@@ -782,6 +782,8 @@ docker.file.stage @defaults("from.name") {
   run []docker.file.run
   // CMD instructions in this Dockerfile
   cmd docker.file.run
+  // USER instruction in this Dockerfile
+  user docker.file.user
   // ENTRYPOINT instructions in this Dockerfile
   entrypoint docker.file.run
   // ADD instructions in this Dockerfile
@@ -790,6 +792,12 @@ docker.file.stage @defaults("from.name") {
   copy []docker.file.copy
   // EXPOSE instructions in this Dockerfile
   expose []docker.file.expose
+}
+
+// Dockerfile USER instructions
+docker.file.user @defaults("user") {
+  user string
+  group string
 }
 
 // Dockerfile EXPOSE instruction

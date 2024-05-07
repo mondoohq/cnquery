@@ -254,6 +254,10 @@ func init() {
 			// to override args, implement: initDockerFileStage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDockerFileStage,
 		},
+		"docker.file.user": {
+			// to override args, implement: initDockerFileUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDockerFileUser,
+		},
 		"docker.file.expose": {
 			// to override args, implement: initDockerFileExpose(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDockerFileExpose,
@@ -1322,6 +1326,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"docker.file.stage.cmd": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFileStage).GetCmd()).ToDataRes(types.Resource("docker.file.run"))
 	},
+	"docker.file.stage.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileStage).GetUser()).ToDataRes(types.Resource("docker.file.user"))
+	},
 	"docker.file.stage.entrypoint": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFileStage).GetEntrypoint()).ToDataRes(types.Resource("docker.file.run"))
 	},
@@ -1333,6 +1340,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"docker.file.stage.expose": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFileStage).GetExpose()).ToDataRes(types.Array(types.Resource("docker.file.expose")))
+	},
+	"docker.file.user.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileUser).GetUser()).ToDataRes(types.String)
+	},
+	"docker.file.user.group": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileUser).GetGroup()).ToDataRes(types.String)
 	},
 	"docker.file.expose.port": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFileExpose).GetPort()).ToDataRes(types.Int)
@@ -3481,6 +3494,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlDockerFileStage).Cmd, ok = plugin.RawToTValue[*mqlDockerFileRun](v.Value, v.Error)
 		return
 	},
+	"docker.file.stage.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileStage).User, ok = plugin.RawToTValue[*mqlDockerFileUser](v.Value, v.Error)
+		return
+	},
 	"docker.file.stage.entrypoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDockerFileStage).Entrypoint, ok = plugin.RawToTValue[*mqlDockerFileRun](v.Value, v.Error)
 		return
@@ -3495,6 +3512,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"docker.file.stage.expose": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDockerFileStage).Expose, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"docker.file.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlDockerFileUser).__id, ok = v.Value.(string)
+			return
+		},
+	"docker.file.user.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileUser).User, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"docker.file.user.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileUser).Group, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"docker.file.expose.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9510,6 +9539,7 @@ type mqlDockerFileStage struct {
 	Labels plugin.TValue[map[string]interface{}]
 	Run plugin.TValue[[]interface{}]
 	Cmd plugin.TValue[*mqlDockerFileRun]
+	User plugin.TValue[*mqlDockerFileUser]
 	Entrypoint plugin.TValue[*mqlDockerFileRun]
 	Add plugin.TValue[[]interface{}]
 	Copy plugin.TValue[[]interface{}]
@@ -9572,6 +9602,10 @@ func (c *mqlDockerFileStage) GetCmd() *plugin.TValue[*mqlDockerFileRun] {
 	return &c.Cmd
 }
 
+func (c *mqlDockerFileStage) GetUser() *plugin.TValue[*mqlDockerFileUser] {
+	return &c.User
+}
+
 func (c *mqlDockerFileStage) GetEntrypoint() *plugin.TValue[*mqlDockerFileRun] {
 	return &c.Entrypoint
 }
@@ -9586,6 +9620,55 @@ func (c *mqlDockerFileStage) GetCopy() *plugin.TValue[[]interface{}] {
 
 func (c *mqlDockerFileStage) GetExpose() *plugin.TValue[[]interface{}] {
 	return &c.Expose
+}
+
+// mqlDockerFileUser for the docker.file.user resource
+type mqlDockerFileUser struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlDockerFileUserInternal it will be used here
+	User plugin.TValue[string]
+	Group plugin.TValue[string]
+}
+
+// createDockerFileUser creates a new instance of this resource
+func createDockerFileUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDockerFileUser{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("docker.file.user", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDockerFileUser) MqlName() string {
+	return "docker.file.user"
+}
+
+func (c *mqlDockerFileUser) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDockerFileUser) GetUser() *plugin.TValue[string] {
+	return &c.User
+}
+
+func (c *mqlDockerFileUser) GetGroup() *plugin.TValue[string] {
+	return &c.Group
 }
 
 // mqlDockerFileExpose for the docker.file.expose resource

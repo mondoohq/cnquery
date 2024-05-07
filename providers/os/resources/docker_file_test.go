@@ -18,6 +18,7 @@ ENV foo=bar
 LABEL a=b
 RUN apk add --no-cache curl
 LABEL c=d
+USER 1001:1001
 CMD ["curl", "http://example.com"]
 ENTRYPOINT ["sh"]
 EXPOSE 80/udp
@@ -63,6 +64,9 @@ ADD /foo-add /bar-add
 
 	require.Equal(t, "curl\nhttp://example.com", s.Cmd.Data.Script.Data)
 	require.Equal(t, "sh", s.Entrypoint.Data.Script.Data)
+
+	require.Equal(t, "1001", s.User.Data.User.Data)
+	require.Equal(t, "1001", s.User.Data.Group.Data)
 
 	exposes := []*mqlDockerFileExpose{
 		s.Expose.Data[0].(*mqlDockerFileExpose),
