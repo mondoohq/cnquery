@@ -16,6 +16,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/users"
+	"go.mondoo.com/cnquery/v11/utils/multierr"
 )
 
 func (x *mqlUser) id() (string, error) {
@@ -118,13 +119,16 @@ func (x *mqlUsers) list() ([]interface{}, error) {
 
 	conn := x.MqlRuntime.Connection.(shared.Connection)
 	um, err := users.ResolveManager(conn)
-	if um == nil || err != nil {
+	if err != nil {
+		return nil, multierr.Wrap(err, "cannot resolve users manager")
+	}
+	if um == nil {
 		return nil, errors.New("cannot find users manager")
 	}
 
 	users, err := um.List()
 	if err != nil {
-		return nil, errors.New("could not retrieve users list")
+		return nil, multierr.Wrap(err, "could not retrieve users list")
 	}
 
 	var res []interface{}

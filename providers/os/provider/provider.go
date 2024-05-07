@@ -26,6 +26,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/connection/tar"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/vagrant"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/winrm"
+	"go.mondoo.com/cnquery/v11/providers/os/detector"
 	"go.mondoo.com/cnquery/v11/providers/os/id"
 	"go.mondoo.com/cnquery/v11/providers/os/resources"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/discovery/docker_engine"
@@ -402,7 +403,15 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			conn, err = docker.NewContainerImageConnection(connId, conf, asset)
 
 		case shared.Type_DockerFile.String():
-			conn, err = docker.NewDockerfile(connId, conf, asset)
+			local := local.NewConnection(connId, conf, asset)
+			// we need to identify the local OS family so that we're able to resolve the file details
+			// properly
+			localFamily := []string{}
+			os, ok := detector.DetectOS(local)
+			if ok {
+				localFamily = os.Family
+			}
+			conn, err = docker.NewDockerfileConnection(connId, conf, asset, local, localFamily)
 
 		case shared.Type_DockerRegistry.String(), shared.Type_ContainerRegistry.String():
 			conn, err = container.NewRegistryConnection(connId, asset)
