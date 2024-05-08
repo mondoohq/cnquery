@@ -102,7 +102,6 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 		Connections: []*inventory.Config{conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.ID()))},
 	})
 	if stringx.ContainsAnyOf(targets, connection.DiscoveryRepos, connection.DiscoveryRepository, connection.DiscoveryAll, connection.DiscoveryAuto) {
-		assetList = []*inventory.Asset{}
 		for i := range org.GetRepositories().Data {
 			repo := org.GetRepositories().Data[i].(*mqlGithubRepository)
 			if reposFilter.skipRepo(repo.Name.Data) {
