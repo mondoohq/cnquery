@@ -796,7 +796,9 @@ docker.file.stage @defaults("from.name") {
 
 // Dockerfile USER instructions
 docker.file.user @defaults("user") {
+  // Set the user name or UID
   user string
+  // Set the user group or GID (optional)
   group string
 }
 
