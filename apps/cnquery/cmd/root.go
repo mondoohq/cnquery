@@ -214,15 +214,11 @@ func getCobraScanConfig(cmd *cobra.Command, runtime *providers.Runtime, cliRes *
 	config.DisplayUsedConfig()
 
 	props := viper.GetStringMapString("props")
-	annotations := viper.GetStringMapString("annotation")
 
 	// merge the config and the user-provided annotations with the latter having precedence
 	optAnnotations := opts.Annotations
 	if optAnnotations == nil {
 		optAnnotations = map[string]string{}
-	}
-	for k, v := range annotations {
-		optAnnotations[k] = v
 	}
 
 	assetName := viper.GetString("asset-name")
