@@ -31,6 +31,8 @@ func init() {
 	_ = scanCmd.Flags().String("platform-id", "", "Select a specific target asset by providing its platform ID.")
 
 	_ = scanCmd.Flags().String("inventory-file", "", "Set the path to the inventory file.")
+	_ = scanCmd.Flags().String("inventory-template", "", "Set the path to the inventory template.")
+	_ = scanCmd.Flags().MarkHidden("inventory-template")
 
 	_ = scanCmd.Flags().Bool("inventory-format-ansible", false, "Set the inventory format to Ansible.")
 	// "inventory-ansible" is deprecated, use "inventory-format-ansible" instead
@@ -89,6 +91,7 @@ To manually configure a query pack, use this:
 
 		_ = viper.BindPFlag("platform-id", cmd.Flags().Lookup("platform-id"))
 		_ = viper.BindPFlag("inventory-file", cmd.Flags().Lookup("inventory-file"))
+		_ = viper.BindPFlag("inventory-template", cmd.Flags().Lookup("inventory-template"))
 		_ = viper.BindPFlag("inventory-ansible", cmd.Flags().Lookup("inventory-ansible"))
 		_ = viper.BindPFlag("inventory-domainlist", cmd.Flags().Lookup("inventory-domainlist"))
 		_ = viper.BindPFlag("querypack-bundle", cmd.Flags().Lookup("querypack-bundle"))
@@ -97,15 +100,15 @@ To manually configure a query pack, use this:
 		_ = viper.BindPFlag("trace-id", cmd.Flags().Lookup("trace-id"))
 		_ = viper.BindPFlag("category", cmd.Flags().Lookup("category"))
 
-		_ = viper.BindPFlag("annotations", cmd.Flags().Lookup("annotations"))
-		_ = viper.BindPFlag("props", cmd.Flags().Lookup("props"))
-
 		// for all assets
 		_ = viper.BindPFlag("incognito", cmd.Flags().Lookup("incognito"))
 		_ = viper.BindPFlag("insecure", cmd.Flags().Lookup("insecure"))
 		_ = viper.BindPFlag("querypacks", cmd.Flags().Lookup("querypack"))
 		_ = viper.BindPFlag("sudo.active", cmd.Flags().Lookup("sudo"))
 		_ = viper.BindPFlag("record", cmd.Flags().Lookup("record"))
+		// NOTE: we may "annotation" to "annotations" to align it with the internal config struct
+		_ = viper.BindPFlag("annotations", cmd.Flags().Lookup("annotation"))
+		_ = viper.BindPFlag("props", cmd.Flags().Lookup("props"))
 
 		_ = viper.BindPFlag("output", cmd.Flags().Lookup("output"))
 		_ = viper.BindPFlag("json", cmd.Flags().Lookup("json"))

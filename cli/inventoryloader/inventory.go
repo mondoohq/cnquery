@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"runtime"
+	"text/template"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
@@ -52,32 +53,68 @@ func loadDataPipe() ([]byte, bool) {
 	return nil, false
 }
 
-// Parse uses the viper flags for `--inventory-file` to load the inventory
-func Parse() (*inventory.Inventory, error) {
-	inventoryFilePath := viper.GetString("inventory-file")
+func renderTemplate(data []byte) ([]byte, error) {
+	type InventoryTemplateVariables struct{}
+	conf := InventoryTemplateVariables{}
 
-	// check in an inventory file was provided
-	if inventoryFilePath == "" {
-		return inventory.New(), nil
+	// allows users to access environment variables in templates
+	funcMap := template.FuncMap{
+		"getenv": func(varName string) string { return os.Getenv(varName) },
 	}
 
+	tmpl, err := template.New("inventory-template").Funcs(funcMap).Parse(string(data))
+	if err != nil {
+		return nil, errors.Wrap(err, "could not parse inventory template")
+	}
+	buf := &bytes.Buffer{}
+	err = tmpl.Execute(buf, conf)
+	return buf.Bytes(), err
+}
+
+// Parse uses the viper flags for `--inventory-file` to load the inventory
+// - if `--inventory-file` is set to "-" it will read from stdin
+// - if `--inventory-template` is set it injects environment variables into the inventory before execution
+func Parse() (*inventory.Inventory, error) {
 	var data []byte
 	var err error
 
-	// for we just read the data from the input file
-	if inventoryFilePath != "-" {
-		log.Info().Str("inventory-file", inventoryFilePath).Msg("load inventory")
-		data, err = os.ReadFile(inventoryFilePath)
-		if err != nil {
-			return nil, err
-		}
-	} else {
+	// a pre-rendered inventory file has always precedence over the inventory template
+	inventoryFilePath := viper.GetString("inventory-file")
+	inventoryTemplate := viper.GetString("inventory-template")
+
+	// check in an inventory file was provided
+	if inventoryFilePath == "" && inventoryTemplate == "" {
+		return inventory.New(), nil
+	}
+
+	if inventoryFilePath == "-" {
+		// read data from stdin
 		log.Info().Msg("load inventory from piped input")
 		var ok bool
 		data, ok = loadDataPipe()
 		if !ok {
 			return nil, errors.New("could not read inventory from piped input")
 		}
+	} else if inventoryFilePath != "" {
+		// read the data from the input file
+		log.Info().Str("inventory-file", inventoryFilePath).Msg("load inventory")
+		data, err = os.ReadFile(inventoryFilePath)
+		if err != nil {
+			return nil, err
+		}
+	} else if inventoryTemplate != "" {
+		// render inventory template first, then continue with generated inventory file
+		log.Info().Str("inventory-template", inventoryTemplate).Msg("load inventory template")
+		templateData, err := os.ReadFile(inventoryTemplate)
+		if err != nil {
+			return nil, err
+		}
+		data, err = renderTemplate(templateData)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		return nil, errors.New("no inventory file or template provided")
 	}
 
 	// force detection
