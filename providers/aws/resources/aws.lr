@@ -63,6 +63,12 @@ private aws.vpc @defaults("id isDefault cidrBlock region") {
   subnets() []aws.vpc.subnet
   // Tags on the VPC
   tags map[string]string
+  // NAT gateways
+  natGateways() []aws.vpc.natgateway
+  // List of service endpoints associated with the VPC
+  serviceEndpoints() []aws.vpc.serviceEndpoint
+  // List of peering connections associated with the VPC
+  peeringConnections() []aws.vpc.peeringConnection
 }
 
 // Amazon Virtual Private Cloud (VPC) route table
@@ -2257,6 +2263,128 @@ aws.ec2 {
   networkAcls() []aws.ec2.networkacl
   // List of keypairs for the account
   keypairs() []aws.ec2.keypair
+  // List of Elastic IPs (EIPs)
+  eips() []aws.ec2.eip
+}
+
+// Amazon Elastic IP (EIP)
+private aws.ec2.eip {
+  // Public IP address of the EIP
+  publicIp string
+  // Whether the Elastic IP is associated with an instance (false if no allocationId is present)
+  attached bool 
+  // Ec2 instance associated with the EIP
+  instance() aws.ec2.instance
+  // ID of the network interface
+  networkInterfaceId string
+  // ID of the network interface owner
+  networkInterfaceOwnerId string
+  // Private IP address for the EIP
+  privateIpAddress string
+  // IPv4 pool of the EIP
+  publicIpv4Pool string
+  // Tags for the EIP
+  tags map[string]string
+  // Region where the EIP is located
+  region string
+}
+
+// Amazon VPC NAT Gateway
+private aws.vpc.natgateway {
+  // Time when the gateway was created
+  createdAt time 
+  // ID of the NAT gateway
+  natGatewayId string
+  // State of the NAT gateway (pending | failed | available | deleting | deleted)
+  state string
+  // Tags for the NAT gateway
+  tags map[string]string
+  // VPC associated with the NAT gateway
+  vpc() aws.vpc
+  // List of addresses associated with the NAT gateway
+  addresses []aws.vpc.natgateway.address
+}
+
+// Amazon VPC NAT gateway address
+private aws.vpc.natgateway.address {
+  // Allocation ID for the address
+  allocationId string
+  // Network interface ID for the address
+  networkInterfaceId string
+  // Private IP associated with the address
+  privateIp string
+  // EIP associated with the address
+  publicIp() aws.ec2.eip // AllocationId can get us back to the actual EIP
+  // Whether this is the primary address for the NAT gateway
+  isPrimary bool
+}
+
+// Amazon VPC Service Endpoint
+private aws.vpc.serviceEndpoint {
+  // True if acceptance required
+  acceptanceRequired bool
+  // List of availability zones for the service endpoint
+  availabilityZones []string
+  // List of base endpoint DNS names for the service endpoint
+  dnsNames []string  
+  // Service ID
+  id string
+  // Whether the service endpoint manages VPC endpoints
+  managesVpcEndpoints bool
+  // Service name
+  name string 
+  // Service owner
+  owner string
+  // Service payer responsibility
+  payerResponsibility string
+  // Service private DNS name verification state
+  privateDnsNameVerificationState string
+  // List of service private DNS names
+  privateDnsNames []string
+  // Tags for the service endpoint
+  tags map[string]string
+  // Service type
+  type string
+  // Whether the service supports VPC endpoint policy
+  vpcEndpointPolicySupported bool
+}
+
+// Amazon VPC Peering Connection
+private aws.vpc.peeringConnection {
+  // VPC for the peering connection acceptor
+  acceptorVpc() aws.vpc.peeringConnection.peeringVpc
+  // Expiration time for the peering connection
+  expirationTime time
+  // ID of the peering connection
+  id string
+  // VPC for the peering connection requestor
+  requestorVpc() aws.vpc.peeringConnection.peeringVpc
+  // Status of the peering connection
+  status string
+  // Tags for the peering connection
+  tags map[string]string
+}
+
+// Amazon VPC Peering Connection Peering VPC
+private aws.vpc.peeringConnection.peeringVpc {
+  // Whether DNS resolution from the remote VPC is allowed
+  allowDnsResolutionFromRemoteVpc bool
+  // Whether egress is allowed from a local classic link to the remote VPC
+  allowEgressFromLocalClassicLinkToRemoteVpc bool
+  // Whether egress is allowed from a local VPC to a classic link
+  allowEgressFromLocalVpcToRemoteClassicLink bool
+  // List of IPv4 CIDR blocks for peering connection
+  ipv4CiderBlocks []string 
+  // List of IPv6 CIDR blocks for peering connection
+  ipv6CiderBlocks []string
+  // Owner ID of the peering connection 
+  ownerID string
+  // Region of the peering connection
+  region string
+  // VPC associated with the peering connection (populated if it's in the same account)
+  vpc() aws.vpc
+  // ID of the VPC associated with the peering connection
+  vpcId string
 }
 
 // Amazon EC2 network ACL

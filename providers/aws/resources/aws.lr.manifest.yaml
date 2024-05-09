@@ -898,6 +898,8 @@ resources:
         Use the `aws.ec2` resource to assess the configuration of AWS EC2 instances.
     fields:
       ebsEncryptionByDefault: {}
+      eips:
+        min_mondoo_version: 9.0.0
       instances: {}
       internetGateways: {}
       keypairs: {}
@@ -940,6 +942,22 @@ resources:
           ipPermissionsEgress.all(ipRanges.length == 0 && ipv6Ranges.length == 0 && fromPort == 0 && toPort == 0)
         }
       title: Ensure the default security group of every VPC restricts all traffic
+  aws.ec2.eip:
+    fields:
+      attached: {}
+      instance: {}
+      networkInterfaceId: {}
+      networkInterfaceOwnerId: {}
+      privateIpAddress: {}
+      publicIp: {}
+      publicIpv4Pool: {}
+      region: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
   aws.ec2.image:
     docs:
       desc: |
@@ -2588,8 +2606,14 @@ resources:
       instanceTenancy:
         min_mondoo_version: 9.0.0
       isDefault: {}
+      natGateways:
+        min_mondoo_version: 9.0.0
+      peeringConnections:
+        min_mondoo_version: 9.0.0
       region: {}
       routeTables: {}
+      serviceEndpoints:
+        min_mondoo_version: 9.0.0
       state: {}
       subnets:
         min_mondoo_version: 9.0.0
@@ -2640,6 +2664,88 @@ resources:
     platform:
       name:
       - aws
+  aws.vpc.natgateway:
+    fields:
+      addresses: {}
+      createdAt: {}
+      natGatewayId: {}
+      state: {}
+      subnet: {}
+      tags: {}
+      vpc: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.vpc.natgateway.address:
+    fields:
+      allocationId: {}
+      isPrimary: {}
+      networkInterfaceId: {}
+      privateIp: {}
+      publicIp: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.vpc.peeringConnection:
+    fields:
+      acceptorVpc: {}
+      expirationTime: {}
+      id: {}
+      requestorVpc: {}
+      status: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.vpc.peeringConnection.peeringVpc:
+    fields:
+      allowDnsResolutionFromRemoteVpc: {}
+      allowEgressFromLocalClassicLinkToRemoteVpc: {}
+      allowEgressFromLocalVpcToRemoteClassicLink: {}
+      ipv4CiderBlocks: {}
+      ipv6CiderBlocks: {}
+      ownerID: {}
+      region: {}
+      vpc: {}
+      vpcId: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.vpc.peeringconnection:
+    fields:
+      acceptorVpc: {}
+      expirationTime: {}
+      id: {}
+      requestorVpc: {}
+      status: {}
+      tags: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.vpc.peeringconnection.peeringvpc:
+    fields:
+      allowDnsResolutionFromRemoteVpc: {}
+      allowEgressFromLocalClassicLinkToRemoteVpc: {}
+      allowEgressFromLocalVpcToRemoteClassicLink: {}
+      ipv4CiderBlocks: {}
+      ipv6CiderBlocks: {}
+      ownerID: {}
+      region: {}
+      vpc: {}
+      vpcId: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
   aws.vpc.routetable:
     fields:
       id: {}
@@ -2648,6 +2754,45 @@ resources:
         min_mondoo_version: 9.0.0
     is_private: true
     min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - aws
+  aws.vpc.serviceEndpoint:
+    fields:
+      acceptanceRequired: {}
+      availabilityZones: {}
+      dnsNames: {}
+      id: {}
+      managesVpcEndpoints: {}
+      name: {}
+      owner: {}
+      payerResponsibility: {}
+      privateDnsNameVerificationState: {}
+      privateDnsNames: {}
+      tags: {}
+      type: {}
+      vpcEndpointPolicySupported: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.vpc.serviceendpoint:
+    fields:
+      acceptanceRequired: {}
+      availabilityZones: {}
+      dnsNames: {}
+      id: {}
+      managesVpcEndpoints: {}
+      name: {}
+      owner: {}
+      payerResponsibility: {}
+      privateDnsNameVerificationState: {}
+      privateDnsNames: {}
+      tags: {}
+      type: {}
+      vpcEndpointPolicySupported: {}
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - aws

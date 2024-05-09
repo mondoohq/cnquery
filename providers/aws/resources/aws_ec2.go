@@ -45,6 +45,145 @@ func Ec2TagsToMap(tags []ec2types.Tag) map[string]interface{} {
 	return tagsMap
 }
 
+func initAwsEc2Eip(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	if args["publicIp"] == nil {
+		return nil, nil, errors.New("publicIp required to fetch aws ec2 eip")
+	}
+	p := args["publicIp"].Value.(string)
+
+	if args["region"] == nil {
+		return nil, nil, errors.New("region required to fetch aws ec2 eip")
+	}
+	r := args["region"].Value.(string)
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Ec2(r)
+	ctx := context.Background()
+	address, err := svc.DescribeAddresses(ctx, &ec2.DescribeAddressesInput{Filters: []ec2types.Filter{{Name: aws.String("public-ip"), Values: []string{p}}}})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if len(address.Addresses) > 0 {
+		add := address.Addresses[0]
+		attached := add.AllocationId != nil
+		args["publicIp"] = llx.StringDataPtr(add.PublicIp)
+		args["attached"] = llx.BoolData(attached) // this is false if allocationId is null and true otherwise
+		args["networkInterfaceId"] = llx.StringDataPtr(add.NetworkInterfaceId)
+		args["networkInterfaceOwnerId"] = llx.StringDataPtr(add.NetworkInterfaceOwnerId)
+		args["privateIpAddress"] = llx.StringDataPtr(add.PrivateIpAddress)
+		args["publicIpv4Pool"] = llx.StringDataPtr(add.PublicIpv4Pool)
+		args["tags"] = llx.MapData(Ec2TagsToMap(add.Tags), types.String)
+		args["region"] = llx.StringData(r)
+		return args, nil, nil
+	}
+	return args, nil, nil
+}
+
+func (a *mqlAwsEc2Eip) id() (string, error) {
+	return a.NetworkInterfaceId.Data, nil
+}
+
+type mqlAwsEc2EipInternal struct {
+	eipCache ec2types.Address
+}
+
+func (a *mqlAwsEc2Eip) instance() (*mqlAwsEc2Instance, error) {
+	regionVal := a.Region.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	if a.eipCache.InstanceId != nil {
+		instanceId := a.eipCache.InstanceId
+		mqlEc2Instance, err := NewResource(a.MqlRuntime, "aws.ec2.instance",
+			map[string]*llx.RawData{
+				"arn": llx.StringData(fmt.Sprintf(ec2InstanceArnPattern, regionVal, conn.AccountId(), convert.ToString(instanceId))),
+			})
+		if err != nil {
+			return nil, err
+		}
+		return mqlEc2Instance.(*mqlAwsEc2Instance), err
+	}
+	a.Instance.State = plugin.StateIsNull | plugin.StateIsSet
+	return nil, nil
+}
+
+func (a *mqlAwsEc2) eips() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []interface{}{}
+	poolOfJobs := jobpool.CreatePool(a.getEIPs(conn), 5)
+	poolOfJobs.Run()
+
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	}
+
+	return res, nil
+}
+
+func (a *mqlAwsEc2) getEIPs(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	for _, region := range regions {
+		regionVal := region
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("ec2>getEIPs>calling aws with region %s", regionVal)
+
+			svc := conn.Ec2(regionVal)
+			ctx := context.Background()
+			res := []interface{}{}
+
+			params := &ec2.DescribeAddressesInput{} // no pagination
+			addresses, err := svc.DescribeAddresses(ctx, params)
+			if err != nil {
+				if Is400AccessDeniedError(err) {
+					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+					return res, nil
+				}
+				return nil, err
+			}
+
+			for i := range addresses.Addresses {
+				add := addresses.Addresses[i]
+				attached := add.AllocationId != nil
+
+				args := map[string]*llx.RawData{
+					"publicIp":                llx.StringDataPtr(add.PublicIp),
+					"attached":                llx.BoolData(attached), // this is false if allocationId is null and true otherwise
+					"networkInterfaceId":      llx.StringDataPtr(add.NetworkInterfaceId),
+					"networkInterfaceOwnerId": llx.StringDataPtr(add.NetworkInterfaceOwnerId),
+					"privateIpAddress":        llx.StringDataPtr(add.PrivateIpAddress),
+					"publicIpv4Pool":          llx.StringDataPtr(add.PublicIpv4Pool),
+					"tags":                    llx.MapData(Ec2TagsToMap(add.Tags), types.String),
+					"region":                  llx.StringData(regionVal),
+				}
+				mqlAddress, err := CreateResource(a.MqlRuntime, "aws.ec2.eip", args)
+				if err != nil {
+					return nil, err
+				}
+				mqlAddress.(*mqlAwsEc2Eip).eipCache = add
+
+				res = append(res, mqlAddress)
+
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
 func (a *mqlAwsEc2Networkacl) id() (string, error) {
 	return a.Arn.Data, nil
 }

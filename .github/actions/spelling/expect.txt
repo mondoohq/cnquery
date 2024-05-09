@@ -22,6 +22,7 @@ dfw
 DIRECTORYID
 dlq
 dlv
+eip
 ekm
 elbv
 exo
@@ -50,6 +51,7 @@ messagestoragepolicy
 mfs
 mgroup
 Mpim
+natgateway
 nodepool
 nullgroup
 nullstring
