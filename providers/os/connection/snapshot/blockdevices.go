@@ -68,7 +68,7 @@ func (blockEntries blockDevices) GetBlockEntryByName(name string) (*fsInfo, erro
 		log.Debug().Msg("found match")
 		for i := range d.Children {
 			entry := d.Children[i]
-			if entry.IsNoBootVolumeAndUnmounted() {
+			if entry.IsNotBootOrRootVolumeAndUnmounted() {
 				devFsName := "/dev/" + entry.Name
 				return &fsInfo{name: devFsName, fstype: entry.FsType}, nil
 			}
@@ -112,7 +112,8 @@ func findVolume(children []blockDevice) *fsInfo {
 	var fs *fsInfo
 	for i := range children {
 		entry := children[i]
-		if entry.IsNoBootVolumeAndUnmounted() {
+		if entry.IsNotBootOrRootVolumeAndUnmounted() {
+			// we are NOT searching for the root volume here, so we can exclude the "sda" and "xvda" volumes
 			devFsName := "/dev/" + entry.Name
 			fs = &fsInfo{name: devFsName, fstype: entry.FsType}
 		}
@@ -121,9 +122,13 @@ func findVolume(children []blockDevice) *fsInfo {
 }
 
 func (entry blockDevice) IsNoBootVolume() bool {
-	return entry.Uuid != "" && entry.FsType != "" && entry.FsType != "vfat" && entry.Label != "EFI" && entry.Label != "boot" && entry.FsUse == ""
+	return entry.Uuid != "" && entry.FsType != "" && entry.FsType != "vfat" && entry.Label != "EFI" && entry.Label != "boot"
 }
 
-func (entry blockDevice) IsNoBootVolumeAndUnmounted() bool {
-	return entry.IsNoBootVolume() && entry.MountPoint == ""
+func (entry blockDevice) IsRootVolume() bool {
+	return strings.Contains(entry.Name, "sda") || strings.Contains(entry.Name, "xvda") || strings.Contains(entry.Name, "nvme0n1")
+}
+
+func (entry blockDevice) IsNotBootOrRootVolumeAndUnmounted() bool {
+	return entry.IsNoBootVolume() && entry.MountPoint == "" && !entry.IsRootVolume()
 }
