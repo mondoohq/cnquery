@@ -74,7 +74,7 @@ prep/tools/mockgen:
 
 #   🌙 MQL/MOTOR   #
 
-cnquery/generate: clean/proto llx/generate shared/generate providers explorer/generate sbom/generate reporter/generate
+cnquery/generate: clean/proto llx/generate shared/generate explorer/generate sbom/generate reporter/generate providers
 
 cnquery/generate/core: clean/proto llx/generate shared/generate providers/proto providers/build/mock providers/build/core explorer/generate sbom/generate reporter/generate
 
@@ -633,7 +633,7 @@ test/lint/golangci-lint/run: prep/tools
 	golangci-lint --version
 	golangci-lint run
 
-test/lint/extended: prep/tools
+test/lint/extended: prep/tools test/generate
 	golangci-lint run --config=.github/.golangci.yml --timeout=30m
 
 test/lint/proto: prep/tools/protolint
