@@ -2263,25 +2263,25 @@ aws.ec2 {
   networkAcls() []aws.ec2.networkacl
   // List of keypairs for the account
   keypairs() []aws.ec2.keypair
-  // List of EIPs
+  // List of Elastic IPs (EIPs)
   eips() []aws.ec2.eip
 }
 
-// Amazon Elastic IP
+// Amazon Elastic IP (EIP)
 private aws.ec2.eip {
-  // PublicIP assigned to 
+  // Public IP address of the EIP
   publicIp string
-  // false if allocationId not present
+  // Whether the Elastic IP is associated with an instance (false if no allocationId is present)
   attached bool 
   // Ec2 instance associated with the EIP
   instance() aws.ec2.instance
-  // Id for the network interface
+  // ID of the network interface
   networkInterfaceId string
-  // Id for the network interface owner
+  // ID of the network interface owner
   networkInterfaceOwnerId string
   // Private IP address for the EIP
   privateIpAddress string
-  // Ipv4 pool for the EIP
+  // IPv4 pool of the EIP
   publicIpv4Pool string
   // Tags for the EIP
   tags map[string]string
@@ -2293,7 +2293,7 @@ private aws.ec2.eip {
 private aws.vpc.natgateway {
   // Time when the gateway was created
   createdAt time 
-  // Id for the NAT gateway
+  // ID of the NAT gateway
   natGatewayId string
   // State of the NAT gateway (pending | failed | available | deleting | deleted)
   state string
@@ -2307,15 +2307,15 @@ private aws.vpc.natgateway {
 
 // Amazon VPC NAT gateway address
 private aws.vpc.natgateway.address {
-  // Allocation Id for the address
+  // Allocation ID for the address
   allocationId string
-  // Network interface Id for the address
+  // Network interface ID for the address
   networkInterfaceId string
   // Private IP associated with the address
   privateIp string
   // EIP associated with the address
   publicIp() aws.ec2.eip // AllocationId can get us back to the actual EIP
-  // True if address is the primary one for the NAT gateway
+  // Whether this is the primary address for the NAT gateway
   isPrimary bool
 }
 
@@ -2327,9 +2327,9 @@ private aws.vpc.serviceEndpoint {
   availabilityZones []string
   // List of base endpoint DNS names for the service endpoint
   dnsNames []string  
-  // Service Id
+  // Service ID
   id string
-  // True if service endpoint manages VPC endpoints
+  // Whether the service endpoint manages VPC endpoints
   managesVpcEndpoints bool
   // Service name
   name string 
@@ -2345,7 +2345,7 @@ private aws.vpc.serviceEndpoint {
   tags map[string]string
   // Service type
   type string
-  // True if service supports VPC endpoint policy
+  // Whether the service supports VPC endpoint policy
   vpcEndpointPolicySupported bool
 }
 
@@ -2355,7 +2355,7 @@ private aws.vpc.peeringConnection {
   acceptorVpc() aws.vpc.peeringConnection.peeringVpc
   // Expiration time for the peering connection
   expirationTime time
-  // Id for the peering connection
+  // ID of the peering connection
   id string
   // VPC for the peering connection requestor
   requestorVpc() aws.vpc.peeringConnection.peeringVpc
@@ -2367,23 +2367,23 @@ private aws.vpc.peeringConnection {
 
 // Amazon VPC Peering Connection Peering VPC
 private aws.vpc.peeringConnection.peeringVpc {
-  // True if DNS resolution from remote VPC allowed
+  // Whether DNS resolution from the remote VPC is allowed
   allowDnsResolutionFromRemoteVpc bool
-  // True if egress allowed
+  // Whether egress is allowed from a local classic link to the remote VPC
   allowEgressFromLocalClassicLinkToRemoteVpc bool
-  // True if egress allowed
+  // Whether egress is allowed from a local VPC to a classic link
   allowEgressFromLocalVpcToRemoteClassicLink bool
-  // List of ipv4 CIDR blocks for peering connection
+  // List of IPv4 CIDR blocks for peering connection
   ipv4CiderBlocks []string 
-  // List of ipv6 CIDR blocks for peering connection
+  // List of IPv6 CIDR blocks for peering connection
   ipv6CiderBlocks []string
-  // Owner Id for the peering connection 
+  // Owner ID of the peering connection 
   ownerID string
-  // Region for the peering connection
+  // Region of the peering connection
   region string
-  // VPC associated with the peering connection, populated if in same account
+  // VPC associated with the peering connection (populated if it's in the same account)
   vpc() aws.vpc
-  // Id of VPC associated with the peering connection
+  // ID of the VPC associated with the peering connection
   vpcId string
 }
 
