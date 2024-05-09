@@ -81,6 +81,7 @@ func Parse() (*inventory.Inventory, error) {
 	// a pre-rendered inventory file has always precedence over the inventory template
 	inventoryFilePath := viper.GetString("inventory-file")
 	inventoryTemplate := viper.GetString("inventory-template")
+	inventorySource := ""
 
 	// check in an inventory file was provided
 	if inventoryFilePath == "" && inventoryTemplate == "" {
@@ -95,6 +96,7 @@ func Parse() (*inventory.Inventory, error) {
 		if !ok {
 			return nil, errors.New("could not read inventory from piped input")
 		}
+		inventorySource = "stdin"
 	} else if inventoryFilePath != "" {
 		// read the data from the input file
 		log.Info().Str("inventory-file", inventoryFilePath).Msg("load inventory")
@@ -102,6 +104,7 @@ func Parse() (*inventory.Inventory, error) {
 		if err != nil {
 			return nil, err
 		}
+		inventorySource = inventoryFilePath
 	} else if inventoryTemplate != "" {
 		// render inventory template first, then continue with generated inventory file
 		log.Info().Str("inventory-template", inventoryTemplate).Msg("load inventory template")
@@ -113,6 +116,7 @@ func Parse() (*inventory.Inventory, error) {
 		if err != nil {
 			return nil, err
 		}
+		inventorySource = inventoryTemplate
 	} else {
 		return nil, errors.New("no inventory file or template provided")
 	}
@@ -146,7 +150,7 @@ func Parse() (*inventory.Inventory, error) {
 	if res.Metadata.Labels == nil {
 		res.Metadata.Labels = map[string]string{}
 	}
-	res.Metadata.Labels[inventory.InventoryFilePath] = inventoryFilePath
+	res.Metadata.Labels[inventory.InventoryFilePath] = inventorySource
 	err = res.PreProcess()
 	if err != nil {
 		return nil, err
