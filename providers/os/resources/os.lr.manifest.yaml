@@ -200,15 +200,20 @@ resources:
       expose: {}
       file: {}
       from: {}
-      labels:
-        min_mondoo_version: 9.0.0
+      labels: {}
       run: {}
+      user: {}
     min_mondoo_version: 9.0.0
     refs:
     - title: Dockerfile Reference
       url: https://docs.docker.com/reference/dockerfile/
     - title: Multi-stage builds
       url: https://docs.docker.com/build/building/multi-stage/
+  docker.file.user:
+    fields:
+      group: {}
+      user: {}
+    min_mondoo_version: 9.0.0
   docker.image:
     fields:
       id: {}

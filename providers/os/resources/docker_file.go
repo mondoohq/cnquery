@@ -190,6 +190,7 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 	var unsupported []string
 	var entrypointRaw *instructions.EntrypointCommand
 	var cmdRaw *instructions.CmdCommand
+	var userRaw *instructions.UserCommand
 	for i := range stage.Commands {
 		switch v := stage.Commands[i].(type) {
 		case *instructions.EnvCommand:
@@ -200,6 +201,9 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 			for _, kv := range v.Labels {
 				labels[kv.Key] = kv.Value
 			}
+		case *instructions.UserCommand:
+			userRaw = v
+
 		case *instructions.RunCommand:
 			script := strings.Join(v.ShellDependantCmdLine.CmdLine, "\n")
 			runResource, err := CreateResource(p.MqlRuntime, "docker.file.run", map[string]*llx.RawData{
@@ -322,6 +326,30 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 		args["cmd"] = llx.ResourceData(cmdResource, "docker.file.run")
 	} else {
 		args["cmd"] = llx.NilData
+	}
+
+	if userRaw != nil {
+		arr := strings.Split(userRaw.User, ":")
+		var user string
+		var group string
+		if len(arr) != 0 && arr[0] != "" {
+			user = arr[0]
+		}
+
+		if len(arr) > 1 && arr[1] != "" {
+			group = arr[1]
+		}
+		userResource, err := CreateResource(p.MqlRuntime, "docker.file.user", map[string]*llx.RawData{
+			"__id":  llx.StringData(p.locationID(userRaw.Location())),
+			"user":  llx.StringData(user),
+			"group": llx.StringData(group),
+		})
+		if err != nil {
+			return nil, err
+		}
+		args["user"] = llx.ResourceData(userResource, "docker.file.user")
+	} else {
+		args["user"] = llx.NilData
 	}
 
 	rawStage, err := CreateResource(p.MqlRuntime, "docker.file.stage", args)
