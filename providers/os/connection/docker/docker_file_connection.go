@@ -66,7 +66,7 @@ func NewDockerfileConnection(_ uint32,
 		return nil, errors.New("no inventory connections")
 	}
 
-	if url, ok := asset.Connections[0].Options["ssh-url"]; ok {
+	if url, ok := conf.Options["ssh-url"]; ok {
 		domain, org, repo, err := urlx.ParseGitSshUrl(url)
 		if err != nil {
 			return nil, err
