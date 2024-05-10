@@ -11,7 +11,7 @@ require (
 	github.com/cockroachdb/errors v1.11.1
 	github.com/microsoft/kiota-abstractions-go v1.6.0
 	github.com/microsoft/kiota-authentication-azure-go v1.0.2
-	github.com/microsoftgraph/msgraph-sdk-go v1.40.0
+	github.com/microsoftgraph/msgraph-sdk-go v1.41.0
 	github.com/microsoftgraph/msgraph-sdk-go-core v1.1.0
 	github.com/rs/zerolog v1.32.0
 	github.com/stretchr/testify v1.9.0
