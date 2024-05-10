@@ -49,7 +49,6 @@ func NewDockerfileConnection(_ uint32,
 	var filename string
 	if !stat.IsDir() {
 		filename = filepath.Base(absSrc)
-		absSrc = filepath.Dir(absSrc)
 		conf.Path = absSrc
 	}
 
@@ -90,7 +89,9 @@ func NewDockerfileConnection(_ uint32,
 
 	conn := &DockerfileConnection{
 		LocalConnection: localConn,
-		Filename:        filepath.Join(conf.Path, filename),
+		// here we must use the absolute path of the Dockerfile so
+		// that we find the file downstream
+		Filename: absSrc,
 	}
 
 	return conn, nil
