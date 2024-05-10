@@ -35,6 +35,8 @@ aws.organization @defaults("arn masterAccountEmail") {
   masterAccountId string
   // Email owner of the organization's master account
   masterAccountEmail string
+  // List of accounts that belong to the organization, if available to the caller
+  accounts() []aws.account
 }
 
 // Amazon Virtual Private Cloud (VPC)

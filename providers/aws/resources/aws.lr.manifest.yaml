@@ -2090,6 +2090,8 @@ resources:
       - aws
   aws.organization:
     fields:
+      accounts:
+        min_mondoo_version: 9.0.0
       arn: {}
       featureSet: {}
       masterAccountEmail: {}

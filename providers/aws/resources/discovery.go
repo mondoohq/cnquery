@@ -27,6 +27,7 @@ const (
 
 	// API scan
 	DiscoveryAccounts                   = "accounts"
+	DiscoveryOrg                        = "organization"
 	DiscoveryResources                  = "resources"          // all the resources
 	DiscoveryECSContainersAPI           = "ecs-containers-api" // need dedup story
 	DiscoveryECRImageAPI                = "ecr-image-api"      // need policy + dedup story
@@ -247,9 +248,24 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 	accountId := trimAwsAccountIdToJustId(awsAccount.Id.Data)
 	assetList := []*inventory.Asset{}
 	switch target {
+	case DiscoveryOrg:
+		res, err := NewResource(runtime, "aws.organization", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+		org := res.(*mqlAwsOrganization)
+
+		accounts := org.GetAccounts()
+		if accounts == nil {
+			return assetList, nil
+		}
+
+		for i := range accounts.Data {
+			awsAccount := accounts.Data[i].(*mqlAwsAccount)
+			assetList = append(assetList, accountAsset(conn, awsAccount))
+		}
 	case DiscoveryAccounts:
 		assetList = append(assetList, accountAsset(conn, awsAccount))
-
 	case DiscoveryInstances:
 		res, err := NewResource(runtime, "aws.ec2", map[string]*llx.RawData{})
 		if err != nil {

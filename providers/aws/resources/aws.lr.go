@@ -23,7 +23,7 @@ func init() {
 			Create: createAws,
 		},
 		"aws.account": {
-			// to override args, implement: initAwsAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initAwsAccount,
 			Create: createAwsAccount,
 		},
 		"aws.organization": {
@@ -792,6 +792,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.organization.masterAccountEmail": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOrganization).GetMasterAccountEmail()).ToDataRes(types.String)
+	},
+	"aws.organization.accounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOrganization).GetAccounts()).ToDataRes(types.Array(types.Resource("aws.account")))
 	},
 	"aws.vpc.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpc).GetArn()).ToDataRes(types.String)
@@ -4148,6 +4151,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.organization.masterAccountEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsOrganization).MasterAccountEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.organization.accounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganization).Accounts, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9383,6 +9390,7 @@ type mqlAwsOrganization struct {
 	FeatureSet plugin.TValue[string]
 	MasterAccountId plugin.TValue[string]
 	MasterAccountEmail plugin.TValue[string]
+	Accounts plugin.TValue[[]interface{}]
 }
 
 // createAwsOrganization creates a new instance of this resource
@@ -9431,6 +9439,22 @@ func (c *mqlAwsOrganization) GetMasterAccountId() *plugin.TValue[string] {
 
 func (c *mqlAwsOrganization) GetMasterAccountEmail() *plugin.TValue[string] {
 	return &c.MasterAccountEmail
+}
+
+func (c *mqlAwsOrganization) GetAccounts() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Accounts, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.organization", c.__id, "accounts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.accounts()
+	})
 }
 
 // mqlAwsVpc for the aws.vpc resource
