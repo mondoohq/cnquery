@@ -23,8 +23,6 @@ resources:
       networkPolicies:
         min_mondoo_version: 5.31.0
       nodes: {}
-      podSecurityPolicies:
-        min_mondoo_version: 5.31.0
       pods: {}
       replicasets:
         min_mondoo_version: 6.7.0
@@ -59,8 +57,6 @@ resources:
       title: Query RBAC role bindings
     - query: k8s.clusterrolebindings { name subjects  }
       title: Query RBAC cluster role bindings
-    - query: k8s.podSecurityPolicies { name manifest }
-      title: Query pod security policies
     - query: k8s.networkPolicies { name manifest }
       title: Query network policies
   k8s.admissionrequest:
@@ -487,24 +483,6 @@ resources:
       uid: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    platform:
-      name:
-      - kubernetes
-  k8s.podsecuritypolicy:
-    fields:
-      annotations: {}
-      created: {}
-      id:
-        min_mondoo_version: 6.10.0
-      kind: {}
-      labels: {}
-      manifest: {}
-      name: {}
-      resourceVersion: {}
-      spec: {}
-      uid: {}
-    is_private: true
-    min_mondoo_version: 5.31.0
     platform:
       name:
       - kubernetes
