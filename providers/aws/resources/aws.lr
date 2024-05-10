@@ -1744,6 +1744,36 @@ aws.dynamodb {
   tables() []aws.dynamodb.table
   // List of DynamoDB settings across all regions
   limits() []aws.dynamodb.limit
+  // List of exports for DynamoDB
+  exports() []aws.dynamodb.export
+}
+
+// Amazon DynamoDB Export
+private aws.dynamodb.export {
+  // Table associated with the export
+  table() aws.dynamodb.table
+  // S3 bucket associated with the export
+  s3Bucket() aws.s3.bucket
+  // S3 Prefix for the export
+  s3Prefix() string
+  // Count of items in the export
+  itemCount() int
+  // Type of the export (FULL_EXPORT | INCREMENTAL_EXPORT )
+  type string
+  // Status of the export (IN_PROGRESS | COMPLETED | FAILED)
+  status string
+  // Format of the export (DYNAMODB_JSON | ION)
+  format() string
+  // Start time of the export
+  startTime() time
+  // End time of the export
+  endTime() time
+  // S3 SSE Algorithm for the export
+  s3SseAlgorithm() string
+  // SSE KMS Key Id
+  kmsKey() aws.kms.key
+  // ARN for the export
+  arn string
 }
 
 // Amazon DynamoDB limits

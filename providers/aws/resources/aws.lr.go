@@ -470,6 +470,10 @@ func init() {
 			// to override args, implement: initAwsDynamodb(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsDynamodb,
 		},
+		"aws.dynamodb.export": {
+			// to override args, implement: initAwsDynamodbExport(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDynamodbExport,
+		},
 		"aws.dynamodb.limit": {
 			// to override args, implement: initAwsDynamodbLimit(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsDynamodbLimit,
@@ -2671,6 +2675,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.dynamodb.limits": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDynamodb).GetLimits()).ToDataRes(types.Array(types.Resource("aws.dynamodb.limit")))
+	},
+	"aws.dynamodb.exports": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodb).GetExports()).ToDataRes(types.Array(types.Resource("aws.dynamodb.export")))
+	},
+	"aws.dynamodb.export.table": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbExport).GetTable()).ToDataRes(types.Resource("aws.dynamodb.table"))
+	},
+	"aws.dynamodb.export.s3Bucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbExport).GetS3Bucket()).ToDataRes(types.Resource("aws.s3.bucket"))
+	},
+	"aws.dynamodb.export.s3Prefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbExport).GetS3Prefix()).ToDataRes(types.String)
+	},
+	"aws.dynamodb.export.itemCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbExport).GetItemCount()).ToDataRes(types.Int)
+	},
+	"aws.dynamodb.export.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbExport).GetType()).ToDataRes(types.String)
+	},
+	"aws.dynamodb.export.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbExport).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.dynamodb.export.format": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbExport).GetFormat()).ToDataRes(types.String)
+	},
+	"aws.dynamodb.export.startTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbExport).GetStartTime()).ToDataRes(types.Time)
+	},
+	"aws.dynamodb.export.endTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbExport).GetEndTime()).ToDataRes(types.Time)
+	},
+	"aws.dynamodb.export.s3SseAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbExport).GetS3SseAlgorithm()).ToDataRes(types.String)
+	},
+	"aws.dynamodb.export.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbExport).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.dynamodb.export.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbExport).GetArn()).ToDataRes(types.String)
 	},
 	"aws.dynamodb.limit.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDynamodbLimit).GetArn()).ToDataRes(types.String)
@@ -7018,6 +7061,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.dynamodb.limits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDynamodb).Limits, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.exports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodb).Exports, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.export.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsDynamodbExport).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.dynamodb.export.table": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbExport).Table, ok = plugin.RawToTValue[*mqlAwsDynamodbTable](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.export.s3Bucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbExport).S3Bucket, ok = plugin.RawToTValue[*mqlAwsS3Bucket](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.export.s3Prefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbExport).S3Prefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.export.itemCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbExport).ItemCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.export.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbExport).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.export.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbExport).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.export.format": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbExport).Format, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.export.startTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbExport).StartTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.export.endTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbExport).EndTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.export.s3SseAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbExport).S3SseAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.export.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbExport).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.export.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbExport).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.dynamodb.limit.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -18157,6 +18256,7 @@ type mqlAwsDynamodb struct {
 	GlobalTables plugin.TValue[[]interface{}]
 	Tables plugin.TValue[[]interface{}]
 	Limits plugin.TValue[[]interface{}]
+	Exports plugin.TValue[[]interface{}]
 }
 
 // createAwsDynamodb creates a new instance of this resource
@@ -18248,6 +18348,174 @@ func (c *mqlAwsDynamodb) GetLimits() *plugin.TValue[[]interface{}] {
 
 		return c.limits()
 	})
+}
+
+func (c *mqlAwsDynamodb) GetExports() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Exports, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.dynamodb", c.__id, "exports")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.exports()
+	})
+}
+
+// mqlAwsDynamodbExport for the aws.dynamodb.export resource
+type mqlAwsDynamodbExport struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlAwsDynamodbExportInternal
+	Table plugin.TValue[*mqlAwsDynamodbTable]
+	S3Bucket plugin.TValue[*mqlAwsS3Bucket]
+	S3Prefix plugin.TValue[string]
+	ItemCount plugin.TValue[int64]
+	Type plugin.TValue[string]
+	Status plugin.TValue[string]
+	Format plugin.TValue[string]
+	StartTime plugin.TValue[*time.Time]
+	EndTime plugin.TValue[*time.Time]
+	S3SseAlgorithm plugin.TValue[string]
+	KmsKey plugin.TValue[*mqlAwsKmsKey]
+	Arn plugin.TValue[string]
+}
+
+// createAwsDynamodbExport creates a new instance of this resource
+func createAwsDynamodbExport(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDynamodbExport{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.dynamodb.export", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDynamodbExport) MqlName() string {
+	return "aws.dynamodb.export"
+}
+
+func (c *mqlAwsDynamodbExport) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDynamodbExport) GetTable() *plugin.TValue[*mqlAwsDynamodbTable] {
+	return plugin.GetOrCompute[*mqlAwsDynamodbTable](&c.Table, func() (*mqlAwsDynamodbTable, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.dynamodb.export", c.__id, "table")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsDynamodbTable), nil
+			}
+		}
+
+		return c.table()
+	})
+}
+
+func (c *mqlAwsDynamodbExport) GetS3Bucket() *plugin.TValue[*mqlAwsS3Bucket] {
+	return plugin.GetOrCompute[*mqlAwsS3Bucket](&c.S3Bucket, func() (*mqlAwsS3Bucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.dynamodb.export", c.__id, "s3Bucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsS3Bucket), nil
+			}
+		}
+
+		return c.s3Bucket()
+	})
+}
+
+func (c *mqlAwsDynamodbExport) GetS3Prefix() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.S3Prefix, func() (string, error) {
+		return c.s3Prefix()
+	})
+}
+
+func (c *mqlAwsDynamodbExport) GetItemCount() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ItemCount, func() (int64, error) {
+		return c.itemCount()
+	})
+}
+
+func (c *mqlAwsDynamodbExport) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsDynamodbExport) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsDynamodbExport) GetFormat() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Format, func() (string, error) {
+		return c.format()
+	})
+}
+
+func (c *mqlAwsDynamodbExport) GetStartTime() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.StartTime, func() (*time.Time, error) {
+		return c.startTime()
+	})
+}
+
+func (c *mqlAwsDynamodbExport) GetEndTime() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.EndTime, func() (*time.Time, error) {
+		return c.endTime()
+	})
+}
+
+func (c *mqlAwsDynamodbExport) GetS3SseAlgorithm() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.S3SseAlgorithm, func() (string, error) {
+		return c.s3SseAlgorithm()
+	})
+}
+
+func (c *mqlAwsDynamodbExport) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.dynamodb.export", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsDynamodbExport) GetArn() *plugin.TValue[string] {
+	return &c.Arn
 }
 
 // mqlAwsDynamodbLimit for the aws.dynamodb.limit resource
