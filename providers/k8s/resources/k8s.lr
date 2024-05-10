@@ -50,6 +50,7 @@ k8s {
   // Kubernetes RBAC RoleBindings
   rolebindings() []k8s.rbac.rolebinding
   // Kubernetes PodSecurityPolicies
+  // Deprecated: This was removed in Kubernetes v1.25
   podSecurityPolicies() []k8s.podsecuritypolicy
   // Kubernetes network policies
   networkPolicies() []k8s.networkpolicy
@@ -752,6 +753,7 @@ private k8s.rbac.rolebinding @defaults("name namespace created") {
 }
 
 // Kubernetes PodSecurityPolicy (deprecated as of Kubernetes v1.21)
+// Deprecated: This was removed in Kubernetes v1.25
 private k8s.podsecuritypolicy {
   // Mondoo ID for the Kubernetes object
   id string
