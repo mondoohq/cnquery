@@ -805,7 +805,7 @@ resources:
     fields:
       backups: {}
       exports:
-        min_mondoo_version: latest
+        min_mondoo_version: 9.0.0
       globalTables: {}
       limits: {}
       tables: {}
