@@ -24,7 +24,9 @@ type DockerfileConnection struct {
 	Filename string
 }
 
-func NewDockerfileConnection(id uint32, conf *inventory.Config, asset *inventory.Asset, localConn *local.LocalConnection, localFamily []string) (*DockerfileConnection, error) {
+func NewDockerfileConnection(_ uint32,
+	conf *inventory.Config, asset *inventory.Asset,
+	localConn *local.LocalConnection, localFamily []string) (*DockerfileConnection, error) {
 	if conf == nil {
 		return nil, errors.New("missing configuration to create dockerfile connection")
 	}
@@ -44,8 +46,6 @@ func NewDockerfileConnection(id uint32, conf *inventory.Config, asset *inventory
 		return nil, err
 	}
 
-	// if we have a regular file, we need to point the fs.Connection to
-	// look at the folder instead and store the filename separately
 	var filename string
 	if !stat.IsDir() {
 		filename = filepath.Base(absSrc)
@@ -62,6 +62,10 @@ func NewDockerfileConnection(id uint32, conf *inventory.Config, asset *inventory
 	}
 	// this helps with running commands against the local connection
 	asset.Platform.Family = append(asset.Platform.Family, localFamily...)
+
+	if len(asset.GetConnections()) == 0 { // prevents panics by accesssing `asset.Connections[0]`
+		return nil, errors.New("no inventory connections")
+	}
 
 	if url, ok := asset.Connections[0].Options["ssh-url"]; ok {
 		domain, org, repo, err := urlx.ParseGitSshUrl(url)
@@ -86,7 +90,7 @@ func NewDockerfileConnection(id uint32, conf *inventory.Config, asset *inventory
 
 	conn := &DockerfileConnection{
 		LocalConnection: localConn,
-		Filename:        filename,
+		Filename:        filepath.Join(conf.Path, filename),
 	}
 
 	return conn, nil
