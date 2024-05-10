@@ -21,6 +21,8 @@ var _ shared.Connection = &DockerfileConnection{}
 
 type DockerfileConnection struct {
 	*local.LocalConnection
+	// Filename must be the absolute path of the Dockerfile so
+	// that we find the file downstream
 	Filename string
 }
 

@@ -46,7 +46,8 @@ func TestNewDockerfileConnection(t *testing.T) {
 		dockerfile, err := os.CreateTemp("", "Dockerfile")
 		require.Nil(t, err)
 		defer os.Remove(dockerfile.Name())
-		dockerfile.WriteString("FROM debian:stable")
+		_, err = dockerfile.WriteString("FROM debian:stable")
+		require.Nil(t, err)
 		conf := &inventory.Config{
 			Path: dockerfile.Name(),
 		}
@@ -65,7 +66,8 @@ func TestNewDockerfileConnection(t *testing.T) {
 		dockerfile, err := os.CreateTemp("", "Dockerfile")
 		require.Nil(t, err)
 		defer os.Remove(dockerfile.Name())
-		dockerfile.WriteString("FROM debian:stable")
+		_, err = dockerfile.WriteString("FROM debian:stable")
+		require.Nil(t, err)
 		conf := &inventory.Config{
 			Path: dockerfile.Name(),
 		}
