@@ -2,18 +2,9 @@ module go.mondoo.com/cnquery/v11/providers/k8s
 
 replace go.mondoo.com/cnquery/v11 => ../..
 
-// We need the k8s packages to be pinned to 0.28.4 because we use PodSecurityPolicies
-replace k8s.io/api => k8s.io/api v0.28.4
+go 1.22.0
 
-replace k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.28.4
-
-replace k8s.io/apimachinery => k8s.io/apimachinery v0.28.4
-
-replace k8s.io/client-go => k8s.io/client-go v0.28.4
-
-go 1.22
-
-toolchain go1.22.0
+toolchain go1.22.2
 
 require (
 	github.com/cockroachdb/errors v1.11.1
@@ -23,14 +14,10 @@ require (
 	github.com/rs/zerolog v1.32.0
 	github.com/stretchr/testify v1.9.0
 	go.mondoo.com/cnquery/v11 v11.2.0
-	// pin v0.28.4
-	k8s.io/api v0.28.4
-	// pin v0.28.4
+	k8s.io/api v0.30.0
 	k8s.io/apiextensions-apiserver v0.28.4
-	// pin v0.28.4
-	k8s.io/apimachinery v0.28.4
-	// pin v0.28.4
-	k8s.io/client-go v0.28.4
+	k8s.io/apimachinery v0.30.0
+	k8s.io/client-go v0.30.0
 	k8s.io/klog/v2 v2.120.1
 	k8s.io/utils v0.0.0-20240502163921-fe8a2dddb1d0
 )
@@ -399,7 +386,7 @@ require (
 	honnef.co/go/tools v0.4.7 // indirect
 	howett.net/plist v1.0.1 // indirect
 	k8s.io/component-base v0.28.4 // indirect
-	k8s.io/kube-openapi v0.0.0-20240220201932-37d671a357a5 // indirect
+	k8s.io/kube-openapi v0.0.0-20240228011516-70dd3763d340 // indirect
 	k8s.io/kubelet v0.28.4 // indirect
 	modernc.org/libc v1.50.5 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
