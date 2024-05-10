@@ -311,6 +311,8 @@ resources:
         min_mondoo_version: 6.4.0
       allowSquashMerge:
         min_mondoo_version: 6.4.0
+      allowUpdateBranch:
+        min_mondoo_version: 9.0.0
       archived: {}
       branches:
         min_mondoo_version: 6.4.0
@@ -329,6 +331,8 @@ resources:
       createdAt: {}
       defaultBranchName:
         min_mondoo_version: 6.4.0
+      deleteBranchOnMerge:
+        min_mondoo_version: 9.0.0
       description: {}
       disabled: {}
       files:
@@ -388,6 +392,8 @@ resources:
       visibility: {}
       watchersCount:
         min_mondoo_version: 7.14.0
+      webCommitSignoffRequired:
+        min_mondoo_version: 9.0.0
       webhooks:
         min_mondoo_version: 6.11.0
       workflows:

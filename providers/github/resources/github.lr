@@ -331,6 +331,12 @@ private github.repository @defaults("fullName") {
   closedIssues() []github.issue
   // Repository license
   license() github.license
+  // Whether the update branch button is enabled
+  allowUpdateBranch bool
+  // Whether commit signatures are required for commits
+	webCommitSignoffRequired bool
+  // Whether deleting pull request branches after merging a pull request is enabled
+	deleteBranchOnMerge bool
 }
 
 // GitHub license

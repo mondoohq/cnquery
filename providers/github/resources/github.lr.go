@@ -617,6 +617,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.repository.license": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetLicense()).ToDataRes(types.Resource("github.license"))
 	},
+	"github.repository.allowUpdateBranch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepository).GetAllowUpdateBranch()).ToDataRes(types.Bool)
+	},
+	"github.repository.webCommitSignoffRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepository).GetWebCommitSignoffRequired()).ToDataRes(types.Bool)
+	},
+	"github.repository.deleteBranchOnMerge": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepository).GetDeleteBranchOnMerge()).ToDataRes(types.Bool)
+	},
 	"github.license.key": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubLicense).GetKey()).ToDataRes(types.String)
 	},
@@ -1550,6 +1559,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"github.repository.license": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubRepository).License, ok = plugin.RawToTValue[*mqlGithubLicense](v.Value, v.Error)
+		return
+	},
+	"github.repository.allowUpdateBranch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepository).AllowUpdateBranch, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.repository.webCommitSignoffRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepository).WebCommitSignoffRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.repository.deleteBranchOnMerge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepository).DeleteBranchOnMerge, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"github.license.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3097,6 +3118,9 @@ type mqlGithubRepository struct {
 	OpenIssues plugin.TValue[[]interface{}]
 	ClosedIssues plugin.TValue[[]interface{}]
 	License plugin.TValue[*mqlGithubLicense]
+	AllowUpdateBranch plugin.TValue[bool]
+	WebCommitSignoffRequired plugin.TValue[bool]
+	DeleteBranchOnMerge plugin.TValue[bool]
 }
 
 // createGithubRepository creates a new instance of this resource
@@ -3530,6 +3554,18 @@ func (c *mqlGithubRepository) GetLicense() *plugin.TValue[*mqlGithubLicense] {
 
 		return c.license()
 	})
+}
+
+func (c *mqlGithubRepository) GetAllowUpdateBranch() *plugin.TValue[bool] {
+	return &c.AllowUpdateBranch
+}
+
+func (c *mqlGithubRepository) GetWebCommitSignoffRequired() *plugin.TValue[bool] {
+	return &c.WebCommitSignoffRequired
+}
+
+func (c *mqlGithubRepository) GetDeleteBranchOnMerge() *plugin.TValue[bool] {
+	return &c.DeleteBranchOnMerge
 }
 
 // mqlGithubLicense for the github.license resource
