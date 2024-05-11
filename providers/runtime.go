@@ -367,6 +367,14 @@ func (r *Runtime) watchAndUpdate(resource string, resourceID string, field strin
 		}
 	}
 
+	if field == "cpes" {
+		log.Debug().Msg("watching field 'cpes' in resource '" + resource + "'")
+	}
+
+	if field == "files" {
+		log.Debug().Msg("watching field 'cpes' in resource '" + resource + "'")
+	}
+
 	if cached, ok := r.Recording().GetData(provider.Connection.Id, resource, resourceID, field); ok {
 		return cached, nil
 	}

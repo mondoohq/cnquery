@@ -72,11 +72,13 @@ func (r *Runtime) ResourceFromRecording(name string, id string) (map[string]*llx
 	// initialized recursively. Instead callers can request these fields from the
 	// recording and initialize them.
 	// TODO: we could use the provided information for a later request.
-	for k, v := range data.Fields {
-		if types.Type(v.Data.Type).ContainsResource() {
-			delete(data.Fields, k)
-		}
-	}
+	// NOTE: that filter does not work for cases where the resource is a field of the resource and is not
+	// dynamically computed.
+	//for k, v := range data.Fields {
+	//	if types.Type(v.Data.Type).ContainsResource() {
+	//		delete(data.Fields, k)
+	//	}
+	//}
 
 	return ProtoArgsToRawDataArgs(data.Fields)
 }
@@ -141,7 +143,14 @@ func (r *Runtime) initResourcesFromRecording(val interface{}, typ types.Type) (i
 			return nil, err
 		}
 
-		return r.CreateResource(r, resource.Name, args)
+		res, err := r.CreateResource(r, resource.Name, args)
+		if err != nil {
+			res, err = r.CreateSharedResource(resource.Name, args)
+			if err != nil {
+				return nil, err
+			}
+		}
+		return res, nil
 
 	default:
 		return val, nil
