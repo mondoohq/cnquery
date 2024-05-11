@@ -17,6 +17,10 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/aws/connection"
 )
 
+const (
+	kmsKeyArnPattern = "arn:aws:kms:%s:%s:key/%s"
+)
+
 func (a *mqlAwsKms) id() (string, error) {
 	return "aws.kms", nil
 }

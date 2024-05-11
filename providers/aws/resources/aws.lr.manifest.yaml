@@ -804,6 +804,8 @@ resources:
         Use the `aws.dynamodb` resource to assess the configuration of the AWS DynamoDB.
     fields:
       backups: {}
+      exports:
+        min_mondoo_version: 9.0.0
       globalTables: {}
       limits: {}
       tables: {}
@@ -830,6 +832,25 @@ resources:
         == 'ENABLED'\n)\n"
       title: Check that all DynamoDB tables are encrypted with AWS Key Management
         Service (KMS)
+  aws.dynamodb.export:
+    fields:
+      arn: {}
+      endTime: {}
+      format: {}
+      itemCount: {}
+      kmsKey: {}
+      s3Bucket: {}
+      s3Prefix: {}
+      s3SseAlgorithm: {}
+      startTime: {}
+      status: {}
+      table: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
   aws.dynamodb.globaltable:
     docs:
       desc: |

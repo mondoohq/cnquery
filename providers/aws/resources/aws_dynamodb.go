@@ -6,9 +6,12 @@ package resources
 import (
 	"context"
 	"fmt"
+	"sync"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	ddtypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/aws/aws-sdk-go/aws"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
@@ -23,6 +26,204 @@ import (
 
 func (a *mqlAwsDynamodb) id() (string, error) {
 	return "aws.dynamodb", nil
+}
+
+func (a *mqlAwsDynamodb) exports() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []interface{}{}
+	poolOfJobs := jobpool.CreatePool(a.getExports(conn), 5)
+	poolOfJobs.Run()
+
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	}
+
+	return res, nil
+}
+
+func (a *mqlAwsDynamodbExport) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+type mqlAwsDynamodbExportInternal struct {
+	exportCache *ddtypes.ExportDescription
+	region      string
+	arn         string
+	lock        sync.Mutex
+}
+
+func (a *mqlAwsDynamodbExport) fetchExport() (*ddtypes.ExportDescription, error) {
+	if a.exportCache != nil {
+		return a.exportCache, nil
+	}
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	ctx := context.Background()
+	svc := conn.Dynamodb(a.region)
+	desc, err := svc.DescribeExport(ctx, &dynamodb.DescribeExportInput{ExportArn: aws.String(a.arn)})
+	if err != nil {
+		return nil, err
+	}
+	a.exportCache = desc.ExportDescription
+	return desc.ExportDescription, nil
+}
+
+func (a *mqlAwsDynamodb) getExports(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		regionVal := region
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("dynamodb>getExports>calling aws with region %s", regionVal)
+
+			svc := conn.Dynamodb(regionVal)
+			ctx := context.Background()
+			res := []interface{}{}
+
+			// no pagination required
+			listExportsResp, err := svc.ListExports(ctx, &dynamodb.ListExportsInput{})
+			if err != nil {
+				if Is400AccessDeniedError(err) {
+					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+					return res, nil
+				}
+				return nil, errors.Wrap(err, "could not gather aws dynamodb exports")
+			}
+			for i := range listExportsResp.ExportSummaries {
+				exp := listExportsResp.ExportSummaries[i]
+				mqlExport, err := CreateResource(a.MqlRuntime, "aws.dynamodb.export",
+					map[string]*llx.RawData{
+						"arn":    llx.StringDataPtr(exp.ExportArn),
+						"type":   llx.StringData(string(exp.ExportType)),
+						"status": llx.StringData(string(exp.ExportStatus)),
+					})
+				if err != nil {
+					return nil, err
+				}
+				mqlExport.(*mqlAwsDynamodbExport).arn = *exp.ExportArn
+				mqlExport.(*mqlAwsDynamodbExport).region = region
+				res = append(res, mqlExport)
+			}
+
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (a *mqlAwsDynamodbExport) s3Prefix() (string, error) {
+	exp, err := a.fetchExport()
+	if err != nil {
+		return "", err
+	}
+	if exp.S3Prefix != nil {
+		return *exp.S3Prefix, nil
+	}
+	return "", nil
+}
+
+func (a *mqlAwsDynamodbExport) itemCount() (int64, error) {
+	exp, err := a.fetchExport()
+	if err != nil {
+		return 0, err
+	}
+	if exp.ItemCount != nil {
+		return *exp.ItemCount, nil
+	}
+	return 0, nil
+}
+
+func (a *mqlAwsDynamodbExport) format() (string, error) {
+	exp, err := a.fetchExport()
+	if err != nil {
+		return "", err
+	}
+	return string(exp.ExportFormat), nil
+}
+
+func (a *mqlAwsDynamodbExport) startTime() (*time.Time, error) {
+	exp, err := a.fetchExport()
+	if err != nil {
+		return nil, err
+	}
+	return exp.StartTime, nil
+}
+
+func (a *mqlAwsDynamodbExport) endTime() (*time.Time, error) {
+	exp, err := a.fetchExport()
+	if err != nil {
+		return nil, err
+	}
+	return exp.EndTime, nil
+}
+
+func (a *mqlAwsDynamodbExport) s3SseAlgorithm() (string, error) {
+	exp, err := a.fetchExport()
+	if err != nil {
+		return "", err
+	}
+	return string(exp.S3SseAlgorithm), nil
+}
+
+func (a *mqlAwsDynamodbExport) s3Bucket() (*mqlAwsS3Bucket, error) {
+	exp, err := a.fetchExport()
+	if err != nil {
+		return nil, err
+	}
+	mqlS3Bucket, err := NewResource(a.MqlRuntime, "aws.s3.bucket",
+		map[string]*llx.RawData{
+			"name": llx.StringDataPtr(exp.S3Bucket),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlS3Bucket.(*mqlAwsS3Bucket), nil
+}
+
+func (a *mqlAwsDynamodbExport) kmsKey() (*mqlAwsKmsKey, error) {
+	exp, err := a.fetchExport()
+	if err != nil {
+		return nil, err
+	}
+	if exp.S3SseKmsKeyId == nil {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	mqlKey, err := NewResource(a.MqlRuntime, "aws.kms.key",
+		map[string]*llx.RawData{
+			"arn": llx.StringData(fmt.Sprintf(kmsKeyArnPattern, a.region, conn.AccountId(), convert.ToString(exp.S3SseKmsKeyId))),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
+func (a *mqlAwsDynamodbExport) table() (*mqlAwsDynamodbTable, error) {
+	exp, err := a.fetchExport()
+	if err != nil {
+		return nil, err
+	}
+	mqltable, err := NewResource(a.MqlRuntime, "aws.dynamodb.table",
+		map[string]*llx.RawData{
+			"arn": llx.StringDataPtr(exp.TableArn),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqltable.(*mqlAwsDynamodbTable), nil
 }
 
 func (a *mqlAwsDynamodb) backups() ([]interface{}, error) {
