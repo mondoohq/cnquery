@@ -1754,7 +1754,7 @@ private aws.dynamodb.export {
   table() aws.dynamodb.table
   // S3 bucket associated with the export
   s3Bucket() aws.s3.bucket
-  // S3 Prefix for the export
+  // S3 prefix for the export
   s3Prefix() string
   // Count of items in the export
   itemCount() int
