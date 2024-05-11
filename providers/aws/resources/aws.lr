@@ -2248,7 +2248,37 @@ private aws.lambda.function @defaults("arn") {
 
 // Amazon Systems Manager
 aws.ssm @defaults("instances") {
+  // List of SSM instances
   instances() []aws.ssm.instance
+  // List of SSM parameters
+  parameters() []aws.ssm.parameter
+}
+
+
+// Amazon SSM parameter
+private aws.ssm.parameter {
+  // Allowed pattern for the parameter
+  allowedPattern string
+  // ARN for the parameter
+  arn string
+  // Region for the parameter
+  region string
+  // Data type for the parameter
+  dataType string
+  // Description for the parameter
+  description string
+  // KMS key associated with the parameter (if any)
+  kmsKey() aws.kms.key
+  // Date when the parameter was last modified
+  lastModifiedDate time
+  // Name of the parameter
+  name string
+  // Tier of the parameter (Standard | Advanced | Intelligent-Tiering)
+  tier string
+  // Type of the parameter (String | StringList | SecureString)
+  type string
+  // Version of the parameter
+  version int
 }
 
 // Amazon SSM instance

@@ -26,6 +26,107 @@ func (e *mqlAwsSsm) id() (string, error) {
 	return "aws.ssm", nil
 }
 
+func (a *mqlAwsSsm) parameters() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	res := []interface{}{}
+	poolOfJobs := jobpool.CreatePool(a.getParameters(conn), 5)
+	poolOfJobs.Run()
+
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	}
+
+	return res, nil
+}
+
+func (a *mqlAwsSsm) getParameters(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	var err error
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}} // return the error
+	}
+	log.Debug().Msgf("regions being called for ssm instance list are: %v", regions)
+	for ri := range regions {
+		region := regions[ri]
+		f := func() (jobpool.JobResult, error) {
+			res := []interface{}{}
+			ssmsvc := conn.Ssm(region)
+			ctx := context.Background()
+
+			input := &ssm.DescribeParametersInput{
+				Filters: []types.ParametersFilter{},
+			}
+			nextToken := aws.String("no_token_to_start_with")
+			for nextToken != nil {
+				resp, err := ssmsvc.DescribeParameters(ctx, input)
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, errors.Wrap(err, "could not gather ssm information")
+				}
+				nextToken = resp.NextToken
+				if resp.NextToken != nil {
+					input.NextToken = nextToken
+				}
+
+				for _, param := range resp.Parameters {
+					mqlParam, err := CreateResource(a.MqlRuntime, "aws.ssm.parameter",
+						map[string]*llx.RawData{
+							"allowedPattern":   llx.StringDataPtr(param.AllowedPattern),
+							"arn":              llx.StringDataPtr(param.ARN),
+							"region":           llx.StringData(region),
+							"dataType":         llx.StringDataPtr(param.DataType),
+							"description":      llx.StringDataPtr(param.Description),
+							"lastModifiedDate": llx.TimeDataPtr(param.LastModifiedDate),
+							"name":             llx.StringDataPtr(param.Name),
+							"tier":             llx.StringData(string(param.Tier)),
+							"type":             llx.StringData(string(param.Type)),
+							"version":          llx.IntData(param.Version),
+						})
+					if err != nil {
+						return nil, err
+					}
+					mqlParam.(*mqlAwsSsmParameter).parameterCache = param
+					res = append(res, mqlParam)
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+type mqlAwsSsmParameterInternal struct {
+	parameterCache types.ParameterMetadata
+	region         string
+}
+
+func (a *mqlAwsSsmParameter) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.parameterCache.KeyId == nil {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	mqlKey, err := NewResource(a.MqlRuntime, "aws.kms.key",
+		map[string]*llx.RawData{
+			"arn": llx.StringData(fmt.Sprintf(kmsKeyArnPattern, a.region, conn.AccountId(), convert.ToString(a.parameterCache.KeyId))),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
 func (a *mqlAwsSsm) instances() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
@@ -108,6 +209,10 @@ func (a *mqlAwsSsm) getInstances(conn *connection.AwsConnection) []*jobpool.Job 
 
 func ssmInstanceArn(account string, region string, id string) string {
 	return fmt.Sprintf(ssmInstanceArnPattern, region, account, id)
+}
+
+func (a *mqlAwsSsmParameter) id() (string, error) {
+	return a.Arn.Data, nil
 }
 
 func (a *mqlAwsSsmInstance) id() (string, error) {
