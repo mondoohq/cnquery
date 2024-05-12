@@ -67,8 +67,8 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		Type:     req.Connector,
 	}
 
+	assetName := ""
 	port := 0
-	containerID := ""
 	switch req.Connector {
 	case "local":
 		conf.Type = shared.Type_Local.String()
@@ -106,7 +106,9 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 				return nil, err
 			}
 			conf.Type = connType
-			containerID = req.Args[0]
+			containerID := req.Args[0]
+			conf.Host = containerID
+			assetName = containerID
 		}
 	case "container":
 		if len(req.Args) > 1 {
@@ -128,7 +130,9 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		} else {
 			connType := identifyContainerType(req.Args[0])
 			conf.Type = connType
-			containerID = req.Args[0]
+			containerID := req.Args[0]
+			conf.Host = containerID
+			assetName = containerID
 		}
 	case "filesystem", "fs":
 		conf.Type = shared.Type_FileSystem.String()
@@ -187,12 +191,8 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	asset := &inventory.Asset{
+		Name:        assetName,
 		Connections: []*inventory.Config{conf},
-	}
-
-	if containerID != "" {
-		asset.Name = containerID
-		conf.Host = containerID
 	}
 
 	idDetector := ""
@@ -449,7 +449,6 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 				return nil, err
 			}
 
-			// This is a workaround to set Google COS platform IDs when scanned from inside k8s
 			pID, err := conn.(*sbom.Connection).Identifier()
 			if err != nil {
 				return nil, err

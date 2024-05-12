@@ -51,14 +51,22 @@ func TestSpdxOutput(t *testing.T) {
 	assert.Contains(t, data, "pkg:npm/npm@10.2.4")
 }
 
-func TestDecoder(t *testing.T) {
+func TestTagValueDecoder(t *testing.T) {
 	f, err := os.Open("testdata/alpine-319.spdx")
 	require.NoError(t, err)
 
-	decoder := &sbom.Spdx{
-		Version: "2.3",
-		Format:  "JSON",
-	}
+	decoder := sbom.NewSPDX(sbom.FormatSpdxTagValue)
+
+	sbomReport, err := decoder.Parse(f)
+	require.NoError(t, err)
+	assert.NotNil(t, sbomReport)
+}
+
+func TestJsonDecoder(t *testing.T) {
+	f, err := os.Open("testdata/alpine-319.spdx.json")
+	require.NoError(t, err)
+
+	decoder := sbom.NewSPDX(sbom.FormatSpdxJSON)
 
 	sbomReport, err := decoder.Parse(f)
 	require.NoError(t, err)

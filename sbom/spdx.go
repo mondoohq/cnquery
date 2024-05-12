@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/package-url/packageurl-go"
@@ -19,6 +20,13 @@ import (
 	"github.com/spdx/tools-golang/spdx/v2/v2_3"
 	"github.com/spdx/tools-golang/tagvalue"
 )
+
+func NewSPDX(format string) *Spdx {
+	return &Spdx{
+		Version: "2.3",
+		Format:  format,
+	}
+}
 
 type Spdx struct {
 	Version string
@@ -60,7 +68,6 @@ func (s *Spdx) convertToSpdx(bom *Sbom) *spdx.Document {
 					Locator:  cpe,
 				})
 			}
-
 		}
 
 		if pkg.Purl != "" {
@@ -151,25 +158,17 @@ func (s *Spdx) Render(w io.Writer, bom *Sbom) error {
 }
 
 func (s *Spdx) Parse(r io.Reader) (*Sbom, error) {
-
-	type reader func(r io.Reader) (*spdx.Document, error)
-
 	// try to parse all supported SPDX format
-	var readers = []reader{
-		func(r io.Reader) (*spdx.Document, error) {
-			return tagvalue.Read(r)
-		},
-		func(r io.Reader) (*spdx.Document, error) {
-			var doc spdx.Document
-			err := json.NewDecoder(r).Decode(&s)
-			return &doc, err
-		},
-	}
-
-	for _, reader := range readers {
-		doc, err := reader(r)
+	if s.Format == FormatSpdxTagValue {
+		doc, err := tagvalue.Read(r)
 		if err == nil {
 			return s.convertToSbom(doc), nil
+		}
+	} else if s.Format == FormatSpdxJSON {
+		var doc spdx.Document
+		err := json.NewDecoder(r).Decode(&doc)
+		if err == nil {
+			return s.convertToSbom(&doc), nil
 		}
 	}
 
@@ -187,27 +186,20 @@ func (s *Spdx) convertToSbom(doc *spdx.Document) *Sbom {
 		Packages: []*Package{},
 	}
 
+	name := ""
+	pf := &Platform{}
+
 	for i := range doc.Packages {
 		pkg := doc.Packages[i]
-
-		if pkg.PrimaryPackagePurpose == "CONTAINER" {
-			bom.Asset.Platform = &Platform{
-				Name:    pkg.PackageName,
-				Version: pkg.PackageVersion,
-				Title:   fmt.Sprintf("%s %s", pkg.PackageName, pkg.PackageVersion),
-			}
-			bom.Asset.Platform.Family = familyMap[pkg.PackageName]
-			continue
-		}
 
 		bomPkg := &Package{
 			Name:        pkg.PackageName,
 			Version:     pkg.PackageVersion,
 			Description: pkg.PackageDescription,
 			Location:    pkg.PackageFileName,
-			Type:        "", // extract package type from purl
-			Purl:        "",
-			Cpes:        []string{}, // TODO: extract CPEs from external references
+			Type:        "", // extract package type from purl, see below
+			Purl:        "", // extract package type from purl, see below
+			Cpes:        []string{},
 		}
 
 		for _, ref := range pkg.PackageExternalReferences {
@@ -216,6 +208,23 @@ func (s *Spdx) convertToSbom(doc *spdx.Document) *Sbom {
 				pkgUrl, err := packageurl.FromString(ref.Locator)
 				if err == nil {
 					bomPkg.Type = pkgUrl.Type
+
+					// extract distro information
+					m := pkgUrl.Qualifiers.Map()
+					distroVal, ok := m["distro"]
+					if ok {
+						name = distroVal
+						pf.Title = distroVal
+						vals := strings.Split(distroVal, "-")
+						if len(vals) > 0 {
+							pf.Name = vals[0]
+							pf.Version = vals[1]
+						}
+					}
+					arch, ok := m["arch"]
+					if ok {
+						pf.Arch = arch
+					}
 				}
 			}
 			if ref.RefType == spdx.SecurityCPE23Type {
@@ -233,5 +242,7 @@ func (s *Spdx) convertToSbom(doc *spdx.Document) *Sbom {
 		bom.Packages = append(bom.Packages, bomPkg)
 	}
 
+	bom.Asset.Name = name
+	bom.Asset.Platform = pf
 	return bom
 }

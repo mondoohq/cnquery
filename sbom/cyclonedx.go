@@ -4,6 +4,7 @@
 package sbom
 
 import (
+	"errors"
 	"io"
 	"time"
 
@@ -11,6 +12,19 @@ import (
 	"github.com/google/uuid"
 	"github.com/package-url/packageurl-go"
 )
+
+func NewCycloneDX(format string) *CycloneDX {
+	switch format {
+	case FormatCycloneDxXML:
+		return &CycloneDX{
+			Format: cyclonedx.BOMFileFormatXML,
+		}
+	default:
+		return &CycloneDX{
+			Format: cyclonedx.BOMFileFormatJSON,
+		}
+	}
+}
 
 type CycloneDX struct {
 	Format cyclonedx.BOMFileFormat
@@ -137,14 +151,28 @@ func (ccx *CycloneDX) convertCycloneDxToSbom(bom *cyclonedx.BOM) (*Sbom, error) 
 		return nil, nil
 	}
 
+	// check if the BOM is empty
+	if bom.Metadata == nil || bom.Metadata.Component == nil || bom.Components == nil {
+		return nil, errors.New("not a valid cyclone dx BOM")
+	}
+
 	sbom := &Sbom{
-		Generator: &Generator{
-			// TODO: define generator
-		},
 		Asset: &Asset{
 			Name: bom.Metadata.Component.Name + ":" + bom.Metadata.Component.Version,
 		},
 		Packages: make([]*Package, 0),
+	}
+
+	if bom.Metadata.Tools != nil {
+		// last one wins :-) - we only support one tool
+		for i := range *bom.Metadata.Tools.Components {
+			component := (*bom.Metadata.Tools.Components)[i]
+			sbom.Generator = &Generator{
+				Name:    component.Name,
+				Version: component.Version,
+				Vendor:  component.Author,
+			}
+		}
 	}
 
 	for i := range *bom.Components {

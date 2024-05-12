@@ -6,10 +6,10 @@ package sbom
 import (
 	"bytes"
 	"errors"
+	"github.com/google/uuid"
 	"go.mondoo.com/cnquery/v11/providers/os/fsutil"
 	"os"
 
-	"github.com/CycloneDX/cyclonedx-go"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
@@ -38,12 +38,12 @@ func NewConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*
 
 	decoder := []sbom.Decoder{}
 
-	decoder = append(decoder, &sbom.CycloneDX{
-		Format: cyclonedx.BOMFileFormatJSON,
-	}, &sbom.Spdx{
-		Version: "2.3",
-		Format:  "JSON",
-	})
+	decoder = append(decoder,
+		sbom.NewCycloneDX(sbom.FormatCycloneDxJSON),
+		sbom.NewCycloneDX(sbom.FormatCycloneDxXML),
+		sbom.NewSPDX(sbom.FormatSpdxTagValue),
+		sbom.NewSPDX(sbom.FormatSpdxJSON),
+	)
 
 	var sbomReport *sbom.Sbom
 	found := false
@@ -106,8 +106,9 @@ func (c *Connection) Capabilities() shared.Capabilities {
 }
 
 func (c *Connection) Identifier() (string, error) {
-	// TODO: generate proper identifier
-	return "sbom", nil
+	// TODO: revisit this approach when we have a better way to uniquely identify the asset
+	// behind the sbom file
+	return "//platformid.api.mondoo.app/runtime/sbom/uuid/" + uuid.New().String(), nil
 }
 
 func (c *Connection) Name() string {
