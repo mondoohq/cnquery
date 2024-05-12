@@ -444,6 +444,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			}
 
 		case shared.Type_SBOM.String():
+			log.Info().Msg("SBOM file support is experimental. Please report any issues.")
 			conn, err = sbom.NewConnection(connId, conf, asset)
 			if err != nil {
 				return nil, err
