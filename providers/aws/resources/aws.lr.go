@@ -558,6 +558,10 @@ func init() {
 			// to override args, implement: initAwsSsm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsSsm,
 		},
+		"aws.ssm.parameter": {
+			// to override args, implement: initAwsSsmParameter(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSsmParameter,
+		},
 		"aws.ssm.instance": {
 			Init: initAwsSsmInstance,
 			Create: createAwsSsmInstance,
@@ -3302,6 +3306,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ssm.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsm).GetInstances()).ToDataRes(types.Array(types.Resource("aws.ssm.instance")))
+	},
+	"aws.ssm.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsm).GetParameters()).ToDataRes(types.Array(types.Resource("aws.ssm.parameter")))
+	},
+	"aws.ssm.parameter.allowedPattern": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmParameter).GetAllowedPattern()).ToDataRes(types.String)
+	},
+	"aws.ssm.parameter.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmParameter).GetArn()).ToDataRes(types.String)
+	},
+	"aws.ssm.parameter.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmParameter).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.ssm.parameter.dataType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmParameter).GetDataType()).ToDataRes(types.String)
+	},
+	"aws.ssm.parameter.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmParameter).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.ssm.parameter.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmParameter).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.ssm.parameter.lastModifiedDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmParameter).GetLastModifiedDate()).ToDataRes(types.Time)
+	},
+	"aws.ssm.parameter.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmParameter).GetName()).ToDataRes(types.String)
+	},
+	"aws.ssm.parameter.tier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmParameter).GetTier()).ToDataRes(types.String)
+	},
+	"aws.ssm.parameter.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmParameter).GetType()).ToDataRes(types.String)
+	},
+	"aws.ssm.parameter.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmParameter).GetVersion()).ToDataRes(types.Int)
 	},
 	"aws.ssm.instance.instanceId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsmInstance).GetInstanceId()).ToDataRes(types.String)
@@ -7985,6 +8025,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		},
 	"aws.ssm.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSsm).Instances, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsm).Parameters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.parameter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsSsmParameter).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.ssm.parameter.allowedPattern": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmParameter).AllowedPattern, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.parameter.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmParameter).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.parameter.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmParameter).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.parameter.dataType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmParameter).DataType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.parameter.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmParameter).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.parameter.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmParameter).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.parameter.lastModifiedDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmParameter).LastModifiedDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.parameter.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmParameter).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.parameter.tier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmParameter).Tier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.parameter.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmParameter).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.parameter.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmParameter).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.ssm.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20557,6 +20649,7 @@ type mqlAwsSsm struct {
 	__id string
 	// optional: if you define mqlAwsSsmInternal it will be used here
 	Instances plugin.TValue[[]interface{}]
+	Parameters plugin.TValue[[]interface{}]
 }
 
 // createAwsSsm creates a new instance of this resource
@@ -20610,6 +20703,133 @@ func (c *mqlAwsSsm) GetInstances() *plugin.TValue[[]interface{}] {
 
 		return c.instances()
 	})
+}
+
+func (c *mqlAwsSsm) GetParameters() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Parameters, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ssm", c.__id, "parameters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.parameters()
+	})
+}
+
+// mqlAwsSsmParameter for the aws.ssm.parameter resource
+type mqlAwsSsmParameter struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlAwsSsmParameterInternal
+	AllowedPattern plugin.TValue[string]
+	Arn plugin.TValue[string]
+	Region plugin.TValue[string]
+	DataType plugin.TValue[string]
+	Description plugin.TValue[string]
+	KmsKey plugin.TValue[*mqlAwsKmsKey]
+	LastModifiedDate plugin.TValue[*time.Time]
+	Name plugin.TValue[string]
+	Tier plugin.TValue[string]
+	Type plugin.TValue[string]
+	Version plugin.TValue[int64]
+}
+
+// createAwsSsmParameter creates a new instance of this resource
+func createAwsSsmParameter(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSsmParameter{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ssm.parameter", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSsmParameter) MqlName() string {
+	return "aws.ssm.parameter"
+}
+
+func (c *mqlAwsSsmParameter) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSsmParameter) GetAllowedPattern() *plugin.TValue[string] {
+	return &c.AllowedPattern
+}
+
+func (c *mqlAwsSsmParameter) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSsmParameter) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSsmParameter) GetDataType() *plugin.TValue[string] {
+	return &c.DataType
+}
+
+func (c *mqlAwsSsmParameter) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsSsmParameter) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ssm.parameter", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsSsmParameter) GetLastModifiedDate() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedDate
+}
+
+func (c *mqlAwsSsmParameter) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSsmParameter) GetTier() *plugin.TValue[string] {
+	return &c.Tier
+}
+
+func (c *mqlAwsSsmParameter) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsSsmParameter) GetVersion() *plugin.TValue[int64] {
+	return &c.Version
 }
 
 // mqlAwsSsmInstance for the aws.ssm.instance resource

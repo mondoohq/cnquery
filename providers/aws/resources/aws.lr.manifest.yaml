@@ -2595,6 +2595,7 @@ resources:
   aws.ssm:
     fields:
       instances: {}
+      parameters: {}
     min_mondoo_version: latest
     platform:
       name:
@@ -2612,6 +2613,25 @@ resources:
       tags: {}
     is_private: true
     min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.ssm.parameter:
+    fields:
+      LastModifiedDate: {}
+      allowedPattern: {}
+      arn: {}
+      dataType: {}
+      description: {}
+      kmsKey: {}
+      lastModifiedDate: {}
+      name: {}
+      region: {}
+      tier: {}
+      type: {}
+      version: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - aws
