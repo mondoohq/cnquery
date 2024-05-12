@@ -1758,11 +1758,11 @@ private aws.dynamodb.export {
   s3Prefix() string
   // Count of items in the export
   itemCount() int
-  // Type of the export (FULL_EXPORT | INCREMENTAL_EXPORT )
+  // Type of the export. Possible values are `FULL_EXPORT` and `INCREMENTAL_EXPORT`
   type string
-  // Status of the export (IN_PROGRESS | COMPLETED | FAILED)
+  // Status of the export. Possible values are `IN_PROGRESS`, `COMPLETED`, and `FAILED`
   status string
-  // Format of the export (DYNAMODB_JSON | ION)
+  // Format of the export. Possible values are `DYNAMODB_JSON` and `ION`
   format() string
   // Start time of the export
   startTime() time
@@ -2273,9 +2273,9 @@ private aws.ssm.parameter {
   lastModifiedDate time
   // Name of the parameter
   name string
-  // Tier of the parameter (Standard | Advanced | Intelligent-Tiering)
+  // Tier of the parameter. Possible values are `Standard`, `Advanced`, and `Intelligent-Tiering`
   tier string
-  // Type of the parameter (String | StringList | SecureString)
+  // Type of the parameter. Possible values are `String`,  `StringList`, and `SecureString`
   type string
   // Version of the parameter
   version int
@@ -2332,7 +2332,7 @@ private aws.ec2.eip {
   // Public IP address of the EIP
   publicIp string
   // Whether the Elastic IP is associated with an instance (false if no allocationId is present)
-  attached bool 
+  attached bool
   // Ec2 instance associated with the EIP
   instance() aws.ec2.instance
   // ID of the network interface
@@ -2352,10 +2352,10 @@ private aws.ec2.eip {
 // Amazon VPC NAT Gateway
 private aws.vpc.natgateway {
   // Time when the gateway was created
-  createdAt time 
+  createdAt time
   // ID of the NAT gateway
   natGatewayId string
-  // State of the NAT gateway (pending | failed | available | deleting | deleted)
+  // State of the NAT gateway. Possible values are `pending`, `failed`,  `available`, `deleting`, and `deleted`
   state string
   // Tags for the NAT gateway
   tags map[string]string
@@ -2386,13 +2386,13 @@ private aws.vpc.serviceEndpoint {
   // List of availability zones for the service endpoint
   availabilityZones []string
   // List of base endpoint DNS names for the service endpoint
-  dnsNames []string  
+  dnsNames []string
   // Service ID
   id string
   // Whether the service endpoint manages VPC endpoints
   managesVpcEndpoints bool
   // Service name
-  name string 
+  name string
   // Service owner
   owner string
   // Service payer responsibility
@@ -2434,10 +2434,10 @@ private aws.vpc.peeringConnection.peeringVpc {
   // Whether egress is allowed from a local VPC to a classic link
   allowEgressFromLocalVpcToRemoteClassicLink bool
   // List of IPv4 CIDR blocks for peering connection
-  ipv4CiderBlocks []string 
+  ipv4CiderBlocks []string
   // List of IPv6 CIDR blocks for peering connection
   ipv6CiderBlocks []string
-  // Owner ID of the peering connection 
+  // Owner ID of the peering connection
   ownerID string
   // Region of the peering connection
   region string
