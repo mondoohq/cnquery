@@ -5,6 +5,7 @@ package providers
 
 import (
 	"encoding/json"
+	"go.mondoo.com/cnquery/v11/utils/piped"
 	"go.mondoo.com/ranger-rpc/status"
 	"os"
 	"strings"
@@ -491,9 +492,42 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 			return // adding this here as a compiler hint to stop warning about nil-dereferences
 		}
 
+		temporaryFiles := []string{}
 		if cliRes.Asset == nil {
 			log.Warn().Err(err).Msg("failed to discover assets after processing CLI arguments")
 		} else {
+			// if we have an asset, we check if the path requires piped content
+			for _, conf := range cliRes.Asset.Connections {
+				if conf.Path != "-" {
+					continue
+				}
+
+				// we need to read from stdin
+				data, ok := piped.LoadDataFromPipe()
+				if !ok {
+					log.Fatal().Msg("could not load data from piped input")
+				}
+				// generate a new temporary file and write the content to it
+				tmpFile, err := os.CreateTemp("", "cnquery-stdin-")
+				if err != nil {
+					log.Fatal().Err(err).Msg("could not create temporary file for stdin")
+				}
+				// remove temporary file after the runtime is closed
+				log.Info().Str("file", tmpFile.Name()).Msg("created temporary file for stdin")
+				temporaryFiles = append(temporaryFiles, tmpFile.Name())
+				if _, err := tmpFile.Write(data); err != nil {
+					log.Fatal().Err(err).Str("file", tmpFile.Name()).Msg("could not write data to temporary file")
+				}
+
+				// replace path with the temporary file and set a flag to indicate that it is piped content
+				conf.Path = tmpFile.Name()
+				if conf.Options == nil {
+					conf.Options = map[string]string{}
+				}
+				conf.Options["piped"] = "true"
+			}
+
+			// NOTE: no fatal output beyond this point, so that the runtime is closed properly
 			assetRuntime, err := providers.Coordinator.RuntimeFor(cliRes.Asset, runtime)
 			if err != nil {
 				log.Warn().Err(err).Msg("failed to get runtime for an asset that was detected after parsing the CLI")
@@ -505,6 +539,12 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 		run(cc, runtime, cliRes)
 		runtime.Close()
 		providers.Coordinator.Shutdown()
+
+		// remove optional temporary files
+		for _, tmpFile := range temporaryFiles {
+			_ = os.Remove(tmpFile)
+		}
+
 	}
 
 	attachFlags(cmd.Flags(), allFlags)
