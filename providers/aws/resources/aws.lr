@@ -1762,7 +1762,7 @@ private aws.dynamodb.export {
   type string
   // Status of the export (IN_PROGRESS, COMPLETED, or FAILED)
   status string
-  // Format of the export. Possible values are `DYNAMODB_JSON` and `ION`
+  // Format of the export (DYNAMODB_JSON or ION)
   format() string
   // Start time of the export
   startTime() time
