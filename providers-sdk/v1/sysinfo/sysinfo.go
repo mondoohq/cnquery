@@ -4,12 +4,15 @@
 package sysinfo
 
 import (
+	"errors"
+
 	"github.com/rs/zerolog/log"
 
 	"go.mondoo.com/cnquery/v11"
 	"go.mondoo.com/cnquery/v11/cli/execruntime"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/local"
+	"go.mondoo.com/cnquery/v11/providers/os/detector"
 	"go.mondoo.com/cnquery/v11/providers/os/id"
 	"go.mondoo.com/cnquery/v11/providers/os/id/hostname"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/networkinterface"
@@ -51,8 +54,17 @@ func Get() (*SystemInfo, error) {
 		}
 	}
 
-	sysInfo.Platform = platform
+	// FIXME: if IdentifyPlatform returns an err, we get a nil platform this will cause a nil pointer dereference in the next step (hostname)
+	// FIXME: we should ensure IdentifyPlatform's error is handled properly
+	if platform == nil {
+		var ok bool
+		platform, ok = detector.DetectOS(conn)
+		if !ok {
+			return nil, errors.New("failed to detect the OS")
+		}
+	}
 
+	sysInfo.Platform = platform
 	sysInfo.Hostname, _ = hostname.Hostname(conn, sysInfo.Platform)
 
 	// determine ip address
