@@ -103,7 +103,8 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 	if ENABLE_FINE_GRAINED_ASSETS {
 		matchingTargets = append(matchingTargets, DiscoveryAuto)
 	}
-	if stringx.ContainsAnyOf(targets, append(matchingTargets, DiscoveryInstances)...) {
+	// FIXME: do not discover instances as OSes right now, only discover as API representations.
+	if stringx.ContainsAnyOf(targets, DiscoveryInstances) {
 		vms, err := discoverInstances(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
@@ -723,8 +724,10 @@ func mqlObjectToAsset(mqlObject mqlObject, conf *inventory.Config, subWithConf s
 		tenantId = *subWithConf.sub.TenantID
 	}
 
-	assetUrl := []string{"azure", tenantId, mqlObject.azureObject.subscription,
-		mqlObject.azureObject.service}
+	assetUrl := []string{
+		"azure", tenantId, mqlObject.azureObject.subscription,
+		mqlObject.azureObject.service,
+	}
 	if includeObjectTypeInUrl {
 		assetUrl = append(assetUrl, mqlObject.azureObject.objectType)
 	}
