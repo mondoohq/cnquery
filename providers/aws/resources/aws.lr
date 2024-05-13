@@ -2355,7 +2355,7 @@ private aws.vpc.natgateway {
   createdAt time
   // ID of the NAT gateway
   natGatewayId string
-  // State of the NAT gateway. Possible values are `pending`, `failed`,  `available`, `deleting`, and `deleted`
+  // State of the NAT gateway (pending, failed, available, deleting, or deleted)
   state string
   // Tags for the NAT gateway
   tags map[string]string
