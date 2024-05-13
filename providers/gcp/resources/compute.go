@@ -1197,11 +1197,12 @@ func (g *mqlGcpProjectComputeServiceNetwork) subnetworks() ([]interface{}, error
 		params := strings.TrimPrefix(subnetUrl.(string), "https://www.googleapis.com/compute/v1/")
 		parts := strings.Split(params, "/")
 		resId := resourceId{Project: parts[1], Region: parts[3], Name: parts[5]}
+		regionUrl := strings.SplitN(subnetUrl.(string), "/subnetworks", 2)
 
 		subnet, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.subnetwork", map[string]*llx.RawData{
 			"name":      llx.StringData(resId.Name),
 			"projectId": llx.StringData(resId.Project),
-			"region":    llx.StringData(resId.Region),
+			"regionUrl": llx.StringData(regionUrl[0]),
 		})
 		if err != nil {
 			return nil, err
@@ -1310,7 +1311,7 @@ func (g *mqlGcpProjectComputeService) networks() ([]interface{}, error) {
 				"peerings":                              llx.ArrayData(peerings, types.Dict),
 				"routingMode":                           llx.StringData(routingMode),
 				"mode":                                  llx.StringData(networkMode(network)),
-				"subnetworkUrls":                        llx.ArrayData(convert.SliceAnyToInterface(network.Subnetworks), types.Resource("gcp.project.computeService.subnetwork")),
+				"subnetworkUrls":                        llx.ArrayData(convert.SliceAnyToInterface(network.Subnetworks), types.String),
 			})
 			if err != nil {
 				return err
@@ -1339,13 +1340,18 @@ func initGcpProjectComputeServiceSubnetwork(runtime *plugin.Runtime, args map[st
 	}
 
 	// If no args are set, try reading them from the platform ID
+	region := ""
 	if len(args) == 0 {
 		if ids := getAssetIdentifier(runtime); ids != nil {
 			args["name"] = llx.StringData(ids.name)
-			args["region"] = llx.StringData(ids.region)
+			region = ids.region
 			args["projectId"] = llx.StringData(ids.project)
 		} else {
 			return nil, nil, errors.New("no asset identifier found")
+		}
+	} else {
+		if args["regionUrl"] != nil {
+			region = RegionNameFromRegionUrl(args["regionUrl"].Value.(string))
 		}
 	}
 
@@ -1371,13 +1377,13 @@ func initGcpProjectComputeServiceSubnetwork(runtime *plugin.Runtime, args map[st
 		if regionUrl.Error != nil {
 			return nil, nil, regionUrl.Error
 		}
-		region := RegionNameFromRegionUrl(regionUrl.Data)
+		subnetRegion := RegionNameFromRegionUrl(regionUrl.Data)
 		projectId := subnetwork.GetProjectId()
 		if projectId.Error != nil {
 			return nil, nil, projectId.Error
 		}
 
-		if name.Data == args["name"].Value && projectId.Data == args["projectId"].Value && region == args["region"].Value {
+		if name.Data == args["name"].Value && projectId.Data == args["projectId"].Value && subnetRegion == region {
 			return args, subnetwork, nil
 		}
 	}
