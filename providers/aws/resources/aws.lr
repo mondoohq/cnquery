@@ -1760,7 +1760,7 @@ private aws.dynamodb.export {
   itemCount() int
   // Type of the export (FULL_EXPORT or INCREMENTAL_EXPORT)
   type string
-  // Status of the export. Possible values are `IN_PROGRESS`, `COMPLETED`, and `FAILED`
+  // Status of the export (IN_PROGRESS, COMPLETED, or FAILED)
   status string
   // Format of the export. Possible values are `DYNAMODB_JSON` and `ION`
   format() string
