@@ -2275,7 +2275,7 @@ private aws.ssm.parameter {
   name string
   // Tier of the parameter (Standard, Advanced, or Intelligent-Tiering)
   tier string
-  // Type of the parameter. Possible values are `String`,  `StringList`, and `SecureString`
+  // Type of the parameter (String, StringList, or SecureString)
   type string
   // Version of the parameter
   version int
