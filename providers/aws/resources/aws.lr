@@ -1758,7 +1758,7 @@ private aws.dynamodb.export {
   s3Prefix() string
   // Count of items in the export
   itemCount() int
-  // Type of the export. Possible values are `FULL_EXPORT` and `INCREMENTAL_EXPORT`
+  // Type of the export (FULL_EXPORT or INCREMENTAL_EXPORT)
   type string
   // Status of the export. Possible values are `IN_PROGRESS`, `COMPLETED`, and `FAILED`
   status string
