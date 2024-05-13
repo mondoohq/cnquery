@@ -17,12 +17,12 @@ require (
 	// pin v0.3.0
 	github.com/alecthomas/participle v0.3.0
 	github.com/alecthomas/participle/v2 v2.1.1
-	github.com/aws/aws-sdk-go v1.52.6
+	github.com/aws/aws-sdk-go v1.53.0
 	github.com/aws/aws-sdk-go-v2 v1.26.1
-	github.com/aws/aws-sdk-go-v2/config v1.27.12
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.12
+	github.com/aws/aws-sdk-go-v2/config v1.27.13
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.13
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.1
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.161.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.161.1
 	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.23.3
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.28.7
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.50.1
@@ -205,7 +205,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.23.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.20.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.23.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.24.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.28.7 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
