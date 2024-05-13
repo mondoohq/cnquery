@@ -64,17 +64,13 @@ func NewDockerfileConnection(_ uint32,
 	// this helps with running commands against the local connection
 	asset.Platform.Family = append(asset.Platform.Family, localFamily...)
 
-	if len(asset.GetConnections()) == 0 { // prevents panics by accesssing `asset.Connections[0]`
-		return nil, errors.New("no inventory connections")
-	}
-
 	if url, ok := conf.Options["ssh-url"]; ok {
 		domain, org, repo, err := urlx.ParseGitSshUrl(url)
 		if err != nil {
 			return nil, err
 		}
 		platformID := "//platformid.api.mondoo.app/runtime/dockerfile/domain/" + domain + "/org/" + org + "/repo/" + repo
-		asset.Connections[0].PlatformId = platformID
+		conf.PlatformId = platformID
 		asset.PlatformIds = []string{platformID}
 		asset.Name = "Dockerfile analysis " + org + "/" + repo
 
@@ -84,7 +80,7 @@ func NewDockerfileConnection(_ uint32,
 		hash := hex.EncodeToString(h.Sum(nil))
 		platformID := "//platformid.api.mondoo.app/runtime/dockerfile/hash/" + hash
 
-		asset.Connections[0].PlatformId = platformID
+		conf.PlatformId = platformID
 		asset.PlatformIds = []string{platformID}
 		asset.Name = "Dockerfile analysis " + filename
 	}

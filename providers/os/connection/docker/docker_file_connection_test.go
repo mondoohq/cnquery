@@ -42,26 +42,6 @@ func TestNewDockerfileConnection(t *testing.T) {
 		require.NotNil(t, err)
 		require.Contains(t, err.Error(), "no such file or directory")
 	})
-	t.Run("valid path that exist but no inventory connections", func(t *testing.T) {
-		dockerfile, err := os.CreateTemp("", "Dockerfile")
-		require.Nil(t, err)
-		defer os.Remove(dockerfile.Name())
-		_, err = dockerfile.WriteString("FROM debian:stable")
-		require.Nil(t, err)
-		conf := &inventory.Config{
-			Path: dockerfile.Name(),
-		}
-		asset := &inventory.Asset{}
-		local := local.NewConnection(0, conf, asset)
-		subject, err := NewDockerfileConnection(0,
-			conf,
-			asset,
-			local,
-			[]string{})
-		require.Nil(t, subject)
-		require.NotNil(t, err)
-		require.Contains(t, err.Error(), "no inventory connections")
-	})
 	t.Run("valid path that exist", func(t *testing.T) {
 		dockerfile, err := os.CreateTemp("", "Dockerfile")
 		require.Nil(t, err)
