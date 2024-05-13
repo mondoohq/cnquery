@@ -2273,7 +2273,7 @@ private aws.ssm.parameter {
   lastModifiedDate time
   // Name of the parameter
   name string
-  // Tier of the parameter. Possible values are `Standard`, `Advanced`, and `Intelligent-Tiering`
+  // Tier of the parameter (Standard, Advanced, or Intelligent-Tiering)
   tier string
   // Type of the parameter. Possible values are `String`,  `StringList`, and `SecureString`
   type string
