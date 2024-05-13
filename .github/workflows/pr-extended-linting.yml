@@ -31,7 +31,7 @@ jobs:
       - name: Generate test files
         run: make test/generate
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v5.3.0
+        uses: golangci/golangci-lint-action@v6.0.1
         with:
           version: latest
           args: --config=.github/.golangci.yml --timeout=30m
