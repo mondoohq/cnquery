@@ -77,6 +77,13 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Options[shared.OPTION_NAMESPACE_EXCLUDE] = string(ns.Value)
 	}
 
+	if containerProxy, ok := flags["container-proxy"]; ok {
+		proxyVal := containerProxy.RawData().Value.(string)
+		if proxyVal != "" {
+			conf.Options["container-proxy"] = proxyVal
+		}
+	}
+
 	asset := &inventory.Asset{
 		Connections: []*inventory.Config{conf},
 	}

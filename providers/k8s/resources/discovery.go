@@ -805,13 +805,19 @@ func discoverContainerImages(conn shared.Connection, runtime *plugin.Runtime, in
 		runningImages = types.MergeMaps(runningImages, podImages)
 	}
 
+	options := map[string]string{}
+	if proxy, ok := invConfig.Options["container-proxy"]; ok && len(proxy) > 0 {
+		options["container-proxy"] = proxy
+	}
+
 	assetList := make([]*inventory.Asset, 0, len(runningImages))
 	for _, i := range runningImages {
 		assetList = append(assetList, &inventory.Asset{
 			Connections: []*inventory.Config{
 				{
-					Type: "registry-image",
-					Host: i.resolvedImage,
+					Type:    "registry-image",
+					Host:    i.resolvedImage,
+					Options: options,
 				},
 			},
 			Category: conn.Asset().Category,

@@ -58,6 +58,12 @@ var Config = plugin.Provider{
 					Default: "",
 					Desc:    "Only include Kubernetes object in the matching namespaces.",
 				},
+				{
+					Long:    "container-proxy",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "HTTP proxy to use for container pulls",
+				},
 			},
 		},
 	},
