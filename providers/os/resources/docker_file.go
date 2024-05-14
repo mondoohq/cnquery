@@ -49,7 +49,7 @@ func initDockerFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 			return nil, nil, errors.New("path must be supplied as a string")
 		}
 	} else if dfc, ok := runtime.Connection.(*docker.DockerfileConnection); ok {
-		path = dfc.Filename
+		path = dfc.FileAbsSrc
 	}
 
 	// we assume the default name for the dockerfile if it was not provided

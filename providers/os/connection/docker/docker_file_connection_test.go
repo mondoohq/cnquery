@@ -60,6 +60,6 @@ func TestNewDockerfileConnection(t *testing.T) {
 			[]string{})
 		require.Nil(t, err)
 		require.NotNil(t, subject)
-		require.Equal(t, dockerfile.Name(), subject.Filename)
+		require.Equal(t, dockerfile.Name(), subject.FileAbsSrc)
 	})
 }

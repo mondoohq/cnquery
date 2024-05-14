@@ -21,14 +21,15 @@ var _ shared.Connection = &DockerfileConnection{}
 
 type DockerfileConnection struct {
 	*local.LocalConnection
-	// Filename must be the absolute path of the Dockerfile so
+	// FileAbsSrc must be the absolute path of the Dockerfile so
 	// that we find the file downstream
-	Filename string
+	FileAbsSrc string
 }
 
 func NewDockerfileConnection(_ uint32,
 	conf *inventory.Config, asset *inventory.Asset,
-	localConn *local.LocalConnection, localFamily []string) (*DockerfileConnection, error) {
+	localConn *local.LocalConnection, localFamily []string,
+) (*DockerfileConnection, error) {
 	if conf == nil {
 		return nil, errors.New("missing configuration to create dockerfile connection")
 	}
@@ -89,7 +90,7 @@ func NewDockerfileConnection(_ uint32,
 		LocalConnection: localConn,
 		// here we must use the absolute path of the Dockerfile so
 		// that we find the file downstream
-		Filename: absSrc,
+		FileAbsSrc: absSrc,
 	}
 
 	return conn, nil
