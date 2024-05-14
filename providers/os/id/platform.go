@@ -99,7 +99,7 @@ func IdentifyPlatform(conn shared.Connection, p *inventory.Platform, idDetectors
 
 	// if we found zero platform ids something went wrong
 	if len(platformIds) == 0 {
-		return nil, nil, errors.New("could not determine a platform identifier")
+		return nil, p, errors.New("could not determine a platform identifier")
 	}
 
 	fingerprint.PlatformIDs = platformIds

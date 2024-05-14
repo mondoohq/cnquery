@@ -4,6 +4,8 @@
 package sysinfo
 
 import (
+	"errors"
+
 	"github.com/rs/zerolog/log"
 
 	"go.mondoo.com/cnquery/v11"
@@ -44,11 +46,15 @@ func Get() (*SystemInfo, error) {
 		Type: "local",
 	}, &asset)
 
-	fingerprint, platform, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
-	if err == nil {
+	fingerprint, platform, _ := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
+	if fingerprint != nil {
 		if len(fingerprint.PlatformIDs) > 0 {
 			sysInfo.PlatformId = fingerprint.PlatformIDs[0]
 		}
+	}
+
+	if platform == nil {
+		return nil, errors.New("failed to detect the OS")
 	}
 
 	sysInfo.Platform = platform
