@@ -432,6 +432,8 @@ ms365.teams {
   csTenantFederationConfiguration() ms365.teams.tenantFederationConfig
   // CS Teams meeting policy configuration
   csTeamsMeetingPolicy() ms365.teams.teamsMeetingPolicyConfig
+  // Teams protection policy configuration
+  teamsProtectionPolicy() ms365.teams.teamsProtectionPolicyConfig
 }
 
 // Microsoft 365 Teams tenant federation configuration
@@ -474,4 +476,12 @@ private ms365.teams.teamsMeetingPolicyConfig {
   allowExternalParticipantGiveRequestControl bool
   // Whether users can report security concerns
   allowSecurityEndUserReporting bool
+}
+
+// Teams Protection Policy configuration
+private ms365.teams.teamsProtectionPolicyConfig {
+  // Whether Zero-hour Auto Purge (ZAP) is enabled
+  zapEnabled bool
+  // Whether the policy configuration is considered valid
+  isValid bool
 }

@@ -122,6 +122,10 @@ func init() {
 			// to override args, implement: initMs365TeamsTeamsMeetingPolicyConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMs365TeamsTeamsMeetingPolicyConfig,
 		},
+		"ms365.teams.teamsProtectionPolicyConfig": {
+			// to override args, implement: initMs365TeamsTeamsProtectionPolicyConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMs365TeamsTeamsProtectionPolicyConfig,
+		},
 	}
 }
 
@@ -691,6 +695,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.teams.csTeamsMeetingPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Teams).GetCsTeamsMeetingPolicy()).ToDataRes(types.Resource("ms365.teams.teamsMeetingPolicyConfig"))
 	},
+	"ms365.teams.teamsProtectionPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365Teams).GetTeamsProtectionPolicy()).ToDataRes(types.Resource("ms365.teams.teamsProtectionPolicyConfig"))
+	},
 	"ms365.teams.tenantFederationConfig.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365TeamsTenantFederationConfig).GetIdentity()).ToDataRes(types.String)
 	},
@@ -741,6 +748,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ms365.teams.teamsMeetingPolicyConfig.allowSecurityEndUserReporting": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).GetAllowSecurityEndUserReporting()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.teamsProtectionPolicyConfig.zapEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsProtectionPolicyConfig).GetZapEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.teamsProtectionPolicyConfig.isValid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsProtectionPolicyConfig).GetIsValid()).ToDataRes(types.Bool)
 	},
 }
 
@@ -1518,6 +1531,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMs365Teams).CsTeamsMeetingPolicy, ok = plugin.RawToTValue[*mqlMs365TeamsTeamsMeetingPolicyConfig](v.Value, v.Error)
 		return
 	},
+	"ms365.teams.teamsProtectionPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365Teams).TeamsProtectionPolicy, ok = plugin.RawToTValue[*mqlMs365TeamsTeamsProtectionPolicyConfig](v.Value, v.Error)
+		return
+	},
 	"ms365.teams.tenantFederationConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlMs365TeamsTenantFederationConfig).__id, ok = v.Value.(string)
 			return
@@ -1592,6 +1609,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"ms365.teams.teamsMeetingPolicyConfig.allowSecurityEndUserReporting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).AllowSecurityEndUserReporting, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsProtectionPolicyConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMs365TeamsTeamsProtectionPolicyConfig).__id, ok = v.Value.(string)
+			return
+		},
+	"ms365.teams.teamsProtectionPolicyConfig.zapEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsProtectionPolicyConfig).ZapEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsProtectionPolicyConfig.isValid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsProtectionPolicyConfig).IsValid, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 }
@@ -3703,6 +3732,7 @@ type mqlMs365Teams struct {
 	CsTeamsClientConfiguration plugin.TValue[interface{}]
 	CsTenantFederationConfiguration plugin.TValue[*mqlMs365TeamsTenantFederationConfig]
 	CsTeamsMeetingPolicy plugin.TValue[*mqlMs365TeamsTeamsMeetingPolicyConfig]
+	TeamsProtectionPolicy plugin.TValue[*mqlMs365TeamsTeamsProtectionPolicyConfig]
 }
 
 // createMs365Teams creates a new instance of this resource
@@ -3772,6 +3802,22 @@ func (c *mqlMs365Teams) GetCsTeamsMeetingPolicy() *plugin.TValue[*mqlMs365TeamsT
 		}
 
 		return c.csTeamsMeetingPolicy()
+	})
+}
+
+func (c *mqlMs365Teams) GetTeamsProtectionPolicy() *plugin.TValue[*mqlMs365TeamsTeamsProtectionPolicyConfig] {
+	return plugin.GetOrCompute[*mqlMs365TeamsTeamsProtectionPolicyConfig](&c.TeamsProtectionPolicy, func() (*mqlMs365TeamsTeamsProtectionPolicyConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ms365.teams", c.__id, "teamsProtectionPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMs365TeamsTeamsProtectionPolicyConfig), nil
+			}
+		}
+
+		return c.teamsProtectionPolicy()
 	})
 }
 
@@ -3936,4 +3982,53 @@ func (c *mqlMs365TeamsTeamsMeetingPolicyConfig) GetAllowExternalParticipantGiveR
 
 func (c *mqlMs365TeamsTeamsMeetingPolicyConfig) GetAllowSecurityEndUserReporting() *plugin.TValue[bool] {
 	return &c.AllowSecurityEndUserReporting
+}
+
+// mqlMs365TeamsTeamsProtectionPolicyConfig for the ms365.teams.teamsProtectionPolicyConfig resource
+type mqlMs365TeamsTeamsProtectionPolicyConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMs365TeamsTeamsProtectionPolicyConfigInternal it will be used here
+	ZapEnabled plugin.TValue[bool]
+	IsValid plugin.TValue[bool]
+}
+
+// createMs365TeamsTeamsProtectionPolicyConfig creates a new instance of this resource
+func createMs365TeamsTeamsProtectionPolicyConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMs365TeamsTeamsProtectionPolicyConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ms365.teams.teamsProtectionPolicyConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMs365TeamsTeamsProtectionPolicyConfig) MqlName() string {
+	return "ms365.teams.teamsProtectionPolicyConfig"
+}
+
+func (c *mqlMs365TeamsTeamsProtectionPolicyConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMs365TeamsTeamsProtectionPolicyConfig) GetZapEnabled() *plugin.TValue[bool] {
+	return &c.ZapEnabled
+}
+
+func (c *mqlMs365TeamsTeamsProtectionPolicyConfig) GetIsValid() *plugin.TValue[bool] {
+	return &c.IsValid
 }

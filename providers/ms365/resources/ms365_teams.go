@@ -36,11 +36,14 @@ Connect-MicrosoftTeams -AccessTokens @("$graphToken", "$teamsToken")
 $CsTeamsClientConfiguration = (Get-CsTeamsClientConfiguration)
 $CsTenantFederationConfiguration = (Get-CsTenantFederationConfiguration)
 $CsTeamsMeetingPolicy = (Get-CsTeamsMeetingPolicy -Identity Global)
+$TeamsProtectionPolicy = (Get-TeamsProtectionPolicy)
 
 $msteams = New-Object PSObject
 Add-Member -InputObject $msteams -MemberType NoteProperty -Name CsTeamsClientConfiguration -Value $CsTeamsClientConfiguration
 Add-Member -InputObject $msteams -MemberType NoteProperty -Name CsTenantFederationConfiguration -Value $CsTenantFederationConfiguration
 Add-Member -InputObject $msteams -MemberType NoteProperty -Name CsTeamsMeetingPolicy -Value $CsTeamsMeetingPolicy
+Add-Member -InputObject $msteams -MemberType NoteProperty -Name TeamsProtectionPolicy -Value $TeamsProtectionPolicy
+
 
 Disconnect-MicrosoftTeams -Confirm:$false
 ConvertTo-Json -Depth 4 $msteams
@@ -50,6 +53,7 @@ type MsTeamsReport struct {
 	CsTeamsClientConfiguration      interface{}                      `json:"CsTeamsClientConfiguration"`
 	CsTenantFederationConfiguration *CsTenantFederationConfiguration `json:"CsTenantFederationConfiguration"`
 	CsTeamsMeetingPolicy            *CsTeamsMeetingPolicy            `json:"CsTeamsMeetingPolicy"`
+	TeamsProtectionPolicy           *TeamsProtectionPolicy           `json:"TeamsProtectionPolicy"`
 }
 
 type CsTenantFederationConfiguration struct {
@@ -76,6 +80,11 @@ type CsTeamsMeetingPolicy struct {
 	DesignatedPresenterRoleMode                string `json:"DesignatedPresenterRoleMode"`
 	AllowExternalParticipantGiveRequestControl bool   `json:"AllowExternalParticipantGiveRequestControl"`
 	AllowSecurityEndUserReporting              bool   `json:"AllowSecurityEndUserReporting"`
+}
+
+type TeamsProtectionPolicy struct {
+	ZapEnabled bool `json:"ZapEnabled"`
+	IsValid    bool `json:"IsValid"`
 }
 
 type mqlMs365TeamsInternal struct {
@@ -191,6 +200,18 @@ func (r *mqlMs365Teams) gatherTeamsReport() error {
 		r.CsTeamsMeetingPolicy = plugin.TValue[*mqlMs365TeamsTeamsMeetingPolicyConfig]{Data: mqlTeamsPolicy.(*mqlMs365TeamsTeamsMeetingPolicyConfig), State: plugin.StateIsSet, Error: mqlTeamsPolicyErr}
 	}
 
+	teamsProtectionPolicy := report.TeamsProtectionPolicy
+	mqlTeamsProtectionPolicy, mqlTeamsProtectionPolicyErr := CreateResource(r.MqlRuntime, "ms365.teams.teamsProtectionPolicyConfig",
+		map[string]*llx.RawData{
+			"zapEnabled": llx.BoolData(teamsProtectionPolicy.ZapEnabled),
+			"isValid":    llx.BoolData(teamsProtectionPolicy.IsValid),
+		})
+	if mqlTeamsProtectionPolicyErr != nil {
+		r.TeamsProtectionPolicy = plugin.TValue[*mqlMs365TeamsTeamsProtectionPolicyConfig]{State: plugin.StateIsSet, Error: mqlTeamsProtectionPolicyErr}
+	} else {
+		r.TeamsProtectionPolicy = plugin.TValue[*mqlMs365TeamsTeamsProtectionPolicyConfig]{Data: mqlTeamsProtectionPolicy.(*mqlMs365TeamsTeamsProtectionPolicyConfig), State: plugin.StateIsSet}
+	}
+
 	return nil
 }
 
@@ -203,5 +224,9 @@ func (r *mqlMs365Teams) csTenantFederationConfiguration() (*mqlMs365TeamsTenantF
 }
 
 func (r *mqlMs365Teams) csTeamsMeetingPolicy() (*mqlMs365TeamsTeamsMeetingPolicyConfig, error) {
+	return nil, r.gatherTeamsReport()
+}
+
+func (r *mqlMs365Teams) teamsProtectionPolicy() (*mqlMs365TeamsTeamsProtectionPolicyConfig, error) {
 	return nil, r.gatherTeamsReport()
 }

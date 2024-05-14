@@ -311,6 +311,8 @@ resources:
         min_mondoo_version: 9.0.0
       csTenantFederationConfiguration:
         min_mondoo_version: 9.0.0
+      teamsProtectionPolicy:
+        min_mondoo_version: 9.0.0
     min_mondoo_version: 5.15.0
     platform:
       name:
@@ -325,6 +327,15 @@ resources:
       autoAdmittedUsers: {}
       designatedPresenterRoleMode: {}
       meetingChatEnabledType: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - microsoft365
+  ms365.teams.teamsProtectionPolicyConfig:
+    fields:
+      isValid: {}
+      zapEnabled: {}
     is_private: true
     min_mondoo_version: latest
     platform:
