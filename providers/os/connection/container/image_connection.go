@@ -11,7 +11,6 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
-	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
@@ -20,6 +19,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/connection/container/image"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/tar"
 	"go.mondoo.com/cnquery/v11/providers/os/id/containerid"
+	"go.mondoo.com/cnquery/v11/providers/os/resources/discovery/container_registry"
 )
 
 // NewImageConnection uses a container image reference as input and creates a tar connection
@@ -63,7 +63,11 @@ func NewRegistryImage(id uint32, conf *inventory.Config, asset *inventory.Asset)
 	}
 	log.Debug().Str("ref", ref.Name()).Msg("found valid container registry reference")
 
-	registryOpts := []remote.Option{auth.TransportOption(conf.Insecure), auth.AuthOption(ref.Name(), conf.Credentials)}
+	registryOpts, err := container_registry.RemoteOptionsFromConfigOptions(conf)
+	if err != nil {
+		return nil, err
+	}
+	registryOpts = append(registryOpts, auth.AuthOption(ref.Name(), conf.Credentials))
 	img, err := image.LoadImageFromRegistry(ref, registryOpts...)
 	if err != nil {
 		return nil, err

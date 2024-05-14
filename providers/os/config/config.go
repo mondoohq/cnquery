@@ -198,6 +198,12 @@ var Config = plugin.Provider{
 					Default: "false",
 					Desc:    "Disable the in-memory cache for images. WARNING: This will slow down scans significantly.",
 				},
+				{
+					Long:    "container-proxy",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "HTTP proxy to use for container pulls",
+				},
 			},
 		},
 		{
@@ -230,6 +236,12 @@ var Config = plugin.Provider{
 					Type:    plugin.FlagType_Bool,
 					Default: "false",
 					Desc:    "Disable the in-memory cache for images. WARNING: This will slow down scans significantly.",
+				},
+				{
+					Long:    "container-proxy",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "HTTP proxy to use for container pulls",
 				},
 			},
 		},

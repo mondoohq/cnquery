@@ -74,7 +74,12 @@ func (r *RegistryConnection) Asset() *inventory.Asset {
 }
 
 func (r *RegistryConnection) DiscoverImages() (*inventory.Inventory, error) {
-	resolver := container_registry.NewContainerRegistryResolver()
+	opts, err := container_registry.RemoteOptionsFromConfigOptions(r.asset.Connections[0])
+	if err != nil {
+		return nil, err
+	}
+
+	resolver := container_registry.NewContainerRegistryResolver(opts...)
 	host := r.asset.Connections[0].Host
 	assets, err := resolver.ListRegistry(host)
 	if err != nil {
