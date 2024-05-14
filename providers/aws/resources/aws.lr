@@ -2724,6 +2724,8 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   rootDeviceName string
   // The architecture of the instance
   architecture string
+  // The TPM version supported. NitroTPM is enabled if this value is `2.0`
+  tpmSupport string
 }
 
 // Amazon EC2 key pair

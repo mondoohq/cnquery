@@ -887,6 +887,7 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, imdsvVe
 				"stateTransitionReason": llx.StringDataPtr(instance.StateTransitionReason),
 				"stateTransitionTime":   llx.TimeData(stateTransitionTime),
 				"tags":                  llx.MapData(Ec2TagsToMap(instance.Tags), types.String),
+				"tpmSupport":            llx.StringDataPtr(instance.TpmSupport),
 			}
 
 			// add vpc if there is one
