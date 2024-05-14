@@ -8,7 +8,6 @@ import (
 	"errors"
 
 	"github.com/google/go-containerregistry/pkg/name"
-	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
@@ -33,26 +32,27 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 func (r *Resolver) Resolve(ctx context.Context, root *inventory.Asset, conf *inventory.Config, credsResolver vault.Resolver) ([]*inventory.Asset, error) {
 	resolved := []*inventory.Asset{}
 
-	imageFetcher := NewContainerRegistryResolver()
+	opts, err := RemoteOptionsFromConfigOptions(conf)
+	if err != nil {
+		return nil, err
+	}
+
+	imageFetcher := NewContainerRegistryResolver(opts...)
 
 	// check if the reference is an image
 	// NOTE: we use strict validation here otherwise urls like cr://index.docker.io/mondoo/client are converted
 	// to index.docker.io/mondoo/client:latest
-	opts := name.StrictValidation
+	nameOpts := name.StrictValidation
 	if r.NoStrictValidation {
-		opts = name.WeakValidation
+		nameOpts = name.WeakValidation
 	}
 
-	ref, err := name.ParseReference(conf.Host, opts)
+	ref, err := name.ParseReference(conf.Host, nameOpts)
 	if err == nil {
 		log.Debug().Str("image", conf.Host).Msg("detected container image in container registry")
 
-		remoteOpts := []remote.Option{
-			auth.AuthOption(ref.Name(), conf.Credentials),
-			// to support self-signed certs
-			auth.TransportOption(conf.Insecure),
-		}
-		a, err := imageFetcher.GetImage(ref, conf.Credentials, remoteOpts...)
+		opts = append(opts, auth.AuthOption(ref.Name(), conf.Credentials))
+		a, err := imageFetcher.GetImage(ref, conf.Credentials, opts...)
 		if err != nil {
 			return nil, err
 		}

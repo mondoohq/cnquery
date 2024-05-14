@@ -4,8 +4,12 @@
 package container_registry
 
 import (
+	"crypto/tls"
 	"fmt"
+	"net"
+	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/cockroachdb/errors"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -18,6 +22,40 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v11/providers/os/id/containerid"
 )
+
+func RemoteOptionsFromConfigOptions(cfg *inventory.Config) ([]remote.Option, error) {
+	opts := []remote.Option{}
+
+	transport := &http.Transport{
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).DialContext,
+		ForceAttemptHTTP2:     true,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+		// We usually are dealing with 2 hosts (at most), split MaxIdleConns between them.
+		MaxIdleConnsPerHost: 50,
+	}
+	if containerProxy, ok := cfg.Options[shared.ContainerProxyOption]; ok {
+		urlParsed, err := url.Parse(containerProxy)
+		if err != nil {
+			return nil, err
+		}
+		transport.Proxy = http.ProxyURL(urlParsed)
+
+	}
+
+	if cfg.Insecure {
+		transport.TLSClientConfig = &tls.Config{
+			InsecureSkipVerify: true,
+		}
+	}
+	opts = append(opts, remote.WithTransport(transport))
+	return opts, nil
+}
 
 func NewContainerRegistryResolver(opts ...remote.Option) *DockerRegistryImages {
 	return &DockerRegistryImages{

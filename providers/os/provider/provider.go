@@ -201,11 +201,19 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		asset.IdDetector = []string{idDetector}
 	}
 
+	if conf.Options == nil {
+		conf.Options = map[string]string{}
+	}
+
 	if disableCache, ok := flags["disable-cache"]; ok {
-		if conf.Options == nil {
-			conf.Options = map[string]string{}
-		}
 		conf.Options["disable-cache"] = strconv.FormatBool(disableCache.RawData().Value.(bool))
+	}
+
+	if containerProxy, ok := flags[shared.ContainerProxyOption]; ok {
+		proxyVal := containerProxy.RawData().Value.(string)
+		if proxyVal != "" {
+			conf.Options[shared.ContainerProxyOption] = proxyVal
+		}
 	}
 
 	res := plugin.ParseCLIRes{
