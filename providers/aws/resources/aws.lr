@@ -2762,7 +2762,7 @@ private aws.ec2.image @defaults("arn") {
   createdAt time
 }
 
-// Amazon EC2 instance device
+// Amazon EC2 instance block device
 private aws.ec2.instance.device @defaults("deviceName volumeId status") {
   // Boolean to denote whether volume should be deleted on instance termination
   deleteOnTermination bool
