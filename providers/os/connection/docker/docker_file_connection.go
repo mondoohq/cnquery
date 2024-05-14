@@ -21,10 +21,15 @@ var _ shared.Connection = &DockerfileConnection{}
 
 type DockerfileConnection struct {
 	*local.LocalConnection
-	Filename string
+	// FileAbsSrc must be the absolute path of the Dockerfile so
+	// that we find the file downstream
+	FileAbsSrc string
 }
 
-func NewDockerfileConnection(id uint32, conf *inventory.Config, asset *inventory.Asset, localConn *local.LocalConnection, localFamily []string) (*DockerfileConnection, error) {
+func NewDockerfileConnection(_ uint32,
+	conf *inventory.Config, asset *inventory.Asset,
+	localConn *local.LocalConnection, localFamily []string,
+) (*DockerfileConnection, error) {
 	if conf == nil {
 		return nil, errors.New("missing configuration to create dockerfile connection")
 	}
@@ -44,12 +49,9 @@ func NewDockerfileConnection(id uint32, conf *inventory.Config, asset *inventory
 		return nil, err
 	}
 
-	// if we have a regular file, we need to point the fs.Connection to
-	// look at the folder instead and store the filename separately
 	var filename string
 	if !stat.IsDir() {
 		filename = filepath.Base(absSrc)
-		absSrc = filepath.Dir(absSrc)
 		conf.Path = absSrc
 	}
 
@@ -63,13 +65,13 @@ func NewDockerfileConnection(id uint32, conf *inventory.Config, asset *inventory
 	// this helps with running commands against the local connection
 	asset.Platform.Family = append(asset.Platform.Family, localFamily...)
 
-	if url, ok := asset.Connections[0].Options["ssh-url"]; ok {
+	if url, ok := conf.Options["ssh-url"]; ok {
 		domain, org, repo, err := urlx.ParseGitSshUrl(url)
 		if err != nil {
 			return nil, err
 		}
 		platformID := "//platformid.api.mondoo.app/runtime/dockerfile/domain/" + domain + "/org/" + org + "/repo/" + repo
-		asset.Connections[0].PlatformId = platformID
+		conf.PlatformId = platformID
 		asset.PlatformIds = []string{platformID}
 		asset.Name = "Dockerfile analysis " + org + "/" + repo
 
@@ -79,14 +81,16 @@ func NewDockerfileConnection(id uint32, conf *inventory.Config, asset *inventory
 		hash := hex.EncodeToString(h.Sum(nil))
 		platformID := "//platformid.api.mondoo.app/runtime/dockerfile/hash/" + hash
 
-		asset.Connections[0].PlatformId = platformID
+		conf.PlatformId = platformID
 		asset.PlatformIds = []string{platformID}
 		asset.Name = "Dockerfile analysis " + filename
 	}
 
 	conn := &DockerfileConnection{
 		LocalConnection: localConn,
-		Filename:        filename,
+		// here we must use the absolute path of the Dockerfile so
+		// that we find the file downstream
+		FileAbsSrc: absSrc,
 	}
 
 	return conn, nil
