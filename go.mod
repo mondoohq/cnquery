@@ -17,7 +17,7 @@ require (
 	// pin v0.3.0
 	github.com/alecthomas/participle v0.3.0
 	github.com/alecthomas/participle/v2 v2.1.1
-	github.com/aws/aws-sdk-go v1.53.0
+	github.com/aws/aws-sdk-go v1.53.1
 	github.com/aws/aws-sdk-go-v2 v1.26.1
 	github.com/aws/aws-sdk-go-v2/config v1.27.13
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.13
@@ -97,8 +97,8 @@ require (
 	golang.org/x/term v0.20.0
 	golang.org/x/text v0.15.0
 	golang.org/x/tools v0.21.0
-	google.golang.org/genproto v0.0.0-20240509183442-62759503f434
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240509183442-62759503f434
+	google.golang.org/genproto v0.0.0-20240513163218-0867130af1f8
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240513163218-0867130af1f8
 	google.golang.org/grpc v1.63.2
 	google.golang.org/protobuf v1.34.1
 	gopkg.in/ini.v1 v1.67.0
@@ -179,7 +179,7 @@ require (
 	cloud.google.com/go/iam v1.1.8 // indirect
 	cloud.google.com/go/kms v1.16.0 // indirect
 	cloud.google.com/go/longrunning v0.5.7 // indirect
-	cloud.google.com/go/storage v1.40.0 // indirect
+	cloud.google.com/go/storage v1.41.0 // indirect
 	github.com/4meepo/tagalign v1.3.4 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/Abirdcfly/dupword v0.0.14 // indirect
@@ -238,7 +238,7 @@ require (
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/dvsekhvalnov/jose2go v1.7.0 // indirect
 	github.com/ettle/strcase v0.2.0 // indirect
-	github.com/fatih/color v1.16.0 // indirect
+	github.com/fatih/color v1.17.0 // indirect
 	github.com/fatih/structtag v1.2.0 // indirect
 	github.com/firefart/nonamedreturns v1.0.5 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
@@ -400,7 +400,7 @@ require (
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 	google.golang.org/api v0.180.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20240509183442-62759503f434 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20240513163218-0867130af1f8 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	honnef.co/go/tools v0.4.7 // indirect
@@ -430,7 +430,7 @@ require (
 	github.com/creack/pty v1.1.18 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
 	github.com/go-errors/errors v1.5.0 // indirect
-	github.com/go-jose/go-jose/v4 v4.0.1 // indirect
+	github.com/go-jose/go-jose/v4 v4.0.2 // indirect
 	github.com/go-test/deep v1.1.0 // indirect
 	github.com/golangci/modinfo v0.3.4 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
