@@ -724,6 +724,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.teams.teamsMeetingPolicyConfig.allowAnonymousUsersToStartMeeting": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).GetAllowAnonymousUsersToStartMeeting()).ToDataRes(types.Bool)
 	},
+	"ms365.teams.teamsMeetingPolicyConfig.allowExternalNonTrustedMeetingChat": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).GetAllowExternalNonTrustedMeetingChat()).ToDataRes(types.Bool)
+	},
 	"ms365.teams.teamsMeetingPolicyConfig.autoAdmittedUsers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).GetAutoAdmittedUsers()).ToDataRes(types.String)
 	},
@@ -1568,6 +1571,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"ms365.teams.teamsMeetingPolicyConfig.allowAnonymousUsersToStartMeeting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).AllowAnonymousUsersToStartMeeting, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsMeetingPolicyConfig.allowExternalNonTrustedMeetingChat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).AllowExternalNonTrustedMeetingChat, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"ms365.teams.teamsMeetingPolicyConfig.autoAdmittedUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3866,6 +3873,7 @@ type mqlMs365TeamsTeamsMeetingPolicyConfig struct {
 	// optional: if you define mqlMs365TeamsTeamsMeetingPolicyConfigInternal it will be used here
 	AllowAnonymousUsersToJoinMeeting plugin.TValue[bool]
 	AllowAnonymousUsersToStartMeeting plugin.TValue[bool]
+	AllowExternalNonTrustedMeetingChat plugin.TValue[bool]
 	AutoAdmittedUsers plugin.TValue[string]
 	AllowPSTNUsersToBypassLobby plugin.TValue[bool]
 	MeetingChatEnabledType plugin.TValue[string]
@@ -3912,6 +3920,10 @@ func (c *mqlMs365TeamsTeamsMeetingPolicyConfig) GetAllowAnonymousUsersToJoinMeet
 
 func (c *mqlMs365TeamsTeamsMeetingPolicyConfig) GetAllowAnonymousUsersToStartMeeting() *plugin.TValue[bool] {
 	return &c.AllowAnonymousUsersToStartMeeting
+}
+
+func (c *mqlMs365TeamsTeamsMeetingPolicyConfig) GetAllowExternalNonTrustedMeetingChat() *plugin.TValue[bool] {
+	return &c.AllowExternalNonTrustedMeetingChat
 }
 
 func (c *mqlMs365TeamsTeamsMeetingPolicyConfig) GetAutoAdmittedUsers() *plugin.TValue[string] {

@@ -462,6 +462,8 @@ private ms365.teams.teamsMeetingPolicyConfig {
   allowAnonymousUsersToJoinMeeting bool
   // Whether anonymous users are allowed to start the meeting
   allowAnonymousUsersToStartMeeting bool
+  // Whether external meeting chat is allowed
+  allowExternalNonTrustedMeetingChat bool
   // Who can bypass the lobby
   autoAdmittedUsers string
   // Whether public switched telephone network (PSTN) users can bypass the lobby

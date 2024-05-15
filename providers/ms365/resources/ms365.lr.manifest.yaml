@@ -319,6 +319,7 @@ resources:
     fields:
       allowAnonymousUsersToJoinMeeting: {}
       allowAnonymousUsersToStartMeeting: {}
+      allowExternalNonTrustedMeetingChat: {}
       allowExternalParticipantGiveRequestControl: {}
       allowPSTNUsersToBypassLobby: {}
       allowSecurityEndUserReporting: {}
