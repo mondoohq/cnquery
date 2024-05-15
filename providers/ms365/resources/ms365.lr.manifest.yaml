@@ -99,6 +99,10 @@ resources:
       mailEnabled: {}
       mailNickname: {}
       members: {}
+      membershipRule:
+        min_mondoo_version: latest
+      membershipRuleProcessingState:
+        min_mondoo_version: latest
       securityEnabled: {}
       visibility:
         min_mondoo_version: 9.0.0

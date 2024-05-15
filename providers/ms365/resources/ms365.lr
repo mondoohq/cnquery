@@ -110,6 +110,10 @@ private microsoft.group @defaults("id displayName") {
   members() []microsoft.user
   // Group types indicating the membership and classification of the group
   groupTypes []string
+  // Membership rule used for dynamic group membership
+  membershipRule string
+  // State of the processing for the dynamic membership rule
+  membershipRuleProcessingState string
 }
 
 // Microsoft domain

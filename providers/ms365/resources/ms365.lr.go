@@ -328,6 +328,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.group.groupTypes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftGroup).GetGroupTypes()).ToDataRes(types.Array(types.String))
 	},
+	"microsoft.group.membershipRule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftGroup).GetMembershipRule()).ToDataRes(types.String)
+	},
+	"microsoft.group.membershipRuleProcessingState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftGroup).GetMembershipRuleProcessingState()).ToDataRes(types.String)
+	},
 	"microsoft.domain.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDomain).GetId()).ToDataRes(types.String)
 	},
@@ -955,6 +961,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.group.groupTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftGroup).GroupTypes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.group.membershipRule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftGroup).MembershipRule, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.group.membershipRuleProcessingState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftGroup).MembershipRuleProcessingState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.domain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2041,6 +2055,8 @@ type mqlMicrosoftGroup struct {
 	Visibility plugin.TValue[string]
 	Members plugin.TValue[[]interface{}]
 	GroupTypes plugin.TValue[[]interface{}]
+	MembershipRule plugin.TValue[string]
+	MembershipRuleProcessingState plugin.TValue[string]
 }
 
 // createMicrosoftGroup creates a new instance of this resource
@@ -2126,6 +2142,14 @@ func (c *mqlMicrosoftGroup) GetMembers() *plugin.TValue[[]interface{}] {
 
 func (c *mqlMicrosoftGroup) GetGroupTypes() *plugin.TValue[[]interface{}] {
 	return &c.GroupTypes
+}
+
+func (c *mqlMicrosoftGroup) GetMembershipRule() *plugin.TValue[string] {
+	return &c.MembershipRule
+}
+
+func (c *mqlMicrosoftGroup) GetMembershipRuleProcessingState() *plugin.TValue[string] {
+	return &c.MembershipRuleProcessingState
 }
 
 // mqlMicrosoftDomain for the microsoft.domain resource
