@@ -12,6 +12,7 @@ import (
 
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
+	"go.mondoo.com/cnquery/v11/types"
 )
 
 func (m *mqlMicrosoftGroup) id() (string, error) {
@@ -48,13 +49,16 @@ func (a *mqlMicrosoft) groups() ([]interface{}, error) {
 	for _, grp := range grps {
 		graphGrp, err := CreateResource(a.MqlRuntime, "microsoft.group",
 			map[string]*llx.RawData{
-				"id":              llx.StringDataPtr(grp.GetId()),
-				"displayName":     llx.StringDataPtr(grp.GetDisplayName()),
-				"mail":            llx.StringDataPtr(grp.GetMail()),
-				"mailEnabled":     llx.BoolDataPtr(grp.GetMailEnabled()),
-				"mailNickname":    llx.StringDataPtr(grp.GetMailNickname()),
-				"securityEnabled": llx.BoolDataPtr(grp.GetSecurityEnabled()),
-				"visibility":      llx.StringDataPtr(grp.GetVisibility()),
+				"id":                            llx.StringDataPtr(grp.GetId()),
+				"displayName":                   llx.StringDataPtr(grp.GetDisplayName()),
+				"mail":                          llx.StringDataPtr(grp.GetMail()),
+				"mailEnabled":                   llx.BoolDataPtr(grp.GetMailEnabled()),
+				"mailNickname":                  llx.StringDataPtr(grp.GetMailNickname()),
+				"securityEnabled":               llx.BoolDataPtr(grp.GetSecurityEnabled()),
+				"visibility":                    llx.StringDataPtr(grp.GetVisibility()),
+				"groupTypes":                    llx.ArrayData(llx.TArr2Raw(grp.GetGroupTypes()), types.String),
+				"membershipRule":                llx.StringDataPtr(grp.GetMembershipRule()),
+				"membershipRuleProcessingState": llx.StringDataPtr(grp.GetMembershipRuleProcessingState()),
 			})
 		if err != nil {
 			return nil, err
