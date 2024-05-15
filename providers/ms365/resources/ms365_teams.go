@@ -72,6 +72,7 @@ type CsTeamsMeetingPolicy struct {
 	AllowAnonymousUsersToStartMeeting          bool   `json:"AllowAnonymousUsersToStartMeeting"`
 	AutoAdmittedUsers                          string `json:"AutoAdmittedUsers"`
 	AllowPSTNUsersToBypassLobby                bool   `json:"AllowPSTNUsersToBypassLobby"`
+	AllowExternalNonTrustedMeetingChat         bool   `json:"AllowExternalNonTrustedMeetingChat"`
 	MeetingChatEnabledType                     string `json:"MeetingChatEnabledType"`
 	DesignatedPresenterRoleMode                string `json:"DesignatedPresenterRoleMode"`
 	AllowExternalParticipantGiveRequestControl bool   `json:"AllowExternalParticipantGiveRequestControl"`
@@ -178,6 +179,7 @@ func (r *mqlMs365Teams) gatherTeamsReport() error {
 		map[string]*llx.RawData{
 			"allowAnonymousUsersToJoinMeeting":           llx.BoolData(teamsPolicy.AllowAnonymousUsersToJoinMeeting),
 			"allowAnonymousUsersToStartMeeting":          llx.BoolData(teamsPolicy.AllowAnonymousUsersToStartMeeting),
+			"allowExternalNonTrustedMeetingChat":         llx.BoolData(teamsPolicy.AllowExternalNonTrustedMeetingChat),
 			"autoAdmittedUsers":                          llx.StringData(teamsPolicy.AutoAdmittedUsers),
 			"allowPSTNUsersToBypassLobby":                llx.BoolData(teamsPolicy.AllowPSTNUsersToBypassLobby),
 			"meetingChatEnabledType":                     llx.StringData(teamsPolicy.MeetingChatEnabledType),
