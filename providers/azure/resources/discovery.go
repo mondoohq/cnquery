@@ -29,15 +29,17 @@ const (
 	DiscoverySubscriptions = "subscriptions"
 	DiscoveryInstances     = "instances"
 	// TODO: this probably needs some more work on the linking to its OS counterpart side
-	DiscoveryInstancesApi      = "instances-api"
-	DiscoverySqlServers        = "sql-servers"
-	DiscoveryPostgresServers   = "postgres-servers"
-	DiscoveryMySqlServers      = "mysql-servers"
-	DiscoveryMariaDbServers    = "mariadb-servers"
-	DiscoveryStorageAccounts   = "storage-accounts"
-	DiscoveryStorageContainers = "storage-containers"
-	DiscoveryKeyVaults         = "keyvaults-vaults"
-	DiscoverySecurityGroups    = "security-groups"
+	DiscoveryInstancesApi            = "instances-api"
+	DiscoverySqlServers              = "sql-servers"
+	DiscoveryPostgresServers         = "postgres-servers"
+	DiscoveryPostgresFlexibleServers = "postgres-flexible-servers"
+	DiscoveryMySqlServers            = "mysql-servers"
+	DiscoveryMySqlFlexibleServers    = "mysql-flexible-servers"
+	DiscoveryMariaDbServers          = "mariadb-servers"
+	DiscoveryStorageAccounts         = "storage-accounts"
+	DiscoveryStorageContainers       = "storage-containers"
+	DiscoveryKeyVaults               = "keyvaults-vaults"
+	DiscoverySecurityGroups          = "security-groups"
 )
 
 type azureObject struct {
@@ -130,25 +132,32 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 		if err != nil {
 			return nil, err
 		}
+		assets = append(assets, mySqlServers...)
+	}
+	if stringx.ContainsAnyOf(targets, DiscoveryMySqlFlexibleServers) {
 		flexibleServers, err := discoverMySqlFlexibleServers(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
 		}
-		assets = append(assets, mySqlServers...)
 		assets = append(assets, flexibleServers...)
 	}
+
 	if stringx.ContainsAnyOf(targets, append(matchingTargets, DiscoveryPostgresServers)...) {
 		postgresServers, err := discoverPostgresqlServers(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
 		}
+		assets = append(assets, postgresServers...)
+	}
+
+	if stringx.ContainsAnyOf(targets, DiscoveryPostgresFlexibleServers) {
 		flexibleServers, err := discoverPostgresqlFlexibleServers(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
 		}
-		assets = append(assets, postgresServers...)
 		assets = append(assets, flexibleServers...)
 	}
+
 	if stringx.ContainsAnyOf(targets, append(matchingTargets, DiscoveryMariaDbServers)...) {
 		mariaDbServers, err := discoverMariadbServers(runtime, subsWithConfigs)
 		if err != nil {
