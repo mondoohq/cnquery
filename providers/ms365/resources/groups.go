@@ -6,13 +6,13 @@ package resources
 import (
 	"context"
 	"errors"
-	"strings"
 
 	"github.com/microsoftgraph/msgraph-sdk-go/groups"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
+	"go.mondoo.com/cnquery/v11/types"
 )
 
 func (m *mqlMicrosoftGroup) id() (string, error) {
@@ -47,7 +47,6 @@ func (a *mqlMicrosoft) groups() ([]interface{}, error) {
 	}
 	res := []interface{}{}
 	for _, grp := range grps {
-		joinedGroupTypes := strings.Join(grp.GetGroupTypes(), ", ")
 		graphGrp, err := CreateResource(a.MqlRuntime, "microsoft.group",
 			map[string]*llx.RawData{
 				"id":              llx.StringDataPtr(grp.GetId()),
@@ -57,8 +56,7 @@ func (a *mqlMicrosoft) groups() ([]interface{}, error) {
 				"mailNickname":    llx.StringDataPtr(grp.GetMailNickname()),
 				"securityEnabled": llx.BoolDataPtr(grp.GetSecurityEnabled()),
 				"visibility":      llx.StringDataPtr(grp.GetVisibility()),
-				// "groupTypes":      llx.ArrayData(groupTypes, types.String),  This cannot be used
-				"groupTypes": llx.StringDataPtr(&joinedGroupTypes),
+				"groupTypes":      llx.ArrayData(llx.TArr2Raw(grp.GetGroupTypes()), types.String),
 			})
 		if err != nil {
 			return nil, err

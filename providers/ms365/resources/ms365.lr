@@ -109,7 +109,7 @@ private microsoft.group @defaults("id displayName") {
   // List of group members
   members() []microsoft.user
   // Group types indicating the membership and classification of the group
-  groupTypes string
+  groupTypes []string
 }
 
 // Microsoft domain
