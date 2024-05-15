@@ -130,14 +130,24 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 		if err != nil {
 			return nil, err
 		}
+		flexibleServers, err := discoverMySqlFlexibleServers(runtime, subsWithConfigs)
+		if err != nil {
+			return nil, err
+		}
 		assets = append(assets, mySqlServers...)
+		assets = append(assets, flexibleServers...)
 	}
 	if stringx.ContainsAnyOf(targets, append(matchingTargets, DiscoveryPostgresServers)...) {
 		postgresServers, err := discoverPostgresqlServers(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
 		}
+		flexibleServers, err := discoverPostgresqlFlexibleServers(runtime, subsWithConfigs)
+		if err != nil {
+			return nil, err
+		}
 		assets = append(assets, postgresServers...)
+		assets = append(assets, flexibleServers...)
 	}
 	if stringx.ContainsAnyOf(targets, append(matchingTargets, DiscoveryMariaDbServers)...) {
 		mariaDbServers, err := discoverMariadbServers(runtime, subsWithConfigs)
@@ -350,6 +360,39 @@ func discoverMySqlServers(runtime *plugin.Runtime, subsWithConfigs []subWithConf
 	return assets, nil
 }
 
+func discoverMySqlFlexibleServers(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([]*inventory.Asset, error) {
+	assets := []*inventory.Asset{}
+	for _, subWithConfig := range subsWithConfigs {
+		svc, err := NewResource(runtime, "azure.subscription.mySqlService", map[string]*llx.RawData{
+			"subscriptionId": llx.StringDataPtr(subWithConfig.sub.SubscriptionID),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mysqlSvc := svc.(*mqlAzureSubscriptionMySqlService)
+		servers := mysqlSvc.GetFlexibleServers()
+		if servers.Error != nil {
+			return nil, servers.Error
+		}
+		for _, mysqlServ := range servers.Data {
+			s := mysqlServ.(*mqlAzureSubscriptionMySqlServiceFlexibleServer)
+			asset := mqlObjectToAsset(mqlObject{
+				name:   s.Name.Data,
+				labels: interfaceMapToStr(s.Tags.Data),
+				azureObject: azureObject{
+					id:           s.Id.Data,
+					subscription: *subWithConfig.sub.SubscriptionID,
+					location:     s.Location.Data,
+					service:      "mysql",
+					objectType:   "flexible-server",
+				},
+			}, subWithConfig.conf.Clone(), subWithConfig, false)
+			assets = append(assets, asset)
+		}
+	}
+	return assets, nil
+}
+
 func discoverPostgresqlServers(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([]*inventory.Asset, error) {
 	assets := []*inventory.Asset{}
 	for _, subWithConfig := range subsWithConfigs {
@@ -375,6 +418,39 @@ func discoverPostgresqlServers(runtime *plugin.Runtime, subsWithConfigs []subWit
 					location:     s.Location.Data,
 					service:      "postgresql",
 					objectType:   "server",
+				},
+			}, subWithConfig.conf.Clone(), subWithConfig, false)
+			assets = append(assets, asset)
+		}
+	}
+	return assets, nil
+}
+
+func discoverPostgresqlFlexibleServers(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([]*inventory.Asset, error) {
+	assets := []*inventory.Asset{}
+	for _, subWithConfig := range subsWithConfigs {
+		svc, err := NewResource(runtime, "azure.subscription.postgreSqlService", map[string]*llx.RawData{
+			"subscriptionId": llx.StringDataPtr(subWithConfig.sub.SubscriptionID),
+		})
+		if err != nil {
+			return nil, err
+		}
+		postgresSvc := svc.(*mqlAzureSubscriptionPostgreSqlService)
+		servers := postgresSvc.GetFlexibleServers()
+		if servers.Error != nil {
+			return nil, servers.Error
+		}
+		for _, mysqlServ := range servers.Data {
+			s := mysqlServ.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer)
+			asset := mqlObjectToAsset(mqlObject{
+				name:   s.Name.Data,
+				labels: interfaceMapToStr(s.Tags.Data),
+				azureObject: azureObject{
+					id:           s.Id.Data,
+					subscription: *subWithConfig.sub.SubscriptionID,
+					location:     s.Location.Data,
+					service:      "postgresql",
+					objectType:   "flexible-server",
 				},
 			}, subWithConfig.conf.Clone(), subWithConfig, false)
 			assets = append(assets, asset)
@@ -680,9 +756,15 @@ func getTitleFamily(azureObject azureObject) (azureObjectPlatformInfo, error) {
 		if azureObject.objectType == "server" {
 			return azureObjectPlatformInfo{title: "Azure PostgreSQL Server", platform: "azure-postgresql-server"}, nil
 		}
+		if azureObject.objectType == "flexible-server" {
+			return azureObjectPlatformInfo{title: "Azure PostgreSQL Flexible Server", platform: "azure-postgresql-flexible-server"}, nil
+		}
 	case "mysql":
 		if azureObject.objectType == "server" {
 			return azureObjectPlatformInfo{title: "Azure MySQL Server", platform: "azure-mysql-server"}, nil
+		}
+		if azureObject.objectType == "flexible-server" {
+			return azureObjectPlatformInfo{title: "Azure MySQL Flexible Server", platform: "azure-mysql-flexible-server"}, nil
 		}
 	case "mariadb":
 		if azureObject.objectType == "server" {
