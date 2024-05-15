@@ -53,6 +53,7 @@ $SharingPolicy = (Get-SharingPolicy)
 $RoleAssignmentPolicy = (Get-RoleAssignmentPolicy)
 $ExternalInOutlook = (Get-ExternalInOutlook)
 $ExoMailbox = (Get-EXOMailbox -RecipientTypeDetails SharedMailbox)
+$TeamsProtectionPolicy = (Get-TeamsProtectionPolicy)
 
 $exchangeOnline = New-Object PSObject
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name MalwareFilterPolicy -Value @($MalwareFilterPolicy)
@@ -74,6 +75,7 @@ Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name SharingPo
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name RoleAssignmentPolicy -Value @($RoleAssignmentPolicy)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name ExternalInOutlook -Value @($ExternalInOutlook)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name ExoMailbox -Value @($ExoMailbox)
+Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name TeamsProtectionPolicy -Value @($TeamsProtectionPolicy)
 
 Disconnect-ExchangeOnline -Confirm:$false
 
@@ -100,7 +102,8 @@ type ExchangeOnlineReport struct {
 	RoleAssignmentPolicy           []interface{}     `json:"RoleAssignmentPolicy"`
 	ExternalInOutlook              []*ExternalSender `json:"ExternalInOutlook"`
 	// note: this only contains shared mailboxes
-	ExoMailbox []*ExoMailbox `json:"ExoMailbox"`
+	ExoMailbox            []*ExoMailbox            `json:"ExoMailbox"`
+	TeamsProtectionPolicy []*TeamsProtectionPolicy `json:"TeamsProtectionPolicy"`
 }
 
 type ExternalSender struct {
@@ -125,6 +128,11 @@ type ExoMailbox struct {
 	DistinguishedName         string   `json:"DistinguishedName"`
 	OrganizationId            string   `json:"OrganizationId"`
 	Guid                      string   `json:"Guid"`
+}
+
+type TeamsProtectionPolicy struct {
+	ZapEnabled bool `json:"ZapEnabled"`
+	IsValid    bool `json:"IsValid"`
 }
 
 type mqlMs365ExchangeonlineInternal struct {
@@ -305,6 +313,23 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 	}
 	r.SharedMailboxes = plugin.TValue[[]interface{}]{Data: sharedMailboxes, State: plugin.StateIsSet, Error: sharedMailboxesErr}
 
+	teamsProtectionPolicy := []interface{}{}
+	var teamsProtectionPolicyErr error
+	for _, t := range report.TeamsProtectionPolicy {
+		policy, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.teamsProtectionPolicy",
+			map[string]*llx.RawData{
+				"zapEnabled": llx.BoolData(t.ZapEnabled),
+				"isValid":    llx.BoolData(t.IsValid),
+			})
+		if err != nil {
+			teamsProtectionPolicyErr = err
+			break
+		}
+
+		teamsProtectionPolicy = append(teamsProtectionPolicy, policy)
+	}
+	r.TeamsProtectionPolicy = plugin.TValue[[]interface{}]{Data: teamsProtectionPolicy, State: plugin.StateIsSet, Error: teamsProtectionPolicyErr}
+
 	return nil
 }
 
@@ -390,6 +415,10 @@ func (r *mqlMs365Exchangeonline) sharedMailboxes() ([]interface{}, error) {
 
 func (m *mqlMs365ExchangeonlineExoMailbox) id() (string, error) {
 	return m.Identity.Data, nil
+}
+
+func (r *mqlMs365Exchangeonline) teamsProtectionPolicy() ([]interface{}, error) {
+	return nil, r.getExchangeReport()
 }
 
 func (m *mqlMs365ExchangeonlineExoMailbox) user() (*mqlMicrosoftUser, error) {
