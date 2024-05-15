@@ -93,16 +93,16 @@ resources:
     fields:
       displayName: {}
       groupTypes:
-        min_mondoo_version: latest
+        min_mondoo_version: 9.0.0
       id: {}
       mail: {}
       mailEnabled: {}
       mailNickname: {}
       members: {}
       membershipRule:
-        min_mondoo_version: latest
+        min_mondoo_version: 9.0.0
       membershipRuleProcessingState:
-        min_mondoo_version: latest
+        min_mondoo_version: 9.0.0
       securityEnabled: {}
       visibility:
         min_mondoo_version: 9.0.0
