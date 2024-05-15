@@ -258,6 +258,10 @@ func init() {
 			Init: initAzureSubscriptionPostgreSqlService,
 			Create: createAzureSubscriptionPostgreSqlService,
 		},
+		"azure.subscription.postgreSqlService.flexibleServer": {
+			Init: initAzureSubscriptionPostgreSqlServiceFlexibleServer,
+			Create: createAzureSubscriptionPostgreSqlServiceFlexibleServer,
+		},
 		"azure.subscription.postgreSqlService.server": {
 			Init: initAzureSubscriptionPostgreSqlServiceServer,
 			Create: createAzureSubscriptionPostgreSqlServiceServer,
@@ -291,7 +295,7 @@ func init() {
 			Create: createAzureSubscriptionMySqlServiceDatabase,
 		},
 		"azure.subscription.mySqlService.flexibleServer": {
-			// to override args, implement: initAzureSubscriptionMySqlServiceFlexibleServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initAzureSubscriptionMySqlServiceFlexibleServer,
 			Create: createAzureSubscriptionMySqlServiceFlexibleServer,
 		},
 		"azure.subscription.mariaDbService": {
@@ -1943,6 +1947,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.postgreSqlService.servers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionPostgreSqlService).GetServers()).ToDataRes(types.Array(types.Resource("azure.subscription.postgreSqlService.server")))
+	},
+	"azure.subscription.postgreSqlService.flexibleServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPostgreSqlService).GetFlexibleServers()).ToDataRes(types.Array(types.Resource("azure.subscription.postgreSqlService.flexibleServer")))
+	},
+	"azure.subscription.postgreSqlService.flexibleServer.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.postgreSqlService.flexibleServer.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.postgreSqlService.flexibleServer.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.postgreSqlService.flexibleServer.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.postgreSqlService.flexibleServer.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.postgreSqlService.flexibleServer.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.postgreSqlService.flexibleServer.configuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).GetConfiguration()).ToDataRes(types.Array(types.Resource("azure.subscription.sqlService.configuration")))
+	},
+	"azure.subscription.postgreSqlService.flexibleServer.databases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).GetDatabases()).ToDataRes(types.Array(types.Resource("azure.subscription.postgreSqlService.database")))
+	},
+	"azure.subscription.postgreSqlService.flexibleServer.firewallRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).GetFirewallRules()).ToDataRes(types.Array(types.Resource("azure.subscription.sqlService.firewallrule")))
 	},
 	"azure.subscription.postgreSqlService.server.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionPostgreSqlServiceServer).GetId()).ToDataRes(types.String)
@@ -4892,6 +4926,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"azure.subscription.postgreSqlService.servers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionPostgreSqlService).Servers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.postgreSqlService.flexibleServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPostgreSqlService).FlexibleServers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.postgreSqlService.flexibleServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).__id, ok = v.Value.(string)
+			return
+		},
+	"azure.subscription.postgreSqlService.flexibleServer.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.postgreSqlService.flexibleServer.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.postgreSqlService.flexibleServer.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.postgreSqlService.flexibleServer.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.postgreSqlService.flexibleServer.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.postgreSqlService.flexibleServer.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).Properties, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.postgreSqlService.flexibleServer.configuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).Configuration, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.postgreSqlService.flexibleServer.databases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).Databases, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.postgreSqlService.flexibleServer.firewallRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).FirewallRules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.postgreSqlService.server.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11930,6 +12008,7 @@ type mqlAzureSubscriptionPostgreSqlService struct {
 	// optional: if you define mqlAzureSubscriptionPostgreSqlServiceInternal it will be used here
 	SubscriptionId plugin.TValue[string]
 	Servers plugin.TValue[[]interface{}]
+	FlexibleServers plugin.TValue[[]interface{}]
 }
 
 // createAzureSubscriptionPostgreSqlService creates a new instance of this resource
@@ -11986,6 +12065,142 @@ func (c *mqlAzureSubscriptionPostgreSqlService) GetServers() *plugin.TValue[[]in
 		}
 
 		return c.servers()
+	})
+}
+
+func (c *mqlAzureSubscriptionPostgreSqlService) GetFlexibleServers() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.FlexibleServers, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.postgreSqlService", c.__id, "flexibleServers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.flexibleServers()
+	})
+}
+
+// mqlAzureSubscriptionPostgreSqlServiceFlexibleServer for the azure.subscription.postgreSqlService.flexibleServer resource
+type mqlAzureSubscriptionPostgreSqlServiceFlexibleServer struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAzureSubscriptionPostgreSqlServiceFlexibleServerInternal it will be used here
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	Location plugin.TValue[string]
+	Tags plugin.TValue[map[string]interface{}]
+	Type plugin.TValue[string]
+	Properties plugin.TValue[interface{}]
+	Configuration plugin.TValue[[]interface{}]
+	Databases plugin.TValue[[]interface{}]
+	FirewallRules plugin.TValue[[]interface{}]
+}
+
+// createAzureSubscriptionPostgreSqlServiceFlexibleServer creates a new instance of this resource
+func createAzureSubscriptionPostgreSqlServiceFlexibleServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionPostgreSqlServiceFlexibleServer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.postgreSqlService.flexibleServer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) MqlName() string {
+	return "azure.subscription.postgreSqlService.flexibleServer"
+}
+
+func (c *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) GetTags() *plugin.TValue[map[string]interface{}] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) GetProperties() *plugin.TValue[interface{}] {
+	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) GetConfiguration() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Configuration, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.postgreSqlService.flexibleServer", c.__id, "configuration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.configuration()
+	})
+}
+
+func (c *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) GetDatabases() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Databases, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.postgreSqlService.flexibleServer", c.__id, "databases")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.databases()
+	})
+}
+
+func (c *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) GetFirewallRules() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.FirewallRules, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.postgreSqlService.flexibleServer", c.__id, "firewallRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.firewallRules()
 	})
 }
 

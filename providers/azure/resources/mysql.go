@@ -455,3 +455,40 @@ func initAzureSubscriptionMySqlServiceServer(runtime *plugin.Runtime, args map[s
 
 	return nil, nil, errors.New("azure mysql server does not exist")
 }
+
+func initAzureSubscriptionMySqlServiceFlexibleServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["id"] = llx.StringData(ids.id)
+		}
+	}
+
+	if args["id"] == nil {
+		return nil, nil, errors.New("id required to fetch azure mysql flexible server")
+	}
+	conn := runtime.Connection.(*connection.AzureConnection)
+	res, err := NewResource(runtime, "azure.subscription.mySqlService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(conn.SubId()),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	mysql := res.(*mqlAzureSubscriptionMySqlService)
+	servers := mysql.GetFlexibleServers()
+	if servers.Error != nil {
+		return nil, nil, servers.Error
+	}
+	id := args["id"].Value.(string)
+	for _, entry := range servers.Data {
+		vm := entry.(*mqlAzureSubscriptionMySqlServiceFlexibleServer)
+		if vm.Id.Data == id {
+			return args, vm, nil
+		}
+	}
+
+	return nil, nil, errors.New("azure mysql flexible server does not exist")
+}

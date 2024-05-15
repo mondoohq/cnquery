@@ -1973,6 +1973,7 @@ resources:
       url: https://learn.microsoft.com/en-us/azure/postgresql/
   azure.subscription.postgreSqlService:
     fields:
+      flexibleServers: {}
       servers: {}
       subscriptionId: {}
     is_private: true
@@ -1995,6 +1996,22 @@ resources:
     refs:
     - title: Azure Database for PostgreSQL - Flexible Server documentation
       url: https://learn.microsoft.com/en-us/azure/postgresql/
+  azure.subscription.postgreSqlService.flexibleServer:
+    fields:
+      configuration: {}
+      databases: {}
+      firewallRules: {}
+      id: {}
+      location: {}
+      name: {}
+      properties: {}
+      tags: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
   azure.subscription.postgreSqlService.server:
     fields:
       configuration: {}
