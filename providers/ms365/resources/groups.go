@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/microsoftgraph/msgraph-sdk-go/groups"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
@@ -46,6 +47,7 @@ func (a *mqlMicrosoft) groups() ([]interface{}, error) {
 	}
 	res := []interface{}{}
 	for _, grp := range grps {
+		joinedGroupTypes := strings.Join(grp.GetGroupTypes(), ", ")
 		graphGrp, err := CreateResource(a.MqlRuntime, "microsoft.group",
 			map[string]*llx.RawData{
 				"id":              llx.StringDataPtr(grp.GetId()),
@@ -55,6 +57,8 @@ func (a *mqlMicrosoft) groups() ([]interface{}, error) {
 				"mailNickname":    llx.StringDataPtr(grp.GetMailNickname()),
 				"securityEnabled": llx.BoolDataPtr(grp.GetSecurityEnabled()),
 				"visibility":      llx.StringDataPtr(grp.GetVisibility()),
+				// "groupTypes":      llx.ArrayData(groupTypes, types.String),  This cannot be used
+				"groupTypes": llx.StringDataPtr(&joinedGroupTypes),
 			})
 		if err != nil {
 			return nil, err

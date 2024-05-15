@@ -325,6 +325,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.group.members": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftGroup).GetMembers()).ToDataRes(types.Array(types.Resource("microsoft.user")))
 	},
+	"microsoft.group.groupTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftGroup).GetGroupTypes()).ToDataRes(types.String)
+	},
 	"microsoft.domain.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDomain).GetId()).ToDataRes(types.String)
 	},
@@ -948,6 +951,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.group.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftGroup).Members, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.group.groupTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftGroup).GroupTypes, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.domain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2033,6 +2040,7 @@ type mqlMicrosoftGroup struct {
 	Mail plugin.TValue[string]
 	Visibility plugin.TValue[string]
 	Members plugin.TValue[[]interface{}]
+	GroupTypes plugin.TValue[string]
 }
 
 // createMicrosoftGroup creates a new instance of this resource
@@ -2114,6 +2122,10 @@ func (c *mqlMicrosoftGroup) GetMembers() *plugin.TValue[[]interface{}] {
 
 		return c.members()
 	})
+}
+
+func (c *mqlMicrosoftGroup) GetGroupTypes() *plugin.TValue[string] {
+	return &c.GroupTypes
 }
 
 // mqlMicrosoftDomain for the microsoft.domain resource

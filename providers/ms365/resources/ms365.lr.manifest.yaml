@@ -92,6 +92,8 @@ resources:
   microsoft.group:
     fields:
       displayName: {}
+      groupTypes:
+        min_mondoo_version: latest
       id: {}
       mail: {}
       mailEnabled: {}
