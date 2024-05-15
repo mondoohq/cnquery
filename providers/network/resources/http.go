@@ -96,7 +96,8 @@ func (x *mqlHttpGet) do() error {
 		return errors.New("missing URL for http.get")
 	}
 
-	resp, err := http.Get(x.Url.Data.String.Data)
+	conn := x.MqlRuntime.Connection.(*connection.HostConnection)
+	resp, err := conn.Client().Get(x.Url.Data.String.Data)
 	x.resp.State = plugin.StateIsSet
 	x.resp.Data = resp
 	x.resp.Error = err

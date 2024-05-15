@@ -37,7 +37,7 @@ var Config = plugin.Provider{
 			Flags: []plugin.Flag{
 				{
 					Long:    "insecure",
-					Type:    plugin.FlagType_String,
+					Type:    plugin.FlagType_Bool,
 					Default: "",
 					Desc:    "Disable TLS/SSL verification.",
 					Option:  plugin.FlagOption_Hidden,
