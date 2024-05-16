@@ -3,6 +3,7 @@ Auths
 autoaccept
 autoscaler
 backupconfiguration
+backupsetting
 bigquery
 bytematchstatement
 cavium
