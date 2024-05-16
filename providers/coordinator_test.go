@@ -149,6 +149,48 @@ func TestRemoveRuntime_StopUnusedProvider(t *testing.T) {
 	assert.Empty(t, c.runningByID)
 }
 
+func TestUnprocessedProviders_RemoveClosed(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	// Setup 1 provider with 1 runtime
+	mockPlugin1 := NewMockProviderPlugin(ctrl)
+	p1 := &RunningProvider{
+		ID:     "provider1",
+		Plugin: mockPlugin1,
+	}
+
+	c := &coordinator{
+		runtimes:    map[string]*Runtime{},
+		runningByID: map[string]*RunningProvider{},
+		unprocessedRuntimes: []*Runtime{
+			{
+				isClosed: true,
+				providers: map[string]*ConnectedProvider{
+					"provider2": {Instance: p1},
+				},
+				Provider: &ConnectedProvider{
+					Instance:   p1,
+					Connection: &pp.ConnectRes{},
+				},
+			},
+			{
+				providers: map[string]*ConnectedProvider{
+					"provider2": {Instance: p1},
+				},
+				Provider: &ConnectedProvider{
+					Instance:   p1,
+					Connection: &pp.ConnectRes{},
+				},
+			},
+		},
+	}
+
+	c.unsafeRefreshRuntimes()
+
+	// The unprocessed runtimes should be 1 since one of them was closed
+	assert.Len(t, c.unprocessedRuntimes, 1)
+}
+
 func TestRemoveRuntime_RemoveDeadProvider(t *testing.T) {
 	ctrl := gomock.NewController(t)
 

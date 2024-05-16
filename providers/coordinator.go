@@ -153,6 +153,9 @@ func (c *coordinator) unsafeRefreshRuntimes() {
 	var remaining []*Runtime
 	for i := range c.unprocessedRuntimes {
 		rt := c.unprocessedRuntimes[i]
+		if rt.isClosed {
+			continue
+		}
 		if asset := rt.asset(); asset == nil || !c.unsafeSetAssetRuntime(asset, rt) {
 			remaining = append(remaining, rt)
 		}
