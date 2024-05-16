@@ -14,7 +14,7 @@ import (
 	"go.mondoo.com/cnquery/v11/types"
 )
 
-var now = time.Now()
+var testTime = time.Unix(1715874169, 1)
 
 func TestRawData_String(t *testing.T) {
 	strVal := "yo"
@@ -37,9 +37,9 @@ func TestRawData_String(t *testing.T) {
 		{StringDataPtr(nil), "<null>"},
 		{StringDataPtr(&strVal), "\"yo\""},
 		{RegexData("ex"), "/ex/"},
-		{TimeData(now), now.String()},
+		{TimeData(testTime), testTime.String()},
 		{TimeDataPtr(nil), "<null>"},
-		{TimeDataPtr(&now), now.String()},
+		{TimeDataPtr(&testTime), testTime.String()},
 		{DictData(int64(1)), "1"},
 		{DictData(float64(1.2)), "1.2"},
 		{DictData(string("yo")), "\"yo\""},
@@ -77,9 +77,9 @@ func TestTruthy(t *testing.T) {
 		{RegexData(""), false},
 		{RegexData("r"), true},
 		{TimeData(time.Time{}), false},
-		{TimeData(now), true},
+		{TimeData(testTime), true},
 		{TimeDataPtr(nil), false},
-		{TimeDataPtr(&now), true},
+		{TimeDataPtr(&testTime), true},
 		{ArrayData([]interface{}{}, types.Any), false},
 		{ArrayData([]interface{}{false}, types.Bool), false},
 		{ArrayData([]interface{}{true}, types.Bool), true},
@@ -119,7 +119,7 @@ func TestSuccess(t *testing.T) {
 		{RegexData("r"), false, false},
 		{TimeData(time.Time{}), false, false},
 		{TimeDataPtr(nil), false, false},
-		{TimeData(now), false, false},
+		{TimeData(testTime), false, false},
 		{ArrayData([]interface{}{}, types.Any), false, false},
 		{ArrayData([]interface{}{true, false, true}, types.Bool), false, true},
 		{ArrayData([]interface{}{true, true}, types.Bool), true, true},
