@@ -7,9 +7,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	rdstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
+	"github.com/aws/smithy-go/transport/http"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/llx"
@@ -86,6 +88,10 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 						}
 						sgs = append(sgs, mqlSg.(*mqlAwsEc2Securitygroup))
 					}
+					var endpointAddress *string
+					if dbInstance.Endpoint != nil {
+						endpointAddress = dbInstance.Endpoint.Address
+					}
 
 					mqlDBInstance, err := CreateResource(a.MqlRuntime, "aws.rds.dbinstance",
 						map[string]*llx.RawData{
@@ -98,7 +104,7 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 							"dbInstanceIdentifier":          llx.StringDataPtr(dbInstance.DBInstanceIdentifier),
 							"deletionProtection":            llx.BoolDataPtr(dbInstance.DeletionProtection),
 							"enabledCloudwatchLogsExports":  llx.ArrayData(stringSliceInterface, types.String),
-							"endpoint":                      llx.StringDataPtr(dbInstance.Endpoint.Address),
+							"endpoint":                      llx.StringDataPtr(endpointAddress),
 							"engine":                        llx.StringDataPtr(dbInstance.Engine),
 							"engineVersion":                 llx.StringDataPtr(dbInstance.EngineVersion),
 							"enhancedMonitoringResourceArn": llx.StringDataPtr(dbInstance.EnhancedMonitoringResourceArn),
@@ -405,6 +411,137 @@ func (a *mqlAwsRdsDbcluster) id() (string, error) {
 
 func (a *mqlAwsRdsSnapshot) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsRdsBackupsetting) id() (string, error) {
+	return a.Target.Data, nil
+}
+
+type mqlAwsRdsBackupsettingInternal struct {
+	kmsKeyId *string
+}
+
+func (a *mqlAwsRdsBackupsetting) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.kmsKeyId == nil {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, "aws.kms.key",
+		map[string]*llx.RawData{
+			"arn": llx.StringDataPtr(a.kmsKeyId),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
+func (a *mqlAwsRdsDbinstance) backupSettings() ([]interface{}, error) {
+	instanceId := a.Id.Data
+	region := a.Region.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Rds(region)
+	ctx := context.Background()
+	res := []interface{}{}
+
+	var marker *string
+	for {
+		resp, err := svc.DescribeDBInstanceAutomatedBackups(ctx, &rds.DescribeDBInstanceAutomatedBackupsInput{DBInstanceIdentifier: &instanceId, Marker: marker})
+		var respErr *http.ResponseError
+		if err != nil {
+			if errors.As(err, &respErr) {
+				if respErr.HTTPStatusCode() == 404 {
+					return nil, nil
+				}
+			}
+			return nil, err
+		}
+		for _, backup := range resp.DBInstanceAutomatedBackups {
+			var earliest *time.Time
+			var latest *time.Time
+			if backup.RestoreWindow != nil {
+				earliest = backup.RestoreWindow.EarliestTime
+				latest = backup.RestoreWindow.LatestTime
+			}
+			mqlRdsBackup, err := CreateResource(a.MqlRuntime, "aws.rds.backupsetting",
+				map[string]*llx.RawData{
+					"target":                   llx.StringDataPtr(backup.BackupTarget),
+					"retentionPeriod":          llx.IntDataPtr(backup.BackupRetentionPeriod),
+					"dedicatedLogVolume":       llx.BoolDataPtr(backup.DedicatedLogVolume),
+					"encrypted":                llx.BoolDataPtr(backup.Encrypted),
+					"region":                   llx.StringData(region),
+					"status":                   llx.StringDataPtr(backup.Status),
+					"timezone":                 llx.StringDataPtr(backup.Timezone),
+					"earliestRestoreAvailable": llx.TimeDataPtr(earliest),
+					"latestRestoreAvailable":   llx.TimeDataPtr(latest),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlRdsBackup)
+			mqlRdsBackup.(*mqlAwsRdsBackupsetting).kmsKeyId = backup.KmsKeyId
+		}
+		if resp.Marker == nil {
+			break
+		}
+		marker = resp.Marker
+	}
+	return res, nil
+}
+
+func (a *mqlAwsRdsDbcluster) backupSettings() ([]interface{}, error) {
+	clusterId := a.Id.Data
+	region := a.Region.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Rds(region)
+	ctx := context.Background()
+	res := []interface{}{}
+
+	var marker *string
+	for {
+		resp, err := svc.DescribeDBClusterAutomatedBackups(ctx, &rds.DescribeDBClusterAutomatedBackupsInput{DBClusterIdentifier: &clusterId, Marker: marker})
+		var respErr *http.ResponseError
+		if err != nil {
+			if errors.As(err, &respErr) {
+				if respErr.HTTPStatusCode() == 404 {
+					return nil, nil
+				}
+			}
+			return nil, err
+		}
+		for _, backup := range resp.DBClusterAutomatedBackups {
+			var earliest *time.Time
+			var latest *time.Time
+			if backup.RestoreWindow != nil {
+				earliest = backup.RestoreWindow.EarliestTime
+				latest = backup.RestoreWindow.LatestTime
+			}
+			mqlRdsBackup, err := CreateResource(a.MqlRuntime, "aws.rds.backupsetting",
+				map[string]*llx.RawData{
+					"target":                   llx.StringDataPtr(backup.DBClusterIdentifier),
+					"retentionPeriod":          llx.IntDataPtr(backup.BackupRetentionPeriod),
+					"dedicatedLogVolume":       llx.NilData,
+					"encrypted":                llx.BoolDataPtr(backup.StorageEncrypted),
+					"region":                   llx.StringData(region),
+					"status":                   llx.StringDataPtr(backup.Status),
+					"timezone":                 llx.NilData,
+					"earliestRestoreAvailable": llx.TimeDataPtr(earliest),
+					"latestRestoreAvailable":   llx.TimeDataPtr(latest),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlRdsBackup)
+			mqlRdsBackup.(*mqlAwsRdsBackupsetting).kmsKeyId = backup.KmsKeyId
+		}
+		if resp.Marker == nil {
+			break
+		}
+		marker = resp.Marker
+	}
+	return res, nil
 }
 
 func (a *mqlAwsRdsSnapshot) attributes() ([]interface{}, error) {

@@ -2121,6 +2121,23 @@ resources:
         id }
       title: Return a list of RDS Clusters across all regions where snapshots are
         not encrypted and return the `arn` `region` and `id` for the cluster
+  aws.rds.backupsetting:
+    fields:
+      dedicatedLogVolume: {}
+      earliestRestoreAvailable: {}
+      encrypted: {}
+      kmsKey: {}
+      latestRestoreAvailable: {}
+      region: {}
+      retentionPeriod: {}
+      status: {}
+      target: {}
+      timezone: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
   aws.rds.dbcluster:
     docs:
       desc: |
@@ -2132,6 +2149,8 @@ resources:
       availabilityZones:
         min_mondoo_version: 9.0.0
       backupRetentionPeriod:
+        min_mondoo_version: 9.0.0
+      backupSettings:
         min_mondoo_version: 9.0.0
       clusterDbInstanceClass:
         min_mondoo_version: 9.0.0
@@ -2190,6 +2209,8 @@ resources:
       availabilityZone:
         min_mondoo_version: 9.0.0
       backupRetentionPeriod: {}
+      backupSettings:
+        min_mondoo_version: 9.0.0
       createdTime:
         min_mondoo_version: 9.0.0
       dbInstanceClass:
