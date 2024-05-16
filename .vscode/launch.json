@@ -50,6 +50,16 @@
       ],
     },
     {
+      "name": "cnquery-sbom",
+      "type": "go",
+      "request": "launch",
+      "program": "${workspaceRoot}/apps/cnquery/cnquery.go",
+      "cwd": "${workspaceRoot}/",
+      "args": [
+        "sbom",
+      ],
+    },
+    {
       "name": "cnquery-run-k8s-pod",
       "type": "go",
       "request": "launch",
