@@ -204,6 +204,11 @@ func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 		runtime: r,
 	}
 
+	// TODO: we probably want to check here if the provider is dead and restart it
+	// if r.Provider.Instance.isCloseOrShutdown() {
+
+	// }
+
 	r.Provider.Connection, r.Provider.ConnectionError = r.Provider.Instance.Plugin.Connect(req, &callbacks)
 	if r.Provider.ConnectionError != nil {
 		return r.Provider.ConnectionError

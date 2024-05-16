@@ -38,6 +38,7 @@ type RunningProvider struct {
 // initialize the heartbeat with the provider
 func (p *RunningProvider) heartbeat() error {
 	if err := p.doOneHeartbeat(p.interval + p.gracePeriod); err != nil {
+		log.Error().Err(err).Str("plugin", p.Name).Msg("error in plugin heartbeat")
 		if err := p.Shutdown(); err != nil {
 			log.Error().Err(err).Str("plugin", p.Name).Msg("error in plugin shutdown")
 		}
@@ -47,6 +48,7 @@ func (p *RunningProvider) heartbeat() error {
 	go func() {
 		for !p.isCloseOrShutdown() {
 			if err := p.doOneHeartbeat(p.interval + p.gracePeriod); err != nil {
+				log.Error().Err(err).Str("plugin", p.Name).Msg("error in plugin heartbeat")
 				if err := p.Shutdown(); err != nil {
 					log.Error().Err(err).Str("plugin", p.Name).Msg("error in plugin shutdown")
 				}

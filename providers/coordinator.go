@@ -211,6 +211,14 @@ func (c *coordinator) RemoveRuntime(runtime *Runtime) {
 				log.Warn().Err(err).Str("provider", p.Name).Msg("failed to shut down provider")
 			}
 		}
+	} else {
+		// Check for killed/crashed providers and remove them from the list of running providers
+		for _, p := range c.runningByID {
+			if p.isCloseOrShutdown() {
+				log.Warn().Str("provider", p.Name).Msg("removing closed provider")
+				delete(c.runningByID, p.ID)
+			}
+		}
 	}
 
 	// If all providers have been killed, reset the connection IDs back to 0
