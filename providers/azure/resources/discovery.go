@@ -134,7 +134,7 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 		}
 		assets = append(assets, mySqlServers...)
 	}
-	if stringx.ContainsAnyOf(targets, DiscoveryMySqlFlexibleServers) {
+	if stringx.ContainsAnyOf(targets, append(matchingTargets, DiscoveryMySqlFlexibleServers)...) {
 		flexibleServers, err := discoverMySqlFlexibleServers(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
@@ -150,7 +150,7 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 		assets = append(assets, postgresServers...)
 	}
 
-	if stringx.ContainsAnyOf(targets, DiscoveryPostgresFlexibleServers) {
+	if stringx.ContainsAnyOf(targets, append(matchingTargets, DiscoveryPostgresFlexibleServers)...) {
 		flexibleServers, err := discoverPostgresqlFlexibleServers(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
