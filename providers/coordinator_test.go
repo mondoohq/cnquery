@@ -149,6 +149,60 @@ func TestRemoveRuntime_StopUnusedProvider(t *testing.T) {
 	assert.Empty(t, c.runningByID)
 }
 
+func TestRemoveRuntime_RemoveDeadProvider(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	// Setup 1 closed provider with 1 runtime
+	mockPlugin1 := NewMockProviderPlugin(ctrl)
+	p1 := &RunningProvider{
+		ID:       "provider1",
+		Plugin:   mockPlugin1,
+		isClosed: true,
+	}
+	r1 := &Runtime{
+		providers: map[string]*ConnectedProvider{
+			"provider1": {Instance: p1},
+		},
+		Provider: &ConnectedProvider{
+			Instance: p1,
+			Connection: &pp.ConnectRes{
+				Asset: &inventory.Asset{PlatformIds: []string{"platformId1"}},
+			},
+		},
+	}
+
+	// Setup another provider with another runtime
+	r2 := &Runtime{
+		providers: map[string]*ConnectedProvider{
+			"provider2": {Instance: p1},
+		},
+		Provider: &ConnectedProvider{
+			Instance: p1,
+			Connection: &pp.ConnectRes{
+				Asset: &inventory.Asset{PlatformIds: []string{"platformId2"}},
+			},
+		},
+	}
+
+	c := &coordinator{
+		runningByID: map[string]*RunningProvider{
+			"provider1": p1,
+		},
+		runtimes: map[string]*Runtime{
+			"platformId1": r1,
+			"platformId2": r2,
+		},
+	}
+
+	// Remove 1 runtime
+	c.RemoveRuntime(r1)
+
+	// Verify that the provider has been removed because it crashed
+	assert.Empty(t, c.runningByID)
+
+	c.RemoveRuntime(r2)
+}
+
 func TestRemoveRuntime_UsedProvider(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
