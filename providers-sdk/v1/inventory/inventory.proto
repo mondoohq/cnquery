@@ -200,7 +200,6 @@ message Config {
   // conflict with the old "backend" while allowing us to load the field from 
   // yaml.
   ProviderType backend = 28;
-  DeprecatedV8_Kind kind = 24;
   // ^^
 
   string host = 2;
@@ -247,46 +246,6 @@ message Discovery {
   map<string,string> filter = 2;
 }
 
-// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-// protolint:disable:next ENUM_NAMES_UPPER_CAMEL_CASE
-enum DeprecatedV8_Kind {
-  // protolint:disable:next ENUM_FIELD_NAMES_ZERO_VALUE_END_WITH
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  KIND_UNKNOWN = 0;
-
-  // at rest
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  KIND_VIRTUAL_MACHINE_IMAGE = 1;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  KIND_CONTAINER_IMAGE = 2;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  KIND_CODE = 3;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  KIND_PACKAGE = 4;
-
-  // in motion
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  KIND_VIRTUAL_MACHINE = 5;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  KIND_CONTAINER = 6;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  KIND_PROCESS = 7;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  KIND_API = 8;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  KIND_BARE_METAL = 9;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  KIND_NETWORK = 10;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  KIND_K8S_OBJECT = 11;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  KIND_AWS_OBJECT = 12;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  KIND_GCP_OBJECT = 13;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  KIND_AZURE_OBJECT= 14;
-}
-
 message Platform {
   string name = 1;
   string arch = 3;
@@ -298,10 +257,6 @@ message Platform {
   string kind = 8;
   // technology url for this asset, raw version of an AssetUrl
   repeated string technology_url_segments = 9;
-
-  // FIXME: DEPRECATED, remove in v10 vv
-  DeprecatedV8_Kind deprecated_v8_kind = 20;
-  // ^^
 
   string runtime = 21;
   map<string, string> labels = 22;

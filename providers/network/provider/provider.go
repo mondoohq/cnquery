@@ -163,7 +163,6 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		}
 
 		conf.Backend = inventory.ProviderType_HOST
-		conf.Kind = inventory.DeprecatedV8_Kind_KIND_NETWORK
 
 		var upstream *upstream.UpstreamClient
 		var err error
