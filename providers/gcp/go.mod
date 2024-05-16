@@ -14,7 +14,7 @@ require (
 	cloud.google.com/go/functions v1.16.2
 	cloud.google.com/go/iam v1.1.8
 	cloud.google.com/go/kms v1.16.0
-	cloud.google.com/go/logging v1.9.0
+	cloud.google.com/go/logging v1.10.0
 	cloud.google.com/go/longrunning v0.5.7
 	cloud.google.com/go/monitoring v1.19.0
 	cloud.google.com/go/pubsub v1.38.0
