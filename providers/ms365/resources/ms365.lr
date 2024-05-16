@@ -391,7 +391,7 @@ ms365.exchangeonline {
   // List of shared mailboxes
   sharedMailboxes() []ms365.exchangeonline.exoMailbox
   // List of Teams protection policies
-  teamsProtectionPolicy() []ms365.exchangeonline.teamsProtectionPolicy
+  teamsProtectionPolicies() []ms365.exchangeonline.teamsProtectionPolicy
 }
 
 // Teams Protection Policy configuration

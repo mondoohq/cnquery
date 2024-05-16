@@ -662,8 +662,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.exchangeonline.sharedMailboxes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetSharedMailboxes()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.exoMailbox")))
 	},
-	"ms365.exchangeonline.teamsProtectionPolicy": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365Exchangeonline).GetTeamsProtectionPolicy()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.teamsProtectionPolicy")))
+	"ms365.exchangeonline.teamsProtectionPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365Exchangeonline).GetTeamsProtectionPolicies()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.teamsProtectionPolicy")))
 	},
 	"ms365.exchangeonline.teamsProtectionPolicy.zapEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineTeamsProtectionPolicy).GetZapEnabled()).ToDataRes(types.Bool)
@@ -1479,8 +1479,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMs365Exchangeonline).SharedMailboxes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.teamsProtectionPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365Exchangeonline).TeamsProtectionPolicy, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+	"ms365.exchangeonline.teamsProtectionPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365Exchangeonline).TeamsProtectionPolicies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"ms365.exchangeonline.teamsProtectionPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3345,7 +3345,7 @@ type mqlMs365Exchangeonline struct {
 	RoleAssignmentPolicy plugin.TValue[[]interface{}]
 	ExternalInOutlook plugin.TValue[[]interface{}]
 	SharedMailboxes plugin.TValue[[]interface{}]
-	TeamsProtectionPolicy plugin.TValue[[]interface{}]
+	TeamsProtectionPolicies plugin.TValue[[]interface{}]
 }
 
 // createMs365Exchangeonline creates a new instance of this resource
@@ -3514,10 +3514,10 @@ func (c *mqlMs365Exchangeonline) GetSharedMailboxes() *plugin.TValue[[]interface
 	})
 }
 
-func (c *mqlMs365Exchangeonline) GetTeamsProtectionPolicy() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.TeamsProtectionPolicy, func() ([]interface{}, error) {
+func (c *mqlMs365Exchangeonline) GetTeamsProtectionPolicies() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.TeamsProtectionPolicies, func() ([]interface{}, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("ms365.exchangeonline", c.__id, "teamsProtectionPolicy")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ms365.exchangeonline", c.__id, "teamsProtectionPolicies")
 			if err != nil {
 				return nil, err
 			}
@@ -3526,7 +3526,7 @@ func (c *mqlMs365Exchangeonline) GetTeamsProtectionPolicy() *plugin.TValue[[]int
 			}
 		}
 
-		return c.teamsProtectionPolicy()
+		return c.teamsProtectionPolicies()
 	})
 }
 

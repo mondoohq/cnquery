@@ -266,6 +266,8 @@ resources:
       sharedMailboxes:
         min_mondoo_version: 9.2.13
       sharingPolicy: {}
+      teamsProtectionPolicies:
+        min_mondoo_version: latest
       teamsProtectionPolicy:
         min_mondoo_version: latest
       transportRule: {}

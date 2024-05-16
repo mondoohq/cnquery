@@ -334,7 +334,7 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 	r.SharedMailboxes = plugin.TValue[[]interface{}]{Data: sharedMailboxes, State: plugin.StateIsSet, Error: sharedMailboxesErr}
 
 	// Related to TeamsProtectionPolicy
-	r.TeamsProtectionPolicy = convertTeamsProtectionPolicy(r, report.TeamsProtectionPolicy)
+	r.TeamsProtectionPolicies = convertTeamsProtectionPolicy(r, report.TeamsProtectionPolicy)
 
 	return nil
 }
@@ -423,7 +423,7 @@ func (m *mqlMs365ExchangeonlineExoMailbox) id() (string, error) {
 	return m.Identity.Data, nil
 }
 
-func (r *mqlMs365Exchangeonline) teamsProtectionPolicy() ([]interface{}, error) {
+func (r *mqlMs365Exchangeonline) teamsProtectionPolicies() ([]interface{}, error) {
 	return nil, r.getExchangeReport()
 }
 
