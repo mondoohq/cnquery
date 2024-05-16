@@ -164,6 +164,26 @@ func (r *mqlMs365Exchangeonline) getOrg() (string, error) {
 	return org, nil
 }
 
+// Related to TeamsProtectionPolicy as a seperate function
+func convertTeamsProtectionPolicy(r *mqlMs365Exchangeonline, data []*TeamsProtectionPolicy) plugin.TValue[[]interface{}] {
+	result := []interface{}{}
+	var teamsProtectionPolicyErr error
+	for _, t := range data {
+		policy, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.teamsProtectionPolicy",
+			map[string]*llx.RawData{
+				"zapEnabled": llx.BoolData(t.ZapEnabled),
+				"isValid":    llx.BoolData(t.IsValid),
+			})
+		if err != nil {
+			teamsProtectionPolicyErr = err
+			break
+		}
+
+		result = append(result, policy)
+	}
+	return plugin.TValue[[]interface{}]{Data: result, State: plugin.StateIsSet, Error: teamsProtectionPolicyErr}
+}
+
 func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 	conn := r.MqlRuntime.Connection.(*connection.Ms365Connection)
 
@@ -313,22 +333,8 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 	}
 	r.SharedMailboxes = plugin.TValue[[]interface{}]{Data: sharedMailboxes, State: plugin.StateIsSet, Error: sharedMailboxesErr}
 
-	teamsProtectionPolicy := []interface{}{}
-	var teamsProtectionPolicyErr error
-	for _, t := range report.TeamsProtectionPolicy {
-		policy, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.teamsProtectionPolicy",
-			map[string]*llx.RawData{
-				"zapEnabled": llx.BoolData(t.ZapEnabled),
-				"isValid":    llx.BoolData(t.IsValid),
-			})
-		if err != nil {
-			teamsProtectionPolicyErr = err
-			break
-		}
-
-		teamsProtectionPolicy = append(teamsProtectionPolicy, policy)
-	}
-	r.TeamsProtectionPolicy = plugin.TValue[[]interface{}]{Data: teamsProtectionPolicy, State: plugin.StateIsSet, Error: teamsProtectionPolicyErr}
+	// Related to TeamsProtectionPolicy
+	r.TeamsProtectionPolicy = convertTeamsProtectionPolicy(r, report.TeamsProtectionPolicy)
 
 	return nil
 }
