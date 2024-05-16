@@ -266,6 +266,10 @@ resources:
       sharedMailboxes:
         min_mondoo_version: 9.2.13
       sharingPolicy: {}
+      teamsProtectionPolicies:
+        min_mondoo_version: latest
+      teamsProtectionPolicy:
+        min_mondoo_version: latest
       transportRule: {}
     min_mondoo_version: 5.15.0
     platform:
@@ -288,6 +292,15 @@ resources:
       identity: {}
     is_private: true
     min_mondoo_version: latest
+    platform:
+      name:
+      - microsoft365
+  ms365.exchangeonline.teamsProtectionPolicy:
+    fields:
+      isValid: {}
+      zapEnabled: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - microsoft365

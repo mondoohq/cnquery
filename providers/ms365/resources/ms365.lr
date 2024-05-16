@@ -390,6 +390,16 @@ ms365.exchangeonline {
   externalInOutlook() []ms365.exchangeonline.externalSender
   // List of shared mailboxes
   sharedMailboxes() []ms365.exchangeonline.exoMailbox
+  // List of Teams protection policies
+  teamsProtectionPolicies() []ms365.exchangeonline.teamsProtectionPolicy
+}
+
+// Teams Protection Policy configuration
+private ms365.exchangeonline.teamsProtectionPolicy {
+  // Whether Zero-hour Auto Purge (ZAP) is enabled
+  zapEnabled bool
+  // Whether the policy configuration is considered valid
+  isValid bool
 }
 
 // Microsoft 365 Exchange Online External Sender
