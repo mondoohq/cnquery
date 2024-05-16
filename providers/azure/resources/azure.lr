@@ -1228,7 +1228,7 @@ private azure.subscription.postgreSqlService {
 }
 
 // Azure Database for PostgreSQL flexible server
-private azure.subscription.postgreSqlService.flexibleServer @defaults("id name location") {
+private azure.subscription.postgreSqlService.flexibleServer @defaults("name location properties.version properties.fullyQualifiedDomainName") {
   // PostgreSQL server ID
   id string
   // PostgreSQL server name
@@ -1382,7 +1382,7 @@ private azure.subscription.mySqlService.database @defaults("id name") {
 }
 
 // Azure Database for MySQL flexible server
-private azure.subscription.mySqlService.flexibleServer @defaults("id name location") {
+private azure.subscription.mySqlService.flexibleServer @defaults("name location properties.version properties.fullyQualifiedDomainName") {
   // MySQL flexible server ID
   id string
   // MySQL flexible server name
