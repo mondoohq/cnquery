@@ -202,9 +202,9 @@ func accountAsset(conn *connection.AwsConnection, awsAccount *mqlAwsAccount) *in
 	name := AssembleIntegrationName(alias, accountId)
 
 	id := "//platformid.api.mondoo.app/runtime/aws/accounts/" + accountId
-
+	accountArn := "arn:aws:sts::" + accountId
 	return &inventory.Asset{
-		PlatformIds: []string{id},
+		PlatformIds: []string{id, accountArn},
 		Name:        name,
 		Platform:    connection.GetPlatformForObject("", accountId),
 		Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
