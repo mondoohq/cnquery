@@ -16,7 +16,7 @@ import (
 )
 
 func (a *mqlAwsAccount) id() (string, error) {
-	return "aws.account/" + a.Id.Data, nil
+	return a.Id.Data, nil
 }
 
 func (a *mqlAwsAccount) aliases() ([]interface{}, error) {
