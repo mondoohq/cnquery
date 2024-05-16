@@ -72,6 +72,12 @@ func GenerateBom(r *reporter.Report) ([]*Sbom, error) {
 
 		// extract os packages and python packages
 		dataPoints := r.Data[mrn]
+		if dataPoints == nil {
+			bom.Status = Status_STATUS_FAILED
+			bom.ErrorMessage = "no data points found"
+			boms = append(boms, bom)
+			continue
+		}
 		for k := range dataPoints.Values {
 			dataValue := dataPoints.Values[k]
 			jsondata, err := reporter.JsonValue(dataValue.Content)
