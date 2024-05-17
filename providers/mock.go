@@ -22,7 +22,7 @@ var mockProvider = Provider{
 			{
 				Name:  "mock",
 				Use:   "mock",
-				Short: "use a recording without an active connection",
+				Short: "a recording file without an active connection",
 			},
 			{
 				Name:     "upstream",

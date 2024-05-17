@@ -6,7 +6,7 @@ Usage:
   cnquery run [command]
 
 Available Commands:
-  mock        Run a query with use a recording without an active connection
+  mock        Run a query with a recording file without an active connection
 
 Flags:
       --ast                  Parse the query and return the abstract syntax tree (AST).
