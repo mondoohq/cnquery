@@ -1856,7 +1856,7 @@ private aws.rds.backupsetting {
   kmsKey() aws.kms.key
   // Region for the backup setting
   region string
-  // Status of the backup settting
+  // Status of the backup setting
   status string
   // Timezone for the backup setting
   timezone string
