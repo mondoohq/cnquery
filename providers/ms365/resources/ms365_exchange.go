@@ -54,6 +54,7 @@ $RoleAssignmentPolicy = (Get-RoleAssignmentPolicy)
 $ExternalInOutlook = (Get-ExternalInOutlook)
 $ExoMailbox = (Get-EXOMailbox -RecipientTypeDetails SharedMailbox)
 $TeamsProtectionPolicy = (Get-TeamsProtectionPolicy)
+$ReportSubmissionPolicy = (Get-ReportSubmissionPolicy)
 
 $exchangeOnline = New-Object PSObject
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name MalwareFilterPolicy -Value @($MalwareFilterPolicy)
@@ -76,6 +77,7 @@ Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name RoleAssig
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name ExternalInOutlook -Value @($ExternalInOutlook)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name ExoMailbox -Value @($ExoMailbox)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name TeamsProtectionPolicy -Value @($TeamsProtectionPolicy)
+Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name ReportSubmissionPolicy -Value @($ReportSubmissionPolicy)
 
 Disconnect-ExchangeOnline -Confirm:$false
 
@@ -102,8 +104,9 @@ type ExchangeOnlineReport struct {
 	RoleAssignmentPolicy           []interface{}     `json:"RoleAssignmentPolicy"`
 	ExternalInOutlook              []*ExternalSender `json:"ExternalInOutlook"`
 	// note: this only contains shared mailboxes
-	ExoMailbox            []*ExoMailbox            `json:"ExoMailbox"`
-	TeamsProtectionPolicy []*TeamsProtectionPolicy `json:"TeamsProtectionPolicy"`
+	ExoMailbox             []*ExoMailbox             `json:"ExoMailbox"`
+	TeamsProtectionPolicy  []*TeamsProtectionPolicy  `json:"TeamsProtectionPolicy"`
+	ReportSubmissionPolicy []*ReportSubmissionPolicy `json:"ReportSubmissionPolicy"`
 }
 
 type ExternalSender struct {
@@ -133,6 +136,17 @@ type ExoMailbox struct {
 type TeamsProtectionPolicy struct {
 	ZapEnabled bool `json:"ZapEnabled"`
 	IsValid    bool `json:"IsValid"`
+}
+
+type ReportSubmissionPolicy struct {
+	ReportJunkToCustomizedAddress               bool     `json:"ReportJunkToCustomizedAddress"`
+	ReportNotJunkToCustomizedAddress            bool     `json:"ReportNotJunkToCustomizedAddress"`
+	ReportPhishToCustomizedAddress              bool     `json:"ReportPhishToCustomizedAddress"`
+	ReportJunkAddresses                         []string `json:"ReportJunkAddresses"`
+	ReportNotJunkAddresses                      []string `json:"ReportNotJunkAddresses"`
+	ReportPhishAddresses                        []string `json:"ReportPhishAddresses"`
+	ReportChatMessageEnabled                    bool     `json:"ReportChatMessageEnabled"`
+	ReportChatMessageToCustomizedAddressEnabled bool     `json:"ReportChatMessageToCustomizedAddressEnabled"`
 }
 
 type mqlMs365ExchangeonlineInternal struct {
@@ -182,6 +196,32 @@ func convertTeamsProtectionPolicy(r *mqlMs365Exchangeonline, data []*TeamsProtec
 		result = append(result, policy)
 	}
 	return plugin.TValue[[]interface{}]{Data: result, State: plugin.StateIsSet, Error: teamsProtectionPolicyErr}
+}
+
+// Related to ReportSubmissionPolicy as a seperate function
+func convertReportSubmissionPolicy(r *mqlMs365Exchangeonline, data []*ReportSubmissionPolicy) plugin.TValue[[]interface{}] {
+	result := []interface{}{}
+	var reportSubmissionPolicyErr error
+	for _, t := range data {
+		policy, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.reportSubmissionPolicy",
+			map[string]*llx.RawData{
+				"reportJunkToCustomizedAddress":               llx.BoolData(t.ReportJunkToCustomizedAddress),
+				"reportNotJunkToCustomizedAddress":            llx.BoolData(t.ReportNotJunkToCustomizedAddress),
+				"reportPhishToCustomizedAddress":              llx.BoolData(t.ReportPhishToCustomizedAddress),
+				"reportJunkAddresses":                         llx.ArrayData(llx.TArr2Raw(t.ReportJunkAddresses), types.Any),
+				"reportNotJunkAddresses":                      llx.ArrayData(llx.TArr2Raw(t.ReportNotJunkAddresses), types.Any),
+				"reportPhishAddresses":                        llx.ArrayData(llx.TArr2Raw(t.ReportNotJunkAddresses), types.Any),
+				"reportChatMessageEnabled":                    llx.BoolData(t.ReportChatMessageEnabled),
+				"reportChatMessageToCustomizedAddressEnabled": llx.BoolData(t.ReportChatMessageToCustomizedAddressEnabled),
+			})
+		if err != nil {
+			reportSubmissionPolicyErr = err
+			break
+		}
+
+		result = append(result, policy)
+	}
+	return plugin.TValue[[]interface{}]{Data: result, State: plugin.StateIsSet, Error: reportSubmissionPolicyErr}
 }
 
 func (r *mqlMs365Exchangeonline) getExchangeReport() error {
@@ -336,6 +376,9 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 	// Related to TeamsProtectionPolicy
 	r.TeamsProtectionPolicies = convertTeamsProtectionPolicy(r, report.TeamsProtectionPolicy)
 
+	// Related to ReportSubmissionPolicy
+	r.ReportSubmissionPolicies = convertReportSubmissionPolicy(r, report.ReportSubmissionPolicy)
+
 	return nil
 }
 
@@ -424,6 +467,10 @@ func (m *mqlMs365ExchangeonlineExoMailbox) id() (string, error) {
 }
 
 func (r *mqlMs365Exchangeonline) teamsProtectionPolicies() ([]interface{}, error) {
+	return nil, r.getExchangeReport()
+}
+
+func (r *mqlMs365Exchangeonline) reportSubmissionPolicies() ([]interface{}, error) {
 	return nil, r.getExchangeReport()
 }
 
