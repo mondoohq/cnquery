@@ -1844,6 +1844,30 @@ aws.rds {
   dbClusters() []aws.rds.dbcluster
 }
 
+// Amazon RDS Backup Setting
+private aws.rds.backupsetting {
+  // Target fot the backup setting
+  target string
+  // Retention period for the backup setting
+  retentionPeriod int
+  // Dedicated log volume for the backup setting
+  dedicatedLogVolume bool
+  // True if backups have encryption turned on
+  encrypted bool
+  // KMS key associated with the backup setting
+  kmsKey() aws.kms.key
+  // Region for the backup setting
+  region string
+  // Status of the backup setting
+  status string
+  // Timezone for the backup setting
+  timezone string
+  // Time of earliest available restore
+  earliestRestoreAvailable time
+  // Time of latest available restore
+  latestRestoreAvailable time
+}
+
 // Amazon RDS database cluster
 private aws.rds.dbcluster @defaults("id region") {
   // ARN for the database cluster
@@ -1900,6 +1924,8 @@ private aws.rds.dbcluster @defaults("id region") {
   masterUsername string
   // The latest time to which a database can be restored with point-in-time restore
   latestRestorableTime time
+  // Backup setting for the DB Cluster
+  backupSettings() []aws.rds.backupsetting
 }
 
 // Amazon RDS snapshot
@@ -1994,6 +2020,8 @@ private aws.rds.dbinstance @defaults("id region engine engineVersion") {
   masterUsername string
   // The latest time to which a database can be restored with point-in-time restore
   latestRestorableTime time
+  // Backup setting for the DB instance
+  backupSettings() []aws.rds.backupsetting
 }
 
 // Amazon ElastiCache

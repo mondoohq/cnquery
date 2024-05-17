@@ -490,6 +490,10 @@ func init() {
 			// to override args, implement: initAwsRds(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsRds,
 		},
+		"aws.rds.backupsetting": {
+			// to override args, implement: initAwsRdsBackupsetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsRdsBackupsetting,
+		},
 		"aws.rds.dbcluster": {
 			// to override args, implement: initAwsRdsDbcluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsRdsDbcluster,
@@ -2797,6 +2801,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.dbClusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRds).GetDbClusters()).ToDataRes(types.Array(types.Resource("aws.rds.dbcluster")))
 	},
+	"aws.rds.backupsetting.target": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsBackupsetting).GetTarget()).ToDataRes(types.String)
+	},
+	"aws.rds.backupsetting.retentionPeriod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsBackupsetting).GetRetentionPeriod()).ToDataRes(types.Int)
+	},
+	"aws.rds.backupsetting.dedicatedLogVolume": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsBackupsetting).GetDedicatedLogVolume()).ToDataRes(types.Bool)
+	},
+	"aws.rds.backupsetting.encrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsBackupsetting).GetEncrypted()).ToDataRes(types.Bool)
+	},
+	"aws.rds.backupsetting.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsBackupsetting).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.rds.backupsetting.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsBackupsetting).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.rds.backupsetting.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsBackupsetting).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.rds.backupsetting.timezone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsBackupsetting).GetTimezone()).ToDataRes(types.String)
+	},
+	"aws.rds.backupsetting.earliestRestoreAvailable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsBackupsetting).GetEarliestRestoreAvailable()).ToDataRes(types.Time)
+	},
+	"aws.rds.backupsetting.latestRestoreAvailable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsBackupsetting).GetLatestRestoreAvailable()).ToDataRes(types.Time)
+	},
 	"aws.rds.dbcluster.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbcluster).GetArn()).ToDataRes(types.String)
 	},
@@ -2877,6 +2911,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.rds.dbcluster.latestRestorableTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbcluster).GetLatestRestorableTime()).ToDataRes(types.Time)
+	},
+	"aws.rds.dbcluster.backupSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetBackupSettings()).ToDataRes(types.Array(types.Resource("aws.rds.backupsetting")))
 	},
 	"aws.rds.snapshot.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsSnapshot).GetArn()).ToDataRes(types.String)
@@ -3006,6 +3043,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.rds.dbinstance.latestRestorableTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetLatestRestorableTime()).ToDataRes(types.Time)
+	},
+	"aws.rds.dbinstance.backupSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetBackupSettings()).ToDataRes(types.Array(types.Resource("aws.rds.backupsetting")))
 	},
 	"aws.elasticache.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticache).GetClusters()).ToDataRes(types.Array(types.Dict))
@@ -7285,6 +7325,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsRds).DbClusters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"aws.rds.backupsetting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsRdsBackupsetting).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.rds.backupsetting.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsBackupsetting).Target, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.backupsetting.retentionPeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsBackupsetting).RetentionPeriod, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.rds.backupsetting.dedicatedLogVolume": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsBackupsetting).DedicatedLogVolume, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.rds.backupsetting.encrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsBackupsetting).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.rds.backupsetting.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsBackupsetting).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.rds.backupsetting.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsBackupsetting).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.backupsetting.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsBackupsetting).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.backupsetting.timezone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsBackupsetting).Timezone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.backupsetting.earliestRestoreAvailable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsBackupsetting).EarliestRestoreAvailable, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.rds.backupsetting.latestRestoreAvailable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsBackupsetting).LatestRestoreAvailable, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.rds.dbcluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsRdsDbcluster).__id, ok = v.Value.(string)
 			return
@@ -7395,6 +7479,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.rds.dbcluster.latestRestorableTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbcluster).LatestRestorableTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.backupSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).BackupSettings, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"aws.rds.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7575,6 +7663,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.rds.dbinstance.latestRestorableTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbinstance).LatestRestorableTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.backupSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).BackupSettings, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"aws.elasticache.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -18974,6 +19066,112 @@ func (c *mqlAwsRds) GetDbClusters() *plugin.TValue[[]interface{}] {
 	})
 }
 
+// mqlAwsRdsBackupsetting for the aws.rds.backupsetting resource
+type mqlAwsRdsBackupsetting struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlAwsRdsBackupsettingInternal
+	Target plugin.TValue[string]
+	RetentionPeriod plugin.TValue[int64]
+	DedicatedLogVolume plugin.TValue[bool]
+	Encrypted plugin.TValue[bool]
+	KmsKey plugin.TValue[*mqlAwsKmsKey]
+	Region plugin.TValue[string]
+	Status plugin.TValue[string]
+	Timezone plugin.TValue[string]
+	EarliestRestoreAvailable plugin.TValue[*time.Time]
+	LatestRestoreAvailable plugin.TValue[*time.Time]
+}
+
+// createAwsRdsBackupsetting creates a new instance of this resource
+func createAwsRdsBackupsetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRdsBackupsetting{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.rds.backupsetting", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRdsBackupsetting) MqlName() string {
+	return "aws.rds.backupsetting"
+}
+
+func (c *mqlAwsRdsBackupsetting) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRdsBackupsetting) GetTarget() *plugin.TValue[string] {
+	return &c.Target
+}
+
+func (c *mqlAwsRdsBackupsetting) GetRetentionPeriod() *plugin.TValue[int64] {
+	return &c.RetentionPeriod
+}
+
+func (c *mqlAwsRdsBackupsetting) GetDedicatedLogVolume() *plugin.TValue[bool] {
+	return &c.DedicatedLogVolume
+}
+
+func (c *mqlAwsRdsBackupsetting) GetEncrypted() *plugin.TValue[bool] {
+	return &c.Encrypted
+}
+
+func (c *mqlAwsRdsBackupsetting) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.backupsetting", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsRdsBackupsetting) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsRdsBackupsetting) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsRdsBackupsetting) GetTimezone() *plugin.TValue[string] {
+	return &c.Timezone
+}
+
+func (c *mqlAwsRdsBackupsetting) GetEarliestRestoreAvailable() *plugin.TValue[*time.Time] {
+	return &c.EarliestRestoreAvailable
+}
+
+func (c *mqlAwsRdsBackupsetting) GetLatestRestoreAvailable() *plugin.TValue[*time.Time] {
+	return &c.LatestRestoreAvailable
+}
+
 // mqlAwsRdsDbcluster for the aws.rds.dbcluster resource
 type mqlAwsRdsDbcluster struct {
 	MqlRuntime *plugin.Runtime
@@ -19006,6 +19204,7 @@ type mqlAwsRdsDbcluster struct {
 	HostedZoneId plugin.TValue[string]
 	MasterUsername plugin.TValue[string]
 	LatestRestorableTime plugin.TValue[*time.Time]
+	BackupSettings plugin.TValue[[]interface{}]
 }
 
 // createAwsRdsDbcluster creates a new instance of this resource
@@ -19165,6 +19364,22 @@ func (c *mqlAwsRdsDbcluster) GetLatestRestorableTime() *plugin.TValue[*time.Time
 	return &c.LatestRestorableTime
 }
 
+func (c *mqlAwsRdsDbcluster) GetBackupSettings() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.BackupSettings, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.dbcluster", c.__id, "backupSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.backupSettings()
+	})
+}
+
 // mqlAwsRdsSnapshot for the aws.rds.snapshot resource
 type mqlAwsRdsSnapshot struct {
 	MqlRuntime *plugin.Runtime
@@ -19315,6 +19530,7 @@ type mqlAwsRdsDbinstance struct {
 	Endpoint plugin.TValue[string]
 	MasterUsername plugin.TValue[string]
 	LatestRestorableTime plugin.TValue[*time.Time]
+	BackupSettings plugin.TValue[[]interface{}]
 }
 
 // createAwsRdsDbinstance creates a new instance of this resource
@@ -19480,6 +19696,22 @@ func (c *mqlAwsRdsDbinstance) GetMasterUsername() *plugin.TValue[string] {
 
 func (c *mqlAwsRdsDbinstance) GetLatestRestorableTime() *plugin.TValue[*time.Time] {
 	return &c.LatestRestorableTime
+}
+
+func (c *mqlAwsRdsDbinstance) GetBackupSettings() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.BackupSettings, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.dbinstance", c.__id, "backupSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.backupSettings()
+	})
 }
 
 // mqlAwsElasticache for the aws.elasticache resource
