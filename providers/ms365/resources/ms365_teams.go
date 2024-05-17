@@ -36,11 +36,13 @@ Connect-MicrosoftTeams -AccessTokens @("$graphToken", "$teamsToken")
 $CsTeamsClientConfiguration = (Get-CsTeamsClientConfiguration)
 $CsTenantFederationConfiguration = (Get-CsTenantFederationConfiguration)
 $CsTeamsMeetingPolicy = (Get-CsTeamsMeetingPolicy -Identity Global)
+$CsTeamsMessagingPolicy = (Get-CsTeamsMessagingPolicy -Identity Global)
 
 $msteams = New-Object PSObject
 Add-Member -InputObject $msteams -MemberType NoteProperty -Name CsTeamsClientConfiguration -Value $CsTeamsClientConfiguration
 Add-Member -InputObject $msteams -MemberType NoteProperty -Name CsTenantFederationConfiguration -Value $CsTenantFederationConfiguration
 Add-Member -InputObject $msteams -MemberType NoteProperty -Name CsTeamsMeetingPolicy -Value $CsTeamsMeetingPolicy
+Add-Member -InputObject $msteams -MemberType NoteProperty -Name CsTeamsMessagingPolicy -Value $CsTeamsMessagingPolicy
 
 Disconnect-MicrosoftTeams -Confirm:$false
 ConvertTo-Json -Depth 4 $msteams
@@ -50,6 +52,7 @@ type MsTeamsReport struct {
 	CsTeamsClientConfiguration      interface{}                      `json:"CsTeamsClientConfiguration"`
 	CsTenantFederationConfiguration *CsTenantFederationConfiguration `json:"CsTenantFederationConfiguration"`
 	CsTeamsMeetingPolicy            *CsTeamsMeetingPolicy            `json:"CsTeamsMeetingPolicy"`
+	CsTeamsMessagingPolicy          *CsTeamsMessagingPolicy          `json:"CsTeamsMessagingPolicy"`
 }
 
 type CsTenantFederationConfiguration struct {
@@ -77,6 +80,10 @@ type CsTeamsMeetingPolicy struct {
 	DesignatedPresenterRoleMode                string `json:"DesignatedPresenterRoleMode"`
 	AllowExternalParticipantGiveRequestControl bool   `json:"AllowExternalParticipantGiveRequestControl"`
 	AllowSecurityEndUserReporting              bool   `json:"AllowSecurityEndUserReporting"`
+}
+
+type CsTeamsMessagingPolicy struct {
+	AllowSecurityEndUserReporting bool `json:"AllowSecurityEndUserReporting"`
 }
 
 type mqlMs365TeamsInternal struct {
@@ -123,11 +130,13 @@ func (r *mqlMs365Teams) gatherTeamsReport() error {
 			return errHandler(err)
 		}
 		str := string(data)
-
 		// The Connect-MicrosoftTeams also displays a header for which there
 		// are no params to hide it. To allow the JSON unmarshal to work
 		// we strip away everything until the first '{' character.
 		idx := strings.IndexByte(str, '{')
+		if idx == -1 {
+			return errHandler(errors.New("invalid JSON format"))
+		}
 		after := str[idx:]
 		newData := []byte(after)
 
@@ -151,46 +160,73 @@ func (r *mqlMs365Teams) gatherTeamsReport() error {
 		return errHandler(fmt.Errorf("failed to generate ms teams report (exit code %d): %s", res.ExitStatus, string(data)))
 	}
 
-	csTeamsConfiguration, csTeamsConfigurationErr := convert.JsonToDict(report.CsTeamsClientConfiguration)
-	r.CsTeamsClientConfiguration = plugin.TValue[interface{}]{Data: csTeamsConfiguration, State: plugin.StateIsSet, Error: csTeamsConfigurationErr}
-
-	tenantConfig := report.CsTenantFederationConfiguration
-	tenantConfigBlockedDomains, _ := convert.JsonToDict(tenantConfig.BlockedDomains)
-	mqlTenantConfig, mqlTenantConfigErr := CreateResource(r.MqlRuntime, "ms365.teams.tenantFederationConfig",
-		map[string]*llx.RawData{
-			"identity":                                    llx.StringData(tenantConfig.Identity),
-			"blockedDomains":                              llx.DictData(tenantConfigBlockedDomains),
-			"allowFederatedUsers":                         llx.BoolData(tenantConfig.AllowFederatedUsers),
-			"allowPublicUsers":                            llx.BoolData(tenantConfig.AllowPublicUsers),
-			"allowTeamsConsumer":                          llx.BoolData(tenantConfig.AllowTeamsConsumer),
-			"allowTeamsConsumerInbound":                   llx.BoolData(tenantConfig.AllowTeamsConsumerInbound),
-			"treatDiscoveredPartnersAsUnverified":         llx.BoolData(tenantConfig.TreatDiscoveredPartnersAsUnverified),
-			"sharedSipAddressSpace":                       llx.BoolData(tenantConfig.SharedSipAddressSpace),
-			"restrictTeamsConsumerToExternalUserProfiles": llx.BoolData(tenantConfig.RestrictTeamsConsumerToExternalUserProfiles),
-		})
-	if mqlTenantConfigErr != nil {
-		r.CsTenantFederationConfiguration = plugin.TValue[*mqlMs365TeamsTenantFederationConfig]{State: plugin.StateIsSet, Error: mqlTenantConfigErr}
+	if report.CsTeamsClientConfiguration != nil {
+		csTeamsConfiguration, csTeamsConfigurationErr := convert.JsonToDict(report.CsTeamsClientConfiguration)
+		r.CsTeamsClientConfiguration = plugin.TValue[interface{}]{Data: csTeamsConfiguration, State: plugin.StateIsSet, Error: csTeamsConfigurationErr}
 	} else {
-		r.CsTenantFederationConfiguration = plugin.TValue[*mqlMs365TeamsTenantFederationConfig]{Data: mqlTenantConfig.(*mqlMs365TeamsTenantFederationConfig), State: plugin.StateIsSet}
+		r.CsTeamsClientConfiguration = plugin.TValue[interface{}]{State: plugin.StateIsSet, Error: errors.New("CsTeamsClientConfiguration is nil")}
 	}
 
-	teamsPolicy := report.CsTeamsMeetingPolicy
-	mqlTeamsPolicy, mqlTeamsPolicyErr := CreateResource(r.MqlRuntime, "ms365.teams.teamsMeetingPolicyConfig",
-		map[string]*llx.RawData{
-			"allowAnonymousUsersToJoinMeeting":           llx.BoolData(teamsPolicy.AllowAnonymousUsersToJoinMeeting),
-			"allowAnonymousUsersToStartMeeting":          llx.BoolData(teamsPolicy.AllowAnonymousUsersToStartMeeting),
-			"allowExternalNonTrustedMeetingChat":         llx.BoolData(teamsPolicy.AllowExternalNonTrustedMeetingChat),
-			"autoAdmittedUsers":                          llx.StringData(teamsPolicy.AutoAdmittedUsers),
-			"allowPSTNUsersToBypassLobby":                llx.BoolData(teamsPolicy.AllowPSTNUsersToBypassLobby),
-			"meetingChatEnabledType":                     llx.StringData(teamsPolicy.MeetingChatEnabledType),
-			"designatedPresenterRoleMode":                llx.StringData(teamsPolicy.DesignatedPresenterRoleMode),
-			"allowExternalParticipantGiveRequestControl": llx.BoolData(teamsPolicy.AllowExternalParticipantGiveRequestControl),
-			"allowSecurityEndUserReporting":              llx.BoolData(teamsPolicy.AllowSecurityEndUserReporting),
-		})
-	if mqlTeamsPolicyErr != nil {
-		r.CsTeamsMeetingPolicy = plugin.TValue[*mqlMs365TeamsTeamsMeetingPolicyConfig]{State: plugin.StateIsSet, Error: mqlTeamsPolicyErr}
+	if report.CsTenantFederationConfiguration != nil {
+		tenantConfig := report.CsTenantFederationConfiguration
+		tenantConfigBlockedDomains, _ := convert.JsonToDict(tenantConfig.BlockedDomains)
+		mqlTenantConfig, mqlTenantConfigErr := CreateResource(r.MqlRuntime, "ms365.teams.tenantFederationConfig",
+			map[string]*llx.RawData{
+				"identity":                                    llx.StringData(tenantConfig.Identity),
+				"blockedDomains":                              llx.DictData(tenantConfigBlockedDomains),
+				"allowFederatedUsers":                         llx.BoolData(tenantConfig.AllowFederatedUsers),
+				"allowPublicUsers":                            llx.BoolData(tenantConfig.AllowPublicUsers),
+				"allowTeamsConsumer":                          llx.BoolData(tenantConfig.AllowTeamsConsumer),
+				"allowTeamsConsumerInbound":                   llx.BoolData(tenantConfig.AllowTeamsConsumerInbound),
+				"treatDiscoveredPartnersAsUnverified":         llx.BoolData(tenantConfig.TreatDiscoveredPartnersAsUnverified),
+				"sharedSipAddressSpace":                       llx.BoolData(tenantConfig.SharedSipAddressSpace),
+				"restrictTeamsConsumerToExternalUserProfiles": llx.BoolData(tenantConfig.RestrictTeamsConsumerToExternalUserProfiles),
+			})
+		if mqlTenantConfigErr != nil {
+			r.CsTenantFederationConfiguration = plugin.TValue[*mqlMs365TeamsTenantFederationConfig]{State: plugin.StateIsSet, Error: mqlTenantConfigErr}
+		} else {
+			r.CsTenantFederationConfiguration = plugin.TValue[*mqlMs365TeamsTenantFederationConfig]{Data: mqlTenantConfig.(*mqlMs365TeamsTenantFederationConfig), State: plugin.StateIsSet}
+		}
 	} else {
-		r.CsTeamsMeetingPolicy = plugin.TValue[*mqlMs365TeamsTeamsMeetingPolicyConfig]{Data: mqlTeamsPolicy.(*mqlMs365TeamsTeamsMeetingPolicyConfig), State: plugin.StateIsSet, Error: mqlTeamsPolicyErr}
+		r.CsTenantFederationConfiguration = plugin.TValue[*mqlMs365TeamsTenantFederationConfig]{State: plugin.StateIsSet, Error: errors.New("CsTenantFederationConfiguration is nil")}
+	}
+
+	if report.CsTeamsMeetingPolicy != nil {
+		teamsPolicy := report.CsTeamsMeetingPolicy
+		mqlTeamsPolicy, mqlTeamsPolicyErr := CreateResource(r.MqlRuntime, "ms365.teams.teamsMeetingPolicyConfig",
+			map[string]*llx.RawData{
+				"allowAnonymousUsersToJoinMeeting":           llx.BoolData(teamsPolicy.AllowAnonymousUsersToJoinMeeting),
+				"allowAnonymousUsersToStartMeeting":          llx.BoolData(teamsPolicy.AllowAnonymousUsersToStartMeeting),
+				"allowExternalNonTrustedMeetingChat":         llx.BoolData(teamsPolicy.AllowExternalNonTrustedMeetingChat),
+				"autoAdmittedUsers":                          llx.StringData(teamsPolicy.AutoAdmittedUsers),
+				"allowPSTNUsersToBypassLobby":                llx.BoolData(teamsPolicy.AllowPSTNUsersToBypassLobby),
+				"meetingChatEnabledType":                     llx.StringData(teamsPolicy.MeetingChatEnabledType),
+				"designatedPresenterRoleMode":                llx.StringData(teamsPolicy.DesignatedPresenterRoleMode),
+				"allowExternalParticipantGiveRequestControl": llx.BoolData(teamsPolicy.AllowExternalParticipantGiveRequestControl),
+				"allowSecurityEndUserReporting":              llx.BoolData(teamsPolicy.AllowSecurityEndUserReporting),
+			})
+		if mqlTeamsPolicyErr != nil {
+			r.CsTeamsMeetingPolicy = plugin.TValue[*mqlMs365TeamsTeamsMeetingPolicyConfig]{State: plugin.StateIsSet, Error: mqlTeamsPolicyErr}
+		} else {
+			r.CsTeamsMeetingPolicy = plugin.TValue[*mqlMs365TeamsTeamsMeetingPolicyConfig]{Data: mqlTeamsPolicy.(*mqlMs365TeamsTeamsMeetingPolicyConfig), State: plugin.StateIsSet}
+		}
+	} else {
+		r.CsTeamsMeetingPolicy = plugin.TValue[*mqlMs365TeamsTeamsMeetingPolicyConfig]{State: plugin.StateIsSet, Error: errors.New("CsTeamsMeetingPolicy is nil")}
+	}
+
+	if report.CsTeamsMessagingPolicy != nil {
+		teamsMessagePolicy := report.CsTeamsMessagingPolicy
+		mqlTeamsMessagePolicy, mqlTeamsMessagePolicyErr := CreateResource(r.MqlRuntime, "ms365.teams.teamsMessagingPolicyConfig",
+			map[string]*llx.RawData{
+				"allowSecurityEndUserReporting": llx.BoolData(teamsMessagePolicy.AllowSecurityEndUserReporting),
+			})
+		if mqlTeamsMessagePolicyErr != nil {
+			r.CsTeamsMessagingPolicy = plugin.TValue[*mqlMs365TeamsTeamsMessagingPolicyConfig]{State: plugin.StateIsSet, Error: mqlTeamsMessagePolicyErr}
+		} else {
+			r.CsTeamsMessagingPolicy = plugin.TValue[*mqlMs365TeamsTeamsMessagingPolicyConfig]{Data: mqlTeamsMessagePolicy.(*mqlMs365TeamsTeamsMessagingPolicyConfig), State: plugin.StateIsSet}
+		}
+	} else {
+		r.CsTeamsMessagingPolicy = plugin.TValue[*mqlMs365TeamsTeamsMessagingPolicyConfig]{State: plugin.StateIsSet, Error: errors.New("CsTeamsMessagingPolicy is nil")}
 	}
 
 	return nil
@@ -205,5 +241,9 @@ func (r *mqlMs365Teams) csTenantFederationConfiguration() (*mqlMs365TeamsTenantF
 }
 
 func (r *mqlMs365Teams) csTeamsMeetingPolicy() (*mqlMs365TeamsTeamsMeetingPolicyConfig, error) {
+	return nil, r.gatherTeamsReport()
+}
+
+func (r *mqlMs365Teams) csTeamsMessagingPolicy() (*mqlMs365TeamsTeamsMessagingPolicyConfig, error) {
 	return nil, r.gatherTeamsReport()
 }

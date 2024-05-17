@@ -328,9 +328,18 @@ resources:
       csTeamsClientConfiguration: {}
       csTeamsMeetingPolicy:
         min_mondoo_version: 9.0.0
+      csTeamsMessagingPolicy:
+        min_mondoo_version: latest
       csTenantFederationConfiguration:
         min_mondoo_version: 9.0.0
     min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - microsoft365
+  ms365.teams.TeamsMessagingPolicyConfig:
+    fields:
+      allowSecurityEndUserReporting: {}
+    min_mondoo_version: latest
     platform:
       name:
       - microsoft365
@@ -345,6 +354,14 @@ resources:
       autoAdmittedUsers: {}
       designatedPresenterRoleMode: {}
       meetingChatEnabledType: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - microsoft365
+  ms365.teams.teamsMessagingPolicyConfig:
+    fields:
+      allowSecurityEndUserReporting: {}
     is_private: true
     min_mondoo_version: latest
     platform:

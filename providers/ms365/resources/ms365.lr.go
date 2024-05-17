@@ -126,6 +126,10 @@ func init() {
 			// to override args, implement: initMs365TeamsTeamsMeetingPolicyConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMs365TeamsTeamsMeetingPolicyConfig,
 		},
+		"ms365.teams.teamsMessagingPolicyConfig": {
+			// to override args, implement: initMs365TeamsTeamsMessagingPolicyConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMs365TeamsTeamsMessagingPolicyConfig,
+		},
 	}
 }
 
@@ -713,6 +717,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.teams.csTeamsMeetingPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Teams).GetCsTeamsMeetingPolicy()).ToDataRes(types.Resource("ms365.teams.teamsMeetingPolicyConfig"))
 	},
+	"ms365.teams.csTeamsMessagingPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365Teams).GetCsTeamsMessagingPolicy()).ToDataRes(types.Resource("ms365.teams.teamsMessagingPolicyConfig"))
+	},
 	"ms365.teams.tenantFederationConfig.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365TeamsTenantFederationConfig).GetIdentity()).ToDataRes(types.String)
 	},
@@ -766,6 +773,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ms365.teams.teamsMeetingPolicyConfig.allowSecurityEndUserReporting": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).GetAllowSecurityEndUserReporting()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.teamsMessagingPolicyConfig.allowSecurityEndUserReporting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsMessagingPolicyConfig).GetAllowSecurityEndUserReporting()).ToDataRes(types.Bool)
 	},
 }
 
@@ -1571,6 +1581,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMs365Teams).CsTeamsMeetingPolicy, ok = plugin.RawToTValue[*mqlMs365TeamsTeamsMeetingPolicyConfig](v.Value, v.Error)
 		return
 	},
+	"ms365.teams.csTeamsMessagingPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365Teams).CsTeamsMessagingPolicy, ok = plugin.RawToTValue[*mqlMs365TeamsTeamsMessagingPolicyConfig](v.Value, v.Error)
+		return
+	},
 	"ms365.teams.tenantFederationConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlMs365TeamsTenantFederationConfig).__id, ok = v.Value.(string)
 			return
@@ -1649,6 +1663,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"ms365.teams.teamsMeetingPolicyConfig.allowSecurityEndUserReporting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).AllowSecurityEndUserReporting, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsMessagingPolicyConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMs365TeamsTeamsMessagingPolicyConfig).__id, ok = v.Value.(string)
+			return
+		},
+	"ms365.teams.teamsMessagingPolicyConfig.allowSecurityEndUserReporting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsMessagingPolicyConfig).AllowSecurityEndUserReporting, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 }
@@ -3841,6 +3863,7 @@ type mqlMs365Teams struct {
 	CsTeamsClientConfiguration plugin.TValue[interface{}]
 	CsTenantFederationConfiguration plugin.TValue[*mqlMs365TeamsTenantFederationConfig]
 	CsTeamsMeetingPolicy plugin.TValue[*mqlMs365TeamsTeamsMeetingPolicyConfig]
+	CsTeamsMessagingPolicy plugin.TValue[*mqlMs365TeamsTeamsMessagingPolicyConfig]
 }
 
 // createMs365Teams creates a new instance of this resource
@@ -3910,6 +3933,22 @@ func (c *mqlMs365Teams) GetCsTeamsMeetingPolicy() *plugin.TValue[*mqlMs365TeamsT
 		}
 
 		return c.csTeamsMeetingPolicy()
+	})
+}
+
+func (c *mqlMs365Teams) GetCsTeamsMessagingPolicy() *plugin.TValue[*mqlMs365TeamsTeamsMessagingPolicyConfig] {
+	return plugin.GetOrCompute[*mqlMs365TeamsTeamsMessagingPolicyConfig](&c.CsTeamsMessagingPolicy, func() (*mqlMs365TeamsTeamsMessagingPolicyConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ms365.teams", c.__id, "csTeamsMessagingPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMs365TeamsTeamsMessagingPolicyConfig), nil
+			}
+		}
+
+		return c.csTeamsMessagingPolicy()
 	})
 }
 
@@ -4078,5 +4117,49 @@ func (c *mqlMs365TeamsTeamsMeetingPolicyConfig) GetAllowExternalParticipantGiveR
 }
 
 func (c *mqlMs365TeamsTeamsMeetingPolicyConfig) GetAllowSecurityEndUserReporting() *plugin.TValue[bool] {
+	return &c.AllowSecurityEndUserReporting
+}
+
+// mqlMs365TeamsTeamsMessagingPolicyConfig for the ms365.teams.teamsMessagingPolicyConfig resource
+type mqlMs365TeamsTeamsMessagingPolicyConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMs365TeamsTeamsMessagingPolicyConfigInternal it will be used here
+	AllowSecurityEndUserReporting plugin.TValue[bool]
+}
+
+// createMs365TeamsTeamsMessagingPolicyConfig creates a new instance of this resource
+func createMs365TeamsTeamsMessagingPolicyConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMs365TeamsTeamsMessagingPolicyConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ms365.teams.teamsMessagingPolicyConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMs365TeamsTeamsMessagingPolicyConfig) MqlName() string {
+	return "ms365.teams.teamsMessagingPolicyConfig"
+}
+
+func (c *mqlMs365TeamsTeamsMessagingPolicyConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMs365TeamsTeamsMessagingPolicyConfig) GetAllowSecurityEndUserReporting() *plugin.TValue[bool] {
 	return &c.AllowSecurityEndUserReporting
 }
