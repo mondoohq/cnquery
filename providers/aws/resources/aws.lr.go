@@ -486,6 +486,14 @@ func init() {
 			Init: initAwsDynamodbTable,
 			Create: createAwsDynamodbTable,
 		},
+		"aws.sqs": {
+			// to override args, implement: initAwsSqs(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSqs,
+		},
+		"aws.sqs.queue": {
+			// to override args, implement: initAwsSqsQueue(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSqsQueue,
+		},
 		"aws.rds": {
 			// to override args, implement: initAwsRds(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsRds,
@@ -2794,6 +2802,54 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.dynamodb.table.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDynamodbTable).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.sqs.queues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqs).GetQueues()).ToDataRes(types.Array(types.Resource("aws.sqs.queue")))
+	},
+	"aws.sqs.queue.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sqs.queue.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sqs.queue.deadLetterQueue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetDeadLetterQueue()).ToDataRes(types.Resource("aws.sqs.queue"))
+	},
+	"aws.sqs.queue.deliveryDelaySeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetDeliveryDelaySeconds()).ToDataRes(types.Int)
+	},
+	"aws.sqs.queue.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.sqs.queue.lastModified": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetLastModified()).ToDataRes(types.Time)
+	},
+	"aws.sqs.queue.maxReceiveCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetMaxReceiveCount()).ToDataRes(types.Int)
+	},
+	"aws.sqs.queue.maximumMessageSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetMaximumMessageSize()).ToDataRes(types.Int)
+	},
+	"aws.sqs.queue.messageRetentionPeriodSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetMessageRetentionPeriodSeconds()).ToDataRes(types.Int)
+	},
+	"aws.sqs.queue.receiveMessageWaitTimeSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetReceiveMessageWaitTimeSeconds()).ToDataRes(types.Int)
+	},
+	"aws.sqs.queue.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sqs.queue.sqsManagedSseEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetSqsManagedSseEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.sqs.queue.queueType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetQueueType()).ToDataRes(types.String)
+	},
+	"aws.sqs.queue.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetUrl()).ToDataRes(types.String)
+	},
+	"aws.sqs.queue.visibilityTimeoutSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetVisibilityTimeoutSeconds()).ToDataRes(types.Int)
 	},
 	"aws.rds.dbInstances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRds).GetDbInstances()).ToDataRes(types.Array(types.Resource("aws.rds.dbinstance")))
@@ -7311,6 +7367,78 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.dynamodb.table.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDynamodbTable).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sqs.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsSqs).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.sqs.queues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqs).Queues, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.sqs.queue.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsSqsQueue).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.sqs.queue.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sqs.queue.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sqs.queue.deadLetterQueue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).DeadLetterQueue, ok = plugin.RawToTValue[*mqlAwsSqsQueue](v.Value, v.Error)
+		return
+	},
+	"aws.sqs.queue.deliveryDelaySeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).DeliveryDelaySeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sqs.queue.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.sqs.queue.lastModified": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).LastModified, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sqs.queue.maxReceiveCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).MaxReceiveCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sqs.queue.maximumMessageSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).MaximumMessageSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sqs.queue.messageRetentionPeriodSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).MessageRetentionPeriodSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sqs.queue.receiveMessageWaitTimeSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).ReceiveMessageWaitTimeSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sqs.queue.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sqs.queue.sqsManagedSseEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).SqsManagedSseEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.sqs.queue.queueType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).QueueType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sqs.queue.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sqs.queue.visibilityTimeoutSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).VisibilityTimeoutSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.rds.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -18986,6 +19114,232 @@ func (c *mqlAwsDynamodbTable) GetSizeBytes() *plugin.TValue[int64] {
 
 func (c *mqlAwsDynamodbTable) GetStatus() *plugin.TValue[string] {
 	return &c.Status
+}
+
+// mqlAwsSqs for the aws.sqs resource
+type mqlAwsSqs struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsSqsInternal it will be used here
+	Queues plugin.TValue[[]interface{}]
+}
+
+// createAwsSqs creates a new instance of this resource
+func createAwsSqs(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSqs{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sqs", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSqs) MqlName() string {
+	return "aws.sqs"
+}
+
+func (c *mqlAwsSqs) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSqs) GetQueues() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Queues, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sqs", c.__id, "queues")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.queues()
+	})
+}
+
+// mqlAwsSqsQueue for the aws.sqs.queue resource
+type mqlAwsSqsQueue struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlAwsSqsQueueInternal
+	Arn plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
+	DeadLetterQueue plugin.TValue[*mqlAwsSqsQueue]
+	DeliveryDelaySeconds plugin.TValue[int64]
+	KmsKey plugin.TValue[*mqlAwsKmsKey]
+	LastModified plugin.TValue[*time.Time]
+	MaxReceiveCount plugin.TValue[int64]
+	MaximumMessageSize plugin.TValue[int64]
+	MessageRetentionPeriodSeconds plugin.TValue[int64]
+	ReceiveMessageWaitTimeSeconds plugin.TValue[int64]
+	Region plugin.TValue[string]
+	SqsManagedSseEnabled plugin.TValue[bool]
+	QueueType plugin.TValue[string]
+	Url plugin.TValue[string]
+	VisibilityTimeoutSeconds plugin.TValue[int64]
+}
+
+// createAwsSqsQueue creates a new instance of this resource
+func createAwsSqsQueue(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSqsQueue{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sqs.queue", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSqsQueue) MqlName() string {
+	return "aws.sqs.queue"
+}
+
+func (c *mqlAwsSqsQueue) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSqsQueue) GetArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Arn, func() (string, error) {
+		return c.arn()
+	})
+}
+
+func (c *mqlAwsSqsQueue) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
+		return c.createdAt()
+	})
+}
+
+func (c *mqlAwsSqsQueue) GetDeadLetterQueue() *plugin.TValue[*mqlAwsSqsQueue] {
+	return plugin.GetOrCompute[*mqlAwsSqsQueue](&c.DeadLetterQueue, func() (*mqlAwsSqsQueue, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sqs.queue", c.__id, "deadLetterQueue")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSqsQueue), nil
+			}
+		}
+
+		return c.deadLetterQueue()
+	})
+}
+
+func (c *mqlAwsSqsQueue) GetDeliveryDelaySeconds() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.DeliveryDelaySeconds, func() (int64, error) {
+		return c.deliveryDelaySeconds()
+	})
+}
+
+func (c *mqlAwsSqsQueue) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sqs.queue", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsSqsQueue) GetLastModified() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LastModified, func() (*time.Time, error) {
+		return c.lastModified()
+	})
+}
+
+func (c *mqlAwsSqsQueue) GetMaxReceiveCount() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MaxReceiveCount, func() (int64, error) {
+		return c.maxReceiveCount()
+	})
+}
+
+func (c *mqlAwsSqsQueue) GetMaximumMessageSize() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MaximumMessageSize, func() (int64, error) {
+		return c.maximumMessageSize()
+	})
+}
+
+func (c *mqlAwsSqsQueue) GetMessageRetentionPeriodSeconds() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MessageRetentionPeriodSeconds, func() (int64, error) {
+		return c.messageRetentionPeriodSeconds()
+	})
+}
+
+func (c *mqlAwsSqsQueue) GetReceiveMessageWaitTimeSeconds() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ReceiveMessageWaitTimeSeconds, func() (int64, error) {
+		return c.receiveMessageWaitTimeSeconds()
+	})
+}
+
+func (c *mqlAwsSqsQueue) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSqsQueue) GetSqsManagedSseEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SqsManagedSseEnabled, func() (bool, error) {
+		return c.sqsManagedSseEnabled()
+	})
+}
+
+func (c *mqlAwsSqsQueue) GetQueueType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.QueueType, func() (string, error) {
+		return c.queueType()
+	})
+}
+
+func (c *mqlAwsSqsQueue) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlAwsSqsQueue) GetVisibilityTimeoutSeconds() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.VisibilityTimeoutSeconds, func() (int64, error) {
+		return c.visibilityTimeoutSeconds()
+	})
 }
 
 // mqlAwsRds for the aws.rds resource
