@@ -186,7 +186,10 @@ func string2result(value interface{}, typ types.Type) (*Primitive, error) {
 	if !ok {
 		return nil, errInvalidConversion(value, typ)
 	}
-	return StringPrimitive(v), nil
+	p := StringPrimitive(v)
+	// special case for semver
+	p.Type = string(typ)
+	return p, nil
 }
 
 func regex2result(value interface{}, typ types.Type) (*Primitive, error) {
