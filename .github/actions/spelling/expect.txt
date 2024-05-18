@@ -53,6 +53,7 @@ mfs
 mgroup
 Mpim
 natgateway
+nodegroup
 nodepool
 nullgroup
 nullstring

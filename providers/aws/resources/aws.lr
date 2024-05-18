@@ -2914,6 +2914,35 @@ aws.eks {
   clusters() []aws.eks.cluster
 }
 
+private aws.eks.nodegroup {
+  // Name for the EKS node group
+  name string
+  // ARN for the EKS node group
+  arn() string
+  // Region for the EKS node group
+  region string
+  // Time when the EKS node group was created
+  createdAt() time
+  // Status for the EKS node group
+  status() string
+  // Capacity type for the EKS node group (ON_DEMAND, SPOT)
+  capacityType() string
+  // Scaling configuration for the EKS node group
+  scalingConfig() dict
+  // Instance types for the EKS node group
+  instanceTypes() []string
+  // AMI type for the EKS node group
+  amiType() string
+  // IAM role for the EKS node group
+  nodeRole() aws.iam.role
+  // Disk size for the EKS node group
+  diskSize() int
+  // Kubernetes labels applied to the EKS node group
+  labels() map[string]string
+  // Tags for the EKS node group
+  tags()  map[string]string
+}
+
 // Amazon EKS cluster
 private aws.eks.cluster @defaults("arn version status") {
   // Name of the cluster
@@ -2942,4 +2971,6 @@ private aws.eks.cluster @defaults("arn version status") {
   resourcesVpcConfig dict
   // Cluster creation timestamp
   createdAt time
+  // List of EKS node groups
+  nodeGroups() []aws.eks.nodegroup
 }

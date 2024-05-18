@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -1217,8 +1218,19 @@ func initAwsIamRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	svc := conn.Iam("")
 	ctx := context.Background()
 
+	var rolename string
+	if args["name"] == nil && args["arn"] != nil {
+		a, err := arn.Parse(args["arn"].Value.(string))
+		if err != nil {
+			return nil, nil, err
+		}
+		rolename = strings.TrimPrefix(a.Resource, "role/")
+	}
 	if args["name"] != nil {
-		rolename := args["name"].Value.(string)
+		rolename = args["name"].Value.(string)
+	}
+
+	if rolename != "" {
 		resp, err := svc.GetRole(ctx, &iam.GetRoleInput{
 			RoleName: &rolename,
 		})

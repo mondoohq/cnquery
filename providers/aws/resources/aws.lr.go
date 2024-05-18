@@ -698,6 +698,10 @@ func init() {
 			// to override args, implement: initAwsEks(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEks,
 		},
+		"aws.eks.nodegroup": {
+			// to override args, implement: initAwsEksNodegroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEksNodegroup,
+		},
 		"aws.eks.cluster": {
 			// to override args, implement: initAwsEksCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEksCluster,
@@ -4094,6 +4098,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.eks.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEks).GetClusters()).ToDataRes(types.Array(types.Resource("aws.eks.cluster")))
 	},
+	"aws.eks.nodegroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksNodegroup).GetName()).ToDataRes(types.String)
+	},
+	"aws.eks.nodegroup.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksNodegroup).GetArn()).ToDataRes(types.String)
+	},
+	"aws.eks.nodegroup.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksNodegroup).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.eks.nodegroup.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksNodegroup).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.eks.nodegroup.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksNodegroup).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.eks.nodegroup.capacityType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksNodegroup).GetCapacityType()).ToDataRes(types.String)
+	},
+	"aws.eks.nodegroup.scalingConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksNodegroup).GetScalingConfig()).ToDataRes(types.Dict)
+	},
+	"aws.eks.nodegroup.instanceTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksNodegroup).GetInstanceTypes()).ToDataRes(types.Array(types.String))
+	},
+	"aws.eks.nodegroup.amiType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksNodegroup).GetAmiType()).ToDataRes(types.String)
+	},
+	"aws.eks.nodegroup.nodeRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksNodegroup).GetNodeRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.eks.nodegroup.diskSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksNodegroup).GetDiskSize()).ToDataRes(types.Int)
+	},
+	"aws.eks.nodegroup.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksNodegroup).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.eks.nodegroup.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksNodegroup).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"aws.eks.cluster.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksCluster).GetName()).ToDataRes(types.String)
 	},
@@ -4132,6 +4175,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.eks.cluster.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksCluster).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.eks.cluster.nodeGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksCluster).GetNodeGroups()).ToDataRes(types.Array(types.Resource("aws.eks.nodegroup")))
 	},
 }
 
@@ -9257,6 +9303,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsEks).Clusters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"aws.eks.nodegroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsEksNodegroup).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.eks.nodegroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksNodegroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eks.nodegroup.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksNodegroup).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eks.nodegroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksNodegroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eks.nodegroup.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksNodegroup).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.eks.nodegroup.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksNodegroup).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eks.nodegroup.capacityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksNodegroup).CapacityType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eks.nodegroup.scalingConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksNodegroup).ScalingConfig, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.eks.nodegroup.instanceTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksNodegroup).InstanceTypes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.eks.nodegroup.amiType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksNodegroup).AmiType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eks.nodegroup.nodeRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksNodegroup).NodeRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.eks.nodegroup.diskSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksNodegroup).DiskSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eks.nodegroup.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksNodegroup).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.eks.nodegroup.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksNodegroup).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
 	"aws.eks.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsEksCluster).__id, ok = v.Value.(string)
 			return
@@ -9311,6 +9413,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.eks.cluster.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEksCluster).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.eks.cluster.nodeGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksCluster).NodeGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 }
@@ -24091,6 +24197,147 @@ func (c *mqlAwsEks) GetClusters() *plugin.TValue[[]interface{}] {
 	})
 }
 
+// mqlAwsEksNodegroup for the aws.eks.nodegroup resource
+type mqlAwsEksNodegroup struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlAwsEksNodegroupInternal
+	Name plugin.TValue[string]
+	Arn plugin.TValue[string]
+	Region plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
+	Status plugin.TValue[string]
+	CapacityType plugin.TValue[string]
+	ScalingConfig plugin.TValue[interface{}]
+	InstanceTypes plugin.TValue[[]interface{}]
+	AmiType plugin.TValue[string]
+	NodeRole plugin.TValue[*mqlAwsIamRole]
+	DiskSize plugin.TValue[int64]
+	Labels plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[map[string]interface{}]
+}
+
+// createAwsEksNodegroup creates a new instance of this resource
+func createAwsEksNodegroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEksNodegroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eks.nodegroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEksNodegroup) MqlName() string {
+	return "aws.eks.nodegroup"
+}
+
+func (c *mqlAwsEksNodegroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEksNodegroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsEksNodegroup) GetArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Arn, func() (string, error) {
+		return c.arn()
+	})
+}
+
+func (c *mqlAwsEksNodegroup) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsEksNodegroup) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
+		return c.createdAt()
+	})
+}
+
+func (c *mqlAwsEksNodegroup) GetStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
+		return c.status()
+	})
+}
+
+func (c *mqlAwsEksNodegroup) GetCapacityType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CapacityType, func() (string, error) {
+		return c.capacityType()
+	})
+}
+
+func (c *mqlAwsEksNodegroup) GetScalingConfig() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.ScalingConfig, func() (interface{}, error) {
+		return c.scalingConfig()
+	})
+}
+
+func (c *mqlAwsEksNodegroup) GetInstanceTypes() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.InstanceTypes, func() ([]interface{}, error) {
+		return c.instanceTypes()
+	})
+}
+
+func (c *mqlAwsEksNodegroup) GetAmiType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AmiType, func() (string, error) {
+		return c.amiType()
+	})
+}
+
+func (c *mqlAwsEksNodegroup) GetNodeRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.NodeRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eks.nodegroup", c.__id, "nodeRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.nodeRole()
+	})
+}
+
+func (c *mqlAwsEksNodegroup) GetDiskSize() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.DiskSize, func() (int64, error) {
+		return c.diskSize()
+	})
+}
+
+func (c *mqlAwsEksNodegroup) GetLabels() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlAwsEksNodegroup) GetTags() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Tags, func() (map[string]interface{}, error) {
+		return c.tags()
+	})
+}
+
 // mqlAwsEksCluster for the aws.eks.cluster resource
 type mqlAwsEksCluster struct {
 	MqlRuntime *plugin.Runtime
@@ -24109,6 +24356,7 @@ type mqlAwsEksCluster struct {
 	NetworkConfig plugin.TValue[interface{}]
 	ResourcesVpcConfig plugin.TValue[interface{}]
 	CreatedAt plugin.TValue[*time.Time]
+	NodeGroups plugin.TValue[[]interface{}]
 }
 
 // createAwsEksCluster creates a new instance of this resource
@@ -24198,4 +24446,20 @@ func (c *mqlAwsEksCluster) GetResourcesVpcConfig() *plugin.TValue[interface{}] {
 
 func (c *mqlAwsEksCluster) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
+}
+
+func (c *mqlAwsEksCluster) GetNodeGroups() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.NodeGroups, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eks.cluster", c.__id, "nodeGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.nodeGroups()
+	})
 }
