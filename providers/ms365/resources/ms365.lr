@@ -424,7 +424,6 @@ private ms365.exchangeonline.reportSubmissionPolicy {
   reportChatMessageToCustomizedAddressEnabled bool
 }
 
-
 // Microsoft 365 Exchange Online External Sender
 private ms365.exchangeonline.externalSender {
   // The identity of the external sender

@@ -179,9 +179,8 @@ func (r *mqlMs365Exchangeonline) getOrg() (string, error) {
 }
 
 // Related to TeamsProtectionPolicy as a seperate function
-func convertTeamsProtectionPolicy(r *mqlMs365Exchangeonline, data []*TeamsProtectionPolicy) plugin.TValue[[]interface{}] {
-	result := []interface{}{}
-	var teamsProtectionPolicyErr error
+func convertTeamsProtectionPolicy(r *mqlMs365Exchangeonline, data []*TeamsProtectionPolicy) ([]interface{}, error) {
+	var result []interface{}
 	for _, t := range data {
 		policy, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.teamsProtectionPolicy",
 			map[string]*llx.RawData{
@@ -189,19 +188,16 @@ func convertTeamsProtectionPolicy(r *mqlMs365Exchangeonline, data []*TeamsProtec
 				"isValid":    llx.BoolData(t.IsValid),
 			})
 		if err != nil {
-			teamsProtectionPolicyErr = err
-			break
+			return nil, err
 		}
-
 		result = append(result, policy)
 	}
-	return plugin.TValue[[]interface{}]{Data: result, State: plugin.StateIsSet, Error: teamsProtectionPolicyErr}
+	return result, nil
 }
 
 // Related to ReportSubmissionPolicy as a seperate function
-func convertReportSubmissionPolicy(r *mqlMs365Exchangeonline, data []*ReportSubmissionPolicy) plugin.TValue[[]interface{}] {
-	result := []interface{}{}
-	var reportSubmissionPolicyErr error
+func convertReportSubmissionPolicy(r *mqlMs365Exchangeonline, data []*ReportSubmissionPolicy) ([]interface{}, error) {
+	var result []interface{}
 	for _, t := range data {
 		policy, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.reportSubmissionPolicy",
 			map[string]*llx.RawData{
@@ -210,18 +206,16 @@ func convertReportSubmissionPolicy(r *mqlMs365Exchangeonline, data []*ReportSubm
 				"reportPhishToCustomizedAddress":              llx.BoolData(t.ReportPhishToCustomizedAddress),
 				"reportJunkAddresses":                         llx.ArrayData(llx.TArr2Raw(t.ReportJunkAddresses), types.Any),
 				"reportNotJunkAddresses":                      llx.ArrayData(llx.TArr2Raw(t.ReportNotJunkAddresses), types.Any),
-				"reportPhishAddresses":                        llx.ArrayData(llx.TArr2Raw(t.ReportNotJunkAddresses), types.Any),
+				"reportPhishAddresses":                        llx.ArrayData(llx.TArr2Raw(t.ReportPhishAddresses), types.Any),
 				"reportChatMessageEnabled":                    llx.BoolData(t.ReportChatMessageEnabled),
 				"reportChatMessageToCustomizedAddressEnabled": llx.BoolData(t.ReportChatMessageToCustomizedAddressEnabled),
 			})
 		if err != nil {
-			reportSubmissionPolicyErr = err
-			break
+			return nil, err
 		}
-
 		result = append(result, policy)
 	}
-	return plugin.TValue[[]interface{}]{Data: result, State: plugin.StateIsSet, Error: reportSubmissionPolicyErr}
+	return result, nil
 }
 
 func (r *mqlMs365Exchangeonline) getExchangeReport() error {
@@ -374,10 +368,12 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 	r.SharedMailboxes = plugin.TValue[[]interface{}]{Data: sharedMailboxes, State: plugin.StateIsSet, Error: sharedMailboxesErr}
 
 	// Related to TeamsProtectionPolicy
-	r.TeamsProtectionPolicies = convertTeamsProtectionPolicy(r, report.TeamsProtectionPolicy)
+	teamsProtectionPolicies, teamsProtectionPolicyErr := convertTeamsProtectionPolicy(r, report.TeamsProtectionPolicy)
+	r.TeamsProtectionPolicies = plugin.TValue[[]interface{}]{Data: teamsProtectionPolicies, State: plugin.StateIsSet, Error: teamsProtectionPolicyErr}
 
 	// Related to ReportSubmissionPolicy
-	r.ReportSubmissionPolicies = convertReportSubmissionPolicy(r, report.ReportSubmissionPolicy)
+	reportSubmissionPolicies, reportSubmissionPolicyErr := convertReportSubmissionPolicy(r, report.ReportSubmissionPolicy)
+	r.ReportSubmissionPolicies = plugin.TValue[[]interface{}]{Data: reportSubmissionPolicies, State: plugin.StateIsSet, Error: reportSubmissionPolicyErr}
 
 	return nil
 }
