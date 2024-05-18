@@ -442,13 +442,13 @@ private ms365.sharepointonline.site {
 
 // Microsoft 365 Teams
 ms365.teams {
-  // CS Teams client configuration
+  // Teams client configuration
   csTeamsClientConfiguration() dict
-  // CS Teams tenant federated configuration
+  // Teams tenant federated configuration
   csTenantFederationConfiguration() ms365.teams.tenantFederationConfig
-  // CS Teams meeting policy configuration
+  // Teams meeting policy configuration
   csTeamsMeetingPolicy() ms365.teams.teamsMeetingPolicyConfig
-  // CS Teams message policy configuration
+  // Teams message policy configuration
   csTeamsMessagingPolicy() ms365.teams.teamsMessagingPolicyConfig
 }
 
@@ -474,7 +474,7 @@ private ms365.teams.tenantFederationConfig {
   restrictTeamsConsumerToExternalUserProfiles bool
 }
 
-// Teams meeting policy configuration
+// Microsoft 365 Teams meeting policy configuration
 private ms365.teams.teamsMeetingPolicyConfig {
   // Whether anonymous users are allowed to join
   allowAnonymousUsersToJoinMeeting bool

@@ -336,13 +336,6 @@ resources:
     platform:
       name:
       - microsoft365
-  ms365.teams.TeamsMessagingPolicyConfig:
-    fields:
-      allowSecurityEndUserReporting: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - microsoft365
   ms365.teams.teamsMeetingPolicyConfig:
     fields:
       allowAnonymousUsersToJoinMeeting: {}
