@@ -1626,12 +1626,40 @@ resources:
       scheme: {}
       securityGroups:
         min_mondoo_version: 9.0.0
+      targetGroups:
+        min_mondoo_version: latest
       vpc:
         min_mondoo_version: 9.0.0
       vpcId:
         min_mondoo_version: 9.0.0
     is_private: true
     min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - aws
+  aws.elb.targetgroup:
+    fields:
+      arn: {}
+      attributes: {}
+      ec2Targets: {}
+      healthCheckEnabled: {}
+      healthCheckIntervalSeconds: {}
+      healthCheckPath: {}
+      healthCheckPort: {}
+      healthCheckProtocol: {}
+      healthCheckTimeoutSeconds: {}
+      ipAddressType: {}
+      ipTargets: {}
+      lambdaTargets: {}
+      name: {}
+      port: {}
+      protocol: {}
+      protocolVersion: {}
+      targetType: {}
+      unhealthyThresholdCount: {}
+      vpc: {}
+    is_private: true
+    min_mondoo_version: latest
     platform:
       name:
       - aws

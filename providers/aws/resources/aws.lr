@@ -1088,6 +1088,44 @@ aws.elb {
   loadBalancers() []aws.elb.loadbalancer
 }
 
+// AWS ELB Target Group
+private aws.elb.targetgroup {
+  // Name for the load balancer target group
+  name string 
+  // ARN for the load balancer target group
+  arn string 
+  // Port for the load balancer target group
+  port int
+  // Protocol for the load balancer target group
+  protocol string
+  // Protocol version for the load balancer target group
+  protocolVersion string
+  // IP address type for the load balancer target group (ipv4, ipv6)
+  ipAddressType string
+  // True if health check is enabled for the load balancer target group
+  healthCheckEnabled bool
+  // Health check interval for the load balancer target group
+  healthCheckIntervalSeconds int
+  // Health check path for the load balancer target group
+  healthCheckPath string
+  // Health check port for the load balancer target group
+  healthCheckPort string
+  // Health check protocol for the load balancer target group
+  healthCheckProtocol string
+  // Health check timeout seconds for the load balancer target group
+  healthCheckTimeoutSeconds int
+  // Target type for the for the load balancer target group (instance, ip, lambda, alb)
+  targetType string
+  // Unhealthy treshold count for the load balancer target group
+  unhealthyThresholdCount int
+  // VPC for the load balancer target group
+  vpc() aws.vpc
+  // EC2 targets for the load balancer target group
+  ec2Targets() []aws.ec2.instance
+  // Lambda targets for the load balancer target group
+  lambdaTargets() []aws.lambda.functio
+}
+
 // AWS Elastic Load Balancing load balancer
 private aws.elb.loadbalancer @defaults("name region elbType scheme vpcId dnsName") {
   // ARN for the load balancer
@@ -1118,6 +1156,8 @@ private aws.elb.loadbalancer @defaults("name region elbType scheme vpcId dnsName
   elbType string
   // VPC where the load balancer is located
   vpc aws.vpc
+  // List of target groups for the load balancer
+  targetGroups() []aws.elb.targetgroup
 }
 
 // AWS CodeBuild for building and testing code

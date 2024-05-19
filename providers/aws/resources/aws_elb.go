@@ -11,6 +11,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	elbtypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
+
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/llx"
@@ -310,4 +313,91 @@ func isV1LoadBalancerArn(a string) bool {
 		return true
 	}
 	return false
+}
+
+func (a *mqlAwsElbTargetgroup) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsElbLoadbalancer) targetGroups() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	regionVal := a.Region.Data
+	svc := conn.Elbv2(regionVal)
+	ctx := context.Background()
+	res := []interface{}{}
+
+	var marker *string
+	for {
+		tgs, err := svc.DescribeTargetGroups(ctx, &elasticloadbalancingv2.DescribeTargetGroupsInput{LoadBalancerArn: aws.String(a.Arn.Data), Marker: marker})
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, tg := range tgs.TargetGroups {
+			args := map[string]*llx.RawData{
+				"arn":                        llx.StringDataPtr(tg.TargetGroupArn),
+				"name":                       llx.StringDataPtr(tg.TargetGroupName),
+				"port":                       llx.IntDataPtr(tg.Port),
+				"protocol":                   llx.StringData(string(tg.Protocol)),
+				"protocolVersion":            llx.StringDataPtr(tg.ProtocolVersion),
+				"ipAddressType":              llx.StringData(string(tg.IpAddressType)),
+				"healthCheckEnabled":         llx.BoolDataPtr(tg.HealthCheckEnabled),
+				"healthCheckIntervalSeconds": llx.IntDataPtr(tg.HealthCheckIntervalSeconds),
+				"healthCheckPath":            llx.StringDataPtr(tg.HealthCheckPath),
+				"healthCheckPort":            llx.StringDataPtr(tg.HealthCheckPort),
+				"healthCheckProtocol":        llx.StringData(string(tg.HealthCheckProtocol)),
+				"healthCheckTimeoutSeconds":  llx.IntDataPtr(tg.HealthCheckTimeoutSeconds),
+				"targetType":                 llx.StringData(string(tg.TargetType)),
+				"unhealthyThresholdCount":    llx.IntDataPtr(tg.UnhealthyThresholdCount),
+			}
+
+			mqlLb, err := CreateResource(a.MqlRuntime, "aws.elb.targetgroup", args)
+			if err != nil {
+				return nil, err
+			}
+			mqlLb.(*mqlAwsElbTargetgroup).targetGroup = tg
+			mqlLb.(*mqlAwsElbTargetgroup).region = regionVal
+			res = append(res, mqlLb)
+		}
+		if tgs.NextMarker == nil {
+			break
+		}
+		marker = tgs.NextMarker
+	}
+	return res, nil
+}
+
+type mqlAwsElbTargetgroupInternal struct {
+	targetGroup elbtypes.TargetGroup
+	region      string
+}
+
+func (a *mqlAwsElbTargetgroup) vpc() (*mqlAwsVpc, error) {
+	if a.targetGroup.VpcId == nil {
+		a.Vpc.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	mqlVpc, err := NewResource(a.MqlRuntime, "aws.vpc",
+		map[string]*llx.RawData{
+			"arn": llx.StringData(fmt.Sprintf(vpcArnPattern, a.region, conn.AccountId(), *a.targetGroup.VpcId)),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlVpc.(*mqlAwsVpc), nil
+}
+
+func (a *mqlAwsElbTargetgroup) ec2Targets() ([]interface{}, error) {
+	// TODO
+	return nil, nil
+}
+
+func (a *mqlAwsElbTargetgroup) lambdaTargets() ([]interface{}, error) {
+	// TODO
+	return nil, nil
 }
