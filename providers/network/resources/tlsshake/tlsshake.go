@@ -309,12 +309,38 @@ func (s *Tester) parseAlert(data []byte, conf *ScanConfig) error {
 	return nil
 }
 
+// helloRetryRequestRandom is the value of the random field in a ServerHello
+// message that indicates a HelloRetryRequest. We must check for this value
+// in order to handle HelloRetryRequests correctly. Otherwise, we will
+// incorrectly interpret the message as a ServerHello. The server will
+// wait for us to send a new ClientHello with the correct parameters. And we
+// will be stuck waiting for data that will never come.
+var helloRetryRequestRandom = []byte{
+	0xcf, 0x21, 0xad, 0x74, 0xe5, 0x9a, 0x61, 0x11,
+	0xbe, 0x1d, 0x8c, 0x02, 0x1e, 0x65, 0xb8, 0x91,
+	0xc2, 0xa2, 0x11, 0x16, 0x7a, 0xbb, 0x8c, 0x5e,
+	0x07, 0x9e, 0x09, 0xe2, 0xc8, 0xa8, 0x33, 0x9c,
+}
+
+func hexdump(data []byte) string {
+	var res bytes.Buffer
+	for i := 0; i < len(data); i++ {
+		if i > 0 {
+			res.WriteString(" ")
+		}
+		res.WriteString(hex.EncodeToString(data[i : i+1]))
+	}
+	return res.String()
+}
+
 func (s *Tester) parseServerHello(data []byte, version string, conf *ScanConfig) error {
 	idx := 0
 
-	idx += 2 + 32
-	// handshake tls version (2), which we don't need yet (we will look at it in the extension if necessary)
-	// random (32), which we don't need
+	idx += 2
+	random := data[idx : idx+32]
+	isHelloRetryRequest := bytes.Equal(random, helloRetryRequestRandom)
+
+	idx += 32
 
 	// we don't need the session ID
 	sessionIDlen := byte1int(data[idx])
@@ -338,24 +364,43 @@ func (s *Tester) parseServerHello(data []byte, version string, conf *ScanConfig)
 		idx += 2
 	}
 
+	var serverKeyShareGroup []byte
 	for allExtLen > 0 && idx < len(data) {
 		extType := string(data[idx : idx+2])
 		extLen := bytes2int(data[idx+2 : idx+4])
-		extData := string(data[idx+4 : idx+4+extLen])
+		extData := data[idx+4 : idx+4+extLen]
 
 		allExtLen -= 4 + extLen
 		idx += 4 + extLen
 
 		switch extType {
 		case EXTENSION_SupportedVersions:
-			if v, ok := VERSIONS_LOOKUP[extData]; ok {
+			if v, ok := VERSIONS_LOOKUP[string(extData)]; ok {
 				version = v
 			} else {
-				s.Findings.Errors = append(s.Findings.Errors, "Failed to parse supported_versions extension: '"+extData+"'")
+				s.sync.Lock()
+				s.Findings.Errors = append(s.Findings.Errors, "Failed to parse supported_versions extension: '"+string(extData)+"'")
+				s.sync.Unlock()
 			}
 		case EXTENSION_RenegotiationInfo:
+			s.sync.Lock()
 			s.Findings.Extensions["renegotiation_info"] = true
+			s.sync.Unlock()
+		case EXTENSION_KeyShare:
+			if len(extData) >= 2 {
+				serverKeyShareGroup = extData[0:2]
+			}
 		}
+	}
+
+	if isHelloRetryRequest {
+		if len(serverKeyShareGroup) > 0 {
+			serverKeyShareGroupHex := hexdump(serverKeyShareGroup)
+			return errors.New("unexpected HelloRetryRequest. (key_share_selected_group = " + serverKeyShareGroupHex + ")")
+		}
+		// The server wants us to retry. However, we hardcode a bunch of inputs
+		// so we can't really retry.
+		return errors.New("unexpected HelloRetryRequest")
 	}
 
 	// we have to wait for any changes to the detected version (in the extensions)
@@ -885,6 +930,7 @@ const (
 	EXTENSION_ServerName        string = "\x00\x00"
 	EXTENSION_SupportedVersions string = "\x00\x2b"
 	EXTENSION_RenegotiationInfo string = "\xff\x01"
+	EXTENSION_KeyShare          string = "\x00\x33"
 )
 
 // https://tools.ietf.org/html/rfc5246#appendix-A.3
