@@ -1842,7 +1842,7 @@ aws.sqs {
   queues() []aws.sqs.queue
 }
 
-// Amazon SQS Queue
+// Amazon Simple Queue Service (SQS) Queue
 private aws.sqs.queue {
   // ARN for the queue
   arn() string
