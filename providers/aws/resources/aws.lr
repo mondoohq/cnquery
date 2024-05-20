@@ -1868,7 +1868,7 @@ private aws.sqs.queue {
   region string
   // Whether SSE is enabled for the queue
   sqsManagedSseEnabled() bool
-  // Fifo or Standard
+  // The type of queue: Fifo or Standard
   queueType() string 
   // URL for the queue
   url string
