@@ -1838,7 +1838,7 @@ private aws.dynamodb.table @defaults("name region") {
 
 // Amazon SQS
 aws.sqs {
-  // List of AWS SQS queues
+  // List of Amazon SQS queues
   queues() []aws.sqs.queue
 }
 
