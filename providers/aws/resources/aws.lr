@@ -1866,7 +1866,7 @@ private aws.sqs.queue {
   receiveMessageWaitTimeSeconds() int
   // Region for the queue
   region string
-  // True if SSE is enabled for the queue
+  // Whether SSE is enabled for the queue
   sqsManagedSseEnabled() bool
   // Fifo or Standard
   queueType() string 
