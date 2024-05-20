@@ -35,7 +35,7 @@ var DefaultProviders Providers = map[string]*Provider{
 				{
 					Name:  "atlassian",
 					Use:   "atlassian",
-					Short: "Atlassian",
+					Short: "an Atlassian Cloud Jira, Confluence or Bitbucket instance",
 				},
 			},
 		},
@@ -104,7 +104,7 @@ var DefaultProviders Providers = map[string]*Provider{
 				{
 					Name:  "gcp",
 					Use:   "gcp",
-					Short: "a Google Cloud project",
+					Short: "a Google Cloud project or folder",
 				},
 			},
 		},
@@ -239,7 +239,7 @@ var DefaultProviders Providers = map[string]*Provider{
 				{
 					Name:  "okta",
 					Use:   "okta",
-					Short: "Okta",
+					Short: "an Okta organization",
 				},
 			},
 		},

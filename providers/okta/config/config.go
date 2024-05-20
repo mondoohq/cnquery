@@ -17,7 +17,7 @@ var Config = plugin.Provider{
 		{
 			Name:      "okta",
 			Use:       "okta",
-			Short:     "Okta",
+			Short:     "an Okta organization",
 			Discovery: []string{},
 			Flags: []plugin.Flag{
 				{

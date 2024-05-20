@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"go.mondoo.com/cnquery/v11/utils/stringx"
 	"go/format"
 	"os"
 	"os/exec"
@@ -16,6 +15,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"go.mondoo.com/cnquery/v11/utils/stringx"
 
 	mastermind "github.com/Masterminds/semver"
 	tea "github.com/charmbracelet/bubbletea"
@@ -42,15 +43,15 @@ push it to a new branch.
 
   $ version update providers/*/ --increment=patch --commit
 
-The tool will also check if the provider go dependencies have changed since the 
+The tool will also check if the provider go dependencies have changed since the
 last version and will suggest to update them as well. To just clean up the go.mod
 and go.sum files, run:
 
-  $ version mod-tidy providers/*/ 
+  $ version mod-tidy providers/*/
 
 To update all provider go dependencies to the latest patch version, run:
 
-  $ version mod-update providers/*/ --patch 
+  $ version mod-update providers/*/ --patch
 
 To update all provider go dependencies to the latest version, run:
 
