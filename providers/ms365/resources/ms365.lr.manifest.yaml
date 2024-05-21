@@ -261,7 +261,7 @@ resources:
       phishFilterPolicy: {}
       remoteDomain: {}
       reportSubmissionPolicies:
-        min_mondoo_version: latest
+        min_mondoo_version: 9.0.0
       roleAssignmentPolicy: {}
       safeAttachmentPolicy: {}
       safeLinksPolicy: {}
