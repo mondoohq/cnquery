@@ -98,6 +98,10 @@ func init() {
 			// to override args, implement: initMs365ExchangeonlineTeamsProtectionPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMs365ExchangeonlineTeamsProtectionPolicy,
 		},
+		"ms365.exchangeonline.reportSubmissionPolicy": {
+			// to override args, implement: initMs365ExchangeonlineReportSubmissionPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMs365ExchangeonlineReportSubmissionPolicy,
+		},
 		"ms365.exchangeonline.externalSender": {
 			// to override args, implement: initMs365ExchangeonlineExternalSender(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMs365ExchangeonlineExternalSender,
@@ -669,11 +673,38 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.exchangeonline.teamsProtectionPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetTeamsProtectionPolicies()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.teamsProtectionPolicy")))
 	},
+	"ms365.exchangeonline.reportSubmissionPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365Exchangeonline).GetReportSubmissionPolicies()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.reportSubmissionPolicy")))
+	},
 	"ms365.exchangeonline.teamsProtectionPolicy.zapEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineTeamsProtectionPolicy).GetZapEnabled()).ToDataRes(types.Bool)
 	},
 	"ms365.exchangeonline.teamsProtectionPolicy.isValid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineTeamsProtectionPolicy).GetIsValid()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.reportJunkToCustomizedAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).GetReportJunkToCustomizedAddress()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.reportNotJunkToCustomizedAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).GetReportNotJunkToCustomizedAddress()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.reportPhishToCustomizedAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).GetReportPhishToCustomizedAddress()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.reportJunkAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).GetReportJunkAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.reportNotJunkAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).GetReportNotJunkAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.reportPhishAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).GetReportPhishAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.reportChatMessageEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).GetReportChatMessageEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.reportChatMessageToCustomizedAddressEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).GetReportChatMessageToCustomizedAddressEnabled()).ToDataRes(types.Bool)
 	},
 	"ms365.exchangeonline.externalSender.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineExternalSender).GetIdentity()).ToDataRes(types.String)
@@ -1493,6 +1524,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMs365Exchangeonline).TeamsProtectionPolicies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"ms365.exchangeonline.reportSubmissionPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365Exchangeonline).ReportSubmissionPolicies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"ms365.exchangeonline.teamsProtectionPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlMs365ExchangeonlineTeamsProtectionPolicy).__id, ok = v.Value.(string)
 			return
@@ -1503,6 +1538,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"ms365.exchangeonline.teamsProtectionPolicy.isValid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365ExchangeonlineTeamsProtectionPolicy).IsValid, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).__id, ok = v.Value.(string)
+			return
+		},
+	"ms365.exchangeonline.reportSubmissionPolicy.reportJunkToCustomizedAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).ReportJunkToCustomizedAddress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.reportNotJunkToCustomizedAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).ReportNotJunkToCustomizedAddress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.reportPhishToCustomizedAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).ReportPhishToCustomizedAddress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.reportJunkAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).ReportJunkAddresses, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.reportNotJunkAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).ReportNotJunkAddresses, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.reportPhishAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).ReportPhishAddresses, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.reportChatMessageEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).ReportChatMessageEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.reportChatMessageToCustomizedAddressEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).ReportChatMessageToCustomizedAddressEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"ms365.exchangeonline.externalSender.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3368,6 +3439,7 @@ type mqlMs365Exchangeonline struct {
 	ExternalInOutlook plugin.TValue[[]interface{}]
 	SharedMailboxes plugin.TValue[[]interface{}]
 	TeamsProtectionPolicies plugin.TValue[[]interface{}]
+	ReportSubmissionPolicies plugin.TValue[[]interface{}]
 }
 
 // createMs365Exchangeonline creates a new instance of this resource
@@ -3552,6 +3624,22 @@ func (c *mqlMs365Exchangeonline) GetTeamsProtectionPolicies() *plugin.TValue[[]i
 	})
 }
 
+func (c *mqlMs365Exchangeonline) GetReportSubmissionPolicies() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.ReportSubmissionPolicies, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ms365.exchangeonline", c.__id, "reportSubmissionPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.reportSubmissionPolicies()
+	})
+}
+
 // mqlMs365ExchangeonlineTeamsProtectionPolicy for the ms365.exchangeonline.teamsProtectionPolicy resource
 type mqlMs365ExchangeonlineTeamsProtectionPolicy struct {
 	MqlRuntime *plugin.Runtime
@@ -3599,6 +3687,85 @@ func (c *mqlMs365ExchangeonlineTeamsProtectionPolicy) GetZapEnabled() *plugin.TV
 
 func (c *mqlMs365ExchangeonlineTeamsProtectionPolicy) GetIsValid() *plugin.TValue[bool] {
 	return &c.IsValid
+}
+
+// mqlMs365ExchangeonlineReportSubmissionPolicy for the ms365.exchangeonline.reportSubmissionPolicy resource
+type mqlMs365ExchangeonlineReportSubmissionPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMs365ExchangeonlineReportSubmissionPolicyInternal it will be used here
+	ReportJunkToCustomizedAddress plugin.TValue[bool]
+	ReportNotJunkToCustomizedAddress plugin.TValue[bool]
+	ReportPhishToCustomizedAddress plugin.TValue[bool]
+	ReportJunkAddresses plugin.TValue[[]interface{}]
+	ReportNotJunkAddresses plugin.TValue[[]interface{}]
+	ReportPhishAddresses plugin.TValue[[]interface{}]
+	ReportChatMessageEnabled plugin.TValue[bool]
+	ReportChatMessageToCustomizedAddressEnabled plugin.TValue[bool]
+}
+
+// createMs365ExchangeonlineReportSubmissionPolicy creates a new instance of this resource
+func createMs365ExchangeonlineReportSubmissionPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMs365ExchangeonlineReportSubmissionPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.reportSubmissionPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMs365ExchangeonlineReportSubmissionPolicy) MqlName() string {
+	return "ms365.exchangeonline.reportSubmissionPolicy"
+}
+
+func (c *mqlMs365ExchangeonlineReportSubmissionPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMs365ExchangeonlineReportSubmissionPolicy) GetReportJunkToCustomizedAddress() *plugin.TValue[bool] {
+	return &c.ReportJunkToCustomizedAddress
+}
+
+func (c *mqlMs365ExchangeonlineReportSubmissionPolicy) GetReportNotJunkToCustomizedAddress() *plugin.TValue[bool] {
+	return &c.ReportNotJunkToCustomizedAddress
+}
+
+func (c *mqlMs365ExchangeonlineReportSubmissionPolicy) GetReportPhishToCustomizedAddress() *plugin.TValue[bool] {
+	return &c.ReportPhishToCustomizedAddress
+}
+
+func (c *mqlMs365ExchangeonlineReportSubmissionPolicy) GetReportJunkAddresses() *plugin.TValue[[]interface{}] {
+	return &c.ReportJunkAddresses
+}
+
+func (c *mqlMs365ExchangeonlineReportSubmissionPolicy) GetReportNotJunkAddresses() *plugin.TValue[[]interface{}] {
+	return &c.ReportNotJunkAddresses
+}
+
+func (c *mqlMs365ExchangeonlineReportSubmissionPolicy) GetReportPhishAddresses() *plugin.TValue[[]interface{}] {
+	return &c.ReportPhishAddresses
+}
+
+func (c *mqlMs365ExchangeonlineReportSubmissionPolicy) GetReportChatMessageEnabled() *plugin.TValue[bool] {
+	return &c.ReportChatMessageEnabled
+}
+
+func (c *mqlMs365ExchangeonlineReportSubmissionPolicy) GetReportChatMessageToCustomizedAddressEnabled() *plugin.TValue[bool] {
+	return &c.ReportChatMessageToCustomizedAddressEnabled
 }
 
 // mqlMs365ExchangeonlineExternalSender for the ms365.exchangeonline.externalSender resource

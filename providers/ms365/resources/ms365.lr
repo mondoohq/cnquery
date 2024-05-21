@@ -392,6 +392,8 @@ ms365.exchangeonline {
   sharedMailboxes() []ms365.exchangeonline.exoMailbox
   // List of Teams protection policies
   teamsProtectionPolicies() []ms365.exchangeonline.teamsProtectionPolicy
+  // List of report submission policies
+  reportSubmissionPolicies() []ms365.exchangeonline.reportSubmissionPolicy
 }
 
 // Teams Protection Policy configuration
@@ -400,6 +402,26 @@ private ms365.exchangeonline.teamsProtectionPolicy {
   zapEnabled bool
   // Whether the policy configuration is considered valid
   isValid bool
+}
+
+// Report Submission Policy configuration
+private ms365.exchangeonline.reportSubmissionPolicy {
+  // Whether to report junk to a customized address
+  reportJunkToCustomizedAddress bool
+  // Whether to report not junk to a customized address
+  reportNotJunkToCustomizedAddress bool
+  // Whether to report phish to a customized address
+  reportPhishToCustomizedAddress bool
+  // Addresses to report junk
+  reportJunkAddresses []string
+  // Addresses to report not junk
+  reportNotJunkAddresses []string
+  // Addresses to report phish
+  reportPhishAddresses []string
+  // Whether chat message reporting is enabled
+  reportChatMessageEnabled bool
+  // Whether to report chat messages to a customized address
+  reportChatMessageToCustomizedAddressEnabled bool
 }
 
 // Microsoft 365 Exchange Online External Sender

@@ -260,6 +260,8 @@ resources:
       owaMailboxPolicy: {}
       phishFilterPolicy: {}
       remoteDomain: {}
+      reportSubmissionPolicies:
+        min_mondoo_version: 9.0.0
       roleAssignmentPolicy: {}
       safeAttachmentPolicy: {}
       safeLinksPolicy: {}
@@ -290,6 +292,21 @@ resources:
       allowList: {}
       enabled: {}
       identity: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - microsoft365
+  ms365.exchangeonline.reportSubmissionPolicy:
+    fields:
+      reportChatMessageEnabled: {}
+      reportChatMessageToCustomizedAddressEnabled: {}
+      reportJunkAddresses: {}
+      reportJunkToCustomizedAddress: {}
+      reportNotJunkAddresses: {}
+      reportNotJunkToCustomizedAddress: {}
+      reportPhishAddresses: {}
+      reportPhishToCustomizedAddress: {}
     is_private: true
     min_mondoo_version: latest
     platform:
