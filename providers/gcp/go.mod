@@ -9,12 +9,12 @@ toolchain go1.22.0
 require (
 	cloud.google.com/go/accessapproval v1.7.7
 	cloud.google.com/go/bigquery v1.61.0
-	cloud.google.com/go/compute v1.26.0
+	cloud.google.com/go/compute v1.27.0
 	cloud.google.com/go/container v1.35.1
 	cloud.google.com/go/functions v1.16.2
 	cloud.google.com/go/iam v1.1.8
-	cloud.google.com/go/kms v1.16.0
-	cloud.google.com/go/logging v1.9.0
+	cloud.google.com/go/kms v1.17.0
+	cloud.google.com/go/logging v1.10.0
 	cloud.google.com/go/longrunning v0.5.7
 	cloud.google.com/go/monitoring v1.19.0
 	cloud.google.com/go/pubsub v1.38.0
@@ -30,7 +30,7 @@ require (
 	go.mondoo.com/cnquery/v11 v11.3.1
 	go.mondoo.com/ranger-rpc v0.6.0
 	golang.org/x/oauth2 v0.20.0
-	google.golang.org/api v0.180.0
+	google.golang.org/api v0.181.0
 	google.golang.org/genproto v0.0.0-20240513163218-0867130af1f8
 	google.golang.org/protobuf v1.34.1
 )
