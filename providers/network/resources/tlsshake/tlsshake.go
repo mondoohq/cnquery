@@ -17,6 +17,7 @@ import (
 	"net"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -285,21 +286,21 @@ func (s *Tester) parseAlert(data []byte, conf *ScanConfig) error {
 			// version is unsupported or just its ciphers. So we check if we found
 			// it previously and if so, don't add it to the list of unsupported
 			// versions.
+			s.sync.Lock()
 			if _, ok := s.Findings.Versions["ssl3"]; !ok {
-				s.sync.Lock()
 				s.Findings.Versions["ssl3"] = false
-				s.sync.Unlock()
 			}
+			s.sync.Unlock()
 		}
 
 		names := cipherNames(conf.version, conf.ciphersFilter)
 		for i := range names {
 			name := names[i]
+			s.sync.Lock()
 			if _, ok := s.Findings.Ciphers[name]; !ok {
-				s.sync.Lock()
 				s.Findings.Ciphers[name] = false
-				s.sync.Unlock()
 			}
+			s.sync.Unlock()
 		}
 
 	default:
@@ -476,8 +477,22 @@ func (s *Tester) parseHello(conn net.Conn, conf *ScanConfig) (bool, error) {
 	for !done {
 		_, err := io.ReadFull(reader, header)
 		if err != nil {
+			hasConnectionReset := strings.Contains(err.Error(), "connection reset by peer")
 			if err == io.EOF {
 				break
+			} else if hasConnectionReset {
+				// If we get a connection reset, we assume the server doesn't support
+				// any of the ciphers we are testing.
+				names := cipherNames(conf.version, conf.ciphersFilter)
+				for i := range names {
+					name := names[i]
+					s.sync.Lock()
+					if _, ok := s.Findings.Ciphers[name]; !ok {
+						s.Findings.Ciphers[name] = false
+					}
+					s.sync.Unlock()
+				}
+				return false, nil
 			}
 			return false, err
 		}
