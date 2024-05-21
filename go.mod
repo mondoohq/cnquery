@@ -1,8 +1,7 @@
 module go.mondoo.com/cnquery/v11
 
 go 1.22
-
-toolchain go1.22.0
+toolchain go1.22.2
 
 require (
 	cloud.google.com/go/logging v1.10.0
@@ -105,13 +104,13 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 	howett.net/plist v1.0.1
 	// pin v0.28.9
-	k8s.io/apimachinery v0.28.9
+	k8s.io/apimachinery v0.30.1
 	// pin v0.28.9
-	k8s.io/client-go v0.28.9
+	k8s.io/client-go v0.30.1
 	// pin v0.28.9
-	k8s.io/component-base v0.28.9
+	k8s.io/component-base v0.30.1
 	// pin v0.28.9
-	k8s.io/kubelet v0.28.9
+	k8s.io/kubelet v0.30.1
 	k8s.io/utils v0.0.0-20240502163921-fe8a2dddb1d0
 	sigs.k8s.io/yaml v1.4.0
 )
@@ -404,8 +403,8 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	honnef.co/go/tools v0.4.7 // indirect
-	k8s.io/api v0.28.9 // indirect
-	k8s.io/klog/v2 v2.110.1 // indirect
+	k8s.io/api v0.30.1 // indirect
+	k8s.io/klog/v2 v2.120.1 // indirect
 	modernc.org/libc v1.50.7 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.8.0 // indirect
