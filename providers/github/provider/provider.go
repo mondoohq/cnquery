@@ -46,6 +46,10 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		Discover: &inventory.Discovery{},
 	}
 
+	if x, ok := flags["enterprise-url"]; ok && len(x.Value) != 0 {
+		conf.Options[connection.OPTION_ENTERPRISE_URL] = string(x.Value)
+	}
+
 	isAppAuth := false
 	if appId, ok := req.Flags[connection.OPTION_APP_ID]; ok && len(appId.Value) > 0 {
 		conf.Options[connection.OPTION_APP_ID] = string(appId.Value)

@@ -59,6 +59,12 @@ var Config = plugin.Provider{
 					Default: "",
 					Desc:    "GitHub Application private key.",
 				},
+				{
+					Long:    "enterprise-url",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "GitHub Enterprise URL.",
+				},
 			},
 		},
 	},

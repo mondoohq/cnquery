@@ -6,6 +6,7 @@ package connection
 import (
 	"context"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 
@@ -24,6 +25,7 @@ const (
 	OPTION_APP_ID              = "app-id"
 	OPTION_APP_INSTALLATION_ID = "app-installation-id"
 	OPTION_APP_PRIVATE_KEY     = "app-private-key"
+	OPTION_ENTERPRISE_URL      = "enterprise-url"
 )
 
 type GithubConnection struct {
@@ -45,6 +47,20 @@ func NewGithubConnection(id uint32, asset *inventory.Asset) (*GithubConnection, 
 	}
 	if err != nil {
 		return nil, err
+	}
+
+	if enterpriseUrl := conf.Options[OPTION_ENTERPRISE_URL]; enterpriseUrl != "" {
+		parsedUrl, err := url.Parse(enterpriseUrl)
+		if err != nil {
+			return nil, err
+		}
+
+		baseUrl := parsedUrl.JoinPath("api/v3/")
+		uploadUrl := parsedUrl.JoinPath("api/uploads/")
+		client, err = client.WithEnterpriseURLs(baseUrl.String(), uploadUrl.String())
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// perform a quick call to verify the token's validity.
