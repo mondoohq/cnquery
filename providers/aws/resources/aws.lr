@@ -1898,9 +1898,9 @@ private aws.rds.dbcluster @defaults("id region") {
   backupRetentionPeriod int
   // Whether minor version patches are applied automatically
   autoMinorVersionUpgrade bool
-  // Name of the compute and memory capacity class of the Cluster DB instances
+  // Name of the compute and memory capacity class of the cluster database instances
   clusterDbInstanceClass string
-  // Name of the database engine for this DB cluster
+  // Name of the database engine for this database cluster
   engine string
   // The version of the database engine for this DB cluster
   engineVersion string
@@ -1910,21 +1910,21 @@ private aws.rds.dbcluster @defaults("id region") {
   multiAZ bool
   // Whether deletion protection is enabled
   deletionProtection bool
-  // List of VPC security group elements that the DB cluster belongs to
+  // List of VPC security group elements that the database cluster belongs to
   securityGroups []aws.ec2.securitygroup
-  // List of Availability Zones (AZs) where instances in the DB cluster can be created
+  // List of Availability Zones (AZs) where instances in the database cluster can be created
   availabilityZones []string
   // The port that the database engine is listening on
   port int
-  // The connection endpoint for the primary instance of the DB cluster
+  // The connection endpoint for the primary instance of the database cluster
   endpoint string
   // The cluster hosted zone ID
   hostedZoneId string
-  // The master username for the DB instance
+  // The master username for the database
   masterUsername string
   // The latest time to which a database can be restored with point-in-time restore
   latestRestorableTime time
-  // Backup setting for the DB Cluster
+  // Backup setting for the database cluster
   backupSettings() []aws.rds.backupsetting
 }
 
@@ -1954,7 +1954,7 @@ private aws.rds.snapshot @defaults("id region type encrypted createdAt") {
   status string
   // The amount of storage allocated to the snapshot
   allocatedStorage int
-  // The port that the DB instance or cluster listens on
+  // The port that the database instance or cluster listens on
   port int
   // The creation date of the snapshot
   createdAt time
@@ -1996,15 +1996,15 @@ private aws.rds.dbinstance @defaults("id region engine engineVersion") {
   enhancedMonitoringResourceArn string
   // Tags for the database instance
   tags map[string]string
-  // Name of the compute and memory capacity class of the DB instance
+  // Name of the compute and memory capacity class of the database instance
   dbInstanceClass string
-  // User-supplied unique key that identifies a DB instance
+  // User-supplied unique key that identifies a database instance
   dbInstanceIdentifier string
-  // Name of the database engine for this DB instance
+  // Name of the database engine for this database instance
   engine string
-  // The version of the database engine for this DB instance
+  // The version of the database engine for this database instance
   engineVersion string
-  // List of VPC security group elements that the DB instance belongs to
+  // List of VPC security group elements that the database instance belongs to
   securityGroups []aws.ec2.securitygroup
   // Current state of this database
   status string
@@ -2012,15 +2012,15 @@ private aws.rds.dbinstance @defaults("id region engine engineVersion") {
   autoMinorVersionUpgrade bool
   // The creation date of the RDS instance
   createdTime time
-  // The port that the DB instance listens on. If the DB instance is part of a DB cluster, this can be a different port than the DB cluster port.
+  // The port that the database instance listens on. If the database instance is part of a DB cluster, this can be a different port than the DB cluster port.
   port int
-  // The connection endpoint for the DB instance
+  // The connection endpoint for the database instance
   endpoint string
-  // The master username for the DB instance
+  // The master username for the database instance
   masterUsername string
   // The latest time to which a database can be restored with point-in-time restore
   latestRestorableTime time
-  // Backup setting for the DB instance
+  // Backup setting for the database instance
   backupSettings() []aws.rds.backupsetting
 }
 
