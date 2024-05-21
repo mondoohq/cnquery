@@ -46,6 +46,18 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		Discover: &inventory.Discovery{},
 	}
 
+	isAppAuth := false
+	if appId, ok := req.Flags[connection.OPTION_APP_ID]; ok && len(appId.Value) > 0 {
+		conf.Options[connection.OPTION_APP_ID] = string(appId.Value)
+
+		installId := req.Flags[connection.OPTION_APP_INSTALLATION_ID]
+		conf.Options[connection.OPTION_APP_INSTALLATION_ID] = string(installId.Value)
+
+		pk := req.Flags[connection.OPTION_APP_PRIVATE_KEY]
+		conf.Options[connection.OPTION_APP_PRIVATE_KEY] = string(pk.Value)
+		isAppAuth = true
+	}
+
 	token := ""
 	if x, ok := flags["token"]; ok && len(x.Value) != 0 {
 		token = string(x.Value)
@@ -53,10 +65,12 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	if token == "" {
 		token = os.Getenv("GITHUB_TOKEN")
 	}
-	if token == "" {
-		return nil, errors.New("a valid GitHub token is required, pass --token '<yourtoken>' or set GITHUB_TOKEN environment variable")
+	if token == "" && !isAppAuth {
+		return nil, errors.New("a valid GitHub authentication is required, pass --token '<yourtoken>', set GITHUB_TOKEN environment variable or provider GitHub App credentials")
 	}
-	conf.Credentials = append(conf.Credentials, vault.NewPasswordCredential("", token))
+	if token != "" {
+		conf.Credentials = append(conf.Credentials, vault.NewPasswordCredential("", token))
+	}
 
 	// discovery flags
 	discoverTargets := []string{}
