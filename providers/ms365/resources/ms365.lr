@@ -442,12 +442,14 @@ private ms365.sharepointonline.site {
 
 // Microsoft 365 Teams
 ms365.teams {
-  // CS Teams client configuration
+  // Teams client configuration
   csTeamsClientConfiguration() dict
-  // CS Teams tenant federated configuration
+  // Teams tenant federated configuration
   csTenantFederationConfiguration() ms365.teams.tenantFederationConfig
-  // CS Teams meeting policy configuration
+  // Teams meeting policy configuration
   csTeamsMeetingPolicy() ms365.teams.teamsMeetingPolicyConfig
+  // Teams message policy configuration
+  csTeamsMessagingPolicy() ms365.teams.teamsMessagingPolicyConfig
 }
 
 // Microsoft 365 Teams tenant federation configuration
@@ -472,7 +474,7 @@ private ms365.teams.tenantFederationConfig {
   restrictTeamsConsumerToExternalUserProfiles bool
 }
 
-// Teams meeting policy configuration
+// Microsoft 365 Teams meeting policy configuration
 private ms365.teams.teamsMeetingPolicyConfig {
   // Whether anonymous users are allowed to join
   allowAnonymousUsersToJoinMeeting bool
@@ -490,6 +492,12 @@ private ms365.teams.teamsMeetingPolicyConfig {
   designatedPresenterRoleMode string
   // Whether external participants can give or request control of the meeting
   allowExternalParticipantGiveRequestControl bool
+  // Whether users can report security concerns
+  allowSecurityEndUserReporting bool
+}
+
+// Teams meeting policy configuration
+private ms365.teams.teamsMessagingPolicyConfig {
   // Whether users can report security concerns
   allowSecurityEndUserReporting bool
 }
