@@ -28,7 +28,7 @@ require (
 	github.com/rs/zerolog v1.32.0
 	github.com/stretchr/testify v1.9.0
 	go.mondoo.com/cnquery/v11 v11.4.3
-	go.mondoo.com/ranger-rpc v0.6.0
+	go.mondoo.com/ranger-rpc v0.6.1
 	golang.org/x/oauth2 v0.20.0
 	google.golang.org/api v0.181.0
 	google.golang.org/genproto v0.0.0-20240520151616-dc85e6b867a5
