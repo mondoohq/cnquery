@@ -11,7 +11,7 @@ require (
 	github.com/rs/zerolog v1.32.0
 	github.com/stretchr/testify v1.9.0
 	go.mondoo.com/cnquery/v11 v11.4.3
-	go.mondoo.com/ranger-rpc v0.6.0
+	go.mondoo.com/ranger-rpc v0.6.1
 )
 
 require (
