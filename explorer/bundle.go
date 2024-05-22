@@ -361,6 +361,22 @@ func (c *bundleCache) compileQueries(queries []*Mquery, pack *QueryPack) error {
 		c.precompileQuery(queries[i], pack)
 	}
 
+	// Topologically sort the queries so that variant queries are compiled after the
+	// actual query they include.
+	topoSortedQueries, err := topologicalSortQueries(queries)
+	if err != nil {
+		return err
+	}
+	for i := range topoSortedQueries {
+		// filters will need to be aggregated into the pack's filters
+		if pack != nil {
+			if err := pack.ComputedFilters.AddQueryFilters(topoSortedQueries[i], c.lookupQuery); err != nil {
+				c.errors = append(c.errors, err)
+				c.errors = append(c.errors, errors.New("failed to register filters for query "+topoSortedQueries[i].Mrn))
+			}
+		}
+	}
+
 	// After the first pass we may have errors. We try to collect as many errors
 	// as we can before returning, so more problems can be fixed at once.
 	// We have to return at this point, because these errors will prevent us from
@@ -369,8 +385,8 @@ func (c *bundleCache) compileQueries(queries []*Mquery, pack *QueryPack) error {
 		return c.error()
 	}
 
-	for i := range queries {
-		c.compileQuery(queries[i])
+	for i := range topoSortedQueries {
+		c.compileQuery(topoSortedQueries[i])
 	}
 
 	// The second pass on errors is done after we have compiled as much as possible.
@@ -436,14 +452,6 @@ func (c *bundleCache) precompileQuery(query *Mquery, pack *QueryPack) {
 		}
 		if uid != "" {
 			c.uid2mrn[uid] = variant.Mrn
-		}
-	}
-
-	// filters will need to be aggregated into the pack's filters
-	if pack != nil {
-		if err := pack.ComputedFilters.AddQueryFilters(query, c.lookupQuery); err != nil {
-			c.errors = append(c.errors, errors.New("failed to register filters for query "+query.Mrn))
-			return
 		}
 	}
 }
@@ -568,4 +576,56 @@ func (p *Bundle) Filters() []*Mquery {
 	}
 
 	return res
+}
+
+func topologicalSortQueries(queries []*Mquery) ([]*Mquery, error) {
+	// Gather all top-level queries with variants
+	queriesMap := map[string]*Mquery{}
+	for _, q := range queries {
+		if q == nil {
+			continue
+		}
+		if q.Mrn == "" {
+			// This should never happen. This function is called after all
+			// queries have their MRNs set.
+			panic("BUG: expected query MRN to be set for topological sort")
+		}
+		queriesMap[q.Mrn] = q
+	}
+
+	// Topologically sort the queries
+	sorted := &Mqueries{}
+	visited := map[string]struct{}{}
+	for _, q := range queriesMap {
+		err := topologicalSortQueriesDFS(q.Mrn, queriesMap, visited, sorted)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return sorted.Items, nil
+}
+
+func topologicalSortQueriesDFS(queryMrn string, queriesMap map[string]*Mquery, visited map[string]struct{}, sorted *Mqueries) error {
+	if _, ok := visited[queryMrn]; ok {
+		return nil
+	}
+	visited[queryMrn] = struct{}{}
+	q := queriesMap[queryMrn]
+	if q == nil {
+		return nil
+	}
+	for _, variant := range q.Variants {
+		if variant.Mrn == "" {
+			// This should never happen. This function is called after all
+			// queries have their MRNs set.
+			panic("BUG: expected variant MRN to be set for topological sort")
+		}
+		err := topologicalSortQueriesDFS(variant.Mrn, queriesMap, visited, sorted)
+		if err != nil {
+			return err
+		}
+	}
+	sorted.Items = append(sorted.Items, q)
+	return nil
 }
