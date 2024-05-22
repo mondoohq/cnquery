@@ -415,17 +415,18 @@ func addConnectionInfoToEcrAsset(image *mqlAwsEcrImage, conn *connection.AwsConn
 	for i := range image.Tags.Data {
 		tag := image.Tags.Data[i].(string)
 		imageTags = append(imageTags, tag)
-		a.Connections = append(a.Connections, &inventory.Config{
-			Type: "registry-image",
-			Host: image.Uri.Data + ":" + tag,
-			Options: map[string]string{
-				"region":  image.Region.Data,
-				"profile": conn.Profile(),
-			},
-			DelayDiscovery: true,
-		})
-
 	}
+
+	a.Connections = append(a.Connections, &inventory.Config{
+		Type: "registry-image",
+		Host: image.Uri.Data + "@" + image.Digest.Data,
+		Options: map[string]string{
+			"region":  image.Region.Data,
+			"profile": conn.Profile(),
+		},
+		DelayDiscovery: true,
+	})
+
 	a.Labels = make(map[string]string)
 	// store digest
 	a.Labels[fmt.Sprintf("ecr.%s.amazonaws.com/digest", image.Region.Data)] = image.Digest.Data
