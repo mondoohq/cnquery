@@ -10,7 +10,7 @@ require (
 	github.com/ctreminiom/go-atlassian v1.6.0
 	github.com/pkg/errors v0.9.1
 	go.mondoo.com/cnquery/v11 v11.4.3
-	go.mondoo.com/ranger-rpc v0.6.0
+	go.mondoo.com/ranger-rpc v0.6.1
 )
 
 require (
