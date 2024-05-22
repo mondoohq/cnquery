@@ -28,6 +28,7 @@ var Config = plugin.Provider{
 		shared.Type_RegistryImage.String(),
 		shared.Type_FileSystem.String(),
 		shared.Type_Winrm.String(),
+		shared.Type_Device.String(),
 	},
 	Connectors: []plugin.Connector{
 		{
@@ -258,6 +259,33 @@ var Config = plugin.Provider{
 					Type:    plugin.FlagType_String,
 					Default: "",
 					Desc:    "Path to a local file or directory for the connection to use.",
+				},
+			},
+		},
+		{
+			Name:    "device",
+			Use:     "device",
+			Short:   "a block device target",
+			MinArgs: 0,
+			MaxArgs: 0,
+			Flags: []plugin.Flag{
+				{
+					Long:   "lun",
+					Type:   plugin.FlagType_String,
+					Desc:   "The logical unit number of the block device that should be scanned. Do not use together with --device-name.",
+					Option: plugin.FlagOption_Hidden,
+				},
+				{
+					Long:   "device-name",
+					Type:   plugin.FlagType_String,
+					Desc:   "The target device to scan, e.g. /dev/sda. Do not use together with --lun.",
+					Option: plugin.FlagOption_Hidden,
+				},
+				{
+					Long:   "platform-ids",
+					Type:   plugin.FlagType_List,
+					Desc:   "List of platform IDs to inject to the asset.",
+					Option: plugin.FlagOption_Hidden,
 				},
 			},
 		},

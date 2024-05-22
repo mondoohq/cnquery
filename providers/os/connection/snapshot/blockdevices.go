@@ -4,32 +4,58 @@
 package snapshot
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"strings"
 
 	"github.com/rs/zerolog/log"
 )
 
-type blockDevices struct {
-	BlockDevices []blockDevice `json:"blockDevices,omitempty"`
+type BlockDevices struct {
+	BlockDevices []BlockDevice `json:"blockDevices,omitempty"`
 }
 
-type blockDevice struct {
+type BlockDevice struct {
 	Name       string        `json:"name,omitempty"`
-	FsType     string        `json:"fstype,omitempty"`
+	FsType     string        `json:"FsType,omitempty"`
 	Label      string        `json:"label,omitempty"`
 	Uuid       string        `json:"uuid,omitempty"`
 	MountPoint string        `json:"mountpoint,omitempty"`
-	Children   []blockDevice `json:"children,omitempty"`
+	Children   []BlockDevice `json:"children,omitempty"`
 	FsUse      string        `json:"fsuse%,omitempty"`
 }
 
 type fsInfo struct {
-	name   string
-	fstype string
+	Name   string
+	FsType string
 }
 
-func (blockEntries blockDevices) GetRootBlockEntry() (*fsInfo, error) {
+func (cmdRunner *LocalCommandRunner) GetBlockDevices() (*BlockDevices, error) {
+	cmd, err := cmdRunner.RunCommand("lsblk -f --json")
+	if err != nil {
+		return nil, err
+	}
+	if cmd.ExitStatus != 0 {
+		outErr, err := io.ReadAll(cmd.Stderr)
+		if err != nil {
+			return nil, err
+		}
+		return nil, fmt.Errorf("failed to run lsblk: %s", outErr)
+	}
+	data, err := io.ReadAll(cmd.Stdout)
+	if err != nil {
+		return nil, err
+	}
+	blockEntries := &BlockDevices{}
+	if err := json.Unmarshal(data, blockEntries); err != nil {
+		return nil, err
+	}
+	return blockEntries, nil
+}
+
+func (blockEntries BlockDevices) GetRootBlockEntry() (*fsInfo, error) {
 	log.Debug().Msg("get root block entry")
 	for i := range blockEntries.BlockDevices {
 		d := blockEntries.BlockDevices[i]
@@ -38,14 +64,14 @@ func (blockEntries blockDevices) GetRootBlockEntry() (*fsInfo, error) {
 			entry := d.Children[i]
 			if entry.IsNoBootVolume() {
 				devFsName := "/dev/" + entry.Name
-				return &fsInfo{name: devFsName, fstype: entry.FsType}, nil
+				return &fsInfo{Name: devFsName, FsType: entry.FsType}, nil
 			}
 		}
 	}
 	return nil, errors.New("target volume not found on instance")
 }
 
-func (blockEntries blockDevices) GetBlockEntryByName(name string) (*fsInfo, error) {
+func (blockEntries BlockDevices) GetBlockEntryByName(name string) (*fsInfo, error) {
 	log.Debug().Str("name", name).Msg("get matching block entry")
 	var secondName string
 	if strings.HasPrefix(name, "/dev/sd") {
@@ -70,14 +96,14 @@ func (blockEntries blockDevices) GetBlockEntryByName(name string) (*fsInfo, erro
 			entry := d.Children[i]
 			if entry.IsNotBootOrRootVolumeAndUnmounted() {
 				devFsName := "/dev/" + entry.Name
-				return &fsInfo{name: devFsName, fstype: entry.FsType}, nil
+				return &fsInfo{Name: devFsName, FsType: entry.FsType}, nil
 			}
 		}
 	}
 	return nil, errors.New("target volume not found on instance")
 }
 
-func (blockEntries blockDevices) GetUnnamedBlockEntry() (*fsInfo, error) {
+func (blockEntries BlockDevices) GetUnnamedBlockEntry() (*fsInfo, error) {
 	fsInfo, err := blockEntries.GetUnmountedBlockEntry()
 	if err == nil && fsInfo != nil {
 		return fsInfo, nil
@@ -93,7 +119,7 @@ func (blockEntries blockDevices) GetUnnamedBlockEntry() (*fsInfo, error) {
 	return nil, errors.New("target volume not found on instance")
 }
 
-func (blockEntries blockDevices) GetUnmountedBlockEntry() (*fsInfo, error) {
+func (blockEntries BlockDevices) GetUnmountedBlockEntry() (*fsInfo, error) {
 	log.Debug().Msg("get unmounted block entry")
 	for i := range blockEntries.BlockDevices {
 		d := blockEntries.BlockDevices[i]
@@ -108,27 +134,27 @@ func (blockEntries blockDevices) GetUnmountedBlockEntry() (*fsInfo, error) {
 	return nil, errors.New("target volume not found on instance")
 }
 
-func findVolume(children []blockDevice) *fsInfo {
+func findVolume(children []BlockDevice) *fsInfo {
 	var fs *fsInfo
 	for i := range children {
 		entry := children[i]
 		if entry.IsNotBootOrRootVolumeAndUnmounted() {
 			// we are NOT searching for the root volume here, so we can exclude the "sda" and "xvda" volumes
 			devFsName := "/dev/" + entry.Name
-			fs = &fsInfo{name: devFsName, fstype: entry.FsType}
+			fs = &fsInfo{Name: devFsName, FsType: entry.FsType}
 		}
 	}
 	return fs
 }
 
-func (entry blockDevice) IsNoBootVolume() bool {
+func (entry BlockDevice) IsNoBootVolume() bool {
 	return entry.Uuid != "" && entry.FsType != "" && entry.FsType != "vfat" && entry.Label != "EFI" && entry.Label != "boot"
 }
 
-func (entry blockDevice) IsRootVolume() bool {
+func (entry BlockDevice) IsRootVolume() bool {
 	return strings.Contains(entry.Name, "sda") || strings.Contains(entry.Name, "xvda") || strings.Contains(entry.Name, "nvme0n1")
 }
 
-func (entry blockDevice) IsNotBootOrRootVolumeAndUnmounted() bool {
+func (entry BlockDevice) IsNotBootOrRootVolumeAndUnmounted() bool {
 	return entry.IsNoBootVolume() && entry.MountPoint == "" && !entry.IsRootVolume()
 }
