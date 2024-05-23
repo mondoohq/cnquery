@@ -9,11 +9,11 @@ import (
 )
 
 type LocalCommandRunner struct {
-	shell []string
+	Shell []string
 }
 
 func (r *LocalCommandRunner) RunCommand(command string) (*shared.Command, error) {
-	c := local.CommandRunner{Shell: r.shell}
+	c := local.CommandRunner{Shell: r.Shell}
 	args := []string{}
 
 	res, err := c.Exec(command, args)

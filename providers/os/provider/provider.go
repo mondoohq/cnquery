@@ -17,6 +17,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/container"
+	"go.mondoo.com/cnquery/v11/providers/os/connection/device"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/docker"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/fs"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/local"
@@ -71,6 +72,8 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	switch req.Connector {
 	case "local":
 		conf.Type = shared.Type_Local.String()
+	case "device":
+		conf.Type = shared.Type_Device.String()
 	case "ssh":
 		conf.Type = shared.Type_SSH.String()
 		port = 22
@@ -216,6 +219,22 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		}
 	}
 
+	if lun, ok := flags["lun"]; ok {
+		conf.Options["lun"] = lun.RawData().Value.(string)
+	}
+	if deviceName, ok := flags["device-name"]; ok {
+		conf.Options["device-name"] = deviceName.RawData().Value.(string)
+	}
+	if platformIDs, ok := flags["platform-ids"]; ok {
+		platformIDs := platformIDs.Array
+		strs := []string{}
+		for _, pID := range platformIDs {
+			strs = append(strs, pID.RawData().Value.(string))
+		}
+		if len(strs) > 0 {
+			conf.Options["inject-platform-ids"] = strings.Join(strs, ",")
+		}
+	}
 	res := plugin.ParseCLIRes{
 		Asset: asset,
 	}
@@ -329,7 +348,8 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 				asset.Platform = p
 				appendRelatedAssetsFromFingerprint(fingerprint, asset)
 			}
-
+		case shared.Type_Device.String():
+			conn, err = device.NewDeviceConnection(connId, conf, asset)
 		case shared.Type_SSH.String():
 			conn, err = ssh.NewConnection(connId, conf, asset)
 			if err != nil {

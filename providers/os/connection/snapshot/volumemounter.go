@@ -26,12 +26,12 @@ type VolumeMounter struct {
 	// where we tell AWS to attach the volume; it doesn't necessarily get attached there, but we have to reference this same location when detaching
 	VolumeAttachmentLoc string
 	opts                map[string]string
-	cmdRunner           *LocalCommandRunner
+	CmdRunner           *LocalCommandRunner
 }
 
 func NewVolumeMounter(shell []string) *VolumeMounter {
 	return &VolumeMounter{
-		cmdRunner: &LocalCommandRunner{shell: shell},
+		CmdRunner: &LocalCommandRunner{Shell: shell},
 	}
 }
 
@@ -40,6 +40,8 @@ func (m *VolumeMounter) Mount() error {
 	if err != nil {
 		return err
 	}
+	// we should consider dropping this if VolumeAttachmentLoc is set. we need to also add FsType but
+	// otherwise that means we're listing the devices twice
 	fsInfo, err := m.getFsInfo()
 	if err != nil {
 		return err
@@ -47,7 +49,7 @@ func (m *VolumeMounter) Mount() error {
 	if fsInfo == nil {
 		return errors.New("unable to find target volume on instance")
 	}
-	log.Debug().Str("device name", fsInfo.name).Msg("found target volume")
+	log.Debug().Str("device name", fsInfo.Name).Msg("found target volume")
 	return m.mountVolume(fsInfo)
 }
 
@@ -63,11 +65,11 @@ func (m *VolumeMounter) createScanDir() error {
 }
 
 func (m *VolumeMounter) getFsInfo() (*fsInfo, error) {
-	log.Debug().Msg("search for target volume")
+	log.Debug().Str("volume attachment loc", m.VolumeAttachmentLoc).Msg("search for target volume")
 
 	// TODO: replace with mql query once version with lsblk resource is released
 	// TODO: only use sudo if we are not root
-	cmd, err := m.cmdRunner.RunCommand("sudo lsblk -f --json")
+	cmd, err := m.CmdRunner.RunCommand("sudo lsblk -f --json")
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +77,7 @@ func (m *VolumeMounter) getFsInfo() (*fsInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	blockEntries := blockDevices{}
+	blockEntries := BlockDevices{}
 	if err := json.Unmarshal(data, &blockEntries); err != nil {
 		return nil, err
 	}
@@ -102,12 +104,12 @@ func (m *VolumeMounter) getFsInfo() (*fsInfo, error) {
 
 func (m *VolumeMounter) mountVolume(fsInfo *fsInfo) error {
 	opts := []string{}
-	if fsInfo.fstype == "xfs" {
+	if fsInfo.FsType == "xfs" {
 		opts = append(opts, "nouuid")
 	}
 	opts = stringx.DedupStringArray(opts)
-	log.Debug().Str("fstype", fsInfo.fstype).Str("device", fsInfo.name).Str("scandir", m.ScanDir).Str("opts", strings.Join(opts, ",")).Msg("mount volume to scan dir")
-	return Mount(fsInfo.name, m.ScanDir, fsInfo.fstype, opts)
+	log.Debug().Str("fstype", fsInfo.FsType).Str("device", fsInfo.Name).Str("scandir", m.ScanDir).Str("opts", strings.Join(opts, ",")).Msg("mount volume to scan dir")
+	return Mount(fsInfo.Name, m.ScanDir, fsInfo.FsType, opts)
 }
 
 func (m *VolumeMounter) UnmountVolumeFromInstance() error {
