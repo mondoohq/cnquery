@@ -8,7 +8,7 @@ toolchain go1.22.0
 
 require (
 	github.com/facebookincubator/nvdtools v0.1.5
-	github.com/rs/zerolog v1.32.0
+	github.com/rs/zerolog v1.33.0
 	github.com/stretchr/testify v1.9.0
 	github.com/vmware/govmomi v0.37.2
 	go.mondoo.com/cnquery/v11 v11.5.0
