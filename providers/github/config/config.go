@@ -45,19 +45,19 @@ var Config = plugin.Provider{
 					Long:    "app-id",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "GitHub Application ID.",
+					Desc:    "GitHub App ID.",
 				},
 				{
 					Long:    "app-installation-id",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "GitHub Application installation ID.",
+					Desc:    "GitHub App installation ID.",
 				},
 				{
 					Long:    "app-private-key",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "GitHub Application private key.",
+					Desc:    "GitHub App private key file path.",
 				},
 				{
 					Long:    "enterprise-url",
