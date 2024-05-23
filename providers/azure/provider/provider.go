@@ -6,7 +6,6 @@ package provider
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"go.mondoo.com/cnquery/v11"
 	"go.mondoo.com/cnquery/v11/llx"
@@ -45,9 +44,6 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	subscriptionsToExclude := flags["subscriptions-exclude"]
 	certificatePath := flags["certificate-path"]
 	certificateSecret := flags["certificate-secret"]
-	skipSnapshotCleanup := flags["skip-snapshot-cleanup"]
-	skipSnapshotSetup := flags["skip-snapshot-setup"]
-	lun := flags["lun"]
 	opts := map[string]string{}
 	creds := []*vault.Credential{}
 
@@ -61,22 +57,6 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 	if len(subscriptionsToExclude.Value) > 0 {
 		opts["subscriptions-exclude"] = string(subscriptionsToExclude.Value)
-	}
-	if len(lun.Value) > 0 {
-		opts[azureinstancesnapshot.Lun] = fmt.Sprint(lun.RawData().Value.(int64))
-	}
-	// the presence of the flag indicates that we should skip cleanup
-	if skipCleanup := skipSnapshotCleanup.RawData().Value.(bool); skipCleanup {
-		opts[azureinstancesnapshot.SkipCleanup] = "true"
-	}
-	// the presence of the flag indicates that we should skip setup. the disk we're trying to scan
-	// is already attached. Rely on the lun parameter to give us a hint as to the location of the disk
-	if skipSetup := skipSnapshotSetup.RawData().Value.(bool); skipSetup {
-		opts[azureinstancesnapshot.SkipSetup] = "true"
-		// we cannot detach the disk if we didn't attach it.
-		// we cannot delete the disk as we do not know it's azure resource id
-		// explicitly set the cleanup flag to false for clarity
-		opts[azureinstancesnapshot.SkipCleanup] = "true"
 	}
 	if len(clientSecret.Value) > 0 {
 		creds = append(creds, &vault.Credential{
