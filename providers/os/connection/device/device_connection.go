@@ -51,7 +51,7 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 	if err != nil {
 		return nil, err
 	}
-	if len(blocks) != 0 {
+	if len(blocks) != 1 {
 		// FIXME: remove this when we start scanning multiple blocks
 		return nil, errors.New("internal>blocks size is not equal to 1.")
 	}
@@ -102,7 +102,9 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 	// allow injecting platform ids into the device connection. we cannot always know the asset that's being scanned, e.g.
 	// if we can scan an azure VM's disk we should be able to inject the platform ids of the VM
 	if platformIDs, ok := conf.Options[PlatformIdInject]; ok {
-		asset.PlatformIds = append(asset.PlatformIds, strings.Split(platformIDs, ",")...)
+		platformIds := strings.Split(platformIDs, ",")
+		log.Debug().Strs("platform-ids", platformIds).Msg("device connection> injecting platform ids")
+		asset.PlatformIds = append(asset.PlatformIds, platformIds...)
 	}
 	return res, nil
 }
