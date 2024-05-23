@@ -1,0 +1,30 @@
+{
+   "blockdevices": [
+      {"name":"sda", "fstype":null, "label":null, "uuid":null, "fsavail":null, "fsuse%":null, "mountpoint":null,
+         "children": [
+            {"name":"sda1", "fstype":"ext4", "label":"cloudimg-rootfs", "uuid":"32c589b5-7835-4684-9994-62e8fb26cd85", "fsavail":"26.9G", "fsuse%":"7%", "mountpoint":"/"},
+            {"name":"sda14", "fstype":null, "label":null, "uuid":null, "fsavail":null, "fsuse%":null, "mountpoint":null},
+            {"name":"sda15", "fstype":"vfat", "label":"UEFI", "uuid":"9915-EF3D", "fsavail":"98.3M", "fsuse%":"6%", "mountpoint":"/boot/efi"}
+         ]
+      },
+      {"name":"sdb", "fstype":null, "label":null, "uuid":null, "fsavail":null, "fsuse%":null, "mountpoint":null,
+         "children": [
+            {"name":"sdb1", "fstype":"ext4", "label":null, "uuid":"be29f4fb-2bb8-430b-9c2a-f76604ef10c6", "fsavail":"3.7G", "fsuse%":"0%", "mountpoint":"/mnt"}
+         ]
+      },
+      {"name":"sdd", "fstype":null, "label":null, "uuid":null, "fsavail":null, "fsuse%":null, "mountpoint":null,
+         "children": [
+            {"name":"sdd1", "fstype":"vfat", "label":null, "uuid":"6BDD-84EA", "fsavail":null, "fsuse%":null, "mountpoint":null},
+            {"name":"sdd2", "fstype":"xfs", "label":"boot", "uuid":"9dd560e5-b943-4e7f-b05f-e79021d9b117", "fsavail":null, "fsuse%":null, "mountpoint":null},
+            {"name":"sdd3", "fstype":null, "label":null, "uuid":null, "fsavail":null, "fsuse%":null, "mountpoint":null},
+            {"name":"sdd4", "fstype":null, "label":null, "uuid":null, "fsavail":null, "fsuse%":null, "mountpoint":null},
+            {"name":"sdd5", "fstype":"LVM2_member", "label":null, "uuid":"VtYqiy-LKfB-HUNG-1JMw-z1J2-erkv-J1DxAs", "fsavail":null, "fsuse%":null, "mountpoint":null,
+               "children": [
+                  {"name":"rocky-root", "fstype":"xfs", "label":null, "uuid":"73976867-73e1-4771-8799-d725d54fa440", "fsavail":null, "fsuse%":null, "mountpoint":null}
+               ]
+            }
+         ]
+      },
+      {"name":"sr0", "fstype":null, "label":null, "uuid":null, "fsavail":null, "fsuse%":null, "mountpoint":null}
+   ]
+}

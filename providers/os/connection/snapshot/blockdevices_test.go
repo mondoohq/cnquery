@@ -92,6 +92,46 @@ func TestGetRootBlockEntryRhel8(t *testing.T) {
 	require.Equal(t, fsInfo{FsType: "xfs", Name: "/dev/sdc2"}, *rootFsInfo)
 }
 
+func TestGetRootBlockEntryRocky9(t *testing.T) {
+	data, err := os.ReadFile("./testdata/rocky9_attached.json")
+	require.NoError(t, err)
+
+	blockEntries := BlockDevices{}
+	err = json.Unmarshal(data, &blockEntries)
+	require.NoError(t, err)
+
+	rootFsInfo, err := blockEntries.GetRootBlockEntry()
+	require.NoError(t, err)
+	require.Equal(t, fsInfo{FsType: "ext4", Name: "/dev/sda1"}, *rootFsInfo)
+
+	rootFsInfo, err = blockEntries.GetUnnamedBlockEntry()
+	require.NoError(t, err)
+	require.Equal(t, fsInfo{
+		FsType: "xfs",
+		Name:   "/dev/rocky-root",
+		UUID:   "73976867-73e1-4771-8799-d725d54fa440",
+		LVM:    true,
+	}, *rootFsInfo)
+}
+
+func TestGetBlockEntryByNameRocky9(t *testing.T) {
+	data, err := os.ReadFile("./testdata/rocky9_attached.json")
+	require.NoError(t, err)
+
+	blockEntries := BlockDevices{}
+	err = json.Unmarshal(data, &blockEntries)
+	require.NoError(t, err)
+
+	fs, err := blockEntries.GetBlockEntryByName("/dev/sdd")
+	require.NoError(t, err)
+	require.Equal(t, fsInfo{
+		FsType: "xfs",
+		Name:   "/dev/rocky-root",
+		UUID:   "73976867-73e1-4771-8799-d725d54fa440",
+		LVM:    true,
+	}, *fs)
+}
+
 func TestGetRootBlockEntryRhelNoLabels(t *testing.T) {
 	data, err := os.ReadFile("./testdata/rhel8_nolabels.json")
 	require.NoError(t, err)

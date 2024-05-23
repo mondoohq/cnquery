@@ -30,6 +30,8 @@ type BlockDevice struct {
 type fsInfo struct {
 	Name   string
 	FsType string
+	UUID   string
+	LVM    bool
 }
 
 func (cmdRunner *LocalCommandRunner) GetBlockDevices() (*BlockDevices, error) {
@@ -59,7 +61,9 @@ func (blockEntries BlockDevices) GetRootBlockEntry() (*fsInfo, error) {
 	log.Debug().Msg("get root block entry")
 	for i := range blockEntries.BlockDevices {
 		d := blockEntries.BlockDevices[i]
-		log.Debug().Str("name", d.Name).Interface("children", d.Children).Interface("mountpoint", d.MountPoint).Msg("found block device")
+		log.Debug().Str("name", d.Name).
+			Interface("children", d.Children).
+			Interface("mountpoint", d.MountPoint).Msg("found block device")
 		for i := range d.Children {
 			entry := d.Children[i]
 			if entry.IsNoBootVolume() {
@@ -81,13 +85,16 @@ func (blockEntries BlockDevices) GetBlockEntryByName(name string) (*fsInfo, erro
 	}
 	for i := range blockEntries.BlockDevices {
 		d := blockEntries.BlockDevices[i]
-		log.Debug().Str("name", d.Name).Interface("children", d.Children).Interface("mountpoint", d.MountPoint).Msg("found block device")
+		log.Debug().Str("name", d.Name).
+			Interface("children", d.Children).
+			Interface("mountpoint", d.MountPoint).
+			Msg("found block device")
 		fullDeviceName := "/dev/" + d.Name
 		if name != fullDeviceName { // check if the device name matches
 			if secondName == "" {
 				continue
 			}
-			if secondName != fullDeviceName { // check if the device name matches the second name option (sdh and xvdh are interchangeable)
+			if secondName != fullDeviceName { // check if the device name matches the second name option (sdh/xvdh)
 				continue
 			}
 		}
@@ -95,8 +102,15 @@ func (blockEntries BlockDevices) GetBlockEntryByName(name string) (*fsInfo, erro
 		for i := range d.Children {
 			entry := d.Children[i]
 			if entry.IsNotBootOrRootVolumeAndUnmounted() {
-				devFsName := "/dev/" + entry.Name
-				return &fsInfo{Name: devFsName, FsType: entry.FsType}, nil
+				if strings.Contains(entry.FsType, "LVM2") && len(entry.Children) > 0 {
+					return &fsInfo{
+						Name:   "/dev/" + entry.Children[0].Name,
+						FsType: entry.Children[0].FsType,
+						UUID:   entry.Children[0].Uuid,
+						LVM:    true,
+					}, nil
+				}
+				return &fsInfo{Name: "/dev/" + entry.Name, FsType: entry.FsType}, nil
 			}
 		}
 	}
@@ -123,7 +137,10 @@ func (blockEntries BlockDevices) GetUnmountedBlockEntry() (*fsInfo, error) {
 	log.Debug().Msg("get unmounted block entry")
 	for i := range blockEntries.BlockDevices {
 		d := blockEntries.BlockDevices[i]
-		log.Debug().Str("name", d.Name).Interface("children", d.Children).Interface("mountpoint", d.MountPoint).Msg("found block device")
+		log.Debug().Str("name", d.Name).
+			Interface("children", d.Children).
+			Interface("mountpoint", d.MountPoint).
+			Msg("found block device")
 		if d.MountPoint != "" { // empty string means it is not mounted
 			continue
 		}
@@ -139,6 +156,15 @@ func findVolume(children []BlockDevice) *fsInfo {
 	for i := range children {
 		entry := children[i]
 		if entry.IsNotBootOrRootVolumeAndUnmounted() {
+			if strings.Contains(entry.FsType, "LVM2") && len(entry.Children) > 0 {
+				return &fsInfo{
+					Name:   "/dev/" + entry.Children[0].Name,
+					FsType: entry.Children[0].FsType,
+					UUID:   entry.Children[0].Uuid,
+					LVM:    true,
+				}
+			}
+
 			// we are NOT searching for the root volume here, so we can exclude the "sda" and "xvda" volumes
 			devFsName := "/dev/" + entry.Name
 			fs = &fsInfo{Name: devFsName, FsType: entry.FsType}

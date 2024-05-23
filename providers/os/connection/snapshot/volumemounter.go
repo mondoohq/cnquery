@@ -5,6 +5,7 @@ package snapshot
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -91,13 +92,13 @@ func (m *VolumeMounter) getFsInfo() (*fsInfo, error) {
 	fsInfo, err = blockEntries.GetBlockEntryByName(m.VolumeAttachmentLoc)
 	if err == nil && fsInfo != nil {
 		return fsInfo, nil
-	} else {
-		// if we get here, we couldn't find a fs loaded at the expected location
-		// AWS does not guarantee this, so that's expected. fallback to find non-boot and non-mounted volume
-		fsInfo, err = blockEntries.GetUnmountedBlockEntry()
-		if err == nil && fsInfo != nil {
-			return fsInfo, nil
-		}
+	}
+
+	// if we get here, we couldn't find a fs loaded at the expected location
+	// AWS does not guarantee this, so that's expected. fallback to find non-boot and non-mounted volume
+	fsInfo, err = blockEntries.GetUnmountedBlockEntry()
+	if err == nil && fsInfo != nil {
+		return fsInfo, nil
 	}
 	return nil, err
 }
@@ -107,8 +108,34 @@ func (m *VolumeMounter) mountVolume(fsInfo *fsInfo) error {
 	if fsInfo.FsType == "xfs" {
 		opts = append(opts, "nouuid")
 	}
+
+	if fsInfo.LVM {
+		log.Debug().
+			Str("name", fsInfo.Name).
+			Str("uuid", fsInfo.UUID).
+			Msg("logical volume detected, getting block device")
+		cmd, err := m.CmdRunner.RunCommand(fmt.Sprintf("sudo blkid --uuid %s", fsInfo.UUID))
+		if err != nil {
+			log.Debug().Err(err).Msg("unable to detect block device from logical volume")
+			return err
+		}
+		data, err := io.ReadAll(cmd.Stdout)
+		if err != nil {
+			return err
+		}
+		fsInfo.Name = strings.Trim(string(data), "\t\n")
+		log.Debug().
+			Str("device", fsInfo.Name).
+			Msg("block device found, setting as new device name")
+	}
+
 	opts = stringx.DedupStringArray(opts)
-	log.Debug().Str("fstype", fsInfo.FsType).Str("device", fsInfo.Name).Str("scandir", m.ScanDir).Str("opts", strings.Join(opts, ",")).Msg("mount volume to scan dir")
+	log.Debug().
+		Str("fstype", fsInfo.FsType).
+		Str("device", fsInfo.Name).
+		Str("scandir", m.ScanDir).
+		Str("opts", strings.Join(opts, ",")).
+		Msg("mount volume to scan dir")
 	return Mount(fsInfo.Name, m.ScanDir, fsInfo.FsType, opts)
 }
 
