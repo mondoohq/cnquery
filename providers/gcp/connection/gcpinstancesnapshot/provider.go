@@ -13,7 +13,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/gcp/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/fs"
+	"go.mondoo.com/cnquery/v11/providers/os/connection/device"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/local"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/snapshot"
 	"go.mondoo.com/cnquery/v11/providers/os/detector"
@@ -205,20 +205,8 @@ func NewGcpSnapshotConnection(id uint32, conf *inventory.Config, asset *inventor
 		}
 	}
 
-	// mount volume
-	shell := []string{"sh", "-c"}
-	volumeMounter := snapshot.NewVolumeMounter(shell)
-	err = volumeMounter.Mount()
-	if err != nil {
-		log.Error().Err(err).Msg("unable to complete mount step")
-		errorHandler()
-		return nil, err
-	}
-
-	conf.Options["path"] = volumeMounter.ScanDir
-	// create and initialize fs provider
-	fsConn, err := fs.NewConnection(id, &inventory.Config{
-		Path:       volumeMounter.ScanDir,
+	// create and initialize device conn provider
+	deviceConn, err := device.NewDeviceConnection(id, &inventory.Config{
 		PlatformId: conf.PlatformId,
 		Options:    conf.Options,
 		Type:       conf.Type,
@@ -230,22 +218,16 @@ func NewGcpSnapshotConnection(id uint32, conf *inventory.Config, asset *inventor
 	}
 
 	c := &GcpSnapshotConnection{
-		FileSystemConnection: fsConn,
-		opts:                 conf.Options,
-		targetType:           target.TargetType,
-		volumeMounter:        volumeMounter,
-		snapshotCreator:      sc,
-		target:               target,
-		scanner:              *scanner,
-		mountInfo:            mi,
-		identifier:           conf.PlatformId,
+		DeviceConnection: deviceConn,
+		opts:             conf.Options,
+		targetType:       target.TargetType,
+		snapshotCreator:  sc,
+		target:           target,
+		scanner:          *scanner,
+		mountInfo:        mi,
+		identifier:       conf.PlatformId,
 	}
 
-	var ok bool
-	asset.Platform, ok = detector.DetectOS(fsConn)
-	if !ok {
-		return nil, errors.New("failed to detect OS")
-	}
 	asset.Id = conf.Type
 	asset.Platform.Kind = c.Kind()
 	asset.Platform.Runtime = c.Runtime()
@@ -256,11 +238,10 @@ func NewGcpSnapshotConnection(id uint32, conf *inventory.Config, asset *inventor
 var _ plugin.Closer = (*GcpSnapshotConnection)(nil)
 
 type GcpSnapshotConnection struct {
-	*fs.FileSystemConnection
+	*device.DeviceConnection
 	opts map[string]string
 	// the type of object we're targeting (instance, disk, snapshot)
 	targetType      string
-	volumeMounter   *snapshot.VolumeMounter
 	snapshotCreator *SnapshotCreator
 	target          scanTarget
 	scanner         scannerInstance
@@ -280,13 +261,12 @@ func (c *GcpSnapshotConnection) Close() {
 		}
 	}
 
-	err := c.volumeMounter.UnmountVolumeFromInstance()
-	if err != nil {
-		log.Error().Err(err).Msg("unable to unmount volume")
+	if c.DeviceConnection != nil {
+		c.DeviceConnection.Close()
 	}
 
 	if c.snapshotCreator != nil {
-		err = c.snapshotCreator.detachDisk(c.scanner.projectID, c.scanner.zone, c.scanner.instanceName, c.mountInfo.deviceName)
+		err := c.snapshotCreator.detachDisk(c.scanner.projectID, c.scanner.zone, c.scanner.instanceName, c.mountInfo.deviceName)
 		if err != nil {
 			log.Error().Err(err).Msg("unable to detach volume")
 		}
@@ -295,11 +275,6 @@ func (c *GcpSnapshotConnection) Close() {
 		if err != nil {
 			log.Error().Err(err).Msg("could not delete created disk")
 		}
-	}
-
-	err = c.volumeMounter.RemoveTempScanDir()
-	if err != nil {
-		log.Error().Err(err).Msg("unable to remove dir")
 	}
 }
 
@@ -325,5 +300,5 @@ func (c *GcpSnapshotConnection) Type() shared.ConnectionType {
 }
 
 func (c *GcpSnapshotConnection) Config() *inventory.Config {
-	return c.FileSystemConnection.Conf
+	return c.DeviceConnection.Conf
 }
