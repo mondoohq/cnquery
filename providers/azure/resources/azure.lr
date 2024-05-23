@@ -694,7 +694,7 @@ azure.subscription.networkService.interface @defaults("name location properties.
 }
 
 // Azure network IP address
-private azure.subscription.networkService.ipAddress @defaults("id name location") {
+private azure.subscription.networkService.ipAddress @defaults("name location ipAddress") {
   // IP address ID
   id string
   // IP address name
