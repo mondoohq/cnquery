@@ -47,11 +47,16 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 	}
 	log.Debug().Str("manager", manager.Name()).Msg("device manager created")
 
-	mi, err := manager.IdentifyBlock(conf.Options)
+	blocks, err := manager.IdentifyBlockDevice(conf.Options)
 	if err != nil {
 		return nil, err
 	}
-	log.Debug().Str("device", mi.DeviceName).Msg("identified block for mounting")
+	if len(blocks) != 0 {
+		// FIXME: remove this when we start scanning multiple blocks
+		return nil, errors.New("internal>blocks size is not equal to 1.")
+	}
+	block := blocks[0]
+	log.Debug().Str("device", block.DeviceName).Msg("identified block for mounting")
 
 	res := &DeviceConnection{
 		Connection:    plugin.NewConnection(connId, asset),
@@ -59,7 +64,7 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 		asset:         asset,
 	}
 
-	scanDir, err := manager.Mount()
+	scanDir, err := manager.Mount(block)
 	if err != nil {
 		log.Error().Err(err).Msg("unable to complete mount step")
 		res.Close()

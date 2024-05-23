@@ -37,14 +37,14 @@ func (d *LinuxDeviceManager) Name() string {
 	return "linux"
 }
 
-func (d *LinuxDeviceManager) IdentifyBlock(opts map[string]string) (shared.MountInfo, error) {
+func (d *LinuxDeviceManager) IdentifyBlockDevice(opts map[string]string) ([]shared.MountInfo, error) {
 	if err := validateOpts(opts); err != nil {
-		return shared.MountInfo{}, err
+		return nil, err
 	}
 	if opts[LunOption] != "" {
 		lun, err := strconv.Atoi(opts[LunOption])
 		if err != nil {
-			return shared.MountInfo{}, err
+			return nil, err
 		}
 		return d.identifyViaLun(lun)
 	}
@@ -52,8 +52,9 @@ func (d *LinuxDeviceManager) IdentifyBlock(opts map[string]string) (shared.Mount
 	return d.identifyViaDeviceName(opts[DeviceName])
 }
 
-func (d *LinuxDeviceManager) Mount() (string, error) {
+func (d *LinuxDeviceManager) Mount(mi shared.MountInfo) (string, error) {
 	// TODO: we should make the volume mounter return the scan dir from Mount()
+	// TODO: use the mount info to mount the volume
 	err := d.volumeMounter.Mount()
 	if err != nil {
 		return "", err
@@ -91,55 +92,55 @@ func validateOpts(opts map[string]string) error {
 	return nil
 }
 
-func (c *LinuxDeviceManager) identifyViaLun(lun int) (shared.MountInfo, error) {
+func (c *LinuxDeviceManager) identifyViaLun(lun int) ([]shared.MountInfo, error) {
 	scsiDevices, err := c.listScsiDevices()
 	if err != nil {
-		return shared.MountInfo{}, err
+		return nil, err
 	}
 
 	// only interested in the scsi devices that match the provided LUN
 	filteredScsiDevices := filterScsiDevices(scsiDevices, lun)
 	if len(filteredScsiDevices) == 0 {
-		return shared.MountInfo{}, errors.New("no matching scsi devices found")
+		return nil, errors.New("no matching scsi devices found")
 	}
 
 	// if we have exactly one device present at the LUN we can directly point the volume mounter towards it
 	if len(filteredScsiDevices) == 1 {
-		return shared.MountInfo{DeviceName: filteredScsiDevices[0].VolumePath}, nil
+		return []shared.MountInfo{{DeviceName: filteredScsiDevices[0].VolumePath}}, nil
 	}
 
 	// we have multiple devices at the same LUN. we find the first non-mounted block devices in that list
 	blockDevices, err := c.volumeMounter.CmdRunner.GetBlockDevices()
 	if err != nil {
-		return shared.MountInfo{}, err
+		return nil, err
 	}
 	target, err := findMatchingDeviceByBlock(filteredScsiDevices, blockDevices)
 	if err != nil {
-		return shared.MountInfo{}, err
+		return nil, err
 	}
 	c.volumeMounter.VolumeAttachmentLoc = target
-	return shared.MountInfo{DeviceName: target}, nil
+	return []shared.MountInfo{{DeviceName: target}}, nil
 }
 
-func (c *LinuxDeviceManager) identifyViaDeviceName(deviceName string) (shared.MountInfo, error) {
+func (c *LinuxDeviceManager) identifyViaDeviceName(deviceName string) ([]shared.MountInfo, error) {
 	blockDevices, err := c.volumeMounter.CmdRunner.GetBlockDevices()
 	if err != nil {
-		return shared.MountInfo{}, err
+		return nil, err
 	}
 	// this is a best-effort approach, we try to find the first unmounted block device as we don't have the device name
 	if deviceName == "" {
 		fsInfo, err := blockDevices.GetUnmountedBlockEntry()
 		if err != nil {
-			return shared.MountInfo{}, err
+			return nil, err
 		}
 		c.volumeMounter.VolumeAttachmentLoc = deviceName
-		return shared.MountInfo{DeviceName: fsInfo.Name}, nil
+		return []shared.MountInfo{{DeviceName: fsInfo.Name}}, nil
 	}
 
 	fsInfo, err := blockDevices.GetBlockEntryByName(deviceName)
 	if err != nil {
-		return shared.MountInfo{}, err
+		return nil, err
 	}
 	c.volumeMounter.VolumeAttachmentLoc = deviceName
-	return shared.MountInfo{DeviceName: fsInfo.Name}, nil
+	return []shared.MountInfo{{DeviceName: fsInfo.Name}}, nil
 }

@@ -7,7 +7,7 @@ import "go.mondoo.com/cnquery/v11/providers/os/connection/device/shared"
 
 type DeviceManager interface {
 	Name() string
-	IdentifyBlock(opts map[string]string) (shared.MountInfo, error)
-	Mount() (string, error)
+	IdentifyBlockDevice(opts map[string]string) ([]shared.MountInfo, error)
+	Mount(mi shared.MountInfo) (string, error)
 	UnmountAndClose()
 }
