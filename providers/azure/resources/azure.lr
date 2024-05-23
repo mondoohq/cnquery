@@ -211,7 +211,7 @@ private azure.subscription.networkService {
   applicationFirewallPolicies() []azure.subscription.networkService.applicationFirewallPolicy
 }
 
-// Azure virtual network (VNet) gateway
+// Azure Virtual Network (VNet) gateway
 azure.subscription.networkService.virtualNetworkGateway @defaults("id name location") {
   // VNet gateway ID
   id string
@@ -461,7 +461,7 @@ private azure.subscription.networkService.bgpSettings.ipConfigurationBgpPeeringA
   tunnelIpAddresses []string
 }
 
-// Azure network NAT gateway
+// Azure NAT gateway
 azure.subscription.networkService.natGateway @defaults("id name location") {
   // NAT Gateway ID
   id string
@@ -485,7 +485,7 @@ azure.subscription.networkService.natGateway @defaults("id name location") {
   subnets() []azure.subscription.networkService.subnet
 }
 
-// Azure network subnet
+// Azure Virtual Network (VNet) subnet
 azure.subscription.networkService.subnet @defaults("id name addressPrefix") {
   // Subnet ID
   id string
@@ -531,7 +531,7 @@ azure.subscription.networkService.virtualNetwork @defaults("id name location") {
   enableVmProtection bool
 }
 
-// Azure Virtual Network DHCP options
+// Azure Virtual Network (VNet) DHCP options
 private azure.subscription.networkService.virtualNetwork.dhcpOptions {
   // DHCP options ID
   id string
@@ -1272,7 +1272,7 @@ private azure.subscription.postgreSqlService.server @defaults("id name location"
 }
 
 // Azure Database for PostgreSQL database
-private azure.subscription.postgreSqlService.database  @defaults("id name") {
+private azure.subscription.postgreSqlService.database @defaults("id name") {
   // PostgreSQL database ID
   id string
   // PostgreSQL database name
@@ -1286,7 +1286,7 @@ private azure.subscription.postgreSqlService.database  @defaults("id name") {
 }
 
 // Azure SQL configuration
-private azure.subscription.sqlService.configuration  @defaults("id name") {
+private azure.subscription.sqlService.configuration @defaults("id name") {
   // SQL configuration ID
   id string
   // SQL configuration name
@@ -1308,7 +1308,7 @@ private azure.subscription.sqlService.configuration  @defaults("id name") {
 }
 
 // Azure SQL firewall rule
-private azure.subscription.sqlService.firewallrule  @defaults("id name") {
+private azure.subscription.sqlService.firewallrule @defaults("id name") {
   // SQL firewall rule ID
   id string
   // SQL firewall rule name
@@ -1322,7 +1322,7 @@ private azure.subscription.sqlService.firewallrule  @defaults("id name") {
 }
 
 // Azure SQL virtual network rule
-private azure.subscription.sqlService.virtualNetworkRule  @defaults("id name") {
+private azure.subscription.sqlService.virtualNetworkRule @defaults("id name") {
   // Virtual network rule ID
   id string
   // Virtual network rule name
@@ -1412,7 +1412,7 @@ private azure.subscription.mariaDbService {
 }
 
 // Azure Database for MariaDB server
-private azure.subscription.mariaDbService.server  @defaults("id name location") {
+private azure.subscription.mariaDbService.server @defaults("id name location") {
   // MariaDB server ID
   id string
   // MariaDB server name
@@ -1482,7 +1482,7 @@ private azure.subscription.keyVaultService {
 }
 
 // Azure Key Vault vault
-private azure.subscription.keyVaultService.vault  @defaults("vaultName type vaultUri location") {
+private azure.subscription.keyVaultService.vault @defaults("vaultName type vaultUri location") {
   // Vault ID
   id string
   // Vault name
@@ -1510,7 +1510,7 @@ private azure.subscription.keyVaultService.vault  @defaults("vaultName type vaul
 }
 
 // Azure Key Vault key
-private azure.subscription.keyVaultService.key  @defaults("kid keyName") {
+private azure.subscription.keyVaultService.key @defaults("kid keyName") {
   // Key ID
   kid string
   // Key tags
@@ -1538,7 +1538,7 @@ private azure.subscription.keyVaultService.key  @defaults("kid keyName") {
 }
 
 // Azure Key Vault certificate
-private azure.subscription.keyVaultService.certificate  @defaults("id certName") {
+private azure.subscription.keyVaultService.certificate @defaults("id certName") {
   // Certificate ID
   id string
   // Certificate tags
@@ -1566,7 +1566,7 @@ private azure.subscription.keyVaultService.certificate  @defaults("id certName")
 }
 
 // Azure Key Vault secret
-private azure.subscription.keyVaultService.secret  @defaults("id secretName") {
+private azure.subscription.keyVaultService.secret @defaults("id secretName") {
   // Secret ID
   id string
   // Secret tags
@@ -1656,7 +1656,7 @@ private azure.subscription.monitorService.activityLog.alert @defaults("name type
 }
 
 // Azure Monitor log profile
-private azure.subscription.monitorService.logprofile  @defaults("id name location") {
+private azure.subscription.monitorService.logprofile @defaults("id name location") {
   // Log profile ID
   id string
   // Log profile name

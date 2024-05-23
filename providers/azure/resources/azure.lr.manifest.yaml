@@ -1651,8 +1651,8 @@ resources:
       name:
       - azure
     refs:
-    - title: Virtual Network documentation
-      url: https://learn.microsoft.com/en-us/azure/virtual-network/
+    - title: Load Balancer documentation
+      url: https://learn.microsoft.com/en-us/azure/load-balancer/
   azure.subscription.networkService.loadBalancerRule:
     fields:
       etag: {}
@@ -1666,8 +1666,8 @@ resources:
       name:
       - azure
     refs:
-    - title: Virtual Network documentation
-      url: https://learn.microsoft.com/en-us/azure/virtual-network/
+    - title: Load Balancer documentation
+      url: https://learn.microsoft.com/en-us/azure/load-balancer/
   azure.subscription.networkService.natGateway:
     fields:
       etag: {}
@@ -1685,8 +1685,8 @@ resources:
       name:
       - azure
     refs:
-    - title: Virtual Network documentation
-      url: https://learn.microsoft.com/en-us/azure/virtual-network/
+    - title: Azure NAT Gateway documentation
+      url: https://learn.microsoft.com/en-us/azure/nat-gateway/
   azure.subscription.networkService.outboundRule:
     fields:
       etag: {}
