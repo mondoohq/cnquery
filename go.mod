@@ -57,7 +57,7 @@ require (
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/kevinburke/ssh_config v1.2.0
 	github.com/knqyf263/go-apk-version v0.0.0-20200609155635-041fdbb8563f
-	github.com/knqyf263/go-rpmdb v0.1.0
+	github.com/knqyf263/go-rpmdb v0.1.1
 	github.com/lithammer/fuzzysearch v1.1.8
 	github.com/lucasb-eyer/go-colorful v1.2.0
 	github.com/masterzen/winrm v0.0.0-20231227165926-e811dad5ac77
@@ -76,7 +76,7 @@ require (
 	github.com/pkg/sftp v1.13.6
 	// pin v1.2.0-beta.2
 	github.com/pkg/term v1.2.0-beta.2
-	github.com/rs/zerolog v1.32.0
+	github.com/rs/zerolog v1.33.0
 	github.com/segmentio/fasthash v1.0.3
 	github.com/segmentio/ksuid v1.0.4
 	github.com/sethvargo/go-password v0.3.0
