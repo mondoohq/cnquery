@@ -8,7 +8,7 @@ toolchain go1.22.0
 
 require (
 	github.com/hashicorp/go-retryablehttp v0.7.6
-	github.com/rs/zerolog v1.32.0
+	github.com/rs/zerolog v1.33.0
 	github.com/slack-go/slack v0.13.0
 	github.com/stretchr/testify v1.9.0
 	go.mondoo.com/cnquery/v11 v11.5.0
