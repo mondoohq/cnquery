@@ -8,7 +8,7 @@ toolchain go1.22.0
 
 require (
 	github.com/packethost/packngo v0.31.0
-	github.com/rs/zerolog v1.32.0
+	github.com/rs/zerolog v1.33.0
 	go.mondoo.com/cnquery/v11 v11.5.0
 	go.mondoo.com/ranger-rpc v0.6.1
 )
