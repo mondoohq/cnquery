@@ -83,8 +83,8 @@ github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources v1.
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources v1.2.0/go.mod h1:5kakwfW5CjC9KK+Q4wjXAg+ShuIm2mBMua0ZFj2C8PE=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions v1.3.0 h1:wxQx2Bt4xzPIKvW59WQf1tJNx/ZZKPfN+EhPX3Z6CYY=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions v1.3.0/go.mod h1:TpiwjwnW/khS0LKs4vW5UmmT9OWcxaveS8U7+tlknzo=
-github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity v0.14.0 h1:JfjIyBJvEvQNP/9MEUo1/6eoiPkiag2OZImw32xakcc=
-github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity v0.14.0/go.mod h1:HakuHOrWlp2G1WlFvkL7JApTZAbxRJnRiz+w4SYak5s=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity v0.13.0 h1:bvkjXDmjYA1qRJwqI+mmFYKioiLRUbR1eAOWsf4a+e4=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity v0.13.0/go.mod h1:rVjowC1tCYv0Uw9/YHbrLzUjuTb8nMqih36SmasUhEo=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql v1.2.0 h1:S087deZ0kP1RUg4pU7w9U9xpUedTCbOtz+mnd0+hrkQ=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql v1.2.0/go.mod h1:B4cEyXrWBmbfMDAPnpJ1di7MAt5DKP57jPEObAvZChg=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage v1.5.0 h1:AifHbc4mg0x9zW52WOpKbsHaDKuRhlI7TVl47thgQ70=
@@ -281,8 +281,8 @@ github.com/getsentry/sentry-go v0.27.0 h1:Pv98CIbtB3LkMWmXi4Joa5OOcwbmnX88sF5qbK
 github.com/getsentry/sentry-go v0.27.0/go.mod h1:lc76E2QywIyW8WuBnwl8Lc4bkmQH4+w1gwTf25trprY=
 github.com/ghostiam/protogetter v0.3.6 h1:R7qEWaSgFCsy20yYHNIJsU9ZOb8TziSRRxuAOTVKeOk=
 github.com/ghostiam/protogetter v0.3.6/go.mod h1:7lpeDnEJ1ZjL/YtyoN99ljO4z0pd3H0d18/t2dPBxHw=
-github.com/go-critic/go-critic v0.11.4 h1:O7kGOCx0NDIni4czrkRIXTnit0mkyKOCePh3My6OyEU=
-github.com/go-critic/go-critic v0.11.4/go.mod h1:2QAdo4iuLik5S9YG0rT4wcZ8QxwHYkrr6/2MWAiv/vc=
+github.com/go-critic/go-critic v0.11.3 h1:SJbYD/egY1noYjTMNTlhGaYlfQ77rQmrNH7h+gtn0N0=
+github.com/go-critic/go-critic v0.11.3/go.mod h1:Je0h5Obm1rR5hAGA9mP2PDiOOk53W+n7pyvXErFKIgI=
 github.com/go-errors/errors v1.5.0 h1:/EuijeGOu7ckFxzhkj4CXJ8JaenxK7bKUxpPYqeLHqQ=
 github.com/go-errors/errors v1.5.0/go.mod h1:sIVyrIiJhuEF+Pj9Ebtd6P/rEYROXFi3BopGUQ5a5Og=
 github.com/go-jose/go-jose/v3 v3.0.3 h1:fFKWeig/irsp7XD2zBxvnmA/XaRWp5V3CBsZXJF7G7k=
