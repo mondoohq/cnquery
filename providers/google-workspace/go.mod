@@ -6,7 +6,7 @@ go 1.22
 
 require (
 	github.com/hashicorp/go-cleanhttp v0.5.2
-	github.com/rs/zerolog v1.32.0
+	github.com/rs/zerolog v1.33.0
 	github.com/stretchr/testify v1.9.0
 	go.mondoo.com/cnquery/v11 v11.5.0
 	golang.org/x/oauth2 v0.20.0
