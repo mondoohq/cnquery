@@ -8,7 +8,6 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/device/shared"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/snapshot"
 )
 
@@ -37,7 +36,7 @@ func (d *LinuxDeviceManager) Name() string {
 	return "linux"
 }
 
-func (d *LinuxDeviceManager) IdentifyBlockDevice(opts map[string]string) ([]shared.MountInfo, error) {
+func (d *LinuxDeviceManager) IdentifyMountTargets(opts map[string]string) ([]*snapshot.PartitionInfo, error) {
 	if err := validateOpts(opts); err != nil {
 		return nil, err
 	}
@@ -46,20 +45,22 @@ func (d *LinuxDeviceManager) IdentifyBlockDevice(opts map[string]string) ([]shar
 		if err != nil {
 			return nil, err
 		}
-		return d.identifyViaLun(lun)
+		pi, err := d.identifyViaLun(lun)
+		if err != nil {
+			return nil, err
+		}
+		return []*snapshot.PartitionInfo{pi}, nil
 	}
 
-	return d.identifyViaDeviceName(opts[DeviceName])
+	pi, err := d.identifyViaDeviceName(opts[DeviceName])
+	if err != nil {
+		return nil, err
+	}
+	return []*snapshot.PartitionInfo{pi}, nil
 }
 
-func (d *LinuxDeviceManager) Mount(mi shared.MountInfo) (string, error) {
-	// TODO: we should make the volume mounter return the scan dir from Mount()
-	// TODO: use the mount info to mount the volume
-	err := d.volumeMounter.Mount()
-	if err != nil {
-		return "", err
-	}
-	return d.volumeMounter.ScanDir, nil
+func (d *LinuxDeviceManager) Mount(pi *snapshot.PartitionInfo) (string, error) {
+	return d.volumeMounter.MountP(pi)
 }
 
 func (d *LinuxDeviceManager) UnmountAndClose() {
@@ -92,7 +93,7 @@ func validateOpts(opts map[string]string) error {
 	return nil
 }
 
-func (c *LinuxDeviceManager) identifyViaLun(lun int) ([]shared.MountInfo, error) {
+func (c *LinuxDeviceManager) identifyViaLun(lun int) (*snapshot.PartitionInfo, error) {
 	scsiDevices, err := c.listScsiDevices()
 	if err != nil {
 		return nil, err
@@ -104,43 +105,26 @@ func (c *LinuxDeviceManager) identifyViaLun(lun int) ([]shared.MountInfo, error)
 		return nil, errors.New("no matching scsi devices found")
 	}
 
+	var target string
 	// if we have exactly one device present at the LUN we can directly point the volume mounter towards it
 	if len(filteredScsiDevices) == 1 {
-		return []shared.MountInfo{{DeviceName: filteredScsiDevices[0].VolumePath}}, nil
-	}
-
-	// we have multiple devices at the same LUN. we find the first non-mounted block devices in that list
-	blockDevices, err := c.volumeMounter.CmdRunner.GetBlockDevices()
-	if err != nil {
-		return nil, err
-	}
-	target, err := findMatchingDeviceByBlock(filteredScsiDevices, blockDevices)
-	if err != nil {
-		return nil, err
-	}
-	c.volumeMounter.VolumeAttachmentLoc = target
-	return []shared.MountInfo{{DeviceName: target}}, nil
-}
-
-func (c *LinuxDeviceManager) identifyViaDeviceName(deviceName string) ([]shared.MountInfo, error) {
-	blockDevices, err := c.volumeMounter.CmdRunner.GetBlockDevices()
-	if err != nil {
-		return nil, err
-	}
-	// this is a best-effort approach, we try to find the first unmounted block device as we don't have the device name
-	if deviceName == "" {
-		fsInfo, err := blockDevices.GetUnmountedBlockEntry()
+		target = filteredScsiDevices[0].VolumePath
+	} else {
+		// we have multiple devices at the same LUN. we find the first non-mounted block devices in that list
+		blockDevices, err := c.volumeMounter.CmdRunner.GetBlockDevices()
 		if err != nil {
 			return nil, err
 		}
-		c.volumeMounter.VolumeAttachmentLoc = deviceName
-		return []shared.MountInfo{{DeviceName: fsInfo.Name}}, nil
+		target, err = findMatchingDeviceByBlock(filteredScsiDevices, blockDevices)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	fsInfo, err := blockDevices.GetBlockEntryByName(deviceName)
-	if err != nil {
-		return nil, err
-	}
-	c.volumeMounter.VolumeAttachmentLoc = deviceName
-	return []shared.MountInfo{{DeviceName: fsInfo.Name}}, nil
+	return c.volumeMounter.GetDeviceForMounting(target)
+}
+
+func (c *LinuxDeviceManager) identifyViaDeviceName(deviceName string) (*snapshot.PartitionInfo, error) {
+	// GetDeviceForMounting also supports passing in empty strings, in that case we do a best-effort guess
+	return c.volumeMounter.GetDeviceForMounting(deviceName)
 }
