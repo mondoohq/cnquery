@@ -1,6 +1,6 @@
 # Arista Provider Testing
 
-Need to test the Arista provider, but you don't have high end switches taking up space in your office? Don't worry, there's plenty of options for local or cloud testing so you can make sure this provider works as expected.
+Need to test the Arista provider, but you don't have high end switches taking up space in your office? Don't worry, there are plenty of options for local or cloud testing so you can make sure this provider works as expected.
 
 ## AWS
 
