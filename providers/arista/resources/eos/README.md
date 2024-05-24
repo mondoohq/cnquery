@@ -1,6 +1,6 @@
 # Arista Setup
 
-Arista vEos Download
+Arista vEOS Download
 https://www.arista.com/en/support/software-download
 
 Arista Go eAPI Library

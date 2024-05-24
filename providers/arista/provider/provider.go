@@ -174,6 +174,7 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.AristaConnecti
 		Family:  []string{"arista"},
 		Kind:    "api",
 		Title:   "Arista EOS",
+		Runtime: "arista",
 	}
 
 	eosClient := eos.NewEos(conn.Client())
