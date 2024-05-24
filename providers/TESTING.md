@@ -6,7 +6,7 @@ Need to test the Arista provider, but you don't have high end switches taking up
 
 ### Launch the marketplace AMI
 
-Launch an EC2 instance in the AWS Console. Search for the name `Arista CloudEOS Router (PAYG)` which will show up in the Marketplace AMI tab.
+Launch an EC2 instance in the AWS Management Console. Search for the name `Arista CloudEOS Router (PAYG)`, which will show up in the Marketplace AMI tab.
 
 **Note**: This subscription is $.45 an hour on top of a very large instance. Don't leave these running.
 
