@@ -21,9 +21,9 @@ func TestGetMatchingBlockEntryByName(t *testing.T) {
 		{Name: "sdx", Children: []BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
 	}...)
 
-	realFsInfo, err := blockEntries.GetBlockEntryByName("/dev/sdx")
+	realPartitionInfo, err := blockEntries.GetBlockEntryByName("/dev/sdx")
 	require.Nil(t, err)
-	require.Equal(t, fsInfo{FsType: "xfs", Name: "/dev/sdh1"}, *realFsInfo)
+	require.Equal(t, PartitionInfo{FsType: "xfs", Name: "/dev/sdh1"}, *realPartitionInfo)
 
 	blockEntries = BlockDevices{BlockDevices: []BlockDevice{RootDevice}}
 	blockEntries.BlockDevices = append(blockEntries.BlockDevices, []BlockDevice{
@@ -31,9 +31,9 @@ func TestGetMatchingBlockEntryByName(t *testing.T) {
 		{Name: "xvdx", Children: []BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "xvdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
 	}...)
 
-	realFsInfo, err = blockEntries.GetBlockEntryByName("/dev/sdx")
+	realPartitionInfo, err = blockEntries.GetBlockEntryByName("/dev/sdx")
 	require.Nil(t, err)
-	require.Equal(t, fsInfo{FsType: "xfs", Name: "/dev/xvdh1"}, *realFsInfo)
+	require.Equal(t, PartitionInfo{FsType: "xfs", Name: "/dev/xvdh1"}, *realPartitionInfo)
 
 	blockEntries = BlockDevices{BlockDevices: []BlockDevice{RootDevice}}
 	blockEntries.BlockDevices = append(blockEntries.BlockDevices, []BlockDevice{
@@ -41,20 +41,20 @@ func TestGetMatchingBlockEntryByName(t *testing.T) {
 		{Name: "xvdh", Children: []BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "xvdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
 	}...)
 
-	realFsInfo, err = blockEntries.GetBlockEntryByName("/dev/xvdh")
+	realPartitionInfo, err = blockEntries.GetBlockEntryByName("/dev/xvdh")
 	require.Nil(t, err)
-	require.Equal(t, fsInfo{FsType: "xfs", Name: "/dev/xvdh1"}, *realFsInfo)
+	require.Equal(t, PartitionInfo{FsType: "xfs", Name: "/dev/xvdh1"}, *realPartitionInfo)
 
 	blockEntries = BlockDevices{BlockDevices: []BlockDevice{RootDevice}}
 	blockEntries.BlockDevices = append(blockEntries.BlockDevices, []BlockDevice{
 		{Name: "nvme0n1", Children: []BlockDevice{{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
 	}...)
 
-	realFsInfo, err = blockEntries.GetBlockEntryByName("/dev/sdh")
+	_, err = blockEntries.GetBlockEntryByName("/dev/sdh")
 	require.Error(t, err)
 
 	blockEntries = BlockDevices{BlockDevices: []BlockDevice{RootDevice}}
-	realFsInfo, err = blockEntries.GetBlockEntryByName("/dev/sdh")
+	_, err = blockEntries.GetBlockEntryByName("/dev/sdh")
 	require.Error(t, err)
 }
 
@@ -63,16 +63,16 @@ func TestGetNonRootBlockEntry(t *testing.T) {
 	blockEntries.BlockDevices = append(blockEntries.BlockDevices, []BlockDevice{
 		{Name: "nvme0n1", Children: []BlockDevice{{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
 	}...)
-	realFsInfo, err := blockEntries.GetUnmountedBlockEntry()
+	realPartitionInfo, err := blockEntries.GetUnmountedBlockEntry()
 	require.Nil(t, err)
-	require.Equal(t, fsInfo{FsType: "xfs", Name: "/dev/nvmd1n1"}, *realFsInfo)
+	require.Equal(t, PartitionInfo{FsType: "xfs", Name: "/dev/nvmd1n1"}, *realPartitionInfo)
 }
 
 func TestGetRootBlockEntry(t *testing.T) {
 	blockEntries := BlockDevices{BlockDevices: []BlockDevice{RootDevice}}
-	realFsInfo, err := blockEntries.GetRootBlockEntry()
+	realPartitionInfo, err := blockEntries.GetRootBlockEntry()
 	require.Nil(t, err)
-	require.Equal(t, fsInfo{FsType: "xfs", Name: "/dev/sda1"}, *realFsInfo)
+	require.Equal(t, PartitionInfo{FsType: "xfs", Name: "/dev/sda1"}, *realPartitionInfo)
 }
 
 func TestGetRootBlockEntryRhel8(t *testing.T) {
@@ -83,13 +83,13 @@ func TestGetRootBlockEntryRhel8(t *testing.T) {
 	err = json.Unmarshal(data, &blockEntries)
 	require.NoError(t, err)
 
-	rootFsInfo, err := blockEntries.GetRootBlockEntry()
+	rootPartitionInfo, err := blockEntries.GetRootBlockEntry()
 	require.NoError(t, err)
-	require.Equal(t, fsInfo{FsType: "xfs", Name: "/dev/sda2"}, *rootFsInfo)
+	require.Equal(t, PartitionInfo{FsType: "xfs", Name: "/dev/sda2"}, *rootPartitionInfo)
 
-	rootFsInfo, err = blockEntries.GetUnnamedBlockEntry()
+	rootPartitionInfo, err = blockEntries.GetUnnamedBlockEntry()
 	require.NoError(t, err)
-	require.Equal(t, fsInfo{FsType: "xfs", Name: "/dev/sdc2"}, *rootFsInfo)
+	require.Equal(t, PartitionInfo{FsType: "xfs", Name: "/dev/sdc2"}, *rootPartitionInfo)
 }
 
 func TestGetRootBlockEntryRhelNoLabels(t *testing.T) {
@@ -100,13 +100,13 @@ func TestGetRootBlockEntryRhelNoLabels(t *testing.T) {
 	err = json.Unmarshal(data, &blockEntries)
 	require.NoError(t, err)
 
-	rootFsInfo, err := blockEntries.GetRootBlockEntry()
+	rootPartitionInfo, err := blockEntries.GetRootBlockEntry()
 	require.NoError(t, err)
-	require.Equal(t, fsInfo{FsType: "xfs", Name: "/dev/sda2"}, *rootFsInfo)
+	require.Equal(t, PartitionInfo{FsType: "xfs", Name: "/dev/sda2"}, *rootPartitionInfo)
 
-	rootFsInfo, err = blockEntries.GetUnnamedBlockEntry()
+	rootPartitionInfo, err = blockEntries.GetUnnamedBlockEntry()
 	require.NoError(t, err)
-	require.Equal(t, fsInfo{FsType: "ext4", Name: "/dev/sdb1"}, *rootFsInfo)
+	require.Equal(t, PartitionInfo{FsType: "ext4", Name: "/dev/sdb1"}, *rootPartitionInfo)
 }
 
 func TestAttachedBlockEntry(t *testing.T) {

@@ -27,7 +27,7 @@ type BlockDevice struct {
 	FsUse      string        `json:"fsuse%,omitempty"`
 }
 
-type fsInfo struct {
+type PartitionInfo struct {
 	Name   string
 	FsType string
 }
@@ -55,7 +55,7 @@ func (cmdRunner *LocalCommandRunner) GetBlockDevices() (*BlockDevices, error) {
 	return blockEntries, nil
 }
 
-func (blockEntries BlockDevices) GetRootBlockEntry() (*fsInfo, error) {
+func (blockEntries BlockDevices) GetRootBlockEntry() (*PartitionInfo, error) {
 	log.Debug().Msg("get root block entry")
 	for i := range blockEntries.BlockDevices {
 		d := blockEntries.BlockDevices[i]
@@ -64,14 +64,14 @@ func (blockEntries BlockDevices) GetRootBlockEntry() (*fsInfo, error) {
 			entry := d.Children[i]
 			if entry.IsNoBootVolume() {
 				devFsName := "/dev/" + entry.Name
-				return &fsInfo{Name: devFsName, FsType: entry.FsType}, nil
+				return &PartitionInfo{Name: devFsName, FsType: entry.FsType}, nil
 			}
 		}
 	}
 	return nil, errors.New("target volume not found on instance")
 }
 
-func (blockEntries BlockDevices) GetBlockEntryByName(name string) (*fsInfo, error) {
+func (blockEntries BlockDevices) GetBlockEntryByName(name string) (*PartitionInfo, error) {
 	log.Debug().Str("name", name).Msg("get matching block entry")
 	var secondName string
 	if strings.HasPrefix(name, "/dev/sd") {
@@ -91,35 +91,35 @@ func (blockEntries BlockDevices) GetBlockEntryByName(name string) (*fsInfo, erro
 				continue
 			}
 		}
-		log.Debug().Msg("found match")
+		log.Debug().Str("location", d.Name).Msg("found match")
 		for i := range d.Children {
 			entry := d.Children[i]
 			if entry.IsNotBootOrRootVolumeAndUnmounted() {
 				devFsName := "/dev/" + entry.Name
-				return &fsInfo{Name: devFsName, FsType: entry.FsType}, nil
+				return &PartitionInfo{Name: devFsName, FsType: entry.FsType}, nil
 			}
 		}
 	}
 	return nil, errors.New("target volume not found on instance")
 }
 
-func (blockEntries BlockDevices) GetUnnamedBlockEntry() (*fsInfo, error) {
-	fsInfo, err := blockEntries.GetUnmountedBlockEntry()
-	if err == nil && fsInfo != nil {
-		return fsInfo, nil
+func (blockEntries BlockDevices) GetUnnamedBlockEntry() (*PartitionInfo, error) {
+	pInfo, err := blockEntries.GetUnmountedBlockEntry()
+	if err == nil && pInfo != nil {
+		return pInfo, nil
 	} else {
 		// if we get here, there was no non-root, non-mounted volume on the instance
 		// this is expected in the "no setup" case where we start an instance with the target
 		// volume attached and only that volume attached
-		fsInfo, err = blockEntries.GetRootBlockEntry()
-		if err == nil && fsInfo != nil {
-			return fsInfo, nil
+		pInfo, err = blockEntries.GetRootBlockEntry()
+		if err == nil && pInfo != nil {
+			return pInfo, nil
 		}
 	}
 	return nil, errors.New("target volume not found on instance")
 }
 
-func (blockEntries BlockDevices) GetUnmountedBlockEntry() (*fsInfo, error) {
+func (blockEntries BlockDevices) GetUnmountedBlockEntry() (*PartitionInfo, error) {
 	log.Debug().Msg("get unmounted block entry")
 	for i := range blockEntries.BlockDevices {
 		d := blockEntries.BlockDevices[i]
@@ -127,21 +127,21 @@ func (blockEntries BlockDevices) GetUnmountedBlockEntry() (*fsInfo, error) {
 		if d.MountPoint != "" { // empty string means it is not mounted
 			continue
 		}
-		if fsinfo := findVolume(d.Children); fsinfo != nil {
-			return fsinfo, nil
+		if pInfo := findVolume(d.Children); pInfo != nil {
+			return pInfo, nil
 		}
 	}
 	return nil, errors.New("target volume not found on instance")
 }
 
-func findVolume(children []BlockDevice) *fsInfo {
-	var fs *fsInfo
+func findVolume(children []BlockDevice) *PartitionInfo {
+	var fs *PartitionInfo
 	for i := range children {
 		entry := children[i]
 		if entry.IsNotBootOrRootVolumeAndUnmounted() {
 			// we are NOT searching for the root volume here, so we can exclude the "sda" and "xvda" volumes
 			devFsName := "/dev/" + entry.Name
-			fs = &fsInfo{Name: devFsName, FsType: entry.FsType}
+			fs = &PartitionInfo{Name: devFsName, FsType: entry.FsType}
 		}
 	}
 	return fs

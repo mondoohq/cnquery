@@ -47,7 +47,7 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 	}
 	log.Debug().Str("manager", manager.Name()).Msg("device manager created")
 
-	blocks, err := manager.IdentifyBlockDevice(conf.Options)
+	blocks, err := manager.IdentifyMountTargets(conf.Options)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 		return nil, errors.New("internal>blocks size is not equal to 1.")
 	}
 	block := blocks[0]
-	log.Debug().Str("device", block.DeviceName).Msg("identified block for mounting")
+	log.Debug().Str("name", block.Name).Str("type", block.FsType).Msg("identified partition for mounting")
 
 	res := &DeviceConnection{
 		Connection:    plugin.NewConnection(connId, asset),

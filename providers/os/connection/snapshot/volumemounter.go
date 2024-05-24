@@ -35,13 +35,13 @@ func NewVolumeMounter(shell []string) *VolumeMounter {
 	}
 }
 
+// we should try and migrate this towards MountP where we specifically mount a target partition.
+// the detection of the partition should be done in the caller (separately from Mount)
 func (m *VolumeMounter) Mount() error {
-	err := m.createScanDir()
+	_, err := m.createScanDir()
 	if err != nil {
 		return err
 	}
-	// we should consider dropping this if VolumeAttachmentLoc is set. we need to also add FsType but
-	// otherwise that means we're listing the devices twice
 	fsInfo, err := m.getFsInfo()
 	if err != nil {
 		return err
@@ -53,18 +53,36 @@ func (m *VolumeMounter) Mount() error {
 	return m.mountVolume(fsInfo)
 }
 
-func (m *VolumeMounter) createScanDir() error {
+// Mounts a specific partition and returns the directory it was mounted to
+func (m *VolumeMounter) MountP(partition *PartitionInfo) (string, error) {
+	if partition == nil {
+		return "", errors.New("mount device> partition is required")
+	}
+	if partition.Name == "" {
+		return "", errors.New("mount device> partition name is required")
+	}
+	if partition.FsType == "" {
+		return "", errors.New("mount device> partition fs type is required")
+	}
+	dir, err := m.createScanDir()
+	if err != nil {
+		return "", err
+	}
+	return dir, m.mountVolume(partition)
+}
+
+func (m *VolumeMounter) createScanDir() (string, error) {
 	dir, err := os.MkdirTemp("", "cnspec-scan")
 	if err != nil {
 		log.Error().Err(err).Msg("error creating directory")
-		return err
+		return "", err
 	}
 	m.ScanDir = dir
 	log.Debug().Str("dir", dir).Msg("created tmp scan dir")
-	return nil
+	return dir, nil
 }
 
-func (m *VolumeMounter) getFsInfo() (*fsInfo, error) {
+func (m *VolumeMounter) getFsInfo() (*PartitionInfo, error) {
 	log.Debug().Str("volume attachment loc", m.VolumeAttachmentLoc).Msg("search for target volume")
 
 	// TODO: replace with mql query once version with lsblk resource is released
@@ -81,7 +99,7 @@ func (m *VolumeMounter) getFsInfo() (*fsInfo, error) {
 	if err := json.Unmarshal(data, &blockEntries); err != nil {
 		return nil, err
 	}
-	var fsInfo *fsInfo
+	var fsInfo *PartitionInfo
 	if m.opts[NoSetup] == "true" {
 		// this means we didn't attach the volume to the instance
 		// so we need to make a best effort guess
@@ -102,7 +120,37 @@ func (m *VolumeMounter) getFsInfo() (*fsInfo, error) {
 	return nil, err
 }
 
-func (m *VolumeMounter) mountVolume(fsInfo *fsInfo) error {
+// GetDeviceForMounting iterates through all the partitions of the target and returns the first one that matches the filters
+// If target is empty, it will return the first unnamed block device (best-effort guessing)
+// E.g. if target is "sda", it will return the first partition of the block device "sda" that satisfies the filters
+func (m *VolumeMounter) GetDeviceForMounting(target string) (*PartitionInfo, error) {
+	if target == "" {
+		log.Debug().Msg("no target provided, searching for unnamed block device")
+	} else {
+		log.Debug().Str("target", target).Msg("search for target partition")
+	}
+
+	cmd, err := m.CmdRunner.RunCommand("sudo lsblk -f --json")
+	if err != nil {
+		return nil, err
+	}
+	data, err := io.ReadAll(cmd.Stdout)
+	if err != nil {
+		return nil, err
+	}
+	blockEntries := BlockDevices{}
+	if err := json.Unmarshal(data, &blockEntries); err != nil {
+		return nil, err
+	}
+	if target == "" {
+		// TODO: i dont know what the difference between GetUnnamedBlockEntry and GetUnmountedBlockEntry is
+		// we need to simplify those
+		return blockEntries.GetUnnamedBlockEntry()
+	}
+	return blockEntries.GetBlockEntryByName(target)
+}
+
+func (m *VolumeMounter) mountVolume(fsInfo *PartitionInfo) error {
 	opts := []string{}
 	if fsInfo.FsType == "xfs" {
 		opts = append(opts, "nouuid")
@@ -113,6 +161,10 @@ func (m *VolumeMounter) mountVolume(fsInfo *fsInfo) error {
 }
 
 func (m *VolumeMounter) UnmountVolumeFromInstance() error {
+	if m.ScanDir == "" {
+		log.Warn().Msg("no scan dir to unmount, skipping")
+		return nil
+	}
 	log.Debug().Str("dir", m.ScanDir).Msg("unmount volume")
 	if err := Unmount(m.ScanDir); err != nil {
 		log.Error().Err(err).Msg("failed to unmount dir")
