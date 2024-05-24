@@ -60,11 +60,7 @@ func (d *LinuxDeviceManager) IdentifyMountTargets(opts map[string]string) ([]*sn
 }
 
 func (d *LinuxDeviceManager) Mount(pi *snapshot.PartitionInfo) (string, error) {
-	scanDir, err := d.volumeMounter.MountP(pi)
-	if err != nil {
-		return "", err
-	}
-	return scanDir, nil
+	return d.volumeMounter.MountP(pi)
 }
 
 func (d *LinuxDeviceManager) UnmountAndClose() {
