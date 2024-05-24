@@ -40,7 +40,6 @@ var Config = plugin.Provider{
 					Type:    plugin.FlagType_Bool,
 					Default: "",
 					Desc:    "Disable TLS/SSL verification.",
-					Option:  plugin.FlagOption_Hidden,
 				},
 			},
 		},
