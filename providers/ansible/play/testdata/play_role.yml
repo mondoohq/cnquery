@@ -1,0 +1,5 @@
+---
+- hosts: webservers
+  roles:
+    - common
+    - webservers

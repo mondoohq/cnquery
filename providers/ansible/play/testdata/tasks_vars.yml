@@ -1,0 +1,23 @@
+tasks:
+  - name: copy a file from a fileshare with custom credentials
+    win_copy:
+      src: \\server\share\data\file.txt
+      dest: C:\temp\file.txt
+      remote_src: yes
+    vars:
+      ansible_become: yes
+      ansible_become_method: runas
+      ansible_become_user: DOMAIN\user
+      ansible_become_password: Password01
+      ansible_become_flags: logon_type=new_credentials logon_flags=netcredentials_only
+
+  - name: run a command under a batch logon
+    win_whoami:
+    become: yes
+    become_flags: logon_type=batch
+
+  - name: run a command and not load the user profile
+    win_whomai:
+    become: yes
+    become_flags: logon_flags=
+

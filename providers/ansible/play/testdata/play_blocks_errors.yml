@@ -1,0 +1,54 @@
+---
+- name: Test block/rescue
+  hosts: nodes
+  gather_facts: false
+
+  tasks:
+    - name: Main block
+      block:
+        - name: Role 1
+          ansible.builtin.include_role:
+            name: role1
+
+        - name: Role 2
+          ansible.builtin.include_role:
+            name: role2
+
+        - name: Accumulate success
+          ansible.builtin.set_fact:
+            _result:
+              host: "{{ inventory_hostname }}"
+              status: "OK"
+              interfaces: "{{ ansible_facts['interfaces'] }}"
+
+      rescue:
+        - name: Accumulate failure
+          ansible.builtin.set_fact:
+            _result:
+              host: "{{ inventory_hostname }}"
+              status: "FAIL"
+
+      always:
+        - name: Tasks that will always run after the main block
+          block:
+            - name: Collect results
+              ansible.builtin.set_fact:
+                _global_result: "{{ (_global_result | default([])) + [hostvars[item]['_result']] }}"
+              loop: "{{ ansible_play_hosts }}"
+
+            - name: Classify results
+              ansible.builtin.set_fact:
+                _result_ok: "{{ _global_result | selectattr('status', 'equalto', 'OK') | list }}"
+                _result_fail: "{{ _global_result | selectattr('status', 'equalto', 'FAIL') | list }}"
+
+            - name: Display results OK
+              ansible.builtin.debug:
+                msg: "{{ _result_ok }}"
+              when: (_result_ok | length ) > 0
+
+            - name: Display results FAIL
+              ansible.builtin.debug:
+                msg: "{{ _result_fail }}"
+              when: (_result_fail | length ) > 0
+          delegate_to: localhost
+          run_once: true

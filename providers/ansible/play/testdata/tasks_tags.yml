@@ -1,0 +1,17 @@
+tasks:
+  - name: Install the servers
+    ansible.builtin.yum:
+      name:
+        - httpd
+        - memcached
+      state: present
+    tags:
+      - packages
+      - webservers
+
+  - name: Configure the service
+    ansible.builtin.template:
+      src: templates/src.j2
+      dest: /etc/foo.conf
+    tags:
+      - configuration

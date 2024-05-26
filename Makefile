@@ -205,7 +205,8 @@ providers/build: \
 	providers/build/aws \
 	providers/build/atlassian \
 	providers/build/cloudformation \
-	providers/build/shodan
+	providers/build/shodan \
+	providers/build/ansible
 
 .PHONY: providers/install
 # Note we need \ to escape the target line into multiple lines
@@ -232,7 +233,8 @@ providers/install: \
 	providers/install/atlassian \
 	providers/install/aws \
 	providers/install/cloudformation \
-	providers/install/shodan
+	providers/install/shodan \
+	providers/install/ansible
 
 providers/build/mock: providers/lr
 	./lr go providers-sdk/v1/testutils/mockprovider/resources/mockprovider.lr
@@ -355,6 +357,11 @@ providers/build/shodan: providers/lr
 providers/install/shodan:
 	@$(call installProvider, providers/shodan)
 
+providers/build/ansible: providers/lr
+	@$(call buildProvider, providers/ansible)
+providers/install/ansible:
+	@$(call installProvider, providers/ansible)
+
 providers/dist:
 	@$(call buildProviderDist, providers/network)
 	@$(call buildProviderDist, providers/os)
@@ -379,6 +386,7 @@ providers/dist:
 	@$(call buildProviderDist, providers/atlassian)
 	@$(call buildProviderDist, providers/cloudformation)
 	@$(call buildProviderDist, providers/shodan)
+	@$(call buildProviderDist, providers/ansible)
 
 providers/bundle:
 	@$(call bundleProvider, providers/network)
@@ -404,6 +412,7 @@ providers/bundle:
 	@$(call bundleProvider, providers/atlassian)
 	@$(call bundleProvider, providers/cloudformation)
 	@$(call bundleProvider, providers/shodan)
+	@$(call bundleProvider, providers/ansible)
 
 providers/test:
 	@$(call testProvider, providers/core)
@@ -430,6 +439,7 @@ providers/test:
 	@$(call testGoModProvider, providers/atlassian)
 	@$(call testGoModProvider, providers/cloudformation)
 	@$(call testGoModProvider, providers/shodan)
+	@$(call testGoModProvider, providers/ansible)
 
 lr/test:
 	go test ./resources/lr/...
@@ -443,6 +453,11 @@ lr/docs/serve:
 # TODO: migrate
 .PHONY: lr/docs/markdown
 lr/docs/markdown: providers/lr
+	./lr markdown providers/ansible/resources/ansible.lr \
+		--pack-name "Ansible" \
+		--description "The Ansible resource pack lets you use MQL to query and assess the security of your Ansible playbooks." \
+		--docs-file providers/ansible/resources/ansible.lr.manifest.yaml \
+		--output ../docs/docs/mql/resources/ansible-pack
 	./lr markdown providers/arista/resources/arista.lr \
 		--pack-name "Arista EOS" \
 		--description "The Arista EOS resource pack lets you use MQL to query and assess the security of your Arista EOS network devices." \

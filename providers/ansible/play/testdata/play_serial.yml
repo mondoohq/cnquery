@@ -1,0 +1,11 @@
+---
+- name: test play
+  hosts: webservers
+  serial: 3
+  gather_facts: False
+
+  tasks:
+    - name: first task
+      command: hostname
+    - name: second task
+      command: hostname

@@ -1,0 +1,17 @@
+---
+-
+  vars:
+    list1:
+      - apple
+      - banana
+      - fig
+
+    list2:
+      - peach
+      - plum
+      - pear
+
+  tasks:
+    - name: Combine list1 and list2 into a merged_list var
+      ansible.builtin.set_fact:
+        merged_list: "{{ list1 + list2 }}"

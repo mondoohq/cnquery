@@ -188,6 +188,7 @@ go 1.22
 
 use (
    ./cnquery
+   ./cnquery/providers/ansible
    ./cnquery/providers/arista
    ./cnquery/providers/atlassian
    ./cnquery/providers/aws
