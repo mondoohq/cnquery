@@ -53,7 +53,6 @@ func (cmdRunner *LocalCommandRunner) GetBlockDevices() (*BlockDevices, error) {
 	if err := json.Unmarshal(data, blockEntries); err != nil {
 		return nil, err
 	}
-	log.Debug().Str("blockEntries", string(data)).Msg("debug>block entries")
 	return blockEntries, nil
 }
 
