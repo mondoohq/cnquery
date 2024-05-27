@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"context"
 	"strings"
 
 	"github.com/gobwas/glob"
@@ -290,13 +291,8 @@ func discoverTerraform(conn *connection.GithubConnection, repo *mqlGithubReposit
 		creds[i] = cc
 	}
 
-	files := repo.GetFiles()
-	if files.Error != nil {
-		return nil, files.Error
-	}
-
 	var res []*inventory.Asset
-	hasTf, err := hasTerraformHcl(conn.Client(), files)
+	hasTf, err := hasTerraformHcl(conn.Client(), repo)
 	if err != nil {
 		log.Error().Err(err).Str("project", repo.FullName.Data).Msg("failed to discover terraform repo in gitlab")
 	} else if hasTf {
@@ -315,25 +311,11 @@ func discoverTerraform(conn *connection.GithubConnection, repo *mqlGithubReposit
 }
 
 // hasTerraformHcl will check if the repository contains terraform files
-func hasTerraformHcl(client *github.Client, files *plugin.TValue[[]interface{}]) (bool, error) {
-	for _, f := range files.Data {
-		file := f.(*mqlGithubFile)
-		children := file.GetFiles()
-		if children.Error != nil {
-			return false, children.Error
-		}
-		hasTf, err := hasTerraformHcl(client, children)
-		if err != nil {
-			return false, err
-		}
-		if hasTf {
-			return true, nil
-		}
-
-		if strings.HasSuffix(file.Path.Data, ".tf") {
-			return true, nil
-		}
+func hasTerraformHcl(client *github.Client, repo *mqlGithubRepository) (bool, error) {
+	query := "repo:" + repo.FullName.Data + " extension:tf"
+	res, _, err := client.Search.Code(context.Background(), query, &github.SearchOptions{})
+	if err != nil {
+		return false, err
 	}
-
-	return false, nil
+	return res.GetTotal() > 0, nil
 }
