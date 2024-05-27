@@ -106,7 +106,7 @@ func (m *VolumeMounter) getFsInfo() (*PartitionInfo, error) {
 		return blockEntries.GetUnnamedBlockEntry()
 	}
 
-	fsInfo, err = blockEntries.GetBlockEntryByName(m.VolumeAttachmentLoc)
+	fsInfo, err = blockEntries.GetMountablePartitionByDevice(m.VolumeAttachmentLoc)
 	if err == nil && fsInfo != nil {
 		return fsInfo, nil
 	} else {
@@ -121,33 +121,25 @@ func (m *VolumeMounter) getFsInfo() (*PartitionInfo, error) {
 }
 
 // GetDeviceForMounting iterates through all the partitions of the target and returns the first one that matches the filters
-// If target is empty, it will return the first unnamed block device (best-effort guessing)
+// If device is not specified, it will return the first non-mounted, non-boot partition (best-effort guessing)
 // E.g. if target is "sda", it will return the first partition of the block device "sda" that satisfies the filters
-func (m *VolumeMounter) GetDeviceForMounting(target string) (*PartitionInfo, error) {
-	if target == "" {
-		log.Debug().Msg("no target provided, searching for unnamed block device")
+func (m *VolumeMounter) GetMountablePartition(device string) (*PartitionInfo, error) {
+	if device == "" {
+		log.Debug().Msg("no device provided, searching for unnamed block device")
 	} else {
-		log.Debug().Str("target", target).Msg("search for target partition")
+		log.Debug().Str("device", device).Msg("search for target partition")
 	}
 
-	cmd, err := m.CmdRunner.RunCommand("sudo lsblk -f --json")
+	blockDevices, err := m.CmdRunner.GetBlockDevices()
 	if err != nil {
 		return nil, err
 	}
-	data, err := io.ReadAll(cmd.Stdout)
-	if err != nil {
-		return nil, err
-	}
-	blockEntries := BlockDevices{}
-	if err := json.Unmarshal(data, &blockEntries); err != nil {
-		return nil, err
-	}
-	if target == "" {
+	if device == "" {
 		// TODO: i dont know what the difference between GetUnnamedBlockEntry and GetUnmountedBlockEntry is
 		// we need to simplify those
-		return blockEntries.GetUnnamedBlockEntry()
+		return blockDevices.GetUnnamedBlockEntry()
 	}
-	return blockEntries.GetBlockEntryByName(target)
+	return blockDevices.GetMountablePartitionByDevice(device)
 }
 
 func (m *VolumeMounter) mountVolume(fsInfo *PartitionInfo) error {
