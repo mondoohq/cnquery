@@ -18,6 +18,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"go.mondoo.com/cnquery/v11/logger"
+	"golang.org/x/mod/modfile"
 	"sigs.k8s.io/yaml"
 )
 
@@ -121,7 +122,7 @@ var editProvidersCmd = &cobra.Command{
 			log.Fatal().Err(err).Str("path", confPath).Msg("failed to marshal updated config")
 		}
 
-		err = os.WriteFile(confPath, raw, 0700)
+		err = os.WriteFile(confPath, raw, 0o700)
 		if err != nil {
 			log.Fatal().Err(err).Str("path", confPath).Msg("failed to write config file")
 		}
@@ -244,9 +245,28 @@ func rewireDependencies(providers []string) {
 				log.Fatal().Err(err).Str("provider", provider).Msg("failed to stat provider go.mod")
 			}
 		}
+
+		goModContent, err := os.ReadFile("providers/" + provider + "/go.mod")
+		if err != nil {
+			log.Fatal().Err(err).Str("provider", provider).Msg("failed to read provider go.mod")
+		}
+		goMod, err := modfile.Parse(fmt.Sprintf("%s/go.mod", provider), goModContent, nil)
+		if err != nil {
+			log.Fatal().Err(err).Str("provider", provider).Msg("failed to parse provider go.mod")
+		}
+
 		// we don't care about the specific version for dev
 		deps += "\n\tgo.mondoo.com/cnquery/v11/providers/" + provider + " v0.0.0"
 		replace += "\nreplace go.mondoo.com/cnquery/v11/providers/" + provider + " => ./providers/" + provider
+		// if the provider has any specific pinned replacements, we also add those to allow compiling
+		for _, r := range goMod.Replace {
+			// special case: we don't want to pull in provider's 'replace go.mondoo.com/cnquery/v11 => ../..' in.
+			if r.Old.Path == "go.mondoo.com/cnquery/v11" {
+				continue
+			}
+			// TODO: maybe we also use the modfile module to update the go.mod we're modifying
+			replace += "\nreplace " + r.Old.Path + " => " + r.New.Path + " " + r.New.Version
+		}
 	}
 	if deps != "" {
 		raws = strings.Replace(raws, "require (", "require ("+deps, 1)
