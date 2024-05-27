@@ -4,15 +4,19 @@
 package resources
 
 import (
+	"context"
 	"strings"
 
 	"github.com/gobwas/glob"
+	"github.com/google/go-github/v61/github"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/v11/providers/github/connection"
 	"go.mondoo.com/cnquery/v11/utils/stringx"
+	"google.golang.org/protobuf/proto"
 )
 
 func Discover(runtime *plugin.Runtime, opts map[string]string) (*inventory.Inventory, error) {
@@ -116,6 +120,14 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 				Labels:      make(map[string]string),
 				Connections: []*inventory.Config{cfg},
 			})
+
+			if stringx.ContainsAnyOf(targets, connection.DiscoveryAll, connection.DiscoveryTerraform) {
+				terraformAssets, err := discoverTerraform(conn, repo)
+				if err != nil {
+					return nil, err
+				}
+				assetList = append(assetList, terraformAssets...)
+			}
 		}
 	}
 	if stringx.ContainsAnyOf(targets, connection.DiscoveryUsers, connection.DiscoveryUser) {
@@ -164,6 +176,14 @@ func repo(runtime *plugin.Runtime, repoName string, owner string, conn *connecti
 		Labels:      make(map[string]string),
 		Connections: []*inventory.Config{cfg},
 	})
+
+	if stringx.ContainsAnyOf(targets, connection.DiscoveryAll, connection.DiscoveryTerraform) {
+		terraformAssets, err := discoverTerraform(conn, repo)
+		if err != nil {
+			return nil, err
+		}
+		assetList = append(assetList, terraformAssets...)
+	}
 
 	return assetList, nil
 }
@@ -256,4 +276,46 @@ func (f *ReposFilter) skipRepo(namespace string) bool {
 	}
 
 	return false
+}
+
+func discoverTerraform(conn *connection.GithubConnection, repo *mqlGithubRepository) ([]*inventory.Asset, error) {
+	// For git clone we need to set the user to oauth2 to be usable with the token.
+	conf := conn.Asset().Connections[0]
+	creds := make([]*vault.Credential, len(conf.Credentials))
+	for i := range conf.Credentials {
+		cred := conf.Credentials[i]
+		cc := proto.Clone(cred).(*vault.Credential)
+		if cc.User == "" {
+			cc.User = "oauth2"
+		}
+		creds[i] = cc
+	}
+
+	var res []*inventory.Asset
+	hasTf, err := hasTerraformHcl(conn.Client(), repo)
+	if err != nil {
+		log.Error().Err(err).Str("project", repo.FullName.Data).Msg("failed to discover terraform repo in gitlab")
+	} else if hasTf {
+		res = append(res, &inventory.Asset{
+			Connections: []*inventory.Config{{
+				Type: "terraform-hcl-git",
+				Options: map[string]string{
+					"ssh-url":  repo.SshUrl.Data,
+					"http-url": repo.CloneUrl.Data,
+				},
+				Credentials: creds,
+			}},
+		})
+	}
+	return res, nil
+}
+
+// hasTerraformHcl will check if the repository contains terraform files
+func hasTerraformHcl(client *github.Client, repo *mqlGithubRepository) (bool, error) {
+	query := "repo:" + repo.FullName.Data + " extension:tf"
+	res, _, err := client.Search.Code(context.Background(), query, &github.SearchOptions{})
+	if err != nil {
+		return false, err
+	}
+	return res.GetTotal() > 0, nil
 }

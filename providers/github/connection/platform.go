@@ -16,6 +16,7 @@ const (
 	DiscoveryRepository   = "repository" // deprecated: use repos
 	DiscoveryUser         = "user"       // deprecated: use users
 	DiscoveryOrganization = "organization"
+	DiscoveryTerraform    = "terraform"
 )
 
 var (
@@ -62,7 +63,6 @@ func (c *GithubConnection) PlatformInfo() (*inventory.Platform, error) {
 	}
 
 	if userId := conf.Options["user"]; userId != "" {
-
 		return NewGithubUserPlatform(userId), nil
 	}
 
