@@ -263,7 +263,6 @@ func (sc *SnapshotCreator) attachDisk(projectID, zone, instanceName, sourceDiskU
 	if err != nil {
 		return err
 	}
-
 	// wait for the operation to complete
 	for {
 		operation, err := computeService.ZoneOperations.Get(projectID, zone, op.Name).Context(ctx).Do()
