@@ -134,7 +134,7 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.Cloudformation
 		Name:   "cloudformation",
 		Family: []string{"cloudformation"},
 		Kind:   "api",
-		Title:  "AWS Cloudformation",
+		Title:  "AWS CloudFormation",
 	}
 
 	projectPath, ok := asset.Connections[0].Options["path"]
@@ -146,7 +146,7 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.Cloudformation
 		platformID := "//platformid.api.mondoo.app/runtime/cloudformation/hash/" + hash
 		asset.Connections[0].PlatformId = platformID
 		asset.PlatformIds = []string{platformID}
-		asset.Name = "Cloudformation Static Analysis " + parseNameFromPath(projectPath)
+		asset.Name = "CloudFormation Static Analysis " + parseNameFromPath(projectPath)
 		return nil
 	}
 
