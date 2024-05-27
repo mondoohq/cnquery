@@ -134,6 +134,11 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		}
 	case "filesystem", "fs":
 		conf.Type = shared.Type_FileSystem.String()
+		if len(req.Args) > 0 {
+			conf.Path = req.Args[0]
+		} else {
+			log.Warn().Msg("no path provided as an arg, looking for --path flag")
+		}
 	}
 
 	user := ""
