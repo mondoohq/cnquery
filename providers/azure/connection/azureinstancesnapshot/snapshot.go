@@ -5,7 +5,6 @@ package azureinstancesnapshot
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -27,17 +26,6 @@ type snapshotCreator struct {
 	token          azcore.TokenCredential
 	opts           *policy.ClientOptions
 	labels         map[string]*string
-}
-
-type instanceInfo struct {
-	subscriptionId string
-	resourceGroup  string
-	instanceName   string
-	location       string
-	bootDiskId     string
-	zones          []*string
-	// Attach the entire VM response as well
-	vm compute.VirtualMachine
 }
 
 type snapshotInfo struct {
@@ -81,30 +69,7 @@ func computeClient(token azcore.TokenCredential, subId string, opts *policy.Clie
 }
 
 func (sc *snapshotCreator) instanceInfo(resourceGroup, instanceName string) (instanceInfo, error) {
-	return InstanceInfo(resourceGroup, instanceName, sc.subscriptionId, sc.token)
-}
-
-func InstanceInfo(resourceGroup, instanceName, subId string, token azcore.TokenCredential) (instanceInfo, error) {
-	ctx := context.Background()
-	ii := instanceInfo{}
-
-	computeSvc, err := computeClient(token, subId, nil)
-	if err != nil {
-		return ii, err
-	}
-
-	instance, err := computeSvc.Get(ctx, resourceGroup, instanceName, &compute.VirtualMachinesClientGetOptions{})
-	if err != nil {
-		return ii, err
-	}
-	ii.resourceGroup = resourceGroup
-	ii.instanceName = *instance.Name
-	ii.bootDiskId = *instance.Properties.StorageProfile.OSDisk.ManagedDisk.ID
-	ii.location = *instance.Location
-	ii.subscriptionId = subId
-	ii.zones = instance.Zones
-	ii.vm = instance.VirtualMachine
-	return ii, nil
+	return GetInstanceInfo(resourceGroup, instanceName, sc.subscriptionId, sc.token)
 }
 
 func (sc *snapshotCreator) snapshotInfo(resourceGroup, snapshotName string) (snapshotInfo, error) {
@@ -208,34 +173,32 @@ func (sc *snapshotCreator) cloneDisk(sourceDiskId, resourceGroupName, diskName s
 }
 
 // attachDisk attaches a disk to an instance
-func (sc *snapshotCreator) attachDisk(targetInstance *instanceInfo, diskName, diskId string, lun int32) error {
-	if targetInstance == nil {
-		return errors.New("targetInstance is nil, cannot attach disk")
-	}
+func (sc *snapshotCreator) attachDisk(targetInstance instanceInfo, diskName, diskId string, lun int) error {
 	ctx := context.Background()
-	log.Debug().Str("disk-name", diskName).Int32("LUN", lun).Msg("attach disk")
+	log.Debug().Str("disk-name", diskName).Int("LUN", lun).Msg("attach disk")
 	computeSvc, err := sc.computeClient()
 	if err != nil {
 		return err
 	}
+	newDisks := []*compute.DataDisk{}
 	// the Azure API requires all disks to be specified, even the already attached ones.
 	// we simply attach the new disk to the end of the already present list of data disks
-	disks := targetInstance.vm.Properties.StorageProfile.DataDisks
-	disks = append(disks, &compute.DataDisk{
+	newDisks = append(newDisks, targetInstance.vm.Properties.StorageProfile.DataDisks...)
+	newDisks = append(newDisks, &compute.DataDisk{
 		Name:         &diskName,
 		CreateOption: to.Ptr(compute.DiskCreateOptionTypesAttach),
 		DeleteOption: to.Ptr(compute.DiskDeleteOptionTypesDelete),
 		Caching:      to.Ptr(compute.CachingTypesNone),
-		Lun:          &lun,
+		Lun:          to.Ptr(int32(lun)),
 		ManagedDisk: &compute.ManagedDiskParameters{
-			ID: &diskId,
+			ID: to.Ptr(diskId),
 		},
 	})
-	props := targetInstance.vm.Properties
-	props.StorageProfile.DataDisks = disks
 	vm := compute.VirtualMachineUpdate{
 		Properties: &compute.VirtualMachineProperties{
-			StorageProfile: props.StorageProfile,
+			StorageProfile: &compute.StorageProfile{
+				DataDisks: newDisks,
+			},
 		},
 	}
 
@@ -261,17 +224,13 @@ func (sc *snapshotCreator) attachDisk(targetInstance *instanceInfo, diskName, di
 	return err
 }
 
-func (sc *snapshotCreator) detachDisk(diskName string, targetInstance *instanceInfo) error {
-	if targetInstance == nil {
-		return errors.New("targetInstance is nil, cannot detach disk")
-	}
+func (sc *snapshotCreator) detachDisk(diskName string, targetInstance instanceInfo) error {
 	ctx := context.Background()
 	log.Debug().Str("instance-name", targetInstance.instanceName).Msg("detach disk from instance")
 	computeSvc, err := sc.computeClient()
 	if err != nil {
 		return err
 	}
-
 	// we stored the disks as they were before attaching the new one in the targetInstance.
 	// we simply use that list which will result in the new disk being detached
 	vm := compute.VirtualMachineUpdate{
