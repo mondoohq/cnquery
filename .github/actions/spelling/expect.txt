@@ -58,6 +58,7 @@ nullgroup
 nullstring
 opcplc
 orstatement
+PAYG
 Pids
 postgre
 pushconfig

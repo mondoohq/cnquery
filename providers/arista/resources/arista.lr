@@ -42,8 +42,8 @@ arista.eos.runningConfig.section {
   content() string
 }
 
-// User on the local Arista EOS system
-arista.eos.user @defaults("name") {
+// Arista EOS local user
+arista.eos.user @defaults("name privilege") {
   // The name of the user
   name string
   // Indicates if the user is able to authenticate without a password
@@ -139,7 +139,7 @@ arista.eos.stp {
 }
 
 // Arista Multiple Spanning Tree Protocol (MSTP) resource instance
-arista.eos.stp.mst {
+arista.eos.stp.mst @defaults("instanceId name") {
   // MST instance number
   instanceId string
   // MST instance name
