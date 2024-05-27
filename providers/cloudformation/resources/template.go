@@ -55,6 +55,11 @@ func (r *mqlCloudformationTemplate) id() (string, error) {
 func (r *mqlCloudformationTemplate) extractDict(section cft.Section) (map[string]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.CloudformationConnection)
 	template := conn.CftTemplate()
+
+	if template.Node == nil || len(template.Node.Content) == 0 {
+		return nil, nil
+	}
+
 	_, parameters, err := gatherMapValue(template.Node.Content[0], string(section))
 	if err != nil && status.Code(err) == codes.NotFound {
 		return nil, nil
