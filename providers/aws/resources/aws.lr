@@ -1100,7 +1100,7 @@ private aws.elb.targetgroup {
   protocol string
   // Protocol version for the load balancer target group
   protocolVersion string
-  // IP address type for the load balancer target group (ipv4, ipv6)
+  // IP address type for the load balancer target group (IPv4, IPv6)
   ipAddressType string
   // True if health check is enabled for the load balancer target group
   healthCheckEnabled bool
