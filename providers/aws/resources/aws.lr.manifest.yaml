@@ -1627,7 +1627,7 @@ resources:
       securityGroups:
         min_mondoo_version: 9.0.0
       targetGroups:
-        min_mondoo_version: latest
+        min_mondoo_version: 9.0.0
       vpc:
         min_mondoo_version: 9.0.0
       vpcId:
@@ -1659,7 +1659,7 @@ resources:
       unhealthyThresholdCount: {}
       vpc: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - aws
