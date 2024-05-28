@@ -1025,7 +1025,7 @@ resources:
       keypair: {}
       launchTime: {}
       networkInterfaces:
-        min_mondoo_version: latest
+        min_mondoo_version: 9.0.0
       patchState: {}
       platformDetails:
         min_mondoo_version: 8.11.0
@@ -1178,7 +1178,7 @@ resources:
       tags: {}
       vpc: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - aws
