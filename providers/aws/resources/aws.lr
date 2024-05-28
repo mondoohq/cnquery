@@ -2762,6 +2762,7 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   networkInterfaces() []aws.ec2.networkinterface
 }
 
+// AWS EC2 network interface
 private aws.ec2.networkinterface @defaults("id macAddress description") {
   // The ID of the network interface
   id string
