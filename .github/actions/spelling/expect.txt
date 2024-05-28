@@ -81,6 +81,7 @@ spo
 sqli
 sqlimatchstatement
 sqlserver
+targetgroup
 testutils
 toplevel
 tpu
