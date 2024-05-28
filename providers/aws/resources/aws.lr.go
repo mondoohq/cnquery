@@ -2008,7 +2008,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsElbTargetgroup).GetEc2Targets()).ToDataRes(types.Array(types.Resource("aws.ec2.instance")))
 	},
 	"aws.elb.targetgroup.lambdaTargets": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsElbTargetgroup).GetLambdaTargets()).ToDataRes(types.Array(types.Resource("aws.lambda.functio")))
+		return (r.(*mqlAwsElbTargetgroup).GetLambdaTargets()).ToDataRes(types.Array(types.Resource("aws.lambda.function")))
 	},
 	"aws.elb.loadbalancer.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbLoadbalancer).GetArn()).ToDataRes(types.String)

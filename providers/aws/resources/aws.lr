@@ -1089,11 +1089,11 @@ aws.elb {
 }
 
 // AWS Elastic Load Balancer (ELB) Target Group
-private aws.elb.targetgroup {
+private aws.elb.targetgroup @defaults("name port ec2Targets lambdaTargets") {
   // Name for the load balancer target group
-  name string 
+  name string
   // ARN for the load balancer target group
-  arn string 
+  arn string
   // Port for the load balancer target group
   port int
   // Protocol for the load balancer target group
