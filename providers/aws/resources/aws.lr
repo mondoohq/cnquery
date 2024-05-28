@@ -2914,6 +2914,7 @@ aws.eks {
   clusters() []aws.eks.cluster
 }
 
+// Amazon EKS managed node group
 private aws.eks.nodegroup @defaults("name scalingConfig.DesiredSize diskSize status") {
   // Name for the EKS node group
   name string
