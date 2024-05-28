@@ -1116,7 +1116,7 @@ private aws.elb.targetgroup {
   healthCheckTimeoutSeconds int
   // Target type for the for the load balancer target group (instance, ip, lambda, alb)
   targetType string
-  // Unhealthy treshold count for the load balancer target group
+  // Unhealthy threshold count for the load balancer target group
   unhealthyThresholdCount int
   // VPC for the load balancer target group
   vpc() aws.vpc
