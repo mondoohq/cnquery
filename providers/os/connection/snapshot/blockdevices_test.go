@@ -118,6 +118,147 @@ func TestGetMountablePartitionByDevice(t *testing.T) {
 	})
 }
 
+func TestFindDevice(t *testing.T) {
+	t.Run("match by exact name", func(t *testing.T) {
+		blockEntries := BlockDevices{
+			BlockDevices: []BlockDevice{
+				{Name: "sda", Children: []BlockDevice{{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoint: "/"}}},
+				{Name: "nvme0n1", Children: []BlockDevice{{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+				{Name: "sdx", Children: []BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+			},
+		}
+
+		res, err := blockEntries.FindDevice("/dev/sdx")
+		require.Nil(t, err)
+		require.Equal(t, res, blockEntries.BlockDevices[2])
+	})
+
+	t.Run("match by interchangeable name", func(t *testing.T) {
+		blockEntries := BlockDevices{
+			BlockDevices: []BlockDevice{
+				{Name: "sda", Children: []BlockDevice{{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoint: "/"}}},
+				{Name: "nvme0n1", Children: []BlockDevice{{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+				{Name: "xvdc", Children: []BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+			},
+		}
+
+		res, err := blockEntries.FindDevice("/dev/sdc")
+		require.Nil(t, err)
+		require.Equal(t, res, blockEntries.BlockDevices[2])
+	})
+
+	t.Run("no match", func(t *testing.T) {
+		blockEntries := BlockDevices{
+			BlockDevices: []BlockDevice{
+				{Name: "sda", Children: []BlockDevice{{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoint: "/"}}},
+				{Name: "nvme0n1", Children: []BlockDevice{{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+				{Name: "xvdc", Children: []BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+			},
+		}
+
+		_, err := blockEntries.FindDevice("/dev/sdd")
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "no block device found with name")
+	})
+}
+
+func TestGetMountablePartition(t *testing.T) {
+	t.Run("no suitable partition (mounted)", func(t *testing.T) {
+		block := BlockDevice{
+			Name: "sda",
+			Children: []BlockDevice{
+				{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoint: "/"},
+			},
+		}
+		_, err := block.GetMountablePartition()
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "no suitable partitions found")
+	})
+
+	t.Run("no suitable partition (no fs type)", func(t *testing.T) {
+		block := BlockDevice{
+			Name: "sda",
+			Children: []BlockDevice{
+				{Uuid: "1234", FsType: "", Label: "ROOT", Name: "sda1", MountPoint: ""},
+			},
+		}
+		_, err := block.GetMountablePartition()
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "no suitable partitions found")
+	})
+
+	t.Run("no suitable partition (EFI label)", func(t *testing.T) {
+		block := BlockDevice{
+			Name: "sda",
+			Children: []BlockDevice{
+				{Uuid: "1234", FsType: "xfs", Label: "EFI", Name: "sda1", MountPoint: ""},
+			},
+		}
+		_, err := block.GetMountablePartition()
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "no suitable partitions found")
+	})
+
+	t.Run("no suitable partition (vfat fs type)", func(t *testing.T) {
+		block := BlockDevice{
+			Name: "sda",
+			Children: []BlockDevice{
+				{Uuid: "1234", FsType: "vfat", Label: "", Name: "sda1", MountPoint: ""},
+			},
+		}
+		_, err := block.GetMountablePartition()
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "no suitable partitions found")
+	})
+
+	t.Run("no suitable partition (boot label)", func(t *testing.T) {
+		block := BlockDevice{
+			Name: "sda",
+			Children: []BlockDevice{
+				{Uuid: "1234", FsType: "xfs", Label: "boot", Name: "sda1", MountPoint: ""},
+			},
+		}
+		_, err := block.GetMountablePartition()
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "no suitable partitions found")
+	})
+
+	t.Run("no suitable partition (empty)", func(t *testing.T) {
+		block := BlockDevice{
+			Name:     "sda",
+			Children: []BlockDevice{},
+		}
+		_, err := block.GetMountablePartition()
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "no suitable partitions found")
+	})
+
+	t.Run("suitable single partition", func(t *testing.T) {
+		block := BlockDevice{
+			Name: "sde",
+			Children: []BlockDevice{
+				{Uuid: "12346", FsType: "xfs", Size: 110, Label: "ROOT", Name: "sde1"},
+			},
+		}
+		partition, err := block.GetMountablePartition()
+		require.Nil(t, err)
+		require.Equal(t, &PartitionInfo{FsType: "xfs", Name: "/dev/sde1"}, partition)
+	})
+
+	t.Run("largest suitable partition", func(t *testing.T) {
+		block := BlockDevice{
+			Name: "sda",
+			Children: []BlockDevice{
+				{Uuid: "12346", FsType: "xfs", Size: 110, Label: "ROOT", Name: "sda1"},
+				{Uuid: "12346", FsType: "xfs", Size: 120, Label: "ROOT", Name: "sda2"},
+			},
+		}
+		partition, err := block.GetMountablePartition()
+		require.Nil(t, err)
+		require.Equal(t, &PartitionInfo{FsType: "xfs", Name: "/dev/sda2"}, partition)
+	})
+}
+
 func TestGetNonRootBlockEntry(t *testing.T) {
 	blockEntries := BlockDevices{BlockDevices: []BlockDevice{
 		{Name: "sda", Children: []BlockDevice{{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoint: "/"}}},

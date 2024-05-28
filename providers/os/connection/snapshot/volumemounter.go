@@ -139,7 +139,12 @@ func (m *VolumeMounter) GetMountablePartition(device string) (*PartitionInfo, er
 		// we need to simplify those
 		return blockDevices.GetUnnamedBlockEntry()
 	}
-	return blockDevices.GetMountablePartitionByDevice(device)
+
+	d, err := blockDevices.FindDevice(device)
+	if err != nil {
+		return nil, err
+	}
+	return d.GetMountablePartition()
 }
 
 func (m *VolumeMounter) mountVolume(fsInfo *PartitionInfo) error {

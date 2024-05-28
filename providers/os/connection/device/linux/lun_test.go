@@ -79,7 +79,7 @@ func TestFindDeviceByBlock(t *testing.T) {
 		}
 		target, err := findMatchingDeviceByBlock(devices, blockDevices)
 		assert.NoError(t, err)
-		expected := "/dev/sdb"
+		expected := blockDevices.BlockDevices[1]
 		assert.Equal(t, expected, target)
 	})
 
@@ -132,8 +132,7 @@ func TestFindDeviceByBlock(t *testing.T) {
 				},
 			},
 		}
-		target, err := findMatchingDeviceByBlock(devices, blockDevices)
-		assert.NoError(t, err)
-		assert.Empty(t, target)
+		_, err := findMatchingDeviceByBlock(devices, blockDevices)
+		assert.Error(t, err)
 	})
 }
