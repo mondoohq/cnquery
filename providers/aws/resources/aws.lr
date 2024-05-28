@@ -2762,8 +2762,8 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   networkInterfaces() []aws.ec2.networkinterface
 }
 
-private aws.ec2.networkinterface {
-  id string 
+private aws.ec2.networkinterface @defaults("id macAddress description") {
+  id string
   description string
   subnet() aws.vpc.subnet
   vpc() aws.vpc
