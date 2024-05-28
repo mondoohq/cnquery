@@ -2393,6 +2393,8 @@ private aws.vpc.natgateway {
   vpc() aws.vpc
   // List of addresses associated with the NAT gateway
   addresses []aws.vpc.natgateway.address
+  // Subnet for the NAT gateway
+  subnet() aws.vpc.subnet
 }
 
 // Amazon VPC NAT gateway address
@@ -2756,6 +2758,24 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   architecture string
   // The TPM version supported. NitroTPM is enabled if this value is `2.0`
   tpmSupport string
+  // List of network interfaces for the instance
+  networkInterfaces() []aws.ec2.networkinterface
+}
+
+private aws.ec2.networkinterface {
+  id string 
+  description string
+  subnet() aws.vpc.subnet
+  vpc() aws.vpc
+  status string
+  sourceDestCheck bool
+  requesterManaged bool
+  tags map[string]string
+  availabilityZone string
+  securityGroups() []aws.ec2.securitygroup
+  ipv6Native bool
+  macAddress string
+  privateDnsName string
 }
 
 // Amazon EC2 key pair

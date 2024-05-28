@@ -1024,6 +1024,8 @@ resources:
       instanceType: {}
       keypair: {}
       launchTime: {}
+      networkInterfaces:
+        min_mondoo_version: latest
       patchState: {}
       platformDetails:
         min_mondoo_version: 8.11.0
@@ -1157,6 +1159,26 @@ resources:
       to: {}
     is_private: true
     min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - aws
+  aws.ec2.networkinterface:
+    fields:
+      availabilityZone: {}
+      description: {}
+      id: {}
+      ipv6Native: {}
+      macAddress: {}
+      privateDnsName: {}
+      requesterManaged: {}
+      securityGroups: {}
+      sourceDestCheck: {}
+      status: {}
+      subnet: {}
+      tags: {}
+      vpc: {}
+    is_private: true
+    min_mondoo_version: latest
     platform:
       name:
       - aws
