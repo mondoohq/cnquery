@@ -121,10 +121,10 @@ func (c *LinuxDeviceManager) identifyViaLun(lun int) (*snapshot.PartitionInfo, e
 		}
 	}
 
-	return c.volumeMounter.GetDeviceForMounting(target)
+	return c.volumeMounter.GetMountablePartition(target)
 }
 
 func (c *LinuxDeviceManager) identifyViaDeviceName(deviceName string) (*snapshot.PartitionInfo, error) {
-	// GetDeviceForMounting also supports passing in empty strings, in that case we do a best-effort guess
-	return c.volumeMounter.GetDeviceForMounting(deviceName)
+	// GetMountablePartition also supports passing in empty strings, in that case we do a best-effort guess
+	return c.volumeMounter.GetMountablePartition(deviceName)
 }

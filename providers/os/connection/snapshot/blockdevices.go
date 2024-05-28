@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"sort"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -19,12 +20,12 @@ type BlockDevices struct {
 
 type BlockDevice struct {
 	Name       string        `json:"name,omitempty"`
-	FsType     string        `json:"FsType,omitempty"`
+	FsType     string        `json:"fstype,omitempty"`
 	Label      string        `json:"label,omitempty"`
 	Uuid       string        `json:"uuid,omitempty"`
 	MountPoint string        `json:"mountpoint,omitempty"`
 	Children   []BlockDevice `json:"children,omitempty"`
-	FsUse      string        `json:"fsuse%,omitempty"`
+	Size       int           `json:"size,omitempty"`
 }
 
 type PartitionInfo struct {
@@ -33,7 +34,7 @@ type PartitionInfo struct {
 }
 
 func (cmdRunner *LocalCommandRunner) GetBlockDevices() (*BlockDevices, error) {
-	cmd, err := cmdRunner.RunCommand("lsblk -f --json")
+	cmd, err := cmdRunner.RunCommand("lsblk -bo NAME,SIZE,FSTYPE,MOUNTPOINT,LABEL,UUID --json")
 	if err != nil {
 		return nil, err
 	}
@@ -71,19 +72,23 @@ func (blockEntries BlockDevices) GetRootBlockEntry() (*PartitionInfo, error) {
 	return nil, errors.New("target volume not found on instance")
 }
 
-func (blockEntries BlockDevices) GetBlockEntryByName(name string) (*PartitionInfo, error) {
-	log.Debug().Str("name", name).Msg("get matching block entry")
+// Searches all the partitions in the target device and finds one that can be mounted. It must be unmounted, non-boot partition
+// If multiple partitions meet this criteria, the largest one is returned.
+func (blockEntries BlockDevices) GetMountablePartitionByDevice(device string) (*PartitionInfo, error) {
+	log.Debug().Str("device", device).Msg("get partitions for device")
+	var block BlockDevice
+	partitions := []BlockDevice{}
 	var secondName string
-	if strings.HasPrefix(name, "/dev/sd") {
+	if strings.HasPrefix(device, "/dev/sd") {
 		// sdh and xvdh are interchangeable
-		end := strings.TrimPrefix(name, "/dev/sd")
+		end := strings.TrimPrefix(device, "/dev/sd")
 		secondName = "/dev/xvd" + end
 	}
 	for i := range blockEntries.BlockDevices {
 		d := blockEntries.BlockDevices[i]
 		log.Debug().Str("name", d.Name).Interface("children", d.Children).Interface("mountpoint", d.MountPoint).Msg("found block device")
 		fullDeviceName := "/dev/" + d.Name
-		if name != fullDeviceName { // check if the device name matches
+		if device != fullDeviceName { // check if the device name matches
 			if secondName == "" {
 				continue
 			}
@@ -91,16 +96,37 @@ func (blockEntries BlockDevices) GetBlockEntryByName(name string) (*PartitionInf
 				continue
 			}
 		}
-		log.Debug().Str("location", d.Name).Msg("found match")
-		for i := range d.Children {
-			entry := d.Children[i]
-			if entry.IsNotBootOrRootVolumeAndUnmounted() {
-				devFsName := "/dev/" + entry.Name
-				return &PartitionInfo{Name: devFsName, FsType: entry.FsType}, nil
-			}
+		log.Debug().Str("name", d.Name).Msg("found matching device")
+		block = d
+		break
+	}
+	if len(block.Name) == 0 {
+		return nil, fmt.Errorf("no block device found with name %s", device)
+	}
+
+	for _, partition := range block.Children {
+		log.Debug().Str("name", partition.Name).Int("size", partition.Size).Msg("checking partition")
+		if partition.IsNotBootOrRootVolumeAndUnmounted() {
+			partitions = append(partitions, partition)
 		}
 	}
-	return nil, errors.New("target volume not found on instance")
+
+	if len(partitions) == 0 {
+		return nil, fmt.Errorf("no suitable partitions found on device %s", block.Name)
+	}
+
+	// sort the candidates by size, so we can pick the largest one
+	sortPartitionsBySize(partitions)
+
+	// return the largest partition. we can extend this to be a parameter in the future
+	devFsName := "/dev/" + partitions[0].Name
+	return &PartitionInfo{Name: devFsName, FsType: partitions[0].FsType}, nil
+}
+
+func sortPartitionsBySize(partitions []BlockDevice) {
+	sort.Slice(partitions, func(i, j int) bool {
+		return partitions[i].Size > partitions[j].Size
+	})
 }
 
 func (blockEntries BlockDevices) GetUnnamedBlockEntry() (*PartitionInfo, error) {
