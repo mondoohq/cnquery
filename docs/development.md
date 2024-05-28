@@ -188,10 +188,11 @@ go 1.21
 
 use (
    ./cnquery
-   ./cnquery/providers/atlassian
    ./cnquery/providers/arista
+   ./cnquery/providers/atlassian
    ./cnquery/providers/aws
    ./cnquery/providers/azure
+   ./cnquery/providers/cloudformation
    ./cnquery/providers/equinix
    ./cnquery/providers/gcp
    ./cnquery/providers/github
@@ -339,6 +340,6 @@ func (g *mqlGcpProjectComputeServiceAddress) network() (*mqlGcpProjectComputeSer
 
 We love emojis in our commits. These are their meanings:
 
-🛑 breaking 🐛 bugfix 🧹 cleanup/internals ⚡ speed 📄 docs  
-✨⭐🌟🌠 smaller or larger features 🐎 race condition  
+🛑 breaking 🐛 bugfix 🧹 cleanup/internals ⚡ speed 📄 docs
+✨⭐🌟🌠 smaller or larger features 🐎 race condition
 🌙 MQL 🌈 visual 🟢 fix tests 🎫 auth 🦅 falcon 🐳 container
