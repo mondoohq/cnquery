@@ -1836,6 +1836,46 @@ private aws.dynamodb.table @defaults("name region") {
   status string
 }
 
+// Amazon Simple Queue Service (SQS)
+aws.sqs {
+  // List of Amazon SQS queues
+  queues() []aws.sqs.queue
+}
+
+// Amazon Simple Queue Service (SQS) Queue
+private aws.sqs.queue {
+  // ARN for the queue
+  arn() string
+  // Time when the queue was created
+  createdAt() time
+  // Dead letter SQS queue, if any
+  deadLetterQueue() aws.sqs.queue
+  // Delay seconds set on the queue
+  deliveryDelaySeconds() int
+  // KMS Key for SSE, if any
+  kmsKey() aws.kms.key
+  // Time when the queue was last modified
+  lastModified() time
+  // Maximum amount of messages that can be received by the queue
+  maxReceiveCount() int
+  // Maximum message size for the queue
+  maximumMessageSize() int
+  // Time in seconds the queue retains messages
+  messageRetentionPeriodSeconds() int
+  // Time in seconds the queue waits for messages
+  receiveMessageWaitTimeSeconds() int
+  // Region for the queue
+  region string
+  // Whether SSE is enabled for the queue
+  sqsManagedSseEnabled() bool
+  // The type of queue: Fifo or Standard
+  queueType() string 
+  // URL for the queue
+  url string
+  // Visibility timeout for the queue
+  visibilityTimeoutSeconds() int
+}
+
 // Amazon Relational Database Service (RDS)
 aws.rds {
   // List of database instances

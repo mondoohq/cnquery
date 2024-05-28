@@ -2617,6 +2617,38 @@ resources:
     platform:
       name:
       - aws
+  aws.sqs:
+    fields:
+      queues: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.sqs.queue:
+    fields:
+      arn: {}
+      createdAt: {}
+      deadLetterQueue: {}
+      deliveryDelaySeconds: {}
+      kmsKey: {}
+      lastModified: {}
+      maxReceiveCount: {}
+      maximumMessageSize: {}
+      messageRetentionPeriodSeconds: {}
+      queueType: {}
+      receiveMessageWaitTimeSeconds: {}
+      region: {}
+      sqsManagedSseEnabled: {}
+      sseEnabled: {}
+      tags: {}
+      type: {}
+      url: {}
+      visibilityTimeoutSeconds: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
   aws.ssm:
     fields:
       instances: {}
