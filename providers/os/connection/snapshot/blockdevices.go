@@ -108,6 +108,7 @@ func (blockEntries BlockDevices) GetMountablePartitionByDevice(device string) (*
 	for _, partition := range block.Children {
 		log.Debug().Str("name", partition.Name).Int("size", partition.Size).Msg("checking partition")
 		if partition.IsNotBootOrRootVolumeAndUnmounted() {
+			log.Debug().Str("name", partition.Name).Msg("found suitable partition")
 			partitions = append(partitions, partition)
 		}
 	}
@@ -157,6 +158,7 @@ func (device BlockDevice) GetMountablePartition() (*PartitionInfo, error) {
 	for _, partition := range device.Children {
 		log.Debug().Str("name", partition.Name).Int("size", partition.Size).Msg("checking partition")
 		if partition.IsNoBootVolumeAndUnmounted() {
+			log.Debug().Str("name", partition.Name).Msg("found suitable partition")
 			partitions = append(partitions, partition)
 		}
 	}
