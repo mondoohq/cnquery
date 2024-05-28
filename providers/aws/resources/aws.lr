@@ -1123,7 +1123,7 @@ private aws.elb.targetgroup {
   // EC2 targets for the load balancer target group
   ec2Targets() []aws.ec2.instance
   // Lambda targets for the load balancer target group
-  lambdaTargets() []aws.lambda.functio
+  lambdaTargets() []aws.lambda.function
 }
 
 // AWS Elastic Load Balancing load balancer
