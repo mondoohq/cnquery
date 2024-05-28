@@ -162,7 +162,7 @@ func (a *mqlAwsSqsQueue) deadLetterQueue() (*mqlAwsSqsQueue, error) {
 		return nil, err
 	}
 	// "https://sqs.us-east-1.amazonaws.com/921877552404/Test-Preslav-Queue"
-	url := fmt.Sprintf("https://sqs.%s.amazonaws.com/%s/%s", a.Region.Data, "acctid", parsedArn.Resource)
+	url := fmt.Sprintf("https://sqs.%s.amazonaws.com/%s/%s", a.Region.Data, parsedArn.AccountID, parsedArn.Resource)
 	q, err := NewResource(a.MqlRuntime, "aws.sqs.queue",
 		map[string]*llx.RawData{
 			"arn":    llx.StringData(r.DeadLetterTargetArn),
