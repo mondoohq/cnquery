@@ -1114,7 +1114,7 @@ private aws.elb.targetgroup {
   healthCheckProtocol string
   // Health check timeout seconds for the load balancer target group
   healthCheckTimeoutSeconds int
-  // Target type for the for the load balancer target group (instance, ip, lambda, alb)
+  // Target type for the for the load balancer target group (instance, IP, Lambda, ALB)
   targetType string
   // Unhealthy threshold count for the load balancer target group
   unhealthyThresholdCount int
