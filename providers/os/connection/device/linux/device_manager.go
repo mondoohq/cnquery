@@ -104,27 +104,43 @@ func (c *LinuxDeviceManager) identifyViaLun(lun int) (*snapshot.PartitionInfo, e
 	if len(filteredScsiDevices) == 0 {
 		return nil, errors.New("no matching scsi devices found")
 	}
-
-	var target string
-	// if we have exactly one device present at the LUN we can directly point the volume mounter towards it
-	if len(filteredScsiDevices) == 1 {
-		target = filteredScsiDevices[0].VolumePath
-	} else {
-		// we have multiple devices at the same LUN. we find the first non-mounted block devices in that list
-		blockDevices, err := c.volumeMounter.CmdRunner.GetBlockDevices()
-		if err != nil {
-			return nil, err
-		}
-		target, err = findMatchingDeviceByBlock(filteredScsiDevices, blockDevices)
-		if err != nil {
-			return nil, err
-		}
+	blockDevices, err := c.volumeMounter.CmdRunner.GetBlockDevices()
+	if err != nil {
+		return nil, err
 	}
-
-	return c.volumeMounter.GetMountablePartition(target)
+	var device snapshot.BlockDevice
+	var deviceErr error
+	// if we have exactly one device present at the LUN we can directly search for it
+	if len(filteredScsiDevices) == 1 {
+		devicePath := filteredScsiDevices[0].VolumePath
+		device, deviceErr = blockDevices.FindDevice(devicePath)
+	} else {
+		device, deviceErr = findMatchingDeviceByBlock(filteredScsiDevices, blockDevices)
+	}
+	if deviceErr != nil {
+		return nil, deviceErr
+	}
+	return device.GetMountablePartition()
 }
 
 func (c *LinuxDeviceManager) identifyViaDeviceName(deviceName string) (*snapshot.PartitionInfo, error) {
-	// GetMountablePartition also supports passing in empty strings, in that case we do a best-effort guess
-	return c.volumeMounter.GetMountablePartition(deviceName)
+	blockDevices, err := c.volumeMounter.CmdRunner.GetBlockDevices()
+	if err != nil {
+		return nil, err
+	}
+
+	// if we don't have a device name we can just return the first non-boot, non-mounted partition.
+	// this is a best-guess approach
+	if deviceName == "" {
+		// TODO: we should rename/simplify this method
+		return blockDevices.GetUnnamedBlockEntry()
+	}
+
+	// if we have a specific device we're looking for we can just ask only for that
+	device, err := blockDevices.FindDevice(deviceName)
+	if err != nil {
+		return nil, err
+	}
+
+	return device.GetMountablePartition()
 }

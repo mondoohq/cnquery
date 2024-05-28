@@ -74,6 +74,7 @@ func (blockEntries BlockDevices) GetRootBlockEntry() (*PartitionInfo, error) {
 
 // Searches all the partitions in the target device and finds one that can be mounted. It must be unmounted, non-boot partition
 // If multiple partitions meet this criteria, the largest one is returned.
+// Deprecated: Use GetMountablePartition instead
 func (blockEntries BlockDevices) GetMountablePartitionByDevice(device string) (*PartitionInfo, error) {
 	log.Debug().Str("device", device).Msg("get partitions for device")
 	var block BlockDevice
@@ -113,6 +114,55 @@ func (blockEntries BlockDevices) GetMountablePartitionByDevice(device string) (*
 
 	if len(partitions) == 0 {
 		return nil, fmt.Errorf("no suitable partitions found on device %s", block.Name)
+	}
+
+	// sort the candidates by size, so we can pick the largest one
+	sortPartitionsBySize(partitions)
+
+	// return the largest partition. we can extend this to be a parameter in the future
+	devFsName := "/dev/" + partitions[0].Name
+	return &PartitionInfo{Name: devFsName, FsType: partitions[0].FsType}, nil
+}
+
+// Searches for a device by name
+func (blockEntries BlockDevices) FindDevice(name string) (BlockDevice, error) {
+	log.Debug().Str("device", name).Msg("searching for device")
+	var secondName string
+	if strings.HasPrefix(name, "/dev/sd") {
+		// sdh and xvdh are interchangeable
+		end := strings.TrimPrefix(name, "/dev/sd")
+		secondName = "/dev/xvd" + end
+	}
+	for i := range blockEntries.BlockDevices {
+		d := blockEntries.BlockDevices[i]
+		log.Debug().Str("name", d.Name).Interface("children", d.Children).Interface("mountpoint", d.MountPoint).Msg("found block device")
+		fullDeviceName := "/dev/" + d.Name
+		if name != fullDeviceName { // check if the device name matches
+			if secondName == "" || secondName != fullDeviceName {
+				continue
+			}
+		}
+		log.Debug().Str("name", d.Name).Msg("found matching device")
+		return d, nil
+	}
+
+	return BlockDevice{}, fmt.Errorf("no block device found with name %s", name)
+}
+
+// Searches all the partitions in the device and finds one that can be mounted. It must be unmounted, non-boot partition
+// If multiple partitions meet this criteria, the largest one is returned.
+func (device BlockDevice) GetMountablePartition() (*PartitionInfo, error) {
+	log.Debug().Str("device", device.Name).Msg("get partitions for device")
+	partitions := []BlockDevice{}
+	for _, partition := range device.Children {
+		log.Debug().Str("name", partition.Name).Int("size", partition.Size).Msg("checking partition")
+		if partition.IsNoBootVolumeAndUnmounted() {
+			partitions = append(partitions, partition)
+		}
+	}
+
+	if len(partitions) == 0 {
+		return nil, fmt.Errorf("no suitable partitions found on device %s", device.Name)
 	}
 
 	// sort the candidates by size, so we can pick the largest one
@@ -177,10 +227,18 @@ func (entry BlockDevice) IsNoBootVolume() bool {
 	return entry.Uuid != "" && entry.FsType != "" && entry.FsType != "vfat" && entry.Label != "EFI" && entry.Label != "boot"
 }
 
+func (entry BlockDevice) IsNoBootVolumeAndUnmounted() bool {
+	return entry.IsNoBootVolume() && !entry.IsMounted()
+}
+
 func (entry BlockDevice) IsRootVolume() bool {
 	return strings.Contains(entry.Name, "sda") || strings.Contains(entry.Name, "xvda") || strings.Contains(entry.Name, "nvme0n1")
 }
 
 func (entry BlockDevice) IsNotBootOrRootVolumeAndUnmounted() bool {
-	return entry.IsNoBootVolume() && entry.MountPoint == "" && !entry.IsRootVolume()
+	return entry.IsNoBootVolumeAndUnmounted() && !entry.IsRootVolume()
+}
+
+func (entry BlockDevice) IsMounted() bool {
+	return entry.MountPoint != ""
 }

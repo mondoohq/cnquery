@@ -57,7 +57,7 @@ func filterScsiDevices(scsiDevices scsiDevices, lun int) []scsiDeviceInfo {
 // there can be multiple devices mounted at the same LUN.
 // the LUN so we need to find all the blocks, mounted at that LUN. then we find the first one
 // that has no mounted partitions and use that as the target device. this is a best-effort approach
-func findMatchingDeviceByBlock(scsiDevices scsiDevices, blockDevices *snapshot.BlockDevices) (string, error) {
+func findMatchingDeviceByBlock(scsiDevices scsiDevices, blockDevices *snapshot.BlockDevices) (snapshot.BlockDevice, error) {
 	matchingBlocks := []snapshot.BlockDevice{}
 	for _, device := range scsiDevices {
 		for _, block := range blockDevices.BlockDevices {
@@ -69,25 +69,22 @@ func findMatchingDeviceByBlock(scsiDevices scsiDevices, blockDevices *snapshot.B
 	}
 
 	if len(matchingBlocks) == 0 {
-		return "", errors.New("no matching blocks found")
+		return snapshot.BlockDevice{}, errors.New("no matching blocks found")
 	}
 
-	var target string
 	for _, b := range matchingBlocks {
 		log.Debug().Str("name", b.Name).Msg("device connection> checking block")
-		mounted := false
 		for _, ch := range b.Children {
 			if len(ch.MountPoint) > 0 && ch.MountPoint != "" {
 				log.Debug().Str("name", ch.Name).Msg("device connection> has mounted partitons, skipping")
-				mounted = true
-			}
-			if !mounted {
-				target = "/dev/" + b.Name
+			} else {
+				// we found a block that has no mounted partitions
+				return b, nil
 			}
 		}
 	}
 
-	return target, nil
+	return snapshot.BlockDevice{}, errors.New("no matching block found")
 }
 
 // parses the output from running 'lsscsi --brief' and gets the device info, the output looks like this:
