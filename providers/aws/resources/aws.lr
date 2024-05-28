@@ -1088,7 +1088,7 @@ aws.elb {
   loadBalancers() []aws.elb.loadbalancer
 }
 
-// AWS ELB Target Group
+// AWS Elastic Load Balancer (ELB) Target Group
 private aws.elb.targetgroup {
   // Name for the load balancer target group
   name string 
