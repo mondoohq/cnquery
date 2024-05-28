@@ -16,6 +16,7 @@ require (
 	go.mondoo.com/cnquery/v11 v11.5.0
 	go.mondoo.com/ranger-rpc v0.6.1
 	golang.org/x/oauth2 v0.20.0
+	google.golang.org/protobuf v1.34.1
 	sigs.k8s.io/yaml v1.4.0
 )
 
@@ -335,7 +336,7 @@ require (
 	github.com/ykadowak/zerologlint v0.1.5 // indirect
 	gitlab.com/bosi/decorder v0.4.2 // indirect
 	go-simpler.org/musttag v0.12.2 // indirect
-	go-simpler.org/sloglint v0.7.0 // indirect
+	go-simpler.org/sloglint v0.7.1 // indirect
 	go.mondoo.com/mondoo-go v0.0.0-20240522040414-f14070ee37a8 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.52.0 // indirect
@@ -364,7 +365,6 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20240521202816-d264139d666e // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240521202816-d264139d666e // indirect
 	google.golang.org/grpc v1.64.0 // indirect
-	google.golang.org/protobuf v1.34.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
