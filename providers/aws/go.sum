@@ -190,6 +190,8 @@ github.com/aws/aws-sdk-go-v2/service/securityhub v1.48.4 h1:J/5XSSUxCUIy6Ya/1qBe
 github.com/aws/aws-sdk-go-v2/service/securityhub v1.48.4/go.mod h1:Ypax6FsjjJFd0fojZ85aErP+hwfVaXW4gsInyTbwL6Q=
 github.com/aws/aws-sdk-go-v2/service/sns v1.29.8 h1:CQicXbvanE/nn+MJQVuDzBplQSFj7M+gLLtArzDVZS4=
 github.com/aws/aws-sdk-go-v2/service/sns v1.29.8/go.mod h1:oP1vkszM8xdAqHMdBstE5TF3xc+yHwQYrAvkNharymc=
+github.com/aws/aws-sdk-go-v2/service/sqs v1.32.3 h1:K0kIvRVzlVB/7onxMnRoqJkBqRdukIeaQ5GwGAmzggM=
+github.com/aws/aws-sdk-go-v2/service/sqs v1.32.3/go.mod h1:xPN9AEzpZ3Ny+HpzsyLBrdXoTFOz7tig6xuYOQ3A0bQ=
 github.com/aws/aws-sdk-go-v2/service/ssm v1.50.4 h1:SgDxM/2kJEeSavji5ob+oluTPo3CQOQmP56F3yUz/kE=
 github.com/aws/aws-sdk-go-v2/service/ssm v1.50.4/go.mod h1:uRCbiDLweN10yl6W80fLygiLUDTIonz8/RpH+6lsEnY=
 github.com/aws/aws-sdk-go-v2/service/sso v1.20.9 h1:aD7AGQhvPuAxlSUfo0CWU7s6FpkbyykMhGYMvlqTjVs=
