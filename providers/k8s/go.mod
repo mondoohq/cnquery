@@ -359,7 +359,7 @@ require (
 	github.com/ykadowak/zerologlint v0.1.5 // indirect
 	gitlab.com/bosi/decorder v0.4.2 // indirect
 	go-simpler.org/musttag v0.12.2 // indirect
-	go-simpler.org/sloglint v0.7.0 // indirect
+	go-simpler.org/sloglint v0.7.1 // indirect
 	go.mondoo.com/mondoo-go v0.0.0-20240522040414-f14070ee37a8 // indirect
 	go.mondoo.com/ranger-rpc v0.6.1 // indirect
 	go.opencensus.io v0.24.0 // indirect
