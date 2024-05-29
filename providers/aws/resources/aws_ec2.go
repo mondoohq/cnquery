@@ -928,16 +928,17 @@ func (i *mqlAwsEc2Instance) networkInterfaces() ([]interface{}, error) {
 		for ni := range nis.NetworkInterfaces {
 			n := nis.NetworkInterfaces[ni]
 			args := map[string]*llx.RawData{
-				"id":               llx.StringDataPtr(n.NetworkInterfaceId),
-				"description":      llx.StringDataPtr(n.Description),
-				"status":           llx.StringData(string(n.Status)),
-				"sourceDestCheck":  llx.BoolDataPtr(n.SourceDestCheck),
-				"requesterManaged": llx.BoolDataPtr(n.RequesterManaged),
-				"tags":             llx.MapData(Ec2TagsToMap(n.TagSet), types.String),
 				"availabilityZone": llx.StringDataPtr(n.AvailabilityZone),
+				"description":      llx.StringDataPtr(n.Description),
+				"id":               llx.StringDataPtr(n.NetworkInterfaceId),
 				"ipv6Native":       llx.BoolDataPtr(n.Ipv6Native),
 				"macAddress":       llx.StringDataPtr(n.MacAddress),
 				"privateDnsName":   llx.StringDataPtr(n.PrivateDnsName),
+				"privateIpAddress": llx.StringDataPtr(n.PrivateIpAddress),
+				"requesterManaged": llx.BoolDataPtr(n.RequesterManaged),
+				"sourceDestCheck":  llx.BoolDataPtr(n.SourceDestCheck),
+				"status":           llx.StringData(string(n.Status)),
+				"tags":             llx.MapData(Ec2TagsToMap(n.TagSet), types.String),
 			}
 			mqlNetworkInterface, err := CreateResource(i.MqlRuntime, "aws.ec2.networkinterface", args)
 			if err != nil {

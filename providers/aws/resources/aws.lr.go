@@ -4087,6 +4087,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.networkinterface.privateDnsName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Networkinterface).GetPrivateDnsName()).ToDataRes(types.String)
 	},
+	"aws.ec2.networkinterface.privateIpAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Networkinterface).GetPrivateIpAddress()).ToDataRes(types.String)
+	},
 	"aws.ec2.keypair.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Keypair).GetArn()).ToDataRes(types.String)
 	},
@@ -9404,6 +9407,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.ec2.networkinterface.privateDnsName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Networkinterface).PrivateDnsName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.networkinterface.privateIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Networkinterface).PrivateIpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.keypair.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24257,6 +24264,7 @@ type mqlAwsEc2Networkinterface struct {
 	Ipv6Native plugin.TValue[bool]
 	MacAddress plugin.TValue[string]
 	PrivateDnsName plugin.TValue[string]
+	PrivateIpAddress plugin.TValue[string]
 }
 
 // createAwsEc2Networkinterface creates a new instance of this resource
@@ -24377,6 +24385,10 @@ func (c *mqlAwsEc2Networkinterface) GetMacAddress() *plugin.TValue[string] {
 
 func (c *mqlAwsEc2Networkinterface) GetPrivateDnsName() *plugin.TValue[string] {
 	return &c.PrivateDnsName
+}
+
+func (c *mqlAwsEc2Networkinterface) GetPrivateIpAddress() *plugin.TValue[string] {
+	return &c.PrivateIpAddress
 }
 
 // mqlAwsEc2Keypair for the aws.ec2.keypair resource

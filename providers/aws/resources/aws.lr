@@ -1909,7 +1909,7 @@ private aws.sqs.queue {
   // Whether SSE is enabled for the queue
   sqsManagedSseEnabled() bool
   // The type of queue: Fifo or Standard
-  queueType() string 
+  queueType() string
   // URL for the queue
   url string
   // Visibility timeout for the queue
@@ -2843,7 +2843,7 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
 }
 
 // AWS EC2 network interface
-private aws.ec2.networkinterface @defaults("id macAddress description") {
+private aws.ec2.networkinterface @defaults("id privateIpAddress macAddress") {
   // The ID of the network interface
   id string
   // The description of the network interface
@@ -2870,6 +2870,8 @@ private aws.ec2.networkinterface @defaults("id macAddress description") {
   macAddress string
   // The private DNS name of the network interface (IPv4)
   privateDnsName string
+  // The private IPv4 address of the network interface
+  privateIpAddress string
 }
 
 // Amazon EC2 key pair

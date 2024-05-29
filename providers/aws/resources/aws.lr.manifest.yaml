@@ -1170,6 +1170,7 @@ resources:
       ipv6Native: {}
       macAddress: {}
       privateDnsName: {}
+      privateIpAddress: {}
       requesterManaged: {}
       securityGroups: {}
       sourceDestCheck: {}
