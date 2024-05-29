@@ -7,7 +7,7 @@ toolchain go1.22.0
 replace go.mondoo.com/cnquery/v11 => ../..
 
 require (
-	github.com/oracle/oci-go-sdk/v65 v65.65.3
+	github.com/oracle/oci-go-sdk/v65 v65.66.0
 	github.com/rs/zerolog v1.33.0
 	go.mondoo.com/cnquery/v11 v11.5.0
 )
