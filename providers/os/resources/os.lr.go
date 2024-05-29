@@ -434,6 +434,14 @@ func init() {
 			Init: initWindowsFeature,
 			Create: createWindowsFeature,
 		},
+		"windows.serverFeature": {
+			Init: initWindowsServerFeature,
+			Create: createWindowsServerFeature,
+		},
+		"windows.optionalFeature": {
+			Init: initWindowsOptionalFeature,
+			Create: createWindowsOptionalFeature,
+		},
 		"windows.firewall": {
 			// to override args, implement: initWindowsFirewall(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindowsFirewall,
@@ -1974,6 +1982,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.features": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindows).GetFeatures()).ToDataRes(types.Array(types.Resource("windows.feature")))
 	},
+	"windows.serverFeatures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindows).GetServerFeatures()).ToDataRes(types.Array(types.Resource("windows.serverFeature")))
+	},
+	"windows.optionalFeatures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindows).GetOptionalFeatures()).ToDataRes(types.Array(types.Resource("windows.optionalFeature")))
+	},
 	"windows.hotfix.hotfixId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsHotfix).GetHotfixId()).ToDataRes(types.String)
 	},
@@ -2006,6 +2020,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.feature.installState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsFeature).GetInstallState()).ToDataRes(types.Int)
+	},
+	"windows.serverFeature.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsServerFeature).GetPath()).ToDataRes(types.String)
+	},
+	"windows.serverFeature.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsServerFeature).GetName()).ToDataRes(types.String)
+	},
+	"windows.serverFeature.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsServerFeature).GetDisplayName()).ToDataRes(types.String)
+	},
+	"windows.serverFeature.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsServerFeature).GetDescription()).ToDataRes(types.String)
+	},
+	"windows.serverFeature.installed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsServerFeature).GetInstalled()).ToDataRes(types.Bool)
+	},
+	"windows.serverFeature.installState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsServerFeature).GetInstallState()).ToDataRes(types.Int)
+	},
+	"windows.optionalFeature.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsOptionalFeature).GetName()).ToDataRes(types.String)
+	},
+	"windows.optionalFeature.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsOptionalFeature).GetDisplayName()).ToDataRes(types.String)
+	},
+	"windows.optionalFeature.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsOptionalFeature).GetDescription()).ToDataRes(types.String)
+	},
+	"windows.optionalFeature.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsOptionalFeature).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.optionalFeature.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsOptionalFeature).GetState()).ToDataRes(types.Int)
 	},
 	"windows.firewall.settings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsFirewall).GetSettings()).ToDataRes(types.Dict)
@@ -4530,6 +4577,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlWindows).Features, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"windows.serverFeatures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindows).ServerFeatures, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"windows.optionalFeatures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindows).OptionalFeatures, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"windows.hotfix.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlWindowsHotfix).__id, ok = v.Value.(string)
 			return
@@ -4580,6 +4635,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"windows.feature.installState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsFeature).InstallState, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.serverFeature.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlWindowsServerFeature).__id, ok = v.Value.(string)
+			return
+		},
+	"windows.serverFeature.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsServerFeature).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.serverFeature.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsServerFeature).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.serverFeature.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsServerFeature).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.serverFeature.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsServerFeature).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.serverFeature.installed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsServerFeature).Installed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.serverFeature.installState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsServerFeature).InstallState, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.optionalFeature.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlWindowsOptionalFeature).__id, ok = v.Value.(string)
+			return
+		},
+	"windows.optionalFeature.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsOptionalFeature).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.optionalFeature.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsOptionalFeature).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.optionalFeature.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsOptionalFeature).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.optionalFeature.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsOptionalFeature).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.optionalFeature.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsOptionalFeature).State, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"windows.firewall.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12982,6 +13089,8 @@ type mqlWindows struct {
 	ComputerInfo plugin.TValue[interface{}]
 	Hotfixes plugin.TValue[[]interface{}]
 	Features plugin.TValue[[]interface{}]
+	ServerFeatures plugin.TValue[[]interface{}]
+	OptionalFeatures plugin.TValue[[]interface{}]
 }
 
 // createWindows creates a new instance of this resource
@@ -13051,6 +13160,38 @@ func (c *mqlWindows) GetFeatures() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.features()
+	})
+}
+
+func (c *mqlWindows) GetServerFeatures() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.ServerFeatures, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows", c.__id, "serverFeatures")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.serverFeatures()
+	})
+}
+
+func (c *mqlWindows) GetOptionalFeatures() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.OptionalFeatures, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows", c.__id, "optionalFeatures")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.optionalFeatures()
 	})
 }
 
@@ -13195,6 +13336,149 @@ func (c *mqlWindowsFeature) GetInstalled() *plugin.TValue[bool] {
 
 func (c *mqlWindowsFeature) GetInstallState() *plugin.TValue[int64] {
 	return &c.InstallState
+}
+
+// mqlWindowsServerFeature for the windows.serverFeature resource
+type mqlWindowsServerFeature struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlWindowsServerFeatureInternal it will be used here
+	Path plugin.TValue[string]
+	Name plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	Description plugin.TValue[string]
+	Installed plugin.TValue[bool]
+	InstallState plugin.TValue[int64]
+}
+
+// createWindowsServerFeature creates a new instance of this resource
+func createWindowsServerFeature(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsServerFeature{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.serverFeature", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsServerFeature) MqlName() string {
+	return "windows.serverFeature"
+}
+
+func (c *mqlWindowsServerFeature) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsServerFeature) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlWindowsServerFeature) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlWindowsServerFeature) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlWindowsServerFeature) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlWindowsServerFeature) GetInstalled() *plugin.TValue[bool] {
+	return &c.Installed
+}
+
+func (c *mqlWindowsServerFeature) GetInstallState() *plugin.TValue[int64] {
+	return &c.InstallState
+}
+
+// mqlWindowsOptionalFeature for the windows.optionalFeature resource
+type mqlWindowsOptionalFeature struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlWindowsOptionalFeatureInternal it will be used here
+	Name plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	Description plugin.TValue[string]
+	Enabled plugin.TValue[bool]
+	State plugin.TValue[int64]
+}
+
+// createWindowsOptionalFeature creates a new instance of this resource
+func createWindowsOptionalFeature(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsOptionalFeature{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.optionalFeature", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsOptionalFeature) MqlName() string {
+	return "windows.optionalFeature"
+}
+
+func (c *mqlWindowsOptionalFeature) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsOptionalFeature) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlWindowsOptionalFeature) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlWindowsOptionalFeature) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlWindowsOptionalFeature) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlWindowsOptionalFeature) GetState() *plugin.TValue[int64] {
+	return &c.State
 }
 
 // mqlWindowsFirewall for the windows.firewall resource

@@ -1387,8 +1387,14 @@ windows {
   // Hotfixes installed on the computer
   hotfixes() []windows.hotfix
 
-  // Information about Windows Server roles, role services, and features that are available for installation and installed on a specified server.
+  // Deprecated: use serverFeatures instead
   features() []windows.feature
+
+  // Information about Windows Server roles, role services, and features that are available for installation and installed on a specified server.
+  serverFeatures() []windows.serverFeature
+
+  // Information about optional features in a Windows image.
+  optionalFeatures() []windows.optionalFeature
 }
 
 // Windows hotfix resource
@@ -1406,6 +1412,7 @@ windows.hotfix {
   installedBy string
 }
 
+// Deprecated: use serverFeature instead
 // Windows feature resource
 windows.feature {
   init(name string)
@@ -1421,6 +1428,38 @@ windows.feature {
   installed bool
   // Feature installation state
   installState int
+}
+
+// Windows Server feature resource
+windows.serverFeature {
+  init(name string)
+  // Feature full path
+  path string
+  // Command IDs of role, role service, or feature
+  name string
+  // Feature name
+  displayName string
+  // Feature description
+  description string
+  // Whether the feature is installed
+  installed bool
+  // Feature installation state
+  installState int
+}
+
+// Windows optional feature resource
+windows.optionalFeature @defaults("name enabled") {
+  init(name string)
+  // Command ID of optional feature
+  name string
+  // Feature name
+  displayName string
+  // Feature description
+  description string
+  // Whether the feature is enabled
+  enabled bool
+  // Feature installation state
+  state int
 }
 
 // Windows Firewall resource
