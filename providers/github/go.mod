@@ -8,7 +8,7 @@ toolchain go1.22.0
 
 require (
 	github.com/bradleyfalzon/ghinstallation/v2 v2.10.0
-	github.com/cockroachdb/errors v1.11.2
+	github.com/cockroachdb/errors v1.11.3
 	github.com/gobwas/glob v0.2.3
 	github.com/google/go-github/v61 v61.0.0
 	github.com/rs/zerolog v1.33.0
