@@ -228,6 +228,7 @@ func (ccx *CycloneDX) convertCycloneDxToSbom(bom *cyclonedx.BOM) (*Sbom, error) 
 
 var familyMap = map[string][]string{
 	"windows": []string{"windows", "os"},
+	"macos":   []string{"darwin", "bsd", "unix", "os"},
 	"debian":  []string{"linux", "unix", "os"},
 	"ubuntu":  []string{"linux", "unix", "os"},
 	"centos":  []string{"linux", "unix", "os"},
