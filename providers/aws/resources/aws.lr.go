@@ -302,6 +302,10 @@ func init() {
 			// to override args, implement: initAwsElb(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsElb,
 		},
+		"aws.elb.targetgroup": {
+			// to override args, implement: initAwsElbTargetgroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsElbTargetgroup,
+		},
 		"aws.elb.loadbalancer": {
 			Init: initAwsElbLoadbalancer,
 			Create: createAwsElbLoadbalancer,
@@ -1971,6 +1975,57 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.elb.loadBalancers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElb).GetLoadBalancers()).ToDataRes(types.Array(types.Resource("aws.elb.loadbalancer")))
 	},
+	"aws.elb.targetgroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbTargetgroup).GetName()).ToDataRes(types.String)
+	},
+	"aws.elb.targetgroup.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbTargetgroup).GetArn()).ToDataRes(types.String)
+	},
+	"aws.elb.targetgroup.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbTargetgroup).GetPort()).ToDataRes(types.Int)
+	},
+	"aws.elb.targetgroup.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbTargetgroup).GetProtocol()).ToDataRes(types.String)
+	},
+	"aws.elb.targetgroup.protocolVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbTargetgroup).GetProtocolVersion()).ToDataRes(types.String)
+	},
+	"aws.elb.targetgroup.ipAddressType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbTargetgroup).GetIpAddressType()).ToDataRes(types.String)
+	},
+	"aws.elb.targetgroup.healthCheckEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbTargetgroup).GetHealthCheckEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.elb.targetgroup.healthCheckIntervalSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbTargetgroup).GetHealthCheckIntervalSeconds()).ToDataRes(types.Int)
+	},
+	"aws.elb.targetgroup.healthCheckPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbTargetgroup).GetHealthCheckPath()).ToDataRes(types.String)
+	},
+	"aws.elb.targetgroup.healthCheckPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbTargetgroup).GetHealthCheckPort()).ToDataRes(types.String)
+	},
+	"aws.elb.targetgroup.healthCheckProtocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbTargetgroup).GetHealthCheckProtocol()).ToDataRes(types.String)
+	},
+	"aws.elb.targetgroup.healthCheckTimeoutSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbTargetgroup).GetHealthCheckTimeoutSeconds()).ToDataRes(types.Int)
+	},
+	"aws.elb.targetgroup.targetType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbTargetgroup).GetTargetType()).ToDataRes(types.String)
+	},
+	"aws.elb.targetgroup.unhealthyThresholdCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbTargetgroup).GetUnhealthyThresholdCount()).ToDataRes(types.Int)
+	},
+	"aws.elb.targetgroup.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbTargetgroup).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
+	"aws.elb.targetgroup.ec2Targets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbTargetgroup).GetEc2Targets()).ToDataRes(types.Array(types.Resource("aws.ec2.instance")))
+	},
+	"aws.elb.targetgroup.lambdaTargets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbTargetgroup).GetLambdaTargets()).ToDataRes(types.Array(types.Resource("aws.lambda.function")))
+	},
 	"aws.elb.loadbalancer.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbLoadbalancer).GetArn()).ToDataRes(types.String)
 	},
@@ -2012,6 +2067,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.elb.loadbalancer.vpc": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbLoadbalancer).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
+	"aws.elb.loadbalancer.targetGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbLoadbalancer).GetTargetGroups()).ToDataRes(types.Array(types.Resource("aws.elb.targetgroup")))
 	},
 	"aws.codebuild.projects": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCodebuild).GetProjects()).ToDataRes(types.Array(types.Resource("aws.codebuild.project")))
@@ -6160,6 +6218,78 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsElb).LoadBalancers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"aws.elb.targetgroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsElbTargetgroup).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.elb.targetgroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbTargetgroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elb.targetgroup.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbTargetgroup).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elb.targetgroup.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbTargetgroup).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.elb.targetgroup.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbTargetgroup).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elb.targetgroup.protocolVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbTargetgroup).ProtocolVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elb.targetgroup.ipAddressType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbTargetgroup).IpAddressType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elb.targetgroup.healthCheckEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbTargetgroup).HealthCheckEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.elb.targetgroup.healthCheckIntervalSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbTargetgroup).HealthCheckIntervalSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.elb.targetgroup.healthCheckPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbTargetgroup).HealthCheckPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elb.targetgroup.healthCheckPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbTargetgroup).HealthCheckPort, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elb.targetgroup.healthCheckProtocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbTargetgroup).HealthCheckProtocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elb.targetgroup.healthCheckTimeoutSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbTargetgroup).HealthCheckTimeoutSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.elb.targetgroup.targetType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbTargetgroup).TargetType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elb.targetgroup.unhealthyThresholdCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbTargetgroup).UnhealthyThresholdCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.elb.targetgroup.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbTargetgroup).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
+	"aws.elb.targetgroup.ec2Targets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbTargetgroup).Ec2Targets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.elb.targetgroup.lambdaTargets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbTargetgroup).LambdaTargets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"aws.elb.loadbalancer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsElbLoadbalancer).__id, ok = v.Value.(string)
 			return
@@ -6218,6 +6348,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.elb.loadbalancer.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElbLoadbalancer).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
+	"aws.elb.loadbalancer.targetGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbLoadbalancer).TargetGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"aws.codebuild.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15381,6 +15515,171 @@ func (c *mqlAwsElb) GetLoadBalancers() *plugin.TValue[[]interface{}] {
 	})
 }
 
+// mqlAwsElbTargetgroup for the aws.elb.targetgroup resource
+type mqlAwsElbTargetgroup struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlAwsElbTargetgroupInternal
+	Name plugin.TValue[string]
+	Arn plugin.TValue[string]
+	Port plugin.TValue[int64]
+	Protocol plugin.TValue[string]
+	ProtocolVersion plugin.TValue[string]
+	IpAddressType plugin.TValue[string]
+	HealthCheckEnabled plugin.TValue[bool]
+	HealthCheckIntervalSeconds plugin.TValue[int64]
+	HealthCheckPath plugin.TValue[string]
+	HealthCheckPort plugin.TValue[string]
+	HealthCheckProtocol plugin.TValue[string]
+	HealthCheckTimeoutSeconds plugin.TValue[int64]
+	TargetType plugin.TValue[string]
+	UnhealthyThresholdCount plugin.TValue[int64]
+	Vpc plugin.TValue[*mqlAwsVpc]
+	Ec2Targets plugin.TValue[[]interface{}]
+	LambdaTargets plugin.TValue[[]interface{}]
+}
+
+// createAwsElbTargetgroup creates a new instance of this resource
+func createAwsElbTargetgroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsElbTargetgroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.elb.targetgroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsElbTargetgroup) MqlName() string {
+	return "aws.elb.targetgroup"
+}
+
+func (c *mqlAwsElbTargetgroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsElbTargetgroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsElbTargetgroup) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsElbTargetgroup) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlAwsElbTargetgroup) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlAwsElbTargetgroup) GetProtocolVersion() *plugin.TValue[string] {
+	return &c.ProtocolVersion
+}
+
+func (c *mqlAwsElbTargetgroup) GetIpAddressType() *plugin.TValue[string] {
+	return &c.IpAddressType
+}
+
+func (c *mqlAwsElbTargetgroup) GetHealthCheckEnabled() *plugin.TValue[bool] {
+	return &c.HealthCheckEnabled
+}
+
+func (c *mqlAwsElbTargetgroup) GetHealthCheckIntervalSeconds() *plugin.TValue[int64] {
+	return &c.HealthCheckIntervalSeconds
+}
+
+func (c *mqlAwsElbTargetgroup) GetHealthCheckPath() *plugin.TValue[string] {
+	return &c.HealthCheckPath
+}
+
+func (c *mqlAwsElbTargetgroup) GetHealthCheckPort() *plugin.TValue[string] {
+	return &c.HealthCheckPort
+}
+
+func (c *mqlAwsElbTargetgroup) GetHealthCheckProtocol() *plugin.TValue[string] {
+	return &c.HealthCheckProtocol
+}
+
+func (c *mqlAwsElbTargetgroup) GetHealthCheckTimeoutSeconds() *plugin.TValue[int64] {
+	return &c.HealthCheckTimeoutSeconds
+}
+
+func (c *mqlAwsElbTargetgroup) GetTargetType() *plugin.TValue[string] {
+	return &c.TargetType
+}
+
+func (c *mqlAwsElbTargetgroup) GetUnhealthyThresholdCount() *plugin.TValue[int64] {
+	return &c.UnhealthyThresholdCount
+}
+
+func (c *mqlAwsElbTargetgroup) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elb.targetgroup", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
+func (c *mqlAwsElbTargetgroup) GetEc2Targets() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Ec2Targets, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elb.targetgroup", c.__id, "ec2Targets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.ec2Targets()
+	})
+}
+
+func (c *mqlAwsElbTargetgroup) GetLambdaTargets() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.LambdaTargets, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elb.targetgroup", c.__id, "lambdaTargets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.lambdaTargets()
+	})
+}
+
 // mqlAwsElbLoadbalancer for the aws.elb.loadbalancer resource
 type mqlAwsElbLoadbalancer struct {
 	MqlRuntime *plugin.Runtime
@@ -15400,6 +15699,7 @@ type mqlAwsElbLoadbalancer struct {
 	Region plugin.TValue[string]
 	ElbType plugin.TValue[string]
 	Vpc plugin.TValue[*mqlAwsVpc]
+	TargetGroups plugin.TValue[[]interface{}]
 }
 
 // createAwsElbLoadbalancer creates a new instance of this resource
@@ -15497,6 +15797,22 @@ func (c *mqlAwsElbLoadbalancer) GetElbType() *plugin.TValue[string] {
 
 func (c *mqlAwsElbLoadbalancer) GetVpc() *plugin.TValue[*mqlAwsVpc] {
 	return &c.Vpc
+}
+
+func (c *mqlAwsElbLoadbalancer) GetTargetGroups() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.TargetGroups, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elb.loadbalancer", c.__id, "targetGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.targetGroups()
+	})
 }
 
 // mqlAwsCodebuild for the aws.codebuild resource
