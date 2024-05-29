@@ -140,6 +140,11 @@ func ResourcesFromManifest(r io.Reader) ([]k8sRuntime.Object, error) {
 			break
 		}
 
+		// If for some reason there is no content in the raw object, we skip it.
+		if len(rawObj.Raw) == 0 {
+			continue
+		}
+
 		obj, _, err := uniDecoder.Decode(rawObj.Raw, nil, nil)
 		if err != nil {
 			obj, _, err = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme).Decode(rawObj.Raw, nil, nil)
