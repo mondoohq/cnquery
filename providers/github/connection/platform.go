@@ -17,6 +17,7 @@ const (
 	DiscoveryUser         = "user"       // deprecated: use users
 	DiscoveryOrganization = "organization"
 	DiscoveryTerraform    = "terraform"
+	DiscoveryK8sManifests = "k8s-manifests"
 )
 
 var (

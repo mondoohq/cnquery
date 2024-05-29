@@ -136,23 +136,7 @@ func DiscoverAssets(ctx context.Context, inv *inventory.Inventory, upstream *ups
 		}
 
 		// for all discovered assets, we apply mondoo-specific labels and annotations that come from the root asset
-		for _, a := range rootAssetWithRuntime.Runtime.Provider.Connection.Inventory.Spec.Assets {
-			// create runtime for root asset
-			assetWithRuntime, err := createRuntimeForAsset(a, upstream, recording)
-			if err != nil {
-				log.Error().Err(err).Str("asset", a.Name).Msg("unable to create runtime for asset")
-				discoveredAssets.AddError(a, err)
-				continue
-			}
-
-			resolvedAsset := assetWithRuntime.Runtime.Provider.Connection.Asset
-			prepareAsset(resolvedAsset, resolvedRootAsset, runtimeLabels)
-
-			// If the asset has been already added, we should close its runtime
-			if !discoveredAssets.Add(resolvedAsset, assetWithRuntime.Runtime) {
-				assetWithRuntime.Runtime.Close()
-			}
-		}
+		discoverAssets(rootAssetWithRuntime, resolvedRootAsset, discoveredAssets, runtimeLabels, upstream, recording)
 	}
 
 	// if there is exactly one asset, assure that the --asset-name is used
@@ -164,6 +148,32 @@ func DiscoverAssets(ctx context.Context, inv *inventory.Inventory, upstream *ups
 	}
 
 	return discoveredAssets, nil
+}
+
+func discoverAssets(rootAssetWithRuntime *AssetWithRuntime, resolvedRootAsset *inventory.Asset, discoveredAssets *DiscoveredAssets, runtimeLabels map[string]string, upstream *upstream.UpstreamConfig, recording llx.Recording) {
+	// for all discovered assets, we apply mondoo-specific labels and annotations that come from the root asset
+	for _, a := range rootAssetWithRuntime.Runtime.Provider.Connection.Inventory.Spec.Assets {
+		// create runtime for root asset
+		assetWithRuntime, err := createRuntimeForAsset(a, upstream, recording)
+		if err != nil {
+			log.Error().Err(err).Str("asset", a.Name).Msg("unable to create runtime for asset")
+			discoveredAssets.AddError(a, err)
+			continue
+		}
+
+		resolvedAsset := assetWithRuntime.Runtime.Provider.Connection.Asset
+		if len(resolvedAsset.PlatformIds) > 0 {
+			prepareAsset(resolvedAsset, resolvedRootAsset, runtimeLabels)
+
+			// If the asset has been already added, we should close its runtime
+			if !discoveredAssets.Add(resolvedAsset, assetWithRuntime.Runtime) {
+				assetWithRuntime.Runtime.Close()
+			}
+		} else {
+			discoverAssets(assetWithRuntime, resolvedRootAsset, discoveredAssets, runtimeLabels, upstream, recording)
+			assetWithRuntime.Runtime.Close()
+		}
+	}
 }
 
 func createRuntimeForAsset(asset *inventory.Asset, upstream *upstream.UpstreamConfig, recording llx.Recording) (*AssetWithRuntime, error) {
