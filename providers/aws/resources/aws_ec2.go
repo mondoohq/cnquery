@@ -913,6 +913,105 @@ type mqlAwsEc2InstanceInternal struct {
 	instanceCache ec2types.Instance
 }
 
+func (i *mqlAwsEc2Instance) networkInterfaces() ([]interface{}, error) {
+	conn := i.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Ec2(i.Region.Data)
+	ctx := context.Background()
+	nextToken := aws.String("no_token_to_start_with")
+	params := &ec2.DescribeNetworkInterfacesInput{Filters: []ec2types.Filter{{Name: aws.String("attachment.instance-id"), Values: []string{i.InstanceId.Data}}}}
+	res := []interface{}{}
+	for nextToken != nil {
+		nis, err := svc.DescribeNetworkInterfaces(ctx, params)
+		if err != nil {
+			return nil, err
+		}
+		for ni := range nis.NetworkInterfaces {
+			n := nis.NetworkInterfaces[ni]
+			args := map[string]*llx.RawData{
+				"id":               llx.StringDataPtr(n.NetworkInterfaceId),
+				"description":      llx.StringDataPtr(n.Description),
+				"status":           llx.StringData(string(n.Status)),
+				"sourceDestCheck":  llx.BoolDataPtr(n.SourceDestCheck),
+				"requesterManaged": llx.BoolDataPtr(n.RequesterManaged),
+				"tags":             llx.MapData(Ec2TagsToMap(n.TagSet), types.String),
+				"availabilityZone": llx.StringDataPtr(n.AvailabilityZone),
+				"ipv6Native":       llx.BoolDataPtr(n.Ipv6Native),
+				"macAddress":       llx.StringDataPtr(n.MacAddress),
+				"privateDnsName":   llx.StringDataPtr(n.PrivateDnsName),
+			}
+			mqlNetworkInterface, err := CreateResource(i.MqlRuntime, "aws.ec2.networkinterface", args)
+			if err != nil {
+				return nil, err
+			}
+			mqlNetworkInterface.(*mqlAwsEc2Networkinterface).networkInterfaceCache = n
+			mqlNetworkInterface.(*mqlAwsEc2Networkinterface).region = i.Region.Data
+			res = append(res, mqlNetworkInterface)
+		}
+		nextToken = nis.NextToken
+		if nis.NextToken != nil {
+			params.NextToken = nextToken
+		}
+	}
+	return res, nil
+}
+
+type mqlAwsEc2NetworkinterfaceInternal struct {
+	networkInterfaceCache ec2types.NetworkInterface
+	region                string
+}
+
+func (i *mqlAwsEc2Networkinterface) securityGroups() ([]interface{}, error) {
+	if i.networkInterfaceCache.Groups != nil {
+		sgs := []interface{}{}
+		conn := i.MqlRuntime.Connection.(*connection.AwsConnection)
+
+		for nig := range i.networkInterfaceCache.Groups {
+			g := *i.networkInterfaceCache.Groups[nig].GroupId
+
+			mqlSg, err := NewResource(i.MqlRuntime, "aws.ec2.securitygroup",
+				map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(securityGroupArnPattern, i.region, conn.AccountId(), g))})
+			if err != nil {
+				return nil, err
+			}
+			sgs = append(sgs, mqlSg)
+		}
+		return sgs, nil
+	}
+	i.SecurityGroups.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
+}
+
+func (i *mqlAwsEc2Networkinterface) subnet() (*mqlAwsVpcSubnet, error) {
+	subn := i.networkInterfaceCache.SubnetId
+	conn := i.MqlRuntime.Connection.(*connection.AwsConnection)
+	if subn != nil {
+
+		arn := fmt.Sprintf(subnetArnPattern, i.region, conn.AccountId(), *subn)
+		res, err := NewResource(i.MqlRuntime, "aws.vpc.subnet", map[string]*llx.RawData{"arn": llx.StringData(arn)})
+		if err != nil {
+			return nil, err
+		}
+		return res.(*mqlAwsVpcSubnet), nil
+	}
+	i.Subnet.State = plugin.StateIsNull | plugin.StateIsSet
+	return nil, nil
+}
+
+func (i *mqlAwsEc2Networkinterface) vpc() (*mqlAwsVpc, error) {
+	vpcId := i.networkInterfaceCache.VpcId
+	if vpcId != nil {
+		conn := i.MqlRuntime.Connection.(*connection.AwsConnection)
+		vpcArn := fmt.Sprintf(vpcArnPattern, i.region, conn.AccountId(), convert.ToString(vpcId))
+		res, err := NewResource(i.MqlRuntime, "aws.vpc", map[string]*llx.RawData{"arn": llx.StringData(vpcArn)})
+		if err != nil {
+			return nil, err
+		}
+		return res.(*mqlAwsVpc), nil
+	}
+	i.Vpc.State = plugin.StateIsNull | plugin.StateIsSet
+	return nil, nil
+}
+
 func (i *mqlAwsEc2Instance) securityGroups() ([]interface{}, error) {
 	if i.instanceCache.SecurityGroups != nil {
 		sgs := []interface{}{}
