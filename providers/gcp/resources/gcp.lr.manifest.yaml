@@ -175,6 +175,7 @@ resources:
       accessApprovalSettings: {}
       apiKeys: {}
       bigquery: {}
+      binaryAuthorization: {}
       cloudFunctions: {}
       cloudRun: {}
       commonInstanceMetadata: {}
@@ -373,6 +374,80 @@ resources:
     refs:
     - title: Introduction to tables
       url: https://cloud.google.com/bigquery/docs/tables-intro
+  gcp.project.binaryAuthorization:
+    fields:
+      admissionWhitelistPatterns: {}
+      clusterAdmissionRules: {}
+      defaultAdmissionRule: {}
+      globalPolicyEvaluationMode: {}
+      istioServiceIdentityAdmissionRules: {}
+      kubernetesNamespaceAdmissionRules: {}
+      kubernetesServiceAccountAdmissionRules: {}
+      name: {}
+      policy: {}
+      updated: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcp
+  gcp.project.binaryAuthorization.admissionRule:
+    fields:
+      enforcementMode: {}
+      evaluationMode: {}
+      requireAttestationsBy: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcp
+  gcp.project.binaryAuthorization.policy:
+    fields:
+      admissionWhitelistPatterns: {}
+      clusterAdmissionRules: {}
+      defaultAdmissionRule: {}
+      globalPolicyEvaluationMode: {}
+      istioServiceIdentityAdmissionRules: {}
+      kubernetesNamespaceAdmissionRules: {}
+      kubernetesServiceAccountAdmissionRules: {}
+      name: {}
+      updated: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcp
+  gcp.project.binaryAuthorizationControl:
+    fields:
+      policy: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcp
+  gcp.project.binaryAuthorizationControl.admissionRule:
+    fields:
+      enforcementMode: {}
+      evaluationMode: {}
+      requireAttestationsBy: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcp
+  gcp.project.binaryAuthorizationControl.policy:
+    fields:
+      admissionWhitelistPatterns: {}
+      clusterAdmissionRules: {}
+      defaultAdmissionRule: {}
+      globalPolicyEvaluationMode: {}
+      istioServiceIdentityAdmissionRules: {}
+      kubernetesNamespaceAdmissionRules: {}
+      kubernetesServiceAccountAdmissionRules: {}
+      name: {}
+      updated: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcp
   gcp.project.cloudFunction:
     fields:
       availableMemoryMb: {}

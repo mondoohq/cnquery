@@ -506,6 +506,18 @@ func init() {
 			// to override args, implement: initGcpProjectMonitoringServiceAlertPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectMonitoringServiceAlertPolicy,
 		},
+		"gcp.project.binaryAuthorizationControl": {
+			// to override args, implement: initGcpProjectBinaryAuthorizationControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectBinaryAuthorizationControl,
+		},
+		"gcp.project.binaryAuthorizationControl.policy": {
+			// to override args, implement: initGcpProjectBinaryAuthorizationControlPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectBinaryAuthorizationControlPolicy,
+		},
+		"gcp.project.binaryAuthorizationControl.admissionRule": {
+			// to override args, implement: initGcpProjectBinaryAuthorizationControlAdmissionRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectBinaryAuthorizationControlAdmissionRule,
+		},
 	}
 }
 
@@ -726,6 +738,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.monitoring": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetMonitoring()).ToDataRes(types.Resource("gcp.project.monitoringService"))
+	},
+	"gcp.project.binaryAuthorization": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetBinaryAuthorization()).ToDataRes(types.Resource("gcp.project.binaryAuthorizationControl"))
 	},
 	"gcp.service.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpService).GetProjectId()).ToDataRes(types.String)
@@ -4036,6 +4051,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.monitoringService.alertPolicy.alertStrategy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectMonitoringServiceAlertPolicy).GetAlertStrategy()).ToDataRes(types.Dict)
 	},
+	"gcp.project.binaryAuthorizationControl.policy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBinaryAuthorizationControl).GetPolicy()).ToDataRes(types.Resource("gcp.project.binaryAuthorizationControl.policy"))
+	},
+	"gcp.project.binaryAuthorizationControl.policy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBinaryAuthorizationControlPolicy).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.binaryAuthorizationControl.policy.globalPolicyEvaluationMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBinaryAuthorizationControlPolicy).GetGlobalPolicyEvaluationMode()).ToDataRes(types.String)
+	},
+	"gcp.project.binaryAuthorizationControl.policy.admissionWhitelistPatterns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBinaryAuthorizationControlPolicy).GetAdmissionWhitelistPatterns()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.binaryAuthorizationControl.policy.clusterAdmissionRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBinaryAuthorizationControlPolicy).GetClusterAdmissionRules()).ToDataRes(types.Map(types.String, types.Resource("gcp.project.binaryAuthorizationControl.admissionRule")))
+	},
+	"gcp.project.binaryAuthorizationControl.policy.kubernetesNamespaceAdmissionRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBinaryAuthorizationControlPolicy).GetKubernetesNamespaceAdmissionRules()).ToDataRes(types.Map(types.String, types.Resource("gcp.project.binaryAuthorizationControl.admissionRule")))
+	},
+	"gcp.project.binaryAuthorizationControl.policy.kubernetesServiceAccountAdmissionRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBinaryAuthorizationControlPolicy).GetKubernetesServiceAccountAdmissionRules()).ToDataRes(types.Map(types.String, types.Resource("gcp.project.binaryAuthorizationControl.admissionRule")))
+	},
+	"gcp.project.binaryAuthorizationControl.policy.istioServiceIdentityAdmissionRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBinaryAuthorizationControlPolicy).GetIstioServiceIdentityAdmissionRules()).ToDataRes(types.Map(types.String, types.Resource("gcp.project.binaryAuthorizationControl.admissionRule")))
+	},
+	"gcp.project.binaryAuthorizationControl.policy.defaultAdmissionRule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBinaryAuthorizationControlPolicy).GetDefaultAdmissionRule()).ToDataRes(types.Resource("gcp.project.binaryAuthorizationControl.admissionRule"))
+	},
+	"gcp.project.binaryAuthorizationControl.policy.updated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBinaryAuthorizationControlPolicy).GetUpdated()).ToDataRes(types.Time)
+	},
+	"gcp.project.binaryAuthorizationControl.admissionRule.evaluationMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBinaryAuthorizationControlAdmissionRule).GetEvaluationMode()).ToDataRes(types.String)
+	},
+	"gcp.project.binaryAuthorizationControl.admissionRule.enforcementMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBinaryAuthorizationControlAdmissionRule).GetEnforcementMode()).ToDataRes(types.String)
+	},
+	"gcp.project.binaryAuthorizationControl.admissionRule.requireAttestationsBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBinaryAuthorizationControlAdmissionRule).GetRequireAttestationsBy()).ToDataRes(types.Array(types.String))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -4270,6 +4324,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"gcp.project.monitoring": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProject).Monitoring, ok = plugin.RawToTValue[*mqlGcpProjectMonitoringService](v.Value, v.Error)
+		return
+	},
+	"gcp.project.binaryAuthorization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).BinaryAuthorization, ok = plugin.RawToTValue[*mqlGcpProjectBinaryAuthorizationControl](v.Value, v.Error)
 		return
 	},
 	"gcp.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9152,6 +9210,70 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlGcpProjectMonitoringServiceAlertPolicy).AlertStrategy, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
+	"gcp.project.binaryAuthorizationControl.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGcpProjectBinaryAuthorizationControl).__id, ok = v.Value.(string)
+			return
+		},
+	"gcp.project.binaryAuthorizationControl.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBinaryAuthorizationControl).Policy, ok = plugin.RawToTValue[*mqlGcpProjectBinaryAuthorizationControlPolicy](v.Value, v.Error)
+		return
+	},
+	"gcp.project.binaryAuthorizationControl.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGcpProjectBinaryAuthorizationControlPolicy).__id, ok = v.Value.(string)
+			return
+		},
+	"gcp.project.binaryAuthorizationControl.policy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBinaryAuthorizationControlPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.binaryAuthorizationControl.policy.globalPolicyEvaluationMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBinaryAuthorizationControlPolicy).GlobalPolicyEvaluationMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.binaryAuthorizationControl.policy.admissionWhitelistPatterns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBinaryAuthorizationControlPolicy).AdmissionWhitelistPatterns, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.binaryAuthorizationControl.policy.clusterAdmissionRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBinaryAuthorizationControlPolicy).ClusterAdmissionRules, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.binaryAuthorizationControl.policy.kubernetesNamespaceAdmissionRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBinaryAuthorizationControlPolicy).KubernetesNamespaceAdmissionRules, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.binaryAuthorizationControl.policy.kubernetesServiceAccountAdmissionRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBinaryAuthorizationControlPolicy).KubernetesServiceAccountAdmissionRules, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.binaryAuthorizationControl.policy.istioServiceIdentityAdmissionRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBinaryAuthorizationControlPolicy).IstioServiceIdentityAdmissionRules, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.binaryAuthorizationControl.policy.defaultAdmissionRule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBinaryAuthorizationControlPolicy).DefaultAdmissionRule, ok = plugin.RawToTValue[*mqlGcpProjectBinaryAuthorizationControlAdmissionRule](v.Value, v.Error)
+		return
+	},
+	"gcp.project.binaryAuthorizationControl.policy.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBinaryAuthorizationControlPolicy).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.binaryAuthorizationControl.admissionRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGcpProjectBinaryAuthorizationControlAdmissionRule).__id, ok = v.Value.(string)
+			return
+		},
+	"gcp.project.binaryAuthorizationControl.admissionRule.evaluationMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBinaryAuthorizationControlAdmissionRule).EvaluationMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.binaryAuthorizationControl.admissionRule.enforcementMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBinaryAuthorizationControlAdmissionRule).EnforcementMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.binaryAuthorizationControl.admissionRule.requireAttestationsBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBinaryAuthorizationControlAdmissionRule).RequireAttestationsBy, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -9622,6 +9744,7 @@ type mqlGcpProject struct {
 	AccessApprovalSettings plugin.TValue[*mqlGcpAccessApprovalSettings]
 	Storage plugin.TValue[*mqlGcpProjectStorageService]
 	Monitoring plugin.TValue[*mqlGcpProjectMonitoringService]
+	BinaryAuthorization plugin.TValue[*mqlGcpProjectBinaryAuthorizationControl]
 }
 
 // createGcpProject creates a new instance of this resource
@@ -10030,6 +10153,22 @@ func (c *mqlGcpProject) GetMonitoring() *plugin.TValue[*mqlGcpProjectMonitoringS
 		}
 
 		return c.monitoring()
+	})
+}
+
+func (c *mqlGcpProject) GetBinaryAuthorization() *plugin.TValue[*mqlGcpProjectBinaryAuthorizationControl] {
+	return plugin.GetOrCompute[*mqlGcpProjectBinaryAuthorizationControl](&c.BinaryAuthorization, func() (*mqlGcpProjectBinaryAuthorizationControl, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project", c.__id, "binaryAuthorization")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectBinaryAuthorizationControl), nil
+			}
+		}
+
+		return c.binaryAuthorization()
 	})
 }
 
@@ -21446,4 +21585,186 @@ func (c *mqlGcpProjectMonitoringServiceAlertPolicy) GetUpdatedBy() *plugin.TValu
 
 func (c *mqlGcpProjectMonitoringServiceAlertPolicy) GetAlertStrategy() *plugin.TValue[interface{}] {
 	return &c.AlertStrategy
+}
+
+// mqlGcpProjectBinaryAuthorizationControl for the gcp.project.binaryAuthorizationControl resource
+type mqlGcpProjectBinaryAuthorizationControl struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlGcpProjectBinaryAuthorizationControlInternal it will be used here
+	Policy plugin.TValue[*mqlGcpProjectBinaryAuthorizationControlPolicy]
+}
+
+// createGcpProjectBinaryAuthorizationControl creates a new instance of this resource
+func createGcpProjectBinaryAuthorizationControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectBinaryAuthorizationControl{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.binaryAuthorizationControl", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectBinaryAuthorizationControl) MqlName() string {
+	return "gcp.project.binaryAuthorizationControl"
+}
+
+func (c *mqlGcpProjectBinaryAuthorizationControl) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectBinaryAuthorizationControl) GetPolicy() *plugin.TValue[*mqlGcpProjectBinaryAuthorizationControlPolicy] {
+	return &c.Policy
+}
+
+// mqlGcpProjectBinaryAuthorizationControlPolicy for the gcp.project.binaryAuthorizationControl.policy resource
+type mqlGcpProjectBinaryAuthorizationControlPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlGcpProjectBinaryAuthorizationControlPolicyInternal it will be used here
+	Name plugin.TValue[string]
+	GlobalPolicyEvaluationMode plugin.TValue[string]
+	AdmissionWhitelistPatterns plugin.TValue[[]interface{}]
+	ClusterAdmissionRules plugin.TValue[map[string]interface{}]
+	KubernetesNamespaceAdmissionRules plugin.TValue[map[string]interface{}]
+	KubernetesServiceAccountAdmissionRules plugin.TValue[map[string]interface{}]
+	IstioServiceIdentityAdmissionRules plugin.TValue[map[string]interface{}]
+	DefaultAdmissionRule plugin.TValue[*mqlGcpProjectBinaryAuthorizationControlAdmissionRule]
+	Updated plugin.TValue[*time.Time]
+}
+
+// createGcpProjectBinaryAuthorizationControlPolicy creates a new instance of this resource
+func createGcpProjectBinaryAuthorizationControlPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectBinaryAuthorizationControlPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.binaryAuthorizationControl.policy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectBinaryAuthorizationControlPolicy) MqlName() string {
+	return "gcp.project.binaryAuthorizationControl.policy"
+}
+
+func (c *mqlGcpProjectBinaryAuthorizationControlPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectBinaryAuthorizationControlPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectBinaryAuthorizationControlPolicy) GetGlobalPolicyEvaluationMode() *plugin.TValue[string] {
+	return &c.GlobalPolicyEvaluationMode
+}
+
+func (c *mqlGcpProjectBinaryAuthorizationControlPolicy) GetAdmissionWhitelistPatterns() *plugin.TValue[[]interface{}] {
+	return &c.AdmissionWhitelistPatterns
+}
+
+func (c *mqlGcpProjectBinaryAuthorizationControlPolicy) GetClusterAdmissionRules() *plugin.TValue[map[string]interface{}] {
+	return &c.ClusterAdmissionRules
+}
+
+func (c *mqlGcpProjectBinaryAuthorizationControlPolicy) GetKubernetesNamespaceAdmissionRules() *plugin.TValue[map[string]interface{}] {
+	return &c.KubernetesNamespaceAdmissionRules
+}
+
+func (c *mqlGcpProjectBinaryAuthorizationControlPolicy) GetKubernetesServiceAccountAdmissionRules() *plugin.TValue[map[string]interface{}] {
+	return &c.KubernetesServiceAccountAdmissionRules
+}
+
+func (c *mqlGcpProjectBinaryAuthorizationControlPolicy) GetIstioServiceIdentityAdmissionRules() *plugin.TValue[map[string]interface{}] {
+	return &c.IstioServiceIdentityAdmissionRules
+}
+
+func (c *mqlGcpProjectBinaryAuthorizationControlPolicy) GetDefaultAdmissionRule() *plugin.TValue[*mqlGcpProjectBinaryAuthorizationControlAdmissionRule] {
+	return &c.DefaultAdmissionRule
+}
+
+func (c *mqlGcpProjectBinaryAuthorizationControlPolicy) GetUpdated() *plugin.TValue[*time.Time] {
+	return &c.Updated
+}
+
+// mqlGcpProjectBinaryAuthorizationControlAdmissionRule for the gcp.project.binaryAuthorizationControl.admissionRule resource
+type mqlGcpProjectBinaryAuthorizationControlAdmissionRule struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlGcpProjectBinaryAuthorizationControlAdmissionRuleInternal it will be used here
+	EvaluationMode plugin.TValue[string]
+	EnforcementMode plugin.TValue[string]
+	RequireAttestationsBy plugin.TValue[[]interface{}]
+}
+
+// createGcpProjectBinaryAuthorizationControlAdmissionRule creates a new instance of this resource
+func createGcpProjectBinaryAuthorizationControlAdmissionRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectBinaryAuthorizationControlAdmissionRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.binaryAuthorizationControl.admissionRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectBinaryAuthorizationControlAdmissionRule) MqlName() string {
+	return "gcp.project.binaryAuthorizationControl.admissionRule"
+}
+
+func (c *mqlGcpProjectBinaryAuthorizationControlAdmissionRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectBinaryAuthorizationControlAdmissionRule) GetEvaluationMode() *plugin.TValue[string] {
+	return &c.EvaluationMode
+}
+
+func (c *mqlGcpProjectBinaryAuthorizationControlAdmissionRule) GetEnforcementMode() *plugin.TValue[string] {
+	return &c.EnforcementMode
+}
+
+func (c *mqlGcpProjectBinaryAuthorizationControlAdmissionRule) GetRequireAttestationsBy() *plugin.TValue[[]interface{}] {
+	return &c.RequireAttestationsBy
 }
