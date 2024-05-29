@@ -22,7 +22,7 @@ require (
 	cloud.google.com/go/run v1.3.7
 	cloud.google.com/go/serviceusage v1.8.6
 	github.com/aws/smithy-go v1.20.2
-	github.com/cockroachdb/errors v1.11.2
+	github.com/cockroachdb/errors v1.11.3
 	github.com/google/go-containerregistry v0.19.1
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/rs/zerolog v1.33.0
@@ -30,7 +30,7 @@ require (
 	go.mondoo.com/cnquery/v11 v11.5.0
 	go.mondoo.com/ranger-rpc v0.6.1
 	golang.org/x/oauth2 v0.20.0
-	google.golang.org/api v0.181.0
+	google.golang.org/api v0.182.0
 	google.golang.org/genproto v0.0.0-20240521202816-d264139d666e
 	google.golang.org/protobuf v1.34.1
 )
