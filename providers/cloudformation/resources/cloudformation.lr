@@ -1,0 +1,55 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/cnquery/v11/providers/cloudformation"
+option go_package = "go.mondoo.com/cnquery/v11/providers/cloudformation/resources"
+
+// AWS CloudFormation Template
+cloudformation.template @defaults("description") {
+  // Template format version
+  version string
+  // Template macros
+  transform []string
+  // Template description
+  description string
+  // Template mappings
+  mappings() map[string]dict
+  // Template globals
+  globals() map[string]dict
+  // Template parameters
+  parameters() map[string]dict
+  // Template metadata
+  metadata() map[string]dict
+  // Template conditions
+  conditions() map[string]dict
+  // Template resources
+  resources() []cloudformation.resource
+  // Template outputs
+  outputs() []cloudformation.output
+  // supported resource types
+  types() []string
+}
+
+// AWS CloudFormation Resource
+cloudformation.resource @defaults("name") {
+  // Resource name
+  name string
+  // Resource type
+  type string
+  // Resource condition
+  condition string
+  // Resource documentation URL
+  documentation string
+  // Resource attributes
+  attributes map[string]dict
+  // Resource properties
+  properties map[string]dict
+}
+
+// AWS CloudFormation Output
+cloudformation.output @defaults("name") {
+  // Output name
+  name string
+  // Output properties
+  properties map[string]dict
+}

@@ -1,0 +1,28 @@
+Resources:
+  MyInstance:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      UserData:
+        "Fn::Base64":
+          !Sub |
+          Queue=${MyQueue}
+      AvailabilityZone: "us-east-1a"
+      ImageId: "ami-0ff8a91507f77f867"
+  MyQueue:
+    Type: "AWS::SQS::Queue"
+    Properties: {}
+  HTTPlistener:
+    Type: "AWS::ElasticLoadBalancingV2::Listener"
+    Properties:
+      DefaultActions:
+        - Type: "redirect"
+          RedirectConfig:
+            Protocol: "HTTPS"
+            Port: 443
+            Host: "#{host}"
+            Path: "/#{path}"
+            Query: "#{query}"
+            StatusCode: "HTTP_301"
+      LoadBalancerArn: !Ref myLoadBalancer
+      Port: 80
+      Protocol: "HTTP"

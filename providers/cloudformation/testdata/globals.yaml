@@ -1,0 +1,28 @@
+Transform: AWS::Serverless-2016-10-31
+
+Globals:
+  Function:
+    Runtime: nodejs12.x
+    Timeout: 180
+    Handler: index.handler
+    Environment:
+      Variables:
+        TABLE_NAME: data-table
+
+Resources:
+  HelloWorldFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          MESSAGE: "Hello From SAM"
+
+  ThumbnailFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Events:
+        Thumbnail:
+          Type: Api
+          Properties:
+            Path: /thumbnail
+            Method: POST

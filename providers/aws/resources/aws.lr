@@ -1836,6 +1836,46 @@ private aws.dynamodb.table @defaults("name region") {
   status string
 }
 
+// Amazon Simple Queue Service (SQS)
+aws.sqs {
+  // List of Amazon SQS queues
+  queues() []aws.sqs.queue
+}
+
+// Amazon Simple Queue Service (SQS) Queue
+private aws.sqs.queue {
+  // ARN for the queue
+  arn() string
+  // Time when the queue was created
+  createdAt() time
+  // Dead letter SQS queue, if any
+  deadLetterQueue() aws.sqs.queue
+  // Delay seconds set on the queue
+  deliveryDelaySeconds() int
+  // KMS Key for SSE, if any
+  kmsKey() aws.kms.key
+  // Time when the queue was last modified
+  lastModified() time
+  // Maximum amount of messages that can be received by the queue
+  maxReceiveCount() int
+  // Maximum message size for the queue
+  maximumMessageSize() int
+  // Time in seconds the queue retains messages
+  messageRetentionPeriodSeconds() int
+  // Time in seconds the queue waits for messages
+  receiveMessageWaitTimeSeconds() int
+  // Region for the queue
+  region string
+  // Whether SSE is enabled for the queue
+  sqsManagedSseEnabled() bool
+  // The type of queue: Fifo or Standard
+  queueType() string 
+  // URL for the queue
+  url string
+  // Visibility timeout for the queue
+  visibilityTimeoutSeconds() int
+}
+
 // Amazon Relational Database Service (RDS)
 aws.rds {
   // List of database instances
@@ -2393,6 +2433,8 @@ private aws.vpc.natgateway {
   vpc() aws.vpc
   // List of addresses associated with the NAT gateway
   addresses []aws.vpc.natgateway.address
+  // Subnet for the NAT gateway
+  subnet() aws.vpc.subnet
 }
 
 // Amazon VPC NAT gateway address
@@ -2756,6 +2798,38 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   architecture string
   // The TPM version supported. NitroTPM is enabled if this value is `2.0`
   tpmSupport string
+  // List of network interfaces for the instance
+  networkInterfaces() []aws.ec2.networkinterface
+}
+
+// AWS EC2 network interface
+private aws.ec2.networkinterface @defaults("id macAddress description") {
+  // The ID of the network interface
+  id string
+  // The description of the network interface
+  description string
+  // The subnet of the network interface
+  subnet() aws.vpc.subnet
+  // The VPC of the network interface
+  vpc() aws.vpc
+  // The status of the network interface. If the network interface is not attached to an instance, the status is available; if a network interface is attached to an instance the status is in-use
+  status string
+  // Indicates whether the network interface performs source/destination checking. A value of true means checking is enabled, and false means checking is disabled. The value must be false for the network interface to perform network address translation (NAT) in your VPC.
+  sourceDestCheck bool
+  // Indicates whether the network interface is being managed by an AWS service (for example, AWS Management Console, Auto Scaling, and so on)
+  requesterManaged bool
+  // Tags set on the interface
+  tags map[string]string
+  // The availability zone of the network interface
+  availabilityZone string
+  // Security groups associated with the network interface
+  securityGroups() []aws.ec2.securitygroup
+  // Indicates whether this is an IPv6 only network interface
+  ipv6Native bool
+  // The MAC address of the network interface
+  macAddress string
+  // The private DNS name of the network interface (IPv4)
+  privateDnsName string
 }
 
 // Amazon EC2 key pair

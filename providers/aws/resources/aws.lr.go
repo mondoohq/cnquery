@@ -39,7 +39,7 @@ func init() {
 			Create: createAwsVpcRoutetable,
 		},
 		"aws.vpc.subnet": {
-			// to override args, implement: initAwsVpcSubnet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initAwsVpcSubnet,
 			Create: createAwsVpcSubnet,
 		},
 		"aws.vpc.endpoint": {
@@ -486,6 +486,14 @@ func init() {
 			Init: initAwsDynamodbTable,
 			Create: createAwsDynamodbTable,
 		},
+		"aws.sqs": {
+			// to override args, implement: initAwsSqs(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSqs,
+		},
+		"aws.sqs.queue": {
+			// to override args, implement: initAwsSqsQueue(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSqsQueue,
+		},
 		"aws.rds": {
 			// to override args, implement: initAwsRds(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsRds,
@@ -657,6 +665,10 @@ func init() {
 		"aws.ec2.instance": {
 			Init: initAwsEc2Instance,
 			Create: createAwsEc2Instance,
+		},
+		"aws.ec2.networkinterface": {
+			// to override args, implement: initAwsEc2Networkinterface(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEc2Networkinterface,
 		},
 		"aws.ec2.keypair": {
 			Init: initAwsEc2Keypair,
@@ -2799,6 +2811,54 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.dynamodb.table.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDynamodbTable).GetStatus()).ToDataRes(types.String)
 	},
+	"aws.sqs.queues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqs).GetQueues()).ToDataRes(types.Array(types.Resource("aws.sqs.queue")))
+	},
+	"aws.sqs.queue.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sqs.queue.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sqs.queue.deadLetterQueue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetDeadLetterQueue()).ToDataRes(types.Resource("aws.sqs.queue"))
+	},
+	"aws.sqs.queue.deliveryDelaySeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetDeliveryDelaySeconds()).ToDataRes(types.Int)
+	},
+	"aws.sqs.queue.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.sqs.queue.lastModified": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetLastModified()).ToDataRes(types.Time)
+	},
+	"aws.sqs.queue.maxReceiveCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetMaxReceiveCount()).ToDataRes(types.Int)
+	},
+	"aws.sqs.queue.maximumMessageSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetMaximumMessageSize()).ToDataRes(types.Int)
+	},
+	"aws.sqs.queue.messageRetentionPeriodSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetMessageRetentionPeriodSeconds()).ToDataRes(types.Int)
+	},
+	"aws.sqs.queue.receiveMessageWaitTimeSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetReceiveMessageWaitTimeSeconds()).ToDataRes(types.Int)
+	},
+	"aws.sqs.queue.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sqs.queue.sqsManagedSseEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetSqsManagedSseEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.sqs.queue.queueType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetQueueType()).ToDataRes(types.String)
+	},
+	"aws.sqs.queue.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetUrl()).ToDataRes(types.String)
+	},
+	"aws.sqs.queue.visibilityTimeoutSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetVisibilityTimeoutSeconds()).ToDataRes(types.Int)
+	},
 	"aws.rds.dbInstances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRds).GetDbInstances()).ToDataRes(types.Array(types.Resource("aws.rds.dbinstance")))
 	},
@@ -3492,6 +3552,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.vpc.natgateway.addresses": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcNatgateway).GetAddresses()).ToDataRes(types.Array(types.Resource("aws.vpc.natgateway.address")))
 	},
+	"aws.vpc.natgateway.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcNatgateway).GetSubnet()).ToDataRes(types.Resource("aws.vpc.subnet"))
+	},
 	"aws.vpc.natgateway.address.allocationId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcNatgatewayAddress).GetAllocationId()).ToDataRes(types.String)
 	},
@@ -3923,6 +3986,48 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.instance.tpmSupport": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetTpmSupport()).ToDataRes(types.String)
+	},
+	"aws.ec2.instance.networkInterfaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetNetworkInterfaces()).ToDataRes(types.Array(types.Resource("aws.ec2.networkinterface")))
+	},
+	"aws.ec2.networkinterface.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Networkinterface).GetId()).ToDataRes(types.String)
+	},
+	"aws.ec2.networkinterface.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Networkinterface).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.ec2.networkinterface.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Networkinterface).GetSubnet()).ToDataRes(types.Resource("aws.vpc.subnet"))
+	},
+	"aws.ec2.networkinterface.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Networkinterface).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
+	"aws.ec2.networkinterface.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Networkinterface).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.ec2.networkinterface.sourceDestCheck": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Networkinterface).GetSourceDestCheck()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.networkinterface.requesterManaged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Networkinterface).GetRequesterManaged()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.networkinterface.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Networkinterface).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.ec2.networkinterface.availabilityZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Networkinterface).GetAvailabilityZone()).ToDataRes(types.String)
+	},
+	"aws.ec2.networkinterface.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Networkinterface).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.ec2.networkinterface.ipv6Native": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Networkinterface).GetIpv6Native()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.networkinterface.macAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Networkinterface).GetMacAddress()).ToDataRes(types.String)
+	},
+	"aws.ec2.networkinterface.privateDnsName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Networkinterface).GetPrivateDnsName()).ToDataRes(types.String)
 	},
 	"aws.ec2.keypair.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Keypair).GetArn()).ToDataRes(types.String)
@@ -7359,6 +7464,78 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsDynamodbTable).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.sqs.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsSqs).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.sqs.queues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqs).Queues, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.sqs.queue.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsSqsQueue).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.sqs.queue.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sqs.queue.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sqs.queue.deadLetterQueue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).DeadLetterQueue, ok = plugin.RawToTValue[*mqlAwsSqsQueue](v.Value, v.Error)
+		return
+	},
+	"aws.sqs.queue.deliveryDelaySeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).DeliveryDelaySeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sqs.queue.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.sqs.queue.lastModified": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).LastModified, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sqs.queue.maxReceiveCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).MaxReceiveCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sqs.queue.maximumMessageSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).MaximumMessageSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sqs.queue.messageRetentionPeriodSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).MessageRetentionPeriodSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sqs.queue.receiveMessageWaitTimeSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).ReceiveMessageWaitTimeSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sqs.queue.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sqs.queue.sqsManagedSseEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).SqsManagedSseEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.sqs.queue.queueType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).QueueType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sqs.queue.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sqs.queue.visibilityTimeoutSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).VisibilityTimeoutSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"aws.rds.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsRds).__id, ok = v.Value.(string)
 			return
@@ -8379,6 +8556,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsVpcNatgateway).Addresses, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"aws.vpc.natgateway.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcNatgateway).Subnet, ok = plugin.RawToTValue[*mqlAwsVpcSubnet](v.Value, v.Error)
+		return
+	},
 	"aws.vpc.natgateway.address.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsVpcNatgatewayAddress).__id, ok = v.Value.(string)
 			return
@@ -9029,6 +9210,66 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.ec2.instance.tpmSupport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Instance).TpmSupport, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.networkInterfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).NetworkInterfaces, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.networkinterface.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsEc2Networkinterface).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.ec2.networkinterface.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Networkinterface).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.networkinterface.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Networkinterface).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.networkinterface.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Networkinterface).Subnet, ok = plugin.RawToTValue[*mqlAwsVpcSubnet](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.networkinterface.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Networkinterface).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.networkinterface.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Networkinterface).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.networkinterface.sourceDestCheck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Networkinterface).SourceDestCheck, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.networkinterface.requesterManaged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Networkinterface).RequesterManaged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.networkinterface.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Networkinterface).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.networkinterface.availabilityZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Networkinterface).AvailabilityZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.networkinterface.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Networkinterface).SecurityGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.networkinterface.ipv6Native": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Networkinterface).Ipv6Native, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.networkinterface.macAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Networkinterface).MacAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.networkinterface.privateDnsName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Networkinterface).PrivateDnsName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.keypair.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19094,6 +19335,232 @@ func (c *mqlAwsDynamodbTable) GetStatus() *plugin.TValue[string] {
 	return &c.Status
 }
 
+// mqlAwsSqs for the aws.sqs resource
+type mqlAwsSqs struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsSqsInternal it will be used here
+	Queues plugin.TValue[[]interface{}]
+}
+
+// createAwsSqs creates a new instance of this resource
+func createAwsSqs(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSqs{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sqs", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSqs) MqlName() string {
+	return "aws.sqs"
+}
+
+func (c *mqlAwsSqs) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSqs) GetQueues() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Queues, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sqs", c.__id, "queues")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.queues()
+	})
+}
+
+// mqlAwsSqsQueue for the aws.sqs.queue resource
+type mqlAwsSqsQueue struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlAwsSqsQueueInternal
+	Arn plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
+	DeadLetterQueue plugin.TValue[*mqlAwsSqsQueue]
+	DeliveryDelaySeconds plugin.TValue[int64]
+	KmsKey plugin.TValue[*mqlAwsKmsKey]
+	LastModified plugin.TValue[*time.Time]
+	MaxReceiveCount plugin.TValue[int64]
+	MaximumMessageSize plugin.TValue[int64]
+	MessageRetentionPeriodSeconds plugin.TValue[int64]
+	ReceiveMessageWaitTimeSeconds plugin.TValue[int64]
+	Region plugin.TValue[string]
+	SqsManagedSseEnabled plugin.TValue[bool]
+	QueueType plugin.TValue[string]
+	Url plugin.TValue[string]
+	VisibilityTimeoutSeconds plugin.TValue[int64]
+}
+
+// createAwsSqsQueue creates a new instance of this resource
+func createAwsSqsQueue(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSqsQueue{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sqs.queue", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSqsQueue) MqlName() string {
+	return "aws.sqs.queue"
+}
+
+func (c *mqlAwsSqsQueue) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSqsQueue) GetArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Arn, func() (string, error) {
+		return c.arn()
+	})
+}
+
+func (c *mqlAwsSqsQueue) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
+		return c.createdAt()
+	})
+}
+
+func (c *mqlAwsSqsQueue) GetDeadLetterQueue() *plugin.TValue[*mqlAwsSqsQueue] {
+	return plugin.GetOrCompute[*mqlAwsSqsQueue](&c.DeadLetterQueue, func() (*mqlAwsSqsQueue, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sqs.queue", c.__id, "deadLetterQueue")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSqsQueue), nil
+			}
+		}
+
+		return c.deadLetterQueue()
+	})
+}
+
+func (c *mqlAwsSqsQueue) GetDeliveryDelaySeconds() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.DeliveryDelaySeconds, func() (int64, error) {
+		return c.deliveryDelaySeconds()
+	})
+}
+
+func (c *mqlAwsSqsQueue) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sqs.queue", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsSqsQueue) GetLastModified() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LastModified, func() (*time.Time, error) {
+		return c.lastModified()
+	})
+}
+
+func (c *mqlAwsSqsQueue) GetMaxReceiveCount() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MaxReceiveCount, func() (int64, error) {
+		return c.maxReceiveCount()
+	})
+}
+
+func (c *mqlAwsSqsQueue) GetMaximumMessageSize() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MaximumMessageSize, func() (int64, error) {
+		return c.maximumMessageSize()
+	})
+}
+
+func (c *mqlAwsSqsQueue) GetMessageRetentionPeriodSeconds() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MessageRetentionPeriodSeconds, func() (int64, error) {
+		return c.messageRetentionPeriodSeconds()
+	})
+}
+
+func (c *mqlAwsSqsQueue) GetReceiveMessageWaitTimeSeconds() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ReceiveMessageWaitTimeSeconds, func() (int64, error) {
+		return c.receiveMessageWaitTimeSeconds()
+	})
+}
+
+func (c *mqlAwsSqsQueue) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSqsQueue) GetSqsManagedSseEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SqsManagedSseEnabled, func() (bool, error) {
+		return c.sqsManagedSseEnabled()
+	})
+}
+
+func (c *mqlAwsSqsQueue) GetQueueType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.QueueType, func() (string, error) {
+		return c.queueType()
+	})
+}
+
+func (c *mqlAwsSqsQueue) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlAwsSqsQueue) GetVisibilityTimeoutSeconds() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.VisibilityTimeoutSeconds, func() (int64, error) {
+		return c.visibilityTimeoutSeconds()
+	})
+}
+
 // mqlAwsRds for the aws.rds resource
 type mqlAwsRds struct {
 	MqlRuntime *plugin.Runtime
@@ -21608,6 +22075,7 @@ type mqlAwsVpcNatgateway struct {
 	Tags plugin.TValue[map[string]interface{}]
 	Vpc plugin.TValue[*mqlAwsVpc]
 	Addresses plugin.TValue[[]interface{}]
+	Subnet plugin.TValue[*mqlAwsVpcSubnet]
 }
 
 // createAwsVpcNatgateway creates a new instance of this resource
@@ -21681,6 +22149,22 @@ func (c *mqlAwsVpcNatgateway) GetVpc() *plugin.TValue[*mqlAwsVpc] {
 
 func (c *mqlAwsVpcNatgateway) GetAddresses() *plugin.TValue[[]interface{}] {
 	return &c.Addresses
+}
+
+func (c *mqlAwsVpcNatgateway) GetSubnet() *plugin.TValue[*mqlAwsVpcSubnet] {
+	return plugin.GetOrCompute[*mqlAwsVpcSubnet](&c.Subnet, func() (*mqlAwsVpcSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc.natgateway", c.__id, "subnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpcSubnet), nil
+			}
+		}
+
+		return c.subnet()
+	})
 }
 
 // mqlAwsVpcNatgatewayAddress for the aws.vpc.natgateway.address resource
@@ -23189,6 +23673,7 @@ type mqlAwsEc2Instance struct {
 	RootDeviceName plugin.TValue[string]
 	Architecture plugin.TValue[string]
 	TpmSupport plugin.TValue[string]
+	NetworkInterfaces plugin.TValue[[]interface{}]
 }
 
 // createAwsEc2Instance creates a new instance of this resource
@@ -23420,6 +23905,162 @@ func (c *mqlAwsEc2Instance) GetArchitecture() *plugin.TValue[string] {
 
 func (c *mqlAwsEc2Instance) GetTpmSupport() *plugin.TValue[string] {
 	return &c.TpmSupport
+}
+
+func (c *mqlAwsEc2Instance) GetNetworkInterfaces() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.NetworkInterfaces, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.instance", c.__id, "networkInterfaces")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.networkInterfaces()
+	})
+}
+
+// mqlAwsEc2Networkinterface for the aws.ec2.networkinterface resource
+type mqlAwsEc2Networkinterface struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlAwsEc2NetworkinterfaceInternal
+	Id plugin.TValue[string]
+	Description plugin.TValue[string]
+	Subnet plugin.TValue[*mqlAwsVpcSubnet]
+	Vpc plugin.TValue[*mqlAwsVpc]
+	Status plugin.TValue[string]
+	SourceDestCheck plugin.TValue[bool]
+	RequesterManaged plugin.TValue[bool]
+	Tags plugin.TValue[map[string]interface{}]
+	AvailabilityZone plugin.TValue[string]
+	SecurityGroups plugin.TValue[[]interface{}]
+	Ipv6Native plugin.TValue[bool]
+	MacAddress plugin.TValue[string]
+	PrivateDnsName plugin.TValue[string]
+}
+
+// createAwsEc2Networkinterface creates a new instance of this resource
+func createAwsEc2Networkinterface(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEc2Networkinterface{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ec2.networkinterface", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEc2Networkinterface) MqlName() string {
+	return "aws.ec2.networkinterface"
+}
+
+func (c *mqlAwsEc2Networkinterface) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEc2Networkinterface) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsEc2Networkinterface) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsEc2Networkinterface) GetSubnet() *plugin.TValue[*mqlAwsVpcSubnet] {
+	return plugin.GetOrCompute[*mqlAwsVpcSubnet](&c.Subnet, func() (*mqlAwsVpcSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.networkinterface", c.__id, "subnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpcSubnet), nil
+			}
+		}
+
+		return c.subnet()
+	})
+}
+
+func (c *mqlAwsEc2Networkinterface) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.networkinterface", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
+func (c *mqlAwsEc2Networkinterface) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsEc2Networkinterface) GetSourceDestCheck() *plugin.TValue[bool] {
+	return &c.SourceDestCheck
+}
+
+func (c *mqlAwsEc2Networkinterface) GetRequesterManaged() *plugin.TValue[bool] {
+	return &c.RequesterManaged
+}
+
+func (c *mqlAwsEc2Networkinterface) GetTags() *plugin.TValue[map[string]interface{}] {
+	return &c.Tags
+}
+
+func (c *mqlAwsEc2Networkinterface) GetAvailabilityZone() *plugin.TValue[string] {
+	return &c.AvailabilityZone
+}
+
+func (c *mqlAwsEc2Networkinterface) GetSecurityGroups() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.SecurityGroups, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.networkinterface", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsEc2Networkinterface) GetIpv6Native() *plugin.TValue[bool] {
+	return &c.Ipv6Native
+}
+
+func (c *mqlAwsEc2Networkinterface) GetMacAddress() *plugin.TValue[string] {
+	return &c.MacAddress
+}
+
+func (c *mqlAwsEc2Networkinterface) GetPrivateDnsName() *plugin.TValue[string] {
+	return &c.PrivateDnsName
 }
 
 // mqlAwsEc2Keypair for the aws.ec2.keypair resource

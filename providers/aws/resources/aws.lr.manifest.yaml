@@ -1024,6 +1024,8 @@ resources:
       instanceType: {}
       keypair: {}
       launchTime: {}
+      networkInterfaces:
+        min_mondoo_version: 9.0.0
       patchState: {}
       platformDetails:
         min_mondoo_version: 8.11.0
@@ -1157,6 +1159,26 @@ resources:
       to: {}
     is_private: true
     min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - aws
+  aws.ec2.networkinterface:
+    fields:
+      availabilityZone: {}
+      description: {}
+      id: {}
+      ipv6Native: {}
+      macAddress: {}
+      privateDnsName: {}
+      requesterManaged: {}
+      securityGroups: {}
+      sourceDestCheck: {}
+      status: {}
+      subnet: {}
+      tags: {}
+      vpc: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - aws
@@ -2639,6 +2661,38 @@ resources:
         min_mondoo_version: 5.23.0
     is_private: true
     min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - aws
+  aws.sqs:
+    fields:
+      queues: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.sqs.queue:
+    fields:
+      arn: {}
+      createdAt: {}
+      deadLetterQueue: {}
+      deliveryDelaySeconds: {}
+      kmsKey: {}
+      lastModified: {}
+      maxReceiveCount: {}
+      maximumMessageSize: {}
+      messageRetentionPeriodSeconds: {}
+      queueType: {}
+      receiveMessageWaitTimeSeconds: {}
+      region: {}
+      sqsManagedSseEnabled: {}
+      sseEnabled: {}
+      tags: {}
+      type: {}
+      url: {}
+      visibilityTimeoutSeconds: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - aws

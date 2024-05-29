@@ -135,21 +135,19 @@ func (a *mqlAwsVpcNatgateway) vpc() (*mqlAwsVpc, error) {
 	return nil, nil
 }
 
-// i think bc subnet is a subresource of vpc i'm having trouble doing this here
-// not totally sure, will revisit
-// func (a *mqlAwsVpcNatgateway) subnet() (*mqlAwsVpcSubnet, error) {
-// 	if a.natGatewayCache.SubnetId != nil {
-// 		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-// 		res, err := NewResource(a.MqlRuntime, "aws.vpc.subnet", map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(subnetArnPattern, a.region, conn.AccountId(), convert.ToString(a.natGatewayCache.SubnetId)))})
-// 		if err != nil {
-// 			a.Subnet.State = plugin.StateIsNull | plugin.StateIsSet
-// 			return nil, err
-// 		}
-// 		return res.(*mqlAwsVpcSubnet), nil
-// 	}
-// 	a.Subnet.State = plugin.StateIsNull | plugin.StateIsSet
-// 	return nil, nil
-// }
+func (a *mqlAwsVpcNatgateway) subnet() (*mqlAwsVpcSubnet, error) {
+	if a.natGatewayCache.SubnetId != nil {
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		res, err := NewResource(a.MqlRuntime, "aws.vpc.subnet", map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(subnetArnPattern, a.region, conn.AccountId(), convert.ToString(a.natGatewayCache.SubnetId)))})
+		if err != nil {
+			a.Subnet.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, err
+		}
+		return res.(*mqlAwsVpcSubnet), nil
+	}
+	a.Subnet.State = plugin.StateIsNull | plugin.StateIsSet
+	return nil, nil
+}
 
 func (a *mqlAwsVpcNatgatewayAddress) publicIp() (*mqlAwsEc2Eip, error) {
 	if a.natGatewayAddressCache.PublicIp != nil {
@@ -610,7 +608,7 @@ func (a *mqlAwsVpc) subnets() ([]interface{}, error) {
 	return res, nil
 }
 
-func initAwsSubnet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+func initAwsVpcSubnet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if args["arn"] == nil && args["id"] == nil {
 		return nil, nil, errors.New("id or arn required to fetch aws vpc subnet")
 	}
@@ -637,7 +635,6 @@ func initAwsSubnet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 			}
 		}
 	}
-
 	if subnetId == "" {
 		return nil, nil, errors.New("no subnet id specified")
 	}
