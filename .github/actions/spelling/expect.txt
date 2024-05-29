@@ -54,6 +54,7 @@ mgroup
 Mpim
 natgateway
 networkinterface
+nodegroup
 nodepool
 nullgroup
 nullstring

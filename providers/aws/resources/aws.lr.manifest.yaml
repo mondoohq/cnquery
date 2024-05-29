@@ -1497,6 +1497,8 @@ resources:
         Use the `aws.eks` resource to assess the configuration of Amazon Elastic Kubernetes Service (EKS).
     fields:
       clusters: {}
+      nodeGroups:
+        min_mondoo_version: 9.0.0
     min_mondoo_version: 5.31.0
     platform:
       name:
@@ -1513,6 +1515,8 @@ resources:
       logging: {}
       name: {}
       networkConfig: {}
+      nodeGroups:
+        min_mondoo_version: 9.0.0
       platformVersion: {}
       region: {}
       resourcesVpcConfig: {}
@@ -1521,6 +1525,27 @@ resources:
       version: {}
     is_private: true
     min_mondoo_version: 5.31.0
+    platform:
+      name:
+      - aws
+  aws.eks.nodegroup:
+    fields:
+      amiType: {}
+      arn: {}
+      autoscalingGroups: {}
+      capacityType: {}
+      createdAt: {}
+      diskSize: {}
+      instanceTypes: {}
+      labels: {}
+      name: {}
+      nodeRole: {}
+      region: {}
+      scalingConfig: {}
+      status: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - aws
