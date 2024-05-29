@@ -180,6 +180,8 @@ type DefaultUserRolePermissions struct {
 	AllowedToReadOtherUsers *bool `json:"allowedToReadOtherUsers"`
 	// Indicates whether the default user role can create tenants.
 	AllowedToCreateTenants *bool `json:"allowedToCreateTenants"`
+	// List of permission grant policies assigned.
+	PermissionGrantPoliciesAssigned []string `json:"permissionGrantPoliciesAssigned"`
 }
 
 func newDefaultUserRolePermissions(a models.DefaultUserRolePermissionsable) *DefaultUserRolePermissions {
@@ -187,10 +189,11 @@ func newDefaultUserRolePermissions(a models.DefaultUserRolePermissionsable) *Def
 		return nil
 	}
 	return &DefaultUserRolePermissions{
-		AllowedToCreateApps:           a.GetAllowedToCreateApps(),
-		AllowedToCreateSecurityGroups: a.GetAllowedToCreateSecurityGroups(),
-		AllowedToReadOtherUsers:       a.GetAllowedToReadOtherUsers(),
-		AllowedToCreateTenants:        a.GetAllowedToCreateTenants(),
+		AllowedToCreateApps:             a.GetAllowedToCreateApps(),
+		AllowedToCreateSecurityGroups:   a.GetAllowedToCreateSecurityGroups(),
+		AllowedToReadOtherUsers:         a.GetAllowedToReadOtherUsers(),
+		AllowedToCreateTenants:          a.GetAllowedToCreateTenants(),
+		PermissionGrantPoliciesAssigned: a.GetPermissionGrantPoliciesAssigned(),
 	}
 }
 
