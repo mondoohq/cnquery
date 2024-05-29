@@ -229,3 +229,14 @@ updates:
         update-types:
           - minor
           - patch
+  - package-ecosystem: gomod
+    directory: /providers/cloudformation/
+    schedule:
+      interval: daily
+    groups:
+      gomodupdates:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch

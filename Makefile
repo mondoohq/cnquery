@@ -230,7 +230,7 @@ providers/install: \
 	providers/install/ms365 \
 	providers/install/atlassian \
 	providers/install/aws \
-    providers/install/cloudformation
+	providers/install/cloudformation
 
 providers/build/mock: providers/lr
 	./lr go providers-sdk/v1/testutils/mockprovider/resources/mockprovider.lr

@@ -17,7 +17,7 @@ var Config = plugin.Provider{
 		{
 			Name:      "cloudformation",
 			Use:       "cloudformation PATH",
-			Short:     "AWS CloudFormation template or AWS SAM template",
+			Short:     "an AWS CloudFormation template or AWS SAM template",
 			MinArgs:   1,
 			MaxArgs:   1,
 			Discovery: []string{},

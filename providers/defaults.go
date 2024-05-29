@@ -71,6 +71,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"cloudformation": {
+		Provider: &plugin.Provider{
+			Name:            "cloudformation",
+			ID:              "go.mondoo.com/cnquery/v9/providers/cloudformation",
+			ConnectionTypes: []string{"cloudformation"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "cloudformation",
+					Use:   "cloudformation PATH",
+					Short: "an AWS CloudFormation template or AWS SAM template",
+				},
+			},
+		},
+	},
+
 	"core": {
 		Provider: &plugin.Provider{
 			Name:            "core",
