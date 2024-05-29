@@ -379,5 +379,23 @@ func hasYaml(client *github.Client, repo *mqlGithubRepository) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return res.GetTotal() > 0, nil
+
+	// Ignore YAML files that are hidden or are in a hidden folder
+	nonHiddenYaml := 0
+	for _, code := range res.CodeResults {
+		fragments := strings.Split(code.GetPath(), "/")
+		// skip hidden files
+		isHidden := false
+		for _, fragment := range fragments {
+			if strings.HasPrefix(fragment, ".") {
+				isHidden = true
+				break
+			}
+		}
+
+		if !isHidden {
+			nonHiddenYaml++
+		}
+	}
+	return nonHiddenYaml > 0, nil
 }
