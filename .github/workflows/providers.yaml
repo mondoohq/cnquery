@@ -55,7 +55,7 @@ jobs:
             fi
             cd providers/$p
             REPO_VERSION=$(grep Version config/config.go | cut -f2 -d\")
-            STATUS_CODE=$(curl -s -o /dev/null -I -w "%{http_code}" https://releases.mondoo.com/providers/atlassian/latest.json)
+            STATUS_CODE=$(curl -s -o /dev/null -I -w "%{http_code}" https://releases.mondoo.com/providers/${p}/latest.json)
             if [ "$STATUS_CODE" -eq "404" ]; then
               DIST_VERSION="unreleased"
             else
