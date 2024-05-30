@@ -11,7 +11,7 @@ require (
 	github.com/cockroachdb/errors v1.11.3
 	github.com/microsoft/kiota-abstractions-go v1.6.0
 	github.com/microsoft/kiota-authentication-azure-go v1.0.2
-	github.com/microsoftgraph/msgraph-sdk-go v1.43.0
+	github.com/microsoftgraph/msgraph-sdk-go v1.44.0
 	github.com/microsoftgraph/msgraph-sdk-go-core v1.1.0
 	github.com/rs/zerolog v1.33.0
 	github.com/stretchr/testify v1.9.0
@@ -42,7 +42,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.8.0 // indirect
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.2.2 // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
-	github.com/Crocmagnon/fatcontext v0.2.2 // indirect
+	github.com/Crocmagnon/fatcontext v0.3.0 // indirect
 	github.com/Djarvur/go-err113 v0.0.0-20210108212216-aea10b59be24 // indirect
 	github.com/GaijinEntertainment/go-exhaustruct/v3 v3.3.0 // indirect
 	github.com/GoogleCloudPlatform/berglas v1.0.3 // indirect
@@ -57,7 +57,7 @@ require (
 	github.com/alingse/asasalint v0.0.11 // indirect
 	github.com/ashanbrown/forbidigo v1.6.0 // indirect
 	github.com/ashanbrown/makezero v1.1.1 // indirect
-	github.com/aws/aws-sdk-go v1.53.11 // indirect
+	github.com/aws/aws-sdk-go v1.53.12 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.27.0 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.27.16 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.16 // indirect
@@ -159,7 +159,7 @@ require (
 	github.com/hashicorp/go-hclog v1.6.3 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-plugin v1.6.1 // indirect
-	github.com/hashicorp/go-retryablehttp v0.7.6 // indirect
+	github.com/hashicorp/go-retryablehttp v0.7.7 // indirect
 	github.com/hashicorp/go-rootcerts v1.0.2 // indirect
 	github.com/hashicorp/go-secure-stdlib/parseutil v0.1.8 // indirect
 	github.com/hashicorp/go-secure-stdlib/strutil v0.1.2 // indirect
