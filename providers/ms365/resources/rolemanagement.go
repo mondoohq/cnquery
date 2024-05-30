@@ -28,7 +28,7 @@ func (a *mqlMicrosoftRolemanagement) roleDefinitions() ([]interface{}, error) {
 		return nil, err
 	}
 	ctx := context.Background()
-	resp, err := graphClient.RoleManagement().Directory().RoleDefinitions().Get(ctx, &rolemanagement.DirectoryRoleDefinitionsRequestBuilderGetRequestConfiguration{})
+	resp, err := graphClient.RoleManagement().Directory().RoleDefinitions().Get(ctx, &rolemanagement.DirectoryRoledefinitionsRoleDefinitionsRequestBuilderGetRequestConfiguration{})
 	if err != nil {
 		return nil, transformError(err)
 	}
@@ -68,8 +68,8 @@ func (a *mqlMicrosoftRolemanagementRoledefinition) assignments() ([]interface{},
 	}
 	roleDefinitionId := a.Id.Data
 	filter := "roleDefinitionId eq '" + roleDefinitionId + "'"
-	requestConfig := &rolemanagement.DirectoryRoleAssignmentsRequestBuilderGetRequestConfiguration{
-		QueryParameters: &rolemanagement.DirectoryRoleAssignmentsRequestBuilderGetQueryParameters{
+	requestConfig := &rolemanagement.DirectoryRoleassignmentsRoleAssignmentsRequestBuilderGetRequestConfiguration{
+		QueryParameters: &rolemanagement.DirectoryRoleassignmentsRoleAssignmentsRequestBuilderGetQueryParameters{
 			Filter: &filter,
 			Expand: []string{"principal"},
 		},

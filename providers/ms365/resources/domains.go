@@ -72,7 +72,7 @@ func (a *mqlMicrosoftDomain) serviceConfigurationRecords() ([]interface{}, error
 
 	id := a.Id.Data
 	ctx := context.Background()
-	resp, err := graphClient.Domains().ByDomainId(id).ServiceConfigurationRecords().Get(ctx, &domains.ItemServiceConfigurationRecordsRequestBuilderGetRequestConfiguration{})
+	resp, err := graphClient.Domains().ByDomainId(id).ServiceConfigurationRecords().Get(ctx, &domains.ItemServiceconfigurationrecordsServiceConfigurationRecordsRequestBuilderGetRequestConfiguration{})
 	if err != nil {
 		return nil, transformError(err)
 	}

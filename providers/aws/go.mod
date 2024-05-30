@@ -7,7 +7,7 @@ go 1.22.0
 toolchain go1.22.2
 
 require (
-	github.com/aws/aws-sdk-go v1.53.11
+	github.com/aws/aws-sdk-go v1.53.12
 	github.com/aws/aws-sdk-go-v2 v1.27.0
 	github.com/aws/aws-sdk-go-v2/config v1.27.16
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.16
@@ -22,7 +22,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.39.6
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.38.4
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.35.5
-	github.com/aws/aws-sdk-go-v2/service/codebuild v1.36.1
+	github.com/aws/aws-sdk-go-v2/service/codebuild v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.46.9
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.38.8
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.32.6
@@ -49,7 +49,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.44.11
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.141.1
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.29.1
-	github.com/aws/aws-sdk-go-v2/service/securityhub v1.48.4
+	github.com/aws/aws-sdk-go-v2/service/securityhub v1.49.0
 	github.com/aws/aws-sdk-go-v2/service/sns v1.29.8
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.32.3
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.50.4
@@ -58,7 +58,7 @@ require (
 	github.com/aws/smithy-go v1.20.2
 	github.com/cockroachdb/errors v1.11.3
 	github.com/google/uuid v1.6.0
-	github.com/hashicorp/go-retryablehttp v0.7.6
+	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/afero v1.11.0
 	github.com/stretchr/testify v1.9.0
@@ -91,7 +91,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.8.0 // indirect
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.2.2 // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
-	github.com/Crocmagnon/fatcontext v0.2.2 // indirect
+	github.com/Crocmagnon/fatcontext v0.3.0 // indirect
 	github.com/Djarvur/go-err113 v0.0.0-20210108212216-aea10b59be24 // indirect
 	github.com/GaijinEntertainment/go-exhaustruct/v3 v3.3.0 // indirect
 	github.com/GoogleCloudPlatform/berglas v1.0.3 // indirect
