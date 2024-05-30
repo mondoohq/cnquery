@@ -30,7 +30,8 @@ const (
 	DiscoveryGroup   = "groups"
 	DiscoveryProject = "projects"
 	// -- chained git discovery options --
-	DiscoveryTerraform = "terraform"
+	DiscoveryTerraform    = "terraform"
+	DiscoveryK8sManifests = "k8s-manifests"
 )
 
 type Service struct {
