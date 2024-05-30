@@ -525,7 +525,7 @@ func (g *mqlGcpProjectGkeService) clusters() ([]interface{}, error) {
 		if c.NetworkPolicy != nil {
 			networkPolicyConfig = map[string]interface{}{
 				"enabled":  c.NetworkPolicy.Enabled,
-				"provider": c.NetworkPolicy.Provider,
+				"provider": c.NetworkPolicy.Provider.String(),
 			}
 		}
 
