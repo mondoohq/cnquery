@@ -151,6 +151,12 @@ func DiscoverAssets(ctx context.Context, inv *inventory.Inventory, upstream *ups
 }
 
 func discoverAssets(rootAssetWithRuntime *AssetWithRuntime, resolvedRootAsset *inventory.Asset, discoveredAssets *DiscoveredAssets, runtimeLabels map[string]string, upstream *upstream.UpstreamConfig, recording llx.Recording) {
+	// It is possible that we did not discover any assets under the root asset. In that case the inventory
+	// would be nil and we can return
+	if rootAssetWithRuntime.Runtime.Provider.Connection.Inventory == nil {
+		return
+	}
+
 	// for all discovered assets, we apply mondoo-specific labels and annotations that come from the root asset
 	for _, a := range rootAssetWithRuntime.Runtime.Provider.Connection.Inventory.Spec.Assets {
 		// create runtime for root asset

@@ -77,8 +77,8 @@ func (s *Service) discover(root *inventory.Asset, conn *connection.GitLabConnect
 		}
 	}
 
-	if slices.Contains(targets, DiscoveryTerraform) {
-		repos, err := s.discoverTerraform(root, conn, projects)
+	if slices.Contains(targets, DiscoveryTerraform) || slices.Contains(targets, DiscoveryK8sManifests) {
+		repos, err := s.discoverTypes(targets, conn, projects)
 		if err != nil {
 			return nil, err
 		}
@@ -279,7 +279,11 @@ func listAllGroups(conn *connection.GitLabConnection) ([]*gitlab.Group, error) {
 	return groups, nil
 }
 
-func (s *Service) discoverTerraform(root *inventory.Asset, conn *connection.GitLabConnection, projects []*gitlab.Project) ([]*inventory.Asset, error) {
+func (s *Service) discoverTypes(targets []string, conn *connection.GitLabConnection, projects []*gitlab.Project) ([]*inventory.Asset, error) {
+	if !slices.Contains(targets, DiscoveryTerraform) && !slices.Contains(targets, DiscoveryK8sManifests) {
+		return nil, nil
+	}
+
 	// For git clone we need to set the user to oauth2 to be usable with the token.
 	creds := make([]*vault.Credential, len(conn.Conf.Credentials))
 	for i := range conn.Conf.Credentials {
@@ -294,10 +298,13 @@ func (s *Service) discoverTerraform(root *inventory.Asset, conn *connection.GitL
 	var res []*inventory.Asset
 	for i := range projects {
 		project := projects[i]
-		files, err := discoverTerraformHcl(conn.Client(), project.ID)
+		discoveredTypes, err := discoverRepoTypes(conn.Client(), project.ID)
 		if err != nil {
 			log.Error().Err(err).Str("project", project.PathWithNamespace).Msg("failed to discover terraform repo in gitlab")
-		} else if len(files) != 0 {
+			continue
+		}
+
+		if discoveredTypes.terraform && slices.Contains(targets, DiscoveryTerraform) {
 			res = append(res, &inventory.Asset{
 				Connections: []*inventory.Config{{
 					Type: "terraform-hcl-git",
@@ -309,17 +316,36 @@ func (s *Service) discoverTerraform(root *inventory.Asset, conn *connection.GitL
 				}},
 			})
 		}
+
+		if discoveredTypes.k8s && slices.Contains(targets, DiscoveryK8sManifests) {
+			res = append(res, &inventory.Asset{
+				Connections: []*inventory.Config{{
+					Type: "k8s",
+					Options: map[string]string{
+						"ssh-url":  project.SSHURLToRepo,
+						"http-url": project.HTTPURLToRepo,
+					},
+					Credentials: creds,
+					Discover:    &inventory.Discovery{Targets: []string{"auto"}},
+				}},
+			})
+		}
 	}
 	return res, nil
 }
 
-// discoverTerraformHcl will check if the repository contains terraform files and return the terraform asset
-func discoverTerraformHcl(client *gitlab.Client, pid interface{}) ([]string, error) {
+type discoveredTypes struct {
+	terraform bool
+	k8s       bool
+}
+
+// discoverRepoTypes will check if the repository contains terraform files and yaml files
+func discoverRepoTypes(client *gitlab.Client, pid interface{}) (*discoveredTypes, error) {
 	opts := &gitlab.ListTreeOptions{
 		ListOptions: gitlab.ListOptions{
 			PerPage: 100,
 		},
-		Recursive: gitlab.Bool(true),
+		Recursive: gitlab.Ptr(true),
 	}
 
 	nodes := []*gitlab.TreeNode{}
@@ -343,12 +369,34 @@ func discoverTerraformHcl(client *gitlab.Client, pid interface{}) ([]string, err
 	}
 
 	terraformFiles := []string{}
+	yamlFiles := []string{}
 	for i := range nodes {
 		node := nodes[i]
+		fragments := strings.Split(node.Path, "/")
+		isHidden := false
+		for _, f := range fragments {
+			if strings.HasPrefix(f, ".") {
+				isHidden = true
+				break
+			}
+		}
+
+		// Skip hidden and files in hidden folders
+		if isHidden {
+			continue
+		}
+
 		if node.Type == "blob" && strings.HasSuffix(node.Path, ".tf") {
 			terraformFiles = append(terraformFiles, node.Path)
+		} else if node.Type == "blob" &&
+			!strings.HasSuffix(node.Path, "mql.yaml") && !strings.HasSuffix(node.Path, "mql.yml") &&
+			(strings.HasSuffix(node.Path, ".yaml") || strings.HasSuffix(node.Path, ".yml")) {
+			yamlFiles = append(yamlFiles, node.Path)
 		}
 	}
 
-	return terraformFiles, nil
+	return &discoveredTypes{
+		terraform: len(terraformFiles) > 0,
+		k8s:       len(yamlFiles) > 0,
+	}, nil
 }
