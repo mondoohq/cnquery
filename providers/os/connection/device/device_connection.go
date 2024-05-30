@@ -70,6 +70,9 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 		res.Close()
 		return nil, err
 	}
+	if conf.Options == nil {
+		conf.Options = make(map[string]string)
+	}
 
 	conf.Options["path"] = scanDir
 	// create and initialize fs provider
