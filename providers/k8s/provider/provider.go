@@ -163,6 +163,11 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			if err != nil {
 				return nil, err
 			}
+		} else if _, ok := conf.Options[shared.OPTION_GIT_HTTP]; ok {
+			conn, err = manifest.NewGitConnection(connId, asset)
+			if err != nil {
+				return nil, err
+			}
 		} else {
 			conn, err = api.NewConnection(connId, asset, s.discoveryCache)
 			if err != nil {

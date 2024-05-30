@@ -38,7 +38,12 @@ func Discover(runtime *plugin.Runtime, opts map[string]string) (*inventory.Inven
 
 func handleTargets(targets []string) []string {
 	if stringx.Contains(targets, connection.DiscoveryAll) {
-		return []string{connection.DiscoveryRepos, connection.DiscoveryUsers}
+		return []string{
+			connection.DiscoveryRepos,
+			connection.DiscoveryUsers,
+			connection.DiscoveryTerraform,
+			connection.DiscoveryK8sManifests,
+		}
 	}
 	return targets
 }
@@ -128,6 +133,13 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 				}
 				assetList = append(assetList, terraformAssets...)
 			}
+			if stringx.ContainsAnyOf(targets, connection.DiscoveryAll, connection.DiscoveryK8sManifests) {
+				k8sAssets, err := discoverK8sManifests(conn, repo)
+				if err != nil {
+					return nil, err
+				}
+				assetList = append(assetList, k8sAssets...)
+			}
 		}
 	}
 	if stringx.ContainsAnyOf(targets, connection.DiscoveryUsers, connection.DiscoveryUser) {
@@ -183,6 +195,13 @@ func repo(runtime *plugin.Runtime, repoName string, owner string, conn *connecti
 			return nil, err
 		}
 		assetList = append(assetList, terraformAssets...)
+	}
+	if stringx.ContainsAnyOf(targets, connection.DiscoveryAll, connection.DiscoveryK8sManifests) {
+		k8sAssets, err := discoverK8sManifests(conn, repo)
+		if err != nil {
+			return nil, err
+		}
+		assetList = append(assetList, k8sAssets...)
 	}
 
 	return assetList, nil
@@ -294,7 +313,7 @@ func discoverTerraform(conn *connection.GithubConnection, repo *mqlGithubReposit
 	var res []*inventory.Asset
 	hasTf, err := hasTerraformHcl(conn.Client(), repo)
 	if err != nil {
-		log.Error().Err(err).Str("project", repo.FullName.Data).Msg("failed to discover terraform repo in gitlab")
+		log.Error().Err(err).Str("project", repo.FullName.Data).Msg("failed to discover terraform repo")
 	} else if hasTf {
 		res = append(res, &inventory.Asset{
 			Connections: []*inventory.Config{{
@@ -318,4 +337,65 @@ func hasTerraformHcl(client *github.Client, repo *mqlGithubRepository) (bool, er
 		return false, err
 	}
 	return res.GetTotal() > 0, nil
+}
+
+func discoverK8sManifests(conn *connection.GithubConnection, repo *mqlGithubRepository) ([]*inventory.Asset, error) {
+	// For git clone we need to set the user to oauth2 to be usable with the token.
+	conf := conn.Asset().Connections[0]
+	creds := make([]*vault.Credential, len(conf.Credentials))
+	for i := range conf.Credentials {
+		cred := conf.Credentials[i]
+		cc := proto.Clone(cred).(*vault.Credential)
+		if cc.User == "" {
+			cc.User = "oauth2"
+		}
+		creds[i] = cc
+	}
+
+	var res []*inventory.Asset
+	hasTf, err := hasYaml(conn.Client(), repo)
+	if err != nil {
+		log.Error().Err(err).Str("project", repo.FullName.Data).Msg("failed to discover k8s manifests repo")
+	} else if hasTf {
+		res = append(res, &inventory.Asset{
+			Connections: []*inventory.Config{{
+				Type: "k8s",
+				Options: map[string]string{
+					"ssh-url":  repo.SshUrl.Data,
+					"http-url": repo.CloneUrl.Data,
+				},
+				Credentials: creds,
+				Discover:    &inventory.Discovery{Targets: []string{"auto"}},
+			}},
+		})
+	}
+	return res, nil
+}
+
+// hasYaml will check if the repository contains YAML files
+func hasYaml(client *github.Client, repo *mqlGithubRepository) (bool, error) {
+	query := "repo:" + repo.FullName.Data + " extension:yaml OR extension:yml"
+	res, _, err := client.Search.Code(context.Background(), query, &github.SearchOptions{})
+	if err != nil {
+		return false, err
+	}
+
+	// Ignore YAML files that are hidden or are in a hidden folder
+	nonHiddenYaml := 0
+	for _, code := range res.CodeResults {
+		fragments := strings.Split(code.GetPath(), "/")
+		// skip hidden files
+		isHidden := false
+		for _, fragment := range fragments {
+			if strings.HasPrefix(fragment, ".") {
+				isHidden = true
+				break
+			}
+		}
+
+		if !isHidden {
+			nonHiddenYaml++
+		}
+	}
+	return nonHiddenYaml > 0, nil
 }

@@ -19,6 +19,8 @@ import (
 	"k8s.io/apimachinery/pkg/version"
 )
 
+var _ plugin.Closer = (*Connection)(nil)
+
 type Option func(*Connection)
 
 func WithNamespace(namespace string) Option {
@@ -39,6 +41,12 @@ func WithManifestContent(data []byte) Option {
 	}
 }
 
+func WithCloser(closer func()) Option {
+	return func(p *Connection) {
+		p.closer = closer
+	}
+}
+
 type Connection struct {
 	shared.ManifestParser
 	plugin.Connection
@@ -47,6 +55,23 @@ type Connection struct {
 
 	manifestFile    string
 	manifestContent []byte
+	closer          func()
+}
+
+func NewGitConnection(id uint32, asset *inventory.Asset, opts ...Option) (shared.Connection, error) {
+	path, closer, err := plugin.NewGitClone(asset)
+	if err != nil {
+		return nil, err
+	}
+
+	// After we have cloned the repo, we just work with the path. This makes sure consequent
+	// connect calls will not trigger repo clone again.
+	conf := asset.Connections[0]
+	delete(conf.Options, shared.OPTION_GIT_HTTP)
+	conf.Options[shared.OPTION_MANIFEST] = path
+
+	opts = append(opts, WithCloser(closer), WithManifestFile(path))
+	return NewConnection(id, asset, opts...)
 }
 
 func NewConnection(id uint32, asset *inventory.Asset, opts ...Option) (shared.Connection, error) {
@@ -88,6 +113,12 @@ func NewConnection(id uint32, asset *inventory.Asset, opts ...Option) (shared.Co
 	}
 
 	return c, nil
+}
+
+func (c *Connection) Close() {
+	if c.closer != nil {
+		c.closer()
+	}
 }
 
 func (c *Connection) ServerVersion() *version.Info {

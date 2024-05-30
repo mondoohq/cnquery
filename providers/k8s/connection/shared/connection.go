@@ -17,6 +17,7 @@ import (
 )
 
 const (
+	OPTION_GIT_HTTP          = "http-url"
 	OPTION_MANIFEST          = "path"
 	OPTION_IMMEMORY_CONTENT  = "manifest-content"
 	OPTION_NAMESPACE         = "namespaces"
