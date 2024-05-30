@@ -18,14 +18,15 @@ import (
 )
 
 const (
-	service_compute            = "compute.googleapis.com"
-	service_gke                = "container.googleapis.com"
-	service_bigquery           = "bigquery.googleapis.com"
-	service_essential_contacts = "essentialcontacts.googleapis.com"
-	service_dns                = "dns.googleapis.com"
-	service_accessapproval     = "accessapproval.googleapis.com"
-	service_apikeys            = "apikeys.googleapis.com"
-	service_dataproc           = "dataproc.googleapis.com"
+	service_compute             = "compute.googleapis.com"
+	service_gke                 = "container.googleapis.com"
+	service_bigquery            = "bigquery.googleapis.com"
+	service_essential_contacts  = "essentialcontacts.googleapis.com"
+	service_dns                 = "dns.googleapis.com"
+	service_accessapproval      = "accessapproval.googleapis.com"
+	service_apikeys             = "apikeys.googleapis.com"
+	service_dataproc            = "dataproc.googleapis.com"
+	service_binaryauthorization = "binaryauthorization.googleapis.com"
 )
 
 func serviceName(name string) string {

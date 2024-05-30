@@ -138,6 +138,8 @@ gcp.project @defaults("name") {
   storage() gcp.project.storageService
   // Monitoring resources
   monitoring() gcp.project.monitoringService
+  // Binary Authorization resources
+  binaryAuthorization() gcp.project.binaryAuthorizationControl
 }
 
 // Google Cloud (GCP) service
@@ -2808,4 +2810,39 @@ private gcp.project.monitoringService.alertPolicy {
   updatedBy string
   // Configuration for notification channels notifications
   alertStrategy dict
+}
+
+private gcp.project.binaryAuthorizationControl {
+  // The policy for container image binary authorization
+  policy gcp.project.binaryAuthorizationControl.policy
+}
+
+private gcp.project.binaryAuthorizationControl.policy {
+  // The resource name
+  name string
+  // Controls the evaluation of a Google-maintained global admission policy for common system-level images
+  globalPolicyEvaluationMode string
+  // Admission policy allowlisting
+  admissionWhitelistPatterns []string
+  // Per-cluster admission rules
+  clusterAdmissionRules map[string]gcp.project.binaryAuthorizationControl.admissionRule
+  // Per-kubernetes-namespace admission rules
+  kubernetesNamespaceAdmissionRules map[string]gcp.project.binaryAuthorizationControl.admissionRule
+  // Per-kubernetes-service-account admission rules
+  kubernetesServiceAccountAdmissionRules map[string]gcp.project.binaryAuthorizationControl.admissionRule
+  // Per-istio-service-identity admission rules
+  istioServiceIdentityAdmissionRules map[string]gcp.project.binaryAuthorizationControl.admissionRule
+  // Default admission rule for a cluster without a per-cluster, per-kubernetes-service-account, or per-istio-service-identity admission rule
+  defaultAdmissionRule gcp.project.binaryAuthorizationControl.admissionRule
+  // Time when the policy was last updated
+  updated time
+}
+
+private gcp.project.binaryAuthorizationControl.admissionRule {
+  // How this admission rule will be evaluated
+  evaluationMode string
+  // The action when a pod creation is denied by the admission rule
+  enforcementMode string
+  // The resource names of the attestors that must attest to a container image
+  requireAttestationsBy []string
 }

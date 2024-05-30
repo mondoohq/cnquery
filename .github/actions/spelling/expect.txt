@@ -41,6 +41,7 @@ ingresstls
 iotedge
 ipsetforwardedipconfig
 ipsetreferencestatement
+istio
 jira
 jsonbody
 labelmatchstatement
