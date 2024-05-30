@@ -10,7 +10,7 @@ import (
 	"go.mondoo.com/cnquery/v11/explorer"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/mrn"
-	"go.mondoo.com/cnquery/v11/shared"
+	"go.mondoo.com/cnquery/v11/utils/iox"
 )
 
 type csvStruct struct {
@@ -28,7 +28,7 @@ func (c csvStruct) toSlice() []string {
 }
 
 // ConvertToCSV writes the given report collection to the given output directory
-func ConvertToCSV(data *explorer.ReportCollection, out shared.OutputHelper) error {
+func ConvertToCSV(data *explorer.ReportCollection, out iox.OutputHelper) error {
 	w := csv.NewWriter(out)
 
 	// write header
@@ -93,7 +93,7 @@ func ConvertToCSV(data *explorer.ReportCollection, out shared.OutputHelper) erro
 				if resolvedPack != nil && resolvedPack.ExecutionJob != nil {
 					for qid, query := range resolvedPack.ExecutionJob.Queries {
 						buf := &bytes.Buffer{}
-						resultWriter := &shared.IOWriter{Writer: buf}
+						resultWriter := &iox.IOWriter{Writer: buf}
 						err := ResultsToCsvEntry(query.Code, results, resultWriter)
 						if err != nil {
 							return err
@@ -131,7 +131,7 @@ func ConvertToCSV(data *explorer.ReportCollection, out shared.OutputHelper) erro
 	return w.Error()
 }
 
-func ResultsToCsvEntry(code *llx.CodeBundle, results map[string]*llx.RawResult, out shared.OutputHelper) error {
+func ResultsToCsvEntry(code *llx.CodeBundle, results map[string]*llx.RawResult, out iox.OutputHelper) error {
 	var checksums []string
 	eps := code.CodeV2.Entrypoints()
 	checksums = make([]string, len(eps))

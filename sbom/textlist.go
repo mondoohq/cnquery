@@ -4,11 +4,12 @@
 package sbom
 
 import (
-	"github.com/muesli/termenv"
-	"go.mondoo.com/cnquery/v11/cli/theme/colors"
 	"io"
 	"sort"
 	"strings"
+
+	"github.com/muesli/termenv"
+	"go.mondoo.com/cnquery/v11/cli/theme/colors"
 )
 
 type cliOption func(*cLiOpts)
@@ -23,6 +24,7 @@ func WithEvidence() cliOption {
 	}
 }
 
+// TextList is a simple text list output format
 type TextList struct {
 	opts cLiOpts
 }
@@ -31,6 +33,10 @@ func (s *TextList) ApplyOptions(opts ...cliOption) {
 	for _, opt := range opts {
 		opt(&s.opts)
 	}
+}
+
+func (s *TextList) Convert(bom *Sbom) (interface{}, error) {
+	return nil, conversionNotSupportedError
 }
 
 func (s *TextList) Render(w io.Writer, bom *Sbom) error {
@@ -91,4 +97,8 @@ func (s *TextList) Render(w io.Writer, bom *Sbom) error {
 		}
 	}
 	return nil
+}
+
+func (s *TextList) Parse(r io.Reader) (*Sbom, error) {
+	return nil, parsingNotSupportedError
 }

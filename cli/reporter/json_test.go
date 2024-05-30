@@ -5,17 +5,17 @@ package reporter
 
 import (
 	"bytes"
-	"go.mondoo.com/cnquery/v11/explorer"
 	"os"
-	"sigs.k8s.io/yaml"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v11/explorer"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/testutils"
-	"go.mondoo.com/cnquery/v11/shared"
+	"go.mondoo.com/cnquery/v11/utils/iox"
+	"sigs.k8s.io/yaml"
 )
 
 var x = testutils.InitTester(testutils.LinuxMock())
@@ -44,7 +44,7 @@ func TestQueryConversion(t *testing.T) {
 	}
 
 	var out strings.Builder
-	w := shared.IOWriter{Writer: &out}
+	w := iox.IOWriter{Writer: &out}
 
 	for i := range tests {
 		cur := tests[i]
@@ -66,7 +66,7 @@ func TestJsonReporter(t *testing.T) {
 	require.NoError(t, err)
 
 	buf := &bytes.Buffer{}
-	w := shared.IOWriter{Writer: buf}
+	w := iox.IOWriter{Writer: buf}
 	err = ConvertToJSON(report, &w)
 	require.NoError(t, err)
 }

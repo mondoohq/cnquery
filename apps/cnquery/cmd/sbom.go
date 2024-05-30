@@ -17,6 +17,8 @@ import (
 	"go.mondoo.com/cnquery/v11/providers"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	sbom "go.mondoo.com/cnquery/v11/sbom"
+	"go.mondoo.com/cnquery/v11/sbom/generator"
+	"go.mondoo.com/cnquery/v11/sbom/pack"
 )
 
 func init() {
@@ -66,7 +68,7 @@ Note this command is experimental and may change in the future.
 
 var sbomCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plugin.ParseCLIRes) {
 	log.Info().Msg("This command is experimental. Please report any issues to https://github.com/mondoohq/cnquery.")
-	pb, err := sbom.QueryPack()
+	pb, err := pack.QueryPack()
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to load query pack")
 	}
@@ -93,14 +95,14 @@ var sbomCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *pl
 		logger.DebugDumpJSON("mondoo-sbom-report", data)
 	}
 
-	boms, err := sbom.NewBom(cnspecReport)
+	boms, err := generator.NewBom(cnspecReport)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to parse bom")
 	}
 
-	var exporter sbom.Exporter
+	var exporter sbom.FormatSpecificationHandler
 	output := viper.GetString("output")
-	exporter = sbom.NewExporter(output)
+	exporter = sbom.New(output)
 	if exporter == nil {
 		log.Fatal().Err(err).Msg("failed to get exporter for output format: " + output)
 	}

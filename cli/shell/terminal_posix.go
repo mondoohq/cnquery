@@ -10,12 +10,18 @@ import (
 	"syscall"
 
 	"github.com/pkg/term/termios"
+	"go.mondoo.com/cnquery/v11/utils/piped"
 	"golang.org/x/sys/unix"
 )
 
 var terminalIos *unix.Termios
 
 func (s *Shell) backupTerminalSettings() {
+	// we only backup if we have no input pipe
+	if piped.IsPipe() {
+		return
+	}
+
 	var err error
 	terminalIos, err = termios.Tcgetattr(uintptr(syscall.Stdin))
 	if err != nil {

@@ -4,8 +4,11 @@
 package sbom
 
 import (
-	"github.com/CycloneDX/cyclonedx-go"
+	"errors"
+	"io"
 	"strings"
+
+	"github.com/CycloneDX/cyclonedx-go"
 )
 
 const (
@@ -17,6 +20,18 @@ const (
 	FormatList          string = "table"
 )
 
+var conversionNotSupportedError = errors.New("conversion is not supported")
+var parsingNotSupportedError = errors.New("parsing is not supported")
+
+type FormatSpecificationHandler interface {
+	// Convert converts cnquery sbom to the desired format
+	Convert(bom *Sbom) (interface{}, error)
+	// Parse parses the sbom format to *Sbom
+	Parse(r io.Reader) (*Sbom, error)
+	// Render writes the converted sbom to the writer in the desired format
+	Render(w io.Writer, bom *Sbom) error
+}
+
 func AllFormats() string {
 	formats := []string{
 		FormatJson, FormatCycloneDxJSON, FormatCycloneDxXML, FormatSpdxJSON, FormatSpdxTagValue, FormatList,
@@ -25,7 +40,7 @@ func AllFormats() string {
 	return strings.Join(formats, ", ")
 }
 
-func NewExporter(fomat string) Exporter {
+func New(fomat string) FormatSpecificationHandler {
 	switch fomat {
 	case FormatJson:
 		return &CnqueryBOM{}

@@ -1,34 +1,39 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package sbom
+package sbom_test
 
 import (
 	"bytes"
+	"os"
 	"testing"
 
 	"github.com/CycloneDX/cyclonedx-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v11/sbom"
+	"go.mondoo.com/cnquery/v11/sbom/generator"
 )
 
-func TestCycloneDX(t *testing.T) {
-	r := loadTestReport(t)
-	sboms, err := GenerateBom(r)
+func TestCycloneDxOutput(t *testing.T) {
+	report, err := generator.LoadReport("./testdata/alpine.json")
+	require.NoError(t, err)
+
+	sboms, err := generator.GenerateBom(report)
 	require.NoError(t, err)
 
 	// store bom in different formats
 	selectedBom := sboms[0]
 
-	var exporter Exporter
-	output := bytes.Buffer{}
-	exporter = &CycloneDX{
+	formatHandler := &sbom.CycloneDX{
 		Format: cyclonedx.BOMFileFormatJSON,
 	}
-	err = exporter.Render(&output, selectedBom)
-	require.NoError(t, err)
 
+	output := bytes.Buffer{}
+	err = formatHandler.Render(&output, selectedBom)
+	require.NoError(t, err)
 	data := output.String()
+
 	// os.WriteFile("./testdata/bom_cyclone.json", output.Bytes(), 0700)
 	assert.Contains(t, data, "cyclonedx")
 
@@ -47,4 +52,30 @@ func TestCycloneDX(t *testing.T) {
 	assert.Contains(t, data, "npm")
 	assert.Contains(t, data, "cpe:2.3:a:npm:npm:10.2.4:*:*:*:*:*:*:*")
 	assert.Contains(t, data, "pkg:npm/npm@10.2.4")
+}
+
+func TestCycloneDxJsonDecoding(t *testing.T) {
+	f, err := os.Open("./testdata/alpine-319.cyclone.json")
+	require.NoError(t, err)
+
+	formatHandler := &sbom.CycloneDX{
+		Format: cyclonedx.BOMFileFormatJSON,
+	}
+
+	bom, err := formatHandler.Parse(f)
+	require.NoError(t, err)
+	assert.NotNil(t, bom)
+}
+
+func TestCycloneDxXmlDecoding(t *testing.T) {
+	f, err := os.Open("./testdata/alpine-319.cyclone.xml")
+	require.NoError(t, err)
+
+	formatHandler := &sbom.CycloneDX{
+		Format: cyclonedx.BOMFileFormatXML,
+	}
+
+	bom, err := formatHandler.Parse(f)
+	require.NoError(t, err)
+	assert.NotNil(t, bom)
 }

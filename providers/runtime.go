@@ -498,14 +498,23 @@ func (r *Runtime) SetRecording(recording llx.Recording) error {
 		log.Warn().Msg("set recording while no provider is set on runtime")
 		return nil
 	}
-	if r.Provider.Instance.ID != mockProvider.ID {
+	if r.Provider.Instance.ID != mockProvider.ID && r.Provider.Instance.ID != sbomProvider.ID {
 		return nil
 	}
 
-	service := r.Provider.Instance.Plugin.(*mockProviderService)
-	// TODO: This is problematic, since we don't have multiple instances of
-	// the service!!
-	service.runtime = r
+	if r.Provider.Instance.ID == mockProvider.ID {
+		service := r.Provider.Instance.Plugin.(*mockProviderService)
+		// TODO: This is problematic, since we don't have multiple instances of
+		// the service!!
+		service.runtime = r
+	}
+
+	if r.Provider.Instance.ID == sbomProvider.ID {
+		service := r.Provider.Instance.Plugin.(*sbomProviderService)
+		// TODO: This is problematic, since we don't have multiple instances of
+		// the service!!
+		service.runtime = r
+	}
 
 	return nil
 }

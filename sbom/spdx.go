@@ -5,24 +5,35 @@ package sbom
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
+	"regexp"
+	"strings"
+	"time"
+
+	"github.com/package-url/packageurl-go"
 	"github.com/spdx/tools-golang/convert"
 	"github.com/spdx/tools-golang/spdx"
 	"github.com/spdx/tools-golang/spdx/v2/v2_1"
 	"github.com/spdx/tools-golang/spdx/v2/v2_2"
 	"github.com/spdx/tools-golang/spdx/v2/v2_3"
 	"github.com/spdx/tools-golang/tagvalue"
-	"io"
-	"regexp"
-	"time"
 )
+
+func NewSPDX(format string) *Spdx {
+	return &Spdx{
+		Version: "2.3",
+		Format:  format,
+	}
+}
 
 type Spdx struct {
 	Version string
 	Format  string
 }
 
-func (s *Spdx) convert(bom *Sbom) *spdx.Document {
+func (s *Spdx) convertToSpdx(bom *Sbom) *spdx.Document {
 	doc := &spdx.Document{
 		SPDXVersion:                spdx.Version,
 		SPDXIdentifier:             "DOCUMENT",
@@ -32,7 +43,11 @@ func (s *Spdx) convert(bom *Sbom) *spdx.Document {
 		CreationInfo: &spdx.CreationInfo{
 			Creators: []spdx.Creator{
 				{
-					Creator:     bom.Generator.Name,
+					Creator:     bom.Generator.Vendor,
+					CreatorType: "Organization",
+				},
+				{
+					Creator:     bom.Generator.Name + "-" + bom.Generator.Version,
 					CreatorType: "Tool",
 				},
 			},
@@ -53,7 +68,6 @@ func (s *Spdx) convert(bom *Sbom) *spdx.Document {
 					Locator:  cpe,
 				})
 			}
-
 		}
 
 		if pkg.Purl != "" {
@@ -90,8 +104,8 @@ func NewSPDXPackageID(pkg *Package) spdx.ElementID {
 	return spdx.ElementID(id)
 }
 
-func (s *Spdx) Render(w io.Writer, bom *Sbom) error {
-	spdxLatestBom := s.convert(bom)
+func (s *Spdx) Convert(bom *Sbom) (interface{}, error) {
+	spdxLatestBom := s.convertToSpdx(bom)
 
 	var spdxBom any
 	var err error
@@ -111,11 +125,19 @@ func (s *Spdx) Render(w io.Writer, bom *Sbom) error {
 		err = convert.Document(spdxLatestBom, &doc)
 		spdxBom = doc
 	default:
-		return fmt.Errorf("unsupported SPDX version %q", s.Version)
+		return nil, fmt.Errorf("unsupported SPDX version %q", s.Version)
 	}
 
 	if err != nil {
-		return fmt.Errorf("unable to convert SBOM to SPDX document: %w", err)
+		return nil, fmt.Errorf("unable to convertToCycloneDx SBOM to SPDX document: %w", err)
+	}
+	return spdxBom, nil
+}
+
+func (s *Spdx) Render(w io.Writer, bom *Sbom) error {
+	spdxBom, err := s.Convert(bom)
+	if err != nil {
+		return err
 	}
 
 	switch s.Format {
@@ -133,4 +155,95 @@ func (s *Spdx) Render(w io.Writer, bom *Sbom) error {
 		enc.SetIndent("", "  ")
 		return enc.Encode(spdxBom)
 	}
+}
+
+func (s *Spdx) Parse(r io.Reader) (*Sbom, error) {
+	// try to parse all supported SPDX format
+	if s.Format == FormatSpdxTagValue {
+		doc, err := tagvalue.Read(r)
+		if err == nil {
+			return s.convertToSbom(doc), nil
+		}
+	} else if s.Format == FormatSpdxJSON {
+		var doc spdx.Document
+		err := json.NewDecoder(r).Decode(&doc)
+		if err == nil {
+			return s.convertToSbom(&doc), nil
+		}
+	}
+
+	return nil, errors.New("unable to parse SPDX document")
+}
+
+func (s *Spdx) convertToSbom(doc *spdx.Document) *Sbom {
+	bom := &Sbom{
+		Generator: &Generator{
+			Name: doc.CreationInfo.Creators[0].Creator,
+		},
+		Asset: &Asset{
+			Name: doc.DocumentName,
+		},
+		Packages: []*Package{},
+	}
+
+	name := ""
+	pf := &Platform{}
+
+	for i := range doc.Packages {
+		pkg := doc.Packages[i]
+
+		bomPkg := &Package{
+			Name:        pkg.PackageName,
+			Version:     pkg.PackageVersion,
+			Description: pkg.PackageDescription,
+			Location:    pkg.PackageFileName,
+			Type:        "", // extract package type from purl, see below
+			Purl:        "", // extract package type from purl, see below
+			Cpes:        []string{},
+		}
+
+		for _, ref := range pkg.PackageExternalReferences {
+			if ref.RefType == spdx.PackageManagerPURL {
+				bomPkg.Purl = ref.Locator
+				pkgUrl, err := packageurl.FromString(ref.Locator)
+				if err == nil {
+					bomPkg.Type = pkgUrl.Type
+
+					// extract distro information
+					m := pkgUrl.Qualifiers.Map()
+					distroVal, ok := m["distro"]
+					if ok {
+						name = distroVal
+						pf.Title = distroVal
+						vals := strings.Split(distroVal, "-")
+						if len(vals) > 0 {
+							pf.Name = vals[0]
+							pf.Version = vals[1]
+						}
+						pf.Family = familyMap[pf.Name]
+					}
+					arch, ok := m["arch"]
+					if ok {
+						pf.Arch = arch
+					}
+				}
+			}
+			if ref.RefType == spdx.SecurityCPE23Type {
+				bomPkg.Cpes = append(bomPkg.Cpes, ref.Locator)
+			}
+		}
+
+		if pkg.PackageFileName != "" {
+			bomPkg.EvidenceList = append(bomPkg.EvidenceList, &Evidence{
+				Type:  EvidenceType_EVIDENCE_TYPE_FILE,
+				Value: pkg.PackageFileName,
+			})
+		}
+
+		bom.Packages = append(bom.Packages, bomPkg)
+	}
+
+	bom.Asset.Name = name
+	bom.Asset.Platform = pf
+	return bom
 }

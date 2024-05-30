@@ -26,8 +26,7 @@ type recording struct {
 	doNotSave bool `json:"-"`
 }
 
-// Creates a recording that holds only the specified asset
-func FromAsset(asset *inventory.Asset) (*recording, error) {
+func NewAssetRecording(asset *inventory.Asset) *Asset {
 	id := asset.Mrn
 	if id == "" {
 		id = asset.Id
@@ -51,13 +50,18 @@ func FromAsset(asset *inventory.Asset) (*recording, error) {
 		ai.Runtime = asset.Platform.Runtime
 		ai.Labels = asset.Platform.Labels
 	}
+	return &Asset{
+		Asset:       ai,
+		connections: map[string]*connection{},
+		resources:   map[string]*Resource{},
+	}
+}
+
+// Creates a recording that holds only the specified asset
+func FromAsset(asset *inventory.Asset) (*recording, error) {
 	r := &recording{
 		Assets: []*Asset{
-			{
-				Asset:       ai,
-				connections: map[string]*connection{},
-				resources:   map[string]*Resource{},
-			},
+			NewAssetRecording(asset),
 		},
 	}
 
@@ -199,18 +203,10 @@ func (r *recording) refreshCache() {
 	r.assets = make(map[uint32]*Asset, len(r.Assets))
 	for i := range r.Assets {
 		asset := r.Assets[i]
-		asset.resources = make(map[string]*Resource, len(asset.Resources))
-		asset.connections = make(map[string]*connection, len(asset.Connections))
+		asset.RefreshCache()
 
-		for j := range asset.Resources {
-			resource := &asset.Resources[j]
-			asset.resources[resource.Resource+"\x00"+resource.ID] = resource
-		}
-
-		for j := range asset.Connections {
-			conn := &asset.Connections[j]
-			asset.connections[conn.Url] = conn
-
+		for i := range asset.Connections {
+			conn := asset.Connections[i]
 			// only connection ID's != 0 are valid IDs. We get lots of 0 when we
 			// initially load this object, so we won't know yet which asset belongs
 			// to which connection.

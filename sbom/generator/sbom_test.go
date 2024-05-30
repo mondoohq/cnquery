@@ -1,30 +1,21 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package sbom
+package generator
 
 import (
-	"os"
+	"go.mondoo.com/cnquery/v11/sbom"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v11/cli/reporter"
-	"sigs.k8s.io/yaml"
 )
 
-func loadTestReport(t *testing.T) *reporter.Report {
-	data, err := os.ReadFile("./testdata/alpine.json")
+func TestSbomGeneration(t *testing.T) {
+	report, err := LoadReport("../testdata/alpine.json")
 	require.NoError(t, err)
-	var report *reporter.Report
-	err = yaml.Unmarshal(data, &report)
-	require.NoError(t, err)
-	return report
-}
 
-func TestSbomParsing(t *testing.T) {
-	r := loadTestReport(t)
-	sboms, err := GenerateBom(r)
+	sboms, err := GenerateBom(report)
 	require.NoError(t, err)
 
 	// store bom in different formats
@@ -40,29 +31,29 @@ func TestSbomParsing(t *testing.T) {
 	// search os package
 	pkg := findProtoPkg(selectedBom.Packages, "alpine-baselayout")
 	assert.Equal(t, "alpine-baselayout", pkg.Name)
-	assert.Contains(t, pkg.EvidenceList, &Evidence{
-		Type:  EvidenceType_EVIDENCE_TYPE_FILE,
+	assert.Contains(t, pkg.EvidenceList, &sbom.Evidence{
+		Type:  sbom.EvidenceType_EVIDENCE_TYPE_FILE,
 		Value: "etc/profile.d/color_prompt.sh.disabled",
 	})
 
 	// search python package
 	pkg = findProtoPkg(selectedBom.Packages, "pip")
 	assert.Equal(t, "pip", pkg.Name)
-	assert.Contains(t, pkg.EvidenceList, &Evidence{
-		Type:  EvidenceType_EVIDENCE_TYPE_FILE,
+	assert.Contains(t, pkg.EvidenceList, &sbom.Evidence{
+		Type:  sbom.EvidenceType_EVIDENCE_TYPE_FILE,
 		Value: "/opt/lib/python3.9/site-packages/pip-21.2.4.dist-info/METADATA",
 	})
 
 	// search npm package
 	pkg = findProtoPkg(selectedBom.Packages, "npm")
 	assert.Equal(t, "npm", pkg.Name)
-	assert.Contains(t, pkg.EvidenceList, &Evidence{
-		Type:  EvidenceType_EVIDENCE_TYPE_FILE,
+	assert.Contains(t, pkg.EvidenceList, &sbom.Evidence{
+		Type:  sbom.EvidenceType_EVIDENCE_TYPE_FILE,
 		Value: "/opt/lib/node_modules/npm/package.json",
 	})
 }
 
-func findProtoPkg(pkgs []*Package, name string) *Package {
+func findProtoPkg(pkgs []*sbom.Package, name string) *sbom.Package {
 	for i := range pkgs {
 		if pkgs[i].Name == name {
 			return pkgs[i]

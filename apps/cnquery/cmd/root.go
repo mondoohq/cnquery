@@ -68,7 +68,7 @@ func BuildRootCmd() (*cobra.Command, error) {
 			Command:             sbomCmd,
 			Run:                 sbomCmdRun,
 			Action:              "Collect a software bill of materials (SBOM) for ",
-			SupportedConnectors: []string{"docker", "container", "filesystem", "local", "ssh", "vagrant", "winrm"},
+			SupportedConnectors: []string{"docker", "container", "filesystem", "local", "ssh", "vagrant", "winrm", "sbom"},
 		},
 	)
 	return rootCmd, err
