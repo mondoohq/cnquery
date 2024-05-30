@@ -18,7 +18,7 @@ func (a *mqlMicrosoftPolicies) authorizationPolicy() (interface{}, error) {
 		return nil, err
 	}
 	ctx := context.Background()
-	resp, err := graphClient.Policies().AuthorizationPolicy().Get(ctx, &policies.AuthorizationPolicyRequestBuilderGetRequestConfiguration{})
+	resp, err := graphClient.Policies().AuthorizationPolicy().Get(ctx, &policies.AuthorizationpolicyAuthorizationPolicyRequestBuilderGetRequestConfiguration{})
 	if err != nil {
 		return nil, transformError(err)
 	}
@@ -33,7 +33,7 @@ func (a *mqlMicrosoftPolicies) identitySecurityDefaultsEnforcementPolicy() (inte
 		return nil, err
 	}
 	ctx := context.Background()
-	policy, err := graphClient.Policies().IdentitySecurityDefaultsEnforcementPolicy().Get(ctx, &policies.IdentitySecurityDefaultsEnforcementPolicyRequestBuilderGetRequestConfiguration{})
+	policy, err := graphClient.Policies().IdentitySecurityDefaultsEnforcementPolicy().Get(ctx, &policies.IdentitysecuritydefaultsenforcementpolicyIdentitySecurityDefaultsEnforcementPolicyRequestBuilderGetRequestConfiguration{})
 	if err != nil {
 		return nil, transformError(err)
 	}
@@ -50,7 +50,7 @@ func (a *mqlMicrosoftPolicies) adminConsentRequestPolicy() (interface{}, error) 
 	}
 
 	ctx := context.Background()
-	policy, err := graphClient.Policies().AdminConsentRequestPolicy().Get(ctx, &policies.AdminConsentRequestPolicyRequestBuilderGetRequestConfiguration{})
+	policy, err := graphClient.Policies().AdminConsentRequestPolicy().Get(ctx, &policies.AdminconsentrequestpolicyAdminConsentRequestPolicyRequestBuilderGetRequestConfiguration{})
 	if err != nil {
 		return nil, transformError(err)
 	}
@@ -67,7 +67,7 @@ func (a *mqlMicrosoftPolicies) permissionGrantPolicies() ([]interface{}, error) 
 	}
 
 	ctx := context.Background()
-	resp, err := graphClient.Policies().PermissionGrantPolicies().Get(ctx, &policies.PermissionGrantPoliciesRequestBuilderGetRequestConfiguration{})
+	resp, err := graphClient.Policies().PermissionGrantPolicies().Get(ctx, &policies.PermissiongrantpoliciesPermissionGrantPoliciesRequestBuilderGetRequestConfiguration{})
 	if err != nil {
 		return nil, transformError(err)
 	}
