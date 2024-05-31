@@ -1539,6 +1539,7 @@ resources:
       diskSize: {}
       instanceTypes: {}
       labels: {}
+      modifiedAt: {}
       name: {}
       nodeRole: {}
       region: {}

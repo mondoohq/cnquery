@@ -3040,6 +3040,8 @@ private aws.eks.nodegroup @defaults("name scalingConfig.DesiredSize diskSize sta
   region string
   // Time when the EKS node group was created
   createdAt() time
+  // Time when the EKS node group was last modified
+  modifiedAt() time
   // Status for the EKS node group
   status() string
   // Capacity type for the EKS node group (ON_DEMAND, SPOT)

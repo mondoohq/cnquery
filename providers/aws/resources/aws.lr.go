@@ -4276,6 +4276,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.eks.nodegroup.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksNodegroup).GetCreatedAt()).ToDataRes(types.Time)
 	},
+	"aws.eks.nodegroup.modifiedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksNodegroup).GetModifiedAt()).ToDataRes(types.Time)
+	},
 	"aws.eks.nodegroup.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksNodegroup).GetStatus()).ToDataRes(types.String)
 	},
@@ -9703,6 +9706,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.eks.nodegroup.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEksNodegroup).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.eks.nodegroup.modifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksNodegroup).ModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.eks.nodegroup.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25175,6 +25182,7 @@ type mqlAwsEksNodegroup struct {
 	Arn plugin.TValue[string]
 	Region plugin.TValue[string]
 	CreatedAt plugin.TValue[*time.Time]
+	ModifiedAt plugin.TValue[*time.Time]
 	Status plugin.TValue[string]
 	CapacityType plugin.TValue[string]
 	ScalingConfig plugin.TValue[interface{}]
@@ -25240,6 +25248,12 @@ func (c *mqlAwsEksNodegroup) GetRegion() *plugin.TValue[string] {
 func (c *mqlAwsEksNodegroup) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
 		return c.createdAt()
+	})
+}
+
+func (c *mqlAwsEksNodegroup) GetModifiedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.ModifiedAt, func() (*time.Time, error) {
+		return c.modifiedAt()
 	})
 }
 

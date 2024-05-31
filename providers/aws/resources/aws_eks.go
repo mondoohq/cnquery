@@ -245,6 +245,14 @@ func (a *mqlAwsEksNodegroup) createdAt() (*time.Time, error) {
 	return ng.CreatedAt, nil
 }
 
+func (a *mqlAwsEksNodegroup) modifiedAt() (*time.Time, error) {
+	ng, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	return ng.ModifiedAt, nil
+}
+
 func (a *mqlAwsEksNodegroup) scalingConfig() (map[string]interface{}, error) {
 	ng, err := a.fetchDetails()
 	if err != nil {
