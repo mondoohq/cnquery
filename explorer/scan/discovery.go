@@ -167,6 +167,12 @@ func discoverAssets(rootAssetWithRuntime *AssetWithRuntime, resolvedRootAsset *i
 			continue
 		}
 
+		// If no asset was returned and no error, then we observed a duplicate asset with a
+		// runtime that already exists.
+		if assetWithRuntime == nil {
+			continue
+		}
+
 		resolvedAsset := assetWithRuntime.Runtime.Provider.Connection.Asset
 		if len(resolvedAsset.PlatformIds) > 0 {
 			prepareAsset(resolvedAsset, resolvedRootAsset, runtimeLabels)
@@ -196,6 +202,12 @@ func createRuntimeForAsset(asset *inventory.Asset, upstream *upstream.UpstreamCo
 	if err != nil {
 		return nil, err
 	}
+
+	// If the runtime already has a connection, it means we have a duplicate asset
+	if runtime.Provider.Connection != nil {
+		return nil, nil
+	}
+
 	if err = runtime.SetRecording(recording); err != nil {
 		return nil, err
 	}

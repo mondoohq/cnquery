@@ -149,6 +149,10 @@ func TestDiscoverAssets(t *testing.T) {
 		assert.Equal(t, "mondoo-operator-123", discoveredAssets.Assets[0].Asset.ManagedBy)
 		assert.Equal(t, "mondoo-operator-123", discoveredAssets.Assets[1].Asset.ManagedBy)
 		assert.Equal(t, "mondoo-operator-123", discoveredAssets.Assets[2].Asset.ManagedBy)
+
+		for _, asset := range discoveredAssets.Assets {
+			asset.Runtime.Close()
+		}
 	})
 
 	t.Run("with duplicate root assets", func(t *testing.T) {
@@ -160,6 +164,10 @@ func TestDiscoverAssets(t *testing.T) {
 		// Make sure no duplicates are returned
 		assert.Len(t, discoveredAssets.Assets, 3)
 		assert.Len(t, discoveredAssets.Errors, 0)
+
+		for _, asset := range discoveredAssets.Assets {
+			asset.Runtime.Close()
+		}
 	})
 
 	t.Run("with duplicate discovered assets", func(t *testing.T) {
@@ -171,6 +179,10 @@ func TestDiscoverAssets(t *testing.T) {
 		// Make sure no duplicates are returned
 		assert.Len(t, discoveredAssets.Assets, 3)
 		assert.Len(t, discoveredAssets.Errors, 0)
+
+		for _, asset := range discoveredAssets.Assets {
+			asset.Runtime.Close()
+		}
 	})
 
 	t.Run("copy root asset annotations", func(t *testing.T) {
@@ -188,6 +200,10 @@ func TestDiscoverAssets(t *testing.T) {
 				assert.Equal(t, v, asset.Asset.Annotations[k])
 			}
 		}
+
+		for _, asset := range discoveredAssets.Assets {
+			asset.Runtime.Close()
+		}
 	})
 
 	t.Run("copy root asset managedBy", func(t *testing.T) {
@@ -198,6 +214,10 @@ func TestDiscoverAssets(t *testing.T) {
 
 		for _, asset := range discoveredAssets.Assets {
 			assert.Equal(t, inv.Spec.Assets[0].ManagedBy, asset.Asset.ManagedBy)
+		}
+
+		for _, asset := range discoveredAssets.Assets {
+			asset.Runtime.Close()
 		}
 	})
 
@@ -220,6 +240,10 @@ func TestDiscoverAssets(t *testing.T) {
 		for _, asset := range discoveredAssets.Assets {
 			require.Contains(t, asset.Asset.Labels, "mondoo.com/exec-environment")
 			assert.Equal(t, "actions.github.com", asset.Asset.Labels["mondoo.com/exec-environment"])
+		}
+
+		for _, asset := range discoveredAssets.Assets {
+			asset.Runtime.Close()
 		}
 	})
 
@@ -244,6 +268,10 @@ func TestDiscoverAssets(t *testing.T) {
 			require.Contains(t, asset.Asset.Labels, "mondoo.com/exec-environment")
 			assert.Equal(t, "actions.github.com", asset.Asset.Labels["mondoo.com/exec-environment"])
 		}
+
+		for _, asset := range discoveredAssets.Assets {
+			asset.Runtime.Close()
+		}
 	})
 
 	t.Run("scannable root asset", func(t *testing.T) {
@@ -253,5 +281,9 @@ func TestDiscoverAssets(t *testing.T) {
 		discoveredAssets, err := DiscoverAssets(context.Background(), inv, nil, recording.Null{})
 		require.NoError(t, err)
 		assert.Len(t, discoveredAssets.Assets, 1)
+
+		for _, asset := range discoveredAssets.Assets {
+			asset.Runtime.Close()
+		}
 	})
 }
