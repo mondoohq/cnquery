@@ -1,0 +1,76 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/cnquery/v11/providers/shodan"
+option go_package = "go.mondoo.com/cnquery/v11/providers/shodan/resources"
+
+// Shodan
+shodan {}
+
+// Shodan Host Information
+shodan.host @defaults("ip") {
+  init(ip string)
+  // Host IP
+  ip string
+  // Host Operating System
+  os() string
+  // Organization that owns the IP
+  org() string
+  // ISP that owns the IP
+  isp() string
+  // Host ASN
+  asn() string
+  // Host tags
+  tags() []string
+  // List of hostnames assigned to the IP
+  hostnames() []string
+  // Open ports
+  ports() []int
+  // Vulnerabilities
+  vulnerabilities() []string
+}
+
+// Shodan Domain Information
+shodan.domain @defaults("name") {
+  init(name string)
+  // Domain name
+  name string
+  // Domain tags
+  tags() []string
+  // List of subdomains
+  subdomains() []string
+  // DNS NS records
+  nsrecords() []shodan.nsrecord
+}
+
+// Shodan DNS NS Record
+private shodan.nsrecord @defaults("domain subdomain type") {
+  // DNS domain
+  domain string
+  // DNS subdomain
+  subdomain string
+  // DNS record types
+  type string
+  // DNS record value
+  value string
+  // Last seen by Shodan
+  lastSeen time
+}
+
+// Shodan account
+shodan.profile @defaults("displayName"){
+  member bool
+  credits int
+  displayName string
+  createdAt time
+}
+
+// Shodan API Plan Information
+shodan.apiPlan @defaults("plan"){
+  scanCredits int
+  plan string
+  unlocked bool
+  unlockedLeft int
+  telnet bool
+  monitoredIps int
+}

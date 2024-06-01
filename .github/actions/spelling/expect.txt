@@ -35,6 +35,8 @@ gpu
 gvnic
 headerorder
 hostkeys
+hostnames
+iana
 iap
 ilb
 ingresstls
@@ -59,6 +61,7 @@ nodegroup
 nodepool
 nullgroup
 nullstring
+nsrecord
 opcplc
 orstatement
 PAYG
@@ -75,6 +78,7 @@ rulegroupreferencestatement
 Sas
 scim
 serviceprincipals
+shodan
 singlequeryargument
 sizeconstraintstatement
 Snat
