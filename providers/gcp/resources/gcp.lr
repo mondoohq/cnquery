@@ -1132,6 +1132,10 @@ private gcp.project.sqlService.instance.settings.ipConfiguration {
   privateNetwork string
   // Whether SSL connections over IP are enforced
   requireSsl bool
+  // Specifies how SSL/TLS is enforced in database connections.
+  sslMode string
+  // Controls connectivity to private IP instances from Google services, such as BigQuery.
+  enablePrivatePathForGoogleCloudServices bool
 }
 
 // Google Cloud (GCP) SQL instance settings maintenance window
