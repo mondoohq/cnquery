@@ -233,12 +233,14 @@ func (g *mqlGcpProjectSqlService) instances() ([]interface{}, error) {
 			}
 
 			mqlIpCfg, err = CreateResource(g.MqlRuntime, "gcp.project.sqlService.instance.settings.ipConfiguration", map[string]*llx.RawData{
-				"id":                 llx.StringData(fmt.Sprintf("%s/settings/ipConfiguration", instanceId)),
-				"allocatedIpRange":   llx.StringData(s.IpConfiguration.AllocatedIpRange),
-				"authorizedNetworks": llx.ArrayData(mqlAclEntries, types.Dict),
-				"ipv4Enabled":        llx.BoolData(s.IpConfiguration.Ipv4Enabled),
-				"privateNetwork":     llx.StringData(s.IpConfiguration.PrivateNetwork),
-				"requireSsl":         llx.BoolData(s.IpConfiguration.RequireSsl),
+				"allocatedIpRange":                        llx.StringData(s.IpConfiguration.AllocatedIpRange),
+				"authorizedNetworks":                      llx.ArrayData(mqlAclEntries, types.Dict),
+				"enablePrivatePathForGoogleCloudServices": llx.BoolData(s.IpConfiguration.EnablePrivatePathForGoogleCloudServices),
+				"id":             llx.StringData(fmt.Sprintf("%s/settings/ipConfiguration", instanceId)),
+				"ipv4Enabled":    llx.BoolData(s.IpConfiguration.Ipv4Enabled),
+				"privateNetwork": llx.StringData(s.IpConfiguration.PrivateNetwork),
+				"requireSsl":     llx.BoolData(s.IpConfiguration.RequireSsl),
+				"sslMode":        llx.StringData(s.IpConfiguration.SslMode),
 			})
 			if err != nil {
 				return nil, err

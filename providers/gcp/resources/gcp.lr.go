@@ -2032,6 +2032,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.sqlService.instance.settings.ipConfiguration.requireSsl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).GetRequireSsl()).ToDataRes(types.Bool)
 	},
+	"gcp.project.sqlService.instance.settings.ipConfiguration.sslMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).GetSslMode()).ToDataRes(types.String)
+	},
+	"gcp.project.sqlService.instance.settings.ipConfiguration.enablePrivatePathForGoogleCloudServices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).GetEnablePrivatePathForGoogleCloudServices()).ToDataRes(types.Bool)
+	},
 	"gcp.project.sqlService.instance.settings.maintenanceWindow.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstanceSettingsMaintenanceWindow).GetId()).ToDataRes(types.String)
 	},
@@ -6180,6 +6186,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"gcp.project.sqlService.instance.settings.ipConfiguration.requireSsl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).RequireSsl, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.settings.ipConfiguration.sslMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).SslMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.settings.ipConfiguration.enablePrivatePathForGoogleCloudServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).EnablePrivatePathForGoogleCloudServices, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.sqlService.instance.settings.maintenanceWindow.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14025,6 +14039,8 @@ type mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration struct {
 	Ipv4Enabled plugin.TValue[bool]
 	PrivateNetwork plugin.TValue[string]
 	RequireSsl plugin.TValue[bool]
+	SslMode plugin.TValue[string]
+	EnablePrivatePathForGoogleCloudServices plugin.TValue[bool]
 }
 
 // createGcpProjectSqlServiceInstanceSettingsIpConfiguration creates a new instance of this resource
@@ -14086,6 +14102,14 @@ func (c *mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration) GetPrivateNetwo
 
 func (c *mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration) GetRequireSsl() *plugin.TValue[bool] {
 	return &c.RequireSsl
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration) GetSslMode() *plugin.TValue[string] {
+	return &c.SslMode
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration) GetEnablePrivatePathForGoogleCloudServices() *plugin.TValue[bool] {
+	return &c.EnablePrivatePathForGoogleCloudServices
 }
 
 // mqlGcpProjectSqlServiceInstanceSettingsMaintenanceWindow for the gcp.project.sqlService.instance.settings.maintenanceWindow resource
