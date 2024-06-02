@@ -1077,7 +1077,7 @@ private aws.autoscaling.group @defaults("name region minSize maxSize") {
   // The duration of the default instance warmup, in seconds
   defaultInstanceWarmup int
   // The EC2 instances associated with the group
-  instances []aws.ec2.instance
+  instances() []aws.ec2.instance
 }
 
 // AWS Elastic Load Balancing
@@ -3060,6 +3060,8 @@ private aws.eks.nodegroup @defaults("name scalingConfig.DesiredSize diskSize sta
   labels() map[string]string
   // Tags for the EKS node group
   tags()  map[string]string
+  // List of autoscaling groups for the node group
+  autoscalingGroups() []aws.autoscaling.group
 }
 
 // Amazon EKS cluster
