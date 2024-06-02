@@ -295,7 +295,7 @@ func init() {
 			Create: createAwsAutoscaling,
 		},
 		"aws.autoscaling.group": {
-			// to override args, implement: initAwsAutoscalingGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initAwsAutoscalingGroup,
 			Create: createAwsAutoscalingGroup,
 		},
 		"aws.elb": {
@@ -4305,6 +4305,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.eks.nodegroup.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksNodegroup).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.eks.nodegroup.autoscalingGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksNodegroup).GetAutoscalingGroups()).ToDataRes(types.Array(types.Resource("aws.autoscaling.group")))
 	},
 	"aws.eks.cluster.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksCluster).GetName()).ToDataRes(types.String)
@@ -9746,6 +9749,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.eks.nodegroup.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEksNodegroup).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.eks.nodegroup.autoscalingGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksNodegroup).AutoscalingGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"aws.eks.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15321,7 +15328,7 @@ func (c *mqlAwsAutoscaling) GetGroups() *plugin.TValue[[]interface{}] {
 type mqlAwsAutoscalingGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlAwsAutoscalingGroupInternal it will be used here
+	mqlAwsAutoscalingGroupInternal
 	Arn plugin.TValue[string]
 	Name plugin.TValue[string]
 	LoadBalancerNames plugin.TValue[[]interface{}]
@@ -15448,7 +15455,19 @@ func (c *mqlAwsAutoscalingGroup) GetDefaultInstanceWarmup() *plugin.TValue[int64
 }
 
 func (c *mqlAwsAutoscalingGroup) GetInstances() *plugin.TValue[[]interface{}] {
-	return &c.Instances
+	return plugin.GetOrCompute[[]interface{}](&c.Instances, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.autoscaling.group", c.__id, "instances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.instances()
+	})
 }
 
 // mqlAwsElb for the aws.elb resource
@@ -25192,6 +25211,7 @@ type mqlAwsEksNodegroup struct {
 	DiskSize plugin.TValue[int64]
 	Labels plugin.TValue[map[string]interface{}]
 	Tags plugin.TValue[map[string]interface{}]
+	AutoscalingGroups plugin.TValue[[]interface{}]
 }
 
 // createAwsEksNodegroup creates a new instance of this resource
@@ -25318,6 +25338,22 @@ func (c *mqlAwsEksNodegroup) GetLabels() *plugin.TValue[map[string]interface{}] 
 func (c *mqlAwsEksNodegroup) GetTags() *plugin.TValue[map[string]interface{}] {
 	return plugin.GetOrCompute[map[string]interface{}](&c.Tags, func() (map[string]interface{}, error) {
 		return c.tags()
+	})
+}
+
+func (c *mqlAwsEksNodegroup) GetAutoscalingGroups() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.AutoscalingGroups, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eks.nodegroup", c.__id, "autoscalingGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.autoscalingGroups()
 	})
 }
 

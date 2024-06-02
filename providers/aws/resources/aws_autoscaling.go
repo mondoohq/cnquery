@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
@@ -12,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/cnquery/v11/providers/aws/connection"
@@ -43,6 +45,82 @@ func (a *mqlAwsAutoscaling) groups() ([]interface{}, error) {
 	}
 
 	return res, nil
+}
+
+func (a *mqlAwsAutoscalingGroup) instances() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	groupInstances := []interface{}{}
+	for _, instance := range a.groupInstances {
+		mqlInstance, err := NewResource(a.MqlRuntime, "aws.ec2.instance",
+			map[string]*llx.RawData{
+				"arn": llx.StringData(fmt.Sprintf(ec2InstanceArnPattern, a.region, conn.AccountId(), convert.ToString(instance.InstanceId))),
+			})
+		if err != nil {
+			return nil, err
+		}
+		groupInstances = append(groupInstances, mqlInstance)
+	}
+	return groupInstances, nil
+}
+
+type mqlAwsAutoscalingGroupInternal struct {
+	groupInstances []ec2types.Instance
+	region         string
+}
+
+func initAwsAutoscalingGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	if args["region"] == nil || args["name"] == nil {
+		return nil, nil, errors.New("region and name required to fetch aws autoscaling group")
+	}
+	region := args["region"].Value.(string)
+	name := args["name"].Value.(string)
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Autoscaling(region)
+	ctx := context.Background()
+	ags, err := svc.DescribeAutoScalingGroups(ctx, &autoscaling.DescribeAutoScalingGroupsInput{AutoScalingGroupNames: []string{name}})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if len(ags.AutoScalingGroups) == 1 {
+		group := ags.AutoScalingGroups[0]
+		lbNames := []interface{}{}
+		for _, name := range group.LoadBalancerNames {
+			lbNames = append(lbNames, name)
+		}
+		availabilityZones := []interface{}{}
+		for _, zone := range group.AvailabilityZones {
+			availabilityZones = append(availabilityZones, zone)
+		}
+		args["arn"] = llx.StringDataPtr(group.AutoScalingGroupARN)
+		args["availabilityZones"] = llx.ArrayData(availabilityZones, types.String)
+		args["capacityRebalance"] = llx.BoolDataPtr(group.CapacityRebalance)
+		args["createdAt"] = llx.TimeDataPtr(group.CreatedTime)
+		args["defaultCooldown"] = llx.IntDataDefault(group.DefaultCooldown, 0)
+		args["defaultInstanceWarmup"] = llx.IntDataDefault(group.DefaultInstanceWarmup, 0)
+		args["desiredCapacity"] = llx.IntDataDefault(group.DesiredCapacity, 0)
+		args["healthCheckGracePeriod"] = llx.IntDataDefault(group.HealthCheckGracePeriod, 0)
+		args["healthCheckType"] = llx.StringDataPtr(group.HealthCheckType)
+		args["launchConfigurationName"] = llx.StringDataPtr(group.LaunchConfigurationName)
+		args["loadBalancerNames"] = llx.ArrayData(lbNames, types.String)
+		args["maxInstanceLifetime"] = llx.IntDataDefault(group.MaxInstanceLifetime, 0)
+		args["maxSize"] = llx.IntDataDefault(group.MaxSize, 0)
+		args["minSize"] = llx.IntDataDefault(group.MinSize, 0)
+		args["name"] = llx.StringDataPtr(group.AutoScalingGroupName)
+		args["region"] = llx.StringData(region)
+		args["tags"] = llx.MapData(autoscalingTagsToMap(group.Tags), types.String)
+		mqlGroup, err := CreateResource(runtime, "aws.autoscaling.group", args)
+		if err != nil {
+			return args, nil, err
+		}
+		mqlGroup.(*mqlAwsAutoscalingGroup).groupInstances = group.Instances
+		mqlGroup.(*mqlAwsAutoscalingGroup).region = region
+		return args, mqlGroup, nil
+	}
+	return args, nil, nil
 }
 
 func (a *mqlAwsAutoscaling) getGroups(conn *connection.AwsConnection) []*jobpool.Job {
@@ -79,17 +157,6 @@ func (a *mqlAwsAutoscaling) getGroups(conn *connection.AwsConnection) []*jobpool
 					for _, zone := range group.AvailabilityZones {
 						availabilityZones = append(availabilityZones, zone)
 					}
-					groupInstances := []interface{}{}
-					for _, instance := range group.Instances {
-						mqlInstance, err := NewResource(a.MqlRuntime, "aws.ec2.instance",
-							map[string]*llx.RawData{
-								"arn": llx.StringData(fmt.Sprintf(ec2InstanceArnPattern, regionVal, conn.AccountId(), convert.ToString(instance.InstanceId))),
-							})
-						if err != nil {
-							return nil, err
-						}
-						groupInstances = append(groupInstances, mqlInstance)
-					}
 
 					mqlGroup, err := CreateResource(a.MqlRuntime, "aws.autoscaling.group",
 						map[string]*llx.RawData{
@@ -102,7 +169,6 @@ func (a *mqlAwsAutoscaling) getGroups(conn *connection.AwsConnection) []*jobpool
 							"desiredCapacity":         llx.IntDataDefault(group.DesiredCapacity, 0),
 							"healthCheckGracePeriod":  llx.IntDataDefault(group.HealthCheckGracePeriod, 0),
 							"healthCheckType":         llx.StringDataPtr(group.HealthCheckType),
-							"instances":               llx.ArrayData(groupInstances, types.Resource("aws.ec2.instance")),
 							"launchConfigurationName": llx.StringDataPtr(group.LaunchConfigurationName),
 							"loadBalancerNames":       llx.ArrayData(lbNames, types.String),
 							"maxInstanceLifetime":     llx.IntDataDefault(group.MaxInstanceLifetime, 0),

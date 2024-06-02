@@ -180,6 +180,31 @@ func (a *mqlAwsEksNodegroup) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+func (a *mqlAwsEksNodegroup) autoscalingGroups() ([]interface{}, error) {
+	ng, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	if ng.Resources == nil || ng.Resources.AutoScalingGroups == nil {
+		return nil, nil
+	}
+	res := []interface{}{}
+	for i := range ng.Resources.AutoScalingGroups {
+		ag := ng.Resources.AutoScalingGroups[i]
+		mqlAg, err := NewResource(a.MqlRuntime, "aws.autoscaling.group",
+			map[string]*llx.RawData{
+				"name":   llx.StringDataPtr(ag.Name),
+				"region": llx.StringData(a.region),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlAg)
+	}
+
+	return res, nil
+}
+
 func (a *mqlAwsEksNodegroup) fetchDetails() (*ekstypes.Nodegroup, error) {
 	if a.details != nil {
 		return a.details, nil
