@@ -245,6 +245,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"nmap": {
+		Provider: &plugin.Provider{
+			Name:            "nmap",
+			ID:              "go.mondoo.com/cnquery/v9/providers/nmap",
+			ConnectionTypes: []string{"nmap"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "nmap",
+					Use:   "nmap",
+					Short: "a Nmap network scanner",
+				},
+			},
+		},
+	},
+
 	"oci": {
 		Provider: &plugin.Provider{
 			Name:            "oci",
