@@ -1,0 +1,60 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/cnquery/v11/providers/nmap"
+option go_package = "go.mondoo.com/cnquery/v11/providers/nmap/resources"
+
+// nmap
+nmap {}
+
+// nmap target
+nmap.target {
+  init(target string)
+  // Target IP address or hostname
+  target string
+  // Hosts discovered for the target
+  hosts() []nmap.host
+  // Errors encountered during the scan
+  warnings() []string
+}
+
+// nmap host
+private nmap.host @defaults("name") {
+  // Name of the host
+ name string
+ // Distance to the host
+ distance dict
+ // Information about the operating system of the host
+ os dict
+ endTime time
+ // Comments about the host
+ comment string
+ // Trace route information
+ trace dict
+ // Addresses associated with the host
+ addresses []dict
+ // Hostnames associated with the host
+ hostnames []dict
+ // Ports on the host
+ ports []nmap.port
+ // State of the host (e.g., up, down)
+ state string
+}
+
+// nmap port
+private nmap.port @defaults("port service"){
+  // Port number
+  port int
+  // Service running on the port
+  service string
+  // Method used to discover the port (e.g., SYN scan)
+  method string
+  // Protocol used (e.g., TCP, UDP)
+  protocol string
+  // Product running on the port
+  product string
+  // Version of the product
+  version string
+  // State of the port (e.g., open, closed)
+  state string
+}
