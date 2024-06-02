@@ -39,7 +39,7 @@ var Config = plugin.Provider{
 					Long:    "insecure",
 					Type:    plugin.FlagType_Bool,
 					Default: "",
-					Desc:    "Disable TLS/SSL verification.",
+					Desc:    "Disable TLS/SSL verification",
 				},
 			},
 		},

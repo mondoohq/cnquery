@@ -31,7 +31,7 @@ func init() {
 var ProvidersCmd = &cobra.Command{
 	Use:    "providers",
 	Short:  "Providers add connectivity to all assets",
-	Long:   `Manage your providers. List and install new ones or update existing ones.`,
+	Long:   `Manage your providers. List and install new ones or update existing ones`,
 	PreRun: func(cmd *cobra.Command, args []string) {},
 	Run: func(cmd *cobra.Command, args []string) {
 		list()
@@ -40,7 +40,7 @@ var ProvidersCmd = &cobra.Command{
 
 var listProvidersCmd = &cobra.Command{
 	Use:    "list",
-	Short:  "List all providers on the system.",
+	Short:  "List all providers on the system",
 	Long:   "",
 	PreRun: func(cmd *cobra.Command, args []string) {},
 	Run: func(cmd *cobra.Command, args []string) {
@@ -50,7 +50,7 @@ var listProvidersCmd = &cobra.Command{
 
 var installProviderCmd = &cobra.Command{
 	Use:    "install <NAME[@VERSION]>",
-	Short:  "Install or update a provider.",
+	Short:  "Install or update a provider",
 	Long:   "",
 	PreRun: func(cmd *cobra.Command, args []string) {},
 	Run: func(cmd *cobra.Command, args []string) {

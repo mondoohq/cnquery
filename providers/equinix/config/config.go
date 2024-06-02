@@ -18,7 +18,7 @@ var Config = plugin.Provider{
 			Name:  "equinix",
 			Use:   "equinix [org <org id>] [project <project-id>] [--token <token>]",
 			Short: "an Equinix Metal organization",
-			Long: `equinix is designed for querying resources within a specified 
+			Long: `equinix is designed for querying resources within a specified
 project or organization on the Equinix Metal platform.
 
 Available Commands:
@@ -35,7 +35,7 @@ If the PACKET_AUTH_TOKEN environment variable is set, the token flag is not requ
 					Long:    "token",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    " Specifies the Equinix API token for authenticating the user",
+					Desc:    "The Equinix API token for authenticating the user",
 				},
 			},
 		},

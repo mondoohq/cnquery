@@ -19,14 +19,14 @@ import (
 func init() {
 	rootCmd.AddCommand(RunCmd)
 
-	RunCmd.Flags().StringP("command", "c", "", "MQL query to executed in the shell.")
-	RunCmd.Flags().Bool("parse", false, "Parse the query and return the logical structure.")
-	RunCmd.Flags().Bool("ast", false, "Parse the query and return the abstract syntax tree (AST).")
-	RunCmd.Flags().Bool("info", false, "Parse the query and provide information about it.")
-	RunCmd.Flags().BoolP("json", "j", false, "Run the query and return the object in a JSON structure.")
-	RunCmd.Flags().String("platform-id", "", "Select a specific target asset by providing its platform ID.")
+	RunCmd.Flags().StringP("command", "c", "", "MQL query to executed in the shell")
+	RunCmd.Flags().Bool("parse", false, "Parse the query and return the logical structure")
+	RunCmd.Flags().Bool("ast", false, "Parse the query and return the abstract syntax tree (AST)")
+	RunCmd.Flags().Bool("info", false, "Parse the query and provide information about it")
+	RunCmd.Flags().BoolP("json", "j", false, "Run the query and return the object in a JSON structure")
+	RunCmd.Flags().String("platform-id", "", "Select a specific target asset by providing its platform ID")
 
-	RunCmd.Flags().String("llx", "", "Generate the executable code bundle and save it to the specified file.")
+	RunCmd.Flags().String("llx", "", "Generate the executable code bundle and save it to the specified file")
 	RunCmd.Flags().MarkHidden("llx")
 	RunCmd.Flags().String("use-llx", "", "Run the code specified in the code bundle on disk")
 	_ = RunCmd.Flags().MarkHidden("use-llx")

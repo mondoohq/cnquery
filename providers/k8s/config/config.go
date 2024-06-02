@@ -44,19 +44,19 @@ var Config = plugin.Provider{
 					Long:    "context",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "Target a Kubernetes context.",
+					Desc:    "Target a Kubernetes context",
 				},
 				{
 					Long:    "namespaces-exclude",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "Filter out Kubernetes objects in the matching namespaces.",
+					Desc:    "Filter out Kubernetes objects in the matching namespaces",
 				},
 				{
 					Long:    "namespaces",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "Only include Kubernetes object in the matching namespaces.",
+					Desc:    "Only include Kubernetes object in the matching namespaces",
 				},
 				{
 					Long:    "container-proxy",
