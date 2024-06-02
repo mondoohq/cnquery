@@ -6,6 +6,7 @@ package config
 import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers/github/connection"
 	"go.mondoo.com/cnquery/v11/providers/github/provider"
 )
 
@@ -16,12 +17,17 @@ var Config = plugin.Provider{
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
 		{
-			Name:      "github",
-			Use:       "github",
-			Short:     "a GitHub organization or repository",
-			MinArgs:   2,
-			MaxArgs:   2,
-			Discovery: []string{},
+			Name:    "github",
+			Use:     "github",
+			Short:   "a GitHub organization or repository",
+			MinArgs: 2,
+			MaxArgs: 2,
+			Discovery: []string{
+				connection.DiscoveryRepos,
+				connection.DiscoveryUsers,
+				connection.DiscoveryTerraform,
+				connection.DiscoveryK8sManifests,
+			},
 			Flags: []plugin.Flag{
 				{
 					Long:    "token",
