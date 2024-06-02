@@ -4,10 +4,10 @@
 option provider = "go.mondoo.com/cnquery/v11/providers/shodan"
 option go_package = "go.mondoo.com/cnquery/v11/providers/shodan/resources"
 
-// Shodan
+// Shodan Search Engine
 shodan {}
 
-// Shodan Host Information
+// Shodan Search Engine host information
 shodan.host @defaults("ip") {
   init(ip string)
   // Host IP
@@ -30,7 +30,7 @@ shodan.host @defaults("ip") {
   vulnerabilities() []string
 }
 
-// Shodan Domain Information
+// Shodan Search Engine domain information
 shodan.domain @defaults("name") {
   init(name string)
   // Domain name
@@ -43,7 +43,7 @@ shodan.domain @defaults("name") {
   nsrecords() []shodan.nsrecord
 }
 
-// Shodan DNS NS Record
+// Shodan Search Engine DNS NS record
 private shodan.nsrecord @defaults("domain subdomain type") {
   // DNS domain
   domain string
@@ -57,7 +57,7 @@ private shodan.nsrecord @defaults("domain subdomain type") {
   lastSeen time
 }
 
-// Shodan account
+// Shodan Search Engine account
 shodan.profile @defaults("displayName"){
   member bool
   credits int
@@ -65,7 +65,7 @@ shodan.profile @defaults("displayName"){
   createdAt time
 }
 
-// Shodan API Plan Information
+// Shodan Search Engine API plan information
 shodan.apiPlan @defaults("plan"){
   scanCredits int
   plan string
