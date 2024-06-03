@@ -59,18 +59,28 @@ private shodan.nsrecord @defaults("domain subdomain type") {
 
 // Shodan Search Engine account
 shodan.profile @defaults("displayName"){
+  // Indicates if the account is a member
   member bool
+  // Number of search credits
   credits int
+  // Display name
   displayName string
+  // Profile creation time
   createdAt time
 }
 
 // Shodan Search Engine API plan information
 shodan.apiPlan @defaults("plan"){
+  // Number of scan credits
   scanCredits int
+  // Name of the plan
   plan string
+  // Indicates if the plan is active
   unlocked bool
+  // Number of scan credits left
   unlockedLeft int
+  // Telnets allowed
   telnet bool
+  // Number of monitored IPs
   monitoredIps int
 }
