@@ -1096,6 +1096,7 @@ resources:
       installed: {}
       name: {}
       path: {}
+    is_private: true
     min_mondoo_version: 5.15.0
     snippets:
     - query: windows.feature('SNMP-Service').installed
@@ -1169,6 +1170,7 @@ resources:
       enabled: {}
       name: {}
       state: {}
+    is_private: true
     min_mondoo_version: 9.0.0
   windows.security:
     fields:
@@ -1203,6 +1205,7 @@ resources:
       installed: {}
       name: {}
       path: {}
+    is_private: true
     min_mondoo_version: 9.0.0
   yaml.path:
     fields:
