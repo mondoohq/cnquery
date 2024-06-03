@@ -1066,9 +1066,9 @@ resources:
       features: {}
       hotfixes: {}
       optionalFeatures:
-        min_mondoo_version: latest
+        min_mondoo_version: 9.0.0
       serverFeatures:
-        min_mondoo_version: latest
+        min_mondoo_version: 9.0.0
     min_mondoo_version: 5.15.0
     snippets:
     - query: windows.computerInfo['WindowsInstallationType'] == 'Server Core'
@@ -1169,7 +1169,7 @@ resources:
       enabled: {}
       name: {}
       state: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 9.0.0
   windows.security:
     fields:
       products: {}
@@ -1203,7 +1203,7 @@ resources:
       installed: {}
       name: {}
       path: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 9.0.0
   yaml.path:
     fields:
       filepath: {}
