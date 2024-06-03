@@ -204,7 +204,8 @@ providers/build: \
 	providers/build/ms365 \
 	providers/build/aws \
 	providers/build/atlassian \
-	providers/build/cloudformation
+	providers/build/cloudformation \
+	providers/build/nmap
 
 .PHONY: providers/install
 # Note we need \ to escape the target line into multiple lines
@@ -230,7 +231,8 @@ providers/install: \
 	providers/install/ms365 \
 	providers/install/atlassian \
 	providers/install/aws \
-	providers/install/cloudformation
+	providers/install/cloudformation \
+	providers/build/nmap
 
 providers/build/mock: providers/lr
 	./lr go providers-sdk/v1/testutils/mockprovider/resources/mockprovider.lr
@@ -348,6 +350,11 @@ providers/build/cloudformation: providers/lr
 providers/install/cloudformation:
 	@$(call installProvider, providers/cloudformation)
 
+providers/build/nmap: providers/lr
+	@$(call buildProvider, providers/nmap)
+providers/install/nmap:
+	@$(call installProvider, providers/nmap)
+
 providers/dist:
 	@$(call buildProviderDist, providers/network)
 	@$(call buildProviderDist, providers/os)
@@ -371,6 +378,7 @@ providers/dist:
 	@$(call buildProviderDist, providers/aws)
 	@$(call buildProviderDist, providers/atlassian)
 	@$(call buildProviderDist, providers/cloudformation)
+	@$(call buildProviderDist, providers/nmap)
 
 providers/bundle:
 	@$(call bundleProvider, providers/network)
@@ -395,6 +403,7 @@ providers/bundle:
 	@$(call bundleProvider, providers/aws)
 	@$(call bundleProvider, providers/atlassian)
 	@$(call bundleProvider, providers/cloudformation)
+	@$(call bundleProvider, providers/nmap)
 
 providers/test:
 	@$(call testProvider, providers/core)
@@ -420,6 +429,7 @@ providers/test:
 	@$(call testGoModProvider, providers/aws)
 	@$(call testGoModProvider, providers/atlassian)
 	@$(call testGoModProvider, providers/cloudformation)
+	@$(call testGoModProvider, providers/nmap)
 
 lr/test:
 	go test ./resources/lr/...
@@ -508,6 +518,11 @@ lr/docs/markdown: providers/lr
 		--description "The Network resource pack lets you use MQL to query and assess the security of domains and network services." \
 		--docs-file providers/network/resources/network.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/network-pack
+	./lr markdown providers/network/resources/nmap.lr \
+		--pack-name "nmap" \
+		--description "The Nmap resource pack lets you use MQL to query and assess Nmap data." \
+		--docs-file providers/network/resources/nmap.lr.manifest.yaml \
+		--output ../docs/docs/mql/resources/nmap-pack
 	./lr markdown providers/oci/resources/oci.lr \
 		--pack-name "Oracle Cloud Infrastructure (OCI)" \
 		--description "The Oracle Cloud Infrastructure (OCI) resource pack lets you use MQL to query and assess the security of your OCI services." \
