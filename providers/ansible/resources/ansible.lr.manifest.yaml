@@ -1,0 +1,48 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+resources:
+  ansible:
+    fields:
+      plays: {}
+    min_mondoo_version: latest
+  ansible.handler:
+    fields:
+      action: {}
+      name: {}
+    min_mondoo_version: latest
+  ansible.play:
+    fields:
+      anyErrorsFatal: {}
+      become: {}
+      becomeFlags: {}
+      becomeMethod: {}
+      becomeUser: {}
+      handlers: {}
+      hosts: {}
+      ignoreUnreachable: {}
+      maxFailPercentage: {}
+      name: {}
+      remoteUser: {}
+      roles: {}
+      strategy: {}
+      tasks: {}
+      vars: {}
+    min_mondoo_version: latest
+  ansible.task:
+    fields:
+      action: {}
+      block: {}
+      changedWhen: {}
+      failedWhen: {}
+      importPlaybook: {}
+      importTasks: {}
+      includePlaybook: {}
+      includeTasks: {}
+      name: {}
+      notify: {}
+      register: {}
+      rescue: {}
+      vars: {}
+      when: {}
+    min_mondoo_version: latest
