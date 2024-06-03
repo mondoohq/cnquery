@@ -1387,7 +1387,7 @@ windows {
   // Hotfixes installed on the computer
   hotfixes() []windows.hotfix
 
-  // Deprecated: use serverFeatures instead
+  // Deprecated. Use `windows.serverFeatures` instead
   features() []windows.feature
 
   // Information about Windows Server roles, role services, and features that are available for installation and installed on a specified server.
@@ -1412,7 +1412,7 @@ windows.hotfix {
   installedBy string
 }
 
-// Deprecated: use serverFeature instead
+// Deprecated. Use `windows.serverFeature` instead
 // Windows feature resource
 private windows.feature {
   init(name string)
@@ -1447,7 +1447,7 @@ private windows.serverFeature @defaults("name") {
   installState int
 }
 
-// Windows optional feature resource
+// Windows optional feature resource (desktop-only)
 private windows.optionalFeature @defaults("name") {
   init(name string)
   // Command ID of optional feature
