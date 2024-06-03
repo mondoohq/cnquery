@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"fmt"
+
 	"github.com/vmware/govmomi/object"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
@@ -67,7 +69,7 @@ func (v *mqlVsphereDatacenter) hosts() ([]interface{}, error) {
 
 	vhosts, err := client.ListHosts(dc, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error listing hosts for datacenter %s: %w", dc.InventoryPath, err)
 	}
 	return newVsphereHostResources(client, v.MqlRuntime, vhosts)
 }
