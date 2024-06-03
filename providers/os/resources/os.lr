@@ -1414,7 +1414,7 @@ windows.hotfix {
 
 // Deprecated: use serverFeature instead
 // Windows feature resource
-windows.feature {
+private windows.feature {
   init(name string)
   // Feature full path
   path string
@@ -1431,7 +1431,7 @@ windows.feature {
 }
 
 // Windows Server feature resource
-windows.serverFeature {
+private windows.serverFeature @defaults("name") {
   init(name string)
   // Feature full path
   path string
@@ -1448,7 +1448,7 @@ windows.serverFeature {
 }
 
 // Windows optional feature resource
-windows.optionalFeature @defaults("name enabled") {
+private windows.optionalFeature @defaults("name") {
   init(name string)
   // Command ID of optional feature
   name string
