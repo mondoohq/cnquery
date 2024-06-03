@@ -117,7 +117,8 @@ func discoverDatacenter(conn *connection.VsphereConnection, datacenterResource *
 
 			esxiVersion, err := conn.EsxiVersion(mqlHost.Moid.Data)
 			if err != nil {
-				return nil, err
+				log.Error().Err(err).Str("host", mqlHost.Moid.Data).Msg("failed to get version of esxi host")
+				continue
 			}
 
 			platformID := connection.VsphereResourceID(instanceUuid, mqlHost.Moid.Data)
