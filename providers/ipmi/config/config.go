@@ -30,7 +30,7 @@ firmware (BIOS or UEFI), and operating system.
 					Long:        "ask-pass",
 					Type:        plugin.FlagType_Bool,
 					Default:     "false",
-					Desc:        "Prompt for connection password.",
+					Desc:        "Prompt for connection password",
 					ConfigEntry: "-",
 				},
 				{
@@ -38,7 +38,7 @@ firmware (BIOS or UEFI), and operating system.
 					Short:       "p",
 					Type:        plugin.FlagType_String,
 					Default:     "",
-					Desc:        "Set the connection password for IPMI connection.",
+					Desc:        "Set the connection password for IPMI connection",
 					Option:      plugin.FlagOption_Password,
 					ConfigEntry: "-",
 				},

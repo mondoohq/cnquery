@@ -48,7 +48,7 @@ var embedQueryPackTemplate []byte
 var queryPackInitCmd = &cobra.Command{
 	Use:   "init [path]",
 	Short: "Create an example query pack",
-	Long:  "Create an example query pack that you can use as a starting point. If you don't provide a filename, cnquery uses `example-pack.mql.yaml`.",
+	Long:  "Create an example query pack that you can use as a starting point. If you don't provide a filename, cnquery uses `example-pack.mql.yaml`",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		name := "example-pack.mql.yaml"

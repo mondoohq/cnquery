@@ -33,7 +33,7 @@ var Config = plugin.Provider{
 					Long:    "token",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "Provide GitLab personal access token.",
+					Desc:    "GitLab personal access token",
 				},
 				{
 					Long:    "group",

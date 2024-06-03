@@ -201,7 +201,7 @@ type CommonOpts struct {
 	// client features
 	Features []string `json:"features,omitempty" mapstructure:"features"`
 
-	// API Proxy for communicating with Mondoo API
+	// API Proxy for communicating with Mondoo Platform API
 	APIProxy string `json:"api_proxy,omitempty" mapstructure:"api_proxy"`
 
 	// labels that will be applied to all assets

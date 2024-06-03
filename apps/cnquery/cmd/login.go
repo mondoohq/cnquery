@@ -28,12 +28,12 @@ import (
 
 func init() {
 	rootCmd.AddCommand(LoginCmd)
-	LoginCmd.Flags().StringP("token", "t", "", "Set a client registration token.")
-	LoginCmd.Flags().StringToString("annotation", nil, "Set the client annotations.")
-	LoginCmd.Flags().String("name", "", "Set asset name.")
-	LoginCmd.Flags().String("api-endpoint", "", "Set the Mondoo API endpoint.")
-	LoginCmd.Flags().Int("timer", 0, "Set the scan interval in minutes.")
-	LoginCmd.Flags().Int("splay", 0, "Randomize the timer by up to this many minutes.")
+	LoginCmd.Flags().StringP("token", "t", "", "Set a client registration token")
+	LoginCmd.Flags().StringToString("annotation", nil, "Set the client annotations")
+	LoginCmd.Flags().String("name", "", "Set asset name")
+	LoginCmd.Flags().String("api-endpoint", "", "Set the Mondoo API endpoint")
+	LoginCmd.Flags().Int("timer", 0, "Set the scan interval in minutes")
+	LoginCmd.Flags().Int("splay", 0, "Randomize the timer by up to this many minutes")
 }
 
 var LoginCmd = &cobra.Command{
@@ -41,11 +41,11 @@ var LoginCmd = &cobra.Command{
 	Aliases: []string{"register"},
 	Short:   "Register with Mondoo Platform",
 	Long: `
-Log in to Mondoo Platform using a registration token. To pass in the token, use 
+Log in to Mondoo Platform using a registration token. To pass in the token, use
 the '--token' flag.
 
 You can generate a new registration token on the Mondoo Dashboard. Go to
-https://console.mondoo.com -> Space -> Settings -> Registration Token. Copy the token and pass it in 
+https://console.mondoo.com -> Space -> Settings -> Registration Token. Copy the token and pass it in
 using the '--token' argument.
 
 You remain logged in until you explicitly log out using the 'logout' subcommand.

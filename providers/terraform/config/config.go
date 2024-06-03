@@ -32,7 +32,7 @@ var Config = plugin.Provider{
 					Long:        "ignore-dot-terraform",
 					Type:        plugin.FlagType_Bool,
 					Default:     "false",
-					Desc:        "Ignore the .terraform directory.",
+					Desc:        "Ignore the .terraform directory",
 					ConfigEntry: "ignore_dot_terraform",
 				},
 			},
