@@ -79,7 +79,7 @@ shodan.apiPlan @defaults("plan"){
   unlocked bool
   // Number of scan credits left
   unlockedLeft int
-  // Telnets allowed
+  // Indicated if Telnet is allowed
   telnet bool
   // Number of monitored IPs
   monitoredIps int
