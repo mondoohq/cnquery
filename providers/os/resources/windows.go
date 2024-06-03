@@ -182,3 +182,158 @@ func (w *mqlWindows) features() ([]interface{}, error) {
 
 	return mqlFeatures, nil
 }
+
+func (wh *mqlWindowsServerFeature) id() (string, error) {
+	return wh.Path.Data, nil
+}
+
+func initWindowsServerFeature(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	nameRaw := args["name"]
+	if nameRaw == nil {
+		return args, nil, nil
+	}
+
+	name, ok := nameRaw.Value.(string)
+	if !ok {
+		return args, nil, nil
+	}
+
+	obj, err := NewResource(runtime, "windows", nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	winResource := obj.(*mqlWindows)
+
+	features := winResource.GetFeatures()
+	if features.Error != nil {
+		return nil, nil, features.Error
+	}
+
+	for i := range features.Data {
+		hf := features.Data[i].(*mqlWindowsServerFeature)
+		if hf.Name.Data == name {
+			return nil, hf, nil
+		}
+	}
+
+	// if the feature cannot be found we return an error
+	return nil, nil, errors.New("could not find feature " + name)
+}
+
+func (w *mqlWindows) serverFeatures() ([]interface{}, error) {
+	conn := w.MqlRuntime.Connection.(shared.Connection)
+
+	// query features
+	encodedCmd := powershell.Encode(windows.QUERY_FEATURES)
+	executedCmd, err := conn.RunCommand(encodedCmd)
+	if err != nil {
+		return nil, err
+	}
+
+	features, err := windows.ParseWindowsFeatures(executedCmd.Stdout)
+	if err != nil {
+		return nil, err
+	}
+
+	// convert features to MQL resource
+	mqlFeatures := make([]interface{}, len(features))
+	for i, feature := range features {
+
+		mqlFeature, err := CreateResource(w.MqlRuntime, "windows.serverFeature", map[string]*llx.RawData{
+			"path":         llx.StringData(feature.Path),
+			"name":         llx.StringData(feature.Name),
+			"displayName":  llx.StringData(feature.DisplayName),
+			"description":  llx.StringData(feature.Description),
+			"installed":    llx.BoolData(feature.Installed),
+			"installState": llx.IntData(feature.InstallState),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		mqlFeatures[i] = mqlFeature
+	}
+
+	return mqlFeatures, nil
+}
+
+func (wh *mqlWindowsOptionalFeature) id() (string, error) {
+	return wh.Name.Data, nil
+}
+
+func initWindowsOptionalFeature(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	nameRaw := args["name"]
+	if nameRaw == nil {
+		return args, nil, nil
+	}
+
+	name, ok := nameRaw.Value.(string)
+	if !ok {
+		return args, nil, nil
+	}
+
+	obj, err := NewResource(runtime, "windows", nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	winResource := obj.(*mqlWindows)
+
+	features := winResource.GetOptionalFeatures()
+	if features.Error != nil {
+		return nil, nil, features.Error
+	}
+
+	for i := range features.Data {
+		hf := features.Data[i].(*mqlWindowsOptionalFeature)
+		if hf.Name.Data == name {
+			return nil, hf, nil
+		}
+	}
+
+	// if the feature cannot be found we return an error
+	return nil, nil, errors.New("could not find feature " + name)
+}
+
+func (w *mqlWindows) optionalFeatures() ([]interface{}, error) {
+	conn := w.MqlRuntime.Connection.(shared.Connection)
+
+	// query features
+	encodedCmd := powershell.Encode(windows.QUERY_OPTIONAL_FEATURES)
+	executedCmd, err := conn.RunCommand(encodedCmd)
+	if err != nil {
+		return nil, err
+	}
+
+	features, err := windows.ParseWindowsOptionalFeatures(executedCmd.Stdout)
+	if err != nil {
+		return nil, err
+	}
+
+	// convert features to MQL resource
+	mqlFeatures := make([]interface{}, len(features))
+	for i, feature := range features {
+
+		mqlFeature, err := CreateResource(w.MqlRuntime, "windows.optionalFeature", map[string]*llx.RawData{
+			"name":        llx.StringData(feature.Name),
+			"displayName": llx.StringData(feature.DisplayName),
+			"description": llx.StringData(feature.Description),
+			"enabled":     llx.BoolData(feature.Enabled),
+			"state":       llx.IntData(feature.State),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		mqlFeatures[i] = mqlFeature
+	}
+
+	return mqlFeatures, nil
+}
