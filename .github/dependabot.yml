@@ -8,11 +8,11 @@ updates:
   - package-ecosystem: docker
     directory: /
     schedule:
-      interval: daily
+      interval: weekly
   - package-ecosystem: gomod
     directory: /
     schedule:
-      interval: daily
+      interval: weekly
     groups:
       gomodupdates:
         patterns:
@@ -23,7 +23,7 @@ updates:
   - package-ecosystem: gomod
     directory: /providers/opcua/
     schedule:
-      interval: daily
+      interval: weekly
     groups:
       gomodupdates:
         patterns:
@@ -34,7 +34,7 @@ updates:
   - package-ecosystem: gomod
     directory: /providers/arista/
     schedule:
-      interval: daily
+      interval: weekly
     groups:
       gomodupdates:
         patterns:
@@ -45,7 +45,7 @@ updates:
   - package-ecosystem: gomod
     directory: /providers/atlassian/
     schedule:
-      interval: daily
+      interval: weekly
     groups:
       gomodupdates:
         patterns:
@@ -56,7 +56,7 @@ updates:
   - package-ecosystem: gomod
     directory: /providers/okta/
     schedule:
-      interval: daily
+      interval: weekly
     groups:
       gomodupdates:
         patterns:
@@ -67,7 +67,7 @@ updates:
   - package-ecosystem: gomod
     directory: /providers/ms365/
     schedule:
-      interval: daily
+      interval: weekly
     groups:
       gomodupdates:
         patterns:
@@ -78,7 +78,7 @@ updates:
   - package-ecosystem: gomod
     directory: /providers/google-workspace/
     schedule:
-      interval: daily
+      interval: weekly
     groups:
       gomodupdates:
         patterns:
@@ -89,7 +89,7 @@ updates:
   - package-ecosystem: gomod
     directory: /providers/equinix/
     schedule:
-      interval: daily
+      interval: weekly
     groups:
       gomodupdates:
         patterns:
@@ -100,7 +100,7 @@ updates:
   - package-ecosystem: gomod
     directory: /providers/vsphere/
     schedule:
-      interval: daily
+      interval: weekly
     groups:
       gomodupdates:
         patterns:
@@ -111,7 +111,7 @@ updates:
   - package-ecosystem: gomod
     directory: /providers/gitlab/
     schedule:
-      interval: daily
+      interval: weekly
     groups:
       gomodupdates:
         patterns:
@@ -122,7 +122,7 @@ updates:
   - package-ecosystem: gomod
     directory: /providers/gcp/
     schedule:
-      interval: daily
+      interval: weekly
     groups:
       gomodupdates:
         patterns:
@@ -133,7 +133,7 @@ updates:
   - package-ecosystem: gomod
     directory: /providers/ipmi/
     schedule:
-      interval: daily
+      interval: weekly
     groups:
       gomodupdates:
         patterns:
@@ -144,7 +144,7 @@ updates:
   - package-ecosystem: gomod
     directory: /providers/github/
     schedule:
-      interval: daily
+      interval: weekly
     groups:
       gomodupdates:
         patterns:
@@ -155,7 +155,7 @@ updates:
   - package-ecosystem: gomod
     directory: /providers/vcd/
     schedule:
-      interval: daily
+      interval: weekly
     groups:
       gomodupdates:
         patterns:
@@ -166,7 +166,7 @@ updates:
   - package-ecosystem: gomod
     directory: /providers/azure/
     schedule:
-      interval: daily
+      interval: weekly
     groups:
       gomodupdates:
         patterns:
@@ -177,7 +177,7 @@ updates:
   - package-ecosystem: gomod
     directory: /providers/terraform/
     schedule:
-      interval: daily
+      interval: weekly
     groups:
       gomodupdates:
         patterns:
@@ -188,7 +188,7 @@ updates:
   - package-ecosystem: gomod
     directory: /providers/slack/
     schedule:
-      interval: daily
+      interval: weekly
     groups:
       gomodupdates:
         patterns:
@@ -199,7 +199,7 @@ updates:
   - package-ecosystem: gomod
     directory: /providers/oci/
     schedule:
-      interval: daily
+      interval: weekly
     groups:
       gomodupdates:
         patterns:
@@ -210,7 +210,7 @@ updates:
   - package-ecosystem: gomod
     directory: /providers/aws/
     schedule:
-      interval: daily
+      interval: weekly
     groups:
       gomodupdates:
         patterns:
@@ -221,7 +221,7 @@ updates:
   - package-ecosystem: gomod
     directory: /providers/k8s/
     schedule:
-      interval: daily
+      interval: weekly
     groups:
       gomodupdates:
         patterns:
@@ -232,7 +232,7 @@ updates:
   - package-ecosystem: gomod
     directory: /providers/cloudformation/
     schedule:
-      interval: daily
+      interval: weekly
     groups:
       gomodupdates:
         patterns:
@@ -242,6 +242,17 @@ updates:
           - patch
   - package-ecosystem: gomod
     directory: /providers/shodan/
+    schedule:
+      interval: weekly
+    groups:
+      gomodupdates:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+  - package-ecosystem: gomod
+    directory: /providers/ansible/
     schedule:
       interval: weekly
     groups:

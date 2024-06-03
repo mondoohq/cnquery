@@ -1,0 +1,84 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/cnquery/v11/providers/ansible"
+option go_package = "go.mondoo.com/cnquery/v11/providers/ansible/resources"
+
+// Ansible
+ansible {
+  plays() []ansible.play
+}
+
+// Ansible Play
+ansible.play @defaults("name") {
+  // Name of the play
+  name string
+  // Hosts
+  hosts dict
+  // User for the connection
+  remoteUser string
+  // Become flag
+  become bool
+  // Become user
+  becomeUser string
+  // Become method
+  becomeMethod string
+  // Become flags
+  becomeFlags string
+  // Strategy
+  strategy string
+  // Maximum number of hosts to fail before quitting
+  maxFailPercentage int
+  // Flag to ignore unreachable hosts
+  ignoreUnreachable bool
+  // Flag to finish fatal on any error
+  anyErrorsFatal bool
+  // Playbook variables
+  vars map[string]dict
+  // Roles
+  roles []string
+  // Tasks
+  tasks() []ansible.task
+  // Handlers
+  handlers() []ansible.handler
+}
+
+// Ansible Task
+ansible.task @defaults("name"){
+  // Name of the task
+  name string
+  // Task action
+  action dict
+  // Task variables
+  vars map[string]dict
+  // Register variable to store the result
+  register string
+  // Condition to run the task
+  when string
+  // Failed condition
+  failedWhen string
+  // Changed condition
+  changedWhen string
+  // Notify handlers
+  notify []string
+  // Pre-process playbook file when playbook is parsed
+  importPlaybook string
+  // Include playbook file
+  includePlaybook string
+  // Pre-process tasks file when playbook is parsed
+  importTasks string
+  // Include tasks file
+  includeTasks string
+  // Block tasks
+  block() []ansible.task
+  // Rescue tasks
+  rescue() []ansible.task
+}
+
+// Ansible Handler
+ansible.handler @defaults("name"){
+  // Name of the handler
+  name string
+  // Handler action
+  action dict
+}

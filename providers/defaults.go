@@ -11,6 +11,21 @@ import "go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 // to tell users what providers are used for common connections, when there
 // is no other way to find out.
 var DefaultProviders Providers = map[string]*Provider{
+	"ansible": {
+		Provider: &plugin.Provider{
+			Name:            "ansible",
+			ID:              "go.mondoo.com/cnquery/v9/providers/ansible",
+			ConnectionTypes: []string{"ansible"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "ansible",
+					Use:   "ansible PATH",
+					Short: "an Ansible playbook",
+				},
+			},
+		},
+	},
+
 	"arista": {
 		Provider: &plugin.Provider{
 			Name:            "arista",
