@@ -326,6 +326,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"shodan": {
+		Provider: &plugin.Provider{
+			Name:            "shodan",
+			ID:              "go.mondoo.com/cnquery/v9/providers/shodan",
+			ConnectionTypes: []string{"shodan"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "shodan",
+					Use:   "shodan",
+					Short: "a Shodan account",
+				},
+			},
+		},
+	},
+
 	"slack": {
 		Provider: &plugin.Provider{
 			Name:            "slack",

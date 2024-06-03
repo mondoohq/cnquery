@@ -1,0 +1,52 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+resources:
+  shodan:
+    fields:
+      field: {}
+    min_mondoo_version: 9.0.0
+  shodan.apiPlan:
+    fields:
+      monitoredIps: {}
+      plan: {}
+      scanCredits: {}
+      telnet: {}
+      unlocked: {}
+      unlockedLeft: {}
+    min_mondoo_version: 9.0.0
+  shodan.domain:
+    fields:
+      name: {}
+      nsrecords: {}
+      subdomains: {}
+      tags: {}
+    min_mondoo_version: 9.0.0
+  shodan.host:
+    fields:
+      asn: {}
+      hostnames: {}
+      ip: {}
+      isp: {}
+      org: {}
+      os: {}
+      ports: {}
+      tags: {}
+      vulnerabilities: {}
+    min_mondoo_version: 9.0.0
+  shodan.nsrecord:
+    fields:
+      domain: {}
+      lastSeen: {}
+      subdomain: {}
+      type: {}
+      value: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  shodan.profile:
+    fields:
+      createdAt: {}
+      credits: {}
+      displayName: {}
+      member: {}
+    min_mondoo_version: 9.0.0

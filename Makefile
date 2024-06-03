@@ -204,7 +204,8 @@ providers/build: \
 	providers/build/ms365 \
 	providers/build/aws \
 	providers/build/atlassian \
-	providers/build/cloudformation
+	providers/build/cloudformation \
+	providers/build/shodan
 
 .PHONY: providers/install
 # Note we need \ to escape the target line into multiple lines
@@ -230,7 +231,8 @@ providers/install: \
 	providers/install/ms365 \
 	providers/install/atlassian \
 	providers/install/aws \
-	providers/install/cloudformation
+	providers/install/cloudformation \
+	providers/install/shodan
 
 providers/build/mock: providers/lr
 	./lr go providers-sdk/v1/testutils/mockprovider/resources/mockprovider.lr
@@ -348,6 +350,11 @@ providers/build/cloudformation: providers/lr
 providers/install/cloudformation:
 	@$(call installProvider, providers/cloudformation)
 
+providers/build/shodan: providers/lr
+	@$(call buildProvider, providers/shodan)
+providers/install/shodan:
+	@$(call installProvider, providers/shodan)
+
 providers/dist:
 	@$(call buildProviderDist, providers/network)
 	@$(call buildProviderDist, providers/os)
@@ -371,6 +378,7 @@ providers/dist:
 	@$(call buildProviderDist, providers/aws)
 	@$(call buildProviderDist, providers/atlassian)
 	@$(call buildProviderDist, providers/cloudformation)
+	@$(call buildProviderDist, providers/shodan)
 
 providers/bundle:
 	@$(call bundleProvider, providers/network)
@@ -395,6 +403,7 @@ providers/bundle:
 	@$(call bundleProvider, providers/aws)
 	@$(call bundleProvider, providers/atlassian)
 	@$(call bundleProvider, providers/cloudformation)
+	@$(call bundleProvider, providers/shodan)
 
 providers/test:
 	@$(call testProvider, providers/core)
@@ -420,6 +429,7 @@ providers/test:
 	@$(call testGoModProvider, providers/aws)
 	@$(call testGoModProvider, providers/atlassian)
 	@$(call testGoModProvider, providers/cloudformation)
+	@$(call testGoModProvider, providers/shodan)
 
 lr/test:
 	go test ./resources/lr/...
@@ -528,6 +538,11 @@ lr/docs/markdown: providers/lr
 		--description "The Operating Systems (OS) resource pack lets you use MQL to query and assess the security of your operating system packages and configuration." \
 		--docs-file providers/os/resources/os.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/os-pack
+	./lr markdown providers/shodan/resources/shodan.lr \
+		--pack-name "Shodan" \
+		--description "The Shodan resource pack lets you use MQL to query and assess IP and DNS information via Shodan service." \
+		--docs-file providers/shodan/resources/shodan.lr.manifest.yaml \
+		--output ../docs/docs/mql/resources/shodan-pack
 	./lr markdown providers/slack/resources/slack.lr \
 		--pack-name "Slack" \
 		--description "The Slack resource pack lets you use MQL to query and assess the security of your Slack identities and configuration." \
