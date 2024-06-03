@@ -1100,9 +1100,9 @@ resources:
     min_mondoo_version: 5.15.0
     snippets:
     - query: windows.feature('SNMP-Service').installed
-      title: Check that a Windows features is installed
+      title: Check that a specific Windows Server feature is installed
     - query: windows.feature('Windows-Defender').installed == false
-      title: Check that a specific feature is not installed
+      title: Check that a specific Windows Server feature is not installed
   windows.firewall:
     fields:
       profiles: {}
@@ -1207,6 +1207,11 @@ resources:
       path: {}
     is_private: true
     min_mondoo_version: 9.0.0
+    snippets:
+    - query: windows.serverFeature('SNMP-Service').installed
+      title: Check that a specific Windows Server feature is installed
+    - query: windows.serverFeature('Windows-Defender').installed == false
+      title: Check that a specific Windows Server feature is not installed
   yaml.path:
     fields:
       filepath: {}
