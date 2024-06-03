@@ -273,6 +273,7 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			return nil, err
 		}
 	}
+
 	log.Debug().Str("asset", req.Asset.Name).Msg("detected asset")
 
 	var inv *inventory.Inventory
@@ -507,6 +508,10 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	if asset.Platform != nil && asset.Platform.Kind == "" {
+		asset.Platform.Kind = "baremetal"
 	}
 
 	return runtime.Connection.(shared.Connection), nil
