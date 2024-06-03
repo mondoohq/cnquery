@@ -69,30 +69,11 @@ func (a *mqlAwsS3) buckets() ([]interface{}, error) {
 	for i := range buckets.Buckets {
 		bucket := buckets.Buckets[i]
 
-		location, err := svc.GetBucketLocation(ctx, &s3.GetBucketLocationInput{
-			Bucket: bucket.Name,
-		})
-		if err != nil {
-			log.Error().Err(err).Str("bucket", *bucket.Name).Msg("Could not get bucket location")
-			continue
-		}
-		if location == nil {
-			log.Error().Err(err).Str("bucket", *bucket.Name).Msg("Could not get bucket location (returned null)")
-			continue
-		}
-
-		region := string(location.LocationConstraint)
-		// us-east-1 returns "" therefore we set it explicitly
-		// https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketLocation.html#API_GetBucketLocation_ResponseSyntax
-		if region == "" {
-			region = "us-east-1"
-		}
 		mqlS3Bucket, err := CreateResource(a.MqlRuntime, "aws.s3.bucket",
 			map[string]*llx.RawData{
 				"name":        llx.StringDataPtr(bucket.Name),
 				"arn":         llx.StringData(fmt.Sprintf(s3ArnPattern, convert.ToString(bucket.Name))),
 				"exists":      llx.BoolData(true),
-				"location":    llx.StringData(region),
 				"createdTime": llx.TimeDataPtr(bucket.CreationDate),
 			})
 		if err != nil {
@@ -158,9 +139,10 @@ func initAwsS3Bucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	log.Debug().Msgf("no bucket found for %s", arn)
 	mqlAwsS3Bucket, err := CreateResource(runtime, "aws.s3.bucket",
 		map[string]*llx.RawData{
-			"arn":    llx.StringData(arn),
-			"name":   llx.StringData(name),
-			"exists": llx.BoolData(false),
+			"arn":         llx.StringData(arn),
+			"name":        llx.StringData(name),
+			"exists":      llx.BoolData(false),
+			"createdTime": llx.NilData,
 		})
 	return nil, mqlAwsS3Bucket, err
 }
@@ -184,19 +166,35 @@ func emptyAwsS3BucketPolicy(runtime *plugin.Runtime) (*mqlAwsS3BucketPolicy, err
 	return res.(*mqlAwsS3BucketPolicy), nil
 }
 
+type mqlAwsS3BucketInternal struct {
+	cacheLocation string
+}
+
+func getRegionForBucket(a *mqlAwsS3Bucket) string {
+	if a.Location.Data != "" {
+		return a.Location.Data
+	}
+	if a.cacheLocation != "" {
+		return a.cacheLocation
+	}
+	l, _ := a.location()
+	a.cacheLocation = l
+	return l
+}
+
 func (a *mqlAwsS3Bucket) policy() (*mqlAwsS3BucketPolicy, error) {
+	region := getRegionForBucket(a)
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	bucketname := a.Name.Data
-	location := a.Location.Data
-	svc := conn.S3(location)
+	svc := conn.S3(region)
 	ctx := context.Background()
 
 	policy, err := svc.GetBucketPolicy(ctx, &s3.GetBucketPolicyInput{
 		Bucket: &bucketname,
 	})
 	if err != nil {
-		if isNotFoundForS3(err) {
+		if isNotFoundForS3(err) || isPermDenied(err) {
 			return emptyAwsS3BucketPolicy(a.MqlRuntime)
 		}
 		return nil, err
@@ -220,12 +218,17 @@ func (a *mqlAwsS3Bucket) policy() (*mqlAwsS3BucketPolicy, error) {
 }
 
 func (a *mqlAwsS3Bucket) tags() (map[string]interface{}, error) {
+	if !isAccessibleBucket(a) {
+		log.Warn().Msg("bucket does not exist or does not exist in this account")
+		a.Tags.State = plugin.StateIsNull
+		return nil, nil
+	}
+	region := getRegionForBucket(a)
 	bucketname := a.Name.Data
-	location := a.Location.Data
 
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	svc := conn.S3(location)
+	svc := conn.S3(region)
 	ctx := context.Background()
 
 	tags, err := svc.GetBucketTagging(ctx, &s3.GetBucketTaggingInput{
@@ -251,24 +254,24 @@ func (a *mqlAwsS3Bucket) tags() (map[string]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsS3Bucket) location() (string, error) {
-	bucketname := a.Name.Data
+func isAccessibleBucket(a *mqlAwsS3Bucket) bool {
+	return a.Exists.Data
+}
 
+func (a *mqlAwsS3Bucket) location() (string, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.S3("")
 	ctx := context.Background()
-
-	location, err := svc.GetBucketLocation(ctx, &s3.GetBucketLocationInput{
-		Bucket: &bucketname,
-	})
+	outp, err := svc.GetBucketLocation(ctx, &s3.GetBucketLocationInput{Bucket: aws.String(a.Name.Data)})
+	// outp, err := svc.HeadBucket(ctx, &s3.HeadBucketInput{Bucket: aws.String(a.Name.Data), ExpectedBucketOwner: aws.String(conn.AccountId())})
 	if err != nil {
-		return "", err
+		log.Warn().Msg("bucket does not exist or does not exist in this account")
+		a.Location.State = plugin.StateIsNull
+		return "", nil
 	}
-
-	region := string(location.LocationConstraint)
-	// us-east-1 returns "" therefore we set it explicitly
-	// https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketLocation.html#API_GetBucketLocation_ResponseSyntax
+	// region := *outp.BucketRegion
+	region := string(outp.LocationConstraint)
 	if region == "" {
 		region = "us-east-1"
 	}
@@ -276,12 +279,18 @@ func (a *mqlAwsS3Bucket) location() (string, error) {
 }
 
 func (a *mqlAwsS3Bucket) gatherAcl() (*s3.GetBucketAclOutput, error) {
+	if !isAccessibleBucket(a) {
+		log.Warn().Msg("bucket does not exist or does not exist in this account")
+		a.Acl.State = plugin.StateIsNull
+		return nil, nil
+	}
+	region := getRegionForBucket(a)
+
 	bucketname := a.Name.Data
-	location := a.Location.Data
 
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	svc := conn.S3(location)
+	svc := conn.S3(region)
 	ctx := context.Background()
 
 	acl, err := svc.GetBucketAcl(ctx, &s3.GetBucketAclInput{
@@ -296,6 +305,11 @@ func (a *mqlAwsS3Bucket) gatherAcl() (*s3.GetBucketAclOutput, error) {
 }
 
 func (a *mqlAwsS3Bucket) acl() ([]interface{}, error) {
+	if !isAccessibleBucket(a) {
+		log.Warn().Msg("bucket does not exist or does not exist in this account")
+		a.Acl.State = plugin.StateIsNull
+		return nil, nil
+	}
 	bucketname := a.Name.Data
 
 	acl, err := a.gatherAcl()
@@ -345,17 +359,18 @@ func (a *mqlAwsS3Bucket) acl() ([]interface{}, error) {
 
 func (a *mqlAwsS3Bucket) publicAccessBlock() (interface{}, error) {
 	bucketname := a.Name.Data
-	location := a.Location.Data
+	region := getRegionForBucket(a)
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	svc := conn.S3(location)
+	svc := conn.S3(region)
 	ctx := context.Background()
 
 	publicAccessBlock, err := svc.GetPublicAccessBlock(ctx, &s3.GetPublicAccessBlockInput{
 		Bucket: &bucketname,
 	})
 	if err != nil {
-		if isNotFoundForS3(err) {
+		if isNotFoundForS3(err) || isPermDenied(err) {
+			a.PublicAccessBlock.State = plugin.StateIsNull
 			return nil, nil
 		}
 		return nil, err
@@ -365,6 +380,11 @@ func (a *mqlAwsS3Bucket) publicAccessBlock() (interface{}, error) {
 }
 
 func (a *mqlAwsS3Bucket) owner() (map[string]interface{}, error) {
+	if !isAccessibleBucket(a) {
+		log.Warn().Msg("bucket does not exist or does not exist in this account")
+		a.Owner.State = plugin.StateIsNull
+		return nil, nil
+	}
 	acl, err := a.gatherAcl()
 	if err != nil {
 		return nil, err
@@ -388,6 +408,11 @@ const (
 )
 
 func (a *mqlAwsS3Bucket) public() (bool, error) {
+	if !isAccessibleBucket(a) {
+		log.Warn().Msg("bucket does not exist or does not exist in this account")
+		a.Public.State = plugin.StateIsNull
+		return false, nil
+	}
 	acl, err := a.gatherAcl()
 	if err != nil {
 		return false, err
@@ -404,18 +429,19 @@ func (a *mqlAwsS3Bucket) public() (bool, error) {
 
 func (a *mqlAwsS3Bucket) cors() ([]interface{}, error) {
 	bucketname := a.Name.Data
-	location := a.Location.Data
+	region := getRegionForBucket(a)
 
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	svc := conn.S3(location)
+	svc := conn.S3(region)
 	ctx := context.Background()
 
 	cors, err := svc.GetBucketCors(ctx, &s3.GetBucketCorsInput{
 		Bucket: &bucketname,
 	})
 	if err != nil {
-		if isNotFoundForS3(err) {
+		if isNotFoundForS3(err) || isPermDenied(err) {
+			a.Cors.State = plugin.StateIsNull
 			return nil, nil
 		}
 		return nil, err
@@ -443,12 +469,17 @@ func (a *mqlAwsS3Bucket) cors() ([]interface{}, error) {
 }
 
 func (a *mqlAwsS3Bucket) logging() (map[string]interface{}, error) {
+	if !isAccessibleBucket(a) {
+		log.Warn().Msg("bucket does not exist or does not exist in this account")
+		a.Logging.State = plugin.StateIsNull
+		return nil, nil
+	}
 	bucketname := a.Name.Data
-	bucketlocation := a.Location.Data
+	region := getRegionForBucket(a)
 
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	svc := conn.S3(bucketlocation)
+	svc := conn.S3(region)
 	ctx := context.Background()
 
 	logging, err := svc.GetBucketLogging(ctx, &s3.GetBucketLoggingInput{
@@ -479,12 +510,17 @@ func (a *mqlAwsS3Bucket) logging() (map[string]interface{}, error) {
 }
 
 func (a *mqlAwsS3Bucket) versioning() (map[string]interface{}, error) {
+	if !isAccessibleBucket(a) {
+		log.Warn().Msg("bucket does not exist or does not exist in this account")
+		a.Versioning.State = plugin.StateIsNull
+		return nil, nil
+	}
 	bucketname := a.Name.Data
-	location := a.Location.Data
+	region := getRegionForBucket(a)
 
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	svc := conn.S3(location)
+	svc := conn.S3(region)
 	ctx := context.Background()
 
 	versioning, err := svc.GetBucketVersioning(ctx, &s3.GetBucketVersioningInput{
@@ -505,8 +541,13 @@ func (a *mqlAwsS3Bucket) versioning() (map[string]interface{}, error) {
 }
 
 func (a *mqlAwsS3Bucket) replication() (interface{}, error) {
+	if !isAccessibleBucket(a) {
+		log.Warn().Msg("bucket does not exist or does not exist in this account")
+		a.Replication.State = plugin.StateIsNull
+		return nil, nil
+	}
 	bucketname := a.Name.Data
-	region := a.Location.Data
+	region := getRegionForBucket(a)
 
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
@@ -517,7 +558,8 @@ func (a *mqlAwsS3Bucket) replication() (interface{}, error) {
 		Bucket: &bucketname,
 	})
 	if err != nil {
-		if isNotFoundForS3(err) {
+		if isNotFoundForS3(err) || isPermDenied(err) {
+			a.Replication.State = plugin.StateIsNull
 			return nil, nil
 		}
 		return nil, err
@@ -526,8 +568,13 @@ func (a *mqlAwsS3Bucket) replication() (interface{}, error) {
 }
 
 func (a *mqlAwsS3Bucket) encryption() (interface{}, error) {
+	if !isAccessibleBucket(a) {
+		log.Warn().Msg("bucket does not exist or does not exist in this account")
+		a.Encryption.State = plugin.StateIsNull
+		return nil, nil
+	}
 	bucketname := a.Name.Data
-	region := a.Location.Data
+	region := getRegionForBucket(a)
 
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
@@ -552,8 +599,13 @@ func (a *mqlAwsS3Bucket) encryption() (interface{}, error) {
 }
 
 func (a *mqlAwsS3Bucket) defaultLock() (string, error) {
+	if !isAccessibleBucket(a) {
+		log.Warn().Msg("bucket does not exist or does not exist in this account")
+		a.DefaultLock.State = plugin.StateIsNull
+		return "", nil
+	}
 	bucketname := a.Name.Data
-	region := a.Location.Data
+	region := getRegionForBucket(a)
 
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
@@ -564,7 +616,8 @@ func (a *mqlAwsS3Bucket) defaultLock() (string, error) {
 		Bucket: &bucketname,
 	})
 	if err != nil {
-		if isNotFoundForS3(err) {
+		if isNotFoundForS3(err) || isPermDenied(err) {
+			a.DefaultLock.State = plugin.StateIsNull
 			return "", nil
 		}
 		return "", err
@@ -574,8 +627,13 @@ func (a *mqlAwsS3Bucket) defaultLock() (string, error) {
 }
 
 func (a *mqlAwsS3Bucket) staticWebsiteHosting() (map[string]interface{}, error) {
+	if !isAccessibleBucket(a) {
+		log.Warn().Msg("bucket does not exist or does not exist in this account")
+		a.StaticWebsiteHosting.State = plugin.StateIsNull
+		return nil, nil
+	}
 	bucketname := a.Name.Data
-	region := a.Location.Data
+	region := getRegionForBucket(a)
 
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
@@ -586,7 +644,8 @@ func (a *mqlAwsS3Bucket) staticWebsiteHosting() (map[string]interface{}, error) 
 		Bucket: &bucketname,
 	})
 	if err != nil {
-		if isNotFoundForS3(err) {
+		if isNotFoundForS3(err) || isPermDenied(err) {
+			a.StaticWebsiteHosting.State = plugin.StateIsNull
 			return nil, nil
 		}
 		return nil, err
@@ -665,6 +724,23 @@ func isNotFoundForS3(err error) bool {
 		return true
 	} else if errors.As(err, &respErr) {
 		if respErr.HTTPStatusCode() == 404 {
+			return true
+		}
+	}
+
+	return false
+}
+
+func isPermDenied(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	var respErr *http.ResponseError
+
+	if errors.As(err, &respErr) {
+		if respErr.HTTPStatusCode() == 403 {
+			log.Warn().Msg(err.Error())
 			return true
 		}
 	}

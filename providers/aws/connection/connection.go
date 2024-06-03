@@ -73,6 +73,25 @@ func NewMockConnection(id uint32, asset *inventory.Asset, conf *inventory.Config
 	}
 }
 
+// type TokenSourceProvider func(ctx context.Context) (oauth2.TokenSource, error)
+
+// func AwsConfigProvider(audience string, audienceRole string) (aws.Config, error) {
+// 	var config *aws.Config
+// 	config = &aws.Config{
+// 		Region: "us-east-1",
+// 	}
+// 	tokenSourceProvider := func(ctx context.Context) (oauth2.TokenSource, error) {
+// 		return idtoken.NewTokenSource(ctx, audience)
+// 	}
+
+// 	config.AssumeRole = &aws.AssumeRoleConfig{
+// 		RoleArn:             audienceRole,
+// 		TokenSourceProvider: tokenSourceProvider,
+// 	}
+
+// 	return awsutil.AwsConfigProvider(config)
+// }
+
 func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*AwsConnection, error) {
 	log.Debug().Msg("new aws connection")
 	// check flags for connection options
@@ -88,6 +107,9 @@ func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 	retryClient.RetryMax = 5
 	retryClient.Logger = &zeroLogAdapter{}
 	c.awsConfigOptions = append(c.awsConfigOptions, config.WithHTTPClient(retryClient.StandardClient()))
+
+	if conf.Options["aws-gcp-audience"] != "" {
+	}
 
 	cfg, err := config.LoadDefaultConfig(context.Background(), c.awsConfigOptions...)
 	if err != nil {
