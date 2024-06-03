@@ -17,7 +17,7 @@ var Config = plugin.Provider{
 		{
 			Name:      "nmap",
 			Use:       "nmap",
-			Short:     "a nmap network scanner",
+			Short:     "a Nmap network scanner",
 			Discovery: []string{},
 			Flags:     []plugin.Flag{},
 		},

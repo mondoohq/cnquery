@@ -1,4 +1,4 @@
-# nmap provider
+# Nmap provider
 
 Nmap, short for Network Mapper, is a powerful and versatile open-source tool used for network discovery and security auditing. This tool is widely utilized by network administrators, security professionals, and penetration testers to map out network structures, discover hosts, identify services, and detect vulnerabilities.
 
@@ -6,7 +6,7 @@ The nmap provider maps primary objects and attributes that nmap uses to store an
 
 ## Pre-requisites
 
-This provider requires the nmap tool to be installed on your system. You can download and install nmap from the official [website](https://nmap.org/download.html).
+This provider requires the Nmap tool to be installed on your system. You can download and install Nmap from the official [website](https://nmap.org/download.html).
 
 ## Get Started
 

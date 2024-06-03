@@ -569,7 +569,7 @@ lr/docs/markdown: providers/lr
 		--output ../docs/docs/mql/resources/network-pack
 	./lr markdown providers/network/resources/nmap.lr \
 		--pack-name "nmap" \
-		--description "The nmap resource pack lets you use MQL to query and assess nmap data." \
+		--description "The Nmap resource pack lets you use MQL to query and assess Nmap data." \
 		--docs-file providers/network/resources/nmap.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/nmap-pack
 	./lr markdown providers/oci/resources/oci.lr \
