@@ -15,6 +15,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/connection/device/linux"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/fs"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v11/providers/os/detector"
 	"go.mondoo.com/cnquery/v11/providers/os/id"
 	"go.mondoo.com/cnquery/v11/providers/os/id/ids"
 )
@@ -53,7 +54,7 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 	}
 	if len(blocks) != 1 {
 		// FIXME: remove this when we start scanning multiple blocks
-		return nil, errors.New("internal>blocks size is not equal to 1.")
+		return nil, errors.New("internal>blocks size is not equal to 1")
 	}
 	block := blocks[0]
 	log.Debug().Str("name", block.Name).Str("type", block.FsType).Msg("identified partition for mounting")
@@ -90,24 +91,31 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 
 	res.FileSystemConnection = fsConn
 
-	asset.IdDetector = []string{ids.IdDetector_Hostname}
-	fingerprint, p, err := id.IdentifyPlatform(res, asset.Platform, asset.IdDetector)
-	if err != nil {
-		res.Close()
-		return nil, err
-	}
-	asset.Name = fingerprint.Name
-	asset.PlatformIds = fingerprint.PlatformIDs
-	asset.IdDetector = fingerprint.ActiveIdDetectors
-	asset.Platform = p
-	asset.Id = conf.Type
-
 	// allow injecting platform ids into the device connection. we cannot always know the asset that's being scanned, e.g.
 	// if we can scan an azure VM's disk we should be able to inject the platform ids of the VM
 	if platformIDs, ok := conf.Options[PlatformIdInject]; ok {
 		platformIds := strings.Split(platformIDs, ",")
-		log.Debug().Strs("platform-ids", platformIds).Msg("device connection> injecting platform ids")
-		asset.PlatformIds = append(asset.PlatformIds, platformIds...)
+		if len(platformIds) > 0 {
+			log.Debug().Strs("platform-ids", platformIds).Msg("device connection> injecting platform ids")
+			conf.PlatformId = platformIds[0]
+			asset.PlatformIds = append(asset.PlatformIds, platformIds...)
+		}
+	}
+
+	p, ok := detector.DetectOS(fsConn)
+	if !ok {
+		res.Close()
+		return nil, errors.New("failed to detect OS")
+	}
+	asset.Platform = p
+	asset.IdDetector = []string{ids.IdDetector_Hostname}
+	fingerprint, p, err := id.IdentifyPlatform(res, asset.Platform, asset.IdDetector)
+	if err == nil {
+		asset.Name = fingerprint.Name
+		asset.PlatformIds = append(asset.PlatformIds, fingerprint.PlatformIDs...)
+		asset.IdDetector = fingerprint.ActiveIdDetectors
+		asset.Platform = p
+		asset.Id = conf.Type
 	}
 	return res, nil
 }
