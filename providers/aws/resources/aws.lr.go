@@ -2698,6 +2698,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.applicationautoscaling.target.suspendedState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApplicationautoscalingTarget).GetSuspendedState()).ToDataRes(types.Dict)
 	},
+	"aws.applicationautoscaling.target.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApplicationautoscalingTarget).GetCreatedAt()).ToDataRes(types.Time)
+	},
 	"aws.backup.vaults": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBackup).GetVaults()).ToDataRes(types.Array(types.Resource("aws.backup.vault")))
 	},
@@ -7345,6 +7348,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.applicationautoscaling.target.suspendedState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsApplicationautoscalingTarget).SuspendedState, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.applicationautoscaling.target.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApplicationautoscalingTarget).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.backup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -18854,6 +18861,7 @@ type mqlAwsApplicationautoscalingTarget struct {
 	MinCapacity plugin.TValue[int64]
 	MaxCapacity plugin.TValue[int64]
 	SuspendedState plugin.TValue[interface{}]
+	CreatedAt plugin.TValue[*time.Time]
 }
 
 // createAwsApplicationautoscalingTarget creates a new instance of this resource
@@ -18915,6 +18923,10 @@ func (c *mqlAwsApplicationautoscalingTarget) GetMaxCapacity() *plugin.TValue[int
 
 func (c *mqlAwsApplicationautoscalingTarget) GetSuspendedState() *plugin.TValue[interface{}] {
 	return &c.SuspendedState
+}
+
+func (c *mqlAwsApplicationautoscalingTarget) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 // mqlAwsBackup for the aws.backup resource

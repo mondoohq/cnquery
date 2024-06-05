@@ -92,6 +92,7 @@ func (a *mqlAwsApplicationAutoscaling) getTargets(conn *connection.AwsConnection
 							"minCapacity":       llx.IntDataDefault(target.MinCapacity, 0),
 							"maxCapacity":       llx.IntDataDefault(target.MaxCapacity, 0),
 							"suspendedState":    llx.MapData(targetState, types.Any),
+							"createdAt":         llx.TimeDataPtr(target.CreationTime),
 						})
 					if err != nil {
 						return nil, err

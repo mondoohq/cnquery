@@ -1728,6 +1728,8 @@ private aws.applicationautoscaling.target @defaults("arn") {
   maxCapacity int
   // suspendedState for the auto scaling target
   suspendedState dict
+  // The creation date for the auto scaling target
+  createdAt time
 }
 
 // AWS Backup
