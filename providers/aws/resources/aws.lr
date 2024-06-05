@@ -2895,7 +2895,7 @@ private aws.ec2.keypair @defaults("name type region") {
 }
 
 // Amazon EC2 image (AMI)
-private aws.ec2.image @defaults("arn") {
+private aws.ec2.image @defaults("ownerAlias id name") {
   // ARN for the AMI
   arn string
   // ID of the image
@@ -2910,6 +2910,8 @@ private aws.ec2.image @defaults("arn") {
   ownerAlias string
   // Date the image was created
   createdAt time
+  // Date the image was deprecated
+  deprecatedAt time
 }
 
 // Amazon EC2 instance block device

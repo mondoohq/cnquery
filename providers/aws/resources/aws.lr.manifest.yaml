@@ -990,6 +990,8 @@ resources:
       arn: {}
       createdAt:
         min_mondoo_version: 9.0.0
+      deprecatedAt:
+        min_mondoo_version: 9.0.0
       id: {}
       name: {}
       ownerAlias:
