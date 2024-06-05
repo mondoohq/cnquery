@@ -4132,6 +4132,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.image.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Image).GetCreatedAt()).ToDataRes(types.Time)
 	},
+	"aws.ec2.image.deprecatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Image).GetDeprecatedAt()).ToDataRes(types.Time)
+	},
 	"aws.ec2.instance.device.deleteOnTermination": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2InstanceDevice).GetDeleteOnTermination()).ToDataRes(types.Bool)
 	},
@@ -9481,6 +9484,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.ec2.image.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Image).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.deprecatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Image).DeprecatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.instance.device.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24508,6 +24515,7 @@ type mqlAwsEc2Image struct {
 	OwnerId plugin.TValue[string]
 	OwnerAlias plugin.TValue[string]
 	CreatedAt plugin.TValue[*time.Time]
+	DeprecatedAt plugin.TValue[*time.Time]
 }
 
 // createAwsEc2Image creates a new instance of this resource
@@ -24573,6 +24581,10 @@ func (c *mqlAwsEc2Image) GetOwnerAlias() *plugin.TValue[string] {
 
 func (c *mqlAwsEc2Image) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
+}
+
+func (c *mqlAwsEc2Image) GetDeprecatedAt() *plugin.TValue[*time.Time] {
+	return &c.DeprecatedAt
 }
 
 // mqlAwsEc2InstanceDevice for the aws.ec2.instance.device resource
