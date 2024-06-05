@@ -359,7 +359,7 @@ func init() {
 			Create: createAwsEcsTask,
 		},
 		"aws.ecs.container": {
-			Init: initAwsEcsContainer,
+			// to override args, implement: initAwsEcsContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEcsContainer,
 		},
 		"aws.emr": {
@@ -16698,7 +16698,7 @@ func (c *mqlAwsEcsInstance) GetRegion() *plugin.TValue[string] {
 type mqlAwsEcsTask struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlAwsEcsTaskInternal it will be used here
+	mqlAwsEcsTaskInternal
 	Arn plugin.TValue[string]
 	ClusterName plugin.TValue[string]
 	Connectivity plugin.TValue[interface{}]
@@ -16775,7 +16775,19 @@ func (c *mqlAwsEcsTask) GetTags() *plugin.TValue[map[string]interface{}] {
 }
 
 func (c *mqlAwsEcsTask) GetContainers() *plugin.TValue[[]interface{}] {
-	return &c.Containers
+	return plugin.GetOrCompute[[]interface{}](&c.Containers, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.task", c.__id, "containers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.containers()
+	})
 }
 
 // mqlAwsEcsContainer for the aws.ecs.container resource
