@@ -233,9 +233,6 @@ func (c *coordinator) RemoveRuntime(runtime *Runtime) {
 		}
 	}
 
-	log.Warn().Int("unprocessed-runtimes", len(c.unprocessedRuntimes)).Msg("unprocessed runtimes")
-	log.Warn().Int("runtimes", len(c.runtimes)).Msg("runtimes")
-
 	// If all providers have been killed, reset the connection IDs back to 0
 	if len(c.runningByID) == 0 {
 		c.connectionsLock.Lock()
