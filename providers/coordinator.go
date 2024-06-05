@@ -206,8 +206,17 @@ func (c *coordinator) RemoveRuntime(runtime *Runtime) {
 		}
 	}
 
-	// Shutdown any providers that are not being used anymore
-	if len(c.runtimes) == 0 && len(c.unprocessedRuntimes) == 0 {
+	// Shutdown any providers that are not being used anymore.
+	// We have runtimes that are used for initialising a scan, but are not
+	// used for the actual scan. They reference no providers, so shouldn't affect
+	// the shutdown of providers.
+	uprocessedRuntimeWithProviders := false
+	for _, rt := range c.unprocessedRuntimes {
+		if rt.Provider != nil {
+			uprocessedRuntimeWithProviders = true
+		}
+	}
+	if len(c.runtimes) == 0 && !uprocessedRuntimeWithProviders {
 		for _, p := range c.runningByID {
 			log.Debug().Msg("shutting down unused provider " + p.Name)
 			if err := c.stop(p); err != nil {
@@ -223,6 +232,9 @@ func (c *coordinator) RemoveRuntime(runtime *Runtime) {
 			}
 		}
 	}
+
+	log.Warn().Int("unprocessed-runtimes", len(c.unprocessedRuntimes)).Msg("unprocessed runtimes")
+	log.Warn().Int("runtimes", len(c.runtimes)).Msg("runtimes")
 
 	// If all providers have been killed, reset the connection IDs back to 0
 	if len(c.runningByID) == 0 {

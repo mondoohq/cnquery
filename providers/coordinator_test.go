@@ -139,6 +139,7 @@ func TestRemoveRuntime_StopUnusedProvider(t *testing.T) {
 			"platformId1": r1,
 			"platformId2": r2,
 		},
+		unprocessedRuntimes: []*Runtime{{}},
 	}
 
 	// Remove all runtimes
