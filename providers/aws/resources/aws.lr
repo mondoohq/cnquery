@@ -1318,7 +1318,7 @@ private aws.ecs.task {
   // User-defined tags associated with the ECS task
   tags map[string]string
   // List of AWS ECS containers
-  containers []aws.ecs.container
+  containers() []aws.ecs.container
 }
 
 // Amazon ECS container
