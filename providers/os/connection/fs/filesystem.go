@@ -5,6 +5,7 @@ package fs
 
 import (
 	"errors"
+	"path/filepath"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
@@ -85,6 +86,7 @@ func (c *FileSystemConnection) FileInfo(path string) (shared.FileInfoDetails, er
 		Size: stat.Size(),
 		Uid:  uid,
 		Gid:  gid,
+		Path: filepath.Join(c.MountedDir, path),
 	}, nil
 }
 

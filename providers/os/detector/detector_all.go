@@ -7,14 +7,12 @@ import (
 	"bytes"
 	"io"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	win "go.mondoo.com/cnquery/v11/providers/os/detector/windows"
 )
 
 const (
@@ -703,36 +701,14 @@ var windows = &PlatformResolver{
 	Name:     "windows",
 	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
-		data, err := win.GetWmiInformation(conn)
-		if err != nil {
-			log.Debug().Err(err).Msg("could not gather wmi information")
-			return false, nil
+		if conn.Capabilities().Has(shared.Capability_RunCommand) {
+			return runtimeWindowsDetector(pf, conn)
 		}
 
-		pf.Name = "windows"
-		pf.Title = data.Caption
-
-		// instead of using windows major.minor.build.ubr we just use build.ubr since
-		// major and minor can be derived from the build version
-		pf.Version = data.BuildNumber
-
-		// FIXME: we need to ask wmic cpu get architecture
-		pf.Arch = data.OSArchitecture
-
-		if pf.Labels == nil {
-			pf.Labels = map[string]string{}
+		if conn.Capabilities().Has(shared.Capability_FileSearch) {
+			return staticWindowsDetector(pf, conn)
 		}
-		pf.Labels["windows.mondoo.com/product-type"] = data.ProductType
-
-		// optional: try to get the ubr number (win 10 + 2019)
-		current, err := win.GetWindowsOSBuild(conn)
-		if err == nil && current.UBR > 0 {
-			pf.Build = strconv.Itoa(current.UBR)
-		} else {
-			log.Debug().Err(err).Msg("could not parse windows current version")
-		}
-
-		return true, nil
+		return false, nil
 	},
 }
 

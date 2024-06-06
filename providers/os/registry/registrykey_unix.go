@@ -4,7 +4,7 @@
 //go:build !windows
 // +build !windows
 
-package windows
+package registry
 
 import "errors"
 
@@ -15,4 +15,8 @@ func GetNativeRegistryKeyItems(path string) ([]RegistryKeyItem, error) {
 
 func GetNativeRegistryKeyChildren(path string) ([]RegistryKeyChild, error) {
 	return nil, errors.New("native registry key children not supported on non-windows platforms")
+}
+
+func GetNativeRegistryKeyItem(path, key string) (RegistryKeyItem, error) {
+	return RegistryKeyItem{}, errors.New("native registry key item not supported on non-windows platforms")
 }
