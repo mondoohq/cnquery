@@ -89,12 +89,13 @@ func Hostname(conn shared.Connection, pf *inventory.Platform) (string, bool) {
 		key, err := rh.GetRegistryItemValue(registry.System, "ControlSet001\\Control\\ComputerName\\ComputerName", "ComputerName")
 		if err == nil {
 			return key.Value.String, true
-		} else {
-			// we also can try ControlSet002 as a fallback
-			key, err := rh.GetRegistryItemValue(registry.System, "ControlSet002\\Control\\ComputerName\\ComputerName", "ComputerName")
-			if err == nil {
-				return key.Value.String, true
-			}
+		}
+
+		// we also can try ControlSet002 as a fallback
+		log.Debug().Err(err).Msg("unable to read windows registry, trying ControlSet002 fallback")
+		key, err = rh.GetRegistryItemValue(registry.System, "ControlSet002\\Control\\ComputerName\\ComputerName", "ComputerName")
+		if err == nil {
+			return key.Value.String, true
 		}
 	}
 

@@ -109,7 +109,6 @@ func ResolveSystemPkgManager(conn shared.Connection) (OperatingSystemPkgManager,
 		pm = &AlpinePkgManager{conn: conn, platform: asset.Platform}
 	case asset.Platform.Name == "macos": // mac os family
 		pm = &MacOSPkgManager{conn: conn}
-		// TODO: add a new manager here for fs conn that lists registry directly
 	case asset.Platform.Name == "windows":
 		pm = &WinPkgManager{conn: conn, platform: asset.Platform}
 	case asset.Platform.Name == "scratch" || asset.Platform.Name == "coreos":

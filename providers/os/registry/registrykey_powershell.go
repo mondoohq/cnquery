@@ -17,11 +17,7 @@ func ParsePowershellRegistryKeyItems(r io.Reader) ([]RegistryKeyItem, error) {
 
 	var items []RegistryKeyItem
 	err = json.Unmarshal(data, &items)
-	if err != nil {
-		return nil, err
-	}
-
-	return items, nil
+	return items, err
 }
 
 func ParsePowershellRegistryKeyChildren(r io.Reader) ([]RegistryKeyChild, error) {
@@ -32,11 +28,7 @@ func ParsePowershellRegistryKeyChildren(r io.Reader) ([]RegistryKeyChild, error)
 
 	var children []RegistryKeyChild
 	err = json.Unmarshal(data, &children)
-	if err != nil {
-		return nil, err
-	}
-
-	return children, nil
+	return children, err
 }
 
 // RegistryKeyItem represents a registry key item and its properties

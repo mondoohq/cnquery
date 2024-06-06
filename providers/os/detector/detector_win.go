@@ -17,6 +17,7 @@ func runtimeWindowsDetector(pf *inventory.Platform, conn shared.Connection) (boo
 	data, err := win.GetWmiInformation(conn)
 	if err != nil {
 		log.Debug().Err(err).Msg("could not gather wmi information")
+		return false, nil
 	}
 
 	pf.Name = "windows"
@@ -36,10 +37,10 @@ func runtimeWindowsDetector(pf *inventory.Platform, conn shared.Connection) (boo
 
 	// optional: try to get the ubr number (win 10 + 2019)
 	current, err := win.GetWindowsOSBuild(conn)
-	if err == nil && current.UBR > 0 {
-		pf.Build = strconv.Itoa(current.UBR)
-	} else {
+	if err != nil {
 		log.Debug().Err(err).Msg("could not parse windows current version")
+	} else if current.UBR > 0 {
+		pf.Build = strconv.Itoa(current.UBR)
 	}
 
 	return true, nil
@@ -67,6 +68,7 @@ func staticWindowsDetector(pf *inventory.Platform, conn shared.Connection) (bool
 	pf.Name = "windows"
 	productName, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion", "ProductName")
 	if err == nil {
+		log.Debug().Str("productName", productName.Value.String).Msg("found productName")
 		pf.Title = productName.Value.String
 	}
 
