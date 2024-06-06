@@ -224,20 +224,15 @@ func (w *WinPkgManager) getLocalInstalledApps() ([]Package, error) {
 	}
 	packages := []Package{}
 	for _, r := range pkgs {
-		// we get all the packages, found under the pkgs paths
 		children, err := registry.GetNativeRegistryKeyChildren(r)
 		if err != nil {
 			continue
 		}
 		for _, c := range children {
-			// for each package the information is contained as items of that registry's key,
-			// so we request the items under the fully qualified path
-			items, err := registry.GetNativeRegistryKeyItems(c.Path + "\\" + c.Name)
+			p, err := getPackageFromRegistryKey(c)
 			if err != nil {
-				log.Debug().Err(err).Str("path", c.Path).Msg("could not read registry key children")
-				continue
+				return nil, err
 			}
-			p := getPackageFromRegistryKeyItems(items)
 			if p == nil {
 				continue
 			}
@@ -252,11 +247,66 @@ func (w *WinPkgManager) getInstalledApps() ([]Package, error) {
 		return w.getLocalInstalledApps()
 	}
 
+	if w.conn.Type() == shared.Type_FileSystem {
+		return w.getFsInstalledApps()
+	}
+
 	cmd, err := w.conn.RunCommand(powershell.Encode(installedAppsScript))
 	if err != nil {
 		return nil, fmt.Errorf("could not read app package list")
 	}
 	return ParseWindowsAppPackages(cmd.Stdout)
+}
+
+func (w *WinPkgManager) getFsInstalledApps() ([]Package, error) {
+	rh := registry.NewRegistryHandler()
+	defer func() {
+		err := rh.UnloadSubkeys()
+		if err != nil {
+			log.Debug().Err(err).Msg("could not unload registry subkeys")
+		}
+	}()
+	fi, err := w.conn.FileInfo(registry.SoftwareRegPath)
+	if err != nil {
+		log.Debug().Err(err).Msg("could not find SOFTWARE registry key file")
+		return nil, err
+	}
+	err = rh.LoadSubkey(registry.Software, fi.Path)
+	if err != nil {
+		log.Debug().Err(err).Msg("could not load SOFTWARE registry key file")
+		return nil, err
+	}
+	pkgs := []string{
+		"Microsoft\\Windows\\CurrentVersion\\Uninstall",
+		"Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+	}
+	packages := []Package{}
+	for _, r := range pkgs {
+		children, err := rh.GetNativeRegistryKeyChildren(registry.Software, r)
+		if err != nil {
+			continue
+		}
+		for _, c := range children {
+			p, err := getPackageFromRegistryKey(c)
+			if err != nil {
+				return nil, err
+			}
+			if p == nil {
+				continue
+			}
+			packages = append(packages, *p)
+		}
+	}
+	return packages, nil
+}
+
+func getPackageFromRegistryKey(key registry.RegistryKeyChild) (*Package, error) {
+	items, err := registry.GetNativeRegistryKeyItems(key.Path + "\\" + key.Name)
+	if err != nil {
+		log.Debug().Err(err).Str("path", key.Path).Msg("could not read registry key children")
+		return nil, err
+	}
+	return getPackageFromRegistryKeyItems(items), nil
 }
 
 func getPackageFromRegistryKeyItems(children []registry.RegistryKeyItem) *Package {

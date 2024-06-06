@@ -101,3 +101,11 @@ func (r *RegistryHandler) GetRegistryItemValue(registryId string, path, key stri
 	}
 	return GetNativeRegistryKeyItem(regPath, key)
 }
+
+func (r *RegistryHandler) GetNativeRegistryKeyChildren(registryId string, path string) ([]RegistryKeyChild, error) {
+	regPath, err := r.getRegistryKeyPath(registryId, path)
+	if err != nil {
+		return nil, err
+	}
+	return GetNativeRegistryKeyChildren(regPath)
+}
