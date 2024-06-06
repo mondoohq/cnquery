@@ -14,7 +14,6 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v11/providers/os/registry"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/powershell"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/windows"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 )
@@ -40,7 +39,7 @@ func (k *mqlRegistrykey) exists() (bool, error) {
 		}
 	}
 
-	script := powershell.Encode(windows.GetRegistryKeyItemScript(k.Path.Data))
+	script := powershell.Encode(registry.GetRegistryKeyItemScript(k.Path.Data))
 	o, err := CreateResource(k.MqlRuntime, "command", map[string]*llx.RawData{
 		"command": llx.StringData(script),
 	})
@@ -78,7 +77,7 @@ func (k *mqlRegistrykey) getEntries() ([]registry.RegistryKeyItem, error) {
 	}
 
 	// parse the output of the powershell script
-	script := powershell.Encode(windows.GetRegistryKeyItemScript(k.Path.Data))
+	script := powershell.Encode(registry.GetRegistryKeyItemScript(k.Path.Data))
 	o, err := CreateResource(k.MqlRuntime, "command", map[string]*llx.RawData{
 		"command": llx.StringData(script),
 	})
@@ -177,7 +176,7 @@ func (k *mqlRegistrykey) children() ([]interface{}, error) {
 		}
 	} else {
 		// parse powershell script
-		script := powershell.Encode(windows.GetRegistryKeyChildItemsScript(k.Path.Data))
+		script := powershell.Encode(registry.GetRegistryKeyChildItemsScript(k.Path.Data))
 		o, err := CreateResource(k.MqlRuntime, "command", map[string]*llx.RawData{
 			"command": llx.StringData(script),
 		})
