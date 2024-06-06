@@ -112,9 +112,9 @@ func GetNativeRegistryKeyItems(path string) ([]RegistryKeyItem, error) {
 	return res, nil
 }
 
-func GetNativeRegistryKeyChildren(path string) ([]RegistryKeyChild, error) {
-	log.Debug().Str("path", path).Msg("search registry key children using native registry api")
-	key, path, err := parseRegistryKeyPath(path)
+func GetNativeRegistryKeyChildren(fullPath string) ([]RegistryKeyChild, error) {
+	log.Debug().Str("path", fullPath).Msg("search registry key children using native registry api")
+	key, path, err := parseRegistryKeyPath(fullPath)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +137,7 @@ func GetNativeRegistryKeyChildren(path string) ([]RegistryKeyChild, error) {
 
 	for i, entry := range entries {
 		res[i] = RegistryKeyChild{
-			Path: path,
+			Path: fullPath,
 			Name: entry,
 		}
 	}
