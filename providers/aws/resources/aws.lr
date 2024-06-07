@@ -23,6 +23,8 @@ aws.account @defaults("id") {
   aliases() []string
   // Information about the associated organization, if any
   organization() aws.organization
+  // Tags on the Account
+  tags() map[string]string
 }
 
 // AWS Organization resource

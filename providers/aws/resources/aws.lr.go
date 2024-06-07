@@ -805,6 +805,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.account.organization": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAccount).GetOrganization()).ToDataRes(types.Resource("aws.organization"))
 	},
+	"aws.account.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccount).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"aws.organization.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOrganization).GetArn()).ToDataRes(types.String)
 	},
@@ -4395,6 +4398,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.account.organization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAccount).Organization, ok = plugin.RawToTValue[*mqlAwsOrganization](v.Value, v.Error)
+		return
+	},
+	"aws.account.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccount).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
 		return
 	},
 	"aws.organization.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9924,6 +9931,7 @@ type mqlAwsAccount struct {
 	Id plugin.TValue[string]
 	Aliases plugin.TValue[[]interface{}]
 	Organization plugin.TValue[*mqlAwsOrganization]
+	Tags plugin.TValue[map[string]interface{}]
 }
 
 // createAwsAccount creates a new instance of this resource
@@ -9986,6 +9994,12 @@ func (c *mqlAwsAccount) GetOrganization() *plugin.TValue[*mqlAwsOrganization] {
 		}
 
 		return c.organization()
+	})
+}
+
+func (c *mqlAwsAccount) GetTags() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Tags, func() (map[string]interface{}, error) {
+		return c.tags()
 	})
 }
 

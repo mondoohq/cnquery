@@ -75,6 +75,35 @@ func (a *mqlAwsOrganization) accounts() ([]interface{}, error) {
 	return accounts, nil
 }
 
+// Method to list tags for the account
+func (c *mqlAwsAccount) tags() (map[string]interface{}, error) {
+	conn := c.MqlRuntime.Connection.(*connection.AwsConnection)
+	client := conn.Organizations("") // no region for orgs, use configured region
+
+	input := &organizations.ListTagsForResourceInput{
+		ResourceId: &c.Id.Data,
+	}
+
+	tags := make(map[string]interface{})
+	for {
+		res, err := client.ListTagsForResource(context.TODO(), input)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, tag := range res.Tags {
+			tags[*tag.Key] = *tag.Value
+		}
+
+		if res.NextToken == nil {
+			break
+		}
+		input.NextToken = res.NextToken
+	}
+
+	return tags, nil
+}
+
 func initAwsAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) >= 2 {
 		return args, nil, nil
