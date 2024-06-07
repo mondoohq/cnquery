@@ -88,7 +88,20 @@ func (f *File) ReadAt(b []byte, off int64) (n int, err error) {
 }
 
 func (f *File) Readdir(count int) (res []os.FileInfo, err error) {
-	return nil, errors.New("not implemented")
+	names, err := f.Readdirnames(count)
+	if err != nil {
+		return nil, err
+	}
+
+	res = make([]os.FileInfo, len(names))
+	for i, name := range names {
+		res[i], err = f.catfs.Stat(name)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return res, nil
 }
 
 func (f *File) Readdirnames(n int) (names []string, err error) {
