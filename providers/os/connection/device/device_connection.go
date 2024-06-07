@@ -13,6 +13,8 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/device/linux"
+	"go.mondoo.com/cnquery/v11/providers/os/connection/device/windows"
+
 	"go.mondoo.com/cnquery/v11/providers/os/connection/fs"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v11/providers/os/detector"
@@ -35,8 +37,8 @@ func getDeviceManager(conf *inventory.Config) (DeviceManager, error) {
 		return nil, errors.New("device manager not implemented for darwin")
 	}
 	if runtime.GOOS == "windows" {
-		// shell = []string{"powershell", "-c"}
-		return nil, errors.New("device manager not implemented for windows")
+		shell = []string{"powershell", "-c"}
+		return windows.NewWindowsDeviceManager(shell, conf.Options)
 	}
 	return linux.NewLinuxDeviceManager(shell, conf.Options)
 }
@@ -148,7 +150,7 @@ func (p *DeviceConnection) UpdateAsset(asset *inventory.Asset) {
 }
 
 func (p *DeviceConnection) Capabilities() shared.Capabilities {
-	return shared.Capability_File
+	return p.FileSystemConnection.Capabilities()
 }
 
 func (p *DeviceConnection) RunCommand(command string) (*shared.Command, error) {
