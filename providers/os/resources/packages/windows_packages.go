@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"runtime"
 	"time"
 
 	"github.com/cockroachdb/errors"
@@ -14,6 +15,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v11/providers/os/detector/windows"
+	"go.mondoo.com/cnquery/v11/providers/os/registry"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/cpe"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/powershell"
 )
@@ -80,6 +82,16 @@ const (
 	Drivers
 	Defender
 )
+
+const installedAppsScript = `
+Get-ItemProperty (@(
+  'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*',
+  'HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*',
+  'HKLM:\\SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*',
+  'HKCU:\\SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*'
+) | Where-Object { Test-Path $_ }) |
+Select-Object -Property DisplayName,DisplayVersion,Publisher,EstimatedSize,InstallSource,UninstallString | ConvertTo-Json -Compress
+`
 
 var (
 	WINDOWS_QUERY_HOTFIXES      = `Get-HotFix | Select-Object -Property Status, Description, HotFixId, Caption, InstalledOn, InstalledBy | ConvertTo-Json`
@@ -203,15 +215,91 @@ func (w *WinPkgManager) Format() string {
 	return "win"
 }
 
-const installedAppsScript = `
-Get-ItemProperty (@(
-  'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*',
-  'HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*',
-  'HKLM:\\SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*',
-  'HKCU:\\SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*'
-) | Where-Object { Test-Path $_ }) |
-Select-Object -Property DisplayName,DisplayVersion,Publisher,EstimatedSize,InstallSource,UninstallString | ConvertTo-Json -Compress
-`
+func (w *WinPkgManager) getLocalInstalledApps() ([]Package, error) {
+	pkgs := []string{
+		"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+		"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+		"HKLM\\SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+		"HKCU\\SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+	}
+	packages := []Package{}
+	for _, r := range pkgs {
+		// we get all the packages, found under the pkgs paths
+		children, err := registry.GetNativeRegistryKeyChildren(r)
+		if err != nil {
+			continue
+		}
+		for _, c := range children {
+			// for each package the information is contained as items of that registry's key,
+			// so we request the items under the fully qualified path
+			items, err := registry.GetNativeRegistryKeyItems(c.Path + "\\" + c.Name)
+			if err != nil {
+				log.Debug().Err(err).Str("path", c.Path).Msg("could not read registry key children")
+				continue
+			}
+			p := getPackageFromRegistryKeyItems(items)
+			if p == nil {
+				continue
+			}
+			packages = append(packages, *p)
+		}
+	}
+	return packages, nil
+}
+
+func (w *WinPkgManager) getInstalledApps() ([]Package, error) {
+	if w.conn.Type() == shared.Type_Local && runtime.GOOS == "windows" {
+		return w.getLocalInstalledApps()
+	}
+
+	cmd, err := w.conn.RunCommand(powershell.Encode(installedAppsScript))
+	if err != nil {
+		return nil, fmt.Errorf("could not read app package list")
+	}
+	return ParseWindowsAppPackages(cmd.Stdout)
+}
+
+func getPackageFromRegistryKeyItems(children []registry.RegistryKeyItem) *Package {
+	var uninstallString string
+	var displayName string
+	var displayVersion string
+	var publisher string
+
+	for _, i := range children {
+		switch i.Key {
+		case "UninstallString":
+			uninstallString = i.Value.String
+		case "DisplayName":
+			displayName = i.Value.String
+		case "DisplayVersion":
+			displayVersion = i.Value.String
+		case "Publisher":
+			publisher = i.Value.String
+		}
+	}
+
+	if uninstallString == "" {
+		return nil
+	}
+
+	pkg := &Package{
+		Name:    displayName,
+		Version: displayVersion,
+		Format:  "windows/app",
+	}
+
+	if displayName != "" && displayVersion != "" {
+		cpeWfn, err := cpe.NewPackage2Cpe(publisher, displayName, displayVersion, "", "")
+		if err != nil {
+			log.Debug().Err(err).Str("name", displayName).Str("version", displayVersion).Msg("could not create cpe for windows app package")
+		} else {
+			pkg.CPE = cpeWfn
+		}
+	} else {
+		log.Debug().Msg("ignored package since information is missing")
+	}
+	return pkg
+}
 
 // returns installed appx packages as well as hot fixes
 func (w *WinPkgManager) List() ([]Package, error) {
@@ -221,19 +309,20 @@ func (w *WinPkgManager) List() ([]Package, error) {
 	}
 
 	pkgs := []Package{}
-
-	cmd, err := w.conn.RunCommand(powershell.Encode(installedAppsScript))
-	if err != nil {
-		return nil, fmt.Errorf("could not read app package list")
-	}
-	appPkgs, err := ParseWindowsAppPackages(cmd.Stdout)
+	appPkgs, err := w.getInstalledApps()
 	if err != nil {
 		return nil, fmt.Errorf("could not read app package list")
 	}
 	pkgs = append(pkgs, appPkgs...)
 
-	// only win 10+ are compatible with app x packages
+	canRunCmd := w.conn.Capabilities().Has(shared.Capability_RunCommand)
+	if !canRunCmd {
+		log.Debug().Msg("cannot run command on windows, skipping appx package and hotfixes list")
+		return pkgs, nil
+	}
+
 	if b.Build > 10240 {
+		// only win 10+ are compatible with app x packages
 		cmd, err := w.conn.RunCommand(powershell.Wrap(WINDOWS_QUERY_APPX_PACKAGES))
 		if err != nil {
 			return nil, fmt.Errorf("could not read appx package list")
@@ -246,7 +335,7 @@ func (w *WinPkgManager) List() ([]Package, error) {
 	}
 
 	// hotfixes
-	cmd, err = w.conn.RunCommand(powershell.Wrap(WINDOWS_QUERY_HOTFIXES))
+	cmd, err := w.conn.RunCommand(powershell.Wrap(WINDOWS_QUERY_HOTFIXES))
 	if err != nil {
 		return nil, errors.Wrap(err, "could not fetch hotfixes")
 	}
@@ -257,7 +346,6 @@ func (w *WinPkgManager) List() ([]Package, error) {
 	hotfixAsPkgs := HotFixesToPackages(hotfixes)
 
 	pkgs = append(pkgs, hotfixAsPkgs...)
-
 	return pkgs, nil
 }
 
