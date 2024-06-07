@@ -9,6 +9,8 @@ package registry
 import (
 	"syscall"
 	"unsafe"
+
+	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -27,9 +29,10 @@ func LoadRegistrySubkey(key, path string) error {
 	if err != nil {
 		return err
 	}
-	ret, _, err := regLoadKey.Call(syscall.HKEY_LOCAL_MACHINE, uintptr(unsafe.Pointer(keyPtr)), uintptr(unsafe.Pointer(pathPtr)))
+	_, _, err = regLoadKey.Call(syscall.HKEY_LOCAL_MACHINE, uintptr(unsafe.Pointer(keyPtr)), uintptr(unsafe.Pointer(pathPtr)))
 	// the Microsoft docs indicate that the return value is 0 on success
-	if ret != 0 {
+	if syserr, ok := err.(syscall.Errno); ok && syserr != 0 {
+		log.Debug().Err(syserr).Msg("could not load registry subkey")
 		return err
 	}
 	return nil
@@ -41,9 +44,10 @@ func UnloadRegistrySubkey(key string) error {
 		return err
 	}
 
-	ret, _, err := regUnloadKey.Call(syscall.HKEY_LOCAL_MACHINE, uintptr(unsafe.Pointer(keyPtr)))
+	_, _, err = regUnloadKey.Call(syscall.HKEY_LOCAL_MACHINE, uintptr(unsafe.Pointer(keyPtr)))
 	// the Microsoft docs indicate that the return value is 0 on success
-	if ret != 0 {
+	if syserr, ok := err.(syscall.Errno); ok && syserr != 0 {
+		log.Debug().Err(syserr).Msg("could not unload registry subkey")
 		return err
 	}
 	return nil

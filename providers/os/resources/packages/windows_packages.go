@@ -247,7 +247,7 @@ func (w *WinPkgManager) getInstalledApps() ([]Package, error) {
 		return w.getLocalInstalledApps()
 	}
 
-	if w.conn.Type() == shared.Type_FileSystem {
+	if w.conn.Type() == shared.Type_FileSystem || w.conn.Type() == shared.Type_Device {
 		return w.getFsInstalledApps()
 	}
 
