@@ -53,33 +53,33 @@ snowflake.user @defaults("name") {
   lastName string
   // Email address
   email string
-  // comment for the user
+  // Comment for the user
   comment string
   // Virtual warehouse that is active by default
   defaultWarehouse string
-  // Specifies the namespace that is active by default
+  // Namespace that is active by default
   defaultNamespace string
-  // Specifies the default role for the user
+  // Default role for the user
   defaultRole string
-  // Specifies whether the user is disabled
+  // Whether the user is disabled
   disabled bool
-  // Indicates if the user has a password
+  // Whether the user has a password
   hasPassword bool
-  // Indicates if the user has MFA enabled
+  // Whether the user has MFA enabled
   hasRsaPublicKey bool
-  // Specifies whether the user is forced to change their password
+  // Whether the user is forced to change their password
   mustChangePassword bool
   // Last time the user logged in
   lastSuccessLogin time
   // Time until the user is locked
   lockedUntil time
-  // Time the user was created
+  // When the user was created
   createdAt time
-  // Time the user expires
+  // When the user expires
   expiresAt time
-  // Indicates if the user has MFA enabled
+  // Whether the user has MFA enabled
   extAuthnDuo bool
-  // MFA user id
+  // MFA user ID
   extAuthnUid string
   // Parameters for the user
   parameters() []snowflake.parameter
@@ -89,13 +89,13 @@ snowflake.user @defaults("name") {
 snowflake.role @defaults("name") {
   // Role name
   name string
-  // Indicates if the role is a default role
+  // Whether the role is the default role
   isDefault bool
-  // Indicates if the role is a current role
+  // Whether the role is a current role
   isCurrent bool
-  // Indicates if the role is a shared role
+  // Whether the role is a shared role
   isInherited bool
-  // Number of users assigned
+  // Number of users assigned to the role
   assignedToUsers int
   // Number of roles granted to
   grantedToRoles int
@@ -117,9 +117,9 @@ snowflake.securityIntegration @defaults("name") {
   category string
   // Comment for the security integration
   comment string
-  // Enabled status of the security integration
+  // Whether the security integration is enabled
   enabled bool
-  // Created time of the security integration
+  // When the security integration was created
   createdAt time
 }
 
@@ -137,7 +137,7 @@ snowflake.passwordPolicy @defaults("name") {
   owner string
   // Comment for the password policy
   comment string
-  // Created time of the password policy
+  // When the password policy was created
   createdAt time
   // Minimum number of characters for password
   passwordMinLength() int
@@ -155,11 +155,11 @@ snowflake.passwordPolicy @defaults("name") {
   passwordMinAgeDays() int
   // Maximum number of days before password must be changed
   passwordMaxAgeDays() int
-  // Maximum number of attempts to enter a password before being locked out
+  // Maximum number of attempts to enter a password before locking out the user account
   passwordMaxRetries() int
-  // Number of minutes the user account will be locked
+  // How long (in minutes) to lock out the user account
   passwordLockoutTimeMins() int
-  // Number of the most recent passwords
+  // Number of recent passwords to retain
   passwordHistory() int
 }
 
@@ -185,7 +185,7 @@ snowflake.networkPolicy @defaults("name") {
   allowedNetworkRules() []string
   // List of network rules that contain the network identifiers that are denied access
   blockedNetworkRules() []string
-  // Created time of the network policy
+  // When the network policy was created
   createdAt time
 }
 
@@ -197,11 +197,11 @@ snowflake.procedure @defaults("name") {
   description string
   // Schema name
   schemaName string
-  // Indicates if the procedure is a builtin
+  // Whether the procedure is built in
   isBuiltin bool
-  // Indicates if it is an aggregate function
+  // Whether the procedure is an aggregate function
   isAggregate bool
-  // Indicates if it is a ansi procedure
+  // Whether the procedure is an ANSI procedure
   isAnsi bool
   // Minimum number of arguments
   minNumberOfArguments int
@@ -211,11 +211,11 @@ snowflake.procedure @defaults("name") {
   arguments string
   // Catalog name
   catalogName string
-  // Indicates if the procedure is a table function
+  // Whether the procedure is a table function
   isTableFunction bool
-  // Indicates if the procedure is for clustering
+  // Whether the procedure is for clustering
   validForClustering bool
-  // Indicates if the procedure is secure
+  // Whether the procedure is secure
   isSecure bool
 }
 
@@ -245,11 +245,11 @@ snowflake.stage @defaults("name") {
   owner string
   // Comment for the stage
   comment string
-  // Created time of the stage
+  // When the stage was created
   createdAt time
-  // Indicates if the stage has credentials
+  // Whether the stage has credentials
   hasCredentials bool
-  // Indicates if the stage has encryption key
+  // Whether the stage has encryption key
   hasEncryptionKey bool
   // URL of the stage
   url string
@@ -263,7 +263,7 @@ snowflake.stage @defaults("name") {
   endpoint string
   // Owner role type
   ownerRoleType string
-  // Directory enabled
+  // Whether a directory table is enabled for the stage
   directoryEnabled bool
 }
 
@@ -287,11 +287,11 @@ snowflake.database @defaults("name") {
   retentionTime int
   // Resource group of the database
   resourceGroup string
-  // Indicates if the database is transient
+  // Whether the database is transient
   transient bool
-  // Created time of the database
+  // When the database was created
   createdAt time
-  // Time the database was dropped
+  // When the database was dropped
   droppedAt time
 }
 
@@ -309,17 +309,17 @@ snowflake.warehouse @defaults("name") {
   minClusterCount int
   // Maximum cluster count
   maxClusterCount int
-  // Started clusters
+  // Number of started clusters
   startedClusterCount int
-  // Running clusters
+  // Number of running clusters
   running int
-  // Queued clusters
+  // Number of queued clusters
   queued int
-  // Indicates if the warehouse is a default database
+  // Whether the warehouse is a default warehouse
   isDefault bool
-  // Indicates if the warehouse is a current database
+  // Indicates if the warehouse is a current warehouse
   isCurrent bool
-  // Period of inactivity, in seconds, after which a running warehouse will automatically suspend and stop using credits
+  // Period of inactivity, in seconds, after which a running warehouse automatically suspends and stops using credits
   autoSuspend int
   // Whether the warehouse, if suspended, automatically resumes
   autoResume bool
@@ -335,7 +335,7 @@ snowflake.warehouse @defaults("name") {
   owner string
   // Comment for the warehouse
   comment string
-  // Indicates if query acceleration is enabled
+  // Whether query acceleration is enabled
   enableQueryAcceleration bool
   // Query acceleration scale factor
   queryAccelerationMaxScaleFactor int
@@ -345,11 +345,11 @@ snowflake.warehouse @defaults("name") {
   scalingPolicy string
   // Owner role type
   ownerRoleType string
-  // Created time of the warehouse
+  // When the warehouse was created
   createdAt time
-  // Resumed time of the warehouse
+  // When the warehouse resumed
   resumedAt time
-  // Updated time of the warehouse
+  // When the warehouse was updated
   updatedAt time
 }
 
@@ -357,9 +357,9 @@ snowflake.warehouse @defaults("name") {
 snowflake.view @defaults("name") {
   // Name of the view
   name string
-  // Kind of the view
+  // Kind of view
   kind string
-  // Indicates if the view is reserved
+  // Whether the view is reserved
   reserved string
   // Database name
   databaseName string
@@ -371,9 +371,9 @@ snowflake.view @defaults("name") {
   comment string
   // Text of the view
   text string
-  // Indicates if the view is secure
+  // Whether the view is secure
   isSecure bool
-  // Indicates if the view is materialized
+  // Whether the view is materialized
   isMaterialized bool
   // Owner role type
   ownerRoleType string
