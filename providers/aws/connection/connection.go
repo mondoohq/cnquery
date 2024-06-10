@@ -79,7 +79,14 @@ func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 	c := &AwsConnection{
 		awsConfigOptions: []func(*config.LoadOptions) error{},
 	}
-	opts := parseFlagsForConnectionOptions(asset.Options, conf.Options, conf.GetCredentials())
+	connOpts := asset.Options
+	if connOpts == nil {
+		connOpts = make(map[string]string)
+	}
+	for k, v := range conf.Options {
+		connOpts[k] = v
+	}
+	opts := parseFlagsForConnectionOptions(connOpts, conf.GetCredentials())
 	for _, opt := range opts {
 		opt(c)
 	}
@@ -89,7 +96,7 @@ func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 	retryClient.Logger = &zeroLogAdapter{}
 	c.awsConfigOptions = append(c.awsConfigOptions, config.WithHTTPClient(retryClient.StandardClient()))
 
-	cfg, err := config.LoadDefaultConfig(context.Background(), c.awsConfigOptions...)
+	cfg, err := LoadAwsConfig(c, connOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -152,15 +159,9 @@ func parseOptsToFilters(opts map[string]string) DiscoveryFilters {
 	return d
 }
 
-func parseFlagsForConnectionOptions(m1 map[string]string, m2 map[string]string, creds []*vault.Credential) []ConnectionOption {
+func parseFlagsForConnectionOptions(connOpts map[string]string, creds []*vault.Credential) []ConnectionOption {
 	// merge the options to make sure we dont miss anything
-	m := m1
-	if m == nil {
-		m = make(map[string]string)
-	}
-	for k, v := range m2 {
-		m[k] = v
-	}
+	m := connOpts
 	o := make([]ConnectionOption, 0)
 	if apiEndpoint, ok := m["endpoint-url"]; ok {
 		o = append(o, WithEndpoint(apiEndpoint))
@@ -252,6 +253,25 @@ func WithAssumeRole(defaultCfg aws.Config, roleArn string, externalId string) Co
 				)),
 		))
 	}
+}
+
+const (
+	GcpInstanceIdentityKey string = "gcp-audience"
+	IdentityRoleArnKey     string = "identity-role-arn"
+)
+
+func LoadAwsConfig(c *AwsConnection, opts map[string]string) (aws.Config, error) {
+	// if an identity is provided, that means we need to load that identity config first
+	// to establish base credentials with aws, and then go on to load the aws config
+	// with the given options like normal
+	if opts[GcpInstanceIdentityKey] != "" {
+		_, err := AwsWithIdentityProvider(opts)
+		if err != nil {
+			return aws.Config{}, err
+		}
+	}
+
+	return config.LoadDefaultConfig(context.Background(), c.awsConfigOptions...)
 }
 
 func (h *AwsConnection) Name() string {
