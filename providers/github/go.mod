@@ -15,7 +15,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	go.mondoo.com/cnquery/v11 v11.6.3
 	go.mondoo.com/ranger-rpc v0.6.1
-	golang.org/x/oauth2 v0.20.0
+	golang.org/x/oauth2 v0.21.0
 	google.golang.org/protobuf v1.34.1
 	sigs.k8s.io/yaml v1.4.0
 )
