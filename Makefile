@@ -573,7 +573,7 @@ lr/docs/markdown: providers/lr
 		--description "The Slack resource pack lets you use MQL to query and assess the security of your Slack identities and configuration." \
 		--docs-file providers/slack/resources/slack.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/slack-pack
-	./lr markdown providers/slack/resources/snowflake.lr \
+	./lr markdown providers/snowflake/resources/snowflake.lr \
 		--pack-name "Snowflake" \
 		--description "The Snowflake resource pack lets you use MQL to query and assess the security of your Snowflake identities and configuration." \
 		--docs-file providers/snowflake/resources/snowflake.lr.manifest.yaml \
