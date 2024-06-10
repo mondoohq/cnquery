@@ -24,6 +24,9 @@ aws.account @defaults("id") {
   // Information about the associated organization, if any
   organization() aws.organization
   // Tags on the account
+  // Note: This operation can only be called from the organization's management
+  // account or by a member account that is a delegated administrator for an
+  // Amazon Web Services service.
   tags() map[string]string
 }
 

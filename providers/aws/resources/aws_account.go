@@ -75,7 +75,7 @@ func (a *mqlAwsOrganization) accounts() ([]interface{}, error) {
 	return accounts, nil
 }
 
-// Method to list tags for the account
+// tags retrieves a map of tags for a given AWS resource.
 func (c *mqlAwsAccount) tags() (map[string]interface{}, error) {
 	conn := c.MqlRuntime.Connection.(*connection.AwsConnection)
 	client := conn.Organizations("") // no region for orgs, use configured region
@@ -84,6 +84,9 @@ func (c *mqlAwsAccount) tags() (map[string]interface{}, error) {
 		ResourceId: &c.Id.Data,
 	}
 
+	// Note: This operation can only be called from the organization's management
+	// account or by a member account that is a delegated administrator for an
+	// Amazon Web Services service.
 	tags := make(map[string]interface{})
 	for {
 		res, err := client.ListTagsForResource(context.TODO(), input)
