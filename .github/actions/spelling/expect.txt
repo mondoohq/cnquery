@@ -2,6 +2,7 @@ atlassian
 Auths
 autoaccept
 autoscaler
+ACCOUNTADMIN
 backupconfiguration
 backupsetting
 bigquery
@@ -20,6 +21,7 @@ datapath
 Ddos
 deliverychannel
 dfw
+DATAUSER
 DIRECTORYID
 dlq
 dlv
@@ -82,6 +84,7 @@ shodan
 singlequeryargument
 sizeconstraintstatement
 Snat
+Snowsight
 spdx
 sph
 spo

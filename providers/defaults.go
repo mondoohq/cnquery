@@ -371,6 +371,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"snowflake": {
+		Provider: &plugin.Provider{
+			Name:            "snowflake",
+			ID:              "go.mondoo.com/cnquery/v9/providers/snowflake",
+			ConnectionTypes: []string{"snowflake"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "snowflake",
+					Use:   "snowflake",
+					Short: "a Snowflake account",
+				},
+			},
+		},
+	},
+
 	"terraform": {
 		Provider: &plugin.Provider{
 			Name:            "terraform",
