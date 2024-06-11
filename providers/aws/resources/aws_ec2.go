@@ -1104,17 +1104,23 @@ func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		args["architecture"] = llx.StringData(string(image.Architecture))
 		args["ownerId"] = llx.StringData(convert.ToString(image.OwnerId))
 		args["ownerAlias"] = llx.StringData(convert.ToString(image.ImageOwnerAlias))
-		createTime, err := time.Parse(time.RFC3339, *image.CreationDate)
-		if err == nil {
-			args["createdAt"] = llx.TimeData(createTime)
-		} else {
+		if image.CreationDate == nil {
 			args["createdAt"] = llx.NilData
-		}
-		deprecateTime, err := time.Parse(time.RFC3339, *image.DeprecationTime)
-		if err == nil {
-			args["deprecatedAt"] = llx.TimeData(deprecateTime)
 		} else {
+			createdAt, err := time.Parse(time.RFC3339, *image.CreationDate)
+			if err != nil {
+				return nil, nil, err
+			}
+			args["createdAt"] = llx.TimeData(createdAt)
+		}
+		if image.DeprecationTime == nil {
 			args["deprecatedAt"] = llx.NilData
+		} else {
+			deprecateTime, err := time.Parse(time.RFC3339, *image.DeprecationTime)
+			if err != nil {
+				return nil, nil, err
+			}
+			args["deprecatedAt"] = llx.TimeData(deprecateTime)
 		}
 		return args, nil, nil
 	}
