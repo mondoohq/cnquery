@@ -5,8 +5,6 @@
 If you have direct access to the host, press Alt+F1 to open the log in page on the machine's physical console.
 Provide credentials when prompted. To return to the Direct Console User Interface press Alt-F2.
 
-see https://kb.vmware.com/s/article/2004746
-
 ## VCSIM simulator
 
 ```bash
