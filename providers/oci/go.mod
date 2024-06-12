@@ -2,7 +2,7 @@ module go.mondoo.com/cnquery/v11/providers/oci
 
 go 1.22
 
-toolchain go1.22.0
+toolchain go1.22.2
 
 replace go.mondoo.com/cnquery/v11 => ../..
 

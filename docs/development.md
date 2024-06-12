@@ -6,7 +6,7 @@
 
 Before building from source, be sure to install:
 
-- [Go 1.22.0+](https://golang.org/dl/)
+- [go 1.22.0+](https://golang.org/dl/)
 - [Protocol Buffers v21+](https://github.com/protocolbuffers/protobuf/releases)
 
 On macOS systems with Homebrew, run: `brew install go@1.22 protobuf`

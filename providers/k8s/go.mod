@@ -13,7 +13,7 @@ replace k8s.io/client-go => k8s.io/client-go v0.28.9
 
 go 1.22
 
-toolchain go1.22.0
+toolchain go1.22.2
 
 require (
 	github.com/cockroachdb/errors v1.11.3

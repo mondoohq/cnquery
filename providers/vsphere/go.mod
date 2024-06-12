@@ -4,7 +4,7 @@ replace go.mondoo.com/cnquery/v11 => ../..
 
 go 1.22
 
-toolchain go1.22.0
+toolchain go1.22.2
 
 require (
 	github.com/facebookincubator/nvdtools v0.1.5

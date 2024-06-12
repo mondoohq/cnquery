@@ -2,7 +2,7 @@ module go.mondoo.com/cnquery/v11/providers/aws
 
 replace go.mondoo.com/cnquery/v11 => ../..
 
-go 1.22.0
+go 1.22.2
 
 toolchain go1.22.2
 
