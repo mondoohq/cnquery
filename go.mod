@@ -1,8 +1,8 @@
 module go.mondoo.com/cnquery/v11
 
-go 1.22
+go 1.22.0
 
-toolchain go1.22.0
+toolchain go1.22.4
 
 require (
 	cloud.google.com/go/logging v1.10.0
@@ -83,7 +83,7 @@ require (
 	github.com/spdx/tools-golang v0.5.4
 	github.com/spf13/afero v1.11.0
 	github.com/spf13/cobra v1.8.0
-	github.com/spf13/pflag v1.0.5
+	github.com/spf13/pflag v1.0.6-0.20201009195203-85dd5c8bc61c
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.9.0
 	github.com/toravir/csd v0.0.0-20200911003203-13ae77ad849c
@@ -105,9 +105,9 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 	howett.net/plist v1.0.1
 	// pin v0.28.9
-	k8s.io/apimachinery v0.28.9
+	k8s.io/apimachinery v0.30.1
 	// pin v0.28.9
-	k8s.io/client-go v0.28.9
+	k8s.io/client-go v0.30.1
 	// pin v0.28.9
 	k8s.io/component-base v0.28.9
 	// pin v0.28.9
@@ -341,8 +341,8 @@ require (
 	github.com/polyfloyd/go-errorlint v1.5.2 // indirect
 	github.com/prometheus/client_golang v1.19.1 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
-	github.com/prometheus/common v0.53.0 // indirect
-	github.com/prometheus/procfs v0.15.0 // indirect
+	github.com/prometheus/common v0.54.0 // indirect
+	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/quasilyte/go-ruleguard v0.4.2 // indirect
 	github.com/quasilyte/gogrep v0.5.0 // indirect
 	github.com/quasilyte/regex/syntax v0.0.0-20210819130434-b3f0c404a727 // indirect
@@ -404,7 +404,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	honnef.co/go/tools v0.4.7 // indirect
-	k8s.io/api v0.28.9 // indirect
+	k8s.io/api v0.30.1 // indirect
 	k8s.io/klog/v2 v2.120.1 // indirect
 	modernc.org/libc v1.52.1 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
@@ -423,7 +423,7 @@ require (
 	cloud.google.com/go/auth v0.5.1 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.2 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
-	github.com/Crocmagnon/fatcontext v0.2.2 // indirect
+	github.com/Crocmagnon/fatcontext v0.3.0 // indirect
 	github.com/Masterminds/semver/v3 v3.2.1 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/charmbracelet/x/ansi v0.1.2 // indirect

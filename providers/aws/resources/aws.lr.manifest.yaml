@@ -83,6 +83,8 @@ resources:
       id: {}
       organization:
         min_mondoo_version: 6.11.0
+      tags:
+        min_mondoo_version: 9.0.0
     min_mondoo_version: 5.15.0
     platform:
       name:
