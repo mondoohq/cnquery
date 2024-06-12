@@ -12,8 +12,8 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/mock"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v11/providers/os/registry"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/powershell"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/windows"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 )
@@ -26,7 +26,7 @@ func (k *mqlRegistrykey) exists() (bool, error) {
 	conn := k.MqlRuntime.Connection.(shared.Connection)
 	// if we are running locally on windows, we can use native api
 	if conn.Type() == shared.Type_Local && runtime.GOOS == "windows" {
-		items, err := windows.GetNativeRegistryKeyItems(k.Path.Data)
+		items, err := registry.GetNativeRegistryKeyItems(k.Path.Data)
 		if err == nil && len(items) > 0 {
 			return true, nil
 		}
@@ -39,7 +39,7 @@ func (k *mqlRegistrykey) exists() (bool, error) {
 		}
 	}
 
-	script := powershell.Encode(windows.GetRegistryKeyItemScript(k.Path.Data))
+	script := powershell.Encode(registry.GetRegistryKeyItemScript(k.Path.Data))
 	o, err := CreateResource(k.MqlRuntime, "command", map[string]*llx.RawData{
 		"command": llx.StringData(script),
 	})
@@ -69,15 +69,15 @@ func (k *mqlRegistrykey) exists() (bool, error) {
 }
 
 // GetEntries returns a list of registry key property resources
-func (k *mqlRegistrykey) getEntries() ([]windows.RegistryKeyItem, error) {
+func (k *mqlRegistrykey) getEntries() ([]registry.RegistryKeyItem, error) {
 	// if we are running locally on windows, we can use native api
 	conn := k.MqlRuntime.Connection.(shared.Connection)
 	if conn.Type() == shared.Type_Local && runtime.GOOS == "windows" {
-		return windows.GetNativeRegistryKeyItems(k.Path.Data)
+		return registry.GetNativeRegistryKeyItems(k.Path.Data)
 	}
 
 	// parse the output of the powershell script
-	script := powershell.Encode(windows.GetRegistryKeyItemScript(k.Path.Data))
+	script := powershell.Encode(registry.GetRegistryKeyItemScript(k.Path.Data))
 	o, err := CreateResource(k.MqlRuntime, "command", map[string]*llx.RawData{
 		"command": llx.StringData(script),
 	})
@@ -108,7 +108,7 @@ func (k *mqlRegistrykey) getEntries() ([]windows.RegistryKeyItem, error) {
 		return nil, stdout.Error
 	}
 
-	return windows.ParsePowershellRegistryKeyItems(strings.NewReader(stdout.Data))
+	return registry.ParsePowershellRegistryKeyItems(strings.NewReader(stdout.Data))
 }
 
 // Deprecated: properties returns the properties of a registry key
@@ -167,16 +167,16 @@ func (k *mqlRegistrykey) items() ([]interface{}, error) {
 func (k *mqlRegistrykey) children() ([]interface{}, error) {
 	conn := k.MqlRuntime.Connection.(shared.Connection)
 	res := []interface{}{}
-	var children []windows.RegistryKeyChild
+	var children []registry.RegistryKeyChild
 	if conn.Type() == shared.Type_Local && runtime.GOOS == "windows" {
 		var err error
-		children, err = windows.GetNativeRegistryKeyChildren(k.Path.Data)
+		children, err = registry.GetNativeRegistryKeyChildren(k.Path.Data)
 		if err != nil {
 			return nil, err
 		}
 	} else {
 		// parse powershell script
-		script := powershell.Encode(windows.GetRegistryKeyChildItemsScript(k.Path.Data))
+		script := powershell.Encode(registry.GetRegistryKeyChildItemsScript(k.Path.Data))
 		o, err := CreateResource(k.MqlRuntime, "command", map[string]*llx.RawData{
 			"command": llx.StringData(script),
 		})
@@ -196,7 +196,7 @@ func (k *mqlRegistrykey) children() ([]interface{}, error) {
 		if stdout.Error != nil {
 			return res, stdout.Error
 		}
-		children, err = windows.ParsePowershellRegistryKeyChildren(strings.NewReader(stdout.Data))
+		children, err = registry.ParsePowershellRegistryKeyChildren(strings.NewReader(stdout.Data))
 		if err != nil {
 			return nil, err
 		}

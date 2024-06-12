@@ -4,10 +4,11 @@
 //go:build windows
 // +build windows
 
-package windows
+package registry
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -111,9 +112,9 @@ func GetNativeRegistryKeyItems(path string) ([]RegistryKeyItem, error) {
 	return res, nil
 }
 
-func GetNativeRegistryKeyChildren(path string) ([]RegistryKeyChild, error) {
-	log.Debug().Str("path", path).Msg("search registry key children using native registry api")
-	key, path, err := parseRegistryKeyPath(path)
+func GetNativeRegistryKeyChildren(fullPath string) ([]RegistryKeyChild, error) {
+	log.Debug().Str("path", fullPath).Msg("search registry key children using native registry api")
+	key, path, err := parseRegistryKeyPath(fullPath)
 	if err != nil {
 		return nil, err
 	}
@@ -136,10 +137,23 @@ func GetNativeRegistryKeyChildren(path string) ([]RegistryKeyChild, error) {
 
 	for i, entry := range entries {
 		res[i] = RegistryKeyChild{
-			Path: path,
+			Path: fullPath,
 			Name: entry,
 		}
 	}
 
 	return res, nil
+}
+
+func GetNativeRegistryKeyItem(path, key string) (RegistryKeyItem, error) {
+	values, err := GetNativeRegistryKeyItems(path)
+	if err != nil {
+		return RegistryKeyItem{}, err
+	}
+	for _, value := range values {
+		if value.Key == key {
+			return value, nil
+		}
+	}
+	return RegistryKeyItem{}, status.Error(codes.NotFound, fmt.Sprintf("registry value %s not found under %s", key, path))
 }

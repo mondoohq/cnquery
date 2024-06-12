@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v11/providers/os/registry"
 )
 
 // Hostname returns the hostname of the system.
@@ -62,6 +63,39 @@ func Hostname(conn shared.Connection, pf *inventory.Platform) (string, bool) {
 			}
 		} else {
 			log.Debug().Err(err).Msg("could not read /etc/hostname file")
+		}
+	}
+
+	// Fallback for windows systems to using registry for static analysis
+	if pf.IsFamily(inventory.FAMILY_WINDOWS) && conn.Capabilities().Has(shared.Capability_FileSearch) {
+		fi, err := conn.FileInfo(registry.SystemRegPath)
+		if err != nil {
+			log.Debug().Err(err).Msg("could not find SYSTEM registry file, cannot perform hostname lookup")
+			return "", false
+		}
+
+		rh := registry.NewRegistryHandler()
+		defer func() {
+			err := rh.UnloadSubkeys()
+			if err != nil {
+				log.Debug().Err(err).Msg("could not unload registry subkeys")
+			}
+		}()
+		err = rh.LoadSubkey(registry.System, fi.Path)
+		if err != nil {
+			log.Debug().Err(err).Msg("could not load SYSTEM registry key file")
+			return "", false
+		}
+		key, err := rh.GetRegistryItemValue(registry.System, "ControlSet001\\Control\\ComputerName\\ComputerName", "ComputerName")
+		if err == nil {
+			return key.Value.String, true
+		}
+
+		// we also can try ControlSet002 as a fallback
+		log.Debug().Err(err).Msg("unable to read windows registry, trying ControlSet002 fallback")
+		key, err = rh.GetRegistryItemValue(registry.System, "ControlSet002\\Control\\ComputerName\\ComputerName", "ComputerName")
+		if err == nil {
+			return key.Value.String, true
 		}
 	}
 

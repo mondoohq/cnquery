@@ -206,6 +206,7 @@ use (
    ./cnquery/providers/okta
    ./cnquery/providers/opcua
    ./cnquery/providers/shodan
+   ./cnquery/providers/snowflake
    ./cnquery/providers/slack
    ./cnquery/providers/terraform
    ./cnquery/providers/vcd

@@ -150,6 +150,7 @@ type FileInfoDetails struct {
 	Mode FileModeDetails
 	Uid  int64
 	Gid  int64
+	Path string
 }
 
 type FileModeDetails struct {

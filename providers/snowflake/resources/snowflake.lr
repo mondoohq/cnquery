@@ -1,0 +1,382 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/cnquery/v11/providers/snowflake"
+option go_package = "go.mondoo.com/cnquery/v11/providers/snowflake/resources"
+
+snowflake {
+  // Current role
+  currentRole() string
+}
+
+// Snowflake Account
+snowflake.account {
+  // Account ID
+  accountId() string
+  // Account region
+  region() string
+  // Account URL
+  url() string
+  // Users in the account
+  users() []snowflake.user
+  // Roles in the account
+  roles() []snowflake.role
+  // Security integrations in the account
+  securityIntegrations() []snowflake.securityIntegration
+  // Password policies in the account
+  passwordPolicies() []snowflake.passwordPolicy
+  // Network policies in the account
+  networkPolicies() []snowflake.networkPolicy
+  // Procedures in the account
+  procedures() []snowflake.procedure
+  // Parameters in the account
+  parameters() []snowflake.parameter
+  // Stages in the account
+  stages() []snowflake.stage
+  // Databases in the account
+  databases() []snowflake.database
+  // Warehouses in the account
+  warehouses() []snowflake.warehouse
+}
+
+// Snowflake User
+snowflake.user @defaults("name") {
+  // User name
+  name string
+  // Login name
+  login string
+  // Display name
+  displayName string
+  // First name
+  firstName string
+  // Last name
+  lastName string
+  // Email address
+  email string
+  // Comment for the user
+  comment string
+  // Virtual warehouse that is active by default
+  defaultWarehouse string
+  // Namespace that is active by default
+  defaultNamespace string
+  // Default role for the user
+  defaultRole string
+  // Whether the user is disabled
+  disabled bool
+  // Whether the user has a password
+  hasPassword bool
+  // Whether the user has MFA enabled
+  hasRsaPublicKey bool
+  // Whether the user is forced to change their password
+  mustChangePassword bool
+  // Last time the user logged in
+  lastSuccessLogin time
+  // Time until the user is locked
+  lockedUntil time
+  // When the user was created
+  createdAt time
+  // When the user expires
+  expiresAt time
+  // Whether the user has MFA enabled
+  extAuthnDuo bool
+  // MFA user ID
+  extAuthnUid string
+  // Parameters for the user
+  parameters() []snowflake.parameter
+}
+
+// Snowflake Role
+snowflake.role @defaults("name") {
+  // Role name
+  name string
+  // Whether the role is the default role
+  isDefault bool
+  // Whether the role is a current role
+  isCurrent bool
+  // Whether the role is a shared role
+  isInherited bool
+  // Number of users assigned to the role
+  assignedToUsers int
+  // Number of roles granted to
+  grantedToRoles int
+  // Number of roles granted
+  grantedRoles int
+  // Owner of the role
+  owner string
+  // Comment for the role
+  comment string
+}
+
+// Snowflake Security Integration
+snowflake.securityIntegration @defaults("name") {
+  // Name of the security integration
+  name string
+  // Type of the security integration
+  type string
+  // Category of the security integration
+  category string
+  // Comment for the security integration
+  comment string
+  // Whether the security integration is enabled
+  enabled bool
+  // When the security integration was created
+  createdAt time
+}
+
+// Snowflake Password Policy
+snowflake.passwordPolicy @defaults("name") {
+  // Name of the password policy
+  name string
+  // Name of the database
+  databaseName string
+  // Name of the schema
+  schemaName string
+  // Name of the kind
+  kind string
+  // Name of the owner
+  owner string
+  // Comment for the password policy
+  comment string
+  // When the password policy was created
+  createdAt time
+  // Minimum number of characters for password
+  passwordMinLength() int
+  // Maximum number of characters for password
+  passwordMaxLength() int
+  // Minimum number of uppercase characters for password
+  passwordMinUpperCaseChars() int
+  // Minimum number of lowercase characters for password
+  passwordMinLowerCaseChars() int
+  // Minimum number of numeric characters for password
+  passwordMinNumericChars() int
+  // Minimum number of special characters for password
+  passwordMinSpecialChars() int
+  // Minimum number of days before password can be changed
+  passwordMinAgeDays() int
+  // Maximum number of days before password must be changed
+  passwordMaxAgeDays() int
+  // Maximum number of attempts to enter a password before locking out the user account
+  passwordMaxRetries() int
+  // How long (in minutes) to lock out the user account
+  passwordLockoutTimeMins() int
+  // Number of recent passwords to retain
+  passwordHistory() int
+}
+
+// Snowflake Network Policy
+snowflake.networkPolicy @defaults("name") {
+  // Name of the network policy
+    name string
+  // Comment for the network policy
+  comment string
+  // Number of entries in the allowed IP list
+  entriesInAllowedIpList int
+  // Number of entries in the blocked IP list
+  entriesInBlockedIpList int
+  // Number of entries in the allowed network rules
+  entriesInAllowedNetworkRules int
+  // Number of entries in the blocked network rules
+  entriesInBlockedNetworkRules int
+  // List of IP addresses that are allowed access
+  allowedIpList() []string
+  // List of IP addresses that are denied access
+  blockedIpList() []string
+  // List of network rules that contain the network identifiers that are allowed access
+  allowedNetworkRules() []string
+  // List of network rules that contain the network identifiers that are denied access
+  blockedNetworkRules() []string
+  // When the network policy was created
+  createdAt time
+}
+
+// Snowflake Procedure
+snowflake.procedure @defaults("name") {
+  // Name of the procedure
+  name string
+  // Procedure description
+  description string
+  // Schema name
+  schemaName string
+  // Whether the procedure is built in
+  isBuiltin bool
+  // Whether the procedure is an aggregate function
+  isAggregate bool
+  // Whether the procedure is an ANSI procedure
+  isAnsi bool
+  // Minimum number of arguments
+  minNumberOfArguments int
+  // Maximum number of arguments
+  maxNumberOfArguments int
+  // Procedure arguments
+  arguments string
+  // Catalog name
+  catalogName string
+  // Whether the procedure is a table function
+  isTableFunction bool
+  // Whether the procedure is for clustering
+  validForClustering bool
+  // Whether the procedure is secure
+  isSecure bool
+}
+
+// Snowflake Parameter
+snowflake.parameter @defaults("key"){
+  // Name of the parameter
+  key string
+  // Value of the parameter
+  value string
+  // Description of the parameter
+  description string
+  // Default value of the parameter
+  defaultValue string
+  // Level of the parameter
+  level string
+}
+
+// Snowflake Stage
+snowflake.stage @defaults("name") {
+  // Name of the stage
+  name string
+  // Database name
+  databaseName string
+  // Schema name
+  schemaName string
+  // Owner of the stage
+  owner string
+  // Comment for the stage
+  comment string
+  // When the stage was created
+  createdAt time
+  // Whether the stage has credentials
+  hasCredentials bool
+  // Whether the stage has encryption key
+  hasEncryptionKey bool
+  // URL of the stage
+  url string
+  // Stage type
+  type string
+  // Cloud provider of the stage
+  cloud string
+  // Storage integration of the stage
+  storeIntegration string
+  // Endpoint of the stage
+  endpoint string
+  // Owner role type
+  ownerRoleType string
+  // Whether a directory table is enabled for the stage
+  directoryEnabled bool
+}
+
+// Snowflake Database
+snowflake.database @defaults("name") {
+  // Name of the database
+  name string
+  // Indicates if the database is a default database
+  isDefault bool
+  // Indicates if the database is a current database
+  isCurrent bool
+  // Database origin
+  origin string
+  // Database owner
+  owner string
+  // Comment for the database
+  comment string
+  // Database options string
+  options string
+  // Retention time of the database
+  retentionTime int
+  // Resource group of the database
+  resourceGroup string
+  // Whether the database is transient
+  transient bool
+  // When the database was created
+  createdAt time
+  // When the database was dropped
+  droppedAt time
+}
+
+// Snowflake Warehouse
+snowflake.warehouse @defaults("name") {
+  // Name of the warehouse
+  name string
+  // Whether the warehouse is active/running, inactive or resizing
+  state string
+  // Warehouse type
+  type string
+  // Warehouse size
+  size string
+  // Minimum cluster count
+  minClusterCount int
+  // Maximum cluster count
+  maxClusterCount int
+  // Number of started clusters
+  startedClusterCount int
+  // Number of running clusters
+  running int
+  // Number of queued clusters
+  queued int
+  // Whether the warehouse is a default warehouse
+  isDefault bool
+  // Indicates if the warehouse is a current warehouse
+  isCurrent bool
+  // Period of inactivity, in seconds, after which a running warehouse automatically suspends and stops using credits
+  autoSuspend int
+  // Whether the warehouse, if suspended, automatically resumes
+  autoResume bool
+  // Percentage of the warehouse compute resources available
+  available float
+  // Percentage of the warehouse compute resources in provisioning
+  provisioning float
+  // Percentage of the warehouse compute resources that execute queries
+  quiescing float
+  // Percentage of the warehouse compute not in available, provisioning, or quiescing state
+  other float
+  // Warehouse owner
+  owner string
+  // Comment for the warehouse
+  comment string
+  // Whether query acceleration is enabled
+  enableQueryAcceleration bool
+  // Query acceleration scale factor
+  queryAccelerationMaxScaleFactor int
+  // Resource monitor of the warehouse
+  resourceMonitor string
+  // Scaling policy of the warehouse
+  scalingPolicy string
+  // Owner role type
+  ownerRoleType string
+  // When the warehouse was created
+  createdAt time
+  // When the warehouse resumed
+  resumedAt time
+  // When the warehouse was updated
+  updatedAt time
+}
+
+// Snowflake View
+snowflake.view @defaults("name") {
+  // Name of the view
+  name string
+  // Kind of view
+  kind string
+  // Whether the view is reserved
+  reserved string
+  // Database name
+  databaseName string
+  // Schema name
+  schemaName string
+  // Owner of the view
+  owner string
+  // Comment for the view
+  comment string
+  // Text of the view
+  text string
+  // Whether the view is secure
+  isSecure bool
+  // Whether the view is materialized
+  isMaterialized bool
+  // Owner role type
+  ownerRoleType string
+  // View change tracking
+  changeTracking string
+}
