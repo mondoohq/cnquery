@@ -417,7 +417,11 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 )
 
-require github.com/moby/buildkit v0.13.2
+require (
+	github.com/likexian/whois v1.15.3
+	github.com/likexian/whois-parser v1.24.16
+	github.com/moby/buildkit v0.13.2
+)
 
 require (
 	cloud.google.com/go/auth v0.5.1 // indirect
@@ -440,6 +444,7 @@ require (
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/lasiar/canonicalheader v1.1.1 // indirect
+	github.com/likexian/gokit v0.25.15 // indirect
 	github.com/quasilyte/go-ruleguard/dsl v0.3.22 // indirect
 	github.com/smarty/assertions v1.15.1 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect

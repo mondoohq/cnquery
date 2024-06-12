@@ -260,3 +260,45 @@ resources:
       string: {}
       user: {}
     min_mondoo_version: 9.1.0
+  whois:
+    fields:
+      admin: {}
+      administrative: {}
+      billing: {}
+      domain: {}
+      host: {}
+      registrant: {}
+      registrar: {}
+      target: {}
+      tech: {}
+      technical: {}
+    min_mondoo_version: 9.0.0
+  whois.contact:
+    fields:
+      city: {}
+      country: {}
+      email: {}
+      name: {}
+      organization: {}
+      phone: {}
+      postalCode: {}
+      province: {}
+      registrarUrl: {}
+      street: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  whois.domainInfo:
+    fields:
+      createdAt: {}
+      dnssec: {}
+      domain: {}
+      expiresAt: {}
+      extension: {}
+      name: {}
+      nameServers: {}
+      punyCode: {}
+      status: {}
+      updatedAt: {}
+      whoisServer: {}
+    is_private: true
+    min_mondoo_version: 9.0.0

@@ -118,6 +118,18 @@ func init() {
 			// to override args, implement: initDnsDkimRecord(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDnsDkimRecord,
 		},
+		"whois": {
+			Init: initWhois,
+			Create: createWhois,
+		},
+		"whois.domainInfo": {
+			// to override args, implement: initWhoisDomainInfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWhoisDomainInfo,
+		},
+		"whois.contact": {
+			// to override args, implement: initWhoisContact(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWhoisContact,
+		},
 	}
 }
 
@@ -635,6 +647,90 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"dns.dkimRecord.valid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDnsDkimRecord).GetValid()).ToDataRes(types.Bool)
+	},
+	"whois.host": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWhois).GetHost()).ToDataRes(types.String)
+	},
+	"whois.domain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWhois).GetDomain()).ToDataRes(types.Resource("whois.domainInfo"))
+	},
+	"whois.registrar": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWhois).GetRegistrar()).ToDataRes(types.Resource("whois.contact"))
+	},
+	"whois.registrant": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWhois).GetRegistrant()).ToDataRes(types.Resource("whois.contact"))
+	},
+	"whois.administrative": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWhois).GetAdministrative()).ToDataRes(types.Resource("whois.contact"))
+	},
+	"whois.technical": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWhois).GetTechnical()).ToDataRes(types.Resource("whois.contact"))
+	},
+	"whois.billing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWhois).GetBilling()).ToDataRes(types.Resource("whois.contact"))
+	},
+	"whois.domainInfo.domain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWhoisDomainInfo).GetDomain()).ToDataRes(types.String)
+	},
+	"whois.domainInfo.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWhoisDomainInfo).GetName()).ToDataRes(types.String)
+	},
+	"whois.domainInfo.punyCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWhoisDomainInfo).GetPunyCode()).ToDataRes(types.String)
+	},
+	"whois.domainInfo.extension": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWhoisDomainInfo).GetExtension()).ToDataRes(types.String)
+	},
+	"whois.domainInfo.whoisServer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWhoisDomainInfo).GetWhoisServer()).ToDataRes(types.String)
+	},
+	"whois.domainInfo.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWhoisDomainInfo).GetStatus()).ToDataRes(types.Array(types.String))
+	},
+	"whois.domainInfo.nameServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWhoisDomainInfo).GetNameServers()).ToDataRes(types.Array(types.String))
+	},
+	"whois.domainInfo.dnssec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWhoisDomainInfo).GetDnssec()).ToDataRes(types.Bool)
+	},
+	"whois.domainInfo.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWhoisDomainInfo).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"whois.domainInfo.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWhoisDomainInfo).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"whois.domainInfo.expiresAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWhoisDomainInfo).GetExpiresAt()).ToDataRes(types.Time)
+	},
+	"whois.contact.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWhoisContact).GetName()).ToDataRes(types.String)
+	},
+	"whois.contact.organization": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWhoisContact).GetOrganization()).ToDataRes(types.String)
+	},
+	"whois.contact.street": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWhoisContact).GetStreet()).ToDataRes(types.String)
+	},
+	"whois.contact.city": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWhoisContact).GetCity()).ToDataRes(types.String)
+	},
+	"whois.contact.province": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWhoisContact).GetProvince()).ToDataRes(types.String)
+	},
+	"whois.contact.postalCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWhoisContact).GetPostalCode()).ToDataRes(types.String)
+	},
+	"whois.contact.country": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWhoisContact).GetCountry()).ToDataRes(types.String)
+	},
+	"whois.contact.phone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWhoisContact).GetPhone()).ToDataRes(types.String)
+	},
+	"whois.contact.email": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWhoisContact).GetEmail()).ToDataRes(types.String)
+	},
+	"whois.contact.registrarUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWhoisContact).GetRegistrarUrl()).ToDataRes(types.String)
 	},
 }
 
@@ -1346,6 +1442,130 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"dns.dkimRecord.valid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDnsDkimRecord).Valid, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"whois.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlWhois).__id, ok = v.Value.(string)
+			return
+		},
+	"whois.host": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWhois).Host, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"whois.domain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWhois).Domain, ok = plugin.RawToTValue[*mqlWhoisDomainInfo](v.Value, v.Error)
+		return
+	},
+	"whois.registrar": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWhois).Registrar, ok = plugin.RawToTValue[*mqlWhoisContact](v.Value, v.Error)
+		return
+	},
+	"whois.registrant": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWhois).Registrant, ok = plugin.RawToTValue[*mqlWhoisContact](v.Value, v.Error)
+		return
+	},
+	"whois.administrative": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWhois).Administrative, ok = plugin.RawToTValue[*mqlWhoisContact](v.Value, v.Error)
+		return
+	},
+	"whois.technical": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWhois).Technical, ok = plugin.RawToTValue[*mqlWhoisContact](v.Value, v.Error)
+		return
+	},
+	"whois.billing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWhois).Billing, ok = plugin.RawToTValue[*mqlWhoisContact](v.Value, v.Error)
+		return
+	},
+	"whois.domainInfo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlWhoisDomainInfo).__id, ok = v.Value.(string)
+			return
+		},
+	"whois.domainInfo.domain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWhoisDomainInfo).Domain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"whois.domainInfo.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWhoisDomainInfo).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"whois.domainInfo.punyCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWhoisDomainInfo).PunyCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"whois.domainInfo.extension": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWhoisDomainInfo).Extension, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"whois.domainInfo.whoisServer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWhoisDomainInfo).WhoisServer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"whois.domainInfo.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWhoisDomainInfo).Status, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"whois.domainInfo.nameServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWhoisDomainInfo).NameServers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"whois.domainInfo.dnssec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWhoisDomainInfo).Dnssec, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"whois.domainInfo.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWhoisDomainInfo).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"whois.domainInfo.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWhoisDomainInfo).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"whois.domainInfo.expiresAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWhoisDomainInfo).ExpiresAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"whois.contact.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlWhoisContact).__id, ok = v.Value.(string)
+			return
+		},
+	"whois.contact.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWhoisContact).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"whois.contact.organization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWhoisContact).Organization, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"whois.contact.street": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWhoisContact).Street, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"whois.contact.city": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWhoisContact).City, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"whois.contact.province": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWhoisContact).Province, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"whois.contact.postalCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWhoisContact).PostalCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"whois.contact.country": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWhoisContact).Country, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"whois.contact.phone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWhoisContact).Phone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"whois.contact.email": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWhoisContact).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"whois.contact.registrarUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWhoisContact).RegistrarUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -3564,4 +3784,338 @@ func (c *mqlDnsDkimRecord) GetValid() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.Valid, func() (bool, error) {
 		return c.valid()
 	})
+}
+
+// mqlWhois for the whois resource
+type mqlWhois struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlWhoisInternal it will be used here
+	Host plugin.TValue[string]
+	Domain plugin.TValue[*mqlWhoisDomainInfo]
+	Registrar plugin.TValue[*mqlWhoisContact]
+	Registrant plugin.TValue[*mqlWhoisContact]
+	Administrative plugin.TValue[*mqlWhoisContact]
+	Technical plugin.TValue[*mqlWhoisContact]
+	Billing plugin.TValue[*mqlWhoisContact]
+}
+
+// createWhois creates a new instance of this resource
+func createWhois(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWhois{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("whois", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWhois) MqlName() string {
+	return "whois"
+}
+
+func (c *mqlWhois) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWhois) GetHost() *plugin.TValue[string] {
+	return &c.Host
+}
+
+func (c *mqlWhois) GetDomain() *plugin.TValue[*mqlWhoisDomainInfo] {
+	return plugin.GetOrCompute[*mqlWhoisDomainInfo](&c.Domain, func() (*mqlWhoisDomainInfo, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("whois", c.__id, "domain")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWhoisDomainInfo), nil
+			}
+		}
+
+		return c.domain()
+	})
+}
+
+func (c *mqlWhois) GetRegistrar() *plugin.TValue[*mqlWhoisContact] {
+	return plugin.GetOrCompute[*mqlWhoisContact](&c.Registrar, func() (*mqlWhoisContact, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("whois", c.__id, "registrar")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWhoisContact), nil
+			}
+		}
+
+		return c.registrar()
+	})
+}
+
+func (c *mqlWhois) GetRegistrant() *plugin.TValue[*mqlWhoisContact] {
+	return plugin.GetOrCompute[*mqlWhoisContact](&c.Registrant, func() (*mqlWhoisContact, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("whois", c.__id, "registrant")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWhoisContact), nil
+			}
+		}
+
+		return c.registrant()
+	})
+}
+
+func (c *mqlWhois) GetAdministrative() *plugin.TValue[*mqlWhoisContact] {
+	return plugin.GetOrCompute[*mqlWhoisContact](&c.Administrative, func() (*mqlWhoisContact, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("whois", c.__id, "administrative")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWhoisContact), nil
+			}
+		}
+
+		return c.administrative()
+	})
+}
+
+func (c *mqlWhois) GetTechnical() *plugin.TValue[*mqlWhoisContact] {
+	return plugin.GetOrCompute[*mqlWhoisContact](&c.Technical, func() (*mqlWhoisContact, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("whois", c.__id, "technical")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWhoisContact), nil
+			}
+		}
+
+		return c.technical()
+	})
+}
+
+func (c *mqlWhois) GetBilling() *plugin.TValue[*mqlWhoisContact] {
+	return plugin.GetOrCompute[*mqlWhoisContact](&c.Billing, func() (*mqlWhoisContact, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("whois", c.__id, "billing")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWhoisContact), nil
+			}
+		}
+
+		return c.billing()
+	})
+}
+
+// mqlWhoisDomainInfo for the whois.domainInfo resource
+type mqlWhoisDomainInfo struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlWhoisDomainInfoInternal it will be used here
+	Domain plugin.TValue[string]
+	Name plugin.TValue[string]
+	PunyCode plugin.TValue[string]
+	Extension plugin.TValue[string]
+	WhoisServer plugin.TValue[string]
+	Status plugin.TValue[[]interface{}]
+	NameServers plugin.TValue[[]interface{}]
+	Dnssec plugin.TValue[bool]
+	CreatedAt plugin.TValue[*time.Time]
+	UpdatedAt plugin.TValue[*time.Time]
+	ExpiresAt plugin.TValue[*time.Time]
+}
+
+// createWhoisDomainInfo creates a new instance of this resource
+func createWhoisDomainInfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWhoisDomainInfo{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("whois.domainInfo", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWhoisDomainInfo) MqlName() string {
+	return "whois.domainInfo"
+}
+
+func (c *mqlWhoisDomainInfo) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWhoisDomainInfo) GetDomain() *plugin.TValue[string] {
+	return &c.Domain
+}
+
+func (c *mqlWhoisDomainInfo) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlWhoisDomainInfo) GetPunyCode() *plugin.TValue[string] {
+	return &c.PunyCode
+}
+
+func (c *mqlWhoisDomainInfo) GetExtension() *plugin.TValue[string] {
+	return &c.Extension
+}
+
+func (c *mqlWhoisDomainInfo) GetWhoisServer() *plugin.TValue[string] {
+	return &c.WhoisServer
+}
+
+func (c *mqlWhoisDomainInfo) GetStatus() *plugin.TValue[[]interface{}] {
+	return &c.Status
+}
+
+func (c *mqlWhoisDomainInfo) GetNameServers() *plugin.TValue[[]interface{}] {
+	return &c.NameServers
+}
+
+func (c *mqlWhoisDomainInfo) GetDnssec() *plugin.TValue[bool] {
+	return &c.Dnssec
+}
+
+func (c *mqlWhoisDomainInfo) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlWhoisDomainInfo) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlWhoisDomainInfo) GetExpiresAt() *plugin.TValue[*time.Time] {
+	return &c.ExpiresAt
+}
+
+// mqlWhoisContact for the whois.contact resource
+type mqlWhoisContact struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlWhoisContactInternal it will be used here
+	Name plugin.TValue[string]
+	Organization plugin.TValue[string]
+	Street plugin.TValue[string]
+	City plugin.TValue[string]
+	Province plugin.TValue[string]
+	PostalCode plugin.TValue[string]
+	Country plugin.TValue[string]
+	Phone plugin.TValue[string]
+	Email plugin.TValue[string]
+	RegistrarUrl plugin.TValue[string]
+}
+
+// createWhoisContact creates a new instance of this resource
+func createWhoisContact(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWhoisContact{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("whois.contact", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWhoisContact) MqlName() string {
+	return "whois.contact"
+}
+
+func (c *mqlWhoisContact) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWhoisContact) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlWhoisContact) GetOrganization() *plugin.TValue[string] {
+	return &c.Organization
+}
+
+func (c *mqlWhoisContact) GetStreet() *plugin.TValue[string] {
+	return &c.Street
+}
+
+func (c *mqlWhoisContact) GetCity() *plugin.TValue[string] {
+	return &c.City
+}
+
+func (c *mqlWhoisContact) GetProvince() *plugin.TValue[string] {
+	return &c.Province
+}
+
+func (c *mqlWhoisContact) GetPostalCode() *plugin.TValue[string] {
+	return &c.PostalCode
+}
+
+func (c *mqlWhoisContact) GetCountry() *plugin.TValue[string] {
+	return &c.Country
+}
+
+func (c *mqlWhoisContact) GetPhone() *plugin.TValue[string] {
+	return &c.Phone
+}
+
+func (c *mqlWhoisContact) GetEmail() *plugin.TValue[string] {
+	return &c.Email
+}
+
+func (c *mqlWhoisContact) GetRegistrarUrl() *plugin.TValue[string] {
+	return &c.RegistrarUrl
 }

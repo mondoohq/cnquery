@@ -402,3 +402,72 @@ dns.dkimRecord @defaults("dnsTxt") {
   // Whether the DKIM entry and public key is valid
   valid() bool
 }
+
+// Domain and IP whois information
+whois {
+  init(target string)
+  // Host, either registered name or IP (e.g., mondoo.com)
+  host string
+  // Domain whois information
+  domain() whois.domainInfo
+  // Registrar whois information
+  registrar() whois.contact
+  // Registrant whois information
+  registrant() whois.contact
+  // Admin whois information
+  administrative() whois.contact
+  // Tech whois information
+  technical() whois.contact
+  // Billing whois information
+  billing() whois.contact
+}
+
+// Whois domain information
+private whois.domainInfo @defaults("domain extension status") {
+  // Domain name
+  domain string
+  // Name
+  name string
+  // Punycode representation of the domain
+  punyCode string
+  // Domain extension
+  extension string
+  // Used whois server
+  whoisServer string
+  // Registration status
+  status []string
+  // Name servers
+  nameServers []string
+  // DNSSEC status
+  dnssec bool
+  // Creation date
+  createdAt time
+  // Updated date
+  updatedAt time
+  // Expiration date
+  expiresAt time
+}
+
+// Whois contact information
+private whois.contact @defaults("name") {
+  // Name
+  name string
+  // Organization
+  organization string
+  // Street
+  street string
+  // City
+  city string
+  // State or Province
+  province string
+  // Postal code
+  postalCode string
+  // Country
+  country string
+  // Phone number
+  phone string
+  // Email address
+  email string
+  // Registrar URL
+  registrarUrl string
+}
