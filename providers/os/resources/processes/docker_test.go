@@ -10,8 +10,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/network"
 	"github.com/google/uuid"
 	specs "github.com/opencontainers/image-spec/specs-go/v1"
@@ -22,7 +22,7 @@ import (
 )
 
 func TestDockerProcsList(t *testing.T) {
-	image := "docker.io/nginx:stable"
+	img := "docker.io/nginx:stable"
 	ctx := context.Background()
 	dClient, err := docker.GetDockerClient()
 	assert.NoError(t, err)
@@ -33,7 +33,7 @@ func TestDockerProcsList(t *testing.T) {
 		t.SkipNow()
 	}
 
-	responseBody, err := dClient.ImagePull(ctx, image, types.ImagePullOptions{})
+	responseBody, err := dClient.ImagePull(ctx, img, image.PullOptions{})
 	defer func() {
 		err = responseBody.Close()
 		if err != nil {
@@ -47,9 +47,7 @@ func TestDockerProcsList(t *testing.T) {
 
 	// Make sure the docker image is cleaned up
 	defer func() {
-		_, err := dClient.ImageRemove(ctx, image, types.ImageRemoveOptions{
-			Force: true,
-		})
+		_, err := dClient.ImageRemove(ctx, img, image.RemoveOptions{Force: true})
 		// ignore error, worst case is that the image is not removed but parallel tests may fail otherwise
 		fmt.Printf("failed to cleanup pre-pulled docker image: %v", err)
 	}()
@@ -59,7 +57,7 @@ func TestDockerProcsList(t *testing.T) {
 		AttachStdout: false,
 		AttachStderr: false,
 		StdinOnce:    false,
-		Image:        image,
+		Image:        img,
 	}
 
 	uuidVal := uuid.New()

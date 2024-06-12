@@ -12,8 +12,8 @@ import (
 
 	"github.com/docker/docker/client"
 
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/network"
 	"github.com/google/uuid"
 	specs "github.com/opencontainers/image-spec/specs-go/v1"
@@ -91,14 +91,14 @@ func TestAssetNameForRemoteImages_DisableDelayedDiscovery(t *testing.T) {
 	assert.Contains(t, asset.PlatformIds, "//platformid.api.mondoo.app/runtime/docker/images/545e6a6310a27636260920bc07b994a299b6708a1b26910cfefd335fdfb60d2b")
 }
 
-func fetchAndCreateImage(t *testing.T, ctx context.Context, dClient *client.Client, image string) container.CreateResponse {
+func fetchAndCreateImage(t *testing.T, ctx context.Context, dClient *client.Client, img string) container.CreateResponse {
 	// If docker is not available, then skip the test.
 	_, err := dClient.ServerVersion(ctx)
 	if err != nil {
 		t.SkipNow()
 	}
 
-	responseBody, err := dClient.ImagePull(ctx, image, types.ImagePullOptions{})
+	responseBody, err := dClient.ImagePull(ctx, img, image.PullOptions{})
 	defer func() {
 		err = responseBody.Close()
 		if err != nil {
@@ -112,9 +112,7 @@ func fetchAndCreateImage(t *testing.T, ctx context.Context, dClient *client.Clie
 
 	// Make sure the docker image is cleaned up
 	defer func() {
-		_, err := dClient.ImageRemove(ctx, image, types.ImageRemoveOptions{
-			Force: true,
-		})
+		_, err := dClient.ImageRemove(ctx, img, image.RemoveOptions{Force: true})
 		// ignore error, worst case is that the image is not removed but parallel tests may fail otherwise
 		fmt.Printf("failed to cleanup pre-pulled docker image: %v", err)
 	}()
@@ -124,7 +122,7 @@ func fetchAndCreateImage(t *testing.T, ctx context.Context, dClient *client.Clie
 		AttachStdout: false,
 		AttachStderr: false,
 		StdinOnce:    false,
-		Image:        image,
+		Image:        img,
 	}
 
 	uuidVal := uuid.New()
@@ -146,9 +144,7 @@ func TestDockerContainerConnection(t *testing.T) {
 
 	// Make sure the container is cleaned up
 	defer func() {
-		err := dClient.ContainerRemove(ctx, created.ID, container.RemoveOptions{
-			Force: true,
-		})
+		err := dClient.ContainerRemove(ctx, created.ID, container.RemoveOptions{Force: true})
 		require.NoError(t, err)
 	}()
 
