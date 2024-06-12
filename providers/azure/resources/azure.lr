@@ -1063,7 +1063,7 @@ private azure.subscription.sqlService {
 }
 
 // Azure SQL server
-private azure.subscription.sqlService.server @defaults("name location") {
+private azure.subscription.sqlService.server @defaults("name location properties.version properties.state properties.fullyQualifiedDomainName") {
   // SQL server ID
   id string
   // SQL server name
@@ -1138,7 +1138,7 @@ private azure.subscription.sqlService.server.administrator @defaults("id name") 
 }
 
 // Azure SQL server database
-private azure.subscription.sqlService.database @defaults("id name") {
+private azure.subscription.sqlService.database @defaults("name edition zoneRedundant status creationDate maxSizeBytes earliestRestoreDate") {
   // SQL database ID
   id string
   // SQL database name
@@ -1228,7 +1228,7 @@ private azure.subscription.postgreSqlService {
 }
 
 // Azure Database for PostgreSQL flexible server
-private azure.subscription.postgreSqlService.flexibleServer @defaults("name location properties.version properties.fullyQualifiedDomainName") {
+private azure.subscription.postgreSqlService.flexibleServer @defaults("name location properties.version properties.state properties.fullyQualifiedDomainName") {
   // PostgreSQL server ID
   id string
   // PostgreSQL server name
@@ -1382,7 +1382,7 @@ private azure.subscription.mySqlService.database @defaults("id name") {
 }
 
 // Azure Database for MySQL flexible server
-private azure.subscription.mySqlService.flexibleServer @defaults("name location properties.version properties.fullyQualifiedDomainName") {
+private azure.subscription.mySqlService.flexibleServer @defaults("name location properties.version properties.state properties.fullyQualifiedDomainName") {
   // MySQL flexible server ID
   id string
   // MySQL flexible server name
