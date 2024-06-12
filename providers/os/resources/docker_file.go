@@ -11,6 +11,7 @@ import (
 	"sync"
 
 	"github.com/moby/buildkit/frontend/dockerfile/instructions"
+	"github.com/moby/buildkit/frontend/dockerfile/linter"
 	"github.com/moby/buildkit/frontend/dockerfile/parser"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/llx"
@@ -123,7 +124,7 @@ func (p *mqlDockerFile) parse(file *mqlFile) error {
 		}
 	}
 
-	parsedStages, meta, err := instructions.Parse(ast.AST)
+	parsedStages, meta, err := instructions.Parse(ast.AST, linter.New(&linter.Config{}))
 	if err != nil {
 		return setError(multierr.Wrap(err, "failed to parse dockerfile instructions in "+file.Path.Data))
 	}

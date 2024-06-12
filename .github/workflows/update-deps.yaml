@@ -1,4 +1,4 @@
-name: Update cnuery and provider dependencies
+name: Update cnquery and provider dependencies
 
 on:
   schedule:

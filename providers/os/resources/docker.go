@@ -7,8 +7,8 @@ import (
 	"context"
 	"os"
 
-	docker_types "github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/client"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/types"
@@ -20,7 +20,7 @@ func (p *mqlDocker) images() ([]interface{}, error) {
 		return nil, err
 	}
 
-	dImages, err := cl.ImageList(context.Background(), docker_types.ImageListOptions{})
+	dImages, err := cl.ImageList(context.Background(), image.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
