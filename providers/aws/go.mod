@@ -7,12 +7,12 @@ go 1.22.0
 toolchain go1.22.2
 
 require (
-	github.com/aws/aws-sdk-go v1.53.19
+	github.com/aws/aws-sdk-go v1.54.0
 	github.com/aws/aws-sdk-go-v2 v1.27.2
 	github.com/aws/aws-sdk-go-v2/config v1.27.18
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.18
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.5
-	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.29.8
+	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/acm v1.26.2
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.23.12
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.27.10
@@ -26,10 +26,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.46.11
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.38.10
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.32.8
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.163.1
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.164.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.28.5
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.23.10
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.41.13
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.42.0
 	github.com/aws/aws-sdk-go-v2/service/efs v1.28.10
 	github.com/aws/aws-sdk-go-v2/service/eks v1.43.1
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.38.8
@@ -37,18 +37,18 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.31.3
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.28.10
 	github.com/aws/aws-sdk-go-v2/service/emr v1.39.11
-	github.com/aws/aws-sdk-go-v2/service/guardduty v1.42.6
+	github.com/aws/aws-sdk-go-v2/service/guardduty v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/iam v1.32.6
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.26.6
 	github.com/aws/aws-sdk-go-v2/service/kms v1.32.3
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.54.6
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.27.9
 	github.com/aws/aws-sdk-go-v2/service/rds v1.79.6
-	github.com/aws/aws-sdk-go-v2/service/redshift v1.44.6
+	github.com/aws/aws-sdk-go-v2/service/redshift v1.44.7
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.55.1
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.44.13
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.144.0
-	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.29.3
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.145.0
+	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.49.2
 	github.com/aws/aws-sdk-go-v2/service/sns v1.29.11
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.32.6
@@ -62,8 +62,8 @@ require (
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/afero v1.11.0
 	github.com/stretchr/testify v1.9.0
-	go.mondoo.com/cnquery/v11 v11.7.3
-	k8s.io/client-go v0.30.1
+	go.mondoo.com/cnquery/v11 v11.8.0
+	k8s.io/client-go v0.30.2
 )
 
 require (
@@ -77,7 +77,7 @@ require (
 	cloud.google.com/go/kms v1.17.1 // indirect
 	cloud.google.com/go/longrunning v0.5.7 // indirect
 	cloud.google.com/go/secretmanager v1.13.1 // indirect
-	cloud.google.com/go/storage v1.41.0 // indirect
+	cloud.google.com/go/storage v1.42.0 // indirect
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/4meepo/tagalign v1.3.4 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -87,7 +87,7 @@ require (
 	github.com/Antonboom/nilnil v0.1.9 // indirect
 	github.com/Antonboom/testifylint v1.4.1 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.12.0 // indirect
-	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.5.2 // indirect
+	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.6.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.9.0 // indirect
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.2.2 // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
@@ -137,7 +137,7 @@ require (
 	github.com/charithe/durationcheck v0.0.10 // indirect
 	github.com/chavacava/garif v0.1.0 // indirect
 	github.com/ckaznocha/intrange v0.1.2 // indirect
-	github.com/cloudflare/circl v1.3.8 // indirect
+	github.com/cloudflare/circl v1.3.9 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/containerd/log v0.1.0 // indirect
@@ -148,10 +148,10 @@ require (
 	github.com/danieljoos/wincred v1.2.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/denis-tingaikin/go-header v0.5.0 // indirect
-	github.com/distribution/reference v0.5.0 // indirect
+	github.com/distribution/reference v0.6.0 // indirect
 	github.com/docker/cli v26.1.4+incompatible // indirect
 	github.com/docker/distribution v2.8.3+incompatible // indirect
-	github.com/docker/docker v26.1.4+incompatible // indirect
+	github.com/docker/docker v27.0.0+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.8.2 // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
@@ -164,7 +164,7 @@ require (
 	github.com/firefart/nonamedreturns v1.0.5 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/fzipp/gocyclo v0.6.0 // indirect
-	github.com/getsentry/sentry-go v0.28.0 // indirect
+	github.com/getsentry/sentry-go v0.28.1 // indirect
 	github.com/ghostiam/protogetter v0.3.6 // indirect
 	github.com/go-critic/go-critic v0.11.4 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
@@ -301,7 +301,7 @@ require (
 	github.com/sanposhiho/wastedassign/v2 v2.0.7 // indirect
 	github.com/santhosh-tekuri/jsonschema/v5 v5.3.1 // indirect
 	github.com/sashamelentyev/interfacebloat v1.1.0 // indirect
-	github.com/sashamelentyev/usestdlibvars v1.26.0 // indirect
+	github.com/sashamelentyev/usestdlibvars v1.27.0 // indirect
 	github.com/securego/gosec/v2 v2.20.1-0.20240525090044-5f0084eb01a9 // indirect
 	github.com/segmentio/fasthash v1.0.3 // indirect
 	github.com/segmentio/ksuid v1.0.4 // indirect
@@ -368,11 +368,11 @@ require (
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.22.0 // indirect
 	google.golang.org/api v0.183.0 // indirect
-	google.golang.org/genproto v0.0.0-20240604185151-ef581f913117 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20240604185151-ef581f913117 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240604185151-ef581f913117 // indirect
+	google.golang.org/genproto v0.0.0-20240610135401-a8a62080eff3 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20240610135401-a8a62080eff3 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240610135401-a8a62080eff3 // indirect
 	google.golang.org/grpc v1.64.0 // indirect
-	google.golang.org/protobuf v1.34.1 // indirect
+	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
