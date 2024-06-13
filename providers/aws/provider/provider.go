@@ -203,15 +203,6 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 
 		case string(awsec2ebsconn.EBSConnectionType):
 			conn, err = awsec2ebsconn.NewAwsEbsConnection(connId, conf, asset)
-			if conn.Asset() != nil && len(conn.Asset().Connections) > 0 && conn.Asset().Connections[0].Options["mounted"] != "" {
-				// if we've already done all the mounting work, then reassign the connection
-				// to be the filesystem connection so we use the right connection down the line
-				fsconn := conn.(*awsec2ebsconn.AwsEbsConnection).FsProvider
-				conn = fsconn
-				req.Asset = fsconn.Asset()
-				req.Asset.Connections[0] = fsconn.Conf
-				asset = req.Asset
-			}
 		default:
 			conn, err = connection.NewAwsConnection(connId, asset, conf)
 		}

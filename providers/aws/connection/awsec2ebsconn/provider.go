@@ -20,12 +20,10 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	awsec2ebstypes "go.mondoo.com/cnquery/v11/providers/aws/connection/awsec2ebsconn/types"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/fs"
+	"go.mondoo.com/cnquery/v11/providers/os/connection/device"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/snapshot"
-	"go.mondoo.com/cnquery/v11/providers/os/detector"
 	"go.mondoo.com/cnquery/v11/providers/os/id/awsec2"
-	"go.mondoo.com/cnquery/v11/providers/os/id/ids"
 )
 
 const (
@@ -37,7 +35,7 @@ var _ plugin.Closer = (*AwsEbsConnection)(nil)
 type AwsEbsConnection struct {
 	plugin.Connection
 	asset               *inventory.Asset
-	FsProvider          *fs.FileSystemConnection
+	DeviceProvider      *device.DeviceConnection
 	scannerRegionEc2svc *ec2.Client
 	targetRegionEc2svc  *ec2.Client
 	config              aws.Config
@@ -46,7 +44,7 @@ type AwsEbsConnection struct {
 	scanVolumeInfo      *awsec2ebstypes.VolumeInfo // the info of the volume we attached to the instance
 	target              awsec2ebstypes.TargetInfo  // info about the target
 	targetType          string                     // the type of object we're targeting (instance, volume, snapshot)
-	volumeMounter       *snapshot.VolumeMounter
+	deviceLocation      string                     // where the device is attached to the instance (e.g. /dev/sda)
 }
 
 // New creates a new aws-ec2-ebs provider
@@ -112,15 +110,11 @@ func NewAwsEbsConnection(id uint32, conf *inventory.Config, asset *inventory.Ass
 		return c, errors.Wrap(err, "unable to validate")
 	}
 
-	// In case of an error, c.Close() needs this:
-	asset.Connections[0].Options["scanner-id"] = c.scannerInstance.Id
-	asset.Connections[0].Options["scanner-region"] = c.scannerInstance.Region
-
 	// 4. setup the volume for scanning
 	// check if we got the no setup override option. this implies the target volume is already attached to the instance
 	// this is used in cases where we need to test a snapshot created from a public marketplace image. the volume gets attached to a brand
 	// new instance, and then that instance is started and we scan the attached fs
-	var volLocation, volId string
+	var volLocation string
 	if conf.Options[snapshot.NoSetup] == "true" || conf.Options[snapshot.IsSetup] == "true" {
 		log.Info().Msg("skipping setup step")
 	} else {
@@ -128,13 +122,13 @@ func NewAwsEbsConnection(id uint32, conf *inventory.Config, asset *inventory.Ass
 		var err error
 		switch c.targetType {
 		case awsec2ebstypes.EBSTargetInstance:
-			ok, volLocation, volId, err = c.SetupForTargetInstance(ctx, instanceinfo)
+			ok, volLocation, _, err = c.SetupForTargetInstance(ctx, instanceinfo)
 			conf.PlatformId = awsec2.MondooInstanceID(i.AccountID, targetRegion, convert.ToString(instanceinfo.InstanceId))
 		case awsec2ebstypes.EBSTargetVolume:
-			ok, volLocation, volId, err = c.SetupForTargetVolume(ctx, *volumeid)
+			ok, volLocation, _, err = c.SetupForTargetVolume(ctx, *volumeid)
 			conf.PlatformId = awsec2.MondooVolumeID(volumeid.Account, volumeid.Region, volumeid.Id)
 		case awsec2ebstypes.EBSTargetSnapshot:
-			ok, volLocation, volId, err = c.SetupForTargetSnapshot(ctx, *snapshotid)
+			ok, volLocation, _, err = c.SetupForTargetSnapshot(ctx, *snapshotid)
 			conf.PlatformId = awsec2.MondooSnapshotID(snapshotid.Account, snapshotid.Region, snapshotid.Id)
 		default:
 			return c, errors.New("invalid target type")
@@ -151,47 +145,20 @@ func NewAwsEbsConnection(id uint32, conf *inventory.Config, asset *inventory.Ass
 		// set is setup to true
 		asset.Connections[0].Options[snapshot.IsSetup] = "true"
 		// save the other information to asset connection options too
-		asset.Connections[0].Options["volume-id"] = volId
-		asset.Connections[0].Options["volume-loc"] = volLocation
 		if c.scanVolumeInfo.Tags["createdBy"] == "Mondoo" {
 			asset.Connections[0].Options["createdBy"] = "Mondoo"
 		}
 	}
+
 	if conf.Options[snapshot.NoSetup] == "true" {
 		conf.PlatformId = awsec2.MondooInstanceID(i.AccountID, targetRegion, convert.ToString(instanceinfo.InstanceId))
 	}
 	asset.PlatformIds = []string{conf.PlatformId}
+	asset.Connections[0].Options["device-name"] = volLocation
+	c.deviceLocation = volLocation
 
-	// Mount Volume
-	shell := []string{"sh", "-c"}
-	volumeMounter := snapshot.NewVolumeMounter(shell)
-	volumeMounter.VolumeAttachmentLoc = volLocation
-	if conf.Options["mounted"] != "" {
-		log.Info().Msg("skipping mount step")
-	} else {
-		err = volumeMounter.Mount()
-		if err != nil {
-			log.Error().Err(err).Msg("unable to complete mount step")
-			c.Close()
-			return c, err
-		}
-		// set mounted
-		asset.Connections[0].Options["mounted"] = volumeMounter.ScanDir
-	}
-	if volumeMounter.ScanDir == "" && conf.Options["mounted"] != "" {
-		volumeMounter.ScanDir = conf.Options["mounted"]
-	}
-	if volumeMounter.ScanDir == "" {
-		c.Close()
-		return c, errors.New("no scan dir specified")
-	}
-
-	log.Debug().Interface("info", c.target).Str("type", c.targetType).Msg("target")
-	// Create and initialize fs provider
-	conf.Options["path"] = volumeMounter.ScanDir
-	fsConn, err := fs.NewConnection(id, &inventory.Config{
-		Type:       "filesystem",
-		Path:       volumeMounter.ScanDir,
+	deviceConn, err := device.NewDeviceConnection(id, &inventory.Config{
+		Type:       "device",
 		PlatformId: conf.PlatformId,
 		Options:    conf.Options,
 		Runtime:    "aws-ebs",
@@ -200,15 +167,7 @@ func NewAwsEbsConnection(id uint32, conf *inventory.Config, asset *inventory.Ass
 		c.Close()
 		return nil, err
 	}
-	c.volumeMounter = volumeMounter
-	c.FsProvider = fsConn
-	asset.IdDetector = []string{ids.IdDetector_Hostname}
-	var ok bool
-	asset.Platform, ok = detector.DetectOS(fsConn)
-	if !ok {
-		c.Close()
-		return nil, errors.New("failed to detect OS")
-	}
+	c.DeviceProvider = deviceConn
 	asset.Id = conf.Type
 	asset.Platform.Runtime = c.Runtime()
 	return c, nil
@@ -219,7 +178,7 @@ func (c *AwsEbsConnection) FileInfo(path string) (shared.FileInfoDetails, error)
 }
 
 func (c *AwsEbsConnection) FileSystem() afero.Fs {
-	return c.FsProvider.FileSystem()
+	return c.DeviceProvider.FileSystem()
 }
 
 func (c *AwsEbsConnection) Close() {
@@ -229,43 +188,20 @@ func (c *AwsEbsConnection) Close() {
 			return
 		}
 	}
+	if c.DeviceProvider != nil {
+		c.DeviceProvider.Close()
+	}
 	// we seem to be losing all the connection info we
 	// had when we started by the time we get here.
 	// we should figure out what is happening
 	// for now, reassemble the info needed from the asset
 	// connection options
 	ctx := context.Background()
-	opts := c.asset.Connections[0].Options
-	c.volumeMounter = &snapshot.VolumeMounter{
-		ScanDir:             opts["mounted"],
-		VolumeAttachmentLoc: opts["volume-loc"],
-	}
-	c.scanVolumeInfo = &awsec2ebstypes.VolumeInfo{
-		Id:   opts["volume-id"],
-		Tags: map[string]string{"createdBy": opts["createdBy"]},
-	}
-	cfg, err := config.LoadDefaultConfig(context.Background())
+	err := c.DetachVolumeFromInstance(ctx, c.scanVolumeInfo)
 	if err != nil {
-		log.Error().Err(err).Msg("cfg")
-		return
+		log.Error().Err(err).Msg("unable to detach volume")
 	}
-	cfg.Region = opts["scanner-region"]
-	c.scannerRegionEc2svc = ec2.NewFromConfig(cfg)
-	c.scannerInstance.Id = opts["scanner-id"]
-	if c.volumeMounter != nil {
-		err := c.volumeMounter.UnmountVolumeFromInstance()
-		if err != nil {
-			log.Error().Err(err).Msg("unable to unmount volume")
-		}
-		err = c.DetachVolumeFromInstance(ctx, c.scanVolumeInfo)
-		if err != nil {
-			log.Error().Err(err).Msg("unable to detach volume")
-		}
-		err = c.volumeMounter.RemoveTempScanDir()
-		if err != nil {
-			log.Error().Err(err).Msg("unable to remove dir")
-		}
-	}
+
 	// only delete the volume if we created it, e.g., if we're scanning a snapshot
 	if val, ok := c.scanVolumeInfo.Tags["createdBy"]; ok {
 		if val == "Mondoo" {
