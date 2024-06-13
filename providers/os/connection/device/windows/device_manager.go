@@ -17,10 +17,12 @@ const (
 )
 
 type WindowsDeviceManager struct {
-	cmdRunner       *snapshot.LocalCommandRunner
-	opts            map[string]string
+	cmdRunner *snapshot.LocalCommandRunner
+	opts      map[string]string
+	// indicates if the disk we've targeted has been set to online. we use this to know if we need to put it back offline once we're done
 	diskSetToOnline bool
-	diskIndex       int
+	// if we've set the disk online, we need to know the index to set it back offline
+	diskIndex int
 }
 
 func NewWindowsDeviceManager(shell []string, opts map[string]string) (*WindowsDeviceManager, error) {
