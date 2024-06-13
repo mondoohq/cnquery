@@ -2929,6 +2929,7 @@ resources:
       - aws
   aws.vpc.routetable:
     fields:
+      associations: {}
       id: {}
       routes: {}
       tags:
