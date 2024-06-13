@@ -546,11 +546,16 @@ func (a *mqlAwsVpc) routeTables() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
+			dictAssociations, err := convert.JsonToDictSlice(routeTable.Associations)
+			if err != nil {
+				return nil, err
+			}
 			mqlRouteTable, err := CreateResource(a.MqlRuntime, "aws.vpc.routetable",
 				map[string]*llx.RawData{
-					"id":     llx.StringDataPtr(routeTable.RouteTableId),
-					"routes": llx.ArrayData(dictRoutes, types.Any),
-					"tags":   llx.MapData(Ec2TagsToMap(routeTable.Tags), types.String),
+					"associations": llx.ArrayData(dictAssociations, types.Any),
+					"id":           llx.StringDataPtr(routeTable.RouteTableId),
+					"routes":       llx.ArrayData(dictRoutes, types.Any),
+					"tags":         llx.MapData(Ec2TagsToMap(routeTable.Tags), types.String),
 				})
 			if err != nil {
 				return nil, err
