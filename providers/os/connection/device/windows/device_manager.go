@@ -17,8 +17,10 @@ const (
 )
 
 type WindowsDeviceManager struct {
-	cmdRunner *snapshot.LocalCommandRunner
-	opts      map[string]string
+	cmdRunner       *snapshot.LocalCommandRunner
+	opts            map[string]string
+	diskSetToOnline bool
+	diskIndex       int
 }
 
 func NewWindowsDeviceManager(shell []string, opts map[string]string) (*WindowsDeviceManager, error) {
@@ -50,6 +52,19 @@ func (d *WindowsDeviceManager) IdentifyMountTargets(opts map[string]string) ([]*
 	targetDrive, err := filterDiskDrives(diskDrives, lunInt)
 	if err != nil {
 		return nil, err
+	}
+
+	diskOnline, err := d.identifyDiskOnline(targetDrive.Index)
+	if err != nil {
+		return nil, err
+	}
+	if diskOnline.IsOffline {
+		err = d.setDiskOnlineState(targetDrive.Index, true)
+		if err != nil {
+			return nil, err
+		}
+		d.diskSetToOnline = true
+		d.diskIndex = targetDrive.Index
 	}
 	partitions, err := d.identifyPartitions(targetDrive.Index)
 	if err != nil {
@@ -87,4 +102,10 @@ func (d *WindowsDeviceManager) Mount(pi *snapshot.PartitionInfo) (string, error)
 
 func (d *WindowsDeviceManager) UnmountAndClose() {
 	log.Debug().Msg("closing windows device manager")
+	if d.diskSetToOnline {
+		err := d.setDiskOnlineState(d.diskIndex, false)
+		if err != nil {
+			log.Debug().Err(err).Msg("could not set disk offline")
+		}
+	}
 }
