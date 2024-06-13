@@ -131,10 +131,11 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.Cloudformation
 	asset.Name = conn.Conf.Host
 
 	asset.Platform = &inventory.Platform{
-		Name:   "cloudformation",
-		Family: []string{"cloudformation"},
-		Kind:   "api",
-		Title:  "AWS CloudFormation",
+		Name:    "cloudformation",
+		Family:  []string{"cloudformation"},
+		Runtime: "cloudformation",
+		Kind:    "api",
+		Title:   "AWS CloudFormation",
 	}
 
 	projectPath, ok := asset.Connections[0].Options["path"]
