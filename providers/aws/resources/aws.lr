@@ -795,9 +795,19 @@ private aws.iam.user @defaults("arn name") {
   // List of group ARNs that the user belongs to
   groups() []string
   // List of access keys metadata associated with the user
-  accessKeys() []dict
+  accessKeys() []aws.iam.accessKey
   // Login profile for the user
   loginProfile() aws.iam.loginProfile
+}
+
+// AWS IAM accessKey definition
+private aws.iam.accessKey @defaults("accessKeyId status") {
+  // Access Key ID
+  accessKeyId string
+  // Status of the access key (Active/Inactive)
+  status string
+  // Time when the access key was created
+  createDate time
 }
 
 // AWS IAM login profile for a user
@@ -3104,3 +3114,4 @@ private aws.eks.cluster @defaults("arn version status") {
   // List of EKS node groups
   nodeGroups() []aws.eks.nodegroup
 }
+

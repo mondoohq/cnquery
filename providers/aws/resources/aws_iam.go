@@ -764,14 +764,13 @@ func (a *mqlAwsIamUser) id() (string, error) {
 
 func (a *mqlAwsIamUser) accessKeys() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
 	svc := conn.Iam("")
 	ctx := context.Background()
-
 	username := a.Name.Data
 
 	var marker *string
-	res := []interface{}{}
+	var resources []interface{} // This will store the created resources.
+
 	for {
 		keysResp, err := svc.ListAccessKeys(ctx, &iam.ListAccessKeysInput{
 			UserName: &username,
@@ -780,18 +779,29 @@ func (a *mqlAwsIamUser) accessKeys() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		metadata, err := convert.JsonToDictSlice(keysResp.AccessKeyMetadata)
-		if err != nil {
-			return nil, err
+
+		for _, keyMetadata := range keysResp.AccessKeyMetadata {
+			// Create a resource for each access key.
+			accessKeyResource, err := CreateResource(a.MqlRuntime, "aws.iam.accessKey",
+				map[string]*llx.RawData{
+					"accessKeyId": llx.StringDataPtr(keyMetadata.AccessKeyId),
+					"status":      llx.StringData(string(keyMetadata.Status)),
+					"createDate":  llx.TimeDataPtr(keyMetadata.CreateDate),
+				},
+			)
+			if err != nil {
+				return nil, err
+			}
+			resources = append(resources, accessKeyResource)
 		}
-		res = append(res, metadata)
+
 		if !keysResp.IsTruncated {
 			break
 		}
 		marker = keysResp.Marker
 	}
 
-	return res, nil
+	return resources, nil
 }
 
 func (a *mqlAwsIamUser) policies() ([]interface{}, error) {
