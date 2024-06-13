@@ -868,6 +868,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.vpc.peeringConnections": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpc).GetPeeringConnections()).ToDataRes(types.Array(types.Resource("aws.vpc.peeringConnection")))
 	},
+	"aws.vpc.routetable.associations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcRoutetable).GetAssociations()).ToDataRes(types.Array(types.Dict))
+	},
 	"aws.vpc.routetable.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcRoutetable).GetId()).ToDataRes(types.String)
 	},
@@ -4496,7 +4499,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsVpcRoutetable).__id, ok = v.Value.(string)
 			return
 		},
-	"aws.vpc.routetable.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+	"aws.vpc.routetable.associations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcRoutetable).Associations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+		"aws.vpc.routetable.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpcRoutetable).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
@@ -10287,6 +10294,7 @@ type mqlAwsVpcRoutetable struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsVpcRoutetableInternal it will be used here
+	Associations plugin.TValue[[]interface{}]
 	Id plugin.TValue[string]
 	Routes plugin.TValue[[]interface{}]
 	Tags plugin.TValue[map[string]interface{}]
@@ -10327,6 +10335,10 @@ func (c *mqlAwsVpcRoutetable) MqlName() string {
 
 func (c *mqlAwsVpcRoutetable) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlAwsVpcRoutetable) GetAssociations() *plugin.TValue[[]interface{}] {
+	return &c.Associations
 }
 
 func (c *mqlAwsVpcRoutetable) GetId() *plugin.TValue[string] {
