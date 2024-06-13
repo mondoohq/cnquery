@@ -273,13 +273,19 @@ var Config = plugin.Provider{
 				{
 					Long:   "lun",
 					Type:   plugin.FlagType_String,
-					Desc:   "The logical unit number of the block device that should be scanned. Do not use together with --device-name",
+					Desc:   "The logical unit number of the block device that should be scanned. Do not use together with --device-name or --serial-number",
 					Option: plugin.FlagOption_Hidden,
 				},
 				{
 					Long:   "device-name",
 					Type:   plugin.FlagType_String,
-					Desc:   "The target device to scan, e.g. /dev/sda. Do not use together with --lun",
+					Desc:   "The target device to scan, e.g. /dev/sda. Do not use together with --lun or --serial-number",
+					Option: plugin.FlagOption_Hidden,
+				},
+				{
+					Long:   "serial-number",
+					Type:   plugin.FlagType_String,
+					Desc:   "The serial number of the block device that should be scanned. Do not use together with --device-name or --lun",
 					Option: plugin.FlagOption_Hidden,
 				},
 				{

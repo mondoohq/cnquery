@@ -5,7 +5,6 @@ package windows
 
 import (
 	"errors"
-	"strconv"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -13,7 +12,8 @@ import (
 )
 
 const (
-	LunOption = "lun"
+	LunOption          = "lun"
+	SerialNumberOption = "serial-number"
 )
 
 type WindowsDeviceManager struct {
@@ -40,18 +40,13 @@ func (d *WindowsDeviceManager) Name() string {
 }
 
 func (d *WindowsDeviceManager) IdentifyMountTargets(opts map[string]string) ([]*snapshot.PartitionInfo, error) {
-	lun := opts[LunOption]
-	lunInt, err := strconv.Atoi(lun)
-	if err != nil {
-		return nil, err
-	}
-	log.Debug().Str("lun", lun).Msg("device connection> identifying mount targets")
+	log.Debug().Msg("device connection> identifying mount targets")
 	diskDrives, err := d.IdentifyDiskDrives()
 	if err != nil {
 		return nil, err
 	}
 
-	targetDrive, err := filterDiskDrives(diskDrives, lunInt)
+	targetDrive, err := filterDiskDrives(diskDrives, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -86,8 +81,14 @@ func (d *WindowsDeviceManager) IdentifyMountTargets(opts map[string]string) ([]*
 // validates the options provided to the device manager
 func validateOpts(opts map[string]string) error {
 	lun := opts[LunOption]
-	if lun == "" {
-		return errors.New("lun is required for a windows device connection")
+	serialNumber := opts[SerialNumberOption]
+
+	if lun != "" && serialNumber != "" {
+		return errors.New("lun and serial-number are mutually exclusive options")
+	}
+
+	if lun == "" && serialNumber == "" {
+		return errors.New("either lun or serial-number must be provided")
 	}
 
 	return nil

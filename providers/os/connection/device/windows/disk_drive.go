@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"slices"
+	"strconv"
 
 	"github.com/rs/zerolog/log"
 
@@ -16,7 +17,7 @@ import (
 )
 
 const (
-	identifyDiskDrivesPwshScript = `Get-WmiObject -Class Win32_DiskDrive | Select-Object Name, SCSILogicalUnit, Index | ConvertTo-Json`
+	identifyDiskDrivesPwshScript = `Get-WmiObject -Class Win32_DiskDrive | Select-Object Name, SCSILogicalUnit, Index, SerialNumber | ConvertTo-Json`
 	identifyDiskOnlinePwshScript = `Get-Disk -Number %d | Select-Object Number, IsOffline | ConvertTo-Json`
 	identifyPartitionPwshScript  = `Get-Disk -Number %d | Get-Partition | Select DriveLetter, Size, Type | ConvertTo-Json`
 	setDiskOnlinePwshScript      = `Set-Disk -Number %d -IsOffline %s`
@@ -26,6 +27,7 @@ type diskDrive struct {
 	Name            string `json:"Name"`
 	SCSILogicalUnit int    `json:"SCSILogicalUnit"`
 	Index           int    `json:"Index"`
+	SerialNumber    string `json:"SerialNumber"`
 }
 
 type diskOnlineStatus struct {
@@ -139,13 +141,43 @@ func (d *WindowsDeviceManager) identifyPartitions(diskNumber int) ([]*diskPartit
 	var partitions []*diskPartition
 	err = json.Unmarshal(stdout, &partitions)
 	if err != nil {
-		return nil, err
+		// fallback, if only one partition is found, the output is not an array
+		var partition *diskPartition
+		err = json.Unmarshal(stdout, &partition)
+		if err != nil {
+			return nil, err
+		}
+		return []*diskPartition{partition}, nil
 	}
 
 	return partitions, nil
 }
 
-func filterDiskDrives(drives []*diskDrive, lun int) (*diskDrive, error) {
+func filterDiskDrives(drives []*diskDrive, opts map[string]string) (*diskDrive, error) {
+	serialNumber := opts[SerialNumberOption]
+	lun := opts[LunOption]
+	if serialNumber != "" {
+		return filterDiskDrivesBySerialNumber(drives, serialNumber)
+	}
+
+	lunInt, err := strconv.Atoi(lun)
+	if err != nil {
+		return nil, err
+	}
+	return filterDiskDrivesByLun(drives, lunInt)
+}
+
+func filterDiskDrivesBySerialNumber(drives []*diskDrive, serialNumber string) (*diskDrive, error) {
+	for _, d := range drives {
+		if serialNumber == d.SerialNumber {
+			log.Debug().Str("serialNumber", serialNumber).Str("name", d.Name).Int("index", d.Index).Msg("found disk drive with matching serial number")
+			return d, nil
+		}
+	}
+	return nil, errors.New("no disk drive with matching serial number found")
+}
+
+func filterDiskDrivesByLun(drives []*diskDrive, lun int) (*diskDrive, error) {
 	for _, d := range drives {
 		if lun == d.SCSILogicalUnit {
 			log.Debug().Int("lun", lun).Str("name", d.Name).Int("index", d.Index).Msg("found disk drive with matching LUN")
@@ -156,7 +188,7 @@ func filterDiskDrives(drives []*diskDrive, lun int) (*diskDrive, error) {
 }
 
 func filterPartitions(partitions []*diskPartition) (*diskPartition, error) {
-	allowed := []string{"Basic", "Windows"}
+	allowed := []string{"Basic", "Windows", "IFS"}
 	for _, p := range partitions {
 		if slices.Contains(allowed, p.Type) && p.DriveLetter != "" {
 			return p, nil
