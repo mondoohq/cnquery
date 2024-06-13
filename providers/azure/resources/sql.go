@@ -745,7 +745,7 @@ func initAzureSubscriptionSqlServiceServer(runtime *plugin.Runtime, args map[str
 	}
 
 	if args["id"] == nil {
-		return nil, nil, errors.New("id required to fetch azure sql server")
+		return nil, nil, errors.New("id required to fetch azure sql database server")
 	}
 	conn := runtime.Connection.(*connection.AzureConnection)
 	res, err := NewResource(runtime, "azure.subscription.sqlService", map[string]*llx.RawData{
@@ -767,5 +767,5 @@ func initAzureSubscriptionSqlServiceServer(runtime *plugin.Runtime, args map[str
 		}
 	}
 
-	return nil, nil, errors.New("azure sql server does not exist")
+	return nil, nil, errors.New("azure sql database server does not exist")
 }

@@ -759,7 +759,7 @@ func getTitleFamily(azureObject azureObject) (azureObjectPlatformInfo, error) {
 		}
 	case "sql":
 		if azureObject.objectType == "server" {
-			return azureObjectPlatformInfo{title: "Azure SQL Server", platform: "azure-sql-server"}, nil
+			return azureObjectPlatformInfo{title: "Azure SQL Database Server", platform: "azure-sql-server"}, nil
 		}
 	case "postgresql":
 		if azureObject.objectType == "server" {
