@@ -279,13 +279,13 @@ var Config = plugin.Provider{
 				{
 					Long:   "device-name",
 					Type:   plugin.FlagType_String,
-					Desc:   "The target device to scan, e.g. /dev/sda. Do not use together with --lun or --serial-number",
+					Desc:   "The target device to scan, e.g. /dev/sda. Supported only for Linux scanning. Do not use together with --lun or --serial-number",
 					Option: plugin.FlagOption_Hidden,
 				},
 				{
 					Long:   "serial-number",
 					Type:   plugin.FlagType_String,
-					Desc:   "The serial number of the block device that should be scanned. Do not use together with --device-name or --lun",
+					Desc:   "The serial number of the block device that should be scanned. Supported only for Windows scanning. Do not use together with --device-name or --lun",
 					Option: plugin.FlagOption_Hidden,
 				},
 				{
