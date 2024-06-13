@@ -230,6 +230,10 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	if deviceName, ok := flags["device-name"]; ok {
 		conf.Options["device-name"] = deviceName.RawData().Value.(string)
 	}
+	if serialNumber, ok := flags["serial-number"]; ok {
+		conf.Options["serial-number"] = serialNumber.RawData().Value.(string)
+	}
+
 	if platformIDs, ok := flags["platform-ids"]; ok {
 		platformIDs := platformIDs.Array
 		strs := []string{}
