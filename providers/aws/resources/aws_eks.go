@@ -448,7 +448,7 @@ func (a *mqlAwsEksAddon) tags() (map[string]interface{}, error) {
 		return nil, err
 	}
 	new := make(map[string]interface{})
-	for k, v := range ao.Labels {
+	for k, v := range ao.Tags {
 		new[k] = v
 	}
 	return new, nil
@@ -459,7 +459,7 @@ func (a *mqlAwsEksAddon) addonVersion() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return string(ao.addonVersion), nil
+	return string(ao.AddonVersion), nil
 }
 
 func (a *mqlAwsEksAddon) publisher() (string, error) {
@@ -467,7 +467,7 @@ func (a *mqlAwsEksAddon) publisher() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return string(ao.publisher), nil
+	return string(ao.Publisher), nil
 }
 
 func (a *mqlAwsEksAddon) owner() (string, error) {
@@ -475,7 +475,7 @@ func (a *mqlAwsEksAddon) owner() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return string(ao.owner), nil
+	return string(ao.Owner), nil
 }
 
 func (a *mqlAwsEksAddon) configurationValues() (string, error) {
@@ -483,5 +483,5 @@ func (a *mqlAwsEksAddon) configurationValues() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return string(ao.configurationValues), nil
+	return string(ao.ConfigurationValues), nil
 }
