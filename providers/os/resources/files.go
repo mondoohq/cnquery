@@ -81,7 +81,13 @@ func (l *mqlFilesFind) list() ([]interface{}, error) {
 			return nil, errors.New("find is not supported for your platform")
 		}
 
-		foundFiles, err = fsSearch.Find(l.From.Data, compiledRegexp, l.Type.Data)
+		var perm *uint32
+		if l.Permissions.Data != 0o777 {
+			p := uint32(l.Permissions.Data)
+			perm = &p
+		}
+
+		foundFiles, err = fsSearch.Find(l.From.Data, compiledRegexp, l.Type.Data, perm)
 		if err != nil {
 			return nil, err
 		}

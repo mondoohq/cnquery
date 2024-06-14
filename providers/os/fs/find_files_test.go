@@ -147,17 +147,25 @@ func TestFindFiles(t *testing.T) {
 	mkFile(t, fs, "root/a/file1")
 	mkFile(t, fs, "root/a/file2")
 	mkFile(t, fs, "root/b/file1")
+	mkFile(t, fs, "root/c/file4")
+	require.NoError(t, fs.Chmod("root/c/file4", 0o002))
 
-	rootAFiles, err := FindFiles(afero.NewIOFS(fs), "root/a", nil, "f")
+	rootAFiles, err := FindFiles(afero.NewIOFS(fs), "root/a", nil, "f", nil)
 	require.NoError(t, err)
 	assert.ElementsMatch(t, rootAFiles, []string{"root/a/file1", "root/a/file2"})
 
-	rootAFilesAndDir, err := FindFiles(afero.NewIOFS(fs), "root/a", nil, "f,d")
+	rootAFilesAndDir, err := FindFiles(afero.NewIOFS(fs), "root/a", nil, "f,d", nil)
 	require.NoError(t, err)
 	assert.ElementsMatch(t, rootAFilesAndDir, []string{"root/a", "root/a/file1", "root/a/file2"})
 
-	rootBFiles, err := FindFiles(afero.NewIOFS(fs), "root", regexp.MustCompile("root/b.*"), "f")
+	rootBFiles, err := FindFiles(afero.NewIOFS(fs), "root", regexp.MustCompile("root/b.*"), "f", nil)
+	require.NoError(t, err)
 	assert.ElementsMatch(t, rootBFiles, []string{"root/b/file1"})
+
+	perm := uint32(0o002)
+	permFiles, err := FindFiles(afero.NewIOFS(fs), "root", nil, "f", &perm)
+	require.NoError(t, err)
+	assert.ElementsMatch(t, permFiles, []string{"root/c/file4"})
 }
 
 func mkFile(t *testing.T, fs afero.Fs, name string) {

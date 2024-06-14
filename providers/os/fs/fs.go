@@ -113,7 +113,7 @@ func (t *MountedFs) Chown(name string, uid, gid int) error {
 	return notSupported
 }
 
-func (t *MountedFs) Find(from string, r *regexp.Regexp, typ string) ([]string, error) {
+func (t *MountedFs) Find(from string, r *regexp.Regexp, typ string, perm *uint32) ([]string, error) {
 	iofs := afero.NewIOFS(t)
-	return FindFiles(iofs, from, r, typ)
+	return FindFiles(iofs, from, r, typ, perm)
 }
