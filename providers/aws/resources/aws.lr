@@ -3077,8 +3077,6 @@ private aws.eks.nodegroup @defaults("name scalingConfig.DesiredSize diskSize sta
 private aws.eks.addon @defaults("addonName clusterName addonVersion status") {
   // The name of the add-on.
   addonName string
-  // Name of the cluster
-  clusterName string
   // The status of the add-on
   status string
   // The version of the add-on

@@ -340,3 +340,216 @@ func (a *mqlAwsEksNodegroup) nodeRole() (*mqlAwsIamRole, error) {
 	}
 	return mqlIam.(*mqlAwsIamRole), nil
 }
+
+// AwsEksAddons
+func (a *mqlAwsEksCluster) addons() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	regionVal := a.Region.Data
+	log.Debug().Msgf("eks>getAddons>calling aws with region %s", regionVal)
+
+	svc := conn.Eks(regionVal)
+	ctx := context.Background()
+	res := []interface{}{}
+
+	addonsRes, err := svc.ListNodegroups(ctx, &eks.ListNodegroupsInput{ClusterName: aws.String(a.Name.Data)})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+			return res, nil
+		}
+		return nil, err
+	}
+
+	if addonsRes == nil {
+		return nil, nil
+	}
+
+	for i := range addonsRes.Nodegroups {
+		nodegroup := addonsRes.Nodegroups[i]
+		args := map[string]*llx.RawData{
+			"name":   llx.StringData(nodegroup),
+			"region": llx.StringData(regionVal),
+		}
+
+		mqlNg, err := CreateResource(a.MqlRuntime, "aws.eks.nodegroup", args)
+		if err != nil {
+			return nil, err
+		}
+		mqlNg.(*mqlAwsEksNodegroup).clusterName = a.Name.Data
+		mqlNg.(*mqlAwsEksNodegroup).region = regionVal
+		res = append(res, mqlNg)
+	}
+	return res, nil
+}
+
+type mqlAwsEksNodegroupInternal struct {
+	details     *ekstypes.Nodegroup
+	region      string
+	lock        sync.Mutex
+	clusterName string
+}
+
+func (a *mqlAwsEksNodegroup) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsEksNodegroup) autoscalingGroups() ([]interface{}, error) {
+	ng, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	if ng.Resources == nil || ng.Resources.AutoScalingGroups == nil {
+		return nil, nil
+	}
+	res := []interface{}{}
+	for i := range ng.Resources.AutoScalingGroups {
+		ag := ng.Resources.AutoScalingGroups[i]
+		mqlAg, err := NewResource(a.MqlRuntime, "aws.autoscaling.group",
+			map[string]*llx.RawData{
+				"name":   llx.StringDataPtr(ag.Name),
+				"region": llx.StringData(a.region),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlAg)
+	}
+
+	return res, nil
+}
+
+func (a *mqlAwsEksNodegroup) fetchDetails() (*ekstypes.Nodegroup, error) {
+	if a.details != nil {
+		return a.details, nil
+	}
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	ctx := context.Background()
+	svc := conn.Eks(a.region)
+	desc, err := svc.DescribeNodegroup(ctx, &eks.DescribeNodegroupInput{NodegroupName: aws.String(a.Name.Data), ClusterName: aws.String(a.clusterName)})
+	if err != nil {
+		return nil, err
+	}
+	a.details = desc.Nodegroup
+	return desc.Nodegroup, nil
+}
+
+func (a *mqlAwsEksNodegroup) arn() (string, error) {
+	ng, err := a.fetchDetails()
+	if err != nil {
+		return "", err
+	}
+	return *ng.NodegroupArn, nil
+}
+
+func (a *mqlAwsEksNodegroup) capacityType() (string, error) {
+	ng, err := a.fetchDetails()
+	if err != nil {
+		return "", err
+	}
+	return string(ng.CapacityType), nil
+}
+
+func (a *mqlAwsEksNodegroup) status() (string, error) {
+	ng, err := a.fetchDetails()
+	if err != nil {
+		return "", err
+	}
+	return string(ng.Status), nil
+}
+
+func (a *mqlAwsEksNodegroup) amiType() (string, error) {
+	ng, err := a.fetchDetails()
+	if err != nil {
+		return "", err
+	}
+	return string(ng.AmiType), nil
+}
+
+func (a *mqlAwsEksNodegroup) diskSize() (int64, error) {
+	ng, err := a.fetchDetails()
+	if err != nil {
+		return 0, err
+	}
+	return int64(*ng.DiskSize), nil
+}
+
+func (a *mqlAwsEksNodegroup) createdAt() (*time.Time, error) {
+	ng, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	return ng.CreatedAt, nil
+}
+
+func (a *mqlAwsEksNodegroup) modifiedAt() (*time.Time, error) {
+	ng, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	return ng.ModifiedAt, nil
+}
+
+func (a *mqlAwsEksNodegroup) scalingConfig() (map[string]interface{}, error) {
+	ng, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(ng.ScalingConfig)
+}
+
+func (a *mqlAwsEksNodegroup) instanceTypes() ([]interface{}, error) {
+	ng, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	s := []interface{}{}
+	for i := range ng.InstanceTypes {
+		s = append(s, ng.InstanceTypes[i])
+	}
+	return s, nil
+}
+
+func (a *mqlAwsEksNodegroup) labels() (map[string]interface{}, error) {
+	ng, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	new := make(map[string]interface{})
+	for k, v := range ng.Labels {
+		new[k] = v
+	}
+	return new, nil
+}
+
+func (a *mqlAwsEksNodegroup) tags() (map[string]interface{}, error) {
+	ng, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	new := make(map[string]interface{})
+	for k, v := range ng.Labels {
+		new[k] = v
+	}
+	return new, nil
+}
+
+func (a *mqlAwsEksNodegroup) nodeRole() (*mqlAwsIamRole, error) {
+	ng, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	if ng.NodeRole == nil {
+		a.NodeRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlIam, err := NewResource(a.MqlRuntime, "aws.iam.role",
+		map[string]*llx.RawData{
+			"arn": llx.StringDataPtr(ng.NodeRole),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlIam.(*mqlAwsIamRole), nil
+}
