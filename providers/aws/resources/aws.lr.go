@@ -13169,7 +13169,7 @@ func (c *mqlAwsEfs) GetFilesystems() *plugin.TValue[[]interface{}] {
 type mqlAwsEfsFilesystem struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlAwsEfsFilesystemInternal it will be used here
+	mqlAwsEfsFilesystemInternal
 	Name plugin.TValue[string]
 	Id plugin.TValue[string]
 	Arn plugin.TValue[string]
