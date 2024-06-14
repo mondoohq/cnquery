@@ -393,31 +393,6 @@ func (a *mqlAwsEksAddon) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func (a *mqlAwsEksAddon) autoscalingGroups() ([]interface{}, error) {
-	ng, err := a.fetchDetails()
-	if err != nil {
-		return nil, err
-	}
-	if ng.Resources == nil || ng.Resources.AutoScalingGroups == nil {
-		return nil, nil
-	}
-	res := []interface{}{}
-	for i := range ng.Resources.AutoScalingGroups {
-		ag := ng.Resources.AutoScalingGroups[i]
-		mqlAg, err := NewResource(a.MqlRuntime, "aws.autoscaling.group",
-			map[string]*llx.RawData{
-				"name":   llx.StringDataPtr(ag.Name),
-				"region": llx.StringData(a.region),
-			})
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, mqlAg)
-	}
-
-	return res, nil
-}
-
 func (a *mqlAwsEksAddon) fetchDetails() (*ekstypes.Addon, error) {
 	if a.details != nil {
 		return a.details, nil
@@ -436,77 +411,77 @@ func (a *mqlAwsEksAddon) fetchDetails() (*ekstypes.Addon, error) {
 }
 
 func (a *mqlAwsEksAddon) arn() (string, error) {
-	ng, err := a.fetchDetails()
+	ao, err := a.fetchDetails()
 	if err != nil {
 		return "", err
 	}
-	return *ng.AddonArn, nil
+	return *ao.AddonArn, nil
 }
 
 func (a *mqlAwsEksAddon) status() (string, error) {
-	ng, err := a.fetchDetails()
+	ao, err := a.fetchDetails()
 	if err != nil {
 		return "", err
 	}
-	return string(ng.Status), nil
+	return string(ao.Status), nil
 }
 
 func (a *mqlAwsEksAddon) createdAt() (*time.Time, error) {
-	ng, err := a.fetchDetails()
+	ao, err := a.fetchDetails()
 	if err != nil {
 		return nil, err
 	}
-	return ng.CreatedAt, nil
+	return ao.CreatedAt, nil
 }
 
 func (a *mqlAwsEksAddon) modifiedAt() (*time.Time, error) {
-	ng, err := a.fetchDetails()
+	ao, err := a.fetchDetails()
 	if err != nil {
 		return nil, err
 	}
-	return ng.ModifiedAt, nil
+	return ao.ModifiedAt, nil
 }
 
 func (a *mqlAwsEksAddon) tags() (map[string]interface{}, error) {
-	ng, err := a.fetchDetails()
+	ao, err := a.fetchDetails()
 	if err != nil {
 		return nil, err
 	}
 	new := make(map[string]interface{})
-	for k, v := range ng.Labels {
+	for k, v := range ao.Labels {
 		new[k] = v
 	}
 	return new, nil
 }
 
 func (a *mqlAwsEksAddon) addonVersion() (string, error) {
-	ng, err := a.fetchDetails()
+	ao, err := a.fetchDetails()
 	if err != nil {
 		return "", err
 	}
-	return string(ng.addonVersion), nil
+	return string(ao.addonVersion), nil
 }
 
 func (a *mqlAwsEksAddon) publisher() (string, error) {
-	ng, err := a.fetchDetails()
+	ao, err := a.fetchDetails()
 	if err != nil {
 		return "", err
 	}
-	return string(ng.publisher), nil
+	return string(ao.publisher), nil
 }
 
 func (a *mqlAwsEksAddon) owner() (string, error) {
-	ng, err := a.fetchDetails()
+	ao, err := a.fetchDetails()
 	if err != nil {
 		return "", err
 	}
-	return string(ng.owner), nil
+	return string(ao.owner), nil
 }
 
 func (a *mqlAwsEksAddon) configurationValues() (string, error) {
-	ng, err := a.fetchDetails()
+	ao, err := a.fetchDetails()
 	if err != nil {
 		return "", err
 	}
-	return string(ng.configurationValues), nil
+	return string(ao.configurationValues), nil
 }
