@@ -182,7 +182,7 @@ func (r *mqlMs365Exchangeonline) getOrg() (string, error) {
 func convertTeamsProtectionPolicy(r *mqlMs365Exchangeonline, data []*TeamsProtectionPolicy) ([]interface{}, error) {
 	var result []interface{}
 	for _, t := range data {
-		if data == nil {
+		if t == nil {
 			continue
 		}
 		policy, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.teamsProtectionPolicy",
