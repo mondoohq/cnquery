@@ -4503,7 +4503,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsVpcRoutetable).Associations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
-		"aws.vpc.routetable.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+	"aws.vpc.routetable.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpcRoutetable).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
