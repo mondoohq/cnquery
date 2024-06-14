@@ -25698,3 +25698,19 @@ func (c *mqlAwsEksCluster) GetNodeGroups() *plugin.TValue[[]interface{}] {
 		return c.nodeGroups()
 	})
 }
+
+func (c *mqlAwsEksCluster) GetAddons() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Addons, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eks.cluster", c.__id, "addons")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.addons()
+	})
+}
