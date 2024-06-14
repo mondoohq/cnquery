@@ -153,7 +153,7 @@ func TestOperatorManifest(t *testing.T) {
 	}
 	inv, err := resources.Discover(pluginRuntime, cnquery.Features{})
 	require.NoError(t, err)
-	require.Len(t, inv.Spec.Assets, 2)
+	require.Len(t, inv.Spec.Assets, 3)
 
 	require.Len(t, inv.Spec.Assets[1].PlatformIds, 1)
 
@@ -175,7 +175,7 @@ func TestOperatorManifest(t *testing.T) {
 
 	require.NotEqual(t, inv.Spec.Assets[0].PlatformIds[0], inv.Spec.Assets[1].PlatformIds[0])
 	require.Equal(t, "//platformid.api.mondoo.app/runtime/k8s/uid/"+manifestHash, inv.Spec.Assets[0].PlatformIds[0])
-	require.Equal(t, "//platformid.api.mondoo.app/runtime/k8s/uid/"+manifestHash+"/namespace/mondoo-operator/deployments/name/mondoo-operator-controller-manager", inv.Spec.Assets[1].PlatformIds[0])
+	require.Equal(t, "//platformid.api.mondoo.app/runtime/k8s/uid/"+manifestHash+"/namespace/mondoo-operator/deployments/name/mondoo-operator-controller-manager", inv.Spec.Assets[2].PlatformIds[0])
 }
 
 func TestOperatorManifestWithNamespaceFilter(t *testing.T) {
@@ -210,7 +210,7 @@ func TestOperatorManifestWithNamespaceFilter(t *testing.T) {
 	}
 	inv, err := resources.Discover(pluginRuntime, cnquery.Features{})
 	require.NoError(t, err)
-	require.Len(t, inv.Spec.Assets, 2)
+	require.Len(t, inv.Spec.Assets, 3)
 
 	require.Len(t, inv.Spec.Assets[1].PlatformIds, 1)
 
@@ -224,7 +224,7 @@ func TestOperatorManifestWithNamespaceFilter(t *testing.T) {
 	}
 	require.NotEqual(t, inv.Spec.Assets[0].PlatformIds[0], inv.Spec.Assets[1].PlatformIds[0])
 	require.Equal(t, "//platformid.api.mondoo.app/runtime/k8s/uid/namespace/mondoo-operator", inv.Spec.Assets[0].PlatformIds[0])
-	require.Equal(t, "//platformid.api.mondoo.app/runtime/k8s/uid/namespace/mondoo-operator/deployments/name/mondoo-operator-controller-manager", inv.Spec.Assets[1].PlatformIds[0])
+	require.Equal(t, "//platformid.api.mondoo.app/runtime/k8s/uid/namespace/mondoo-operator/deployments/name/mondoo-operator-controller-manager", inv.Spec.Assets[2].PlatformIds[0])
 }
 
 func TestManifestNoObjects(t *testing.T) {
@@ -258,7 +258,7 @@ func TestManifestNoObjects(t *testing.T) {
 	}
 	inv, err := resources.Discover(pluginRuntime, cnquery.Features{})
 	require.NoError(t, err)
-	require.Len(t, inv.Spec.Assets, 1)
+	require.Len(t, inv.Spec.Assets, 2)
 
 	require.Len(t, inv.Spec.Assets[0].PlatformIds, 1)
 
@@ -304,7 +304,7 @@ func TestManifestDir(t *testing.T) {
 	}
 	inv, err := resources.Discover(pluginRuntime, cnquery.Features{})
 	require.NoError(t, err)
-	require.Len(t, inv.Spec.Assets, 3)
+	require.Len(t, inv.Spec.Assets, 5)
 
 	for i := range inv.Spec.Assets {
 		asset := inv.Spec.Assets[i]

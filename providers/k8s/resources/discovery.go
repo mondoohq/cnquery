@@ -40,6 +40,7 @@ const (
 	DiscoveryAdmissionReviews = "admissionreviews"
 	DiscoveryIngresses        = "ingresses"
 	DiscoveryNamespaces       = "namespaces"
+	DiscoveryServices         = "services"
 )
 
 type NamespaceFilterOpts struct {
@@ -197,6 +198,13 @@ func discoverAssets(
 		}
 		if target == DiscoveryCronJobs || target == DiscoveryAuto || target == DiscoveryAll {
 			list, err = discoverCronJobs(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters)
+			if err != nil {
+				return nil, err
+			}
+			assets = append(assets, list...)
+		}
+		if target == DiscoveryServices || target == DiscoveryAuto || target == DiscoveryAll {
+			list, err = discoverServices(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters)
 			if err != nil {
 				return nil, err
 			}
@@ -368,6 +376,61 @@ func discoverJobs(
 			Category:    conn.Asset().Category,
 		})
 		od.Add(job.obj)
+	}
+	return assetList, nil
+}
+
+func discoverServices(
+	conn shared.Connection,
+	invConfig *inventory.Config,
+	clusterId string,
+	k8s *mqlK8s,
+	od *PlatformIdOwnershipIndex,
+	nsFilter NamespaceFilterOpts,
+	resFilter *ResourceFilters,
+) ([]*inventory.Asset, error) {
+	cjs := k8s.GetServices()
+	if cjs.Error != nil {
+		return nil, cjs.Error
+	}
+
+	// If there is a resources filter we should only retrieve the workloads that are in the filter.
+	if !resFilter.IsEmpty() && resFilter.IsEmptyForType("service") {
+		return []*inventory.Asset{}, nil
+	}
+
+	assetList := make([]*inventory.Asset, 0, len(cjs.Data))
+	for _, cj := range cjs.Data {
+		serv := cj.(*mqlK8sService)
+
+		if skip := nsFilter.skipNamespace(serv.Namespace.Data); skip {
+			continue
+		}
+
+		if !resFilter.IsEmpty() && !resFilter.Match("service", serv.Name.Data, serv.Namespace.Data) {
+			continue
+		}
+
+		labels := map[string]string{}
+		for k, v := range serv.GetLabels().Data {
+			labels[k] = v.(string)
+		}
+		addMondooAssetLabels(labels, &serv.obj.ObjectMeta, clusterId)
+		platform, err := createPlatformData(serv.Kind.Data, conn.Runtime())
+		if err != nil {
+			return nil, err
+		}
+		assetList = append(assetList, &inventory.Asset{
+			PlatformIds: []string{
+				shared.NewWorkloadPlatformId(clusterId, "service", serv.Namespace.Data, serv.Name.Data, serv.Uid.Data),
+			},
+			Name:        assetName(serv.Namespace.Data, serv.Name.Data),
+			Platform:    platform,
+			Labels:      labels,
+			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(invConfig.Id))}, // pass-in the parent connection config
+			Category:    conn.Asset().Category,
+		})
+		od.Add(serv.obj)
 	}
 	return assetList, nil
 }
@@ -961,6 +1024,10 @@ func createPlatformData(objectKind, runtime string) (*inventory.Platform, error)
 		platformData.Family = append(platformData.Family, "k8s-ingress")
 		platformData.Name = "k8s-ingress"
 		platformData.Title = "Kubernetes Ingress"
+	case "Service":
+		platformData.Family = append(platformData.Family, "k8s-service")
+		platformData.Name = "k8s-service"
+		platformData.Title = "Kubernetes Service"
 	case "Namespace":
 		platformData.Family = append(platformData.Family, "k8s-namespace")
 		platformData.Name = "k8s-namespace"
