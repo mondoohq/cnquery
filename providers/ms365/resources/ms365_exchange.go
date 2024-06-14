@@ -182,6 +182,9 @@ func (r *mqlMs365Exchangeonline) getOrg() (string, error) {
 func convertTeamsProtectionPolicy(r *mqlMs365Exchangeonline, data []*TeamsProtectionPolicy) ([]interface{}, error) {
 	var result []interface{}
 	for _, t := range data {
+		if data == nil {
+			continue
+		}
 		policy, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.teamsProtectionPolicy",
 			map[string]*llx.RawData{
 				"zapEnabled": llx.BoolData(t.ZapEnabled),
