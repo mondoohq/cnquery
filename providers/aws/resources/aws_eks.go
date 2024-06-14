@@ -364,36 +364,36 @@ func (a *mqlAwsEksCluster) addons() ([]interface{}, error) {
 		return nil, nil
 	}
 
-	for i := range addonsRes.Nodegroups {
-		nodegroup := addonsRes.Nodegroups[i]
+	for i := range addonsRes.Addons {
+		addon := addonsRes.Addons[i]
 		args := map[string]*llx.RawData{
-			"name":   llx.StringData(nodegroup),
+			"name":   llx.StringData(addon),
 			"region": llx.StringData(regionVal),
 		}
 
-		mqlNg, err := CreateResource(a.MqlRuntime, "aws.eks.nodegroup", args)
+		mqlNg, err := CreateResource(a.MqlRuntime, "aws.eks.addon", args)
 		if err != nil {
 			return nil, err
 		}
-		mqlNg.(*mqlAwsEksNodegroup).clusterName = a.Name.Data
-		mqlNg.(*mqlAwsEksNodegroup).region = regionVal
+		mqlNg.(*mqlAwsEksAddon).clusterName = a.Name.Data
+		mqlNg.(*mqlAwsEksAddon).region = regionVal
 		res = append(res, mqlNg)
 	}
 	return res, nil
 }
 
-type mqlAwsEksNodegroupInternal struct {
+type mqlAwsEksAddonInternal struct {
 	details     *ekstypes.Nodegroup
 	region      string
 	lock        sync.Mutex
 	clusterName string
 }
 
-func (a *mqlAwsEksNodegroup) id() (string, error) {
+func (a *mqlAwsEksAddon) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func (a *mqlAwsEksNodegroup) autoscalingGroups() ([]interface{}, error) {
+func (a *mqlAwsEksAddon) autoscalingGroups() ([]interface{}, error) {
 	ng, err := a.fetchDetails()
 	if err != nil {
 		return nil, err
@@ -418,7 +418,7 @@ func (a *mqlAwsEksNodegroup) autoscalingGroups() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsEksNodegroup) fetchDetails() (*ekstypes.Nodegroup, error) {
+func (a *mqlAwsEksAddon) fetchDetails() (*ekstypes.Nodegroup, error) {
 	if a.details != nil {
 		return a.details, nil
 	}
@@ -435,7 +435,7 @@ func (a *mqlAwsEksNodegroup) fetchDetails() (*ekstypes.Nodegroup, error) {
 	return desc.Nodegroup, nil
 }
 
-func (a *mqlAwsEksNodegroup) arn() (string, error) {
+func (a *mqlAwsEksAddon) arn() (string, error) {
 	ng, err := a.fetchDetails()
 	if err != nil {
 		return "", err
@@ -443,7 +443,7 @@ func (a *mqlAwsEksNodegroup) arn() (string, error) {
 	return *ng.NodegroupArn, nil
 }
 
-func (a *mqlAwsEksNodegroup) capacityType() (string, error) {
+func (a *mqlAwsEksAddon) capacityType() (string, error) {
 	ng, err := a.fetchDetails()
 	if err != nil {
 		return "", err
@@ -451,7 +451,7 @@ func (a *mqlAwsEksNodegroup) capacityType() (string, error) {
 	return string(ng.CapacityType), nil
 }
 
-func (a *mqlAwsEksNodegroup) status() (string, error) {
+func (a *mqlAwsEksAddon) status() (string, error) {
 	ng, err := a.fetchDetails()
 	if err != nil {
 		return "", err
@@ -459,7 +459,7 @@ func (a *mqlAwsEksNodegroup) status() (string, error) {
 	return string(ng.Status), nil
 }
 
-func (a *mqlAwsEksNodegroup) amiType() (string, error) {
+func (a *mqlAwsEksAddon) amiType() (string, error) {
 	ng, err := a.fetchDetails()
 	if err != nil {
 		return "", err
@@ -467,7 +467,7 @@ func (a *mqlAwsEksNodegroup) amiType() (string, error) {
 	return string(ng.AmiType), nil
 }
 
-func (a *mqlAwsEksNodegroup) diskSize() (int64, error) {
+func (a *mqlAwsEksAddon) diskSize() (int64, error) {
 	ng, err := a.fetchDetails()
 	if err != nil {
 		return 0, err
@@ -475,7 +475,7 @@ func (a *mqlAwsEksNodegroup) diskSize() (int64, error) {
 	return int64(*ng.DiskSize), nil
 }
 
-func (a *mqlAwsEksNodegroup) createdAt() (*time.Time, error) {
+func (a *mqlAwsEksAddon) createdAt() (*time.Time, error) {
 	ng, err := a.fetchDetails()
 	if err != nil {
 		return nil, err
@@ -483,7 +483,7 @@ func (a *mqlAwsEksNodegroup) createdAt() (*time.Time, error) {
 	return ng.CreatedAt, nil
 }
 
-func (a *mqlAwsEksNodegroup) modifiedAt() (*time.Time, error) {
+func (a *mqlAwsEksAddon) modifiedAt() (*time.Time, error) {
 	ng, err := a.fetchDetails()
 	if err != nil {
 		return nil, err
@@ -491,7 +491,7 @@ func (a *mqlAwsEksNodegroup) modifiedAt() (*time.Time, error) {
 	return ng.ModifiedAt, nil
 }
 
-func (a *mqlAwsEksNodegroup) scalingConfig() (map[string]interface{}, error) {
+func (a *mqlAwsEksAddon) scalingConfig() (map[string]interface{}, error) {
 	ng, err := a.fetchDetails()
 	if err != nil {
 		return nil, err
@@ -499,7 +499,7 @@ func (a *mqlAwsEksNodegroup) scalingConfig() (map[string]interface{}, error) {
 	return convert.JsonToDict(ng.ScalingConfig)
 }
 
-func (a *mqlAwsEksNodegroup) instanceTypes() ([]interface{}, error) {
+func (a *mqlAwsEksAddon) instanceTypes() ([]interface{}, error) {
 	ng, err := a.fetchDetails()
 	if err != nil {
 		return nil, err
@@ -511,7 +511,7 @@ func (a *mqlAwsEksNodegroup) instanceTypes() ([]interface{}, error) {
 	return s, nil
 }
 
-func (a *mqlAwsEksNodegroup) labels() (map[string]interface{}, error) {
+func (a *mqlAwsEksAddon) labels() (map[string]interface{}, error) {
 	ng, err := a.fetchDetails()
 	if err != nil {
 		return nil, err
@@ -523,7 +523,7 @@ func (a *mqlAwsEksNodegroup) labels() (map[string]interface{}, error) {
 	return new, nil
 }
 
-func (a *mqlAwsEksNodegroup) tags() (map[string]interface{}, error) {
+func (a *mqlAwsEksAddon) tags() (map[string]interface{}, error) {
 	ng, err := a.fetchDetails()
 	if err != nil {
 		return nil, err
@@ -535,7 +535,7 @@ func (a *mqlAwsEksNodegroup) tags() (map[string]interface{}, error) {
 	return new, nil
 }
 
-func (a *mqlAwsEksNodegroup) nodeRole() (*mqlAwsIamRole, error) {
+func (a *mqlAwsEksAddon) nodeRole() (*mqlAwsIamRole, error) {
 	ng, err := a.fetchDetails()
 	if err != nil {
 		return nil, err
