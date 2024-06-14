@@ -79,9 +79,14 @@ func (a *mqlAwsIam) credentialReport() ([]interface{}, error) {
 		if errors.As(err, &awsFailErr) {
 			return nil, errors.Wrap(err, "could not gather aws iam credential report")
 		}
+		var ae smithy.APIError
+		if errors.As(err, &ae) {
+			if ae.ErrorCode() == "LimitExceeded" {
+				return nil, errors.Wrap(err, "could not gather aws iam credential report, rate limit exceeded")
+			}
+		}
 
 		// if we have an error and it is not 500 we generate a report
-		var ae smithy.APIError
 		if errors.As(err, &ae) {
 			if ae.ErrorCode() == "ReportNotPresent" {
 				// generate a new report
