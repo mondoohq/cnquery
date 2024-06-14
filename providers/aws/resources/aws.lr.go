@@ -25283,7 +25283,7 @@ func createAwsEksNodegroup(runtime *plugin.Runtime, args map[string]*llx.RawData
 	}
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("aws.eks.nodegroup", res.__id)
+		args, err = runtime.ResourceFromRecording("aws.eks.addon", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -25293,71 +25293,71 @@ func createAwsEksNodegroup(runtime *plugin.Runtime, args map[string]*llx.RawData
 	return res, nil
 }
 
-func (c *mqlAwsEksNodegroup) MqlName() string {
-	return "aws.eks.nodegroup"
+func (c *mqlAwsEksAddon) MqlName() string {
+	return "aws.eks.addon"
 }
 
-func (c *mqlAwsEksNodegroup) MqlID() string {
+func (c *mqlAwsEksAddon) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsEksNodegroup) GetName() *plugin.TValue[string] {
+func (c *mqlAwsEksAddon) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlAwsEksNodegroup) GetArn() *plugin.TValue[string] {
+func (c *mqlAwsEksAddon) GetArn() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Arn, func() (string, error) {
 		return c.arn()
 	})
 }
 
-func (c *mqlAwsEksNodegroup) GetRegion() *plugin.TValue[string] {
+func (c *mqlAwsEksAddon) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
-func (c *mqlAwsEksNodegroup) GetCreatedAt() *plugin.TValue[*time.Time] {
+func (c *mqlAwsEksAddon) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
 		return c.createdAt()
 	})
 }
 
-func (c *mqlAwsEksNodegroup) GetModifiedAt() *plugin.TValue[*time.Time] {
+func (c *mqlAwsEksAddon) GetModifiedAt() *plugin.TValue[*time.Time] {
 	return plugin.GetOrCompute[*time.Time](&c.ModifiedAt, func() (*time.Time, error) {
 		return c.modifiedAt()
 	})
 }
 
-func (c *mqlAwsEksNodegroup) GetStatus() *plugin.TValue[string] {
+func (c *mqlAwsEksAddon) GetStatus() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
 		return c.status()
 	})
 }
 
-func (c *mqlAwsEksNodegroup) GetCapacityType() *plugin.TValue[string] {
+func (c *mqlAwsEksAddon) GetCapacityType() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.CapacityType, func() (string, error) {
 		return c.capacityType()
 	})
 }
 
-func (c *mqlAwsEksNodegroup) GetScalingConfig() *plugin.TValue[interface{}] {
+func (c *mqlAwsEksAddon) GetScalingConfig() *plugin.TValue[interface{}] {
 	return plugin.GetOrCompute[interface{}](&c.ScalingConfig, func() (interface{}, error) {
 		return c.scalingConfig()
 	})
 }
 
-func (c *mqlAwsEksNodegroup) GetInstanceTypes() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsEksAddon) GetInstanceTypes() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.InstanceTypes, func() ([]interface{}, error) {
 		return c.instanceTypes()
 	})
 }
 
-func (c *mqlAwsEksNodegroup) GetAmiType() *plugin.TValue[string] {
+func (c *mqlAwsEksAddon) GetAmiType() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.AmiType, func() (string, error) {
 		return c.amiType()
 	})
 }
 
-func (c *mqlAwsEksNodegroup) GetNodeRole() *plugin.TValue[*mqlAwsIamRole] {
+func (c *mqlAwsEksAddon) GetNodeRole() *plugin.TValue[*mqlAwsIamRole] {
 	return plugin.GetOrCompute[*mqlAwsIamRole](&c.NodeRole, func() (*mqlAwsIamRole, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eks.nodegroup", c.__id, "nodeRole")
@@ -25373,25 +25373,25 @@ func (c *mqlAwsEksNodegroup) GetNodeRole() *plugin.TValue[*mqlAwsIamRole] {
 	})
 }
 
-func (c *mqlAwsEksNodegroup) GetDiskSize() *plugin.TValue[int64] {
+func (c *mqlAwsEksAddon) GetDiskSize() *plugin.TValue[int64] {
 	return plugin.GetOrCompute[int64](&c.DiskSize, func() (int64, error) {
 		return c.diskSize()
 	})
 }
 
-func (c *mqlAwsEksNodegroup) GetLabels() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsEksAddon) GetLabels() *plugin.TValue[map[string]interface{}] {
 	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
 		return c.labels()
 	})
 }
 
-func (c *mqlAwsEksNodegroup) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsEksAddon) GetTags() *plugin.TValue[map[string]interface{}] {
 	return plugin.GetOrCompute[map[string]interface{}](&c.Tags, func() (map[string]interface{}, error) {
 		return c.tags()
 	})
 }
 
-func (c *mqlAwsEksNodegroup) GetAutoscalingGroups() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsEksAddon) GetAutoscalingGroups() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.AutoscalingGroups, func() ([]interface{}, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eks.nodegroup", c.__id, "autoscalingGroups")
