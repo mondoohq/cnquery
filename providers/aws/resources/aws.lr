@@ -3128,4 +3128,6 @@ private aws.eks.cluster @defaults("arn version status") {
   createdAt time
   // List of EKS node groups
   nodeGroups() []aws.eks.nodegroup
+  // List of EKS addons
+  addons() []aws.eks.addons
 }
