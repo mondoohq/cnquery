@@ -25246,7 +25246,7 @@ func (c *mqlAwsEks) GetClusters() *plugin.TValue[[]interface{}] {
 	})
 }
 
-// mqlAwsEksNodegroup for the aws.eks.addon resource
+// mqlAwsEksAddon for the aws.eks.addon resource
 type mqlAwsEksAddon struct {
 	MqlRuntime *plugin.Runtime
 	__id string
@@ -25265,8 +25265,8 @@ type mqlAwsEksAddon struct {
 }
 
 // createAwsEksNodegroup creates a new instance of this resource
-func createAwsEksNodegroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlAwsEksNodegroup{
+func createAwsEksAddon(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEksAddon{
 		MqlRuntime: runtime,
 	}
 
@@ -25333,6 +25333,12 @@ func (c *mqlAwsEksAddon) GetStatus() *plugin.TValue[string] {
 	})
 }
 
+func (c *mqlAwsEksAddon) GetTags() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Tags, func() (map[string]interface{}, error) {
+		return c.tags()
+	})
+}
+
 func (c *mqlAwsEksAddon) GetCapacityType() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.CapacityType, func() (string, error) {
 		return c.capacityType()
@@ -25385,11 +25391,6 @@ func (c *mqlAwsEksAddon) GetLabels() *plugin.TValue[map[string]interface{}] {
 	})
 }
 
-func (c *mqlAwsEksAddon) GetTags() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Tags, func() (map[string]interface{}, error) {
-		return c.tags()
-	})
-}
 
 func (c *mqlAwsEksAddon) GetAutoscalingGroups() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.AutoscalingGroups, func() ([]interface{}, error) {
