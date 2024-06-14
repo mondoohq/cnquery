@@ -443,36 +443,12 @@ func (a *mqlAwsEksAddon) arn() (string, error) {
 	return *ng.AddonArn, nil
 }
 
-func (a *mqlAwsEksAddon) capacityType() (string, error) {
-	ng, err := a.fetchDetails()
-	if err != nil {
-		return "", err
-	}
-	return string(ng.CapacityType), nil
-}
-
 func (a *mqlAwsEksAddon) status() (string, error) {
 	ng, err := a.fetchDetails()
 	if err != nil {
 		return "", err
 	}
 	return string(ng.Status), nil
-}
-
-func (a *mqlAwsEksAddon) amiType() (string, error) {
-	ng, err := a.fetchDetails()
-	if err != nil {
-		return "", err
-	}
-	return string(ng.AmiType), nil
-}
-
-func (a *mqlAwsEksAddon) diskSize() (int64, error) {
-	ng, err := a.fetchDetails()
-	if err != nil {
-		return 0, err
-	}
-	return int64(*ng.DiskSize), nil
 }
 
 func (a *mqlAwsEksAddon) createdAt() (*time.Time, error) {
@@ -491,38 +467,6 @@ func (a *mqlAwsEksAddon) modifiedAt() (*time.Time, error) {
 	return ng.ModifiedAt, nil
 }
 
-func (a *mqlAwsEksAddon) scalingConfig() (map[string]interface{}, error) {
-	ng, err := a.fetchDetails()
-	if err != nil {
-		return nil, err
-	}
-	return convert.JsonToDict(ng.ScalingConfig)
-}
-
-func (a *mqlAwsEksAddon) instanceTypes() ([]interface{}, error) {
-	ng, err := a.fetchDetails()
-	if err != nil {
-		return nil, err
-	}
-	s := []interface{}{}
-	for i := range ng.InstanceTypes {
-		s = append(s, ng.InstanceTypes[i])
-	}
-	return s, nil
-}
-
-func (a *mqlAwsEksAddon) labels() (map[string]interface{}, error) {
-	ng, err := a.fetchDetails()
-	if err != nil {
-		return nil, err
-	}
-	new := make(map[string]interface{})
-	for k, v := range ng.Labels {
-		new[k] = v
-	}
-	return new, nil
-}
-
 func (a *mqlAwsEksAddon) tags() (map[string]interface{}, error) {
 	ng, err := a.fetchDetails()
 	if err != nil {
@@ -535,21 +479,34 @@ func (a *mqlAwsEksAddon) tags() (map[string]interface{}, error) {
 	return new, nil
 }
 
-func (a *mqlAwsEksAddon) nodeRole() (*mqlAwsIamRole, error) {
+func (a *mqlAwsEksAddon) addonVersion() (string, error) {
 	ng, err := a.fetchDetails()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	if ng.NodeRole == nil {
-		a.NodeRole.State = plugin.StateIsNull | plugin.StateIsSet
-		return nil, nil
-	}
-	mqlIam, err := NewResource(a.MqlRuntime, "aws.iam.role",
-		map[string]*llx.RawData{
-			"arn": llx.StringDataPtr(ng.NodeRole),
-		})
+	return string(ng.addonVersion), nil
+}
+
+func (a *mqlAwsEksAddon) publisher() (string, error) {
+	ng, err := a.fetchDetails()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return mqlIam.(*mqlAwsIamRole), nil
+	return string(ng.publisher), nil
+}
+
+func (a *mqlAwsEksAddon) owner() (string, error) {
+	ng, err := a.fetchDetails()
+	if err != nil {
+		return "", err
+	}
+	return string(ng.owner), nil
+}
+
+func (a *mqlAwsEksAddon) configurationValues() (string, error) {
+	ng, err := a.fetchDetails()
+	if err != nil {
+		return "", err
+	}
+	return string(ng.configurationValues), nil
 }
