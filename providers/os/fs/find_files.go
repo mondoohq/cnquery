@@ -12,25 +12,13 @@ import (
 )
 
 func FindFiles(iofs fs.FS, from string, r *regexp.Regexp, typ string, perm *uint32) ([]string, error) {
-	matcher := createFindFilesMatcher(typ, r)
+	matcher := createFindFilesMatcher(iofs, typ, r, perm)
 	matchedPaths := []string{}
 	err := fs.WalkDir(iofs, from, func(p string, d fs.DirEntry, err error) error {
 		if err := handleFsError(err); err != nil {
 			return err
 		}
 		if matcher.Match(p, d.Type()) {
-			// If we have a permission filter, match on permissions too
-			if perm != nil {
-				info, err := fs.Stat(iofs, p)
-				if err := handleFsError(err); err != nil {
-					return err
-				}
-
-				// If the permissions don't match continue
-				if uint32(info.Mode().Perm())&*perm == 0 {
-					return nil
-				}
-			}
 			matchedPaths = append(matchedPaths, p)
 		}
 		return nil
@@ -57,13 +45,16 @@ func handleFsError(err error) error {
 type findFilesMatcher struct {
 	types []byte
 	r     *regexp.Regexp
+	perm  *uint32
+	iofs  fs.FS
 }
 
 func (m findFilesMatcher) Match(path string, t fs.FileMode) bool {
 	matchesType := m.matchesType(t)
 	matchesRegex := m.matchesRegex(path)
+	matchesPerm := m.matchesPerm(path)
 
-	return matchesType && matchesRegex
+	return matchesType && matchesRegex && matchesPerm
 }
 
 func (m findFilesMatcher) matchesRegex(path string) bool {
@@ -103,7 +94,23 @@ func (m findFilesMatcher) matchesType(entryType fs.FileMode) bool {
 	return false
 }
 
-func createFindFilesMatcher(typeStr string, r *regexp.Regexp) findFilesMatcher {
+func (m findFilesMatcher) matchesPerm(path string) bool {
+	if m.perm == nil {
+		return true
+	}
+	info, err := fs.Stat(m.iofs, path)
+	if err != nil {
+		return false
+	}
+
+	// If the permissions don't match continue
+	if uint32(info.Mode().Perm())&*m.perm == 0 {
+		return false
+	}
+	return true
+}
+
+func createFindFilesMatcher(iofs fs.FS, typeStr string, r *regexp.Regexp, perm *uint32) findFilesMatcher {
 	allowed := []byte{}
 	types := strings.Split(typeStr, ",")
 	for _, t := range types {
@@ -120,5 +127,7 @@ func createFindFilesMatcher(typeStr string, r *regexp.Regexp) findFilesMatcher {
 	return findFilesMatcher{
 		types: allowed,
 		r:     r,
+		perm:  perm,
+		iofs:  iofs,
 	}
 }
