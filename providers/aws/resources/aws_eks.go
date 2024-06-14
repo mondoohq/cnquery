@@ -351,7 +351,7 @@ func (a *mqlAwsEksCluster) addons() ([]interface{}, error) {
 	ctx := context.Background()
 	res := []interface{}{}
 
-	addonsRes, err := svc.ListNodegroups(ctx, &eks.ListNodegroupsInput{ClusterName: aws.String(a.Name.Data)})
+	addonsRes, err := svc.ListAddonsInput(ctx, &eks.ListAddonsInputInput{ClusterName: aws.String(a.Name.Data)})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
 			log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
