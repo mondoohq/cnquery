@@ -383,7 +383,7 @@ func (a *mqlAwsEksCluster) addons() ([]interface{}, error) {
 }
 
 type mqlAwsEksAddonInternal struct {
-	details     *ekstypes.Nodegroup
+	details     *ekstypes.Addon
 	region      string
 	lock        sync.Mutex
 	clusterName string
@@ -418,7 +418,7 @@ func (a *mqlAwsEksAddon) autoscalingGroups() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsEksAddon) fetchDetails() (*ekstypes.Nodegroup, error) {
+func (a *mqlAwsEksAddon) fetchDetails() (*ekstypes.Addon, error) {
 	if a.details != nil {
 		return a.details, nil
 	}
@@ -427,12 +427,12 @@ func (a *mqlAwsEksAddon) fetchDetails() (*ekstypes.Nodegroup, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	ctx := context.Background()
 	svc := conn.Eks(a.region)
-	desc, err := svc.DescribeNodegroup(ctx, &eks.DescribeNodegroupInput{NodegroupName: aws.String(a.Name.Data), ClusterName: aws.String(a.clusterName)})
+	desc, err := svc.DescribeAddon(ctx, &eks.DescribeAddonInput{AddonName: aws.String(a.Name.Data), ClusterName: aws.String(a.clusterName)})
 	if err != nil {
 		return nil, err
 	}
-	a.details = desc.Nodegroup
-	return desc.Nodegroup, nil
+	a.details = desc.Addon
+	return desc.Addon, nil
 }
 
 func (a *mqlAwsEksAddon) arn() (string, error) {
@@ -440,7 +440,7 @@ func (a *mqlAwsEksAddon) arn() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return *ng.NodegroupArn, nil
+	return *ng.AddonArn, nil
 }
 
 func (a *mqlAwsEksAddon) capacityType() (string, error) {
