@@ -64,9 +64,10 @@ func TestFindFilesMatcher(t *testing.T) {
 					excludeTypes = append(excludeTypes, string(b))
 				}
 			}
+			fs := afero.IOFS{Fs: afero.NewMemMapFs()}
 			t.Run(fmt.Sprintf("%s matcher", string(tc.matches)), func(t *testing.T) {
-				exclusionMatcher := createFindFilesMatcher(strings.Join(excludeTypes, ","), nil)
-				exactMatcher := createFindFilesMatcher(string(tc.matches), nil)
+				exclusionMatcher := createFindFilesMatcher(fs, strings.Join(excludeTypes, ","), nil, nil)
+				exactMatcher := createFindFilesMatcher(fs, string(tc.matches), nil, nil)
 				assert.True(t, exactMatcher.Match("/foo", tc.typ), "exact matcher failed to match")
 				assert.False(t, exclusionMatcher.Match("/foo", tc.typ), "exclusion matcher matched")
 			})
@@ -75,7 +76,8 @@ func TestFindFilesMatcher(t *testing.T) {
 
 	t.Run("regex", func(t *testing.T) {
 		t.Run("any type", func(t *testing.T) {
-			exactMatcher := createFindFilesMatcher("", regexp.MustCompile("foo.*"))
+			fs := afero.IOFS{Fs: afero.NewMemMapFs()}
+			exactMatcher := createFindFilesMatcher(fs, "", regexp.MustCompile("foo.*"), nil)
 
 			for _, m := range possibleModes {
 				t.Run(fmt.Sprintf("mode %s", m.String()), func(t *testing.T) {
@@ -87,7 +89,7 @@ func TestFindFilesMatcher(t *testing.T) {
 		})
 
 		t.Run("specific type", func(t *testing.T) {
-			exactMatcher := createFindFilesMatcher("f", regexp.MustCompile("foo.*"))
+			exactMatcher := createFindFilesMatcher(afero.IOFS{Fs: afero.NewMemMapFs()}, "f", regexp.MustCompile("foo.*"), nil)
 
 			assert.False(t, exactMatcher.Match("foobar", fs.ModeDir))
 			assert.True(t, exactMatcher.Match("foobar", fs.ModePerm))
@@ -124,6 +126,7 @@ func TestFindFilesMatcher(t *testing.T) {
 				matches: 'p',
 			},
 		}
+		fs := afero.IOFS{Fs: afero.NewMemMapFs()}
 		for _, tc := range testCases {
 			excludeTypes := []string{}
 			for _, b := range possibleTypes {
@@ -132,7 +135,7 @@ func TestFindFilesMatcher(t *testing.T) {
 				}
 			}
 			t.Run(fmt.Sprintf("%s matcher", string(tc.matches)), func(t *testing.T) {
-				exactMatcher := createFindFilesMatcher("", nil)
+				exactMatcher := createFindFilesMatcher(fs, "", nil, nil)
 				assert.True(t, exactMatcher.Match("/foo", tc.typ), "matcher failed to match")
 			})
 		}
@@ -147,17 +150,25 @@ func TestFindFiles(t *testing.T) {
 	mkFile(t, fs, "root/a/file1")
 	mkFile(t, fs, "root/a/file2")
 	mkFile(t, fs, "root/b/file1")
+	mkFile(t, fs, "root/c/file4")
+	require.NoError(t, fs.Chmod("root/c/file4", 0o002))
 
-	rootAFiles, err := FindFiles(afero.NewIOFS(fs), "root/a", nil, "f")
+	rootAFiles, err := FindFiles(afero.NewIOFS(fs), "root/a", nil, "f", nil)
 	require.NoError(t, err)
 	assert.ElementsMatch(t, rootAFiles, []string{"root/a/file1", "root/a/file2"})
 
-	rootAFilesAndDir, err := FindFiles(afero.NewIOFS(fs), "root/a", nil, "f,d")
+	rootAFilesAndDir, err := FindFiles(afero.NewIOFS(fs), "root/a", nil, "f,d", nil)
 	require.NoError(t, err)
 	assert.ElementsMatch(t, rootAFilesAndDir, []string{"root/a", "root/a/file1", "root/a/file2"})
 
-	rootBFiles, err := FindFiles(afero.NewIOFS(fs), "root", regexp.MustCompile("root/b.*"), "f")
+	rootBFiles, err := FindFiles(afero.NewIOFS(fs), "root", regexp.MustCompile("root/b.*"), "f", nil)
+	require.NoError(t, err)
 	assert.ElementsMatch(t, rootBFiles, []string{"root/b/file1"})
+
+	perm := uint32(0o002)
+	permFiles, err := FindFiles(afero.NewIOFS(fs), "root", nil, "f", &perm)
+	require.NoError(t, err)
+	assert.ElementsMatch(t, permFiles, []string{"root/c/file4"})
 }
 
 func mkFile(t *testing.T, fs afero.Fs, name string) {

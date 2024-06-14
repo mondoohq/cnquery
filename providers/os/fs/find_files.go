@@ -9,16 +9,15 @@ import (
 	"os"
 	"regexp"
 	"strings"
+
+	"golang.org/x/sys/unix"
 )
 
-func FindFiles(iofs fs.FS, from string, r *regexp.Regexp, typ string) ([]string, error) {
-	matcher := createFindFilesMatcher(typ, r)
+func FindFiles(iofs fs.FS, from string, r *regexp.Regexp, typ string, perm *uint32) ([]string, error) {
+	matcher := createFindFilesMatcher(iofs, typ, r, perm)
 	matchedPaths := []string{}
 	err := fs.WalkDir(iofs, from, func(p string, d fs.DirEntry, err error) error {
-		if err != nil {
-			if errors.Is(err, os.ErrPermission) {
-				return nil
-			}
+		if err := handleFsError(err); err != nil {
 			return err
 		}
 		if matcher.Match(p, d.Type()) {
@@ -32,16 +31,32 @@ func FindFiles(iofs fs.FS, from string, r *regexp.Regexp, typ string) ([]string,
 	return matchedPaths, nil
 }
 
+// handleFsError checks if the error is a permission denied or non-existent file error and returns nil in such cases.
+func handleFsError(err error) error {
+	if err != nil {
+		// Check for denied permissions and non-existent files. This can sometimes happen, especially for procfs
+		// We don't want to error out in such cases. We can safely skip over the file.
+		if errors.Is(err, os.ErrPermission) || errors.Is(err, os.ErrNotExist) || errors.Is(err, os.ErrInvalid) || errors.Is(err, unix.EINVAL) {
+			return nil
+		}
+		return err
+	}
+	return nil
+}
+
 type findFilesMatcher struct {
 	types []byte
 	r     *regexp.Regexp
+	perm  *uint32
+	iofs  fs.FS
 }
 
 func (m findFilesMatcher) Match(path string, t fs.FileMode) bool {
 	matchesType := m.matchesType(t)
 	matchesRegex := m.matchesRegex(path)
+	matchesPerm := m.matchesPerm(path)
 
-	return matchesType && matchesRegex
+	return matchesType && matchesRegex && matchesPerm
 }
 
 func (m findFilesMatcher) matchesRegex(path string) bool {
@@ -81,7 +96,23 @@ func (m findFilesMatcher) matchesType(entryType fs.FileMode) bool {
 	return false
 }
 
-func createFindFilesMatcher(typeStr string, r *regexp.Regexp) findFilesMatcher {
+func (m findFilesMatcher) matchesPerm(path string) bool {
+	if m.perm == nil {
+		return true
+	}
+	info, err := fs.Stat(m.iofs, path)
+	if err != nil {
+		return false
+	}
+
+	// If the permissions don't match continue
+	if uint32(info.Mode().Perm())&*m.perm == 0 {
+		return false
+	}
+	return true
+}
+
+func createFindFilesMatcher(iofs fs.FS, typeStr string, r *regexp.Regexp, perm *uint32) findFilesMatcher {
 	allowed := []byte{}
 	types := strings.Split(typeStr, ",")
 	for _, t := range types {
@@ -98,5 +129,7 @@ func createFindFilesMatcher(typeStr string, r *regexp.Regexp) findFilesMatcher {
 	return findFilesMatcher{
 		types: allowed,
 		r:     r,
+		perm:  perm,
+		iofs:  iofs,
 	}
 }
