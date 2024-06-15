@@ -351,7 +351,7 @@ func (a *mqlAwsEksCluster) addons() ([]interface{}, error) {
 	ctx := context.Background()
 	res := []interface{}{}
 
-	addonsRes, err := svc.ListAddonsInput(ctx, &eks.ListAddonsInput{ClusterName: aws.String(a.Name.Data)})
+	addonsRes, err := svc.ListAddons(ctx, &eks.ListAddonsInput{ClusterName: aws.String(a.Name.Data)})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
 			log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -459,7 +459,7 @@ func (a *mqlAwsEksAddon) addonVersion() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return string(ao.AddonVersion), nil
+	return *ao.AddonVersion, nil
 }
 
 func (a *mqlAwsEksAddon) publisher() (string, error) {
@@ -467,7 +467,7 @@ func (a *mqlAwsEksAddon) publisher() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return string(ao.Publisher), nil
+	return *ao.Publisher, nil
 }
 
 func (a *mqlAwsEksAddon) owner() (string, error) {
@@ -475,7 +475,7 @@ func (a *mqlAwsEksAddon) owner() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return string(ao.Owner), nil
+	return *ao.Owner, nil
 }
 
 func (a *mqlAwsEksAddon) configurationValues() (string, error) {
@@ -483,5 +483,5 @@ func (a *mqlAwsEksAddon) configurationValues() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return string(ao.ConfigurationValues), nil
+	return *ao.ConfigurationValues, nil
 }

@@ -714,13 +714,13 @@ func init() {
 			// to override args, implement: initAwsEks(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEks,
 		},
-		"aws.eks.addon": {
-			// to override args, implement: initAwsEksNodegroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createAwsEksAddon,
-		},
 		"aws.eks.nodegroup": {
 			// to override args, implement: initAwsEksNodegroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEksNodegroup,
+		},
+		"aws.eks.addon": {
+			// to override args, implement: initAwsEksAddon(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEksAddon,
 		},
 		"aws.eks.cluster": {
 			// to override args, implement: initAwsEksCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4322,6 +4322,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.eks.nodegroup.autoscalingGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksNodegroup).GetAutoscalingGroups()).ToDataRes(types.Array(types.Resource("aws.autoscaling.group")))
 	},
+	"aws.eks.addon.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksAddon).GetName()).ToDataRes(types.String)
+	},
+	"aws.eks.addon.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksAddon).GetArn()).ToDataRes(types.String)
+	},
+	"aws.eks.addon.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksAddon).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.eks.addon.addonVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksAddon).GetAddonVersion()).ToDataRes(types.String)
+	},
+	"aws.eks.addon.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksAddon).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.eks.addon.modifiedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksAddon).GetModifiedAt()).ToDataRes(types.Time)
+	},
+	"aws.eks.addon.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksAddon).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.eks.addon.publisher": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksAddon).GetPublisher()).ToDataRes(types.String)
+	},
+	"aws.eks.addon.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksAddon).GetOwner()).ToDataRes(types.String)
+	},
+	"aws.eks.addon.configurationValues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksAddon).GetConfigurationValues()).ToDataRes(types.String)
+	},
 	"aws.eks.cluster.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksCluster).GetName()).ToDataRes(types.String)
 	},
@@ -4363,6 +4393,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.eks.cluster.nodeGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksCluster).GetNodeGroups()).ToDataRes(types.Array(types.Resource("aws.eks.nodegroup")))
+	},
+	"aws.eks.cluster.addons": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksCluster).GetAddons()).ToDataRes(types.Array(types.Resource("aws.eks.addons")))
 	},
 }
 
@@ -9780,6 +9813,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsEksNodegroup).AutoscalingGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"aws.eks.addon.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsEksAddon).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.eks.addon.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksAddon).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eks.addon.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksAddon).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eks.addon.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksAddon).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eks.addon.addonVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksAddon).AddonVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eks.addon.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksAddon).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.eks.addon.modifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksAddon).ModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.eks.addon.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksAddon).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.eks.addon.publisher": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksAddon).Publisher, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eks.addon.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksAddon).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eks.addon.configurationValues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksAddon).ConfigurationValues, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.eks.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsEksCluster).__id, ok = v.Value.(string)
 			return
@@ -9838,6 +9915,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.eks.cluster.nodeGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEksCluster).NodeGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.eks.cluster.addons": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksCluster).Addons, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 }
@@ -25246,123 +25327,6 @@ func (c *mqlAwsEks) GetClusters() *plugin.TValue[[]interface{}] {
 	})
 }
 
-// mqlAwsEksAddon for the aws.eks.addon resource
-type mqlAwsEksAddon struct {
-	MqlRuntime *plugin.Runtime
-	__id string
-	mqlAwsEksAddonInternal
-	Name plugin.TValue[string]
-	Arn plugin.TValue[string]
-	Region plugin.TValue[string]
-	CreatedAt plugin.TValue[*time.Time]
-	ModifiedAt plugin.TValue[*time.Time]
-	Status plugin.TValue[string]
-	AddonVersion plugin.TValue[string]
-	Tags plugin.TValue[map[string]interface{}]
-	Publisher plugin.TValue[string]
-	Owner plugin.TValue[string]
-	ConfigurationValues plugin.TValue[string]
-}
-
-// createAwsEksNodegroup creates a new instance of this resource
-func createAwsEksAddon(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlAwsEksAddon{
-		MqlRuntime: runtime,
-	}
-
-	err := SetAllData(res, args)
-	if err != nil {
-		return res, err
-	}
-
-	if res.__id == "" {
-	res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("aws.eks.addon", res.__id)
-		if err != nil || args == nil {
-			return res, err
-		}
-		return res, SetAllData(res, args)
-	}
-
-	return res, nil
-}
-
-func (c *mqlAwsEksAddon) MqlName() string {
-	return "aws.eks.addon"
-}
-
-func (c *mqlAwsEksAddon) MqlID() string {
-	return c.__id
-}
-
-func (c *mqlAwsEksAddon) GetName() *plugin.TValue[string] {
-	return &c.Name
-}
-
-func (c *mqlAwsEksAddon) GetArn() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.Arn, func() (string, error) {
-		return c.arn()
-	})
-}
-
-func (c *mqlAwsEksAddon) GetRegion() *plugin.TValue[string] {
-	return &c.Region
-}
-
-func (c *mqlAwsEksAddon) GetCreatedAt() *plugin.TValue[*time.Time] {
-	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
-		return c.createdAt()
-	})
-}
-
-func (c *mqlAwsEksAddon) GetModifiedAt() *plugin.TValue[*time.Time] {
-	return plugin.GetOrCompute[*time.Time](&c.ModifiedAt, func() (*time.Time, error) {
-		return c.modifiedAt()
-	})
-}
-
-func (c *mqlAwsEksAddon) GetStatus() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
-		return c.status()
-	})
-}
-
-func (c *mqlAwsEksAddon) GetTags() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Tags, func() (map[string]interface{}, error) {
-		return c.tags()
-	})
-}
-
-func (c *mqlAwsEksAddon) GetAddonVersion() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.Arn, func() (string, error) {
-		return c.addonVersion()
-	})
-}
-
-func (c *mqlAwsEksAddon) GetPublisher() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.Arn, func() (string, error) {
-		return c.publisher()
-	})
-}
-
-func (c *mqlAwsEksAddon) GetOwner() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.Arn, func() (string, error) {
-		return c.owner()
-	})
-}
-
-func (c *mqlAwsEksAddon) GetConfigurationValues() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.Arn, func() (string, error) {
-		return c.configurationValues()
-	})
-}
-
 // mqlAwsEksNodegroup for the aws.eks.nodegroup resource
 type mqlAwsEksNodegroup struct {
 	MqlRuntime *plugin.Runtime
@@ -25528,6 +25492,108 @@ func (c *mqlAwsEksNodegroup) GetAutoscalingGroups() *plugin.TValue[[]interface{}
 	})
 }
 
+// mqlAwsEksAddon for the aws.eks.addon resource
+type mqlAwsEksAddon struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlAwsEksAddonInternal
+	Name plugin.TValue[string]
+	Arn plugin.TValue[string]
+	Status plugin.TValue[string]
+	AddonVersion plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
+	ModifiedAt plugin.TValue[*time.Time]
+	Tags plugin.TValue[map[string]interface{}]
+	Publisher plugin.TValue[string]
+	Owner plugin.TValue[string]
+	ConfigurationValues plugin.TValue[string]
+}
+
+// createAwsEksAddon creates a new instance of this resource
+func createAwsEksAddon(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEksAddon{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eks.addon", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEksAddon) MqlName() string {
+	return "aws.eks.addon"
+}
+
+func (c *mqlAwsEksAddon) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEksAddon) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsEksAddon) GetArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Arn, func() (string, error) {
+		return c.arn()
+	})
+}
+
+func (c *mqlAwsEksAddon) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsEksAddon) GetAddonVersion() *plugin.TValue[string] {
+	return &c.AddonVersion
+}
+
+func (c *mqlAwsEksAddon) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
+		return c.createdAt()
+	})
+}
+
+func (c *mqlAwsEksAddon) GetModifiedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.ModifiedAt, func() (*time.Time, error) {
+		return c.modifiedAt()
+	})
+}
+
+func (c *mqlAwsEksAddon) GetTags() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Tags, func() (map[string]interface{}, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsEksAddon) GetPublisher() *plugin.TValue[string] {
+	return &c.Publisher
+}
+
+func (c *mqlAwsEksAddon) GetOwner() *plugin.TValue[string] {
+	return &c.Owner
+}
+
+func (c *mqlAwsEksAddon) GetConfigurationValues() *plugin.TValue[string] {
+	return &c.ConfigurationValues
+}
+
 // mqlAwsEksCluster for the aws.eks.cluster resource
 type mqlAwsEksCluster struct {
 	MqlRuntime *plugin.Runtime
@@ -25547,6 +25613,7 @@ type mqlAwsEksCluster struct {
 	ResourcesVpcConfig plugin.TValue[interface{}]
 	CreatedAt plugin.TValue[*time.Time]
 	NodeGroups plugin.TValue[[]interface{}]
+	Addons plugin.TValue[[]interface{}]
 }
 
 // createAwsEksCluster creates a new instance of this resource
