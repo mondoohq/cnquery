@@ -3074,15 +3074,15 @@ private aws.eks.nodegroup @defaults("name scalingConfig.DesiredSize diskSize sta
 }
 
 // Amazon EKS add-on
-private aws.eks.addon @defaults("addonName clusterName addonVersion status") {
+private aws.eks.addon @defaults("name addonVersion status") {
   // The name of the add-on.
   name string
   // The Amazon Resource Name (ARN) of the add-on.
   arn() string
   // The status of the add-on
-  status string
+  status() string
   // The version of the add-on
-  addonVersion string
+  addonVersion() string
   // The Unix epoch timestamp at object creation.
   createdAt() time
   // The Unix epoch timestamp for the last modification to the object.
@@ -3090,11 +3090,11 @@ private aws.eks.addon @defaults("addonName clusterName addonVersion status") {
   // Tags for the EKS node group
   tags()  map[string]string
   // The publisher of the add-on.
-  publisher string
+  publisher() string
   // The owner of the add-on.
-  owner string
+  owner() string
   // The configuration values that you provided.
-  configurationValues string
+  configurationValues() string
 }
 
 
@@ -3129,5 +3129,5 @@ private aws.eks.cluster @defaults("arn version status") {
   // List of EKS node groups
   nodeGroups() []aws.eks.nodegroup
   // List of EKS addons
-  addons() []aws.eks.addons
+  addons() []aws.eks.addon
 }

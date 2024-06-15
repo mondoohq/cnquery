@@ -4395,7 +4395,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsEksCluster).GetNodeGroups()).ToDataRes(types.Array(types.Resource("aws.eks.nodegroup")))
 	},
 	"aws.eks.cluster.addons": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEksCluster).GetAddons()).ToDataRes(types.Array(types.Resource("aws.eks.addons")))
+		return (r.(*mqlAwsEksCluster).GetAddons()).ToDataRes(types.Array(types.Resource("aws.eks.addon")))
 	},
 }
 
@@ -25557,11 +25557,15 @@ func (c *mqlAwsEksAddon) GetArn() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsEksAddon) GetStatus() *plugin.TValue[string] {
-	return &c.Status
+	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
+		return c.status()
+	})
 }
 
 func (c *mqlAwsEksAddon) GetAddonVersion() *plugin.TValue[string] {
-	return &c.AddonVersion
+	return plugin.GetOrCompute[string](&c.AddonVersion, func() (string, error) {
+		return c.addonVersion()
+	})
 }
 
 func (c *mqlAwsEksAddon) GetCreatedAt() *plugin.TValue[*time.Time] {
@@ -25583,15 +25587,21 @@ func (c *mqlAwsEksAddon) GetTags() *plugin.TValue[map[string]interface{}] {
 }
 
 func (c *mqlAwsEksAddon) GetPublisher() *plugin.TValue[string] {
-	return &c.Publisher
+	return plugin.GetOrCompute[string](&c.Publisher, func() (string, error) {
+		return c.publisher()
+	})
 }
 
 func (c *mqlAwsEksAddon) GetOwner() *plugin.TValue[string] {
-	return &c.Owner
+	return plugin.GetOrCompute[string](&c.Owner, func() (string, error) {
+		return c.owner()
+	})
 }
 
 func (c *mqlAwsEksAddon) GetConfigurationValues() *plugin.TValue[string] {
-	return &c.ConfigurationValues
+	return plugin.GetOrCompute[string](&c.ConfigurationValues, func() (string, error) {
+		return c.configurationValues()
+	})
 }
 
 // mqlAwsEksCluster for the aws.eks.cluster resource

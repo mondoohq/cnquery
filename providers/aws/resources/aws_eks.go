@@ -367,8 +367,7 @@ func (a *mqlAwsEksCluster) addons() ([]interface{}, error) {
 	for i := range addonsRes.Addons {
 		addon := addonsRes.Addons[i]
 		args := map[string]*llx.RawData{
-			"name":   llx.StringData(addon),
-			"region": llx.StringData(regionVal),
+			"name": llx.StringData(addon),
 		}
 
 		mqlNg, err := CreateResource(a.MqlRuntime, "aws.eks.addon", args)
@@ -415,6 +414,9 @@ func (a *mqlAwsEksAddon) arn() (string, error) {
 	if err != nil {
 		return "", err
 	}
+	if ao.AddonArn == nil {
+		return "", nil
+	}
 	return *ao.AddonArn, nil
 }
 
@@ -459,6 +461,9 @@ func (a *mqlAwsEksAddon) addonVersion() (string, error) {
 	if err != nil {
 		return "", err
 	}
+	if ao.AddonVersion == nil {
+		return "", nil
+	}
 	return *ao.AddonVersion, nil
 }
 
@@ -466,6 +471,9 @@ func (a *mqlAwsEksAddon) publisher() (string, error) {
 	ao, err := a.fetchDetails()
 	if err != nil {
 		return "", err
+	}
+	if ao.Publisher == nil {
+		return "", nil
 	}
 	return *ao.Publisher, nil
 }
@@ -475,6 +483,9 @@ func (a *mqlAwsEksAddon) owner() (string, error) {
 	if err != nil {
 		return "", err
 	}
+	if ao.Owner == nil {
+		return "", nil
+	}
 	return *ao.Owner, nil
 }
 
@@ -482,6 +493,9 @@ func (a *mqlAwsEksAddon) configurationValues() (string, error) {
 	ao, err := a.fetchDetails()
 	if err != nil {
 		return "", err
+	}
+	if ao.ConfigurationValues == nil {
+		return "", nil
 	}
 	return *ao.ConfigurationValues, nil
 }
