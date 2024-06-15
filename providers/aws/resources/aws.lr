@@ -102,7 +102,7 @@ private aws.vpc.routetable.associations @defaults("routeTableAssociationId gatew
   main string
   // Unique ID of the route table
   routeTableId
-  // The subnet of the oute table association
+  // The subnet of the route table association
   subnet() aws.vpc.subnet
 }
 
