@@ -3075,7 +3075,7 @@ private aws.eks.nodegroup @defaults("name scalingConfig.DesiredSize diskSize sta
 
 // Amazon EKS add-on
 private aws.eks.addon @defaults("name addonVersion status") {
-  // The name of the add-on.
+  // The name of the add-on
   name string
   // The Amazon Resource Name (ARN) of the add-on.
   arn() string
