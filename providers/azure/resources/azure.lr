@@ -1058,46 +1058,46 @@ private azure.subscription.webService.appsiteconfig @defaults("id name") {
 private azure.subscription.sqlService {
   // Subscription identifier
   subscriptionId string
-  // List of SQL servers
+  // List of servers
   servers() []azure.subscription.sqlService.server
 }
 
-// Azure SQL server
-private azure.subscription.sqlService.server @defaults("name location") {
-  // SQL server ID
+// Azure SQL Database server
+private azure.subscription.sqlService.server @defaults("name location properties.version properties.state properties.fullyQualifiedDomainName") {
+  // SQL Database server ID
   id string
-  // SQL server name
+  // SQL Database server name
   name string
-  // SQL server location
+  // SQL Database server location
   location string
-  // SQL server tags
+  // SQL Database server tags
   tags map[string]string
-  // SQL server type
+  // SQL Database server type
   type string
-  // SQL server properties
+  // SQL Database server properties
   properties dict
-  // SQL server databases
+  // SQL Database server databases
   databases() []azure.subscription.sqlService.database
-  // SQL server firewall rules
+  // SQL Database server firewall rules
   firewallRules() []azure.subscription.sqlService.firewallrule
-  // SQL server AD administrators
+  // SQL Database server Entra ID administrators
   azureAdAdministrators() []azure.subscription.sqlService.server.administrator
-  // SQL server connection policy
+  // SQL Database server connection policy
   connectionPolicy() dict
-  // SQL server auditing policy
+  // SQL Database server auditing policy
   auditingPolicy() dict
-  // SQL server security alert policy
+  // SQL Database server security alert policy
   securityAlertPolicy() dict
-  // SQL server encryption protector
+  // SQL Database server encryption protector
   encryptionProtector() dict
-  // SQL server threat detection policy
+  // SQL Database server threat detection policy
   threatDetectionPolicy() dict
-  // SQL server vulnerability assessment settings
+  // SQL Database server vulnerability assessment settings
   vulnerabilityAssessmentSettings() azure.subscription.sqlService.server.vulnerabilityassessmentsettings
   virtualNetworkRules() []azure.subscription.sqlService.virtualNetworkRule
 }
 
-// Azure SQL server vulnerability assessment settings
+// Azure SQL Database server vulnerability assessment settings
 private azure.subscription.sqlService.server.vulnerabilityassessmentsettings {
   // ID of the vulnerability assessment
   id string
@@ -1119,7 +1119,7 @@ private azure.subscription.sqlService.server.vulnerabilityassessmentsettings {
   mailSubscriptionAdmins bool
 }
 
-// Azure SQL server administrator
+// Azure SQL Database server administrator
 private azure.subscription.sqlService.server.administrator @defaults("id name") {
   // SQL administrator ID
   id string
@@ -1137,8 +1137,8 @@ private azure.subscription.sqlService.server.administrator @defaults("id name") 
   tenantId string
 }
 
-// Azure SQL server database
-private azure.subscription.sqlService.database @defaults("id name") {
+// Azure SQL Database service database
+private azure.subscription.sqlService.database @defaults("name edition zoneRedundant status creationDate maxSizeBytes earliestRestoreDate") {
   // SQL database ID
   id string
   // SQL database name
@@ -1183,7 +1183,7 @@ private azure.subscription.sqlService.database @defaults("id name") {
   readScale string
   // SQL database sample name
   sampleName string
-  // Whether SQL server is zone redundant
+  // Whether the database is zone redundant
   zoneRedundant bool
   // SQL database transparent data encryption
   transparentDataEncryption() dict
@@ -1199,7 +1199,7 @@ private azure.subscription.sqlService.database @defaults("id name") {
   usage() []azure.subscription.sqlService.databaseusage
 }
 
-// Azure SQL database usage
+// Azure SQL Database service database usage
 private azure.subscription.sqlService.databaseusage @defaults("id name") {
   // Database usage ID
   id string
@@ -1228,7 +1228,7 @@ private azure.subscription.postgreSqlService {
 }
 
 // Azure Database for PostgreSQL flexible server
-private azure.subscription.postgreSqlService.flexibleServer @defaults("name location properties.version properties.fullyQualifiedDomainName") {
+private azure.subscription.postgreSqlService.flexibleServer @defaults("name location properties.version properties.state properties.fullyQualifiedDomainName") {
   // PostgreSQL server ID
   id string
   // PostgreSQL server name
@@ -1382,7 +1382,7 @@ private azure.subscription.mySqlService.database @defaults("id name") {
 }
 
 // Azure Database for MySQL flexible server
-private azure.subscription.mySqlService.flexibleServer @defaults("name location properties.version properties.fullyQualifiedDomainName") {
+private azure.subscription.mySqlService.flexibleServer @defaults("name location properties.version properties.state properties.fullyQualifiedDomainName") {
   // MySQL flexible server ID
   id string
   // MySQL flexible server name
