@@ -42,32 +42,34 @@ func initGcpProjectComputeService(runtime *plugin.Runtime, args map[string]*llx.
 	return args, nil, nil
 }
 
-type mqlGcpProjectComputeServiceInternal struct {
-	serviceEnabled bool
-}
-
 func (g *mqlGcpProject) compute() (*mqlGcpProjectComputeService, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
 	}
 	projectId := g.Id.Data
 
-	res, err := CreateResource(g.MqlRuntime, "gcp.project.computeService", map[string]*llx.RawData{
+	res, err := NewResource(g.MqlRuntime, "gcp.project.computeService", map[string]*llx.RawData{
 		"projectId": llx.StringData(projectId),
 	})
 	if err != nil {
 		return nil, err
 	}
-
-	serviceEnabled, err := g.isServiceEnabled(service_compute)
-	if err != nil {
-		return nil, err
-	}
-
 	computeService := res.(*mqlGcpProjectComputeService)
-	computeService.serviceEnabled = serviceEnabled
-
 	return computeService, nil
+}
+
+func (g *mqlGcpProjectComputeService) enabled() (bool, error) {
+	gcpProjectRes, err := NewResource(g.MqlRuntime, "gcp.project", map[string]*llx.RawData{"id": llx.StringData(g.ProjectId.Data)})
+	if err != nil {
+		return false, err
+	}
+	gcpProject := gcpProjectRes.(*mqlGcpProject)
+
+	serviceEnabled, err := gcpProject.isServiceEnabled(service_compute)
+	if err != nil {
+		return false, err
+	}
+	return serviceEnabled, nil
 }
 
 func (g *mqlGcpProjectComputeService) id() (string, error) {
@@ -101,7 +103,7 @@ func initGcpProjectComputeServiceRegion(runtime *plugin.Runtime, args map[string
 
 func (g *mqlGcpProjectComputeService) regions() ([]interface{}, error) {
 	// when the service is not enabled, we return nil
-	if !g.serviceEnabled {
+	if !g.GetEnabled().Data {
 		return nil, nil
 	}
 
@@ -155,7 +157,7 @@ func (g *mqlGcpProjectComputeServiceZone) region() (interface{}, error) {
 
 func (g *mqlGcpProjectComputeService) zones() ([]interface{}, error) {
 	// when the service is not enabled, we return nil
-	if !g.serviceEnabled {
+	if !g.GetEnabled().Data {
 		return nil, nil
 	}
 
@@ -243,7 +245,7 @@ func newMqlMachineType(runtime *plugin.Runtime, entry *compute.MachineType, proj
 
 func (g *mqlGcpProjectComputeService) machineTypes() ([]interface{}, error) {
 	// when the service is not enabled, we return nil
-	if !g.serviceEnabled {
+	if !g.GetEnabled().Data {
 		return nil, nil
 	}
 
@@ -645,7 +647,7 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 
 func (g *mqlGcpProjectComputeService) instances() ([]interface{}, error) {
 	// when the service is not enabled, we return nil
-	if !g.serviceEnabled {
+	if !g.GetEnabled().Data {
 		return nil, nil
 	}
 
@@ -735,7 +737,7 @@ func (g *mqlGcpProjectComputeServiceDisk) zone() (interface{}, error) {
 
 func (g *mqlGcpProjectComputeService) disks() ([]interface{}, error) {
 	// when the service is not enabled, we return nil
-	if !g.serviceEnabled {
+	if !g.GetEnabled().Data {
 		return nil, nil
 	}
 
@@ -904,7 +906,7 @@ func initGcpProjectComputeServiceFirewall(runtime *plugin.Runtime, args map[stri
 
 func (g *mqlGcpProjectComputeService) firewalls() ([]interface{}, error) {
 	// when the service is not enabled, we return nil
-	if !g.serviceEnabled {
+	if !g.GetEnabled().Data {
 		return nil, nil
 	}
 
@@ -1000,7 +1002,7 @@ func (g *mqlGcpProjectComputeServiceSnapshot) sourceDisk() (interface{}, error) 
 
 func (g *mqlGcpProjectComputeService) snapshots() ([]interface{}, error) {
 	// when the service is not enabled, we return nil
-	if !g.serviceEnabled {
+	if !g.GetEnabled().Data {
 		return nil, nil
 	}
 
@@ -1119,7 +1121,7 @@ func (g *mqlGcpProjectComputeServiceImage) sourceDisk() (interface{}, error) {
 
 func (g *mqlGcpProjectComputeService) images() ([]interface{}, error) {
 	// when the service is not enabled, we return nil
-	if !g.serviceEnabled {
+	if !g.GetEnabled().Data {
 		return nil, nil
 	}
 
@@ -1259,7 +1261,7 @@ func initGcpProjectComputeServiceNetwork(runtime *plugin.Runtime, args map[strin
 
 func (g *mqlGcpProjectComputeService) networks() ([]interface{}, error) {
 	// when the service is not enabled, we return nil
-	if !g.serviceEnabled {
+	if !g.GetEnabled().Data {
 		return nil, nil
 	}
 
@@ -1355,7 +1357,7 @@ func initGcpProjectComputeServiceSubnetwork(runtime *plugin.Runtime, args map[st
 		}
 	}
 
-	obj, err := CreateResource(runtime, "gcp.project.computeService", map[string]*llx.RawData{
+	obj, err := NewResource(runtime, "gcp.project.computeService", map[string]*llx.RawData{
 		"projectId": llx.StringData(args["projectId"].Value.(string)),
 	})
 	if err != nil {
@@ -1516,7 +1518,7 @@ func newMqlSubnetwork(projectId string, runtime *plugin.Runtime, subnetwork *com
 
 func (g *mqlGcpProjectComputeService) subnetworks() ([]interface{}, error) {
 	// when the service is not enabled, we return nil
-	if !g.serviceEnabled {
+	if !g.GetEnabled().Data {
 		return nil, nil
 	}
 
@@ -1609,7 +1611,7 @@ func newMqlRouter(projectId string, region *mqlGcpProjectComputeServiceRegion, r
 
 func (g *mqlGcpProjectComputeService) routers() ([]interface{}, error) {
 	// when the service is not enabled, we return nil
-	if !g.serviceEnabled {
+	if !g.GetEnabled().Data {
 		return nil, nil
 	}
 
@@ -1676,7 +1678,7 @@ func (g *mqlGcpProjectComputeService) routers() ([]interface{}, error) {
 
 func (g *mqlGcpProjectComputeService) backendServices() ([]interface{}, error) {
 	// when the service is not enabled, we return nil
-	if !g.serviceEnabled {
+	if !g.GetEnabled().Data {
 		return nil, nil
 	}
 
@@ -1956,7 +1958,7 @@ func networkMode(n *compute.Network) string {
 
 func (g *mqlGcpProjectComputeService) addresses() ([]interface{}, error) {
 	// when the service is not enabled, we return nil
-	if !g.serviceEnabled {
+	if !g.GetEnabled().Data {
 		return nil, nil
 	}
 

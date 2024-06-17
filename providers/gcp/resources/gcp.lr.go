@@ -808,6 +808,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeService).GetProjectId()).ToDataRes(types.String)
 	},
+	"gcp.project.computeService.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeService).GetEnabled()).ToDataRes(types.Bool)
+	},
 	"gcp.project.computeService.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeService).GetInstances()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.instance")))
 	},
@@ -4438,6 +4441,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		},
 	"gcp.project.computeService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeService).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10429,8 +10436,9 @@ func (c *mqlGcpResourcemanagerBinding) GetRole() *plugin.TValue[string] {
 type mqlGcpProjectComputeService struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	mqlGcpProjectComputeServiceInternal
+	// optional: if you define mqlGcpProjectComputeServiceInternal it will be used here
 	ProjectId plugin.TValue[string]
+	Enabled plugin.TValue[bool]
 	Instances plugin.TValue[[]interface{}]
 	Snapshots plugin.TValue[[]interface{}]
 	Disks plugin.TValue[[]interface{}]
@@ -10486,6 +10494,12 @@ func (c *mqlGcpProjectComputeService) MqlID() string {
 
 func (c *mqlGcpProjectComputeService) GetProjectId() *plugin.TValue[string] {
 	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectComputeService) GetEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Enabled, func() (bool, error) {
+		return c.enabled()
+	})
 }
 
 func (c *mqlGcpProjectComputeService) GetInstances() *plugin.TValue[[]interface{}] {

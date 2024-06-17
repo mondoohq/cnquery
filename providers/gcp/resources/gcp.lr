@@ -200,6 +200,8 @@ private gcp.resourcemanager.binding {
 private gcp.project.computeService {
   // Project ID
   projectId string
+  // Whether the service is enabled
+  enabled() bool
   // Google Compute Engine instances in a project
   instances() []gcp.project.computeService.instance
   // Google Compute Engine snapshots in a project

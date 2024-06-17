@@ -874,10 +874,11 @@ func (g *mqlGcpProjectGkeServiceClusterNetworkConfig) subnetwork() (*mqlGcpProje
 
 	// Format is projects/project-1/regions/us-central1/subnetworks/subnet-1
 	params := strings.Split(subnetPath, "/")
-	res, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.subnetwork", map[string]*llx.RawData{
+	regionUrl := strings.SplitN(subnetPath, "/subnetworks", 2)
+	res, err := NewResource(g.MqlRuntime, "gcp.project.computeService.subnetwork", map[string]*llx.RawData{
 		"name":      llx.StringData(params[len(params)-1]),
 		"projectId": llx.StringData(params[1]),
-		"region":    llx.StringData(params[3]),
+		"regionUrl": llx.StringData(regionUrl[0]),
 	})
 	if err != nil {
 		return nil, err

@@ -706,6 +706,7 @@ resources:
       addresses: {}
       backendServices: {}
       disks: {}
+      enabled: {}
       firewalls: {}
       forwardingRules: {}
       images: {}
