@@ -1183,7 +1183,7 @@ private azure.subscription.sqlService.database @defaults("name edition zoneRedun
   readScale string
   // SQL database sample name
   sampleName string
-  // Whether the SQL is zone redundant
+  // Whether the database is zone redundant
   zoneRedundant bool
   // SQL database transparent data encryption
   transparentDataEncryption() dict
