@@ -13,9 +13,14 @@ func FindFiles(iofs fs.FS, from string, r *regexp.Regexp, typ string, perm *uint
 	matcher := createFindFilesMatcher(iofs, typ, r, perm)
 	matchedPaths := []string{}
 	err := fs.WalkDir(iofs, from, func(p string, d fs.DirEntry, err error) error {
-		if err := handleFsError(err); err != nil {
+		skip, err := handleFsError(err)
+		if err != nil {
 			return err
 		}
+		if skip {
+			return nil
+		}
+
 		if matcher.Match(p, d.Type()) {
 			matchedPaths = append(matchedPaths, p)
 		}
