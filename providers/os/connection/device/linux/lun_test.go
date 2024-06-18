@@ -64,6 +64,9 @@ func TestFindDeviceByBlock(t *testing.T) {
 							Name:       "sda1",
 							MountPoint: "/",
 						},
+						{
+							Name: "sda2",
+						},
 					},
 				},
 				{
@@ -118,6 +121,9 @@ func TestFindDeviceByBlock(t *testing.T) {
 						{
 							Name:       "sda1",
 							MountPoint: "/",
+						},
+						{
+							Name: "sda2",
 						},
 					},
 				},

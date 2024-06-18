@@ -72,16 +72,20 @@ func findMatchingDeviceByBlock(scsiDevices scsiDevices, blockDevices *snapshot.B
 		return snapshot.BlockDevice{}, errors.New("no matching blocks found")
 	}
 
+	var matching *snapshot.BlockDevice
 	for _, b := range matchingBlocks {
 		log.Debug().Str("name", b.Name).Msg("device connection> checking block")
 		for _, ch := range b.Children {
 			if len(ch.MountPoint) > 0 && ch.MountPoint != "" {
-				log.Debug().Str("name", ch.Name).Msg("device connection> has mounted partitons, skipping")
-			} else {
-				// we found a block that has no mounted partitions
-				return b, nil
+				log.Debug().Str("name", ch.Name).Str("mountpoint", ch.MountPoint).Str("parent", b.Name).Msg("device connection> has mounted partitons, skipping parent block")
+				break
 			}
+			matching = &b
 		}
+	}
+
+	if matching != nil {
+		return *matching, nil
 	}
 
 	return snapshot.BlockDevice{}, errors.New("no matching block found")
