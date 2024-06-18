@@ -6,15 +6,16 @@ package packages
 import (
 	"bufio"
 	"fmt"
-	"github.com/package-url/packageurl-go"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/cpe"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/purl"
 	"io"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/package-url/packageurl-go"
+	"go.mondoo.com/cnquery/v11/providers/os/resources/cpe"
+	"go.mondoo.com/cnquery/v11/providers/os/resources/purl"
 
 	"github.com/cockroachdb/errors"
 	_ "github.com/glebarez/go-sqlite" // required for sqlite3 rpm support
@@ -258,11 +259,13 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 	resultList := []Package{}
 	for _, pkg := range pkgList {
 		version := pkg.Version
+		epoch := strconv.Itoa(pkg.EpochNum())
+		version = epoch + ":" + version
 		if pkg.Release != "" {
 			version = version + "-" + pkg.Release
 		}
 
-		rpmPkg := newRpmPackage(rpm.platform, pkg.Name, version, pkg.Arch, strconv.Itoa(pkg.EpochNum()), pkg.Summary)
+		rpmPkg := newRpmPackage(rpm.platform, pkg.Name, version, pkg.Arch, epoch, pkg.Summary)
 
 		// determine all files attached
 		records := []FileRecord{}
