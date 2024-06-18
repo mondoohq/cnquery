@@ -298,7 +298,7 @@ func TestCompiler_DeterministicChecksum(t *testing.T) {
 		azureConf := mqlc.NewConfig(azure_schema, features)
 		res, err := mqlc.Compile(mql, map[string]*llx.Primitive{}, azureConf)
 		require.Nil(t, err)
-		require.Equal(t, res.CodeV2.Id, "LkB8PP3xB2Q=")
+		require.Equal(t, res.CodeV2.Id, "h81H/YfoIRI=")
 	}
 }
 
