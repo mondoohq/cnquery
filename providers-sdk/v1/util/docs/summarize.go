@@ -4,12 +4,14 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/providers"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/resources"
 )
 
@@ -25,6 +27,7 @@ func main() {
 	}
 
 	schemas := map[string]*resources.Schema{}
+	connectors := 0
 	for i := range providersDir {
 		node := providersDir[i]
 		if !node.IsDir() {
@@ -34,15 +37,35 @@ func main() {
 		name := node.Name()
 		path := filepath.Join(path, name)
 
-		resourcesFile := filepath.Join(path, "dist", name+".resources.json")
-		exists, err := exists(resourcesFile)
+		configFile := filepath.Join(path, "dist", name+".json")
+		ok, err := exists(configFile)
 		if err != nil {
-			log.Fatal().Err(err).Str("path", resourcesFile).Msg("can't determine if folder exists")
+			log.Fatal().Err(err).Str("path", configFile).Msg("can't determine if config file exists")
 		}
-		if !exists {
-			log.Info().Msg("skipping " + name)
+		if !ok {
+			log.Info().Msg("skipping " + name + " (no config)")
 			continue
 		}
+		resourcesFile := filepath.Join(path, "dist", name+".resources.json")
+		ok, err = exists(resourcesFile)
+		if err != nil {
+			log.Fatal().Err(err).Str("path", resourcesFile).Msg("can't determine if resources file exists")
+		}
+		if !ok {
+			log.Info().Msg("skipping " + name + " (no schema)")
+			continue
+		}
+
+		configRaw, err := os.ReadFile(configFile)
+		if err != nil {
+			log.Fatal().Str("path", configFile).Err(err).Msg("failed to read config for provider")
+		}
+		var config plugin.Provider
+		err = json.Unmarshal(configRaw, &config)
+		if err != nil {
+			log.Fatal().Str("path", configFile).Err(err).Msg("failed to unmarshal config for provider")
+		}
+		connectors += len(config.Connectors)
 
 		schema := providers.MustLoadSchemaFromFile(name, resourcesFile)
 		schemas[node.Name()] = schema
@@ -66,9 +89,10 @@ func main() {
 	}
 
 	fmt.Println()
-	fmt.Printf("Total providers: %d\n", len(schemas))
-	fmt.Printf("Total resources: %d\n", len(resources))
-	fmt.Printf("Total fields:    %d\n", fields)
+	fmt.Printf("Total providers:   %d\n", len(schemas))
+	fmt.Printf("Total connectors:  %d\n", connectors)
+	fmt.Printf("Total resources:   %d\n", len(resources))
+	fmt.Printf("Total fields:      %d\n", fields)
 }
 
 func exists(path string) (bool, error) {
