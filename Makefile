@@ -595,9 +595,9 @@ lr/docs/markdown: providers/lr
 		--output ../docs/docs/mql/resources/vsphere-pack
 
 lr/docs/stats:
-	echo "Please remember to re-run before using this:"
-	echo "  make providers/build"
-	echo ""
+	@echo "Please remember to re-run before using this:"
+	@echo "  make providers/build"
+	@echo ""
 	go run providers-sdk/v1/util/docs/summarize.go ${PWD}/providers
 
 llx/generate:
