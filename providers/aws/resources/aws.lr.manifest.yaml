@@ -2943,10 +2943,10 @@ resources:
       - aws
   aws.vpc.routetable.associations:
     fields:
-      routeTableAssociationId: {}
       associationsState: {}
       gatewayId: {}
       main: {}
+      routeTableAssociationId: {}
       routeTableId: {}
       subnet: {}
     is_private: true
