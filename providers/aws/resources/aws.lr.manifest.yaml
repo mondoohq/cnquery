@@ -2792,7 +2792,8 @@ resources:
       peeringConnections:
         min_mondoo_version: 9.0.0
       region: {}
-      routeTables: {}
+      routeTables:
+        min_mondoo_version: 9.0.0
       serviceEndpoints:
         min_mondoo_version: 9.0.0
       state: {}
