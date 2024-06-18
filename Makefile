@@ -594,6 +594,12 @@ lr/docs/markdown: providers/lr
 		--docs-file providers/vsphere/resources/vsphere.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/vsphere-pack
 
+lr/docs/stats:
+	echo "Please remember to re-run before using this:"
+	echo "  make providers/build"
+	echo ""
+	go run providers-sdk/v1/util/docs/summarize.go ${PWD}/providers
+
 llx/generate:
 	go generate ./llx
 
