@@ -2930,13 +2930,27 @@ resources:
       - aws
   aws.vpc.routetable:
     fields:
-      associations: {}
+      associations:
+        min_mondoo_version: 9.0.0
       id: {}
       routes: {}
       tags:
         min_mondoo_version: 9.0.0
     is_private: true
     min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - aws
+  aws.vpc.routetable.associations:
+    fields:
+      routeTableAssociationId: {}
+      associationsState: {}
+      gatewayId: {}
+      main: {}
+      routeTableId: {}
+      subnet: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - aws
