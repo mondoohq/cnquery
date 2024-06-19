@@ -135,9 +135,18 @@ func initAwsLambdaFunction(runtime *plugin.Runtime, args map[string]*llx.RawData
 			args["arn"] = llx.StringData(ids.arn)
 		}
 	}
+
+	name := args["name"]
+	region := args["region"]
+	if name == nil {
+		return nil, nil, errors.New("name required to fetch lambda function")
+	}
+	if region == nil {
+		return nil, nil, errors.New("region required to fetch lambda function")
+	}
 	var arnVal string
 	if args["arn"] == nil {
-		arnVal = getLambdaArn(args["name"].String(), args["region"].String(), "")
+		arnVal = getLambdaArn(name.String(), region.String(), "")
 		if arnVal == "" {
 			return nil, nil, errors.New("arn required to fetch lambda function")
 		}
