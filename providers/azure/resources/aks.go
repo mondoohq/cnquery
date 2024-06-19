@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -25,7 +26,10 @@ func initAzureSubscriptionAks(runtime *plugin.Runtime, args map[string]*llx.RawD
 		return args, nil, nil
 	}
 
-	conn := runtime.Connection.(*connection.AzureConnection)
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
 	args["subscriptionId"] = llx.StringData(conn.SubId())
 
 	return args, nil, nil

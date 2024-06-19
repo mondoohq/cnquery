@@ -43,7 +43,10 @@ func initAzureSubscriptionComputeService(runtime *plugin.Runtime, args map[strin
 		return args, nil, nil
 	}
 
-	conn := runtime.Connection.(*connection.AzureConnection)
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
 	args["subscriptionId"] = llx.StringData(conn.SubId())
 
 	return args, nil, nil
@@ -494,7 +497,10 @@ func initAzureSubscriptionComputeServiceVm(runtime *plugin.Runtime, args map[str
 	if args["id"] == nil {
 		return nil, nil, errors.New("id required to fetch azure compute vm instance")
 	}
-	conn := runtime.Connection.(*connection.AzureConnection)
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
 	res, err := NewResource(runtime, "azure.subscription.computeService", map[string]*llx.RawData{
 		"subscriptionId": llx.StringData(conn.SubId()),
 	})

@@ -20,9 +20,6 @@ func getAssetIdentifier(runtime *plugin.Runtime) *assetIdentifier {
 	if a == nil {
 		return nil
 	}
-	if a == nil {
-		return nil
-	}
 	azureId := ""
 	for _, id := range a.PlatformIds {
 		if strings.HasPrefix(id, "/subscriptions/") {

@@ -31,7 +31,10 @@ func initAzureSubscriptionAdvisorService(runtime *plugin.Runtime, args map[strin
 		return args, nil, nil
 	}
 
-	conn := runtime.Connection.(*connection.AzureConnection)
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
 	args["subscriptionId"] = llx.StringData(conn.SubId())
 
 	return args, nil, nil
