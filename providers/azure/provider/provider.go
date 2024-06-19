@@ -231,6 +231,10 @@ func (s *Service) discover(conn shared.AzureConnection) (*inventory.Inventory, e
 		return nil, nil
 	}
 
+	if len(conn.Config().Discover.Targets) == 0 {
+		return nil, nil
+	}
+
 	runtime, err := s.GetRuntime(conn.ID())
 	if err != nil {
 		return nil, err
