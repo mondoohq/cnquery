@@ -28,7 +28,10 @@ func initAzureSubscriptionPostgreSqlService(runtime *plugin.Runtime, args map[st
 		return args, nil, nil
 	}
 
-	conn := runtime.Connection.(*connection.AzureConnection)
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
 	args["subscriptionId"] = llx.StringData(conn.SubId())
 
 	return args, nil, nil
@@ -450,7 +453,10 @@ func initAzureSubscriptionPostgreSqlServiceServer(runtime *plugin.Runtime, args 
 	if args["id"] == nil {
 		return nil, nil, errors.New("id required to fetch azure postgresql server")
 	}
-	conn := runtime.Connection.(*connection.AzureConnection)
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
 	res, err := NewResource(runtime, "azure.subscription.postgreSqlService", map[string]*llx.RawData{
 		"subscriptionId": llx.StringData(conn.SubId()),
 	})
@@ -487,7 +493,10 @@ func initAzureSubscriptionPostgreSqlServiceFlexibleServer(runtime *plugin.Runtim
 	if args["id"] == nil {
 		return nil, nil, errors.New("id required to fetch azure postgresql flexible server")
 	}
-	conn := runtime.Connection.(*connection.AzureConnection)
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
 	res, err := NewResource(runtime, "azure.subscription.postgreSqlService", map[string]*llx.RawData{
 		"subscriptionId": llx.StringData(conn.SubId()),
 	})

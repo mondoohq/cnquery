@@ -71,7 +71,10 @@ func MondooAzureInstanceID(instanceID string) string {
 }
 
 func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.Inventory, error) {
-	conn := runtime.Connection.(*connection.AzureConnection)
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
 	assets := []*inventory.Asset{}
 	targets := rootConf.GetDiscover().GetTargets()
 	subsToInclude := rootConf.Options["subscriptions"]

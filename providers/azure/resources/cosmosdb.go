@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
@@ -25,7 +26,10 @@ func initAzureSubscriptionCosmosDbService(runtime *plugin.Runtime, args map[stri
 		return args, nil, nil
 	}
 
-	conn := runtime.Connection.(*connection.AzureConnection)
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
 	args["subscriptionId"] = llx.StringData(conn.SubId())
 
 	return args, nil, nil

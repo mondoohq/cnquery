@@ -36,7 +36,10 @@ func initAzureSubscriptionStorageService(runtime *plugin.Runtime, args map[strin
 		return args, nil, nil
 	}
 
-	conn := runtime.Connection.(*connection.AzureConnection)
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
 	args["subscriptionId"] = llx.StringData(conn.SubId())
 
 	return args, nil, nil
@@ -430,7 +433,10 @@ func initAzureSubscriptionStorageServiceAccount(runtime *plugin.Runtime, args ma
 		return nil, nil, errors.New("id required to fetch azure storage account")
 	}
 
-	conn := runtime.Connection.(*connection.AzureConnection)
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
 	res, err := NewResource(runtime, "azure.subscription.storageService", map[string]*llx.RawData{
 		"subscriptionId": llx.StringData(conn.SubId()),
 	})
@@ -468,7 +474,10 @@ func initAzureSubscriptionStorageServiceAccountContainer(runtime *plugin.Runtime
 		return nil, nil, errors.New("id required to fetch azure storage account")
 	}
 
-	conn := runtime.Connection.(*connection.AzureConnection)
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
 	res, err := NewResource(runtime, "azure.subscription.storageService", map[string]*llx.RawData{
 		"subscriptionId": llx.StringData(conn.SubId()),
 	})

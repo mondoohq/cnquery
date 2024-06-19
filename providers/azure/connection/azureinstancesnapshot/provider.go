@@ -62,12 +62,12 @@ func ParseTarget(conf *inventory.Config, scanner azureScannerInstance) (scanTarg
 	if target == "" {
 		return scanTarget{}, errors.New("target is required")
 	}
-	id, err := arm.ParseResourceID(conf.Options["target"])
+	id, err := arm.ParseResourceID(target)
 	if err != nil {
-		log.Debug().Msg("could not parse target as resource id, assuming it's only the resource name")
+		log.Debug().Str("id", target).Msg("could not parse target as an ARM resource id, going to use the scanner's resource group and subscription id")
 		return scanTarget{
 			TargetType:     conf.Options["type"],
-			Target:         conf.Options["target"],
+			Target:         target,
 			ResourceGroup:  scanner.resourceGroup,
 			SubscriptionId: scanner.subscriptionId,
 		}, nil
