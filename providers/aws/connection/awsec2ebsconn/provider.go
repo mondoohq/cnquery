@@ -154,7 +154,6 @@ func NewAwsEbsConnection(id uint32, conf *inventory.Config, asset *inventory.Ass
 		conf.PlatformId = awsec2.MondooInstanceID(i.AccountID, targetRegion, convert.ToString(instanceinfo.InstanceId))
 	}
 	asset.PlatformIds = []string{conf.PlatformId}
-	asset.Connections[0].Options["device-name"] = volLocation
 	c.deviceLocation = volLocation
 
 	deviceConn, err := device.NewDeviceConnection(id, &inventory.Config{
