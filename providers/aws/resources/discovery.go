@@ -222,11 +222,11 @@ func Discover(runtime *plugin.Runtime, filters connection.DiscoveryFilters) (*in
 }
 
 func handleTargets(targets []string) []string {
+	if ENABLE_FINE_GRAINED_ASSETS {
+		return append(AllAPIResources, DiscoveryAccounts)
+	}
 	if len(targets) == 0 || stringx.Contains(targets, DiscoveryAuto) {
 		// default to auto if none defined
-		if ENABLE_FINE_GRAINED_ASSETS {
-			return AllAPIResources
-		}
 		return Auto
 	}
 
