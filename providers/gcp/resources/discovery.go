@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"sync"
 
 	"github.com/google/go-containerregistry/pkg/name"
@@ -37,7 +38,10 @@ const (
 )
 
 func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
-	conn := runtime.Connection.(*connection.GcpConnection)
+	conn, ok := runtime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
 
 	in := &inventory.Inventory{Spec: &inventory.InventorySpec{
 		Assets: []*inventory.Asset{},

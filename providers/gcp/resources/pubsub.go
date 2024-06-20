@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -31,7 +32,10 @@ func initGcpProjectPubsubService(runtime *plugin.Runtime, args map[string]*llx.R
 		return args, nil, nil
 	}
 
-	conn := runtime.Connection.(*connection.GcpConnection)
+	conn, ok := runtime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
 
 	projectId := conn.ResourceID()
 	args["projectId"] = llx.StringData(projectId)
