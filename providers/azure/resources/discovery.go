@@ -44,6 +44,7 @@ const (
 
 type azureObject struct {
 	subscription string
+	tenant       *string
 	id           string
 	location     string
 	service      string
@@ -230,11 +231,12 @@ func discoverInstancesApi(runtime *plugin.Runtime, subsWithConfigs []subWithConf
 				azureObject: azureObject{
 					id:           vm.Id.Data,
 					subscription: *subWithConfig.sub.SubscriptionID,
+					tenant:       subWithConfig.sub.TenantID,
 					location:     vm.Location.Data,
 					service:      "compute",
 					objectType:   "vm-api",
 				},
-			}, subWithConfig.conf.Clone(), subWithConfig, false)
+			}, subWithConfig.conf, false)
 			labels, err := getInstancesLabels(vm)
 			if err != nil {
 				return nil, err
@@ -277,11 +279,12 @@ func discoverInstances(runtime *plugin.Runtime, subsWithConfigs []subWithConfig)
 				azureObject: azureObject{
 					id:           vm.Id.Data,
 					subscription: *subWithConfig.sub.SubscriptionID,
+					tenant:       subWithConfig.sub.TenantID,
 					location:     vm.Location.Data,
 					service:      "compute",
 					objectType:   "vm",
 				},
-			}, subWithConfig.conf.Clone(), subWithConfig, false)
+			}, subWithConfig.conf, false)
 			for _, ip := range ipAddresses.Data {
 				ipAddress := ip.(*mqlAzureSubscriptionNetworkServiceIpAddress)
 				// TODO: we need to make this work via another provider maybe?
@@ -328,11 +331,12 @@ func discoverSqlServers(runtime *plugin.Runtime, subsWithConfigs []subWithConfig
 				azureObject: azureObject{
 					id:           s.Id.Data,
 					subscription: *subWithConfig.sub.SubscriptionID,
+					tenant:       subWithConfig.sub.TenantID,
 					location:     s.Location.Data,
 					service:      "sql",
 					objectType:   "server",
 				},
-			}, subWithConfig.conf.Clone(), subWithConfig, false)
+			}, subWithConfig.conf, false)
 			assets = append(assets, asset)
 		}
 	}
@@ -361,11 +365,12 @@ func discoverMySqlServers(runtime *plugin.Runtime, subsWithConfigs []subWithConf
 				azureObject: azureObject{
 					id:           s.Id.Data,
 					subscription: *subWithConfig.sub.SubscriptionID,
+					tenant:       subWithConfig.sub.TenantID,
 					location:     s.Location.Data,
 					service:      "mysql",
 					objectType:   "server",
 				},
-			}, subWithConfig.conf.Clone(), subWithConfig, false)
+			}, subWithConfig.conf, false)
 			assets = append(assets, asset)
 		}
 	}
@@ -394,11 +399,12 @@ func discoverMySqlFlexibleServers(runtime *plugin.Runtime, subsWithConfigs []sub
 				azureObject: azureObject{
 					id:           s.Id.Data,
 					subscription: *subWithConfig.sub.SubscriptionID,
+					tenant:       subWithConfig.sub.TenantID,
 					location:     s.Location.Data,
 					service:      "mysql",
 					objectType:   "flexible-server",
 				},
-			}, subWithConfig.conf.Clone(), subWithConfig, false)
+			}, subWithConfig.conf, false)
 			assets = append(assets, asset)
 		}
 	}
@@ -427,11 +433,12 @@ func discoverPostgresqlServers(runtime *plugin.Runtime, subsWithConfigs []subWit
 				azureObject: azureObject{
 					id:           s.Id.Data,
 					subscription: *subWithConfig.sub.SubscriptionID,
+					tenant:       subWithConfig.sub.TenantID,
 					location:     s.Location.Data,
 					service:      "postgresql",
 					objectType:   "server",
 				},
-			}, subWithConfig.conf.Clone(), subWithConfig, false)
+			}, subWithConfig.conf, false)
 			assets = append(assets, asset)
 		}
 	}
@@ -460,11 +467,12 @@ func discoverPostgresqlFlexibleServers(runtime *plugin.Runtime, subsWithConfigs 
 				azureObject: azureObject{
 					id:           s.Id.Data,
 					subscription: *subWithConfig.sub.SubscriptionID,
+					tenant:       subWithConfig.sub.TenantID,
 					location:     s.Location.Data,
 					service:      "postgresql",
 					objectType:   "flexible-server",
 				},
-			}, subWithConfig.conf.Clone(), subWithConfig, false)
+			}, subWithConfig.conf, false)
 			assets = append(assets, asset)
 		}
 	}
@@ -493,11 +501,12 @@ func discoverMariadbServers(runtime *plugin.Runtime, subsWithConfigs []subWithCo
 				azureObject: azureObject{
 					id:           s.Id.Data,
 					subscription: *subWithConfig.sub.SubscriptionID,
+					tenant:       subWithConfig.sub.TenantID,
 					location:     s.Location.Data,
 					service:      "mariadb",
 					objectType:   "server",
 				},
-			}, subWithConfig.conf.Clone(), subWithConfig, false)
+			}, subWithConfig.conf, false)
 			assets = append(assets, asset)
 		}
 	}
@@ -526,11 +535,12 @@ func discoverStorageAccounts(runtime *plugin.Runtime, subsWithConfig []subWithCo
 				azureObject: azureObject{
 					id:           a.Id.Data,
 					subscription: *subWithConfig.sub.SubscriptionID,
+					tenant:       subWithConfig.sub.TenantID,
 					location:     a.Location.Data,
 					service:      "storage",
 					objectType:   "account",
 				},
-			}, subWithConfig.conf.Clone(), subWithConfig, true)
+			}, subWithConfig.conf, true)
 			assets = append(assets, asset)
 		}
 	}
@@ -565,11 +575,12 @@ func discoverStorageAccountsContainers(runtime *plugin.Runtime, subsWithConfig [
 					azureObject: azureObject{
 						id:           c.Id.Data,
 						subscription: *subWithConfig.sub.SubscriptionID,
+						tenant:       subWithConfig.sub.TenantID,
 						location:     a.Location.Data,
 						service:      "storage",
 						objectType:   "container",
 					},
-				}, subWithConfig.conf.Clone(), subWithConfig, true)
+				}, subWithConfig.conf, true)
 				assets = append(assets, asset)
 			}
 		}
@@ -599,11 +610,12 @@ func discoverSecurityGroups(runtime *plugin.Runtime, subsWithConfigs []subWithCo
 				azureObject: azureObject{
 					id:           s.Id.Data,
 					subscription: *subWithConfig.sub.SubscriptionID,
+					tenant:       subWithConfig.sub.TenantID,
 					location:     s.Location.Data,
 					service:      "network",
 					objectType:   "security-group",
 				},
-			}, subWithConfig.conf.Clone(), subWithConfig, true)
+			}, subWithConfig.conf, true)
 			assets = append(assets, asset)
 		}
 	}
@@ -632,11 +644,12 @@ func discoverVaults(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([
 				azureObject: azureObject{
 					id:           v.Id.Data,
 					subscription: *subWithConfig.sub.SubscriptionID,
+					tenant:       subWithConfig.sub.TenantID,
 					location:     v.Location.Data,
 					service:      "keyvault",
 					objectType:   "vault",
 				},
-			}, subWithConfig.conf.Clone(), subWithConfig, false)
+			}, subWithConfig.conf, false)
 			assets = append(assets, asset)
 		}
 	}
@@ -745,7 +758,9 @@ func getSubConfig(rootConf *inventory.Config, parentId uint32, sub subscriptions
 		cfg.Options = map[string]string{}
 	}
 	cfg.Options[connection.OptionSubscriptionID] = *sub.SubscriptionID
-	cfg.Options[connection.OptionTenantID] = *sub.TenantID
+	if sub.TenantID != nil {
+		cfg.Options[connection.OptionTenantID] = *sub.TenantID
+	}
 	return cfg
 }
 
@@ -799,7 +814,7 @@ func getTitleFamily(azureObject azureObject) (azureObjectPlatformInfo, error) {
 	return azureObjectPlatformInfo{}, fmt.Errorf("missing runtime info for azure object service %s type %s", azureObject.service, azureObject.objectType)
 }
 
-func mqlObjectToAsset(mqlObject mqlObject, conf *inventory.Config, subWithConf subWithConfig, includeObjectTypeInUrl bool) *inventory.Asset {
+func mqlObjectToAsset(mqlObject mqlObject, parentConf *inventory.Config, includeObjectTypeInUrl bool) *inventory.Asset {
 	if mqlObject.name == "" {
 		mqlObject.name = mqlObject.azureObject.id
 	}
@@ -808,12 +823,12 @@ func mqlObjectToAsset(mqlObject mqlObject, conf *inventory.Config, subWithConf s
 		return nil
 	}
 	platformid := AzureObjectPlatformId(mqlObject.azureObject.id)
-	cfg := conf.Clone()
+	cfg := parentConf.Clone(inventory.WithoutDiscovery())
 	cfg.PlatformId = platformid
 
 	tenantId := "unknown"
-	if subWithConf.sub.TenantID != nil {
-		tenantId = *subWithConf.sub.TenantID
+	if mqlObject.azureObject.tenant != nil {
+		tenantId = *mqlObject.azureObject.tenant
 	}
 
 	assetUrl := []string{
