@@ -1513,8 +1513,27 @@ resources:
     refs:
     - title: Amazon Elastic Kubernetes Service
       url: https://aws.amazon.com/eks/
+  aws.eks.addon:
+    fields:
+      addonVersion: {}
+      arn: {}
+      configurationValues: {}
+      createdAt: {}
+      modifiedAt: {}
+      name: {}
+      owner: {}
+      publisher: {}
+      status: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
   aws.eks.cluster:
     fields:
+      addons:
+        min_mondoo_version: 9.0.0
       arn: {}
       createdAt: {}
       encryptionConfig: {}

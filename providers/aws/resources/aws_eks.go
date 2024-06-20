@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -339,4 +340,160 @@ func (a *mqlAwsEksNodegroup) nodeRole() (*mqlAwsIamRole, error) {
 		return nil, err
 	}
 	return mqlIam.(*mqlAwsIamRole), nil
+}
+
+// AwsEksAddons
+func (a *mqlAwsEksCluster) addons() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	regionVal := a.Region.Data
+	log.Debug().Msgf("eks>getAddons>calling aws with region %s", regionVal)
+
+	svc := conn.Eks(regionVal)
+	ctx := context.Background()
+	res := []interface{}{}
+
+	addonsRes, err := svc.ListAddons(ctx, &eks.ListAddonsInput{ClusterName: aws.String(a.Name.Data)})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+			return res, nil
+		}
+		return nil, err
+	}
+
+	if addonsRes == nil {
+		return nil, nil
+	}
+
+	for i := range addonsRes.Addons {
+		addon := addonsRes.Addons[i]
+		args := map[string]*llx.RawData{
+			"__id": llx.StringData(fmt.Sprintf("aws.eks.addon/%s/%s", a.Name.Data, addon)),
+			"name": llx.StringData(addon),
+		}
+
+		mqlNg, err := CreateResource(a.MqlRuntime, "aws.eks.addon", args)
+		if err != nil {
+			return nil, err
+		}
+		mqlNg.(*mqlAwsEksAddon).clusterName = a.Name.Data
+		mqlNg.(*mqlAwsEksAddon).region = regionVal
+		res = append(res, mqlNg)
+	}
+	return res, nil
+}
+
+type mqlAwsEksAddonInternal struct {
+	details     *ekstypes.Addon
+	region      string
+	lock        sync.Mutex
+	clusterName string
+}
+
+func (a *mqlAwsEksAddon) fetchDetails() (*ekstypes.Addon, error) {
+	if a.details != nil {
+		return a.details, nil
+	}
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	ctx := context.Background()
+	svc := conn.Eks(a.region)
+	desc, err := svc.DescribeAddon(ctx, &eks.DescribeAddonInput{AddonName: aws.String(a.Name.Data), ClusterName: aws.String(a.clusterName)})
+	if err != nil {
+		return nil, err
+	}
+	a.details = desc.Addon
+	return desc.Addon, nil
+}
+
+func (a *mqlAwsEksAddon) arn() (string, error) {
+	ao, err := a.fetchDetails()
+	if err != nil {
+		return "", err
+	}
+	if ao.AddonArn == nil {
+		return "", nil
+	}
+	return *ao.AddonArn, nil
+}
+
+func (a *mqlAwsEksAddon) status() (string, error) {
+	ao, err := a.fetchDetails()
+	if err != nil {
+		return "", err
+	}
+	return string(ao.Status), nil
+}
+
+func (a *mqlAwsEksAddon) createdAt() (*time.Time, error) {
+	ao, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	return ao.CreatedAt, nil
+}
+
+func (a *mqlAwsEksAddon) modifiedAt() (*time.Time, error) {
+	ao, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	return ao.ModifiedAt, nil
+}
+
+func (a *mqlAwsEksAddon) tags() (map[string]interface{}, error) {
+	ao, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	new := make(map[string]interface{})
+	for k, v := range ao.Tags {
+		new[k] = v
+	}
+	return new, nil
+}
+
+func (a *mqlAwsEksAddon) addonVersion() (string, error) {
+	ao, err := a.fetchDetails()
+	if err != nil {
+		return "", err
+	}
+	if ao.AddonVersion == nil {
+		return "", nil
+	}
+	return *ao.AddonVersion, nil
+}
+
+func (a *mqlAwsEksAddon) publisher() (string, error) {
+	ao, err := a.fetchDetails()
+	if err != nil {
+		return "", err
+	}
+	if ao.Publisher == nil {
+		return "", nil
+	}
+	return *ao.Publisher, nil
+}
+
+func (a *mqlAwsEksAddon) owner() (string, error) {
+	ao, err := a.fetchDetails()
+	if err != nil {
+		return "", err
+	}
+	if ao.Owner == nil {
+		return "", nil
+	}
+	return *ao.Owner, nil
+}
+
+func (a *mqlAwsEksAddon) configurationValues() (string, error) {
+	ao, err := a.fetchDetails()
+	if err != nil {
+		return "", err
+	}
+	if ao.ConfigurationValues == nil {
+		return "", nil
+	}
+	return *ao.ConfigurationValues, nil
 }
