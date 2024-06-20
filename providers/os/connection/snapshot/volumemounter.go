@@ -4,8 +4,6 @@
 package snapshot
 
 import (
-	"encoding/json"
-	"io"
 	"os"
 	"strings"
 
@@ -25,7 +23,6 @@ type VolumeMounter struct {
 	ScanDir string
 	// where we tell AWS to attach the volume; it doesn't necessarily get attached there, but we have to reference this same location when detaching
 	VolumeAttachmentLoc string
-	opts                map[string]string
 	CmdRunner           *LocalCommandRunner
 }
 
@@ -33,24 +30,6 @@ func NewVolumeMounter(shell []string) *VolumeMounter {
 	return &VolumeMounter{
 		CmdRunner: &LocalCommandRunner{Shell: shell},
 	}
-}
-
-// we should try and migrate this towards MountP where we specifically mount a target partition.
-// the detection of the partition should be done in the caller (separately from Mount)
-func (m *VolumeMounter) Mount() error {
-	_, err := m.createScanDir()
-	if err != nil {
-		return err
-	}
-	fsInfo, err := m.getFsInfo()
-	if err != nil {
-		return err
-	}
-	if fsInfo == nil {
-		return errors.New("unable to find target volume on instance")
-	}
-	log.Debug().Str("device name", fsInfo.Name).Msg("found target volume")
-	return m.mountVolume(fsInfo)
 }
 
 // Mounts a specific partition and returns the directory it was mounted to
@@ -80,44 +59,6 @@ func (m *VolumeMounter) createScanDir() (string, error) {
 	m.ScanDir = dir
 	log.Debug().Str("dir", dir).Msg("created tmp scan dir")
 	return dir, nil
-}
-
-func (m *VolumeMounter) getFsInfo() (*PartitionInfo, error) {
-	log.Debug().Str("volume attachment loc", m.VolumeAttachmentLoc).Msg("search for target volume")
-
-	// TODO: replace with mql query once version with lsblk resource is released
-	// TODO: only use sudo if we are not root
-	cmd, err := m.CmdRunner.RunCommand("sudo lsblk -f --json")
-	if err != nil {
-		return nil, err
-	}
-	data, err := io.ReadAll(cmd.Stdout)
-	if err != nil {
-		return nil, err
-	}
-	blockEntries := BlockDevices{}
-	if err := json.Unmarshal(data, &blockEntries); err != nil {
-		return nil, err
-	}
-	var fsInfo *PartitionInfo
-	if m.opts[NoSetup] == "true" {
-		// this means we didn't attach the volume to the instance
-		// so we need to make a best effort guess
-		return blockEntries.GetUnnamedBlockEntry()
-	}
-
-	fsInfo, err = blockEntries.GetMountablePartitionByDevice(m.VolumeAttachmentLoc)
-	if err == nil && fsInfo != nil {
-		return fsInfo, nil
-	} else {
-		// if we get here, we couldn't find a fs loaded at the expected location
-		// AWS does not guarantee this, so that's expected. fallback to find non-boot and non-mounted volume
-		fsInfo, err = blockEntries.GetUnmountedBlockEntry()
-		if err == nil && fsInfo != nil {
-			return fsInfo, nil
-		}
-	}
-	return nil, err
 }
 
 // GetDeviceForMounting iterates through all the partitions of the target and returns the first one that matches the filters
