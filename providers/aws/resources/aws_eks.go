@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -367,6 +368,7 @@ func (a *mqlAwsEksCluster) addons() ([]interface{}, error) {
 	for i := range addonsRes.Addons {
 		addon := addonsRes.Addons[i]
 		args := map[string]*llx.RawData{
+			"__id": llx.StringData(fmt.Sprintf("aws.eks.addon/%s/%s", a.Name.Data, addon)),
 			"name": llx.StringData(addon),
 		}
 
@@ -386,10 +388,6 @@ type mqlAwsEksAddonInternal struct {
 	region      string
 	lock        sync.Mutex
 	clusterName string
-}
-
-func (a *mqlAwsEksAddon) id() (string, error) {
-	return a.Arn.Data, nil
 }
 
 func (a *mqlAwsEksAddon) fetchDetails() (*ekstypes.Addon, error) {
