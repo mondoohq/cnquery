@@ -41,7 +41,10 @@ type assetIdentifier struct {
 }
 
 func getAssetIdentifier(runtime *plugin.Runtime) *assetIdentifier {
-	conn := runtime.Connection.(*connection.GcpConnection)
+	conn, ok := runtime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil
+	}
 	id := conn.Asset().PlatformIds[0]
 
 	if strings.HasPrefix(id, "//platformid.api.mondoo.app/runtime/gcp/") {

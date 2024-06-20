@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	serviceusage "cloud.google.com/go/serviceusage/apiv1"
@@ -126,7 +127,10 @@ func initGcpService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	}
 	name := nameRaw.Value.(string)
 
-	conn := runtime.Connection.(*connection.GcpConnection)
+	conn, ok := runtime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
 	credentials, err := conn.Credentials(serviceusage.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, nil, err

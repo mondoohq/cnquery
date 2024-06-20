@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"go.mondoo.com/cnquery/v11/llx"
@@ -50,7 +51,10 @@ func (g *mqlGcpAccessApprovalSettings) id() (string, error) {
 }
 
 func accessApprovalSettings(runtime *plugin.Runtime, settingsName string) (*mqlGcpAccessApprovalSettings, error) {
-	conn := runtime.Connection.(*connection.GcpConnection)
+	conn, ok := runtime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
 	credentials, err := conn.Credentials(accessapproval.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, err
