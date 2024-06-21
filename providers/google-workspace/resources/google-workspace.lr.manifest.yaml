@@ -4,12 +4,38 @@
 resources:
   googleworkspace:
     fields:
+      calendars: {}
       connectedApps: {}
       domains: {}
       groups: {}
       orgUnits: {}
       roles: {}
       users: {}
+    min_mondoo_version: latest
+  googleworkspace.calendar:
+    fields:
+      acl: {}
+      name: {}
+      primary: {}
+      summary: {}
+      summaryOverride: {}
+    is_private: true
+    min_mondoo_version: latest
+  googleworkspace.calendar.acl:
+    fields:
+      role: {}
+    min_mondoo_version: latest
+  googleworkspace.calendar.aclRule:
+    fields:
+      role: {}
+      scope: {}
+    is_private: true
+    min_mondoo_version: latest
+  googleworkspace.calendar.aclRule.scope:
+    fields:
+      type: {}
+      value: {}
+    is_private: true
     min_mondoo_version: latest
   googleworkspace.connectedApp:
     fields:
