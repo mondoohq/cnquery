@@ -106,21 +106,22 @@ func (a *mqlAwsIam) credentialReport() ([]interface{}, error) {
 	rresp, err := svc.GetCredentialReport(ctx, &iam.GetCredentialReportInput{})
 	var ae smithy.APIError
 	if errors.As(err, &ae) {
+		maxRetries := 0
 		for ae.ErrorCode() == "NoSuchEntity" || ae.ErrorCode() == "ReportInProgress" {
 			rresp, err = svc.GetCredentialReport(ctx, &iam.GetCredentialReportInput{})
 			if err == nil {
 				break
 			}
-
-			if errors.As(err, &ae) {
-				if ae.ErrorCode() != "NoSuchEntity" && ae.ErrorCode() != "ReportInProgress" {
-					return nil, errors.Wrap(err, "could not gather aws iam credential report")
-				}
+			if maxRetries == 5 {
+				return nil, errors.Wrap(err, "timed out trying to gather aws iam credential report")
 			}
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(200 * time.Millisecond)
+			maxRetries++
+		}
+		if ae.ErrorCode() != "NoSuchEntity" && ae.ErrorCode() != "ReportInProgress" {
+			return nil, errors.Wrap(err, "could not gather aws iam credential report")
 		}
 	}
-
 	if rresp == nil {
 		return nil, errors.Wrap(err, "could not gather aws iam credential report")
 	}
