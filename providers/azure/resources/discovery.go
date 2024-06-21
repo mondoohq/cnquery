@@ -96,13 +96,13 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 	subsWithConfigs := make([]subWithConfig, len(subs))
 	for i := range subs {
 		sub := subs[i]
-		subsWithConfigs[i] = subWithConfig{sub: sub, conf: getSubConfig(conn.Conf, conn.ID(), sub)}
+		subsWithConfigs[i] = subWithConfig{sub: sub, conf: getSubConfig(conn.Conf, sub)}
 	}
 
 	if stringx.ContainsAnyOf(targets, DiscoverySubscriptions, DiscoveryAll, DiscoveryAuto) {
 		// we've already discovered those, simply add them as assets
 		for _, s := range subsWithConfigs {
-			assets = append(assets, subToAsset(s.sub, s.conf, conn.ID()))
+			assets = append(assets, subToAsset(s))
 		}
 	}
 	matchingTargets := []string{DiscoveryAll}
@@ -728,8 +728,10 @@ func discoverSubscriptions(conn *connection.AzureConnection, filter connection.S
 	return subs, nil
 }
 
-func subToAsset(sub subscriptions.Subscription, conf *inventory.Config, parentConnId uint32) *inventory.Asset {
-	copyConf := conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(parentConnId))
+func subToAsset(subWithConfig subWithConfig) *inventory.Asset {
+	sub := subWithConfig.sub
+	conf := subWithConfig.conf
+	copyConf := conf.Clone(inventory.WithoutDiscovery())
 	platformId := "//platformid.api.mondoo.app/runtime/azure/subscriptions/" + *sub.SubscriptionID
 	tenantId := "unknown"
 	if sub.TenantID != nil {
@@ -752,8 +754,8 @@ func subToAsset(sub subscriptions.Subscription, conf *inventory.Config, parentCo
 
 // creates a config with filled in subscription and tenant id, this config can be used by the subscription asset
 // or any assets that are discovered within that subscription
-func getSubConfig(rootConf *inventory.Config, parentId uint32, sub subscriptions.Subscription) *inventory.Config {
-	cfg := rootConf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(parentId))
+func getSubConfig(rootConf *inventory.Config, sub subscriptions.Subscription) *inventory.Config {
+	cfg := rootConf.Clone(inventory.WithoutDiscovery())
 	if cfg.Options == nil {
 		cfg.Options = map[string]string{}
 	}
