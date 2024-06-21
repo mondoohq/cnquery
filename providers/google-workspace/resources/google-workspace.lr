@@ -70,6 +70,8 @@ private googleworkspace.user @defaults("primaryEmail") {
   archived bool
   // Indicates a user with super administrator privileges
   isAdmin bool
+  // Indicates if a user is a delegated administrator
+  isDelegatedAdmin bool
   // Is 2-step verification enforced
   isEnforcedIn2Sv bool
   // Is enrolled in 2-step verification

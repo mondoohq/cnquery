@@ -79,6 +79,7 @@ func newMqlGoogleWorkspaceUser(runtime *plugin.Runtime, entry *directory.User) (
 		"suspensionReason": llx.StringData(entry.SuspensionReason),
 		"archived":         llx.BoolData(entry.Archived),
 		"isAdmin":          llx.BoolData(entry.IsAdmin),
+		"isDelegatedAdmin": llx.BoolData(entry.IsDelegatedAdmin),
 		"isEnforcedIn2Sv":  llx.BoolData(entry.IsEnforcedIn2Sv),
 		"isEnrolledIn2Sv":  llx.BoolData(entry.IsEnrolledIn2Sv),
 		"isMailboxSetup":   llx.BoolData(entry.IsMailboxSetup),

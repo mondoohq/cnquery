@@ -216,6 +216,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"googleworkspace.user.isAdmin": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceUser).GetIsAdmin()).ToDataRes(types.Bool)
 	},
+	"googleworkspace.user.isDelegatedAdmin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUser).GetIsDelegatedAdmin()).ToDataRes(types.Bool)
+	},
 	"googleworkspace.user.isEnforcedIn2Sv": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceUser).GetIsEnforcedIn2Sv()).ToDataRes(types.Bool)
 	},
@@ -514,6 +517,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"googleworkspace.user.isAdmin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGoogleworkspaceUser).IsAdmin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.isDelegatedAdmin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUser).IsDelegatedAdmin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.user.isEnforcedIn2Sv": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1087,6 +1094,7 @@ type mqlGoogleworkspaceUser struct {
 	SuspensionReason plugin.TValue[string]
 	Archived plugin.TValue[bool]
 	IsAdmin plugin.TValue[bool]
+	IsDelegatedAdmin plugin.TValue[bool]
 	IsEnforcedIn2Sv plugin.TValue[bool]
 	IsEnrolledIn2Sv plugin.TValue[bool]
 	IsMailboxSetup plugin.TValue[bool]
@@ -1183,6 +1191,10 @@ func (c *mqlGoogleworkspaceUser) GetArchived() *plugin.TValue[bool] {
 
 func (c *mqlGoogleworkspaceUser) GetIsAdmin() *plugin.TValue[bool] {
 	return &c.IsAdmin
+}
+
+func (c *mqlGoogleworkspaceUser) GetIsDelegatedAdmin() *plugin.TValue[bool] {
+	return &c.IsDelegatedAdmin
 }
 
 func (c *mqlGoogleworkspaceUser) GetIsEnforcedIn2Sv() *plugin.TValue[bool] {
