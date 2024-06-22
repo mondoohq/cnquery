@@ -12,7 +12,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
-	"github.com/pkg/errors"
+	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
 )
@@ -38,8 +38,8 @@ func GetChainedToken(options *azidentity.DefaultAzureCredentialOptions) (*aziden
 	}
 	mic, err := azidentity.NewManagedIdentityCredential(&azidentity.ManagedIdentityCredentialOptions{ClientOptions: options.ClientOptions})
 	if err == nil {
-		timedMic := &timedManagedIdentityCredential{mic: *mic, timeout: 5 * time.Second}
-		chain = append(chain, timedMic)
+		retryableMic := &retryableManagedIdentityCredential{mic: *mic, timeout: 5 * time.Second, attempts: 3}
+		chain = append(chain, retryableMic)
 	}
 	wic, err := azidentity.NewWorkloadIdentityCredential(&azidentity.WorkloadIdentityCredentialOptions{
 		ClientOptions:            options.ClientOptions,
@@ -53,12 +53,31 @@ func GetChainedToken(options *azidentity.DefaultAzureCredentialOptions) (*aziden
 	return azidentity.NewChainedTokenCredential(chain, nil)
 }
 
-type timedManagedIdentityCredential struct {
-	mic     azidentity.ManagedIdentityCredential
-	timeout time.Duration
+type retryableManagedIdentityCredential struct {
+	mic      azidentity.ManagedIdentityCredential
+	attempts int
+	timeout  time.Duration
 }
 
-func (t *timedManagedIdentityCredential) GetToken(ctx context.Context, opts policy.TokenRequestOptions) (azcore.AccessToken, error) {
+func (t *retryableManagedIdentityCredential) GetToken(ctx context.Context, opts policy.TokenRequestOptions) (azcore.AccessToken, error) {
+	// sanity check to ensure we get at least one attempt
+	if t.attempts < 1 {
+		t.attempts = 1
+	}
+	errs := []error{}
+	for i := 0; i < t.attempts; i++ {
+		tk, err := t.tryGetToken(ctx, opts)
+		if err == nil {
+			return tk, nil
+		}
+		log.Debug().Int("attempt", i).Msgf("failed to get managed identity token: %v, will retry", err)
+		errs = append(errs, err)
+	}
+	log.Error().Msgf("failed to get managed identity token after %d attempts", t.attempts)
+	return azcore.AccessToken{}, errors.Join(errs...)
+}
+
+func (t *retryableManagedIdentityCredential) tryGetToken(ctx context.Context, opts policy.TokenRequestOptions) (azcore.AccessToken, error) {
 	ctx, cancel := context.WithTimeout(ctx, t.timeout)
 	defer cancel()
 	var tk azcore.AccessToken
