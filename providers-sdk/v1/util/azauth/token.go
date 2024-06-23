@@ -64,24 +64,30 @@ func (t *retryableManagedIdentityCredential) GetToken(ctx context.Context, opts 
 	if t.attempts < 1 {
 		t.attempts = 1
 	}
+
 	errs := []error{}
 	for i := 0; i < t.attempts; i++ {
 		tk, err := t.tryGetToken(ctx, opts)
 		if err == nil {
 			return tk, nil
 		}
-		log.Debug().Int("attempt", i).Msgf("failed to get managed identity token: %v, will retry", err)
+		log.Debug().
+			Err(err).
+			Int("attempt", i+1).
+			Int("max_attempts", t.attempts).
+			Msg("failed to get managed identity token (may retry)")
 		errs = append(errs, err)
 	}
-	log.Error().Msgf("failed to get managed identity token after %d attempts", t.attempts)
+
+	log.Error().
+		Int("num_attempts", t.attempts).
+		Msg("failed to get managed identity token (max retries reached)")
 	return azcore.AccessToken{}, errors.Join(errs...)
 }
 
-func (t *retryableManagedIdentityCredential) tryGetToken(ctx context.Context, opts policy.TokenRequestOptions) (azcore.AccessToken, error) {
+func (t *retryableManagedIdentityCredential) tryGetToken(ctx context.Context, opts policy.TokenRequestOptions) (tk azcore.AccessToken, err error) {
 	ctx, cancel := context.WithTimeout(ctx, t.timeout)
 	defer cancel()
-	var tk azcore.AccessToken
-	var err error
 	if t.timeout > 0 {
 		c, cancel := context.WithTimeout(ctx, t.timeout)
 		defer cancel()
@@ -98,7 +104,7 @@ func (t *retryableManagedIdentityCredential) tryGetToken(ctx context.Context, op
 	} else {
 		tk, err = t.mic.GetToken(ctx, opts)
 	}
-	return tk, err
+	return
 }
 
 func GetTokenFromCredential(credential *vault.Credential, tenantId, clientId string) (azcore.TokenCredential, error) {
