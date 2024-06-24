@@ -110,6 +110,18 @@ func (a *mqlAwsEks) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 					"logging":            llx.MapData(logging, types.Any),
 					"networkConfig":      llx.MapData(kubernetesNetworkConfig, types.Any),
 					"resourcesVpcConfig": llx.MapData(vpcConfig, types.Any),
+					"iamRole":            llx.NilData, // set iamRole to nil as default, if iam is not set
+				}
+
+				if cluster.RoleArn != nil {
+					mqlIam, err := NewResource(a.MqlRuntime, "aws.iam.role",
+						map[string]*llx.RawData{"arn": llx.StringDataPtr(cluster.RoleArn)},
+					)
+					if err != nil {
+						return nil, err
+					}
+					// update the iam setting
+					args["iamRole"] = llx.ResourceData(mqlIam, mqlIam.MqlName())
 				}
 
 				mqlFilesystem, err := CreateResource(a.MqlRuntime, "aws.eks.cluster", args)
