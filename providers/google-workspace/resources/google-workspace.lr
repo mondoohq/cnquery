@@ -204,7 +204,10 @@ private googleworkspace.role @defaults("name") {
 
 // Google Workspace apps reports
 private googleworkspace.report.apps {
+  // Retrieves a report for the settings of the Google Workspace app Drive
   drive() []googleworkspace.report.activity
+  // Retrieves a report for the Google Workspace Admin settings
+  admin() []googleworkspace.report.activity
 }
 
 // Google Workspace app reports activity

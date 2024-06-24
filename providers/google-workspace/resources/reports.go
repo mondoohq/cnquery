@@ -83,6 +83,43 @@ func (g *mqlGoogleworkspaceReportApps) drive() ([]interface{}, error) {
 	return res, nil
 }
 
+func (g *mqlGoogleworkspaceReportApps) admin() ([]interface{}, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GoogleWorkspaceConnection)
+	reportsService, err := reportsService(conn)
+	if err != nil {
+		return nil, err
+	}
+
+	res := []interface{}{}
+
+	activities, err := reportsService.Activities.List("all", "admin").CustomerId(conn.CustomerID()).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	for {
+		for i := range activities.Items {
+			r, err := newMqlGoogleWorkspaceReportActivity(g.MqlRuntime, activities.Items[i])
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, r)
+		}
+
+		if activities.NextPageToken == "" {
+			break
+		}
+
+		activities, err = reportsService.Activities.List("all", "admin").CustomerId(conn.CustomerID()).
+			PageToken(activities.NextPageToken).Do()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return res, nil
+}
+
 func (g *mqlGoogleworkspaceReportActivity) id() (string, error) {
 	if g.Id.Error != nil {
 		return "", g.Id.Error

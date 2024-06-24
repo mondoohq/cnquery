@@ -378,6 +378,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"googleworkspace.report.apps.drive": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceReportApps).GetDrive()).ToDataRes(types.Array(types.Resource("googleworkspace.report.activity")))
 	},
+	"googleworkspace.report.apps.admin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceReportApps).GetAdmin()).ToDataRes(types.Array(types.Resource("googleworkspace.report.activity")))
+	},
 	"googleworkspace.report.activity.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceReportActivity).GetId()).ToDataRes(types.Int)
 	},
@@ -792,6 +795,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		},
 	"googleworkspace.report.apps.drive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGoogleworkspaceReportApps).Drive, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.report.apps.admin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceReportApps).Admin, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.report.activity.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1936,6 +1943,7 @@ type mqlGoogleworkspaceReportApps struct {
 	__id string
 	// optional: if you define mqlGoogleworkspaceReportAppsInternal it will be used here
 	Drive plugin.TValue[[]interface{}]
+	Admin plugin.TValue[[]interface{}]
 }
 
 // createGoogleworkspaceReportApps creates a new instance of this resource
@@ -1988,6 +1996,22 @@ func (c *mqlGoogleworkspaceReportApps) GetDrive() *plugin.TValue[[]interface{}] 
 		}
 
 		return c.drive()
+	})
+}
+
+func (c *mqlGoogleworkspaceReportApps) GetAdmin() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Admin, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("googleworkspace.report.apps", c.__id, "admin")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.admin()
 	})
 }
 
