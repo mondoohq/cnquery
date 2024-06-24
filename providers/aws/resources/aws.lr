@@ -3129,4 +3129,6 @@ private aws.eks.cluster @defaults("arn version status") {
   nodeGroups() []aws.eks.nodegroup
   // List of EKS add-ons
   addons() []aws.eks.addon
+  // The IAM role that provides permissions for the Kubernetes control plane to make calls to Amazon Web Services API operations on your behalf
+  iamRole aws.iam.role
 }

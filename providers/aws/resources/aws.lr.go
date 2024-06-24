@@ -4397,6 +4397,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.eks.cluster.addons": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksCluster).GetAddons()).ToDataRes(types.Array(types.Resource("aws.eks.addon")))
 	},
+	"aws.eks.cluster.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksCluster).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -9919,6 +9922,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.eks.cluster.addons": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEksCluster).Addons, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.eks.cluster.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksCluster).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
 		return
 	},
 }
@@ -25619,6 +25626,7 @@ type mqlAwsEksCluster struct {
 	CreatedAt plugin.TValue[*time.Time]
 	NodeGroups plugin.TValue[[]interface{}]
 	Addons plugin.TValue[[]interface{}]
+	IamRole plugin.TValue[*mqlAwsIamRole]
 }
 
 // createAwsEksCluster creates a new instance of this resource
@@ -25740,4 +25748,8 @@ func (c *mqlAwsEksCluster) GetAddons() *plugin.TValue[[]interface{}] {
 
 		return c.addons()
 	})
+}
+
+func (c *mqlAwsEksCluster) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return &c.IamRole
 }
