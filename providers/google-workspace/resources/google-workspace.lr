@@ -18,6 +18,36 @@ googleworkspace {
   roles() []googleworkspace.role
   // Retrieves a list of all apps for the Google Workspace account
   connectedApps() []googleworkspace.connectedApp
+  // Retrieves a list of all calendars for the Google Workspace account
+  calendars() []googleworkspace.calendar
+}
+
+// Google Workspace calendar
+private googleworkspace.calendar @defaults("summary") {
+  // Title of the calendar
+  summary string
+  // The summary that the authenticated user has set for this calendar
+  summaryOverride string
+  // Whether the calendar is the primary calendar for the authenticated user
+  primary bool
+  // ACL rules for the calendar
+  acl() []googleworkspace.calendar.aclRule
+}
+
+// Google Workspace calendar ACL rule
+private googleworkspace.calendar.aclRule @defaults("role") {
+  // The role assigned to the scope. Possible values are none, freeBusyReader, reader, writer, owner
+  role string
+  // The extent to which calendar access is granted by this ACL rule
+  scope googleworkspace.calendar.aclRule.scope
+}
+
+// Google Workspace calendar ACL rule scope
+private googleworkspace.calendar.aclRule.scope @defaults("type") {
+  // The type of the scope. Possible values are default, user, group, domain
+  type string
+  // The email address of the user or group, or the name of a domain depending on the scope type
+  value string
 }
 
 // Google Workspace organizational unit

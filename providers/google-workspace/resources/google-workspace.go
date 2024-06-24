@@ -9,6 +9,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/google-workspace/connection"
 	directory "google.golang.org/api/admin/directory/v1"
 	reports "google.golang.org/api/admin/reports/v1"
+	"google.golang.org/api/calendar/v3"
 	cloudidentity "google.golang.org/api/cloudidentity/v1"
 	"google.golang.org/api/groupssettings/v1"
 	"google.golang.org/api/option"
@@ -36,6 +37,16 @@ func directoryService(conn *connection.GoogleWorkspaceConnection, scopes ...stri
 
 	directoryService, err := directory.NewService(context.Background(), option.WithHTTPClient(client))
 	return directoryService, err
+}
+
+func calendarService(conn *connection.GoogleWorkspaceConnection, scopes ...string) (*calendar.Service, error) {
+	client, err := conn.Client(scopes...)
+	if err != nil {
+		return nil, err
+	}
+
+	calendarsService, err := calendar.NewService(context.Background(), option.WithHTTPClient(client))
+	return calendarsService, err
 }
 
 func cloudIdentityService(conn *connection.GoogleWorkspaceConnection, scopes ...string) (*cloudidentity.Service, error) {

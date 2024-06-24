@@ -22,6 +22,18 @@ func init() {
 			// to override args, implement: initGoogleworkspace(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGoogleworkspace,
 		},
+		"googleworkspace.calendar": {
+			// to override args, implement: initGoogleworkspaceCalendar(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGoogleworkspaceCalendar,
+		},
+		"googleworkspace.calendar.aclRule": {
+			// to override args, implement: initGoogleworkspaceCalendarAclRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGoogleworkspaceCalendarAclRule,
+		},
+		"googleworkspace.calendar.aclRule.scope": {
+			// to override args, implement: initGoogleworkspaceCalendarAclRuleScope(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGoogleworkspaceCalendarAclRuleScope,
+		},
 		"googleworkspace.orgUnit": {
 			// to override args, implement: initGoogleworkspaceOrgUnit(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGoogleworkspaceOrgUnit,
@@ -155,6 +167,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"googleworkspace.connectedApps": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspace).GetConnectedApps()).ToDataRes(types.Array(types.Resource("googleworkspace.connectedApp")))
+	},
+	"googleworkspace.calendars": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspace).GetCalendars()).ToDataRes(types.Array(types.Resource("googleworkspace.calendar")))
+	},
+	"googleworkspace.calendar.summary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceCalendar).GetSummary()).ToDataRes(types.String)
+	},
+	"googleworkspace.calendar.summaryOverride": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceCalendar).GetSummaryOverride()).ToDataRes(types.String)
+	},
+	"googleworkspace.calendar.primary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceCalendar).GetPrimary()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.calendar.acl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceCalendar).GetAcl()).ToDataRes(types.Array(types.Resource("googleworkspace.calendar.aclRule")))
+	},
+	"googleworkspace.calendar.aclRule.role": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceCalendarAclRule).GetRole()).ToDataRes(types.String)
+	},
+	"googleworkspace.calendar.aclRule.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceCalendarAclRule).GetScope()).ToDataRes(types.Resource("googleworkspace.calendar.aclRule.scope"))
+	},
+	"googleworkspace.calendar.aclRule.scope.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceCalendarAclRuleScope).GetType()).ToDataRes(types.String)
+	},
+	"googleworkspace.calendar.aclRule.scope.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceCalendarAclRuleScope).GetValue()).ToDataRes(types.String)
 	},
 	"googleworkspace.orgUnit.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceOrgUnit).GetId()).ToDataRes(types.String)
@@ -425,6 +464,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"googleworkspace.connectedApps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGoogleworkspace).ConnectedApps, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.calendars": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspace).Calendars, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.calendar.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGoogleworkspaceCalendar).__id, ok = v.Value.(string)
+			return
+		},
+	"googleworkspace.calendar.summary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceCalendar).Summary, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.calendar.summaryOverride": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceCalendar).SummaryOverride, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.calendar.primary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceCalendar).Primary, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.calendar.acl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceCalendar).Acl, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.calendar.aclRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGoogleworkspaceCalendarAclRule).__id, ok = v.Value.(string)
+			return
+		},
+	"googleworkspace.calendar.aclRule.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceCalendarAclRule).Role, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.calendar.aclRule.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceCalendarAclRule).Scope, ok = plugin.RawToTValue[*mqlGoogleworkspaceCalendarAclRuleScope](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.calendar.aclRule.scope.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGoogleworkspaceCalendarAclRuleScope).__id, ok = v.Value.(string)
+			return
+		},
+	"googleworkspace.calendar.aclRule.scope.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceCalendarAclRuleScope).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.calendar.aclRule.scope.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceCalendarAclRuleScope).Value, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.orgUnit.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -818,6 +905,7 @@ type mqlGoogleworkspace struct {
 	Groups plugin.TValue[[]interface{}]
 	Roles plugin.TValue[[]interface{}]
 	ConnectedApps plugin.TValue[[]interface{}]
+	Calendars plugin.TValue[[]interface{}]
 }
 
 // createGoogleworkspace creates a new instance of this resource
@@ -951,6 +1039,191 @@ func (c *mqlGoogleworkspace) GetConnectedApps() *plugin.TValue[[]interface{}] {
 
 		return c.connectedApps()
 	})
+}
+
+func (c *mqlGoogleworkspace) GetCalendars() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Calendars, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("googleworkspace", c.__id, "calendars")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.calendars()
+	})
+}
+
+// mqlGoogleworkspaceCalendar for the googleworkspace.calendar resource
+type mqlGoogleworkspaceCalendar struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlGoogleworkspaceCalendarInternal it will be used here
+	Summary plugin.TValue[string]
+	SummaryOverride plugin.TValue[string]
+	Primary plugin.TValue[bool]
+	Acl plugin.TValue[[]interface{}]
+}
+
+// createGoogleworkspaceCalendar creates a new instance of this resource
+func createGoogleworkspaceCalendar(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGoogleworkspaceCalendar{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("googleworkspace.calendar", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGoogleworkspaceCalendar) MqlName() string {
+	return "googleworkspace.calendar"
+}
+
+func (c *mqlGoogleworkspaceCalendar) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGoogleworkspaceCalendar) GetSummary() *plugin.TValue[string] {
+	return &c.Summary
+}
+
+func (c *mqlGoogleworkspaceCalendar) GetSummaryOverride() *plugin.TValue[string] {
+	return &c.SummaryOverride
+}
+
+func (c *mqlGoogleworkspaceCalendar) GetPrimary() *plugin.TValue[bool] {
+	return &c.Primary
+}
+
+func (c *mqlGoogleworkspaceCalendar) GetAcl() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Acl, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("googleworkspace.calendar", c.__id, "acl")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.acl()
+	})
+}
+
+// mqlGoogleworkspaceCalendarAclRule for the googleworkspace.calendar.aclRule resource
+type mqlGoogleworkspaceCalendarAclRule struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlGoogleworkspaceCalendarAclRuleInternal it will be used here
+	Role plugin.TValue[string]
+	Scope plugin.TValue[*mqlGoogleworkspaceCalendarAclRuleScope]
+}
+
+// createGoogleworkspaceCalendarAclRule creates a new instance of this resource
+func createGoogleworkspaceCalendarAclRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGoogleworkspaceCalendarAclRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("googleworkspace.calendar.aclRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGoogleworkspaceCalendarAclRule) MqlName() string {
+	return "googleworkspace.calendar.aclRule"
+}
+
+func (c *mqlGoogleworkspaceCalendarAclRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGoogleworkspaceCalendarAclRule) GetRole() *plugin.TValue[string] {
+	return &c.Role
+}
+
+func (c *mqlGoogleworkspaceCalendarAclRule) GetScope() *plugin.TValue[*mqlGoogleworkspaceCalendarAclRuleScope] {
+	return &c.Scope
+}
+
+// mqlGoogleworkspaceCalendarAclRuleScope for the googleworkspace.calendar.aclRule.scope resource
+type mqlGoogleworkspaceCalendarAclRuleScope struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlGoogleworkspaceCalendarAclRuleScopeInternal it will be used here
+	Type plugin.TValue[string]
+	Value plugin.TValue[string]
+}
+
+// createGoogleworkspaceCalendarAclRuleScope creates a new instance of this resource
+func createGoogleworkspaceCalendarAclRuleScope(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGoogleworkspaceCalendarAclRuleScope{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("googleworkspace.calendar.aclRule.scope", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGoogleworkspaceCalendarAclRuleScope) MqlName() string {
+	return "googleworkspace.calendar.aclRule.scope"
+}
+
+func (c *mqlGoogleworkspaceCalendarAclRuleScope) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGoogleworkspaceCalendarAclRuleScope) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlGoogleworkspaceCalendarAclRuleScope) GetValue() *plugin.TValue[string] {
+	return &c.Value
 }
 
 // mqlGoogleworkspaceOrgUnit for the googleworkspace.orgUnit resource
