@@ -106,9 +106,12 @@ func (f *File) Readdirnames(n int) ([]string, error) {
 	}
 
 	// extract names
-	basenames := make([]string, len(directories))
-	for i := range directories {
-		basenames[i] = filepath.Base(directories[i])
+	basenames := []string{}
+	for _, dir := range directories {
+		if dir == "" {
+			continue
+		}
+		basenames = append(basenames, filepath.Base(dir))
 	}
 	return basenames, nil
 }
