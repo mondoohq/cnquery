@@ -6,6 +6,7 @@ package resources
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	ssmtypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
@@ -20,6 +21,16 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/id/awsec2"
 	"go.mondoo.com/cnquery/v11/providers/os/id/containerid"
 	"go.mondoo.com/cnquery/v11/providers/os/id/ids"
+)
+
+const (
+	MondooRegionLabelKey       = "mondoo.com/region"
+	MondooInstanceLabelKey     = "mondoo.com/instance-id"
+	MondooPlatformLabelKey     = "mondoo.com/platform"
+	MondooLaunchTimeLabelKey   = "mondoo.com/launch-time"
+	MondooInstanceTypeLabelKey = "mondoo.com/instance-type"
+	MondooParentIdLabelKey     = "mondoo.com/parent-id"
+	MondooImageLabelKey        = "mondoo.com/image"
 )
 
 type mqlObject struct {
@@ -234,6 +245,37 @@ func getPlatformFamily(pf string) []string {
 	return []string{}
 }
 
+type instanceInfo struct {
+	region          string
+	platformDetails string
+	instanceType    string
+	accountId       string
+	instanceId      string
+	launchTime      *time.Time
+	image           *string
+	instanceTags    map[string]string
+}
+
+func addMondooLabels(instance instanceInfo, asset *inventory.Asset) {
+	if asset.Labels == nil {
+		asset.Labels = make(map[string]string)
+	}
+	if instance.instanceTags != nil {
+		asset.Labels = instance.instanceTags
+	}
+	asset.Labels[MondooRegionLabelKey] = instance.region
+	asset.Labels[MondooPlatformLabelKey] = instance.platformDetails
+	asset.Labels[MondooInstanceTypeLabelKey] = instance.instanceType
+	asset.Labels[MondooParentIdLabelKey] = instance.accountId
+	asset.Labels[MondooInstanceLabelKey] = instance.instanceId
+	if instance.launchTime != nil {
+		asset.Labels[MondooLaunchTimeLabelKey] = instance.launchTime.String()
+	}
+	if instance.image != nil {
+		asset.Labels[MondooImageLabelKey] = *instance.image
+	}
+}
+
 func addConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, conn *connection.AwsConnection) *inventory.Asset {
 	asset := &inventory.Asset{}
 	asset.PlatformIds = []string{awsec2.MondooInstanceID(accountId, instance.Region.Data, instance.InstanceId.Data)}
@@ -244,18 +286,21 @@ func addConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, 
 		Family:  getPlatformFamily(instance.PlatformDetails.Data),
 	}
 	asset.State = mapEc2InstanceStateCode(instance.State.Data)
-	asset.Labels = mapStringInterfaceToStringString(instance.Tags.Data)
 	asset.Name = getInstanceName(instance.InstanceId.Data, asset.Labels)
 	asset.Options = conn.ConnectionOptions()
-	asset.Labels["mondoo.com/region"] = instance.Region.Data
-	asset.Labels["mondoo.com/platform"] = instance.PlatformDetails.Data
-	asset.Labels["mondoo.com/instance-type"] = instance.InstanceType.Data
-	asset.Labels["mondoo.com/parent-id"] = accountId
-	asset.Labels["mondoo.com/instance-id"] = instance.InstanceId.Data
-
-	if instance.GetImage().Data != nil {
-		asset.Labels["mondoo.com/image"] = instance.GetImage().Data.Id.Data
+	info := instanceInfo{
+		instanceTags:    mapStringInterfaceToStringString(instance.Tags.Data),
+		region:          instance.Region.Data,
+		platformDetails: instance.PlatformDetails.Data,
+		instanceType:    instance.InstanceType.Data,
+		accountId:       accountId,
+		instanceId:      instance.InstanceId.Data,
+		launchTime:      instance.LaunchTime.Data,
 	}
+	if instance.GetImage().Data != nil {
+		info.image = &instance.GetImage().Data.Id.Data
+	}
+	addMondooLabels(info, asset)
 
 	// if there is a public ip & it is running, we assume ssh is an option
 	if instance.PublicIp.Data != "" && instance.State.Data == string(types.InstanceStateNameRunning) {
