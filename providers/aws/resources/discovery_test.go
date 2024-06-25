@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
@@ -159,4 +160,12 @@ func TestAddConnInfoToEc2Instances(t *testing.T) {
 	info.launchTime = &now
 	addMondooLabels(info, a)
 	require.NotNil(t, expectedLabels[MondooLaunchTimeLabelKey])
+	info.image = aws.String("test")
+	addMondooLabels(info, a)
+	require.NotNil(t, expectedLabels[MondooImageLabelKey])
+	info.instanceTags = nil
+	addMondooLabels(info, a)
+	info.instanceTags = map[string]string{"testing-key": "testing-val"}
+	addMondooLabels(info, a)
+	require.Equal(t, a.Labels["testing-key"], "testing-val")
 }

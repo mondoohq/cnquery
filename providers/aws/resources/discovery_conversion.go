@@ -252,11 +252,16 @@ type instanceInfo struct {
 	accountId       string
 	instanceId      string
 	launchTime      *time.Time
+	image           *string
+	instanceTags    map[string]string
 }
 
 func addMondooLabels(instance instanceInfo, asset *inventory.Asset) {
 	if asset.Labels == nil {
 		asset.Labels = make(map[string]string)
+	}
+	if instance.instanceTags != nil {
+		asset.Labels = instance.instanceTags
 	}
 	asset.Labels[MondooRegionLabelKey] = instance.region
 	asset.Labels[MondooPlatformLabelKey] = instance.platformDetails
@@ -265,6 +270,9 @@ func addMondooLabels(instance instanceInfo, asset *inventory.Asset) {
 	asset.Labels[MondooInstanceLabelKey] = instance.instanceId
 	if instance.launchTime != nil {
 		asset.Labels[MondooLaunchTimeLabelKey] = instance.launchTime.String()
+	}
+	if instance.image != nil {
+		asset.Labels[MondooImageLabelKey] = *instance.image
 	}
 }
 
@@ -278,21 +286,21 @@ func addConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, 
 		Family:  getPlatformFamily(instance.PlatformDetails.Data),
 	}
 	asset.State = mapEc2InstanceStateCode(instance.State.Data)
-	asset.Labels = mapStringInterfaceToStringString(instance.Tags.Data)
 	asset.Name = getInstanceName(instance.InstanceId.Data, asset.Labels)
 	asset.Options = conn.ConnectionOptions()
-	addMondooLabels(instanceInfo{
+	info := instanceInfo{
+		instanceTags:    mapStringInterfaceToStringString(instance.Tags.Data),
 		region:          instance.Region.Data,
 		platformDetails: instance.PlatformDetails.Data,
 		instanceType:    instance.InstanceType.Data,
 		accountId:       accountId,
 		instanceId:      instance.InstanceId.Data,
 		launchTime:      instance.LaunchTime.Data,
-	}, asset)
-
-	if instance.GetImage().Data != nil {
-		asset.Labels[MondooImageLabelKey] = instance.GetImage().Data.Id.Data
 	}
+	if instance.GetImage().Data != nil {
+		info.image = &instance.GetImage().Data.Id.Data
+	}
+	addMondooLabels(info, asset)
 
 	// if there is a public ip & it is running, we assume ssh is an option
 	if instance.PublicIp.Data != "" && instance.State.Data == string(types.InstanceStateNameRunning) {
