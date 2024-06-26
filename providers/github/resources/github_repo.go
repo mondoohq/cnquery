@@ -453,6 +453,12 @@ func (g *mqlGithubBranch) protectionRules() (*mqlGithubBranchprotection, error) 
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 	var err error
 
+	// if the branch is not protected, we don't need to fetch the protection rules
+	if !g.IsProtected.Data {
+		g.ProtectionRules.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
 	if g.RepoName.Error != nil {
 		return nil, g.RepoName.Error
 	}
