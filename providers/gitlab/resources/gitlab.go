@@ -39,7 +39,7 @@ func initGitlabGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	args["requireTwoFactorAuthentication"] = llx.BoolData(grp.RequireTwoFactorAuth)
 	args["preventForkingOutsideGroup"] = llx.BoolData(grp.PreventForkingOutsideGroup)
 	args["mentionsDisabled"] = llx.BoolData(grp.MentionsDisabled)
-	args["emailsDisabled"] = llx.BoolData(grp.EmailsDisabled)
+	args["emailsDisabled"] = llx.BoolData(!grp.EmailsEnabled)
 
 	return args, nil, nil
 }
