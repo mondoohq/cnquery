@@ -9,10 +9,14 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/bradleyfalzon/ghinstallation/v2"
 	"github.com/cockroachdb/errors"
 	"github.com/google/go-github/v62/github"
+	"github.com/hashicorp/go-retryablehttp"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
@@ -131,7 +135,7 @@ func newGithubAppClient(conf *inventory.Config) (*github.Client, error) {
 		return nil, errors.New("app-private-key is required for GitHub App authentication")
 	}
 
-	return github.NewClient(&http.Client{Transport: itr}), nil
+	return github.NewClient(newGithubRetryableClient(&http.Client{Transport: itr})), nil
 }
 
 func newGithubTokenClient(conf *inventory.Config) (*github.Client, error) {
@@ -161,5 +165,81 @@ func newGithubTokenClient(conf *inventory.Config) (*github.Client, error) {
 		&oauth2.Token{AccessToken: token},
 	)
 	tc := oauth2.NewClient(ctx, ts)
-	return github.NewClient(tc), nil
+	return github.NewClient(newGithubRetryableClient(tc)), nil
+}
+
+func newGithubRetryableClient(httpClient *http.Client) *http.Client {
+	retryClient := retryablehttp.NewClient()
+	retryClient.RetryMax = 5
+	retryClient.Logger = &zeroLogAdapter{}
+
+	if httpClient == nil {
+		httpClient = http.DefaultClient
+	}
+	retryClient.HTTPClient = httpClient
+
+	retryClient.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
+		// Default Retry Policy would not retry on 403 (adding 429 for good measure)
+		if resp.StatusCode == 403 || resp.StatusCode == 429 {
+			// Primary and Secondary rate limit
+			if resp.Header.Get("x-ratelimit-remaining") == "0" {
+				return true, nil // Should be retried after the rate limit reset (duration handled by Backoff)
+			}
+		}
+		return retryablehttp.DefaultRetryPolicy(ctx, resp, err)
+	}
+	retryClient.Backoff = func(min, max time.Duration, attemptNum int, resp *http.Response) time.Duration {
+		if resp.StatusCode == 403 || resp.StatusCode == 429 {
+			// Secondary limit
+			if resp.Header.Get("retry-after") != "" {
+				sec, err := strconv.ParseInt(resp.Header.Get("retry-after"), 10, 64) // retry-after	- The number of seconds to wait before making a follow-up request
+				if err != nil {                                                      // Must be impossible to hit errors here, but just in case
+					return time.Second * 8
+				}
+				return time.Second * time.Duration(sec)
+			}
+			// Primary and Secondary rate limit
+			if resp.Header.Get("x-ratelimit-remaining") == "0" {
+				unix, err := strconv.ParseInt(resp.Header.Get("x-ratelimit-reset"), 10, 64) // x-ratelimit-reset	- The time at which the current rate limit window resets, in UTC epoch seconds
+				if err != nil {                                                             // Must be impossible to hit errors here, but just in case
+					return time.Second * 8
+				}
+				tm := time.Unix(unix, 0)
+				return tm.Sub(time.Now().UTC()) // time.Until might not use UTC, depending on the server configuration
+			}
+		}
+
+		return retryablehttp.DefaultBackoff(min, max, attemptNum, resp)
+	}
+
+	return retryClient.StandardClient()
+}
+
+// zeroLogAdapter is the adapter for retryablehttp is outputting debug messages
+type zeroLogAdapter struct{}
+
+func (l *zeroLogAdapter) Msg(msg string, keysAndValues ...interface{}) {
+	var e *zerolog.Event
+	// retry messages should only go to debug
+	e = log.Debug()
+	for i := 0; i < len(keysAndValues); i += 2 {
+		e = e.Interface(keysAndValues[i].(string), keysAndValues[i+1])
+	}
+	e.Msg(msg)
+}
+
+func (l *zeroLogAdapter) Error(msg string, keysAndValues ...interface{}) {
+	l.Msg(msg, keysAndValues...)
+}
+
+func (l *zeroLogAdapter) Info(msg string, keysAndValues ...interface{}) {
+	l.Msg(msg, keysAndValues...)
+}
+
+func (l *zeroLogAdapter) Debug(msg string, keysAndValues ...interface{}) {
+	l.Msg(msg, keysAndValues...)
+}
+
+func (l *zeroLogAdapter) Warn(msg string, keysAndValues ...interface{}) {
+	l.Msg(msg, keysAndValues...)
 }
