@@ -1673,6 +1673,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.iam.policy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamPolicy).GetId()).ToDataRes(types.String)
 	},
+	"aws.iam.policy.policyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicy).GetPolicyId()).ToDataRes(types.String)
+	},
 	"aws.iam.policy.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamPolicy).GetName()).ToDataRes(types.String)
 	},
@@ -5794,6 +5797,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.iam.policy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.policy.policyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicy).PolicyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.iam.policy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14073,9 +14080,10 @@ func (c *mqlAwsIamLoginProfile) GetCreatedAt() *plugin.TValue[*time.Time] {
 type mqlAwsIamPolicy struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlAwsIamPolicyInternal it will be used here
+	mqlAwsIamPolicyInternal
 	Arn plugin.TValue[string]
 	Id plugin.TValue[string]
+	PolicyId plugin.TValue[string]
 	Name plugin.TValue[string]
 	Description plugin.TValue[string]
 	IsAttachable plugin.TValue[bool]
@@ -14133,6 +14141,12 @@ func (c *mqlAwsIamPolicy) GetArn() *plugin.TValue[string] {
 
 func (c *mqlAwsIamPolicy) GetId() *plugin.TValue[string] {
 	return &c.Id
+}
+
+func (c *mqlAwsIamPolicy) GetPolicyId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PolicyId, func() (string, error) {
+		return c.policyId()
+	})
 }
 
 func (c *mqlAwsIamPolicy) GetName() *plugin.TValue[string] {
