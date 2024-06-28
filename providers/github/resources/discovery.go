@@ -103,13 +103,17 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 	if err != nil {
 		return nil, err
 	}
-	assetList = append(assetList, &inventory.Asset{
-		PlatformIds: []string{connection.NewGithubOrgIdentifier(org.Login.Data)},
-		Name:        org.Name.Data,
-		Platform:    connection.NewGithubOrgPlatform(org.Login.Data),
-		Labels:      map[string]string{},
-		Connections: []*inventory.Config{conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.ID()))},
-	})
+
+	if reposFilter.empty() {
+		assetList = append(assetList, &inventory.Asset{
+			PlatformIds: []string{connection.NewGithubOrgIdentifier(org.Login.Data)},
+			Name:        org.Name.Data,
+			Platform:    connection.NewGithubOrgPlatform(org.Login.Data),
+			Labels:      map[string]string{},
+			Connections: []*inventory.Config{conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.ID()))},
+		})
+	}
+
 	if stringx.ContainsAnyOf(targets, connection.DiscoveryRepos, connection.DiscoveryRepository, connection.DiscoveryAll, connection.DiscoveryAuto) {
 		for i := range org.GetRepositories().Data {
 			repo := org.GetRepositories().Data[i].(*mqlGithubRepository)
@@ -260,6 +264,10 @@ func NewReposFilter(cfg *inventory.Config) ReposFilter {
 		nsFilter.exclude = strings.Split(exclude, ",")
 	}
 	return nsFilter
+}
+
+func (f *ReposFilter) empty() bool {
+	return (len(f.exclude) + len(f.include)) == 0
 }
 
 func (f *ReposFilter) skipRepo(namespace string) bool {
