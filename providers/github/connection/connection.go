@@ -181,7 +181,7 @@ func newGithubRetryableClient(httpClient *http.Client) *http.Client {
 	retryClient.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
 		// Default Retry Policy would not retry on 403 (adding 429 for good measure)
 		if resp.StatusCode == 403 || resp.StatusCode == 429 {
-			// Primary and Seconday rate limit
+			// Primary and Secondary rate limit
 			if resp.Header.Get("x-ratelimit-remaining") == "0" {
 				return true, nil // Should be retried after the rate limit reset (duration handled by Backoff)
 			}
@@ -190,11 +190,19 @@ func newGithubRetryableClient(httpClient *http.Client) *http.Client {
 	}
 	retryClient.Backoff = func(min, max time.Duration, attemptNum int, resp *http.Response) time.Duration {
 		if resp.StatusCode == 403 || resp.StatusCode == 429 {
-			// Primary and Seconday rate limit
+			// Secondary limit
+			if resp.Header.Get("retry-after") != "" {
+				sec, err := strconv.ParseInt(resp.Header.Get("retry-after"), 10, 64) // retry-after	- The number of seconds to wait before making a follow-up request
+				if err != nil {                                                      // Must be impossible to hit errors here, but just in case
+					return time.Second * 8
+				}
+				return time.Second * time.Duration(sec)
+			}
+			// Primary and Secondary rate limit
 			if resp.Header.Get("x-ratelimit-remaining") == "0" {
 				unix, err := strconv.ParseInt(resp.Header.Get("x-ratelimit-reset"), 10, 64) // x-ratelimit-reset	- The time at which the current rate limit window resets, in UTC epoch seconds
 				if err != nil {                                                             // Must be impossible to hit errors here, but just in case
-					return time.Second * 8 // Github starts with 8s jailtime
+					return time.Second * 8
 				}
 				tm := time.Unix(unix, 0)
 				return tm.Sub(time.Now().UTC()) // time.Until might not use UTC, depending on the server configuration
