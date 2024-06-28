@@ -2626,6 +2626,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.aksService.cluster.agentPoolProfiles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetAgentPoolProfiles()).ToDataRes(types.Array(types.Dict))
 	},
+	"azure.subscription.aksService.cluster.apiServerAccessProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetApiServerAccessProfile()).ToDataRes(types.Dict)
+	},
 	"azure.subscription.advisorService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAdvisorService).GetSubscriptionId()).ToDataRes(types.String)
 	},
@@ -5962,6 +5965,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"azure.subscription.aksService.cluster.agentPoolProfiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionAksServiceCluster).AgentPoolProfiles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.apiServerAccessProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceCluster).ApiServerAccessProfile, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.advisorService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15000,6 +15007,7 @@ type mqlAzureSubscriptionAksServiceCluster struct {
 	HttpProxyConfig plugin.TValue[interface{}]
 	AddonProfiles plugin.TValue[[]interface{}]
 	AgentPoolProfiles plugin.TValue[[]interface{}]
+	ApiServerAccessProfile plugin.TValue[interface{}]
 }
 
 // createAzureSubscriptionAksServiceCluster creates a new instance of this resource
@@ -15117,6 +15125,10 @@ func (c *mqlAzureSubscriptionAksServiceCluster) GetAddonProfiles() *plugin.TValu
 
 func (c *mqlAzureSubscriptionAksServiceCluster) GetAgentPoolProfiles() *plugin.TValue[[]interface{}] {
 	return &c.AgentPoolProfiles
+}
+
+func (c *mqlAzureSubscriptionAksServiceCluster) GetApiServerAccessProfile() *plugin.TValue[interface{}] {
+	return &c.ApiServerAccessProfile
 }
 
 // mqlAzureSubscriptionAdvisorService for the azure.subscription.advisorService resource
