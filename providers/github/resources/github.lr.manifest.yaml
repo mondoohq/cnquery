@@ -38,7 +38,7 @@ resources:
     fields:
       headCommit: {}
       headCommitSha:
-        min_mondoo_version: latest
+        min_mondoo_version: 9.0.0
       isDefault:
         min_mondoo_version: 6.8.0
       isProtected:
