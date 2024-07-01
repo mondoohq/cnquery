@@ -422,7 +422,9 @@ private github.branch @defaults("name") {
   // Whether branch protection is enabled
   isProtected bool
   // Repository branch HEAD commit
-  headCommit github.commit
+  headCommit() github.commit
+  // Repository branch HEAD commit SHA sum
+  headCommitSha string
   // Repository branch protection rules
   protectionRules() github.branchprotection
   // Repository branch repository name
