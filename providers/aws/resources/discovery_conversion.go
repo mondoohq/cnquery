@@ -424,6 +424,7 @@ func addConnectionInfoToEcrAsset(image *mqlAwsEcrImage, conn *connection.AwsConn
 			"region":  image.Region.Data,
 			"profile": conn.Profile(),
 		},
+		Runtime:        "aws-ecr",
 		DelayDiscovery: true,
 	})
 
