@@ -217,6 +217,8 @@ resources:
     fields:
       addonProfiles: {}
       agentPoolProfiles: {}
+      apiServerAccessProfile:
+        min_mondoo_version: 9.0.0
       createdAt: {}
       dnsPrefix: {}
       fqdn: {}

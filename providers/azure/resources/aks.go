@@ -82,6 +82,10 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
+			apiServerAccessProfile, err := convert.JsonToDict(entry.Properties.APIServerAccessProfile)
+			if err != nil {
+				return nil, err
+			}
 			addonProfiles := []interface{}{}
 			for k, a := range entry.Properties.AddonProfiles {
 				dict, err := convert.JsonToDict(a)
@@ -127,6 +131,7 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]interface{}, error) {
 					"securityProfile":           llx.DictData(securityProfile),
 					"storageProfile":            llx.DictData(storageProfile),
 					"workloadAutoScalerProfile": llx.DictData(workloadAutoScalerProfile),
+					"apiServerAccessProfile":    llx.DictData(apiServerAccessProfile),
 				})
 			if err != nil {
 				return nil, err

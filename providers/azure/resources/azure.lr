@@ -1807,6 +1807,8 @@ private azure.subscription.aksService.cluster @defaults("name location kubernete
   addonProfiles []dict
   // The agent pool profiles of the AKS cluster
   agentPoolProfiles []dict
+  // The API server access profile
+  apiServerAccessProfile dict
 }
 
 // Azure Advisor
