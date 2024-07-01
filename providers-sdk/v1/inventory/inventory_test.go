@@ -292,6 +292,20 @@ func TestMarkInsecure(t *testing.T) {
 	}
 }
 
+func TestAnnotations(t *testing.T) {
+	inventory, err := InventoryFromFile("./testdata/annotations.yaml")
+	require.NoError(t, err)
+
+	err = inventory.PreProcess()
+	require.NoError(t, err)
+
+	a := findAsset(inventory.Spec.Assets, "asset-with-annotations")
+	require.NotNil(t, a)
+
+	assert.Equal(t, "myvalue", a.Annotations["mykey"])
+
+}
+
 func findAsset(assets []*Asset, id string) *Asset {
 	for i := range assets {
 		a := assets[i]

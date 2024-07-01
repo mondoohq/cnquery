@@ -1,0 +1,11 @@
+spec:
+  assets:
+    - id: asset-with-annotations
+      name: My Customer Asset Name
+      connections:
+        - type: local
+          discover:
+            targets:
+              - auto
+      annotations:
+        mykey: myvalue
