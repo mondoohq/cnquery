@@ -719,6 +719,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.branch.headCommit": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubBranch).GetHeadCommit()).ToDataRes(types.Resource("github.commit"))
 	},
+	"github.branch.headCommitSha": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubBranch).GetHeadCommitSha()).ToDataRes(types.String)
+	},
 	"github.branch.protectionRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubBranch).GetProtectionRules()).ToDataRes(types.Resource("github.branchprotection"))
 	},
@@ -1710,6 +1713,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"github.branch.headCommit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubBranch).HeadCommit, ok = plugin.RawToTValue[*mqlGithubCommit](v.Value, v.Error)
+		return
+	},
+	"github.branch.headCommitSha": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubBranch).HeadCommitSha, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"github.branch.protectionRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3943,6 +3950,7 @@ type mqlGithubBranch struct {
 	Name plugin.TValue[string]
 	IsProtected plugin.TValue[bool]
 	HeadCommit plugin.TValue[*mqlGithubCommit]
+	HeadCommitSha plugin.TValue[string]
 	ProtectionRules plugin.TValue[*mqlGithubBranchprotection]
 	RepoName plugin.TValue[string]
 	Owner plugin.TValue[*mqlGithubUser]
@@ -3995,7 +4003,23 @@ func (c *mqlGithubBranch) GetIsProtected() *plugin.TValue[bool] {
 }
 
 func (c *mqlGithubBranch) GetHeadCommit() *plugin.TValue[*mqlGithubCommit] {
-	return &c.HeadCommit
+	return plugin.GetOrCompute[*mqlGithubCommit](&c.HeadCommit, func() (*mqlGithubCommit, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.branch", c.__id, "headCommit")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGithubCommit), nil
+			}
+		}
+
+		return c.headCommit()
+	})
+}
+
+func (c *mqlGithubBranch) GetHeadCommitSha() *plugin.TValue[string] {
+	return &c.HeadCommitSha
 }
 
 func (c *mqlGithubBranch) GetProtectionRules() *plugin.TValue[*mqlGithubBranchprotection] {

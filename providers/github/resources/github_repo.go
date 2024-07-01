@@ -406,11 +406,6 @@ func (g *mqlGithubRepository) branches() ([]interface{}, error) {
 	res := []interface{}{}
 	for i := range allBranches {
 		branch := allBranches[i]
-		rc := branch.Commit
-		mqlCommit, err := newMqlGithubCommit(g.MqlRuntime, rc, ownerLogin, repoName)
-		if err != nil {
-			return nil, err
-		}
 
 		defaultBranch := false
 		if repoDefaultBranchName == *branch.Name {
@@ -418,12 +413,12 @@ func (g *mqlGithubRepository) branches() ([]interface{}, error) {
 		}
 
 		mqlBranch, err := CreateResource(g.MqlRuntime, "github.branch", map[string]*llx.RawData{
-			"name":        llx.StringData(branch.GetName()),
-			"isProtected": llx.BoolData(branch.GetProtected()),
-			"headCommit":  llx.AnyData(mqlCommit),
-			"repoName":    llx.StringData(repoName),
-			"owner":       llx.ResourceData(owner, owner.MqlName()),
-			"isDefault":   llx.BoolData(defaultBranch),
+			"name":          llx.StringData(branch.GetName()),
+			"isProtected":   llx.BoolData(branch.GetProtected()),
+			"headCommitSha": llx.StringData(branch.GetCommit().GetSHA()),
+			"repoName":      llx.StringData(repoName),
+			"owner":         llx.ResourceData(owner, owner.MqlName()),
+			"isDefault":     llx.BoolData(defaultBranch),
 		})
 		if err != nil {
 			return nil, err
@@ -575,6 +570,22 @@ func (g *mqlGithubBranch) protectionRules() (*mqlGithubBranchprotection, error) 
 		return nil, err
 	}
 	return res.(*mqlGithubBranchprotection), nil
+}
+
+func (g *mqlGithubBranch) headCommit() (*mqlGithubCommit, error) {
+	ownerName := g.Owner.Data
+	if ownerName.Login.Error != nil {
+		return nil, ownerName.Login.Error
+	}
+	ownerLogin := ownerName.Login.Data
+
+	commit, err := newMqlGithubCommit(g.MqlRuntime, &github.RepositoryCommit{
+		SHA: &g.HeadCommitSha.Data,
+	}, ownerLogin, g.RepoName.Data)
+	if err != nil {
+		return nil, err
+	}
+	return commit.(*mqlGithubCommit), nil
 }
 
 func newMqlGithubCommit(runtime *plugin.Runtime, rc *github.RepositoryCommit, owner string, repo string) (interface{}, error) {
