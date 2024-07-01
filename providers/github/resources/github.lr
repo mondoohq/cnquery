@@ -226,6 +226,17 @@ private github.package @defaults("id name") {
   repository() github.repository
 }
 
+// GitHub packages
+github.packages {
+  []github.package
+  // Public packages
+  public() []github.package
+  // Private packages
+  private() []github.package
+  // Internal packages
+  internal() []github.package
+} 
+
 // GitHub repository
 private github.repository @defaults("fullName") {
   init(name string) // can only be used when logged in to github as a user

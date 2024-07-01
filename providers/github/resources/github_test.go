@@ -50,3 +50,12 @@ func TestResource_Github(t *testing.T) {
 		assert.Equal(t, string(""), res[0].Data.Value)
 	})
 }
+
+func TestResource_GithubPackages(t *testing.T) {
+	t.Run("github packages", func(t *testing.T) {
+		res := x.TestQuery(t, "github.packages")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, string(""), res[0].Data.Value)
+	})
+}
