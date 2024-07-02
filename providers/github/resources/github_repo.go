@@ -155,7 +155,6 @@ func initGithubRepository(runtime *plugin.Runtime, args map[string]*llx.RawData)
 				}
 				user = obj.(*mqlGithubUser)
 			}
-			return nil, nil, err
 		} else {
 			org = obj.(*mqlGithubOrganization)
 		}
