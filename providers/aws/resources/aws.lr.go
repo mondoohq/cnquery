@@ -10399,7 +10399,7 @@ func (c *mqlAwsVpcRoutetable) GetAssociations() *plugin.TValue[[]interface{}] {
 			}
 		}
 
-		return c.Associations()
+		return c.associations()
 	})
 }
 
@@ -10492,7 +10492,7 @@ func (c *mqlAwsVpcRoutetableAssociations) GetSubnet() *plugin.TValue[*mqlAwsVpcS
 			}
 		}
 
-		return c.Subnet()
+		return c.subnet()
 	})
 }
 
