@@ -289,6 +289,13 @@ resources:
       visibility: {}
     is_private: true
     min_mondoo_version: 6.11.0
+  github.packages:
+    fields:
+      internal: {}
+      list: {}
+      private: {}
+      public: {}
+    min_mondoo_version: 9.0.0
   github.release:
     fields:
       name: {}

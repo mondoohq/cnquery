@@ -54,6 +54,10 @@ func init() {
 			// to override args, implement: initGithubPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGithubPackage,
 		},
+		"github.packages": {
+			// to override args, implement: initGithubPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGithubPackages,
+		},
 		"github.repository": {
 			Init: initGithubRepository,
 			Create: createGithubRepository,
@@ -463,6 +467,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"github.package.repository": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubPackage).GetRepository()).ToDataRes(types.Resource("github.repository"))
+	},
+	"github.packages.public": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubPackages).GetPublic()).ToDataRes(types.Array(types.Resource("github.package")))
+	},
+	"github.packages.private": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubPackages).GetPrivate()).ToDataRes(types.Array(types.Resource("github.package")))
+	},
+	"github.packages.internal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubPackages).GetInternal()).ToDataRes(types.Array(types.Resource("github.package")))
+	},
+	"github.packages.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubPackages).GetList()).ToDataRes(types.Array(types.Resource("github.package")))
 	},
 	"github.repository.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetId()).ToDataRes(types.Int)
@@ -1345,6 +1361,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"github.package.repository": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubPackage).Repository, ok = plugin.RawToTValue[*mqlGithubRepository](v.Value, v.Error)
+		return
+	},
+	"github.packages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGithubPackages).__id, ok = v.Value.(string)
+			return
+		},
+	"github.packages.public": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubPackages).Public, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"github.packages.private": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubPackages).Private, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"github.packages.internal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubPackages).Internal, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"github.packages.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubPackages).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"github.repository.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3045,6 +3081,118 @@ func (c *mqlGithubPackage) GetRepository() *plugin.TValue[*mqlGithubRepository] 
 		}
 
 		return c.repository()
+	})
+}
+
+// mqlGithubPackages for the github.packages resource
+type mqlGithubPackages struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlGithubPackagesInternal it will be used here
+	Public plugin.TValue[[]interface{}]
+	Private plugin.TValue[[]interface{}]
+	Internal plugin.TValue[[]interface{}]
+	List plugin.TValue[[]interface{}]
+}
+
+// createGithubPackages creates a new instance of this resource
+func createGithubPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGithubPackages{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("github.packages", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGithubPackages) MqlName() string {
+	return "github.packages"
+}
+
+func (c *mqlGithubPackages) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGithubPackages) GetPublic() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Public, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.packages", c.__id, "public")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.public()
+	})
+}
+
+func (c *mqlGithubPackages) GetPrivate() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Private, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.packages", c.__id, "private")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.private()
+	})
+}
+
+func (c *mqlGithubPackages) GetInternal() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Internal, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.packages", c.__id, "internal")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.internal()
+	})
+}
+
+func (c *mqlGithubPackages) GetList() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.packages", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.list()
 	})
 }
 
