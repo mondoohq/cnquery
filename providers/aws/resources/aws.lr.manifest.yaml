@@ -1954,6 +1954,8 @@ resources:
       id: {}
       isAttachable: {}
       name: {}
+      policyId:
+        min_mondoo_version: 9.0.0
       scope: {}
       updateDate: {}
       versions: {}

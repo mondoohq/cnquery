@@ -810,8 +810,10 @@ private aws.iam.loginProfile @defaults("createdAt") {
 private aws.iam.policy @defaults("arn name") {
   // ARN of the policy
   arn string
-  // ID of the policy
+  // ID of the policy: deprecated, use policyId
   id string
+  // ID of the policy
+  policyId() string
   // Name of the policy
   name() string
   // Description of the policy
