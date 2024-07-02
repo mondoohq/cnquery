@@ -15,6 +15,12 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/github/connection"
 )
 
+const (
+	GITHUB_PACKAGE_VISIBILITY_PUBLIC   = "public"
+	GITHUB_PACKAGE_VISIBILITY_PRIVATE  = "private"
+	GITHUB_PACKAGE_VISIBILITY_INTERNAL = "internal"
+)
+
 func (g *mqlGithubPackage) id() (string, error) {
 	if g.Id.Error != nil {
 		return "", g.Id.Error
@@ -32,17 +38,17 @@ func (g *mqlGithubPackages) list() ([]any, error) {
 }
 
 func (g *mqlGithubPackages) public() ([]any, error) {
-	visibility := "public"
+	visibility := GITHUB_PACKAGE_VISIBILITY_PUBLIC
 	return newMqlGithubPackages(g.MqlRuntime, &visibility)
 }
 
 func (g *mqlGithubPackages) private() ([]any, error) {
-	visibility := "private"
+	visibility := GITHUB_PACKAGE_VISIBILITY_PRIVATE
 	return newMqlGithubPackages(g.MqlRuntime, &visibility)
 }
 
 func (g *mqlGithubPackages) internal() ([]any, error) {
-	visibility := "internal"
+	visibility := GITHUB_PACKAGE_VISIBILITY_INTERNAL
 	return newMqlGithubPackages(g.MqlRuntime, &visibility)
 }
 
