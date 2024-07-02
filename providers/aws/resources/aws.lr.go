@@ -885,7 +885,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsVpcRoutetable).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.vpc.routetable.associations.routeTableAssociationId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsVpcRoutetableAssociations).GetRouteTableAssociationId()).ToDataRes(NO_TYPE_DETECTED)
+		return (r.(*mqlAwsVpcRoutetableAssociations).GetRouteTableAssociationId()).ToDataRes(types.String)
 	},
 	"aws.vpc.routetable.associations.associationsState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcRoutetableAssociations).GetAssociationsState()).ToDataRes(types.Array(types.Dict))
@@ -897,7 +897,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsVpcRoutetableAssociations).GetMain()).ToDataRes(types.String)
 	},
 	"aws.vpc.routetable.associations.routeTableId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsVpcRoutetableAssociations).GetRouteTableId()).ToDataRes(NO_TYPE_DETECTED)
+		return (r.(*mqlAwsVpcRoutetableAssociations).GetRouteTableId()).ToDataRes(types.String)
 	},
 	"aws.vpc.routetable.associations.subnet": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcRoutetableAssociations).GetSubnet()).ToDataRes(types.Resource("aws.vpc.subnet"))
@@ -4542,7 +4542,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.vpc.routetable.associations.routeTableAssociationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVpcRoutetableAssociations).RouteTableAssociationId, ok = plugin.RawToTValue[NO_TYPE_DETECTED](v.Value, v.Error)
+		r.(*mqlAwsVpcRoutetableAssociations).RouteTableAssociationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.routetable.associations.associationsState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4558,7 +4558,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.vpc.routetable.associations.routeTableId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVpcRoutetableAssociations).RouteTableId, ok = plugin.RawToTValue[NO_TYPE_DETECTED](v.Value, v.Error)
+		r.(*mqlAwsVpcRoutetableAssociations).RouteTableId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.routetable.associations.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10420,11 +10420,11 @@ type mqlAwsVpcRoutetableAssociations struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsVpcRoutetableAssociationsInternal it will be used here
-	RouteTableAssociationId plugin.TValue[NO_TYPE_DETECTED]
+	RouteTableAssociationId plugin.TValue[string]
 	AssociationsState plugin.TValue[[]interface{}]
 	GatewayId plugin.TValue[string]
 	Main plugin.TValue[string]
-	RouteTableId plugin.TValue[NO_TYPE_DETECTED]
+	RouteTableId plugin.TValue[string]
 	Subnet plugin.TValue[*mqlAwsVpcSubnet]
 }
 
@@ -10460,7 +10460,7 @@ func (c *mqlAwsVpcRoutetableAssociations) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsVpcRoutetableAssociations) GetRouteTableAssociationId() *plugin.TValue[NO_TYPE_DETECTED] {
+func (c *mqlAwsVpcRoutetableAssociations) GetRouteTableAssociationId() *plugin.TValue[string] {
 	return &c.RouteTableAssociationId
 }
 
@@ -10476,7 +10476,7 @@ func (c *mqlAwsVpcRoutetableAssociations) GetMain() *plugin.TValue[string] {
 	return &c.Main
 }
 
-func (c *mqlAwsVpcRoutetableAssociations) GetRouteTableId() *plugin.TValue[NO_TYPE_DETECTED] {
+func (c *mqlAwsVpcRoutetableAssociations) GetRouteTableId() *plugin.TValue[string] {
 	return &c.RouteTableId
 }
 
