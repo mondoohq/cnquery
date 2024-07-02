@@ -93,7 +93,7 @@ private aws.vpc.routetable @defaults("id routes.length") {
 // Amazon Virtual Private Cloud (VPC) route table associations
 private aws.vpc.routetable.associations @defaults("routeTableAssociationId gatewayId subnetId") {
   // Unique ID of the association
-  routeTableAssociationId
+  routeTableAssociationId string
   // Association state
   associationsState []dict
   // Unique ID of the associated gateway
@@ -101,7 +101,7 @@ private aws.vpc.routetable.associations @defaults("routeTableAssociationId gatew
   // Whether this is the main association
   main string
   // Unique ID of the route table
-  routeTableId
+  routeTableId string
   // Subnet of the route table association
   subnet() aws.vpc.subnet
 }
