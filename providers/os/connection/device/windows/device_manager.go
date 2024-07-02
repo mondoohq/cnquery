@@ -21,6 +21,8 @@ type WindowsDeviceManager struct {
 	opts      map[string]string
 	// indicates if the disk we've targeted has been set to online. we use this to know if we need to put it back offline once we're done
 	diskSetToOnline bool
+	// indicates if the disk we've targeted has been set to readonly=false. we use this to know if we need to put it back to readonly once we're done
+	diskSetToReadonly bool
 	// if we've set the disk online, we need to know the index to set it back offline
 	diskIndex int
 }
@@ -51,11 +53,19 @@ func (d *WindowsDeviceManager) IdentifyMountTargets(opts map[string]string) ([]*
 		return nil, err
 	}
 
-	diskOnline, err := d.identifyDiskOnline(targetDrive.Index)
+	diskStatus, err := d.identifyDiskStatus(targetDrive.Index)
 	if err != nil {
 		return nil, err
 	}
-	if diskOnline.IsOffline {
+	if diskStatus.Readonly {
+		err = d.setDiskReadonlyState(targetDrive.Index, false)
+		if err != nil {
+			return nil, err
+		}
+		d.diskSetToOnline = true
+		d.diskIndex = targetDrive.Index
+	}
+	if diskStatus.Offline {
 		err = d.setDiskOnlineState(targetDrive.Index, true)
 		if err != nil {
 			return nil, err
@@ -63,6 +73,7 @@ func (d *WindowsDeviceManager) IdentifyMountTargets(opts map[string]string) ([]*
 		d.diskSetToOnline = true
 		d.diskIndex = targetDrive.Index
 	}
+
 	partitions, err := d.identifyPartitions(targetDrive.Index)
 	if err != nil {
 		return nil, err
@@ -109,6 +120,12 @@ func (d *WindowsDeviceManager) UnmountAndClose() {
 		err := d.setDiskOnlineState(d.diskIndex, false)
 		if err != nil {
 			log.Debug().Err(err).Msg("could not set disk offline")
+		}
+	}
+	if d.diskSetToReadonly {
+		err := d.setDiskReadonlyState(d.diskIndex, true)
+		if err != nil {
+			log.Debug().Err(err).Msg("could not set disk readonly")
 		}
 	}
 }

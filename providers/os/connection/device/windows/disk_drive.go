@@ -18,9 +18,10 @@ import (
 
 const (
 	identifyDiskDrivesPwshScript = `Get-WmiObject -Class Win32_DiskDrive | Select-Object Name, SCSILogicalUnit, Index, SerialNumber | ConvertTo-Json`
-	identifyDiskOnlinePwshScript = `Get-Disk -Number %d | Select-Object Number, IsOffline | ConvertTo-Json`
+	identifyDiskOnlinePwshScript = `Get-Disk -Number %d | Select-Object Number, IsOffline, IsReadOnly | ConvertTo-Json`
 	identifyPartitionPwshScript  = `Get-Disk -Number %d | Get-Partition | Select DriveLetter, Size, Type | ConvertTo-Json`
 	setDiskOnlinePwshScript      = `Set-Disk -Number %d -IsOffline %s`
+	setDiskReadOnlyPwshScript    = `Set-Disk -Number %d -IsReadOnly %s`
 )
 
 type diskDrive struct {
@@ -30,9 +31,10 @@ type diskDrive struct {
 	SerialNumber    string `json:"SerialNumber"`
 }
 
-type diskOnlineStatus struct {
-	Number    int  `json:"Number"`
-	IsOffline bool `json:"IsOffline"`
+type diskStatus struct {
+	Number   int  `json:"Number"`
+	Offline  bool `json:"IsOffline"`
+	Readonly bool `json:"IsReadOnly"`
 }
 
 type diskPartition struct {
@@ -63,7 +65,29 @@ func (d *WindowsDeviceManager) setDiskOnlineState(diskNumber int, online bool) e
 	return nil
 }
 
-func (d *WindowsDeviceManager) identifyDiskOnline(diskNumber int) (*diskOnlineStatus, error) {
+func (d *WindowsDeviceManager) setDiskReadonlyState(diskNumber int, readonly bool) error {
+	str := "$true"
+	if !readonly {
+		str = "$false"
+	}
+	log.Debug().Int("diskNumber", diskNumber).Bool("readonly", readonly).Msg("setting disk readonly state")
+	script := fmt.Sprintf(setDiskReadOnlyPwshScript, diskNumber, str)
+	cmd, err := d.cmdRunner.RunCommand(powershell.Encode(script))
+	if err != nil {
+		return err
+	}
+	if cmd.ExitStatus != 0 {
+		outErr, err := io.ReadAll(cmd.Stderr)
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf("failed to run powershell script: %s", outErr)
+	}
+
+	return nil
+}
+
+func (d *WindowsDeviceManager) identifyDiskStatus(diskNumber int) (*diskStatus, error) {
 	cmd, err := d.cmdRunner.RunCommand(powershell.Encode(fmt.Sprintf(identifyDiskOnlinePwshScript, diskNumber)))
 	if err != nil {
 		return nil, err
@@ -81,7 +105,7 @@ func (d *WindowsDeviceManager) identifyDiskOnline(diskNumber int) (*diskOnlineSt
 		return nil, err
 	}
 
-	var status *diskOnlineStatus
+	var status *diskStatus
 	err = json.Unmarshal(stdout, &status)
 	if err != nil {
 		return nil, err
