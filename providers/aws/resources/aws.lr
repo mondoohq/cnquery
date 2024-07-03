@@ -91,7 +91,7 @@ private aws.vpc.routetable @defaults("id routes.length") {
 }
 
 // Amazon Virtual Private Cloud (VPC) route table association
-private aws.vpc.routetable.association @defaults("routeTableAssociationId gatewayId subnetId") {
+private aws.vpc.routetable.association @defaults("routeTableAssociationId gatewayId") {
   // Unique ID of the association
   routeTableAssociationId string
   // Association state
