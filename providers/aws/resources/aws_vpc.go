@@ -546,24 +546,51 @@ func (a *mqlAwsVpc) routeTables() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			dictAssociations, err := convert.JsonToDictSlice(routeTable.Associations)
-			if err != nil {
-				return nil, err
-			}
 			mqlRouteTable, err := CreateResource(a.MqlRuntime, "aws.vpc.routetable",
 				map[string]*llx.RawData{
-					"associations": llx.ArrayData(dictAssociations, types.Any),
-					"id":           llx.StringDataPtr(routeTable.RouteTableId),
-					"routes":       llx.ArrayData(dictRoutes, types.Any),
-					"tags":         llx.MapData(Ec2TagsToMap(routeTable.Tags), types.String),
+					"id":     llx.StringDataPtr(routeTable.RouteTableId),
+					"routes": llx.ArrayData(dictRoutes, types.Any),
+					"tags":   llx.MapData(Ec2TagsToMap(routeTable.Tags), types.String),
 				})
 			if err != nil {
 				return nil, err
 			}
 			res = append(res, mqlRouteTable)
+			mqlRouteTable.(*mqlAwsVpcRoutetable).cacheAssociations = routeTable.Associations
 		}
 	}
 	return res, nil
+}
+
+type mqlAwsVpcRoutetableInternal struct {
+	cacheAssociations []vpctypes.RouteTableAssociation
+}
+
+func (a *mqlAwsVpcRoutetable) associations() ([]interface{}, error) {
+	res := []interface{}{}
+	for i := range a.cacheAssociations {
+		assoc := a.cacheAssociations[i]
+		state, err := convert.JsonToDict(assoc.AssociationState)
+		if err != nil {
+			return nil, err
+		}
+		mqlAssoc, err := CreateResource(a.MqlRuntime, "aws.vpc.routetable.association", map[string]*llx.RawData{
+			"routeTableAssociationId": llx.StringDataPtr(assoc.RouteTableAssociationId),
+			"associationsState":       llx.AnyData(state),
+			"gatewayId":               llx.StringDataPtr(assoc.GatewayId),
+			"main":                    llx.BoolDataPtr(assoc.Main),
+			"routeTableId":            llx.StringDataPtr(assoc.RouteTableId),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlAssoc)
+	}
+	return nil, nil
+}
+
+func (a *mqlAwsVpcRoutetableAssociation) subnet() (*mqlAwsVpcSubnet, error) {
+	return nil, nil
 }
 
 func (a *mqlAwsVpcSubnet) id() (string, error) {

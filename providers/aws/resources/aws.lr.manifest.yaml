@@ -2941,7 +2941,7 @@ resources:
     platform:
       name:
       - aws
-  aws.vpc.routetable.associations:
+  aws.vpc.routetable.association:
     fields:
       associationsState: {}
       gatewayId: {}
@@ -2950,6 +2950,18 @@ resources:
       routeTableId: {}
       subnet: {}
     is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.vpc.routetable.associations:
+    fields:
+      associationsState: {}
+      gatewayId: {}
+      main: {}
+      routeTableAssociationId: {}
+      routeTableId: {}
+      subnet: {}
     min_mondoo_version: 9.0.0
     platform:
       name:
