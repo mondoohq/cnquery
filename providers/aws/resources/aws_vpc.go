@@ -586,7 +586,7 @@ func (a *mqlAwsVpcRoutetable) associations() ([]interface{}, error) {
 		}
 		res = append(res, mqlAssoc)
 	}
-	return nil, nil
+	return res, nil
 }
 
 func (a *mqlAwsVpcRoutetableAssociation) subnet() (*mqlAwsVpcSubnet, error) {
