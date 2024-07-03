@@ -578,7 +578,7 @@ func (a *mqlAwsVpcRoutetable) associations() ([]interface{}, error) {
 		}
 		mqlAssoc, err := CreateResource(a.MqlRuntime, "aws.vpc.routetable.association", map[string]*llx.RawData{
 			"routeTableAssociationId": llx.StringDataPtr(assoc.RouteTableAssociationId),
-			"associationsState":       llx.AnyData(state),
+			"associationsState":       llx.AnyData(assoc.state),
 			"gatewayId":               llx.StringDataPtr(assoc.GatewayId),
 			"main":                    llx.BoolDataPtr(assoc.Main),
 			"routeTableId":            llx.StringDataPtr(assoc.RouteTableId),
