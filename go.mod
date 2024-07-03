@@ -406,7 +406,7 @@ require (
 	honnef.co/go/tools v0.4.7 // indirect
 	k8s.io/api v0.28.9 // indirect
 	k8s.io/klog/v2 v2.120.1 // indirect
-	modernc.org/libc v1.54.2 // indirect
+	modernc.org/libc v1.53.3 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.8.0 // indirect
 	modernc.org/sqlite v1.30.1 // indirect

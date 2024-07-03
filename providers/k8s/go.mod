@@ -417,7 +417,7 @@ require (
 	k8s.io/component-base v0.28.9 // indirect
 	k8s.io/kube-openapi v0.0.0-20240220201932-37d671a357a5 // indirect
 	k8s.io/kubelet v0.28.9 // indirect
-	modernc.org/libc v1.54.2 // indirect
+	modernc.org/libc v1.53.3 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.8.0 // indirect
 	modernc.org/sqlite v1.30.1 // indirect
