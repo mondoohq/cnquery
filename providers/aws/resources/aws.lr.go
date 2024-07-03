@@ -10419,7 +10419,7 @@ func (c *mqlAwsVpcRoutetable) GetTags() *plugin.TValue[map[string]interface{}] {
 type mqlAwsVpcRoutetableAssociation struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlAwsVpcRoutetableAssociationInternal it will be used here
+	mqlAwsVpcRoutetableAssociationInternal
 	RouteTableAssociationId plugin.TValue[string]
 	AssociationsState plugin.TValue[[]interface{}]
 	GatewayId plugin.TValue[string]

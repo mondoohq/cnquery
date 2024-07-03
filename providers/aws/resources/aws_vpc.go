@@ -557,6 +557,7 @@ func (a *mqlAwsVpc) routeTables() ([]interface{}, error) {
 			}
 			res = append(res, mqlRouteTable)
 			mqlRouteTable.(*mqlAwsVpcRoutetable).cacheAssociations = routeTable.Associations
+			mqlRouteTable.(*mqlAwsVpcRoutetable).region = a.Region.Data
 		}
 	}
 	return res, nil
@@ -564,6 +565,7 @@ func (a *mqlAwsVpc) routeTables() ([]interface{}, error) {
 
 type mqlAwsVpcRoutetableInternal struct {
 	cacheAssociations []vpctypes.RouteTableAssociation
+	region            string
 }
 
 func (a *mqlAwsVpcRoutetable) associations() ([]interface{}, error) {
@@ -585,11 +587,28 @@ func (a *mqlAwsVpcRoutetable) associations() ([]interface{}, error) {
 			return nil, err
 		}
 		res = append(res, mqlAssoc)
+		mqlAssoc.(*mqlAwsVpcRoutetableAssociation).cacheSubnetId = assoc.SubnetId
+		mqlAssoc.(*mqlAwsVpcRoutetableAssociation).region = a.region
 	}
 	return res, nil
 }
 
+type mqlAwsVpcRoutetableAssociationInternal struct {
+	cacheSubnetId *string
+	region        string
+}
+
 func (a *mqlAwsVpcRoutetableAssociation) subnet() (*mqlAwsVpcSubnet, error) {
+	if a.cacheSubnetId != nil {
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		res, err := NewResource(a.MqlRuntime, "aws.vpc.subnet", map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(subnetArnPattern, a.region, conn.AccountId(), convert.ToString(a.cacheSubnetId)))})
+		if err != nil {
+			a.Subnet.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, err
+		}
+		return res.(*mqlAwsVpcSubnet), nil
+	}
+	a.Subnet.State = plugin.StateIsNull | plugin.StateIsSet
 	return nil, nil
 }
 
