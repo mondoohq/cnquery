@@ -319,7 +319,7 @@ func (nodeData *CollectionFinisherNodeData) initialize() {
 	}
 }
 
-// consume marks the received dataponts as finished
+// consume marks the received datapoints as finished
 func (nodeData *CollectionFinisherNodeData) consume(from NodeID, data *envelope) {
 	if len(nodeData.remainingDatapoints) == 0 {
 		return

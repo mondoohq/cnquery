@@ -42,7 +42,7 @@ func ParseSoftwarePlistUpdates(input io.Reader) ([]OperatingSystemUpdate, error)
 	var r io.ReadSeeker
 	r, ok := input.(io.ReadSeeker)
 
-	// if the read seaker is not implemented lets cache stdout in-memory
+	// if the read seeker is not implemented lets cache stdout in-memory
 	if !ok {
 		packageList, err := io.ReadAll(input)
 		if err != nil {

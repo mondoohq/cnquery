@@ -76,7 +76,7 @@ func TestPlaybookDecoding(t *testing.T) {
 		assert.Equal(t, "False", play.GatherFacts)
 	})
 
-	t.Run("load playbook with mulitple plays", func(t *testing.T) {
+	t.Run("load playbook with multiple plays", func(t *testing.T) {
 		data, err := os.ReadFile("./testdata/play_multi.yml")
 		require.NoError(t, err)
 

@@ -80,7 +80,7 @@ func TestAddRuntime(t *testing.T) {
 	// Wait until all runtimes are added
 	wg.Wait()
 
-	// Vertify that all runtimes are added and the last connectiod ID is correct
+	// Verify that all runtimes are added and the last connection ID is correct
 	assert.Len(t, s.runtimes, 200)
 	assert.Equal(t, s.lastConnectionID, uint32(0))
 }
@@ -128,7 +128,7 @@ func TestDeprecatedAddRuntime(t *testing.T) {
 	// Wait until all runtimes are added
 	wg.Wait()
 
-	// Vertify that all runtimes are added and the last connectiod ID is correct
+	// Verify that all runtimes are added and the last connection ID is correct
 	assert.Len(t, s.runtimes, 200)
 	assert.Equal(t, s.lastConnectionID, uint32(200))
 }

@@ -34,7 +34,7 @@ func NewService() *Service {
 
 var heartbeatRes HeartbeatRes
 
-// FIXME: once we move to v12, remove the conf parametrer and remove the connId from the createRuntime function.
+// FIXME: once we move to v12, remove the conf parameter and remove the connId from the createRuntime function.
 // The connection ID will always be set before the connection call is done, so we don't need to do anything about it here.
 // The parameters are needed now, only to make sure that old clients can work with new providers.
 func (s *Service) AddRuntime(conf *inventory.Config, createRuntime func(connId uint32) (*Runtime, error)) (*Runtime, error) {

@@ -35,7 +35,7 @@ func TestManagerCentos(t *testing.T) {
 			Version:      "1.2",
 			SerialNumber: "0",
 			UUID:         "64f118d3-0060-4a4c-bf1f-a11d655c4d6f",
-			Familiy:      "Virtual Machine",
+			Family:       "Virtual Machine",
 			SKU:          "",
 		},
 		BaseBoardInfo: BaseBoardInfo{
@@ -78,7 +78,7 @@ func TestManagerMacos(t *testing.T) {
 			Version:      "1.0",
 			SerialNumber: "DAAAA111AA11",
 			UUID:         "e126775d-2368-4f51-9863-76d5df0c8108",
-			Familiy:      "",
+			Family:       "",
 			SKU:          "",
 		},
 		BaseBoardInfo: BaseBoardInfo{
@@ -121,7 +121,7 @@ func TestManagerWindows(t *testing.T) {
 			Version:      "None",
 			SerialNumber: "",
 			UUID:         "16BD4D56-6B98-23F9-493C-F6B14E7CFC0B",
-			Familiy:      "",
+			Family:       "",
 			SKU:          "",
 		},
 		BaseBoardInfo: BaseBoardInfo{

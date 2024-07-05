@@ -83,7 +83,7 @@ func initMachineSystem(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 		"serial":       llx.StringData(biosInfo.SysInfo.SerialNumber),
 		"uuid":         llx.StringData(biosInfo.SysInfo.UUID),
 		"sku":          llx.StringData(biosInfo.SysInfo.SKU),
-		"family":       llx.StringData(biosInfo.SysInfo.Familiy),
+		"family":       llx.StringData(biosInfo.SysInfo.Family),
 	}, nil, nil
 }
 

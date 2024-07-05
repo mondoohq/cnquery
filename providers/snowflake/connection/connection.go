@@ -7,6 +7,7 @@ import (
 	"crypto/rsa"
 	"encoding/pem"
 	"errors"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/snowflakedb/gosnowflake"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
@@ -77,7 +78,7 @@ func NewSnowflakeConnection(id uint32, asset *inventory.Asset, conf *inventory.C
 	return conn, nil
 }
 
-func parsePrivateKey(privateKeyBytes []byte, passhrase []byte) (*rsa.PrivateKey, error) {
+func parsePrivateKey(privateKeyBytes []byte, passphrase []byte) (*rsa.PrivateKey, error) {
 	privateKeyBlock, _ := pem.Decode(privateKeyBytes)
 	if privateKeyBlock == nil {
 		return nil, errors.New("could not decode private key")
@@ -86,11 +87,11 @@ func parsePrivateKey(privateKeyBytes []byte, passhrase []byte) (*rsa.PrivateKey,
 	var privateKey interface{}
 	var err error
 	if privateKeyBlock.Type == "ENCRYPTED PRIVATE KEY" {
-		if len(passhrase) == 0 {
+		if len(passphrase) == 0 {
 			return nil, errors.New("private key is encrypted, but no passphrase provided")
 		}
 
-		privateKey, err = ssh.ParseRawPrivateKeyWithPassphrase(privateKeyBlock.Bytes, passhrase)
+		privateKey, err = ssh.ParseRawPrivateKeyWithPassphrase(privateKeyBlock.Bytes, passphrase)
 		if err != nil {
 			return nil, errors.New("could not parse encrypted private key " + err.Error())
 		}

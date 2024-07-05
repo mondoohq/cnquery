@@ -190,7 +190,7 @@ func (c *VsphereConnection) InstanceUUID() (string, error) {
 			return "", err
 		}
 
-		// NOTE: we do not use the ESXi host identifier here to distingush between the API and the host itself
+		// NOTE: we do not use the ESXi host identifier here to distinguish between the API and the host itself
 		return host.Reference().Value, nil
 	}
 
