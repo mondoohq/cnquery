@@ -38,6 +38,7 @@ var Config = plugin.Provider{
 				resources.DiscoveryAdmissionReviews,
 				resources.DiscoveryIngresses,
 				resources.DiscoveryNamespaces,
+				resources.DiscoveryServices,
 			},
 			Flags: []plugin.Flag{
 				{
