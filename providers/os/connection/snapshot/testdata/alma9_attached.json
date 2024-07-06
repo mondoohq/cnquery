@@ -89,6 +89,7 @@
         {
           "name": "xvdh3",
           "fstype": "xfs",
+          "size": 101,
           "fsver": null,
           "label": null,
           "uuid": "31f80bf2-f73c-4350-bd3e-1dfe82e691f9",
@@ -102,6 +103,7 @@
           "name": "xvdh4",
           "fstype": "xfs",
           "fsver": null,
+          "size": 100,
           "label": null,
           "uuid": "b6b03ca5-4431-4db9-a1fb-f13c8566f779",
           "fsavail": null,
