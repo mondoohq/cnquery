@@ -18,7 +18,7 @@ import (
 // group assets into hierarchical tree structures, that make it easy for us
 // to put them into a box and reason about them.
 //
-// For example: A techology-centric view of the world would group a VM
+// For example: A technology-centric view of the world would group a VM
 // in a cloud environment like this:
 //   /aws/accountX/ec2/instances/linux/debian/8.0
 //

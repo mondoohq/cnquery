@@ -67,7 +67,7 @@ func (s *LinuxSmbiosManager) Info() (*SmBiosInfo, error) {
 		case "chassis_version":
 			dst = &smInfo.ChassisInfo.Version
 		case "product_family":
-			dst = &smInfo.SysInfo.Familiy
+			dst = &smInfo.SysInfo.Family
 		case "product_name":
 			dst = &smInfo.SysInfo.Model
 		case "product_serial":

@@ -490,7 +490,7 @@ func commitChanges(confs updateConfs) error {
 	branchRef := plumbing.NewBranchReferenceName(branchName)
 
 	// Note: The branch may be local and thus won't be found in repo.Branch(branchName)
-	// This is consufing and I couldn't find any further docs on this behavior,
+	// This is confusing and I couldn't find any further docs on this behavior,
 	// but we have to work around it.
 	if _, err := repo.Reference(branchRef, true); err == nil {
 		err = repo.Storer.RemoveReference(branchRef)

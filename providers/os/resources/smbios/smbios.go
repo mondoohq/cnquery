@@ -29,7 +29,7 @@ type SysInfo struct {
 	Version      string
 	SerialNumber string
 	UUID         string
-	Familiy      string
+	Family       string
 	SKU          string
 }
 

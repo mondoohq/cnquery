@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// withMessage and methods are taken frmo https://github.com/pkg/errors
+// withMessage and methods are taken from https://github.com/pkg/errors
 // under BSD-2-Clause license
 
 type withMessage struct {
