@@ -107,7 +107,7 @@ func TestGetMountablePartitionByDevice(t *testing.T) {
 					Name: "sde",
 					Children: []BlockDevice{
 						{Uuid: "12346", FsType: "xfs", Size: 110, Label: "ROOT", Name: "sde1"},
-						{Uuid: "12345", FsType: "xfs", Size: 120, Label: "boot", Name: "sde2"},
+						{Uuid: "12345", FsType: "xfs", Size: 120, Label: "BOOT", Name: "sde2"},
 					},
 				},
 			},
@@ -395,7 +395,7 @@ func TestAttachedBlockEntryMultipleMatch(t *testing.T) {
 	info, err := blockEntries.GetUnnamedBlockEntry()
 	require.NoError(t, err)
 	require.Equal(t, "xfs", info.FsType)
-	require.True(t, strings.Contains(info.Name, "xvdh4"))
+	require.True(t, strings.Contains(info.Name, "xvdh3"))
 }
 
 func TestAttachedBlockEntryFedora(t *testing.T) {
