@@ -163,8 +163,7 @@ func (a *mqlAwsRdsDbinstance) subnets() ([]interface{}, error) {
 		}
 		return res, nil
 	}
-	a.Subnets.State = plugin.StateIsNull | plugin.StateIsSet
-	return nil, nil
+	return nil, errors.New("no subnets found for RDS DB instance")
 }
 
 func rdsTagsToMap(tags []rdstypes.Tag) map[string]interface{} {
