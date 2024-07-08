@@ -213,21 +213,23 @@ func addResourceSuggestions(schema resources.ResourcesSchema, name string, res *
 
 	suggested := findFuzzy(name, names)
 
-	res.Suggestions = make([]*llx.Documentation, len(suggested))
 	var info *resources.ResourceInfo
 	for i := range suggested {
 		field := suggested[i].Target
 		info = resourceInfos[field]
 		if info != nil {
-			res.Suggestions[i] = &llx.Documentation{
+			if info.GetPrivate() {
+				continue
+			}
+			res.Suggestions = append(res.Suggestions, &llx.Documentation{
 				Field: field,
 				Title: info.Title,
 				Desc:  info.Desc,
-			}
+			})
 		} else {
-			res.Suggestions[i] = &llx.Documentation{
+			res.Suggestions = append(res.Suggestions, &llx.Documentation{
 				Field: field,
-			}
+			})
 		}
 	}
 }
