@@ -131,6 +131,10 @@ resources:
     refs:
     - title: What is a container?
       url: https://docs.docker.com/guides/walkthroughs/what-is-a-container/
+  docker.exposes:
+    fields:
+      port: {}
+    min_mondoo_version: latest
   docker.file:
     docs:
       desc: |
@@ -150,6 +154,7 @@ resources:
       chown: {}
       dst: {}
       src: {}
+    is_private: true
     min_mondoo_version: 9.0.0
     refs:
     - title: Dockerfile ADD reference
@@ -160,6 +165,7 @@ resources:
       chown: {}
       dst: {}
       src: {}
+    is_private: true
     min_mondoo_version: 9.0.0
     refs:
     - title: Dockerfile COPY reference
@@ -168,6 +174,7 @@ resources:
     fields:
       port: {}
       protocol: {}
+    is_private: true
     min_mondoo_version: 9.0.0
     refs:
     - title: Dockerfile EXPOSE reference
@@ -179,6 +186,7 @@ resources:
       name: {}
       platform: {}
       tag: {}
+    is_private: true
     min_mondoo_version: 9.0.0
     refs:
     - title: Dockerfile FROM reference
@@ -186,6 +194,7 @@ resources:
   docker.file.run:
     fields:
       script: {}
+    is_private: true
     min_mondoo_version: 9.0.0
     refs:
     - title: Dockerfile RUN reference
@@ -203,6 +212,7 @@ resources:
       labels: {}
       run: {}
       user: {}
+    is_private: true
     min_mondoo_version: 9.0.0
     refs:
     - title: Dockerfile Reference
@@ -213,6 +223,7 @@ resources:
     fields:
       group: {}
       user: {}
+    is_private: true
     min_mondoo_version: 9.0.0
   docker.image:
     fields:
