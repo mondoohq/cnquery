@@ -3182,6 +3182,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.dbinstance.backupSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetBackupSettings()).ToDataRes(types.Array(types.Resource("aws.rds.backupsetting")))
 	},
+	"aws.rds.dbinstance.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
 	"aws.elasticache.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticache).GetClusters()).ToDataRes(types.Array(types.Dict))
 	},
@@ -8097,6 +8100,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.rds.dbinstance.backupSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbinstance).BackupSettings, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).Subnets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"aws.elasticache.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20573,7 +20580,7 @@ func (c *mqlAwsRdsSnapshot) GetCreatedAt() *plugin.TValue[*time.Time] {
 type mqlAwsRdsDbinstance struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlAwsRdsDbinstanceInternal it will be used here
+	mqlAwsRdsDbinstanceInternal
 	Arn plugin.TValue[string]
 	Name plugin.TValue[string]
 	BackupRetentionPeriod plugin.TValue[int64]
@@ -20604,6 +20611,7 @@ type mqlAwsRdsDbinstance struct {
 	MasterUsername plugin.TValue[string]
 	LatestRestorableTime plugin.TValue[*time.Time]
 	BackupSettings plugin.TValue[[]interface{}]
+	Subnets plugin.TValue[[]interface{}]
 }
 
 // createAwsRdsDbinstance creates a new instance of this resource
@@ -20784,6 +20792,22 @@ func (c *mqlAwsRdsDbinstance) GetBackupSettings() *plugin.TValue[[]interface{}] 
 		}
 
 		return c.backupSettings()
+	})
+}
+
+func (c *mqlAwsRdsDbinstance) GetSubnets() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Subnets, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.dbinstance", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.subnets()
 	})
 }
 

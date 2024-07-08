@@ -2111,6 +2111,8 @@ private aws.rds.dbinstance @defaults("id region engine engineVersion") {
   latestRestorableTime time
   // Backup setting for the database instance
   backupSettings() []aws.rds.backupsetting
+  // Subnet for the RDS instance
+  subnets() []aws.vpc.subnet
 }
 
 // Amazon ElastiCache

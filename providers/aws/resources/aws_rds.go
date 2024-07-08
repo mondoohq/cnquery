@@ -127,6 +127,8 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 					if err != nil {
 						return nil, err
 					}
+					mqlDBInstance.(*mqlAwsRdsDbinstance).region = regionVal
+					mqlDBInstance.(*mqlAwsRdsDbinstance).cacheSubnets = dbInstance.DBSubnetGroup
 					res = append(res, mqlDBInstance)
 				}
 				if dbInstances.Marker == nil {
@@ -139,6 +141,29 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+type mqlAwsRdsDbinstanceInternal struct {
+	cacheSubnets *rdstypes.DBSubnetGroup
+	region       string
+}
+
+func (a *mqlAwsRdsDbinstance) subnets() ([]interface{}, error) {
+	if a.cacheSubnets != nil {
+		res := []interface{}{}
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		for i := range a.cacheSubnets.Subnets {
+			subnet := a.cacheSubnets.Subnets[i]
+			sub, err := NewResource(a.MqlRuntime, "aws.vpc.subnet", map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(subnetArnPattern, a.region, conn.AccountId(), convert.ToString(subnet.SubnetIdentifier)))})
+			if err != nil {
+				a.Subnets.State = plugin.StateIsNull | plugin.StateIsSet
+				return nil, err
+			}
+			res = append(res, sub)
+		}
+		return res, nil
+	}
+	return nil, errors.New("no subnets found for RDS DB instance")
 }
 
 func rdsTagsToMap(tags []rdstypes.Tag) map[string]interface{} {

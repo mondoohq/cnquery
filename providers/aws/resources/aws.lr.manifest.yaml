@@ -2357,6 +2357,8 @@ resources:
         min_mondoo_version: 9.0.0
       storageType:
         min_mondoo_version: 9.0.0
+      subnets:
+        min_mondoo_version: 9.0.0
       tags: {}
     is_private: true
     min_mondoo_version: 5.15.0
