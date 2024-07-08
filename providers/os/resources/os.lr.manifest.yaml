@@ -131,10 +131,6 @@ resources:
     refs:
     - title: What is a container?
       url: https://docs.docker.com/guides/walkthroughs/what-is-a-container/
-  docker.exposes:
-    fields:
-      port: {}
-    min_mondoo_version: latest
   docker.file:
     docs:
       desc: |
