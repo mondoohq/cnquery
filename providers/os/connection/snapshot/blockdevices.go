@@ -213,20 +213,25 @@ func (blockEntries BlockDevices) GetUnmountedBlockEntry() (*PartitionInfo, error
 }
 
 func findVolume(children []BlockDevice) *PartitionInfo {
-	var fs *PartitionInfo
+	candidates := []BlockDevice{}
 	for i := range children {
 		entry := children[i]
 		if entry.IsNotBootOrRootVolumeAndUnmounted() {
 			// we are NOT searching for the root volume here, so we can exclude the "sda" and "xvda" volumes
-			devFsName := "/dev/" + entry.Name
-			fs = &PartitionInfo{Name: devFsName, FsType: entry.FsType}
+			candidates = append(candidates, entry)
 		}
 	}
-	return fs
+	if len(candidates) == 0 {
+		return nil
+	}
+	sortPartitionsBySize(candidates)
+	return &PartitionInfo{Name: "/dev/" + candidates[0].Name, FsType: candidates[0].FsType}
 }
 
 func (entry BlockDevice) IsNoBootVolume() bool {
-	return entry.Uuid != "" && entry.FsType != "" && entry.FsType != "vfat" && entry.Label != "EFI" && entry.Label != "boot"
+	typ := strings.ToLower(entry.FsType)
+	label := strings.ToLower(entry.Label)
+	return entry.Uuid != "" && typ != "" && typ != "vfat" && label != "efi" && label != "boot"
 }
 
 func (entry BlockDevice) IsNoBootVolumeAndUnmounted() bool {
