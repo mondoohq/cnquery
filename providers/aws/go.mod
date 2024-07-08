@@ -7,15 +7,15 @@ go 1.22.0
 toolchain go1.22.2
 
 require (
-	github.com/aws/aws-sdk-go v1.54.13
+	github.com/aws/aws-sdk-go v1.54.15
 	github.com/aws/aws-sdk-go-v2 v1.30.1
-	github.com/aws/aws-sdk-go-v2/config v1.27.23
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.23
+	github.com/aws/aws-sdk-go-v2/config v1.27.24
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.24
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.9
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.32.1
-	github.com/aws/aws-sdk-go-v2/service/acm v1.28.1
+	github.com/aws/aws-sdk-go-v2/service/acm v1.28.2
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.25.1
-	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.30.1
+	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.30.2
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.43.1
 	github.com/aws/aws-sdk-go-v2/service/backup v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.38.2
@@ -42,7 +42,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.28.1
 	github.com/aws/aws-sdk-go-v2/service/kms v1.35.1
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.56.1
-	github.com/aws/aws-sdk-go-v2/service/organizations v1.29.1
+	github.com/aws/aws-sdk-go-v2/service/organizations v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/rds v1.81.2
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.46.1
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.58.0
@@ -119,7 +119,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.15 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.17.13 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.22.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.26.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.26.2 // indirect
 	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20240701140119-53ce41df9490 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
