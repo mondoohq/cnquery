@@ -769,7 +769,7 @@ docker.file @defaults("file.path instructions.length stages.length") {
 }
 
 // Dockerfile stages
-docker.file.stage @defaults("from.name") {
+private docker.file.stage @defaults("from.name") {
   // The source of this stage, specified via `FROM` in Dockerfiles
   from docker.file.from
   // Contains the reference to the Dockerfile this stage belongs to
@@ -795,7 +795,7 @@ docker.file.stage @defaults("from.name") {
 }
 
 // Dockerfile USER instructions
-docker.file.user @defaults("user") {
+private docker.file.user @defaults("user") {
   // Set the user name or UID
   user string
   // Set the user group or GID (optional)
@@ -803,7 +803,7 @@ docker.file.user @defaults("user") {
 }
 
 // Dockerfile EXPOSE instruction
-docker.file.expose @defaults("port protocol") {
+private docker.file.expose @defaults("port protocol") {
   // Port that is exposed
   port int
   // Protocol that is exposed (evaluates to `tcp` if not specified)
@@ -811,7 +811,7 @@ docker.file.expose @defaults("port protocol") {
 }
 
 // Dockerfile FROM instructions
-docker.file.from @defaults("name image tag") {
+private docker.file.from @defaults("name image tag") {
   platform string
   image string
   tag string
@@ -820,12 +820,12 @@ docker.file.from @defaults("name image tag") {
 }
 
 // Dockerfile RUN instructions
-docker.file.run @defaults("script") {
+private docker.file.run @defaults("script") {
   script string
 }
 
 // Dockerfile ADD instructions
-docker.file.add @defaults("src dst") {
+private docker.file.add @defaults("src dst") {
   src []string
   dst string
   chown string
@@ -833,7 +833,7 @@ docker.file.add @defaults("src dst") {
 }
 
 // Dockerfile COPY instructions
-docker.file.copy @defaults("src dst") {
+private docker.file.copy @defaults("src dst") {
   // Optional source to copy file(s) from when not using the default build context
   src []string
   // The destination in the image for the file(s)
