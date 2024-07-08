@@ -1910,7 +1910,7 @@ func TestSuggestions(t *testing.T) {
 		{
 			// resource suggestions
 			"ssh",
-			[]string{"os.unix.sshd", "sshd", "sshd.config", "sshd.config.matchBlock", "windows.security.health"},
+			[]string{"os.unix.sshd", "sshd", "sshd.config", "windows.security.health"},
 			errors.New("cannot find resource for identifier 'ssh'"),
 			nil,
 		},
