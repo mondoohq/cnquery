@@ -345,6 +345,7 @@ func (a *mqlAwsIam) mqlPolicies(policies []iamtypes.Policy) ([]interface{}, erro
 			map[string]*llx.RawData{
 				"arn":             llx.StringDataPtr(policy.Arn),
 				"id":              llx.StringDataPtr(policy.PolicyId),
+				"policyId":        llx.StringDataPtr(policy.PolicyId),
 				"name":            llx.StringDataPtr(policy.PolicyName),
 				"description":     llx.StringDataPtr(policy.Description),
 				"isAttachable":    llx.BoolData(policy.IsAttachable),
@@ -852,10 +853,10 @@ func (a *mqlAwsIamUser) attachedPolicies() ([]interface{}, error) {
 
 		for i := range userAttachedPolicies.AttachedPolicies {
 			attachedPolicy := userAttachedPolicies.AttachedPolicies[i]
-
 			mqlAwsIamPolicy, err := CreateResource(a.MqlRuntime, "aws.iam.policy",
-				map[string]*llx.RawData{"arn": llx.StringDataPtr(attachedPolicy.PolicyArn)},
-			)
+				// this isn't correct for the id, this is the name. we need to remove "id" from the policy type.
+				// it is creating a conflict bc we cannot make it optional, as it then bumps up against the internal id
+				map[string]*llx.RawData{"arn": llx.StringDataPtr(attachedPolicy.PolicyArn), "id": llx.StringDataPtr(attachedPolicy.PolicyArn)})
 			if err != nil {
 				return nil, err
 			}
@@ -878,12 +879,14 @@ func (a *mqlAwsIamPolicy) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+type mqlAwsIamPolicyInternal struct {
+	cachePolicy *iamtypes.Policy
+}
+
 func (a *mqlAwsIamPolicy) loadPolicy(arn string) (*iamtypes.Policy, error) {
-	// c, ok := a.Cache.Load("_policy")
-	// if ok {
-	// 	log.Info().Msg("use policy from cache")
-	// 	return c.Data.(*types.Policy), nil
-	// }
+	if a.cachePolicy != nil {
+		return a.cachePolicy, nil
+	}
 
 	// if its not in the cache, fetch it
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
@@ -896,8 +899,7 @@ func (a *mqlAwsIamPolicy) loadPolicy(arn string) (*iamtypes.Policy, error) {
 		return nil, err
 	}
 
-	// cache the data
-	// a.Cache.Store("_policy", &resources.CacheEntry{Data: policy.Policy})
+	a.cachePolicy = policy.Policy
 	return policy.Policy, nil
 }
 
@@ -919,6 +921,16 @@ func (a *mqlAwsIamPolicy) description() (string, error) {
 		return "", err
 	}
 	return convert.ToString(policy.Description), nil
+}
+
+func (a *mqlAwsIamPolicy) policyId() (string, error) {
+	arn := a.Arn.Data
+
+	policy, err := a.loadPolicy(arn)
+	if err != nil {
+		return "", err
+	}
+	return convert.ToString(policy.PolicyId), nil
 }
 
 func (a *mqlAwsIamPolicy) isAttachable() (bool, error) {
