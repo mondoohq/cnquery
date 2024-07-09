@@ -60,7 +60,11 @@ You remain logged in until you explicitly log out using the 'logout' subcommand.
 		annotations, _ := cmd.Flags().GetStringToString("annotation")
 		timer, _ := cmd.Flags().GetInt("timer")
 		splay, _ := cmd.Flags().GetInt("splay")
-		return register(token, annotations, timer, splay)
+		err := register(token, annotations, timer, splay)
+		if err != nil {
+			defer StatusCmd.RunE(cmd, args)
+		}
+		return err
 	},
 }
 
