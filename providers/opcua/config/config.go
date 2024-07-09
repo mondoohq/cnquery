@@ -11,7 +11,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "opcua",
 	ID:              "go.mondoo.com/cnquery/v9/providers/opcua",
-	Version:         "11.0.19",
+	Version:         "11.0.20",
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
 		{
