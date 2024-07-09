@@ -63,10 +63,11 @@ You remain logged in until you explicitly log out using the 'logout' subcommand.
 		err := register(token, annotations, timer, splay)
 		if err != nil {
 			defer func() {
-				err := StatusCmd.RunE(cmd, args)
+				s, err := checkStatus()
 				if err != nil {
 					log.Warn().Err(err).Msg("could not run status command")
 				}
+				s.RenderCliStatus()
 			}()
 		}
 		return err
