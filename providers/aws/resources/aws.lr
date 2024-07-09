@@ -80,12 +80,30 @@ private aws.vpc @defaults("id isDefault cidrBlock region") {
 
 // Amazon Virtual Private Cloud (VPC) route table
 private aws.vpc.routetable @defaults("id routes.length") {
+  // A list of association descriptions
+  associations() []aws.vpc.routetable.association
   // Unique ID of the route table
   id string
   // A list of route descriptions
   routes []dict
   // Tags on the route table
   tags map[string]string
+}
+
+// Amazon Virtual Private Cloud (VPC) route table association
+private aws.vpc.routetable.association @defaults("routeTableAssociationId gatewayId") {
+  // Unique ID of the association
+  routeTableAssociationId string
+  // Association state
+  associationsState dict
+  // Unique ID of the associated gateway
+  gatewayId string
+  // Whether this is the main association
+  main bool
+  // Unique ID of the route table
+  routeTableId string
+  // Subnet of the route table association
+  subnet() aws.vpc.subnet
 }
 
 // Amazon Virtual Private Cloud (VPC) subnet

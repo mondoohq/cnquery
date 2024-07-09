@@ -2821,7 +2821,8 @@ resources:
       peeringConnections:
         min_mondoo_version: 9.0.0
       region: {}
-      routeTables: {}
+      routeTables:
+        min_mondoo_version: 9.0.0
       serviceEndpoints:
         min_mondoo_version: 9.0.0
       state: {}
@@ -2958,12 +2959,27 @@ resources:
       - aws
   aws.vpc.routetable:
     fields:
+      associations:
+        min_mondoo_version: 9.0.0
       id: {}
       routes: {}
       tags:
         min_mondoo_version: 9.0.0
     is_private: true
     min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - aws
+  aws.vpc.routetable.association:
+    fields:
+      associationsState: {}
+      gatewayId: {}
+      main: {}
+      routeTableAssociationId: {}
+      routeTableId: {}
+      subnet: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - aws

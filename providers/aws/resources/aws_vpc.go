@@ -556,9 +556,60 @@ func (a *mqlAwsVpc) routeTables() ([]interface{}, error) {
 				return nil, err
 			}
 			res = append(res, mqlRouteTable)
+			mqlRouteTable.(*mqlAwsVpcRoutetable).cacheAssociations = routeTable.Associations
+			mqlRouteTable.(*mqlAwsVpcRoutetable).region = a.Region.Data
 		}
 	}
 	return res, nil
+}
+
+type mqlAwsVpcRoutetableInternal struct {
+	cacheAssociations []vpctypes.RouteTableAssociation
+	region            string
+}
+
+func (a *mqlAwsVpcRoutetable) associations() ([]interface{}, error) {
+	res := []interface{}{}
+	for i := range a.cacheAssociations {
+		assoc := a.cacheAssociations[i]
+		state, err := convert.JsonToDict(assoc.AssociationState)
+		if err != nil {
+			return nil, err
+		}
+		mqlAssoc, err := CreateResource(a.MqlRuntime, "aws.vpc.routetable.association", map[string]*llx.RawData{
+			"routeTableAssociationId": llx.StringDataPtr(assoc.RouteTableAssociationId),
+			"associationsState":       llx.DictData(state),
+			"gatewayId":               llx.StringDataPtr(assoc.GatewayId),
+			"main":                    llx.BoolDataPtr(assoc.Main),
+			"routeTableId":            llx.StringDataPtr(assoc.RouteTableId),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlAssoc)
+		mqlAssoc.(*mqlAwsVpcRoutetableAssociation).cacheSubnetId = assoc.SubnetId
+		mqlAssoc.(*mqlAwsVpcRoutetableAssociation).region = a.region
+	}
+	return res, nil
+}
+
+type mqlAwsVpcRoutetableAssociationInternal struct {
+	cacheSubnetId *string
+	region        string
+}
+
+func (a *mqlAwsVpcRoutetableAssociation) subnet() (*mqlAwsVpcSubnet, error) {
+	if a.cacheSubnetId != nil {
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		res, err := NewResource(a.MqlRuntime, "aws.vpc.subnet", map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(subnetArnPattern, a.region, conn.AccountId(), convert.ToString(a.cacheSubnetId)))})
+		if err != nil {
+			a.Subnet.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, err
+		}
+		return res.(*mqlAwsVpcSubnet), nil
+	}
+	a.Subnet.State = plugin.StateIsNull | plugin.StateIsSet
+	return nil, nil
 }
 
 func (a *mqlAwsVpcSubnet) id() (string, error) {

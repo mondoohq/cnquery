@@ -38,6 +38,10 @@ func init() {
 			// to override args, implement: initAwsVpcRoutetable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsVpcRoutetable,
 		},
+		"aws.vpc.routetable.association": {
+			// to override args, implement: initAwsVpcRoutetableAssociation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsVpcRoutetableAssociation,
+		},
 		"aws.vpc.subnet": {
 			Init: initAwsVpcSubnet,
 			Create: createAwsVpcSubnet,
@@ -872,6 +876,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.vpc.peeringConnections": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpc).GetPeeringConnections()).ToDataRes(types.Array(types.Resource("aws.vpc.peeringConnection")))
 	},
+	"aws.vpc.routetable.associations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcRoutetable).GetAssociations()).ToDataRes(types.Array(types.Resource("aws.vpc.routetable.association")))
+	},
 	"aws.vpc.routetable.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcRoutetable).GetId()).ToDataRes(types.String)
 	},
@@ -880,6 +887,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.vpc.routetable.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcRoutetable).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.vpc.routetable.association.routeTableAssociationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcRoutetableAssociation).GetRouteTableAssociationId()).ToDataRes(types.String)
+	},
+	"aws.vpc.routetable.association.associationsState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcRoutetableAssociation).GetAssociationsState()).ToDataRes(types.Dict)
+	},
+	"aws.vpc.routetable.association.gatewayId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcRoutetableAssociation).GetGatewayId()).ToDataRes(types.String)
+	},
+	"aws.vpc.routetable.association.main": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcRoutetableAssociation).GetMain()).ToDataRes(types.Bool)
+	},
+	"aws.vpc.routetable.association.routeTableId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcRoutetableAssociation).GetRouteTableId()).ToDataRes(types.String)
+	},
+	"aws.vpc.routetable.association.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcRoutetableAssociation).GetSubnet()).ToDataRes(types.Resource("aws.vpc.subnet"))
 	},
 	"aws.vpc.subnet.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcSubnet).GetArn()).ToDataRes(types.String)
@@ -4548,6 +4573,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsVpcRoutetable).__id, ok = v.Value.(string)
 			return
 		},
+	"aws.vpc.routetable.associations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcRoutetable).Associations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"aws.vpc.routetable.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpcRoutetable).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4558,6 +4587,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.vpc.routetable.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpcRoutetable).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.routetable.association.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsVpcRoutetableAssociation).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.vpc.routetable.association.routeTableAssociationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcRoutetableAssociation).RouteTableAssociationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.routetable.association.associationsState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcRoutetableAssociation).AssociationsState, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.routetable.association.gatewayId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcRoutetableAssociation).GatewayId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.routetable.association.main": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcRoutetableAssociation).Main, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.routetable.association.routeTableId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcRoutetableAssociation).RouteTableId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.routetable.association.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcRoutetableAssociation).Subnet, ok = plugin.RawToTValue[*mqlAwsVpcSubnet](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.subnet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10406,7 +10463,8 @@ func (c *mqlAwsVpc) GetPeeringConnections() *plugin.TValue[[]interface{}] {
 type mqlAwsVpcRoutetable struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlAwsVpcRoutetableInternal it will be used here
+	mqlAwsVpcRoutetableInternal
+	Associations plugin.TValue[[]interface{}]
 	Id plugin.TValue[string]
 	Routes plugin.TValue[[]interface{}]
 	Tags plugin.TValue[map[string]interface{}]
@@ -10449,6 +10507,22 @@ func (c *mqlAwsVpcRoutetable) MqlID() string {
 	return c.__id
 }
 
+func (c *mqlAwsVpcRoutetable) GetAssociations() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Associations, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc.routetable", c.__id, "associations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.associations()
+	})
+}
+
 func (c *mqlAwsVpcRoutetable) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
@@ -10459,6 +10533,87 @@ func (c *mqlAwsVpcRoutetable) GetRoutes() *plugin.TValue[[]interface{}] {
 
 func (c *mqlAwsVpcRoutetable) GetTags() *plugin.TValue[map[string]interface{}] {
 	return &c.Tags
+}
+
+// mqlAwsVpcRoutetableAssociation for the aws.vpc.routetable.association resource
+type mqlAwsVpcRoutetableAssociation struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlAwsVpcRoutetableAssociationInternal
+	RouteTableAssociationId plugin.TValue[string]
+	AssociationsState plugin.TValue[interface{}]
+	GatewayId plugin.TValue[string]
+	Main plugin.TValue[bool]
+	RouteTableId plugin.TValue[string]
+	Subnet plugin.TValue[*mqlAwsVpcSubnet]
+}
+
+// createAwsVpcRoutetableAssociation creates a new instance of this resource
+func createAwsVpcRoutetableAssociation(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsVpcRoutetableAssociation{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.vpc.routetable.association", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsVpcRoutetableAssociation) MqlName() string {
+	return "aws.vpc.routetable.association"
+}
+
+func (c *mqlAwsVpcRoutetableAssociation) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsVpcRoutetableAssociation) GetRouteTableAssociationId() *plugin.TValue[string] {
+	return &c.RouteTableAssociationId
+}
+
+func (c *mqlAwsVpcRoutetableAssociation) GetAssociationsState() *plugin.TValue[interface{}] {
+	return &c.AssociationsState
+}
+
+func (c *mqlAwsVpcRoutetableAssociation) GetGatewayId() *plugin.TValue[string] {
+	return &c.GatewayId
+}
+
+func (c *mqlAwsVpcRoutetableAssociation) GetMain() *plugin.TValue[bool] {
+	return &c.Main
+}
+
+func (c *mqlAwsVpcRoutetableAssociation) GetRouteTableId() *plugin.TValue[string] {
+	return &c.RouteTableId
+}
+
+func (c *mqlAwsVpcRoutetableAssociation) GetSubnet() *plugin.TValue[*mqlAwsVpcSubnet] {
+	return plugin.GetOrCompute[*mqlAwsVpcSubnet](&c.Subnet, func() (*mqlAwsVpcSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc.routetable.association", c.__id, "subnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpcSubnet), nil
+			}
+		}
+
+		return c.subnet()
+	})
 }
 
 // mqlAwsVpcSubnet for the aws.vpc.subnet resource
