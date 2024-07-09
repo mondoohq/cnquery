@@ -2948,11 +2948,11 @@ private aws.ec2.securitygroup @defaults("id name region vpc.id") {
   // A map of tags associated with the security group
   tags map[string]string
   // VPC associated with the security group
-  vpc aws.vpc
+  vpc() aws.vpc
   // IP permissions (ingress) for the security group
-  ipPermissions []aws.ec2.securitygroup.ippermission
+  ipPermissions() []aws.ec2.securitygroup.ippermission
   // IP permissions (egress) for the security group
-  ipPermissionsEgress []aws.ec2.securitygroup.ippermission
+  ipPermissionsEgress() []aws.ec2.securitygroup.ippermission
   // Region associated with the security group
   region string
   // Whether the security group is attached to Amazon Elastic Compute Cloud
@@ -2973,6 +2973,10 @@ private aws.ec2.securitygroup.ippermission @defaults("id toPort fromPort ipProto
   ipRanges []string
   // IPv6 ranges
   ipv6Ranges []string
+  // List of Prefix ids
+  prefixListIds []dict
+  // List of user id group pairs
+  userIdGroupPairs []dict
 }
 
 // AWS Config
