@@ -4211,6 +4211,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.securitygroup.ippermission.ipv6Ranges": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2SecuritygroupIppermission).GetIpv6Ranges()).ToDataRes(types.Array(types.String))
 	},
+	"aws.ec2.securitygroup.ippermission.prefixListIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2SecuritygroupIppermission).GetPrefixListIds()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.ec2.securitygroup.ippermission.userIdGroupPairs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2SecuritygroupIppermission).GetUserIdGroupPairs()).ToDataRes(types.Array(types.Dict))
+	},
 	"aws.config.recorders": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsConfig).GetRecorders()).ToDataRes(types.Array(types.Resource("aws.config.recorder")))
 	},
@@ -9648,6 +9654,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.ec2.securitygroup.ippermission.ipv6Ranges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2SecuritygroupIppermission).Ipv6Ranges, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.securitygroup.ippermission.prefixListIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2SecuritygroupIppermission).PrefixListIds, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.securitygroup.ippermission.userIdGroupPairs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2SecuritygroupIppermission).UserIdGroupPairs, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"aws.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24823,7 +24837,7 @@ func (c *mqlAwsEc2InstanceDevice) GetDeviceName() *plugin.TValue[string] {
 type mqlAwsEc2Securitygroup struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlAwsEc2SecuritygroupInternal it will be used here
+	mqlAwsEc2SecuritygroupInternal
 	Arn plugin.TValue[string]
 	Id plugin.TValue[string]
 	Name plugin.TValue[string]
@@ -24894,15 +24908,51 @@ func (c *mqlAwsEc2Securitygroup) GetTags() *plugin.TValue[map[string]interface{}
 }
 
 func (c *mqlAwsEc2Securitygroup) GetVpc() *plugin.TValue[*mqlAwsVpc] {
-	return &c.Vpc
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.securitygroup", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
 }
 
 func (c *mqlAwsEc2Securitygroup) GetIpPermissions() *plugin.TValue[[]interface{}] {
-	return &c.IpPermissions
+	return plugin.GetOrCompute[[]interface{}](&c.IpPermissions, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.securitygroup", c.__id, "ipPermissions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.ipPermissions()
+	})
 }
 
 func (c *mqlAwsEc2Securitygroup) GetIpPermissionsEgress() *plugin.TValue[[]interface{}] {
-	return &c.IpPermissionsEgress
+	return plugin.GetOrCompute[[]interface{}](&c.IpPermissionsEgress, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.securitygroup", c.__id, "ipPermissionsEgress")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.ipPermissionsEgress()
+	})
 }
 
 func (c *mqlAwsEc2Securitygroup) GetRegion() *plugin.TValue[string] {
@@ -24926,6 +24976,8 @@ type mqlAwsEc2SecuritygroupIppermission struct {
 	IpProtocol plugin.TValue[string]
 	IpRanges plugin.TValue[[]interface{}]
 	Ipv6Ranges plugin.TValue[[]interface{}]
+	PrefixListIds plugin.TValue[[]interface{}]
+	UserIdGroupPairs plugin.TValue[[]interface{}]
 }
 
 // createAwsEc2SecuritygroupIppermission creates a new instance of this resource
@@ -24987,6 +25039,14 @@ func (c *mqlAwsEc2SecuritygroupIppermission) GetIpRanges() *plugin.TValue[[]inte
 
 func (c *mqlAwsEc2SecuritygroupIppermission) GetIpv6Ranges() *plugin.TValue[[]interface{}] {
 	return &c.Ipv6Ranges
+}
+
+func (c *mqlAwsEc2SecuritygroupIppermission) GetPrefixListIds() *plugin.TValue[[]interface{}] {
+	return &c.PrefixListIds
+}
+
+func (c *mqlAwsEc2SecuritygroupIppermission) GetUserIdGroupPairs() *plugin.TValue[[]interface{}] {
+	return &c.UserIdGroupPairs
 }
 
 // mqlAwsConfig for the aws.config resource
