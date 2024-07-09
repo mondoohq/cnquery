@@ -2973,9 +2973,9 @@ private aws.ec2.securitygroup.ippermission @defaults("id toPort fromPort ipProto
   ipRanges []string
   // IPv6 ranges
   ipv6Ranges []string
-  // List of Prefix ids
+  // List of Prefix IDs
   prefixListIds []dict
-  // List of user id group pairs
+  // List of user ID group pairs
   userIdGroupPairs []dict
 }
 
