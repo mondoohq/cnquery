@@ -62,7 +62,12 @@ You remain logged in until you explicitly log out using the 'logout' subcommand.
 		splay, _ := cmd.Flags().GetInt("splay")
 		err := register(token, annotations, timer, splay)
 		if err != nil {
-			defer StatusCmd.RunE(cmd, args)
+			defer func() {
+				err := StatusCmd.RunE(cmd, args)
+				if err != nil {
+					log.Warn().Err(err).Msg("could not run status command")
+				}
+			}()
 		}
 		return err
 	},
