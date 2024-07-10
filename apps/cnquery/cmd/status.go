@@ -44,77 +44,12 @@ Status sends a ping to Mondoo Platform to verify the credentials.
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		defer providers.Coordinator.Shutdown()
-		opts, optsErr := config.Read()
-		if optsErr != nil {
-			return cli_errors.NewCommandError(errors.Wrap(optsErr, "could not load configuration"), 1)
-		}
 
 		config.DisplayUsedConfig()
 
-		s := Status{
-			Client: ClientStatus{
-				Timestamp: time.Now().Format(time.RFC3339),
-				Version:   cnquery.GetVersion(),
-				Build:     cnquery.GetBuild(),
-			},
-		}
-
-		httpClient, err := opts.GetHttpClient()
+		s, err := checkStatus()
 		if err != nil {
-			return cli_errors.NewCommandError(errors.Wrap(err, "failed to set up Mondoo API client"), 1)
-		}
-
-		sysInfo, err := sysinfo.Get()
-		if err == nil {
-			s.Client.Platform = sysInfo.Platform
-			s.Client.Hostname = sysInfo.Hostname
-			s.Client.IP = sysInfo.IP
-		}
-
-		// check server health and clock skew
-		upstreamStatus, err := health.CheckApiHealth(httpClient, opts.UpstreamApiEndpoint())
-		if err != nil {
-			log.Error().Err(err).Msg("could not check upstream health")
-		}
-		s.Upstream = upstreamStatus
-
-		latestVersion, err := cnquery.GetLatestVersion(httpClient)
-		if err != nil {
-			return cli_errors.NewCommandError(errors.Wrap(err, "failed to get latest version"), 1)
-		}
-
-		s.Client.LatestVersion = latestVersion
-
-		// check valid agent authentication
-		plugins := []ranger.ClientPlugin{}
-
-		// try to load config into credentials struct
-		credentials := opts.GetServiceCredential()
-		if credentials != nil && len(credentials.Mrn) > 0 {
-			s.Client.ParentMrn = credentials.ParentMrn
-			s.Client.Registered = true
-			s.Client.ServiceAccount = credentials.Mrn
-			s.Client.Mrn = opts.AgentMrn
-			if s.Client.Mrn == "" {
-				s.Client.Mrn = "no managed client"
-			}
-
-			certAuth, err := upstream.NewServiceAccountRangerPlugin(credentials)
-			if err != nil {
-				return cli_errors.NewCommandError(errors.Wrap(err, "invalid credentials"), ConfigurationErrorCode)
-			}
-			plugins = append(plugins, certAuth)
-
-			// try to ping the server
-			client, err := upstream.NewAgentManagerClient(s.Upstream.API.Endpoint, httpClient, plugins...)
-			if err == nil {
-				_, err = client.PingPong(context.Background(), &upstream.Ping{})
-				if err != nil {
-					s.Client.PingPongError = err
-				}
-			} else {
-				s.Client.PingPongError = err
-			}
+			return err
 		}
 
 		switch strings.ToLower(viper.GetString("output")) {
@@ -133,6 +68,81 @@ Status sends a ping to Mondoo Platform to verify the credentials.
 		}
 		return nil
 	},
+}
+
+func checkStatus() (Status, error) {
+	s := Status{
+		Client: ClientStatus{
+			Timestamp: time.Now().Format(time.RFC3339),
+			Version:   cnquery.GetVersion(),
+			Build:     cnquery.GetBuild(),
+		},
+	}
+
+	opts, optsErr := config.Read()
+	if optsErr != nil {
+		return s, cli_errors.NewCommandError(errors.Wrap(optsErr, "could not load configuration"), 1)
+	}
+
+	httpClient, err := opts.GetHttpClient()
+	if err != nil {
+		return s, cli_errors.NewCommandError(errors.Wrap(err, "failed to set up Mondoo API client"), 1)
+	}
+
+	sysInfo, err := sysinfo.Get()
+	if err == nil {
+		s.Client.Platform = sysInfo.Platform
+		s.Client.Hostname = sysInfo.Hostname
+		s.Client.IP = sysInfo.IP
+	}
+
+	// check server health and clock skew
+	upstreamStatus, err := health.CheckApiHealth(httpClient, opts.UpstreamApiEndpoint())
+	if err != nil {
+		log.Error().Err(err).Msg("could not check upstream health")
+	}
+	s.Upstream = upstreamStatus
+
+	latestVersion, err := cnquery.GetLatestVersion(httpClient)
+	if err != nil {
+		return s, cli_errors.NewCommandError(errors.Wrap(err, "failed to get latest version"), 1)
+	}
+
+	s.Client.LatestVersion = latestVersion
+
+	// check valid agent authentication
+	plugins := []ranger.ClientPlugin{}
+
+	// try to load config into credentials struct
+	credentials := opts.GetServiceCredential()
+	if credentials != nil && len(credentials.Mrn) > 0 {
+		s.Client.ParentMrn = credentials.GetParentMrn()
+		s.Client.Registered = true
+		s.Client.ServiceAccount = credentials.Mrn
+		s.Client.Mrn = opts.AgentMrn
+		if s.Client.Mrn == "" {
+			s.Client.Mrn = "no managed client"
+		}
+
+		certAuth, err := upstream.NewServiceAccountRangerPlugin(credentials)
+		if err != nil {
+			return s, cli_errors.NewCommandError(errors.Wrap(err, "invalid credentials"), ConfigurationErrorCode)
+		}
+		plugins = append(plugins, certAuth)
+
+		// try to ping the server
+		client, err := upstream.NewAgentManagerClient(s.Upstream.API.Endpoint, httpClient, plugins...)
+		if err == nil {
+			_, err = client.PingPong(context.Background(), &upstream.Ping{})
+			if err != nil {
+				s.Client.PingPongError = err
+			}
+		} else {
+			s.Client.PingPongError = err
+		}
+	}
+
+	return s, nil
 }
 
 type Status struct {
