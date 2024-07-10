@@ -116,7 +116,7 @@ func checkStatus() (Status, error) {
 	// try to load config into credentials struct
 	credentials := opts.GetServiceCredential()
 	if credentials != nil && len(credentials.Mrn) > 0 {
-		s.Client.ParentMrn = credentials.ScopeMrn
+		s.Client.ParentMrn = credentials.GetParentMrn()
 		s.Client.Registered = true
 		s.Client.ServiceAccount = credentials.Mrn
 		s.Client.Mrn = opts.AgentMrn
