@@ -32,7 +32,7 @@ func TestWindowsAppPackagesParser(t *testing.T) {
 		Version: "14.28.29913.0",
 		Arch:    "",
 		Format:  "windows/app",
-		CPE:     "cpe:2.3:a:microsoft_corporation:microsoft_visual_c\\+\\+_2015-2019_redistributable_\\(x86\\)_-_14.28.29913:14.28.29913.0:*:*:*:*:*:*:*",
+		CPEs:    []string{"cpe:2.3:a:microsoft_corporation:microsoft_visual_c\\+\\+_2015-2019_redistributable_\\(x86\\)_-_14.28.29913:14.28.29913.0:*:*:*:*:*:*:*"},
 	}, p)
 
 	// check empty return
@@ -67,7 +67,7 @@ func TestWindowsAppxPackagesParser(t *testing.T) {
 		Arch:    "neutral",
 		Format:  "windows/appx",
 		// TODO: this is a bug in the CPE generation, we need to extract the publisher from the package
-		CPE: "cpe:2.3:a:cn\\=microsoft_corporation\\,_o\\=microsoft_corporation\\,_l\\=redmond\\,_s\\=washington\\,_c\\=us:microsoft.windows.cortana:1.11.5.17763:*:*:*:*:*:*:*",
+		CPEs: []string{"cpe:2.3:a:cn\\=microsoft_corporation\\,_o\\=microsoft_corporation\\,_l\\=redmond\\,_s\\=washington\\,_c\\=us:microsoft.windows.cortana:1.11.5.17763:*:*:*:*:*:*:*"},
 	}, p)
 
 	// check empty return
@@ -164,7 +164,7 @@ func TestGetPackageFromRegistryKeyItems(t *testing.T) {
 			},
 		}
 		p := getPackageFromRegistryKeyItems(items)
-		CPE, err := cpe.NewPackage2Cpe(
+		CPEs, err := cpe.NewPackage2Cpe(
 			"Microsoft Corporation",
 			"Microsoft Visual C++ 2015-2019 Redistributable (x86) - 14.28.29913",
 			"14.28.29913.0",
@@ -178,7 +178,7 @@ func TestGetPackageFromRegistryKeyItems(t *testing.T) {
 			Version: "14.28.29913.0",
 			Arch:    "",
 			Format:  "windows/app",
-			CPE:     CPE,
+			CPEs:    CPEs,
 		}
 		assert.NotNil(t, p)
 		assert.Equal(t, expected, p)

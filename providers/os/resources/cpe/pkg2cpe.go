@@ -11,7 +11,8 @@ import (
 	"github.com/facebookincubator/nvdtools/wfn"
 )
 
-func NewPackage2Cpe(vendor, name, version, release, arch string) (string, error) {
+func NewPackage2Cpe(vendor, name, version, release, arch string) ([]string, error) {
+	cpes := []string{}
 	vendor = strings.ToLower(vendor)
 	name = strings.ToLower(name)
 	version = strings.ToLower(version)
@@ -27,15 +28,15 @@ func NewPackage2Cpe(vendor, name, version, release, arch string) (string, error)
 		"arch":    &arch,
 	} {
 		if *addr, err = wfn.WFNize(*addr); err != nil {
-			return "", fmt.Errorf("couldn't wfnize %s %q: %v", n, *addr, err)
+			return cpes, fmt.Errorf("couldn't wfnize %s %q: %v", n, *addr, err)
 		}
 	}
 
 	if name == "" {
-		return "", errors.New("name is empty")
+		return cpes, errors.New("name is empty")
 	}
 	if version == "" {
-		return "", errors.New("version is empty")
+		return cpes, errors.New("version is empty")
 	}
 
 	attr := wfn.Attributes{}
@@ -46,5 +47,28 @@ func NewPackage2Cpe(vendor, name, version, release, arch string) (string, error)
 	attr.Update = release
 	attr.TargetHW = arch
 
-	return attr.BindToFmtString(), nil
+	cpes = append(cpes, attr.BindToFmtString())
+
+	// TODO: modify different fields to have a higher chance of matching
+	// nested for loops with funcs to modify different fields
+
+	// Modify the CPE to later have a higher chance of matching
+	// e.g. "microsoft_corporation" -> "microsoft"
+	if strings.HasSuffix(attr.Vendor, "_corporation") {
+		attr.Vendor = strings.TrimSuffix(attr.Vendor, "_corporation")
+		cpes = append(cpes, attr.BindToFmtString())
+	}
+
+	if strings.HasSuffix(attr.Product, attr.Version) {
+		attr.Product = strings.TrimSuffix(attr.Product, attr.Version)
+		cpes = append(cpes, attr.BindToFmtString())
+	}
+
+	versionParts := strings.Split(attr.Version, ".")
+	if len(versionParts) > 3 {
+		attr.Version = strings.Join(versionParts[:3], ".")
+		cpes = append(cpes, attr.BindToFmtString())
+	}
+
+	return cpes, nil
 }

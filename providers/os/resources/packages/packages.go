@@ -40,7 +40,7 @@ type Package struct {
 	PUrl string `json:"purl,omitempty"`
 
 	// Package CPE
-	CPE string `json:"cpe,omitempty"`
+	CPEs []string `json:"cpes,omitempty"`
 
 	// Package files (optional, only for some package managers)
 	FilesAvailable PkgFilesAvailable `json:"files_available,omitempty"`

@@ -6,12 +6,13 @@ package packages
 import (
 	"bufio"
 	"fmt"
+	"io"
+	"strings"
+
 	"github.com/package-url/packageurl-go"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	cpe2 "go.mondoo.com/cnquery/v11/providers/os/resources/cpe"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/purl"
-	"io"
-	"strings"
 
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 )
@@ -35,7 +36,7 @@ func parseAixPackages(pf *inventory.Platform, r io.Reader) ([]Package, error) {
 
 		record := strings.Split(line, ":")
 
-		cpe, _ := cpe2.NewPackage2Cpe(record[1], record[1], record[2], "", pf.Arch)
+		cpes, _ := cpe2.NewPackage2Cpe(record[1], record[1], record[2], "", pf.Arch)
 		// Fileset, Level, PtfID, State, Type, Description, EFIXLocked
 		pkgs = append(pkgs, Package{
 			Name:        record[1],
@@ -43,7 +44,7 @@ func parseAixPackages(pf *inventory.Platform, r io.Reader) ([]Package, error) {
 			Description: strings.TrimSpace(record[6]),
 			Format:      AixPkgFormat,
 			PUrl:        purl.NewPackageUrl(pf, record[1], record[2], "", "", packageurl.TypeGeneric),
-			CPE:         cpe,
+			CPEs:        cpes,
 		})
 
 	}

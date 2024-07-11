@@ -178,9 +178,9 @@ func (x *mqlPackages) list() ([]interface{}, error) {
 		}
 
 		cpes := []interface{}{}
-		if osPkg.CPE != "" {
+		for _, osPkgCpe := range osPkg.CPEs {
 			cpe, err := x.MqlRuntime.CreateSharedResource("cpe", map[string]*llx.RawData{
-				"uri": llx.StringData(osPkg.CPE),
+				"uri": llx.StringData(osPkgCpe),
 			})
 			if err != nil {
 				return nil, err
