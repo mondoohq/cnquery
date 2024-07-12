@@ -22,7 +22,7 @@ type mqlK8sRbacRoleInternal struct {
 }
 
 func (k *mqlK8s) roles() ([]interface{}, error) {
-	return k8sResourceToMql(k.MqlRuntime, "roles", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToMql(k.MqlRuntime, rbacv1.Resource("roles").String(), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		role, ok := resource.(*rbacv1.Role)

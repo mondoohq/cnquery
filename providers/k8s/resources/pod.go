@@ -22,7 +22,7 @@ type mqlK8sPodInternal struct {
 }
 
 func (k *mqlK8s) pods() ([]interface{}, error) {
-	return k8sResourceToMql(k.MqlRuntime, "pods.v1.", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToMql(k.MqlRuntime, corev1.Resource("pods").String(), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		r, err := CreateResource(k.MqlRuntime, "k8s.pod", map[string]*llx.RawData{

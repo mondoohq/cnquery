@@ -22,7 +22,7 @@ type mqlK8sStatefulsetInternal struct {
 }
 
 func (k *mqlK8s) statefulsets() ([]interface{}, error) {
-	return k8sResourceToMql(k.MqlRuntime, "statefulsets", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToMql(k.MqlRuntime, appsv1.Resource("statefulsets").String(), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		r, err := CreateResource(k.MqlRuntime, "k8s.statefulset", map[string]*llx.RawData{

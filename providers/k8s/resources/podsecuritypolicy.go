@@ -20,7 +20,7 @@ type mqlK8sPodsecuritypolicyInternal struct {
 }
 
 func (k *mqlK8s) podSecurityPolicies() ([]interface{}, error) {
-	return k8sResourceToMql(k.MqlRuntime, "podsecuritypolicies", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToMql(k.MqlRuntime, policyv1beta1.Resource("podsecuritypolicies").String(), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		psp, ok := resource.(*policyv1beta1.PodSecurityPolicy)
