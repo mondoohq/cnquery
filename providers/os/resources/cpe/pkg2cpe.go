@@ -6,6 +6,7 @@ package cpe
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/facebookincubator/nvdtools/wfn"
@@ -18,6 +19,13 @@ func NewPackage2Cpe(vendor, name, version, release, arch string) ([]string, erro
 	version = strings.ToLower(version)
 	release = strings.ToLower(release)
 	arch = strings.ToLower(arch)
+
+	// Remove epoch when present
+	// Otherwise the WFNize will only use the epoch as the version
+	epochRegex := regexp.MustCompile(`^\d+:(.*)$`)
+	if matches := epochRegex.FindStringSubmatch(version); len(matches) > 1 {
+		version = matches[1]
+	}
 
 	var err error
 	for n, addr := range map[string]*string{
@@ -49,26 +57,79 @@ func NewPackage2Cpe(vendor, name, version, release, arch string) ([]string, erro
 
 	cpes = append(cpes, attr.BindToFmtString())
 
-	// TODO: modify different fields to have a higher chance of matching
-	// nested for loops with funcs to modify different fields
-
+	specialMutationAttr := attr
+	genericMutationAttr := attr
+	if specialAttr := specialCPEMutations(specialMutationAttr); specialAttr != nil {
+		cpes = append(cpes, specialAttr.BindToFmtString())
+		genericMutationAttr = *specialAttr
+	}
 	// Modify the CPE to later have a higher chance of matching
-	// e.g. "microsoft_corporation" -> "microsoft"
-	if strings.HasSuffix(attr.Vendor, "_corporation") {
-		attr.Vendor = strings.TrimSuffix(attr.Vendor, "_corporation")
-		cpes = append(cpes, attr.BindToFmtString())
-	}
-
-	if strings.HasSuffix(attr.Product, attr.Version) {
-		attr.Product = strings.TrimSuffix(attr.Product, attr.Version)
-		cpes = append(cpes, attr.BindToFmtString())
-	}
-
-	versionParts := strings.Split(attr.Version, ".")
-	if len(versionParts) > 3 {
-		attr.Version = strings.Join(versionParts[:3], ".")
-		cpes = append(cpes, attr.BindToFmtString())
+	for _, mutation := range genericCPEVendorMutations {
+		vendorMutationAttr := mutation(genericMutationAttr)
+		if vendorMutationAttr != nil {
+			cpes = append(cpes, vendorMutationAttr.BindToFmtString())
+		} else {
+			vendorMutationAttr = &genericMutationAttr
+		}
+		for _, mutation := range genericCPEProductMutations {
+			productMutationAttr := mutation(*vendorMutationAttr)
+			if productMutationAttr != nil {
+				cpes = append(cpes, productMutationAttr.BindToFmtString())
+			} else {
+				productMutationAttr = vendorMutationAttr
+			}
+			for _, mutation := range genericCPEVersionMutations {
+				versionMutationAttr := mutation(*productMutationAttr)
+				if versionMutationAttr != nil {
+					cpes = append(cpes, versionMutationAttr.BindToFmtString())
+				}
+			}
+		}
 	}
 
 	return cpes, nil
+}
+
+var genericCPEProductMutations = []func(attr wfn.Attributes) *wfn.Attributes{
+	func(attr wfn.Attributes) *wfn.Attributes {
+		if strings.HasSuffix(attr.Product, attr.Version) {
+			attr.Product = strings.TrimSuffix(attr.Product, attr.Version)
+			attr.Product = strings.TrimSuffix(attr.Product, "_")
+			return &attr
+		}
+		return nil
+	},
+}
+
+var genericCPEVendorMutations = []func(attr wfn.Attributes) *wfn.Attributes{
+	// e.g. "microsoft_corporation" -> "microsoft"
+	func(attr wfn.Attributes) *wfn.Attributes {
+		if strings.HasSuffix(attr.Vendor, "_corporation") {
+			attr.Vendor = strings.TrimSuffix(attr.Vendor, "_corporation")
+			return &attr
+		}
+		return nil
+	},
+}
+
+var genericCPEVersionMutations = []func(attr wfn.Attributes) *wfn.Attributes{
+	func(attr wfn.Attributes) *wfn.Attributes {
+		versionParts := strings.Split(attr.Version, ".")
+		if len(versionParts) > 3 {
+			attr.Version = strings.Join(versionParts[:3], ".")
+			attr.Version = strings.TrimSuffix(attr.Version, "\\")
+			return &attr
+		}
+		return nil
+	},
+}
+
+var specialCPEMutations = func(attr wfn.Attributes) *wfn.Attributes {
+	if attr.Vendor == "mirthconnect" {
+		attr.Product = "mirth_connect"
+		attr.Vendor = "nextgen"
+		attr.TargetHW = "*"
+		return &attr
+	}
+	return nil
 }

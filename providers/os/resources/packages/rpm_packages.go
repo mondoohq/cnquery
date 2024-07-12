@@ -71,7 +71,10 @@ func newRpmPackage(pf *inventory.Platform, name, version, arch, epoch, descripti
 	// NOTE that we do not have the vendor of the package itself, we could try to parse it from the vendor
 	// but that will also not be reliable. We may incorporate the cpe dictionary in the future but that would
 	// increase the binary.
-	cpes, _ := cpe.NewPackage2Cpe(name, name, version, arch, epoch)
+	if epoch == "0" {
+		epoch = ""
+	}
+	cpes, _ := cpe.NewPackage2Cpe(name, name, version, epoch, arch)
 	return Package{
 		Name:        name,
 		Version:     version,
