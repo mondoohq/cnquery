@@ -22,7 +22,7 @@ type mqlK8sServiceaccountInternal struct {
 }
 
 func (k *mqlK8s) serviceaccounts() ([]interface{}, error) {
-	return k8sResourceToMql(k.MqlRuntime, "serviceaccounts", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToMql(k.MqlRuntime, corev1.Resource("serviceaccounts").String(), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		serviceAccount, ok := resource.(*corev1.ServiceAccount)

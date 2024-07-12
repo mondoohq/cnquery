@@ -22,7 +22,7 @@ type mqlK8sSecretInternal struct {
 }
 
 func (k *mqlK8s) secrets() ([]interface{}, error) {
-	return k8sResourceToMql(k.MqlRuntime, "secrets.v1.", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToMql(k.MqlRuntime, corev1.Resource("secrets").String(), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		s, ok := resource.(*corev1.Secret)
