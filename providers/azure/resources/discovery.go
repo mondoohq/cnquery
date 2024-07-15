@@ -169,6 +169,7 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 		}
 		assets = append(assets, mariaDbServers...)
 	}
+
 	if stringx.ContainsAnyOf(targets, append(matchingTargets, DiscoveryStorageAccounts)...) {
 		accs, err := discoverStorageAccounts(runtime, subsWithConfigs)
 		if err != nil {
@@ -176,7 +177,9 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 		}
 		assets = append(assets, accs...)
 	}
-	if stringx.ContainsAnyOf(targets, append(matchingTargets, DiscoveryStorageContainers)...) {
+
+	// FIXME: bring back the storage containers as as part of FF scanning once we can do parallel scanning
+	if stringx.ContainsAnyOf(targets, DiscoveryAll, DiscoveryStorageContainers) {
 		containers, err := discoverStorageAccountsContainers(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
