@@ -7,20 +7,20 @@ go 1.22.0
 toolchain go1.22.4
 
 require (
-	cloud.google.com/go/accessapproval v1.7.9
+	cloud.google.com/go/accessapproval v1.7.10
 	cloud.google.com/go/bigquery v1.61.0
-	cloud.google.com/go/compute v1.27.2
-	cloud.google.com/go/container v1.37.2
-	cloud.google.com/go/functions v1.16.4
+	cloud.google.com/go/compute v1.27.3
+	cloud.google.com/go/container v1.37.3
+	cloud.google.com/go/functions v1.16.5
 	cloud.google.com/go/iam v1.1.11
 	cloud.google.com/go/kms v1.18.3
 	cloud.google.com/go/logging v1.10.0
 	cloud.google.com/go/longrunning v0.5.10
-	cloud.google.com/go/monitoring v1.20.1
+	cloud.google.com/go/monitoring v1.20.2
 	cloud.google.com/go/pubsub v1.40.0
-	cloud.google.com/go/recommender v1.12.5
-	cloud.google.com/go/run v1.3.9
-	cloud.google.com/go/serviceusage v1.8.8
+	cloud.google.com/go/recommender v1.12.6
+	cloud.google.com/go/run v1.3.10
+	cloud.google.com/go/serviceusage v1.8.9
 	github.com/aws/smithy-go v1.20.3
 	github.com/cockroachdb/errors v1.11.3
 	github.com/google/go-containerregistry v0.20.0
@@ -43,7 +43,7 @@ require (
 	cloud.google.com/go v0.115.0 // indirect
 	cloud.google.com/go/auth v0.7.0 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.3 // indirect
-	cloud.google.com/go/binaryauthorization v1.8.5
+	cloud.google.com/go/binaryauthorization v1.8.6
 	cloud.google.com/go/compute/metadata v0.5.0 // indirect
 	cloud.google.com/go/secretmanager v1.13.4 // indirect
 	cloud.google.com/go/storage v1.43.0 // indirect
