@@ -100,7 +100,7 @@ func (a *mqlMicrosoftSecurity) secureScores() ([]interface{}, error) {
 		return nil, err
 	}
 	ctx := context.Background()
-	resp, err := graphClient.Security().SecureScores().Get(ctx, &security.SecurescoresSecureScoresRequestBuilderGetRequestConfiguration{})
+	resp, err := graphClient.Security().SecureScores().Get(ctx, &security.SecureScoresRequestBuilderGetRequestConfiguration{})
 	if err != nil {
 		return nil, transformError(err)
 	}

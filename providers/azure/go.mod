@@ -39,14 +39,14 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.33.0
 	github.com/stretchr/testify v1.9.0
-	go.mondoo.com/cnquery/v11 v11.11.0
+	go.mondoo.com/cnquery/v11 v11.12.2
 )
 
 require (
 	4d63.com/gocheckcompilerdirectives v1.2.1 // indirect
 	4d63.com/gochecknoglobals v0.2.1 // indirect
 	cloud.google.com/go v0.115.0 // indirect
-	cloud.google.com/go/auth v0.7.0 // indirect
+	cloud.google.com/go/auth v0.7.1 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.3 // indirect
 	cloud.google.com/go/compute/metadata v0.5.0 // indirect
 	cloud.google.com/go/iam v1.1.11 // indirect
@@ -83,7 +83,7 @@ require (
 	github.com/alingse/asasalint v0.0.11 // indirect
 	github.com/ashanbrown/forbidigo v1.6.0 // indirect
 	github.com/ashanbrown/makezero v1.1.1 // indirect
-	github.com/aws/aws-sdk-go v1.54.18 // indirect
+	github.com/aws/aws-sdk-go v1.54.19 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.30.3 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.27.26 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.26 // indirect
@@ -127,9 +127,9 @@ require (
 	github.com/containerd/log v0.1.0 // indirect
 	github.com/containerd/stargz-snapshotter/estargz v0.15.1 // indirect
 	github.com/curioswitch/go-reassign v0.2.0 // indirect
-	github.com/cyphar/filepath-securejoin v0.2.5 // indirect
+	github.com/cyphar/filepath-securejoin v0.3.0 // indirect
 	github.com/daixiang0/gci v0.13.4 // indirect
-	github.com/danieljoos/wincred v1.2.1 // indirect
+	github.com/danieljoos/wincred v1.2.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/denis-tingaikin/go-header v0.5.0 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
@@ -177,7 +177,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/golangci/dupl v0.0.0-20180902072040-3e9179ac440a // indirect
-	github.com/golangci/gofmt v0.0.0-20231019111953-be8c47862aaa // indirect
+	github.com/golangci/gofmt v0.0.0-20240710011838-52c11c6007e5 // indirect
 	github.com/golangci/golangci-lint v1.59.1 // indirect
 	github.com/golangci/misspell v0.6.0 // indirect
 	github.com/golangci/modinfo v0.3.4 // indirect
@@ -226,7 +226,7 @@ require (
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/kisielk/errcheck v1.7.0 // indirect
 	github.com/kkHAIKE/contextcheck v1.1.5 // indirect
-	github.com/klauspost/compress v1.17.7 // indirect
+	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
@@ -358,9 +358,9 @@ require (
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.23.0 // indirect
 	google.golang.org/api v0.188.0 // indirect
-	google.golang.org/genproto v0.0.0-20240709173604-40e1e62336c5 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20240709173604-40e1e62336c5 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240709173604-40e1e62336c5 // indirect
+	google.golang.org/genproto v0.0.0-20240711142825-46eb208f015d // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20240711142825-46eb208f015d // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240711142825-46eb208f015d // indirect
 	google.golang.org/grpc v1.65.0 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect

@@ -30,7 +30,7 @@ func (a *mqlMicrosoftDevicemanagement) deviceConfigurations() ([]interface{}, er
 	}
 
 	ctx := context.Background()
-	resp, err := graphClient.DeviceManagement().DeviceConfigurations().Get(ctx, &devicemanagement.DeviceconfigurationsDeviceConfigurationsRequestBuilderGetRequestConfiguration{})
+	resp, err := graphClient.DeviceManagement().DeviceConfigurations().Get(ctx, &devicemanagement.DeviceConfigurationsRequestBuilderGetRequestConfiguration{})
 	if err != nil {
 		return nil, transformError(err)
 	}
@@ -65,8 +65,8 @@ func (a *mqlMicrosoftDevicemanagement) deviceCompliancePolicies() ([]interface{}
 	}
 
 	ctx := context.Background()
-	requestConfig := &devicemanagement.DevicecompliancepoliciesDeviceCompliancePoliciesRequestBuilderGetRequestConfiguration{
-		QueryParameters: &devicemanagement.DevicecompliancepoliciesDeviceCompliancePoliciesRequestBuilderGetQueryParameters{
+	requestConfig := &devicemanagement.DeviceCompliancePoliciesRequestBuilderGetRequestConfiguration{
+		QueryParameters: &devicemanagement.DeviceCompliancePoliciesRequestBuilderGetQueryParameters{
 			Expand: []string{"assignments"},
 		},
 	}
