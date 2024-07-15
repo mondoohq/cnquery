@@ -7,7 +7,7 @@ toolchain go1.22.4
 replace go.mondoo.com/cnquery/v11 => ../..
 
 require (
-	github.com/aws-cloudformation/rain v1.11.0
+	github.com/aws-cloudformation/rain v1.12.0
 	github.com/stretchr/testify v1.9.0
 	go.mondoo.com/cnquery/v11 v11.11.0
 	go.mondoo.com/ranger-rpc v0.6.2

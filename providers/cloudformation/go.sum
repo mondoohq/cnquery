@@ -79,8 +79,8 @@ github.com/ashanbrown/forbidigo v1.6.0 h1:D3aewfM37Yb3pxHujIPSpTf6oQk9sc9WZi8ger
 github.com/ashanbrown/forbidigo v1.6.0/go.mod h1:Y8j9jy9ZYAEHXdu723cUlraTqbzjKF1MUyfOKL+AjcU=
 github.com/ashanbrown/makezero v1.1.1 h1:iCQ87C0V0vSyO+M9E/FZYbu65auqH0lnsOkf5FcB28s=
 github.com/ashanbrown/makezero v1.1.1/go.mod h1:i1bJLCRSCHOcOa9Y6MyF2FTfMZMFdHvxKHxgO5Z1axI=
-github.com/aws-cloudformation/rain v1.11.0 h1:56on6R2sRvLHI9YYAI+hn8SooIHVOKdZ888Zz1ZHw30=
-github.com/aws-cloudformation/rain v1.11.0/go.mod h1:A/yECJb1B6s2lCBBK8PnJ5bkPE5XVXMOaDh5cQLgo50=
+github.com/aws-cloudformation/rain v1.12.0 h1:y2NPszCGTXmEZWdBTkXbVp6oKk9Mz8evU+Egk0csWd4=
+github.com/aws-cloudformation/rain v1.12.0/go.mod h1:S8tZu2CjzzNaKjXqD55qP2btGrYTIinC092x0xYHIAE=
 github.com/aws/aws-sdk-go v1.54.18 h1:t8DGtN8A2wEiazoJxeDbfPsbxCKtjoRLuO7jBSgJzo4=
 github.com/aws/aws-sdk-go v1.54.18/go.mod h1:eRwEWoyTWFMVYVQzKMNHWP5/RV4xIUGMQfXQHfHkpNU=
 github.com/aws/aws-sdk-go-v2 v1.30.3 h1:jUeBtG0Ih+ZIFH0F4UkmL9w3cSpaMv9tYYDbzILP8dY=
