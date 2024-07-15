@@ -9,9 +9,9 @@ toolchain go1.22.4
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.12.0
 	github.com/cockroachdb/errors v1.11.3
-	github.com/microsoft/kiota-abstractions-go v1.6.0
+	github.com/microsoft/kiota-abstractions-go v1.6.1
 	github.com/microsoft/kiota-authentication-azure-go v1.0.2
-	github.com/microsoftgraph/msgraph-sdk-go v1.45.0
+	github.com/microsoftgraph/msgraph-sdk-go v1.46.0
 	github.com/microsoftgraph/msgraph-sdk-go-core v1.1.0
 	github.com/rs/zerolog v1.33.0
 	github.com/stretchr/testify v1.9.0
