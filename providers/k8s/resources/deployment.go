@@ -22,7 +22,7 @@ type mqlK8sDeploymentInternal struct {
 }
 
 func (k *mqlK8s) deployments() ([]interface{}, error) {
-	return k8sResourceToMql(k.MqlRuntime, appsv1.Resource("deployments").String(), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToMql(k.MqlRuntime, gvkString(appsv1.SchemeGroupVersion.WithKind("deployments")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		r, err := CreateResource(k.MqlRuntime, "k8s.deployment", map[string]*llx.RawData{

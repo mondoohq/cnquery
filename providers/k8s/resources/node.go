@@ -53,7 +53,7 @@ func initK8sNode(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 
 func (k *mqlK8s) nodes() ([]interface{}, error) {
 	k.mqlK8sInternal.nodesByName = make(map[string]*mqlK8sNode)
-	return k8sResourceToMql(k.MqlRuntime, corev1.Resource("nodes").String(), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToMql(k.MqlRuntime, gvkString(corev1.SchemeGroupVersion.WithKind("nodes")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		r, err := CreateResource(k.MqlRuntime, "k8s.node", map[string]*llx.RawData{
 			"id":              llx.StringData(objIdFromK8sObj(obj, objT)),
 			"uid":             llx.StringData(string(obj.GetUID())),

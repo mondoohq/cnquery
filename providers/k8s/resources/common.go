@@ -15,6 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 func k8sProvider(t plugin.Connection) (shared.Connection, error) {
@@ -26,6 +27,10 @@ func k8sProvider(t plugin.Connection) (shared.Connection, error) {
 }
 
 type resourceConvertFn func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error)
+
+func gvkString(gvk schema.GroupVersionKind) string {
+	return gvk.Kind + "." + gvk.Version + "." + gvk.Group
+}
 
 func k8sResourceToMql(r *plugin.Runtime, kind string, fn resourceConvertFn) ([]interface{}, error) {
 	kt, err := k8sProvider(r.Connection)

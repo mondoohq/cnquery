@@ -21,7 +21,7 @@ type mqlK8sServiceInternal struct {
 }
 
 func (k *mqlK8s) services() ([]interface{}, error) {
-	return k8sResourceToMql(k.MqlRuntime, corev1.Resource("services").String(), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToMql(k.MqlRuntime, gvkString(corev1.SchemeGroupVersion.WithKind("services")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 		srv, ok := resource.(*corev1.Service)
 		if !ok {
