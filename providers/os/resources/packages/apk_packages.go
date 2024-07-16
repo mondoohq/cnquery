@@ -46,7 +46,7 @@ func ParseApkDbPackages(pf *inventory.Platform, input io.Reader) []Package {
 		pkg.Format = AlpinePkgFormat
 		pkg.PUrl = purl.NewPackageUrl(pf, pkg.Name, pkg.Version, pkg.Arch, pkg.Epoch, packageurl.TypeApk)
 
-		cpes, _ := cpe2.NewPackage2Cpe(pkg.Name, pkg.Name, pkg.Version, pkg.Arch, pf.Arch)
+		cpes, _ := cpe2.NewPackage2Cpe(pkg.Vendor, pkg.Name, pkg.Version, "", pf.Arch)
 		pkg.CPEs = cpes
 
 		// do sanitization checks to ensure we have minimal information

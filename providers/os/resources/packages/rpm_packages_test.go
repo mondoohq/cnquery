@@ -6,9 +6,6 @@ package packages
 import (
 	"bytes"
 	"fmt"
-	"io"
-	"os"
-	"path/filepath"
 	"testing"
 
 	rpmdb "github.com/knqyf263/go-rpmdb/pkg"
@@ -18,15 +15,15 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/connection/mock"
 )
 
-func TestRedhat7Parser(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/packages_redhat7.toml", &inventory.Asset{})
+func TestRedhat8Parser(t *testing.T) {
+	mock, err := mock.New(0, "./testdata/packages_redhat8.toml", &inventory.Asset{})
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	pf := &inventory.Platform{
 		Name:    "redhat",
-		Version: "7.4",
+		Version: "8.4",
 		Arch:    "x86_64",
 		Family:  []string{"redhat", "linux", "unix", "os"},
 		Labels: map[string]string{
@@ -34,95 +31,141 @@ func TestRedhat7Parser(t *testing.T) {
 		},
 	}
 
-	c, err := mock.RunCommand("rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH} %{SUMMARY}\\n'")
+	c, err := mock.RunCommand("rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}\\n'")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	m := ParseRpmPackages(pf, c.Stdout)
-	assert.Equal(t, 144, len(m), "detected the right amount of packages")
+	assert.Equal(t, 190, len(m), "detected the right amount of packages")
 
 	p := Package{
 		Name:        "ncurses-base",
-		Version:     "5.9-14.20130511.el7_4",
+		Version:     "6.1-7.20180224.el8",
+		Vendor:      "Red Hat, Inc.",
 		Arch:        "noarch",
 		Description: "Descriptions of common terminals",
-		PUrl:        "pkg:rpm/rhel/ncurses-base@5.9-14.20130511.el7_4?arch=noarch&distro=rhel-7.4",
+		PUrl:        "pkg:rpm/rhel/ncurses-base@6.1-7.20180224.el8?arch=noarch&distro=rhel-8.4",
 		CPEs: []string{
-			"cpe:2.3:a:ncurses-base:ncurses-base:5.9-14.20130511.el7_4:*:*:*:*:*:noarch:*",
-			"cpe:2.3:a:ncurses-base:ncurses-base:5.9-14.20130511:*:*:*:*:*:noarch:*",
+			"cpe:2.3:a:red_hat\\,_inc.:ncurses-base:6.1-7.20180224.el8:*:*:*:*:*:noarch:*",
+			"cpe:2.3:a:red_hat\\,_inc.:ncurses-base:6.1-7.20180224:*:*:*:*:*:noarch:*",
+			"cpe:2.3:a:red_hat\\,_inc.:ncurses-base:6.1:*:*:*:*:*:noarch:*",
+			"cpe:2.3:a:red_hat\\,_inc.:ncurses-base:6.1-7.20180224.el8:*:*:*:*:*:*:*",
+			"cpe:2.3:a:red_hat\\,_inc.:ncurses-base:6.1-7.20180224:*:*:*:*:*:*:*",
+			"cpe:2.3:a:red_hat\\,_inc.:ncurses-base:6.1:*:*:*:*:*:*:*",
 		},
 		Format:         RpmPkgFormat,
 		FilesAvailable: PkgFilesAsync,
 	}
-	assert.Equal(t, findPkg(m, p.Name), p, p.Name)
+	assert.Equal(t, p, findPkg(m, p.Name), p.Name)
 
 	p = Package{
 		Name:        "libstdc++",
-		Version:     "4.8.5-28.el7_5.1",
+		Version:     "8.4.1-1.el8",
+		Vendor:      "Red Hat, Inc.",
 		Arch:        "x86_64",
 		Description: "GNU Standard C++ Library",
-		PUrl:        "pkg:rpm/rhel/libstdc%2B%2B@4.8.5-28.el7_5.1?arch=x86_64&distro=rhel-7.4",
+		PUrl:        "pkg:rpm/rhel/libstdc%2B%2B@8.4.1-1.el8?arch=x86_64&distro=rhel-8.4",
 		CPEs: []string{
-			"cpe:2.3:a:libstdc\\+\\+:libstdc\\+\\+:4.8.5-28.el7_5.1:*:*:*:*:*:x86_64:*",
-			"cpe:2.3:a:libstdc\\+\\+:libstdc\\+\\+:4.8.5-28:*:*:*:*:*:x86_64:*",
+			"cpe:2.3:a:red_hat\\,_inc.:libstdc\\+\\+:8.4.1-1.el8:*:*:*:*:*:x86_64:*",
+			"cpe:2.3:a:red_hat\\,_inc.:libstdc\\+\\+:8.4.1-1:*:*:*:*:*:x86_64:*",
+			"cpe:2.3:a:red_hat\\,_inc.:libstdc\\+\\+:8.4.1:*:*:*:*:*:x86_64:*",
+			"cpe:2.3:a:red_hat\\,_inc.:libstdc\\+\\+:8.4.1-1.el8:*:*:*:*:*:*:*",
+			"cpe:2.3:a:red_hat\\,_inc.:libstdc\\+\\+:8.4.1-1:*:*:*:*:*:*:*",
+			"cpe:2.3:a:red_hat\\,_inc.:libstdc\\+\\+:8.4.1:*:*:*:*:*:*:*",
 		},
 		Format:         RpmPkgFormat,
 		FilesAvailable: PkgFilesAsync,
 	}
-	assert.Equal(t, findPkg(m, p.Name), p, p.Name)
+	assert.Equal(t, p, findPkg(m, p.Name), p.Name)
 
 	p = Package{
-		Name:           "iputils",
-		Version:        "20160308-10.el7",
-		Arch:           "x86_64",
-		Description:    "Network monitoring tools including ping",
-		PUrl:           "pkg:rpm/rhel/iputils@20160308-10.el7?arch=x86_64&distro=rhel-7.4",
-		CPEs:           []string{"cpe:2.3:a:iputils:iputils:20160308-10.el7:*:*:*:*:*:x86_64:*"},
+		Name:        "iptables-libs",
+		Version:     "1.8.4-17.el8_4.1",
+		Vendor:      "Red Hat, Inc.",
+		Arch:        "x86_64",
+		Description: "iptables libraries",
+		PUrl:        "pkg:rpm/rhel/iptables-libs@1.8.4-17.el8_4.1?arch=x86_64&distro=rhel-8.4",
+		CPEs: []string{
+			"cpe:2.3:a:red_hat\\,_inc.:iptables-libs:1.8.4-17.el8_4.1:*:*:*:*:*:x86_64:*",
+			"cpe:2.3:a:red_hat\\,_inc.:iptables-libs:1.8.4-17:*:*:*:*:*:x86_64:*",
+			"cpe:2.3:a:red_hat\\,_inc.:iptables-libs:1.8.4:*:*:*:*:*:x86_64:*",
+			"cpe:2.3:a:red_hat\\,_inc.:iptables-libs:1.8.4-17.el8_4.1:*:*:*:*:*:*:*",
+			"cpe:2.3:a:red_hat\\,_inc.:iptables-libs:1.8.4-17:*:*:*:*:*:*:*",
+			"cpe:2.3:a:red_hat\\,_inc.:iptables-libs:1.8.4:*:*:*:*:*:*:*",
+		},
 		Format:         RpmPkgFormat,
 		FilesAvailable: PkgFilesAsync,
 	}
-	assert.Equal(t, findPkg(m, p.Name), p, p.Name)
+	assert.Equal(t, p, findPkg(m, p.Name), p.Name)
 
 	p = Package{
-		Name:           "openssl-libs",
-		Version:        "1:1.0.2k-12.el7",
-		Epoch:          "1",
-		Arch:           "x86_64",
-		Description:    "A general purpose cryptography library with TLS implementation",
-		PUrl:           "pkg:rpm/rhel/openssl-libs@1%3A1.0.2k-12.el7?arch=x86_64&distro=rhel-7.4&epoch=1",
-		CPEs:           []string{"cpe:2.3:a:openssl-libs:openssl-libs:1.0.2k-12.el7:*:*:*:*:*:x86_64:*"},
+		Name:        "openssl-libs",
+		Version:     "1:1.1.1g-15.el8_3",
+		Vendor:      "Red Hat, Inc.",
+		Epoch:       "1",
+		Arch:        "x86_64",
+		Description: "A general purpose cryptography library with TLS implementation",
+		PUrl:        "pkg:rpm/rhel/openssl-libs@1%3A1.1.1g-15.el8_3?arch=x86_64&distro=rhel-8.4&epoch=1",
+		CPEs: []string{
+			"cpe:2.3:a:red_hat\\,_inc.:openssl-libs:1.1.1g-15.el8_3:1:*:*:*:*:x86_64:*",
+			"cpe:2.3:a:red_hat\\,_inc.:openssl-libs:1.1.1g-15:1:*:*:*:*:x86_64:*",
+			"cpe:2.3:a:red_hat\\,_inc.:openssl-libs:1.1.1g:1:*:*:*:*:x86_64:*",
+			"cpe:2.3:a:red_hat\\,_inc.:openssl-libs:1.1.1g-15.el8_3:*:*:*:*:*:x86_64:*",
+			"cpe:2.3:a:red_hat\\,_inc.:openssl-libs:1.1.1g-15:*:*:*:*:*:x86_64:*",
+			"cpe:2.3:a:red_hat\\,_inc.:openssl-libs:1.1.1g:*:*:*:*:*:x86_64:*",
+			"cpe:2.3:a:red_hat\\,_inc.:openssl-libs:1.1.1g-15.el8_3:*:*:*:*:*:*:*",
+			"cpe:2.3:a:red_hat\\,_inc.:openssl-libs:1.1.1g-15:*:*:*:*:*:*:*",
+			"cpe:2.3:a:red_hat\\,_inc.:openssl-libs:1.1.1g:*:*:*:*:*:*:*",
+		},
 		Format:         RpmPkgFormat,
 		FilesAvailable: PkgFilesAsync,
 	}
-	assert.Equal(t, findPkg(m, p.Name), p, p.Name)
+	assert.Equal(t, p, findPkg(m, p.Name), p.Name)
 
 	p = Package{
-		Name:           "dbus-libs",
-		Version:        "1:1.10.24-7.el7",
-		Epoch:          "1",
-		Arch:           "x86_64",
-		Description:    "Libraries for accessing D-BUS",
-		PUrl:           "pkg:rpm/rhel/dbus-libs@1%3A1.10.24-7.el7?arch=x86_64&distro=rhel-7.4&epoch=1",
-		CPEs:           []string{"cpe:2.3:a:dbus-libs:dbus-libs:1.10.24-7.el7:*:*:*:*:*:x86_64:*"},
+		Name:        "dbus-libs",
+		Version:     "1:1.12.8-12.el8_4.2",
+		Vendor:      "Red Hat, Inc.",
+		Epoch:       "1",
+		Arch:        "x86_64",
+		Description: "Libraries for accessing D-BUS",
+		PUrl:        "pkg:rpm/rhel/dbus-libs@1%3A1.12.8-12.el8_4.2?arch=x86_64&distro=rhel-8.4&epoch=1",
+		CPEs: []string{
+			"cpe:2.3:a:red_hat\\,_inc.:dbus-libs:1.12.8-12.el8_4.2:1:*:*:*:*:x86_64:*",
+			"cpe:2.3:a:red_hat\\,_inc.:dbus-libs:1.12.8-12:1:*:*:*:*:x86_64:*",
+			"cpe:2.3:a:red_hat\\,_inc.:dbus-libs:1.12.8:1:*:*:*:*:x86_64:*",
+			"cpe:2.3:a:red_hat\\,_inc.:dbus-libs:1.12.8-12.el8_4.2:*:*:*:*:*:x86_64:*",
+			"cpe:2.3:a:red_hat\\,_inc.:dbus-libs:1.12.8-12:*:*:*:*:*:x86_64:*",
+			"cpe:2.3:a:red_hat\\,_inc.:dbus-libs:1.12.8:*:*:*:*:*:x86_64:*",
+			"cpe:2.3:a:red_hat\\,_inc.:dbus-libs:1.12.8-12.el8_4.2:*:*:*:*:*:*:*",
+			"cpe:2.3:a:red_hat\\,_inc.:dbus-libs:1.12.8-12:*:*:*:*:*:*:*",
+			"cpe:2.3:a:red_hat\\,_inc.:dbus-libs:1.12.8:*:*:*:*:*:*:*",
+		},
 		Format:         RpmPkgFormat,
 		FilesAvailable: PkgFilesAsync,
 	}
-	assert.Equal(t, findPkg(m, p.Name), p, p.Name)
+	assert.Equal(t, p, findPkg(m, p.Name), p.Name)
 
 	// fetch package files
 	p = Package{
-		Name:           "hostname",
-		Version:        "3.13-3.el7",
-		Epoch:          "",
-		Arch:           "x86_64",
-		Description:    "Utility to set/show the host name or domain name",
-		PUrl:           "pkg:rpm/rhel/hostname@3.13-3.el7?arch=x86_64&distro=rhel-7.4",
-		CPEs:           []string{"cpe:2.3:a:hostname:hostname:3.13-3.el7:*:*:*:*:*:x86_64:*"},
+		Name:        "which",
+		Version:     "2.21-12.el8",
+		Vendor:      "Red Hat, Inc.",
+		Epoch:       "",
+		Arch:        "x86_64",
+		Description: "Displays where a particular program in your path is located",
+		PUrl:        "pkg:rpm/rhel/which@2.21-12.el8?arch=x86_64&distro=rhel-8.4",
+		CPEs: []string{
+			"cpe:2.3:a:red_hat\\,_inc.:which:2.21-12.el8:*:*:*:*:*:x86_64:*",
+			"cpe:2.3:a:red_hat\\,_inc.:which:2.21:*:*:*:*:*:x86_64:*",
+			"cpe:2.3:a:red_hat\\,_inc.:which:2.21-12.el8:*:*:*:*:*:*:*",
+			"cpe:2.3:a:red_hat\\,_inc.:which:2.21:*:*:*:*:*:*:*",
+		},
 		Format:         RpmPkgFormat,
 		FilesAvailable: PkgFilesAsync,
 	}
-	assert.Equal(t, findPkg(m, p.Name), p, p.Name)
+	assert.Equal(t, p, findPkg(m, p.Name), p.Name)
 
 	mgr := &RpmPkgManager{
 		conn:     mock,
@@ -130,123 +173,54 @@ func TestRedhat7Parser(t *testing.T) {
 	}
 	pkgFiles, err := mgr.Files(p.Name, p.Version, p.Arch)
 	require.NoError(t, err)
-	assert.Equal(t, 4, len(pkgFiles), "detected the right amount of package files")
-	assert.Contains(t, pkgFiles, FileRecord{Path: "/usr/bin/dnsdomainname"})
-	assert.Contains(t, pkgFiles, FileRecord{Path: "/usr/share/man/man1/ypdomainname.1.gz"})
-}
-
-func TestRedhat6Parser(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/packages_redhat6.toml", &inventory.Asset{})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	pf := &inventory.Platform{
-		Name:    "redhat",
-		Version: "6.2",
-		Arch:    "x86_64",
-		Family:  []string{"redhat", "linux", "unix", "os"},
-		Labels: map[string]string{
-			"distro-id": "rhel",
-		},
-	}
-
-	c, err := mock.RunCommand("rpm -qa --queryformat '%{NAME} %{EPOCH}:%{VERSION}-%{RELEASE} %{ARCH} %{SUMMARY}\\n'")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	m := ParseRpmPackages(pf, c.Stdout)
-	assert.Equal(t, 8, len(m), "detected the right amount of packages")
-
-	p := Package{
-		Name:           "ElectricFence",
-		Version:        "2.1-3",
-		Arch:           "i386",
-		Description:    "A debugger which detects memory allocation violations.",
-		PUrl:           "pkg:rpm/rhel/ElectricFence@2.1-3?arch=i386&distro=rhel-6.2",
-		CPEs:           []string{"cpe:2.3:a:electricfence:electricfence:2.1-3:*:*:*:*:*:i386:*"},
-		Format:         RpmPkgFormat,
-		FilesAvailable: PkgFilesAsync,
-	}
-	assert.Contains(t, m, p, "ElectricFence")
-
-	p = Package{
-		Name:           "shadow-utils",
-		Version:        "1:19990827-10",
-		Epoch:          "1",
-		Arch:           "i386",
-		Description:    "Utilities for managing shadow password files and user/group accounts.",
-		PUrl:           "pkg:rpm/rhel/shadow-utils@1%3A19990827-10?arch=i386&distro=rhel-6.2&epoch=1",
-		CPEs:           []string{"cpe:2.3:a:shadow-utils:shadow-utils:19990827-10:*:*:*:*:*:i386:*"},
-		Format:         RpmPkgFormat,
-		FilesAvailable: PkgFilesAsync,
-	}
-	assert.Contains(t, m, p, "shadow-utils")
-
-	p = Package{
-		Name:           "arpwatch",
-		Version:        "1:2.1a4-19",
-		Epoch:          "1",
-		Arch:           "i386",
-		Description:    "Network monitoring tools for tracking IP addresses on a network.",
-		PUrl:           "pkg:rpm/rhel/arpwatch@1%3A2.1a4-19?arch=i386&distro=rhel-6.2&epoch=1",
-		CPEs:           []string{"cpe:2.3:a:arpwatch:arpwatch:2.1a4-19:*:*:*:*:*:i386:*"},
-		Format:         RpmPkgFormat,
-		FilesAvailable: PkgFilesAsync,
-	}
-	assert.Contains(t, m, p, "arpwatch")
-
-	p = Package{
-		Name:           "bash",
-		Version:        "1.14.7-22",
-		Arch:           "i386",
-		Description:    "The GNU Bourne Again shell (bash) version 1.14.",
-		PUrl:           "pkg:rpm/rhel/bash@1.14.7-22?arch=i386&distro=rhel-6.2",
-		CPEs:           []string{"cpe:2.3:a:bash:bash:1.14.7-22:*:*:*:*:*:i386:*"},
-		Format:         RpmPkgFormat,
-		FilesAvailable: PkgFilesAsync,
-	}
-	assert.Contains(t, m, p, "bash")
+	assert.Equal(t, 15, len(pkgFiles), "detected the right amount of package files")
+	assert.Contains(t, pkgFiles, FileRecord{Path: "/usr/share/doc/which"})
+	assert.Contains(t, pkgFiles, FileRecord{Path: "/usr/share/info/which.info.gz"})
 }
 
 func TestPhoton4ImageParser(t *testing.T) {
-	// to create this test file, run the following command:
-	// mondoo scan docker image photon:4.0 --record
-	mock, err := mock.New(0, "./testdata/packages_photon_image.toml", &inventory.Asset{})
-	if err != nil {
-		t.Fatal(err)
+	// To get this data, run the following command on a Photon 4 system:
+	// tdnf info ncurses-libs bash sqlite-libs
+
+	epoch := int(0)
+	pkgList := []*rpmdb.PackageInfo{
+		{
+			Name:    "ncurses-libs",
+			Epoch:   &epoch,
+			Version: "6.2",
+			Release: "6.ph4",
+			Arch:    "x86_64",
+			Vendor:  "VMware, Inc.",
+			Summary: "Ncurses Libraries",
+		},
+		{
+			Name:    "bash",
+			Epoch:   &epoch,
+			Version: "5.0",
+			Release: "4.ph4",
+			Arch:    "x86_64",
+			Vendor:  "VMware, Inc.",
+			Summary: "Bourne-Again SHell",
+		},
+		{
+			Name:    "sqlite-libs",
+			Epoch:   &epoch,
+			Version: "3.38.5",
+			Release: "4.ph4",
+			Arch:    "x86_64",
+			Vendor:  "VMware, Inc.",
+			Summary: "sqlite3 library",
+		},
 	}
 
-	rpmTmpDir, err := os.MkdirTemp(os.TempDir(), "mondoo-rpmdb")
-	require.NoError(t, err)
-	defer os.RemoveAll(rpmTmpDir)
-
-	fWriter, err := os.Create(filepath.Join(rpmTmpDir, "rpmdb.sqlite"))
-	require.NoError(t, err)
-	defer fWriter.Close()
-
-	f, err := mock.FileSystem().Open(filepath.Join("/var/lib/rpm", "rpmdb.sqlite"))
-	require.NoError(t, err)
-	defer f.Close()
-
-	_, err = io.Copy(fWriter, f)
-	require.NoError(t, err)
-
-	packageList := bytes.Buffer{}
-	db, err := rpmdb.Open(filepath.Join(rpmTmpDir, "rpmdb.sqlite"))
-	require.NoError(t, err)
-
-	pkgList, err := db.ListPackages()
-	require.NoError(t, err)
-
+	var packageList bytes.Buffer
 	for _, pkg := range pkgList {
-		packageList.WriteString(fmt.Sprintf("%s %d:%s-%s %s %s\n", pkg.Name, pkg.EpochNum(), pkg.Version, pkg.Release, pkg.Arch, pkg.Summary))
+		packageList.WriteString(fmt.Sprintf("%s %d:%s-%s %s__%s__%s\n", pkg.Name, pkg.EpochNum(), pkg.Version, pkg.Release, pkg.Arch, pkg.Vendor, pkg.Summary))
 	}
 
 	pf := &inventory.Platform{
 		Name:    "photon",
-		Version: "3.0",
+		Version: "4.0",
 		Arch:    "x86_64",
 		Family:  []string{"linux", "unix", "os"},
 		Labels: map[string]string{
@@ -255,41 +229,61 @@ func TestPhoton4ImageParser(t *testing.T) {
 	}
 
 	m := ParseRpmPackages(pf, &packageList)
-	assert.Equal(t, 36, len(m), "detected the right amount of packages")
+	assert.Equal(t, 3, len(m), "detected the right amount of packages")
 
 	p := Package{
-		Name:           "ncurses-libs",
-		Version:        "6.2-6.ph4",
-		Arch:           "x86_64",
-		Description:    "Ncurses Libraries",
-		PUrl:           "pkg:rpm/photon/ncurses-libs@6.2-6.ph4?arch=x86_64&distro=photon-3.0",
-		CPEs:           []string{"cpe:2.3:a:ncurses-libs:ncurses-libs:6.2-6.ph4:*:*:*:*:*:x86_64:*"},
+		Name:        "ncurses-libs",
+		Version:     "6.2-6.ph4",
+		Vendor:      "VMware, Inc.",
+		Arch:        "x86_64",
+		Description: "Ncurses Libraries",
+		PUrl:        "pkg:rpm/photon/ncurses-libs@6.2-6.ph4?arch=x86_64&distro=photon-4.0",
+		CPEs: []string{
+			"cpe:2.3:a:vmware\\,_inc.:ncurses-libs:6.2-6.ph4:*:*:*:*:*:x86_64:*",
+			"cpe:2.3:a:vmware\\,_inc.:ncurses-libs:6.2:*:*:*:*:*:x86_64:*",
+			"cpe:2.3:a:vmware\\,_inc.:ncurses-libs:6.2-6.ph4:*:*:*:*:*:*:*",
+			"cpe:2.3:a:vmware\\,_inc.:ncurses-libs:6.2:*:*:*:*:*:*:*",
+		},
 		Format:         RpmPkgFormat,
 		FilesAvailable: PkgFilesAsync,
 	}
-	assert.Contains(t, m, p, "ncurses-libs")
+	assert.Equal(t, p, findPkg(m, p.Name), p.Name)
 
 	p = Package{
-		Name:           "bash",
-		Version:        "5.0-2.ph4",
-		Arch:           "x86_64",
-		Description:    "Bourne-Again SHell",
-		PUrl:           "pkg:rpm/photon/bash@5.0-2.ph4?arch=x86_64&distro=photon-3.0",
-		CPEs:           []string{"cpe:2.3:a:bash:bash:5.0-2.ph4:*:*:*:*:*:x86_64:*"},
+		Name:        "bash",
+		Version:     "5.0-4.ph4",
+		Vendor:      "VMware, Inc.",
+		Arch:        "x86_64",
+		Description: "Bourne-Again SHell",
+		PUrl:        "pkg:rpm/photon/bash@5.0-4.ph4?arch=x86_64&distro=photon-4.0",
+		CPEs: []string{
+			"cpe:2.3:a:vmware\\,_inc.:bash:5.0-4.ph4:*:*:*:*:*:x86_64:*",
+			"cpe:2.3:a:vmware\\,_inc.:bash:5.0:*:*:*:*:*:x86_64:*",
+			"cpe:2.3:a:vmware\\,_inc.:bash:5.0-4.ph4:*:*:*:*:*:*:*",
+			"cpe:2.3:a:vmware\\,_inc.:bash:5.0:*:*:*:*:*:*:*",
+		},
 		Format:         RpmPkgFormat,
 		FilesAvailable: PkgFilesAsync,
 	}
-	assert.Contains(t, m, p, "bash")
+	assert.Equal(t, p, findPkg(m, p.Name), p.Name)
 
 	p = Package{
-		Name:           "sqlite-libs",
-		Version:        "3.38.5-1.ph4",
-		Arch:           "x86_64",
-		Description:    "sqlite3 library",
-		PUrl:           "pkg:rpm/photon/sqlite-libs@3.38.5-1.ph4?arch=x86_64&distro=photon-3.0",
-		CPEs:           []string{"cpe:2.3:a:sqlite-libs:sqlite-libs:3.38.5-1.ph4:*:*:*:*:*:x86_64:*"},
+		Name:        "sqlite-libs",
+		Version:     "3.38.5-4.ph4",
+		Vendor:      "VMware, Inc.",
+		Arch:        "x86_64",
+		Description: "sqlite3 library",
+		PUrl:        "pkg:rpm/photon/sqlite-libs@3.38.5-4.ph4?arch=x86_64&distro=photon-4.0",
+		CPEs: []string{
+			"cpe:2.3:a:vmware\\,_inc.:sqlite-libs:3.38.5-4.ph4:*:*:*:*:*:x86_64:*",
+			"cpe:2.3:a:vmware\\,_inc.:sqlite-libs:3.38.5-4:*:*:*:*:*:x86_64:*",
+			"cpe:2.3:a:vmware\\,_inc.:sqlite-libs:3.38.5:*:*:*:*:*:x86_64:*",
+			"cpe:2.3:a:vmware\\,_inc.:sqlite-libs:3.38.5-4.ph4:*:*:*:*:*:*:*",
+			"cpe:2.3:a:vmware\\,_inc.:sqlite-libs:3.38.5-4:*:*:*:*:*:*:*",
+			"cpe:2.3:a:vmware\\,_inc.:sqlite-libs:3.38.5:*:*:*:*:*:*:*",
+		},
 		Format:         RpmPkgFormat,
 		FilesAvailable: PkgFilesAsync,
 	}
-	assert.Contains(t, m, p, "sqlite-libs")
+	assert.Equal(t, p, findPkg(m, p.Name), p.Name)
 }

@@ -4,9 +4,10 @@
 package reboot
 
 import (
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"io"
 	"strings"
+
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 
 	"go.mondoo.com/cnquery/v11/providers/core/resources/versions/rpm"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
@@ -29,7 +30,7 @@ func (s *RpmNewestKernel) RebootPending() (bool, error) {
 	}
 
 	// get installed kernel version
-	installedKernelCmd, err := s.conn.RunCommand("rpm -q kernel --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH} %{SUMMARY}\n'")
+	installedKernelCmd, err := s.conn.RunCommand("rpm -q kernel --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}\n'")
 	if err != nil {
 		return false, err
 	}

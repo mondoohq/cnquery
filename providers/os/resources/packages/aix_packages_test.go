@@ -32,8 +32,11 @@ func TestParseAixPackages(t *testing.T) {
 		Version:     "7.3.0.0",
 		Description: "AIXwindows msmit Application",
 		PUrl:        "pkg:generic/aix/X11.apps.msmit@7.3.0.0?distro=aix-7.2",
-		CPEs:        []string{"cpe:2.3:a:x11.apps.msmit:x11.apps.msmit:7.3.0.0:*:*:*:*:*:powerpc:*"},
-		Format:      "bff",
+		CPEs: []string{
+			"cpe:2.3:a:x11.apps.msmit:x11.apps.msmit:7.3.0.0:*:*:*:*:*:powerpc:*",
+			"cpe:2.3:a:x11.apps.msmit:x11.apps.msmit:7.3.0:*:*:*:*:*:powerpc:*",
+		},
+		Format: "bff",
 	}
 	assert.Contains(t, m, p)
 }

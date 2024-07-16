@@ -15,17 +15,32 @@ func TestPkg2Gen(t *testing.T) {
 		vendor   string
 		name     string
 		version  string
-		expected string
+		expected []string
 	}{
-		{"tar", "tar", "1.34+dfsg-1", "cpe:2.3:a:tar:tar:1.34\\+dfsg-1:*:*:*:*:*:*:*"},
-		{"@coreui/vue", "@coreui/vue", "2.1.2", "cpe:2.3:a:\\@coreui\\/vue:\\@coreui\\/vue:2.1.2:*:*:*:*:*:*:*"},
+		{
+			"tar",
+			"tar",
+			"1.34+dfsg-1",
+			[]string{
+				"cpe:2.3:a:tar:tar:1.34\\+dfsg-1:*:*:*:*:*:*:*",
+				"cpe:2.3:a:tar:tar:1.34\\+dfsg:*:*:*:*:*:*:*",
+			},
+		},
+		{
+			"@coreui/vue",
+			"@coreui/vue",
+			"2.1.2",
+			[]string{
+				"cpe:2.3:a:\\@coreui\\/vue:\\@coreui\\/vue:2.1.2:*:*:*:*:*:*:*",
+			},
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			cpe, err := NewPackage2Cpe(test.vendor, test.name, test.version, "", "")
+			cpes, err := NewPackage2Cpe(test.vendor, test.name, test.version, "", "")
 			require.NoError(t, err)
-			assert.Equal(t, test.expected, cpe)
+			assert.Equal(t, test.expected, cpes)
 		})
 	}
 }
@@ -45,18 +60,20 @@ func TestPkg2GenMutations(t *testing.T) {
 			"",
 			[]string{
 				"cpe:2.3:a:nextgen_corporation:mirth_connect_4.4.0.b2948:4.4.0.b2948:*:*:*:*:*:*:*",
+				"cpe:2.3:a:nextgen:mirth_connect_4.4.0.b2948:4.4.0.b2948:*:*:*:*:*:*:*",
 				"cpe:2.3:a:nextgen:mirth_connect:4.4.0.b2948:*:*:*:*:*:*:*",
 				"cpe:2.3:a:nextgen:mirth_connect:4.4.0:*:*:*:*:*:*:*",
 			},
 		},
 		{
-			"mirthconnect",
+			"nextgen",
 			"mirthconnect",
 			"0:4.4.0.b2948-1",
 			"i386",
 			[]string{
-				"cpe:2.3:a:nextgen:mirth_connect:4.4.0.b2948-1:*:*:*:*:*:*:*",
-				"cpe:2.3:a:nextgen:mirth_connect:4.4.0:*:*:*:*:*:*:*",
+				"cpe:2.3:a:nextgen:mirthconnect:4.4.0.b2948-1:*:*:*:*:*:i386:*",
+				"cpe:2.3:a:nextgen:mirthconnect:4.4.0:*:*:*:*:*:i386:*",
+				"cpe:2.3:a:nextgen:mirthconnect:4.4.0.b2948:*:*:*:*:*:i386:*",
 			},
 		},
 	}
@@ -65,9 +82,7 @@ func TestPkg2GenMutations(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			cpes, err := NewPackage2Cpe(test.vendor, test.name, test.version, "", test.arch)
 			require.NoError(t, err)
-			for _, cpe := range test.expected {
-				assert.Contains(t, cpes, cpe)
-			}
+			assert.Equal(t, test.expected, cpes)
 		})
 	}
 }

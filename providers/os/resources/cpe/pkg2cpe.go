@@ -57,12 +57,7 @@ func NewPackage2Cpe(vendor, name, version, release, arch string) ([]string, erro
 
 	cpes = append(cpes, attr.BindToFmtString())
 
-	specialMutationAttr := attr
 	genericMutationAttr := attr
-	if specialAttr := specialCPEMutations(specialMutationAttr); specialAttr != nil {
-		cpes = append(cpes, specialAttr.BindToFmtString())
-		genericMutationAttr = *specialAttr
-	}
 	// Modify the CPE to later have a higher chance of matching
 	for _, mutation := range genericCPEVendorMutations {
 		vendorMutationAttr := mutation(genericMutationAttr)
@@ -103,9 +98,11 @@ var genericCPEProductMutations = []func(attr wfn.Attributes) *wfn.Attributes{
 
 var genericCPEVendorMutations = []func(attr wfn.Attributes) *wfn.Attributes{
 	// e.g. "microsoft_corporation" -> "microsoft"
+	// e.g. "nextgencorporation" -> "nextgen"
 	func(attr wfn.Attributes) *wfn.Attributes {
-		if strings.HasSuffix(attr.Vendor, "_corporation") {
-			attr.Vendor = strings.TrimSuffix(attr.Vendor, "_corporation")
+		if strings.HasSuffix(attr.Vendor, "corporation") {
+			attr.Vendor = strings.TrimSuffix(attr.Vendor, "corporation")
+			attr.Vendor = strings.TrimSuffix(attr.Vendor, "_")
 			return &attr
 		}
 		return nil
@@ -122,14 +119,13 @@ var genericCPEVersionMutations = []func(attr wfn.Attributes) *wfn.Attributes{
 		}
 		return nil
 	},
-}
-
-var specialCPEMutations = func(attr wfn.Attributes) *wfn.Attributes {
-	if attr.Vendor == "mirthconnect" {
-		attr.Product = "mirth_connect"
-		attr.Vendor = "nextgen"
-		attr.TargetHW = "*"
-		return &attr
-	}
-	return nil
+	func(attr wfn.Attributes) *wfn.Attributes {
+		versionParts := strings.Split(attr.Version, "-")
+		if len(versionParts) > 1 {
+			attr.Version = versionParts[0]
+			attr.Version = strings.TrimSuffix(attr.Version, "\\")
+			return &attr
+		}
+		return nil
+	},
 }

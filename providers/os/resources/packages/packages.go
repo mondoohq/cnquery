@@ -45,6 +45,9 @@ type Package struct {
 	// Package files (optional, only for some package managers)
 	FilesAvailable PkgFilesAvailable `json:"files_available,omitempty"`
 	Files          []FileRecord      `json:"files,omitempty"`
+
+	// This is used for the CPE generation
+	Vendor string `json:"vendor,omitempty"`
 }
 
 type FileRecord struct {

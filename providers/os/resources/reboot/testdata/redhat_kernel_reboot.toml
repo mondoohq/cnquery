@@ -1,8 +1,8 @@
-[commands."rpm -q kernel --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH} %{SUMMARY}\n'"]
+[commands."rpm -q kernel --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}\n'"]
 stdout = """
-kernel 0:4.18.0-80.el8 x86_64 The Linux kernel
-kernel 0:4.18.0-80.4.2.el8_0 x86_64 The Linux kernel
-kernel 0:4.18.0-80.11.2.el8_0 x86_64 The Linux kernel
+kernel 0:4.18.0-80.el8 x86_64__Red Hat, Inc.__The Linux kernel
+kernel 0:4.18.0-80.4.2.el8_0 x86_64__Red Hat, Inc.__The Linux kernel
+kernel 0:4.18.0-80.11.2.el8_0 x86_64__Red Hat, Inc.__The Linux kernel
 """
 
 [commands."uname -r"]

@@ -50,11 +50,18 @@ partition tables (eg. GPT, MBR, etc).
 The fdisk utility is the classical text-mode utility.
 The cfdisk utilitity gives a more userfriendly curses based interface.
 The sfdisk utility is mostly for automation and scripting uses.`,
-		PUrl:   "pkg:deb/ubuntu/fdisk@2.31.1-0.4ubuntu3.1?arch=amd64&distro=ubuntu-18.04",
-		CPEs:   []string{"cpe:2.3:a:fdisk:fdisk:2.31.1-0.4ubuntu3.1:amd64:*:*:*:*:*:*"},
+		PUrl: "pkg:deb/ubuntu/fdisk@2.31.1-0.4ubuntu3.1?arch=amd64&distro=ubuntu-18.04",
+		CPEs: []string{
+			"cpe:2.3:a:fdisk:fdisk:2.31.1-0.4ubuntu3.1:*:*:*:*:*:amd64:*",
+			"cpe:2.3:a:fdisk:fdisk:2.31.1-0:*:*:*:*:*:amd64:*",
+			"cpe:2.3:a:fdisk:fdisk:2.31.1:*:*:*:*:*:amd64:*",
+			"cpe:2.3:a:fdisk:fdisk:2.31.1-0.4ubuntu3.1:*:*:*:*:*:*:*",
+			"cpe:2.3:a:fdisk:fdisk:2.31.1-0:*:*:*:*:*:*:*",
+			"cpe:2.3:a:fdisk:fdisk:2.31.1:*:*:*:*:*:*:*",
+		},
 		Format: "deb",
 	}
-	assert.Equal(t, findPkg(m, p.Name), p, p.Name)
+	assert.Equal(t, p, findPkg(m, p.Name), p.Name)
 
 	p = Package{
 		Name:    "libaudit1",
@@ -66,8 +73,13 @@ The sfdisk utility is mostly for automation and scripting uses.`,
 The audit-libs package contains the dynamic libraries needed for
 applications to use the audit framework. It is used to monitor systems for
 security related events.`,
-		PUrl:           "pkg:deb/ubuntu/libaudit1@1%3A2.4-1%2Bb1?arch=amd64&distro=ubuntu-18.04",
-		CPEs:           []string{"cpe:2.3:a:libaudit1:libaudit1:1:amd64:*:*:*:*:*:*"},
+		PUrl: "pkg:deb/ubuntu/libaudit1@1%3A2.4-1%2Bb1?arch=amd64&distro=ubuntu-18.04",
+		CPEs: []string{
+			"cpe:2.3:a:libaudit1:libaudit1:2.4-1\\+b1:*:*:*:*:*:amd64:*",
+			"cpe:2.3:a:libaudit1:libaudit1:2.4:*:*:*:*:*:amd64:*",
+			"cpe:2.3:a:libaudit1:libaudit1:2.4-1\\+b1:*:*:*:*:*:*:*",
+			"cpe:2.3:a:libaudit1:libaudit1:2.4:*:*:*:*:*:*:*",
+		},
 		Format:         "deb",
 		FilesAvailable: PkgFilesAsync,
 	}
@@ -85,12 +97,17 @@ accept input from the user, parse the command into an argv argument
 vector, and then dispatch it to a handler function.
 .
 It was originally inspired by the Multics SubSystem library.`,
-		PUrl:           "pkg:deb/ubuntu/libss2@1.44.1-1?arch=amd64&distro=ubuntu-18.04",
-		CPEs:           []string{"cpe:2.3:a:libss2:libss2:1.44.1-1:amd64:*:*:*:*:*:*"},
+		PUrl: "pkg:deb/ubuntu/libss2@1.44.1-1?arch=amd64&distro=ubuntu-18.04",
+		CPEs: []string{
+			"cpe:2.3:a:libss2:libss2:1.44.1-1:*:*:*:*:*:amd64:*",
+			"cpe:2.3:a:libss2:libss2:1.44.1:*:*:*:*:*:amd64:*",
+			"cpe:2.3:a:libss2:libss2:1.44.1-1:*:*:*:*:*:*:*",
+			"cpe:2.3:a:libss2:libss2:1.44.1:*:*:*:*:*:*:*",
+		},
 		Format:         "deb",
 		FilesAvailable: PkgFilesAsync,
 	}
-	assert.Equal(t, findPkg(m, p.Name), p, p.Name)
+	assert.Equal(t, p, findPkg(m, p.Name), p.Name)
 
 	// fetch package files
 	mgr := &DebPkgManager{
@@ -134,8 +151,11 @@ This package contains the basic filesystem hierarchy of a Debian system, and
 several important miscellaneous files, such as /etc/debian_version,
 /etc/host.conf, /etc/issue, /etc/motd, /etc/profile, and others,
 and the text of several common licenses in use on Debian systems.`,
-		PUrl:   "pkg:deb/ubuntu/base-files@9.9%2Bdeb9u11?arch=amd64&distro=ubuntu-18.04",
-		CPEs:   []string{"cpe:2.3:a:base-files:base-files:9.9\\+deb9u11:amd64:*:*:*:*:*:*"},
+		PUrl: "pkg:deb/ubuntu/base-files@9.9%2Bdeb9u11?arch=amd64&distro=ubuntu-18.04",
+		CPEs: []string{
+			"cpe:2.3:a:base-files:base-files:9.9\\+deb9u11:*:*:*:*:*:amd64:*",
+			"cpe:2.3:a:base-files:base-files:9.9\\+deb9u11:*:*:*:*:*:*:*",
+		},
 		Format: "deb",
 	}
 	assert.Contains(t, m, p, "fdisk detected")

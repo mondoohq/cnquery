@@ -30,10 +30,10 @@ const (
 	RpmPkgFormat = "rpm"
 )
 
-var RPM_REGEX = regexp.MustCompile(`^([\w-+]*)\s(\d*|\(none\)):([\w\d-+.:]+)\s([\w\d]*|\(none\))\s(.*)$`)
+var RPM_REGEX = regexp.MustCompile(`^([\w-+]*)\s(\d*|\(none\)):([\w\d-+.:]+)\s([\w\d]*|\(none\))__([\w\d\s,\.]+)__(.*)$`)
 
 // ParseRpmPackages parses output from:
-// rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH} %{SUMMARY}\n'
+// rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}\n'
 func ParseRpmPackages(pf *inventory.Platform, input io.Reader) []Package {
 	pkgs := []Package{}
 	scanner := bufio.NewScanner(input)
@@ -58,7 +58,7 @@ func ParseRpmPackages(pf *inventory.Platform, input io.Reader) []Package {
 			if arch == "(none)" {
 				arch = ""
 			}
-			pkg := newRpmPackage(pf, name, version, arch, epoch, m[5])
+			pkg := newRpmPackage(pf, name, version, arch, epoch, m[5], m[6])
 			pkg.FilesAvailable = PkgFilesAsync // when we use commands we need to fetch the files async
 			pkgs = append(pkgs, pkg)
 
@@ -67,14 +67,23 @@ func ParseRpmPackages(pf *inventory.Platform, input io.Reader) []Package {
 	return pkgs
 }
 
-func newRpmPackage(pf *inventory.Platform, name, version, arch, epoch, description string) Package {
+func newRpmPackage(pf *inventory.Platform, name, version, arch, epoch, vendor, description string) Package {
 	// NOTE that we do not have the vendor of the package itself, we could try to parse it from the vendor
 	// but that will also not be reliable. We may incorporate the cpe dictionary in the future but that would
 	// increase the binary.
 	if epoch == "0" {
 		epoch = ""
 	}
-	cpes, _ := cpe.NewPackage2Cpe(name, name, version, epoch, arch)
+	cpes, _ := cpe.NewPackage2Cpe(vendor, name, version, epoch, arch)
+	cpesWithoutEpoch := []string{}
+	if epoch != "" {
+		// I searched https://www.redhat.com/security/data/metrics/repository-to-cpe.json for the epoch
+		// and it seems that the epoch is not part of the CPE, so we need to add it without the epoch
+		cpesWithoutEpoch, _ = cpe.NewPackage2Cpe(vendor, name, version, "", arch)
+	}
+	cpesWithoutEpochAndArch, _ := cpe.NewPackage2Cpe(vendor, name, version, "", "")
+	cpes = append(cpes, cpesWithoutEpoch...)
+	cpes = append(cpes, cpesWithoutEpochAndArch...)
 	return Package{
 		Name:        name,
 		Version:     version,
@@ -84,6 +93,7 @@ func newRpmPackage(pf *inventory.Platform, name, version, arch, epoch, descripti
 		Format:      RpmPkgFormat,
 		PUrl:        purl.NewPackageUrl(pf, name, version, arch, epoch, packageurl.TypeRPM),
 		CPEs:        cpes,
+		Vendor:      vendor,
 	}
 }
 
@@ -157,14 +167,14 @@ func (rpm *RpmPkgManager) queryFormat() string {
 	// this format should work everywhere
 	// fall-back to epoch instead of epochnum for 6 ish platforms, latest 6 platforms also support epochnum, but we
 	// save 1 call by not detecting the available keyword via rpm --querytags
-	format := "%{NAME} %{EPOCH}:%{VERSION}-%{RELEASE} %{ARCH} %{SUMMARY}\\n"
+	format := "%{NAME} %{EPOCH}:%{VERSION}-%{RELEASE} %{ARCH} %{VENDOR} %{SUMMARY}\\n"
 
 	// ATTENTION: EPOCHNUM is only available since later version of rpm in RedHat 6 and Suse 12
 	// we can only expect if for rhel 7+, therefore we need to run an extra test
 	// be aware that this method is also used for non-redhat systems like suse
 	i, err := strconv.ParseInt(rpm.platform.Version, 0, 32)
 	if err == nil && (rpm.platform.Name == "centos" || rpm.platform.Name == "redhat") && i >= 7 {
-		format = "%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH} %{SUMMARY}\\n"
+		format = "%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH} %{VENDOR} %{SUMMARY}\\n"
 	}
 
 	return format
@@ -268,7 +278,7 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 			version = version + "-" + pkg.Release
 		}
 
-		rpmPkg := newRpmPackage(rpm.platform, pkg.Name, version, pkg.Arch, epoch, pkg.Summary)
+		rpmPkg := newRpmPackage(rpm.platform, pkg.Name, version, pkg.Arch, epoch, pkg.Vendor, pkg.Summary)
 
 		// determine all files attached
 		records := []FileRecord{}
