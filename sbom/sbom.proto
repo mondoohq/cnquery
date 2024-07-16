@@ -118,6 +118,17 @@ enum ExternalIDType {
   // EXTERNAL_ID_TYPE_AWS_ORG denotes the organization to which the AWS Account
   // and all subresources belong.
   EXTERNAL_ID_TYPE_AWS_ORG = 3;
+
+  // EXTERNAL_ID_TYPE_AZURE_SUB represents an Azure subscription identifier. 
+  // This type is used when the external ID refers specifically to an Azure
+  // subscription number, which is a unique identifier for an Azure 
+  // subscription.
+  EXTERNAL_ID_TYPE_AZURE_SUB = 4;
+
+  // EXTERNAL_ID_TYPE_AZURE_ID represents a fully qualified Azure resource 
+  // identifier, a standarized format used by Azure to uniquely identify 
+  // resources within the Azure ecosystem.
+  EXTERNAL_ID_TYPE_AZURE_ID = 5;
 }
 
 // ExternalID encapsulates an external identifier and its type. This structure
