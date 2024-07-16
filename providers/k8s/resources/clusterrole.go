@@ -22,7 +22,7 @@ type mqlK8sRbacClusterroleInternal struct {
 }
 
 func (k *mqlK8s) clusterroles() ([]interface{}, error) {
-	return k8sResourceToMql(k.MqlRuntime, "clusterroles", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToMql(k.MqlRuntime, gvkString(rbacv1.SchemeGroupVersion.WithKind("clusterroles")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 		clusterRole, ok := resource.(*rbacv1.ClusterRole)
 		if !ok {

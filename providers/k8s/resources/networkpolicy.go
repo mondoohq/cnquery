@@ -21,7 +21,7 @@ type mqlK8sNetworkpolicyInternal struct {
 }
 
 func (k *mqlK8s) networkPolicies() ([]interface{}, error) {
-	return k8sResourceToMql(k.MqlRuntime, networkingv1.Resource("networkpolicies").String(), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToMql(k.MqlRuntime, gvkString(networkingv1.SchemeGroupVersion.WithKind("networkpolicies")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		networkPolicy, ok := resource.(*networkingv1.NetworkPolicy)

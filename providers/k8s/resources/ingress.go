@@ -26,7 +26,7 @@ type mqlK8sIngressInternal struct {
 }
 
 func (k *mqlK8s) ingresses() ([]interface{}, error) {
-	return k8sResourceToMql(k.MqlRuntime, networkingv1.Resource("ingresses").String(), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToMql(k.MqlRuntime, gvkString(networkingv1.SchemeGroupVersion.WithKind("ingresses")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		ingress, ok := resource.(*networkingv1.Ingress)

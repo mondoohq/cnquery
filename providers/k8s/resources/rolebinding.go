@@ -22,7 +22,7 @@ type mqlK8sRbacRolebindingInternal struct {
 }
 
 func (k *mqlK8s) rolebindings() ([]interface{}, error) {
-	return k8sResourceToMql(k.MqlRuntime, rbacv1.Resource("rolebindings").String(), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToMql(k.MqlRuntime, gvkString(rbacv1.SchemeGroupVersion.WithKind("rolebindings")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		roleBinding, ok := resource.(*rbacv1.RoleBinding)
