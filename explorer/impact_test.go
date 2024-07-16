@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestParsing(t *testing.T) {
+func TestImpactParsing(t *testing.T) {
 	tests := []struct {
 		title string
 		data  string
@@ -81,7 +81,7 @@ func TestParsing(t *testing.T) {
 	}
 }
 
-func TestMerging(t *testing.T) {
+func TestImpactMerging(t *testing.T) {
 	tests := []struct {
 		title string
 		base  *Impact
@@ -130,4 +130,14 @@ func TestMerging(t *testing.T) {
 			assert.Equal(t, cur.res, cur.main)
 		})
 	}
+}
+
+func TestScoringSystemParsing(t *testing.T) {
+	s := ScoringSystem_DECAYED
+	raw, err := json.Marshal(s)
+	require.NoError(t, err)
+
+	err = json.Unmarshal(raw, &s)
+	require.NoError(t, err)
+	assert.Equal(t, ScoringSystem_DECAYED, s)
 }

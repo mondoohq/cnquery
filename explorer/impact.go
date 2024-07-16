@@ -164,6 +164,23 @@ func (s *ScoringSystem) UnmarshalYAML(node *yaml.Node) error {
 	return nil
 }
 
+func (s *ScoringSystem) MarshalJSON() ([]byte, error) {
+	switch *s {
+	case ScoringSystem_WORST:
+		return []byte("highest impact"), nil
+	case ScoringSystem_WEIGHTED:
+		return []byte("weighted"), nil
+	case ScoringSystem_AVERAGE:
+		return []byte("average"), nil
+	case ScoringSystem_BANDED:
+		return []byte("banded"), nil
+	case ScoringSystem_DECAYED:
+		return []byte("decayed"), nil
+	default:
+		return []byte("unknown"), nil
+	}
+}
+
 func (s *ScoringSystem) MarshalYAML() (interface{}, error) {
 	switch *s {
 	case ScoringSystem_WORST:
