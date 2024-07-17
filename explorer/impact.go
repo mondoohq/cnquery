@@ -164,9 +164,9 @@ func (s *ScoringSystem) UnmarshalYAML(node *yaml.Node) error {
 	return nil
 }
 
-func (s *ScoringSystem) MarshalJSON() ([]byte, error) {
+func (s ScoringSystem) MarshalJSON() ([]byte, error) {
 	var result string
-	switch *s {
+	switch s {
 	case ScoringSystem_WORST:
 		result = "highest impact"
 	case ScoringSystem_WEIGHTED:
@@ -184,8 +184,8 @@ func (s *ScoringSystem) MarshalJSON() ([]byte, error) {
 	return json.Marshal(result) // will add quotes and escape if needed
 }
 
-func (s *ScoringSystem) MarshalYAML() (interface{}, error) {
-	switch *s {
+func (s ScoringSystem) MarshalYAML() (interface{}, error) {
+	switch s {
 	case ScoringSystem_WORST:
 		return "highest impact", nil
 	case ScoringSystem_WEIGHTED:
@@ -197,6 +197,6 @@ func (s *ScoringSystem) MarshalYAML() (interface{}, error) {
 	case ScoringSystem_DECAYED:
 		return "decayed", nil
 	default:
-		return *s, nil
+		return s, nil
 	}
 }

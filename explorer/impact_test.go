@@ -139,6 +139,8 @@ func TestScoringSystemParsingJSON(t *testing.T) {
 	raw, err := json.Marshal(s)
 	require.NoError(t, err)
 
+	assert.Equal(t, `"decayed"`, string(raw))
+
 	err = json.Unmarshal(raw, &s)
 	require.NoError(t, err)
 	assert.Equal(t, ScoringSystem_DECAYED, s)
@@ -148,6 +150,8 @@ func TestScoringSystemParsingYAML(t *testing.T) {
 	s := ScoringSystem_DECAYED
 	raw, err := yaml.Marshal(s)
 	require.NoError(t, err)
+
+	assert.Equal(t, `decayed`, strings.Trim(string(raw), "\n"))
 
 	err = yaml.Unmarshal(raw, &s)
 	require.NoError(t, err)
