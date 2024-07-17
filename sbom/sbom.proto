@@ -223,6 +223,8 @@ message Package {
   repeated Evidence evidence_list = 21;
   // Package Origin (e.g. other package name, or source of the package)
   string origin = 22;
+  // Package Vendor/Publisher
+  string vendor = 23;
 }
 
 enum EvidenceType {

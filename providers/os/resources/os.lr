@@ -626,6 +626,9 @@ package @defaults("name version") {
 
   // Package files
   files() []pkgFileInfo
+
+  // Package vendor
+  vendor string
 }
 
 private pkgFileInfo @defaults("path") {

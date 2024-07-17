@@ -201,6 +201,7 @@ func (x *mqlPackages) list() ([]interface{}, error) {
 			"epoch":       llx.StringData(osPkg.Epoch),
 			"purl":        llx.StringData(osPkg.PUrl),
 			"cpes":        llx.ArrayData(cpes, types.Resource("cpe")),
+			"vendor":      llx.StringData(osPkg.Vendor),
 		})
 		if err != nil {
 			return nil, err

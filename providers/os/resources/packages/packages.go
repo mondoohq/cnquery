@@ -46,7 +46,7 @@ type Package struct {
 	FilesAvailable PkgFilesAvailable `json:"files_available,omitempty"`
 	Files          []FileRecord      `json:"files,omitempty"`
 
-	// This is used for the CPE generation
+	// This is used for the CPE generation and exposed via MQL
 	Vendor string `json:"vendor,omitempty"`
 }
 

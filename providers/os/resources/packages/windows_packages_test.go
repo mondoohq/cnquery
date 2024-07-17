@@ -37,6 +37,7 @@ func TestWindowsAppPackagesParser(t *testing.T) {
 			"cpe:2.3:a:microsoft:microsoft_visual_c\\+\\+_2015-2019_redistributable_\\(x86\\)_-_14.28.29913:14.28.29913.0:*:*:*:*:*:*:*",
 			"cpe:2.3:a:microsoft:microsoft_visual_c\\+\\+_2015-2019_redistributable_\\(x86\\)_-_14.28.29913:14.28.29913:*:*:*:*:*:*:*",
 		},
+		Vendor: "Microsoft Corporation",
 	}, p)
 
 	// check empty return
@@ -75,6 +76,7 @@ func TestWindowsAppxPackagesParser(t *testing.T) {
 			"cpe:2.3:a:cn\\=microsoft_corporation\\,_o\\=microsoft_corporation\\,_l\\=redmond\\,_s\\=washington\\,_c\\=us:microsoft.windows.cortana:1.11.5.17763:*:*:*:*:*:*:*",
 			"cpe:2.3:a:cn\\=microsoft_corporation\\,_o\\=microsoft_corporation\\,_l\\=redmond\\,_s\\=washington\\,_c\\=us:microsoft.windows.cortana:1.11.5:*:*:*:*:*:*:*",
 		},
+		Vendor: "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US",
 	}, p)
 
 	// check empty return
@@ -186,6 +188,7 @@ func TestGetPackageFromRegistryKeyItems(t *testing.T) {
 			Arch:    "",
 			Format:  "windows/app",
 			CPEs:    CPEs,
+			Vendor:  "Microsoft Corporation",
 		}
 		assert.NotNil(t, p)
 		assert.Equal(t, expected, p)
