@@ -5,10 +5,12 @@ package explorer
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v3"
 )
 
 func TestImpactParsing(t *testing.T) {
@@ -132,7 +134,7 @@ func TestImpactMerging(t *testing.T) {
 	}
 }
 
-func TestScoringSystemParsing(t *testing.T) {
+func TestScoringSystemParsingJSON(t *testing.T) {
 	s := ScoringSystem_DECAYED
 	raw, err := json.Marshal(s)
 	require.NoError(t, err)
@@ -140,4 +142,50 @@ func TestScoringSystemParsing(t *testing.T) {
 	err = json.Unmarshal(raw, &s)
 	require.NoError(t, err)
 	assert.Equal(t, ScoringSystem_DECAYED, s)
+}
+
+func TestScoringSystemParsingYAML(t *testing.T) {
+	s := ScoringSystem_DECAYED
+	raw, err := yaml.Marshal(s)
+	require.NoError(t, err)
+
+	err = yaml.Unmarshal(raw, &s)
+	require.NoError(t, err)
+	assert.Equal(t, ScoringSystem_DECAYED, s)
+}
+
+func TestScoringSystemPointerParsingJSON(t *testing.T) {
+	ss := ScoringSystem_DECAYED
+	data := struct {
+		ScoringSystem *ScoringSystem `json:"scoring_system"`
+	}{
+		&ss,
+	}
+
+	raw, err := json.Marshal(data)
+	require.NoError(t, err)
+
+	assert.JSONEq(t, `{"scoring_system":"decayed"}`, string(raw))
+
+	err = json.Unmarshal(raw, &data)
+	require.NoError(t, err)
+	assert.Equal(t, ScoringSystem_DECAYED, *data.ScoringSystem)
+}
+
+func TestScoringSystemPointerParsingYAML(t *testing.T) {
+	ss := ScoringSystem_DECAYED
+	data := struct {
+		ScoringSystem *ScoringSystem `yaml:"scoring_system"`
+	}{
+		&ss,
+	}
+
+	raw, err := yaml.Marshal(data)
+	require.NoError(t, err)
+
+	assert.Equal(t, `scoring_system: decayed`, strings.Trim(string(raw), "\n"))
+
+	err = yaml.Unmarshal(raw, &data)
+	require.NoError(t, err)
+	assert.Equal(t, ScoringSystem_DECAYED, *data.ScoringSystem)
 }
