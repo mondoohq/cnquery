@@ -119,12 +119,18 @@ func (s *ScoringSystem) UnmarshalJSON(data []byte) error {
 		_ = json.Unmarshal(data, &name)
 
 		switch name {
-		case "highest impact":
-			*s = ScoringSystem_WORST
+		case "unspecified":
+			*s = ScoringSystem_SCORING_UNSPECIFIED
 		case "weighted":
 			*s = ScoringSystem_WEIGHTED
+		case "highest impact":
+			*s = ScoringSystem_WORST
 		case "average", "":
 			*s = ScoringSystem_AVERAGE
+		case "data only":
+			*s = ScoringSystem_DATA_ONLY
+		case "ignore score":
+			*s = ScoringSystem_IGNORE_SCORE
 		case "banded":
 			*s = ScoringSystem_BANDED
 		case "decayed":
@@ -147,12 +153,18 @@ func (s *ScoringSystem) UnmarshalYAML(node *yaml.Node) error {
 		_ = node.Decode(&name)
 
 		switch name {
-		case "highest impact":
-			*s = ScoringSystem_WORST
+		case "unspecified":
+			*s = ScoringSystem_SCORING_UNSPECIFIED
 		case "weighted":
 			*s = ScoringSystem_WEIGHTED
+		case "highest impact":
+			*s = ScoringSystem_WORST
 		case "average", "":
 			*s = ScoringSystem_AVERAGE
+		case "data only":
+			*s = ScoringSystem_DATA_ONLY
+		case "ignore score":
+			*s = ScoringSystem_IGNORE_SCORE
 		case "banded":
 			*s = ScoringSystem_BANDED
 		case "decayed":
@@ -167,12 +179,18 @@ func (s *ScoringSystem) UnmarshalYAML(node *yaml.Node) error {
 func (s ScoringSystem) MarshalJSON() ([]byte, error) {
 	var result string
 	switch s {
-	case ScoringSystem_WORST:
-		result = "highest impact"
+	case ScoringSystem_SCORING_UNSPECIFIED:
+		result = "unspecified"
 	case ScoringSystem_WEIGHTED:
 		result = "weighted"
+	case ScoringSystem_WORST:
+		result = "highest impact"
 	case ScoringSystem_AVERAGE:
 		result = "average"
+	case ScoringSystem_DATA_ONLY:
+		result = "data only"
+	case ScoringSystem_IGNORE_SCORE:
+		result = "ignore score"
 	case ScoringSystem_BANDED:
 		result = "banded"
 	case ScoringSystem_DECAYED:
@@ -186,12 +204,18 @@ func (s ScoringSystem) MarshalJSON() ([]byte, error) {
 
 func (s ScoringSystem) MarshalYAML() (interface{}, error) {
 	switch s {
-	case ScoringSystem_WORST:
-		return "highest impact", nil
+	case ScoringSystem_SCORING_UNSPECIFIED:
+		return "unspecified", nil
 	case ScoringSystem_WEIGHTED:
 		return "weighted", nil
+	case ScoringSystem_WORST:
+		return "highest impact", nil
 	case ScoringSystem_AVERAGE:
 		return "average", nil
+	case ScoringSystem_DATA_ONLY:
+		return "data only", nil
+	case ScoringSystem_IGNORE_SCORE:
+		return "ignore score", nil
 	case ScoringSystem_BANDED:
 		return "banded", nil
 	case ScoringSystem_DECAYED:
