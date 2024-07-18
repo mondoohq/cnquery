@@ -180,7 +180,7 @@ func newGithubRetryableClient(httpClient *http.Client) *http.Client {
 
 	retryClient.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
 		// Default Retry Policy would not retry on 403 (adding 429 for good measure)
-		if resp.StatusCode == 403 || resp.StatusCode == 429 {
+		if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 429) {
 			// Primary and Secondary rate limit
 			if resp.Header.Get("x-ratelimit-remaining") == "0" {
 				return true, nil // Should be retried after the rate limit reset (duration handled by Backoff)
@@ -189,7 +189,7 @@ func newGithubRetryableClient(httpClient *http.Client) *http.Client {
 		return retryablehttp.DefaultRetryPolicy(ctx, resp, err)
 	}
 	retryClient.Backoff = func(min, max time.Duration, attemptNum int, resp *http.Response) time.Duration {
-		if resp.StatusCode == 403 || resp.StatusCode == 429 {
+		if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 429) {
 			// Secondary limit
 			if resp.Header.Get("retry-after") != "" {
 				sec, err := strconv.ParseInt(resp.Header.Get("retry-after"), 10, 64) // retry-after	- The number of seconds to wait before making a follow-up request
