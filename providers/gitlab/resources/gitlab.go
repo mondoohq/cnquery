@@ -121,3 +121,30 @@ func initGitlabProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	args = getGitlabProjectArgs(project)
 	return args, nil, nil
 }
+
+// New function to fetch project approval settings
+func (p *mqlGitlabProject) approvalSettings() ([]interface{}, error) {
+	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	projectID := int(p.Id.Data)
+	approvalConfig, _, err := conn.Client().Projects.GetApprovalConfiguration(projectID)
+	if err != nil {
+		return nil, err
+	}
+
+	approvalSettings := map[string]*llx.RawData{
+		"approvalsBeforeMerge":                      llx.IntData(int64(approvalConfig.ApprovalsBeforeMerge)),
+		"resetApprovalsOnPush":                      llx.BoolData(approvalConfig.ResetApprovalsOnPush),
+		"disableOverridingApproversPerMergeRequest": llx.BoolData(approvalConfig.DisableOverridingApproversPerMergeRequest),
+		"mergeRequestsAuthorApproval":               llx.BoolData(approvalConfig.MergeRequestsAuthorApproval),
+		"mergeRequestsDisableCommittersApproval":    llx.BoolData(approvalConfig.MergeRequestsDisableCommittersApproval),
+		"requirePasswordToApprove":                  llx.BoolData(approvalConfig.RequirePasswordToApprove),
+	}
+
+	mqlApprovalSettings, err := CreateResource(p.MqlRuntime, "gitlab.project.approvalSettings", approvalSettings)
+	if err != nil {
+		return nil, err
+	}
+
+	return []interface{}{mqlApprovalSettings}, nil
+}
