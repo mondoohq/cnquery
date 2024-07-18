@@ -40,8 +40,10 @@ func ParseDpkgPackages(pf *inventory.Platform, input io.Reader) ([]Package, erro
 		// do sanitization checks to ensure we have minimal information
 		if pkg.Name != "" && pkg.Version != "" {
 			pkg.PUrl = purl.NewPackageUrl(pf, pkg.Name, pkg.Version, pkg.Arch, pkg.Epoch, packageurl.TypeDebian)
-			cpe, _ := cpe.NewPackage2Cpe(pkg.Name, pkg.Name, pkg.Version, pkg.Arch, pkg.Epoch)
-			pkg.CPE = cpe
+			cpes, _ := cpe.NewPackage2Cpe(pkg.Name, pkg.Name, pkg.Version, pkg.Epoch, pkg.Arch)
+			cpesWithoutArch, _ := cpe.NewPackage2Cpe(pkg.Name, pkg.Name, pkg.Version, pkg.Epoch, "")
+			cpes = append(cpes, cpesWithoutArch...)
+			pkg.CPEs = cpes
 			pkgs = append(pkgs, pkg)
 		} else {
 			log.Debug().Msg("ignored deb packages since information is missing")

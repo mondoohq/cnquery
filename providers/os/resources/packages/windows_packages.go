@@ -133,9 +133,9 @@ func ParseWindowsAppxPackages(input io.Reader) ([]Package, error) {
 			arch = "unknown"
 		}
 
-		cpeWfn := ""
+		cpeWfns := []string{}
 		if appxPackages[i].Name != "" && appxPackages[i].Version != "" {
-			cpeWfn, err = cpe.NewPackage2Cpe(appxPackages[i].Publisher, appxPackages[i].Name, appxPackages[i].Version, "", "")
+			cpeWfns, err = cpe.NewPackage2Cpe(appxPackages[i].Publisher, appxPackages[i].Name, appxPackages[i].Version, "", "")
 			if err != nil {
 				log.Debug().Err(err).Str("name", appxPackages[i].Name).Str("version", appxPackages[i].Version).Msg("could not create cpe for windows appx package")
 			}
@@ -148,7 +148,7 @@ func ParseWindowsAppxPackages(input io.Reader) ([]Package, error) {
 			Version: appxPackages[i].Version,
 			Arch:    arch,
 			Format:  "windows/appx",
-			CPE:     cpeWfn,
+			CPEs:    cpeWfns,
 		}
 	}
 	return pkgs, nil
@@ -339,11 +339,11 @@ func getPackageFromRegistryKeyItems(children []registry.RegistryKeyItem) *Packag
 	}
 
 	if displayName != "" && displayVersion != "" {
-		cpeWfn, err := cpe.NewPackage2Cpe(publisher, displayName, displayVersion, "", "")
+		cpeWfns, err := cpe.NewPackage2Cpe(publisher, displayName, displayVersion, "", "")
 		if err != nil {
 			log.Debug().Err(err).Str("name", displayName).Str("version", displayVersion).Msg("could not create cpe for windows app package")
 		} else {
-			pkg.CPE = cpeWfn
+			pkg.CPEs = cpeWfns
 		}
 	} else {
 		log.Debug().Msg("ignored package since information is missing")
@@ -431,9 +431,9 @@ func ParseWindowsAppPackages(input io.Reader) ([]Package, error) {
 		if entry.UninstallString == "" {
 			continue
 		}
-		cpeWfn := ""
+		cpeWfns := []string{}
 		if entry.DisplayName != "" && entry.DisplayVersion != "" {
-			cpeWfn, err = cpe.NewPackage2Cpe(entry.Publisher, entry.DisplayName, entry.DisplayVersion, "", "")
+			cpeWfns, err = cpe.NewPackage2Cpe(entry.Publisher, entry.DisplayName, entry.DisplayVersion, "", "")
 			if err != nil {
 				log.Debug().Err(err).Str("name", entry.DisplayName).Str("version", entry.DisplayVersion).Msg("could not create cpe for windows app package")
 			}
@@ -444,7 +444,7 @@ func ParseWindowsAppPackages(input io.Reader) ([]Package, error) {
 			Name:    entry.DisplayName,
 			Version: entry.DisplayVersion,
 			Format:  "windows/app",
-			CPE:     cpeWfn,
+			CPEs:    cpeWfns,
 		})
 	}
 

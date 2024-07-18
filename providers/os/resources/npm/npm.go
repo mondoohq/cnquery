@@ -57,13 +57,13 @@ func NewPackageUrl(name string, version string) string {
 
 func NewCpes(name string, version string) []string {
 	cpes := []string{}
-	cpeEntry, err := cpe.NewPackage2Cpe(name, name, cleanVersion(version), "", "")
+	cpeEntries, err := cpe.NewPackage2Cpe(name, name, cleanVersion(version), "", "")
 	// we only add the cpe if it could be created
 	// if the cpe could not be created, we log the error and continue to ensure the package is still added to the list
 	if err != nil {
 		log.Warn().Str("name", name).Str("version", version).Err(err).Msg("failed to create cpe")
-	} else if cpeEntry != "" {
-		cpes = append(cpes, cpeEntry)
+	} else if len(cpeEntries) > 0 {
+		cpes = append(cpes, cpeEntries...)
 	}
 	return cpes
 }

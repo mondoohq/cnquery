@@ -4,9 +4,10 @@
 package python
 
 import (
+	"strings"
+
 	"github.com/package-url/packageurl-go"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/cpe"
-	"strings"
 )
 
 func NewPackageUrl(name string, version string) string {
@@ -27,9 +28,9 @@ func NewCpes(name string, version string) []string {
 	cpes := []string{}
 	// what we see in the cpe dictionary is that the vendor is the name of the package itself + "_project"
 	vendor := name + "_project"
-	cpeEntry, err := cpe.NewPackage2Cpe(vendor, name, version, "", "")
-	if err == nil && cpeEntry != "" {
-		cpes = append(cpes, cpeEntry)
+	cpeEntries, err := cpe.NewPackage2Cpe(vendor, name, version, "", "")
+	if err == nil && len(cpeEntries) > 0 {
+		cpes = append(cpes, cpeEntries...)
 	}
 	return cpes
 }

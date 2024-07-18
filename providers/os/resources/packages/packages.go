@@ -40,11 +40,14 @@ type Package struct {
 	PUrl string `json:"purl,omitempty"`
 
 	// Package CPE
-	CPE string `json:"cpe,omitempty"`
+	CPEs []string `json:"cpes,omitempty"`
 
 	// Package files (optional, only for some package managers)
 	FilesAvailable PkgFilesAvailable `json:"files_available,omitempty"`
 	Files          []FileRecord      `json:"files,omitempty"`
+
+	// This is used for the CPE generation
+	Vendor string `json:"vendor,omitempty"`
 }
 
 type FileRecord struct {
