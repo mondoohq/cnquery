@@ -151,6 +151,11 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		return nil, errors.New("no connection data provided")
 	}
 
+	// If we get 1 connection that enables fine-grained assets, enable it globally for the provider
+	if cnquery.Features(req.Features).IsActive(cnquery.FineGrainedAssets) {
+		resources.ENABLE_FINE_GRAINED_ASSETS = true
+	}
+
 	conn, err := s.connect(req, callback)
 	if err != nil {
 		return nil, err
