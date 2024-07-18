@@ -149,6 +149,7 @@ func ParseWindowsAppxPackages(input io.Reader) ([]Package, error) {
 			Arch:    arch,
 			Format:  "windows/appx",
 			CPEs:    cpeWfns,
+			Vendor:  appxPackages[i].Publisher,
 		}
 	}
 	return pkgs, nil
@@ -336,6 +337,7 @@ func getPackageFromRegistryKeyItems(children []registry.RegistryKeyItem) *Packag
 		Name:    displayName,
 		Version: displayVersion,
 		Format:  "windows/app",
+		Vendor:  publisher,
 	}
 
 	if displayName != "" && displayVersion != "" {
@@ -410,7 +412,7 @@ func ParseWindowsAppPackages(input io.Reader) ([]Package, error) {
 		return []Package{}, nil
 	}
 
-	type plwershellUninstallEntry struct {
+	type powershellUninstallEntry struct {
 		DisplayName     string `json:"DisplayName"`
 		DisplayVersion  string `json:"DisplayVersion"`
 		Publisher       string `json:"Publisher"`
@@ -419,7 +421,7 @@ func ParseWindowsAppPackages(input io.Reader) ([]Package, error) {
 		UninstallString string `json:"UninstallString"`
 	}
 
-	var entries []plwershellUninstallEntry
+	var entries []powershellUninstallEntry
 	err = json.Unmarshal(data, &entries)
 	if err != nil {
 		return nil, err
@@ -445,6 +447,7 @@ func ParseWindowsAppPackages(input io.Reader) ([]Package, error) {
 			Version: entry.DisplayVersion,
 			Format:  "windows/app",
 			CPEs:    cpeWfns,
+			Vendor:  entry.Publisher,
 		})
 	}
 

@@ -693,6 +693,8 @@ resources:
       purl:
         min_mondoo_version: latest
       status: {}
+      vendor:
+        min_mondoo_version: 9.0.0
       version: {}
     min_mondoo_version: 5.15.0
     snippets:
