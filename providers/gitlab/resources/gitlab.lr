@@ -82,6 +82,19 @@ gitlab.project @defaults("fullName visibility webURL") {
   autoDevopsEnabled bool
 	// Whether the requirements feature is enabled
   requirementsEnabled bool
+  // Approval rules for the project
+  approvalRules() []gitlab.project.approvalRule
+}
+
+
+// GitLab project approval rule
+gitlab.project.approvalRule @defaults("id name approvalsRequired") {
+  // Rule ID
+  id int
+  // Rule name
+  name string
+  // Number of approvals required
+  approvalsRequired int
   // Approval settings for the project
   approvalSettings() gitlab.project.approvalSettings
 }
