@@ -84,6 +84,8 @@ gitlab.project @defaults("fullName visibility webURL") {
   requirementsEnabled bool
   // Approval rules for the project
   approvalRules() []gitlab.project.approvalRule
+  // Merge methods for the project
+  mergeMethod() gitlab.project.mergeMethod
   // Approval settings for the project
   approvalSettings() gitlab.project.approvalSettings
 }
@@ -113,4 +115,9 @@ gitlab.project.approvalSettings @defaults("approvalsBeforeMerge requirePasswordT
   mergeRequestsDisableCommittersApproval bool
   // Require password to approve
   requirePasswordToApprove bool
+}
+// GitLab project merge method
+gitlab.project.mergeMethod @defaults("method") {
+  // Merge method used by the project
+  method string
 }

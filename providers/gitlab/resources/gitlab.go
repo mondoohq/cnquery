@@ -175,3 +175,25 @@ func (p *mqlGitlabProject) approvalRules() ([]interface{}, error) {
 
 	return approvalRules, nil
 }
+
+// To fetch project merge method
+func (p *mqlGitlabProject) mergeMethod() (*mqlGitlabProjectMergeMethod, error) {
+	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	projectID := int(p.Id.Data)
+	project, _, err := conn.Client().Projects.GetProject(projectID, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	mergeMethod := map[string]*llx.RawData{
+		"method": llx.StringData(string(project.MergeMethod)),
+	}
+
+	mqlMergeMethod, err := CreateResource(p.MqlRuntime, "gitlab.project.mergeMethod", mergeMethod)
+	if err != nil {
+		return nil, err
+	}
+
+	return mqlMergeMethod.(*mqlGitlabProjectMergeMethod), nil
+}
