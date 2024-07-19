@@ -82,4 +82,22 @@ gitlab.project @defaults("fullName visibility webURL") {
   autoDevopsEnabled bool
 	// Whether the requirements feature is enabled
   requirementsEnabled bool
+  // Approval settings for the project
+  approvalSettings() gitlab.project.approvalSettings
+}
+
+// GitLab project approval settings
+gitlab.project.approvalSettings @defaults("approvalsBeforeMerge requirePasswordToApprove") {
+  // Number of approvals before merge
+  approvalsBeforeMerge int
+  // Whether all approvals are removed when new commits are pushed
+  resetApprovalsOnPush bool
+  // Disable overriding approvers per merge request
+  disableOverridingApproversPerMergeRequest bool
+  // Whether author of merge request can approve
+  mergeRequestsAuthorApproval bool
+  // Disable committer's approval for merge request
+  mergeRequestsDisableCommittersApproval bool
+  // Require password to approve
+  requirePasswordToApprove bool
 }
