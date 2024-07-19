@@ -116,3 +116,12 @@ gitlab.project.approvalSettings @defaults("approvalsBeforeMerge requirePasswordT
   // Require password to approve
   requirePasswordToApprove bool
 }
+
+
+// GitLab protected branch
+gitlab.project.repository.protectedBranch @defaults("name allowForcePush") {
+  // Branch name
+  name string
+  // Whether force push is allowed
+  allowForcePush bool
+}
