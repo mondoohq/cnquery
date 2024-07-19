@@ -123,7 +123,7 @@ func initGitlabProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 }
 
 // New function to fetch project approval settings
-func (p *mqlGitlabProject) approvalSettings() ([]interface{}, error) {
+func (p *mqlGitlabProject) approvalSettings() (*mqlGitlabProjectApprovalSettings, error) {
 	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
 
 	projectID := int(p.Id.Data)
@@ -146,5 +146,5 @@ func (p *mqlGitlabProject) approvalSettings() ([]interface{}, error) {
 		return nil, err
 	}
 
-	return []interface{}{mqlApprovalSettings}, nil
+	return mqlApprovalSettings.(*mqlGitlabProjectApprovalSettings), nil
 }

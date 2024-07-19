@@ -83,7 +83,7 @@ gitlab.project @defaults("fullName visibility webURL") {
 	// Whether the requirements feature is enabled
   requirementsEnabled bool
   // Approval settings for the project
-  approvalSettings() []gitlab.project.approvalSettings
+  approvalSettings() gitlab.project.approvalSettings
 }
 
 // GitLab project approval settings
