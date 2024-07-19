@@ -175,8 +175,3 @@ func (p *mqlGitlabProject) approvalRules() ([]interface{}, error) {
 
 	return approvalRules, nil
 }
-
-// Initialize the gitlab project approval rule
-func initGitlabProjectApprovalRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	return args, nil, nil
-}
