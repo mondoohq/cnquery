@@ -186,8 +186,18 @@ func (p *mqlGitlabProject) mergeMethod() (*mqlGitlabProjectMergeMethod, error) {
 		return nil, err
 	}
 
+	var mergeMethodString string
+	switch project.MergeMethod {
+	case "ff":
+		mergeMethodString = "fast-forward merge"
+	case "rebase_merge":
+		mergeMethodString = "semi-linear merge"
+	default:
+		mergeMethodString = string(project.MergeMethod)
+	}
+
 	mergeMethod := map[string]*llx.RawData{
-		"method": llx.StringData(string(project.MergeMethod)),
+		"method": llx.StringData(mergeMethodString),
 	}
 
 	mqlMergeMethod, err := CreateResource(p.MqlRuntime, "gitlab.project.mergeMethod", mergeMethod)
