@@ -124,4 +124,6 @@ gitlab.project.repository.protectedBranch @defaults("name allowForcePush") {
   name string
   // Whether force push is allowed
   allowForcePush bool
+  // Whether this is the default branch
+  defaultBranch bool
 }

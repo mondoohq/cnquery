@@ -149,7 +149,7 @@ func (p *mqlGitlabProject) approvalSettings() (*mqlGitlabProjectApprovalSettings
 	return mqlApprovalSettings.(*mqlGitlabProjectApprovalSettings), nil
 }
 
-// Define the id function for unique identifier for a resource instance
+// Define the id function for a unique identifier for a resource instance
 func (g *mqlGitlabProjectRepositoryProtectedBranch) id() (string, error) {
 	return g.Name.Data, nil
 }
@@ -159,6 +159,13 @@ func (p *mqlGitlabProject) protectedBranches() ([]interface{}, error) {
 	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
 
 	projectID := int(p.Id.Data)
+	project, _, err := conn.Client().Projects.GetProject(projectID, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	defaultBranch := project.DefaultBranch
+
 	protectedBranches, _, err := conn.Client().ProtectedBranches.ListProtectedBranches(projectID, nil)
 	if err != nil {
 		return nil, err
@@ -166,9 +173,13 @@ func (p *mqlGitlabProject) protectedBranches() ([]interface{}, error) {
 
 	var mqlProtectedBranches []interface{}
 	for _, branch := range protectedBranches {
+		// Declare and initialize isDefaultBranch variable
+		isDefaultBranch := branch.Name == defaultBranch
+
 		branchSettings := map[string]*llx.RawData{
 			"name":           llx.StringData(branch.Name),
 			"allowForcePush": llx.BoolData(branch.AllowForcePush),
+			"defaultBranch":  llx.BoolData(isDefaultBranch),
 		}
 
 		mqlProtectedBranch, err := CreateResource(p.MqlRuntime, "gitlab.project.repository.protectedBranch", branchSettings)
