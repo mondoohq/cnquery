@@ -198,3 +198,53 @@ func (p *mqlGitlabProject) mergeMethod() (string, error) {
 
 	return mergeMethodString, nil
 }
+
+// New function to fetch force push settings
+func (p *mqlGitlabProject) forcePushDenied() (bool, error) {
+	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	projectID := int(p.Id.Data)
+	protectedBranches, _, err := conn.Client().ProtectedBranches.ListProtectedBranches(projectID, nil)
+	if err != nil {
+		return false, err
+	}
+
+	for _, branch := range protectedBranches {
+		if branch.Name == p.DefaultBranch.Data {
+			for _, pushAccessLevel := range branch.PushAccessLevels {
+				if pushAccessLevel.AccessLevelDescription == "No one" {
+					return true, nil
+				}
+			}
+		}
+	}
+
+	return false, nil
+}
+
+func (p *mqlGitlabProject) protectedBranches() ([]interface{}, error) {
+	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	projectID := int(p.Id.Data)
+	protectedBranches, _, err := conn.Client().ProtectedBranches.ListProtectedBranches(projectID, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var mqlProtectedBranches []interface{}
+	for _, branch := range protectedBranches {
+		branchSettings := map[string]*llx.RawData{
+			"name":           llx.StringData(branch.Name),
+			"allowForcePush": llx.BoolData(branch.AllowForcePush),
+		}
+
+		mqlProtectedBranch, err := CreateResource(p.MqlRuntime, "gitlab.project.repository.protectedBranch", branchSettings)
+		if err != nil {
+			return nil, err
+		}
+
+		mqlProtectedBranches = append(mqlProtectedBranches, mqlProtectedBranch)
+	}
+
+	return mqlProtectedBranches, nil
+}
