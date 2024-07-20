@@ -175,3 +175,26 @@ func (p *mqlGitlabProject) approvalRules() ([]interface{}, error) {
 
 	return approvalRules, nil
 }
+
+// To fetch project merge method
+func (p *mqlGitlabProject) mergeMethod() (string, error) {
+	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	projectID := int(p.Id.Data)
+	project, _, err := conn.Client().Projects.GetProject(projectID, nil)
+	if err != nil {
+		return "", err
+	}
+
+	var mergeMethodString string
+	switch project.MergeMethod {
+	case "ff":
+		mergeMethodString = "fast-forward merge"
+	case "rebase_merge":
+		mergeMethodString = "semi-linear merge"
+	default:
+		mergeMethodString = string(project.MergeMethod)
+	}
+
+	return mergeMethodString, nil
+}

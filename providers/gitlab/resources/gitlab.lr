@@ -84,6 +84,8 @@ gitlab.project @defaults("fullName visibility webURL") {
   requirementsEnabled bool
   // Approval rules for the project
   approvalRules() []gitlab.project.approvalRule
+  // Merge methods for the project
+  mergeMethod() string
   // Approval settings for the project
   approvalSettings() gitlab.project.approvalSettings
 }
