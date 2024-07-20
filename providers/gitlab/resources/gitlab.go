@@ -148,3 +148,30 @@ func (p *mqlGitlabProject) approvalSettings() (*mqlGitlabProjectApprovalSettings
 
 	return mqlApprovalSettings.(*mqlGitlabProjectApprovalSettings), nil
 }
+
+// New function to fetch project approval rules
+func (p *mqlGitlabProject) approvalRules() ([]interface{}, error) {
+	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	projectID := int(p.Id.Data)
+	approvals, _, err := conn.Client().Projects.GetProjectApprovalRules(projectID, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var approvalRules []interface{}
+	for _, rule := range approvals {
+		approvalRule := map[string]*llx.RawData{
+			"id":                llx.IntData(int64(rule.ID)),
+			"name":              llx.StringData(rule.Name),
+			"approvalsRequired": llx.IntData(int64(rule.ApprovalsRequired)),
+		}
+		mqlApprovalRule, err := CreateResource(p.MqlRuntime, "gitlab.project.approvalRule", approvalRule)
+		if err != nil {
+			return nil, err
+		}
+		approvalRules = append(approvalRules, mqlApprovalRule)
+	}
+
+	return approvalRules, nil
+}
