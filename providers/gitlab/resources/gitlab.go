@@ -149,7 +149,58 @@ func (p *mqlGitlabProject) approvalSettings() (*mqlGitlabProjectApprovalSettings
 	return mqlApprovalSettings.(*mqlGitlabProjectApprovalSettings), nil
 }
 
-// Define the id function for a unique identifier for a resource instance
+// New function to fetch project approval rules
+func (p *mqlGitlabProject) approvalRules() ([]interface{}, error) {
+	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	projectID := int(p.Id.Data)
+	approvals, _, err := conn.Client().Projects.GetProjectApprovalRules(projectID, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var approvalRules []interface{}
+	for _, rule := range approvals {
+		approvalRule := map[string]*llx.RawData{
+			"id":                llx.IntData(int64(rule.ID)),
+			"name":              llx.StringData(rule.Name),
+			"approvalsRequired": llx.IntData(int64(rule.ApprovalsRequired)),
+		}
+		mqlApprovalRule, err := CreateResource(p.MqlRuntime, "gitlab.project.approvalRule", approvalRule)
+		if err != nil {
+			return nil, err
+		}
+		approvalRules = append(approvalRules, mqlApprovalRule)
+	}
+
+	return approvalRules, nil
+}
+
+// To fetch project merge method
+func (p *mqlGitlabProject) mergeMethod() (string, error) {
+	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	projectID := int(p.Id.Data)
+	project, _, err := conn.Client().Projects.GetProject(projectID, nil)
+	if err != nil {
+		return "", err
+	}
+
+	var mergeMethodString string
+	switch project.MergeMethod {
+	case "ff":
+		mergeMethodString = "fast-forward merge"
+	case "rebase_merge":
+		mergeMethodString = "semi-linear merge"
+	default:
+		mergeMethodString = string(project.MergeMethod)
+	}
+
+	return mergeMethodString, nil
+}
+
+// Define the id function for a unique identifier for a resource instance gitlab.project.repository.protectedBranch
+// The struct name mqlGitlabProjectRepositoryProtectedBranch is derived from the resource path gitlab.project.repository.protectedBranch. This is a convention used to maintain consistency and clarity within the Mondoo framework by adding mql in the front, ensuring that each resource can be uniquely identified and managed.
 func (g *mqlGitlabProjectRepositoryProtectedBranch) id() (string, error) {
 	return g.Name.Data, nil
 }

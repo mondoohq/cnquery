@@ -88,6 +88,8 @@ gitlab.project @defaults("fullName visibility webURL") {
   mergeMethod() string
   // Approval settings for the project
   approvalSettings() gitlab.project.approvalSettings
+  // Protected branches settings for the project
+  protectedBranches() []gitlab.project.repository.protectedBranch
 }
 
 
