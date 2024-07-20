@@ -84,6 +84,8 @@ gitlab.project @defaults("fullName visibility webURL") {
   requirementsEnabled bool
   // Approval rules for the project
   approvalRules() []gitlab.project.approvalRule
+  // Approval settings for the project
+  approvalSettings() gitlab.project.approvalSettings
 }
 
 
@@ -95,8 +97,6 @@ gitlab.project.approvalRule @defaults("id name approvalsRequired") {
   name string
   // Number of approvals required
   approvalsRequired int
-  // Approval settings for the project
-  approvalSettings() gitlab.project.approvalSettings
 }
 
 // GitLab project approval settings
