@@ -506,6 +506,8 @@ resources:
   macos:
     fields:
       globalAccountPolicies: {}
+      systemExtensions:
+        min_mondoo_version: latest
       userHostPreferences: {}
       userPreferences: {}
     min_mondoo_version: 5.15.0
@@ -527,6 +529,22 @@ resources:
     fields:
       authorizationDB: {}
     min_mondoo_version: 5.15.0
+  macos.systemExtension:
+    fields:
+      active: {}
+      bundleID: {}
+      bundlePath: {}
+      categories: {}
+      enabled: {}
+      identifier: {}
+      mdmManaged: {}
+      name: {}
+      state: {}
+      teamID: {}
+      uuid: {}
+      version: {}
+    is_private: true
+    min_mondoo_version: latest
   macos.systemsetup:
     fields:
       allowPowerButtonToSleepComputer: {}

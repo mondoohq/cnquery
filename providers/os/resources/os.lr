@@ -1302,6 +1302,8 @@ macos {
   userHostPreferences() map[string]dict
   // macOS global account policies
   globalAccountPolicies() dict
+  // System extensions
+  systemExtensions() []macos.systemExtension
 }
 
 // macOS application layer firewall (ALF) service
@@ -1398,6 +1400,30 @@ windows {
 
   // Information about optional features in a Windows image.
   optionalFeatures() []windows.optionalFeature
+}
+
+// macOS system extension
+private macos.systemExtension @defaults("teamID identifier version state"){
+  // Identifier of the system extension
+  identifier string
+  // System extension unique identifier
+  uuid string
+  // Version of the system extension
+  version string
+  // Categories of the system extension
+  categories []string
+  // State of the system extension
+  state string
+  // Indicates whether the system extension is enabled
+  enabled() bool
+  // Indicates whether the system extension is active
+  active() bool
+  // Team identifier of the system extension
+  teamID string
+  // Path to the system extension
+  bundlePath string
+  // Indicates whether the system extension is MDM managed
+  mdmManaged bool
 }
 
 // Windows hotfix resource
