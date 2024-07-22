@@ -356,7 +356,7 @@ file @defaults("path size permissions.string") {
   dirname(path) string
   // Contents of this file
   content(path, exists) string
-  // Indicator if this file exists on the system
+  // Whether this file exists on the system
   exists(path) bool
   // Permissions for this file
   permissions(path) file.permissions

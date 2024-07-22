@@ -48,7 +48,7 @@ private opcua.node @defaults("id name") {
   class string
   // Node description
   description string
-  // Indicates if value is writable
+  // Whether the value is writable
   writeable bool
   // Data type
   dataType string

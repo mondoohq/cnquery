@@ -271,9 +271,9 @@ snowflake.stage @defaults("name") {
 snowflake.database @defaults("name") {
   // Name of the database
   name string
-  // Indicates if the database is a default database
+  // Whether the database is a default database
   isDefault bool
-  // Indicates if the database is a current database
+  // Whether the database is a current database
   isCurrent bool
   // Database origin
   origin string
@@ -317,7 +317,7 @@ snowflake.warehouse @defaults("name") {
   queued int
   // Whether the warehouse is a default warehouse
   isDefault bool
-  // Indicates if the warehouse is a current warehouse
+  // Whether the warehouse is a current warehouse
   isCurrent bool
   // Period of inactivity, in seconds, after which a running warehouse automatically suspends and stops using credits
   autoSuspend int

@@ -29,9 +29,9 @@ ansible.play @defaults("name") {
   strategy string
   // Maximum number of hosts to fail before quitting
   maxFailPercentage int
-  // Flag to ignore unreachable hosts
+  // Whether to ignore unreachable hosts
   ignoreUnreachable bool
-  // Flag to finish fatal on any error
+  // Whether to finish fatal on any error
   anyErrorsFatal bool
   // Playbook variables
   vars map[string]dict

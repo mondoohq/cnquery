@@ -188,9 +188,9 @@ slack.conversation @defaults("id name") {
   topic dict
   // Information about the channel purpose
   purpose dict
-  // Indicates that the conversation is archived
+  // Whether the conversation is archived
   isArchived bool
-  // Indicates that the conversation is open
+  // Whether the conversation is open
   isOpen bool
   // Whether the conversation is privileged between two or more members
   isPrivate bool

@@ -60,7 +60,7 @@ okta.organization @defaults("companyName") {
   lastUpdated time
   // Expiration of organization
   expiresAt time
-  // Indicates whether the organization's users receive Okta communication email
+  // Whether the organization's users receive Okta communication email
   optOutCommunicationEmails() bool
   // Billing contact of organization
   billingContact() okta.user

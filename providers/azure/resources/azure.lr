@@ -135,7 +135,7 @@ azure.subscription.computeService.vm @defaults("name location properties.hardwar
   zones []string
   // VM state
   state() string
-  // Indicates if the VM is running
+  // Whether the VM is running
   isRunning() bool
   // VM tags
   tags map[string]string
@@ -525,9 +525,9 @@ azure.subscription.networkService.virtualNetwork @defaults("id name location") {
   subnets []azure.subscription.networkService.subnet
   // Virtual Network DHCP options
   dhcpOptions azure.subscription.networkService.virtualNetwork.dhcpOptions
-  // Indicates if DDoS protection is enabled for all the protected resources in the virtual network.
+  // Whether DDoS protection is enabled for all the protected resources in the virtual network
   enableDdosProtection bool
-  // Indicates if VM protection is enabled for all the subnets in the virtual network
+  // Whether VM protection is enabled for all the subnets in the virtual network
   enableVmProtection bool
 }
 
@@ -805,7 +805,7 @@ private azure.subscription.networkService.watcher.flowlog @defaults("name locati
   etag string
   // Network watcher flow log provisioning state
   provisioningState string
-  // whether the network watcher flow log is enabled
+  // Whether the network watcher flow log is enabled
   enabled bool
   // Network watcher flow log storage account identifier
   storageAccountId string

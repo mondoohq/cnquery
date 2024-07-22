@@ -59,7 +59,7 @@ private shodan.nsrecord @defaults("domain subdomain type") {
 
 // Shodan Search Engine account
 shodan.profile @defaults("displayName"){
-  // Indicates if the account is a member
+  // Whether the account is a member
   member bool
   // Number of search credits
   credits int
@@ -75,11 +75,11 @@ shodan.apiPlan @defaults("plan"){
   scanCredits int
   // Name of the plan
   plan string
-  // Indicates if the plan is active
+  // Whether the plan is active
   unlocked bool
   // Number of scan credits left
   unlockedLeft int
-  // Indicated if Telnet is allowed
+  // Whether Telnet is allowed
   telnet bool
   // Number of monitored IPs
   monitoredIps int

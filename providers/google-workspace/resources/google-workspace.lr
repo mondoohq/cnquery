@@ -64,9 +64,9 @@ private googleworkspace.orgUnit @defaults("name") {
 private googleworkspace.domain @defaults("domainName") {
   // The domain name of the customer
   domainName string
-  // Indicates if the domain is a primary domain
+  // Whether the domain is a primary domain
   isPrimary bool
-  // Indicates the verification state of a domain
+  // Whether the domain is verified
   verified bool
   // Creation time of the domain
   creationTime time
@@ -88,25 +88,25 @@ private googleworkspace.user @defaults("primaryEmail") {
   recoveryEmail string
   // Recovery phone of the user
   recoveryPhone string
-  // User accepted the Terms of Service agreement
+  // Whether the user accepted the Terms of Service agreement
   agreedToTerms bool
   // A list of the user's alias email addresses
   aliases []string
-  // Indicates if user is suspended
+  // Whether the user is suspended
   suspended bool
   // The reason a user account is suspended
   suspensionReason string
-  // Indicates if user is archived
+  // Whether the user is archived
   archived bool
-  // Indicates a user with super administrator privileges
+  // Whether the user has super administrator privileges
   isAdmin bool
-  // Indicates if a user is a delegated administrator
+  // Whether the a user is a delegated administrator
   isDelegatedAdmin bool
-  // Is 2-step verification enforced
+  // Whether 2-step verification is enforced
   isEnforcedIn2Sv bool
-  // Is enrolled in 2-step verification
+  // Whether the user is enrolled in 2-step verification
   isEnrolledIn2Sv bool
-  // Indicates if the user's Google mailbox is created
+  // Whether the user's Google mailbox is created
   isMailboxSetup bool
   // User's last login time
   lastLoginTime time
@@ -120,13 +120,13 @@ private googleworkspace.user @defaults("primaryEmail") {
 
 // Google Workspace token
 private googleworkspace.token @defaults("displayText") {
-  // Indicates if the application is registered with Google
+  // Whether the application is registered with Google
   anonymous bool
   // The Client ID of the application
   clientId string
   // The displayable name of the application token
   displayText string
-  // Indicates if the token is issued to an installed application
+  // Whether the token is issued to an installed application
   nativeApp bool
   // A list of granted authorization scopes the application
   scopes []string
@@ -162,7 +162,7 @@ private googleworkspace.group @defaults("email") {
   aliases []string
   // The number of users that are direct members of the group
   directMembersCount int
-  // Indicates if this group was created by an administrator rather than a user
+  // Whether this group was created by an administrator rather than a user
   adminCreated bool
   // Retrieve members of the group
   members() []googleworkspace.member
@@ -194,9 +194,9 @@ private googleworkspace.role @defaults("name") {
   name string
   // A short description of the role
   description string
-  // Indicates if this is a pre-defined system role
+  // Whether this is a pre-defined system role
   isSystemRole bool
-  // Indicates if the role is a super admin role
+  // Whether the role is a super admin role
   isSuperAdminRole bool
   // The set of privileges
   privileges []dict
