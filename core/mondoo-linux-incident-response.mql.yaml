@@ -19,31 +19,31 @@ packs:
         title: Installed kernels
         filters: mondoo.capabilities.contains("run-command")
         mql: kernel.installed
-      - uid: mondoo-linux-kernel-info
+      - uid: mondoo-linux-incident-response-kernel-info
         title: Running kernel version
         filters: mondoo.capabilities.contains("run-command")
         mql: kernel.info
-      - uid: mondoo-linux-kernel-modules
+      - uid: mondoo-linux-incident-response-kernel-modules
         title: Kernel modules
         mql: kernel.modules { name loaded }
       - uid: mondoo-linux-incident-response-processes
         title: Running processes
         filters: mondoo.capabilities.contains("run-command")
         mql: processes { pid  command }
-      - uid: mondoo-linux-mounts
+      - uid: mondoo-linux-incident-response-mounts
         title: Mounted devices
         mql: mount.list { path fstype device options }
-      - uid: mondoo-linux-listening-ports
-        title: All listening ports
+      - uid: mondoo-linux-incident-response-listening-ports
+        title: Listening ports
         filters: mondoo.capabilities.contains("run-command")
         mql: ports.listening
-      - uid: mondoo-linux-uptime
+      - uid: mondoo-linux-incident-response-uptime
         title: Operating system uptime
         filters: mondoo.capabilities.contains("run-command")
         mql: os.uptime
-      - uid: mondoo-linux-installed-packages
+      - uid: mondoo-linux-incident-response-installed-packages
         title: Installed packages
         mql: packages { name version arch installed }
-      - uid: mondoo-linux-running-services
+      - uid: mondoo-linux-incident-response-running-services
         title: Running services
         mql: services.where(running == true) { name running enabled masked type }
