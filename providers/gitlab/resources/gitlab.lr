@@ -132,7 +132,7 @@ gitlab.project.repository.protectedBranch @defaults("name allowForcePush") {
   defaultBranch bool
 }
 
-// GitLab repository file
+// GitLab project file
 gitlab.project.file @defaults("path type") {
   // File path
   path string

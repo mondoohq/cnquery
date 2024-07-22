@@ -306,7 +306,7 @@ func (f *mqlGitlabProjectFile) id() (string, error) {
 }
 
 // To fetch the list of files in the project repository
-func (p *mqlGitlabProject) listFilesInRepository() ([]interface{}, error) {
+func (p *mqlGitlabProject) projectFiles() ([]interface{}, error) {
 	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
 
 	projectID := int(p.Id.Data)
