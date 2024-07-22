@@ -109,13 +109,13 @@ gitlab.project.approvalSettings @defaults("approvalsBeforeMerge requirePasswordT
   approvalsBeforeMerge int
   // Whether all approvals are removed when new commits are pushed
   resetApprovalsOnPush bool
-  // Disable overriding approvers per merge request
+  // Whether users are prevented from overriding an approver per merge request
   disableOverridingApproversPerMergeRequest bool
   // Whether author of merge request can approve
   mergeRequestsAuthorApproval bool
-  // Disable committer's approval for merge request
+  // Whether users are prevented from overriding a committer's approval for merge request
   mergeRequestsDisableCommittersApproval bool
-  // Require password to approve
+  // Whether a password is required to approve
   requirePasswordToApprove bool
 }
 

@@ -456,7 +456,7 @@ private github.branchprotection @defaults("id") {
   requiredPullRequestReviews dict
   // Require conversation resolution before merging
   requiredConversationResolution dict
-  // Require signed commits
+  // Whether signed commits are required
   requiredSignatures bool
   // Require linear history
   requireLinearHistory dict

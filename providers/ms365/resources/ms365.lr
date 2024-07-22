@@ -46,7 +46,7 @@ private microsoft.organization @defaults("displayName") {
 private microsoft.user @defaults("id displayName mail") {
   // User ID
   id string
-  // User account status
+  // Whether the user account is enabled
   accountEnabled bool
   // User city
   city string
@@ -96,9 +96,9 @@ private microsoft.group @defaults("id displayName") {
   id string
   // Group display name
   displayName string
-  // Group security enabled status
+  // Whether group security is enabled
   securityEnabled bool
-  // Group email enabled status
+  // Whether group email is enabled status
   mailEnabled bool
   // Group email nickname
   mailNickname string

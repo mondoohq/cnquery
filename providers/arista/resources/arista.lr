@@ -64,7 +64,7 @@ arista.eos.user @defaults("name privilege") {
 private arista.eos.role @defaults("name default"){
   // Name of role
   name string
-  // Flag for default role
+  // Whether this is the default role
   default bool
   // List of rules that restricts access to specified commands
   rules []dict
@@ -72,7 +72,7 @@ private arista.eos.role @defaults("name default"){
 
 // Arista EOS SNMP information resource
 arista.eos.snmpSetting {
-  // SNMP logging status
+  // Whether SNMP logging is enabled
   enabled bool
   // SNMP trap generation information
   notifications() []dict
@@ -177,7 +177,7 @@ arista.eos.spt.mstInterface @defaults("name") {
   inconsistentFeatures dict
   // Port Number
   portNumber int
-  // Flag if it is an edge port
+  // Whether the interface is an edge port
   isEdgePort bool
   // Details about Designated root, Designated bridge and Designated port
   detail dict

@@ -524,15 +524,15 @@ private gcp.project.computeService.attachedDisk {
   projectId string
   // Architecture of the attached disk
   architecture string
-  // Indicates if disk will be auto-deleted
+  // Whether the disk will be auto-deleted
   autoDelete bool
-  // Indicates that this is a boot disk
+  // Whether this is a boot disk
   boot bool
   // Unique device name
   deviceName string
   // Size of the disk in GB
   diskSizeGb int
-  // Indicates whether to force attach the regional disk
+  // Whether to force attach the regional disk
   forceAttach bool
   // Features to enable on the guest operating
   guestOsFeatures []string
@@ -560,7 +560,7 @@ private gcp.project.computeService.snapshot @defaults("name") {
   description string
   // Architecture of the snapshot
   architecture string
-  // Indicates if snapshot was automatically created
+  // Whether the snapshot was automatically created
   autoCreated bool
   // Snapshot chain
   chainName string
@@ -660,7 +660,7 @@ private gcp.project.computeService.network @defaults("name") {
   description string
   // If not set, indicates a legacy network
   autoCreateSubnetworks bool
-  // Indicates if ULA internal IPv6 is enabled on this network
+  // Whether ULA internal IPv6 is enabled on this network
   enableUlaInternalIpv6 bool
   // Gateway address for default routing
   gatewayIPv4 string
@@ -1076,7 +1076,7 @@ private gcp.project.sqlService.instance.settings {
   settingsVersion int
   // SQL-server-specific audit configuration
   sqlServerAuditConfig dict
-  // Configuration to increase storage size automatically
+  // Whether to increase storage size automatically
   storageAutoResize bool
   // Maximum size to which storage capacity can be automatically increased
   storageAutoResizeLimit int
@@ -1136,7 +1136,7 @@ private gcp.project.sqlService.instance.settings.ipConfiguration {
   requireSsl bool
   // Specifies how SSL/TLS is enforced in database connections.
   sslMode string
-  // Controls connectivity to private IP instances from Google services, such as BigQuery.
+  // Whether the service uses an internal direct path instead of the private IP address inside of the Virtual Private Cloud (Controls connectivity to private IP instances from Google services, such as BigQuery)
   enablePrivatePathForGoogleCloudServices bool
 }
 
@@ -1246,9 +1246,9 @@ private gcp.project.bigqueryService.table @defaults("id") {
   description string
   // User-provided labels
   labels map[string]string
-  // Indicates if Legacy SQL is used for the view query
+  // Whether the view query uses Legacy SQL
   useLegacySQL bool
-  // Indicates if queries that reference this table must specify a partition filter
+  // Whether queries that reference this table must specify a partition filter
   requirePartitionFilter bool
   // Creation timestamp
   created time
@@ -1436,7 +1436,7 @@ private gcp.project.gkeService.cluster @defaults("name description zone status c
   nodePools []gcp.project.gkeService.cluster.nodepool
   // The list of Google Compute Engine zones in which the cluster's nodes should be located
   locations []string
-  // Enable Kubernetes alpha features
+  // Whether Kubernetes alpha features are enabled
   enableKubernetesAlpha bool
   // Whether Autopilot is enabled for the cluster
   autopilotEnabled bool
@@ -1682,7 +1682,7 @@ private gcp.project.gkeService.cluster.nodepool.config @defaults("machineType di
   advancedMachineFeatures gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures
   // gVNIC configuration
   gvnicConfig gcp.project.gkeService.cluster.nodepool.config.gvnicConfig
-  // Spot flag for enabling Spot VM, which is a rebrand of the existing preemptible flag
+  // Whether Spot VM is enabled (a rebrand of the existing preemptible flag)
   spot bool
   // Confidential nodes configuration
   confidentialNodes gcp.project.gkeService.cluster.nodepool.config.confidentialNodes
@@ -1937,7 +1937,7 @@ private gcp.project.kmsService.keyring.cryptokey @defaults("name purpose") {
   versionTemplate dict
   // User-defined labels
   labels map[string]string
-  // Whether this key may contain imported versions only
+  // Whether this key can contain imported versions only
   importOnly bool
   // Period of time that versions of this key spend in DESTROY_SCHEDULED state before being destroyed
   destroyScheduledDuration time

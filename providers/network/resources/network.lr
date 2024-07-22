@@ -67,7 +67,7 @@ private http.header.sts @defaults("maxAge includeSubDomains preload") {
 // HTTP header for X-XSS-Protection, which is now outdated (replaced by CSP)
 // and may even cause security vulnerabilities
 private http.header.xssProtection @defaults("enabled mode report") {
-  // Enabled when the header value is set to 1; disabled if set to 0
+  // Whether the header is enabled (Enabled when the header value is set to 1; disabled if set to 0)
   enabled bool
   // Mode for XSS filtering
   mode string
@@ -175,7 +175,7 @@ certificate @defaults("serial subject.commonName subject.dn") {
   signature() string
   // Signature algorithm ID
   signingAlgorithm() string
-  // Flag if certificate authority
+  // Whether the certificate is from a certificate authority
   isCA() bool
   // Key usage
   keyUsage() []string
@@ -234,7 +234,7 @@ pkix.extension @defaults("id") {
   id string
   // Extension identifier
   identifier string
-  // Flag for critical extension
+  // Whether the extension is critical
   critical bool
   // Extension value
   value string
@@ -334,7 +334,7 @@ domainName @defaults("fqdn") {
   effectiveTLDPlusOne string
   // Top-level domain
   tld string
-  // Flag indicates if the TLD is ICANN managed
+  // Whether the TLD is ICANN managed
   tldIcannManaged bool
   // Domain labels
   labels []string

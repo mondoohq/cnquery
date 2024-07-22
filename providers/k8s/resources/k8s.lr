@@ -64,7 +64,7 @@ private k8s.apiresource @defaults("name kind") {
   name string
   // Singular name of the resource
   singularName string
-  // Whether a resource is namespaced or not
+  // Whether a resource is namespaced
   namespaced bool
   // Preferred group of the resource
   group string

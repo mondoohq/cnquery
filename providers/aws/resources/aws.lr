@@ -673,7 +673,7 @@ private aws.efs.filesystem @defaults("name id region") {
   id string
   // ARN of the file system
   arn string
-  // Whether or not the file system is encrypted
+  // Whether the file system is encrypted
   encrypted bool
   // KMS key used for encryption of the file system
   kmsKey() aws.kms.key
@@ -703,7 +703,7 @@ private aws.kms.key @defaults("id region metadata.Description") {
   arn string
   // Region the key lives in
   region string
-  // Bool that specifies whether key rotation is enabled
+  // Whether key rotation is enabled
   keyRotationEnabled() bool
   // Metadata for the key
   metadata() dict
@@ -743,7 +743,7 @@ private aws.iam.usercredentialreportentry @defaults("arn") {
   // ARN for the credential report
   arn() string
 
-  // Denotes if the access key is active
+  // Whether the access key is active
   accessKey1Active() bool
   // Time when key was last rotated
   accessKey1LastRotated() time
@@ -754,7 +754,7 @@ private aws.iam.usercredentialreportentry @defaults("arn") {
   // Service that last used the key
   accessKey1LastUsedService() string
 
-  // Denotes if the access key is active
+  // Whether the access key is active
   accessKey2Active() bool
   // Time when key was last rotated
   accessKey2LastRotated() time
@@ -765,17 +765,17 @@ private aws.iam.usercredentialreportentry @defaults("arn") {
   // Service that last used the key
   accessKey2LastUsedService() string
 
-  // Denotes if the cert is active
+  // Whether the cert is active
   cert1Active() bool
   // Time when the cert was last rotated
   cert1LastRotated() time
 
-  // Denotes if the cert is active
+  // Whether the cert is active
   cert2Active() bool
   // Time when the cert was last rotated
   cert2LastRotated() time
 
-  // Denotes if mfa is active in the account
+  // Whether MFA is active in the account
   mfaActive() bool
   // Whether passwords are enabled
   passwordEnabled() bool
@@ -836,7 +836,7 @@ private aws.iam.policy @defaults("arn name") {
   name() string
   // Description of the policy
   description() string
-  // Denotes if the policy can be attached
+  // Whether the policy can be attached
   isAttachable() bool
   // The number of principal entities (users, groups, and roles) that the policy is attached to
   attachmentCount() int
@@ -865,7 +865,7 @@ private aws.iam.policyversion @defaults("arn isDefaultVersion") {
   arn string
   // Version ID
   versionId string
-  // Denotes if this version is the policy default version
+  // Whether this version is the policy default version
   isDefaultVersion bool
   // JSON statements for this policy version
   document() dict
@@ -1001,7 +1001,7 @@ private aws.es.domain @defaults("arn name") {
   arn string
   // Whether encryption at rest is enabled
   encryptionAtRestEnabled bool
-  // Denoted whether node to node encryption is enabled
+  // Whether node-to-node encryption is enabled
   nodeToNodeEncryptionEnabled bool
   // Name of the Elasticsearch domain
   name string
@@ -1097,7 +1097,7 @@ private aws.autoscaling.group @defaults("name region minSize maxSize") {
   desiredCapacity int
   // List of availability zones associated with the group
   availabilityZones []string
-  // Indicates whether Capacity Rebalancing is enabled
+  // Whether Capacity Rebalancing is enabled
   capacityRebalance bool
   // The duration of the default instance warmup, in seconds
   defaultInstanceWarmup int
@@ -1127,7 +1127,7 @@ private aws.elb.targetgroup @defaults("name port ec2Targets lambdaTargets") {
   protocolVersion string
   // IP address type for the load balancer target group (IPv4, IPv6)
   ipAddressType string
-  // True if health check is enabled for the load balancer target group
+  // Whether health check is enabled for the load balancer target group
   healthCheckEnabled bool
   // Health check interval for the load balancer target group
   healthCheckIntervalSeconds int
@@ -1312,7 +1312,7 @@ private aws.ecs.cluster @defaults("name region status runningTasksCount pendingT
 
 // AWS ECS container instance
 private aws.ecs.instance {
-  // True if agent is connected to ECS
+  // Whether the agent is connected to ECS
   agentConnected bool
   // ID for the container instance
   id string
@@ -1549,9 +1549,9 @@ private aws.cloudfront.distribution @defaults("domainName status") {
   cacheBehaviors []dict
   // HTTP version of the distribution
   httpVersion string
-  // Is the distribution IPV6 enabled
+  // Whether the distribution is IPV6 enabled
   isIPV6Enabled bool
-  // Is the distribution enabled
+  // Whether the distribution is enabled
   enabled bool
   // The price class of the distribution
   priceClass string
@@ -1611,7 +1611,7 @@ private aws.cloudtrail.trail @defaults("name region") {
   kmsKey() aws.kms.key
   // Whether the trail exists in multiple regions (false if single region)
   isMultiRegionTrail bool
-  // Whether trail is an organization trail (logs events for management and member accounts of the organization)
+  // Whether the trail is an organization trail (logs events for management and member accounts of the organization)
   isOrganizationTrail bool
   // Whether log file validation is enabled
   logFileValidationEnabled bool
@@ -1775,7 +1775,7 @@ private aws.backup.vault @defaults("name region") {
   region string
   // Date the backup vault was created
   createdAt time
-  // Is the backup locked
+  // Whether the backup is locked
   locked bool
   // The ARN of the encryption key
   encryptionKeyArn string
@@ -1891,7 +1891,7 @@ private aws.dynamodb.table @defaults("name region") {
   tags() map[string]string
   // The creation time of the table
   createdTime time
-  // Is deletion protection enabled
+  // Whether deletion protection is enabled
   deletionProtectionEnabled bool
   // The global table version
   globalTableVersion string
@@ -1957,9 +1957,9 @@ private aws.rds.backupsetting {
   target string
   // Retention period for the backup setting
   retentionPeriod int
-  // Dedicated log volume for the backup setting
+  // Whether dedicated log volume is enabled for the backup setting
   dedicatedLogVolume bool
-  // True if backups have encryption turned on
+  // Whether backups have encryption turned on
   encrypted bool
   // KMS key associated with the backup setting
   kmsKey() aws.kms.key
@@ -2285,7 +2285,7 @@ private aws.ecr.repository @defaults("uri region") {
   images() []aws.ecr.image
   // Region where the image is stored
   region string
-  // Repository option to scan on image push
+  // Whether the repository option to scan on image push is enabled
   imageScanOnPush bool
 }
 
@@ -2347,7 +2347,7 @@ private aws.apigateway.stage @defaults("arn") {
   arn string
   // Name for the stage
   name string
-  // Bool that denotes if tracing is enabled for the stage
+  // Whether tracing is enabled for the stage
   tracingEnabled bool
   // Description for the stage
   description string
@@ -2522,7 +2522,7 @@ private aws.vpc.natgateway.address {
 
 // Amazon VPC Service Endpoint
 private aws.vpc.serviceEndpoint {
-  // True if acceptance required
+  // Whether acceptance is required
   acceptanceRequired bool
   // List of availability zones for the service endpoint
   availabilityZones []string
@@ -2719,7 +2719,7 @@ private aws.ec2.volume @defaults("id region volumeType size encrypted state") {
   createTime time
   // Region where the EC2 volume is stored
   region string
-  // Whether Amazon EBS Multi-Attach is enabled.
+  // Whether Amazon EBS Multi-Attach is enabled
   multiAttachEnabled bool
   // The throughput that the volume supports, in MiB/s.
   throughput int
@@ -2883,9 +2883,9 @@ private aws.ec2.networkinterface @defaults("id privateIpAddress macAddress") {
   vpc() aws.vpc
   // The status of the network interface. If the network interface is not attached to an instance, the status is available; if a network interface is attached to an instance the status is in-use
   status string
-  // Indicates whether the network interface performs source/destination checking. A value of true means checking is enabled, and false means checking is disabled. The value must be false for the network interface to perform network address translation (NAT) in your VPC.
+  // Whether the network interface performs source/destination checking (A value of true means checking is enabled, and false means checking is disabled. The value must be false for the network interface to perform network address translation (NAT) in your VPC.)
   sourceDestCheck bool
-  // Indicates whether the network interface is being managed by an AWS service (for example, AWS Management Console, Auto Scaling, and so on)
+  // Whether the network interface is being managed by an AWS service (for example, AWS Management Console, Auto Scaling, and so on)
   requesterManaged bool
   // Tags set on the interface
   tags map[string]string
@@ -2893,7 +2893,7 @@ private aws.ec2.networkinterface @defaults("id privateIpAddress macAddress") {
   availabilityZone string
   // Security groups associated with the network interface
   securityGroups() []aws.ec2.securitygroup
-  // Indicates whether this is an IPv6 only network interface
+  // Whether this is an IPv6 only network interface
   ipv6Native bool
   // The MAC address of the network interface
   macAddress string
@@ -2943,7 +2943,7 @@ private aws.ec2.image @defaults("ownerAlias id name") {
 
 // Amazon EC2 instance block device
 private aws.ec2.instance.device @defaults("deviceName volumeId status") {
-  // Boolean to denote whether volume should be deleted on instance termination
+  // Whether the volume should be deleted on instance termination
   deleteOnTermination bool
   // Status of the device
   status string
