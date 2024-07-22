@@ -139,11 +139,12 @@ func (v *Vault) Set(ctx context.Context, cred *vault.Secret) (*vault.SecretID, e
 		return nil, err
 	}
 
-	_, err = c.Create(ctx, &berglas.StorageCreateRequest{
-		Bucket:    v.bucket,
-		Object:    cred.Key,
-		Plaintext: cred.Data,
-		Key:       v.kmsKeyID,
+	_, err = c.Update(ctx, &berglas.StorageUpdateRequest{
+		Bucket:          v.bucket,
+		Object:          cred.Key,
+		Plaintext:       cred.Data,
+		Key:             v.kmsKeyID,
+		CreateIfMissing: true,
 	})
 	if err != nil {
 		return nil, err

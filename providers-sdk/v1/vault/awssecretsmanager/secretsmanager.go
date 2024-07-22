@@ -5,9 +5,11 @@ package awssecretsmanager
 
 import (
 	"context"
+	"errors"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
@@ -85,6 +87,29 @@ func (v *Vault) Set(ctx context.Context, cred *vault.Secret) (*vault.SecretID, e
 	c := secretsmanager.NewFromConfig(v.cfg)
 	o, err := c.CreateSecret(ctx, &secretsmanager.CreateSecretInput{
 		Name:         &cred.Key,
+		SecretBinary: cred.Data,
+		KmsKeyId:     kmsKeyID,
+	})
+	if err != nil {
+		var aerr *types.ResourceExistsException
+		if errors.As(err, &aerr) {
+			return v.updateSecret(ctx, cred)
+		}
+
+		return nil, err
+	}
+
+	return &vault.SecretID{Key: *o.ARN}, err
+}
+
+func (v *Vault) updateSecret(ctx context.Context, cred *vault.Secret) (*vault.SecretID, error) {
+	var kmsKeyID *string
+	if len(v.kmsKeyID) > 0 {
+		kmsKeyID = &v.kmsKeyID
+	}
+
+	c := secretsmanager.NewFromConfig(v.cfg)
+	o, err := c.UpdateSecret(ctx, &secretsmanager.UpdateSecretInput{
 		SecretBinary: cred.Data,
 		KmsKeyId:     kmsKeyID,
 	})

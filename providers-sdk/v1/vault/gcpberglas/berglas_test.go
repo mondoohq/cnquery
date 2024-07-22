@@ -32,4 +32,11 @@ func TestGcpBerglas(t *testing.T) {
 	get, err := v.Get(ctx, &vault.SecretID{Key: cred.Key})
 	require.NoError(t, err)
 	assert.Equal(t, cred.Data, get.Data)
+
+	cred.Data = []byte("my-even-more-secret-data")
+	_, err = v.Set(ctx, cred)
+	require.NoError(t, err)
+	get, err = v.Get(ctx, &vault.SecretID{Key: cred.Key})
+	require.NoError(t, err)
+	assert.Equal(t, cred.Data, get.Data)
 }
