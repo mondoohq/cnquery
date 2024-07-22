@@ -90,6 +90,8 @@ gitlab.project @defaults("fullName visibility webURL") {
   approvalSettings() gitlab.project.approvalSettings
   // Protected branches settings for the project
   protectedBranches() []gitlab.project.repository.protectedBranch
+  // To fetch the list of members in the project with their roles
+  projectMembers() []gitlab.project.member
 }
 
 
@@ -128,4 +130,16 @@ gitlab.project.repository.protectedBranch @defaults("name allowForcePush") {
   allowForcePush bool
   // Whether this is the default branch
   defaultBranch bool
+}
+
+// GitLab project member
+gitlab.project.member @defaults("id name role") {
+  // Member ID
+  id int
+  // Member name
+  name string
+  // Member role
+  role string
+  // Member access level
+  accesslevel int
 }
