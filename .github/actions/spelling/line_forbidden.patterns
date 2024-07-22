@@ -8,6 +8,16 @@
 \b[Ll]orem [Ii]psum\b
 
 #
+# Overly formal style
+#
+
+# s.b. Whether
+\bIndicates whether\b
+\bIndicates if\b
+\bWhether or not\b
+\bDenotes if\b
+
+#
 # Terms to avoid
 #
 

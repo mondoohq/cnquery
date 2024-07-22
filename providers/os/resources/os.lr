@@ -1528,7 +1528,7 @@ windows.firewall.rule {
   description string
   // The group that this rule belongs to
   displayGroup string
-  // Indicates whether this rule is administratively enabled or disabled
+  // Whether this rule is administratively enabled or disabled
   // Values: enabled (1), disabled (2)
   enabled int
   // Specifies which direction of traffic to match with this rule

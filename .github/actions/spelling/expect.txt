@@ -1,8 +1,8 @@
+ACCOUNTADMIN
 atlassian
 Auths
 autoaccept
 autoscaler
-ACCOUNTADMIN
 backupconfiguration
 backupsetting
 bigquery
@@ -18,11 +18,10 @@ cpe
 cryptokey
 customresources
 datapath
+DATAUSER
 Ddos
 deliverychannel
 dfw
-DATAUSER
-DIRECTORYID
 dlq
 dlv
 eip
@@ -37,7 +36,6 @@ gpu
 gvnic
 headerorder
 hostkeys
-hostnames
 iana
 iap
 ilb
@@ -61,9 +59,9 @@ natgateway
 networkinterface
 nodegroup
 nodepool
+nsrecord
 nullgroup
 nullstring
-nsrecord
 opcplc
 orstatement
 PAYG
@@ -80,11 +78,9 @@ rulegroupreferencestatement
 Sas
 scim
 serviceprincipals
-shodan
 singlequeryargument
 sizeconstraintstatement
 Snat
-Snowsight
 spdx
 sph
 spo
@@ -102,5 +98,3 @@ vulnerabilityassessmentsettings
 vulnmgmt
 wil
 xssmatchstatement
-optionalfeature
-Committers

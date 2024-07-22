@@ -172,13 +172,13 @@ func newAllowInvitesFrom(a *models.AllowInvitesFrom) *AllowInvitesFrom {
 }
 
 type DefaultUserRolePermissions struct {
-	// Indicates whether the default user role can create applications.
+	// Whether the default user role can create applications.
 	AllowedToCreateApps *bool `json:"allowedToCreateApps"`
-	// Indicates whether the default user role can create security groups.
+	// Whether the default user role can create security groups.
 	AllowedToCreateSecurityGroups *bool `json:"allowedToCreateSecurityGroups"`
-	// Indicates whether the default user role can read other users.
+	// Whether the default user role can read other users.
 	AllowedToReadOtherUsers *bool `json:"allowedToReadOtherUsers"`
-	// Indicates whether the default user role can create tenants.
+	// Whether the default user role can create tenants.
 	AllowedToCreateTenants *bool `json:"allowedToCreateTenants"`
 	// List of permission grant policies assigned.
 	PermissionGrantPoliciesAssigned []string `json:"permissionGrantPoliciesAssigned"`
@@ -199,11 +199,11 @@ func newDefaultUserRolePermissions(a models.DefaultUserRolePermissionsable) *Def
 
 type AuthorizationPolicy struct {
 	PolicyBase
-	// Indicates whether users can sign up for email based subscriptions.
+	// Whether users can sign up for email based subscriptions.
 	AllowedToSignUpEmailBasedSubscriptions *bool `json:"allowedToSignUpEmailBasedSubscriptions"`
-	// Indicates whether the Self-Serve Password Reset feature can be used by users on the tenant.
+	// Whether the Self-Serve Password Reset feature can be used by users on the tenant.
 	AllowedToUseSSPR *bool `json:"allowedToUseSSPR"`
-	// Indicates whether a user can join the tenant by email validation.
+	// Whether a user can join the tenant by email validation.
 	AllowEmailVerifiedUsersToJoinOrganization *bool `json:"allowEmailVerifiedUsersToJoinOrganization"`
 	// Indicates who can invite external users to the organization. Possible values are: none, adminsAndGuestInviters, adminsGuestInvitersAndAllMembers, everyone.  everyone is the default setting for all cloud environments except US Government. See more in the table below.
 	AllowInvitesFrom *AllowInvitesFrom `json:"allowInvitesFrom"`
