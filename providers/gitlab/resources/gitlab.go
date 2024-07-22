@@ -299,3 +299,49 @@ func (p *mqlGitlabProject) projectMembers() ([]interface{}, error) {
 
 	return mqlMembers, nil
 }
+
+// Define the id function for a unique identifier for a file resource
+func (f *mqlGitlabProjectFile) id() (string, error) {
+	return f.Path.Data, nil
+}
+
+// To fetch the list of files in the project repository
+func (p *mqlGitlabProject) listFilesInRepository() ([]interface{}, error) {
+	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	projectID := int(p.Id.Data)
+	defaultBranch := p.DefaultBranch.Data
+
+	ref := &defaultBranch
+	recursive := true
+
+	// ListTree function expect pointer to the struct
+	listFilesOptions := &gitlab.ListTreeOptions{
+		Ref:       ref,
+		Recursive: &recursive,
+	}
+
+	// Fetch the list of files
+	files, _, err := conn.Client().Repositories.ListTree(projectID, listFilesOptions)
+	if err != nil {
+		return nil, err
+	}
+
+	var mqlFiles []interface{}
+	for _, file := range files {
+		fileInfo := map[string]*llx.RawData{
+			"path": llx.StringData(file.Path),
+			"type": llx.StringData(file.Type),
+			"name": llx.StringData(file.Name),
+		}
+
+		mqlFile, err := CreateResource(p.MqlRuntime, "gitlab.project.file", fileInfo)
+		if err != nil {
+			return nil, err
+		}
+
+		mqlFiles = append(mqlFiles, mqlFile)
+	}
+
+	return mqlFiles, nil
+}

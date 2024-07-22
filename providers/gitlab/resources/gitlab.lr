@@ -123,23 +123,21 @@ private gitlab.project.approvalSettings @defaults("approvalsBeforeMerge requireP
 
 
 // GitLab protected branch
-private gitlab.project.protectedBranch @defaults("name allowForcePush") {
+gitlab.project.repository.protectedBranch @defaults("name allowForcePush") {
   // Branch name
   name string
   // Whether force push is allowed
   allowForcePush bool
   // Whether this is the default branch
   defaultBranch bool
-  // Whether code owner approval required
-  codeOwnerApproval bool
 }
 
-// GitLab project member
-gitlab.project.member @defaults("id name role") {
-  // Member ID
-  id int
-  // Member name
+// GitLab repository file
+gitlab.project.file @defaults("path type") {
+  // File path
+  path string
+  // File type
+  type string
+  // File name
   name string
-  // Member role
-  role string
 }
