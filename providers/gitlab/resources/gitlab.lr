@@ -88,6 +88,8 @@ gitlab.project @defaults("fullName visibility webURL") {
   mergeMethod() string
   // Approval settings for the project
   approvalSettings() gitlab.project.approvalSettings
+  // Protected branches settings for the project
+  protectedBranches() []gitlab.project.repository.protectedBranch
 }
 
 
@@ -115,4 +117,15 @@ gitlab.project.approvalSettings @defaults("approvalsBeforeMerge requirePasswordT
   mergeRequestsDisableCommittersApproval bool
   // Require password to approve
   requirePasswordToApprove bool
+}
+
+
+// GitLab protected branch
+gitlab.project.repository.protectedBranch @defaults("name allowForcePush") {
+  // Branch name
+  name string
+  // Whether force push is allowed
+  allowForcePush bool
+  // Whether this is the default branch
+  defaultBranch bool
 }

@@ -198,3 +198,48 @@ func (p *mqlGitlabProject) mergeMethod() (string, error) {
 
 	return mergeMethodString, nil
 }
+
+// Define the id function for a unique identifier for a resource instance gitlab.project.repository.protectedBranch
+// The struct name mqlGitlabProjectRepositoryProtectedBranch is derived from the resource path gitlab.project.repository.protectedBranch. This is a convention used to maintain consistency and clarity within the Mondoo framework by adding mql in the front, ensuring that each resource can be uniquely identified and managed.
+func (g *mqlGitlabProjectRepositoryProtectedBranch) id() (string, error) {
+	return g.Name.Data, nil
+}
+
+// To fetch protected branch settings
+func (p *mqlGitlabProject) protectedBranches() ([]interface{}, error) {
+	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	projectID := int(p.Id.Data)
+	project, _, err := conn.Client().Projects.GetProject(projectID, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	defaultBranch := project.DefaultBranch
+
+	protectedBranches, _, err := conn.Client().ProtectedBranches.ListProtectedBranches(projectID, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var mqlProtectedBranches []interface{}
+	for _, branch := range protectedBranches {
+		// Declare and initialize isDefaultBranch variable
+		isDefaultBranch := branch.Name == defaultBranch
+
+		branchSettings := map[string]*llx.RawData{
+			"name":           llx.StringData(branch.Name),
+			"allowForcePush": llx.BoolData(branch.AllowForcePush),
+			"defaultBranch":  llx.BoolData(isDefaultBranch),
+		}
+
+		mqlProtectedBranch, err := CreateResource(p.MqlRuntime, "gitlab.project.repository.protectedBranch", branchSettings)
+		if err != nil {
+			return nil, err
+		}
+
+		mqlProtectedBranches = append(mqlProtectedBranches, mqlProtectedBranch)
+	}
+
+	return mqlProtectedBranches, nil
+}
