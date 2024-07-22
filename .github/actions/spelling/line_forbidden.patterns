@@ -45,6 +45,9 @@
 # s.b. SOC 2
 \bSOC2\b
 
+# s.b. NIS2
+\bNIS 2\b
+
 # s.b. ISO 270001
 \bISO270001\b
 
@@ -84,6 +87,9 @@
 #
 # Product Names
 #
+
+# s.b. Memcached
+\bMemCached\b
 
 # s.b. Jira
 \bJIRA\b
@@ -288,6 +294,8 @@
 \bLinked In\b
 \bLinkedin\b
 
+# s.b. Microsoft IIS
+\bIIS Server\b
 #
 # VMware Products
 #
@@ -457,7 +465,7 @@
 \bWorkmail\b
 
 #
-# GCP Products
+# Google Cloud Products
 #
 
 # s.b. AlloyDB
@@ -468,9 +476,11 @@
 
 # s.b. BigLake
 \bBig Lake\b
+\bBiglake\b
 
 # s.b. BigQuery
 \bBig Query\b
+\bBigquery\b
 
 # s.b. Cloud Build
 \bCloudBuild\b
@@ -528,6 +538,16 @@
 # s.b. VMware Engine
 \bVMware engine\b
 \bVMWare Engine\b
+
+# s.b. Bigtable
+\bBigTable\b
+\bBig Table\b
+
+# s.b. Datastore
+\bDataStore\b
+
+# s.b. Memorystore
+\bMemoryStore\b
 
 #
 # Azure Products
