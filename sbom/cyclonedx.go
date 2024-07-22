@@ -38,6 +38,7 @@ func (ccx *CycloneDX) convertToCycloneDx(bom *Sbom) (*cyclonedx.BOM, error) {
 		Tools: &cyclonedx.ToolsChoice{
 			Components: &[]cyclonedx.Component{
 				{
+					Type:    cyclonedx.ComponentTypeApplication,
 					Author:  bom.Generator.Vendor,
 					Name:    bom.Generator.Name,
 					Version: bom.Generator.Version,
@@ -45,7 +46,7 @@ func (ccx *CycloneDX) convertToCycloneDx(bom *Sbom) (*cyclonedx.BOM, error) {
 			},
 		},
 		Component: &cyclonedx.Component{
-			// BOMRef:  string(bomRef),
+			BOMRef: uuid.New().String(),
 			// TODO: understand the device type
 			// Type: cyclonedx.ComponentTypeContainer,
 			Type: cyclonedx.ComponentTypeDevice,
@@ -62,6 +63,7 @@ func (ccx *CycloneDX) convertToCycloneDx(bom *Sbom) (*cyclonedx.BOM, error) {
 	}
 
 	components = append(components, cyclonedx.Component{
+		BOMRef:  uuid.New().String(),
 		Type:    cyclonedx.ComponentTypeOS,
 		Name:    bom.Asset.Platform.Name,
 		Version: bom.Asset.Platform.Version,
@@ -104,6 +106,7 @@ func (ccx *CycloneDX) convertToCycloneDx(bom *Sbom) (*cyclonedx.BOM, error) {
 		}
 
 		bomPkg := cyclonedx.Component{
+			BOMRef:     uuid.New().String(), // temporary, we need to store the relationships next
 			Type:       cyclonedx.ComponentTypeLibrary,
 			Name:       pkg.Name,
 			Version:    pkg.Version,
