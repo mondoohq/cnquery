@@ -2883,7 +2883,7 @@ private aws.ec2.networkinterface @defaults("id privateIpAddress macAddress") {
   vpc() aws.vpc
   // The status of the network interface. If the network interface is not attached to an instance, the status is available; if a network interface is attached to an instance the status is in-use
   status string
-  // Whether the network interface performs source/destination checking (A value of true means checking is enabled, and false means checking is disabled. The value must be false for the network interface to perform network address translation (NAT) in your VPC.)
+  // Whether the network interface performs source/destination checking. A value of true means checking is enabled, and false means checking is disabled. The value must be false for the network interface to perform network address translation (NAT) in your VPC.
   sourceDestCheck bool
   // Whether the network interface is being managed by an AWS service (for example, AWS Management Console, Auto Scaling, and so on)
   requesterManaged bool
