@@ -196,11 +196,11 @@ private vcd.vm @defaults("name") {
 vcd.serverInstance {
   // Name of vCenter server
   name string
-  // Indicates if vCenter server is busy
+  // Whether vCenter server is busy
   isBusy bool
-  // Indicates if vCenter server is enabled
+  // Whether vCenter server is enabled
   isEnabled bool
-  // Indicates if vCenter server is supported
+  // Whether vCenter server is supported
   isSupported bool
   // vCenter listener state
   listenerState string
@@ -264,7 +264,7 @@ vcd.vdc {
   usedNetworkCount int
   // Quota of VMs that can be created in this VDC
   vmQuota int
-  // Indicates if VDC is enabled for use
+  // Whether VDC is enabled
   isEnabled bool
 }
 

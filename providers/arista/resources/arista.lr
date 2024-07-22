@@ -46,7 +46,7 @@ arista.eos.runningConfig.section {
 arista.eos.user @defaults("name privilege") {
   // The name of the user
   name string
-  // Indicates if the user is able to authenticate without a password
+  // Whether the user can authenticate without a password
   privilege string
   // User's assigned role
   role string
