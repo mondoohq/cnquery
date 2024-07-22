@@ -544,7 +544,7 @@ resources:
       uuid: {}
       version: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 9.0.0
   macos.systemsetup:
     fields:
       allowPowerButtonToSleepComputer: {}
