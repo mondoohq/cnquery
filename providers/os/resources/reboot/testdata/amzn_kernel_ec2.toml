@@ -1,8 +1,3 @@
-[commands."rpm -q kernel --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH} %{SUMMARY}\n'"]
-stdout = """
-kernel 0:4.14.123-111.109.amzn2 x86_64 The Linux kernel
-"""
-
 [commands."uname -r"]
 stdout = "4.14.123-111.109.amzn2.x86_64"
 
