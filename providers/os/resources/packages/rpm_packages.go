@@ -167,14 +167,14 @@ func (rpm *RpmPkgManager) queryFormat() string {
 	// this format should work everywhere
 	// fall-back to epoch instead of epochnum for 6 ish platforms, latest 6 platforms also support epochnum, but we
 	// save 1 call by not detecting the available keyword via rpm --querytags
-	format := "%{NAME} %{EPOCH}:%{VERSION}-%{RELEASE} %{ARCH} %{VENDOR} %{SUMMARY}\\n"
+	format := "%{NAME} %{EPOCH}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}\\n"
 
 	// ATTENTION: EPOCHNUM is only available since later version of rpm in RedHat 6 and Suse 12
 	// we can only expect if for rhel 7+, therefore we need to run an extra test
 	// be aware that this method is also used for non-redhat systems like suse
 	i, err := strconv.ParseInt(rpm.platform.Version, 0, 32)
 	if err == nil && (rpm.platform.Name == "centos" || rpm.platform.Name == "redhat") && i >= 7 {
-		format = "%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH} %{VENDOR} %{SUMMARY}\\n"
+		format = "%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}\\n"
 	}
 
 	return format
