@@ -1414,15 +1414,15 @@ private macos.systemExtension @defaults("teamID identifier version state"){
   categories []string
   // State of the system extension
   state string
-  // Indicates whether the system extension is enabled
+  // Whether the system extension is enabled
   enabled() bool
-  // Indicates whether the system extension is active
+  // Whether the system extension is active
   active() bool
   // Team identifier of the system extension
   teamID string
   // Path to the system extension
   bundlePath string
-  // Indicates whether the system extension is MDM managed
+  // Whether the system extension is MDM managed
   mdmManaged bool
 }
 
