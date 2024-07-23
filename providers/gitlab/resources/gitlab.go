@@ -231,7 +231,7 @@ func (p *mqlGitlabProject) protectedBranches() ([]interface{}, error) {
 			"name":              llx.StringData(branch.Name),
 			"allowForcePush":    llx.BoolData(branch.AllowForcePush),
 			"defaultBranch":     llx.BoolData(isDefaultBranch),
-			"CodeOwnerApproval": llx.BoolData(branch.CodeOwnerApprovalRequired),
+			"codeOwnerApproval": llx.BoolData(branch.CodeOwnerApprovalRequired),
 		}
 
 		mqlProtectedBranch, err := CreateResource(p.MqlRuntime, "gitlab.project.protectedBranch", branchSettings)
