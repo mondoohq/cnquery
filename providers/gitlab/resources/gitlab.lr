@@ -89,7 +89,7 @@ gitlab.project @defaults("fullName visibility webURL") {
   // Approval settings for the project
   approvalSettings() gitlab.project.approvalSettings
   // Protected branches settings for the project
-  protectedBranches() []gitlab.project.repository.protectedBranch
+  protectedBranches() []gitlab.project.protectedBranch
   // To fetch the list of members in the project with their roles
   projectMembers() []gitlab.project.member
 }
@@ -123,7 +123,7 @@ gitlab.project.approvalSettings @defaults("approvalsBeforeMerge requirePasswordT
 
 
 // GitLab protected branch
-gitlab.project.repository.protectedBranch @defaults("name allowForcePush") {
+gitlab.project.protectedBranch @defaults("name allowForcePush") {
   // Branch name
   name string
   // Whether force push is allowed
@@ -140,6 +140,4 @@ gitlab.project.member @defaults("id name role") {
   name string
   // Member role
   role string
-  // Member access level
-  accesslevel int
 }

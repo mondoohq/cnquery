@@ -201,7 +201,7 @@ func (p *mqlGitlabProject) mergeMethod() (string, error) {
 
 // Define the id function for a unique identifier for a resource instance gitlab.project.repository.protectedBranch
 // The struct name mqlGitlabProjectRepositoryProtectedBranch is derived from the resource path gitlab.project.repository.protectedBranch. This is a convention used to maintain consistency and clarity within the Mondoo framework by adding mql in the front, ensuring that each resource can be uniquely identified and managed.
-func (g *mqlGitlabProjectRepositoryProtectedBranch) id() (string, error) {
+func (g *mqlGitlabProjectProtectedBranch) id() (string, error) {
 	return g.Name.Data, nil
 }
 
@@ -233,7 +233,7 @@ func (p *mqlGitlabProject) protectedBranches() ([]interface{}, error) {
 			"defaultBranch":  llx.BoolData(isDefaultBranch),
 		}
 
-		mqlProtectedBranch, err := CreateResource(p.MqlRuntime, "gitlab.project.repository.protectedBranch", branchSettings)
+		mqlProtectedBranch, err := CreateResource(p.MqlRuntime, "gitlab.project.protectedBranch", branchSettings)
 		if err != nil {
 			return nil, err
 		}
@@ -283,10 +283,9 @@ func (p *mqlGitlabProject) projectMembers() ([]interface{}, error) {
 	for _, member := range members {
 		role := mapAccessLevelToRole(int(member.AccessLevel))
 		memberInfo := map[string]*llx.RawData{
-			"id":          llx.IntData(int64(member.ID)),
-			"name":        llx.StringData(member.Name),
-			"role":        llx.StringData(role),
-			"accesslevel": llx.IntData(int64(member.AccessLevel)),
+			"id":   llx.IntData(int64(member.ID)),
+			"name": llx.StringData(member.Name),
+			"role": llx.StringData(role),
 		}
 
 		mqlMember, err := CreateResource(p.MqlRuntime, "gitlab.project.member", memberInfo)
