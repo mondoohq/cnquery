@@ -85,6 +85,7 @@ resources:
       approvalsRequired: {}
       id: {}
       name: {}
+    is_private: true
     min_mondoo_version: 9.0.0
   gitlab.project.approvalSettings:
     fields:
@@ -94,7 +95,16 @@ resources:
       mergeRequestsDisableCommittersApproval: {}
       requirePasswordToApprove: {}
       resetApprovalsOnPush: {}
+    is_private: true
     min_mondoo_version: 9.0.0
+  gitlab.project.protectedBranch:
+    fields:
+      allowForcePush: {}
+      codeOwnerApproval: {}
+      defaultBranch: {}
+      name: {}
+    is_private: true
+    min_mondoo_version: latest
   gitlab.project.member:
     fields:
       id: {}
@@ -104,6 +114,7 @@ resources:
   gitlab.project.protectedBranch:
     fields:
       allowForcePush: {}
+      codeOwnerApproval: {}
       defaultBranch: {}
       name: {}
     min_mondoo_version: 9.0.0
