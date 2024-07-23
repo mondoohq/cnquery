@@ -210,7 +210,9 @@ func (m *mqlMacosSystemsetup) disableKeyboardWhenEnclosureLockIsEngaged() (strin
 	return macos.SystemSetupCmdOutput{}.ParseDisableKeyboardWhenEnclosureLockIsEngaged(data), err
 }
 
-func Decode(r io.ReadSeeker) (map[string]interface{}, error) {
+type plistData map[string]interface{}
+
+func Decode(r io.ReadSeeker) (plistData, error) {
 	var data map[string]interface{}
 	decoder := plist.NewDecoder(r)
 	err := decoder.Decode(&data)
@@ -227,11 +229,54 @@ func Decode(r io.ReadSeeker) (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	var dataJson map[string]interface{}
+	var dataJson plistData
 	err = json.Unmarshal(jsondata, &dataJson)
 	if err != nil {
 		return nil, err
 	}
 
 	return dataJson, nil
+}
+
+func (d plistData) GetPlistData(path ...string) plistData {
+	val := d
+	ok := false
+	for i := range path {
+		if val == nil {
+			return nil
+		}
+		val, ok = val[path[i]].(map[string]interface{})
+		if !ok {
+			return nil
+		}
+	}
+	return val
+}
+
+func (d plistData) GetString(path ...string) string {
+	val := d
+	ok := false
+	for i := 0; i < len(path)-1; i++ {
+		if val == nil {
+			return ""
+		}
+		val, ok = val[path[i]].(map[string]interface{})
+		if !ok {
+			return ""
+		}
+	}
+	key := path[len(path)-1]
+	return val[key].(string)
+}
+
+func (d plistData) GetList(path ...string) []interface{} {
+	val := d
+	for i := 0; i < len(path)-1; i++ {
+		if val == nil {
+			return nil
+		}
+		val = val[path[i]].(map[string]interface{})
+	}
+	key := path[len(path)-1]
+	return val[key].([]interface{})
 }

@@ -426,6 +426,10 @@ func init() {
 			// to override args, implement: initWindows(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindows,
 		},
+		"macos.systemExtension": {
+			// to override args, implement: initMacosSystemExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMacosSystemExtension,
+		},
 		"windows.hotfix": {
 			Init: initWindowsHotfix,
 			Create: createWindowsHotfix,
@@ -1880,6 +1884,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"macos.globalAccountPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacos).GetGlobalAccountPolicies()).ToDataRes(types.Dict)
 	},
+	"macos.systemExtensions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacos).GetSystemExtensions()).ToDataRes(types.Array(types.Resource("macos.systemExtension")))
+	},
 	"macos.alf.allowDownloadSignedEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacosAlf).GetAllowDownloadSignedEnabled()).ToDataRes(types.Int)
 	},
@@ -1990,6 +1997,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.optionalFeatures": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindows).GetOptionalFeatures()).ToDataRes(types.Array(types.Resource("windows.optionalFeature")))
+	},
+	"macos.systemExtension.identifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSystemExtension).GetIdentifier()).ToDataRes(types.String)
+	},
+	"macos.systemExtension.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSystemExtension).GetUuid()).ToDataRes(types.String)
+	},
+	"macos.systemExtension.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSystemExtension).GetVersion()).ToDataRes(types.String)
+	},
+	"macos.systemExtension.categories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSystemExtension).GetCategories()).ToDataRes(types.Array(types.String))
+	},
+	"macos.systemExtension.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSystemExtension).GetState()).ToDataRes(types.String)
+	},
+	"macos.systemExtension.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSystemExtension).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"macos.systemExtension.active": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSystemExtension).GetActive()).ToDataRes(types.Bool)
+	},
+	"macos.systemExtension.teamID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSystemExtension).GetTeamID()).ToDataRes(types.String)
+	},
+	"macos.systemExtension.bundlePath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSystemExtension).GetBundlePath()).ToDataRes(types.String)
+	},
+	"macos.systemExtension.mdmManaged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSystemExtension).GetMdmManaged()).ToDataRes(types.Bool)
 	},
 	"windows.hotfix.hotfixId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsHotfix).GetHotfixId()).ToDataRes(types.String)
@@ -4428,6 +4465,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMacos).GlobalAccountPolicies, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
+	"macos.systemExtensions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacos).SystemExtensions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"macos.alf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlMacosAlf).__id, ok = v.Value.(string)
 			return
@@ -4590,6 +4631,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"windows.optionalFeatures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindows).OptionalFeatures, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"macos.systemExtension.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMacosSystemExtension).__id, ok = v.Value.(string)
+			return
+		},
+	"macos.systemExtension.identifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSystemExtension).Identifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.systemExtension.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSystemExtension).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.systemExtension.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSystemExtension).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.systemExtension.categories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSystemExtension).Categories, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"macos.systemExtension.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSystemExtension).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.systemExtension.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSystemExtension).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"macos.systemExtension.active": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSystemExtension).Active, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"macos.systemExtension.teamID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSystemExtension).TeamID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.systemExtension.bundlePath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSystemExtension).BundlePath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.systemExtension.mdmManaged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSystemExtension).MdmManaged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.hotfix.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12722,6 +12807,7 @@ type mqlMacos struct {
 	UserPreferences plugin.TValue[map[string]interface{}]
 	UserHostPreferences plugin.TValue[map[string]interface{}]
 	GlobalAccountPolicies plugin.TValue[interface{}]
+	SystemExtensions plugin.TValue[[]interface{}]
 }
 
 // createMacos creates a new instance of this resource
@@ -12771,6 +12857,22 @@ func (c *mqlMacos) GetUserHostPreferences() *plugin.TValue[map[string]interface{
 func (c *mqlMacos) GetGlobalAccountPolicies() *plugin.TValue[interface{}] {
 	return plugin.GetOrCompute[interface{}](&c.GlobalAccountPolicies, func() (interface{}, error) {
 		return c.globalAccountPolicies()
+	})
+}
+
+func (c *mqlMacos) GetSystemExtensions() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.SystemExtensions, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("macos", c.__id, "systemExtensions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.systemExtensions()
 	})
 }
 
@@ -13205,6 +13307,99 @@ func (c *mqlWindows) GetOptionalFeatures() *plugin.TValue[[]interface{}] {
 
 		return c.optionalFeatures()
 	})
+}
+
+// mqlMacosSystemExtension for the macos.systemExtension resource
+type mqlMacosSystemExtension struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMacosSystemExtensionInternal it will be used here
+	Identifier plugin.TValue[string]
+	Uuid plugin.TValue[string]
+	Version plugin.TValue[string]
+	Categories plugin.TValue[[]interface{}]
+	State plugin.TValue[string]
+	Enabled plugin.TValue[bool]
+	Active plugin.TValue[bool]
+	TeamID plugin.TValue[string]
+	BundlePath plugin.TValue[string]
+	MdmManaged plugin.TValue[bool]
+}
+
+// createMacosSystemExtension creates a new instance of this resource
+func createMacosSystemExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMacosSystemExtension{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("macos.systemExtension", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMacosSystemExtension) MqlName() string {
+	return "macos.systemExtension"
+}
+
+func (c *mqlMacosSystemExtension) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMacosSystemExtension) GetIdentifier() *plugin.TValue[string] {
+	return &c.Identifier
+}
+
+func (c *mqlMacosSystemExtension) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlMacosSystemExtension) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlMacosSystemExtension) GetCategories() *plugin.TValue[[]interface{}] {
+	return &c.Categories
+}
+
+func (c *mqlMacosSystemExtension) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlMacosSystemExtension) GetEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Enabled, func() (bool, error) {
+		return c.enabled()
+	})
+}
+
+func (c *mqlMacosSystemExtension) GetActive() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Active, func() (bool, error) {
+		return c.active()
+	})
+}
+
+func (c *mqlMacosSystemExtension) GetTeamID() *plugin.TValue[string] {
+	return &c.TeamID
+}
+
+func (c *mqlMacosSystemExtension) GetBundlePath() *plugin.TValue[string] {
+	return &c.BundlePath
+}
+
+func (c *mqlMacosSystemExtension) GetMdmManaged() *plugin.TValue[bool] {
+	return &c.MdmManaged
 }
 
 // mqlWindowsHotfix for the windows.hotfix resource
