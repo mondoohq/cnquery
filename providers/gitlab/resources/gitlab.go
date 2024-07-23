@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"encoding/base64"
+	"fmt"
 	"strconv"
 
 	"github.com/xanzy/go-gitlab"
@@ -305,7 +307,7 @@ func (f *mqlGitlabProjectFile) id() (string, error) {
 	return f.Path.Data, nil
 }
 
-// To fetch the list of files in the project repository
+// To fetch the list of files in the project repository and their contents
 func (p *mqlGitlabProject) projectFiles() ([]interface{}, error) {
 	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
 
@@ -315,7 +317,7 @@ func (p *mqlGitlabProject) projectFiles() ([]interface{}, error) {
 	ref := &defaultBranch
 	recursive := true
 
-	// ListTree function expect pointer to the struct
+	// ListTree function expects pointer to the struct
 	listFilesOptions := &gitlab.ListTreeOptions{
 		Ref:       ref,
 		Recursive: &recursive,
@@ -324,23 +326,39 @@ func (p *mqlGitlabProject) projectFiles() ([]interface{}, error) {
 	// Fetch the list of files
 	files, _, err := conn.Client().Repositories.ListTree(projectID, listFilesOptions)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to list files in repository: %w", err)
 	}
 
 	var mqlFiles []interface{}
 	for _, file := range files {
-		fileInfo := map[string]*llx.RawData{
-			"path": llx.StringData(file.Path),
-			"type": llx.StringData(file.Type),
-			"name": llx.StringData(file.Name),
-		}
+		// Making sure we only fetch file content for blobs (files) not directories
+		if file.Type == "blob" {
+			// Fetch file content
+			fileContent, _, err := conn.Client().RepositoryFiles.GetFile(projectID, file.Path, &gitlab.GetFileOptions{Ref: ref})
+			if err != nil {
+				return nil, err
+			}
 
-		mqlFile, err := CreateResource(p.MqlRuntime, "gitlab.project.file", fileInfo)
-		if err != nil {
-			return nil, err
-		}
+			// Decode base64 content
+			contentBytes, err := base64.StdEncoding.DecodeString(fileContent.Content)
+			if err != nil {
+				return nil, err
+			}
 
-		mqlFiles = append(mqlFiles, mqlFile)
+			fileInfo := map[string]*llx.RawData{
+				"path":    llx.StringData(file.Path),
+				"type":    llx.StringData(file.Type),
+				"name":    llx.StringData(file.Name),
+				"content": llx.StringData(string(contentBytes)),
+			}
+
+			mqlFile, err := CreateResource(p.MqlRuntime, "gitlab.project.file", fileInfo)
+			if err != nil {
+				return nil, err
+			}
+
+			mqlFiles = append(mqlFiles, mqlFile)
+		}
 	}
 
 	return mqlFiles, nil
