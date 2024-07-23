@@ -26,6 +26,18 @@ func init() {
 			Init: initGitlabProject,
 			Create: createGitlabProject,
 		},
+		"gitlab.project.approvalRule": {
+			// to override args, implement: initGitlabProjectApprovalRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGitlabProjectApprovalRule,
+		},
+		"gitlab.project.approvalSettings": {
+			// to override args, implement: initGitlabProjectApprovalSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGitlabProjectApprovalSettings,
+		},
+		"gitlab.project.repository.protectedBranch": {
+			// to override args, implement: initGitlabProjectRepositoryProtectedBranch(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGitlabProjectRepositoryProtectedBranch,
+		},
 	}
 }
 
@@ -202,6 +214,54 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gitlab.project.requirementsEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetRequirementsEnabled()).ToDataRes(types.Bool)
 	},
+	"gitlab.project.approvalRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetApprovalRules()).ToDataRes(types.Array(types.Resource("gitlab.project.approvalRule")))
+	},
+	"gitlab.project.mergeMethod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetMergeMethod()).ToDataRes(types.String)
+	},
+	"gitlab.project.approvalSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetApprovalSettings()).ToDataRes(types.Resource("gitlab.project.approvalSettings"))
+	},
+	"gitlab.project.protectedBranches": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetProtectedBranches()).ToDataRes(types.Array(types.Resource("gitlab.project.repository.protectedBranch")))
+	},
+	"gitlab.project.approvalRule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectApprovalRule).GetId()).ToDataRes(types.Int)
+	},
+	"gitlab.project.approvalRule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectApprovalRule).GetName()).ToDataRes(types.String)
+	},
+	"gitlab.project.approvalRule.approvalsRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectApprovalRule).GetApprovalsRequired()).ToDataRes(types.Int)
+	},
+	"gitlab.project.approvalSettings.approvalsBeforeMerge": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectApprovalSettings).GetApprovalsBeforeMerge()).ToDataRes(types.Int)
+	},
+	"gitlab.project.approvalSettings.resetApprovalsOnPush": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectApprovalSettings).GetResetApprovalsOnPush()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.approvalSettings.disableOverridingApproversPerMergeRequest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectApprovalSettings).GetDisableOverridingApproversPerMergeRequest()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.approvalSettings.mergeRequestsAuthorApproval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectApprovalSettings).GetMergeRequestsAuthorApproval()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.approvalSettings.mergeRequestsDisableCommittersApproval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectApprovalSettings).GetMergeRequestsDisableCommittersApproval()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.approvalSettings.requirePasswordToApprove": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectApprovalSettings).GetRequirePasswordToApprove()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.repository.protectedBranch.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectRepositoryProtectedBranch).GetName()).ToDataRes(types.String)
+	},
+	"gitlab.project.repository.protectedBranch.allowForcePush": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectRepositoryProtectedBranch).GetAllowForcePush()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.repository.protectedBranch.defaultBranch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectRepositoryProtectedBranch).GetDefaultBranch()).ToDataRes(types.Bool)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -364,6 +424,82 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"gitlab.project.requirementsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProject).RequirementsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.approvalRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).ApprovalRules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mergeMethod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).MergeMethod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.approvalSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).ApprovalSettings, ok = plugin.RawToTValue[*mqlGitlabProjectApprovalSettings](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.protectedBranches": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).ProtectedBranches, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.approvalRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGitlabProjectApprovalRule).__id, ok = v.Value.(string)
+			return
+		},
+	"gitlab.project.approvalRule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectApprovalRule).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.approvalRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectApprovalRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.approvalRule.approvalsRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectApprovalRule).ApprovalsRequired, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.approvalSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGitlabProjectApprovalSettings).__id, ok = v.Value.(string)
+			return
+		},
+	"gitlab.project.approvalSettings.approvalsBeforeMerge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectApprovalSettings).ApprovalsBeforeMerge, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.approvalSettings.resetApprovalsOnPush": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectApprovalSettings).ResetApprovalsOnPush, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.approvalSettings.disableOverridingApproversPerMergeRequest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectApprovalSettings).DisableOverridingApproversPerMergeRequest, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.approvalSettings.mergeRequestsAuthorApproval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectApprovalSettings).MergeRequestsAuthorApproval, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.approvalSettings.mergeRequestsDisableCommittersApproval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectApprovalSettings).MergeRequestsDisableCommittersApproval, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.approvalSettings.requirePasswordToApprove": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectApprovalSettings).RequirePasswordToApprove, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.repository.protectedBranch.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGitlabProjectRepositoryProtectedBranch).__id, ok = v.Value.(string)
+			return
+		},
+	"gitlab.project.repository.protectedBranch.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectRepositoryProtectedBranch).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.repository.protectedBranch.allowForcePush": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectRepositoryProtectedBranch).AllowForcePush, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.repository.protectedBranch.defaultBranch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectRepositoryProtectedBranch).DefaultBranch, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 }
@@ -535,6 +671,10 @@ type mqlGitlabProject struct {
 	PackagesEnabled plugin.TValue[bool]
 	AutoDevopsEnabled plugin.TValue[bool]
 	RequirementsEnabled plugin.TValue[bool]
+	ApprovalRules plugin.TValue[[]interface{}]
+	MergeMethod plugin.TValue[string]
+	ApprovalSettings plugin.TValue[*mqlGitlabProjectApprovalSettings]
+	ProtectedBranches plugin.TValue[[]interface{}]
 }
 
 // createGitlabProject creates a new instance of this resource
@@ -668,4 +808,240 @@ func (c *mqlGitlabProject) GetAutoDevopsEnabled() *plugin.TValue[bool] {
 
 func (c *mqlGitlabProject) GetRequirementsEnabled() *plugin.TValue[bool] {
 	return &c.RequirementsEnabled
+}
+
+func (c *mqlGitlabProject) GetApprovalRules() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.ApprovalRules, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.project", c.__id, "approvalRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.approvalRules()
+	})
+}
+
+func (c *mqlGitlabProject) GetMergeMethod() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MergeMethod, func() (string, error) {
+		return c.mergeMethod()
+	})
+}
+
+func (c *mqlGitlabProject) GetApprovalSettings() *plugin.TValue[*mqlGitlabProjectApprovalSettings] {
+	return plugin.GetOrCompute[*mqlGitlabProjectApprovalSettings](&c.ApprovalSettings, func() (*mqlGitlabProjectApprovalSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.project", c.__id, "approvalSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGitlabProjectApprovalSettings), nil
+			}
+		}
+
+		return c.approvalSettings()
+	})
+}
+
+func (c *mqlGitlabProject) GetProtectedBranches() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.ProtectedBranches, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.project", c.__id, "protectedBranches")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.protectedBranches()
+	})
+}
+
+// mqlGitlabProjectApprovalRule for the gitlab.project.approvalRule resource
+type mqlGitlabProjectApprovalRule struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlGitlabProjectApprovalRuleInternal it will be used here
+	Id plugin.TValue[int64]
+	Name plugin.TValue[string]
+	ApprovalsRequired plugin.TValue[int64]
+}
+
+// createGitlabProjectApprovalRule creates a new instance of this resource
+func createGitlabProjectApprovalRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGitlabProjectApprovalRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gitlab.project.approvalRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGitlabProjectApprovalRule) MqlName() string {
+	return "gitlab.project.approvalRule"
+}
+
+func (c *mqlGitlabProjectApprovalRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGitlabProjectApprovalRule) GetId() *plugin.TValue[int64] {
+	return &c.Id
+}
+
+func (c *mqlGitlabProjectApprovalRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGitlabProjectApprovalRule) GetApprovalsRequired() *plugin.TValue[int64] {
+	return &c.ApprovalsRequired
+}
+
+// mqlGitlabProjectApprovalSettings for the gitlab.project.approvalSettings resource
+type mqlGitlabProjectApprovalSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlGitlabProjectApprovalSettingsInternal it will be used here
+	ApprovalsBeforeMerge plugin.TValue[int64]
+	ResetApprovalsOnPush plugin.TValue[bool]
+	DisableOverridingApproversPerMergeRequest plugin.TValue[bool]
+	MergeRequestsAuthorApproval plugin.TValue[bool]
+	MergeRequestsDisableCommittersApproval plugin.TValue[bool]
+	RequirePasswordToApprove plugin.TValue[bool]
+}
+
+// createGitlabProjectApprovalSettings creates a new instance of this resource
+func createGitlabProjectApprovalSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGitlabProjectApprovalSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gitlab.project.approvalSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGitlabProjectApprovalSettings) MqlName() string {
+	return "gitlab.project.approvalSettings"
+}
+
+func (c *mqlGitlabProjectApprovalSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGitlabProjectApprovalSettings) GetApprovalsBeforeMerge() *plugin.TValue[int64] {
+	return &c.ApprovalsBeforeMerge
+}
+
+func (c *mqlGitlabProjectApprovalSettings) GetResetApprovalsOnPush() *plugin.TValue[bool] {
+	return &c.ResetApprovalsOnPush
+}
+
+func (c *mqlGitlabProjectApprovalSettings) GetDisableOverridingApproversPerMergeRequest() *plugin.TValue[bool] {
+	return &c.DisableOverridingApproversPerMergeRequest
+}
+
+func (c *mqlGitlabProjectApprovalSettings) GetMergeRequestsAuthorApproval() *plugin.TValue[bool] {
+	return &c.MergeRequestsAuthorApproval
+}
+
+func (c *mqlGitlabProjectApprovalSettings) GetMergeRequestsDisableCommittersApproval() *plugin.TValue[bool] {
+	return &c.MergeRequestsDisableCommittersApproval
+}
+
+func (c *mqlGitlabProjectApprovalSettings) GetRequirePasswordToApprove() *plugin.TValue[bool] {
+	return &c.RequirePasswordToApprove
+}
+
+// mqlGitlabProjectRepositoryProtectedBranch for the gitlab.project.repository.protectedBranch resource
+type mqlGitlabProjectRepositoryProtectedBranch struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlGitlabProjectRepositoryProtectedBranchInternal it will be used here
+	Name plugin.TValue[string]
+	AllowForcePush plugin.TValue[bool]
+	DefaultBranch plugin.TValue[bool]
+}
+
+// createGitlabProjectRepositoryProtectedBranch creates a new instance of this resource
+func createGitlabProjectRepositoryProtectedBranch(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGitlabProjectRepositoryProtectedBranch{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gitlab.project.repository.protectedBranch", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGitlabProjectRepositoryProtectedBranch) MqlName() string {
+	return "gitlab.project.repository.protectedBranch"
+}
+
+func (c *mqlGitlabProjectRepositoryProtectedBranch) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGitlabProjectRepositoryProtectedBranch) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGitlabProjectRepositoryProtectedBranch) GetAllowForcePush() *plugin.TValue[bool] {
+	return &c.AllowForcePush
+}
+
+func (c *mqlGitlabProjectRepositoryProtectedBranch) GetDefaultBranch() *plugin.TValue[bool] {
+	return &c.DefaultBranch
 }

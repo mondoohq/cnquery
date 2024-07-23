@@ -27,6 +27,10 @@ resources:
     fields:
       allowMergeOnSkippedPipeline:
         min_mondoo_version: 9.0.0
+      approvalRules:
+        min_mondoo_version: 9.0.0
+      approvalSettings:
+        min_mondoo_version: 9.0.0
       archived:
         min_mondoo_version: 9.0.0
       autoDevopsEnabled:
@@ -45,6 +49,8 @@ resources:
       id: {}
       issuesEnabled:
         min_mondoo_version: 9.0.0
+      mergeMethod:
+        min_mondoo_version: 9.0.0
       mergeRequestsEnabled:
         min_mondoo_version: 9.0.0
       mirror:
@@ -57,6 +63,8 @@ resources:
       packagesEnabled:
         min_mondoo_version: 9.0.0
       path: {}
+      protectedBranches:
+        min_mondoo_version: 9.0.0
       requirementsEnabled:
         min_mondoo_version: 9.0.0
       serviceDeskEnabled:
@@ -70,3 +78,24 @@ resources:
         min_mondoo_version: 9.0.0
     maturity: experimental
     min_mondoo_version: 5.15.0
+  gitlab.project.approvalRule:
+    fields:
+      approvalsRequired: {}
+      id: {}
+      name: {}
+    min_mondoo_version: 9.0.0
+  gitlab.project.approvalSettings:
+    fields:
+      approvalsBeforeMerge: {}
+      disableOverridingApproversPerMergeRequest: {}
+      mergeRequestsAuthorApproval: {}
+      mergeRequestsDisableCommittersApproval: {}
+      requirePasswordToApprove: {}
+      resetApprovalsOnPush: {}
+    min_mondoo_version: 9.0.0
+  gitlab.project.repository.protectedBranch:
+    fields:
+      allowForcePush: {}
+      defaultBranch: {}
+      name: {}
+    min_mondoo_version: 9.0.0
