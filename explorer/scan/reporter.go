@@ -43,6 +43,7 @@ func (r *AggregateReporter) AddReport(asset *inventory.Asset, results *AssetRepo
 		Name:    asset.Name,
 		Mrn:     asset.Mrn,
 		TraceId: asset.TraceId,
+		Labels:  asset.Labels,
 	}
 	r.assetReports[asset.Mrn] = results.Report
 	r.resolved[asset.Mrn] = results.Resolved

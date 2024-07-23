@@ -45,6 +45,7 @@ func ConvertToProto(data *explorer.ReportCollection) (*Report, error) {
 			Mrn:     a.Mrn,
 			Name:    a.Name,
 			TraceId: a.TraceId,
+			Labels:  a.Labels,
 		}
 		protoReport.Assets[assetMrn] = pAsset
 	}

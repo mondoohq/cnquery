@@ -47,12 +47,12 @@ func GenerateBom(r *reporter.Report) ([]*sbom.Sbom, error) {
 		}
 
 		bom.Asset = &sbom.Asset{
-			Name:        asset.Name,
+			Name:        asset.GetName(),
 			PlatformIds: nil,
 			Platform:    &sbom.Platform{},
-			Labels:      map[string]string{},
+			Labels:      asset.GetLabels(),
 			ExternalIds: []*sbom.ExternalID{},
-			TraceId:     asset.TraceId,
+			TraceId:     asset.GetTraceId(),
 		}
 
 		bom.Packages = []*sbom.Package{}
