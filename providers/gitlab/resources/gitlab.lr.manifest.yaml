@@ -63,6 +63,8 @@ resources:
       packagesEnabled:
         min_mondoo_version: 9.0.0
       path: {}
+      projectMembers:
+        min_mondoo_version: 9.0.0
       protectedBranches:
         min_mondoo_version: 9.0.0
       requirementsEnabled:
@@ -93,15 +95,15 @@ resources:
       requirePasswordToApprove: {}
       resetApprovalsOnPush: {}
     min_mondoo_version: 9.0.0
-  gitlab.project.protectedBranch:
-    fields:
-      allowForcePush: {}
-      defaultBranch: {}
-      name: {}
-    min_mondoo_version: 9.0.0
   gitlab.project.member:
     fields:
       id: {}
       name: {}
       role: {}
+    min_mondoo_version: 9.0.0
+  gitlab.project.protectedBranch:
+    fields:
+      allowForcePush: {}
+      defaultBranch: {}
+      name: {}
     min_mondoo_version: 9.0.0
