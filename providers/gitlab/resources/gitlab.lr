@@ -94,6 +94,8 @@ gitlab.project @defaults("fullName visibility webURL") {
   projectMembers() []gitlab.project.member
   // List of files in the project repository
   projectFiles() []gitlab.project.file
+  // List of webhooks for the project
+  webhooks() []gitlab.project.webhook
 }
 
 
@@ -132,28 +134,12 @@ private gitlab.project.protectedBranch @defaults("name allowForcePush") {
   allowForcePush bool
   // Whether this is the default branch
   defaultBranch bool
-  // Whether code owner approval required
-  codeOwnerApproval bool
 }
 
-// GitLab project member
-gitlab.project.member @defaults("id name role") {
-  // Member ID
-  id int
-  // Member name
-  name string
-  // Member role
-  role string
-}
-
-// GitLab project file
-private gitlab.project.file @defaults("path type") {
-  // File path
-  path string
-  // File type
-  type string
-  // File name
-  name string
-  // File content
-  content string
+// GitLab project webhook
+private gitlab.project.webhook @defaults("url sslVerification") {
+  // Webhook URL
+  url string
+  // Whether SSL verification is enabled
+  sslVerification bool
 }
