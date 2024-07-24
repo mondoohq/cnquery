@@ -18,6 +18,7 @@ message Report {
 message Asset {
   string mrn = 1;
   string name = 2;
+  map <string, string> labels = 3;
   string platform_name = 20;
   string trace_id = 21;
 }

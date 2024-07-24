@@ -385,6 +385,7 @@ message Report {
 // Asset is a lean layer of information about an asset
 message Asset {
   string mrn = 1;
+  map<string, string> labels = 3;
   string name = 18;
   string trace_id = 19;
 }
