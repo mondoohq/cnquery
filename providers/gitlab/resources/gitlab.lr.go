@@ -34,9 +34,21 @@ func init() {
 			// to override args, implement: initGitlabProjectApprovalSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGitlabProjectApprovalSettings,
 		},
-		"gitlab.project.repository.protectedBranch": {
-			// to override args, implement: initGitlabProjectRepositoryProtectedBranch(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createGitlabProjectRepositoryProtectedBranch,
+		"gitlab.project.protectedBranch": {
+			// to override args, implement: initGitlabProjectProtectedBranch(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGitlabProjectProtectedBranch,
+		},
+		"gitlab.project.member": {
+			// to override args, implement: initGitlabProjectMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGitlabProjectMember,
+		},
+		"gitlab.project.file": {
+			// to override args, implement: initGitlabProjectFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGitlabProjectFile,
+		},
+		"gitlab.project.webhook": {
+			// to override args, implement: initGitlabProjectWebhook(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGitlabProjectWebhook,
 		},
 	}
 }
@@ -224,7 +236,16 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlGitlabProject).GetApprovalSettings()).ToDataRes(types.Resource("gitlab.project.approvalSettings"))
 	},
 	"gitlab.project.protectedBranches": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGitlabProject).GetProtectedBranches()).ToDataRes(types.Array(types.Resource("gitlab.project.repository.protectedBranch")))
+		return (r.(*mqlGitlabProject).GetProtectedBranches()).ToDataRes(types.Array(types.Resource("gitlab.project.protectedBranch")))
+	},
+	"gitlab.project.projectMembers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetProjectMembers()).ToDataRes(types.Array(types.Resource("gitlab.project.member")))
+	},
+	"gitlab.project.projectFiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetProjectFiles()).ToDataRes(types.Array(types.Resource("gitlab.project.file")))
+	},
+	"gitlab.project.webhooks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetWebhooks()).ToDataRes(types.Array(types.Resource("gitlab.project.webhook")))
 	},
 	"gitlab.project.approvalRule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectApprovalRule).GetId()).ToDataRes(types.Int)
@@ -253,14 +274,44 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gitlab.project.approvalSettings.requirePasswordToApprove": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectApprovalSettings).GetRequirePasswordToApprove()).ToDataRes(types.Bool)
 	},
-	"gitlab.project.repository.protectedBranch.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGitlabProjectRepositoryProtectedBranch).GetName()).ToDataRes(types.String)
+	"gitlab.project.protectedBranch.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectProtectedBranch).GetName()).ToDataRes(types.String)
 	},
-	"gitlab.project.repository.protectedBranch.allowForcePush": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGitlabProjectRepositoryProtectedBranch).GetAllowForcePush()).ToDataRes(types.Bool)
+	"gitlab.project.protectedBranch.allowForcePush": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectProtectedBranch).GetAllowForcePush()).ToDataRes(types.Bool)
 	},
-	"gitlab.project.repository.protectedBranch.defaultBranch": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGitlabProjectRepositoryProtectedBranch).GetDefaultBranch()).ToDataRes(types.Bool)
+	"gitlab.project.protectedBranch.defaultBranch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectProtectedBranch).GetDefaultBranch()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.protectedBranch.codeOwnerApproval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectProtectedBranch).GetCodeOwnerApproval()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.member.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMember).GetId()).ToDataRes(types.Int)
+	},
+	"gitlab.project.member.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMember).GetName()).ToDataRes(types.String)
+	},
+	"gitlab.project.member.role": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMember).GetRole()).ToDataRes(types.String)
+	},
+	"gitlab.project.file.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectFile).GetPath()).ToDataRes(types.String)
+	},
+	"gitlab.project.file.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectFile).GetType()).ToDataRes(types.String)
+	},
+	"gitlab.project.file.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectFile).GetName()).ToDataRes(types.String)
+	},
+	"gitlab.project.file.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectFile).GetContent()).ToDataRes(types.String)
+	},
+	"gitlab.project.webhook.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectWebhook).GetUrl()).ToDataRes(types.String)
+	},
+	"gitlab.project.webhook.sslVerification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectWebhook).GetSslVerification()).ToDataRes(types.Bool)
 	},
 }
 
@@ -442,6 +493,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlGitlabProject).ProtectedBranches, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"gitlab.project.projectMembers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).ProjectMembers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.projectFiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).ProjectFiles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.webhooks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).Webhooks, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"gitlab.project.approvalRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlGitlabProjectApprovalRule).__id, ok = v.Value.(string)
 			return
@@ -486,20 +549,72 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlGitlabProjectApprovalSettings).RequirePasswordToApprove, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"gitlab.project.repository.protectedBranch.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGitlabProjectRepositoryProtectedBranch).__id, ok = v.Value.(string)
+	"gitlab.project.protectedBranch.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGitlabProjectProtectedBranch).__id, ok = v.Value.(string)
 			return
 		},
-	"gitlab.project.repository.protectedBranch.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGitlabProjectRepositoryProtectedBranch).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"gitlab.project.protectedBranch.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectProtectedBranch).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"gitlab.project.repository.protectedBranch.allowForcePush": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGitlabProjectRepositoryProtectedBranch).AllowForcePush, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"gitlab.project.protectedBranch.allowForcePush": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectProtectedBranch).AllowForcePush, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"gitlab.project.repository.protectedBranch.defaultBranch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGitlabProjectRepositoryProtectedBranch).DefaultBranch, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"gitlab.project.protectedBranch.defaultBranch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectProtectedBranch).DefaultBranch, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.protectedBranch.codeOwnerApproval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectProtectedBranch).CodeOwnerApproval, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.member.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGitlabProjectMember).__id, ok = v.Value.(string)
+			return
+		},
+	"gitlab.project.member.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMember).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.member.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMember).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.member.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMember).Role, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.file.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGitlabProjectFile).__id, ok = v.Value.(string)
+			return
+		},
+	"gitlab.project.file.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectFile).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.file.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectFile).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.file.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectFile).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.file.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectFile).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.webhook.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGitlabProjectWebhook).__id, ok = v.Value.(string)
+			return
+		},
+	"gitlab.project.webhook.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectWebhook).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.webhook.sslVerification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectWebhook).SslVerification, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 }
@@ -675,6 +790,9 @@ type mqlGitlabProject struct {
 	MergeMethod plugin.TValue[string]
 	ApprovalSettings plugin.TValue[*mqlGitlabProjectApprovalSettings]
 	ProtectedBranches plugin.TValue[[]interface{}]
+	ProjectMembers plugin.TValue[[]interface{}]
+	ProjectFiles plugin.TValue[[]interface{}]
+	Webhooks plugin.TValue[[]interface{}]
 }
 
 // createGitlabProject creates a new instance of this resource
@@ -864,6 +982,54 @@ func (c *mqlGitlabProject) GetProtectedBranches() *plugin.TValue[[]interface{}] 
 	})
 }
 
+func (c *mqlGitlabProject) GetProjectMembers() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.ProjectMembers, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.project", c.__id, "projectMembers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.projectMembers()
+	})
+}
+
+func (c *mqlGitlabProject) GetProjectFiles() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.ProjectFiles, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.project", c.__id, "projectFiles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.projectFiles()
+	})
+}
+
+func (c *mqlGitlabProject) GetWebhooks() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Webhooks, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.project", c.__id, "webhooks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.webhooks()
+	})
+}
+
 // mqlGitlabProjectApprovalRule for the gitlab.project.approvalRule resource
 type mqlGitlabProjectApprovalRule struct {
 	MqlRuntime *plugin.Runtime
@@ -987,19 +1153,20 @@ func (c *mqlGitlabProjectApprovalSettings) GetRequirePasswordToApprove() *plugin
 	return &c.RequirePasswordToApprove
 }
 
-// mqlGitlabProjectRepositoryProtectedBranch for the gitlab.project.repository.protectedBranch resource
-type mqlGitlabProjectRepositoryProtectedBranch struct {
+// mqlGitlabProjectProtectedBranch for the gitlab.project.protectedBranch resource
+type mqlGitlabProjectProtectedBranch struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlGitlabProjectRepositoryProtectedBranchInternal it will be used here
+	// optional: if you define mqlGitlabProjectProtectedBranchInternal it will be used here
 	Name plugin.TValue[string]
 	AllowForcePush plugin.TValue[bool]
 	DefaultBranch plugin.TValue[bool]
+	CodeOwnerApproval plugin.TValue[bool]
 }
 
-// createGitlabProjectRepositoryProtectedBranch creates a new instance of this resource
-func createGitlabProjectRepositoryProtectedBranch(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlGitlabProjectRepositoryProtectedBranch{
+// createGitlabProjectProtectedBranch creates a new instance of this resource
+func createGitlabProjectProtectedBranch(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGitlabProjectProtectedBranch{
 		MqlRuntime: runtime,
 	}
 
@@ -1016,7 +1183,7 @@ func createGitlabProjectRepositoryProtectedBranch(runtime *plugin.Runtime, args 
 	}
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("gitlab.project.repository.protectedBranch", res.__id)
+		args, err = runtime.ResourceFromRecording("gitlab.project.protectedBranch", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -1026,22 +1193,203 @@ func createGitlabProjectRepositoryProtectedBranch(runtime *plugin.Runtime, args 
 	return res, nil
 }
 
-func (c *mqlGitlabProjectRepositoryProtectedBranch) MqlName() string {
-	return "gitlab.project.repository.protectedBranch"
+func (c *mqlGitlabProjectProtectedBranch) MqlName() string {
+	return "gitlab.project.protectedBranch"
 }
 
-func (c *mqlGitlabProjectRepositoryProtectedBranch) MqlID() string {
+func (c *mqlGitlabProjectProtectedBranch) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlGitlabProjectRepositoryProtectedBranch) GetName() *plugin.TValue[string] {
+func (c *mqlGitlabProjectProtectedBranch) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlGitlabProjectRepositoryProtectedBranch) GetAllowForcePush() *plugin.TValue[bool] {
+func (c *mqlGitlabProjectProtectedBranch) GetAllowForcePush() *plugin.TValue[bool] {
 	return &c.AllowForcePush
 }
 
-func (c *mqlGitlabProjectRepositoryProtectedBranch) GetDefaultBranch() *plugin.TValue[bool] {
+func (c *mqlGitlabProjectProtectedBranch) GetDefaultBranch() *plugin.TValue[bool] {
 	return &c.DefaultBranch
+}
+
+func (c *mqlGitlabProjectProtectedBranch) GetCodeOwnerApproval() *plugin.TValue[bool] {
+	return &c.CodeOwnerApproval
+}
+
+// mqlGitlabProjectMember for the gitlab.project.member resource
+type mqlGitlabProjectMember struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlGitlabProjectMemberInternal it will be used here
+	Id plugin.TValue[int64]
+	Name plugin.TValue[string]
+	Role plugin.TValue[string]
+}
+
+// createGitlabProjectMember creates a new instance of this resource
+func createGitlabProjectMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGitlabProjectMember{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gitlab.project.member", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGitlabProjectMember) MqlName() string {
+	return "gitlab.project.member"
+}
+
+func (c *mqlGitlabProjectMember) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGitlabProjectMember) GetId() *plugin.TValue[int64] {
+	return &c.Id
+}
+
+func (c *mqlGitlabProjectMember) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGitlabProjectMember) GetRole() *plugin.TValue[string] {
+	return &c.Role
+}
+
+// mqlGitlabProjectFile for the gitlab.project.file resource
+type mqlGitlabProjectFile struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlGitlabProjectFileInternal it will be used here
+	Path plugin.TValue[string]
+	Type plugin.TValue[string]
+	Name plugin.TValue[string]
+	Content plugin.TValue[string]
+}
+
+// createGitlabProjectFile creates a new instance of this resource
+func createGitlabProjectFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGitlabProjectFile{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gitlab.project.file", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGitlabProjectFile) MqlName() string {
+	return "gitlab.project.file"
+}
+
+func (c *mqlGitlabProjectFile) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGitlabProjectFile) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlGitlabProjectFile) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlGitlabProjectFile) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGitlabProjectFile) GetContent() *plugin.TValue[string] {
+	return &c.Content
+}
+
+// mqlGitlabProjectWebhook for the gitlab.project.webhook resource
+type mqlGitlabProjectWebhook struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlGitlabProjectWebhookInternal it will be used here
+	Url plugin.TValue[string]
+	SslVerification plugin.TValue[bool]
+}
+
+// createGitlabProjectWebhook creates a new instance of this resource
+func createGitlabProjectWebhook(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGitlabProjectWebhook{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gitlab.project.webhook", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGitlabProjectWebhook) MqlName() string {
+	return "gitlab.project.webhook"
+}
+
+func (c *mqlGitlabProjectWebhook) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGitlabProjectWebhook) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlGitlabProjectWebhook) GetSslVerification() *plugin.TValue[bool] {
+	return &c.SslVerification
 }
