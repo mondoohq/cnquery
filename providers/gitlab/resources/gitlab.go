@@ -201,7 +201,7 @@ func (p *mqlGitlabProject) mergeMethod() (string, error) {
 
 // Define the id function for a unique identifier for a resource instance gitlab.project.repository.protectedBranch
 // The struct name mqlGitlabProjectRepositoryProtectedBranch is derived from the resource path gitlab.project.repository.protectedBranch. This is a convention used to maintain consistency and clarity within the Mondoo framework by adding mql in the front, ensuring that each resource can be uniquely identified and managed.
-func (g *mqlGitlabProjectRepositoryProtectedBranch) id() (string, error) {
+func (g *mqlGitlabProjectProtectedBranch) id() (string, error) {
 	return g.Name.Data, nil
 }
 
@@ -233,7 +233,7 @@ func (p *mqlGitlabProject) protectedBranches() ([]interface{}, error) {
 			"defaultBranch":  llx.BoolData(isDefaultBranch),
 		}
 
-		mqlProtectedBranch, err := CreateResource(p.MqlRuntime, "gitlab.project.repository.protectedBranch", branchSettings)
+		mqlProtectedBranch, err := CreateResource(p.MqlRuntime, "gitlab.project.protectedBranch", branchSettings)
 		if err != nil {
 			return nil, err
 		}
@@ -242,4 +242,59 @@ func (p *mqlGitlabProject) protectedBranches() ([]interface{}, error) {
 	}
 
 	return mqlProtectedBranches, nil
+}
+
+// id related to gitlab.project.member
+func (g *mqlGitlabProjectMember) id() (string, error) {
+	return strconv.FormatInt(g.Id.Data, 10), nil
+}
+
+// To fetch the list of members in the project with their roles
+func (p *mqlGitlabProject) projectMembers() ([]interface{}, error) {
+	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	projectID := int(p.Id.Data)
+
+	// Fetch the list of members, keep it in mind it is different from ListProjectMembers
+	members, _, err := conn.Client().ProjectMembers.ListAllProjectMembers(projectID, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// function to map access levels to roles, encapsulated inside projectMembers
+	mapAccessLevelToRole := func(accessLevel int) string {
+		switch accessLevel {
+		case 10:
+			return "Guest"
+		case 20:
+			return "Reporter"
+		case 30:
+			return "Developer"
+		case 40:
+			return "Maintainer"
+		case 50:
+			return "Owner"
+		default:
+			return "Unknown"
+		}
+	}
+
+	var mqlMembers []interface{}
+	for _, member := range members {
+		role := mapAccessLevelToRole(int(member.AccessLevel))
+		memberInfo := map[string]*llx.RawData{
+			"id":   llx.IntData(int64(member.ID)),
+			"name": llx.StringData(member.Name),
+			"role": llx.StringData(role),
+		}
+
+		mqlMember, err := CreateResource(p.MqlRuntime, "gitlab.project.member", memberInfo)
+		if err != nil {
+			return nil, err
+		}
+
+		mqlMembers = append(mqlMembers, mqlMember)
+	}
+
+	return mqlMembers, nil
 }
