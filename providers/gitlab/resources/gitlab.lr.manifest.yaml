@@ -63,6 +63,8 @@ resources:
       packagesEnabled:
         min_mondoo_version: 9.0.0
       path: {}
+      projectFiles:
+        min_mondoo_version: 9.0.0
       projectMembers:
         min_mondoo_version: 9.0.0
       protectedBranches:
@@ -95,6 +97,14 @@ resources:
       mergeRequestsDisableCommittersApproval: {}
       requirePasswordToApprove: {}
       resetApprovalsOnPush: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  gitlab.project.file:
+    fields:
+      content: {}
+      name: {}
+      path: {}
+      type: {}
     is_private: true
     min_mondoo_version: 9.0.0
   gitlab.project.member:

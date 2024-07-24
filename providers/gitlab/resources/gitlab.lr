@@ -90,8 +90,10 @@ gitlab.project @defaults("fullName visibility webURL") {
   approvalSettings() gitlab.project.approvalSettings
   // Protected branches settings for the project
   protectedBranches() []gitlab.project.protectedBranch
-  // To fetch the list of members in the project with their roles
+  // List of members in the project with their roles
   projectMembers() []gitlab.project.member
+  // List of files in the project repository
+  projectFiles() []gitlab.project.file
 }
 
 
@@ -142,4 +144,16 @@ gitlab.project.member @defaults("id name role") {
   name string
   // Member role
   role string
+}
+
+// GitLab project file
+private gitlab.project.file @defaults("path type") {
+  // File path
+  path string
+  // File type
+  type string
+  // File name
+  name string
+  // File content
+  content string
 }
