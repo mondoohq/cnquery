@@ -130,6 +130,8 @@ private gitlab.project.protectedBranch @defaults("name allowForcePush") {
   allowForcePush bool
   // Whether this is the default branch
   defaultBranch bool
+  // Whether code owner approval required
+  codeOwnerApproval bool
 }
 
 // GitLab project member

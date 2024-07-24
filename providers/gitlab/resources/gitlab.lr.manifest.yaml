@@ -97,14 +97,6 @@ resources:
       resetApprovalsOnPush: {}
     is_private: true
     min_mondoo_version: 9.0.0
-  gitlab.project.protectedBranch:
-    fields:
-      allowForcePush: {}
-      codeOwnerApproval: {}
-      defaultBranch: {}
-      name: {}
-    is_private: true
-    min_mondoo_version: 9.0.0
   gitlab.project.member:
     fields:
       id: {}
@@ -117,4 +109,5 @@ resources:
       codeOwnerApproval: {}
       defaultBranch: {}
       name: {}
+    is_private: true
     min_mondoo_version: 9.0.0
