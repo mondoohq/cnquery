@@ -228,9 +228,10 @@ func (p *mqlGitlabProject) protectedBranches() ([]interface{}, error) {
 		isDefaultBranch := branch.Name == defaultBranch
 
 		branchSettings := map[string]*llx.RawData{
-			"name":           llx.StringData(branch.Name),
-			"allowForcePush": llx.BoolData(branch.AllowForcePush),
-			"defaultBranch":  llx.BoolData(isDefaultBranch),
+			"name":              llx.StringData(branch.Name),
+			"allowForcePush":    llx.BoolData(branch.AllowForcePush),
+			"defaultBranch":     llx.BoolData(isDefaultBranch),
+			"codeOwnerApproval": llx.BoolData(branch.CodeOwnerApprovalRequired),
 		}
 
 		mqlProtectedBranch, err := CreateResource(p.MqlRuntime, "gitlab.project.protectedBranch", branchSettings)

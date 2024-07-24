@@ -96,7 +96,7 @@ gitlab.project @defaults("fullName visibility webURL") {
 
 
 // GitLab project approval rule
-gitlab.project.approvalRule @defaults("id name approvalsRequired") {
+private gitlab.project.approvalRule @defaults("id name approvalsRequired") {
   // Rule ID
   id int
   // Rule name
@@ -106,7 +106,7 @@ gitlab.project.approvalRule @defaults("id name approvalsRequired") {
 }
 
 // GitLab project approval settings
-gitlab.project.approvalSettings @defaults("approvalsBeforeMerge requirePasswordToApprove") {
+private gitlab.project.approvalSettings @defaults("approvalsBeforeMerge requirePasswordToApprove") {
   // Number of approvals before merge
   approvalsBeforeMerge int
   // Whether all approvals are removed when new commits are pushed
@@ -123,13 +123,15 @@ gitlab.project.approvalSettings @defaults("approvalsBeforeMerge requirePasswordT
 
 
 // GitLab protected branch
-gitlab.project.protectedBranch @defaults("name allowForcePush") {
+private gitlab.project.protectedBranch @defaults("name allowForcePush") {
   // Branch name
   name string
   // Whether force push is allowed
   allowForcePush bool
   // Whether this is the default branch
   defaultBranch bool
+  // Whether code owner approval required
+  codeOwnerApproval bool
 }
 
 // GitLab project member
