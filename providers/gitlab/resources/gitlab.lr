@@ -134,6 +134,30 @@ private gitlab.project.protectedBranch @defaults("name allowForcePush") {
   allowForcePush bool
   // Whether this is the default branch
   defaultBranch bool
+  // Whether code owner approval required
+  codeOwnerApproval bool
+}
+
+// GitLab project member
+gitlab.project.member @defaults("id name role") {
+  // Member ID
+  id int
+  // Member name
+  name string
+  // Member role
+  role string
+}
+
+// GitLab project file
+private gitlab.project.file @defaults("path type") {
+  // File path
+  path string
+  // File type
+  type string
+  // File name
+  name string
+  // File content
+  content string
 }
 
 // GitLab project webhook
