@@ -363,3 +363,37 @@ func (p *mqlGitlabProject) projectFiles() ([]interface{}, error) {
 
 	return mqlFiles, nil
 }
+
+// id function for a unique identifier for a resource instance gitlab.project.webhook
+func (g *mqlGitlabProjectWebhook) id() (string, error) {
+	return g.Url.Data, nil
+}
+
+// Function to fetch and check the webhooks for a project
+func (p *mqlGitlabProject) webhooks() ([]interface{}, error) {
+	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	projectID := int(p.Id.Data)
+
+	hooks, _, err := conn.Client().Projects.ListProjectHooks(projectID, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var mqlWebhooks []interface{}
+	for _, hook := range hooks {
+		hookInfo := map[string]*llx.RawData{
+			"url":             llx.StringData(hook.URL),
+			"sslVerification": llx.BoolData(hook.EnableSSLVerification),
+		}
+
+		mqlWebhook, err := CreateResource(p.MqlRuntime, "gitlab.project.webhook", hookInfo)
+		if err != nil {
+			return nil, err
+		}
+
+		mqlWebhooks = append(mqlWebhooks, mqlWebhook)
+	}
+
+	return mqlWebhooks, nil
+}

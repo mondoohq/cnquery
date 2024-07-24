@@ -78,6 +78,8 @@ resources:
       visibility: {}
       webURL:
         min_mondoo_version: 9.0.0
+      webhooks:
+        min_mondoo_version: 9.0.0
       wikiEnabled:
         min_mondoo_version: 9.0.0
     maturity: experimental
@@ -119,5 +121,11 @@ resources:
       codeOwnerApproval: {}
       defaultBranch: {}
       name: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  gitlab.project.webhook:
+    fields:
+      sslVerification: {}
+      url: {}
     is_private: true
     min_mondoo_version: 9.0.0

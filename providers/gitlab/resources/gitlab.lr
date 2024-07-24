@@ -94,6 +94,8 @@ gitlab.project @defaults("fullName visibility webURL") {
   projectMembers() []gitlab.project.member
   // List of files in the project repository
   projectFiles() []gitlab.project.file
+  // List of webhooks for the project
+  webhooks() []gitlab.project.webhook
 }
 
 
@@ -156,4 +158,12 @@ private gitlab.project.file @defaults("path type") {
   name string
   // File content
   content string
+}
+
+// GitLab project webhook
+private gitlab.project.webhook @defaults("url sslVerification") {
+  // Webhook URL
+  url string
+  // Whether SSL verification is enabled
+  sslVerification bool
 }
