@@ -64,7 +64,7 @@ resources:
         min_mondoo_version: 9.0.0
       path: {}
       projectFiles:
-        min_mondoo_version: latest
+        min_mondoo_version: 9.0.0
       projectMembers:
         min_mondoo_version: 9.0.0
       protectedBranches:
