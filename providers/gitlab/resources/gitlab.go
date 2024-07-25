@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/xanzy/go-gitlab"
 	"go.mondoo.com/cnquery/v11/llx"
@@ -128,12 +129,29 @@ func initGitlabProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 func (p *mqlGitlabProject) approvalSettings() (*mqlGitlabProjectApprovalSettings, error) {
 	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
 
+	// Number of retries
+	retry := 3
+	timeout := 5 * time.Second
+
+	// using pointer for efficiency
+	var approvalConfig *gitlab.ProjectApprovals
+	var err error
 	projectID := int(p.Id.Data)
-	approvalConfig, _, err := conn.Client().Projects.GetApprovalConfiguration(projectID)
+
+	for i := 0; i < retry; i++ {
+		start := time.Now()
+		approvalConfig, _, err = conn.Client().Projects.GetApprovalConfiguration(projectID)
+		if err == nil {
+			break
+		}
+		if time.Since(start) < timeout {
+			time.Sleep(timeout - time.Since(start))
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
-
 	approvalSettings := map[string]*llx.RawData{
 		"approvalsBeforeMerge":                      llx.IntData(int64(approvalConfig.ApprovalsBeforeMerge)),
 		"resetApprovalsOnPush":                      llx.BoolData(approvalConfig.ResetApprovalsOnPush),
