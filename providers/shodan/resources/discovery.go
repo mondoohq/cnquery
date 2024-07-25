@@ -36,6 +36,7 @@ func Discover(runtime *plugin.Runtime, opts map[string]string) (*inventory.Inven
 	assetList := []*inventory.Asset{}
 
 	addrs := resolveNetworks(networks)
+
 	for i := range addrs {
 		addr := addrs[i]
 
@@ -48,7 +49,7 @@ func Discover(runtime *plugin.Runtime, opts map[string]string) (*inventory.Inven
 			continue
 		}
 
-		assetList = append(assetList, &inventory.Asset{
+		a := &inventory.Asset{
 			Name: addr.String(),
 			Connections: []*inventory.Config{
 				{
@@ -57,9 +58,12 @@ func Discover(runtime *plugin.Runtime, opts map[string]string) (*inventory.Inven
 					Options: map[string]string{
 						"search": "host",
 					},
+					Credentials: conf.Credentials,
 				},
 			},
-		})
+		}
+
+		assetList = append(assetList, a)
 	}
 
 	in := &inventory.Inventory{Spec: &inventory.InventorySpec{
