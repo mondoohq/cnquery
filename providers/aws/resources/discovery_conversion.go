@@ -286,10 +286,11 @@ func addConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, 
 		Family:  getPlatformFamily(instance.PlatformDetails.Data),
 	}
 	asset.State = mapEc2InstanceStateCode(instance.State.Data)
-	asset.Name = getInstanceName(instance.InstanceId.Data, asset.Labels)
+	instanceTags := mapStringInterfaceToStringString(instance.Tags.Data)
+	asset.Name = getInstanceName(instance.InstanceId.Data, instanceTags)
 	asset.Options = conn.ConnectionOptions()
 	info := instanceInfo{
-		instanceTags:    mapStringInterfaceToStringString(instance.Tags.Data),
+		instanceTags:    instanceTags,
 		region:          instance.Region.Data,
 		platformDetails: instance.PlatformDetails.Data,
 		instanceType:    instance.InstanceType.Data,
