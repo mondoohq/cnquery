@@ -3157,7 +3157,7 @@ private aws.eks.cluster @defaults("arn version status") {
   addons() []aws.eks.addon
   // The IAM role that provides permissions for the Kubernetes control plane to make calls to Amazon Web Services API operations on your behalf
   iamRole aws.iam.role
-  // The Kubernetes support policy of the cluster. `STANDARD` support automatically upgrades at the end of standard support. `EXTENDED` automatically enters extended support at the end of standard support.
+  // The Kubernetes support policy of the cluster. (`STANDARD` support automatically upgrades at the end of standard support. `EXTENDED` automatically enters extended support at the end of standard support.)
   supportType string
   // The authentication mode for the cluster
   authenticationMode string
