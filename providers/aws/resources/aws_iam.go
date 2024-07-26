@@ -598,7 +598,7 @@ func (p *mqlAwsIamUsercredentialreportentry) getTimeValue(key string) (*time.Tim
 	}
 
 	// parse iso 8601  "2020-07-15T14:52:00+00:00"
-	format := "2006-01-02T15:04:05-07:00"
+	format := time.RFC3339
 	parsed, err := time.Parse(format, val)
 	if err != nil {
 		log.Error().Err(err).Msg("could not parse the time")
