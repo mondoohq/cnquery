@@ -181,6 +181,13 @@ func newGithubRetryableClient(httpClient *http.Client) *http.Client {
 	retryClient.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
 		// Default Retry Policy would not retry on 403 (adding 429 for good measure)
 		if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 429) {
+			if log.Logger.GetLevel() <= zerolog.DebugLevel { // includes Debug and Trace
+				e := log.Debug()
+				for k, v := range resp.Header {
+					e = e.Strs(k, v)
+				}
+				e.Msg("checking retry")
+			}
 			// Primary and Secondary rate limit
 			if resp.Header.Get("x-ratelimit-remaining") == "0" {
 				return true, nil // Should be retried after the rate limit reset (duration handled by Backoff)
@@ -190,11 +197,13 @@ func newGithubRetryableClient(httpClient *http.Client) *http.Client {
 	}
 	retryClient.Backoff = func(min, max time.Duration, attemptNum int, resp *http.Response) time.Duration {
 		if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 429) {
-			log.Debug().
-				Str("retry-after", resp.Header.Get("retry-after")).
-				Str("x-ratelimit-remaining", resp.Header.Get("x-ratelimit-remaining")).
-				Str("x-ratelimit-reset", resp.Header.Get("x-ratelimit-reset")).
-				Msgf("retrying request, attempt %d", attemptNum)
+			if log.Logger.GetLevel() <= zerolog.DebugLevel { // includes Debug and Trace
+				e := log.Debug()
+				for k, v := range resp.Header {
+					e = e.Strs(k, v)
+				}
+				e.Msgf("retrying request, attempt %d", attemptNum)
+			}
 
 			// Secondary limit
 			if resp.Header.Get("retry-after") != "" {
