@@ -18,20 +18,15 @@ var Config = plugin.Provider{
 			Name:  "google-workspace",
 			Use:   "google-workspace [--credentials-path <credentials-path>] [--customer-id <customer-id>] [--impersonated-user-email <impersonated-user-email>]",
 			Short: "a Google Workspace account",
-			Long: `google-workspace is designed for querying resources within for a Google Workspace domain.
+			Long: `Use the google-workspace provider to query resources in a Google Workspace domain.
 
-The provider requires three flags to be set:
-'--customer-id <customer-id>': This flag is used to specify the unique ID of the Google Workspace customer. 
-The customer ID is an immutable, unique identifier for a Google Workspace account.
+The provider requires these three flags:
 
-'--impersonated-user-email <user-email>': This flag is used to specify the email address of the user to 
-impersonate in this session. This is useful when the user executing the command does not have the necessary 
-permissions, but can impersonate a user who does.
+* '--customer-id <customer-id>': This flag specifies the unique ID of the Google Workspace customer. The customer ID is an immutable, unique identifier for a Google Workspace account.
 
-'--credentials-path <credentials-file-path>': This flag is used to specify the file path to the credentials 
-file (typically a JSON file) that should be used for authentication.
+* '--impersonated-user-email <user-email>': This flag specifies the email address of the user to impersonate in the session. This is useful when the user executing the command does not have the necessary permissions, but can impersonate a user who does.
 
-In case GOOGLE_APPLICATION_CREDENTIALS environment variable is set, the --credentials-path flag can be omitted.
+* '--credentials-path <credentials-file-path>': This flag specifies the path to the credentials file (typically a JSON file) to use for authentication. You can omit this flag if the GOOGLE_APPLICATION_CREDENTIALS environment variable is set.
 `,
 
 			Aliases:   []string{"googleworkspace"},
@@ -41,21 +36,21 @@ In case GOOGLE_APPLICATION_CREDENTIALS environment variable is set, the --creden
 					Long:    "credentials-path",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "The path to the service account credentials to access the APIs with",
+					Desc:    "Path to the service account credentials with which to access the APIs",
 					Option:  plugin.FlagOption_Required,
 				},
 				{
 					Long:    "customer-id",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "Specify the Google Workspace customer id to scan",
+					Desc:    "Google Workspace customer ID to scan",
 					Option:  plugin.FlagOption_Required,
 				},
 				{
 					Long:    "impersonated-user-email",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "The impersonated user's email with access to the Admin APIs",
+					Desc:    "Email address of the user to impersonate in the session",
 				},
 			},
 		},
