@@ -201,7 +201,7 @@ func TestLoadManifestDirRecursively(t *testing.T) {
 	assert.NotContains(t, manifestsAsString, "README")
 	assert.NotContains(t, manifestsAsString, "operators.coreos.com")
 
-	// This is from files in subdirs whicch should be included
+	// This is from files in subdirs which should be included
 	assert.Contains(t, manifestsAsString, "hello-1")
 	assert.Contains(t, manifestsAsString, "hello-2")
 	assert.Contains(t, manifestsAsString, "MondooAuditConfig")

@@ -101,7 +101,7 @@ func (a *DockerRegistryImages) Repositories(reg name.Registry) ([]string, error)
 	return res, nil
 }
 
-// ListRegistry tries to iterate over all repositores in one registry
+// ListRegistry tries to iterate over all repositories in one registry
 // eg. 1234567.dkr.ecr.us-east-1.amazonaws.com
 func (a *DockerRegistryImages) ListRegistry(registry string) ([]*inventory.Asset, error) {
 	reg, err := name.NewRegistry(registry)

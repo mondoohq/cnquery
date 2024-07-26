@@ -164,7 +164,7 @@ func parseCertificates(runtime *plugin.Runtime, domainName string, certificateLi
 		raw, err := CreateResource(runtime, "certificate", map[string]*llx.RawData{
 			"pem": llx.StringData(string(pem)),
 			// NOTE: if we do not set the hash here, it will generate the cache content before we can store it
-			// we are using the hashs for the id, therefore it is required during creation
+			// we are using the hashes for the id, therefore it is required during creation
 			"fingerprints": llx.MapData(certificates.Fingerprints(cert), types.String),
 			"isRevoked":    llx.BoolData(isRevoked),
 			"revokedAt":    llx.TimeData(revokedAt),

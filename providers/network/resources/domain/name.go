@@ -15,7 +15,7 @@ import (
 // Public Suffix List https://publicsuffix.org
 // Reserved Top-Level Domains https://datatracker.ietf.org/doc/html/rfc2606
 
-// Domain embeds net/url and adds extra fields ontop
+// Domain embeds net/url and adds extra fields on top
 type Name struct {
 	Host                string
 	Port                int

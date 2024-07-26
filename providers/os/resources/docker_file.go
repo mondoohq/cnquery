@@ -286,7 +286,7 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 
 	if len(unsupported) != 0 {
 		slices.Sort(unsupported)
-		log.Debug().Strs("commands", slices.Compact(unsupported)).Msg("unsuppoprted dockerfile commands")
+		log.Debug().Strs("commands", slices.Compact(unsupported)).Msg("unsupported dockerfile commands")
 	}
 
 	args := map[string]*llx.RawData{

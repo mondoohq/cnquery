@@ -55,7 +55,7 @@ func TestDetectNotInstance(t *testing.T) {
 	require.Len(t, related, 0)
 }
 
-func TestDetectConainer(t *testing.T) {
+func TestDetectContainer(t *testing.T) {
 	conn, err := mock.New(0, "./testdata/container.toml", &inventory.Asset{})
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)

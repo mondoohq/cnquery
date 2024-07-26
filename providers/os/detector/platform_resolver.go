@@ -83,7 +83,7 @@ func (r *PlatformResolver) resolvePlatform(pf *inventory.Platform, conn shared.C
 			}
 		}
 
-		// we reached this point, we know it is the platfrom but we could not
+		// we reached this point, we know it is the platform but we could not
 		// identify the system
 		// TODO: add generic platform instance
 		// TODO: should we return an error?

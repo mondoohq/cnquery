@@ -56,7 +56,7 @@ func fetchVulnReport(runtime *plugin.Runtime) (interface{}, error) {
 	apiPackages := []*mvd.Package{}
 	kernelVersion := ""
 
-	// collect pacakges if the platform supports gathering files
+	// collect packages if the platform supports gathering files
 	if conn.Capabilities().Has(shared.Capability_File) {
 		obj, err := CreateResource(runtime, "packages", map[string]*llx.RawData{})
 		if err != nil {

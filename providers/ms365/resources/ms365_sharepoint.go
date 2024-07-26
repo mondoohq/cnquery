@@ -38,7 +38,7 @@ Add-Member -InputObject $sharepoint -MemberType NoteProperty -Name SPOTenant -Va
 Add-Member -InputObject $sharepoint -MemberType NoteProperty -Name SPOTenantSyncClientRestriction -Value $SPOTenantSyncClientRestriction
 Add-Member -InputObject $sharepoint -MemberType NoteProperty -Name SPOSite -Value $SPOSite
 
-Disconnect-PnPOnline 
+Disconnect-PnPOnline
 
 ConvertTo-Json -Depth 4 $sharepoint -EnumsAsStrings
 `
@@ -78,7 +78,7 @@ func (r *mqlMs365Sharepointonline) getTenant() (string, error) {
 	if spUrl == "" {
 		tenantDomainName := mqlMicrosoft.GetTenantDomainName()
 		if tenantDomainName.Error != nil {
-			// note: we dont want to err here. maybe the app registration has no perms to get the organization
+			// note: we don't want to err here. maybe the app registration has no perms to get the organization
 			// in that case we try and get the report by using the explicitly passed in sharepoint url
 			log.Debug().Err(tenantDomainName.Error).Msg("unable to get tenant domain name")
 		} else {
@@ -119,7 +119,7 @@ func (r *mqlMs365Sharepointonline) getSharepointOnlineReport() error {
 	// for some reasons, tokens issued by a client secret do not work. only certificates do
 	// TODO: ^ we should try and investigate why, its unclear to me why it happens.
 	if !conn.IsCertProvided() {
-		return errHandler(fmt.Errorf("only certificate authentication is supported for fetching sharepoint onine report"))
+		return errHandler(fmt.Errorf("only certificate authentication is supported for fetching sharepoint online report"))
 	}
 
 	tenant, err := r.getTenant()
