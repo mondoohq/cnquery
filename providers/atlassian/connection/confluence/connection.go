@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	Confluence shared.ConnectionType = "confluece"
+	Confluence shared.ConnectionType = "confluence"
 )
 
 type ConfluenceConnection struct {
