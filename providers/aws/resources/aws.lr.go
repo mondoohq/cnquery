@@ -4437,6 +4437,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.eks.cluster.iamRole": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksCluster).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
 	},
+	"aws.eks.cluster.supportType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksCluster).GetSupportType()).ToDataRes(types.String)
+	},
+	"aws.eks.cluster.authenticationMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksCluster).GetAuthenticationMode()).ToDataRes(types.String)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -10011,6 +10017,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.eks.cluster.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEksCluster).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.eks.cluster.supportType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksCluster).SupportType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eks.cluster.authenticationMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksCluster).AuthenticationMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -25880,6 +25894,8 @@ type mqlAwsEksCluster struct {
 	NodeGroups plugin.TValue[[]interface{}]
 	Addons plugin.TValue[[]interface{}]
 	IamRole plugin.TValue[*mqlAwsIamRole]
+	SupportType plugin.TValue[string]
+	AuthenticationMode plugin.TValue[string]
 }
 
 // createAwsEksCluster creates a new instance of this resource
@@ -26005,4 +26021,12 @@ func (c *mqlAwsEksCluster) GetAddons() *plugin.TValue[[]interface{}] {
 
 func (c *mqlAwsEksCluster) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
 	return &c.IamRole
+}
+
+func (c *mqlAwsEksCluster) GetSupportType() *plugin.TValue[string] {
+	return &c.SupportType
+}
+
+func (c *mqlAwsEksCluster) GetAuthenticationMode() *plugin.TValue[string] {
+	return &c.AuthenticationMode
 }
