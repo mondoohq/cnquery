@@ -15,7 +15,7 @@ func TestResource_Groups(t *testing.T) {
 		assert.NotEmpty(t, res)
 	})
 
-	t.Run("test a specific grroup", func(t *testing.T) {
+	t.Run("test a specific group", func(t *testing.T) {
 		res := x.TestQuery(t, "groups.list[0].name")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)

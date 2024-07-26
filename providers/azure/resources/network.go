@@ -1412,7 +1412,7 @@ func (a *mqlAzureSubscriptionNetworkServiceSubnet) ipConfigurations() ([]interfa
 	}
 	mqlNetwork := network.(*mqlAzureSubscriptionNetworkService)
 	// the subnet ip configs are referencing the virtual network gateways ip config. There seems to be no
-	// no API to fetch this so we fetch the gateaways and iterate through them
+	// no API to fetch this so we fetch the gateways and iterate through them
 	gateways := mqlNetwork.GetVirtualNetworkGateways()
 	if gateways.Error != nil {
 		return nil, err

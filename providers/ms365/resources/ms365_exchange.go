@@ -32,7 +32,7 @@ $outlookToken= '%s'
 
 Install-Module -Name ExchangeOnlineManagement -Scope CurrentUser -Force
 Import-Module ExchangeOnlineManagement
-Connect-ExchangeOnline -AccessToken $outlookToken -AppID $appId -Organization $organization -ShowBanner:$false -ShowProgress:$false 
+Connect-ExchangeOnline -AccessToken $outlookToken -AppID $appId -Organization $organization -ShowBanner:$false -ShowProgress:$false
 
 $MalwareFilterPolicy = (Get-MalwareFilterPolicy)
 $HostedOutboundSpamFilterPolicy = (Get-HostedOutboundSpamFilterPolicy)
@@ -168,7 +168,7 @@ func (r *mqlMs365Exchangeonline) getOrg() (string, error) {
 	if org == "" {
 		tenantDomainName := mqlMicrosoft.GetTenantDomainName()
 		if tenantDomainName.Error != nil {
-			// note: we dont want to err here. maybe the app registration has no perms to get the organization
+			// note: we don't want to err here. maybe the app registration has no perms to get the organization
 			// in that case we try and get the report by using the explicitly passed in exchange organization
 			log.Debug().Err(tenantDomainName.Error).Msg("unable to get tenant domain name")
 		} else {
@@ -178,7 +178,7 @@ func (r *mqlMs365Exchangeonline) getOrg() (string, error) {
 	return org, nil
 }
 
-// Related to TeamsProtectionPolicy as a seperate function
+// Related to TeamsProtectionPolicy as a separate function
 func convertTeamsProtectionPolicy(r *mqlMs365Exchangeonline, data []*TeamsProtectionPolicy) ([]interface{}, error) {
 	var result []interface{}
 	for _, t := range data {
@@ -198,7 +198,7 @@ func convertTeamsProtectionPolicy(r *mqlMs365Exchangeonline, data []*TeamsProtec
 	return result, nil
 }
 
-// Related to ReportSubmissionPolicy as a seperate function
+// Related to ReportSubmissionPolicy as a separate function
 func convertReportSubmissionPolicy(r *mqlMs365Exchangeonline, data []*ReportSubmissionPolicy) ([]interface{}, error) {
 	var result []interface{}
 	for _, t := range data {

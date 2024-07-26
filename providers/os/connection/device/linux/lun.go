@@ -77,7 +77,7 @@ func findMatchingDeviceByBlock(scsiDevices scsiDevices, blockDevices *snapshot.B
 		log.Debug().Str("name", b.Name).Msg("device connection> checking block")
 		for _, ch := range b.Children {
 			if len(ch.MountPoint) > 0 && ch.MountPoint != "" {
-				log.Debug().Str("name", ch.Name).Str("mountpoint", ch.MountPoint).Str("parent", b.Name).Msg("device connection> has mounted partitons, skipping parent block")
+				log.Debug().Str("name", ch.Name).Str("mountpoint", ch.MountPoint).Str("parent", b.Name).Msg("device connection> has mounted partitions, skipping parent block")
 				break
 			}
 			matching = &b

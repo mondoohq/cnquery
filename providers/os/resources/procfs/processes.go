@@ -31,7 +31,7 @@ type LinuxProcessStatus struct {
 	Ngid       int64  `json:"ngid"` // NUMA group ID (0 if none)
 }
 
-var LINUX_PROCES_STATUS_REGEX = regexp.MustCompile(`^(.*):\s*(.*)$`)
+var LINUX_PROCESS_STATUS_REGEX = regexp.MustCompile(`^(.*):\s*(.*)$`)
 
 func ParseProcessStatus(input io.Reader) (*LinuxProcessStatus, error) {
 	lps := &LinuxProcessStatus{}
@@ -39,7 +39,7 @@ func ParseProcessStatus(input io.Reader) (*LinuxProcessStatus, error) {
 	scanner := bufio.NewScanner(input)
 	for scanner.Scan() {
 		line := scanner.Text()
-		m := LINUX_PROCES_STATUS_REGEX.FindStringSubmatch(line)
+		m := LINUX_PROCESS_STATUS_REGEX.FindStringSubmatch(line)
 
 		if m == nil {
 			log.Warn().Str("entry", line).Msg("ignore process status entry")
