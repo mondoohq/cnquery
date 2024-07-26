@@ -87,7 +87,7 @@ gitlab.project @defaults("fullName visibility webURL") {
   // Merge methods for the project
   mergeMethod() string
   // Approval settings for the project
-  approvalSettings() gitlab.project.approvalSettings
+  approvalSettings() gitlab.project.approvalSetting
   // Protected branches settings for the project
   protectedBranches() []gitlab.project.protectedBranch
   // List of members in the project with their roles
@@ -110,7 +110,7 @@ private gitlab.project.approvalRule @defaults("id name approvalsRequired") {
 }
 
 // GitLab project approval settings
-private gitlab.project.approvalSettings @defaults("approvalsBeforeMerge requirePasswordToApprove") {
+private gitlab.project.approvalSetting @defaults("approvalsBeforeMerge requirePasswordToApprove") {
   // Number of approvals before merge
   approvalsBeforeMerge int
   // Whether all approvals are removed when new commits are pushed
