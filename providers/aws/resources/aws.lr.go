@@ -3075,6 +3075,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.dbcluster.backupSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbcluster).GetBackupSettings()).ToDataRes(types.Array(types.Resource("aws.rds.backupsetting")))
 	},
+	"aws.rds.dbcluster.engineLifecycleSupport": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetEngineLifecycleSupport()).ToDataRes(types.String)
+	},
 	"aws.rds.snapshot.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsSnapshot).GetArn()).ToDataRes(types.String)
 	},
@@ -3209,6 +3212,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.rds.dbinstance.subnets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
+	"aws.rds.dbinstance.engineLifecycleSupport": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetEngineLifecycleSupport()).ToDataRes(types.String)
 	},
 	"aws.elasticache.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticache).GetClusters()).ToDataRes(types.Array(types.Dict))
@@ -7981,6 +7987,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsRdsDbcluster).BackupSettings, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"aws.rds.dbcluster.engineLifecycleSupport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).EngineLifecycleSupport, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.rds.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsRdsSnapshot).__id, ok = v.Value.(string)
 			return
@@ -8167,6 +8177,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.rds.dbinstance.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbinstance).Subnets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.engineLifecycleSupport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).EngineLifecycleSupport, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.elasticache.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20454,6 +20468,7 @@ type mqlAwsRdsDbcluster struct {
 	MasterUsername plugin.TValue[string]
 	LatestRestorableTime plugin.TValue[*time.Time]
 	BackupSettings plugin.TValue[[]interface{}]
+	EngineLifecycleSupport plugin.TValue[string]
 }
 
 // createAwsRdsDbcluster creates a new instance of this resource
@@ -20629,6 +20644,10 @@ func (c *mqlAwsRdsDbcluster) GetBackupSettings() *plugin.TValue[[]interface{}] {
 	})
 }
 
+func (c *mqlAwsRdsDbcluster) GetEngineLifecycleSupport() *plugin.TValue[string] {
+	return &c.EngineLifecycleSupport
+}
+
 // mqlAwsRdsSnapshot for the aws.rds.snapshot resource
 type mqlAwsRdsSnapshot struct {
 	MqlRuntime *plugin.Runtime
@@ -20781,6 +20800,7 @@ type mqlAwsRdsDbinstance struct {
 	LatestRestorableTime plugin.TValue[*time.Time]
 	BackupSettings plugin.TValue[[]interface{}]
 	Subnets plugin.TValue[[]interface{}]
+	EngineLifecycleSupport plugin.TValue[string]
 }
 
 // createAwsRdsDbinstance creates a new instance of this resource
@@ -20978,6 +20998,10 @@ func (c *mqlAwsRdsDbinstance) GetSubnets() *plugin.TValue[[]interface{}] {
 
 		return c.subnets()
 	})
+}
+
+func (c *mqlAwsRdsDbinstance) GetEngineLifecycleSupport() *plugin.TValue[string] {
+	return &c.EngineLifecycleSupport
 }
 
 // mqlAwsElasticache for the aws.elasticache resource

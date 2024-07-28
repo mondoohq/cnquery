@@ -2274,6 +2274,8 @@ resources:
         min_mondoo_version: 9.0.0
       engine:
         min_mondoo_version: 9.0.0
+      engineLifecycleSupport:
+        min_mondoo_version: 9.0.0
       engineVersion:
         min_mondoo_version: 9.0.0
       hostedZoneId:
@@ -2335,6 +2337,8 @@ resources:
         min_mondoo_version: 9.0.0
       engine:
         min_mondoo_version: 5.19.1
+      engineLifecycleSupport:
+        min_mondoo_version: 9.0.0
       engineVersion:
         min_mondoo_version: 9.0.0
       enhancedMonitoringResourceArn: {}

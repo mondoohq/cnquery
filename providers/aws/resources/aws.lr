@@ -2033,6 +2033,8 @@ private aws.rds.dbcluster @defaults("id region") {
   latestRestorableTime time
   // Backup setting for the database cluster
   backupSettings() []aws.rds.backupsetting
+  // The life cycle type for the database engine. By default, this value is set to `open-source-rds-extended-support`, which enrolls your DB engine into Amazon RDS Extended Support. At the end of standard support, you can avoid charges for Extended Support by setting the value to `open-source-rds-extended-support-disabled`. In this case, creating the DB engine will fail if the DB major version is past its end of standard support date.
+  engineLifecycleSupport string
 }
 
 // Amazon RDS snapshot
@@ -2131,6 +2133,8 @@ private aws.rds.dbinstance @defaults("id region engine engineVersion") {
   backupSettings() []aws.rds.backupsetting
   // Subnet for the RDS instance
   subnets() []aws.vpc.subnet
+  // The life cycle type for the database engine. By default, this value is set to `open-source-rds-extended-support`, which enrolls your DB engine into Amazon RDS Extended Support. At the end of standard support, you can avoid charges for Extended Support by setting the value to `open-source-rds-extended-support-disabled`. In this case, creating the DB engine will fail if the DB major version is past its end of standard support date.
+  engineLifecycleSupport string
 }
 
 // Amazon ElastiCache
