@@ -65,7 +65,7 @@ prep/tools: prep/tools/protolint prep/tools/mockgen
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 	go install github.com/hashicorp/copywrite@latest
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.4.0
 	go install go.mondoo.com/ranger-rpc/protoc-gen-rangerrpc@latest
 	go install go.mondoo.com/ranger-rpc/protoc-gen-rangerrpc-swagger@latest
 
