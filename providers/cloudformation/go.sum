@@ -37,8 +37,8 @@ github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be h1:9AeTilPcZAjCFI
 github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be/go.mod h1:ySMOLuWl6zY27l47sB3qLNK6tF2fkHG55UZxx8oIVo4=
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5 h1:0CwZNZbxp69SHPdPJAN/hZIm0C4OItdklCFmMRWYpio=
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5/go.mod h1:wHh0iHkYZB8zMSxRWpUBQtwG5a7fFgvEO+odwuTv2gs=
-github.com/aws-cloudformation/rain v1.12.1 h1:QQx2cYo2CJRYcBFC+cPAwo65peZqhd9wGBTWwT+g4Vs=
-github.com/aws-cloudformation/rain v1.12.1/go.mod h1:S8tZu2CjzzNaKjXqD55qP2btGrYTIinC092x0xYHIAE=
+github.com/aws-cloudformation/rain v1.13.1 h1:j2/L6B10/r3Z0yBHWcmNA1nc5bQ9M9s+0QjHZzJ+o2A=
+github.com/aws-cloudformation/rain v1.13.1/go.mod h1:wvddtEAC6tzISh1VVnF9EwYLHcIAvsbvx8wPFzpI8i4=
 github.com/aws/aws-sdk-go v1.54.20 h1:FZ2UcXya7bUkvkpf7TaPmiL7EubK0go1nlXGLRwEsoo=
 github.com/aws/aws-sdk-go v1.54.20/go.mod h1:eRwEWoyTWFMVYVQzKMNHWP5/RV4xIUGMQfXQHfHkpNU=
 github.com/aws/aws-sdk-go-v2 v1.30.3 h1:jUeBtG0Ih+ZIFH0F4UkmL9w3cSpaMv9tYYDbzILP8dY=
