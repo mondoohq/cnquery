@@ -7,20 +7,20 @@ go 1.22.0
 toolchain go1.22.4
 
 require (
-	cloud.google.com/go/accessapproval v1.7.10
-	cloud.google.com/go/bigquery v1.61.0
-	cloud.google.com/go/compute v1.27.3
-	cloud.google.com/go/container v1.37.3
-	cloud.google.com/go/functions v1.16.5
-	cloud.google.com/go/iam v1.1.11
-	cloud.google.com/go/kms v1.18.3
-	cloud.google.com/go/logging v1.10.0
-	cloud.google.com/go/longrunning v0.5.10
-	cloud.google.com/go/monitoring v1.20.2
+	cloud.google.com/go/accessapproval v1.7.11
+	cloud.google.com/go/bigquery v1.62.0
+	cloud.google.com/go/compute v1.27.4
+	cloud.google.com/go/container v1.38.0
+	cloud.google.com/go/functions v1.16.6
+	cloud.google.com/go/iam v1.1.12
+	cloud.google.com/go/kms v1.18.4
+	cloud.google.com/go/logging v1.11.0
+	cloud.google.com/go/longrunning v0.5.11
+	cloud.google.com/go/monitoring v1.20.3
 	cloud.google.com/go/pubsub v1.40.0
-	cloud.google.com/go/recommender v1.12.6
-	cloud.google.com/go/run v1.3.10
-	cloud.google.com/go/serviceusage v1.8.9
+	cloud.google.com/go/recommender v1.12.7
+	cloud.google.com/go/run v1.4.0
+	cloud.google.com/go/serviceusage v1.8.10
 	github.com/aws/smithy-go v1.20.3
 	github.com/cockroachdb/errors v1.11.3
 	github.com/google/go-containerregistry v0.20.1
@@ -30,16 +30,16 @@ require (
 	go.mondoo.com/cnquery/v11 v11.13.2
 	go.mondoo.com/ranger-rpc v0.6.2
 	golang.org/x/oauth2 v0.21.0
-	google.golang.org/api v0.188.0
-	google.golang.org/genproto v0.0.0-20240711142825-46eb208f015d
+	google.golang.org/api v0.189.0
+	google.golang.org/genproto v0.0.0-20240722135656-d784300faade
 	google.golang.org/protobuf v1.34.2
 )
 
 require (
 	cloud.google.com/go v0.115.0 // indirect
-	cloud.google.com/go/auth v0.7.1 // indirect
+	cloud.google.com/go/auth v0.7.2 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.3 // indirect
-	cloud.google.com/go/binaryauthorization v1.8.6
+	cloud.google.com/go/binaryauthorization v1.8.7
 	cloud.google.com/go/compute/metadata v0.5.0 // indirect
 	cloud.google.com/go/secretmanager v1.13.4 // indirect
 	cloud.google.com/go/storage v1.43.0 // indirect
@@ -120,7 +120,7 @@ require (
 	github.com/google/s2a-go v0.1.7 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.2 // indirect
-	github.com/googleapis/gax-go/v2 v2.12.5 // indirect
+	github.com/googleapis/gax-go/v2 v2.13.0 // indirect
 	github.com/gsterjov/go-libsecret v0.0.0-20161001094733-a6f4afe4910c // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-hclog v1.6.3 // indirect
@@ -200,8 +200,8 @@ require (
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.23.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240716161551-93cc26a95ae9 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20240711142825-46eb208f015d // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240711142825-46eb208f015d // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20240722135656-d784300faade // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240722135656-d784300faade // indirect
 	google.golang.org/grpc v1.65.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
