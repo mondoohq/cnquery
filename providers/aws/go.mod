@@ -7,15 +7,15 @@ go 1.22.0
 toolchain go1.22.2
 
 require (
-	github.com/aws/aws-sdk-go v1.54.20
+	github.com/aws/aws-sdk-go v1.55.3
 	github.com/aws/aws-sdk-go-v2 v1.30.3
 	github.com/aws/aws-sdk-go-v2/config v1.27.27
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.27
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.11
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.32.3
 	github.com/aws/aws-sdk-go-v2/service/acm v1.28.4
-	github.com/aws/aws-sdk-go-v2/service/apigateway v1.25.3
-	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.30.4
+	github.com/aws/aws-sdk-go-v2/service/apigateway v1.25.4
+	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.43.3
 	github.com/aws/aws-sdk-go-v2/service/backup v1.36.3
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.38.4
@@ -25,16 +25,16 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.40.3
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.48.3
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.40.3
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.3
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.171.0
-	github.com/aws/aws-sdk-go-v2/service/ecr v1.30.3
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.4
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.173.0
+	github.com/aws/aws-sdk-go-v2/service/ecr v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.25.3
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.44.3
 	github.com/aws/aws-sdk-go-v2/service/efs v1.31.3
 	github.com/aws/aws-sdk-go-v2/service/eks v1.47.0
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.40.3
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.26.3
-	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.33.3
+	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.30.3
 	github.com/aws/aws-sdk-go-v2/service/emr v1.42.2
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.45.3
