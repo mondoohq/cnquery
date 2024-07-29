@@ -297,12 +297,7 @@ func discoverPods(
 			continue
 		}
 
-		if ownerReferencesFilter(pod.obj.ObjectMeta.OwnerReferences, map[string]struct{}{
-			"DaemonSet":   {},
-			"StatefulSet": {},
-			"ReplicaSet":  {},
-			"Job":         {},
-		}) {
+		if PodOwnerReferencesFilter(pod.obj.ObjectMeta.OwnerReferences) {
 			continue
 		}
 
@@ -361,9 +356,7 @@ func discoverJobs(
 			continue
 		}
 
-		if ownerReferencesFilter(job.obj.ObjectMeta.OwnerReferences, map[string]struct{}{
-			"CronJob": {},
-		}) {
+		if JobOwnerReferencesFilter(job.obj.ObjectMeta.OwnerReferences) {
 			continue
 		}
 
@@ -642,9 +635,7 @@ func discoverReplicaSets(
 			continue
 		}
 
-		if ownerReferencesFilter(replicaset.obj.ObjectMeta.OwnerReferences, map[string]struct{}{
-			"Deployment": {},
-		}) {
+		if ReplicaSetOwnerReferencesFilter(replicaset.obj.ObjectMeta.OwnerReferences) {
 			continue
 		}
 
@@ -1179,7 +1170,7 @@ func assetName(ns, name string) string {
 	return ns + "/" + name
 }
 
-func ownerReferencesFilter(refs []metav1.OwnerReference, filter map[string]struct{}) bool {
+func OwnerReferencesFilter(refs []metav1.OwnerReference, filter map[string]struct{}) bool {
 	if len(refs) == 0 {
 		return false
 	}
@@ -1191,4 +1182,25 @@ func ownerReferencesFilter(refs []metav1.OwnerReference, filter map[string]struc
 	}
 
 	return false
+}
+
+func PodOwnerReferencesFilter(refs []metav1.OwnerReference) bool {
+	return OwnerReferencesFilter(refs, map[string]struct{}{
+		"DaemonSet":   {},
+		"StatefulSet": {},
+		"ReplicaSet":  {},
+		"Job":         {},
+	})
+}
+
+func JobOwnerReferencesFilter(refs []metav1.OwnerReference) bool {
+	return OwnerReferencesFilter(refs, map[string]struct{}{
+		"CronJob": {},
+	})
+}
+
+func ReplicaSetOwnerReferencesFilter(refs []metav1.OwnerReference) bool {
+	return OwnerReferencesFilter(refs, map[string]struct{}{
+		"Deployment": {},
+	})
 }
