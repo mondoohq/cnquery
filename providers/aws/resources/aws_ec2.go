@@ -662,6 +662,8 @@ func initAwsEc2Keypair(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 		args["tags"] = llx.MapData(Ec2TagsToMap(kp.Tags), types.String)
 		args["region"] = llx.StringData(r)
 		args["arn"] = llx.StringData(fmt.Sprintf(keypairArnPattern, conn.AccountId(), r, convert.ToString(kp.KeyPairId)))
+		args["createdAt"] = llx.TimeDataPtr(kp.CreateTime)
+
 		return args, nil, nil
 	}
 	return args, nil, nil
@@ -1092,7 +1094,7 @@ func (i *mqlAwsEc2Instance) keypair() (*mqlAwsEc2Keypair, error) {
 		mqlKeyPair, err := NewResource(i.MqlRuntime, "aws.ec2.keypair",
 			map[string]*llx.RawData{
 				"region": llx.StringData(i.Region.Data),
-				"name":   llx.StringData(convert.ToString(i.instanceCache.KeyName)),
+				"name":   llx.StringDataPtr(i.instanceCache.KeyName),
 			})
 		if err == nil {
 			return mqlKeyPair.(*mqlAwsEc2Keypair), nil
