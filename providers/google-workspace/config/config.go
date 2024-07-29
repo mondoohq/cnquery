@@ -4,6 +4,7 @@
 package config
 
 import (
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/google-workspace/provider"
 )
@@ -52,6 +53,16 @@ The provider requires these three flags:
 					Default: "",
 					Desc:    "Email address of the user to impersonate in the session",
 				},
+			},
+		},
+	},
+	AssetUrlTrees: []*inventory.AssetUrlBranch{
+		{
+			PathSegments: []string{"technology=google-workspace"},
+			Key:          "customer",
+			Title:        "Customer",
+			Values: map[string]*inventory.AssetUrlBranch{
+				"*": nil,
 			},
 		},
 	},

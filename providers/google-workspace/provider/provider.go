@@ -6,6 +6,7 @@ package provider
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 
 	"github.com/rs/zerolog/log"
@@ -44,24 +45,25 @@ func readEnvs(envs ...string) []string {
 }
 
 // to be used by gcp/googleworkspace cmds, fetches the creds from either the env vars provided or from a flag in the provided cmd
-func getGoogleCreds(credentialPath string, envs ...string) []byte {
+func getGoogleCreds(credentialPath string, envs ...string) ([]byte, error) {
 	var credsPaths []string
 	// env vars have precedence over the --credentials-path arg
 	credsPaths = readEnvs(envs...)
 
+	errs := []error{}
 	if credentialPath != "" {
 		credsPaths = append(credsPaths, credentialPath)
 	}
 
-	for i := range credsPaths {
-		path := credsPaths[i]
-
+	for _, path := range credsPaths {
 		serviceAccount, err := os.ReadFile(path)
-		if err == nil {
-			return serviceAccount
+		if err != nil {
+			errs = append(errs, err)
+		} else {
+			return serviceAccount, nil
 		}
 	}
-	return nil
+	return nil, errors.Join(errs...)
 }
 
 func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error) {
@@ -87,7 +89,11 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		"GOOGLEWORKSPACE_CLOUD_KEYFILE_JSON",
 		"GOOGLE_CREDENTIALS",
 	}
-	serviceAccount := getGoogleCreds(credentialsPath, envVars...)
+	serviceAccount, err := getGoogleCreds(credentialsPath, envVars...)
+	if err != nil {
+		log.Error().Err(err).Msg("could not read service account credentials")
+		return nil, err
+	}
 	if serviceAccount != nil {
 		conf.Credentials = append(conf.Credentials, &vault.Credential{
 			Type:   vault.CredentialType_json,
@@ -192,14 +198,20 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.GoogleWorkspaceConnection) error {
-	asset.Name = conn.Conf.Host
-
+	pd, err := resources.GetPrimaryDomain(conn)
+	if err != nil {
+		log.Error().Err(err).Msg("could not get primary domain for google workspace")
+		asset.Name = conn.CustomerID()
+	} else {
+		asset.Name = fmt.Sprintf("%s %s", pd, conn.CustomerID())
+	}
 	asset.Platform = &inventory.Platform{
-		Name:    "google-workspace",
-		Family:  []string{"google"},
-		Kind:    "api",
-		Title:   "Google Workspace",
-		Runtime: "google-workspace",
+		Name:                  "google-workspace",
+		Family:                []string{"google"},
+		Kind:                  "api",
+		Title:                 "Google Workspace",
+		Runtime:               "google-workspace",
+		TechnologyUrlSegments: []string{"google-workspace", conn.CustomerID()},
 	}
 
 	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/googleworkspace/customer/" + conn.CustomerID()}
