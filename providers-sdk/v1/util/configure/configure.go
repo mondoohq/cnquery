@@ -4,6 +4,7 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"go/format"
@@ -198,8 +199,12 @@ func init() {
 func buildProviders(providers []string) {
 	for i, provider := range providers {
 		cmd := exec.Command("make", "providers/build/"+provider)
+		var out bytes.Buffer
+		cmd.Stdout = &out
+		cmd.Stderr = &out
 		log.Debug().Str("provider", provider).Msg("build provider " + strconv.Itoa(i+1) + "/" + strconv.Itoa(len(providers)))
 		if err := cmd.Run(); err != nil {
+			fmt.Println(out.String())
 			log.Error().Err(err).Str("provider", provider).Msg("failed to build provider")
 		}
 
