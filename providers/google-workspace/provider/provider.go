@@ -201,9 +201,9 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.GoogleWorkspac
 	pd, err := resources.GetPrimaryDomain(conn)
 	if err != nil {
 		log.Error().Err(err).Msg("could not get primary domain for google workspace")
-		asset.Name = conn.CustomerID()
+		asset.Name = fmt.Sprintf("Google Workspace (%s)", conn.CustomerID())
 	} else {
-		asset.Name = fmt.Sprintf("%s %s", pd, conn.CustomerID())
+		asset.Name = fmt.Sprintf("Google Workspace %s (%s)", pd, conn.CustomerID())
 	}
 	asset.Platform = &inventory.Platform{
 		Name:                  "google-workspace",
