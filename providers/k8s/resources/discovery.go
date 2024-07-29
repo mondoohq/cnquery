@@ -1170,13 +1170,13 @@ func assetName(ns, name string) string {
 	return ns + "/" + name
 }
 
-func OwnerReferencesFilter(refs []metav1.OwnerReference, filter map[string]struct{}) bool {
+func OwnerReferencesFilter(refs []metav1.OwnerReference, filter ...string) bool {
 	if len(refs) == 0 {
 		return false
 	}
 
 	for _, ref := range refs {
-		if _, has := filter[ref.Kind]; has {
+		if stringx.Contains(filter, ref.Kind) {
 			return true
 		}
 	}
@@ -1185,22 +1185,13 @@ func OwnerReferencesFilter(refs []metav1.OwnerReference, filter map[string]struc
 }
 
 func PodOwnerReferencesFilter(refs []metav1.OwnerReference) bool {
-	return OwnerReferencesFilter(refs, map[string]struct{}{
-		"DaemonSet":   {},
-		"StatefulSet": {},
-		"ReplicaSet":  {},
-		"Job":         {},
-	})
+	return OwnerReferencesFilter(refs, "DaemonSet", "StatefulSet", "ReplicaSet", "Job")
 }
 
 func JobOwnerReferencesFilter(refs []metav1.OwnerReference) bool {
-	return OwnerReferencesFilter(refs, map[string]struct{}{
-		"CronJob": {},
-	})
+	return OwnerReferencesFilter(refs, "CronJob")
 }
 
 func ReplicaSetOwnerReferencesFilter(refs []metav1.OwnerReference) bool {
-	return OwnerReferencesFilter(refs, map[string]struct{}{
-		"Deployment": {},
-	})
+	return OwnerReferencesFilter(refs, "Deployment")
 }
