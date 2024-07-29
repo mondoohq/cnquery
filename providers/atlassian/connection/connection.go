@@ -38,7 +38,7 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (s
 		if err != nil {
 			return nil, errors.Wrap(err, "Failed to create Jira connection")
 		}
-	case "confluence":
+	case string(confluence.Confluence):
 		conn, err = confluence.NewConnection(id, asset, conf)
 		if err != nil {
 			return nil, errors.Wrap(err, "Failed to create Confluence connection")

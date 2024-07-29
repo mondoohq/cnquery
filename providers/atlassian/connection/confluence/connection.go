@@ -95,7 +95,7 @@ func (c *ConfluenceConnection) Type() shared.ConnectionType {
 }
 
 func (c *ConfluenceConnection) ConnectionType() string {
-	return "confluence"
+	return string(Confluence)
 }
 
 func (c *ConfluenceConnection) Config() *inventory.Config {

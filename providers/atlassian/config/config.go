@@ -5,6 +5,7 @@ package config
 
 import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers/atlassian/connection/confluence"
 	"go.mondoo.com/cnquery/v11/providers/atlassian/provider"
 )
 
@@ -16,7 +17,7 @@ var Config = plugin.Provider{
 		provider.DefaultConnectionType,
 		"jira",
 		"admin",
-		"confluence",
+		string(confluence.Confluence),
 		"scim",
 	},
 	Connectors: []plugin.Connector{
