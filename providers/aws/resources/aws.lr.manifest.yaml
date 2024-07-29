@@ -1539,6 +1539,8 @@ resources:
       addons:
         min_mondoo_version: 9.0.0
       arn: {}
+      authenticationMode:
+        min_mondoo_version: 9.0.0
       createdAt: {}
       encryptionConfig: {}
       endpoint: {}
@@ -1553,6 +1555,8 @@ resources:
       region: {}
       resourcesVpcConfig: {}
       status: {}
+      supportType:
+        min_mondoo_version: 9.0.0
       tags: {}
       version: {}
     is_private: true

@@ -98,19 +98,21 @@ func (a *mqlAwsEks) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 
 				args := map[string]*llx.RawData{
 					"arn":                llx.StringDataPtr(cluster.Arn),
-					"name":               llx.StringDataPtr(cluster.Name),
-					"region":             llx.StringData(regionVal),
-					"version":            llx.StringDataPtr(cluster.Version),
-					"platformVersion":    llx.StringDataPtr(cluster.PlatformVersion),
-					"tags":               llx.MapData(strMapToInterface(cluster.Tags), types.String),
-					"status":             llx.StringData(string(cluster.Status)),
-					"encryptionConfig":   llx.ArrayData(encryptionConfig, types.Any),
+					"authenticationMode": llx.StringData(string(cluster.AccessConfig.AuthenticationMode)),
 					"createdAt":          llx.TimeDataPtr(cluster.CreatedAt),
+					"encryptionConfig":   llx.ArrayData(encryptionConfig, types.Any),
 					"endpoint":           llx.StringDataPtr(cluster.Endpoint),
-					"logging":            llx.MapData(logging, types.Any),
-					"networkConfig":      llx.MapData(kubernetesNetworkConfig, types.Any),
-					"resourcesVpcConfig": llx.MapData(vpcConfig, types.Any),
 					"iamRole":            llx.NilData, // set iamRole to nil as default, if iam is not set
+					"logging":            llx.MapData(logging, types.Any),
+					"name":               llx.StringDataPtr(cluster.Name),
+					"networkConfig":      llx.MapData(kubernetesNetworkConfig, types.Any),
+					"platformVersion":    llx.StringDataPtr(cluster.PlatformVersion),
+					"region":             llx.StringData(regionVal),
+					"resourcesVpcConfig": llx.MapData(vpcConfig, types.Any),
+					"status":             llx.StringData(string(cluster.Status)),
+					"supportType":        llx.StringData(string(cluster.UpgradePolicy.SupportType)),
+					"tags":               llx.MapData(strMapToInterface(cluster.Tags), types.String),
+					"version":            llx.StringDataPtr(cluster.Version),
 				}
 
 				if cluster.RoleArn != nil {
