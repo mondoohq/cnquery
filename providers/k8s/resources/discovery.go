@@ -297,6 +297,15 @@ func discoverPods(
 			continue
 		}
 
+		if ownerReferencesFilter(pod.obj.ObjectMeta.OwnerReferences, map[string]struct{}{
+			"DaemonSet":   {},
+			"StatefulSet": {},
+			"ReplicaSet":  {},
+			"Job":         {},
+		}) {
+			continue
+		}
+
 		if !resFilter.IsEmpty() && !resFilter.Match("pod", pod.Name.Data, pod.Namespace.Data) {
 			continue
 		}
@@ -349,6 +358,12 @@ func discoverJobs(
 		job := j.(*mqlK8sJob)
 
 		if skip := nsFilter.skipNamespace(job.Namespace.Data); skip {
+			continue
+		}
+
+		if ownerReferencesFilter(job.obj.ObjectMeta.OwnerReferences, map[string]struct{}{
+			"CronJob": {},
+		}) {
 			continue
 		}
 
@@ -624,6 +639,12 @@ func discoverReplicaSets(
 		replicaset := r.(*mqlK8sReplicaset)
 
 		if skip := nsFilter.skipNamespace(replicaset.Namespace.Data); skip {
+			continue
+		}
+
+		if ownerReferencesFilter(replicaset.obj.ObjectMeta.OwnerReferences, map[string]struct{}{
+			"Deployment": {},
+		}) {
 			continue
 		}
 
@@ -1156,4 +1177,18 @@ func assetName(ns, name string) string {
 		return name
 	}
 	return ns + "/" + name
+}
+
+func ownerReferencesFilter(refs []metav1.OwnerReference, filter map[string]struct{}) bool {
+	if len(refs) == 0 {
+		return false
+	}
+
+	for _, ref := range refs {
+		if _, has := filter[ref.Kind]; has {
+			return true
+		}
+	}
+
+	return false
 }
