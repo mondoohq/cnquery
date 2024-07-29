@@ -125,7 +125,7 @@ func initGitlabProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 }
 
 // New function to fetch project approval settings
-func (p *mqlGitlabProject) approvalSettings() (*mqlGitlabProjectApprovalSettings, error) {
+func (p *mqlGitlabProject) approvalSettings() (*mqlGitlabProjectApprovalSetting, error) {
 	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
 
 	projectID := int(p.Id.Data)
@@ -143,12 +143,12 @@ func (p *mqlGitlabProject) approvalSettings() (*mqlGitlabProjectApprovalSettings
 		"requirePasswordToApprove":                  llx.BoolData(approvalConfig.RequirePasswordToApprove),
 	}
 
-	mqlApprovalSettings, err := CreateResource(p.MqlRuntime, "gitlab.project.approvalSettings", approvalSettings)
+	mqlApprovalSettings, err := CreateResource(p.MqlRuntime, "gitlab.project.approvalSetting", approvalSettings)
 	if err != nil {
 		return nil, err
 	}
 
-	return mqlApprovalSettings.(*mqlGitlabProjectApprovalSettings), nil
+	return mqlApprovalSettings.(*mqlGitlabProjectApprovalSetting), nil
 }
 
 // New function to fetch project approval rules
