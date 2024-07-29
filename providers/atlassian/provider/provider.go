@@ -6,6 +6,7 @@ package provider
 import (
 	"context"
 	"errors"
+
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 
@@ -14,6 +15,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/v11/providers/atlassian/connection"
+	"go.mondoo.com/cnquery/v11/providers/atlassian/connection/confluence"
 	"go.mondoo.com/cnquery/v11/providers/atlassian/connection/shared"
 	"go.mondoo.com/cnquery/v11/providers/atlassian/resources"
 )
@@ -88,7 +90,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Options["product"] = req.Args[0]
 	case "jira":
 		conf.Options["product"] = req.Args[0]
-	case "confluence":
+	case string(confluence.Confluence):
 		conf.Options["product"] = req.Args[0]
 	case "scim":
 		conf.Options["product"] = req.Args[0]
