@@ -1,0 +1,31 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+resources:
+  mondoo:
+    fields: {}
+    min_mondoo_version: latest
+  mondoo.agent:
+    fields:
+      mrn: {}
+    min_mondoo_version: latest
+  mondoo.asset:
+    fields:
+      mrn: {}
+      name: {}
+      platform: {}
+      resources: {}
+    is_private: true
+    min_mondoo_version: latest
+  mondoo.resource:
+    fields:
+      id: {}
+      name: {}
+    is_private: true
+    min_mondoo_version: latest
+  mondoo.space:
+    fields:
+      assets: {}
+      mrn: {}
+      name: {}
+    min_mondoo_version: latest
