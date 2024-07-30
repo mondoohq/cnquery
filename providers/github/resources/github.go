@@ -53,8 +53,8 @@ func getOrg(ctx context.Context, runtime *plugin.Runtime, conn *connection.Githu
 	}
 	res, err, _ := g.memoize.Memoize("org-"+name, func() (interface{}, error) {
 		log.Debug().Msgf("fetching organization %s", name)
-		user, _, err := conn.Client().Organizations.Get(ctx, name)
-		return user, err
+		org, _, err := conn.Client().Organizations.Get(ctx, name)
+		return org, err
 	})
 	if err != nil {
 		return nil, err

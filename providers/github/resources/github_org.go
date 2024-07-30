@@ -17,6 +17,10 @@ import (
 	"go.mondoo.com/cnquery/v11/types"
 )
 
+type mqlGithubOrganizationInternal struct {
+	repoMap map[string]*mqlGithubRepository
+}
+
 func (g *mqlGithubOrganization) id() (string, error) {
 	if g.Id.Error != nil {
 		return "", g.Id.Error
@@ -279,11 +283,13 @@ func (g *mqlGithubOrganization) repositories() ([]interface{}, error) {
 	res := []interface{}{}
 	for i := range allRepos {
 		repo := allRepos[i]
+
 		r, err := newMqlGithubRepository(g.MqlRuntime, repo)
 		if err != nil {
 			return nil, err
 		}
 		res = append(res, r)
+		g.repoMap[repo.GetName()] = r
 	}
 
 	return res, nil
