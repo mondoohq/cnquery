@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"errors"
 	"time"
 
 	"go.mondoo.com/cnquery/v11/llx"
@@ -11,6 +12,26 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/google-workspace/connection"
 	directory "google.golang.org/api/admin/directory/v1"
 )
+
+func GetPrimaryDomain(conn *connection.GoogleWorkspaceConnection) (string, error) {
+	directoryService, err := directoryService(conn, directory.AdminDirectoryDomainReadonlyScope)
+	if err != nil {
+		return "", err
+	}
+
+	domains, err := directoryService.Domains.List(conn.CustomerID()).Do()
+	if err != nil {
+		return "", err
+	}
+
+	for _, domain := range domains.Domains {
+		if domain.IsPrimary {
+			return domain.DomainName, nil
+		}
+	}
+
+	return "", errors.New("no primary domain found")
+}
 
 func (g *mqlGoogleworkspace) domains() ([]interface{}, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GoogleWorkspaceConnection)
