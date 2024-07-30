@@ -6,6 +6,8 @@ package providers
 import (
 	"bytes"
 	"context"
+	"os"
+
 	"github.com/cockroachdb/errors"
 	"github.com/google/uuid"
 	"go.mondoo.com/cnquery/v11/explorer/resources"
@@ -18,7 +20,6 @@ import (
 	"go.mondoo.com/cnquery/v11/types"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
-	"os"
 )
 
 var sbomProvider = Provider{
@@ -57,7 +58,6 @@ func (s *sbomProviderService) Heartbeat(req *plugin.HeartbeatReq) (*plugin.Heart
 }
 
 func (s *sbomProviderService) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error) {
-
 	filePath := req.Args[0]
 
 	return &plugin.ParseCLIRes{
@@ -86,7 +86,6 @@ func (s *sbomProviderService) Connect(req *plugin.ConnectReq, callback plugin.Pr
 	data, err := os.ReadFile(conf.Path)
 	if err != nil {
 		return nil, err
-
 	}
 
 	decoder := []sbom.Decoder{}
@@ -226,6 +225,21 @@ func (s *sbomProviderService) GetResourcesData(ctx context.Context, req *resourc
 	}
 
 	return &resources.EntityResourcesRes{
+		EntityMrn: req.EntityMrn,
+		Resources: list,
+	}, nil
+}
+
+func (s *sbomProviderService) ListResources(ctx context.Context, req *resources.ListResourcesReq) (*resources.ListResourcesRes, error) {
+	list := make([]*llx.ResourceRecording, len(s.recording.Resources))
+	for i := range s.recording.Resources {
+		cur := s.recording.Resources[i]
+		list[i] = &llx.ResourceRecording{
+			Resource: cur.Resource,
+			Id:       cur.ID,
+		}
+	}
+	return &resources.ListResourcesRes{
 		EntityMrn: req.EntityMrn,
 		Resources: list,
 	}, nil

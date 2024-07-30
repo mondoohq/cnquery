@@ -234,7 +234,7 @@ func (c *CommonOpts) GetFeatures() cnquery.Features {
 				flags = append(flags, byte(flag))
 			}
 		} else {
-			log.Warn().Str("feature", name).Msg("could not parse feature")
+			log.Warn().Str("feature", name).Msg("could not get a feature")
 		}
 	}
 
