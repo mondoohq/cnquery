@@ -49,6 +49,7 @@ jobs:
           protoc --version
           make prep
           make cnquery/generate
+          SKIP_COMPILE=yes make providers/build
           git diff --exit-code *.go
           git diff --exit-code providers/**/*.lr.json
           git diff --exit-code providers/**/*.resources.json
