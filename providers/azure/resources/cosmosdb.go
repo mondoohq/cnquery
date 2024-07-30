@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
@@ -54,13 +55,13 @@ func (a *mqlAzureSubscriptionCosmosDbService) accounts() ([]interface{}, error) 
 	}
 	res = append(res, cosmosAccounts...)
 
-	mongoAccounts, err := fetchMongoDBAndPostgreSQLAccounts(ctx, a.MqlRuntime, conn, subId, "Microsoft.DocumentDB/mongoClusters")
+	mongoAccounts, err := fetchDbAccountsByType(ctx, a.MqlRuntime, conn, subId, "Microsoft.DocumentDB/mongoClusters")
 	if err != nil {
 		return nil, err
 	}
 	res = append(res, mongoAccounts...)
 
-	postgresAccounts, err := fetchMongoDBAndPostgreSQLAccounts(ctx, a.MqlRuntime, conn, subId, "Microsoft.DBforPostgreSQL/serverGroupsv2")
+	postgresAccounts, err := fetchDbAccountsByType(ctx, a.MqlRuntime, conn, subId, "Microsoft.DBforPostgreSQL/serverGroupsv2")
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +110,7 @@ func fetchCosmosDBAccounts(ctx context.Context, runtime *plugin.Runtime, conn *c
 	return res, nil
 }
 
-func fetchMongoDBAndPostgreSQLAccounts(ctx context.Context, runtime *plugin.Runtime, conn *connection.AzureConnection, subId string, resourceType string) ([]interface{}, error) {
+func fetchDbAccountsByType(ctx context.Context, runtime *plugin.Runtime, conn *connection.AzureConnection, subId string, resourceType string) ([]interface{}, error) {
 	resClient, err := armresources.NewClient(subId, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
@@ -118,7 +119,7 @@ func fetchMongoDBAndPostgreSQLAccounts(ctx context.Context, runtime *plugin.Runt
 	}
 
 	res := []interface{}{}
-	filter := "resourceType eq '" + resourceType + "'"
+	filter := fmt.Sprintf("resourceType eq '%s'", resourceType)
 	pager := resClient.NewListPager(&armresources.ClientListOptions{
 		Filter: &filter,
 	})
