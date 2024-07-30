@@ -131,9 +131,11 @@ func initGithubRepository(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 	conn := runtime.Connection.(*connection.GithubConnection)
 
+	// determine the owner object
 	var org *mqlGithubOrganization
 	var user *mqlGithubUser
 	var err error
+	owner := ""
 	orgId, err := conn.Organization()
 	if err == nil {
 		obj, err := NewResource(runtime, "github.organization", map[string]*llx.RawData{
@@ -154,12 +156,15 @@ func initGithubRepository(runtime *plugin.Runtime, args map[string]*llx.RawData)
 					return nil, nil, err
 				}
 				user = obj.(*mqlGithubUser)
+				owner = userId.Name
 			}
 		} else {
 			org = obj.(*mqlGithubOrganization)
+			owner = orgId.Name
 		}
 	}
 
+	// gather the repo name or fallback to the repo name defined in the connection
 	reponame := ""
 	if x, ok := args["name"]; ok {
 		reponame = x.Value.(string)
@@ -175,26 +180,34 @@ func initGithubRepository(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return nil, nil, errors.New("name must be set for github.repository initialization")
 	}
 
-	var repos *plugin.TValue[[]interface{}]
 	if org != nil {
-		repos = org.GetRepositories()
-		if repos.Error != nil {
-			return nil, nil, repos.Error
+		// to avoid loading a large list of repos, we first check if the repositories is in the cached map
+		repo, ok := org.repoCacheMap[reponame]
+		if ok {
+			return args, repo, nil
 		}
 	} else if user != nil {
-		repos = user.GetRepositories()
-		if repos.Error != nil {
-			return nil, nil, repos.Error
+		// to avoid loading a large list of repos, we first check if the repositories is in the cached map
+		repo, ok := user.repoCacheMap[reponame]
+		if ok {
+			return args, repo, nil
 		}
 	} else {
 		return nil, nil, errors.New("no user and no org specified")
 	}
 
-	for _, obj := range repos.Data {
-		repo := obj.(*mqlGithubRepository)
-		if repo.Name.Data == reponame {
-			return args, repo, nil
+	// if the repo is not cached, we fetch it from the github api
+	if owner != "" {
+		// we reach this point if the repo was not cached
+		ghRepo, _, err := conn.Client().Repositories.Get(context.Background(), orgId.Name, reponame)
+		if err != nil {
+			return nil, nil, err
 		}
+		r, err := newMqlGithubRepository(runtime, ghRepo)
+		if err != nil {
+			return nil, nil, err
+		}
+		return args, r, nil
 	}
 
 	return args, nil, fmt.Errorf("could not find repository %q. Make sure the repository exists and the token has sufficient permissions to access it", reponame)

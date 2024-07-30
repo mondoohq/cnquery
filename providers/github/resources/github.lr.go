@@ -2331,7 +2331,7 @@ func (c *mqlGitGpgSignature) GetSignature() *plugin.TValue[string] {
 type mqlGithubOrganization struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlGithubOrganizationInternal it will be used here
+	mqlGithubOrganizationInternal
 	Login plugin.TValue[string]
 	Id plugin.TValue[int64]
 	NodeId plugin.TValue[string]
@@ -2669,7 +2669,7 @@ func (c *mqlGithubOrganization) GetHasRepositoryProjects() *plugin.TValue[bool] 
 type mqlGithubUser struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlGithubUserInternal it will be used here
+	mqlGithubUserInternal
 	Id plugin.TValue[int64]
 	Login plugin.TValue[string]
 	Name plugin.TValue[string]

@@ -19,6 +19,10 @@ import (
 	"go.mondoo.com/ranger-rpc"
 )
 
+type mqlGithubUserInternal struct {
+	repoCacheMap map[string]*mqlGithubRepository
+}
+
 func (g *mqlGithubUser) id() (string, error) {
 	if g.Id.Error != nil {
 		return "", g.Id.Error
@@ -100,13 +104,13 @@ func (g *mqlGithubUser) repositories() ([]interface{}, error) {
 	}
 	githubLogin := g.Login.Data
 
-	listOpts := &github.RepositoryListOptions{
+	listOpts := &github.RepositoryListByUserOptions{
 		ListOptions: github.ListOptions{PerPage: paginationPerPage},
 	}
 
 	var allRepos []*github.Repository
 	for {
-		repos, resp, err := conn.Client().Repositories.List(context.Background(), githubLogin, listOpts)
+		repos, resp, err := conn.Client().Repositories.ListByUser(context.Background(), githubLogin, listOpts)
 		if err != nil {
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
@@ -120,6 +124,10 @@ func (g *mqlGithubUser) repositories() ([]interface{}, error) {
 		listOpts.Page = resp.NextPage
 	}
 
+	if g.repoCacheMap == nil {
+		g.repoCacheMap = make(map[string]*mqlGithubRepository)
+	}
+
 	res := []interface{}{}
 	for i := range allRepos {
 		repo := allRepos[i]
@@ -128,6 +136,7 @@ func (g *mqlGithubUser) repositories() ([]interface{}, error) {
 			return nil, err
 		}
 		res = append(res, r)
+		g.repoCacheMap[repo.GetName()] = r
 	}
 
 	return res, nil
