@@ -63,7 +63,7 @@ packs:
         title: Shodan info about Ports
         mql: |
           shodan.host.ports
-      - uid: mondoo-shodan-inventory-ports
+      - uid: mondoo-shodan-inventory-vulns
         title: Shodan info about vulnerabilities
         mql: |
           shodan.host.vulnerabilities
