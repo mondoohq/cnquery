@@ -5,6 +5,7 @@ package resources
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"go.mondoo.com/cnquery/v11/llx"
@@ -12,7 +13,9 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v11/providers/google-workspace/connection"
 	"go.mondoo.com/cnquery/v11/types"
+
 	directory "google.golang.org/api/admin/directory/v1"
+	reports "google.golang.org/api/admin/reports/v1"
 )
 
 func (g *mqlGoogleworkspace) users() ([]interface{}, error) {
@@ -104,37 +107,58 @@ func (g *mqlGoogleworkspaceUser) usageReport() (*mqlGoogleworkspaceReportUsage, 
 	}
 	primaryEmail := g.PrimaryEmail.Data
 
-	date := time.Now()
-	report, err := reportsService.UserUsageReport.Get(primaryEmail, date.Format(time.DateOnly)).CustomerId(conn.CustomerID()).Do()
-	if err != nil {
-		return nil, err
-	}
+	day := 24 * time.Hour
+	now := time.Now()
+	tries := 10
+	for tries > 0 {
+		report, err := fetchUsageReport(reportsService, primaryEmail, now)
+		if err != nil && shouldCheckEarlierDateForReport(err) {
+			now = now.Add(-day)
+			tries--
+			continue
+		} else if err != nil {
+			return nil, err
+		}
 
-	i := 0
-	for {
+		if len(report.UsageReports) == 0 {
+			// try fetching from a day before
+			now = now.Add(-day)
+			tries--
+			continue
+		}
+
 		if len(report.UsageReports) > 1 {
 			return nil, errors.New("unexpected result for user usage report")
 		}
 
-		if len(report.UsageReports) == 0 {
-			date = date.Add(-24 * time.Hour)
-			// try fetching from a day before
-			report, err = reportsService.UserUsageReport.Get(primaryEmail, date.Format(time.DateOnly)).CustomerId(conn.CustomerID()).Do()
-			if err != nil {
-				return nil, err
-			}
-			i++
-			if i > 10 {
-				return nil, errors.New("could not find user report within last 10 days")
-			}
-			continue
-		}
-
 		// if we reach here, we have exactly one report
-		break
+		return newMqlGoogleWorkspaceUsageReport(g.MqlRuntime, report.UsageReports[0])
 	}
 
-	return newMqlGoogleWorkspaceUsageReport(g.MqlRuntime, report.UsageReports[0])
+	return nil, errors.New("could not fetch usage report for user, earliest tried date: " + now.Format(time.DateOnly))
+}
+
+func fetchUsageReport(svc *reports.Service, email string, date time.Time) (*reports.UsageReports, error) {
+	report, err := svc.UserUsageReport.Get(email, date.Format(time.DateOnly)).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	return report, nil
+}
+
+// there are 2 types of errors we can get here:
+// 1. Error 400: Start date can not be later than 2024-07-29, invalid
+// 2. Error 400: Data for dates later than 2024-07-26 is not yet available. Please check back later, invalid
+// we want to check both and return true if we should check an earlier date
+func shouldCheckEarlierDateForReport(err error) bool {
+	if strings.Contains(err.Error(), "Error 400: Start date can not be later than ") {
+		return true
+	}
+	if strings.Contains(err.Error(), "Error 400: Data for dates later than ") {
+		return true
+	}
+	return false
 }
 
 func (g *mqlGoogleworkspaceUser) tokens() ([]interface{}, error) {
