@@ -1,5 +1,9 @@
-// Copyright (c) Mondoo, Inc.
-// SPDX-License-Identifier: BUSL-1.1
+// Copyright 2009 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// Original source: https://golang.org/src/path/path.go
+
+// The following code is adapted from golang but removes the cross-compile code so
+// that it always behaves unix style no matter for which platform it was compiled
 
 package tar
 
@@ -7,9 +11,6 @@ import (
 	"os"
 	"strings"
 )
-
-// the following code is adapted from golang but removes the cross-compile code so that it
-// always behaves unix style no matter for which platform it was compiled
 
 // docker images only use relative paths, we need to make them absolute here
 func Abs(path string) string {
