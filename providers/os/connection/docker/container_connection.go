@@ -16,6 +16,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
+	"go.mondoo.com/cnquery/v11/cli/tmp"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/container"
@@ -299,7 +300,7 @@ func NewContainerImageConnection(id uint32, conf *inventory.Config, asset *inven
 
 	// cache file locally
 	var filename string
-	tmpFile, err := tar.RandomFile()
+	tmpFile, err := tmp.File()
 	if err != nil {
 		return nil, err
 	}

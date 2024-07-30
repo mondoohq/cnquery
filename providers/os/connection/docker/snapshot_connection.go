@@ -7,6 +7,7 @@ import (
 	"context"
 	"os"
 
+	"go.mondoo.com/cnquery/v11/cli/tmp"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/tar"
@@ -21,7 +22,7 @@ type SnapshotConnection struct {
 // NewSnapshotConnection creates a snapshot for a docker engine container and opens it
 func NewSnapshotConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*SnapshotConnection, error) {
 	// cache container on local disk
-	f, err := tar.RandomFile()
+	f, err := tmp.File()
 	if err != nil {
 		return nil, err
 	}

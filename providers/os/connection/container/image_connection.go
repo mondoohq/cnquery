@@ -13,6 +13,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/v11/cli/tmp"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/container/auth"
@@ -30,7 +31,7 @@ func NewImageConnection(id uint32, conf *inventory.Config, asset *inventory.Asse
 		conf.DelayDiscovery = true // Delay discovery, to make sure we don't directly download the image
 	}
 	// ^^
-	f, err := tar.RandomFile()
+	f, err := tmp.File()
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +152,7 @@ func NewFromTar(id uint32, conf *inventory.Config, asset *inventory.Asset) (*tar
 	// we need to extract the image from the tar file and create a new tar connection
 	imageFilename := ""
 
-	f, err := tar.RandomFile()
+	f, err := tmp.File()
 	if err != nil {
 		return nil, err
 	}

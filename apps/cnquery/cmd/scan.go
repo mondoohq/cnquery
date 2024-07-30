@@ -47,9 +47,15 @@ func init() {
 	_ = scanCmd.Flags().MarkHidden("inventory-domainlist")
 
 	// bundles, packs & incognito mode
-	_ = scanCmd.Flags().Bool("incognito", false, "Run in incognito mode. Do not report scan results to Mondoo Platform")
-	_ = scanCmd.Flags().StringSlice("querypack", nil, "Set the query packs to execute. This requires `querypack-bundle`. You can specify multiple UIDs")
-	_ = scanCmd.Flags().StringSliceP("querypack-bundle", "f", nil, "Path to local query pack file")
+	_ = scanCmd.Flags().Bool("incognito",
+		false,
+		"Run in incognito mode. Do not report scan results to Mondoo Platform")
+	_ = scanCmd.Flags().StringSlice("querypack",
+		nil,
+		"Set the query packs to execute. This requires `querypack-bundle`. You can specify multiple UIDs")
+	_ = scanCmd.Flags().StringSliceP("querypack-bundle",
+		"f",
+		nil, "Path to local query pack file")
 	// flag completion command
 	_ = scanCmd.RegisterFlagCompletionFunc("querypack", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return getQueryPacksForCompletion(), cobra.ShellCompDirectiveDefault
