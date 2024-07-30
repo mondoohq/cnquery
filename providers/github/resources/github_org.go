@@ -18,7 +18,7 @@ import (
 )
 
 type mqlGithubOrganizationInternal struct {
-	repoMap map[string]*mqlGithubRepository
+	repoCacheMap map[string]*mqlGithubRepository
 }
 
 func (g *mqlGithubOrganization) id() (string, error) {
@@ -280,6 +280,10 @@ func (g *mqlGithubOrganization) repositories() ([]interface{}, error) {
 		listOpts.Page = resp.NextPage
 	}
 
+	if g.repoCacheMap == nil {
+		g.repoCacheMap = make(map[string]*mqlGithubRepository)
+	}
+
 	res := []interface{}{}
 	for i := range allRepos {
 		repo := allRepos[i]
@@ -289,7 +293,7 @@ func (g *mqlGithubOrganization) repositories() ([]interface{}, error) {
 			return nil, err
 		}
 		res = append(res, r)
-		g.repoMap[repo.GetName()] = r
+		g.repoCacheMap[repo.GetName()] = r
 	}
 
 	return res, nil
