@@ -25,13 +25,13 @@ var Config = plugin.Provider{
 			Name:  "atlassian",
 			Use:   "atlassian",
 			Short: "an Atlassian Cloud Jira, Confluence or Bitbucket instance",
-			Long: `atlassian is designed for querying resources within Atlassian Cloud, including Jira, Confluence, and SCIM.
+			Long: `Use the atlassian provider to query resources within Atlassian Cloud, including Jira, Confluence, and SCIM.
 
 Available Commands:
-  admin                     Specifies the Atlassian admin to interact with.
-  jira                      Specifies the Jira instance to interact with.
-  confluence                Specifies the Confluence instance to interact with.
-  scim                      Specifies the SCIM instance to interact with.
+  admin                     Atlassian administrative instance
+  jira                      Jira instance
+  confluence                Confluence instance
+  scim                      SCIM instance
 
 Examples:
   cnquery shell atlassian admin --admin-token <token>
@@ -39,10 +39,10 @@ Examples:
   cnquery shell atlassian confluence --host <host> --user <user> --user-token <token>
   cnquery shell atlassian scim <directory-id> --scim-token <token>
 
-If the ATLASSIAN_ADMIN_TOKEN environment variable is set, the admin-token flag is not required. If the ATLASSIAN_USER,
-ATLASSIAN_HOST, and ATLASSIAN_USER_TOKEN environment variables are set, the user, host, and user-token flags are not required.
+If you set the ATLASSIAN_ADMIN_TOKEN environment, you can omit the admin-token flag. If you set the ATLASSIAN_USER,
+ATLASSIAN_HOST, and ATLASSIAN_USER_TOKEN environment variables, you can omit the user, host, and user-token flags.
 
-For SCIM, you receive both the token and the directory-id from Atlassian when you setup an identity provider.
+For the SCIM token and the directory-id values: Atlassian provides these values when you set up an identity provider.
 `,
 			MaxArgs:   2,
 			Discovery: []string{},
@@ -69,7 +69,7 @@ For SCIM, you receive both the token and the directory-id from Atlassian when yo
 					Long:    "user-token",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "Atlassian user API token (used for Jira / Confluence)",
+					Desc:    "Atlassian user API token (used for Jira or Confluence)",
 				},
 				{
 					Long:    "scim-token",
