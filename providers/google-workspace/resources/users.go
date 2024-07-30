@@ -111,7 +111,7 @@ func (g *mqlGoogleworkspaceUser) usageReport() (*mqlGoogleworkspaceReportUsage, 
 	now := time.Now()
 	tries := 10
 	for tries > 0 {
-		report, err := fetchUsageReport(reportsService, primaryEmail, now)
+		report, err := fetchUsageReport(reportsService, primaryEmail, conn.CustomerID(), now)
 		if err != nil && shouldCheckEarlierDateForReport(err) {
 			now = now.Add(-day)
 			tries--
@@ -138,8 +138,8 @@ func (g *mqlGoogleworkspaceUser) usageReport() (*mqlGoogleworkspaceReportUsage, 
 	return nil, errors.New("could not fetch usage report for user, earliest tried date: " + now.Format(time.DateOnly))
 }
 
-func fetchUsageReport(svc *reports.Service, email string, date time.Time) (*reports.UsageReports, error) {
-	report, err := svc.UserUsageReport.Get(email, date.Format(time.DateOnly)).Do()
+func fetchUsageReport(svc *reports.Service, email string, customerId string, date time.Time) (*reports.UsageReports, error) {
+	report, err := svc.UserUsageReport.Get(email, date.Format(time.DateOnly)).CustomerId(customerId).Do()
 	if err != nil {
 		return nil, err
 	}
