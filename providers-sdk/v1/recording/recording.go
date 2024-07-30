@@ -330,13 +330,19 @@ func (r *recording) findAssetConnID(asset *inventory.Asset) (int, string) {
 			if id == asset.Id {
 				return i, asset.Id
 			}
-			for _, pidExisting := range r.Assets[i].Asset.PlatformIDs {
-				for _, pid := range asset.PlatformIds {
-					if pidExisting == pid {
-						return i, asset.Mrn
-					}
-				}
+		}
+	}
+
+	if asset.Platform != nil {
+		found := -1
+		for i := range r.Assets {
+			if r.Assets[i].Asset.Title == asset.Platform.Title {
+				found = i
+				break
 			}
+		}
+		if found != -1 {
+			return found, r.Assets[found].Asset.ID
 		}
 	}
 
