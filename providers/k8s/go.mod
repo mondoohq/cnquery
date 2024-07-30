@@ -65,7 +65,7 @@ require (
 	github.com/alecthomas/participle v0.3.0 // indirect
 	github.com/alecthomas/participle/v2 v2.1.1 // indirect
 	github.com/anchore/go-struct-converter v0.0.0-20221118182256-c68fdcfa2092 // indirect
-	github.com/aws/aws-sdk-go v1.55.3 // indirect
+	github.com/aws/aws-sdk-go v1.55.4 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.30.3 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.27.27 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.27 // indirect
@@ -288,7 +288,7 @@ require (
 	k8s.io/component-base v0.28.9 // indirect
 	k8s.io/kube-openapi v0.0.0-20240220201932-37d671a357a5 // indirect
 	k8s.io/kubelet v0.28.9 // indirect
-	modernc.org/libc v1.55.5 // indirect
+	modernc.org/libc v1.55.6 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.8.0 // indirect
 	modernc.org/sqlite v1.31.1 // indirect
