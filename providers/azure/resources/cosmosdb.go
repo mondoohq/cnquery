@@ -48,41 +48,46 @@ func (a *mqlAzureSubscriptionCosmosDbService) accounts() ([]interface{}, error) 
 	res := []interface{}{}
 
 	// Fetch resources of different types - other than MongoDB and PostgreSQL
-	err := fetchCosmosDBAccounts(ctx, a.MqlRuntime, conn, subId, &res)
+	cosmosAccounts, err := fetchCosmosDBAccounts(ctx, a.MqlRuntime, conn, subId)
 	if err != nil {
 		return nil, err
 	}
+	res = append(res, cosmosAccounts...)
 
-	err = fetchMongoDBClusters(ctx, a.MqlRuntime, conn, subId, &res)
+	mongoAccounts, err := fetchMongoDBAndPostgreSQLAccounts(ctx, a.MqlRuntime, conn, subId, "Microsoft.DocumentDB/mongoClusters")
 	if err != nil {
 		return nil, err
 	}
+	res = append(res, mongoAccounts...)
 
-	err = fetchPostgreSQLServerGroups(ctx, a.MqlRuntime, conn, subId, &res)
+	postgresAccounts, err := fetchMongoDBAndPostgreSQLAccounts(ctx, a.MqlRuntime, conn, subId, "Microsoft.DBforPostgreSQL/serverGroupsv2")
 	if err != nil {
 		return nil, err
 	}
+	res = append(res, postgresAccounts...)
 
 	return res, nil
 }
 
-func fetchCosmosDBAccounts(ctx context.Context, runtime *plugin.Runtime, conn *connection.AzureConnection, subId string, res *[]interface{}) error {
+func fetchCosmosDBAccounts(ctx context.Context, runtime *plugin.Runtime, conn *connection.AzureConnection, subId string) ([]interface{}, error) {
 	accClient, err := cosmosdb.NewDatabaseAccountsClient(subId, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
+
+	res := []interface{}{}
 	pager := accClient.NewListPager(&cosmosdb.DatabaseAccountsClientListOptions{})
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		for _, account := range page.Value {
 			properties, err := convert.JsonToDict(account.Properties)
 			if err != nil {
-				return err
+				return nil, err
 			}
 
 			mqlCosmosDbAccount, err := CreateResource(runtime, "azure.subscription.cosmosDbService.account",
@@ -96,34 +101,36 @@ func fetchCosmosDBAccounts(ctx context.Context, runtime *plugin.Runtime, conn *c
 					"properties": llx.DictData(properties),
 				})
 			if err != nil {
-				return err
+				return nil, err
 			}
-			*res = append(*res, mqlCosmosDbAccount)
+			res = append(res, mqlCosmosDbAccount)
 		}
 	}
-	return nil
+	return res, nil
 }
 
-func fetchMongoDBClusters(ctx context.Context, runtime *plugin.Runtime, conn *connection.AzureConnection, subId string, res *[]interface{}) error {
+func fetchMongoDBAndPostgreSQLAccounts(ctx context.Context, runtime *plugin.Runtime, conn *connection.AzureConnection, subId string, resourceType string) ([]interface{}, error) {
 	resClient, err := armresources.NewClient(subId, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
-	filter := "resourceType eq 'Microsoft.DocumentDB/mongoClusters'"
+
+	res := []interface{}{}
+	filter := "resourceType eq '" + resourceType + "'"
 	pager := resClient.NewListPager(&armresources.ClientListOptions{
 		Filter: &filter,
 	})
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		for _, account := range page.Value {
 			properties, err := convert.JsonToDict(account.Properties)
 			if err != nil {
-				return err
+				return nil, err
 			}
 
 			mqlResource, err := CreateResource(runtime, "azure.subscription.cosmosDbService.account",
@@ -137,51 +144,10 @@ func fetchMongoDBClusters(ctx context.Context, runtime *plugin.Runtime, conn *co
 					"properties": llx.DictData(properties),
 				})
 			if err != nil {
-				return err
+				return nil, err
 			}
-			*res = append(*res, mqlResource)
+			res = append(res, mqlResource)
 		}
 	}
-	return nil
-}
-
-func fetchPostgreSQLServerGroups(ctx context.Context, runtime *plugin.Runtime, conn *connection.AzureConnection, subId string, res *[]interface{}) error {
-	resClient, err := armresources.NewClient(subId, conn.Token(), &arm.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
-	})
-	if err != nil {
-		return err
-	}
-	filter := "resourceType eq 'Microsoft.DBforPostgreSQL/serverGroupsv2'"
-	pager := resClient.NewListPager(&armresources.ClientListOptions{
-		Filter: &filter,
-	})
-	for pager.More() {
-		page, err := pager.NextPage(ctx)
-		if err != nil {
-			return err
-		}
-		for _, account := range page.Value {
-			properties, err := convert.JsonToDict(account.Properties)
-			if err != nil {
-				return err
-			}
-
-			mqlResource, err := CreateResource(runtime, "azure.subscription.cosmosDbService.account",
-				map[string]*llx.RawData{
-					"id":         llx.StringDataPtr(account.ID),
-					"name":       llx.StringDataPtr(account.Name),
-					"tags":       llx.MapData(convert.PtrMapStrToInterface(account.Tags), types.String),
-					"location":   llx.StringDataPtr(account.Location),
-					"kind":       llx.StringDataPtr(account.Kind),
-					"type":       llx.StringDataPtr(account.Type),
-					"properties": llx.DictData(properties),
-				})
-			if err != nil {
-				return err
-			}
-			*res = append(*res, mqlResource)
-		}
-	}
-	return nil
+	return res, nil
 }
