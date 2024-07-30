@@ -4,7 +4,7 @@
 packs:
   - uid: mondoo-shodan-inventory
     name: Shodan Inventory Pack
-    version: 1.0.0
+    version: 1.1.0
     license: BUSL-1.1
     authors:
       - name: Mondoo, Inc
@@ -63,4 +63,8 @@ packs:
         title: Shodan info about Ports
         mql: |
           shodan.host.ports
+      - uid: mondoo-shodan-inventory-ports
+        title: Shodan info about vulnerabilities
+        mql: |
+          shodan.host.vulnerabilities
    
