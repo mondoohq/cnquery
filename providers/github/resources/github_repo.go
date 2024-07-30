@@ -1115,13 +1115,14 @@ func newMqlGithubFile(runtime *plugin.Runtime, ownerName string, repoName string
 		}
 	}
 	res, err := CreateResource(runtime, "github.file", map[string]*llx.RawData{
-		"path":      llx.StringDataPtr(content.Path),
-		"name":      llx.StringDataPtr(content.Name),
-		"type":      llx.StringDataPtr(content.Type),
-		"sha":       llx.StringDataPtr(content.SHA),
-		"isBinary":  llx.BoolData(isBinary),
-		"ownerName": llx.StringData(ownerName),
-		"repoName":  llx.StringData(repoName),
+		"path":        llx.StringDataPtr(content.Path),
+		"name":        llx.StringDataPtr(content.Name),
+		"type":        llx.StringDataPtr(content.Type),
+		"sha":         llx.StringDataPtr(content.SHA),
+		"isBinary":    llx.BoolData(isBinary),
+		"ownerName":   llx.StringData(ownerName),
+		"repoName":    llx.StringData(repoName),
+		"downloadUrl": llx.StringDataPtr(content.DownloadURL),
 	})
 	if err != nil {
 		return nil, err
