@@ -211,7 +211,7 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.GoogleWorkspac
 		Kind:                  "api",
 		Title:                 "Google Workspace",
 		Runtime:               "google-workspace",
-		TechnologyUrlSegments: []string{"google-workspace", conn.CustomerID()},
+		TechnologyUrlSegments: []string{"saas", "google-workspace", conn.CustomerID()},
 	}
 
 	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/googleworkspace/customer/" + conn.CustomerID()}

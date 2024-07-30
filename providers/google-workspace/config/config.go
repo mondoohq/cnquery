@@ -58,11 +58,15 @@ The provider requires these three flags:
 	},
 	AssetUrlTrees: []*inventory.AssetUrlBranch{
 		{
-			PathSegments: []string{"technology=google-workspace"},
-			Key:          "customer",
-			Title:        "Customer",
+			PathSegments: []string{"technology=saas"},
+			Key:          "category",
 			Values: map[string]*inventory.AssetUrlBranch{
-				"*": nil,
+				"google-workspace": {
+					Key: "customer",
+					Values: map[string]*inventory.AssetUrlBranch{
+						"*": nil,
+					},
+				},
 			},
 		},
 	},
