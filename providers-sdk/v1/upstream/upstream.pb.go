@@ -110,7 +110,7 @@ func (x *UpstreamConfig) GetApiProxy() string {
 	return ""
 }
 
-// ServiceAccountCredentials are used to authenticate with the Mondoo platform
+// ServiceAccountCredentials are used to authenticate with the Mondoo Platform
 type ServiceAccountCredentials struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
