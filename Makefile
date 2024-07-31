@@ -211,7 +211,8 @@ providers/build: \
 	providers/build/cloudformation \
 	providers/build/shodan \
 	providers/build/ansible \
-	providers/build/snowflake
+	providers/build/snowflake \
+	providers/build/mondoo
 
 .PHONY: providers/install
 # Note we need \ to escape the target line into multiple lines
@@ -240,7 +241,8 @@ providers/install: \
 	providers/install/cloudformation \
 	providers/install/shodan \
 	providers/install/ansible \
-	providers/install/snowflake
+	providers/install/snowflake \
+	providers/install/mondoo
 
 providers/build/mock: providers/lr
 	./lr go providers-sdk/v1/testutils/mockprovider/resources/mockprovider.lr
@@ -373,6 +375,11 @@ providers/build/snowflake: providers/lr
 providers/install/snowflake:
 	@$(call installProvider, providers/snowflake)
 
+providers/build/mondoo: providers/lr
+	@$(call buildProvider, providers/mondoo)
+providers/install/mondoo:
+	@$(call installProvider, providers/mondoo)
+
 providers/dist:
 	@$(call buildProviderDist, providers/network)
 	@$(call buildProviderDist, providers/os)
@@ -399,6 +406,7 @@ providers/dist:
 	@$(call buildProviderDist, providers/shodan)
 	@$(call buildProviderDist, providers/ansible)
 	@$(call buildProviderDist, providers/snowflake)
+	@$(call buildProviderDist, providers/mondoo)
 
 providers/bundle:
 	@$(call bundleProvider, providers/network)
@@ -426,6 +434,7 @@ providers/bundle:
 	@$(call bundleProvider, providers/shodan)
 	@$(call bundleProvider, providers/ansible)
 	@$(call bundleProvider, providers/snowflake)
+	@$(call bundleProvider, providers/mondoo)
 
 providers/test:
 	@$(call testProvider, providers/core)
@@ -454,6 +463,7 @@ providers/test:
 	@$(call testGoModProvider, providers/shodan)
 	@$(call testGoModProvider, providers/ansible)
 	@$(call testGoModProvider, providers/snowflake)
+	@$(call testGoModProvider, providers/mondoo)
 
 lr/test:
 	go test ./resources/lr/...
@@ -577,11 +587,6 @@ lr/docs/markdown: providers/lr
 		--description "The Slack resource pack lets you use MQL to query and assess the security of your Slack identities and configuration." \
 		--docs-file providers/slack/resources/slack.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/slack-pack
-	./lr markdown providers/snowflake/resources/snowflake.lr \
-		--pack-name "Snowflake" \
-		--description "The Snowflake resource pack lets you use MQL to query and assess the security of your Snowflake identities and configuration." \
-		--docs-file providers/snowflake/resources/snowflake.lr.manifest.yaml \
-		--output ../docs/docs/mql/resources/snowflake-pack
 	./lr markdown providers/terraform/resources/terraform.lr \
 		--pack-name "Terraform IaC" \
 		--description "The Terraform IaC resource pack lets you use MQL to query and assess the security of your Terraform HCL, plan, and state resources." \
@@ -597,6 +602,16 @@ lr/docs/markdown: providers/lr
 		--description "The VMware vSphere resource pack lets you use MQL to query and assess the security of your VMware vSphere hosts and services." \
 		--docs-file providers/vsphere/resources/vsphere.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/vsphere-pack
+	./lr markdown providers/snowflake/resources/snowflake.lr \
+		--pack-name "Snowflake" \
+		--description "The Snowflake resource pack lets you use MQL to query and assess the security of your Snowflake identities and configuration." \
+		--docs-file providers/snowflake/resources/snowflake.lr.manifest.yaml \
+		--output ../docs/docs/mql/resources/snowflake-pack
+	./lr markdown providers/mondoo/resources/mondoo.lr \
+		--pack-name "Mondoo" \
+		--description "The Mondoo resource pack lets you interact with the Mondoo platform and its assets and resources." \
+		--docs-file providers/mondoo/resources/mondoo.lr.manifest.yaml \
+		--output ../docs/docs/mql/resources/mondoo-pack
 
 lr/docs/stats:
 	@echo "Please remember to re-run before using this:"

@@ -1,0 +1,44 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
+import "../../core/resources/core.lr"
+import "../../network/resources/network.lr"
+
+option provider = "go.mondoo.com/cnquery/v11/providers/mondoo"
+option go_package = "go.mondoo.com/cnquery/v11/providers/mondoo/resources"
+
+// Mondoo Client
+mondoo.agent @defaults("mrn") {
+  // Client identifier
+  mrn string
+}
+
+// Mondoo Space
+mondoo.space @defaults("name mrn") {
+  // Space name
+  name string
+  // Space identifier
+  mrn string
+  // Assets in space
+  assets() []mondoo.asset
+}
+
+// Mondoo Asset
+private mondoo.asset @defaults("name platform") {
+  // Asset name
+  name string
+  // Asset identifier
+  mrn string
+  // Platform name
+  platform string
+  // Asset resources
+  resources() []mondoo.resource
+}
+
+// Resource
+private mondoo.resource @defaults("name id") {
+  // Resource name
+  name string
+  // Resource identifier
+  id string
+} 
