@@ -4,11 +4,11 @@
 resources:
   mondoo:
     fields: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 9.0.0
   mondoo.agent:
     fields:
       mrn: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 9.0.0
   mondoo.asset:
     fields:
       mrn: {}
@@ -16,16 +16,16 @@ resources:
       platform: {}
       resources: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 9.0.0
   mondoo.resource:
     fields:
       id: {}
       name: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 9.0.0
   mondoo.space:
     fields:
       assets: {}
       mrn: {}
       name: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 9.0.0
