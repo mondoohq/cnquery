@@ -60,7 +60,8 @@ You remain logged in until you explicitly log out using the 'logout' subcommand.
 		annotations, _ := cmd.Flags().GetStringToString("annotation")
 		timer, _ := cmd.Flags().GetInt("timer")
 		splay, _ := cmd.Flags().GetInt("splay")
-		err := register(token, annotations, timer, splay)
+		apiEndpointOverride, _ := cmd.Flags().GetString("api-endpoint")
+		err := register(token, annotations, timer, splay, apiEndpointOverride)
 		if err != nil {
 			defer func() {
 				s, err := checkStatus()
@@ -74,7 +75,7 @@ You remain logged in until you explicitly log out using the 'logout' subcommand.
 	},
 }
 
-func register(token string, annotations map[string]string, timer int, splay int) error {
+func register(token string, annotations map[string]string, timer int, splay int, apiEndpointOverride string) error {
 	var err error
 	var credential *upstream.ServiceAccountCredentials
 
@@ -114,7 +115,8 @@ func register(token string, annotations map[string]string, timer int, splay int)
 				log.Info().Msg("token will expire at " + claims.Claims.Expiry.Time().Format(time.RFC1123))
 			}
 
-			if apiEndpoint == "" {
+			// use the api endpoint from the token if not overridden via flag
+			if apiEndpointOverride == "" {
 				apiEndpoint = claims.ApiEndpoint
 			}
 		}
