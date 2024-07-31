@@ -1301,10 +1301,12 @@ func (g *mqlGithubFile) content() (string, error) {
 	path := g.Path.Data
 	fileContent, _, _, err := conn.Client().Repositories.GetContents(context.TODO(), ownerName, repoName, path, &github.RepositoryContentGetOptions{})
 	if err != nil {
-		log.Error().Err(err).Msg("unable to get contents list")
 		if strings.Contains(err.Error(), "404") {
+			log.Debug().Err(err).
+				Msg("unable to get contents list")
 			return "", nil
 		}
+		log.Error().Err(err).Msg("unable to get contents list")
 		return "", err
 	}
 
