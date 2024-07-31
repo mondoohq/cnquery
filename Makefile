@@ -90,8 +90,12 @@ define buildProvider
 	./lr docs json ${$@_HOME}/resources/${$@_NAME}.lr.manifest.yaml
 	echo "--> [${$@_NAME}] generate CLI json"
 	cd ${$@_HOME} && go run ./gen/main.go .
-	echo "--> [${$@_NAME}] creating ${$@_BIN}"
-	cd ${$@_HOME} && GOOS=${TARGETOS} go build -o ${$@_DIST_BIN}${BIN_SUFFIX} ./main.go
+	@if [ "$(SKIP_COMPILE)" = "yes" ]; then \
+		echo "--> [${$@_NAME}] skipping compile"; \
+	else \
+		echo "--> [${$@_NAME}] creating ${$@_BIN}"; \
+		cd ${$@_HOME} && GOOS=${TARGETOS} go build -o ${$@_DIST_BIN}${BIN_SUFFIX} ./main.go; \
+	fi
 endef
 
 define buildProviderDist
