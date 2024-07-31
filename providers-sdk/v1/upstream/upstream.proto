@@ -15,7 +15,7 @@ message UpstreamConfig {
   string api_proxy = 6;
 }
 
-// ServiceAccountCredentials are used to authenticate with the Mondoo Platform
+// ServiceAccountCredentials are used to authenticate with Mondoo Platform
 message ServiceAccountCredentials {
   // MRN of the service account
   string mrn = 1;
