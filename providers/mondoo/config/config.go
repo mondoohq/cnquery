@@ -17,7 +17,7 @@ var Config = plugin.Provider{
 		{
 			Name:      "mondoo",
 			Use:       "mondoo",
-			Short:     "a Mondoo platform",
+			Short:     "the Mondoo Platform",
 			MinArgs:   0,
 			MaxArgs:   4,
 			Discovery: []string{},

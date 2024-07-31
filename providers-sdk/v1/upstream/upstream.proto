@@ -15,7 +15,7 @@ message UpstreamConfig {
   string api_proxy = 6;
 }
 
-// ServiceAccountCredentials are used to authenticate with the Mondoo platform
+// ServiceAccountCredentials are used to authenticate with the Mondoo Platform
 message ServiceAccountCredentials {
   // MRN of the service account
   string mrn = 1;
@@ -33,7 +33,7 @@ message ServiceAccountCredentials {
 
 service AgentManager {
   // RegisterAgent registers a new managed agent
-  rpc RegisterAgent(AgentRegistrationRequest) 
+  rpc RegisterAgent(AgentRegistrationRequest)
     returns (AgentRegistrationConfirmation);
 
   // UnRegister removes the managed agent from management
@@ -82,7 +82,7 @@ message AgentRegistrationConfirmation {
   ServiceAccountCredentials credential = 2;
 }
 
-message Mrn { 
+message Mrn {
   string mrn = 1;
 }
 

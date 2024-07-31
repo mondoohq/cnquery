@@ -6,11 +6,12 @@ package health
 import (
 	"context"
 	"fmt"
+	"runtime/debug"
+
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/cli/config"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream"
 	"go.mondoo.com/ranger-rpc"
-	"runtime/debug"
 )
 
 //go:generate protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. errors.proto
@@ -90,5 +91,5 @@ func sendPanic(product, version, build string, r any, stacktrace []byte) {
 		return
 	}
 
-	log.Info().Msg("reported panic to Mondoo platform")
+	log.Info().Msg("reported panic to Mondoo Platform")
 }
