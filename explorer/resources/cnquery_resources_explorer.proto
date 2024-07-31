@@ -10,6 +10,7 @@ option go_package = "go.mondoo.com/cnquery/v11/explorer/resources";
 
 service ResourcesExplorer {
   rpc GetResourcesData(EntityResourcesReq) returns (EntityResourcesRes) {}
+  rpc ListResources(ListResourcesReq) returns (ListResourcesRes) {}
 }
 
 message EntityResourcesReq {
@@ -25,5 +26,16 @@ message ResourceDataReq {
 
 message EntityResourcesRes {
   string entity_mrn = 1;
+  repeated cnquery.llx.ResourceRecording resources = 4;
+}
+
+message ListResourcesReq {
+  string entity_mrn = 1;
+}
+
+message ListResourcesRes {
+  string entity_mrn = 1;
+  // Resources for this entity, limited to their name + ID.
+  // If you want to access their data, look at EntityResourcesRes
   repeated cnquery.llx.ResourceRecording resources = 4;
 }

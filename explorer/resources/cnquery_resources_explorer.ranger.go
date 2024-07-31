@@ -20,6 +20,7 @@ import (
 
 type ResourcesExplorer interface {
 	GetResourcesData(context.Context, *EntityResourcesReq) (*EntityResourcesRes, error)
+	ListResources(context.Context, *ListResourcesReq) (*ListResourcesRes, error)
 }
 
 // client implementation
@@ -53,6 +54,11 @@ func (c *ResourcesExplorerClient) GetResourcesData(ctx context.Context, in *Enti
 	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/GetResourcesData"}, ""), in, out)
 	return out, err
 }
+func (c *ResourcesExplorerClient) ListResources(ctx context.Context, in *ListResourcesReq) (*ListResourcesRes, error) {
+	out := new(ListResourcesRes)
+	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/ListResources"}, ""), in, out)
+	return out, err
+}
 
 // server implementation
 
@@ -77,6 +83,7 @@ func NewResourcesExplorerServer(handler ResourcesExplorer, opts ...ResourcesExpl
 		Name: "ResourcesExplorer",
 		Methods: map[string]ranger.Method{
 			"GetResourcesData": srv.GetResourcesData,
+			"ListResources":    srv.ListResources,
 		},
 	}
 	return ranger.NewRPCServer(&service)
@@ -110,4 +117,28 @@ func (p *ResourcesExplorerServer) GetResourcesData(ctx context.Context, reqBytes
 		return nil, err
 	}
 	return p.handler.GetResourcesData(ctx, &req)
+}
+func (p *ResourcesExplorerServer) ListResources(ctx context.Context, reqBytes *[]byte) (pb.Message, error) {
+	var req ListResourcesReq
+	var err error
+
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, errors.New("could not access header")
+	}
+
+	switch md.First("Content-Type") {
+	case "application/protobuf", "application/octet-stream", "application/grpc+proto":
+		err = pb.Unmarshal(*reqBytes, &req)
+	default:
+		// handle case of empty object
+		if len(*reqBytes) > 0 {
+			err = jsonpb.UnmarshalOptions{DiscardUnknown: true}.Unmarshal(*reqBytes, &req)
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	return p.handler.ListResources(ctx, &req)
 }
