@@ -5,12 +5,14 @@ package resources
 
 import (
 	"context"
+	"time"
 
 	"go.mondoo.com/cnquery/v11/explorer/resources"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers/mondoo/connection"
+	"go.mondoo.com/cnquery/v11/types"
 	"go.mondoo.com/cnquery/v11/utils/multierr"
-	"go.mondoo.com/mondoo-go"
+	mondoogql "go.mondoo.com/mondoo-go"
 )
 
 func (m *mqlMondooSpace) assets() ([]any, error) {
@@ -26,6 +28,10 @@ func (m *mqlMondooSpace) assets() ([]any, error) {
 					State     string
 					Name      string
 					AssetType string `graphql:"asset_type"`
+					UpdatedAt *string
+					// Annotations map[string]string
+					Annotations []keyValue
+					Labels      []keyValue
 				}
 			}
 		} `graphql:"assets(spaceMrn: $spaceMrn)"`
@@ -43,9 +49,12 @@ func (m *mqlMondooSpace) assets() ([]any, error) {
 	for i := range q.Assets.Edges {
 		e := q.Assets.Edges[i]
 		raw, err := CreateResource(m.MqlRuntime, "mondoo.asset", map[string]*llx.RawData{
-			"name":     llx.StringData(e.Node.Name),
-			"mrn":      llx.StringData(e.Node.Mrn),
-			"platform": llx.StringData(e.Node.AssetType),
+			"name":        llx.StringData(e.Node.Name),
+			"mrn":         llx.StringData(e.Node.Mrn),
+			"platform":    llx.StringData(e.Node.AssetType),
+			"annotations": llx.MapData(keyvals2map(e.Node.Annotations), types.Map(types.String, types.String)),
+			"labels":      llx.MapData(keyvals2map(e.Node.Labels), types.Map(types.String, types.String)),
+			"updatedAt":   llx.TimeDataPtr(string2time(e.Node.UpdatedAt)),
 		})
 		if err != nil {
 			return nil, err
@@ -54,6 +63,38 @@ func (m *mqlMondooSpace) assets() ([]any, error) {
 	}
 
 	return res, nil
+}
+
+type keyValue struct {
+	Key   string
+	Value *string
+}
+
+func keyvals2map(keyvals []keyValue) map[string]any {
+	if len(keyvals) == 0 {
+		return nil
+	}
+	res := make(map[string]any, len(keyvals))
+	for i := range keyvals {
+		cur := keyvals[i]
+		if cur.Value == nil {
+			res[cur.Key] = ""
+		} else {
+			res[cur.Key] = *cur.Value
+		}
+	}
+	return res
+}
+
+func string2time(s *string) *time.Time {
+	if s == nil {
+		return nil
+	}
+	res, err := time.Parse(time.RFC3339, *s)
+	if err != nil {
+		return nil
+	}
+	return &res
 }
 
 func (m *mqlMondooAsset) id() (string, error) {

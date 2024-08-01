@@ -11,11 +11,19 @@ resources:
     min_mondoo_version: 9.0.0
   mondoo.asset:
     fields:
+      annotations: {}
+      createdAt: {}
+      labels: {}
       mrn: {}
       name: {}
       platform: {}
       resources: {}
+      updatedAt: {}
     is_private: true
+    min_mondoo_version: 9.0.0
+  mondoo.client:
+    fields:
+      mrn: {}
     min_mondoo_version: 9.0.0
   mondoo.resource:
     fields:
