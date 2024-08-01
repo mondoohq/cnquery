@@ -129,9 +129,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"mondoo.asset.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMondooAsset).GetLabels()).ToDataRes(types.Map(types.String, types.String))
 	},
-	"mondoo.asset.createdAt": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMondooAsset).GetCreatedAt()).ToDataRes(types.Time)
-	},
 	"mondoo.asset.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMondooAsset).GetUpdatedAt()).ToDataRes(types.Time)
 	},
@@ -202,10 +199,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"mondoo.asset.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMondooAsset).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
-		return
-	},
-	"mondoo.asset.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMondooAsset).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"mondoo.asset.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -372,7 +365,6 @@ type mqlMondooAsset struct {
 	Platform plugin.TValue[string]
 	Annotations plugin.TValue[map[string]interface{}]
 	Labels plugin.TValue[map[string]interface{}]
-	CreatedAt plugin.TValue[*time.Time]
 	UpdatedAt plugin.TValue[*time.Time]
 	Resources plugin.TValue[[]interface{}]
 }
@@ -432,10 +424,6 @@ func (c *mqlMondooAsset) GetAnnotations() *plugin.TValue[map[string]interface{}]
 
 func (c *mqlMondooAsset) GetLabels() *plugin.TValue[map[string]interface{}] {
 	return &c.Labels
-}
-
-func (c *mqlMondooAsset) GetCreatedAt() *plugin.TValue[*time.Time] {
-	return &c.CreatedAt
 }
 
 func (c *mqlMondooAsset) GetUpdatedAt() *plugin.TValue[*time.Time] {

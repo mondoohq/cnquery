@@ -12,7 +12,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/mondoo/connection"
 	"go.mondoo.com/cnquery/v11/types"
 	"go.mondoo.com/cnquery/v11/utils/multierr"
-	"go.mondoo.com/mondoo-go"
+	mondoogql "go.mondoo.com/mondoo-go"
 )
 
 func (m *mqlMondooSpace) assets() ([]any, error) {
@@ -28,7 +28,6 @@ func (m *mqlMondooSpace) assets() ([]any, error) {
 					State     string
 					Name      string
 					AssetType string `graphql:"asset_type"`
-					CreatedAt *string
 					UpdatedAt *string
 					// Annotations map[string]string
 					Annotations []keyValue
@@ -55,7 +54,6 @@ func (m *mqlMondooSpace) assets() ([]any, error) {
 			"platform":    llx.StringData(e.Node.AssetType),
 			"annotations": llx.MapData(keyvals2map(e.Node.Annotations), types.Map(types.String, types.String)),
 			"labels":      llx.MapData(keyvals2map(e.Node.Labels), types.Map(types.String, types.String)),
-			"createdAt":   llx.TimeDataPtr(string2time(e.Node.CreatedAt)),
 			"updatedAt":   llx.TimeDataPtr(string2time(e.Node.UpdatedAt)),
 		})
 		if err != nil {

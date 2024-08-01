@@ -35,8 +35,6 @@ private mondoo.asset @defaults("name platform") {
   annotations map[string]string
   // Labels associated with this asset
   labels map[string]string
-  // Time this asset was created
-  createdAt time
   // Time this asset was last updated
   updatedAt time
   // Asset resources
