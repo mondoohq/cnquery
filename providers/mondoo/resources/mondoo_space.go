@@ -7,11 +7,9 @@ import (
 	"context"
 	"time"
 
-	"go.mondoo.com/cnquery/v11/explorer/resources"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers/mondoo/connection"
 	"go.mondoo.com/cnquery/v11/types"
-	"go.mondoo.com/cnquery/v11/utils/multierr"
 	mondoogql "go.mondoo.com/mondoo-go"
 )
 
@@ -32,6 +30,10 @@ func (m *mqlMondooSpace) assets() ([]any, error) {
 					// Annotations map[string]string
 					Annotations []keyValue
 					Labels      []keyValue
+					Score       struct {
+						Grade string
+						Value int
+					}
 				}
 			}
 		} `graphql:"assets(spaceMrn: $spaceMrn)"`
@@ -55,6 +57,8 @@ func (m *mqlMondooSpace) assets() ([]any, error) {
 			"annotations": llx.MapData(keyvals2map(e.Node.Annotations), types.Map(types.String, types.String)),
 			"labels":      llx.MapData(keyvals2map(e.Node.Labels), types.Map(types.String, types.String)),
 			"updatedAt":   llx.TimeDataPtr(string2time(e.Node.UpdatedAt)),
+			"scoreGrade":  llx.StringData(e.Node.Score.Grade),
+			"scoreValue":  llx.IntData(e.Node.Score.Value),
 		})
 		if err != nil {
 			return nil, err
@@ -95,49 +99,4 @@ func string2time(s *string) *time.Time {
 		return nil
 	}
 	return &res
-}
-
-func (m *mqlMondooAsset) id() (string, error) {
-	return m.Mrn.Data, nil
-}
-
-func (m *mqlMondooAsset) resources() ([]any, error) {
-	conn := m.MqlRuntime.Connection.(*connection.Connection)
-	upstream := conn.Upstream
-
-	explorer, err := resources.NewRemoteServices(upstream.ApiEndpoint, upstream.Plugins, upstream.HttpClient)
-	if err != nil {
-		return nil, err
-	}
-
-	// urecording, err := recording.NewUpstreamRecording(context.Background(), explorer, m.Mrn.Data)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	list, err := explorer.ListResources(context.Background(), &resources.ListResourcesReq{
-		EntityMrn: m.Mrn.Data,
-	})
-	if err != nil {
-		return nil, multierr.Wrap(err, "failed to list resources for asset "+m.Mrn.Data)
-	}
-
-	res := make([]any, len(list.Resources))
-	for i := range list.Resources {
-		resource := list.Resources[i]
-		raw, err := CreateResource(m.MqlRuntime, "mondoo.resource", map[string]*llx.RawData{
-			"name": llx.StringData(resource.Resource),
-			"id":   llx.StringData(resource.Id),
-		})
-		if err != nil {
-			return nil, multierr.Wrap(err, "failed to initialize resource on Mondoo asset "+m.Mrn.Data)
-		}
-		res[i] = raw
-	}
-
-	return res, nil
-}
-
-func (m *mqlMondooResource) id() (string, error) {
-	return m.Name.Data + "\x00" + m.Id.Data, nil
 }

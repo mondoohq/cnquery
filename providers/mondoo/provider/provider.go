@@ -6,7 +6,7 @@ package provider
 import (
 	"context"
 	"errors"
-	"strings"
+	"fmt"
 
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/mrn"
@@ -31,11 +31,6 @@ func Init() *Service {
 }
 
 func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error) {
-	flags := req.Flags
-	if flags == nil {
-		flags = map[string]*llx.Primitive{}
-	}
-
 	inventoryConfig := &inventory.Config{
 		Type: req.Connector,
 	}
@@ -43,26 +38,6 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		Connections: []*inventory.Config{inventoryConfig},
 	}
 	return &plugin.ParseCLIRes{Asset: &asset}, nil
-}
-
-func parseFlagsToFiltersOpts(m map[string]*llx.Primitive) map[string]string {
-	o := make(map[string]string, 0)
-
-	if x, ok := m["filters"]; ok && len(x.Map) != 0 {
-		for k, v := range x.Map {
-			if strings.Contains(k, "tag:") {
-				o[k] = string(v.Value)
-			}
-			if k == "instance-id" {
-				o[k] = string(v.Value)
-			}
-			if strings.Contains(k, "region") {
-				o[k] = string(v.Value)
-			}
-		}
-	}
-
-	return o
 }
 
 func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*plugin.ConnectRes, error) {
@@ -106,19 +81,11 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			return nil, err
 		}
 
-		name := mrnBasenameOrMrn(upstream.SpaceMrn)
-
-		asset.Connections[0].Id = connId
-		asset.Name = "Mondoo Space " + name
-		asset.PlatformIds = []string{upstream.SpaceMrn}
-		asset.Platform = &inventory.Platform{
-			Name:    "mondoo-space",
-			Title:   "Mondoo Space",
-			Family:  []string{},
-			Kind:    "api",
-			Runtime: "mondoo",
-			Labels:  map[string]string{},
+		err = fillAsset(upstream.SpaceMrn, asset)
+		if err != nil {
+			return nil, err
 		}
+		asset.Connections[0].Id = connId
 
 		return plugin.NewRuntime(
 			conn,
@@ -134,11 +101,54 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		return nil, err
 	}
 
-	if err := s.initResources(runtime); err != nil {
+	if err := s.initResources(runtime, asset); err != nil {
 		return nil, err
 	}
 
 	return runtime.Connection.(*connection.Connection), nil
+}
+
+func fillAsset(mrnStr string, asset *inventory.Asset) error {
+	m, err := mrn.NewMRN(mrnStr)
+	if err != nil {
+		return err
+	}
+
+	name := mrnBasenameOrMrn(mrnStr)
+	asset.PlatformIds = []string{mrnStr}
+	asset.Name = name
+
+	_, err = m.ResourceID("spaces")
+	// we have a space component in the MRN, it's a space config
+	if err == nil {
+		asset.Name = fmt.Sprintf("Mondoo Space %s", name)
+		asset.Platform = &inventory.Platform{
+			Name:    "mondoo-space",
+			Title:   "Mondoo Space",
+			Family:  []string{},
+			Kind:    "api",
+			Runtime: "mondoo",
+			Labels:  map[string]string{},
+		}
+		return nil
+	}
+
+	// we have an org component in the MRN, it's a org config
+	_, err = m.ResourceID("organizations")
+	if err == nil {
+		asset.Name = fmt.Sprintf("Mondoo Organization %s", name)
+		asset.Platform = &inventory.Platform{
+			Name:    "mondoo-organization",
+			Title:   "Mondoo Organization",
+			Family:  []string{},
+			Kind:    "api",
+			Runtime: "mondoo",
+			Labels:  map[string]string{},
+		}
+		return nil
+	}
+
+	return fmt.Errorf("invalid MRN '%s', must contain either 'spaces' or 'organizations' component", mrnStr)
 }
 
 func mrnBasenameOrMrn(m string) string {
@@ -153,7 +163,7 @@ func mrnBasenameOrMrn(m string) string {
 	return base
 }
 
-func (s *Service) initResources(runtime *plugin.Runtime) error {
+func (s *Service) initResources(runtime *plugin.Runtime, asset *inventory.Asset) error {
 	conn := runtime.Connection.(*connection.Connection)
 	var err error
 
@@ -165,12 +175,22 @@ func (s *Service) initResources(runtime *plugin.Runtime) error {
 	}
 
 	spaceMrn := conn.Upstream.SpaceMrn
-	_, err = resources.CreateResource(runtime, "mondoo.space", map[string]*llx.RawData{
-		"name": llx.StringData(mrnBasenameOrMrn(spaceMrn)),
-		"mrn":  llx.StringData(spaceMrn),
-	})
-	if err != nil {
-		return err
+	if asset.Platform.Name == "mondoo-space" {
+		_, err = resources.CreateResource(runtime, "mondoo.space", map[string]*llx.RawData{
+			"name": llx.StringData(mrnBasenameOrMrn(spaceMrn)),
+			"mrn":  llx.StringData(spaceMrn),
+		})
+		if err != nil {
+			return err
+		}
+	} else if asset.Platform.Name == "mondoo-organization" {
+		_, err = resources.CreateResource(runtime, "mondoo.organization", map[string]*llx.RawData{
+			"name": llx.StringData(mrnBasenameOrMrn(spaceMrn)),
+			"mrn":  llx.StringData(spaceMrn),
+		})
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

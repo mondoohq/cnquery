@@ -18,12 +18,20 @@ resources:
       name: {}
       platform: {}
       resources: {}
+      scoreGrade: {}
+      scoreValue: {}
       updatedAt: {}
     is_private: true
     min_mondoo_version: 9.0.0
   mondoo.client:
     fields:
       mrn: {}
+    min_mondoo_version: 9.0.0
+  mondoo.organization:
+    fields:
+      mrn: {}
+      name: {}
+      spaces: {}
     min_mondoo_version: 9.0.0
   mondoo.resource:
     fields:
