@@ -5,13 +5,31 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/mondoo/connection"
 	"go.mondoo.com/cnquery/v11/types"
 	mondoogql "go.mondoo.com/mondoo-go"
 )
+
+func initMondooSpace(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	conn := runtime.Connection.(*connection.Connection)
+	if conn.Type != connection.ConnTypeSpace {
+		return nil, nil, errors.New("cannot initialize mondoo.space, invalid connection")
+	}
+	args["mrn"] = llx.StringData(conn.Upstream.SpaceMrn)
+	// TODO: we should fetch this from the API, mrn basename != name
+	args["name"] = llx.StringData(connection.MrnBasenameOrMrn(conn.Upstream.SpaceMrn))
+
+	return args, nil, nil
+}
+
+func (m *mqlMondooSpace) id() (string, error) {
+	return m.Mrn.Data, nil
+}
 
 func (m *mqlMondooSpace) assets() ([]any, error) {
 	conn := m.MqlRuntime.Connection.(*connection.Connection)

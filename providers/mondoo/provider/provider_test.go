@@ -8,24 +8,28 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream"
+	"go.mondoo.com/cnquery/v11/providers/mondoo/connection"
 )
-
-func TestMrnBasenameOrMrn(t *testing.T) {
-	mrn := "//captain.api.mondoo.app/organizations/romantic-hopper-662653"
-	base := mrnBasenameOrMrn(mrn)
-	require.Equal(t, "romantic-hopper-662653", base)
-
-	mrn = "romantic-hopper-662653"
-	base = mrnBasenameOrMrn(mrn)
-	require.Equal(t, "romantic-hopper-662653", base)
-}
 
 func TestFillAsset(t *testing.T) {
 	t.Run("mondoo organization asset", func(t *testing.T) {
-		a := &inventory.Asset{}
-		mrn := "//captain.api.mondoo.app/organizations/romantic-hopper-662653"
-		err := fillAsset(mrn, a)
-		require.NoError(t, err)
+		a := &inventory.Asset{
+			Connections: []*inventory.Config{
+				{},
+			},
+		}
+		conn := &connection.Connection{
+			Connection: plugin.NewConnection(1, a),
+			Type:       connection.ConnTypeOrganization,
+			Upstream: &upstream.UpstreamClient{
+				UpstreamConfig: upstream.UpstreamConfig{
+					SpaceMrn: "//captain.api.mondoo.app/organization/romantic-hopper-662653",
+				},
+			},
+		}
+		fillAsset(conn, a)
 		require.Equal(t, "Mondoo Organization romantic-hopper-662653", a.Name)
 
 		expectedPlatform := &inventory.Platform{
@@ -40,10 +44,21 @@ func TestFillAsset(t *testing.T) {
 	})
 
 	t.Run("mondoo space asset", func(t *testing.T) {
-		a := &inventory.Asset{}
-		mrn := "//captain.api.mondoo.app/spaces/romantic-hopper-662653"
-		err := fillAsset(mrn, a)
-		require.NoError(t, err)
+		a := &inventory.Asset{
+			Connections: []*inventory.Config{
+				{},
+			},
+		}
+		conn := &connection.Connection{
+			Connection: plugin.NewConnection(1, a),
+			Type:       connection.ConnTypeSpace,
+			Upstream: &upstream.UpstreamClient{
+				UpstreamConfig: upstream.UpstreamConfig{
+					SpaceMrn: "//captain.api.mondoo.app/spaces/romantic-hopper-662653",
+				},
+			},
+		}
+		fillAsset(conn, a)
 		require.Equal(t, "Mondoo Space romantic-hopper-662653", a.Name)
 
 		expectedPlatform := &inventory.Platform{
@@ -55,12 +70,5 @@ func TestFillAsset(t *testing.T) {
 			Labels:  map[string]string{},
 		}
 		require.Equal(t, expectedPlatform, a.Platform)
-	})
-
-	t.Run("no asset (invalid MRN)", func(t *testing.T) {
-		a := &inventory.Asset{}
-		mrn := "//captain.api.mondoo.app/serviceaccounts/romantic-hopper-662653"
-		err := fillAsset(mrn, a)
-		require.Error(t, err)
 	})
 }
