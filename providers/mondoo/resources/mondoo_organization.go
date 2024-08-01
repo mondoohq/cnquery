@@ -5,11 +5,28 @@ package resources
 
 import (
 	"context"
+	"errors"
 
 	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/mondoo/connection"
 	mondoogql "go.mondoo.com/mondoo-go"
 )
+
+func initMondooOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	conn := runtime.Connection.(*connection.Connection)
+	if conn.Type != connection.ConnTypeOrganization {
+		return nil, nil, errors.New("cannot initialize mondoo.organization, invalid connection")
+	}
+	args["mrn"] = llx.StringData(conn.Upstream.SpaceMrn)
+	args["name"] = llx.StringData(connection.MrnBasenameOrMrn(conn.Upstream.SpaceMrn))
+
+	return args, nil, nil
+}
+
+func (m *mqlMondooOrganization) id() (string, error) {
+	return m.Mrn.Data, nil
+}
 
 func (m *mqlMondooOrganization) spaces() ([]interface{}, error) {
 	conn := m.MqlRuntime.Connection.(*connection.Connection)

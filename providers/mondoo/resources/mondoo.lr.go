@@ -23,11 +23,11 @@ func init() {
 			Create: createMondooClient,
 		},
 		"mondoo.organization": {
-			// to override args, implement: initMondooOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initMondooOrganization,
 			Create: createMondooOrganization,
 		},
 		"mondoo.space": {
-			// to override args, implement: initMondooSpace(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initMondooSpace,
 			Create: createMondooSpace,
 		},
 		"mondoo.asset": {
@@ -353,7 +353,12 @@ func createMondooOrganization(runtime *plugin.Runtime, args map[string]*llx.RawD
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("mondoo.organization", res.__id)
@@ -419,7 +424,12 @@ func createMondooSpace(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("mondoo.space", res.__id)
