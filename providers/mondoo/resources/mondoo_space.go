@@ -39,7 +39,7 @@ func (m *mqlMondooSpace) assets() ([]any, error) {
 		} `graphql:"assets(spaceMrn: $spaceMrn)"`
 	}
 	vars := map[string]any{
-		"spaceMrn": mondoogql.String(conn.Upstream.SpaceMrn),
+		"spaceMrn": mondoogql.String(m.Mrn.Data),
 	}
 
 	err := conn.Client.Query(context.Background(), &q, vars)
