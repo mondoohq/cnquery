@@ -157,7 +157,7 @@ func (s *Service) initResources(runtime *plugin.Runtime) error {
 	conn := runtime.Connection.(*connection.Connection)
 	var err error
 
-	_, err = resources.CreateResource(runtime, "mondoo.agent", map[string]*llx.RawData{
+	_, err = resources.CreateResource(runtime, "mondoo.client", map[string]*llx.RawData{
 		"mrn": llx.StringData(conn.Upstream.Creds.Mrn),
 	})
 	if err != nil {

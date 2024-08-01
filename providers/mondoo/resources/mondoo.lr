@@ -8,7 +8,7 @@ option provider = "go.mondoo.com/cnquery/v11/providers/mondoo"
 option go_package = "go.mondoo.com/cnquery/v11/providers/mondoo/resources"
 
 // Mondoo Client
-mondoo.agent @defaults("mrn") {
+mondoo.client @defaults("mrn") {
   // Client identifier
   mrn string
 }
@@ -31,6 +31,14 @@ private mondoo.asset @defaults("name platform") {
   mrn string
   // Platform name
   platform string
+  // Annotations associated with this asset
+  annotations map[string]string
+  // Labels associated with this asset
+  labels map[string]string
+  // Time this asset was created
+  createdAt time
+  // Time this asset was last updated
+  updatedAt time
   // Asset resources
   resources() []mondoo.resource
 }

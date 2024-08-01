@@ -7,6 +7,7 @@ package resources
 
 import (
 	"errors"
+	"time"
 
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
@@ -17,9 +18,9 @@ var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
 	resourceFactories = map[string]plugin.ResourceFactory {
-		"mondoo.agent": {
-			// to override args, implement: initMondooAgent(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createMondooAgent,
+		"mondoo.client": {
+			// to override args, implement: initMondooClient(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMondooClient,
 		},
 		"mondoo.space": {
 			// to override args, implement: initMondooSpace(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -101,8 +102,8 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 }
 
 var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
-	"mondoo.agent.mrn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMondooAgent).GetMrn()).ToDataRes(types.String)
+	"mondoo.client.mrn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMondooClient).GetMrn()).ToDataRes(types.String)
 	},
 	"mondoo.space.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMondooSpace).GetName()).ToDataRes(types.String)
@@ -121,6 +122,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"mondoo.asset.platform": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMondooAsset).GetPlatform()).ToDataRes(types.String)
+	},
+	"mondoo.asset.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMondooAsset).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"mondoo.asset.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMondooAsset).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"mondoo.asset.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMondooAsset).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"mondoo.asset.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMondooAsset).GetUpdatedAt()).ToDataRes(types.Time)
 	},
 	"mondoo.asset.resources": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMondooAsset).GetResources()).ToDataRes(types.Array(types.Resource("mondoo.resource")))
@@ -143,12 +156,12 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 }
 
 var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
-	"mondoo.agent.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMondooAgent).__id, ok = v.Value.(string)
+	"mondoo.client.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMondooClient).__id, ok = v.Value.(string)
 			return
 		},
-	"mondoo.agent.mrn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMondooAgent).Mrn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"mondoo.client.mrn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMondooClient).Mrn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"mondoo.space.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -181,6 +194,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"mondoo.asset.platform": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMondooAsset).Platform, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mondoo.asset.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMondooAsset).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"mondoo.asset.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMondooAsset).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"mondoo.asset.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMondooAsset).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"mondoo.asset.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMondooAsset).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"mondoo.asset.resources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -223,17 +252,17 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 	return nil
 }
 
-// mqlMondooAgent for the mondoo.agent resource
-type mqlMondooAgent struct {
+// mqlMondooClient for the mondoo.client resource
+type mqlMondooClient struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlMondooAgentInternal it will be used here
+	// optional: if you define mqlMondooClientInternal it will be used here
 	Mrn plugin.TValue[string]
 }
 
-// createMondooAgent creates a new instance of this resource
-func createMondooAgent(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlMondooAgent{
+// createMondooClient creates a new instance of this resource
+func createMondooClient(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMondooClient{
 		MqlRuntime: runtime,
 	}
 
@@ -245,7 +274,7 @@ func createMondooAgent(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("mondoo.agent", res.__id)
+		args, err = runtime.ResourceFromRecording("mondoo.client", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -255,15 +284,15 @@ func createMondooAgent(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 	return res, nil
 }
 
-func (c *mqlMondooAgent) MqlName() string {
-	return "mondoo.agent"
+func (c *mqlMondooClient) MqlName() string {
+	return "mondoo.client"
 }
 
-func (c *mqlMondooAgent) MqlID() string {
+func (c *mqlMondooClient) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMondooAgent) GetMrn() *plugin.TValue[string] {
+func (c *mqlMondooClient) GetMrn() *plugin.TValue[string] {
 	return &c.Mrn
 }
 
@@ -341,6 +370,10 @@ type mqlMondooAsset struct {
 	Name plugin.TValue[string]
 	Mrn plugin.TValue[string]
 	Platform plugin.TValue[string]
+	Annotations plugin.TValue[map[string]interface{}]
+	Labels plugin.TValue[map[string]interface{}]
+	CreatedAt plugin.TValue[*time.Time]
+	UpdatedAt plugin.TValue[*time.Time]
 	Resources plugin.TValue[[]interface{}]
 }
 
@@ -391,6 +424,22 @@ func (c *mqlMondooAsset) GetMrn() *plugin.TValue[string] {
 
 func (c *mqlMondooAsset) GetPlatform() *plugin.TValue[string] {
 	return &c.Platform
+}
+
+func (c *mqlMondooAsset) GetAnnotations() *plugin.TValue[map[string]interface{}] {
+	return &c.Annotations
+}
+
+func (c *mqlMondooAsset) GetLabels() *plugin.TValue[map[string]interface{}] {
+	return &c.Labels
+}
+
+func (c *mqlMondooAsset) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlMondooAsset) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
 }
 
 func (c *mqlMondooAsset) GetResources() *plugin.TValue[[]interface{}] {
