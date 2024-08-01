@@ -13,6 +13,16 @@ mondoo.client @defaults("mrn") {
   mrn string
 }
 
+// Mondoo Organization
+mondoo.organization @defaults ("name mrn") {
+  // Organization name
+  name string
+  // Organization identifier
+  mrn string
+  // Spaces in the organization
+  spaces() []mondoo.space
+}
+
 // Mondoo Space
 mondoo.space @defaults("name mrn") {
   // Space name
@@ -37,6 +47,10 @@ private mondoo.asset @defaults("name platform") {
   labels map[string]string
   // Time this asset was last updated
   updatedAt time
+  // Asset score value
+  scoreValue int
+  // Asset score grade
+  scoreGrade string
   // Asset resources
   resources() []mondoo.resource
 }
