@@ -1,11 +1,11 @@
-// Copyright (c) Mondoo, Inc.
-// SPDX-License-Identifier: BUSL-1.1
+// Copyright 2011 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
 
-package cat
-
-// this implementation is derived from golang's internal stat implementation
+// This implementation is derived from golang's internal stat implementation
 // Golang licensed BSD-style license https://github.com/golang/go/blob/master/LICENSE
 // see  https://github.com/golang/go/blob/5d1a95175e693f5be0bc31ae9e6a7873318925eb/src/syscall/types_windows.go
+
+package cat
 
 import (
 	"os"

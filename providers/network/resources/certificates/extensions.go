@@ -1,5 +1,11 @@
+// Copyright 2021 The Go Authors. All rights reserved.
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BSD-3-Clause
+//
+// This code is based on the x509 parser from the Go standard library:
+// https://github.com/golang/go/blob/master/src/crypto/x509/parser.go
+// License of the Go standard library: BSD 3-Clause "New" or "Revised" License
+
 package certificates
 
 import (
@@ -17,9 +23,6 @@ import (
 	"unicode"
 )
 
-// This code is based on the x509 parser from the Go standard library:
-// https://github.com/golang/go/blob/master/src/crypto/x509/parser.go
-// License of the Go standard library: BSD 3-Clause "New" or "Revised" License
 var OIDExtensionSubjectAltName = asn1.ObjectIdentifier{2, 5, 29, 17}
 
 const (
