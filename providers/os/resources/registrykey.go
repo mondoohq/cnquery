@@ -244,11 +244,11 @@ func initRegistrykeyProperty(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return nil, nil, err
 	}
 
-	// set default values
+	// set default values instead of null (llx.NilData) to Negative to avoid Error
 	args["exists"] = llx.BoolFalse
-	args["data"] = llx.DictData(nil)
-	args["value"] = llx.NilData
-	args["type"] = llx.NilData
+	args["data"] = llx.StringData("-1")
+	args["value"] = llx.StringData("-1")
+	args["type"] = llx.StringData("-1")
 
 	// path exists
 	if exists.Data {
