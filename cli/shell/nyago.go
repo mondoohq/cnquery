@@ -1,5 +1,7 @@
-// Copyright (c) Mondoo, Inc.
-// SPDX-License-Identifier: BUSL-1.1
+// Copyright (c) Nihad Abbasov
+// SPDX-License-Identifier: BSD-2-Clause
+//
+// Code taken from: https://github.com/NARKOZ/go-nyancat
 
 package shell
 
@@ -13,8 +15,6 @@ import (
 
 	"github.com/pierrec/lz4/v4"
 )
-
-// Code taken from: https://github.com/NARKOZ/go-nyancat
 
 func nyago(width, height int) {
 	cdec, err := base64.StdEncoding.DecodeString(c)

@@ -1,5 +1,8 @@
-// Copyright (c) Mondoo, Inc.
-// SPDX-License-Identifier: BUSL-1.1
+// Copyright (c) Michael Smith
+// SPDX-License-Identifier: MIT
+//
+// MarshalED25519PrivateKey writes ed25519 private keys into the new OpenSSH private key format.
+// This code is derived from https://github.com/mikesmitty/edkey which is MIT-Licensed
 
 package keypair
 
@@ -10,8 +13,6 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-// MarshalED25519PrivateKey writes ed25519 private keys into the new OpenSSH private key format.
-// This code is derived from https://github.com/mikesmitty/edkey which is MIT-Licensed
 func MarshalED25519PrivateKey(key ed25519.PrivateKey) []byte {
 	// Add our key header (followed by a null byte)
 	magic := append([]byte("openssh-key-v1"), 0)

@@ -1,6 +1,7 @@
-// Copyright (c) Mondoo, Inc.
-// SPDX-License-Identifier: BUSL-1.1
-
+// Copyright (c) Okta, Inc.
+// SPDX-License-Identifier: MPL-2.0
+//
+// This code was derived from https://github.com/okta/terraform-provider-okta/blob/master/sdk/security_notification_emails.go
 package sdk
 
 import (
@@ -28,7 +29,6 @@ type SecurityNotificationEmails struct {
 
 // GetSecurityNotificationEmails retrieves the security configuration
 func (m *ApiExtension) GetSecurityNotificationEmails(ctx context.Context, orgId string, token string, client *http.Client) (*SecurityNotificationEmails, error) {
-	// This code was derived from https://github.com/okta/terraform-provider-okta/blob/master/sdk/security_notification_emails.go
 
 	// we need to split the orgId into orgName and domain because this API uses a different domain
 	orgName, domain, found := strings.Cut(orgId, ".")
