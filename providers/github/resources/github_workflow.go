@@ -4,7 +4,6 @@
 package resources
 
 import (
-	"context"
 	"errors"
 	"strconv"
 	"strings"
@@ -61,7 +60,7 @@ func (g *mqlGithubWorkflow) file() (*mqlGithubFile, error) {
 
 	// TODO: no branch support yet
 	// if we workflow is running for a branch only, we do not see from the response the branch name
-	fileContent, _, _, err := conn.Client().Repositories.GetContents(context.Background(), ownerLogin, repoName, filePath, &github.RepositoryContentGetOptions{})
+	fileContent, _, _, err := conn.Client().Repositories.GetContents(conn.Context(), ownerLogin, repoName, filePath, &github.RepositoryContentGetOptions{})
 	if err != nil {
 		// TODO: should this be an error
 		if strings.Contains(err.Error(), "404") {

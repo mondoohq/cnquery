@@ -4,7 +4,6 @@
 package resources
 
 import (
-	"context"
 	"errors"
 	"strconv"
 	"strings"
@@ -43,7 +42,7 @@ func (g *mqlGithubTeam) repositories() ([]interface{}, error) {
 	listOpts := &github.ListOptions{}
 	var allRepos []*github.Repository
 	for {
-		repos, resp, err := conn.Client().Teams.ListTeamReposByID(context.Background(), orgID, teamID, listOpts)
+		repos, resp, err := conn.Client().Teams.ListTeamReposByID(conn.Context(), orgID, teamID, listOpts)
 		if err != nil {
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
@@ -96,7 +95,7 @@ func (g *mqlGithubTeam) members() ([]interface{}, error) {
 	}
 	var allMembers []*github.User
 	for {
-		members, resp, err := conn.Client().Teams.ListTeamMembersByID(context.Background(), orgID, teamID, listOpts)
+		members, resp, err := conn.Client().Teams.ListTeamMembersByID(conn.Context(), orgID, teamID, listOpts)
 		if err != nil {
 			return nil, err
 		}

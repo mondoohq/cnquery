@@ -319,7 +319,7 @@ func discoverTerraform(conn *connection.GithubConnection, repo *mqlGithubReposit
 	}
 
 	var res []*inventory.Asset
-	hasTf, err := hasTerraformHcl(conn.Client(), repo)
+	hasTf, err := hasTerraformHcl(conn.Context(), conn.Client(), repo)
 	if err != nil {
 		log.Error().Err(err).Str("project", repo.FullName.Data).Msg("failed to discover terraform repo")
 	} else if hasTf {
@@ -338,9 +338,9 @@ func discoverTerraform(conn *connection.GithubConnection, repo *mqlGithubReposit
 }
 
 // hasTerraformHcl will check if the repository contains terraform files
-func hasTerraformHcl(client *github.Client, repo *mqlGithubRepository) (bool, error) {
+func hasTerraformHcl(ctx context.Context, client *github.Client, repo *mqlGithubRepository) (bool, error) {
 	query := "repo:" + repo.FullName.Data + " extension:tf"
-	res, _, err := client.Search.Code(context.Background(), query, &github.SearchOptions{})
+	res, _, err := client.Search.Code(ctx, query, &github.SearchOptions{})
 	if err != nil {
 		return false, err
 	}
@@ -380,7 +380,7 @@ func discoverK8sManifests(conn *connection.GithubConnection, repo *mqlGithubRepo
 	}
 
 	var res []*inventory.Asset
-	hasTf, err := hasYaml(conn.Client(), repo)
+	hasTf, err := hasYaml(conn.Context(), conn.Client(), repo)
 	if err != nil {
 		log.Error().Err(err).Str("project", repo.FullName.Data).Msg("failed to discover k8s manifests repo")
 	} else if hasTf {
@@ -400,9 +400,9 @@ func discoverK8sManifests(conn *connection.GithubConnection, repo *mqlGithubRepo
 }
 
 // hasYaml will check if the repository contains YAML files
-func hasYaml(client *github.Client, repo *mqlGithubRepository) (bool, error) {
+func hasYaml(ctx context.Context, client *github.Client, repo *mqlGithubRepository) (bool, error) {
 	query := "repo:" + repo.FullName.Data + " extension:yaml OR extension:yml"
-	res, _, err := client.Search.Code(context.Background(), query, &github.SearchOptions{})
+	res, _, err := client.Search.Code(ctx, query, &github.SearchOptions{})
 	if err != nil {
 		return false, err
 	}

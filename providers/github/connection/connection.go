@@ -36,6 +36,7 @@ type GithubConnection struct {
 	plugin.Connection
 	asset  *inventory.Asset
 	client *github.Client
+	ctx    context.Context
 }
 
 func NewGithubConnection(id uint32, asset *inventory.Asset) (*GithubConnection, error) {
@@ -67,8 +68,10 @@ func NewGithubConnection(id uint32, asset *inventory.Asset) (*GithubConnection, 
 		}
 	}
 
+	ctx := context.WithValue(context.Background(), github.SleepUntilPrimaryRateLimitResetWhenRateLimited, true)
+
 	// perform a quick call to verify the token's validity.
-	_, resp, err := client.Meta.Zen(context.Background())
+	_, resp, err := client.Meta.Zen(ctx)
 	if err != nil {
 		if resp != nil && resp.StatusCode == 401 {
 			return nil, errors.New("invalid GitHub token provided. check the value passed with the --token flag or the GITHUB_TOKEN environment variable")
@@ -79,6 +82,7 @@ func NewGithubConnection(id uint32, asset *inventory.Asset) (*GithubConnection, 
 		Connection: plugin.NewConnection(id, asset),
 		asset:      asset,
 		client:     client,
+		ctx:        ctx,
 	}, nil
 }
 
@@ -92,6 +96,10 @@ func (c *GithubConnection) Asset() *inventory.Asset {
 
 func (c *GithubConnection) Client() *github.Client {
 	return c.client
+}
+
+func (c *GithubConnection) Context() context.Context {
+	return c.ctx
 }
 
 func newGithubAppClient(conf *inventory.Config) (*github.Client, error) {

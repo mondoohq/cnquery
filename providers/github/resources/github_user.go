@@ -4,7 +4,6 @@
 package resources
 
 import (
-	"context"
 	"io"
 	"strconv"
 	"strings"
@@ -50,7 +49,7 @@ func initGithubUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	}
 
 	// finally grab the user from github
-	githubUser, err := getUser(context.Background(), runtime, conn, userLogin)
+	githubUser, err := getUser(conn.Context(), runtime, conn, userLogin)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -110,7 +109,7 @@ func (g *mqlGithubUser) repositories() ([]interface{}, error) {
 
 	var allRepos []*github.Repository
 	for {
-		repos, resp, err := conn.Client().Repositories.ListByUser(context.Background(), githubLogin, listOpts)
+		repos, resp, err := conn.Client().Repositories.ListByUser(conn.Context(), githubLogin, listOpts)
 		if err != nil {
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
@@ -164,7 +163,7 @@ func (g *mqlGithubUser) gists() ([]interface{}, error) {
 
 	var allGists []*github.Gist
 	for {
-		gists, resp, err := conn.Client().Gists.List(context.Background(), userLogin, listOpts)
+		gists, resp, err := conn.Client().Gists.List(conn.Context(), userLogin, listOpts)
 		if err != nil {
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
