@@ -68,6 +68,8 @@ func NewGithubConnection(id uint32, asset *inventory.Asset) (*GithubConnection, 
 		}
 	}
 
+	// set the context so github client can handle backoff
+	// (default behaviour is to send fake 403 response bypassing the retry logic)
 	ctx := context.WithValue(context.Background(), github.SleepUntilPrimaryRateLimitResetWhenRateLimited, true)
 
 	// perform a quick call to verify the token's validity.
