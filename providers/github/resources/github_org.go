@@ -4,7 +4,6 @@
 package resources
 
 import (
-	"context"
 	"errors"
 	"strconv"
 	"strings"
@@ -47,7 +46,7 @@ func initGithubOrganization(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		}
 	}
 
-	org, err := getOrg(context.Background(), runtime, conn, name)
+	org, err := getOrg(conn.Context(), runtime, conn, name)
 	if err != nil {
 		return args, nil, err
 	}
@@ -108,7 +107,7 @@ func (g *mqlGithubOrganization) members() ([]interface{}, error) {
 	}
 	var allMembers []*github.User
 	for {
-		members, resp, err := conn.Client().Organizations.ListMembers(context.Background(), orgLogin, listOpts)
+		members, resp, err := conn.Client().Organizations.ListMembers(conn.Context(), orgLogin, listOpts)
 		if err != nil {
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
@@ -153,7 +152,7 @@ func (g *mqlGithubOrganization) owners() ([]interface{}, error) {
 	}
 	var allMembers []*github.User
 	for {
-		members, resp, err := conn.Client().Organizations.ListMembers(context.Background(), orgLogin, listOpts)
+		members, resp, err := conn.Client().Organizations.ListMembers(conn.Context(), orgLogin, listOpts)
 		if err != nil {
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
@@ -216,7 +215,7 @@ func (g *mqlGithubOrganization) teams() ([]interface{}, error) {
 	}
 	var allTeams []*github.Team
 	for {
-		teams, resp, err := conn.Client().Teams.ListTeams(context.Background(), orgLogin, listOpts)
+		teams, resp, err := conn.Client().Teams.ListTeams(conn.Context(), orgLogin, listOpts)
 		if err != nil {
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
@@ -266,7 +265,7 @@ func (g *mqlGithubOrganization) repositories() ([]interface{}, error) {
 
 	var allRepos []*github.Repository
 	for {
-		repos, resp, err := conn.Client().Repositories.ListByOrg(context.Background(), orgLogin, listOpts)
+		repos, resp, err := conn.Client().Repositories.ListByOrg(conn.Context(), orgLogin, listOpts)
 		if err != nil {
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
@@ -312,7 +311,7 @@ func (g *mqlGithubOrganization) webhooks() ([]interface{}, error) {
 	}
 	var allHooks []*github.Hook
 	for {
-		hooks, resp, err := conn.Client().Organizations.ListHooks(context.TODO(), ownerLogin, listOpts)
+		hooks, resp, err := conn.Client().Organizations.ListHooks(conn.Context(), ownerLogin, listOpts)
 		if err != nil {
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
@@ -374,7 +373,7 @@ func (g *mqlGithubOrganization) packages() ([]interface{}, error) {
 
 		var allPackages []*github.Package
 		for {
-			packages, resp, err := conn.Client().Organizations.ListPackages(context.Background(), ownerLogin, listOpts)
+			packages, resp, err := conn.Client().Organizations.ListPackages(conn.Context(), ownerLogin, listOpts)
 			if err != nil {
 				if strings.Contains(err.Error(), "404") {
 					return nil, nil
@@ -445,7 +444,7 @@ func (g *mqlGithubPackage) repository() (*mqlGithubRepository, error) {
 	}
 	ownerLogin := owner.Login.Data
 
-	repo, _, err := conn.Client().Repositories.Get(context.Background(), ownerLogin, repoName)
+	repo, _, err := conn.Client().Repositories.Get(conn.Context(), ownerLogin, repoName)
 	if err != nil {
 		return nil, err
 	}
@@ -465,7 +464,7 @@ func (g *mqlGithubOrganization) installations() ([]interface{}, error) {
 	}
 	var allOrgInstallations []*github.Installation
 	for {
-		orgInstallations, resp, err := conn.Client().Organizations.ListInstallations(context.Background(), orgLogin, listOpts)
+		orgInstallations, resp, err := conn.Client().Organizations.ListInstallations(conn.Context(), orgLogin, listOpts)
 		if err != nil {
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil

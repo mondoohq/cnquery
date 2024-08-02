@@ -4,7 +4,6 @@
 package resources
 
 import (
-	"context"
 	"strconv"
 	"strings"
 
@@ -70,7 +69,7 @@ func newMqlGithubPackages(runtime *plugin.Runtime, visibility *string) ([]any, e
 
 		var allPackages []*github.Package
 		for {
-			packages, resp, err := conn.Client().Organizations.ListPackages(context.Background(), orgId.Name, listOpts)
+			packages, resp, err := conn.Client().Organizations.ListPackages(conn.Context(), orgId.Name, listOpts)
 			if err != nil {
 				if strings.Contains(err.Error(), "404") {
 					return nil, nil
