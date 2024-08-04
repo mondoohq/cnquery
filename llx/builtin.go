@@ -537,6 +537,7 @@ func init() {
 			"keys":                            {f: dictKeysV2, Label: "keys"},
 			"values":                          {f: dictValuesV2, Label: "values"},
 			"where":                           {f: dictWhere, Label: "where"},
+			"sample":                          {f: dictSample, Label: "sample"},
 			"recurse":                         {f: dictRecurse, Label: "recurse"},
 			"$whereNot":                       {f: dictWhereNot},
 			"$all":                            {f: dictAllV2},
@@ -587,6 +588,7 @@ func init() {
 			"length":                   {f: arrayLengthV2},
 			"where":                    {f: arrayWhereV2},
 			"$whereNot":                {f: arrayWhereNotV2},
+			"sample":                   {f: arraySample},
 			"$all":                     {f: arrayAllV2},
 			"$none":                    {f: arrayNoneV2},
 			"$any":                     {f: arrayAnyV2},
@@ -682,6 +684,7 @@ func init() {
 			"length":                   {f: mapLengthV2},
 			"where":                    {f: mapWhereV2},
 			"$whereNot":                {f: mapWhereNotV2},
+			"sample":                   {f: mapSample},
 			"$any":                     {f: mapAny},
 			"$one":                     {f: mapOne},
 			"$none":                    {f: mapNone},
@@ -723,6 +726,7 @@ func init() {
 			// fields
 			"where":     {f: resourceWhereV2},
 			"$whereNot": {f: resourceWhereNotV2},
+			"sample":    {f: resourceSample},
 			"map":       {f: resourceMapV2},
 			"length":    {f: resourceLengthV2},
 			"{}": {f: func(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {

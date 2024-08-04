@@ -120,7 +120,6 @@ func _resourceWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64,
 
 		e.triggerChain(ref, data)
 	})
-
 	if err != nil {
 		return nil, 0, err
 	}
@@ -134,6 +133,32 @@ func resourceWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) 
 
 func resourceWhereNotV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return _resourceWhereV2(e, bind, chunk, ref, true)
+}
+
+func resourceSample(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	// sample(resource.list)
+	itemsRef := chunk.Function.Args[0]
+	items, rref, err := e.resolveValue(itemsRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+	list := items.Value.([]any)
+	if len(list) == 0 {
+		return bind, 0, nil
+	}
+
+	cntRef := chunk.Function.Args[1]
+	cntRaw, rref, err := e.resolveValue(cntRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+	cnt, ok := cntRaw.Value.(int64)
+	if !ok {
+		return nil, 0, errors.New("failed to get count for sample, incorrect type of value")
+	}
+
+	res := _arraySample(list, cnt)
+	return ArrayData(res, bind.Type), 0, nil
 }
 
 func resourceMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
@@ -196,7 +221,6 @@ func resourceMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 
 		e.triggerChain(ref, data)
 	})
-
 	if err != nil {
 		return nil, 0, err
 	}

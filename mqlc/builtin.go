@@ -28,6 +28,7 @@ var (
 	dictType        = func(t types.Type) types.Type { return types.Dict }
 	blockType       = func(t types.Type) types.Type { return types.Block }
 	dictArrayType   = func(t types.Type) types.Type { return types.Array(types.Dict) }
+	sameType        = func(t types.Type) types.Type { return t }
 )
 
 var builtinFunctions map[types.Type]map[string]compileHandler
@@ -78,6 +79,7 @@ func init() {
 			"first":        {typ: dictType, signature: FunctionSignature{}},
 			"last":         {typ: dictType, signature: FunctionSignature{}},
 			"where":        {compile: compileDictWhere, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"sample":       {typ: sameType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Int}}},
 			"recurse":      {compile: compileDictRecurse, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"contains":     {compile: compileDictContains, typ: boolType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"in":           {typ: boolType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Array(types.String)}}},
@@ -101,6 +103,7 @@ func init() {
 			"{}":           {typ: arrayBlockType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"length":       {typ: intType, signature: FunctionSignature{}},
 			"where":        {compile: compileArrayWhere, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"sample":       {typ: sameType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Int}}},
 			"duplicates":   {compile: compileArrayDuplicates, signature: FunctionSignature{Required: 0, Args: []types.Type{types.String}}},
 			"unique":       {compile: compileArrayUnique, signature: FunctionSignature{Required: 0}},
 			"in":           {typ: boolType, compile: compileStringIn, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Array(types.String)}}},
@@ -122,6 +125,7 @@ func init() {
 			"keys":     {typ: stringArrayType, signature: FunctionSignature{}},
 			"values":   {compile: compileMapValues, signature: FunctionSignature{}},
 			"where":    {compile: compileMapWhere, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"sample":   {typ: sameType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Int}}},
 			"contains": {compile: compileMapContains, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"all":      {compile: compileMapAll, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"one":      {compile: compileMapOne, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
@@ -131,6 +135,7 @@ func init() {
 			// "":       compileHandler{compile: compileResourceDefault},
 			"length":   {compile: compileResourceLength, signature: FunctionSignature{}},
 			"where":    {compile: compileResourceWhere, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"sample":   {compile: compileResourceSample, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Int}}},
 			"contains": {compile: compileResourceContains, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"all":      {compile: compileResourceAll, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"any":      {compile: compileResourceAny, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
