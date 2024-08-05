@@ -31,7 +31,7 @@ func init() {
 			Create: createMondooSpace,
 		},
 		"mondoo.asset": {
-			// to override args, implement: initMondooAsset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initMondooAsset,
 			Create: createMondooAsset,
 		},
 		"mondoo.resource": {
