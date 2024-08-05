@@ -347,7 +347,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		var err error
 
 		switch conf.Type {
-		case shared.Type_Local.String():
+		case shared.Type_Local.String(), "k8s": // FIXME: k8s is a temp workaround for cross-provider resources
 			conn = local.NewConnection(connId, conf, asset)
 
 			fingerprint, p, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
