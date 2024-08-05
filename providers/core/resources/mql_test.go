@@ -708,6 +708,65 @@ func TestArray(t *testing.T) {
 	})
 }
 
+func testSample(t *testing.T, mqlData string, sampleLen int, isMap bool) {
+	const samplesCnt = 20
+
+	t.Run(mqlData, func(t *testing.T) {
+		x := testutils.InitTester(testutils.LinuxMock())
+
+		// check that the data is different; given enough samples with a good
+		// data length, this should very very rarely fail naturally
+		allDupes := true
+		if samplesCnt < 2 {
+			allDupes = false
+		}
+		samples := make([][samplesCnt]any, samplesCnt)
+		ref := [samplesCnt]any{}
+
+		for i := 0; i < samplesCnt; i++ {
+			mql := mqlData + ".sample(" + strconv.Itoa(sampleLen) + ")"
+			if isMap {
+				mql += ".keys"
+			}
+			res := x.TestQuery(t, mql)
+			require.Len(t, res, 2)
+
+			list, ok := res[0].Data.Value.([]any)
+			require.True(t, ok, "return a list of values")
+			require.Len(t, list, sampleLen)
+			curSamples := [samplesCnt]any{}
+			copy(curSamples[:], list)
+
+			if i == 0 {
+				ref = curSamples
+			} else if ref != curSamples {
+				allDupes = false
+			}
+			samples[i] = curSamples
+		}
+
+		assert.False(t, allDupes)
+	})
+}
+
+func TestSample(t *testing.T) {
+	t.Run("simple array", func(t *testing.T) {
+		testSample(t, "[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]", 3, false)
+	})
+
+	t.Run("simple map", func(t *testing.T) {
+		testSample(t, "{\"a\": 1, \"b\": 1, \"c\": 2, \"d\": 4, \"e\": 5, \"f\": 6, \"g\": 7, \"h\": 8, \"i\": 9, \"j\": 10, \"k\": 11, \"l\": 12, \"m\": 13, \"n\": 14, \"o\": 15, \"p\": 16, \"q\": 17, \"r\": 18, \"s\": 19, \"t\": 20}", 3, true)
+	})
+
+	t.Run("simple dict array", func(t *testing.T) {
+		testSample(t, "parse.json(content: '[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]').params", 3, false)
+	})
+
+	t.Run("simple map", func(t *testing.T) {
+		testSample(t, "parse.json(content: '{\"a\": 1, \"b\": 1, \"c\": 2, \"d\": 4, \"e\": 5, \"f\": 6, \"g\": 7, \"h\": 8, \"i\": 9, \"j\": 10, \"k\": 11, \"l\": 12, \"m\": 13, \"n\": 14, \"o\": 15, \"p\": 16, \"q\": 17, \"r\": 18, \"s\": 19, \"t\": 20}').params", 3, true)
+	})
+}
+
 func TestMap(t *testing.T) {
 	m := "{'a': 1, 'b': 1, 'c': 2}"
 	x := testutils.InitTester(testutils.LinuxMock())

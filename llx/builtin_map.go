@@ -5,6 +5,7 @@ package llx
 
 import (
 	"errors"
+	"math/rand"
 	"regexp"
 	"strconv"
 	"strings"
@@ -180,7 +181,6 @@ func _mapWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, inve
 		})
 		e.triggerChain(ref, data)
 	})
-
 	if err != nil {
 		return nil, 0, err
 	}
@@ -194,6 +194,50 @@ func mapWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Raw
 
 func mapWhereNotV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return _mapWhereV2(e, bind, chunk, ref, true)
+}
+
+func _mapSample(bmap map[string]any, cnt int64) map[string]any {
+	keys := make([]string, len(bmap))
+	i := 0
+	for k := range bmap {
+		keys[i] = k
+		i++
+	}
+
+	res := make(map[string]any, cnt)
+	// Note: we still go through the list, even if more items are requested than the list contains.
+	// In that case we only return what we have, but in random order.
+	for i := 0; i < int(cnt) && len(keys) > 0; i++ {
+		candidate := rand.Intn(len(keys))
+		key := keys[candidate]
+		res[key] = bmap[key]
+		keys = append(keys[0:candidate], keys[candidate+1:]...)
+	}
+	return res
+}
+
+func mapSample(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return NilData, 0, nil
+	}
+
+	bmap, ok := bind.Value.(map[string]any)
+	if !ok {
+		return nil, 0, errors.New("can't run sample on data, it's not a map")
+	}
+
+	cntRef := chunk.Function.Args[0]
+	cntRaw, rref, err := e.resolveValue(cntRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+	cnt, ok := cntRaw.Value.(int64)
+	if !ok {
+		return nil, 0, errors.New("failed to get count for sample, incorrect type of value")
+	}
+
+	res := _mapSample(bmap, cnt)
+	return MapData(res, bind.Type.Child()), 0, nil
 }
 
 func mapAll(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
@@ -714,7 +758,6 @@ func _dictArrayWhere(e *blockExecutor, list []interface{}, chunk *Chunk, ref uin
 		})
 		e.triggerChain(ref, data)
 	})
-
 	if err != nil {
 		return nil, 0, err
 	}
@@ -809,7 +852,6 @@ func _dictWhere(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, inver
 		})
 		e.triggerChain(ref, data)
 	})
-
 	if err != nil {
 		return nil, 0, err
 	}
@@ -823,6 +865,33 @@ func dictWhere(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawD
 
 func dictWhereNot(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return _dictWhere(e, bind, chunk, ref, true)
+}
+
+func dictSample(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return NilData, 0, nil
+	}
+
+	cntRef := chunk.Function.Args[0]
+	cntRaw, rref, err := e.resolveValue(cntRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+	cnt, ok := cntRaw.Value.(int64)
+	if !ok {
+		return nil, 0, errors.New("failed to get count for sample, incorrect type of value")
+	}
+
+	var res any
+	switch v := bind.Value.(type) {
+	case []any:
+		res = _arraySample(v, cnt)
+	case map[string]any:
+		res = _mapSample(v, cnt)
+	default:
+		return nil, 0, errors.New("failed to get sample, must be an array or map")
+	}
+	return DictData(res), 0, nil
 }
 
 func filterList(e *blockExecutor, list []any, chunk *Chunk, ref uint64, invert bool) ([]any, uint64, error) {
@@ -862,7 +931,6 @@ func filterList(e *blockExecutor, list []any, chunk *Chunk, ref uint64, invert b
 		}
 		res = resList
 	})
-
 	if err != nil {
 		return nil, 0, err
 	}

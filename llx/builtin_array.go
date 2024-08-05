@@ -5,6 +5,7 @@ package llx
 
 import (
 	"errors"
+	"math/rand"
 	"strconv"
 
 	"go.mondoo.com/cnquery/v11/types"
@@ -167,7 +168,6 @@ func arrayBlockListV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 		})
 		e.triggerChain(ref, data)
 	})
-
 	if err != nil {
 		return nil, 0, err
 	}
@@ -285,7 +285,6 @@ func _arrayWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, in
 		})
 		e.triggerChain(ref, data)
 	})
-
 	if err != nil {
 		return nil, 0, err
 	}
@@ -299,6 +298,43 @@ func arrayWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 
 func arrayWhereNotV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return _arrayWhereV2(e, bind, chunk, ref, true)
+}
+
+func _arraySample(array []any, cnt int64) []any {
+	var res []any
+	// Note: we still go through the list, even if more items are requested than the list contains.
+	// In that case we only return what we have, but in random order.
+	for i := 0; i < int(cnt) && len(array) > 0; i++ {
+		candidate := rand.Intn(len(array))
+		res = append(res, array[candidate])
+		// TODO: this approach can be heavily optimized, instead of stitching the slice together over again...
+		array = append(array[0:candidate], array[candidate+1:]...)
+	}
+	return res
+}
+
+func arraySample(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return NilData, 0, nil
+	}
+
+	list, ok := bind.Value.([]any)
+	if !ok {
+		return nil, 0, errors.New("can't run sample on data, it's not a list")
+	}
+
+	cntRef := chunk.Function.Args[0]
+	cntRaw, rref, err := e.resolveValue(cntRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+	cnt, ok := cntRaw.Value.(int64)
+	if !ok {
+		return nil, 0, errors.New("failed to get count for sample, incorrect type of value")
+	}
+
+	res := _arraySample(list, cnt)
+	return ArrayData(res, bind.Type.Child()), 0, nil
 }
 
 func arrayAllV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
@@ -422,7 +458,6 @@ func arrayMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Raw
 		})
 		e.triggerChain(ref, data)
 	})
-
 	if err != nil {
 		return nil, 0, err
 	}
@@ -659,7 +694,6 @@ func arrayFieldDuplicatesV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref u
 		})
 		e.triggerChain(ref, data)
 	})
-
 	if err != nil {
 		return nil, 0, err
 	}

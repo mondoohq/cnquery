@@ -189,6 +189,53 @@ func compileResourceWhere(c *compiler, typ types.Type, ref uint64, id string, ca
 	return typ, nil
 }
 
+func compileResourceSample(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+	resource, err := listResource(c, typ)
+	if err != nil {
+		return types.Nil, multierr.Wrap(err, "failed to compile "+id)
+	}
+
+	if call == nil {
+		return types.Nil, errors.New("missing argument for calling '" + id + "'")
+	}
+	if len(call.Function) > 1 {
+		return types.Nil, errors.New("too many arguments when calling '" + id + "', only 1 is supported")
+	}
+
+	resourceRef := c.tailRef()
+
+	listType, err := compileResourceDefault(c, typ, ref, "list", nil)
+	if err != nil {
+		return listType, err
+	}
+	listRef := c.tailRef()
+
+	arg := call.Function[0]
+	if arg.Value == nil || arg.Value.Operand == nil {
+		return types.Nil, errors.New("function '" + id + "' needs one argument")
+	}
+	val, err := c.compileOperand(arg.Value.Operand)
+	if err != nil {
+		return types.Nil, err
+	}
+
+	args := []*llx.Primitive{
+		llx.RefPrimitiveV2(listRef),
+		val,
+	}
+
+	c.addChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   id,
+		Function: &llx.Function{
+			Type:    string(types.Array(types.Resource(resource.Name))),
+			Binding: resourceRef,
+			Args:    args,
+		},
+	})
+	return typ, nil
+}
+
 func compileResourceMap(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
 	resource, err := listResource(c, typ)
 	if err != nil {
