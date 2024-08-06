@@ -594,6 +594,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.repository.defaultBranchName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetDefaultBranchName()).ToDataRes(types.String)
 	},
+	"github.repository.defaultBranch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepository).GetDefaultBranch()).ToDataRes(types.Resource("github.branch"))
+	},
 	"github.repository.commits": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetCommits()).ToDataRes(types.Array(types.Resource("github.commit")))
 	},
@@ -1540,6 +1543,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"github.repository.defaultBranchName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubRepository).DefaultBranchName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.repository.defaultBranch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepository).DefaultBranch, ok = plugin.RawToTValue[*mqlGithubBranch](v.Value, v.Error)
 		return
 	},
 	"github.repository.commits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3246,6 +3253,7 @@ type mqlGithubRepository struct {
 	AllMergeRequests plugin.TValue[[]interface{}]
 	Branches plugin.TValue[[]interface{}]
 	DefaultBranchName plugin.TValue[string]
+	DefaultBranch plugin.TValue[*mqlGithubBranch]
 	Commits plugin.TValue[[]interface{}]
 	Contributors plugin.TValue[[]interface{}]
 	Collaborators plugin.TValue[[]interface{}]
@@ -3496,6 +3504,22 @@ func (c *mqlGithubRepository) GetBranches() *plugin.TValue[[]interface{}] {
 
 func (c *mqlGithubRepository) GetDefaultBranchName() *plugin.TValue[string] {
 	return &c.DefaultBranchName
+}
+
+func (c *mqlGithubRepository) GetDefaultBranch() *plugin.TValue[*mqlGithubBranch] {
+	return plugin.GetOrCompute[*mqlGithubBranch](&c.DefaultBranch, func() (*mqlGithubBranch, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "defaultBranch")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGithubBranch), nil
+			}
+		}
+
+		return c.defaultBranch()
+	})
 }
 
 func (c *mqlGithubRepository) GetCommits() *plugin.TValue[[]interface{}] {
