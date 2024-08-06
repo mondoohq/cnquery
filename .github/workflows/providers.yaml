@@ -113,6 +113,9 @@ jobs:
           go-version: ">=${{ env.golang-version }}"
           cache: false
 
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+
       - name: 'Authenticate to Google Cloud'
         uses: 'google-github-actions/auth@v2'
         with:
