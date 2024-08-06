@@ -7,6 +7,7 @@ import (
 	"errors"
 	"net/url"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 
@@ -169,7 +170,8 @@ func (c *GitLabConnection) PID() (interface{}, error) {
 	if c.projectName == "" {
 		return nil, errors.New("cannot look up gitlab project, no project path defined")
 	}
-	return url.QueryEscape(c.groupName) + "/" + url.QueryEscape(c.projectName), nil
+
+	return path.Join(c.groupName, c.projectName), nil
 }
 
 func (c *GitLabConnection) Project() (*gitlab.Project, error) {
