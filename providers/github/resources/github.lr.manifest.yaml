@@ -157,7 +157,7 @@ resources:
       updatedAt: {}
       url: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 9.0.0
   github.license:
     fields:
       key: {}
@@ -165,7 +165,7 @@ resources:
       spdxId: {}
       url: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 9.0.0
   github.mergeRequest:
     fields:
       assignees: {}
@@ -309,9 +309,9 @@ resources:
   github.repository:
     fields:
       MergeRequests:
-        min_mondoo_version: latest
+        min_mondoo_version: 9.0.0
       allMergeRequests:
-        min_mondoo_version: latest
+        min_mondoo_version: 9.0.0
       allowAutoMerge:
         min_mondoo_version: 6.4.0
       allowForking:
@@ -330,7 +330,7 @@ resources:
       closedIssues:
         min_mondoo_version: 7.14.0
       closedMergeRequests:
-        min_mondoo_version: latest
+        min_mondoo_version: 9.0.0
       collaborators:
         min_mondoo_version: 6.11.0
       commits:
@@ -338,6 +338,8 @@ resources:
       contributors:
         min_mondoo_version: 6.4.0
       createdAt: {}
+      defaultBranch:
+        min_mondoo_version: 9.0.0
       defaultBranchName:
         min_mondoo_version: 6.4.0
       description: {}

@@ -316,6 +316,8 @@ private github.repository @defaults("fullName") {
   branches() []github.branch
   // Default branch name for the repository
   defaultBranchName string
+  // Default branch
+  defaultBranch() github.branch
   // List of commits for the repository
   commits() []github.commit
   // List of contributors for the repository

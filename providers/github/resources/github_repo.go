@@ -423,20 +423,60 @@ func (g *mqlGithubRepository) branches() ([]interface{}, error) {
 			defaultBranch = true
 		}
 
-		mqlBranch, err := CreateResource(g.MqlRuntime, "github.branch", map[string]*llx.RawData{
-			"name":          llx.StringData(branch.GetName()),
-			"isProtected":   llx.BoolData(branch.GetProtected()),
-			"headCommitSha": llx.StringData(branch.GetCommit().GetSHA()),
-			"repoName":      llx.StringData(repoName),
-			"owner":         llx.ResourceData(owner, owner.MqlName()),
-			"isDefault":     llx.BoolData(defaultBranch),
-		})
+		mqlBranch, err := newMqlBranch(g.MqlRuntime, branch, owner, repoName, defaultBranch)
 		if err != nil {
 			return nil, err
 		}
 		res = append(res, mqlBranch)
 	}
 	return res, nil
+}
+
+func newMqlBranch(runtime *plugin.Runtime, branch *github.Branch, owner *mqlGithubUser, repoName string, defaultBranch bool) (*mqlGithubBranch, error) {
+	mqlBranch, err := CreateResource(runtime, "github.branch", map[string]*llx.RawData{
+		"name":          llx.StringData(branch.GetName()),
+		"isProtected":   llx.BoolData(branch.GetProtected()),
+		"headCommitSha": llx.StringData(branch.GetCommit().GetSHA()),
+		"repoName":      llx.StringData(repoName),
+		"owner":         llx.ResourceData(owner, owner.MqlName()),
+		"isDefault":     llx.BoolData(defaultBranch),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return mqlBranch.(*mqlGithubBranch), nil
+}
+
+func (g *mqlGithubRepository) defaultBranch() (*mqlGithubBranch, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	repoName := g.Name.Data
+	if g.Owner.Error != nil {
+		return nil, g.Owner.Error
+	}
+	owner := g.Owner.Data
+
+	if owner.Login.Error != nil {
+		return nil, owner.Login.Error
+	}
+	ownerLogin := owner.Login.Data
+
+	if g.DefaultBranchName.Error != nil {
+		return nil, g.DefaultBranchName.Error
+	}
+	repoDefaultBranchName := g.DefaultBranchName.Data
+
+	branch, _, err := conn.Client().Repositories.GetBranch(conn.Context(), ownerLogin, repoName, repoDefaultBranchName, 3)
+	if err != nil {
+		if strings.Contains(err.Error(), "404") {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return newMqlBranch(g.MqlRuntime, branch, owner, repoName, true)
 }
 
 type githubDismissalRestrictions struct {
