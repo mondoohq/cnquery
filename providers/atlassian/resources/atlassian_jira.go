@@ -7,9 +7,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers/atlassian/connection/jira"
+)
+
+const (
+	JIRA_TIME_FORMAT               = "2006-01-02T15:04:05.999-0700"
+	JIRA_ISSUES_SEARCH_MAX_RESULTS = 1000
 )
 
 func (a *mqlAtlassianJira) id() (string, error) {
@@ -182,26 +188,42 @@ func (a *mqlAtlassianJira) issues() ([]interface{}, error) {
 	jira := conn.Client()
 	validate := ""
 	jql := "order by created DESC"
-	fields := []string{"status", "project", "description"}
+	fields := []string{"created", "status", "project", "description"}
 	expands := []string{"changelog", "renderedFields", "names", "schema", "transitions", "operations", "editmeta"}
-	issues, _, err := jira.Issue.Search.Get(context.Background(), jql, fields, expands, 0, 1000, validate)
-	if err != nil {
-		return nil, err
-	}
+
 	res := []interface{}{}
-	for _, issue := range issues.Issues {
-		mqlAtlassianJiraIssue, err := CreateResource(a.MqlRuntime, "atlassian.jira.issue",
-			map[string]*llx.RawData{
-				"id":          llx.StringData(issue.ID),
-				"project":     llx.StringData(issue.Fields.Project.Name),
-				"status":      llx.StringData(issue.Fields.Status.Name),
-				"description": llx.StringData(issue.Fields.Description),
-			})
+	startAt := 0
+	total := JIRA_ISSUES_SEARCH_MAX_RESULTS
+
+	for startAt < total {
+		issues, _, err := jira.Issue.Search.Get(context.Background(), jql, fields, expands, startAt, JIRA_ISSUES_SEARCH_MAX_RESULTS, validate)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlAtlassianJiraIssue)
+		for _, issue := range issues.Issues {
+			created, err := time.Parse(JIRA_TIME_FORMAT, issue.Fields.Created)
+			if err != nil {
+				return nil, err
+			}
+
+			mqlAtlassianJiraIssue, err := CreateResource(a.MqlRuntime, "atlassian.jira.issue",
+				map[string]*llx.RawData{
+					"id":          llx.StringData(issue.ID),
+					"project":     llx.StringData(issue.Fields.Project.Name),
+					"status":      llx.StringData(issue.Fields.Status.Name),
+					"description": llx.StringData(issue.Fields.Description),
+					"created":     llx.TimeData(created.UTC()),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAtlassianJiraIssue)
+		}
+
+		total = issues.Total
+		startAt += len(issues.Issues)
 	}
+
 	return res, nil
 }
 
