@@ -212,7 +212,7 @@ func (a *mqlAtlassianJira) issues() ([]interface{}, error) {
 					"project":     llx.StringData(issue.Fields.Project.Name),
 					"status":      llx.StringData(issue.Fields.Status.Name),
 					"description": llx.StringData(issue.Fields.Description),
-					"created":     llx.TimeData(created.UTC()),
+					"createdAt":   llx.TimeData(created.UTC()),
 				})
 			if err != nil {
 				return nil, err
