@@ -24,12 +24,12 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity"
 	security "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity"
 )
 
 const (
 	vaQualysPolicyDefinitionId string = "/providers/Microsoft.Authorization/policyDefinitions/13ce0167-8ca6-4048-8e6b-f996402e3c1b"
-
 	// There are two policy per component: one for ARC clusters and one for k8s clusters
 	arcClusterDefenderExtensionDefinitionId        string = "/providers/Microsoft.Authorization/policyDefinitions/708b60a6-d253-4fe0-9114-4be4c00f012c"
 	kubernetesClusterDefenderExtensionDefinitionId string = "/providers/Microsoft.Authorization/policyDefinitions/64def556-fbad-4622-930e-72d1d5589bf5"
@@ -71,6 +71,15 @@ func (a *mqlAzureSubscriptionCloudDefenderService) defenderForServers() (interfa
 	if err != nil {
 		return nil, err
 	}
+	clientFactory, err := armsecurity.NewClientFactory(subId, token, nil)
+	if err != nil {
+		return nil, err
+	}
+	vmPricing, err := clientFactory.NewPricingsClient().Get(ctx, fmt.Sprintf("subscriptions/%s", subId), "VirtualMachines", &security.PricingsClientGetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
 	ep := cloud.AzurePublic.Services[cloud.ResourceManager].Endpoint
 	list, err := getPolicyAssignments(ctx, subId, ep, rawToken.Token)
 	if err != nil {
@@ -87,6 +96,12 @@ func (a *mqlAzureSubscriptionCloudDefenderService) defenderForServers() (interfa
 	}
 
 	resp := defenderForServers{}
+	if vmPricing.Properties.PricingTier != nil {
+		// According to the CIS implementation of checking if the defender for servers is on, we need to check if the pricing tier is standard
+		// https://learn.microsoft.com/en-us/rest/api/defenderforcloud/pricings/list?view=rest-defenderforcloud-2024-01-01&tabs=HTTP#pricingtier
+		resp.Enabled = *vmPricing.Properties.PricingTier == security.PricingTierStandard
+	}
+
 	for _, it := range list.PolicyAssignments {
 		if it.Properties.PolicyDefinitionID == vaQualysPolicyDefinitionId {
 			resp.Enabled = true
@@ -136,6 +151,7 @@ func (a *mqlAzureSubscriptionCloudDefenderService) defenderForContainers() (inte
 	if err != nil {
 		return nil, err
 	}
+
 	ep := cloud.AzurePublic.Services[cloud.ResourceManager].Endpoint
 	pas, err := getPolicyAssignments(ctx, subId, ep, rawToken.Token)
 	if err != nil {
