@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	JIRA_TIME_FORMAT               = "2006-01-02T15:04:05.999-0700"
-	JIRA_ISSUES_SEARCH_MAX_RESULTS = 1000
+	JIRA_TIME_FORMAT        = "2006-01-02T15:04:05.999-0700"
+	JIRA_SEARCH_MAX_RESULTS = 1000
 )
 
 func (a *mqlAtlassianJira) id() (string, error) {
@@ -28,23 +28,34 @@ func (a *mqlAtlassianJira) users() ([]interface{}, error) {
 		return nil, errors.New("Current connection does not allow jira access")
 	}
 	jira := conn.Client()
-	users, _, err := jira.User.Search.Do(context.Background(), "", " ", 0, 1000)
-	if err != nil {
-		return nil, err
-	}
-	res := []interface{}{}
-	for _, user := range users {
-		mqlAtlassianJiraUser, err := CreateResource(a.MqlRuntime, "atlassian.jira.user",
-			map[string]*llx.RawData{
-				"id":      llx.StringData(user.AccountID),
-				"name":    llx.StringData(user.DisplayName),
-				"type":    llx.StringData(user.AccountType),
-				"picture": llx.StringData(user.AvatarUrls.One6X16),
-			})
+
+	res := []any{}
+	startAt := 0
+
+	for {
+		users, _, err := jira.User.Search.Do(context.Background(), "", " ", startAt, JIRA_SEARCH_MAX_RESULTS)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlAtlassianJiraUser)
+		if len(users) == 0 {
+			break
+		}
+
+		for _, user := range users {
+			mqlAtlassianJiraUser, err := CreateResource(a.MqlRuntime, "atlassian.jira.user",
+				map[string]*llx.RawData{
+					"id":      llx.StringData(user.AccountID),
+					"name":    llx.StringData(user.DisplayName),
+					"type":    llx.StringData(user.AccountType),
+					"picture": llx.StringData(user.AvatarUrls.One6X16),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAtlassianJiraUser)
+		}
+
+		startAt += len(users)
 	}
 	return res, nil
 }
@@ -153,29 +164,38 @@ func (a *mqlAtlassianJira) projects() ([]interface{}, error) {
 		return nil, errors.New("Current connection does not allow jira access")
 	}
 	jira := conn.Client()
-	projects, _, err := jira.Project.Search(context.Background(), nil, 0, 1000)
-	if err != nil {
-		return nil, err
-	}
 
-	res := []interface{}{}
-	for _, project := range projects.Values {
-		mqlAtlassianJiraProject, err := CreateResource(a.MqlRuntime, "atlassian.jira.project",
-			map[string]*llx.RawData{
-				"id":       llx.StringData(project.ID),
-				"name":     llx.StringData(project.Name),
-				"uuid":     llx.StringData(project.UUID),
-				"key":      llx.StringData(project.Key),
-				"url":      llx.StringData(project.URL),
-				"email":    llx.StringData(project.Email),
-				"private":  llx.BoolData(project.IsPrivate),
-				"deleted":  llx.BoolData(project.Deleted),
-				"archived": llx.BoolData(project.Archived),
-			})
+	res := []any{}
+	startAt := 0
+	total := JIRA_SEARCH_MAX_RESULTS
+
+	for startAt < total {
+		projects, _, err := jira.Project.Search(context.Background(), nil, startAt, JIRA_SEARCH_MAX_RESULTS)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlAtlassianJiraProject)
+
+		for _, project := range projects.Values {
+			mqlAtlassianJiraProject, err := CreateResource(a.MqlRuntime, "atlassian.jira.project",
+				map[string]*llx.RawData{
+					"id":       llx.StringData(project.ID),
+					"name":     llx.StringData(project.Name),
+					"uuid":     llx.StringData(project.UUID),
+					"key":      llx.StringData(project.Key),
+					"url":      llx.StringData(project.URL),
+					"email":    llx.StringData(project.Email),
+					"private":  llx.BoolData(project.IsPrivate),
+					"deleted":  llx.BoolData(project.Deleted),
+					"archived": llx.BoolData(project.Archived),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAtlassianJiraProject)
+		}
+
+		total = projects.Total
+		startAt += len(projects.Values)
 	}
 	return res, nil
 }
@@ -193,10 +213,10 @@ func (a *mqlAtlassianJira) issues() ([]interface{}, error) {
 
 	res := []interface{}{}
 	startAt := 0
-	total := JIRA_ISSUES_SEARCH_MAX_RESULTS
+	total := JIRA_SEARCH_MAX_RESULTS
 
 	for startAt < total {
-		issues, _, err := jira.Issue.Search.Get(context.Background(), jql, fields, expands, startAt, JIRA_ISSUES_SEARCH_MAX_RESULTS, validate)
+		issues, _, err := jira.Issue.Search.Get(context.Background(), jql, fields, expands, startAt, JIRA_SEARCH_MAX_RESULTS, validate)
 		if err != nil {
 			return nil, err
 		}
