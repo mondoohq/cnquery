@@ -116,6 +116,8 @@ atlassian.jira.issue @defaults("id") {
   status string
   // Description
   description string
+  // Issue create time in UTC
+  created time
 }
 
 // Jira server info

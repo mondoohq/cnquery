@@ -271,6 +271,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.jira.issue.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraIssue).GetDescription()).ToDataRes(types.String)
 	},
+	"atlassian.jira.issue.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraIssue).GetCreated()).ToDataRes(types.Time)
+	},
 	"atlassian.jira.serverInfo.baseUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraServerInfo).GetBaseUrl()).ToDataRes(types.String)
 	},
@@ -560,6 +563,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"atlassian.jira.issue.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianJiraIssue).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.issue.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraIssue).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"atlassian.jira.serverInfo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1390,6 +1397,7 @@ type mqlAtlassianJiraIssue struct {
 	Project plugin.TValue[string]
 	Status plugin.TValue[string]
 	Description plugin.TValue[string]
+	Created plugin.TValue[*time.Time]
 }
 
 // createAtlassianJiraIssue creates a new instance of this resource
@@ -1443,6 +1451,10 @@ func (c *mqlAtlassianJiraIssue) GetStatus() *plugin.TValue[string] {
 
 func (c *mqlAtlassianJiraIssue) GetDescription() *plugin.TValue[string] {
 	return &c.Description
+}
+
+func (c *mqlAtlassianJiraIssue) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
 }
 
 // mqlAtlassianJiraServerInfo for the atlassian.jira.serverInfo resource
