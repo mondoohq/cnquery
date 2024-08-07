@@ -190,30 +190,40 @@ func (a *mqlAtlassianJira) issues() ([]interface{}, error) {
 	jql := "order by created DESC"
 	fields := []string{"created", "status", "project", "description"}
 	expands := []string{"changelog", "renderedFields", "names", "schema", "transitions", "operations", "editmeta"}
-	issues, _, err := jira.Issue.Search.Get(context.Background(), jql, fields, expands, 0, JIRA_ISSUES_SEARCH_MAX_RESULTS, validate)
-	if err != nil {
-		return nil, err
-	}
+
 	res := []interface{}{}
-	for _, issue := range issues.Issues {
-		created, err := time.Parse(JIRA_TIME_FORMAT, issue.Fields.Created)
+	startAt := 0
+	total := JIRA_ISSUES_SEARCH_MAX_RESULTS
+
+	for startAt < total {
+		issues, _, err := jira.Issue.Search.Get(context.Background(), jql, fields, expands, startAt, JIRA_ISSUES_SEARCH_MAX_RESULTS, validate)
 		if err != nil {
 			return nil, err
+		}
+		for _, issue := range issues.Issues {
+			created, err := time.Parse(JIRA_TIME_FORMAT, issue.Fields.Created)
+			if err != nil {
+				return nil, err
+			}
+
+			mqlAtlassianJiraIssue, err := CreateResource(a.MqlRuntime, "atlassian.jira.issue",
+				map[string]*llx.RawData{
+					"id":          llx.StringData(issue.ID),
+					"project":     llx.StringData(issue.Fields.Project.Name),
+					"status":      llx.StringData(issue.Fields.Status.Name),
+					"description": llx.StringData(issue.Fields.Description),
+					"created":     llx.TimeData(created.UTC()),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAtlassianJiraIssue)
 		}
 
-		mqlAtlassianJiraIssue, err := CreateResource(a.MqlRuntime, "atlassian.jira.issue",
-			map[string]*llx.RawData{
-				"id":          llx.StringData(issue.ID),
-				"project":     llx.StringData(issue.Fields.Project.Name),
-				"status":      llx.StringData(issue.Fields.Status.Name),
-				"description": llx.StringData(issue.Fields.Description),
-				"created":     llx.TimeData(created.UTC()),
-			})
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, mqlAtlassianJiraIssue)
+		total = issues.Total
+		startAt += len(issues.Issues)
 	}
+
 	return res, nil
 }
 
