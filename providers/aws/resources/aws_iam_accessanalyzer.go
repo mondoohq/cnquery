@@ -16,11 +16,11 @@ import (
 	"go.mondoo.com/cnquery/v11/types"
 )
 
-func (a *mqlAwsAccessanalyzerAnalyzer) id() (string, error) {
+func (a *mqlAwsIamAccessanalyzerAnalyzer) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func (a *mqlAwsAccessAnalyzer) analyzers() ([]interface{}, error) {
+func (a *mqlAwsIamAccessAnalyzer) analyzers() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	res := []interface{}{}
@@ -39,7 +39,7 @@ func (a *mqlAwsAccessAnalyzer) analyzers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsAccessAnalyzer) getAnalyzers(conn *connection.AwsConnection) []*jobpool.Job {
+func (a *mqlAwsIamAccessAnalyzer) getAnalyzers(conn *connection.AwsConnection) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := conn.Regions()
 	if err != nil {
@@ -65,7 +65,7 @@ func (a *mqlAwsAccessAnalyzer) getAnalyzers(conn *connection.AwsConnection) []*j
 					return nil, err
 				}
 				for _, analyzer := range analyzers.Analyzers {
-					mqlAnalyzer, err := CreateResource(a.MqlRuntime, "aws.accessanalyzer.analyzer",
+					mqlAnalyzer, err := CreateResource(a.MqlRuntime, "aws.iam.accessanalyzer.analyzer",
 						map[string]*llx.RawData{
 							"arn":                    llx.StringDataPtr(analyzer.Arn),
 							"createdAt":              llx.TimeDataPtr(analyzer.CreatedAt),
