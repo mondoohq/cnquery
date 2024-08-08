@@ -1936,6 +1936,7 @@ resources:
       lastResourceAnalyzed: {}
       lastResourceAnalyzedAt: {}
       name: {}
+      region: {}
       status: {}
       tags: {}
       type: {}

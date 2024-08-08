@@ -899,7 +899,7 @@ aws.iam.accessAnalyzer @defaults("analyzers") {
 }
 
 // AWS IAM Access Analyzer resource (provides an object representing an individual AWS IAM Access Analyzer configuration)
-private aws.iam.accessanalyzer.analyzer @defaults("name type status") {
+private aws.iam.accessanalyzer.analyzer @defaults("name type region status") {
   // ARN for the analyzer
   arn string
   // Name for the analyzer
@@ -908,6 +908,8 @@ private aws.iam.accessanalyzer.analyzer @defaults("name type status") {
   status string
   // Type of analyzer: ACCOUNT or ORGANIZATION
   type string
+  // Region where the analyzer exists
+  region string
   // Tags for the analyzer
   tags map[string]string
   // The name of the last resource that was analyzed
@@ -917,7 +919,6 @@ private aws.iam.accessanalyzer.analyzer @defaults("name type status") {
   // Creation timestamp
   createdAt time
 }
-
 
 // AWS SageMaker
 aws.sagemaker {

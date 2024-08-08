@@ -5,7 +5,6 @@ package resources
 
 import (
 	"context"
-
 	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
 	aatypes "github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types"
 	"github.com/aws/aws-sdk-go/aws"
@@ -50,40 +49,48 @@ func (a *mqlAwsIamAccessAnalyzer) getAnalyzers(conn *connection.AwsConnection) [
 		regionVal := regions[i]
 		f := func() (jobpool.JobResult, error) {
 			svc := conn.AccessAnalyzer(regionVal)
-			ctx := context.Background()
 			res := []interface{}{}
-			nextToken := aws.String("no_token_to_start_with")
-			params := &accessanalyzer.ListAnalyzersInput{Type: aatypes.TypeAccount}
-			for nextToken != nil {
-				analyzers, err := svc.ListAnalyzers(ctx, params)
-				if err != nil {
-					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
-						return res, nil
-					}
-					log.Error().Err(err).Str("region", regionVal).Msg("error listing analyzers")
-					return nil, err
-				}
-				for _, analyzer := range analyzers.Analyzers {
-					mqlAnalyzer, err := CreateResource(a.MqlRuntime, "aws.iam.accessanalyzer.analyzer",
-						map[string]*llx.RawData{
-							"arn":                    llx.StringDataPtr(analyzer.Arn),
-							"createdAt":              llx.TimeDataPtr(analyzer.CreatedAt),
-							"lastResourceAnalyzed":   llx.StringDataPtr(analyzer.LastResourceAnalyzed),
-							"lastResourceAnalyzedAt": llx.TimeDataPtr(analyzer.LastResourceAnalyzedAt),
-							"name":                   llx.StringDataPtr(analyzer.Name),
-							"status":                 llx.StringData(string(analyzer.Status)),
-							"tags":                   llx.MapData(strMapToInterface(analyzer.Tags), types.String),
-							"type":                   llx.StringData(string(analyzer.Type)),
-						})
+
+			// we need to iterate over all the analyzers types in the account
+			analyzerTypes := []aatypes.Type{aatypes.TypeAccount, aatypes.TypeOrganization, aatypes.TypeAccountUnusedAccess, aatypes.TypeOrganizationUnusedAccess}
+			for _, analyzerType := range analyzerTypes {
+				ctx := context.Background()
+
+				// query all the analyzers in the account / region
+				nextToken := aws.String("no_token_to_start_with")
+				params := &accessanalyzer.ListAnalyzersInput{Type: analyzerType}
+				for nextToken != nil {
+					analyzers, err := svc.ListAnalyzers(ctx, params)
 					if err != nil {
+						if Is400AccessDeniedError(err) {
+							log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+							return res, nil
+						}
+						log.Error().Err(err).Str("region", regionVal).Msg("error listing analyzers")
 						return nil, err
 					}
-					res = append(res, mqlAnalyzer)
-				}
-				nextToken = analyzers.NextToken
-				if analyzers.NextToken != nil {
-					params.NextToken = nextToken
+					for _, analyzer := range analyzers.Analyzers {
+						mqlAnalyzer, err := CreateResource(a.MqlRuntime, "aws.iam.accessanalyzer.analyzer",
+							map[string]*llx.RawData{
+								"arn":                    llx.StringDataPtr(analyzer.Arn),
+								"name":                   llx.StringDataPtr(analyzer.Name),
+								"status":                 llx.StringData(string(analyzer.Status)),
+								"type":                   llx.StringData(string(analyzer.Type)),
+								"region":                 llx.StringData(regionVal),
+								"tags":                   llx.MapData(strMapToInterface(analyzer.Tags), types.String),
+								"createdAt":              llx.TimeDataPtr(analyzer.CreatedAt),
+								"lastResourceAnalyzed":   llx.StringDataPtr(analyzer.LastResourceAnalyzed),
+								"lastResourceAnalyzedAt": llx.TimeDataPtr(analyzer.LastResourceAnalyzedAt),
+							})
+						if err != nil {
+							return nil, err
+						}
+						res = append(res, mqlAnalyzer)
+					}
+					nextToken = analyzers.NextToken
+					if analyzers.NextToken != nil {
+						params.NextToken = nextToken
+					}
 				}
 			}
 			return jobpool.JobResult(res), nil

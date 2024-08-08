@@ -1785,6 +1785,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.iam.accessanalyzer.analyzer.type": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamAccessanalyzerAnalyzer).GetType()).ToDataRes(types.String)
 	},
+	"aws.iam.accessanalyzer.analyzer.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessanalyzerAnalyzer).GetRegion()).ToDataRes(types.String)
+	},
 	"aws.iam.accessanalyzer.analyzer.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamAccessanalyzerAnalyzer).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -6007,6 +6010,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.iam.accessanalyzer.analyzer.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamAccessanalyzerAnalyzer).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.accessanalyzer.analyzer.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessanalyzerAnalyzer).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.iam.accessanalyzer.analyzer.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14678,6 +14685,7 @@ type mqlAwsIamAccessanalyzerAnalyzer struct {
 	Name plugin.TValue[string]
 	Status plugin.TValue[string]
 	Type plugin.TValue[string]
+	Region plugin.TValue[string]
 	Tags plugin.TValue[map[string]interface{}]
 	LastResourceAnalyzed plugin.TValue[string]
 	LastResourceAnalyzedAt plugin.TValue[*time.Time]
@@ -14735,6 +14743,10 @@ func (c *mqlAwsIamAccessanalyzerAnalyzer) GetStatus() *plugin.TValue[string] {
 
 func (c *mqlAwsIamAccessanalyzerAnalyzer) GetType() *plugin.TValue[string] {
 	return &c.Type
+}
+
+func (c *mqlAwsIamAccessanalyzerAnalyzer) GetRegion() *plugin.TValue[string] {
+	return &c.Region
 }
 
 func (c *mqlAwsIamAccessanalyzerAnalyzer) GetTags() *plugin.TValue[map[string]interface{}] {
