@@ -99,7 +99,7 @@ private k8s.namespace @defaults("name created") {
 }
 
 // Kubernetes node
-private k8s.node @defaults("name kind") {
+private k8s.node @defaults("name labels['kubernetes.io/arch'] labels['kubernetes.io/os'] ") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
