@@ -11,8 +11,6 @@ import (
 	waftypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
-
-	//"github.com/aws/aws-sdk-go/aws"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"

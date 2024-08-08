@@ -7,9 +7,9 @@ import (
 	"context"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/rs/zerolog/log"
 	awsec2ebstypes "go.mondoo.com/cnquery/v11/providers/aws/connection/awsec2ebsconn/types"
 )
