@@ -50,6 +50,14 @@ func init() {
 			Init: initCpe,
 			Create: createCpe,
 		},
+		"product": {
+			// to override args, implement: initProduct(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createProduct,
+		},
+		"product.releaseCycleInformation": {
+			// to override args, implement: initProductReleaseCycleInformation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createProductReleaseCycleInformation,
+		},
 	}
 }
 
@@ -276,6 +284,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"cpe.other": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCpe).GetOther()).ToDataRes(types.String)
+	},
+	"product.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProduct).GetName()).ToDataRes(types.String)
+	},
+	"product.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProduct).GetVersion()).ToDataRes(types.String)
+	},
+	"product.releaseCycle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProduct).GetReleaseCycle()).ToDataRes(types.Resource("product.releaseCycleInformation"))
+	},
+	"product.releaseCycleInformation.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProductReleaseCycleInformation).GetName()).ToDataRes(types.String)
+	},
+	"product.releaseCycleInformation.cycle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProductReleaseCycleInformation).GetCycle()).ToDataRes(types.String)
+	},
+	"product.releaseCycleInformation.latestVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProductReleaseCycleInformation).GetLatestVersion()).ToDataRes(types.String)
+	},
+	"product.releaseCycleInformation.firstReleaseDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProductReleaseCycleInformation).GetFirstReleaseDate()).ToDataRes(types.Time)
+	},
+	"product.releaseCycleInformation.lastReleaseDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProductReleaseCycleInformation).GetLastReleaseDate()).ToDataRes(types.Time)
+	},
+	"product.releaseCycleInformation.endOfActiveSupport": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProductReleaseCycleInformation).GetEndOfActiveSupport()).ToDataRes(types.Time)
+	},
+	"product.releaseCycleInformation.endOfLife": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProductReleaseCycleInformation).GetEndOfLife()).ToDataRes(types.Time)
+	},
+	"product.releaseCycleInformation.endOfExtendedSupport": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProductReleaseCycleInformation).GetEndOfExtendedSupport()).ToDataRes(types.Time)
+	},
+	"product.releaseCycleInformation.link": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProductReleaseCycleInformation).GetLink()).ToDataRes(types.String)
 	},
 }
 
@@ -531,6 +575,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"cpe.other": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCpe).Other, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"product.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlProduct).__id, ok = v.Value.(string)
+			return
+		},
+	"product.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProduct).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"product.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProduct).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"product.releaseCycle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProduct).ReleaseCycle, ok = plugin.RawToTValue[*mqlProductReleaseCycleInformation](v.Value, v.Error)
+		return
+	},
+	"product.releaseCycleInformation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlProductReleaseCycleInformation).__id, ok = v.Value.(string)
+			return
+		},
+	"product.releaseCycleInformation.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProductReleaseCycleInformation).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"product.releaseCycleInformation.cycle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProductReleaseCycleInformation).Cycle, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"product.releaseCycleInformation.latestVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProductReleaseCycleInformation).LatestVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"product.releaseCycleInformation.firstReleaseDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProductReleaseCycleInformation).FirstReleaseDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"product.releaseCycleInformation.lastReleaseDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProductReleaseCycleInformation).LastReleaseDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"product.releaseCycleInformation.endOfActiveSupport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProductReleaseCycleInformation).EndOfActiveSupport, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"product.releaseCycleInformation.endOfLife": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProductReleaseCycleInformation).EndOfLife, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"product.releaseCycleInformation.endOfExtendedSupport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProductReleaseCycleInformation).EndOfExtendedSupport, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"product.releaseCycleInformation.link": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProductReleaseCycleInformation).Link, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -1217,4 +1317,159 @@ func (c *mqlCpe) GetOther() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Other, func() (string, error) {
 		return c.other()
 	})
+}
+
+// mqlProduct for the product resource
+type mqlProduct struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlProductInternal it will be used here
+	Name plugin.TValue[string]
+	Version plugin.TValue[string]
+	ReleaseCycle plugin.TValue[*mqlProductReleaseCycleInformation]
+}
+
+// createProduct creates a new instance of this resource
+func createProduct(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProduct{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("product", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProduct) MqlName() string {
+	return "product"
+}
+
+func (c *mqlProduct) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProduct) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlProduct) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlProduct) GetReleaseCycle() *plugin.TValue[*mqlProductReleaseCycleInformation] {
+	return plugin.GetOrCompute[*mqlProductReleaseCycleInformation](&c.ReleaseCycle, func() (*mqlProductReleaseCycleInformation, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("product", c.__id, "releaseCycle")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlProductReleaseCycleInformation), nil
+			}
+		}
+
+		return c.releaseCycle()
+	})
+}
+
+// mqlProductReleaseCycleInformation for the product.releaseCycleInformation resource
+type mqlProductReleaseCycleInformation struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlProductReleaseCycleInformationInternal it will be used here
+	Name plugin.TValue[string]
+	Cycle plugin.TValue[string]
+	LatestVersion plugin.TValue[string]
+	FirstReleaseDate plugin.TValue[*time.Time]
+	LastReleaseDate plugin.TValue[*time.Time]
+	EndOfActiveSupport plugin.TValue[*time.Time]
+	EndOfLife plugin.TValue[*time.Time]
+	EndOfExtendedSupport plugin.TValue[*time.Time]
+	Link plugin.TValue[string]
+}
+
+// createProductReleaseCycleInformation creates a new instance of this resource
+func createProductReleaseCycleInformation(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProductReleaseCycleInformation{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("product.releaseCycleInformation", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProductReleaseCycleInformation) MqlName() string {
+	return "product.releaseCycleInformation"
+}
+
+func (c *mqlProductReleaseCycleInformation) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProductReleaseCycleInformation) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlProductReleaseCycleInformation) GetCycle() *plugin.TValue[string] {
+	return &c.Cycle
+}
+
+func (c *mqlProductReleaseCycleInformation) GetLatestVersion() *plugin.TValue[string] {
+	return &c.LatestVersion
+}
+
+func (c *mqlProductReleaseCycleInformation) GetFirstReleaseDate() *plugin.TValue[*time.Time] {
+	return &c.FirstReleaseDate
+}
+
+func (c *mqlProductReleaseCycleInformation) GetLastReleaseDate() *plugin.TValue[*time.Time] {
+	return &c.LastReleaseDate
+}
+
+func (c *mqlProductReleaseCycleInformation) GetEndOfActiveSupport() *plugin.TValue[*time.Time] {
+	return &c.EndOfActiveSupport
+}
+
+func (c *mqlProductReleaseCycleInformation) GetEndOfLife() *plugin.TValue[*time.Time] {
+	return &c.EndOfLife
+}
+
+func (c *mqlProductReleaseCycleInformation) GetEndOfExtendedSupport() *plugin.TValue[*time.Time] {
+	return &c.EndOfExtendedSupport
+}
+
+func (c *mqlProductReleaseCycleInformation) GetLink() *plugin.TValue[string] {
+	return &c.Link
 }

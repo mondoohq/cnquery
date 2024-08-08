@@ -5,6 +5,7 @@ syntax = "proto3";
 
 package mondoo.mvd.v1;
 
+import "google/protobuf/timestamp.proto";
 import "providers-sdk/v1/upstream/mvd/cvss/cvss.proto";
 
 option go_package = 
@@ -35,10 +36,14 @@ message Package {
   int32 score = 26;
   bool affected = 27;
 }
-
+// Implements the AdvisoryScanner interface from cnquery
 service AdvisoryScanner {
+  // Scans a list of packages for vulnerabilities
   rpc AnalyseAsset(AnalyseAssetRequest) returns (VulnReport);
+  // Get information about the end of life of a platform
   rpc IsEol(Platform) returns (PlatformEolInfo);
+  // Get information about the end of life of a product
+  rpc GetProductEol(GetProductEolRequest) returns (GetProductEolResponse);
 }
 
 message AnalyseAssetRequest {
@@ -206,4 +211,45 @@ message PlatformEolInfo {
   string ReleaseDate = 4;
   // protolint:disable:next FIELD_NAMES_LOWER_SNAKE_CASE
   string EolDate = 5;
+}
+
+// GetProductEolRequest contains information about the product and the version
+message GetProductEolRequest {
+  // Product ID eg. kubernetes
+  string name = 1;
+  // Product version
+  string version = 2;
+}
+
+// GetProductEolResponse contains information about the end of life of a product
+// release
+message GetProductEolResponse {
+  // Release information
+  EndOfLifeRelease release = 1;
+}
+
+// EndOfLifeRelease contains information about the end of life of a release
+message EndOfLifeRelease {
+  // Release Name eg. Ubuntu
+  string release_name = 1;
+  // Release Codename eg. Focal Fossa
+  string release_codename = 2;
+  // Release Cycle eg. major version
+  string release_cycle = 3;
+  // Latest version in the release cycle
+  string latest_version = 4;
+  // First Release Date
+  google.protobuf.Timestamp  first_release_date = 5;
+  // Last Release Date
+  google.protobuf.Timestamp  last_release_date = 6;
+  // Link to the release
+  string release_link = 7;
+  // End Of Active Support
+  google.protobuf.Timestamp  end_of_active_support = 8;
+  // End Of Life
+  google.protobuf.Timestamp  end_of_life = 9;
+  // End Of Extended Support
+  google.protobuf.Timestamp  end_of_extended_support = 10;
+  // Change Log Reference
+  string change_log_reference = 11;
 }
