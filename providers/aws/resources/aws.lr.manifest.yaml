@@ -1868,10 +1868,16 @@ resources:
       desc: |
         The `aws.guardduty.detector` resource provides fields for assessing the configuration of individual Amazon GuardDuty Detectors. For usage, read the `aws.guardduty` resource documentation
     fields:
+      features:
+        min_mondoo_version: 9.0.0
       findingPublishingFrequency: {}
+      findings:
+        min_mondoo_version: 9.0.0
       id: {}
       region: {}
       status: {}
+      tags:
+        min_mondoo_version: 9.0.0
       unarchivedFindings: {}
     is_private: true
     min_mondoo_version: 5.15.0

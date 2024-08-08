@@ -95,31 +95,94 @@ func (a *mqlAwsGuardduty) getDetectors(conn *connection.AwsConnection) []*jobpoo
 	return tasks
 }
 
-func initAwsGuarddutyDetector(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) > 2 {
-		return args, nil, nil
+func (a *mqlAwsGuarddutyDetector) populateData() error {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	// default set values
+	a.Status = plugin.TValue[string]{State: plugin.StateIsSet | plugin.StateIsNull}
+	a.FindingPublishingFrequency = plugin.TValue[string]{State: plugin.StateIsSet | plugin.StateIsNull}
+	a.Features = plugin.TValue[[]interface{}]{State: plugin.StateIsSet | plugin.StateIsNull}
+	a.Tags = plugin.TValue[map[string]interface{}]{State: plugin.StateIsSet | plugin.StateIsNull}
+
+	detectorId := a.GetId().Data
+	region := a.GetRegion().Data
+
+	svc := conn.Guardduty(region)
+
+	ctx := context.Background()
+	detector, err := svc.GetDetector(ctx, &guardduty.GetDetectorInput{
+		DetectorId: &detectorId,
+	})
+	if err != nil {
+
+		return err
 	}
 
-	if args["id"] == nil && args["region"] == nil {
-		return nil, nil, errors.New("name and region required to fetch guardduty detector")
-	}
+	a.Status = plugin.TValue[string]{Data: string(detector.Status), State: plugin.StateIsSet}
+	a.FindingPublishingFrequency = plugin.TValue[string]{Data: string(detector.FindingPublishingFrequency), State: plugin.StateIsSet}
+	features, _ := convert.JsonToDictSlice(detector.Features)
+	a.Features = plugin.TValue[[]interface{}]{Data: features, State: plugin.StateIsSet}
+	a.Tags = plugin.TValue[map[string]interface{}]{Data: convert.MapToInterfaceMap(detector.Tags), State: plugin.StateIsSet}
 
-	id := args["id"].Value.(string)
-	region := args["region"].Value.(string)
-	conn := runtime.Connection.(*connection.AwsConnection)
+	return nil
+}
+
+func (a *mqlAwsGuarddutyDetector) status() (string, error) {
+	return "", a.populateData()
+}
+
+func (a *mqlAwsGuarddutyDetector) features() ([]interface{}, error) {
+	return nil, a.populateData()
+}
+
+func (a *mqlAwsGuarddutyDetector) tags() (map[string]interface{}, error) {
+	return nil, a.populateData()
+}
+
+func (a *mqlAwsGuarddutyDetector) findingPublishingFrequency() (string, error) {
+	return "", a.populateData()
+}
+
+func (a *mqlAwsGuarddutyDetector) findings() ([]interface{}, error) {
+	id := a.Id.Data
+	region := a.Region.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Guardduty(region)
 	ctx := context.Background()
-	detector, err := svc.GetDetector(ctx, &guardduty.GetDetectorInput{DetectorId: &id})
+
+	findings, err := svc.ListFindings(ctx, &guardduty.ListFindingsInput{
+		DetectorId: &id,
+		FindingCriteria: &types.FindingCriteria{
+			Criterion: map[string]types.Condition{
+				"service.archived": {
+					Equals: []string{"false"},
+				},
+			},
+		},
+	})
 	if err != nil {
-		return nil, nil, err
+		return nil, err
+	}
+	findingDetails, err := svc.GetFindings(ctx, &guardduty.GetFindingsInput{FindingIds: findings.FindingIds, DetectorId: &id})
+	if err != nil {
+		return nil, err
 	}
 
-	args["status"] = llx.StringData(string(detector.Status))
-	args["findingPublishingFrequency"] = llx.StringData(string(detector.FindingPublishingFrequency))
-	return args, nil, nil
+	res := []interface{}{}
+	for _, finding := range findingDetails.Findings {
+		mqlFinding, err := newMqlAwsGuardDutyFinding(a.MqlRuntime, finding)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlFinding)
+	}
+
+	return res, nil
 }
 
+// unarchivedFindings returns all findings that are not archived
+// Deprecated: use findings instead
 func (a *mqlAwsGuarddutyDetector) unarchivedFindings() ([]interface{}, error) {
 	id := a.Id.Data
 	region := a.Region.Data

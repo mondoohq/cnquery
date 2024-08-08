@@ -327,7 +327,7 @@ func init() {
 			Create: createAwsGuardduty,
 		},
 		"aws.guardduty.detector": {
-			Init: initAwsGuarddutyDetector,
+			// to override args, implement: initAwsGuarddutyDetector(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsGuarddutyDetector,
 		},
 		"aws.guardduty.finding": {
@@ -2149,8 +2149,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.guardduty.detector.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGuarddutyDetector).GetStatus()).ToDataRes(types.String)
 	},
+	"aws.guardduty.detector.features": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyDetector).GetFeatures()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.guardduty.detector.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyDetector).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"aws.guardduty.detector.findingPublishingFrequency": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGuarddutyDetector).GetFindingPublishingFrequency()).ToDataRes(types.String)
+	},
+	"aws.guardduty.detector.findings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyDetector).GetFindings()).ToDataRes(types.Array(types.Resource("aws.guardduty.finding")))
 	},
 	"aws.guardduty.detector.unarchivedFindings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGuarddutyDetector).GetUnarchivedFindings()).ToDataRes(types.Array(types.Dict))
@@ -6606,8 +6615,20 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsGuarddutyDetector).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.guardduty.detector.features": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyDetector).Features, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.detector.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyDetector).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
 	"aws.guardduty.detector.findingPublishingFrequency": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsGuarddutyDetector).FindingPublishingFrequency, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.detector.findings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyDetector).Findings, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"aws.guardduty.detector.unarchivedFindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16497,7 +16518,10 @@ type mqlAwsGuarddutyDetector struct {
 	Id plugin.TValue[string]
 	Region plugin.TValue[string]
 	Status plugin.TValue[string]
+	Features plugin.TValue[[]interface{}]
+	Tags plugin.TValue[map[string]interface{}]
 	FindingPublishingFrequency plugin.TValue[string]
+	Findings plugin.TValue[[]interface{}]
 	UnarchivedFindings plugin.TValue[[]interface{}]
 }
 
@@ -16547,11 +16571,43 @@ func (c *mqlAwsGuarddutyDetector) GetRegion() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsGuarddutyDetector) GetStatus() *plugin.TValue[string] {
-	return &c.Status
+	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
+		return c.status()
+	})
+}
+
+func (c *mqlAwsGuarddutyDetector) GetFeatures() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Features, func() ([]interface{}, error) {
+		return c.features()
+	})
+}
+
+func (c *mqlAwsGuarddutyDetector) GetTags() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Tags, func() (map[string]interface{}, error) {
+		return c.tags()
+	})
 }
 
 func (c *mqlAwsGuarddutyDetector) GetFindingPublishingFrequency() *plugin.TValue[string] {
-	return &c.FindingPublishingFrequency
+	return plugin.GetOrCompute[string](&c.FindingPublishingFrequency, func() (string, error) {
+		return c.findingPublishingFrequency()
+	})
+}
+
+func (c *mqlAwsGuarddutyDetector) GetFindings() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Findings, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.guardduty.detector", c.__id, "findings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.findings()
+	})
 }
 
 func (c *mqlAwsGuarddutyDetector) GetUnarchivedFindings() *plugin.TValue[[]interface{}] {
