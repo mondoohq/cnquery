@@ -7,9 +7,9 @@ import (
 	"context"
 	"errors"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/smithy-go/transport/http"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/llx"
