@@ -3,9 +3,11 @@
 
 import "../../network/resources/network.lr"
 
-
 option provider = "go.mondoo.com/cnquery/v9/providers/aws"
 option go_package = "go.mondoo.com/cnquery/v11/providers/aws/resources"
+
+alias aws.accessAnalyzer = aws.iam.accessAnalyzer
+alias aws.accessAnalyzer.analyzer = aws.iam.accessanalyzer.analyzer
 
 // AWS resource
 aws @defaults("account.id") {
@@ -633,31 +635,6 @@ private aws.waf.ipset @defaults("name") {
   addresses dict
 }
 
-// AWS IAM Access Analyzer resource (for assessing the configuration of AWS IAM Access Analyzer)
-aws.accessAnalyzer @defaults("analyzers") {
-  // List of `aws.accessanalyzer.analyzer` objects for all AWS IAM Access Analyzers configured within the account
-  analyzers() []aws.accessanalyzer.analyzer
-}
-
-// AWS IAM Access Analyzer resource (provides an object representing an individual AWS IAM Access Analyzer configuration)
-private aws.accessanalyzer.analyzer @defaults("name type status") {
-  // ARN for the analyzer
-  arn string
-  // Name for the analyzer
-  name string
-  // Status of the analyzer: ACTIVE, CREATING, DISABLED, or FAILED
-  status string
-  // Type of analyzer: ACCOUNT or ORGANIZATION
-  type string
-  // Tags for the analyzer
-  tags map[string]string
-  // The name of the last resource that was analyzed
-  lastResourceAnalyzed string
-  // Last scan timestamp
-  lastResourceAnalyzedAt time
-  // Creation timestamp
-  createdAt time
-}
 
 // AWS Elastic File System (EFS) service
 aws.efs @defaults("filesystems") {
@@ -913,6 +890,64 @@ private aws.iam.virtualmfadevice @defaults("serialNumber") {
   enableDate time
   // User associated with the MFA device
   user aws.iam.user
+}
+
+// AWS IAM Access Analyzer resource (for assessing the configuration of AWS IAM Access Analyzer)
+aws.iam.accessAnalyzer @defaults("analyzers") {
+  // List of `aws.iam.accessanalyzer.analyzer` objects for all AWS IAM Access Analyzers configured within the account
+  analyzers() []aws.iam.accessanalyzer.analyzer
+  // List all active findings for all analyzers and regions
+  findings() []aws.iam.accessanalyzer.finding
+}
+
+// AWS IAM Access Analyzer resource (provides an object representing an individual AWS IAM Access Analyzer configuration)
+private aws.iam.accessanalyzer.analyzer @defaults("name type region status") {
+  // ARN for the analyzer
+  arn string
+  // Name for the analyzer
+  name string
+  // Status of the analyzer: ACTIVE, CREATING, DISABLED, or FAILED
+  status string
+  // Type of analyzer: ACCOUNT or ORGANIZATION
+  type string
+  // Region where the analyzer exists
+  region string
+  // Tags for the analyzer
+  tags map[string]string
+  // The name of the last resource that was analyzed
+  lastResourceAnalyzed string
+  // Last scan timestamp
+  lastResourceAnalyzedAt time
+  // Creation timestamp
+  createdAt time
+}
+
+// AWS IAM Access Analyzer finding
+private aws.iam.accessanalyzer.finding @defaults("resourceType region type status") {
+  // Finding id
+  id string
+  // Error Message
+  error string
+  // Resource
+  resourceArn string
+  // Resource owner
+  resourceOwnerAccount string
+  // Resource type
+  resourceType string
+  // Finding type
+  type string
+  // Finding Status
+  status string
+  // Time the finding was generated
+  analyzedAt time
+  // Creation timestamp
+  createdAt time
+  // Creation timestamp
+  updatedAt time
+  // Region where the finding exists
+  region string
+  // Analyzer arn
+  analyzerArn string
 }
 
 // AWS SageMaker

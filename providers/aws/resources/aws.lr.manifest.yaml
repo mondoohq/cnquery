@@ -69,7 +69,6 @@ resources:
       tags:
         min_mondoo_version: 5.16.0
       type: {}
-    is_private: true
     min_mondoo_version: 5.15.0
     platform:
       name:
@@ -1923,6 +1922,49 @@ resources:
         != null\n  ) \n"
       title: Do not setup access keys during initial user setup for all IAM users
         that have a console password
+  aws.iam.accessAnalyzer:
+    fields:
+      analyzers: {}
+      findings: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.iam.accessanalyzer.analyzer:
+    fields:
+      arn: {}
+      createdAt: {}
+      lastResourceAnalyzed: {}
+      lastResourceAnalyzedAt: {}
+      name: {}
+      region: {}
+      status: {}
+      tags: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.iam.accessanalyzer.finding:
+    fields:
+      analyzedAt: {}
+      analyzerArn: {}
+      createdAt: {}
+      error: {}
+      id: {}
+      region: {}
+      resourceArn: {}
+      resourceOwnerAccount: {}
+      resourceType: {}
+      status: {}
+      type: {}
+      updatedAt: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
   aws.iam.group:
     docs:
       desc: |
