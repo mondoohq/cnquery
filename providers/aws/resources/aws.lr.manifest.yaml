@@ -30,49 +30,6 @@ resources:
     - query: |
         aws.vpcs.all( flowLogs.any(status == "ACTIVE") )
       title: Ensure VPC flow logging is enabled in all VPCs
-  aws.accessAnalyzer:
-    docs:
-      desc: |
-        The `aws.accessAnalyzer` resource returns a list AWS IAM Access Analyzers configured across the AWS account.
-    fields:
-      analyzers: {}
-    min_mondoo_version: 5.15.0
-    platform:
-      name:
-      - aws
-    refs:
-    - title: Using AWS IAM Access Analyzer
-      url: https://docs.aws.amazon.com/IAM/latest/UserGuide/what-is-access-analyzer.html
-    snippets:
-    - query: aws.accessAnalyzer.analyzers
-      title: Return a list of AWS IAM Access Analyzers configured across the AWS account
-    - query: "aws.accessAnalyzer.analyzers { \n  arn \n  name \n  status \n  type
-        \n}\n"
-      title: Return a list of `aws.accessAnalyzer.analyzer` resources and the value
-        for specified fields
-    - query: |
-        aws.accessAnalyzer.analyzers.all(
-          status == "ACTIVE"
-        )
-      title: Ensure that IAM Access analyzer is enabled for all regions
-  aws.accessanalyzer.analyzer:
-    fields:
-      arn: {}
-      createdAt:
-        min_mondoo_version: 9.0.0
-      lastResourceAnalyzed:
-        min_mondoo_version: 9.0.0
-      lastResourceAnalyzedAt:
-        min_mondoo_version: 9.0.0
-      name: {}
-      status: {}
-      tags:
-        min_mondoo_version: 5.16.0
-      type: {}
-    min_mondoo_version: 5.15.0
-    platform:
-      name:
-      - aws
   aws.account:
     docs:
       desc: |
@@ -1930,6 +1887,21 @@ resources:
     platform:
       name:
       - aws
+    refs:
+    - title: Using AWS IAM Access Analyzer
+      url: https://docs.aws.amazon.com/IAM/latest/UserGuide/what-is-access-analyzer.html
+    snippets:
+    - query: aws.iam.accessAnalyzer.analyzers
+      title: Return a list of AWS IAM Access Analyzers configured across the AWS account
+    - query: "aws.iam.accessAnalyzer.analyzers { \n  arn \n  name \n  status \n  type
+        \n}\n"
+      title: Return a list of `aws.iam.accessAnalyzer.analyzer` resources and the value
+        for specified fields
+    - query: |
+        aws.iam.accessAnalyzer.analyzers.all(
+          status == "ACTIVE"
+        )
+      title: Ensure that IAM Access analyzer is enabled for all regions
   aws.iam.accessanalyzer.analyzer:
     fields:
       arn: {}
