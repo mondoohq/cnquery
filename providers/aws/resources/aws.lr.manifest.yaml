@@ -1920,8 +1920,8 @@ resources:
       title: Return a list of AWS IAM Access Analyzers configured across the AWS account
     - query: "aws.iam.accessAnalyzer.analyzers { \n  arn \n  name \n  status \n  type
         \n}\n"
-      title: Return a list of `aws.iam.accessAnalyzer.analyzer` resources and the value
-        for specified fields
+      title: Return a list of `aws.iam.accessAnalyzer.analyzer` resources and the
+        value for specified fields
     - query: |
         aws.iam.accessAnalyzer.analyzers.all(
           status == "ACTIVE"
