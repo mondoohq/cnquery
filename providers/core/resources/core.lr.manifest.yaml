@@ -178,6 +178,24 @@ resources:
       tld: {}
       tldIcannManaged: {}
     min_mondoo_version: 5.15.0
+  eol.product:
+    fields:
+      name: {}
+      release: {}
+      version: {}
+    min_mondoo_version: latest
+  eol.productRelease:
+    fields:
+      cycle: {}
+      endOfActiveSupport: {}
+      endOfExtendedSupport: {}
+      endOfLife: {}
+      firstReleaseDate: {}
+      lastVersion: {}
+      link: {}
+      name: {}
+    is_private: true
+    min_mondoo_version: latest
   mondoo:
     fields:
       arch:
