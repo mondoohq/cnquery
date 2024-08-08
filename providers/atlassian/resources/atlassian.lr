@@ -107,7 +107,7 @@ atlassian.jira {
 }
 
 // Issue
-atlassian.jira.issue @defaults("id") {
+atlassian.jira.issue @defaults("id createdAt") {
   // Issue ID
   id string
   // Project

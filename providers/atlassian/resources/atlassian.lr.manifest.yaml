@@ -147,8 +147,7 @@ resources:
     min_mondoo_version: 9.0.0
   atlassian.jira.issue:
     fields:
-      created:
-        min_mondoo_version: 9.0.0
+      createdAt: {}
       description: {}
       id: {}
       project: {}
