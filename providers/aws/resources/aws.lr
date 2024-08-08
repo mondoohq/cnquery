@@ -896,6 +896,8 @@ private aws.iam.virtualmfadevice @defaults("serialNumber") {
 aws.iam.accessAnalyzer @defaults("analyzers") {
   // List of `aws.iam.accessanalyzer.analyzer` objects for all AWS IAM Access Analyzers configured within the account
   analyzers() []aws.iam.accessanalyzer.analyzer
+  // List all active findings for all analyzers and regions
+  findings() []aws.iam.accessanalyzer.finding
 }
 
 // AWS IAM Access Analyzer resource (provides an object representing an individual AWS IAM Access Analyzer configuration)
@@ -918,6 +920,34 @@ private aws.iam.accessanalyzer.analyzer @defaults("name type region status") {
   lastResourceAnalyzedAt time
   // Creation timestamp
   createdAt time
+}
+
+// AWS IAM Access Analyzer finding
+private aws.iam.accessanalyzer.finding @defaults("resourceType region type status") {
+  // Finding id
+  id string
+  // Error Message
+  error string
+  // Resource
+  resourceArn string
+  // Resource owner
+  resourceOwnerAccount string
+  // Resource type
+  resourceType string
+  // Finding type
+  type string
+  // Finding Status
+  status string
+  // Time the finding was generated
+  analyzedAt time
+  // Creation timestamp
+  createdAt time
+  // Creation timestamp
+  updatedAt time
+  // Region where the finding exists
+  region string
+  // Analyzer arn
+  analyzerArn string
 }
 
 // AWS SageMaker

@@ -250,6 +250,10 @@ func init() {
 			// to override args, implement: initAwsIamAccessanalyzerAnalyzer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsIamAccessanalyzerAnalyzer,
 		},
+		"aws.iam.accessanalyzer.finding": {
+			// to override args, implement: initAwsIamAccessanalyzerFinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsIamAccessanalyzerFinding,
+		},
 		"aws.sagemaker": {
 			// to override args, implement: initAwsSagemaker(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsSagemaker,
@@ -1773,6 +1777,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.iam.accessAnalyzer.analyzers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamAccessAnalyzer).GetAnalyzers()).ToDataRes(types.Array(types.Resource("aws.iam.accessanalyzer.analyzer")))
 	},
+	"aws.iam.accessAnalyzer.findings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessAnalyzer).GetFindings()).ToDataRes(types.Array(types.Resource("aws.iam.accessanalyzer.finding")))
+	},
 	"aws.iam.accessanalyzer.analyzer.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamAccessanalyzerAnalyzer).GetArn()).ToDataRes(types.String)
 	},
@@ -1799,6 +1806,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.iam.accessanalyzer.analyzer.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamAccessanalyzerAnalyzer).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.iam.accessanalyzer.finding.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessanalyzerFinding).GetId()).ToDataRes(types.String)
+	},
+	"aws.iam.accessanalyzer.finding.error": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessanalyzerFinding).GetError()).ToDataRes(types.String)
+	},
+	"aws.iam.accessanalyzer.finding.resourceArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessanalyzerFinding).GetResourceArn()).ToDataRes(types.String)
+	},
+	"aws.iam.accessanalyzer.finding.resourceOwnerAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessanalyzerFinding).GetResourceOwnerAccount()).ToDataRes(types.String)
+	},
+	"aws.iam.accessanalyzer.finding.resourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessanalyzerFinding).GetResourceType()).ToDataRes(types.String)
+	},
+	"aws.iam.accessanalyzer.finding.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessanalyzerFinding).GetType()).ToDataRes(types.String)
+	},
+	"aws.iam.accessanalyzer.finding.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessanalyzerFinding).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.iam.accessanalyzer.finding.analyzedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessanalyzerFinding).GetAnalyzedAt()).ToDataRes(types.Time)
+	},
+	"aws.iam.accessanalyzer.finding.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessanalyzerFinding).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.iam.accessanalyzer.finding.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessanalyzerFinding).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.iam.accessanalyzer.finding.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessanalyzerFinding).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.iam.accessanalyzer.finding.analyzerArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessanalyzerFinding).GetAnalyzerArn()).ToDataRes(types.String)
 	},
 	"aws.sagemaker.endpoints": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemaker).GetEndpoints()).ToDataRes(types.Array(types.Resource("aws.sagemaker.endpoint")))
@@ -5992,6 +6035,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsIamAccessAnalyzer).Analyzers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"aws.iam.accessAnalyzer.findings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzer).Findings, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"aws.iam.accessanalyzer.analyzer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsIamAccessanalyzerAnalyzer).__id, ok = v.Value.(string)
 			return
@@ -6030,6 +6077,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.iam.accessanalyzer.analyzer.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamAccessanalyzerAnalyzer).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.accessanalyzer.finding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsIamAccessanalyzerFinding).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.iam.accessanalyzer.finding.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessanalyzerFinding).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.accessanalyzer.finding.error": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessanalyzerFinding).Error, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.accessanalyzer.finding.resourceArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessanalyzerFinding).ResourceArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.accessanalyzer.finding.resourceOwnerAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessanalyzerFinding).ResourceOwnerAccount, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.accessanalyzer.finding.resourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessanalyzerFinding).ResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.accessanalyzer.finding.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessanalyzerFinding).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.accessanalyzer.finding.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessanalyzerFinding).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.accessanalyzer.finding.analyzedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessanalyzerFinding).AnalyzedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.accessanalyzer.finding.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessanalyzerFinding).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.accessanalyzer.finding.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessanalyzerFinding).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.accessanalyzer.finding.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessanalyzerFinding).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.accessanalyzer.finding.analyzerArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessanalyzerFinding).AnalyzerArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14626,6 +14725,7 @@ type mqlAwsIamAccessAnalyzer struct {
 	__id string
 	// optional: if you define mqlAwsIamAccessAnalyzerInternal it will be used here
 	Analyzers plugin.TValue[[]interface{}]
+	Findings plugin.TValue[[]interface{}]
 }
 
 // createAwsIamAccessAnalyzer creates a new instance of this resource
@@ -14673,6 +14773,22 @@ func (c *mqlAwsIamAccessAnalyzer) GetAnalyzers() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.analyzers()
+	})
+}
+
+func (c *mqlAwsIamAccessAnalyzer) GetFindings() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Findings, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.accessAnalyzer", c.__id, "findings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.findings()
 	})
 }
 
@@ -14763,6 +14879,105 @@ func (c *mqlAwsIamAccessanalyzerAnalyzer) GetLastResourceAnalyzedAt() *plugin.TV
 
 func (c *mqlAwsIamAccessanalyzerAnalyzer) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
+}
+
+// mqlAwsIamAccessanalyzerFinding for the aws.iam.accessanalyzer.finding resource
+type mqlAwsIamAccessanalyzerFinding struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsIamAccessanalyzerFindingInternal it will be used here
+	Id plugin.TValue[string]
+	Error plugin.TValue[string]
+	ResourceArn plugin.TValue[string]
+	ResourceOwnerAccount plugin.TValue[string]
+	ResourceType plugin.TValue[string]
+	Type plugin.TValue[string]
+	Status plugin.TValue[string]
+	AnalyzedAt plugin.TValue[*time.Time]
+	CreatedAt plugin.TValue[*time.Time]
+	UpdatedAt plugin.TValue[*time.Time]
+	Region plugin.TValue[string]
+	AnalyzerArn plugin.TValue[string]
+}
+
+// createAwsIamAccessanalyzerFinding creates a new instance of this resource
+func createAwsIamAccessanalyzerFinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsIamAccessanalyzerFinding{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.iam.accessanalyzer.finding", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsIamAccessanalyzerFinding) MqlName() string {
+	return "aws.iam.accessanalyzer.finding"
+}
+
+func (c *mqlAwsIamAccessanalyzerFinding) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsIamAccessanalyzerFinding) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsIamAccessanalyzerFinding) GetError() *plugin.TValue[string] {
+	return &c.Error
+}
+
+func (c *mqlAwsIamAccessanalyzerFinding) GetResourceArn() *plugin.TValue[string] {
+	return &c.ResourceArn
+}
+
+func (c *mqlAwsIamAccessanalyzerFinding) GetResourceOwnerAccount() *plugin.TValue[string] {
+	return &c.ResourceOwnerAccount
+}
+
+func (c *mqlAwsIamAccessanalyzerFinding) GetResourceType() *plugin.TValue[string] {
+	return &c.ResourceType
+}
+
+func (c *mqlAwsIamAccessanalyzerFinding) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsIamAccessanalyzerFinding) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsIamAccessanalyzerFinding) GetAnalyzedAt() *plugin.TValue[*time.Time] {
+	return &c.AnalyzedAt
+}
+
+func (c *mqlAwsIamAccessanalyzerFinding) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsIamAccessanalyzerFinding) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlAwsIamAccessanalyzerFinding) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsIamAccessanalyzerFinding) GetAnalyzerArn() *plugin.TValue[string] {
+	return &c.AnalyzerArn
 }
 
 // mqlAwsSagemaker for the aws.sagemaker resource
