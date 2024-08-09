@@ -38,7 +38,7 @@ resources:
     fields:
       list: {}
       pem: {}
-    min_mondoo_version: 9.1.0
+    min_mondoo_version: 9.0.0
   dns:
     fields:
       dkim: {}
@@ -87,7 +87,7 @@ resources:
     min_mondoo_version: 5.15.0
   http:
     fields: {}
-    min_mondoo_version: 9.1.0
+    min_mondoo_version: 9.0.0
   http.get:
     fields:
       body: {}
@@ -95,7 +95,7 @@ resources:
       statusCode: {}
       url: {}
       version: {}
-    min_mondoo_version: 9.1.0
+    min_mondoo_version: 9.0.0
   http.header:
     fields:
       contentType: {}
@@ -109,14 +109,20 @@ resources:
       xXssProtection: {}
     is_private: true
     maturity: experimental
-    min_mondoo_version: 9.1.0
+    min_mondoo_version: 9.0.0
+    refs:
+    - title: HTTP Headers
+      url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers
   http.header.contentType:
     fields:
       params: {}
       type: {}
     is_private: true
     maturity: experimental
-    min_mondoo_version: 9.1.0
+    min_mondoo_version: 9.0.0
+    refs:
+    - title: X-Content-Type-Options
+      url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options
   http.header.setCookie:
     fields:
       name: {}
@@ -124,7 +130,10 @@ resources:
       value: {}
     is_private: true
     maturity: experimental
-    min_mondoo_version: 9.1.0
+    min_mondoo_version: 9.0.0
+    refs:
+    - title: Set-Cookie
+      url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie
   http.header.sts:
     fields:
       includeSubDomains: {}
@@ -132,7 +141,10 @@ resources:
       preload: {}
     is_private: true
     maturity: experimental
-    min_mondoo_version: 9.1.0
+    min_mondoo_version: 9.0.0
+    refs:
+    - title: Strict-Transport-Security
+      url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security
   http.header.xssProtection:
     fields:
       enabled: {}
@@ -142,7 +154,10 @@ resources:
       report: {}
     is_private: true
     maturity: experimental
-    min_mondoo_version: 9.1.0
+    min_mondoo_version: 9.0.0
+    refs:
+    - title: X-XSS-Protection
+      url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection
   openpgp.entities:
     fields:
       content: {}
@@ -259,4 +274,4 @@ resources:
       scheme: {}
       string: {}
       user: {}
-    min_mondoo_version: 9.1.0
+    min_mondoo_version: 9.0.0

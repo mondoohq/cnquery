@@ -54,7 +54,7 @@ private http.header @defaults("length=params.length") {
   csp() map[string]string
 }
 
-// HTTP header for Strict-Transport-Security
+// HTTP header Strict-Transport-Security
 private http.header.sts @defaults("maxAge includeSubDomains preload") {
   // How long to cache HTTPS-only policy in seconds
   maxAge time
@@ -64,7 +64,7 @@ private http.header.sts @defaults("maxAge includeSubDomains preload") {
   preload bool
 }
 
-// HTTP header for X-XSS-Protection, which is now outdated (replaced by CSP)
+// HTTP header X-XSS-Protection, which is now outdated (replaced by CSP)
 // and may even cause security vulnerabilities
 private http.header.xssProtection @defaults("enabled mode report") {
   // Whether the header is enabled (Enabled when the header value is set to 1; disabled if set to 0)
@@ -75,7 +75,7 @@ private http.header.xssProtection @defaults("enabled mode report") {
   report string
 }
 
-// Content-Type header
+// HTTP header Content-Type
 private http.header.contentType @defaults("type") {
   // MIME type for the content
   type string
@@ -83,7 +83,7 @@ private http.header.contentType @defaults("type") {
   params map[string]string
 }
 
-// Set-Cookie header
+// HTTP header Set-Cookie
 private http.header.setCookie @defaults("name value") {
   // Name of the cookie to set
   name string
@@ -140,14 +140,14 @@ tls @defaults("socket domainName") {
   nonSniCertificates(socket, domainName) []certificate
 }
 
-// x509 certificates resource
+// X.509 certificates resource
 certificates {
   []certificate
   // PEM content
   pem string
 }
 
-// x509 certificate resource
+// X.509 certificate resource
 certificate @defaults("serial subject.commonName subject.dn") {
   // PEM content
   pem string
@@ -201,7 +201,7 @@ certificate @defaults("serial subject.commonName subject.dn") {
   sanExtension() pkix.sanExtension
 }
 
-// x509 certificate PKIX name
+// X.509 certificate PKIX name
 pkix.name @defaults("id dn commonName") {
   // ID
   id string
@@ -228,7 +228,7 @@ pkix.name @defaults("id dn commonName") {
   extraNames map[string]string
 }
 
-// x509 certificate PKIX extension
+// X.509 certificate PKIX extension
 pkix.extension @defaults("id") {
   // ID
   id string
@@ -240,7 +240,7 @@ pkix.extension @defaults("id") {
   value string
 }
 
-// x509 certificate PKIX Subject Alternative Name (SAN) extension
+// X.509 certificate PKIX Subject Alternative Name (SAN) extension
 private pkix.sanExtension @defaults("dnsNames") {
 	// x509 certificate PKIX extension
 	extension pkix.extension
