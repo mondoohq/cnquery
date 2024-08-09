@@ -21,6 +21,7 @@ import (
 type AdvisoryScanner interface {
 	AnalyseAsset(context.Context, *AnalyseAssetRequest) (*VulnReport, error)
 	IsEol(context.Context, *Platform) (*PlatformEolInfo, error)
+	GetProductEol(context.Context, *GetProductEolRequest) (*GetProductEolResponse, error)
 }
 
 // client implementation
@@ -59,6 +60,11 @@ func (c *AdvisoryScannerClient) IsEol(ctx context.Context, in *Platform) (*Platf
 	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/IsEol"}, ""), in, out)
 	return out, err
 }
+func (c *AdvisoryScannerClient) GetProductEol(ctx context.Context, in *GetProductEolRequest) (*GetProductEolResponse, error) {
+	out := new(GetProductEolResponse)
+	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/GetProductEol"}, ""), in, out)
+	return out, err
+}
 
 // server implementation
 
@@ -82,8 +88,9 @@ func NewAdvisoryScannerServer(handler AdvisoryScanner, opts ...AdvisoryScannerSe
 	service := ranger.Service{
 		Name: "AdvisoryScanner",
 		Methods: map[string]ranger.Method{
-			"AnalyseAsset": srv.AnalyseAsset,
-			"IsEol":        srv.IsEol,
+			"AnalyseAsset":  srv.AnalyseAsset,
+			"IsEol":         srv.IsEol,
+			"GetProductEol": srv.GetProductEol,
 		},
 	}
 	return ranger.NewRPCServer(&service)
@@ -141,4 +148,28 @@ func (p *AdvisoryScannerServer) IsEol(ctx context.Context, reqBytes *[]byte) (pb
 		return nil, err
 	}
 	return p.handler.IsEol(ctx, &req)
+}
+func (p *AdvisoryScannerServer) GetProductEol(ctx context.Context, reqBytes *[]byte) (pb.Message, error) {
+	var req GetProductEolRequest
+	var err error
+
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, errors.New("could not access header")
+	}
+
+	switch md.First("Content-Type") {
+	case "application/protobuf", "application/octet-stream", "application/grpc+proto":
+		err = pb.Unmarshal(*reqBytes, &req)
+	default:
+		// handle case of empty object
+		if len(*reqBytes) > 0 {
+			err = jsonpb.UnmarshalOptions{DiscardUnknown: true}.Unmarshal(*reqBytes, &req)
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	return p.handler.GetProductEol(ctx, &req)
 }

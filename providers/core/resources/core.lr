@@ -147,4 +147,34 @@ cpe @defaults("uri") {
   targetHw() string
   // Other of the CPE
   other() string
-} 
+}
+
+// End of life information for a product
+eol.product {
+  // Product name
+  name string
+  // Product version
+  version string
+  // Product release information
+  release() eol.productRelease
+}
+
+// End of life information for a product release
+private eol.productRelease {
+  // Release name
+  name string
+  // Release cycle
+  cycle string
+  // Last release version
+  lastVersion string
+  // First release date
+  firstReleaseDate time
+  // End of active support
+  endOfActiveSupport time
+  // End of life date
+  endOfLife time
+  // End of extended support
+  endOfExtendedSupport time
+  // Release link
+  link string
+}

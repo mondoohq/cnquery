@@ -50,6 +50,14 @@ func init() {
 			Init: initCpe,
 			Create: createCpe,
 		},
+		"eol.product": {
+			// to override args, implement: initEolProduct(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createEolProduct,
+		},
+		"eol.productRelease": {
+			// to override args, implement: initEolProductRelease(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createEolProductRelease,
+		},
 	}
 }
 
@@ -276,6 +284,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"cpe.other": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCpe).GetOther()).ToDataRes(types.String)
+	},
+	"eol.product.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEolProduct).GetName()).ToDataRes(types.String)
+	},
+	"eol.product.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEolProduct).GetVersion()).ToDataRes(types.String)
+	},
+	"eol.product.release": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEolProduct).GetRelease()).ToDataRes(types.Resource("eol.productRelease"))
+	},
+	"eol.productRelease.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEolProductRelease).GetName()).ToDataRes(types.String)
+	},
+	"eol.productRelease.cycle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEolProductRelease).GetCycle()).ToDataRes(types.String)
+	},
+	"eol.productRelease.lastVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEolProductRelease).GetLastVersion()).ToDataRes(types.String)
+	},
+	"eol.productRelease.firstReleaseDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEolProductRelease).GetFirstReleaseDate()).ToDataRes(types.Time)
+	},
+	"eol.productRelease.endOfActiveSupport": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEolProductRelease).GetEndOfActiveSupport()).ToDataRes(types.Time)
+	},
+	"eol.productRelease.endOfLife": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEolProductRelease).GetEndOfLife()).ToDataRes(types.Time)
+	},
+	"eol.productRelease.endOfExtendedSupport": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEolProductRelease).GetEndOfExtendedSupport()).ToDataRes(types.Time)
+	},
+	"eol.productRelease.link": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEolProductRelease).GetLink()).ToDataRes(types.String)
 	},
 }
 
@@ -531,6 +572,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"cpe.other": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCpe).Other, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"eol.product.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlEolProduct).__id, ok = v.Value.(string)
+			return
+		},
+	"eol.product.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEolProduct).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"eol.product.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEolProduct).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"eol.product.release": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEolProduct).Release, ok = plugin.RawToTValue[*mqlEolProductRelease](v.Value, v.Error)
+		return
+	},
+	"eol.productRelease.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlEolProductRelease).__id, ok = v.Value.(string)
+			return
+		},
+	"eol.productRelease.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEolProductRelease).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"eol.productRelease.cycle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEolProductRelease).Cycle, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"eol.productRelease.lastVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEolProductRelease).LastVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"eol.productRelease.firstReleaseDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEolProductRelease).FirstReleaseDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"eol.productRelease.endOfActiveSupport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEolProductRelease).EndOfActiveSupport, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"eol.productRelease.endOfLife": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEolProductRelease).EndOfLife, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"eol.productRelease.endOfExtendedSupport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEolProductRelease).EndOfExtendedSupport, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"eol.productRelease.link": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEolProductRelease).Link, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -1217,4 +1310,154 @@ func (c *mqlCpe) GetOther() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Other, func() (string, error) {
 		return c.other()
 	})
+}
+
+// mqlEolProduct for the eol.product resource
+type mqlEolProduct struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlEolProductInternal it will be used here
+	Name plugin.TValue[string]
+	Version plugin.TValue[string]
+	Release plugin.TValue[*mqlEolProductRelease]
+}
+
+// createEolProduct creates a new instance of this resource
+func createEolProduct(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlEolProduct{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("eol.product", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlEolProduct) MqlName() string {
+	return "eol.product"
+}
+
+func (c *mqlEolProduct) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlEolProduct) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlEolProduct) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlEolProduct) GetRelease() *plugin.TValue[*mqlEolProductRelease] {
+	return plugin.GetOrCompute[*mqlEolProductRelease](&c.Release, func() (*mqlEolProductRelease, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("eol.product", c.__id, "release")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlEolProductRelease), nil
+			}
+		}
+
+		return c.release()
+	})
+}
+
+// mqlEolProductRelease for the eol.productRelease resource
+type mqlEolProductRelease struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlEolProductReleaseInternal it will be used here
+	Name plugin.TValue[string]
+	Cycle plugin.TValue[string]
+	LastVersion plugin.TValue[string]
+	FirstReleaseDate plugin.TValue[*time.Time]
+	EndOfActiveSupport plugin.TValue[*time.Time]
+	EndOfLife plugin.TValue[*time.Time]
+	EndOfExtendedSupport plugin.TValue[*time.Time]
+	Link plugin.TValue[string]
+}
+
+// createEolProductRelease creates a new instance of this resource
+func createEolProductRelease(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlEolProductRelease{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("eol.productRelease", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlEolProductRelease) MqlName() string {
+	return "eol.productRelease"
+}
+
+func (c *mqlEolProductRelease) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlEolProductRelease) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlEolProductRelease) GetCycle() *plugin.TValue[string] {
+	return &c.Cycle
+}
+
+func (c *mqlEolProductRelease) GetLastVersion() *plugin.TValue[string] {
+	return &c.LastVersion
+}
+
+func (c *mqlEolProductRelease) GetFirstReleaseDate() *plugin.TValue[*time.Time] {
+	return &c.FirstReleaseDate
+}
+
+func (c *mqlEolProductRelease) GetEndOfActiveSupport() *plugin.TValue[*time.Time] {
+	return &c.EndOfActiveSupport
+}
+
+func (c *mqlEolProductRelease) GetEndOfLife() *plugin.TValue[*time.Time] {
+	return &c.EndOfLife
+}
+
+func (c *mqlEolProductRelease) GetEndOfExtendedSupport() *plugin.TValue[*time.Time] {
+	return &c.EndOfExtendedSupport
+}
+
+func (c *mqlEolProductRelease) GetLink() *plugin.TValue[string] {
+	return &c.Link
 }
