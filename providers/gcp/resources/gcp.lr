@@ -574,7 +574,7 @@ private gcp.project.computeService.snapshot @defaults("name") {
   storageBytes int
   // An indicator whether storageBytes is in a stable state or in storage reallocation
   storageBytesStatus string
-  // Indicates the type of the snapshot
+  // Snapshot type
   snapshotType string
   // Public visible licenses
   licenses []string
@@ -1266,7 +1266,7 @@ private gcp.project.bigqueryService.table @defaults("id") {
   expirationTime time
   // Cloud KMS encryption key that is used to protect BigQuery table
   kmsName string
-  // Indicates when the base table was snapshot
+  // Snapshot creation time
   snapshotTime time
   // Query to use for a logical view
   viewQuery string
