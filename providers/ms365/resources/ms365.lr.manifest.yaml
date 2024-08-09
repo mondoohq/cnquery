@@ -37,6 +37,8 @@ resources:
         min_mondoo_version: 9.0.0
       notes:
         min_mondoo_version: 9.0.0
+      owners:
+        min_mondoo_version: latest
       publisherDomain: {}
       secrets:
         min_mondoo_version: 9.0.0

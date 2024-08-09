@@ -27,7 +27,12 @@ func (a *mqlMicrosoft) applications() ([]interface{}, error) {
 		return nil, err
 	}
 	ctx := context.Background()
-	resp, err := graphClient.Applications().Get(ctx, &applications.ApplicationsRequestBuilderGetRequestConfiguration{})
+	top := int32(999)
+	resp, err := graphClient.Applications().Get(ctx, &applications.ApplicationsRequestBuilderGetRequestConfiguration{
+		QueryParameters: &applications.ApplicationsRequestBuilderGetQueryParameters{
+			Top: &top,
+		},
+	})
 	if err != nil {
 		return nil, transformError(err)
 	}
@@ -46,7 +51,7 @@ func (a *mqlMicrosoft) applications() ([]interface{}, error) {
 }
 
 func initMicrosoftApplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	// we only look up the package, if we have been supplied by its name and nothing else
+	// we only look up the application if we have been supplied by its name and nothing else
 	raw, ok := args["name"]
 	if !ok || len(args) != 1 {
 		return args, nil, nil
@@ -112,6 +117,57 @@ func (a *mqlMicrosoftApplication) hasExpiredCredentials() (bool, error) {
 		}
 	}
 	return false, nil
+}
+
+func (a *mqlMicrosoftApplication) owners() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+
+	msResource, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "microsoft", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	mqlMicrsoftResource := msResource.(*mqlMicrosoft)
+
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	resp, err := graphClient.Applications().ByApplicationId(a.GetId().Data).Owners().Get(ctx, &applications.ItemOwnersRequestBuilderGetRequestConfiguration{
+		QueryParameters: &applications.ItemOwnersRequestBuilderGetQueryParameters{
+			Select: []string{"id"},
+		},
+	})
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	res := []interface{}{}
+	for i := range resp.GetValue() {
+		ownerId := resp.GetValue()[i].GetId()
+		if ownerId == nil {
+			continue
+		}
+
+		// if the user is already indexed, we can reuse it
+		userResource, ok := mqlMicrsoftResource.userById(*ownerId)
+		if ok {
+			res = append(res, userResource)
+			continue
+		}
+
+		// otherwise we create a new user resource
+		newUserResource, err := a.MqlRuntime.NewResource(a.MqlRuntime, "microsoft.user", map[string]*llx.RawData{
+			"id": llx.StringDataPtr(ownerId),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlMicrsoftResource.index(newUserResource.(*mqlMicrosoftUser))
+		res = append(res, newUserResource)
+	}
+	return res, nil
 }
 
 // newMqlMicrosoftApplication creates a new mqlMicrosoftApplication resource
