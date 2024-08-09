@@ -37,15 +37,14 @@ jobs:
             echo "Install GCC on the runner."; 
           fi
 
-      # Note we do not use apt install -y protobuf-compiler` since it is too old
+        # Note we do not use apt install -y protobuf-compiler` since it is too old
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Check generated files
         run: |
-          PB_REL="https://github.com/protocolbuffers/protobuf/releases"
-          curl -LO $PB_REL/download/v${PROTO_VERSION}/protoc-${PROTO_VERSION}-linux-x86_64.zip
-          mkdir tools
-          unzip protoc-${PROTO_VERSION}-linux-x86_64.zip -d ./tools
-          rm protoc-${PROTO_VERSION}-linux-x86_64.zip
-          export PATH="$PATH:$(pwd)/tools/bin"
           protoc --version
           make prep
           make cnquery/generate
