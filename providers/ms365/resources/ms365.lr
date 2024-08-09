@@ -162,7 +162,7 @@ private microsoft.domaindnsrecord @defaults("id label") {
   properties dict
 }
 
-// Microsoft application
+// Microsoft Entra ID application registration
 microsoft.application @defaults("id displayName hasExpiredCredentials") {
   init(name string)
   // Application ID
@@ -171,7 +171,7 @@ microsoft.application @defaults("id displayName hasExpiredCredentials") {
   appId string
   // Application display name
   name string
-  // Deprecated: Application display name use `name` instead
+  // Deprecated: Use `name` instead
   displayName string
   // Description
   description string
@@ -181,7 +181,7 @@ microsoft.application @defaults("id displayName hasExpiredCredentials") {
   tags []string
   // Application creation date
   createdAt time
-  // Deprecated: Application creation date use `createdAt` instead
+  // Deprecated: Use `createdAt` instead
   createdDateTime time
   // Application identifier URIs
   identifierUris []string
@@ -195,11 +195,11 @@ microsoft.application @defaults("id displayName hasExpiredCredentials") {
   secrets []microsoft.passwordCredential
   // Certificates
   certificates []microsoft.keyCredential
-  // Indicates assigned expired credentials
+  // Whether the credentials have expired
   hasExpiredCredentials() bool
 }
 
-// Certificate Secret
+// Microsoft Entra AD Application certificate
 private microsoft.keyCredential @defaults("thumbprint description expires keyId") {
   // Certificate ID
   keyId string
@@ -213,11 +213,11 @@ private microsoft.keyCredential @defaults("thumbprint description expires keyId"
   usage string
   // Certificate expiration date
   expires time
-  // Indicates expired secret
+  // Whether the secret has expired
   expired bool
 }
 
-// Password Secret
+// Microsoft Entra AD Application secrets
 private microsoft.passwordCredential @defaults("description expires keyId") {
   // Secret ID
   keyId string
@@ -227,7 +227,7 @@ private microsoft.passwordCredential @defaults("description expires keyId") {
   hint string
   // Secret expiration date
   expires time
-  // Indicates expired secret
+  // Whether the secret has expired
   expired bool
 }
 
