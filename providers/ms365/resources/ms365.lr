@@ -163,12 +163,15 @@ private microsoft.domaindnsrecord @defaults("id label") {
 }
 
 // Microsoft application
-private microsoft.application @defaults("id displayName expiredCredentials") {
+microsoft.application @defaults("id displayName hasExpiredCredentials") {
+  init(name string)
   // Application ID
   id string
   // Application app ID
   appId string
   // Application display name
+  name string
+  // Deprecated: Application display name use `name` instead
   displayName string
   // Description
   description string
@@ -193,7 +196,7 @@ private microsoft.application @defaults("id displayName expiredCredentials") {
   // Certificates
   certificates []microsoft.keyCredential
   // Indicates assigned expired credentials
-  expiredCredentials() bool
+  hasExpiredCredentials() bool
 }
 
 // Certificate Secret
@@ -210,7 +213,7 @@ private microsoft.keyCredential @defaults("thumbprint description expires keyId"
   usage string
   // Certificate expiration date
   expires time
-  // Indicates if the secret is expired
+  // Indicates expired secret
   expired bool
 }
 
@@ -224,7 +227,7 @@ private microsoft.passwordCredential @defaults("description expires keyId") {
   hint string
   // Secret expiration date
   expires time
-  // Indicates if the secret is expired
+  // Indicates expired secret
   expired bool
 }
 

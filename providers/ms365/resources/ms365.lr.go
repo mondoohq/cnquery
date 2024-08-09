@@ -43,7 +43,7 @@ func init() {
 			Create: createMicrosoftDomaindnsrecord,
 		},
 		"microsoft.application": {
-			// to override args, implement: initMicrosoftApplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initMicrosoftApplication,
 			Create: createMicrosoftApplication,
 		},
 		"microsoft.keyCredential": {
@@ -417,6 +417,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.application.appId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftApplication).GetAppId()).ToDataRes(types.String)
 	},
+	"microsoft.application.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplication).GetName()).ToDataRes(types.String)
+	},
 	"microsoft.application.displayName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftApplication).GetDisplayName()).ToDataRes(types.String)
 	},
@@ -453,8 +456,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.application.certificates": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftApplication).GetCertificates()).ToDataRes(types.Array(types.Resource("microsoft.keyCredential")))
 	},
-	"microsoft.application.expiredCredentials": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftApplication).GetExpiredCredentials()).ToDataRes(types.Bool)
+	"microsoft.application.hasExpiredCredentials": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplication).GetHasExpiredCredentials()).ToDataRes(types.Bool)
 	},
 	"microsoft.keyCredential.keyId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftKeyCredential).GetKeyId()).ToDataRes(types.String)
@@ -1192,6 +1195,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMicrosoftApplication).AppId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"microsoft.application.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplication).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"microsoft.application.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftApplication).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1240,8 +1247,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMicrosoftApplication).Certificates, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
-	"microsoft.application.expiredCredentials": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftApplication).ExpiredCredentials, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"microsoft.application.hasExpiredCredentials": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplication).HasExpiredCredentials, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"microsoft.keyCredential.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2639,6 +2646,7 @@ type mqlMicrosoftApplication struct {
 	// optional: if you define mqlMicrosoftApplicationInternal it will be used here
 	Id plugin.TValue[string]
 	AppId plugin.TValue[string]
+	Name plugin.TValue[string]
 	DisplayName plugin.TValue[string]
 	Description plugin.TValue[string]
 	Notes plugin.TValue[string]
@@ -2651,7 +2659,7 @@ type mqlMicrosoftApplication struct {
 	Info plugin.TValue[interface{}]
 	Secrets plugin.TValue[[]interface{}]
 	Certificates plugin.TValue[[]interface{}]
-	ExpiredCredentials plugin.TValue[bool]
+	HasExpiredCredentials plugin.TValue[bool]
 }
 
 // createMicrosoftApplication creates a new instance of this resource
@@ -2692,6 +2700,10 @@ func (c *mqlMicrosoftApplication) GetId() *plugin.TValue[string] {
 
 func (c *mqlMicrosoftApplication) GetAppId() *plugin.TValue[string] {
 	return &c.AppId
+}
+
+func (c *mqlMicrosoftApplication) GetName() *plugin.TValue[string] {
+	return &c.Name
 }
 
 func (c *mqlMicrosoftApplication) GetDisplayName() *plugin.TValue[string] {
@@ -2742,9 +2754,9 @@ func (c *mqlMicrosoftApplication) GetCertificates() *plugin.TValue[[]interface{}
 	return &c.Certificates
 }
 
-func (c *mqlMicrosoftApplication) GetExpiredCredentials() *plugin.TValue[bool] {
-	return plugin.GetOrCompute[bool](&c.ExpiredCredentials, func() (bool, error) {
-		return c.expiredCredentials()
+func (c *mqlMicrosoftApplication) GetHasExpiredCredentials() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasExpiredCredentials, func() (bool, error) {
+		return c.hasExpiredCredentials()
 	})
 }
 
