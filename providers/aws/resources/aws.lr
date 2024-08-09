@@ -1246,6 +1246,8 @@ private aws.codebuild.project @defaults("arn name") {
 
 // Amazon GuardDuty for threat detection
 aws.guardduty {
+  // List of GuardDuty active findings
+  findings() []aws.guardduty.finding
   // List of GuardDuty detectors
   detectors() []aws.guardduty.detector
 }
@@ -1257,11 +1259,41 @@ private aws.guardduty.detector @defaults("id region") {
   // Region for the detector
   region string
   // Status of the detector: ENABLED or DISABLED
-  status string
+  status() string
+  // Feature set for the detector
+  features() []dict
+  // Tags for the project
+  tags() map[string]string
   // Publishing frequency for the detector
-  findingPublishingFrequency string
-  // List of unarchivedFindings found by the detector
+  findingPublishingFrequency() string
+  // List of active findings by detector
+  findings() []aws.guardduty.finding
+  // Deprecated: List of unarchivedFindings found by the detector, use `findings` instead
   unarchivedFindings() []dict
+}
+
+// AWS Guard Duty finding
+private aws.guardduty.finding @defaults("title region severity") {
+  // Unique ID for the finding
+  arn string
+  // ID of the finding
+  id string
+  // Region where the finding was found
+  region string
+  // Title
+  title string
+  // Description
+  description string
+  // Severity of the finding
+  severity float
+  // Confidence level of the finding
+  confidence float
+  // Type of the finding
+  type string
+  // Created at time
+  createdAt time
+  // Updated at time
+  updatedAt time
 }
 
 // AWS Security Hub
