@@ -27,11 +27,13 @@ resources:
       description:
         min_mondoo_version: 9.0.0
       displayName: {}
-      expiredCredentials:
+      hasExpiredCredentials:
         min_mondoo_version: 9.0.0
       id: {}
       identifierUris: {}
       info:
+        min_mondoo_version: 9.0.0
+      name:
         min_mondoo_version: 9.0.0
       notes:
         min_mondoo_version: 9.0.0
@@ -41,7 +43,6 @@ resources:
       signInAudience: {}
       tags:
         min_mondoo_version: 9.0.0
-    is_private: true
     min_mondoo_version: 5.15.0
   microsoft.devicemanagement:
     fields:
