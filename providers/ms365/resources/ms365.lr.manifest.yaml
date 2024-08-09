@@ -19,13 +19,30 @@ resources:
   microsoft.application:
     fields:
       appId: {}
+      certificates:
+        min_mondoo_version: 9.0.0
+      createdAt:
+        min_mondoo_version: 9.0.0
       createdDateTime: {}
+      description:
+        min_mondoo_version: 9.0.0
       displayName: {}
+      hasExpiredCredentials:
+        min_mondoo_version: 9.0.0
       id: {}
       identifierUris: {}
+      info:
+        min_mondoo_version: 9.0.0
+      name:
+        min_mondoo_version: 9.0.0
+      notes:
+        min_mondoo_version: 9.0.0
       publisherDomain: {}
+      secrets:
+        min_mondoo_version: 9.0.0
       signInAudience: {}
-    is_private: true
+      tags:
+        min_mondoo_version: 9.0.0
     min_mondoo_version: 5.15.0
   microsoft.devicemanagement:
     fields:
@@ -108,6 +125,19 @@ resources:
         min_mondoo_version: 9.0.0
     is_private: true
     min_mondoo_version: 5.15.0
+  microsoft.keyCredential:
+    fields:
+      description: {}
+      displayName: {}
+      expired: {}
+      expires: {}
+      hint: {}
+      keyId: {}
+      thumbprint: {}
+      type: {}
+      usage: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   microsoft.organization:
     fields:
       assignedPlans: {}
@@ -119,6 +149,16 @@ resources:
       verifiedDomains: {}
     is_private: true
     min_mondoo_version: 5.15.0
+  microsoft.passwordCredential:
+    fields:
+      description: {}
+      displayName: {}
+      expired: {}
+      expires: {}
+      hint: {}
+      keyId: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   microsoft.policies:
     fields:
       adminConsentRequestPolicy: {}

@@ -43,8 +43,16 @@ func init() {
 			Create: createMicrosoftDomaindnsrecord,
 		},
 		"microsoft.application": {
-			// to override args, implement: initMicrosoftApplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initMicrosoftApplication,
 			Create: createMicrosoftApplication,
+		},
+		"microsoft.keyCredential": {
+			// to override args, implement: initMicrosoftKeyCredential(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftKeyCredential,
+		},
+		"microsoft.passwordCredential": {
+			// to override args, implement: initMicrosoftPasswordCredential(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftPasswordCredential,
 		},
 		"microsoft.serviceprincipal": {
 			// to override args, implement: initMicrosoftServiceprincipal(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -409,20 +417,83 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.application.appId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftApplication).GetAppId()).ToDataRes(types.String)
 	},
+	"microsoft.application.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplication).GetName()).ToDataRes(types.String)
+	},
+	"microsoft.application.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplication).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.application.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplication).GetDescription()).ToDataRes(types.String)
+	},
+	"microsoft.application.notes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplication).GetNotes()).ToDataRes(types.String)
+	},
+	"microsoft.application.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplication).GetTags()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.application.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplication).GetCreatedAt()).ToDataRes(types.Time)
+	},
 	"microsoft.application.createdDateTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftApplication).GetCreatedDateTime()).ToDataRes(types.Time)
 	},
 	"microsoft.application.identifierUris": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftApplication).GetIdentifierUris()).ToDataRes(types.Array(types.String))
 	},
-	"microsoft.application.displayName": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftApplication).GetDisplayName()).ToDataRes(types.String)
-	},
 	"microsoft.application.publisherDomain": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftApplication).GetPublisherDomain()).ToDataRes(types.String)
 	},
 	"microsoft.application.signInAudience": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftApplication).GetSignInAudience()).ToDataRes(types.String)
+	},
+	"microsoft.application.info": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplication).GetInfo()).ToDataRes(types.Dict)
+	},
+	"microsoft.application.secrets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplication).GetSecrets()).ToDataRes(types.Array(types.Resource("microsoft.passwordCredential")))
+	},
+	"microsoft.application.certificates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplication).GetCertificates()).ToDataRes(types.Array(types.Resource("microsoft.keyCredential")))
+	},
+	"microsoft.application.hasExpiredCredentials": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplication).GetHasExpiredCredentials()).ToDataRes(types.Bool)
+	},
+	"microsoft.keyCredential.keyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftKeyCredential).GetKeyId()).ToDataRes(types.String)
+	},
+	"microsoft.keyCredential.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftKeyCredential).GetDescription()).ToDataRes(types.String)
+	},
+	"microsoft.keyCredential.thumbprint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftKeyCredential).GetThumbprint()).ToDataRes(types.String)
+	},
+	"microsoft.keyCredential.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftKeyCredential).GetType()).ToDataRes(types.String)
+	},
+	"microsoft.keyCredential.usage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftKeyCredential).GetUsage()).ToDataRes(types.String)
+	},
+	"microsoft.keyCredential.expires": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftKeyCredential).GetExpires()).ToDataRes(types.Time)
+	},
+	"microsoft.keyCredential.expired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftKeyCredential).GetExpired()).ToDataRes(types.Bool)
+	},
+	"microsoft.passwordCredential.keyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPasswordCredential).GetKeyId()).ToDataRes(types.String)
+	},
+	"microsoft.passwordCredential.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPasswordCredential).GetDescription()).ToDataRes(types.String)
+	},
+	"microsoft.passwordCredential.hint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPasswordCredential).GetHint()).ToDataRes(types.String)
+	},
+	"microsoft.passwordCredential.expires": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPasswordCredential).GetExpires()).ToDataRes(types.Time)
+	},
+	"microsoft.passwordCredential.expired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPasswordCredential).GetExpired()).ToDataRes(types.Bool)
 	},
 	"microsoft.serviceprincipal.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftServiceprincipal).GetId()).ToDataRes(types.String)
@@ -1124,6 +1195,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMicrosoftApplication).AppId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"microsoft.application.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplication).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplication).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplication).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.notes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplication).Notes, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplication).Tags, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplication).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"microsoft.application.createdDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftApplication).CreatedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -1132,16 +1227,84 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMicrosoftApplication).IdentifierUris, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
-	"microsoft.application.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftApplication).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"microsoft.application.publisherDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftApplication).PublisherDomain, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.application.signInAudience": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftApplication).SignInAudience, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.info": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplication).Info, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.secrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplication).Secrets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.certificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplication).Certificates, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.hasExpiredCredentials": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplication).HasExpiredCredentials, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.keyCredential.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftKeyCredential).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.keyCredential.keyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftKeyCredential).KeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.keyCredential.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftKeyCredential).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.keyCredential.thumbprint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftKeyCredential).Thumbprint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.keyCredential.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftKeyCredential).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.keyCredential.usage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftKeyCredential).Usage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.keyCredential.expires": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftKeyCredential).Expires, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.keyCredential.expired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftKeyCredential).Expired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.passwordCredential.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftPasswordCredential).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.passwordCredential.keyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPasswordCredential).KeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.passwordCredential.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPasswordCredential).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.passwordCredential.hint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPasswordCredential).Hint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.passwordCredential.expires": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPasswordCredential).Expires, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.passwordCredential.expired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPasswordCredential).Expired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"microsoft.serviceprincipal.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2483,11 +2646,20 @@ type mqlMicrosoftApplication struct {
 	// optional: if you define mqlMicrosoftApplicationInternal it will be used here
 	Id plugin.TValue[string]
 	AppId plugin.TValue[string]
+	Name plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	Description plugin.TValue[string]
+	Notes plugin.TValue[string]
+	Tags plugin.TValue[[]interface{}]
+	CreatedAt plugin.TValue[*time.Time]
 	CreatedDateTime plugin.TValue[*time.Time]
 	IdentifierUris plugin.TValue[[]interface{}]
-	DisplayName plugin.TValue[string]
 	PublisherDomain plugin.TValue[string]
 	SignInAudience plugin.TValue[string]
+	Info plugin.TValue[interface{}]
+	Secrets plugin.TValue[[]interface{}]
+	Certificates plugin.TValue[[]interface{}]
+	HasExpiredCredentials plugin.TValue[bool]
 }
 
 // createMicrosoftApplication creates a new instance of this resource
@@ -2501,12 +2673,7 @@ func createMicrosoftApplication(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return res, err
 	}
 
-	if res.__id == "" {
-	res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("microsoft.application", res.__id)
@@ -2535,6 +2702,30 @@ func (c *mqlMicrosoftApplication) GetAppId() *plugin.TValue[string] {
 	return &c.AppId
 }
 
+func (c *mqlMicrosoftApplication) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlMicrosoftApplication) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftApplication) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMicrosoftApplication) GetNotes() *plugin.TValue[string] {
+	return &c.Notes
+}
+
+func (c *mqlMicrosoftApplication) GetTags() *plugin.TValue[[]interface{}] {
+	return &c.Tags
+}
+
+func (c *mqlMicrosoftApplication) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
 func (c *mqlMicrosoftApplication) GetCreatedDateTime() *plugin.TValue[*time.Time] {
 	return &c.CreatedDateTime
 }
@@ -2543,16 +2734,168 @@ func (c *mqlMicrosoftApplication) GetIdentifierUris() *plugin.TValue[[]interface
 	return &c.IdentifierUris
 }
 
-func (c *mqlMicrosoftApplication) GetDisplayName() *plugin.TValue[string] {
-	return &c.DisplayName
-}
-
 func (c *mqlMicrosoftApplication) GetPublisherDomain() *plugin.TValue[string] {
 	return &c.PublisherDomain
 }
 
 func (c *mqlMicrosoftApplication) GetSignInAudience() *plugin.TValue[string] {
 	return &c.SignInAudience
+}
+
+func (c *mqlMicrosoftApplication) GetInfo() *plugin.TValue[interface{}] {
+	return &c.Info
+}
+
+func (c *mqlMicrosoftApplication) GetSecrets() *plugin.TValue[[]interface{}] {
+	return &c.Secrets
+}
+
+func (c *mqlMicrosoftApplication) GetCertificates() *plugin.TValue[[]interface{}] {
+	return &c.Certificates
+}
+
+func (c *mqlMicrosoftApplication) GetHasExpiredCredentials() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasExpiredCredentials, func() (bool, error) {
+		return c.hasExpiredCredentials()
+	})
+}
+
+// mqlMicrosoftKeyCredential for the microsoft.keyCredential resource
+type mqlMicrosoftKeyCredential struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftKeyCredentialInternal it will be used here
+	KeyId plugin.TValue[string]
+	Description plugin.TValue[string]
+	Thumbprint plugin.TValue[string]
+	Type plugin.TValue[string]
+	Usage plugin.TValue[string]
+	Expires plugin.TValue[*time.Time]
+	Expired plugin.TValue[bool]
+}
+
+// createMicrosoftKeyCredential creates a new instance of this resource
+func createMicrosoftKeyCredential(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftKeyCredential{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.keyCredential", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftKeyCredential) MqlName() string {
+	return "microsoft.keyCredential"
+}
+
+func (c *mqlMicrosoftKeyCredential) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftKeyCredential) GetKeyId() *plugin.TValue[string] {
+	return &c.KeyId
+}
+
+func (c *mqlMicrosoftKeyCredential) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMicrosoftKeyCredential) GetThumbprint() *plugin.TValue[string] {
+	return &c.Thumbprint
+}
+
+func (c *mqlMicrosoftKeyCredential) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlMicrosoftKeyCredential) GetUsage() *plugin.TValue[string] {
+	return &c.Usage
+}
+
+func (c *mqlMicrosoftKeyCredential) GetExpires() *plugin.TValue[*time.Time] {
+	return &c.Expires
+}
+
+func (c *mqlMicrosoftKeyCredential) GetExpired() *plugin.TValue[bool] {
+	return &c.Expired
+}
+
+// mqlMicrosoftPasswordCredential for the microsoft.passwordCredential resource
+type mqlMicrosoftPasswordCredential struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftPasswordCredentialInternal it will be used here
+	KeyId plugin.TValue[string]
+	Description plugin.TValue[string]
+	Hint plugin.TValue[string]
+	Expires plugin.TValue[*time.Time]
+	Expired plugin.TValue[bool]
+}
+
+// createMicrosoftPasswordCredential creates a new instance of this resource
+func createMicrosoftPasswordCredential(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftPasswordCredential{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.passwordCredential", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftPasswordCredential) MqlName() string {
+	return "microsoft.passwordCredential"
+}
+
+func (c *mqlMicrosoftPasswordCredential) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftPasswordCredential) GetKeyId() *plugin.TValue[string] {
+	return &c.KeyId
+}
+
+func (c *mqlMicrosoftPasswordCredential) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMicrosoftPasswordCredential) GetHint() *plugin.TValue[string] {
+	return &c.Hint
+}
+
+func (c *mqlMicrosoftPasswordCredential) GetExpires() *plugin.TValue[*time.Time] {
+	return &c.Expires
+}
+
+func (c *mqlMicrosoftPasswordCredential) GetExpired() *plugin.TValue[bool] {
+	return &c.Expired
 }
 
 // mqlMicrosoftServiceprincipal for the microsoft.serviceprincipal resource

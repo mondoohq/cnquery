@@ -162,22 +162,73 @@ private microsoft.domaindnsrecord @defaults("id label") {
   properties dict
 }
 
-// Microsoft application
-private microsoft.application @defaults("id displayName") {
+// Microsoft Entra ID application registration
+microsoft.application @defaults("id displayName hasExpiredCredentials") {
+  init(name string)
   // Application ID
   id string
   // Application app ID
   appId string
+  // Application display name
+  name string
+  // Deprecated: Use `name` instead
+  displayName string
+  // Description
+  description string
+  // Notes
+  notes string
+  // Tags
+  tags []string
   // Application creation date
+  createdAt time
+  // Deprecated: Use `createdAt` instead
   createdDateTime time
   // Application identifier URIs
   identifierUris []string
-  // Application display name
-  displayName string
   // Application publisher domain
   publisherDomain string
   // Application sign-in audience
   signInAudience string
+  // Basic profile information
+  info dict
+  // Client secrets
+  secrets []microsoft.passwordCredential
+  // Certificates
+  certificates []microsoft.keyCredential
+  // Whether the credentials have expired
+  hasExpiredCredentials() bool
+}
+
+// Microsoft Entra AD Application certificate
+private microsoft.keyCredential @defaults("thumbprint description expires keyId") {
+  // Certificate ID
+  keyId string
+  // Description
+  description string
+  // Certificate thumbprint
+  thumbprint string
+  // Certificate type
+  type string
+  // Certificate usage
+  usage string
+  // Certificate expiration date
+  expires time
+  // Whether the secret has expired
+  expired bool
+}
+
+// Microsoft Entra AD Application secrets
+private microsoft.passwordCredential @defaults("description expires keyId") {
+  // Secret ID
+  keyId string
+  // Description
+  description string
+  // Secret hint
+  hint string
+  // Secret expiration date
+  expires time
+  // Whether the secret has expired
+  expired bool
 }
 
 // Microsoft service principal
