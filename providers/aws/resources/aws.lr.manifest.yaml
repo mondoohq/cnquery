@@ -2258,8 +2258,12 @@ resources:
       desc: |
         Use the `aws.rds` resource to assess the configuration of AWS RDS deployments. The resource returns lists of `aws.rds.dbcluster`, `aws.rds.dbinstance`, and `aws.rds.snapshot` resources, each with fields for assessing the configuration of those assets.
     fields:
+      clusters:
+        min_mondoo_version: 9.0.0
       dbClusters: {}
       dbInstances: {}
+      instances:
+        min_mondoo_version: 9.0.0
     min_mondoo_version: 5.15.0
     platform:
       name:

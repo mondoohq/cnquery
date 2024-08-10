@@ -27,7 +27,13 @@ func (a *mqlAwsRds) id() (string, error) {
 	return "aws.rds", nil
 }
 
+// Deprecated: use instances() instead
 func (a *mqlAwsRds) dbInstances() ([]interface{}, error) {
+	return a.instances()
+}
+
+// instances returns all RDS instances
+func (a *mqlAwsRds) instances() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	res := []interface{}{}
 	poolOfJobs := jobpool.CreatePool(a.getDbInstances(conn), 5)
@@ -180,7 +186,13 @@ func rdsTagsToMap(tags []rdstypes.Tag) map[string]interface{} {
 	return tagsMap
 }
 
+// Deprecated: use clusters() instead
 func (a *mqlAwsRds) dbClusters() ([]interface{}, error) {
+	return a.clusters()
+}
+
+// clusters returns all RDS clusters
+func (a *mqlAwsRds) clusters() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	res := []interface{}{}
 	poolOfJobs := jobpool.CreatePool(a.getDbClusters(conn), 5)
