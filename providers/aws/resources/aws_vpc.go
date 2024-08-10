@@ -77,11 +77,20 @@ func (a *mqlAws) getVpcs(conn *connection.AwsConnection) []*jobpool.Job {
 
 				for i := range vpcs.Vpcs {
 					v := vpcs.Vpcs[i]
-
+					name := ""
+					if v.Tags != nil {
+						for _, tag := range v.Tags {
+							if tag.Key != nil && *tag.Key == "Name" && tag.Value != nil {
+								name = *tag.Value
+								break
+							}
+						}
+					}
 					mqlVpc, err := CreateResource(a.MqlRuntime, "aws.vpc",
 						map[string]*llx.RawData{
 							"arn":             llx.StringData(fmt.Sprintf(vpcArnPattern, regionVal, conn.AccountId(), convert.ToString(v.VpcId))),
 							"id":              llx.StringDataPtr(v.VpcId),
+							"name":            llx.StringData(name),
 							"state":           llx.StringData(string(v.State)),
 							"isDefault":       llx.BoolData(convert.ToBool(v.IsDefault)),
 							"instanceTenancy": llx.StringData(string(v.InstanceTenancy)),

@@ -52,6 +52,8 @@ private aws.vpc @defaults("id isDefault cidrBlock region") {
   arn string
   // ID of the VPC
   id string
+  // Name of the VPC
+  name string
   // IPv4 CIDR block of the VPC
   cidrBlock string
   // State of the VPC: pending or available

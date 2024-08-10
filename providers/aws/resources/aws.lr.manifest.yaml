@@ -2863,6 +2863,8 @@ resources:
       instanceTenancy:
         min_mondoo_version: 9.0.0
       isDefault: {}
+      name:
+        min_mondoo_version: 9.0.0
       natGateways:
         min_mondoo_version: 9.0.0
       peeringConnections:

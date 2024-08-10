@@ -845,6 +845,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.vpc.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpc).GetId()).ToDataRes(types.String)
 	},
+	"aws.vpc.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpc).GetName()).ToDataRes(types.String)
+	},
 	"aws.vpc.cidrBlock": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpc).GetCidrBlock()).ToDataRes(types.String)
 	},
@@ -4619,6 +4622,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.vpc.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpc).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpc).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.cidrBlock": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10503,6 +10510,7 @@ type mqlAwsVpc struct {
 	// optional: if you define mqlAwsVpcInternal it will be used here
 	Arn plugin.TValue[string]
 	Id plugin.TValue[string]
+	Name plugin.TValue[string]
 	CidrBlock plugin.TValue[string]
 	State plugin.TValue[string]
 	IsDefault plugin.TValue[bool]
@@ -10561,6 +10569,10 @@ func (c *mqlAwsVpc) GetArn() *plugin.TValue[string] {
 
 func (c *mqlAwsVpc) GetId() *plugin.TValue[string] {
 	return &c.Id
+}
+
+func (c *mqlAwsVpc) GetName() *plugin.TValue[string] {
+	return &c.Name
 }
 
 func (c *mqlAwsVpc) GetCidrBlock() *plugin.TValue[string] {
