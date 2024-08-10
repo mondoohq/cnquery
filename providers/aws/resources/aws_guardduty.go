@@ -144,15 +144,12 @@ func (a *mqlAwsGuarddutyDetector) findingPublishingFrequency() (string, error) {
 }
 
 func (a *mqlAwsGuarddutyDetector) findings() ([]interface{}, error) {
-	id := a.Id.Data
+	detectorId := a.Id.Data
 	region := a.Region.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
 	svc := conn.Guardduty(region)
-	ctx := context.Background()
-
-	findings, err := svc.ListFindings(ctx, &guardduty.ListFindingsInput{
-		DetectorId: &id,
+	params := &guardduty.ListFindingsInput{
+		DetectorId: &detectorId,
 		FindingCriteria: &types.FindingCriteria{
 			Criterion: map[string]types.Condition{
 				"service.archived": {
@@ -160,25 +157,8 @@ func (a *mqlAwsGuarddutyDetector) findings() ([]interface{}, error) {
 				},
 			},
 		},
-	})
-	if err != nil {
-		return nil, err
 	}
-	findingDetails, err := svc.GetFindings(ctx, &guardduty.GetFindingsInput{FindingIds: findings.FindingIds, DetectorId: &id})
-	if err != nil {
-		return nil, err
-	}
-
-	res := []interface{}{}
-	for _, finding := range findingDetails.Findings {
-		mqlFinding, err := newMqlAwsGuardDutyFinding(a.MqlRuntime, finding)
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, mqlFinding)
-	}
-
-	return res, nil
+	return fetchFindings(svc, detectorId, region, params, a.MqlRuntime)
 }
 
 // unarchivedFindings returns all findings that are not archived
@@ -261,9 +241,6 @@ func (a *mqlAwsGuardduty) listFindings(conn *connection.AwsConnection, detectorM
 			res := []interface{}{}
 			detectorList := detectorMap[regionVal]
 			for _, detectorId := range detectorList {
-				ctx := context.Background()
-
-				findingIds := []string{}
 				params := &guardduty.ListFindingsInput{
 					DetectorId: &detectorId,
 					FindingCriteria: &types.FindingCriteria{
@@ -277,50 +254,68 @@ func (a *mqlAwsGuardduty) listFindings(conn *connection.AwsConnection, detectorM
 						},
 					},
 				}
-
-				nextToken := aws.String("no_token_to_start_with")
-				for nextToken != nil {
-					detectors, err := svc.ListFindings(ctx, params)
-					if err != nil {
-						if Is400AccessDeniedError(err) {
-							log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
-							return nil, nil
-						}
-						return nil, err
-					}
-
-					findingIds = append(findingIds, detectors.FindingIds...)
-					nextToken = detectors.NextToken
-					// AWS returns empty string as pointer :-)
-					if nextToken != nil && *nextToken != "" {
-						params.NextToken = nextToken
-					} else {
-						nextToken = nil
-					}
-				}
-
-				// fetch all findings
-				findingDetails, err := svc.GetFindings(ctx, &guardduty.GetFindingsInput{
-					FindingIds: findingIds,
-					DetectorId: &detectorId,
-				})
+				findings, err := fetchFindings(svc, detectorId, regionVal, params, a.MqlRuntime)
 				if err != nil {
 					return nil, err
 				}
-
-				for _, finding := range findingDetails.Findings {
-					mqlFinding, err := newMqlAwsGuardDutyFinding(a.MqlRuntime, finding)
-					if err != nil {
-						return nil, err
-					}
-					res = append(res, mqlFinding)
-				}
+				res = append(res, findings...)
 			}
 			return jobpool.JobResult(res), nil
 		}
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+// fetchFindings list all findings for a detector and fetches the details to create the MQL resources
+func fetchFindings(svc *guardduty.Client, detectorId string, regionVal string, params *guardduty.ListFindingsInput, runtime *plugin.Runtime) ([]interface{}, error) {
+	res := []interface{}{}
+	ctx := context.Background()
+	findingIds := []string{}
+	nextToken := aws.String("no_token_to_start_with")
+	for nextToken != nil {
+		// fetch all finding ids, we can only fetch 50 at a time, that is the default
+		detectors, err := svc.ListFindings(ctx, params)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+				return nil, nil
+			}
+			return nil, err
+		}
+
+		findingIds = append(findingIds, detectors.FindingIds...)
+		nextToken = detectors.NextToken
+		// AWS returns empty string as pointer :-)
+		if nextToken != nil && *nextToken != "" {
+			params.NextToken = nextToken
+		} else {
+			nextToken = nil
+		}
+	}
+
+	// fetch all findings, we can only fetch 50 at a time
+	fetched := 0
+	for i := 0; i < len(findingIds); i += 50 {
+		findingIdsChunk := findingIds[i:min(i+50, len(findingIds))]
+		findingDetails, err := svc.GetFindings(ctx, &guardduty.GetFindingsInput{
+			FindingIds: findingIdsChunk,
+			DetectorId: &detectorId,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		for _, finding := range findingDetails.Findings {
+			fetched++
+			mqlFinding, err := newMqlAwsGuardDutyFinding(runtime, finding)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlFinding)
+		}
+	}
+	return res, nil
 }
 
 func newMqlAwsGuardDutyFinding(runtime *plugin.Runtime, finding types.Finding) (*mqlAwsGuarddutyFinding, error) {
