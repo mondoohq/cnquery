@@ -88,6 +88,7 @@ sqli
 sqlimatchstatement
 sqlserver
 targetgroup
+tde
 testutils
 toplevel
 tpu

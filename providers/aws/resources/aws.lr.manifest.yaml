@@ -2241,6 +2241,88 @@ resources:
     platform:
       name:
       - aws
+  aws.neptune:
+    fields:
+      clusters: {}
+      instances: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.neptune.cluster:
+    fields:
+      arn: {}
+      automaticRestartTime: {}
+      availabilityZones: {}
+      backupRetentionPeriod: {}
+      clusterIdentifier: {}
+      clusterParameterGroup: {}
+      clusterResourceId: {}
+      createdAt: {}
+      crossAccountClone: {}
+      deletionProtection: {}
+      earliestRestorableTime: {}
+      endpoint: {}
+      engine: {}
+      engineVersion: {}
+      globalClusterIdentifier: {}
+      iamDatabaseAuthenticationEnabled: {}
+      kmsKeyId: {}
+      latestRestorableTime: {}
+      masterUsername: {}
+      multiAZ: {}
+      name: {}
+      port: {}
+      preferredBackupWindow: {}
+      preferredMaintenanceWindow: {}
+      region: {}
+      status: {}
+      storageEncrypted: {}
+      storageType: {}
+      subnetGroup: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.neptune.instance:
+    fields:
+      arn: {}
+      autoMinorVersionUpgrade: {}
+      availabilityZone: {}
+      backupRetentionPeriod: {}
+      clusterIdentifier: {}
+      createdAt: {}
+      deletionProtection: {}
+      enabledCloudwatchLogsExports: {}
+      endpoint: {}
+      engine: {}
+      engineVersion: {}
+      enhancedMonitoringResourceArn: {}
+      iamDatabaseAuthenticationEnabled: {}
+      instanceClass: {}
+      kmsKeyId: {}
+      latestRestorableTime: {}
+      masterUsername: {}
+      monitoringInterval: {}
+      monitoringRoleArn: {}
+      multiAZ: {}
+      name: {}
+      port: {}
+      preferredBackupWindow: {}
+      preferredMaintenanceWindow: {}
+      promotionTier: {}
+      region: {}
+      status: {}
+      storageEncrypted: {}
+      storageType: {}
+      tdeCredentialArn: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
   aws.organization:
     fields:
       accounts:

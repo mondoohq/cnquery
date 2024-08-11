@@ -2134,8 +2134,6 @@ private aws.rds.snapshot @defaults("id region type encrypted createdAt") {
   engineVersion string
   // The snapshot status
   status string
-  // The amount of storage allocated to the snapshot
-  allocatedStorage int
   // The port that the database instance or cluster listens on
   port int
   // The creation date of the snapshot
@@ -3238,4 +3236,138 @@ private aws.eks.cluster @defaults("arn version status") {
   supportType string
   // The authentication mode for the cluster
   authenticationMode string
+}
+
+// Amazon Neptune
+aws.neptune @defaults("clusters") {
+  // List of database clusters
+  clusters() []aws.neptune.cluster
+  // List of database instances
+  instances() []aws.neptune.instance
+}
+
+// Amazon Neptune cluster
+private aws.neptune.cluster @defaults("arn name status") {
+  // ARN for the cluster
+  arn string
+  // Name of the cluster
+  name string
+  // User-supplied DB cluster identifier
+  clusterIdentifier string
+  // User-supplied global database cluster identifier
+  globalClusterIdentifier string
+  // Name of the database engine
+  engine string
+  // Database engine version
+  engineVersion string
+  // Amazon KMS key identifier for the encrypted DB cluster
+  kmsKeyId string
+  // Region where the cluster exists
+  region string
+  // Time when the cluster was created
+  automaticRestartTime time
+  // List of EC2 Availability Zones
+  availabilityZones []string
+  // Number of days for which automatic DB snapshots are retained
+  backupRetentionPeriod int
+  // Time when the cluster was created
+  createdAt time
+  // Whether the DB cluster can be cloned across accounts
+  crossAccountClone bool
+  // DB cluster parameter group for the DB cluster
+  clusterParameterGroup string
+  // Subnet group associated with the DB cluster
+  subnetGroup string
+  // Amazon Region-unique, immutable identifier for the DB cluster
+  clusterResourceId string
+  // Whether the DB cluster has deletion protection enabled
+  deletionProtection bool
+  // Earliest time to which a database can be restored
+  earliestRestorableTime time
+  // Connection endpoint for the primary instance
+  endpoint string
+  // Whether mapping of Amazon Identity and Access Management (IAM) accounts to database accounts is enabled
+  iamDatabaseAuthenticationEnabled bool
+  // Latest time to which a database can be restored
+  latestRestorableTime time
+  // Username
+  masterUsername string
+  // Whether the cluster has instances in multiple availability zones
+  multiAZ bool
+  // Port that the database engine is listening on
+  port int
+  // Daily time range during which automated backups are created
+  preferredBackupWindow string
+  // Weekly time range during which system maintenance can occur
+  preferredMaintenanceWindow string
+  // Status of the cluster
+  status string
+  // Whether the DB cluster is encrypted
+  storageEncrypted bool
+  // Storage type
+  storageType string
+}
+
+// Amazon Neptune instance
+private aws.neptune.instance @defaults("arn name status"){
+  // ARN for the instance
+  arn string
+  // Name of the instance
+  name string
+  // User-supplied DB cluster identifier
+  clusterIdentifier string
+  // Whether minor version patches are applied automatically
+  autoMinorVersionUpgrade bool
+  // Name of the availability zone
+  availabilityZone string
+  // Number of days for which automatic DB snapshots are retained
+  backupRetentionPeriod int
+  // Name of the compute and memory capacity class
+  instanceClass string
+  // Status of the instance
+  status string
+  // Port that the database engine is listening on
+  port int
+  // Whether the instance has deletion protection enabled
+  deletionProtection bool
+  // List of log types that this DB instance is configured to export to CloudWatch logs
+  enabledCloudwatchLogsExports []string
+  // Connection endpoint
+  endpoint dict
+  // Name of the database engine
+  engine string
+  // Database engine version
+  engineVersion string
+  // Amazon CloudWatch Log ARN log stream to which the database writes the audit log
+  enhancedMonitoringResourceArn string
+  // Whether mapping of Amazon Identity and Access Management (IAM) accounts to database accounts is enabled
+  iamDatabaseAuthenticationEnabled bool
+  // Time when the cluster was created
+  createdAt time
+  // Amazon KMS key identifier for the encrypted DB instance
+  kmsKeyId string
+  // Latest time to which a database can be restored
+  latestRestorableTime time
+  // Username
+  masterUsername string
+  // Interval, in seconds, between points when Enhanced Monitoring metrics are collected
+  monitoringInterval int
+  // ARN for the IAM role that permits Neptune to send Enhanced Monitoring metrics to Amazon CloudWatch Logs
+  monitoringRoleArn string
+  // Whether the cluster has instances in multiple availability zones
+  multiAZ bool
+  // Daily time range during which automated backups are created
+  preferredBackupWindow string
+  // Weekly time range during which system maintenance can occur
+  preferredMaintenanceWindow string
+  // Specifies the order in which a Read Replica is promoted
+  promotionTier int
+  // Region where the cluster exists
+  region string
+  // Whether the DB cluster is encrypted
+  storageEncrypted bool
+  // Storage type
+  storageType string
+  // Key store with which the instance is associated for TDE encryption
+  tdeCredentialArn string
 }
