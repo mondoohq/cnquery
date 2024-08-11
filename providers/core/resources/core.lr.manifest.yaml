@@ -331,6 +331,25 @@ resources:
       path: {}
       pem: {}
     min_mondoo_version: 5.15.0
+  product:
+    fields:
+      name: {}
+      releaseCycle: {}
+      version: {}
+    min_mondoo_version: 9.0.0
+  product.releaseCycleInformation:
+    fields:
+      cycle: {}
+      endOfActiveSupport: {}
+      endOfExtendedSupport: {}
+      endOfLife: {}
+      firstReleaseDate: {}
+      lastReleaseDate: {}
+      latestVersion: {}
+      link: {}
+      name: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   regex:
     fields:
       creditCard: {}
