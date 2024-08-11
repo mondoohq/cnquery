@@ -858,6 +858,10 @@ resources:
         min_mondoo_version: 9.0.0
       id:
         min_mondoo_version: 9.0.0
+      items:
+        min_mondoo_version: 9.0.0
+      latestStreamArn:
+        min_mondoo_version: 9.0.0
       name: {}
       provisionedThroughput: {}
       region: {}

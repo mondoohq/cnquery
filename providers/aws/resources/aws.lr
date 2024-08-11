@@ -1944,6 +1944,8 @@ private aws.dynamodb.globaltable @defaults("name") {
 private aws.dynamodb.table @defaults("name region") {
   // ARN for the table
   arn string
+  // The table ID
+  id string
   // Table name
   name string
   // Region where the table exists
@@ -1964,11 +1966,13 @@ private aws.dynamodb.table @defaults("name region") {
   deletionProtectionEnabled bool
   // The global table version
   globalTableVersion string
-  // The table ID
-  id string
+  // Number of items in the table
+  items int
   // The total size of the specified table, in bytes. DynamoDB updates this value approximately every six hours.
   sizeBytes int
-  // The current state of the table: CREATING, UPDATING, DELETING, ACTIVE, INACCESSIBLE_ENCRYPTION_CREDENTIALS, ARCHIVING, or ARCHIVED
+  // Latest stream for this table
+  latestStreamArn string
+  // Current state of the table: CREATING, UPDATING, DELETING, ACTIVE, INACCESSIBLE_ENCRYPTION_CREDENTIALS, ARCHIVING, or ARCHIVED
   status string
 }
 
