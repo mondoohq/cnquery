@@ -2112,6 +2112,16 @@ private aws.rds.dbcluster @defaults("id region") {
   backupSettings() []aws.rds.backupsetting
   // The life cycle type for the database engine. By default, this value is set to `open-source-rds-extended-support`, which enrolls your DB engine into Amazon RDS Extended Support. At the end of standard support, you can avoid charges for Extended Support by setting the value to `open-source-rds-extended-support-disabled`. In this case, creating the DB engine will fail if the DB major version is past its end of standard support date.
   engineLifecycleSupport string
+  // Expiration date for the instance certificate
+  certificateExpiresAt time
+  // ID of the Certificate Authority
+  certificateAuthority string
+  // Whether IAM database authentication is enabled
+  iamDatabaseAuthentication bool
+  // Mode of the database activity stream
+  activityStreamMode string
+  // Status of the database activity stream
+  activityStreamStatus string
 }
 
 // Amazon RDS snapshot
@@ -2210,6 +2220,18 @@ private aws.rds.dbinstance @defaults("id region engine engineVersion") {
   subnets() []aws.vpc.subnet
   // The life cycle type for the database engine. By default, this value is set to `open-source-rds-extended-support`, which enrolls your DB engine into Amazon RDS Extended Support. At the end of standard support, you can avoid charges for Extended Support by setting the value to `open-source-rds-extended-support-disabled`. In this case, creating the DB engine will fail if the DB major version is past its end of standard support date.
   engineLifecycleSupport string
+  // Expiration date for the instance certificate
+  certificateExpiresAt time
+  // ID of the Certificate Authority
+  certificateAuthority string
+  // Whether IAM database authentication is enabled
+  iamDatabaseAuthentication bool
+  // Assigned IAM instance profile
+  customIamInstanceProfile string
+  // Mode of the database activity stream
+  activityStreamMode string
+  // Status of the database activity stream
+  activityStreamStatus string
 }
 
 // Amazon ElastiCache

@@ -3197,6 +3197,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.dbcluster.engineLifecycleSupport": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbcluster).GetEngineLifecycleSupport()).ToDataRes(types.String)
 	},
+	"aws.rds.dbcluster.certificateExpiresAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetCertificateExpiresAt()).ToDataRes(types.Time)
+	},
+	"aws.rds.dbcluster.certificateAuthority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetCertificateAuthority()).ToDataRes(types.String)
+	},
+	"aws.rds.dbcluster.iamDatabaseAuthentication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetIamDatabaseAuthentication()).ToDataRes(types.Bool)
+	},
+	"aws.rds.dbcluster.activityStreamMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetActivityStreamMode()).ToDataRes(types.String)
+	},
+	"aws.rds.dbcluster.activityStreamStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetActivityStreamStatus()).ToDataRes(types.String)
+	},
 	"aws.rds.snapshot.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsSnapshot).GetArn()).ToDataRes(types.String)
 	},
@@ -3331,6 +3346,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.rds.dbinstance.engineLifecycleSupport": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetEngineLifecycleSupport()).ToDataRes(types.String)
+	},
+	"aws.rds.dbinstance.certificateExpiresAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetCertificateExpiresAt()).ToDataRes(types.Time)
+	},
+	"aws.rds.dbinstance.certificateAuthority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetCertificateAuthority()).ToDataRes(types.String)
+	},
+	"aws.rds.dbinstance.iamDatabaseAuthentication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetIamDatabaseAuthentication()).ToDataRes(types.Bool)
+	},
+	"aws.rds.dbinstance.customIamInstanceProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetCustomIamInstanceProfile()).ToDataRes(types.String)
+	},
+	"aws.rds.dbinstance.activityStreamMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetActivityStreamMode()).ToDataRes(types.String)
+	},
+	"aws.rds.dbinstance.activityStreamStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetActivityStreamStatus()).ToDataRes(types.String)
 	},
 	"aws.elasticache.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticache).GetClusters()).ToDataRes(types.Array(types.Dict))
@@ -8436,6 +8469,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsRdsDbcluster).EngineLifecycleSupport, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.rds.dbcluster.certificateExpiresAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).CertificateExpiresAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.certificateAuthority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).CertificateAuthority, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.iamDatabaseAuthentication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).IamDatabaseAuthentication, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.activityStreamMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).ActivityStreamMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.activityStreamStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).ActivityStreamStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.rds.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsRdsSnapshot).__id, ok = v.Value.(string)
 			return
@@ -8622,6 +8675,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.rds.dbinstance.engineLifecycleSupport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbinstance).EngineLifecycleSupport, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.certificateExpiresAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).CertificateExpiresAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.certificateAuthority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).CertificateAuthority, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.iamDatabaseAuthentication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).IamDatabaseAuthentication, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.customIamInstanceProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).CustomIamInstanceProfile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.activityStreamMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).ActivityStreamMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.activityStreamStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).ActivityStreamStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.elasticache.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21485,6 +21562,11 @@ type mqlAwsRdsDbcluster struct {
 	LatestRestorableTime plugin.TValue[*time.Time]
 	BackupSettings plugin.TValue[[]interface{}]
 	EngineLifecycleSupport plugin.TValue[string]
+	CertificateExpiresAt plugin.TValue[*time.Time]
+	CertificateAuthority plugin.TValue[string]
+	IamDatabaseAuthentication plugin.TValue[bool]
+	ActivityStreamMode plugin.TValue[string]
+	ActivityStreamStatus plugin.TValue[string]
 }
 
 // createAwsRdsDbcluster creates a new instance of this resource
@@ -21664,6 +21746,26 @@ func (c *mqlAwsRdsDbcluster) GetEngineLifecycleSupport() *plugin.TValue[string] 
 	return &c.EngineLifecycleSupport
 }
 
+func (c *mqlAwsRdsDbcluster) GetCertificateExpiresAt() *plugin.TValue[*time.Time] {
+	return &c.CertificateExpiresAt
+}
+
+func (c *mqlAwsRdsDbcluster) GetCertificateAuthority() *plugin.TValue[string] {
+	return &c.CertificateAuthority
+}
+
+func (c *mqlAwsRdsDbcluster) GetIamDatabaseAuthentication() *plugin.TValue[bool] {
+	return &c.IamDatabaseAuthentication
+}
+
+func (c *mqlAwsRdsDbcluster) GetActivityStreamMode() *plugin.TValue[string] {
+	return &c.ActivityStreamMode
+}
+
+func (c *mqlAwsRdsDbcluster) GetActivityStreamStatus() *plugin.TValue[string] {
+	return &c.ActivityStreamStatus
+}
+
 // mqlAwsRdsSnapshot for the aws.rds.snapshot resource
 type mqlAwsRdsSnapshot struct {
 	MqlRuntime *plugin.Runtime
@@ -21812,6 +21914,12 @@ type mqlAwsRdsDbinstance struct {
 	BackupSettings plugin.TValue[[]interface{}]
 	Subnets plugin.TValue[[]interface{}]
 	EngineLifecycleSupport plugin.TValue[string]
+	CertificateExpiresAt plugin.TValue[*time.Time]
+	CertificateAuthority plugin.TValue[string]
+	IamDatabaseAuthentication plugin.TValue[bool]
+	CustomIamInstanceProfile plugin.TValue[string]
+	ActivityStreamMode plugin.TValue[string]
+	ActivityStreamStatus plugin.TValue[string]
 }
 
 // createAwsRdsDbinstance creates a new instance of this resource
@@ -22013,6 +22121,30 @@ func (c *mqlAwsRdsDbinstance) GetSubnets() *plugin.TValue[[]interface{}] {
 
 func (c *mqlAwsRdsDbinstance) GetEngineLifecycleSupport() *plugin.TValue[string] {
 	return &c.EngineLifecycleSupport
+}
+
+func (c *mqlAwsRdsDbinstance) GetCertificateExpiresAt() *plugin.TValue[*time.Time] {
+	return &c.CertificateExpiresAt
+}
+
+func (c *mqlAwsRdsDbinstance) GetCertificateAuthority() *plugin.TValue[string] {
+	return &c.CertificateAuthority
+}
+
+func (c *mqlAwsRdsDbinstance) GetIamDatabaseAuthentication() *plugin.TValue[bool] {
+	return &c.IamDatabaseAuthentication
+}
+
+func (c *mqlAwsRdsDbinstance) GetCustomIamInstanceProfile() *plugin.TValue[string] {
+	return &c.CustomIamInstanceProfile
+}
+
+func (c *mqlAwsRdsDbinstance) GetActivityStreamMode() *plugin.TValue[string] {
+	return &c.ActivityStreamMode
+}
+
+func (c *mqlAwsRdsDbinstance) GetActivityStreamStatus() *plugin.TValue[string] {
+	return &c.ActivityStreamStatus
 }
 
 // mqlAwsElasticache for the aws.elasticache resource

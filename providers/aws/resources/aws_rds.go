@@ -12,14 +12,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	rdstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/aws/smithy-go/transport/http"
-
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/cnquery/v11/providers/aws/connection"
-
 	"go.mondoo.com/cnquery/v11/types"
 )
 
@@ -99,6 +97,11 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 						endpointAddress = dbInstance.Endpoint.Address
 					}
 
+					var certificateExpiration *time.Time
+					if dbInstance.CertificateDetails != nil {
+						certificateExpiration = dbInstance.CertificateDetails.ValidTill
+					}
+
 					mqlDBInstance, err := CreateResource(a.MqlRuntime, "aws.rds.dbinstance",
 						map[string]*llx.RawData{
 							"arn":                           llx.StringDataPtr(dbInstance.DBInstanceArn),
@@ -130,6 +133,12 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 							"storageIops":                   llx.IntDataDefault(dbInstance.Iops, 0),
 							"storageType":                   llx.StringDataPtr(dbInstance.StorageType),
 							"tags":                          llx.MapData(rdsTagsToMap(dbInstance.TagList), types.String),
+							"certificateExpiresAt":          llx.TimeDataPtr(certificateExpiration),
+							"certificateAuthority":          llx.StringDataPtr(dbInstance.CACertificateIdentifier),
+							"iamDatabaseAuthentication":     llx.BoolDataPtr(dbInstance.IAMDatabaseAuthenticationEnabled),
+							"customIamInstanceProfile":      llx.StringDataPtr(dbInstance.CustomIamInstanceProfile),
+							"activityStreamMode":            llx.StringData(string(dbInstance.ActivityStreamMode)),
+							"activityStreamStatus":          llx.StringData(string(dbInstance.ActivityStreamStatus)),
 						})
 					if err != nil {
 						return nil, err
@@ -150,64 +159,14 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 	return tasks
 }
 
+
+func (a *mqlAwsRdsDbinstance) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
 type mqlAwsRdsDbinstanceInternal struct {
 	cacheSubnets *rdstypes.DBSubnetGroup
 	region       string
-}
-
-func (a *mqlAwsRdsDbinstance) subnets() ([]interface{}, error) {
-	if a.cacheSubnets != nil {
-		res := []interface{}{}
-		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-		for i := range a.cacheSubnets.Subnets {
-			subnet := a.cacheSubnets.Subnets[i]
-			sub, err := NewResource(a.MqlRuntime, "aws.vpc.subnet", map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(subnetArnPattern, a.region, conn.AccountId(), convert.ToString(subnet.SubnetIdentifier)))})
-			if err != nil {
-				a.Subnets.State = plugin.StateIsNull | plugin.StateIsSet
-				return nil, err
-			}
-			res = append(res, sub)
-		}
-		return res, nil
-	}
-	return nil, errors.New("no subnets found for RDS DB instance")
-}
-
-func rdsTagsToMap(tags []rdstypes.Tag) map[string]interface{} {
-	tagsMap := make(map[string]interface{})
-
-	if len(tags) > 0 {
-		for i := range tags {
-			tag := tags[i]
-			tagsMap[convert.ToString(tag.Key)] = convert.ToString(tag.Value)
-		}
-	}
-
-	return tagsMap
-}
-
-// Deprecated: use clusters() instead
-func (a *mqlAwsRds) dbClusters() ([]interface{}, error) {
-	return a.clusters()
-}
-
-// clusters returns all RDS clusters
-func (a *mqlAwsRds) clusters() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(a.getDbClusters(conn), 5)
-	poolOfJobs.Run()
-
-	// check for errors
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	// get all the results
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
-	}
-
-	return res, nil
 }
 
 func initAwsRdsDbinstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -246,6 +205,91 @@ func initAwsRdsDbinstance(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		}
 	}
 	return nil, nil, errors.New("rds db instance does not exist")
+}
+
+func (a *mqlAwsRdsDbinstance) subnets() ([]interface{}, error) {
+	if a.cacheSubnets != nil {
+		res := []interface{}{}
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		for i := range a.cacheSubnets.Subnets {
+			subnet := a.cacheSubnets.Subnets[i]
+			sub, err := NewResource(a.MqlRuntime, "aws.vpc.subnet", map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(subnetArnPattern, a.region, conn.AccountId(), convert.ToString(subnet.SubnetIdentifier)))})
+			if err != nil {
+				a.Subnets.State = plugin.StateIsNull | plugin.StateIsSet
+				return nil, err
+			}
+			res = append(res, sub)
+		}
+		return res, nil
+	}
+	return nil, errors.New("no subnets found for RDS DB instance")
+}
+
+func (a *mqlAwsRdsDbinstance) snapshots() ([]interface{}, error) {
+	instanceId := a.Id.Data
+	region := a.Region.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Rds(region)
+	ctx := context.Background()
+	res := []interface{}{}
+
+	var marker *string
+	for {
+		snapshots, err := svc.DescribeDBSnapshots(ctx, &rds.DescribeDBSnapshotsInput{DBInstanceIdentifier: &instanceId, Marker: marker})
+		if err != nil {
+			return nil, err
+		}
+		for _, snapshot := range snapshots.DBSnapshots {
+			mqlDbSnapshot, err := newMqlAwsRdsDbSnapshot(a.MqlRuntime, region, snapshot)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlDbSnapshot)
+		}
+		if snapshots.Marker == nil {
+			break
+		}
+		marker = snapshots.Marker
+	}
+	return res, nil
+}
+
+func rdsTagsToMap(tags []rdstypes.Tag) map[string]interface{} {
+	tagsMap := make(map[string]interface{})
+
+	if len(tags) > 0 {
+		for i := range tags {
+			tag := tags[i]
+			tagsMap[convert.ToString(tag.Key)] = convert.ToString(tag.Value)
+		}
+	}
+
+	return tagsMap
+}
+
+// Deprecated: use clusters() instead
+func (a *mqlAwsRds) dbClusters() ([]interface{}, error) {
+	return a.clusters()
+}
+
+// clusters returns all RDS clusters
+func (a *mqlAwsRds) clusters() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []interface{}{}
+	poolOfJobs := jobpool.CreatePool(a.getDbClusters(conn), 5)
+	poolOfJobs.Run()
+
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	}
+
+	return res, nil
 }
 
 func (a *mqlAwsRds) getDbClusters(conn *connection.AwsConnection) []*jobpool.Job {
@@ -302,35 +346,48 @@ func (a *mqlAwsRds) getDbClusters(conn *connection.AwsConnection) []*jobpool.Job
 					for _, zone := range cluster.AvailabilityZones {
 						stringSliceAZs = append(stringSliceAZs, zone)
 					}
+
+					var certificateExpiration *time.Time
+					var caIdentifier *string
+					if cluster.CertificateDetails != nil {
+						certificateExpiration = cluster.CertificateDetails.ValidTill
+						caIdentifier = cluster.CertificateDetails.CAIdentifier
+					}
+
 					mqlDbCluster, err := CreateResource(a.MqlRuntime, "aws.rds.dbcluster",
 						map[string]*llx.RawData{
-							"arn":                     llx.StringDataPtr(cluster.DBClusterArn),
-							"autoMinorVersionUpgrade": llx.BoolDataPtr(cluster.AutoMinorVersionUpgrade),
-							"availabilityZones":       llx.ArrayData(stringSliceAZs, types.String),
-							"backupRetentionPeriod":   llx.IntDataDefault(cluster.BackupRetentionPeriod, 0),
-							"clusterDbInstanceClass":  llx.StringDataPtr(cluster.DBClusterInstanceClass),
-							"createdTime":             llx.TimeDataPtr(cluster.ClusterCreateTime),
-							"deletionProtection":      llx.BoolDataPtr(cluster.DeletionProtection),
-							"endpoint":                llx.StringDataPtr(cluster.Endpoint),
-							"engine":                  llx.StringDataPtr(cluster.Engine),
-							"engineLifecycleSupport":  llx.StringDataPtr(cluster.EngineLifecycleSupport),
-							"engineVersion":           llx.StringDataPtr(cluster.EngineVersion),
-							"hostedZoneId":            llx.StringDataPtr(cluster.HostedZoneId),
-							"id":                      llx.StringDataPtr(cluster.DBClusterIdentifier),
-							"latestRestorableTime":    llx.TimeDataPtr(cluster.LatestRestorableTime),
-							"masterUsername":          llx.StringDataPtr(cluster.MasterUsername),
-							"members":                 llx.ArrayData(mqlRdsDbInstances, types.Resource("aws.rds.dbinstance")),
-							"multiAZ":                 llx.BoolDataPtr(cluster.MultiAZ),
-							"port":                    llx.IntDataDefault(cluster.Port, -1),
-							"publiclyAccessible":      llx.BoolDataPtr(cluster.PubliclyAccessible),
-							"region":                  llx.StringData(regionVal),
-							"securityGroups":          llx.ArrayData(sgs, types.Resource("aws.ec2.securitygroup")),
-							"status":                  llx.StringDataPtr(cluster.Status),
-							"storageAllocated":        llx.IntDataDefault(cluster.AllocatedStorage, 0),
-							"storageEncrypted":        llx.BoolDataPtr(cluster.StorageEncrypted),
-							"storageIops":             llx.IntDataDefault(cluster.Iops, 0),
-							"storageType":             llx.StringDataPtr(cluster.StorageType),
-							"tags":                    llx.MapData(rdsTagsToMap(cluster.TagList), types.String),
+							"arn":                       llx.StringDataPtr(cluster.DBClusterArn),
+							"autoMinorVersionUpgrade":   llx.BoolDataPtr(cluster.AutoMinorVersionUpgrade),
+							"availabilityZones":         llx.ArrayData(stringSliceAZs, types.String),
+							"backupRetentionPeriod":     llx.IntDataDefault(cluster.BackupRetentionPeriod, 0),
+							"clusterDbInstanceClass":    llx.StringDataPtr(cluster.DBClusterInstanceClass),
+							"createdTime":               llx.TimeDataPtr(cluster.ClusterCreateTime),
+							"deletionProtection":        llx.BoolDataPtr(cluster.DeletionProtection),
+							"endpoint":                  llx.StringDataPtr(cluster.Endpoint),
+							"engine":                    llx.StringDataPtr(cluster.Engine),
+							"engineLifecycleSupport":    llx.StringDataPtr(cluster.EngineLifecycleSupport),
+							"engineVersion":             llx.StringDataPtr(cluster.EngineVersion),
+							"hostedZoneId":              llx.StringDataPtr(cluster.HostedZoneId),
+							"id":                        llx.StringDataPtr(cluster.DBClusterIdentifier),
+							"latestRestorableTime":      llx.TimeDataPtr(cluster.LatestRestorableTime),
+							"masterUsername":            llx.StringDataPtr(cluster.MasterUsername),
+							"members":                   llx.ArrayData(mqlRdsDbInstances, types.Resource("aws.rds.dbinstance")),
+							"multiAZ":                   llx.BoolDataPtr(cluster.MultiAZ),
+							"port":                      llx.IntDataDefault(cluster.Port, -1),
+							"publiclyAccessible":        llx.BoolDataPtr(cluster.PubliclyAccessible),
+							"region":                    llx.StringData(regionVal),
+							"securityGroups":            llx.ArrayData(sgs, types.Resource("aws.ec2.securitygroup")),
+							"status":                    llx.StringDataPtr(cluster.Status),
+							"storageAllocated":          llx.IntDataDefault(cluster.AllocatedStorage, 0),
+							"storageEncrypted":          llx.BoolDataPtr(cluster.StorageEncrypted),
+							"storageIops":               llx.IntDataDefault(cluster.Iops, 0),
+							"storageType":               llx.StringDataPtr(cluster.StorageType),
+							"tags":                      llx.MapData(rdsTagsToMap(cluster.TagList), types.String),
+							"certificateExpiresAt":      llx.TimeDataPtr(certificateExpiration),
+							"certificateAuthority":      llx.StringDataPtr(caIdentifier),
+							"iamDatabaseAuthentication": llx.BoolDataPtr(cluster.IAMDatabaseAuthenticationEnabled),
+							"activityStreamMode":        llx.StringData(string(cluster.ActivityStreamMode)),
+							"activityStreamStatus":      llx.StringData(string(cluster.ActivityStreamStatus)),
 						})
 					if err != nil {
 						return nil, err
@@ -366,22 +423,7 @@ func (a *mqlAwsRdsDbcluster) snapshots() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, snapshot := range snapshots.DBClusterSnapshots {
-			mqlDbSnapshot, err := CreateResource(a.MqlRuntime, "aws.rds.snapshot",
-				map[string]*llx.RawData{
-					"allocatedStorage":  llx.IntDataDefault(snapshot.AllocatedStorage, 0),
-					"arn":               llx.StringDataPtr(snapshot.DBClusterSnapshotArn),
-					"createdAt":         llx.TimeDataPtr(snapshot.SnapshotCreateTime),
-					"encrypted":         llx.BoolDataPtr(snapshot.StorageEncrypted),
-					"engine":            llx.StringDataPtr(snapshot.Engine),
-					"engineVersion":     llx.StringDataPtr(snapshot.EngineVersion),
-					"id":                llx.StringDataPtr(snapshot.DBClusterSnapshotIdentifier),
-					"port":              llx.IntDataDefault(snapshot.Port, -1),
-					"isClusterSnapshot": llx.BoolData(true),
-					"region":            llx.StringData(region),
-					"status":            llx.StringDataPtr(snapshot.Status),
-					"tags":              llx.MapData(rdsTagsToMap(snapshot.TagList), types.String),
-					"type":              llx.StringDataPtr(snapshot.SnapshotType),
-				})
+			mqlDbSnapshot, err := newMqlAwsRdsClusterSnapshot(a.MqlRuntime, region, snapshot)
 			if err != nil {
 				return nil, err
 			}
@@ -395,53 +437,54 @@ func (a *mqlAwsRdsDbcluster) snapshots() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsRdsDbinstance) snapshots() ([]interface{}, error) {
-	instanceId := a.Id.Data
-	region := a.Region.Data
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
-	svc := conn.Rds(region)
-	ctx := context.Background()
-	res := []interface{}{}
-
-	var marker *string
-	for {
-		snapshots, err := svc.DescribeDBSnapshots(ctx, &rds.DescribeDBSnapshotsInput{DBInstanceIdentifier: &instanceId, Marker: marker})
-		if err != nil {
-			return nil, err
-		}
-		for _, snapshot := range snapshots.DBSnapshots {
-			mqlDbSnapshot, err := CreateResource(a.MqlRuntime, "aws.rds.snapshot",
-				map[string]*llx.RawData{
-					"allocatedStorage":  llx.IntDataDefault(snapshot.AllocatedStorage, 0),
-					"arn":               llx.StringDataPtr(snapshot.DBSnapshotArn),
-					"createdAt":         llx.TimeDataPtr(snapshot.SnapshotCreateTime),
-					"encrypted":         llx.BoolDataPtr(snapshot.Encrypted),
-					"engine":            llx.StringDataPtr(snapshot.Engine),
-					"engineVersion":     llx.StringDataPtr(snapshot.EngineVersion),
-					"id":                llx.StringDataPtr(snapshot.DBSnapshotIdentifier),
-					"port":              llx.IntDataDefault(snapshot.Port, -1),
-					"isClusterSnapshot": llx.BoolData(false),
-					"region":            llx.StringData(region),
-					"status":            llx.StringDataPtr(snapshot.Status),
-					"tags":              llx.MapData(rdsTagsToMap(snapshot.TagList), types.String),
-					"type":              llx.StringDataPtr(snapshot.SnapshotType),
-				})
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, mqlDbSnapshot)
-		}
-		if snapshots.Marker == nil {
-			break
-		}
-		marker = snapshots.Marker
+// newMqlAwsRdsClusterSnapshot creates a new mqlAwsRdsSnapshot from a rdstypes.DBClusterSnapshot which is only
+// used for Aurora clusters not for RDS instances
+func newMqlAwsRdsClusterSnapshot(runtime *plugin.Runtime, region string, snapshot rdstypes.DBClusterSnapshot) (*mqlAwsRdsSnapshot, error) {
+	res, err := CreateResource(runtime, "aws.rds.snapshot",
+		map[string]*llx.RawData{
+			"allocatedStorage":  llx.IntDataDefault(snapshot.AllocatedStorage, 0),
+			"arn":               llx.StringDataPtr(snapshot.DBClusterSnapshotArn),
+			"createdAt":         llx.TimeDataPtr(snapshot.SnapshotCreateTime),
+			"encrypted":         llx.BoolDataPtr(snapshot.StorageEncrypted),
+			"engine":            llx.StringDataPtr(snapshot.Engine),
+			"engineVersion":     llx.StringDataPtr(snapshot.EngineVersion),
+			"id":                llx.StringDataPtr(snapshot.DBClusterSnapshotIdentifier),
+			"port":              llx.IntDataDefault(snapshot.Port, -1),
+			"isClusterSnapshot": llx.BoolData(true),
+			"region":            llx.StringData(region),
+			"status":            llx.StringDataPtr(snapshot.Status),
+			"tags":              llx.MapData(rdsTagsToMap(snapshot.TagList), types.String),
+			"type":              llx.StringDataPtr(snapshot.SnapshotType),
+		})
+	if err != nil {
+		return nil, err
 	}
-	return res, nil
+	return res.(*mqlAwsRdsSnapshot), nil
 }
 
-func (a *mqlAwsRdsDbinstance) id() (string, error) {
-	return a.Arn.Data, nil
+// newMqlAwsRdsDbSnapshot creates a new mqlAwsRdsSnapshot from a rdstypes.DBSnapshot which is only
+// used for Aurora clusters not for RDS instances
+func newMqlAwsRdsDbSnapshot(runtime *plugin.Runtime, region string, snapshot rdstypes.DBSnapshot) (*mqlAwsRdsSnapshot, error) {
+	res, err := CreateResource(runtime, "aws.rds.snapshot",
+		map[string]*llx.RawData{
+			"allocatedStorage":  llx.IntDataDefault(snapshot.AllocatedStorage, 0),
+			"arn":               llx.StringDataPtr(snapshot.DBSnapshotArn),
+			"createdAt":         llx.TimeDataPtr(snapshot.SnapshotCreateTime),
+			"encrypted":         llx.BoolDataPtr(snapshot.Encrypted),
+			"engine":            llx.StringDataPtr(snapshot.Engine),
+			"engineVersion":     llx.StringDataPtr(snapshot.EngineVersion),
+			"id":                llx.StringDataPtr(snapshot.DBSnapshotIdentifier),
+			"port":              llx.IntDataDefault(snapshot.Port, -1),
+			"isClusterSnapshot": llx.BoolData(false),
+			"region":            llx.StringData(region),
+			"status":            llx.StringDataPtr(snapshot.Status),
+			"tags":              llx.MapData(rdsTagsToMap(snapshot.TagList), types.String),
+			"type":              llx.StringDataPtr(snapshot.SnapshotType),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsRdsSnapshot), nil
 }
 
 func (a *mqlAwsRdsDbcluster) id() (string, error) {
