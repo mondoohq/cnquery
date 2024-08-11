@@ -47,6 +47,7 @@ istio
 jira
 jsonbody
 labelmatchstatement
+lifeanalytics
 loggingservice
 managedrulegroupstatement
 managedzone
@@ -90,6 +91,7 @@ sqlserver
 targetgroup
 tde
 testutils
+timestream
 toplevel
 tpu
 vdcs

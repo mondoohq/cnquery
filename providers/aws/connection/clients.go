@@ -48,6 +48,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	"github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb"
+	"github.com/aws/aws-sdk-go-v2/service/timestreamwrite"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	"github.com/rs/zerolog/log"
 )
@@ -770,6 +772,60 @@ func (t *AwsConnection) Neptune(region string) *neptune.Client {
 
 	// Create a Neptune client from just a session.
 	client := neptune.NewFromConfig(cfg)
+
+	// cache it
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+// TimestreamLifeAnalytics returns a Timestream client for Life Analytics
+func (t *AwsConnection) TimestreamLifeAnalytics(region string) *timestreamwrite.Client {
+	// if no region value is sent in, use the configured region
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_timestream_" + region
+
+	// check for cached client and return it if it exists
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached timestreamwrite client")
+		return c.Data.(*timestreamwrite.Client)
+	}
+
+	// create the client
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+
+	// Create a Neptune client from just a session.
+	client := timestreamwrite.NewFromConfig(cfg)
+
+	// cache it
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+// TimestreamInflux returns a Timestream client for InfluxDB
+func (t *AwsConnection) TimestreamInfluxDB(region string) *timestreaminfluxdb.Client {
+	// if no region value is sent in, use the configured region
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_timestream_" + region
+
+	// check for cached client and return it if it exists
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached timestreaminfluxdb client")
+		return c.Data.(*timestreaminfluxdb.Client)
+	}
+
+	// create the client
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+
+	// Create a Neptune client from just a session.
+	client := timestreaminfluxdb.NewFromConfig(cfg)
 
 	// cache it
 	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})

@@ -54,6 +54,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.34.3
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.52.4
 	github.com/aws/aws-sdk-go-v2/service/sts v1.30.3
+	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.2.3
+	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.27.3
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.51.4
 	github.com/aws/smithy-go v1.20.3
 	github.com/cockroachdb/errors v1.11.3
@@ -63,6 +65,7 @@ require (
 	github.com/spf13/afero v1.11.0
 	github.com/stretchr/testify v1.9.0
 	go.mondoo.com/cnquery/v11 v11.16.1
+	golang.org/x/exp v0.0.0-20240808152545-0cdaa3abc0fa
 	k8s.io/client-go v0.30.3
 )
 
