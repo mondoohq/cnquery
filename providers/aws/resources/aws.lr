@@ -2270,8 +2270,10 @@ private aws.rds.pendingMaintenanceAction {
 aws.elasticache @defaults("cacheClusters") {
     // Deprecated. Use `cacheClusters` instead.
   clusters() []dict
-  // List of clusters
+  // List of cache clusters
   cacheClusters() []aws.elasticache.cluster
+  // List of serverless caches
+  serverlessCaches() []aws.elasticache.serverlessCache
 }
 
 // Amazon ElastiCache cluster
@@ -2330,6 +2332,36 @@ private aws.elasticache.cluster @defaults("cacheClusterId region nodeType engine
   transitEncryptionEnabled bool
   // Whether migrating clients to use in-transit encryption (with no downtime) is allowed
   transitEncryptionMode string
+}
+
+// Amazon ElastiCache serverless cache
+private aws.elasticache.serverlessCache @defaults("name description status engine engineVersion") {
+  // ARN for the cache
+  arn string
+  // Unique identifier of the serverless cache
+  name string
+  // Description of the serverless cache
+  description string
+  // The name of the cache engine used for this cluster: Memcached or Redis
+  engine string
+  // The version of the cache engine that is used in this cluster
+  engineVersion string
+  // Version number of the engine the serverless cache is compatible with
+  majorEngineVersion string
+  // ID of the Amazon Web Services Key Management Service (KMS) key
+  kmsKeyId string
+  // A list of VPC security groups associated with the cluster
+  securityGroups []aws.ec2.securitygroup
+  // The number of days for which ElastiCache retains automatic cluster snapshots before deleting them
+  snapshotRetentionLimit int
+  // Time that a cache snapshot will be created
+  dailySnapshotTime string
+  // Status of the serverless cache
+  status string
+  // Region where the cache exists
+  region string
+  // Time when the serverless cache was created
+  createdAt time
 }
 
 // Amazon Redshift

@@ -542,6 +542,10 @@ func init() {
 			// to override args, implement: initAwsElasticacheCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsElasticacheCluster,
 		},
+		"aws.elasticache.serverlessCache": {
+			// to override args, implement: initAwsElasticacheServerlessCache(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsElasticacheServerlessCache,
+		},
 		"aws.redshift": {
 			// to override args, implement: initAwsRedshift(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsRedshift,
@@ -3429,6 +3433,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.elasticache.cacheClusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticache).GetCacheClusters()).ToDataRes(types.Array(types.Resource("aws.elasticache.cluster")))
 	},
+	"aws.elasticache.serverlessCaches": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticache).GetServerlessCaches()).ToDataRes(types.Array(types.Resource("aws.elasticache.serverlessCache")))
+	},
 	"aws.elasticache.cluster.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticacheCluster).GetArn()).ToDataRes(types.String)
 	},
@@ -3509,6 +3516,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.elasticache.cluster.transitEncryptionMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticacheCluster).GetTransitEncryptionMode()).ToDataRes(types.String)
+	},
+	"aws.elasticache.serverlessCache.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheServerlessCache).GetArn()).ToDataRes(types.String)
+	},
+	"aws.elasticache.serverlessCache.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheServerlessCache).GetName()).ToDataRes(types.String)
+	},
+	"aws.elasticache.serverlessCache.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheServerlessCache).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.elasticache.serverlessCache.engine": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheServerlessCache).GetEngine()).ToDataRes(types.String)
+	},
+	"aws.elasticache.serverlessCache.engineVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheServerlessCache).GetEngineVersion()).ToDataRes(types.String)
+	},
+	"aws.elasticache.serverlessCache.majorEngineVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheServerlessCache).GetMajorEngineVersion()).ToDataRes(types.String)
+	},
+	"aws.elasticache.serverlessCache.kmsKeyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheServerlessCache).GetKmsKeyId()).ToDataRes(types.String)
+	},
+	"aws.elasticache.serverlessCache.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheServerlessCache).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.elasticache.serverlessCache.snapshotRetentionLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheServerlessCache).GetSnapshotRetentionLimit()).ToDataRes(types.Int)
+	},
+	"aws.elasticache.serverlessCache.dailySnapshotTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheServerlessCache).GetDailySnapshotTime()).ToDataRes(types.String)
+	},
+	"aws.elasticache.serverlessCache.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheServerlessCache).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.elasticache.serverlessCache.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheServerlessCache).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.elasticache.serverlessCache.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheServerlessCache).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"aws.redshift.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshift).GetClusters()).ToDataRes(types.Array(types.Resource("aws.redshift.cluster")))
@@ -8882,6 +8928,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsElasticache).CacheClusters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"aws.elasticache.serverlessCaches": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticache).ServerlessCaches, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"aws.elasticache.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsElasticacheCluster).__id, ok = v.Value.(string)
 			return
@@ -8992,6 +9042,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.elasticache.cluster.transitEncryptionMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElasticacheCluster).TransitEncryptionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.serverlessCache.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsElasticacheServerlessCache).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.elasticache.serverlessCache.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheServerlessCache).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.serverlessCache.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheServerlessCache).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.serverlessCache.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheServerlessCache).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.serverlessCache.engine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheServerlessCache).Engine, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.serverlessCache.engineVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheServerlessCache).EngineVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.serverlessCache.majorEngineVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheServerlessCache).MajorEngineVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.serverlessCache.kmsKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheServerlessCache).KmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.serverlessCache.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheServerlessCache).SecurityGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.serverlessCache.snapshotRetentionLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheServerlessCache).SnapshotRetentionLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.serverlessCache.dailySnapshotTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheServerlessCache).DailySnapshotTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.serverlessCache.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheServerlessCache).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.serverlessCache.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheServerlessCache).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.serverlessCache.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheServerlessCache).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.redshift.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -22536,6 +22642,7 @@ type mqlAwsElasticache struct {
 	// optional: if you define mqlAwsElasticacheInternal it will be used here
 	Clusters plugin.TValue[[]interface{}]
 	CacheClusters plugin.TValue[[]interface{}]
+	ServerlessCaches plugin.TValue[[]interface{}]
 }
 
 // createAwsElasticache creates a new instance of this resource
@@ -22597,6 +22704,22 @@ func (c *mqlAwsElasticache) GetCacheClusters() *plugin.TValue[[]interface{}] {
 	})
 }
 
+func (c *mqlAwsElasticache) GetServerlessCaches() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.ServerlessCaches, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elasticache", c.__id, "serverlessCaches")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.serverlessCaches()
+	})
+}
+
 // mqlAwsElasticacheCluster for the aws.elasticache.cluster resource
 type mqlAwsElasticacheCluster struct {
 	MqlRuntime *plugin.Runtime
@@ -22642,12 +22765,7 @@ func createAwsElasticacheCluster(runtime *plugin.Runtime, args map[string]*llx.R
 		return res, err
 	}
 
-	if res.__id == "" {
-	res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aws.elasticache.cluster", res.__id)
@@ -22774,6 +22892,110 @@ func (c *mqlAwsElasticacheCluster) GetTransitEncryptionEnabled() *plugin.TValue[
 
 func (c *mqlAwsElasticacheCluster) GetTransitEncryptionMode() *plugin.TValue[string] {
 	return &c.TransitEncryptionMode
+}
+
+// mqlAwsElasticacheServerlessCache for the aws.elasticache.serverlessCache resource
+type mqlAwsElasticacheServerlessCache struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsElasticacheServerlessCacheInternal it will be used here
+	Arn plugin.TValue[string]
+	Name plugin.TValue[string]
+	Description plugin.TValue[string]
+	Engine plugin.TValue[string]
+	EngineVersion plugin.TValue[string]
+	MajorEngineVersion plugin.TValue[string]
+	KmsKeyId plugin.TValue[string]
+	SecurityGroups plugin.TValue[[]interface{}]
+	SnapshotRetentionLimit plugin.TValue[int64]
+	DailySnapshotTime plugin.TValue[string]
+	Status plugin.TValue[string]
+	Region plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
+}
+
+// createAwsElasticacheServerlessCache creates a new instance of this resource
+func createAwsElasticacheServerlessCache(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsElasticacheServerlessCache{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.elasticache.serverlessCache", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsElasticacheServerlessCache) MqlName() string {
+	return "aws.elasticache.serverlessCache"
+}
+
+func (c *mqlAwsElasticacheServerlessCache) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsElasticacheServerlessCache) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsElasticacheServerlessCache) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsElasticacheServerlessCache) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsElasticacheServerlessCache) GetEngine() *plugin.TValue[string] {
+	return &c.Engine
+}
+
+func (c *mqlAwsElasticacheServerlessCache) GetEngineVersion() *plugin.TValue[string] {
+	return &c.EngineVersion
+}
+
+func (c *mqlAwsElasticacheServerlessCache) GetMajorEngineVersion() *plugin.TValue[string] {
+	return &c.MajorEngineVersion
+}
+
+func (c *mqlAwsElasticacheServerlessCache) GetKmsKeyId() *plugin.TValue[string] {
+	return &c.KmsKeyId
+}
+
+func (c *mqlAwsElasticacheServerlessCache) GetSecurityGroups() *plugin.TValue[[]interface{}] {
+	return &c.SecurityGroups
+}
+
+func (c *mqlAwsElasticacheServerlessCache) GetSnapshotRetentionLimit() *plugin.TValue[int64] {
+	return &c.SnapshotRetentionLimit
+}
+
+func (c *mqlAwsElasticacheServerlessCache) GetDailySnapshotTime() *plugin.TValue[string] {
+	return &c.DailySnapshotTime
+}
+
+func (c *mqlAwsElasticacheServerlessCache) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsElasticacheServerlessCache) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsElasticacheServerlessCache) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 // mqlAwsRedshift for the aws.redshift resource
