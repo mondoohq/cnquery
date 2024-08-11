@@ -117,6 +117,7 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 							"engine":                        llx.StringDataPtr(dbInstance.Engine),
 							"engineLifecycleSupport":        llx.StringDataPtr(dbInstance.EngineLifecycleSupport),
 							"engineVersion":                 llx.StringDataPtr(dbInstance.EngineVersion),
+							"monitoringInterval":            llx.IntDataPtr(dbInstance.MonitoringInterval),
 							"enhancedMonitoringResourceArn": llx.StringDataPtr(dbInstance.EnhancedMonitoringResourceArn),
 							"id":                            llx.StringDataPtr(dbInstance.DBInstanceIdentifier),
 							"latestRestorableTime":          llx.TimeDataPtr(dbInstance.LatestRestorableTime),
@@ -519,6 +520,7 @@ func (a *mqlAwsRds) getDbClusters(conn *connection.AwsConnection) []*jobpool.Job
 							"iamDatabaseAuthentication": llx.BoolDataPtr(cluster.IAMDatabaseAuthenticationEnabled),
 							"activityStreamMode":        llx.StringData(string(cluster.ActivityStreamMode)),
 							"activityStreamStatus":      llx.StringData(string(cluster.ActivityStreamStatus)),
+							"monitoringInterval":        llx.IntDataPtr(cluster.MonitoringInterval),
 						})
 					if err != nil {
 						return nil, err

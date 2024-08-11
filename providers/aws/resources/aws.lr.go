@@ -3219,6 +3219,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.dbcluster.activityStreamStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbcluster).GetActivityStreamStatus()).ToDataRes(types.String)
 	},
+	"aws.rds.dbcluster.monitoringInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetMonitoringInterval()).ToDataRes(types.Int)
+	},
 	"aws.rds.snapshot.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsSnapshot).GetArn()).ToDataRes(types.String)
 	},
@@ -3261,6 +3264,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.dbinstance.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetArn()).ToDataRes(types.String)
 	},
+	"aws.rds.dbinstance.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetId()).ToDataRes(types.String)
+	},
 	"aws.rds.dbinstance.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetName()).ToDataRes(types.String)
 	},
@@ -3300,8 +3306,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.dbinstance.multiAZ": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetMultiAZ()).ToDataRes(types.Bool)
 	},
-	"aws.rds.dbinstance.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsRdsDbinstance).GetId()).ToDataRes(types.String)
+	"aws.rds.dbinstance.monitoringInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetMonitoringInterval()).ToDataRes(types.Int)
 	},
 	"aws.rds.dbinstance.enhancedMonitoringResourceArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetEnhancedMonitoringResourceArn()).ToDataRes(types.String)
@@ -8524,6 +8530,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsRdsDbcluster).ActivityStreamStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.rds.dbcluster.monitoringInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).MonitoringInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"aws.rds.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsRdsSnapshot).__id, ok = v.Value.(string)
 			return
@@ -8588,6 +8598,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsRdsDbinstance).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.rds.dbinstance.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.rds.dbinstance.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbinstance).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8640,8 +8654,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsRdsDbinstance).MultiAZ, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"aws.rds.dbinstance.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRdsDbinstance).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.rds.dbinstance.monitoringInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).MonitoringInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.rds.dbinstance.enhancedMonitoringResourceArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21655,6 +21669,7 @@ type mqlAwsRdsDbcluster struct {
 	IamDatabaseAuthentication plugin.TValue[bool]
 	ActivityStreamMode plugin.TValue[string]
 	ActivityStreamStatus plugin.TValue[string]
+	MonitoringInterval plugin.TValue[int64]
 }
 
 // createAwsRdsDbcluster creates a new instance of this resource
@@ -21854,6 +21869,10 @@ func (c *mqlAwsRdsDbcluster) GetActivityStreamStatus() *plugin.TValue[string] {
 	return &c.ActivityStreamStatus
 }
 
+func (c *mqlAwsRdsDbcluster) GetMonitoringInterval() *plugin.TValue[int64] {
+	return &c.MonitoringInterval
+}
+
 // mqlAwsRdsSnapshot for the aws.rds.snapshot resource
 type mqlAwsRdsSnapshot struct {
 	MqlRuntime *plugin.Runtime
@@ -21971,6 +21990,7 @@ type mqlAwsRdsDbinstance struct {
 	__id string
 	mqlAwsRdsDbinstanceInternal
 	Arn plugin.TValue[string]
+	Id plugin.TValue[string]
 	Name plugin.TValue[string]
 	BackupRetentionPeriod plugin.TValue[int64]
 	Snapshots plugin.TValue[[]interface{}]
@@ -21984,7 +22004,7 @@ type mqlAwsRdsDbinstance struct {
 	EnabledCloudwatchLogsExports plugin.TValue[[]interface{}]
 	DeletionProtection plugin.TValue[bool]
 	MultiAZ plugin.TValue[bool]
-	Id plugin.TValue[string]
+	MonitoringInterval plugin.TValue[int64]
 	EnhancedMonitoringResourceArn plugin.TValue[string]
 	Tags plugin.TValue[map[string]interface{}]
 	DbInstanceClass plugin.TValue[string]
@@ -22052,6 +22072,10 @@ func (c *mqlAwsRdsDbinstance) GetArn() *plugin.TValue[string] {
 	return &c.Arn
 }
 
+func (c *mqlAwsRdsDbinstance) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
 func (c *mqlAwsRdsDbinstance) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
@@ -22116,8 +22140,8 @@ func (c *mqlAwsRdsDbinstance) GetMultiAZ() *plugin.TValue[bool] {
 	return &c.MultiAZ
 }
 
-func (c *mqlAwsRdsDbinstance) GetId() *plugin.TValue[string] {
-	return &c.Id
+func (c *mqlAwsRdsDbinstance) GetMonitoringInterval() *plugin.TValue[int64] {
+	return &c.MonitoringInterval
 }
 
 func (c *mqlAwsRdsDbinstance) GetEnhancedMonitoringResourceArn() *plugin.TValue[string] {

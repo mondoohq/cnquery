@@ -2431,6 +2431,8 @@ resources:
       masterUsername:
         min_mondoo_version: 9.0.0
       members: {}
+      monitoringInterval:
+        min_mondoo_version: 9.0.0
       multiAZ:
         min_mondoo_version: 9.0.0
       port:
@@ -2503,6 +2505,8 @@ resources:
       latestRestorableTime:
         min_mondoo_version: 9.0.0
       masterUsername:
+        min_mondoo_version: 9.0.0
+      monitoringInterval:
         min_mondoo_version: 9.0.0
       multiAZ: {}
       name: {}

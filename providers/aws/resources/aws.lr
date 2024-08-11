@@ -2124,6 +2124,8 @@ private aws.rds.dbcluster @defaults("id region") {
   activityStreamMode string
   // Status of the database activity stream
   activityStreamStatus string
+  // Interval, in seconds, between points when Enhanced Monitoring metrics are collected
+  monitoringInterval int
 }
 
 // Amazon RDS snapshot
@@ -2160,6 +2162,8 @@ private aws.rds.snapshot @defaults("id region type encrypted createdAt") {
 private aws.rds.dbinstance @defaults("id region engine engineVersion") {
   // ARN for the database instance
   arn string
+  // Identifier for the database instance
+  id string
   // Name of the database instance
   name string
   // Number of days for which automated snapshots are retained
@@ -2186,8 +2190,8 @@ private aws.rds.dbinstance @defaults("id region engine engineVersion") {
   deletionProtection bool
   // Whether the instance is a Multi-AZ deployment
   multiAZ bool
-  // Identifier for the database instance
-  id string
+  // Interval, in seconds, between points when Enhanced Monitoring metrics are collected
+  monitoringInterval int
   // ARN of the CloudWatch log stream that receives the enhanced monitoring metrics data
   enhancedMonitoringResourceArn string
   // Tags for the database instance
