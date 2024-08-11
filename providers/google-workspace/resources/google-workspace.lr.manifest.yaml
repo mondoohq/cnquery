@@ -12,6 +12,9 @@ resources:
       roles: {}
       users: {}
     min_mondoo_version: latest
+    refs:
+    - title: Google Workspace Knowledge Center
+      url: https://knowledge.workspace.google.com/
   googleworkspace.calendar:
     fields:
       acl: {}

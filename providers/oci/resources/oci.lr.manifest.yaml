@@ -17,11 +17,17 @@ resources:
       state: {}
     is_private: true
     min_mondoo_version: 8.10.0
+    refs:
+    - title: What is a Compartment?
+      url: https://docs.oracle.com/en/cloud/foundation/cloud_architecture/governance/compartments.html
   oci.compute:
     fields:
       images: {}
       instances: {}
     min_mondoo_version: 8.10.0
+    refs:
+    - title: Compute
+      url: https://docs.oracle.com/en-us/iaas/Content/Compute/home.htm
   oci.compute.image:
     fields:
       created: {}
@@ -32,6 +38,9 @@ resources:
       state: {}
     is_private: true
     min_mondoo_version: 8.10.0
+    refs:
+    - title: Platform Images
+      url: https://docs.oracle.com/en-us/iaas/Content/Compute/References/images.htm
   oci.compute.instance:
     fields:
       created: {}
@@ -42,6 +51,9 @@ resources:
       state: {}
     is_private: true
     min_mondoo_version: 8.10.0
+    refs:
+    - title: Working with Instances
+      url: https://docs.oracle.com/en-us/iaas/Content/Compute/Tasks/instances.htm
   oci.identity:
     fields:
       groups: {}
@@ -98,6 +110,9 @@ resources:
       state: {}
     is_private: true
     min_mondoo_version: 8.10.0
+    refs:
+    - title: Managing Groups
+      url: https://docs.oracle.com/en-us/iaas/Content/Identity/Tasks/managinggroups.htm
   oci.identity.policy:
     fields:
       compartmentID: {}
@@ -110,6 +125,9 @@ resources:
       statements: {}
     is_private: true
     min_mondoo_version: 8.10.0
+    refs:
+    - title: Managing Policies
+      url: https://docs.oracle.com/en-us/iaas/Content/Identity/Tasks/managingpolicies.htm
   oci.identity.user:
     fields:
       apiKeys: {}
@@ -132,11 +150,17 @@ resources:
       state: {}
     is_private: true
     min_mondoo_version: 8.10.0
+    refs:
+    - title: Managing Users
+      url: https://docs.oracle.com/en-us/iaas/Content/Identity/Tasks/managingusers.htm
   oci.network:
     fields:
       securityLists: {}
       vcns: {}
     min_mondoo_version: 8.10.0
+    refs:
+    - title: Core Network Capabilities
+      url: https://docs.oracle.com/en/cloud/foundation/cloud_architecture/network/corecapabilities.html
   oci.network.securityList:
     fields:
       compartmentID: {}
@@ -149,6 +173,9 @@ resources:
       state: {}
     is_private: true
     min_mondoo_version: 8.10.0
+    refs:
+    - title: Security Lists
+      url: https://docs.oracle.com/en-us/iaas/Content/Network/Concepts/securitylists.htm
   oci.network.vcn:
     fields:
       cidrBlock: {}
@@ -162,11 +189,17 @@ resources:
       state: {}
     is_private: true
     min_mondoo_version: 8.10.0
+    refs:
+    - title: VCNs and Subnets
+      url: https://docs.oracle.com/en-us/iaas/Content/Network/Tasks/VCNs.htm
   oci.objectStorage:
     fields:
       buckets: {}
       namespace: {}
     min_mondoo_version: 8.10.0
+    refs:
+    - title: Object Storage
+      url: https://docs.oracle.com/en-us/iaas/Content/Object/home.htm
   oci.objectStorage.bucket:
     fields:
       autoTiering: {}
@@ -182,6 +215,9 @@ resources:
       versioning: {}
     is_private: true
     min_mondoo_version: 8.10.0
+    refs:
+    - title: Object Storage Buckets
+      url: https://docs.oracle.com/en-us/iaas/Content/Object/Tasks/managingbuckets.htm
   oci.region:
     fields:
       id: {}
@@ -190,6 +226,11 @@ resources:
       status: {}
     is_private: true
     min_mondoo_version: 8.10.0
+    refs:
+    - title: What is a Region?
+      url: https://docs.oracle.com/en/cloud/foundation/cloud_architecture/governance/regions.html
+    - title: Regions and Availability Domains
+      url: https://docs.oracle.com/en-us/iaas/Content/General/Concepts/regions.htm
   oci.tenancy:
     fields:
       description: {}
@@ -197,3 +238,6 @@ resources:
       name: {}
       retentionPeriod: {}
     min_mondoo_version: 8.10.0
+    refs:
+    - title: What is a Tenancy?
+      url: https://docs.oracle.com/en/cloud/foundation/cloud_architecture/governance/tenancy.html
