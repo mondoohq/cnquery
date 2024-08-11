@@ -21,14 +21,14 @@ import (
 
 func init() {
 	docsYamlCmd.Flags().String("docs-file", "", "optional file path to write content to a file")
-	docsYamlCmd.Flags().String("version", defaultVersion, "optional version to mark resource, default is latest")
+	docsYamlCmd.Flags().String("version", defaultVersionField, "optional version to mark resource, default is latest")
 	docsCmd.AddCommand(docsYamlCmd)
 	docsJSONCmd.Flags().String("dist", "", "folder for output json generation")
 	docsCmd.AddCommand(docsJSONCmd)
 	rootCmd.AddCommand(docsCmd)
 }
 
-const defaultVersion = "latest"
+const defaultVersionField = "9.0.0"
 
 var docsCmd = &cobra.Command{
 	Use: "docs",
@@ -175,7 +175,7 @@ func ensureDefaults(id string, entry *docs.LrDocsEntry, version string) *docs.Lr
 		}
 		if entry.MinMondooVersion == "" {
 			entry.MinMondooVersion = version
-		} else if entry.MinMondooVersion == defaultVersion && version != defaultVersion {
+		} else if entry.MinMondooVersion == defaultVersionField && version != defaultVersionField {
 			// Update to specified version if previously set to default
 			entry.MinMondooVersion = version
 		}
@@ -204,7 +204,7 @@ func mergeFields(version string, entry *docs.LrDocsEntry, fields []*lr.BasicFiel
 				MinMondooVersion: version,
 			}
 			entry.Fields[f.ID] = fDoc
-		} else if entry.Fields[f.ID].MinMondooVersion == "latest" && version != "latest" {
+		} else if entry.Fields[f.ID].MinMondooVersion == defaultVersionField && version != defaultVersionField {
 			entry.Fields[f.ID].MinMondooVersion = version
 		}
 		// Scrub field version if same as resource
