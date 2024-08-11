@@ -46,8 +46,7 @@ resources:
       name:
       - kubernetes
     snippets:
-    - query: k8s.pods { containers.where(securityContext["privileged"] == true) name
-        }
+    - query: k8s.pods { containers.where(securityContext["privileged"] == true) name }
       title: List kubernetes pods with privileged containers
     - query: k8s.pods.all( namespace != "default")
       title: Check if the default namespace is used
@@ -63,6 +62,9 @@ resources:
       title: Query pod security policies
     - query: k8s.networkPolicies { name manifest }
       title: Query network policies
+    refs:
+    - title: Kubernetes Documentation
+      url: https://kubernetes.io/docs/home/
   k8s.admissionrequest:
     fields:
       name: {}
@@ -117,6 +119,9 @@ resources:
     platform:
       name:
       - kubernetes
+    refs:
+    - title: ConfigMaps Documentation
+      url: https://kubernetes.io/docs/concepts/configuration/configmap/
   k8s.container:
     fields:
       args: {}
@@ -173,6 +178,9 @@ resources:
     platform:
       name:
       - kubernetes
+    refs:
+    - title: CronJob Documentation
+      url: https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/
   k8s.customresource:
     fields:
       annotations: {}
@@ -191,6 +199,9 @@ resources:
     platform:
       name:
       - kubernetes
+    refs:
+    - title: Custom Resources Documentation
+      url: https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/
   k8s.daemonset:
     fields:
       annotations:
@@ -218,6 +229,9 @@ resources:
     platform:
       name:
       - kubernetes
+    refs:
+    - title: DaemonSet Documentation
+      url: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/
   k8s.deployment:
     fields:
       annotations:
@@ -245,6 +259,9 @@ resources:
     platform:
       name:
       - kubernetes
+    refs:
+    - title: Deployments Documentation
+      url: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
   k8s.ephemeralContainer:
     fields:
       args: {}
@@ -267,6 +284,9 @@ resources:
     platform:
       name:
       - kubernetes
+    refs:
+    - title: Ephemeral Containers Documentation
+      url: https://kubernetes.io/docs/concepts/workloads/pods/ephemeral-containers/
   k8s.ingress:
     fields:
       annotations: {}
@@ -286,6 +306,9 @@ resources:
     platform:
       name:
       - kubernetes
+    refs:
+    - title: Ingress Documentation
+      url: https://kubernetes.io/docs/concepts/services-networking/ingress/
   k8s.ingressbackend:
     fields:
       id: {}
@@ -374,6 +397,9 @@ resources:
     platform:
       name:
       - kubernetes
+    refs:
+    - title: Init Containers Documentation
+      url: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
   k8s.job:
     fields:
       annotations:
@@ -401,6 +427,9 @@ resources:
     platform:
       name:
       - kubernetes
+    refs:
+    - title: Jobs Documentation
+      url: https://kubernetes.io/docs/concepts/workloads/controllers/job/
   k8s.kubelet:
     fields:
       configFile: {}
@@ -410,6 +439,9 @@ resources:
     platform:
       name:
       - kubernetes
+    refs:
+    - title: kubelet Documentation
+      url: https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/
   k8s.namespace:
     fields:
       annotations: {}
@@ -426,6 +458,9 @@ resources:
     platform:
       name:
       - kubernetes
+    refs:
+    - title: Namespaces Documentation
+      url: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
   k8s.networkpolicy:
     fields:
       annotations: {}
@@ -445,6 +480,9 @@ resources:
     platform:
       name:
       - kubernetes
+    refs:
+    - title: Network Policies Documentation
+      url: https://kubernetes.io/docs/concepts/services-networking/network-policies/
   k8s.node:
     fields:
       annotations:
@@ -463,6 +501,9 @@ resources:
     platform:
       name:
       - kubernetes
+    refs:
+    - title: Nodes Documentation
+      url: https://kubernetes.io/docs/concepts/architecture/nodes/
   k8s.pod:
     fields:
       annotations: {}
@@ -490,6 +531,9 @@ resources:
     platform:
       name:
       - kubernetes
+    refs:
+    - title: Pods Documentation
+      url: https://kubernetes.io/docs/concepts/workloads/pods/
   k8s.podsecuritypolicy:
     fields:
       annotations: {}
@@ -508,6 +552,9 @@ resources:
     platform:
       name:
       - kubernetes
+    refs:
+    - title: Pod Security Policies Documentation
+      url: https://kubernetes.io/docs/concepts/security/pod-security-policy/
   k8s.rbac.clusterrole:
     fields:
       aggregationRule: {}
@@ -527,6 +574,9 @@ resources:
     platform:
       name:
       - kubernetes
+    refs:
+    - title: Using RBAC Authorization Documentation
+      url: https://kubernetes.io/docs/reference/access-authn-authz/rbac/#rolebinding-and-clusterrolebinding
   k8s.rbac.clusterrolebinding:
     fields:
       annotations: {}
@@ -546,6 +596,9 @@ resources:
     platform:
       name:
       - kubernetes
+    refs:
+    - title: Using RBAC Authorization Documentation
+      url: https://kubernetes.io/docs/reference/access-authn-authz/rbac/#rolebinding-and-clusterrolebinding
   k8s.rbac.role:
     fields:
       annotations: {}
@@ -565,6 +618,9 @@ resources:
     platform:
       name:
       - kubernetes
+    refs:
+    - title: Using RBAC Authorization Documentation
+      url: https://kubernetes.io/docs/reference/access-authn-authz/rbac/#rolebinding-and-clusterrolebinding
   k8s.rbac.rolebinding:
     fields:
       annotations: {}
@@ -585,6 +641,9 @@ resources:
     platform:
       name:
       - kubernetes
+    refs:
+    - title: Using RBAC Authorization Documentation
+      url: https://kubernetes.io/docs/reference/access-authn-authz/rbac/#rolebinding-and-clusterrolebinding
   k8s.replicaset:
     fields:
       annotations:
@@ -612,6 +671,9 @@ resources:
     platform:
       name:
       - kubernetes
+    refs:
+    - title: ReplicaSet Documentation
+      url: https://kubernetes.io/docs/reference/access-authn-authz/rbac/#rolebinding-and-clusterrolebinding
   k8s.secret:
     fields:
       annotations:
@@ -637,6 +699,9 @@ resources:
     platform:
       name:
       - kubernetes
+    refs:
+    - title: Secrets Documentation
+      url: https://kubernetes.io/docs/concepts/configuration/secret/
   k8s.service:
     fields:
       annotations: {}
@@ -656,6 +721,9 @@ resources:
     platform:
       name:
       - kubernetes
+    refs:
+    - title: Service Documentation
+      url: https://kubernetes.io/docs/concepts/services-networking/service/
   k8s.serviceaccount:
     fields:
       annotations: {}
@@ -677,6 +745,9 @@ resources:
     platform:
       name:
       - kubernetes
+    refs:
+    - title: Service Accounts Documentation
+      url: https://kubernetes.io/docs/concepts/security/service-accounts/
   k8s.statefulset:
     fields:
       annotations:
@@ -704,6 +775,9 @@ resources:
     platform:
       name:
       - kubernetes
+    refs:
+    - title: StatefulSets Documentation
+      url: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/
   k8s.userinfo:
     fields:
       uid: {}
