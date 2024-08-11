@@ -140,6 +140,7 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 							"customIamInstanceProfile":      llx.StringDataPtr(dbInstance.CustomIamInstanceProfile),
 							"activityStreamMode":            llx.StringData(string(dbInstance.ActivityStreamMode)),
 							"activityStreamStatus":          llx.StringData(string(dbInstance.ActivityStreamStatus)),
+							"networkType":                   llx.StringDataPtr(dbInstance.NetworkType),
 						})
 					if err != nil {
 						return nil, err
@@ -521,6 +522,7 @@ func (a *mqlAwsRds) getDbClusters(conn *connection.AwsConnection) []*jobpool.Job
 							"activityStreamMode":        llx.StringData(string(cluster.ActivityStreamMode)),
 							"activityStreamStatus":      llx.StringData(string(cluster.ActivityStreamStatus)),
 							"monitoringInterval":        llx.IntDataPtr(cluster.MonitoringInterval),
+							"networkType":               llx.StringDataPtr(cluster.NetworkType),
 						})
 					if err != nil {
 						return nil, err

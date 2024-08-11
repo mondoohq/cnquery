@@ -3222,6 +3222,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.dbcluster.monitoringInterval": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbcluster).GetMonitoringInterval()).ToDataRes(types.Int)
 	},
+	"aws.rds.dbcluster.networkType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetNetworkType()).ToDataRes(types.String)
+	},
 	"aws.rds.snapshot.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsSnapshot).GetArn()).ToDataRes(types.String)
 	},
@@ -3380,6 +3383,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.rds.dbinstance.pendingMaintenanceActions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetPendingMaintenanceActions()).ToDataRes(types.Array(types.Resource("aws.rds.pendingMaintenanceAction")))
+	},
+	"aws.rds.dbinstance.networkType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetNetworkType()).ToDataRes(types.String)
 	},
 	"aws.rds.pendingMaintenanceAction.resourceArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsPendingMaintenanceAction).GetResourceArn()).ToDataRes(types.String)
@@ -8534,6 +8540,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsRdsDbcluster).MonitoringInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"aws.rds.dbcluster.networkType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).NetworkType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.rds.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsRdsSnapshot).__id, ok = v.Value.(string)
 			return
@@ -8752,6 +8762,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.rds.dbinstance.pendingMaintenanceActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbinstance).PendingMaintenanceActions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.networkType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).NetworkType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.rds.pendingMaintenanceAction.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21670,6 +21684,7 @@ type mqlAwsRdsDbcluster struct {
 	ActivityStreamMode plugin.TValue[string]
 	ActivityStreamStatus plugin.TValue[string]
 	MonitoringInterval plugin.TValue[int64]
+	NetworkType plugin.TValue[string]
 }
 
 // createAwsRdsDbcluster creates a new instance of this resource
@@ -21873,6 +21888,10 @@ func (c *mqlAwsRdsDbcluster) GetMonitoringInterval() *plugin.TValue[int64] {
 	return &c.MonitoringInterval
 }
 
+func (c *mqlAwsRdsDbcluster) GetNetworkType() *plugin.TValue[string] {
+	return &c.NetworkType
+}
+
 // mqlAwsRdsSnapshot for the aws.rds.snapshot resource
 type mqlAwsRdsSnapshot struct {
 	MqlRuntime *plugin.Runtime
@@ -22029,6 +22048,7 @@ type mqlAwsRdsDbinstance struct {
 	ActivityStreamMode plugin.TValue[string]
 	ActivityStreamStatus plugin.TValue[string]
 	PendingMaintenanceActions plugin.TValue[[]interface{}]
+	NetworkType plugin.TValue[string]
 }
 
 // createAwsRdsDbinstance creates a new instance of this resource
@@ -22274,6 +22294,10 @@ func (c *mqlAwsRdsDbinstance) GetPendingMaintenanceActions() *plugin.TValue[[]in
 
 		return c.pendingMaintenanceActions()
 	})
+}
+
+func (c *mqlAwsRdsDbinstance) GetNetworkType() *plugin.TValue[string] {
+	return &c.NetworkType
 }
 
 // mqlAwsRdsPendingMaintenanceAction for the aws.rds.pendingMaintenanceAction resource

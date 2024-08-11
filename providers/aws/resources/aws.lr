@@ -2126,6 +2126,8 @@ private aws.rds.dbcluster @defaults("id region") {
   activityStreamStatus string
   // Interval, in seconds, between points when Enhanced Monitoring metrics are collected
   monitoringInterval int
+  // Network type of the DB instance
+  networkType string
 }
 
 // Amazon RDS snapshot
@@ -2240,6 +2242,8 @@ private aws.rds.dbinstance @defaults("id region engine engineVersion") {
   activityStreamStatus string
   // List of pending maintenance actions for the database instance
   pendingMaintenanceActions() []aws.rds.pendingMaintenanceAction
+  // Network type of the DB instance
+  networkType string
 }
 
 // Amazon RDS pending maintenance action

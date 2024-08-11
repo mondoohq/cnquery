@@ -2435,6 +2435,8 @@ resources:
         min_mondoo_version: 9.0.0
       multiAZ:
         min_mondoo_version: 9.0.0
+      networkType:
+        min_mondoo_version: 9.0.0
       port:
         min_mondoo_version: 9.0.0
       publiclyAccessible:
@@ -2510,6 +2512,8 @@ resources:
         min_mondoo_version: 9.0.0
       multiAZ: {}
       name: {}
+      networkType:
+        min_mondoo_version: 9.0.0
       pendingMaintenanceActions:
         min_mondoo_version: 9.0.0
       port:
