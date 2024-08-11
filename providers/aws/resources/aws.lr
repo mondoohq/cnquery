@@ -2026,6 +2026,8 @@ aws.rds {
   dbClusters() []aws.rds.dbcluster
   // List of RDS database clusters
   clusters() []aws.rds.dbcluster
+  // List of pending maintenance actions for the database instance
+  pendingMaintenanceActions() []aws.rds.pendingMaintenanceAction
 }
 
 // Amazon RDS Backup Setting
@@ -2232,6 +2234,26 @@ private aws.rds.dbinstance @defaults("id region engine engineVersion") {
   activityStreamMode string
   // Status of the database activity stream
   activityStreamStatus string
+  // List of pending maintenance actions for the database instance
+  pendingMaintenanceActions() []aws.rds.pendingMaintenanceAction
+}
+
+// Amazon RDS pending maintenance action
+private aws.rds.pendingMaintenanceAction {
+  // ARN for resource
+  resourceArn string
+  // Action to take
+  action string
+  // Description of the action
+  description string
+  // Auto applied after date
+  autoAppliedAfterDate time
+  // Current apply date
+  currentApplyDate time
+  // Forced apply date
+  forcedApplyDate time
+  // Opt-in status
+  optInStatus string
 }
 
 // Amazon ElastiCache

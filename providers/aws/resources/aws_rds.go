@@ -159,6 +159,73 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 	return tasks
 }
 
+// pendingMaintenanceActions returns all pending maintaince actions for all RDS instances
+func (a *mqlAwsRds) pendingMaintenanceActions() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []interface{}{}
+	poolOfJobs := jobpool.CreatePool(a.getPpendingMaintenanceActions(conn), 5)
+	poolOfJobs.Run()
+
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	}
+
+	return res, nil
+}
+
+func (a *mqlAwsRds) getPpendingMaintenanceActions(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		regionVal := region
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("rds>getDbInstances>calling aws with region %s", regionVal)
+
+			res := []interface{}{}
+			svc := conn.Rds(regionVal)
+			ctx := context.Background()
+
+			var marker *string
+			for {
+				pendingMaintainanceList, err := svc.DescribePendingMaintenanceActions(ctx, &rds.DescribePendingMaintenanceActionsInput{
+					Marker: marker,
+				})
+				if err != nil {
+					return nil, err
+				}
+				for _, resp := range pendingMaintainanceList.PendingMaintenanceActions {
+					if resp.ResourceIdentifier == nil {
+						continue
+					}
+					for _, action := range resp.PendingMaintenanceActionDetails {
+						resourceArn := *resp.ResourceIdentifier
+						mqlDbSnapshot, err := newMqlAwsPendingMaintainceAction(a.MqlRuntime, region, resourceArn, action)
+						if err != nil {
+							return nil, err
+						}
+						res = append(res, mqlDbSnapshot)
+					}
+				}
+				if pendingMaintainanceList.Marker == nil {
+					break
+				}
+				marker = pendingMaintainanceList.Marker
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
 
 func (a *mqlAwsRdsDbinstance) id() (string, error) {
 	return a.Arn.Data, nil
@@ -253,6 +320,70 @@ func (a *mqlAwsRdsDbinstance) snapshots() ([]interface{}, error) {
 		marker = snapshots.Marker
 	}
 	return res, nil
+}
+
+// pendingMaintenanceActions returns all pending maintenance actions for the RDS instance
+func (a *mqlAwsRdsDbinstance) pendingMaintenanceActions() ([]interface{}, error) {
+	instanceArn := a.Arn.Data
+	region := a.Region.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Rds(region)
+	ctx := context.Background()
+	res := []interface{}{}
+
+	var marker *string
+	for {
+		pendingMaintainanceList, err := svc.DescribePendingMaintenanceActions(ctx, &rds.DescribePendingMaintenanceActionsInput{
+			ResourceIdentifier: &instanceArn,
+			Marker:             marker,
+		})
+		if err != nil {
+			return nil, err
+		}
+		for _, resp := range pendingMaintainanceList.PendingMaintenanceActions {
+			if resp.ResourceIdentifier == nil {
+				continue
+			}
+			for _, action := range resp.PendingMaintenanceActionDetails {
+				resourceArn := *resp.ResourceIdentifier
+				mqlDbSnapshot, err := newMqlAwsPendingMaintainceAction(a.MqlRuntime, region, resourceArn, action)
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, mqlDbSnapshot)
+			}
+		}
+		if pendingMaintainanceList.Marker == nil {
+			break
+		}
+		marker = pendingMaintainanceList.Marker
+	}
+	return res, nil
+}
+
+// newMqlAwsPendingMaintainceaction creates a new mqlAwsRdsPendingMaintenanceActions from a rdstypes.PendingMaintenanceAction
+func newMqlAwsPendingMaintainceAction(runtime *plugin.Runtime, region string, resourceArn string, maintenanceAction rdstypes.PendingMaintenanceAction) (*mqlAwsRdsPendingMaintenanceAction, error) {
+	action := ""
+	if maintenanceAction.Action != nil {
+		action = *maintenanceAction.Action
+	}
+
+	res, err := CreateResource(runtime, "aws.rds.pendingMaintenanceAction",
+		map[string]*llx.RawData{
+			"__id":                 llx.StringData(fmt.Sprintf("%s/pendingMaintainance/%s", resourceArn, action)),
+			"resourceArn":          llx.StringData(resourceArn),
+			"action":               llx.StringDataPtr(maintenanceAction.Action),
+			"description":          llx.StringDataPtr(maintenanceAction.Description),
+			"autoAppliedAfterDate": llx.TimeDataPtr(maintenanceAction.AutoAppliedAfterDate),
+			"currentApplyDate":     llx.TimeDataPtr(maintenanceAction.CurrentApplyDate),
+			"forcedApplyDate":      llx.TimeDataPtr(maintenanceAction.ForcedApplyDate),
+			"optInStatus":          llx.StringDataPtr(maintenanceAction.OptInStatus),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsRdsPendingMaintenanceAction), nil
 }
 
 func rdsTagsToMap(tags []rdstypes.Tag) map[string]interface{} {

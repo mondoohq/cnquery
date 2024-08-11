@@ -530,6 +530,10 @@ func init() {
 			Init: initAwsRdsDbinstance,
 			Create: createAwsRdsDbinstance,
 		},
+		"aws.rds.pendingMaintenanceAction": {
+			// to override args, implement: initAwsRdsPendingMaintenanceAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsRdsPendingMaintenanceAction,
+		},
 		"aws.elasticache": {
 			// to override args, implement: initAwsElasticache(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsElasticache,
@@ -3080,6 +3084,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRds).GetClusters()).ToDataRes(types.Array(types.Resource("aws.rds.dbcluster")))
 	},
+	"aws.rds.pendingMaintenanceActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRds).GetPendingMaintenanceActions()).ToDataRes(types.Array(types.Resource("aws.rds.pendingMaintenanceAction")))
+	},
 	"aws.rds.backupsetting.target": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsBackupsetting).GetTarget()).ToDataRes(types.String)
 	},
@@ -3364,6 +3371,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.rds.dbinstance.activityStreamStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetActivityStreamStatus()).ToDataRes(types.String)
+	},
+	"aws.rds.dbinstance.pendingMaintenanceActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetPendingMaintenanceActions()).ToDataRes(types.Array(types.Resource("aws.rds.pendingMaintenanceAction")))
+	},
+	"aws.rds.pendingMaintenanceAction.resourceArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsPendingMaintenanceAction).GetResourceArn()).ToDataRes(types.String)
+	},
+	"aws.rds.pendingMaintenanceAction.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsPendingMaintenanceAction).GetAction()).ToDataRes(types.String)
+	},
+	"aws.rds.pendingMaintenanceAction.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsPendingMaintenanceAction).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.rds.pendingMaintenanceAction.autoAppliedAfterDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsPendingMaintenanceAction).GetAutoAppliedAfterDate()).ToDataRes(types.Time)
+	},
+	"aws.rds.pendingMaintenanceAction.currentApplyDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsPendingMaintenanceAction).GetCurrentApplyDate()).ToDataRes(types.Time)
+	},
+	"aws.rds.pendingMaintenanceAction.forcedApplyDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsPendingMaintenanceAction).GetForcedApplyDate()).ToDataRes(types.Time)
+	},
+	"aws.rds.pendingMaintenanceAction.optInStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsPendingMaintenanceAction).GetOptInStatus()).ToDataRes(types.String)
 	},
 	"aws.elasticache.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticache).GetClusters()).ToDataRes(types.Array(types.Dict))
@@ -8305,6 +8336,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsRds).Clusters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"aws.rds.pendingMaintenanceActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRds).PendingMaintenanceActions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"aws.rds.backupsetting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsRdsBackupsetting).__id, ok = v.Value.(string)
 			return
@@ -8699,6 +8734,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.rds.dbinstance.activityStreamStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbinstance).ActivityStreamStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.pendingMaintenanceActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).PendingMaintenanceActions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.rds.pendingMaintenanceAction.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsRdsPendingMaintenanceAction).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.rds.pendingMaintenanceAction.resourceArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsPendingMaintenanceAction).ResourceArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.pendingMaintenanceAction.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsPendingMaintenanceAction).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.pendingMaintenanceAction.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsPendingMaintenanceAction).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.pendingMaintenanceAction.autoAppliedAfterDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsPendingMaintenanceAction).AutoAppliedAfterDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.rds.pendingMaintenanceAction.currentApplyDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsPendingMaintenanceAction).CurrentApplyDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.rds.pendingMaintenanceAction.forcedApplyDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsPendingMaintenanceAction).ForcedApplyDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.rds.pendingMaintenanceAction.optInStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsPendingMaintenanceAction).OptInStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.elasticache.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21319,6 +21390,7 @@ type mqlAwsRds struct {
 	Instances plugin.TValue[[]interface{}]
 	DbClusters plugin.TValue[[]interface{}]
 	Clusters plugin.TValue[[]interface{}]
+	PendingMaintenanceActions plugin.TValue[[]interface{}]
 }
 
 // createAwsRds creates a new instance of this resource
@@ -21419,6 +21491,22 @@ func (c *mqlAwsRds) GetClusters() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.clusters()
+	})
+}
+
+func (c *mqlAwsRds) GetPendingMaintenanceActions() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.PendingMaintenanceActions, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds", c.__id, "pendingMaintenanceActions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.pendingMaintenanceActions()
 	})
 }
 
@@ -21920,6 +22008,7 @@ type mqlAwsRdsDbinstance struct {
 	CustomIamInstanceProfile plugin.TValue[string]
 	ActivityStreamMode plugin.TValue[string]
 	ActivityStreamStatus plugin.TValue[string]
+	PendingMaintenanceActions plugin.TValue[[]interface{}]
 }
 
 // createAwsRdsDbinstance creates a new instance of this resource
@@ -22145,6 +22234,96 @@ func (c *mqlAwsRdsDbinstance) GetActivityStreamMode() *plugin.TValue[string] {
 
 func (c *mqlAwsRdsDbinstance) GetActivityStreamStatus() *plugin.TValue[string] {
 	return &c.ActivityStreamStatus
+}
+
+func (c *mqlAwsRdsDbinstance) GetPendingMaintenanceActions() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.PendingMaintenanceActions, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.dbinstance", c.__id, "pendingMaintenanceActions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.pendingMaintenanceActions()
+	})
+}
+
+// mqlAwsRdsPendingMaintenanceAction for the aws.rds.pendingMaintenanceAction resource
+type mqlAwsRdsPendingMaintenanceAction struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsRdsPendingMaintenanceActionInternal it will be used here
+	ResourceArn plugin.TValue[string]
+	Action plugin.TValue[string]
+	Description plugin.TValue[string]
+	AutoAppliedAfterDate plugin.TValue[*time.Time]
+	CurrentApplyDate plugin.TValue[*time.Time]
+	ForcedApplyDate plugin.TValue[*time.Time]
+	OptInStatus plugin.TValue[string]
+}
+
+// createAwsRdsPendingMaintenanceAction creates a new instance of this resource
+func createAwsRdsPendingMaintenanceAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRdsPendingMaintenanceAction{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.rds.pendingMaintenanceAction", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRdsPendingMaintenanceAction) MqlName() string {
+	return "aws.rds.pendingMaintenanceAction"
+}
+
+func (c *mqlAwsRdsPendingMaintenanceAction) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRdsPendingMaintenanceAction) GetResourceArn() *plugin.TValue[string] {
+	return &c.ResourceArn
+}
+
+func (c *mqlAwsRdsPendingMaintenanceAction) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlAwsRdsPendingMaintenanceAction) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsRdsPendingMaintenanceAction) GetAutoAppliedAfterDate() *plugin.TValue[*time.Time] {
+	return &c.AutoAppliedAfterDate
+}
+
+func (c *mqlAwsRdsPendingMaintenanceAction) GetCurrentApplyDate() *plugin.TValue[*time.Time] {
+	return &c.CurrentApplyDate
+}
+
+func (c *mqlAwsRdsPendingMaintenanceAction) GetForcedApplyDate() *plugin.TValue[*time.Time] {
+	return &c.ForcedApplyDate
+}
+
+func (c *mqlAwsRdsPendingMaintenanceAction) GetOptInStatus() *plugin.TValue[string] {
+	return &c.OptInStatus
 }
 
 // mqlAwsElasticache for the aws.elasticache resource
