@@ -6,15 +6,14 @@ package resources
 import (
 	"context"
 	"fmt"
-
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
-
+	elasticache_types "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/cnquery/v11/providers/aws/connection"
-
 	"go.mondoo.com/cnquery/v11/types"
 )
 
@@ -139,67 +138,7 @@ func (a *mqlAwsElasticache) getCacheClusters(conn *connection.AwsConnection) []*
 				for i := range clusters.CacheClusters {
 					cluster := clusters.CacheClusters[i]
 
-					cacheNodes := []interface{}{}
-					for i := range cluster.CacheNodes {
-						cacheNodes = append(cacheNodes, convert.ToString(cluster.CacheNodes[i].CacheNodeId))
-					}
-					cacheSecurityGroups := []interface{}{}
-					for i := range cluster.CacheSecurityGroups {
-						cacheSecurityGroups = append(cacheSecurityGroups, convert.ToString(cluster.CacheSecurityGroups[i].CacheSecurityGroupName))
-					}
-					logDeliveryConfigurations, err := convert.JsonToDictSlice(cluster.LogDeliveryConfigurations)
-					if err != nil {
-						return nil, err
-					}
-					var notificationConfiguration string
-					if cluster.NotificationConfiguration != nil {
-						notificationConfiguration = convert.ToString(cluster.NotificationConfiguration.TopicArn)
-					}
-
-					sgs := []interface{}{}
-					for i := range cluster.SecurityGroups {
-						sg := cluster.SecurityGroups[i]
-						mqlSg, err := NewResource(a.MqlRuntime, "aws.ec2.securitygroup",
-							map[string]*llx.RawData{
-								"arn": llx.StringData(fmt.Sprintf(securityGroupArnPattern, regionVal, conn.AccountId(), convert.ToString(sg.SecurityGroupId))),
-							})
-						if err != nil {
-							return nil, err
-						}
-						sgs = append(sgs, mqlSg)
-					}
-
-					mqlCluster, err := CreateResource(a.MqlRuntime, "aws.elasticache.cluster",
-						map[string]*llx.RawData{
-							"__id":                      llx.StringDataPtr(cluster.ARN),
-							"arn":                       llx.StringDataPtr(cluster.ARN),
-							"atRestEncryptionEnabled":   llx.BoolDataPtr(cluster.AtRestEncryptionEnabled),
-							"authTokenEnabled":          llx.BoolDataPtr(cluster.AuthTokenEnabled),
-							"authTokenLastModifiedDate": llx.TimeDataPtr(cluster.AuthTokenLastModifiedDate),
-							"autoMinorVersionUpgrade":   llx.BoolDataPtr(cluster.AutoMinorVersionUpgrade),
-							"cacheClusterCreateTime":    llx.TimeDataPtr(cluster.CacheClusterCreateTime),
-							"cacheClusterId":            llx.StringDataPtr(cluster.CacheClusterId),
-							"cacheClusterStatus":        llx.StringDataPtr(cluster.CacheClusterStatus),
-							"cacheNodeType":             llx.StringDataPtr(cluster.CacheNodeType),
-							"cacheNodes":                llx.ArrayData(cacheNodes, types.String),
-							"cacheSecurityGroups":       llx.ArrayData(cacheSecurityGroups, types.String),
-							"cacheSubnetGroupName":      llx.StringDataPtr(cluster.CacheSubnetGroupName),
-							"clientDownloadLandingPage": llx.StringDataPtr(cluster.ClientDownloadLandingPage),
-							"nodeType":                  llx.StringDataPtr(cluster.CacheNodeType),
-							"engine":                    llx.StringDataPtr(cluster.Engine),
-							"engineVersion":             llx.StringDataPtr(cluster.EngineVersion),
-							"ipDiscovery":               llx.StringData(string(cluster.IpDiscovery)),
-							"logDeliveryConfigurations": llx.ArrayData(logDeliveryConfigurations, types.Any),
-							"networkType":               llx.StringData(string(cluster.NetworkType)),
-							"notificationConfiguration": llx.StringData(notificationConfiguration),
-							"numCacheNodes":             llx.IntDataDefault(cluster.NumCacheNodes, 0),
-							"preferredAvailabilityZone": llx.StringDataPtr(cluster.PreferredAvailabilityZone),
-							"region":                    llx.StringData(regionVal),
-							"securityGroups":            llx.ArrayData(sgs, types.Resource("aws.ec2.securitygroup")),
-							"snapshotRetentionLimit":    llx.IntDataDefault(cluster.SnapshotRetentionLimit, 0),
-							"transitEncryptionEnabled":  llx.BoolDataPtr(cluster.TransitEncryptionEnabled),
-							"transitEncryptionMode":     llx.StringData(string(cluster.TransitEncryptionMode)),
-						})
+					mqlCluster, err := newMqlAwsElasticacheCluster(a.MqlRuntime, regionVal, conn.AccountId(), cluster)
 					if err != nil {
 						return nil, err
 					}
@@ -215,6 +154,74 @@ func (a *mqlAwsElasticache) getCacheClusters(conn *connection.AwsConnection) []*
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func newMqlAwsElasticacheCluster(runtime *plugin.Runtime, region string, accountID string, cluster elasticache_types.CacheCluster) (*mqlAwsElasticacheCluster, error) {
+	cacheNodes := []interface{}{}
+	for i := range cluster.CacheNodes {
+		cacheNodes = append(cacheNodes, convert.ToString(cluster.CacheNodes[i].CacheNodeId))
+	}
+	cacheSecurityGroups := []interface{}{}
+	for i := range cluster.CacheSecurityGroups {
+		cacheSecurityGroups = append(cacheSecurityGroups, convert.ToString(cluster.CacheSecurityGroups[i].CacheSecurityGroupName))
+	}
+	logDeliveryConfigurations, err := convert.JsonToDictSlice(cluster.LogDeliveryConfigurations)
+	if err != nil {
+		return nil, err
+	}
+	var notificationConfiguration string
+	if cluster.NotificationConfiguration != nil {
+		notificationConfiguration = convert.ToString(cluster.NotificationConfiguration.TopicArn)
+	}
+
+	sgs := []interface{}{}
+	for i := range cluster.SecurityGroups {
+		sg := cluster.SecurityGroups[i]
+		mqlSg, err := NewResource(runtime, "aws.ec2.securitygroup",
+			map[string]*llx.RawData{
+				"arn": llx.StringData(fmt.Sprintf(securityGroupArnPattern, region, accountID, convert.ToString(sg.SecurityGroupId))),
+			})
+		if err != nil {
+			return nil, err
+		}
+		sgs = append(sgs, mqlSg)
+	}
+
+	mqlCluster, err := CreateResource(runtime, "aws.elasticache.cluster",
+		map[string]*llx.RawData{
+			"__id":                      llx.StringDataPtr(cluster.ARN),
+			"arn":                       llx.StringDataPtr(cluster.ARN),
+			"atRestEncryptionEnabled":   llx.BoolDataPtr(cluster.AtRestEncryptionEnabled),
+			"authTokenEnabled":          llx.BoolDataPtr(cluster.AuthTokenEnabled),
+			"authTokenLastModifiedDate": llx.TimeDataPtr(cluster.AuthTokenLastModifiedDate),
+			"autoMinorVersionUpgrade":   llx.BoolDataPtr(cluster.AutoMinorVersionUpgrade),
+			"cacheClusterCreateTime":    llx.TimeDataPtr(cluster.CacheClusterCreateTime),
+			"cacheClusterId":            llx.StringDataPtr(cluster.CacheClusterId),
+			"cacheClusterStatus":        llx.StringDataPtr(cluster.CacheClusterStatus),
+			"cacheNodeType":             llx.StringDataPtr(cluster.CacheNodeType),
+			"cacheNodes":                llx.ArrayData(cacheNodes, types.String),
+			"cacheSecurityGroups":       llx.ArrayData(cacheSecurityGroups, types.String),
+			"cacheSubnetGroupName":      llx.StringDataPtr(cluster.CacheSubnetGroupName),
+			"clientDownloadLandingPage": llx.StringDataPtr(cluster.ClientDownloadLandingPage),
+			"nodeType":                  llx.StringDataPtr(cluster.CacheNodeType),
+			"engine":                    llx.StringDataPtr(cluster.Engine),
+			"engineVersion":             llx.StringDataPtr(cluster.EngineVersion),
+			"ipDiscovery":               llx.StringData(string(cluster.IpDiscovery)),
+			"logDeliveryConfigurations": llx.ArrayData(logDeliveryConfigurations, types.Any),
+			"networkType":               llx.StringData(string(cluster.NetworkType)),
+			"notificationConfiguration": llx.StringData(notificationConfiguration),
+			"numCacheNodes":             llx.IntDataDefault(cluster.NumCacheNodes, 0),
+			"preferredAvailabilityZone": llx.StringDataPtr(cluster.PreferredAvailabilityZone),
+			"region":                    llx.StringData(region),
+			"securityGroups":            llx.ArrayData(sgs, types.Resource("aws.ec2.securitygroup")),
+			"snapshotRetentionLimit":    llx.IntDataDefault(cluster.SnapshotRetentionLimit, 0),
+			"transitEncryptionEnabled":  llx.BoolDataPtr(cluster.TransitEncryptionEnabled),
+			"transitEncryptionMode":     llx.StringData(string(cluster.TransitEncryptionMode)),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlCluster.(*mqlAwsElasticacheCluster), nil
 }
 
 func (a *mqlAwsElasticache) serverlessCaches() ([]interface{}, error) {
@@ -270,41 +277,11 @@ func (a *mqlAwsElasticache) getServerlessCaches(conn *connection.AwsConnection) 
 				}
 				for i := range caches.ServerlessCaches {
 					cache := caches.ServerlessCaches[i]
-
-					sgs := []interface{}{}
-					for i := range cache.SecurityGroupIds {
-						sgId := cache.SecurityGroupIds[i]
-						mqlSg, err := NewResource(a.MqlRuntime, "aws.ec2.securitygroup",
-							map[string]*llx.RawData{
-								"arn": llx.StringData(fmt.Sprintf(securityGroupArnPattern, regionVal, conn.AccountId(), sgId)),
-							})
-						if err != nil {
-							return nil, err
-						}
-						sgs = append(sgs, mqlSg)
-					}
-
-					mqlCluster, err := CreateResource(a.MqlRuntime, "aws.elasticache.serverlessCache",
-						map[string]*llx.RawData{
-							"__id":                   llx.StringDataPtr(cache.ARN),
-							"arn":                    llx.StringDataPtr(cache.ARN),
-							"name":                   llx.StringDataPtr(cache.ServerlessCacheName),
-							"description":            llx.StringDataPtr(cache.Description),
-							"engine":                 llx.StringDataPtr(cache.Engine),
-							"engineVersion":          llx.StringDataPtr(cache.FullEngineVersion),
-							"majorEngineVersion":     llx.StringDataPtr(cache.MajorEngineVersion),
-							"kmsKeyId":               llx.StringDataPtr(cache.KmsKeyId),
-							"region":                 llx.StringData(regionVal),
-							"securityGroups":         llx.ArrayData(sgs, types.Resource("aws.ec2.securitygroup")),
-							"snapshotRetentionLimit": llx.IntDataDefault(cache.SnapshotRetentionLimit, 0),
-							"dailySnapshotTime":      llx.StringDataPtr(cache.DailySnapshotTime),
-							"createdAt":              llx.TimeDataPtr(cache.CreateTime),
-							"status":                 llx.StringDataPtr(cache.Status),
-						})
+					mqlCache, err := newMqlAwsElasticacheServerlessCache(a.MqlRuntime, regionVal, conn.AccountId(), cache)
 					if err != nil {
 						return nil, err
 					}
-					res = append(res, mqlCluster)
+					res = append(res, mqlCache)
 				}
 				if caches.NextToken == nil {
 					break
@@ -316,4 +293,41 @@ func (a *mqlAwsElasticache) getServerlessCaches(conn *connection.AwsConnection) 
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func newMqlAwsElasticacheServerlessCache(runtime *plugin.Runtime, region string, accountID string, cache elasticache_types.ServerlessCache) (*mqlAwsElasticacheServerlessCache, error) {
+	sgs := []interface{}{}
+	for i := range cache.SecurityGroupIds {
+		sgId := cache.SecurityGroupIds[i]
+		mqlSg, err := NewResource(runtime, "aws.ec2.securitygroup",
+			map[string]*llx.RawData{
+				"arn": llx.StringData(fmt.Sprintf(securityGroupArnPattern, region, accountID, sgId)),
+			})
+		if err != nil {
+			return nil, err
+		}
+		sgs = append(sgs, mqlSg)
+	}
+
+	mqlCache, err := CreateResource(runtime, "aws.elasticache.serverlessCache",
+		map[string]*llx.RawData{
+			"__id":                   llx.StringDataPtr(cache.ARN),
+			"arn":                    llx.StringDataPtr(cache.ARN),
+			"name":                   llx.StringDataPtr(cache.ServerlessCacheName),
+			"description":            llx.StringDataPtr(cache.Description),
+			"engine":                 llx.StringDataPtr(cache.Engine),
+			"engineVersion":          llx.StringDataPtr(cache.FullEngineVersion),
+			"majorEngineVersion":     llx.StringDataPtr(cache.MajorEngineVersion),
+			"kmsKeyId":               llx.StringDataPtr(cache.KmsKeyId),
+			"region":                 llx.StringData(region),
+			"securityGroups":         llx.ArrayData(sgs, types.Resource("aws.ec2.securitygroup")),
+			"snapshotRetentionLimit": llx.IntDataDefault(cache.SnapshotRetentionLimit, 0),
+			"dailySnapshotTime":      llx.StringDataPtr(cache.DailySnapshotTime),
+			"createdAt":              llx.TimeDataPtr(cache.CreateTime),
+			"status":                 llx.StringDataPtr(cache.Status),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlCache.(*mqlAwsElasticacheServerlessCache), nil
 }
