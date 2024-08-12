@@ -2989,6 +2989,85 @@ resources:
     platform:
       name:
       - aws
+  aws.timestream:
+    fields:
+      backups: {}
+      databases: {}
+      tables: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.timestream.backup:
+    fields:
+      arn: {}
+      createdAt: {}
+      name: {}
+      region: {}
+      updatedAt: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.timestream.database:
+    fields:
+      arn: {}
+      createdAt: {}
+      name: {}
+      region: {}
+      updatedAt: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.timestream.lifeanalytics:
+    fields:
+      databases: {}
+      tables: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.timestream.lifeanalytics.database:
+    fields:
+      arn: {}
+      createdAt: {}
+      kmsKeyId: {}
+      name: {}
+      region: {}
+      tableCount: {}
+      updatedAt: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.timestream.lifeanalytics.table:
+    fields:
+      arn: {}
+      createdAt: {}
+      databaseName: {}
+      magneticStoreWriteProperties: {}
+      name: {}
+      region: {}
+      retentionProperties: {}
+      updatedAt: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.timestream.table:
+    fields:
+      arn: {}
+      createdAt: {}
+      name: {}
+      region: {}
+      updatedAt: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
   aws.vpc:
     fields:
       arn: {}

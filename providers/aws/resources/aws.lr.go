@@ -754,6 +754,18 @@ func init() {
 			// to override args, implement: initAwsNeptuneInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsNeptuneInstance,
 		},
+		"aws.timestream.lifeanalytics": {
+			// to override args, implement: initAwsTimestreamLifeanalytics(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsTimestreamLifeanalytics,
+		},
+		"aws.timestream.lifeanalytics.database": {
+			// to override args, implement: initAwsTimestreamLifeanalyticsDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsTimestreamLifeanalyticsDatabase,
+		},
+		"aws.timestream.lifeanalytics.table": {
+			// to override args, implement: initAwsTimestreamLifeanalyticsTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsTimestreamLifeanalyticsTable,
+		},
 	}
 }
 
@@ -4826,6 +4838,57 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.neptune.instance.tdeCredentialArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNeptuneInstance).GetTdeCredentialArn()).ToDataRes(types.String)
+	},
+	"aws.timestream.lifeanalytics.databases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamLifeanalytics).GetDatabases()).ToDataRes(types.Array(types.Resource("aws.timestream.lifeanalytics.database")))
+	},
+	"aws.timestream.lifeanalytics.tables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamLifeanalytics).GetTables()).ToDataRes(types.Array(types.Resource("aws.timestream.lifeanalytics.table")))
+	},
+	"aws.timestream.lifeanalytics.database.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamLifeanalyticsDatabase).GetArn()).ToDataRes(types.String)
+	},
+	"aws.timestream.lifeanalytics.database.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamLifeanalyticsDatabase).GetName()).ToDataRes(types.String)
+	},
+	"aws.timestream.lifeanalytics.database.kmsKeyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamLifeanalyticsDatabase).GetKmsKeyId()).ToDataRes(types.String)
+	},
+	"aws.timestream.lifeanalytics.database.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamLifeanalyticsDatabase).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.timestream.lifeanalytics.database.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamLifeanalyticsDatabase).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.timestream.lifeanalytics.database.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamLifeanalyticsDatabase).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.timestream.lifeanalytics.database.tableCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamLifeanalyticsDatabase).GetTableCount()).ToDataRes(types.Int)
+	},
+	"aws.timestream.lifeanalytics.table.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamLifeanalyticsTable).GetArn()).ToDataRes(types.String)
+	},
+	"aws.timestream.lifeanalytics.table.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamLifeanalyticsTable).GetName()).ToDataRes(types.String)
+	},
+	"aws.timestream.lifeanalytics.table.databaseName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamLifeanalyticsTable).GetDatabaseName()).ToDataRes(types.String)
+	},
+	"aws.timestream.lifeanalytics.table.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamLifeanalyticsTable).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.timestream.lifeanalytics.table.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamLifeanalyticsTable).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.timestream.lifeanalytics.table.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamLifeanalyticsTable).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.timestream.lifeanalytics.table.magneticStoreWriteProperties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamLifeanalyticsTable).GetMagneticStoreWriteProperties()).ToDataRes(types.Dict)
+	},
+	"aws.timestream.lifeanalytics.table.retentionProperties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamLifeanalyticsTable).GetRetentionProperties()).ToDataRes(types.Dict)
 	},
 }
 
@@ -10913,6 +10976,86 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.neptune.instance.tdeCredentialArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsNeptuneInstance).TdeCredentialArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.lifeanalytics.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsTimestreamLifeanalytics).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.timestream.lifeanalytics.databases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamLifeanalytics).Databases, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.lifeanalytics.tables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamLifeanalytics).Tables, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.lifeanalytics.database.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsTimestreamLifeanalyticsDatabase).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.timestream.lifeanalytics.database.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamLifeanalyticsDatabase).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.lifeanalytics.database.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamLifeanalyticsDatabase).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.lifeanalytics.database.kmsKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamLifeanalyticsDatabase).KmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.lifeanalytics.database.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamLifeanalyticsDatabase).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.lifeanalytics.database.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamLifeanalyticsDatabase).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.lifeanalytics.database.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamLifeanalyticsDatabase).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.lifeanalytics.database.tableCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamLifeanalyticsDatabase).TableCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.lifeanalytics.table.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsTimestreamLifeanalyticsTable).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.timestream.lifeanalytics.table.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamLifeanalyticsTable).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.lifeanalytics.table.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamLifeanalyticsTable).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.lifeanalytics.table.databaseName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamLifeanalyticsTable).DatabaseName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.lifeanalytics.table.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamLifeanalyticsTable).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.lifeanalytics.table.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamLifeanalyticsTable).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.lifeanalytics.table.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamLifeanalyticsTable).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.lifeanalytics.table.magneticStoreWriteProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamLifeanalyticsTable).MagneticStoreWriteProperties, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.lifeanalytics.table.retentionProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamLifeanalyticsTable).RetentionProperties, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 }
@@ -27872,4 +28015,235 @@ func (c *mqlAwsNeptuneInstance) GetStorageType() *plugin.TValue[string] {
 
 func (c *mqlAwsNeptuneInstance) GetTdeCredentialArn() *plugin.TValue[string] {
 	return &c.TdeCredentialArn
+}
+
+// mqlAwsTimestreamLifeanalytics for the aws.timestream.lifeanalytics resource
+type mqlAwsTimestreamLifeanalytics struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsTimestreamLifeanalyticsInternal it will be used here
+	Databases plugin.TValue[[]interface{}]
+	Tables plugin.TValue[[]interface{}]
+}
+
+// createAwsTimestreamLifeanalytics creates a new instance of this resource
+func createAwsTimestreamLifeanalytics(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsTimestreamLifeanalytics{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.timestream.lifeanalytics", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsTimestreamLifeanalytics) MqlName() string {
+	return "aws.timestream.lifeanalytics"
+}
+
+func (c *mqlAwsTimestreamLifeanalytics) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsTimestreamLifeanalytics) GetDatabases() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Databases, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.timestream.lifeanalytics", c.__id, "databases")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.databases()
+	})
+}
+
+func (c *mqlAwsTimestreamLifeanalytics) GetTables() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Tables, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.timestream.lifeanalytics", c.__id, "tables")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.tables()
+	})
+}
+
+// mqlAwsTimestreamLifeanalyticsDatabase for the aws.timestream.lifeanalytics.database resource
+type mqlAwsTimestreamLifeanalyticsDatabase struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsTimestreamLifeanalyticsDatabaseInternal it will be used here
+	Arn plugin.TValue[string]
+	Name plugin.TValue[string]
+	KmsKeyId plugin.TValue[string]
+	Region plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
+	UpdatedAt plugin.TValue[*time.Time]
+	TableCount plugin.TValue[int64]
+}
+
+// createAwsTimestreamLifeanalyticsDatabase creates a new instance of this resource
+func createAwsTimestreamLifeanalyticsDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsTimestreamLifeanalyticsDatabase{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.timestream.lifeanalytics.database", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsTimestreamLifeanalyticsDatabase) MqlName() string {
+	return "aws.timestream.lifeanalytics.database"
+}
+
+func (c *mqlAwsTimestreamLifeanalyticsDatabase) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsTimestreamLifeanalyticsDatabase) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsTimestreamLifeanalyticsDatabase) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsTimestreamLifeanalyticsDatabase) GetKmsKeyId() *plugin.TValue[string] {
+	return &c.KmsKeyId
+}
+
+func (c *mqlAwsTimestreamLifeanalyticsDatabase) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsTimestreamLifeanalyticsDatabase) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsTimestreamLifeanalyticsDatabase) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlAwsTimestreamLifeanalyticsDatabase) GetTableCount() *plugin.TValue[int64] {
+	return &c.TableCount
+}
+
+// mqlAwsTimestreamLifeanalyticsTable for the aws.timestream.lifeanalytics.table resource
+type mqlAwsTimestreamLifeanalyticsTable struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsTimestreamLifeanalyticsTableInternal it will be used here
+	Arn plugin.TValue[string]
+	Name plugin.TValue[string]
+	DatabaseName plugin.TValue[string]
+	Region plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
+	UpdatedAt plugin.TValue[*time.Time]
+	MagneticStoreWriteProperties plugin.TValue[interface{}]
+	RetentionProperties plugin.TValue[interface{}]
+}
+
+// createAwsTimestreamLifeanalyticsTable creates a new instance of this resource
+func createAwsTimestreamLifeanalyticsTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsTimestreamLifeanalyticsTable{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.timestream.lifeanalytics.table", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsTimestreamLifeanalyticsTable) MqlName() string {
+	return "aws.timestream.lifeanalytics.table"
+}
+
+func (c *mqlAwsTimestreamLifeanalyticsTable) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsTimestreamLifeanalyticsTable) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsTimestreamLifeanalyticsTable) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsTimestreamLifeanalyticsTable) GetDatabaseName() *plugin.TValue[string] {
+	return &c.DatabaseName
+}
+
+func (c *mqlAwsTimestreamLifeanalyticsTable) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsTimestreamLifeanalyticsTable) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsTimestreamLifeanalyticsTable) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlAwsTimestreamLifeanalyticsTable) GetMagneticStoreWriteProperties() *plugin.TValue[interface{}] {
+	return &c.MagneticStoreWriteProperties
+}
+
+func (c *mqlAwsTimestreamLifeanalyticsTable) GetRetentionProperties() *plugin.TValue[interface{}] {
+	return &c.RetentionProperties
 }

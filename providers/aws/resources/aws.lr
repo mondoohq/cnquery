@@ -3429,3 +3429,49 @@ private aws.neptune.instance @defaults("arn name status"){
   // Key store with which the instance is associated for TDE encryption
   tdeCredentialArn string
 }
+
+// Amazon Timestream for LifeAnalytics
+aws.timestream.lifeanalytics @defaults("databases") {
+  // List of databases
+  databases() []aws.timestream.lifeanalytics.database
+  // List of database tables
+  tables() []aws.timestream.lifeanalytics.table
+}
+
+// Amazon Timestream for LifeAnalytics database
+private aws.timestream.lifeanalytics.database @defaults("name region") {
+  // ARN for the database
+  arn string
+  // Name of the database
+  name string
+  // KMS key used to encrypt the data stored in the database
+  kmsKeyId string
+  // Region where the database exists
+  region string
+  // Time when the database was created
+  createdAt time
+  // Time when the database was last updated
+  updatedAt time
+  // Total number of tables in database
+  tableCount int
+}
+
+// Amazon Timestream for LifeAnalytics table
+private aws.timestream.lifeanalytics.table @defaults("name region") {
+  // ARN for the table
+  arn string
+  // Name of the table
+  name string
+  // Name of the database
+  databaseName string
+  // Region where the table exists
+  region string
+  // Time when the table was created
+  createdAt time
+  // Time when the table was last updated
+  updatedAt time
+  // magnetic store properties for the table
+  magneticStoreWriteProperties dict
+  // retention duration properties for the table
+  retentionProperties dict
+}
