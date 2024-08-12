@@ -19,8 +19,6 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/cnquery/v11/providers/aws/connection"
-
-	"go.mondoo.com/cnquery/v11/types"
 )
 
 func (a *mqlAwsDynamodb) id() (string, error) {
@@ -496,14 +494,16 @@ func (a *mqlAwsDynamodb) getTables(conn *connection.AwsConnection) []*jobpool.Jo
 						"arn":                       llx.StringData(fmt.Sprintf(dynamoTableArnPattern, regionVal, conn.AccountId(), tableName)),
 						"name":                      llx.StringData(tableName),
 						"region":                    llx.StringData(regionVal),
-						"sseDescription":            llx.MapData(sseDict, types.String),
-						"provisionedThroughput":     llx.MapData(throughputDict, types.String),
+						"sseDescription":            llx.DictData(sseDict),
+						"provisionedThroughput":     llx.DictData(throughputDict),
 						"createdTime":               llx.TimeDataPtr(table.Table.CreationDateTime),
 						"deletionProtectionEnabled": llx.BoolDataPtr(table.Table.DeletionProtectionEnabled),
 						"globalTableVersion":        llx.StringDataPtr(table.Table.GlobalTableVersion),
 						"id":                        llx.StringDataPtr(table.Table.TableId),
 						"sizeBytes":                 llx.IntDataPtr(table.Table.TableSizeBytes),
 						"status":                    llx.StringData(string(table.Table.TableStatus)),
+						"items":                     llx.IntDataPtr(table.Table.ItemCount),
+						"latestStreamArn":           llx.StringDataPtr(table.Table.LatestStreamArn),
 					})
 				if err != nil {
 					return nil, err

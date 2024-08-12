@@ -2963,6 +2963,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.dynamodb.table.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDynamodbTable).GetArn()).ToDataRes(types.String)
 	},
+	"aws.dynamodb.table.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetId()).ToDataRes(types.String)
+	},
 	"aws.dynamodb.table.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDynamodbTable).GetName()).ToDataRes(types.String)
 	},
@@ -2993,11 +2996,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.dynamodb.table.globalTableVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDynamodbTable).GetGlobalTableVersion()).ToDataRes(types.String)
 	},
-	"aws.dynamodb.table.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsDynamodbTable).GetId()).ToDataRes(types.String)
+	"aws.dynamodb.table.items": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetItems()).ToDataRes(types.Int)
 	},
 	"aws.dynamodb.table.sizeBytes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDynamodbTable).GetSizeBytes()).ToDataRes(types.Int)
+	},
+	"aws.dynamodb.table.latestStreamArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetLatestStreamArn()).ToDataRes(types.String)
 	},
 	"aws.dynamodb.table.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDynamodbTable).GetStatus()).ToDataRes(types.String)
@@ -7922,6 +7928,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsDynamodbTable).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.dynamodb.table.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.dynamodb.table.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDynamodbTable).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -7962,12 +7972,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsDynamodbTable).GlobalTableVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.dynamodb.table.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsDynamodbTable).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.dynamodb.table.items": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).Items, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.dynamodb.table.sizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDynamodbTable).SizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.table.latestStreamArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).LatestStreamArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.dynamodb.table.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20425,6 +20439,7 @@ type mqlAwsDynamodbTable struct {
 	__id string
 	// optional: if you define mqlAwsDynamodbTableInternal it will be used here
 	Arn plugin.TValue[string]
+	Id plugin.TValue[string]
 	Name plugin.TValue[string]
 	Region plugin.TValue[string]
 	Backups plugin.TValue[[]interface{}]
@@ -20435,8 +20450,9 @@ type mqlAwsDynamodbTable struct {
 	CreatedTime plugin.TValue[*time.Time]
 	DeletionProtectionEnabled plugin.TValue[bool]
 	GlobalTableVersion plugin.TValue[string]
-	Id plugin.TValue[string]
+	Items plugin.TValue[int64]
 	SizeBytes plugin.TValue[int64]
+	LatestStreamArn plugin.TValue[string]
 	Status plugin.TValue[string]
 }
 
@@ -20479,6 +20495,10 @@ func (c *mqlAwsDynamodbTable) MqlID() string {
 
 func (c *mqlAwsDynamodbTable) GetArn() *plugin.TValue[string] {
 	return &c.Arn
+}
+
+func (c *mqlAwsDynamodbTable) GetId() *plugin.TValue[string] {
+	return &c.Id
 }
 
 func (c *mqlAwsDynamodbTable) GetName() *plugin.TValue[string] {
@@ -20527,12 +20547,16 @@ func (c *mqlAwsDynamodbTable) GetGlobalTableVersion() *plugin.TValue[string] {
 	return &c.GlobalTableVersion
 }
 
-func (c *mqlAwsDynamodbTable) GetId() *plugin.TValue[string] {
-	return &c.Id
+func (c *mqlAwsDynamodbTable) GetItems() *plugin.TValue[int64] {
+	return &c.Items
 }
 
 func (c *mqlAwsDynamodbTable) GetSizeBytes() *plugin.TValue[int64] {
 	return &c.SizeBytes
+}
+
+func (c *mqlAwsDynamodbTable) GetLatestStreamArn() *plugin.TValue[string] {
+	return &c.LatestStreamArn
 }
 
 func (c *mqlAwsDynamodbTable) GetStatus() *plugin.TValue[string] {
