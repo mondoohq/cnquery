@@ -45,8 +45,12 @@ resources:
     platform:
       name:
       - kubernetes
+    refs:
+    - title: Kubernetes Documentation
+      url: https://kubernetes.io/docs/home/
     snippets:
-    - query: k8s.pods { containers.where(securityContext["privileged"] == true) name }
+    - query: k8s.pods { containers.where(securityContext["privileged"] == true) name
+        }
       title: List kubernetes pods with privileged containers
     - query: k8s.pods.all( namespace != "default")
       title: Check if the default namespace is used
@@ -62,9 +66,6 @@ resources:
       title: Query pod security policies
     - query: k8s.networkPolicies { name manifest }
       title: Query network policies
-    refs:
-    - title: Kubernetes Documentation
-      url: https://kubernetes.io/docs/home/
   k8s.admissionrequest:
     fields:
       name: {}
