@@ -738,6 +738,18 @@ func init() {
 			// to override args, implement: initAwsEksCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEksCluster,
 		},
+		"aws.neptune": {
+			// to override args, implement: initAwsNeptune(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsNeptune,
+		},
+		"aws.neptune.cluster": {
+			// to override args, implement: initAwsNeptuneCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsNeptuneCluster,
+		},
+		"aws.neptune.instance": {
+			// to override args, implement: initAwsNeptuneInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsNeptuneInstance,
+		},
 	}
 }
 
@@ -3218,9 +3230,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.snapshot.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsSnapshot).GetStatus()).ToDataRes(types.String)
 	},
-	"aws.rds.snapshot.allocatedStorage": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsRdsSnapshot).GetAllocatedStorage()).ToDataRes(types.Int)
-	},
 	"aws.rds.snapshot.port": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsSnapshot).GetPort()).ToDataRes(types.Int)
 	},
@@ -4555,6 +4564,189 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.eks.cluster.authenticationMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksCluster).GetAuthenticationMode()).ToDataRes(types.String)
+	},
+	"aws.neptune.clusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptune).GetClusters()).ToDataRes(types.Array(types.Resource("aws.neptune.cluster")))
+	},
+	"aws.neptune.instances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptune).GetInstances()).ToDataRes(types.Array(types.Resource("aws.neptune.instance")))
+	},
+	"aws.neptune.cluster.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneCluster).GetArn()).ToDataRes(types.String)
+	},
+	"aws.neptune.cluster.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneCluster).GetName()).ToDataRes(types.String)
+	},
+	"aws.neptune.cluster.clusterIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneCluster).GetClusterIdentifier()).ToDataRes(types.String)
+	},
+	"aws.neptune.cluster.globalClusterIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneCluster).GetGlobalClusterIdentifier()).ToDataRes(types.String)
+	},
+	"aws.neptune.cluster.engine": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneCluster).GetEngine()).ToDataRes(types.String)
+	},
+	"aws.neptune.cluster.engineVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneCluster).GetEngineVersion()).ToDataRes(types.String)
+	},
+	"aws.neptune.cluster.kmsKeyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneCluster).GetKmsKeyId()).ToDataRes(types.String)
+	},
+	"aws.neptune.cluster.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneCluster).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.neptune.cluster.automaticRestartTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneCluster).GetAutomaticRestartTime()).ToDataRes(types.Time)
+	},
+	"aws.neptune.cluster.availabilityZones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneCluster).GetAvailabilityZones()).ToDataRes(types.Array(types.String))
+	},
+	"aws.neptune.cluster.backupRetentionPeriod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneCluster).GetBackupRetentionPeriod()).ToDataRes(types.Int)
+	},
+	"aws.neptune.cluster.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneCluster).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.neptune.cluster.crossAccountClone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneCluster).GetCrossAccountClone()).ToDataRes(types.Bool)
+	},
+	"aws.neptune.cluster.clusterParameterGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneCluster).GetClusterParameterGroup()).ToDataRes(types.String)
+	},
+	"aws.neptune.cluster.subnetGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneCluster).GetSubnetGroup()).ToDataRes(types.String)
+	},
+	"aws.neptune.cluster.clusterResourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneCluster).GetClusterResourceId()).ToDataRes(types.String)
+	},
+	"aws.neptune.cluster.deletionProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneCluster).GetDeletionProtection()).ToDataRes(types.Bool)
+	},
+	"aws.neptune.cluster.earliestRestorableTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneCluster).GetEarliestRestorableTime()).ToDataRes(types.Time)
+	},
+	"aws.neptune.cluster.endpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneCluster).GetEndpoint()).ToDataRes(types.String)
+	},
+	"aws.neptune.cluster.iamDatabaseAuthenticationEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneCluster).GetIamDatabaseAuthenticationEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.neptune.cluster.latestRestorableTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneCluster).GetLatestRestorableTime()).ToDataRes(types.Time)
+	},
+	"aws.neptune.cluster.masterUsername": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneCluster).GetMasterUsername()).ToDataRes(types.String)
+	},
+	"aws.neptune.cluster.multiAZ": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneCluster).GetMultiAZ()).ToDataRes(types.Bool)
+	},
+	"aws.neptune.cluster.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneCluster).GetPort()).ToDataRes(types.Int)
+	},
+	"aws.neptune.cluster.preferredBackupWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneCluster).GetPreferredBackupWindow()).ToDataRes(types.String)
+	},
+	"aws.neptune.cluster.preferredMaintenanceWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneCluster).GetPreferredMaintenanceWindow()).ToDataRes(types.String)
+	},
+	"aws.neptune.cluster.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneCluster).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.neptune.cluster.storageEncrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneCluster).GetStorageEncrypted()).ToDataRes(types.Bool)
+	},
+	"aws.neptune.cluster.storageType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneCluster).GetStorageType()).ToDataRes(types.String)
+	},
+	"aws.neptune.instance.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetArn()).ToDataRes(types.String)
+	},
+	"aws.neptune.instance.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetName()).ToDataRes(types.String)
+	},
+	"aws.neptune.instance.clusterIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetClusterIdentifier()).ToDataRes(types.String)
+	},
+	"aws.neptune.instance.autoMinorVersionUpgrade": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetAutoMinorVersionUpgrade()).ToDataRes(types.Bool)
+	},
+	"aws.neptune.instance.availabilityZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetAvailabilityZone()).ToDataRes(types.String)
+	},
+	"aws.neptune.instance.backupRetentionPeriod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetBackupRetentionPeriod()).ToDataRes(types.Int)
+	},
+	"aws.neptune.instance.instanceClass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetInstanceClass()).ToDataRes(types.String)
+	},
+	"aws.neptune.instance.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.neptune.instance.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetPort()).ToDataRes(types.Int)
+	},
+	"aws.neptune.instance.deletionProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetDeletionProtection()).ToDataRes(types.Bool)
+	},
+	"aws.neptune.instance.enabledCloudwatchLogsExports": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetEnabledCloudwatchLogsExports()).ToDataRes(types.Array(types.String))
+	},
+	"aws.neptune.instance.endpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetEndpoint()).ToDataRes(types.Dict)
+	},
+	"aws.neptune.instance.engine": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetEngine()).ToDataRes(types.String)
+	},
+	"aws.neptune.instance.engineVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetEngineVersion()).ToDataRes(types.String)
+	},
+	"aws.neptune.instance.enhancedMonitoringResourceArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetEnhancedMonitoringResourceArn()).ToDataRes(types.String)
+	},
+	"aws.neptune.instance.iamDatabaseAuthenticationEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetIamDatabaseAuthenticationEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.neptune.instance.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.neptune.instance.kmsKeyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetKmsKeyId()).ToDataRes(types.String)
+	},
+	"aws.neptune.instance.latestRestorableTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetLatestRestorableTime()).ToDataRes(types.Time)
+	},
+	"aws.neptune.instance.masterUsername": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetMasterUsername()).ToDataRes(types.String)
+	},
+	"aws.neptune.instance.monitoringInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetMonitoringInterval()).ToDataRes(types.Int)
+	},
+	"aws.neptune.instance.monitoringRoleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetMonitoringRoleArn()).ToDataRes(types.String)
+	},
+	"aws.neptune.instance.multiAZ": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetMultiAZ()).ToDataRes(types.Bool)
+	},
+	"aws.neptune.instance.preferredBackupWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetPreferredBackupWindow()).ToDataRes(types.String)
+	},
+	"aws.neptune.instance.preferredMaintenanceWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetPreferredMaintenanceWindow()).ToDataRes(types.String)
+	},
+	"aws.neptune.instance.promotionTier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetPromotionTier()).ToDataRes(types.Int)
+	},
+	"aws.neptune.instance.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.neptune.instance.storageEncrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetStorageEncrypted()).ToDataRes(types.Bool)
+	},
+	"aws.neptune.instance.storageType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetStorageType()).ToDataRes(types.String)
+	},
+	"aws.neptune.instance.tdeCredentialArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetTdeCredentialArn()).ToDataRes(types.String)
 	},
 }
 
@@ -8292,10 +8484,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsRdsSnapshot).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.rds.snapshot.allocatedStorage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRdsSnapshot).AllocatedStorage, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
 	"aws.rds.snapshot.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsSnapshot).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -10286,6 +10474,262 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.eks.cluster.authenticationMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEksCluster).AuthenticationMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsNeptune).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.neptune.clusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptune).Clusters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptune).Instances, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsNeptuneCluster).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.neptune.cluster.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneCluster).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.cluster.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneCluster).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.cluster.clusterIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneCluster).ClusterIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.cluster.globalClusterIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneCluster).GlobalClusterIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.cluster.engine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneCluster).Engine, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.cluster.engineVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneCluster).EngineVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.cluster.kmsKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneCluster).KmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.cluster.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneCluster).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.cluster.automaticRestartTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneCluster).AutomaticRestartTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.cluster.availabilityZones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneCluster).AvailabilityZones, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.cluster.backupRetentionPeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneCluster).BackupRetentionPeriod, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.cluster.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneCluster).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.cluster.crossAccountClone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneCluster).CrossAccountClone, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.cluster.clusterParameterGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneCluster).ClusterParameterGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.cluster.subnetGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneCluster).SubnetGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.cluster.clusterResourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneCluster).ClusterResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.cluster.deletionProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneCluster).DeletionProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.cluster.earliestRestorableTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneCluster).EarliestRestorableTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.cluster.endpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneCluster).Endpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.cluster.iamDatabaseAuthenticationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneCluster).IamDatabaseAuthenticationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.cluster.latestRestorableTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneCluster).LatestRestorableTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.cluster.masterUsername": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneCluster).MasterUsername, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.cluster.multiAZ": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneCluster).MultiAZ, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.cluster.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneCluster).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.cluster.preferredBackupWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneCluster).PreferredBackupWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.cluster.preferredMaintenanceWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneCluster).PreferredMaintenanceWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.cluster.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneCluster).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.cluster.storageEncrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneCluster).StorageEncrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.cluster.storageType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneCluster).StorageType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsNeptuneInstance).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.neptune.instance.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.clusterIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).ClusterIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.autoMinorVersionUpgrade": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).AutoMinorVersionUpgrade, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.availabilityZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).AvailabilityZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.backupRetentionPeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).BackupRetentionPeriod, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.instanceClass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).InstanceClass, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.deletionProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).DeletionProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.enabledCloudwatchLogsExports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).EnabledCloudwatchLogsExports, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.endpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).Endpoint, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.engine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).Engine, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.engineVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).EngineVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.enhancedMonitoringResourceArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).EnhancedMonitoringResourceArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.iamDatabaseAuthenticationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).IamDatabaseAuthenticationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.kmsKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).KmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.latestRestorableTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).LatestRestorableTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.masterUsername": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).MasterUsername, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.monitoringInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).MonitoringInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.monitoringRoleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).MonitoringRoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.multiAZ": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).MultiAZ, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.preferredBackupWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).PreferredBackupWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.preferredMaintenanceWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).PreferredMaintenanceWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.promotionTier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).PromotionTier, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.storageEncrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).StorageEncrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.storageType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).StorageType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.tdeCredentialArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).TdeCredentialArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -21236,7 +21680,6 @@ type mqlAwsRdsSnapshot struct {
 	Engine plugin.TValue[string]
 	EngineVersion plugin.TValue[string]
 	Status plugin.TValue[string]
-	AllocatedStorage plugin.TValue[int64]
 	Port plugin.TValue[int64]
 	CreatedAt plugin.TValue[*time.Time]
 }
@@ -21322,10 +21765,6 @@ func (c *mqlAwsRdsSnapshot) GetEngineVersion() *plugin.TValue[string] {
 
 func (c *mqlAwsRdsSnapshot) GetStatus() *plugin.TValue[string] {
 	return &c.Status
-}
-
-func (c *mqlAwsRdsSnapshot) GetAllocatedStorage() *plugin.TValue[int64] {
-	return &c.AllocatedStorage
 }
 
 func (c *mqlAwsRdsSnapshot) GetPort() *plugin.TValue[int64] {
@@ -26611,4 +27050,455 @@ func (c *mqlAwsEksCluster) GetSupportType() *plugin.TValue[string] {
 
 func (c *mqlAwsEksCluster) GetAuthenticationMode() *plugin.TValue[string] {
 	return &c.AuthenticationMode
+}
+
+// mqlAwsNeptune for the aws.neptune resource
+type mqlAwsNeptune struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsNeptuneInternal it will be used here
+	Clusters plugin.TValue[[]interface{}]
+	Instances plugin.TValue[[]interface{}]
+}
+
+// createAwsNeptune creates a new instance of this resource
+func createAwsNeptune(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsNeptune{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.neptune", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsNeptune) MqlName() string {
+	return "aws.neptune"
+}
+
+func (c *mqlAwsNeptune) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsNeptune) GetClusters() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Clusters, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.neptune", c.__id, "clusters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.clusters()
+	})
+}
+
+func (c *mqlAwsNeptune) GetInstances() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Instances, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.neptune", c.__id, "instances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.instances()
+	})
+}
+
+// mqlAwsNeptuneCluster for the aws.neptune.cluster resource
+type mqlAwsNeptuneCluster struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsNeptuneClusterInternal it will be used here
+	Arn plugin.TValue[string]
+	Name plugin.TValue[string]
+	ClusterIdentifier plugin.TValue[string]
+	GlobalClusterIdentifier plugin.TValue[string]
+	Engine plugin.TValue[string]
+	EngineVersion plugin.TValue[string]
+	KmsKeyId plugin.TValue[string]
+	Region plugin.TValue[string]
+	AutomaticRestartTime plugin.TValue[*time.Time]
+	AvailabilityZones plugin.TValue[[]interface{}]
+	BackupRetentionPeriod plugin.TValue[int64]
+	CreatedAt plugin.TValue[*time.Time]
+	CrossAccountClone plugin.TValue[bool]
+	ClusterParameterGroup plugin.TValue[string]
+	SubnetGroup plugin.TValue[string]
+	ClusterResourceId plugin.TValue[string]
+	DeletionProtection plugin.TValue[bool]
+	EarliestRestorableTime plugin.TValue[*time.Time]
+	Endpoint plugin.TValue[string]
+	IamDatabaseAuthenticationEnabled plugin.TValue[bool]
+	LatestRestorableTime plugin.TValue[*time.Time]
+	MasterUsername plugin.TValue[string]
+	MultiAZ plugin.TValue[bool]
+	Port plugin.TValue[int64]
+	PreferredBackupWindow plugin.TValue[string]
+	PreferredMaintenanceWindow plugin.TValue[string]
+	Status plugin.TValue[string]
+	StorageEncrypted plugin.TValue[bool]
+	StorageType plugin.TValue[string]
+}
+
+// createAwsNeptuneCluster creates a new instance of this resource
+func createAwsNeptuneCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsNeptuneCluster{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.neptune.cluster", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsNeptuneCluster) MqlName() string {
+	return "aws.neptune.cluster"
+}
+
+func (c *mqlAwsNeptuneCluster) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsNeptuneCluster) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsNeptuneCluster) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsNeptuneCluster) GetClusterIdentifier() *plugin.TValue[string] {
+	return &c.ClusterIdentifier
+}
+
+func (c *mqlAwsNeptuneCluster) GetGlobalClusterIdentifier() *plugin.TValue[string] {
+	return &c.GlobalClusterIdentifier
+}
+
+func (c *mqlAwsNeptuneCluster) GetEngine() *plugin.TValue[string] {
+	return &c.Engine
+}
+
+func (c *mqlAwsNeptuneCluster) GetEngineVersion() *plugin.TValue[string] {
+	return &c.EngineVersion
+}
+
+func (c *mqlAwsNeptuneCluster) GetKmsKeyId() *plugin.TValue[string] {
+	return &c.KmsKeyId
+}
+
+func (c *mqlAwsNeptuneCluster) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsNeptuneCluster) GetAutomaticRestartTime() *plugin.TValue[*time.Time] {
+	return &c.AutomaticRestartTime
+}
+
+func (c *mqlAwsNeptuneCluster) GetAvailabilityZones() *plugin.TValue[[]interface{}] {
+	return &c.AvailabilityZones
+}
+
+func (c *mqlAwsNeptuneCluster) GetBackupRetentionPeriod() *plugin.TValue[int64] {
+	return &c.BackupRetentionPeriod
+}
+
+func (c *mqlAwsNeptuneCluster) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsNeptuneCluster) GetCrossAccountClone() *plugin.TValue[bool] {
+	return &c.CrossAccountClone
+}
+
+func (c *mqlAwsNeptuneCluster) GetClusterParameterGroup() *plugin.TValue[string] {
+	return &c.ClusterParameterGroup
+}
+
+func (c *mqlAwsNeptuneCluster) GetSubnetGroup() *plugin.TValue[string] {
+	return &c.SubnetGroup
+}
+
+func (c *mqlAwsNeptuneCluster) GetClusterResourceId() *plugin.TValue[string] {
+	return &c.ClusterResourceId
+}
+
+func (c *mqlAwsNeptuneCluster) GetDeletionProtection() *plugin.TValue[bool] {
+	return &c.DeletionProtection
+}
+
+func (c *mqlAwsNeptuneCluster) GetEarliestRestorableTime() *plugin.TValue[*time.Time] {
+	return &c.EarliestRestorableTime
+}
+
+func (c *mqlAwsNeptuneCluster) GetEndpoint() *plugin.TValue[string] {
+	return &c.Endpoint
+}
+
+func (c *mqlAwsNeptuneCluster) GetIamDatabaseAuthenticationEnabled() *plugin.TValue[bool] {
+	return &c.IamDatabaseAuthenticationEnabled
+}
+
+func (c *mqlAwsNeptuneCluster) GetLatestRestorableTime() *plugin.TValue[*time.Time] {
+	return &c.LatestRestorableTime
+}
+
+func (c *mqlAwsNeptuneCluster) GetMasterUsername() *plugin.TValue[string] {
+	return &c.MasterUsername
+}
+
+func (c *mqlAwsNeptuneCluster) GetMultiAZ() *plugin.TValue[bool] {
+	return &c.MultiAZ
+}
+
+func (c *mqlAwsNeptuneCluster) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlAwsNeptuneCluster) GetPreferredBackupWindow() *plugin.TValue[string] {
+	return &c.PreferredBackupWindow
+}
+
+func (c *mqlAwsNeptuneCluster) GetPreferredMaintenanceWindow() *plugin.TValue[string] {
+	return &c.PreferredMaintenanceWindow
+}
+
+func (c *mqlAwsNeptuneCluster) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsNeptuneCluster) GetStorageEncrypted() *plugin.TValue[bool] {
+	return &c.StorageEncrypted
+}
+
+func (c *mqlAwsNeptuneCluster) GetStorageType() *plugin.TValue[string] {
+	return &c.StorageType
+}
+
+// mqlAwsNeptuneInstance for the aws.neptune.instance resource
+type mqlAwsNeptuneInstance struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsNeptuneInstanceInternal it will be used here
+	Arn plugin.TValue[string]
+	Name plugin.TValue[string]
+	ClusterIdentifier plugin.TValue[string]
+	AutoMinorVersionUpgrade plugin.TValue[bool]
+	AvailabilityZone plugin.TValue[string]
+	BackupRetentionPeriod plugin.TValue[int64]
+	InstanceClass plugin.TValue[string]
+	Status plugin.TValue[string]
+	Port plugin.TValue[int64]
+	DeletionProtection plugin.TValue[bool]
+	EnabledCloudwatchLogsExports plugin.TValue[[]interface{}]
+	Endpoint plugin.TValue[interface{}]
+	Engine plugin.TValue[string]
+	EngineVersion plugin.TValue[string]
+	EnhancedMonitoringResourceArn plugin.TValue[string]
+	IamDatabaseAuthenticationEnabled plugin.TValue[bool]
+	CreatedAt plugin.TValue[*time.Time]
+	KmsKeyId plugin.TValue[string]
+	LatestRestorableTime plugin.TValue[*time.Time]
+	MasterUsername plugin.TValue[string]
+	MonitoringInterval plugin.TValue[int64]
+	MonitoringRoleArn plugin.TValue[string]
+	MultiAZ plugin.TValue[bool]
+	PreferredBackupWindow plugin.TValue[string]
+	PreferredMaintenanceWindow plugin.TValue[string]
+	PromotionTier plugin.TValue[int64]
+	Region plugin.TValue[string]
+	StorageEncrypted plugin.TValue[bool]
+	StorageType plugin.TValue[string]
+	TdeCredentialArn plugin.TValue[string]
+}
+
+// createAwsNeptuneInstance creates a new instance of this resource
+func createAwsNeptuneInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsNeptuneInstance{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.neptune.instance", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsNeptuneInstance) MqlName() string {
+	return "aws.neptune.instance"
+}
+
+func (c *mqlAwsNeptuneInstance) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsNeptuneInstance) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsNeptuneInstance) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsNeptuneInstance) GetClusterIdentifier() *plugin.TValue[string] {
+	return &c.ClusterIdentifier
+}
+
+func (c *mqlAwsNeptuneInstance) GetAutoMinorVersionUpgrade() *plugin.TValue[bool] {
+	return &c.AutoMinorVersionUpgrade
+}
+
+func (c *mqlAwsNeptuneInstance) GetAvailabilityZone() *plugin.TValue[string] {
+	return &c.AvailabilityZone
+}
+
+func (c *mqlAwsNeptuneInstance) GetBackupRetentionPeriod() *plugin.TValue[int64] {
+	return &c.BackupRetentionPeriod
+}
+
+func (c *mqlAwsNeptuneInstance) GetInstanceClass() *plugin.TValue[string] {
+	return &c.InstanceClass
+}
+
+func (c *mqlAwsNeptuneInstance) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsNeptuneInstance) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlAwsNeptuneInstance) GetDeletionProtection() *plugin.TValue[bool] {
+	return &c.DeletionProtection
+}
+
+func (c *mqlAwsNeptuneInstance) GetEnabledCloudwatchLogsExports() *plugin.TValue[[]interface{}] {
+	return &c.EnabledCloudwatchLogsExports
+}
+
+func (c *mqlAwsNeptuneInstance) GetEndpoint() *plugin.TValue[interface{}] {
+	return &c.Endpoint
+}
+
+func (c *mqlAwsNeptuneInstance) GetEngine() *plugin.TValue[string] {
+	return &c.Engine
+}
+
+func (c *mqlAwsNeptuneInstance) GetEngineVersion() *plugin.TValue[string] {
+	return &c.EngineVersion
+}
+
+func (c *mqlAwsNeptuneInstance) GetEnhancedMonitoringResourceArn() *plugin.TValue[string] {
+	return &c.EnhancedMonitoringResourceArn
+}
+
+func (c *mqlAwsNeptuneInstance) GetIamDatabaseAuthenticationEnabled() *plugin.TValue[bool] {
+	return &c.IamDatabaseAuthenticationEnabled
+}
+
+func (c *mqlAwsNeptuneInstance) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsNeptuneInstance) GetKmsKeyId() *plugin.TValue[string] {
+	return &c.KmsKeyId
+}
+
+func (c *mqlAwsNeptuneInstance) GetLatestRestorableTime() *plugin.TValue[*time.Time] {
+	return &c.LatestRestorableTime
+}
+
+func (c *mqlAwsNeptuneInstance) GetMasterUsername() *plugin.TValue[string] {
+	return &c.MasterUsername
+}
+
+func (c *mqlAwsNeptuneInstance) GetMonitoringInterval() *plugin.TValue[int64] {
+	return &c.MonitoringInterval
+}
+
+func (c *mqlAwsNeptuneInstance) GetMonitoringRoleArn() *plugin.TValue[string] {
+	return &c.MonitoringRoleArn
+}
+
+func (c *mqlAwsNeptuneInstance) GetMultiAZ() *plugin.TValue[bool] {
+	return &c.MultiAZ
+}
+
+func (c *mqlAwsNeptuneInstance) GetPreferredBackupWindow() *plugin.TValue[string] {
+	return &c.PreferredBackupWindow
+}
+
+func (c *mqlAwsNeptuneInstance) GetPreferredMaintenanceWindow() *plugin.TValue[string] {
+	return &c.PreferredMaintenanceWindow
+}
+
+func (c *mqlAwsNeptuneInstance) GetPromotionTier() *plugin.TValue[int64] {
+	return &c.PromotionTier
+}
+
+func (c *mqlAwsNeptuneInstance) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsNeptuneInstance) GetStorageEncrypted() *plugin.TValue[bool] {
+	return &c.StorageEncrypted
+}
+
+func (c *mqlAwsNeptuneInstance) GetStorageType() *plugin.TValue[string] {
+	return &c.StorageType
+}
+
+func (c *mqlAwsNeptuneInstance) GetTdeCredentialArn() *plugin.TValue[string] {
+	return &c.TdeCredentialArn
 }
