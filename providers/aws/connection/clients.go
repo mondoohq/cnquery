@@ -778,8 +778,8 @@ func (t *AwsConnection) Neptune(region string) *neptune.Client {
 	return client
 }
 
-// TimestreamLifeAnalytics returns a Timestream client for Life Analytics
-func (t *AwsConnection) TimestreamLifeAnalytics(region string) *timestreamwrite.Client {
+// TimestreamLiveAnalytics returns a Timestream client for Live Analytics
+func (t *AwsConnection) TimestreamLiveAnalytics(region string) *timestreamwrite.Client {
 	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
 		region = t.cfg.Region

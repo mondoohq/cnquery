@@ -3462,16 +3462,16 @@ private aws.neptune.instance @defaults("arn name status"){
   tdeCredentialArn string
 }
 
-// Amazon Timestream for LifeAnalytics
-aws.timestream.lifeanalytics @defaults("databases") {
+// Amazon Timestream for LiveAnalytics
+aws.timestream.liveanalytics @defaults("databases") {
   // List of databases
-  databases() []aws.timestream.lifeanalytics.database
+  databases() []aws.timestream.liveanalytics.database
   // List of database tables
-  tables() []aws.timestream.lifeanalytics.table
+  tables() []aws.timestream.liveanalytics.table
 }
 
-// Amazon Timestream for LifeAnalytics database
-private aws.timestream.lifeanalytics.database @defaults("name region") {
+// Amazon Timestream for LiveAnalytics database
+private aws.timestream.liveanalytics.database @defaults("name region") {
   // ARN for the database
   arn string
   // Name of the database
@@ -3488,8 +3488,8 @@ private aws.timestream.lifeanalytics.database @defaults("name region") {
   tableCount int
 }
 
-// Amazon Timestream for LifeAnalytics table
-private aws.timestream.lifeanalytics.table @defaults("name region") {
+// Amazon Timestream for LiveAnalytics table
+private aws.timestream.liveanalytics.table @defaults("name region") {
   // ARN for the table
   arn string
   // Name of the table

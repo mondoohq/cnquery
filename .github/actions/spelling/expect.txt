@@ -48,7 +48,7 @@ istio
 jira
 jsonbody
 labelmatchstatement
-lifeanalytics
+liveanalytics
 loggingservice
 managedrulegroupstatement
 managedzone
