@@ -21,7 +21,7 @@ func (a *mqlMicrosoftGroup) members() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	mqlMicrsoftResource := msResource.(*mqlMicrosoft)
+	mqlMicrosoftResource := msResource.(*mqlMicrosoft)
 
 	groupId := a.Id.Data
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
