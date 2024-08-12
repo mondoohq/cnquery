@@ -17,6 +17,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/id/hostname"
 	"go.mondoo.com/cnquery/v11/providers/os/id/ids"
 	"go.mondoo.com/cnquery/v11/providers/os/id/machineid"
+	"go.mondoo.com/cnquery/v11/providers/os/id/serialnumber"
 	"go.mondoo.com/cnquery/v11/providers/os/id/sshhostkey"
 )
 
@@ -52,7 +53,7 @@ func IdentifyPlatform(conn shared.Connection, p *inventory.Platform, idDetectors
 		// fallback to default id detectors
 		switch conn.Type() {
 		case shared.Type_Local:
-			idDetectors = []string{ids.IdDetector_Hostname, ids.IdDetector_CloudDetect}
+			idDetectors = []string{ids.IdDetector_Hostname, ids.IdDetector_MachineSerial, ids.IdDetector_CloudDetect}
 		case shared.Type_SSH:
 			idDetectors = []string{ids.IdDetector_Hostname, ids.IdDetector_CloudDetect, ids.IdDetector_SshHostkey}
 		case shared.Type_Tar, shared.Type_FileSystem, shared.Type_DockerSnapshot:
@@ -159,6 +160,17 @@ func GatherPlatformInfo(conn shared.Connection, pf *inventory.Platform, idDetect
 				Name:               "",
 				RelatedPlatformIDs: []string{},
 			}, hostErr
+		}
+		return &PlatformInfo{}, nil
+	case idDetector == ids.IdDetector_MachineSerial:
+		serial, err := serialnumber.SerialNumber(conn, pf)
+		if err == nil && len(serial) > 0 {
+			identifier = "//platformid.api.mondoo.app/serialnumber/" + serial
+			return &PlatformInfo{
+				IDs:                []string{identifier},
+				Name:               "",
+				RelatedPlatformIDs: []string{},
+			}, nil
 		}
 		return &PlatformInfo{}, nil
 	case idDetector == ids.IdDetector_AwsEcs:
