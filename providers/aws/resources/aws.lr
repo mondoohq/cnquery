@@ -36,7 +36,7 @@ aws.account @defaults("id") {
 aws.organization @defaults("arn masterAccountEmail") {
   // ARN of the organization
   arn string
-  // Specifies the functionality available to org: ALL or CONSOLIDATED_BILLING
+  // Functionality available to org: ALL or CONSOLIDATED_BILLING
   featureSet string
   // ID of the organization's master account
   masterAccountId string
@@ -120,13 +120,13 @@ private aws.vpc.subnet @defaults("id cidrs region availabilityZone defaultForAva
   cidrs string
   // Whether instances launched in this subnet receive public IPv4 addresses
   mapPublicIpOnLaunch bool
-  // The availability zone where this subnet is located
+  // Availability zone where this subnet is located
   availabilityZone string
   // Whether this is the default subnet for the availability zone
   defaultForAvailabilityZone bool
   // Whether a network interface created in this subnet (including a network interface created by RunInstances ) receives an IPv6 address
   assignIpv6AddressOnCreation bool
-  // The state of the subnet: pending or available
+  // State of the subnet: pending or available
   state string
   // Region in which the VPC subnet exists
   region string
@@ -142,11 +142,11 @@ private aws.vpc.endpoint @defaults("id type region") {
   vpc string
   // Region in which the VPC endpoint exists
   region string
-  // The name of the endpoint service
+  // Endpoint service name
   serviceName string
-  // The policy document associated with the endpoint, if applicable
+  // Policy document associated with the endpoint, if applicable
   policyDocument string
-  // The subnets for the (interface) endpoint
+  // Subnets for the (interface) endpoint
   subnets []string
   // Whether to associate a private hosted zone with the specified VPC
   privateDnsEnabled bool
@@ -170,15 +170,15 @@ private aws.vpc.flowlog @defaults("id region status") {
   tags map[string]string
   // Creation timestamp
   createdAt time
-  // The destination for the flow log data
+  // Destination for the flow log data
   destination string
-  // The destination type for the flow log data
+  // Destination type for the flow log data
   destinationType string
-   // The delivery log status for the flow log data
+   // Delivery log status for the flow log data
   deliverLogsStatus string
-  // The maximum interval of time during which a flow of packets is captured and aggregated into a flow log record. The possible values are 60 seconds (1 minute) or 600 seconds (10 minutes).
+  // Maximum interval of time during which a flow of packets is captured and aggregated into a flow log record: 60 seconds (1 minute) or 600 seconds (10 minutes)
   maxAggregationInterval int
-  // The type of traffic to monitor. ACCEPT, ALL, and REJECT
+  // Type of traffic to monitor: ACCEPT, ALL, and REJECT
   trafficType string
 }
 
@@ -240,7 +240,7 @@ private aws.waf.rule @defaults("name") {
   statement aws.waf.rule.statement
   // Part of the rule that tells WAF what to do with a web request when it matches the criteria defined in the rule
   action aws.waf.rule.action
-  // The ARN of either rule ACL or the RuleGroup that this rule belongs to
+  // ARN of either rule ACL or the RuleGroup that this rule belongs to
   belongsTo string
 }
 
@@ -414,7 +414,7 @@ private aws.waf.rule.statement.sizeconstraintstatement {
   ruleName string
   // ID of the statement
   statementID string
-  // The size that triggers this statement
+  // Size that triggers this statement
   size int
   // How to compare the size
   comparisonOperator string
@@ -555,7 +555,7 @@ private aws.waf.rule.fieldtomatch.jsonbody {
   matchPattern aws.waf.rule.fieldtomatch.jsonbody.matchpattern
 }
 
-// The pattern to match
+// Pattern to match
 private aws.waf.rule.fieldtomatch.jsonbody.matchpattern {
   // Name of the rule this statement belongs to
   ruleName string
@@ -581,7 +581,7 @@ private aws.waf.rule.fieldtomatch.headers {
   matchPattern aws.waf.rule.fieldtomatch.headers.matchpattern
 }
 
-// The pattern to match
+// pattern to match
 private aws.waf.rule.fieldtomatch.headers.matchpattern {
   // Name of the rule this statement belongs to
   ruleName string
@@ -817,7 +817,7 @@ private aws.iam.policy @defaults("arn name") {
   description() string
   // Whether the policy can be attached
   isAttachable() bool
-  // The number of principal entities (users, groups, and roles) that the policy is attached to
+  // Number of principal entities (users, groups, and roles) that the policy is attached to
   attachmentCount() int
   // Time when the policy was created
   createDate() time
@@ -866,7 +866,7 @@ private aws.iam.role @defaults("arn name") {
   tags map[string]string
   // Time when the role was created
   createDate time
-  // The policy document that grants an entity permission to assume the role
+  // Policy document that grants an entity permission to assume the role
   assumeRolePolicyDocument dict
 }
 
@@ -916,7 +916,7 @@ private aws.iam.accessanalyzer.analyzer @defaults("name type region status") {
   region string
   // Tags for the analyzer
   tags map[string]string
-  // The name of the last resource that was analyzed
+  // Name of the last resource that was analyzed
   lastResourceAnalyzed string
   // Last scan timestamp
   lastResourceAnalyzedAt time
@@ -1048,11 +1048,11 @@ private aws.es.domain @defaults("arn name") {
   region string
   // Tags for the domain
   tags map[string]string
-  // The version of Elasticsearch running
+  // Version of Elasticsearch running
   elasticsearchVersion string
-  // The Elasticsearch domain ID
+  // Elasticsearch domain ID
   domainId string
-  // The Elasticsearch domain name
+  // Elasticsearch domain name
   domainName string
 }
 
@@ -1082,17 +1082,17 @@ private aws.acm.certificate @defaults("domainName issuer createdAt notAfter") {
   certificate() network.certificate
   // Tags associated with the certificate
   tags map[string]string
-  // The algorithm that was used to generate the public-private key pair
+  // Algorithm used to generate the public-private key pair
   keyAlgorithm string
-  // The serial number of the certificate
+  // Serial number of the certificate
   serial string
-  // The source of the certificate: AMAZON_ISSUED or IMPORTED
+  // Source of the certificate: AMAZON_ISSUED or IMPORTED
   source string
-  // The name of the certificate authority that issued and signed the certificate
+  // Name of the certificate authority that issued and signed the certificate
   issuer string
-  // The time at which the certificate was issued (exists only when the certificate source is AMAZON_ISSUED)
+  // Time at which the certificate was issued (exists only when the certificate source is AMAZON_ISSUED)
   issuedAt time
-  // The date and time when the certificate was imported (exists only when the certificate source is IMPORTED)
+  // Date and time when the certificate was imported (exists only when the certificate source is IMPORTED)
   importedAt time
 }
 
@@ -1114,31 +1114,31 @@ private aws.autoscaling.group @defaults("name region minSize maxSize") {
   healthCheckType string
   // Tags for the asg
   tags map[string]string
-  // The region of the Auto Scaling group
+  // Region of the Auto Scaling group
   region string
-  // The minimum number of instances to scale down to
+  // Minimum number of instances to scale down to
   minSize int
-  // The maximum number of instances to scale up to
+  // Maximum number of instances to scale up to
   maxSize int
-  // The time to wait after scaling up / down before the next scaling event is started
+  // Time to wait after scaling up or down before starting the next scaling event
   defaultCooldown int
-  // The name of the launch configuration
+  // Launch configuration name
   launchConfigurationName string
-  // The grace period in seconds before an instance with a failing health check will be replaced
+  // Grace period in seconds before an instance with a failing health check is replaced
   healthCheckGracePeriod int
   // Time when the autoscaling group was created
   createdAt time
-  // The maximum amount of time, in seconds, that an instance can be in service
+  // Maximum amount of time, in seconds, that an instance can be in service
   maxInstanceLifetime int
-  // The desired size of the group
+  // Desired size of the group
   desiredCapacity int
   // List of availability zones associated with the group
   availabilityZones []string
   // Whether Capacity Rebalancing is enabled
   capacityRebalance bool
-  // The duration of the default instance warmup, in seconds
+  // Duration of the default instance warmup, in seconds
   defaultInstanceWarmup int
-  // The EC2 instances associated with the group
+  // EC2 instances associated with the group
   instances() []aws.ec2.instance
 }
 
@@ -1202,7 +1202,7 @@ private aws.elb.loadbalancer @defaults("name region elbType scheme vpcId dnsName
   scheme string
   // A list of attributes for the load balancer
   attributes() []dict
-  // Deprecated. Use vpc instead
+  // Deprecated: Use `vpc` instead
   vpcId string
   // Date and time when the load balancer was created
   createdTime time
@@ -1210,11 +1210,11 @@ private aws.elb.loadbalancer @defaults("name region elbType scheme vpcId dnsName
   availabilityZones []string
   // VPC security groups for the load balancer
   securityGroups []aws.ec2.securitygroup
-  // The ID of the Amazon Route 53 hosted zone associated with the load balancer
+  // ID of the Amazon Route 53 hosted zone associated with the load balancer
   hostedZoneId string
   // Region where the load balancer exists
   region string
-  // The type of ELB. Possible values are `network`, `application`, `gateway`, or `classic`
+  // Type of ELB. Possible values are `network`, `application`, `gateway`, or `classic`
   elbType string
   // VPC where the load balancer is located
   vpc aws.vpc
@@ -1326,15 +1326,15 @@ private aws.secretsmanager.secret @defaults("arn name") {
   createdAt time
   // Description of the secret
   description string
-  // The last date the secret was changed
+  // Last date the secret was changed
   lastChangedDate time
-  // The last date the secret was automatically rotated
+  // Last date the secret was automatically rotated
   lastRotatedDate time
   // Name of the secret
   name string
-  // The date of the next secret rotation
+  // Date of the next secret rotation
   nextRotationDate time
-  // The primary region of the secret
+  // Primary region of the secret
   primaryRegion string
   // Whether rotation is enabled for the secret
   rotationEnabled bool
@@ -1375,7 +1375,7 @@ private aws.ecs.cluster @defaults("name region status runningTasksCount pendingT
   tasks() []aws.ecs.task
   // List of AWS ECS container instances
   containerInstances() []aws.ecs.instance
-  // The region where the cluster is located
+  // Region where the cluster is located
   region string
 }
 
@@ -1578,7 +1578,7 @@ private aws.cloudwatch.loggroup @defaults("arn") {
   kmsKey() aws.kms.key
   // Region where the log group is stored
   region string
-  // The number of days to retain the log events in the specified log group
+  // Number of days to retain the log events in the specified log group
   retentionInDays int
 }
 
@@ -1622,7 +1622,7 @@ private aws.cloudfront.distribution @defaults("domainName status") {
   isIPV6Enabled bool
   // Whether the distribution is enabled
   enabled bool
-  // The price class of the distribution
+  // Price class of the distribution
   priceClass string
   // CNAMEs aliases if any for this distribution
   cnames []string
@@ -1822,7 +1822,7 @@ private aws.applicationautoscaling.target @defaults("arn") {
   maxCapacity int
   // suspendedState for the auto scaling target
   suspendedState dict
-  // The creation date for the auto scaling target
+  // Creation date for the auto scaling target
   createdAt time
 }
 
@@ -1840,13 +1840,13 @@ private aws.backup.vault @defaults("name region") {
   name string
   // List of recovery points stored in the backup vault
   recoveryPoints() []aws.backup.vaultRecoveryPoint
-  // The region of the vault
+  // Region of the vault
   region string
   // Date the backup vault was created
   createdAt time
   // Whether the backup is locked
   locked bool
-  // The ARN of the encryption key
+  // ARN of the encryption key
   encryptionKeyArn string
 }
 
@@ -1944,7 +1944,7 @@ private aws.dynamodb.globaltable @defaults("name") {
 private aws.dynamodb.table @defaults("name region") {
   // ARN for the table
   arn string
-  // The table ID
+  // Table ID
   id string
   // Table name
   name string
@@ -1960,15 +1960,15 @@ private aws.dynamodb.table @defaults("name region") {
   continuousBackups() dict
   // Tags for the table
   tags() map[string]string
-  // The creation time of the table
+  // Creation time of the table
   createdTime time
   // Whether deletion protection is enabled
   deletionProtectionEnabled bool
-  // The global table version
+  // Global table version
   globalTableVersion string
   // Number of items in the table
   items int
-  // The total size of the specified table, in bytes. DynamoDB updates this value approximately every six hours.
+  // Total size of the specified table, in bytes. DynamoDB updates this value approximately every six hours.
   sizeBytes int
   // Latest stream for this table
   latestStreamArn string
@@ -2008,7 +2008,7 @@ private aws.sqs.queue {
   region string
   // Whether SSE is enabled for the queue
   sqsManagedSseEnabled() bool
-  // The type of queue: Fifo or Standard
+  // Type of queue: Fifo or Standard
   queueType() string
   // URL for the queue
   url string
@@ -2018,7 +2018,7 @@ private aws.sqs.queue {
 
 // Amazon Relational Database Service (RDS)
 aws.rds {
-  // Deprecated. Use `instances` instead
+  // Deprecated: Use `instances` instead
   dbInstances() []aws.rds.dbinstance
   // List of database instances
   instances() []aws.rds.dbinstance
@@ -2070,17 +2070,17 @@ private aws.rds.dbcluster @defaults("id region") {
   tags map[string]string
   // Whether the cluster is encrypted
   storageEncrypted bool
-  // The amount of storage, in GiB, provisioned on the cluster
+  // Amount of storage, in GiB, provisioned on the cluster
   storageAllocated int
-  // The storage IOPS provisioned on the cluster
+  // Storage IOPS provisioned on the cluster
   storageIops int
-  // The type of storage provisioned on the cluster
+  // Type of storage provisioned on the cluster
   storageType string
   // Current state of the cluster
   status string
-  // The creation date of the RDS cluster
+  // Creation date of the RDS cluster
   createdTime time
-  // Number of days for which automated snapshots are retained
+  // Number of days automated snapshots are retained
   backupRetentionPeriod int
   // Whether minor version patches are applied automatically
   autoMinorVersionUpgrade bool
@@ -2088,7 +2088,7 @@ private aws.rds.dbcluster @defaults("id region") {
   clusterDbInstanceClass string
   // Name of the database engine for this database cluster
   engine string
-  // The version of the database engine for this DB cluster
+  // Version of the database engine for this DB cluster
   engineVersion string
   // Whether the cluster is publicly accessible
   publiclyAccessible bool
@@ -2100,19 +2100,19 @@ private aws.rds.dbcluster @defaults("id region") {
   securityGroups() []aws.ec2.securitygroup
   // List of Availability Zones (AZs) where instances in the database cluster can be created
   availabilityZones []string
-  // The port that the database engine is listening on
+  // Port on which the database engine is listening
   port int
-  // The connection endpoint for the primary instance of the database cluster
+  // Connection endpoint for the primary instance of the database cluster
   endpoint string
-  // The cluster hosted zone ID
+  // Cluster hosted zone ID
   hostedZoneId string
-  // The master username for the database
+  // Master username for the database
   masterUsername string
-  // The latest time to which a database can be restored with point-in-time restore
+  // Latest time to which a database can be restored with point-in-time restore
   latestRestorableTime time
   // Backup setting for the database cluster
   backupSettings() []aws.rds.backupsetting
-  // The life cycle type for the database engine. By default, this value is set to `open-source-rds-extended-support`, which enrolls your DB engine into Amazon RDS Extended Support. At the end of standard support, you can avoid charges for Extended Support by setting the value to `open-source-rds-extended-support-disabled`. In this case, creating the DB engine will fail if the DB major version is past its end of standard support date.
+  // Life cycle type for the database engine. By default, this value is set to `open-source-rds-extended-support`, which enrolls your DB engine into Amazon RDS Extended Support. At the end of standard support, you can avoid charges for Extended Support by setting the value to `open-source-rds-extended-support-disabled`. In this case, creating the DB engine will fail if the DB major version is past its end of standard support date.
   engineLifecycleSupport string
   // Expiration date for the instance certificate
   certificateExpiresAt time
@@ -2152,17 +2152,17 @@ private aws.rds.snapshot @defaults("id region type encrypted createdAt") {
   isClusterSnapshot bool
   // Tags for the snapshot
   tags map[string]string
-  // The snapshot DB engine
+  // Snapshot DB engine
   engine string
-  // The snapshot DB engine version
+  // Snapshot DB engine version
   engineVersion string
-  // The snapshot status
+  // Snapshot status
   status string
-  // The port that the database instance or cluster listens on
+  // Port that the database instance or cluster listens on
   port int
   // Allocated storage size in gibibytes (GiB)
   allocatedStorage int
-  // The creation date of the snapshot
+  // Creation date of the snapshot
   createdAt time
 }
 
@@ -2174,17 +2174,17 @@ private aws.rds.dbinstance @defaults("id region engine engineVersion") {
   id string
   // Name of the database instance
   name string
-  // Number of days for which automated snapshots are retained
+  // Number of days automated snapshots are retained
   backupRetentionPeriod int
   // List of snapshots for the database instance
   snapshots() []aws.rds.snapshot
   // Whether the instance is encrypted
   storageEncrypted bool
-  // The amount of storage, in GiB, provisioned on the instance
+  // Amount of storage, in GiB, provisioned on the instance
   storageAllocated int
-  // The storage IOPS provisioned on the instance
+  // Storage IOPS provisioned on the instance
   storageIops int
-  // The type of storage provisioned on the instance
+  // Type of storage provisioned on the instance
   storageType string
   // Region where the instance exists
   region string
@@ -2210,7 +2210,7 @@ private aws.rds.dbinstance @defaults("id region engine engineVersion") {
   dbInstanceIdentifier string
   // Name of the database engine for this database instance
   engine string
-  // The version of the database engine for this database instance
+  // Version of the database engine for this database instance
   engineVersion string
   // List of VPC security group elements that the database instance belongs to
   securityGroups() []aws.ec2.securitygroup
@@ -2218,21 +2218,21 @@ private aws.rds.dbinstance @defaults("id region engine engineVersion") {
   status string
   // Whether minor version patches are applied automatically
   autoMinorVersionUpgrade bool
-  // The creation date of the RDS instance
+  // Creation date of the RDS instance
   createdTime time
-  // The port that the database instance listens on. If the database instance is part of a DB cluster, this can be a different port than the DB cluster port.
+  // Port that the database instance listens on. If the database instance is part of a DB cluster, this can be a different port than the DB cluster port.
   port int
-  // The connection endpoint for the database instance
+  // Connection endpoint for the database instance
   endpoint string
-  // The master username for the database instance
+  // Master username for the database instance
   masterUsername string
-  // The latest time to which a database can be restored with point-in-time restore
+  // Latest time to which a database can be restored with point-in-time restore
   latestRestorableTime time
   // Backup setting for the database instance
   backupSettings() []aws.rds.backupsetting
   // Subnet for the RDS instance
   subnets() []aws.vpc.subnet
-  // The life cycle type for the database engine. By default, this value is set to `open-source-rds-extended-support`, which enrolls your DB engine into Amazon RDS Extended Support. At the end of standard support, you can avoid charges for Extended Support by setting the value to `open-source-rds-extended-support-disabled`. In this case, creating the DB engine will fail if the DB major version is past its end of standard support date.
+  // Life cycle type for the database engine. By default, this value is set to `open-source-rds-extended-support`, which enrolls your DB engine into Amazon RDS Extended Support. At the end of standard support, you can avoid charges for Extended Support by setting the value to `open-source-rds-extended-support-disabled`. In this case, creating the DB engine will fail if the DB major version is past its end of standard support date.
   engineLifecycleSupport string
   // Expiration date for the instance certificate
   certificateExpiresAt time
@@ -2276,7 +2276,7 @@ private aws.rds.pendingMaintenanceAction {
 
 // Amazon ElastiCache
 aws.elasticache @defaults("cacheClusters") {
-    // Deprecated. Use `cacheClusters` instead.
+    // Deprecated: Use `cacheClusters` instead.
   clusters() []dict
   // List of cache clusters
   cacheClusters() []aws.elasticache.cluster
@@ -2296,45 +2296,45 @@ private aws.elasticache.cluster @defaults("cacheClusterId region nodeType engine
   authTokenLastModifiedDate time
   // Whether the cluster is configured to auto-upgrade to the next minor version (Redis 6.0 or later)
   autoMinorVersionUpgrade bool
-  // The date and time when the cluster was created
+  // Date and time when the cluster was created
   cacheClusterCreateTime time
-  // The user-supplied unique key that identifies the cluster
+  // User-supplied unique key that identifies the cluster
   cacheClusterId string
-  // The current state of the cluster: available, creating, deleted, deleting, incompatible-network, modifying, rebooting cluster nodes, restore-failed, or snapshotting
+  // Current state of the cluster: available, creating, deleted, deleting, incompatible-network, modifying, rebooting cluster nodes, restore-failed, or snapshotting
   cacheClusterStatus string
-  // The name of the compute and memory capacity node type for the cluster
+  // Name of the compute and memory capacity node type for the cluster
   cacheNodeType string
   // A list of cache nodes that are members of the cluster
   cacheNodes []string
   // A list of cache security group elements, composed of name and status sub-elements
   cacheSecurityGroups []string
-  // The name of the cache subnet group associated with the cluster
+  // Name of the cache subnet group associated with the cluster
   cacheSubnetGroupName string
-  // The URL of the web page where you can download the latest ElastiCache client library
+  // URL of the web page where you can download the latest ElastiCache client library
   clientDownloadLandingPage string
-  // The node type for the nodes in the cluster
+  // Node type for the nodes in the cluster
   nodeType string
-  // The name of the cache engine used for this cluster: Memcached or Redis
+  // Name of the cache engine used for this cluster: Memcached or Redis
   engine string
-  // The version of the cache engine that is used in this cluster
+  // Version of the cache engine that is used in this cluster
   engineVersion string
-  // The network type associated with the cluster: ipv4 or ipv6
+  // Network type associated with the cluster: ipv4 or ipv6
   ipDiscovery string
-  // The log delivery configurations being modified
+  // Log delivery configurations being modified
   logDeliveryConfigurations []dict
-  // The supported network connection type for the cluster: ipv4, ipv6, or dual_stack
+  // Supported network connection type for the cluster: ipv4, ipv6, or dual_stack
   networkType string
   // Describes a notification topic and its status
   notificationConfiguration string
-  // The number of cache nodes in the cluster
+  // Number of cache nodes in the cluster
   numCacheNodes int
-  // The name of the availability zone in which the cluster is located or "Multiple" if the cache nodes are located in different availability zones
+  // Name of the availability zone in which the cluster is located or "Multiple" if the cache nodes are located in different availability zones
   preferredAvailabilityZone string
   // Region where the cluster exists
   region string
   // A list of VPC security groups associated with the cluster
   securityGroups() []aws.ec2.securitygroup
-  // The number of days for which ElastiCache retains automatic cluster snapshots before deleting them
+  // Number of days ElastiCache retains automatic cluster snapshots before deleting them
   snapshotRetentionLimit int
   // Whether in-transit encryption is enabled
   transitEncryptionEnabled bool
@@ -2350,19 +2350,19 @@ private aws.elasticache.serverlessCache @defaults("name description status engin
   name string
   // Description of the serverless cache
   description string
-  // The name of the cache engine used for this cluster: Memcached or Redis
+  // Cache engine used for this cluster: Memcached or Redis
   engine string
-  // The version of the cache engine that is used in this cluster
+  // Version of the cache engine that is used in this cluster
   engineVersion string
-  // Version number of the engine the serverless cache is compatible with
+  // Version number of the engine with which the serverless cache is compatible
   majorEngineVersion string
   // ID of the Amazon Web Services Key Management Service (KMS) key
   kmsKeyId string
   // A list of VPC security groups associated with the cluster
   securityGroups() []aws.ec2.securitygroup
-  // The number of days for which ElastiCache retains automatic cluster snapshots before deleting them
+  // Number of days ElastiCache retains automatic cluster snapshots before deleting them
   snapshotRetentionLimit int
-  // Time that a cache snapshot will be created
+  // Time each day that a cache snapshot is created
   dailySnapshotTime string
   // Status of the serverless cache
   status string
@@ -2412,11 +2412,11 @@ private aws.redshift.cluster @defaults("dbName clusterVersion clusterStatus regi
   masterUsername string
   // Name of the initial database created when cluster was created
   name string
-  // The next scheduled maintenance window
+  // Next scheduled maintenance window
   nextMaintenanceWindowStartTime time
-  // The node type for the nodes in the cluster
+  // Node type for the nodes in the cluster
   nodeType string
-  // The number of nodes in the cluster
+  // Number of nodes in the cluster
   numberOfNodes int
   // Detailed list of parameters for each parameter group name
   parameters() []dict
@@ -2428,7 +2428,7 @@ private aws.redshift.cluster @defaults("dbName clusterVersion clusterStatus regi
   region string
   // Tags for the cluster
   tags map[string]string
-  // The ID of the VPC where the cluster is running
+  // ID of the VPC where the cluster is running
   vpcId string
 }
 
@@ -2603,7 +2603,7 @@ private aws.ssm.instance @defaults("instanceId region platformName platformVersi
   ipAddress string
   // Platform name for the SSM Instance, as described by AWS
   platformName string
-  // The type of for the SSM Instance, as described by AWS: Windows, Linux, and so on
+  // Type of platform for the SSM Instance, as described by AWS: Windows, Linux, and so on
   platformType string
   // Platform version for the SSM Instance, as described by AWS
   platformVersion string
@@ -2794,7 +2794,7 @@ private aws.ec2.networkacl.entry @defaults("id egress ruleAction cidrBlock portR
   egress bool
   // Allow or deny
   ruleAction string
-  // The rule number
+  // Rule number
   ruleNumber int
   // Port range for the ACL entry
   portRange() aws.ec2.networkacl.entry.portrange
@@ -2862,9 +2862,9 @@ private aws.ec2.snapshot @defaults("id region volumeSize state") {
   tags map[string]string
   // State of the snapshot: pending, completed, error, recoverable, or recovering
   state string
-  // The size of the volume, in GiB
+  // Size of the volume, in GiB
   volumeSize int
-  // The description of the snapshot
+  // Description of the snapshot
   description string
   // Whether the snapshot is encrypted
   encrypted bool
@@ -2894,11 +2894,11 @@ private aws.ec2.volume @defaults("id region volumeType size encrypted state") {
   region string
   // Whether Amazon EBS Multi-Attach is enabled
   multiAttachEnabled bool
-  // The throughput that the volume supports, in MiB/s.
+  // Throughput that the volume supports, in MiB/s.
   throughput int
-  // The size of the volume, in GiBs.
+  // Size of the volume, in GiBs.
   size int
-  // The number of I/O operations per second (IOPS). For gp3, io1, and io2 volumes, this represents the number of IOPS that are provisioned for the volume. For gp2 volumes, this represents the baseline performance of the volume and the rate at which the volume accumulates I/O credits for bursting.
+  // Number of I/O operations per second (IOPS). For gp3, io1, and io2 volumes, this represents the number of IOPS that are provisioned for the volume. For gp2 volumes, this represents the baseline performance of the volume and the rate at which the volume accumulates I/O credits for bursting.
   iops int
 }
 
@@ -3000,7 +3000,7 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   platformDetails string
   // Public DNS name for the instance
   publicDnsName string
-  // The status of the specified instance
+  // Status of the specified instance
   instanceStatus() dict
   // Reason for the most recent state transition
   stateReason dict
@@ -3026,19 +3026,19 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   keypair() aws.ec2.keypair
   // Time when the last state transition occurred
   stateTransitionTime time
-  // The ARN of the VPC associated with the instance
+  // ARN of the VPC associated with the instance
   vpcArn string
-  // The hypervisor type of the instance: ovm or xen
+  // Hypervisor type of the instance: ovm or xen
   hypervisor string
   // Whether this is a Spot Instance or a Scheduled Instance: spot, scheduled, or capacity-block
   instanceLifecycle string
-  // The root device type used by the AMI: ebs or instance-store
+  // Root device type used by the AMI: ebs or instance-store
   rootDeviceType string
-  // The device name of the root device volume, such as /dev/sda1
+  // Device name of the root device volume, such as /dev/sda1
   rootDeviceName string
-  // The architecture of the instance
+  // Architecture of the instance
   architecture string
-  // The TPM version supported. NitroTPM is enabled if this value is `2.0`
+  // TPM version supported. NitroTPM is enabled if this value is `2.0`
   tpmSupport string
   // List of network interfaces for the instance
   networkInterfaces() []aws.ec2.networkinterface
@@ -3046,15 +3046,15 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
 
 // AWS EC2 network interface
 private aws.ec2.networkinterface @defaults("id privateIpAddress macAddress") {
-  // The ID of the network interface
+  // ID of the network interface
   id string
-  // The description of the network interface
+  // Description of the network interface
   description string
-  // The subnet of the network interface
+  // Subnet of the network interface
   subnet() aws.vpc.subnet
-  // The VPC of the network interface
+  // VPC of the network interface
   vpc() aws.vpc
-  // The status of the network interface. If the network interface is not attached to an instance, the status is available; if a network interface is attached to an instance the status is in-use
+  // Status of the network interface. If the network interface is not attached to an instance, the status is available; if a network interface is attached to an instance the status is in-use
   status string
   // Whether the network interface performs source/destination checking (A value of true means checking is enabled, and false means checking is disabled. The value must be false for the network interface to perform network address translation (NAT) in your VPC.)
   sourceDestCheck bool
@@ -3062,17 +3062,17 @@ private aws.ec2.networkinterface @defaults("id privateIpAddress macAddress") {
   requesterManaged bool
   // Tags set on the interface
   tags map[string]string
-  // The availability zone of the network interface
+  // Availability zone of the network interface
   availabilityZone string
   // Security groups associated with the network interface
   securityGroups() []aws.ec2.securitygroup
   // Whether this is an IPv6 only network interface
   ipv6Native bool
-  // The MAC address of the network interface
+  // MAC address of the network interface
   macAddress string
-  // The private DNS name of the network interface (IPv4)
+  // Private DNS name of the network interface (IPv4)
   privateDnsName string
-  // The private IPv4 address of the network interface
+  // Private IPv4 address of the network interface
   privateIpAddress string
 }
 
@@ -3188,11 +3188,11 @@ private aws.config.rule @defaults("name id region state") {
   state string
   // Rule identifier that causes the function to evaluate resources
   source dict
-  // The ID of the Config rule
+  // ID of the Config rule
   id string
-  // The name that you assigned to the Config rule
+  // Name that you assigned to the Config rule
   name string
-  // The description that provided for the Config rule
+  // Description that provided for the Config rule
   description string
   // Region for the Config rule
   region string
@@ -3274,25 +3274,25 @@ private aws.eks.nodegroup @defaults("name scalingConfig.DesiredSize diskSize sta
 
 // Amazon EKS add-on
 private aws.eks.addon @defaults("name addonVersion status") {
-  // The name of the add-on
+  // Add-on name
   name string
-  // The Amazon Resource Name (ARN) of the add-on
+  // Amazon Resource Name (ARN) of the add-on
   arn() string
-  // The status of the add-on
+  // Add-on status
   status() string
-  // The version of the add-on
+  // Add-on version
   addonVersion() string
-  // The Unix epoch timestamp at object creation
+  // Unix epoch timestamp at object creation
   createdAt() time
-  // The Unix epoch timestamp for the last modification to the object
+  // Unix epoch timestamp for the last modification to the object
   modifiedAt() time
   // Tags for the EKS node group
   tags()  map[string]string
-  // The publisher of the add-on
+  // Add-on publisher
   publisher() string
-  // The owner of the add-on
+  // Add-on owner
   owner() string
-  // The configuration values that you provided
+  // Configuration values that you provided
   configurationValues() string
 }
 
@@ -3306,7 +3306,7 @@ private aws.eks.cluster @defaults("arn version status") {
   region string
   // A map of tags associated with the cluster
   tags map[string]string
-  // The endpoint of Kubernetes API server
+  // Endpoint of Kubernetes API server
   endpoint string
   // Kubernetes server version
   version string
@@ -3328,11 +3328,11 @@ private aws.eks.cluster @defaults("arn version status") {
   nodeGroups() []aws.eks.nodegroup
   // List of EKS add-ons
   addons() []aws.eks.addon
-  // The IAM role that provides permissions for the Kubernetes control plane to make calls to Amazon Web Services API operations on your behalf
+  // IAM role that provides permissions for the Kubernetes control plane to make calls to Amazon Web Services API operations on your behalf
   iamRole aws.iam.role
-  // The Kubernetes support policy of the cluster. (`STANDARD` support automatically upgrades at the end of standard support. `EXTENDED` automatically enters extended support at the end of standard support)
+  // Kubernetes support policy of the cluster. (`STANDARD` support automatically upgrades at the end of standard support. `EXTENDED` automatically enters extended support at the end of standard support)
   supportType string
-  // The authentication mode for the cluster
+  // Cluster authentication mode
   authenticationMode string
 }
 
@@ -3366,7 +3366,7 @@ private aws.neptune.cluster @defaults("arn name status") {
   automaticRestartTime time
   // List of EC2 Availability Zones
   availabilityZones []string
-  // Number of days for which automatic DB snapshots are retained
+  // Number of days automatic DB snapshots are retained
   backupRetentionPeriod int
   // Time when the cluster was created
   createdAt time
@@ -3394,7 +3394,7 @@ private aws.neptune.cluster @defaults("arn name status") {
   masterUsername string
   // Whether the cluster has instances in multiple availability zones
   multiAZ bool
-  // Port that the database engine is listening on
+  // Port on which the database engine is listening
   port int
   // Daily time range during which automated backups are created
   preferredBackupWindow string
@@ -3420,13 +3420,13 @@ private aws.neptune.instance @defaults("arn name status"){
   autoMinorVersionUpgrade bool
   // Name of the availability zone
   availabilityZone string
-  // Number of days for which automatic DB snapshots are retained
+  // Number of days automatic DB snapshots are retained
   backupRetentionPeriod int
   // Name of the compute and memory capacity class
   instanceClass string
   // Status of the instance
   status string
-  // Port that the database engine is listening on
+  // Port on which the database engine is listening
   port int
   // Whether the instance has deletion protection enabled
   deletionProtection bool
@@ -3460,7 +3460,7 @@ private aws.neptune.instance @defaults("arn name status"){
   preferredBackupWindow string
   // Weekly time range during which system maintenance can occur
   preferredMaintenanceWindow string
-  // Specifies the order in which a Read Replica is promoted
+  // Order in which a Read Replica is promoted
   promotionTier int
   // Region where the cluster exists
   region string
@@ -3512,8 +3512,8 @@ private aws.timestream.liveanalytics.table @defaults("name region") {
   createdAt time
   // Time when the table was last updated
   updatedAt time
-  // magnetic store properties for the table
+  // Magnetic store properties for the table
   magneticStoreWriteProperties dict
-  // retention duration properties for the table
+  // Retention duration properties for the table
   retentionProperties dict
 }
