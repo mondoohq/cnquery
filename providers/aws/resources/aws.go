@@ -8,6 +8,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
+	"fmt"
 	"io"
 	"strings"
 
@@ -44,6 +45,10 @@ const (
 	apiArnPattern               = "arn:aws:apigateway:%s:%s::/apis/%s"
 	apiStageArnPattern          = "arn:aws:apigateway:%s:%s::/apis/%s/stages/%s"
 )
+
+func NewSecurityGroupArn(region, accountID, sgID string) string {
+	return fmt.Sprintf(securityGroupArnPattern, region, accountID, sgID)
+}
 
 func (a *mqlAws) regions() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)

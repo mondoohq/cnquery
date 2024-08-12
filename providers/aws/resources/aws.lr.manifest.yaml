@@ -1553,6 +1553,8 @@ resources:
     fields:
       cacheClusters: {}
       clusters: {}
+      serverlessCaches:
+        min_mondoo_version: 9.0.0
     min_mondoo_version: 5.15.0
     platform:
       name:
@@ -1599,6 +1601,26 @@ resources:
       transitEncryptionMode: {}
     is_private: true
     min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.elasticache.serverlessCache:
+    fields:
+      arn: {}
+      createdAt: {}
+      dailySnapshotTime: {}
+      description: {}
+      engine: {}
+      engineVersion: {}
+      kmsKeyId: {}
+      majorEngineVersion: {}
+      name: {}
+      region: {}
+      securityGroups: {}
+      snapshotRetentionLimit: {}
+      status: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - aws
