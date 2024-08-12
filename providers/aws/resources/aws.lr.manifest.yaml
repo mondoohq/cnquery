@@ -2344,6 +2344,8 @@ resources:
       desc: |
         Use the `aws.rds` resource to assess the configuration of AWS RDS deployments. The resource returns lists of `aws.rds.dbcluster`, `aws.rds.dbinstance`, and `aws.rds.snapshot` resources, each with fields for assessing the configuration of those assets.
     fields:
+      allPendingMaintenanceActions:
+        min_mondoo_version: 9.0.0
       clusters:
         min_mondoo_version: 9.0.0
       dbClusters: {}
@@ -2388,6 +2390,10 @@ resources:
       desc: |
         The `aws.rds.dbcluster` resource provides fields for assessing the configuration of AWS RDS Clusters.
     fields:
+      activityStreamMode:
+        min_mondoo_version: latest
+      activityStreamStatus:
+        min_mondoo_version: latest
       arn: {}
       autoMinorVersionUpgrade:
         min_mondoo_version: 9.0.0
@@ -2397,6 +2403,10 @@ resources:
         min_mondoo_version: 9.0.0
       backupSettings:
         min_mondoo_version: 9.0.0
+      certificateAuthority:
+        min_mondoo_version: latest
+      certificateExpiresAt:
+        min_mondoo_version: latest
       clusterDbInstanceClass:
         min_mondoo_version: 9.0.0
       createdTime:
@@ -2413,13 +2423,19 @@ resources:
         min_mondoo_version: 9.0.0
       hostedZoneId:
         min_mondoo_version: 9.0.0
+      iamDatabaseAuthentication:
+        min_mondoo_version: latest
       id: {}
       latestRestorableTime:
         min_mondoo_version: 9.0.0
       masterUsername:
         min_mondoo_version: 9.0.0
       members: {}
+      monitoringInterval:
+        min_mondoo_version: 9.0.0
       multiAZ:
+        min_mondoo_version: 9.0.0
+      networkType:
         min_mondoo_version: 9.0.0
       port:
         min_mondoo_version: 9.0.0
@@ -2450,6 +2466,10 @@ resources:
       desc: |
         The `aws.rds.dbinstance` resource provides fields for assessing the configuration of RDS instances. For usage, read the `aws.rds` resource documentation.
     fields:
+      activityStreamMode:
+        min_mondoo_version: latest
+      activityStreamStatus:
+        min_mondoo_version: latest
       arn: {}
       autoMinorVersionUpgrade:
         min_mondoo_version: 8.22.0
@@ -2458,8 +2478,14 @@ resources:
       backupRetentionPeriod: {}
       backupSettings:
         min_mondoo_version: 9.0.0
+      certificateAuthority:
+        min_mondoo_version: latest
+      certificateExpiresAt:
+        min_mondoo_version: latest
       createdTime:
         min_mondoo_version: 9.0.0
+      customIamInstanceProfile:
+        min_mondoo_version: latest
       dbInstanceClass:
         min_mondoo_version: 5.19.1
       dbInstanceIdentifier:
@@ -2475,13 +2501,21 @@ resources:
       engineVersion:
         min_mondoo_version: 9.0.0
       enhancedMonitoringResourceArn: {}
+      iamDatabaseAuthentication:
+        min_mondoo_version: latest
       id: {}
       latestRestorableTime:
         min_mondoo_version: 9.0.0
       masterUsername:
         min_mondoo_version: 9.0.0
+      monitoringInterval:
+        min_mondoo_version: 9.0.0
       multiAZ: {}
       name: {}
+      networkType:
+        min_mondoo_version: 9.0.0
+      pendingMaintenanceActions:
+        min_mondoo_version: 9.0.0
       port:
         min_mondoo_version: 9.0.0
       publiclyAccessible: {}
@@ -2503,6 +2537,20 @@ resources:
       tags: {}
     is_private: true
     min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - aws
+  aws.rds.pendingMaintenanceAction:
+    fields:
+      action: {}
+      autoAppliedAfterDate: {}
+      currentApplyDate: {}
+      description: {}
+      forcedApplyDate: {}
+      optInStatus: {}
+      resourceArn: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - aws

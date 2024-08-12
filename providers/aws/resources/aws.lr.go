@@ -530,6 +530,10 @@ func init() {
 			Init: initAwsRdsDbinstance,
 			Create: createAwsRdsDbinstance,
 		},
+		"aws.rds.pendingMaintenanceAction": {
+			// to override args, implement: initAwsRdsPendingMaintenanceAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsRdsPendingMaintenanceAction,
+		},
 		"aws.elasticache": {
 			// to override args, implement: initAwsElasticache(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsElasticache,
@@ -3080,6 +3084,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRds).GetClusters()).ToDataRes(types.Array(types.Resource("aws.rds.dbcluster")))
 	},
+	"aws.rds.allPendingMaintenanceActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRds).GetAllPendingMaintenanceActions()).ToDataRes(types.Array(types.Resource("aws.rds.pendingMaintenanceAction")))
+	},
 	"aws.rds.backupsetting.target": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsBackupsetting).GetTarget()).ToDataRes(types.String)
 	},
@@ -3197,6 +3204,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.dbcluster.engineLifecycleSupport": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbcluster).GetEngineLifecycleSupport()).ToDataRes(types.String)
 	},
+	"aws.rds.dbcluster.certificateExpiresAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetCertificateExpiresAt()).ToDataRes(types.Time)
+	},
+	"aws.rds.dbcluster.certificateAuthority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetCertificateAuthority()).ToDataRes(types.String)
+	},
+	"aws.rds.dbcluster.iamDatabaseAuthentication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetIamDatabaseAuthentication()).ToDataRes(types.Bool)
+	},
+	"aws.rds.dbcluster.activityStreamMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetActivityStreamMode()).ToDataRes(types.String)
+	},
+	"aws.rds.dbcluster.activityStreamStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetActivityStreamStatus()).ToDataRes(types.String)
+	},
+	"aws.rds.dbcluster.monitoringInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetMonitoringInterval()).ToDataRes(types.Int)
+	},
+	"aws.rds.dbcluster.networkType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetNetworkType()).ToDataRes(types.String)
+	},
 	"aws.rds.snapshot.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsSnapshot).GetArn()).ToDataRes(types.String)
 	},
@@ -3233,11 +3261,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.snapshot.port": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsSnapshot).GetPort()).ToDataRes(types.Int)
 	},
+	"aws.rds.snapshot.allocatedStorage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsSnapshot).GetAllocatedStorage()).ToDataRes(types.Int)
+	},
 	"aws.rds.snapshot.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsSnapshot).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"aws.rds.dbinstance.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetArn()).ToDataRes(types.String)
+	},
+	"aws.rds.dbinstance.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetId()).ToDataRes(types.String)
 	},
 	"aws.rds.dbinstance.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetName()).ToDataRes(types.String)
@@ -3278,8 +3312,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.dbinstance.multiAZ": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetMultiAZ()).ToDataRes(types.Bool)
 	},
-	"aws.rds.dbinstance.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsRdsDbinstance).GetId()).ToDataRes(types.String)
+	"aws.rds.dbinstance.monitoringInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetMonitoringInterval()).ToDataRes(types.Int)
 	},
 	"aws.rds.dbinstance.enhancedMonitoringResourceArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetEnhancedMonitoringResourceArn()).ToDataRes(types.String)
@@ -3331,6 +3365,51 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.rds.dbinstance.engineLifecycleSupport": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetEngineLifecycleSupport()).ToDataRes(types.String)
+	},
+	"aws.rds.dbinstance.certificateExpiresAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetCertificateExpiresAt()).ToDataRes(types.Time)
+	},
+	"aws.rds.dbinstance.certificateAuthority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetCertificateAuthority()).ToDataRes(types.String)
+	},
+	"aws.rds.dbinstance.iamDatabaseAuthentication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetIamDatabaseAuthentication()).ToDataRes(types.Bool)
+	},
+	"aws.rds.dbinstance.customIamInstanceProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetCustomIamInstanceProfile()).ToDataRes(types.String)
+	},
+	"aws.rds.dbinstance.activityStreamMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetActivityStreamMode()).ToDataRes(types.String)
+	},
+	"aws.rds.dbinstance.activityStreamStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetActivityStreamStatus()).ToDataRes(types.String)
+	},
+	"aws.rds.dbinstance.pendingMaintenanceActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetPendingMaintenanceActions()).ToDataRes(types.Array(types.Resource("aws.rds.pendingMaintenanceAction")))
+	},
+	"aws.rds.dbinstance.networkType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetNetworkType()).ToDataRes(types.String)
+	},
+	"aws.rds.pendingMaintenanceAction.resourceArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsPendingMaintenanceAction).GetResourceArn()).ToDataRes(types.String)
+	},
+	"aws.rds.pendingMaintenanceAction.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsPendingMaintenanceAction).GetAction()).ToDataRes(types.String)
+	},
+	"aws.rds.pendingMaintenanceAction.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsPendingMaintenanceAction).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.rds.pendingMaintenanceAction.autoAppliedAfterDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsPendingMaintenanceAction).GetAutoAppliedAfterDate()).ToDataRes(types.Time)
+	},
+	"aws.rds.pendingMaintenanceAction.currentApplyDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsPendingMaintenanceAction).GetCurrentApplyDate()).ToDataRes(types.Time)
+	},
+	"aws.rds.pendingMaintenanceAction.forcedApplyDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsPendingMaintenanceAction).GetForcedApplyDate()).ToDataRes(types.Time)
+	},
+	"aws.rds.pendingMaintenanceAction.optInStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsPendingMaintenanceAction).GetOptInStatus()).ToDataRes(types.String)
 	},
 	"aws.elasticache.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticache).GetClusters()).ToDataRes(types.Array(types.Dict))
@@ -8272,6 +8351,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsRds).Clusters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"aws.rds.allPendingMaintenanceActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRds).AllPendingMaintenanceActions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"aws.rds.backupsetting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsRdsBackupsetting).__id, ok = v.Value.(string)
 			return
@@ -8436,6 +8519,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsRdsDbcluster).EngineLifecycleSupport, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.rds.dbcluster.certificateExpiresAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).CertificateExpiresAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.certificateAuthority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).CertificateAuthority, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.iamDatabaseAuthentication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).IamDatabaseAuthentication, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.activityStreamMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).ActivityStreamMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.activityStreamStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).ActivityStreamStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.monitoringInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).MonitoringInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.networkType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).NetworkType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.rds.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsRdsSnapshot).__id, ok = v.Value.(string)
 			return
@@ -8488,6 +8599,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsRdsSnapshot).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"aws.rds.snapshot.allocatedStorage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsSnapshot).AllocatedStorage, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"aws.rds.snapshot.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsSnapshot).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -8498,6 +8613,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		},
 	"aws.rds.dbinstance.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbinstance).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.rds.dbinstance.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8552,8 +8671,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsRdsDbinstance).MultiAZ, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"aws.rds.dbinstance.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRdsDbinstance).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.rds.dbinstance.monitoringInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).MonitoringInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.rds.dbinstance.enhancedMonitoringResourceArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8622,6 +8741,70 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.rds.dbinstance.engineLifecycleSupport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbinstance).EngineLifecycleSupport, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.certificateExpiresAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).CertificateExpiresAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.certificateAuthority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).CertificateAuthority, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.iamDatabaseAuthentication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).IamDatabaseAuthentication, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.customIamInstanceProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).CustomIamInstanceProfile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.activityStreamMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).ActivityStreamMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.activityStreamStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).ActivityStreamStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.pendingMaintenanceActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).PendingMaintenanceActions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.networkType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).NetworkType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.pendingMaintenanceAction.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsRdsPendingMaintenanceAction).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.rds.pendingMaintenanceAction.resourceArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsPendingMaintenanceAction).ResourceArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.pendingMaintenanceAction.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsPendingMaintenanceAction).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.pendingMaintenanceAction.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsPendingMaintenanceAction).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.pendingMaintenanceAction.autoAppliedAfterDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsPendingMaintenanceAction).AutoAppliedAfterDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.rds.pendingMaintenanceAction.currentApplyDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsPendingMaintenanceAction).CurrentApplyDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.rds.pendingMaintenanceAction.forcedApplyDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsPendingMaintenanceAction).ForcedApplyDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.rds.pendingMaintenanceAction.optInStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsPendingMaintenanceAction).OptInStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.elasticache.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21242,6 +21425,7 @@ type mqlAwsRds struct {
 	Instances plugin.TValue[[]interface{}]
 	DbClusters plugin.TValue[[]interface{}]
 	Clusters plugin.TValue[[]interface{}]
+	AllPendingMaintenanceActions plugin.TValue[[]interface{}]
 }
 
 // createAwsRds creates a new instance of this resource
@@ -21342,6 +21526,22 @@ func (c *mqlAwsRds) GetClusters() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.clusters()
+	})
+}
+
+func (c *mqlAwsRds) GetAllPendingMaintenanceActions() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.AllPendingMaintenanceActions, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds", c.__id, "allPendingMaintenanceActions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.allPendingMaintenanceActions()
 	})
 }
 
@@ -21485,6 +21685,13 @@ type mqlAwsRdsDbcluster struct {
 	LatestRestorableTime plugin.TValue[*time.Time]
 	BackupSettings plugin.TValue[[]interface{}]
 	EngineLifecycleSupport plugin.TValue[string]
+	CertificateExpiresAt plugin.TValue[*time.Time]
+	CertificateAuthority plugin.TValue[string]
+	IamDatabaseAuthentication plugin.TValue[bool]
+	ActivityStreamMode plugin.TValue[string]
+	ActivityStreamStatus plugin.TValue[string]
+	MonitoringInterval plugin.TValue[int64]
+	NetworkType plugin.TValue[string]
 }
 
 // createAwsRdsDbcluster creates a new instance of this resource
@@ -21664,6 +21871,34 @@ func (c *mqlAwsRdsDbcluster) GetEngineLifecycleSupport() *plugin.TValue[string] 
 	return &c.EngineLifecycleSupport
 }
 
+func (c *mqlAwsRdsDbcluster) GetCertificateExpiresAt() *plugin.TValue[*time.Time] {
+	return &c.CertificateExpiresAt
+}
+
+func (c *mqlAwsRdsDbcluster) GetCertificateAuthority() *plugin.TValue[string] {
+	return &c.CertificateAuthority
+}
+
+func (c *mqlAwsRdsDbcluster) GetIamDatabaseAuthentication() *plugin.TValue[bool] {
+	return &c.IamDatabaseAuthentication
+}
+
+func (c *mqlAwsRdsDbcluster) GetActivityStreamMode() *plugin.TValue[string] {
+	return &c.ActivityStreamMode
+}
+
+func (c *mqlAwsRdsDbcluster) GetActivityStreamStatus() *plugin.TValue[string] {
+	return &c.ActivityStreamStatus
+}
+
+func (c *mqlAwsRdsDbcluster) GetMonitoringInterval() *plugin.TValue[int64] {
+	return &c.MonitoringInterval
+}
+
+func (c *mqlAwsRdsDbcluster) GetNetworkType() *plugin.TValue[string] {
+	return &c.NetworkType
+}
+
 // mqlAwsRdsSnapshot for the aws.rds.snapshot resource
 type mqlAwsRdsSnapshot struct {
 	MqlRuntime *plugin.Runtime
@@ -21681,6 +21916,7 @@ type mqlAwsRdsSnapshot struct {
 	EngineVersion plugin.TValue[string]
 	Status plugin.TValue[string]
 	Port plugin.TValue[int64]
+	AllocatedStorage plugin.TValue[int64]
 	CreatedAt plugin.TValue[*time.Time]
 }
 
@@ -21771,6 +22007,10 @@ func (c *mqlAwsRdsSnapshot) GetPort() *plugin.TValue[int64] {
 	return &c.Port
 }
 
+func (c *mqlAwsRdsSnapshot) GetAllocatedStorage() *plugin.TValue[int64] {
+	return &c.AllocatedStorage
+}
+
 func (c *mqlAwsRdsSnapshot) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
@@ -21781,6 +22021,7 @@ type mqlAwsRdsDbinstance struct {
 	__id string
 	mqlAwsRdsDbinstanceInternal
 	Arn plugin.TValue[string]
+	Id plugin.TValue[string]
 	Name plugin.TValue[string]
 	BackupRetentionPeriod plugin.TValue[int64]
 	Snapshots plugin.TValue[[]interface{}]
@@ -21794,7 +22035,7 @@ type mqlAwsRdsDbinstance struct {
 	EnabledCloudwatchLogsExports plugin.TValue[[]interface{}]
 	DeletionProtection plugin.TValue[bool]
 	MultiAZ plugin.TValue[bool]
-	Id plugin.TValue[string]
+	MonitoringInterval plugin.TValue[int64]
 	EnhancedMonitoringResourceArn plugin.TValue[string]
 	Tags plugin.TValue[map[string]interface{}]
 	DbInstanceClass plugin.TValue[string]
@@ -21812,6 +22053,14 @@ type mqlAwsRdsDbinstance struct {
 	BackupSettings plugin.TValue[[]interface{}]
 	Subnets plugin.TValue[[]interface{}]
 	EngineLifecycleSupport plugin.TValue[string]
+	CertificateExpiresAt plugin.TValue[*time.Time]
+	CertificateAuthority plugin.TValue[string]
+	IamDatabaseAuthentication plugin.TValue[bool]
+	CustomIamInstanceProfile plugin.TValue[string]
+	ActivityStreamMode plugin.TValue[string]
+	ActivityStreamStatus plugin.TValue[string]
+	PendingMaintenanceActions plugin.TValue[[]interface{}]
+	NetworkType plugin.TValue[string]
 }
 
 // createAwsRdsDbinstance creates a new instance of this resource
@@ -21853,6 +22102,10 @@ func (c *mqlAwsRdsDbinstance) MqlID() string {
 
 func (c *mqlAwsRdsDbinstance) GetArn() *plugin.TValue[string] {
 	return &c.Arn
+}
+
+func (c *mqlAwsRdsDbinstance) GetId() *plugin.TValue[string] {
+	return &c.Id
 }
 
 func (c *mqlAwsRdsDbinstance) GetName() *plugin.TValue[string] {
@@ -21919,8 +22172,8 @@ func (c *mqlAwsRdsDbinstance) GetMultiAZ() *plugin.TValue[bool] {
 	return &c.MultiAZ
 }
 
-func (c *mqlAwsRdsDbinstance) GetId() *plugin.TValue[string] {
-	return &c.Id
+func (c *mqlAwsRdsDbinstance) GetMonitoringInterval() *plugin.TValue[int64] {
+	return &c.MonitoringInterval
 }
 
 func (c *mqlAwsRdsDbinstance) GetEnhancedMonitoringResourceArn() *plugin.TValue[string] {
@@ -22013,6 +22266,124 @@ func (c *mqlAwsRdsDbinstance) GetSubnets() *plugin.TValue[[]interface{}] {
 
 func (c *mqlAwsRdsDbinstance) GetEngineLifecycleSupport() *plugin.TValue[string] {
 	return &c.EngineLifecycleSupport
+}
+
+func (c *mqlAwsRdsDbinstance) GetCertificateExpiresAt() *plugin.TValue[*time.Time] {
+	return &c.CertificateExpiresAt
+}
+
+func (c *mqlAwsRdsDbinstance) GetCertificateAuthority() *plugin.TValue[string] {
+	return &c.CertificateAuthority
+}
+
+func (c *mqlAwsRdsDbinstance) GetIamDatabaseAuthentication() *plugin.TValue[bool] {
+	return &c.IamDatabaseAuthentication
+}
+
+func (c *mqlAwsRdsDbinstance) GetCustomIamInstanceProfile() *plugin.TValue[string] {
+	return &c.CustomIamInstanceProfile
+}
+
+func (c *mqlAwsRdsDbinstance) GetActivityStreamMode() *plugin.TValue[string] {
+	return &c.ActivityStreamMode
+}
+
+func (c *mqlAwsRdsDbinstance) GetActivityStreamStatus() *plugin.TValue[string] {
+	return &c.ActivityStreamStatus
+}
+
+func (c *mqlAwsRdsDbinstance) GetPendingMaintenanceActions() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.PendingMaintenanceActions, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.dbinstance", c.__id, "pendingMaintenanceActions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.pendingMaintenanceActions()
+	})
+}
+
+func (c *mqlAwsRdsDbinstance) GetNetworkType() *plugin.TValue[string] {
+	return &c.NetworkType
+}
+
+// mqlAwsRdsPendingMaintenanceAction for the aws.rds.pendingMaintenanceAction resource
+type mqlAwsRdsPendingMaintenanceAction struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsRdsPendingMaintenanceActionInternal it will be used here
+	ResourceArn plugin.TValue[string]
+	Action plugin.TValue[string]
+	Description plugin.TValue[string]
+	AutoAppliedAfterDate plugin.TValue[*time.Time]
+	CurrentApplyDate plugin.TValue[*time.Time]
+	ForcedApplyDate plugin.TValue[*time.Time]
+	OptInStatus plugin.TValue[string]
+}
+
+// createAwsRdsPendingMaintenanceAction creates a new instance of this resource
+func createAwsRdsPendingMaintenanceAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRdsPendingMaintenanceAction{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.rds.pendingMaintenanceAction", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRdsPendingMaintenanceAction) MqlName() string {
+	return "aws.rds.pendingMaintenanceAction"
+}
+
+func (c *mqlAwsRdsPendingMaintenanceAction) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRdsPendingMaintenanceAction) GetResourceArn() *plugin.TValue[string] {
+	return &c.ResourceArn
+}
+
+func (c *mqlAwsRdsPendingMaintenanceAction) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlAwsRdsPendingMaintenanceAction) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsRdsPendingMaintenanceAction) GetAutoAppliedAfterDate() *plugin.TValue[*time.Time] {
+	return &c.AutoAppliedAfterDate
+}
+
+func (c *mqlAwsRdsPendingMaintenanceAction) GetCurrentApplyDate() *plugin.TValue[*time.Time] {
+	return &c.CurrentApplyDate
+}
+
+func (c *mqlAwsRdsPendingMaintenanceAction) GetForcedApplyDate() *plugin.TValue[*time.Time] {
+	return &c.ForcedApplyDate
+}
+
+func (c *mqlAwsRdsPendingMaintenanceAction) GetOptInStatus() *plugin.TValue[string] {
+	return &c.OptInStatus
 }
 
 // mqlAwsElasticache for the aws.elasticache resource
