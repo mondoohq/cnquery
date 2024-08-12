@@ -431,7 +431,7 @@ func installVersion(name string, version string) (*Provider, error) {
 		Dst: DefaultPath,
 	})
 	if err != nil {
-		log.Debug().Str("url", url).Msg("failed to install form URL (download)")
+		log.Debug().Str("url", url).Msg("failed to install from URL (download)")
 		return nil, errors.Wrap(err, "failed to install "+name+"-"+version)
 	}
 
