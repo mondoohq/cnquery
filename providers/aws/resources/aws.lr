@@ -3374,6 +3374,8 @@ private aws.neptune.cluster @defaults("arn name status") {
   deletionProtection bool
   // Earliest time to which a database can be restored
   earliestRestorableTime time
+  // List of log types that this cluster is configured to export to CloudWatch logs
+  enabledCloudwatchLogsExports []string
   // Connection endpoint for the primary instance
   endpoint string
   // Whether mapping of Amazon Identity and Access Management (IAM) accounts to database accounts is enabled
