@@ -53,7 +53,7 @@ func IdentifyPlatform(conn shared.Connection, p *inventory.Platform, idDetectors
 		// fallback to default id detectors
 		switch conn.Type() {
 		case shared.Type_Local:
-			idDetectors = []string{ids.IdDetector_Hostname, ids.IdDetector_MachineSerial, ids.IdDetector_CloudDetect}
+			idDetectors = []string{ids.IdDetector_Hostname, ids.IdDetector_SerialNumber, ids.IdDetector_CloudDetect}
 		case shared.Type_SSH:
 			idDetectors = []string{ids.IdDetector_Hostname, ids.IdDetector_CloudDetect, ids.IdDetector_SshHostkey}
 		case shared.Type_Tar, shared.Type_FileSystem, shared.Type_DockerSnapshot:
@@ -162,7 +162,7 @@ func GatherPlatformInfo(conn shared.Connection, pf *inventory.Platform, idDetect
 			}, hostErr
 		}
 		return &PlatformInfo{}, nil
-	case idDetector == ids.IdDetector_MachineSerial:
+	case idDetector == ids.IdDetector_SerialNumber:
 		serial, err := serialnumber.SerialNumber(conn, pf)
 		if err == nil && len(serial) > 0 {
 			identifier = "//platformid.api.mondoo.app/serialnumber/" + serial
