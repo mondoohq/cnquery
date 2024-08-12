@@ -41,7 +41,7 @@ func TestLocalConnectionIdDetectors(t *testing.T) {
 	require.Contains(t, connectResp.Asset.IdDetector, ids.IdDetector_CloudDetect)
 	require.NotContains(t, connectResp.Asset.IdDetector, ids.IdDetector_SshHostkey)
 
-	require.Len(t, connectResp.Asset.PlatformIds, 1)
+	require.Len(t, connectResp.Asset.PlatformIds, 2)
 
 	shutdownconnectResp, err := srv.Shutdown(&plugin.ShutdownReq{})
 	require.NoError(t, err)
@@ -56,12 +56,12 @@ func TestLocalConnectionIdDetectors(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, connectResp)
 
-	require.Len(t, connectResp.Asset.IdDetector, 2)
+	require.Len(t, connectResp.Asset.IdDetector, 3)
 	require.Contains(t, connectResp.Asset.IdDetector, ids.IdDetector_Hostname)
 	require.Contains(t, connectResp.Asset.IdDetector, ids.IdDetector_CloudDetect)
 	require.NotContains(t, connectResp.Asset.IdDetector, ids.IdDetector_SshHostkey)
 	// Now the platformIDs are cleaned up
-	require.Len(t, connectResp.Asset.PlatformIds, 1)
+	require.Len(t, connectResp.Asset.PlatformIds, 2)
 
 	shutdownconnectResp, err = srv.Shutdown(&plugin.ShutdownReq{})
 	require.NoError(t, err)
