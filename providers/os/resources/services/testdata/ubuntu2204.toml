@@ -267,3 +267,11 @@ x11-common.service                         masked          enabled
 
 263 unit files listed.
 """
+
+[files."/sbin/init"]
+path = "/sbin/init"
+
+[files."/sbin/init".stat]
+mode = 33261
+uid = 0
+gid = 0
