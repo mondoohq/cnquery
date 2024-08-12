@@ -2097,7 +2097,7 @@ private aws.rds.dbcluster @defaults("id region") {
   // Whether deletion protection is enabled
   deletionProtection bool
   // List of VPC security group elements that the database cluster belongs to
-  securityGroups []aws.ec2.securitygroup
+  securityGroups() []aws.ec2.securitygroup
   // List of Availability Zones (AZs) where instances in the database cluster can be created
   availabilityZones []string
   // The port that the database engine is listening on
@@ -2209,7 +2209,7 @@ private aws.rds.dbinstance @defaults("id region engine engineVersion") {
   // The version of the database engine for this database instance
   engineVersion string
   // List of VPC security group elements that the database instance belongs to
-  securityGroups []aws.ec2.securitygroup
+  securityGroups() []aws.ec2.securitygroup
   // Current state of this database
   status string
   // Whether minor version patches are applied automatically
