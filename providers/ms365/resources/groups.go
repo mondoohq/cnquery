@@ -54,7 +54,7 @@ func (a *mqlMicrosoftGroup) members() ([]interface{}, error) {
 		}
 
 		// if the user is already indexed, we can reuse it
-		userResource, ok := mqlMicrsoftResource.userById(*memberId)
+		userResource, ok := mqlMicrosoftResource.userById(*memberId)
 		if ok {
 			res = append(res, userResource)
 			continue
@@ -66,7 +66,7 @@ func (a *mqlMicrosoftGroup) members() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		mqlMicrsoftResource.index(newUserResource.(*mqlMicrosoftUser))
+		mqlMicrosoftResource.index(newUserResource.(*mqlMicrosoftUser))
 		res = append(res, newUserResource)
 	}
 	return res, nil

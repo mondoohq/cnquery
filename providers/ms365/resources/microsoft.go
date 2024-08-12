@@ -13,8 +13,6 @@ import (
 type mqlMicrosoftInternal struct {
 	// index users by id
 	idxUsersById map[string]*mqlMicrosoftUser
-	// index users by principal name
-	idxUsersByPrincipalName map[string]*mqlMicrosoftUser
 }
 
 // initIndex ensures the user indexes are initialized,
@@ -23,16 +21,12 @@ func (a *mqlMicrosoft) initIndex() {
 	if a.idxUsersById == nil {
 		a.idxUsersById = make(map[string]*mqlMicrosoftUser)
 	}
-	if a.idxUsersByPrincipalName == nil {
-		a.idxUsersByPrincipalName = make(map[string]*mqlMicrosoftUser)
-	}
 }
 
 // index adds a user to the internal indexes
 func (a *mqlMicrosoft) index(user *mqlMicrosoftUser) {
 	a.initIndex()
 	a.idxUsersById[user.Id.Data] = user
-	a.idxUsersByPrincipalName[user.UserPrincipalName.Data] = user
 }
 
 // userById returns a user by id if it exists in the index
