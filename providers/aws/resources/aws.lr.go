@@ -3241,6 +3241,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.dbcluster.networkType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbcluster).GetNetworkType()).ToDataRes(types.String)
 	},
+	"aws.rds.dbcluster.preferredMaintenanceWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetPreferredMaintenanceWindow()).ToDataRes(types.String)
+	},
+	"aws.rds.dbcluster.preferredBackupWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetPreferredBackupWindow()).ToDataRes(types.String)
+	},
 	"aws.rds.snapshot.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsSnapshot).GetArn()).ToDataRes(types.String)
 	},
@@ -3405,6 +3411,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.rds.dbinstance.networkType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetNetworkType()).ToDataRes(types.String)
+	},
+	"aws.rds.dbinstance.preferredMaintenanceWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetPreferredMaintenanceWindow()).ToDataRes(types.String)
+	},
+	"aws.rds.dbinstance.preferredBackupWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetPreferredBackupWindow()).ToDataRes(types.String)
 	},
 	"aws.rds.pendingMaintenanceAction.resourceArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsPendingMaintenanceAction).GetResourceArn()).ToDataRes(types.String)
@@ -8659,6 +8671,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsRdsDbcluster).NetworkType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.rds.dbcluster.preferredMaintenanceWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).PreferredMaintenanceWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.preferredBackupWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).PreferredBackupWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.rds.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsRdsSnapshot).__id, ok = v.Value.(string)
 			return
@@ -8885,6 +8905,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.rds.dbinstance.networkType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbinstance).NetworkType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.preferredMaintenanceWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).PreferredMaintenanceWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.preferredBackupWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).PreferredBackupWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.rds.pendingMaintenanceAction.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21948,6 +21976,8 @@ type mqlAwsRdsDbcluster struct {
 	ActivityStreamStatus plugin.TValue[string]
 	MonitoringInterval plugin.TValue[int64]
 	NetworkType plugin.TValue[string]
+	PreferredMaintenanceWindow plugin.TValue[string]
+	PreferredBackupWindow plugin.TValue[string]
 }
 
 // createAwsRdsDbcluster creates a new instance of this resource
@@ -22167,6 +22197,14 @@ func (c *mqlAwsRdsDbcluster) GetNetworkType() *plugin.TValue[string] {
 	return &c.NetworkType
 }
 
+func (c *mqlAwsRdsDbcluster) GetPreferredMaintenanceWindow() *plugin.TValue[string] {
+	return &c.PreferredMaintenanceWindow
+}
+
+func (c *mqlAwsRdsDbcluster) GetPreferredBackupWindow() *plugin.TValue[string] {
+	return &c.PreferredBackupWindow
+}
+
 // mqlAwsRdsSnapshot for the aws.rds.snapshot resource
 type mqlAwsRdsSnapshot struct {
 	MqlRuntime *plugin.Runtime
@@ -22329,6 +22367,8 @@ type mqlAwsRdsDbinstance struct {
 	ActivityStreamStatus plugin.TValue[string]
 	PendingMaintenanceActions plugin.TValue[[]interface{}]
 	NetworkType plugin.TValue[string]
+	PreferredMaintenanceWindow plugin.TValue[string]
+	PreferredBackupWindow plugin.TValue[string]
 }
 
 // createAwsRdsDbinstance creates a new instance of this resource
@@ -22590,6 +22630,14 @@ func (c *mqlAwsRdsDbinstance) GetPendingMaintenanceActions() *plugin.TValue[[]in
 
 func (c *mqlAwsRdsDbinstance) GetNetworkType() *plugin.TValue[string] {
 	return &c.NetworkType
+}
+
+func (c *mqlAwsRdsDbinstance) GetPreferredMaintenanceWindow() *plugin.TValue[string] {
+	return &c.PreferredMaintenanceWindow
+}
+
+func (c *mqlAwsRdsDbinstance) GetPreferredBackupWindow() *plugin.TValue[string] {
+	return &c.PreferredBackupWindow
 }
 
 // mqlAwsRdsPendingMaintenanceAction for the aws.rds.pendingMaintenanceAction resource

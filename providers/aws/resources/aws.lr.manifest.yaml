@@ -2462,6 +2462,10 @@ resources:
         min_mondoo_version: 9.0.0
       port:
         min_mondoo_version: 9.0.0
+      preferredBackupWindow:
+        min_mondoo_version: 9.0.0
+      preferredMaintenanceWindow:
+        min_mondoo_version: 9.0.0
       publiclyAccessible:
         min_mondoo_version: 9.0.0
       region: {}
@@ -2540,6 +2544,10 @@ resources:
       pendingMaintenanceActions:
         min_mondoo_version: 9.0.0
       port:
+        min_mondoo_version: 9.0.0
+      preferredBackupWindow:
+        min_mondoo_version: 9.0.0
+      preferredMaintenanceWindow:
         min_mondoo_version: 9.0.0
       publiclyAccessible: {}
       region: {}

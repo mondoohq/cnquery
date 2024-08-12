@@ -2128,6 +2128,11 @@ private aws.rds.dbcluster @defaults("id region") {
   monitoringInterval int
   // Network type of the DB instance
   networkType string
+  // Preferred maintenance window for the database cluster
+  preferredMaintenanceWindow string
+  // Preferred backup window for the database cluster
+  preferredBackupWindow string
+
 }
 
 // Amazon RDS snapshot
@@ -2246,6 +2251,10 @@ private aws.rds.dbinstance @defaults("id region engine engineVersion") {
   pendingMaintenanceActions() []aws.rds.pendingMaintenanceAction
   // Network type of the DB instance
   networkType string
+  // Preferred maintenance window for the database cluster
+  preferredMaintenanceWindow string
+  // Preferred backup window for the database cluster
+  preferredBackupWindow string
 }
 
 // Amazon RDS pending maintenance action
