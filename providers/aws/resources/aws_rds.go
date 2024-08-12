@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/rds"
@@ -20,6 +21,10 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/aws/connection"
 	"go.mondoo.com/cnquery/v11/types"
 )
+
+// The cluster and instance API also return data for non-RDS engines like Neptune and DocumentDB. We have to filter
+// these out since we have specific resources for them.
+var nonRdsEngines = []string{"neptune", "docdb"}
 
 func (a *mqlAwsRds) id() (string, error) {
 	return "aws.rds", nil
@@ -76,6 +81,12 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 					return nil, err
 				}
 				for _, dbInstance := range dbInstances.DBInstances {
+					// we cannot filter it in the api call since the api does not support it negative filters
+					if slices.Contains(nonRdsEngines, *dbInstance.Engine) {
+						log.Debug().Str("engine", *dbInstance.Engine).Msg("skipping non-RDS engine")
+						continue
+					}
+
 					mqlDBInstance, err := newMqlAwsRdsInstance(a.MqlRuntime, regionVal, conn.AccountId(), dbInstance)
 					if err != nil {
 						return nil, err
@@ -458,6 +469,12 @@ func (a *mqlAwsRds) getDbClusters(conn *connection.AwsConnection) []*jobpool.Job
 				}
 
 				for _, cluster := range dbClusters.DBClusters {
+					// we cannot filter it in the api call since the api does not support it negative filters
+					if slices.Contains(nonRdsEngines, *cluster.Engine) {
+						log.Debug().Str("engine", *cluster.Engine).Msg("skipping non-RDS engine")
+						continue
+					}
+
 					mqlDbCluster, err := newMqlAwsRdsCluster(a.MqlRuntime, regionVal, conn.AccountId(), cluster)
 					if err != nil {
 						return nil, err
