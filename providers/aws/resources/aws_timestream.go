@@ -17,7 +17,7 @@ import (
 // AWS TimeStream LiveAnalytics is not available in all regions
 var timeStreamLiveRegions = []string{
 	"us-gov-west-1",
-	"ap-south-1",
+	// "ap-south-1", // only InfluxDB is available
 	"ap-northeast-1",
 	// "ap-southeast-1", // only InfluxDB is available
 	"ap-southeast-2",
