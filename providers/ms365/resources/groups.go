@@ -5,11 +5,8 @@ package resources
 
 import (
 	"context"
-	"errors"
-
 	"github.com/microsoftgraph/msgraph-sdk-go/groups"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
-
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
 	"go.mondoo.com/cnquery/v11/types"
@@ -20,7 +17,59 @@ func (m *mqlMicrosoftGroup) id() (string, error) {
 }
 
 func (a *mqlMicrosoftGroup) members() ([]interface{}, error) {
-	return nil, errors.New("not implemented")
+	msResource, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "microsoft", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	mqlMicrosoftResource := msResource.(*mqlMicrosoft)
+
+	groupId := a.Id.Data
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, err
+	}
+	top := int32(200)
+
+	queryParams := &groups.ItemMembersRequestBuilderGetQueryParameters{
+		Top: &top,
+	}
+	ctx := context.Background()
+	resp, err := graphClient.Groups().ByGroupId(groupId).Members().Get(ctx, &groups.ItemMembersRequestBuilderGetRequestConfiguration{
+		QueryParameters: queryParams,
+	})
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	res := []interface{}{}
+	for _, member := range resp.GetValue() {
+		memberId := member.GetId()
+		if memberId == nil {
+			continue
+		}
+
+		if member.GetOdataType() != nil && *member.GetOdataType() != "#microsoft.graph.user" {
+			continue
+		}
+
+		// if the user is already indexed, we can reuse it
+		userResource, ok := mqlMicrosoftResource.userById(*memberId)
+		if ok {
+			res = append(res, userResource)
+			continue
+		}
+
+		newUserResource, err := a.MqlRuntime.NewResource(a.MqlRuntime, "microsoft.user", map[string]*llx.RawData{
+			"id": llx.StringDataPtr(memberId),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlMicrosoftResource.index(newUserResource.(*mqlMicrosoftUser))
+		res = append(res, newUserResource)
+	}
+	return res, nil
 }
 
 func (a *mqlMicrosoft) groups() ([]interface{}, error) {

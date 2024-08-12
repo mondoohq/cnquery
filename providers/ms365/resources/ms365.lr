@@ -42,8 +42,8 @@ private microsoft.organization @defaults("displayName") {
   onPremisesSyncEnabled bool
 }
 
-// Microsoft user
-private microsoft.user @defaults("id displayName mail") {
+// Microsoft Entra ID user
+private microsoft.user @defaults("id displayName userPrincipalName") {
   // User ID
   id string
   // Whether the user account is enabled
@@ -197,6 +197,8 @@ microsoft.application @defaults("id displayName hasExpiredCredentials") {
   certificates []microsoft.keyCredential
   // Whether the credentials have expired
   hasExpiredCredentials() bool
+  // Application owner
+  owners() []microsoft.user
 }
 
 // Microsoft Entra AD Application certificate

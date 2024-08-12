@@ -27,7 +27,7 @@ func init() {
 			Create: createMicrosoftOrganization,
 		},
 		"microsoft.user": {
-			// to override args, implement: initMicrosoftUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initMicrosoftUser,
 			Create: createMicrosoftUser,
 		},
 		"microsoft.group": {
@@ -458,6 +458,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.application.hasExpiredCredentials": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftApplication).GetHasExpiredCredentials()).ToDataRes(types.Bool)
+	},
+	"microsoft.application.owners": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplication).GetOwners()).ToDataRes(types.Array(types.Resource("microsoft.user")))
 	},
 	"microsoft.keyCredential.keyId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftKeyCredential).GetKeyId()).ToDataRes(types.String)
@@ -1251,6 +1254,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMicrosoftApplication).HasExpiredCredentials, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"microsoft.application.owners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplication).Owners, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"microsoft.keyCredential.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlMicrosoftKeyCredential).__id, ok = v.Value.(string)
 			return
@@ -1935,7 +1942,7 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 type mqlMicrosoft struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlMicrosoftInternal it will be used here
+	mqlMicrosoftInternal
 	Organizations plugin.TValue[[]interface{}]
 	Users plugin.TValue[[]interface{}]
 	Groups plugin.TValue[[]interface{}]
@@ -2217,12 +2224,7 @@ func createMicrosoftUser(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	if res.__id == "" {
-	res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("microsoft.user", res.__id)
@@ -2660,6 +2662,7 @@ type mqlMicrosoftApplication struct {
 	Secrets plugin.TValue[[]interface{}]
 	Certificates plugin.TValue[[]interface{}]
 	HasExpiredCredentials plugin.TValue[bool]
+	Owners plugin.TValue[[]interface{}]
 }
 
 // createMicrosoftApplication creates a new instance of this resource
@@ -2757,6 +2760,22 @@ func (c *mqlMicrosoftApplication) GetCertificates() *plugin.TValue[[]interface{}
 func (c *mqlMicrosoftApplication) GetHasExpiredCredentials() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.HasExpiredCredentials, func() (bool, error) {
 		return c.hasExpiredCredentials()
+	})
+}
+
+func (c *mqlMicrosoftApplication) GetOwners() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Owners, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.application", c.__id, "owners")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.owners()
 	})
 }
 
