@@ -2325,7 +2325,7 @@ private aws.elasticache.cluster @defaults("cacheClusterId region nodeType engine
   // Region where the cluster exists
   region string
   // A list of VPC security groups associated with the cluster
-  securityGroups []aws.ec2.securitygroup
+  securityGroups() []aws.ec2.securitygroup
   // The number of days for which ElastiCache retains automatic cluster snapshots before deleting them
   snapshotRetentionLimit int
   // Whether in-transit encryption is enabled
@@ -2351,7 +2351,7 @@ private aws.elasticache.serverlessCache @defaults("name description status engin
   // ID of the Amazon Web Services Key Management Service (KMS) key
   kmsKeyId string
   // A list of VPC security groups associated with the cluster
-  securityGroups []aws.ec2.securitygroup
+  securityGroups() []aws.ec2.securitygroup
   // The number of days for which ElastiCache retains automatic cluster snapshots before deleting them
   snapshotRetentionLimit int
   // Time that a cache snapshot will be created

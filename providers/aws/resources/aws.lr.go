@@ -22724,7 +22724,7 @@ func (c *mqlAwsElasticache) GetServerlessCaches() *plugin.TValue[[]interface{}] 
 type mqlAwsElasticacheCluster struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlAwsElasticacheClusterInternal it will be used here
+	mqlAwsElasticacheClusterInternal
 	Arn plugin.TValue[string]
 	AtRestEncryptionEnabled plugin.TValue[bool]
 	AuthTokenEnabled plugin.TValue[bool]
@@ -22879,7 +22879,19 @@ func (c *mqlAwsElasticacheCluster) GetRegion() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsElasticacheCluster) GetSecurityGroups() *plugin.TValue[[]interface{}] {
-	return &c.SecurityGroups
+	return plugin.GetOrCompute[[]interface{}](&c.SecurityGroups, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elasticache.cluster", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
 }
 
 func (c *mqlAwsElasticacheCluster) GetSnapshotRetentionLimit() *plugin.TValue[int64] {
@@ -22898,7 +22910,7 @@ func (c *mqlAwsElasticacheCluster) GetTransitEncryptionMode() *plugin.TValue[str
 type mqlAwsElasticacheServerlessCache struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlAwsElasticacheServerlessCacheInternal it will be used here
+	mqlAwsElasticacheServerlessCacheInternal
 	Arn plugin.TValue[string]
 	Name plugin.TValue[string]
 	Description plugin.TValue[string]
@@ -22975,7 +22987,19 @@ func (c *mqlAwsElasticacheServerlessCache) GetKmsKeyId() *plugin.TValue[string] 
 }
 
 func (c *mqlAwsElasticacheServerlessCache) GetSecurityGroups() *plugin.TValue[[]interface{}] {
-	return &c.SecurityGroups
+	return plugin.GetOrCompute[[]interface{}](&c.SecurityGroups, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elasticache.serverlessCache", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
 }
 
 func (c *mqlAwsElasticacheServerlessCache) GetSnapshotRetentionLimit() *plugin.TValue[int64] {
