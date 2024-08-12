@@ -7,46 +7,46 @@ go 1.22.0
 toolchain go1.22.4
 
 require (
-	cloud.google.com/go/accessapproval v1.7.11
+	cloud.google.com/go/accessapproval v1.7.12
 	cloud.google.com/go/bigquery v1.62.0
-	cloud.google.com/go/compute v1.27.4
-	cloud.google.com/go/container v1.38.0
-	cloud.google.com/go/functions v1.16.6
-	cloud.google.com/go/iam v1.1.12
-	cloud.google.com/go/kms v1.18.4
+	cloud.google.com/go/compute v1.27.5
+	cloud.google.com/go/container v1.38.1
+	cloud.google.com/go/functions v1.17.0
+	cloud.google.com/go/iam v1.1.13
+	cloud.google.com/go/kms v1.18.5
 	cloud.google.com/go/logging v1.11.0
-	cloud.google.com/go/longrunning v0.5.11
-	cloud.google.com/go/monitoring v1.20.3
+	cloud.google.com/go/longrunning v0.5.12
+	cloud.google.com/go/monitoring v1.20.4
 	cloud.google.com/go/pubsub v1.41.0
-	cloud.google.com/go/recommender v1.12.7
-	cloud.google.com/go/run v1.4.0
-	cloud.google.com/go/serviceusage v1.8.10
+	cloud.google.com/go/recommender v1.12.8
+	cloud.google.com/go/run v1.4.1
+	cloud.google.com/go/serviceusage v1.8.11
 	github.com/aws/smithy-go v1.20.3
 	github.com/cockroachdb/errors v1.11.3
-	github.com/google/go-containerregistry v0.20.1
+	github.com/google/go-containerregistry v0.20.2
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/rs/zerolog v1.33.0
 	github.com/stretchr/testify v1.9.0
-	go.mondoo.com/cnquery/v11 v11.15.1
+	go.mondoo.com/cnquery/v11 v11.16.1
 	go.mondoo.com/ranger-rpc v0.6.2
 	golang.org/x/oauth2 v0.22.0
-	google.golang.org/api v0.190.0
-	google.golang.org/genproto v0.0.0-20240730163845-b1a4ccb954bf
+	google.golang.org/api v0.191.0
+	google.golang.org/genproto v0.0.0-20240808171019-573a1156607a
 	google.golang.org/protobuf v1.34.2
 )
 
 require (
 	cloud.google.com/go v0.115.0 // indirect
-	cloud.google.com/go/auth v0.7.3 // indirect
-	cloud.google.com/go/auth/oauth2adapt v0.2.3 // indirect
-	cloud.google.com/go/binaryauthorization v1.8.7
+	cloud.google.com/go/auth v0.8.0 // indirect
+	cloud.google.com/go/auth/oauth2adapt v0.2.4 // indirect
+	cloud.google.com/go/binaryauthorization v1.8.8
 	cloud.google.com/go/compute/metadata v0.5.0 // indirect
-	cloud.google.com/go/secretmanager v1.13.5 // indirect
+	cloud.google.com/go/secretmanager v1.13.6 // indirect
 	cloud.google.com/go/storage v1.43.0 // indirect
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
-	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.13.0 // indirect
+	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.14.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.7.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.10.0 // indirect
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.2.2 // indirect
@@ -65,18 +65,18 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.15 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.15 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.173.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.174.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.25.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ecr v1.31.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ecr v1.32.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.25.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.32.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.52.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.52.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.22.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.26.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.30.3 // indirect
-	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20240730143543-a8d7d3c42ca1 // indirect
+	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20240809155957-ac94a3401898 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/cenkalti/backoff/v3 v3.2.2 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
@@ -189,19 +189,19 @@ require (
 	go.opentelemetry.io/otel/trace v1.28.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.1.0 // indirect
 	go.uber.org/mock v0.4.0 // indirect
-	golang.org/x/crypto v0.25.0 // indirect
-	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
+	golang.org/x/crypto v0.26.0 // indirect
+	golang.org/x/exp v0.0.0-20240808152545-0cdaa3abc0fa // indirect
 	golang.org/x/mod v0.20.0 // indirect
-	golang.org/x/net v0.27.0 // indirect
+	golang.org/x/net v0.28.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
-	golang.org/x/sys v0.23.0 // indirect
-	golang.org/x/term v0.22.0 // indirect
-	golang.org/x/text v0.16.0 // indirect
+	golang.org/x/sys v0.24.0 // indirect
+	golang.org/x/term v0.23.0 // indirect
+	golang.org/x/text v0.17.0 // indirect
 	golang.org/x/time v0.6.0 // indirect
-	golang.org/x/tools v0.23.0 // indirect
+	golang.org/x/tools v0.24.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240716161551-93cc26a95ae9 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20240730163845-b1a4ccb954bf // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240730163845-b1a4ccb954bf // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20240808171019-573a1156607a // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240808171019-573a1156607a // indirect
 	google.golang.org/grpc v1.65.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
