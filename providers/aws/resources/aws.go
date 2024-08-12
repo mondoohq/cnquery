@@ -196,3 +196,31 @@ func remove(s []string, r string) []string {
 	}
 	return s
 }
+
+// securityGroupIdHandler is a helper struct to handle security group ids and convert them to resources
+// This makes it easy to extend the internal representation of a resource and fetch security groups asynchronous
+type securityGroupIdHandler struct {
+	securityGroupArns []string
+}
+
+// setSecurityGroupArns sets the security group arns
+func (sgh *securityGroupIdHandler) setSecurityGroupArns(ids []string) {
+	sgh.securityGroupArns = ids
+}
+
+// newSecurityGroupResources creates new security group resources based on the security group arns
+func (sgh *securityGroupIdHandler) newSecurityGroupResources(runtime *plugin.Runtime) ([]interface{}, error) {
+	sgs := []interface{}{}
+	for i := range sgh.securityGroupArns {
+		sgArn := sgh.securityGroupArns[i]
+		mqlSg, err := NewResource(runtime, "aws.ec2.securitygroup",
+			map[string]*llx.RawData{
+				"arn": llx.StringData(sgArn),
+			})
+		if err != nil {
+			return nil, err
+		}
+		sgs = append(sgs, mqlSg)
+	}
+	return sgs, nil
+}

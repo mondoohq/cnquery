@@ -16,30 +16,6 @@ import (
 	"go.mondoo.com/cnquery/v11/types"
 )
 
-type securityGroupIdHandler struct {
-	securityGroupArns []string
-}
-
-func (sgh *securityGroupIdHandler) setSecurityGroupArns(ids []string) {
-	sgh.securityGroupArns = ids
-}
-
-func (sgh *securityGroupIdHandler) newSecurityGroupResources(runtime *plugin.Runtime) ([]interface{}, error) {
-	sgs := []interface{}{}
-	for i := range sgh.securityGroupArns {
-		sgArn := sgh.securityGroupArns[i]
-		mqlSg, err := NewResource(runtime, "aws.ec2.securitygroup",
-			map[string]*llx.RawData{
-				"arn": llx.StringData(sgArn),
-			})
-		if err != nil {
-			return nil, err
-		}
-		sgs = append(sgs, mqlSg)
-	}
-	return sgs, nil
-}
-
 func (a *mqlAwsElasticache) id() (string, error) {
 	return "aws.elasticache", nil
 }

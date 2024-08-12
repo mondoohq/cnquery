@@ -21904,7 +21904,7 @@ func (c *mqlAwsRdsBackupsetting) GetLatestRestoreAvailable() *plugin.TValue[*tim
 type mqlAwsRdsDbcluster struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlAwsRdsDbclusterInternal it will be used here
+	mqlAwsRdsDbclusterInternal
 	Arn plugin.TValue[string]
 	Region plugin.TValue[string]
 	Id plugin.TValue[string]
@@ -22073,7 +22073,19 @@ func (c *mqlAwsRdsDbcluster) GetDeletionProtection() *plugin.TValue[bool] {
 }
 
 func (c *mqlAwsRdsDbcluster) GetSecurityGroups() *plugin.TValue[[]interface{}] {
-	return &c.SecurityGroups
+	return plugin.GetOrCompute[[]interface{}](&c.SecurityGroups, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.dbcluster", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
 }
 
 func (c *mqlAwsRdsDbcluster) GetAvailabilityZones() *plugin.TValue[[]interface{}] {
@@ -22450,7 +22462,19 @@ func (c *mqlAwsRdsDbinstance) GetEngineVersion() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsRdsDbinstance) GetSecurityGroups() *plugin.TValue[[]interface{}] {
-	return &c.SecurityGroups
+	return plugin.GetOrCompute[[]interface{}](&c.SecurityGroups, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.dbinstance", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
 }
 
 func (c *mqlAwsRdsDbinstance) GetStatus() *plugin.TValue[string] {
