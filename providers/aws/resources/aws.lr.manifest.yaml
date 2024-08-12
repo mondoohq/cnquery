@@ -2288,6 +2288,7 @@ resources:
       crossAccountClone: {}
       deletionProtection: {}
       earliestRestorableTime: {}
+      enabledCloudwatchLogsExports: {}
       endpoint: {}
       engine: {}
       engineVersion: {}

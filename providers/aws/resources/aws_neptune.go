@@ -122,6 +122,7 @@ func newMqlAwsNeptuneCluster(runtime *plugin.Runtime, region string, cluster nep
 			"clusterResourceId":                llx.StringDataPtr(cluster.DbClusterResourceId),
 			"deletionProtection":               llx.BoolDataPtr(cluster.DeletionProtection),
 			"earliestRestorableTime":           llx.TimeDataPtr(cluster.EarliestRestorableTime),
+			"enabledCloudwatchLogsExports":     llx.ArrayData(convert.SliceAnyToInterface(cluster.EnabledCloudwatchLogsExports), types.String),
 			"endpoint":                         llx.StringDataPtr(cluster.Endpoint),
 			"iamDatabaseAuthenticationEnabled": llx.BoolDataPtr(cluster.IAMDatabaseAuthenticationEnabled),
 			"latestRestorableTime":             llx.TimeDataPtr(cluster.LatestRestorableTime),

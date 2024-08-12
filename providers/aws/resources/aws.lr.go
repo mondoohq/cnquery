@@ -4762,6 +4762,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.neptune.cluster.earliestRestorableTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNeptuneCluster).GetEarliestRestorableTime()).ToDataRes(types.Time)
 	},
+	"aws.neptune.cluster.enabledCloudwatchLogsExports": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneCluster).GetEnabledCloudwatchLogsExports()).ToDataRes(types.Array(types.String))
+	},
 	"aws.neptune.cluster.endpoint": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNeptuneCluster).GetEndpoint()).ToDataRes(types.String)
 	},
@@ -10914,6 +10917,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.neptune.cluster.earliestRestorableTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsNeptuneCluster).EarliestRestorableTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.cluster.enabledCloudwatchLogsExports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneCluster).EnabledCloudwatchLogsExports, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"aws.neptune.cluster.endpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -27937,6 +27944,7 @@ type mqlAwsNeptuneCluster struct {
 	ClusterResourceId plugin.TValue[string]
 	DeletionProtection plugin.TValue[bool]
 	EarliestRestorableTime plugin.TValue[*time.Time]
+	EnabledCloudwatchLogsExports plugin.TValue[[]interface{}]
 	Endpoint plugin.TValue[string]
 	IamDatabaseAuthenticationEnabled plugin.TValue[bool]
 	LatestRestorableTime plugin.TValue[*time.Time]
@@ -28052,6 +28060,10 @@ func (c *mqlAwsNeptuneCluster) GetDeletionProtection() *plugin.TValue[bool] {
 
 func (c *mqlAwsNeptuneCluster) GetEarliestRestorableTime() *plugin.TValue[*time.Time] {
 	return &c.EarliestRestorableTime
+}
+
+func (c *mqlAwsNeptuneCluster) GetEnabledCloudwatchLogsExports() *plugin.TValue[[]interface{}] {
+	return &c.EnabledCloudwatchLogsExports
 }
 
 func (c *mqlAwsNeptuneCluster) GetEndpoint() *plugin.TValue[string] {
