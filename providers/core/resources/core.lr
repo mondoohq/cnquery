@@ -50,7 +50,7 @@ asset @defaults("name platform version") {
   annotations map[string]string
 }
 
-// Information about the assets platform end-of-life.
+// Information about the asset's platform's end of life
 asset.eol @defaults("date") {
   // Documentation URL
   docsUrl string
@@ -100,7 +100,7 @@ regex {
   creditCard() regex
 }
 
-// Provides common parsers (json, ini, certs, etc)
+// Common parsers (json, ini, certs, and so on)
 parse {
   // Built-in functions:
   // date(value, format) time
@@ -171,11 +171,11 @@ private product.releaseCycleInformation {
   firstReleaseDate time
   // Last release date
   lastReleaseDate time
-  // End of active support
+  // When active support ends
   endOfActiveSupport time
   // End of life date
   endOfLife time
-  // End of extended support
+  // When extended support ends
   endOfExtendedSupport time
   // Release link
   link string
