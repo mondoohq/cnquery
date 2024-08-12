@@ -162,7 +162,7 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 }
 
 // pendingMaintenanceActions returns all pending maintaince actions for all RDS instances
-func (a *mqlAwsRds) pendingMaintenanceActions() ([]interface{}, error) {
+func (a *mqlAwsRds) allPendingMaintenanceActions() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	res := []interface{}{}
 	poolOfJobs := jobpool.CreatePool(a.getPpendingMaintenanceActions(conn), 5)
@@ -180,7 +180,7 @@ func (a *mqlAwsRds) pendingMaintenanceActions() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsRds) getPpendingMaintenanceActions(conn *connection.AwsConnection) []*jobpool.Job {
+func (a *mqlAwsRds) getPendingMaintenanceActions(conn *connection.AwsConnection) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := conn.Regions()
 	if err != nil {
@@ -210,7 +210,7 @@ func (a *mqlAwsRds) getPpendingMaintenanceActions(conn *connection.AwsConnection
 					}
 					for _, action := range resp.PendingMaintenanceActionDetails {
 						resourceArn := *resp.ResourceIdentifier
-						mqlDbSnapshot, err := newMqlAwsPendingMaintainceAction(a.MqlRuntime, region, resourceArn, action)
+						mqlPendingAction, err := newMqlAwsPendingMaintainceAction(a.MqlRuntime, region, resourceArn, action)
 						if err != nil {
 							return nil, err
 						}
