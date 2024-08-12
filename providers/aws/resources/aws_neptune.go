@@ -5,14 +5,17 @@ package resources
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go-v2/service/neptune"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/types"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/neptune"
+	neptune_types "github.com/aws/aws-sdk-go-v2/service/neptune/types"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/cnquery/v11/providers/aws/connection"
+	"go.mondoo.com/cnquery/v11/types"
 )
 
 func (a *mqlAwsNeptune) id() (string, error) {
@@ -59,6 +62,13 @@ func (a *mqlAwsNeptune) getDbClusters(conn *connection.AwsConnection) []*jobpool
 			for {
 				cluster, err := svc.DescribeDBClusters(ctx, &neptune.DescribeDBClustersInput{
 					Marker: marker,
+					Filters: []neptune_types.Filter{
+						{
+							// we need to filter by engine since the neptune client also returns rds instances - rofl
+							Name:   aws.String("engine"),
+							Values: []string{"neptune"},
+						},
+					},
 				})
 				if err != nil {
 					if Is400AccessDeniedError(err) {
@@ -72,40 +82,7 @@ func (a *mqlAwsNeptune) getDbClusters(conn *connection.AwsConnection) []*jobpool
 				}
 				for i := range cluster.DBClusters {
 					cluster := cluster.DBClusters[i]
-
-					mqlCluster, err := CreateResource(a.MqlRuntime, "aws.neptune.cluster",
-						map[string]*llx.RawData{
-							"__id":                             llx.StringDataPtr(cluster.DBClusterArn),
-							"arn":                              llx.StringDataPtr(cluster.DBClusterArn),
-							"name":                             llx.StringDataPtr(cluster.DatabaseName),
-							"clusterIdentifier":                llx.StringDataPtr(cluster.DBClusterIdentifier),
-							"globalClusterIdentifier":          llx.StringDataPtr(cluster.GlobalClusterIdentifier),
-							"engine":                           llx.StringDataPtr(cluster.Engine),
-							"engineVersion":                    llx.StringDataPtr(cluster.EngineVersion),
-							"kmsKeyId":                         llx.StringDataPtr(cluster.KmsKeyId),
-							"region":                           llx.StringData(regionVal),
-							"automaticRestartTime":             llx.TimeDataPtr(cluster.AutomaticRestartTime),
-							"availabilityZones":                llx.ArrayData(convert.SliceAnyToInterface(cluster.AvailabilityZones), types.String),
-							"backupRetentionPeriod":            llx.IntDataPtr(cluster.BackupRetentionPeriod),
-							"createdAt":                        llx.TimeDataPtr(cluster.ClusterCreateTime),
-							"crossAccountClone":                llx.BoolDataPtr(cluster.CrossAccountClone),
-							"clusterParameterGroup":            llx.StringDataPtr(cluster.DBClusterParameterGroup),
-							"subnetGroup":                      llx.StringDataPtr(cluster.DBSubnetGroup),
-							"clusterResourceId":                llx.StringDataPtr(cluster.DbClusterResourceId),
-							"deletionProtection":               llx.BoolDataPtr(cluster.DeletionProtection),
-							"earliestRestorableTime":           llx.TimeDataPtr(cluster.EarliestRestorableTime),
-							"endpoint":                         llx.StringDataPtr(cluster.Endpoint),
-							"iamDatabaseAuthenticationEnabled": llx.BoolDataPtr(cluster.IAMDatabaseAuthenticationEnabled),
-							"latestRestorableTime":             llx.TimeDataPtr(cluster.LatestRestorableTime),
-							"masterUsername":                   llx.StringDataPtr(cluster.MasterUsername),
-							"multiAZ":                          llx.BoolDataPtr(cluster.MultiAZ),
-							"port":                             llx.IntDataPtr(cluster.Port),
-							"preferredBackupWindow":            llx.StringDataPtr(cluster.PreferredBackupWindow),
-							"preferredMaintenanceWindow":       llx.StringDataPtr(cluster.PreferredMaintenanceWindow),
-							"status":                           llx.StringDataPtr(cluster.Status),
-							"storageEncrypted":                 llx.BoolDataPtr(cluster.StorageEncrypted),
-							"storageType":                      llx.StringDataPtr(cluster.StorageType),
-						})
+					mqlCluster, err := newMqlAwsNeptuneCluster(a.MqlRuntime, regionVal, cluster)
 					if err != nil {
 						return nil, err
 					}
@@ -121,6 +98,46 @@ func (a *mqlAwsNeptune) getDbClusters(conn *connection.AwsConnection) []*jobpool
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func newMqlAwsNeptuneCluster(runtime *plugin.Runtime, region string, cluster neptune_types.DBCluster) (*mqlAwsNeptuneCluster, error) {
+	resource, err := CreateResource(runtime, "aws.neptune.cluster",
+		map[string]*llx.RawData{
+			"__id":                             llx.StringDataPtr(cluster.DBClusterArn),
+			"arn":                              llx.StringDataPtr(cluster.DBClusterArn),
+			"name":                             llx.StringDataPtr(cluster.DatabaseName),
+			"clusterIdentifier":                llx.StringDataPtr(cluster.DBClusterIdentifier),
+			"globalClusterIdentifier":          llx.StringDataPtr(cluster.GlobalClusterIdentifier),
+			"engine":                           llx.StringDataPtr(cluster.Engine),
+			"engineVersion":                    llx.StringDataPtr(cluster.EngineVersion),
+			"kmsKeyId":                         llx.StringDataPtr(cluster.KmsKeyId),
+			"region":                           llx.StringData(region),
+			"automaticRestartTime":             llx.TimeDataPtr(cluster.AutomaticRestartTime),
+			"availabilityZones":                llx.ArrayData(convert.SliceAnyToInterface(cluster.AvailabilityZones), types.String),
+			"backupRetentionPeriod":            llx.IntDataPtr(cluster.BackupRetentionPeriod),
+			"createdAt":                        llx.TimeDataPtr(cluster.ClusterCreateTime),
+			"crossAccountClone":                llx.BoolDataPtr(cluster.CrossAccountClone),
+			"clusterParameterGroup":            llx.StringDataPtr(cluster.DBClusterParameterGroup),
+			"subnetGroup":                      llx.StringDataPtr(cluster.DBSubnetGroup),
+			"clusterResourceId":                llx.StringDataPtr(cluster.DbClusterResourceId),
+			"deletionProtection":               llx.BoolDataPtr(cluster.DeletionProtection),
+			"earliestRestorableTime":           llx.TimeDataPtr(cluster.EarliestRestorableTime),
+			"endpoint":                         llx.StringDataPtr(cluster.Endpoint),
+			"iamDatabaseAuthenticationEnabled": llx.BoolDataPtr(cluster.IAMDatabaseAuthenticationEnabled),
+			"latestRestorableTime":             llx.TimeDataPtr(cluster.LatestRestorableTime),
+			"masterUsername":                   llx.StringDataPtr(cluster.MasterUsername),
+			"multiAZ":                          llx.BoolDataPtr(cluster.MultiAZ),
+			"port":                             llx.IntDataPtr(cluster.Port),
+			"preferredBackupWindow":            llx.StringDataPtr(cluster.PreferredBackupWindow),
+			"preferredMaintenanceWindow":       llx.StringDataPtr(cluster.PreferredMaintenanceWindow),
+			"status":                           llx.StringDataPtr(cluster.Status),
+			"storageEncrypted":                 llx.BoolDataPtr(cluster.StorageEncrypted),
+			"storageType":                      llx.StringDataPtr(cluster.StorageType),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlAwsNeptuneCluster), nil
 }
 
 func (a *mqlAwsNeptune) instances() ([]interface{}, error) {
@@ -163,6 +180,13 @@ func (a *mqlAwsNeptune) getDbInstances(conn *connection.AwsConnection) []*jobpoo
 			for {
 				cluster, err := svc.DescribeDBInstances(ctx, &neptune.DescribeDBInstancesInput{
 					Marker: marker,
+					Filters: []neptune_types.Filter{
+						{
+							// we need to filter by engine since the neptune client also returns rds instances - rofl
+							Name:   aws.String("engine"),
+							Values: []string{"neptune"},
+						},
+					},
 				})
 				if err != nil {
 					if Is400AccessDeniedError(err) {
@@ -176,45 +200,11 @@ func (a *mqlAwsNeptune) getDbInstances(conn *connection.AwsConnection) []*jobpoo
 				}
 				for i := range cluster.DBInstances {
 					instance := cluster.DBInstances[i]
-
-					endpoint, _ := convert.JsonToDictSlice(instance.Endpoint)
-
-					mqlCluster, err := CreateResource(a.MqlRuntime, "aws.neptune.instance",
-						map[string]*llx.RawData{
-							"__id":                             llx.StringDataPtr(instance.DBInstanceArn),
-							"arn":                              llx.StringDataPtr(instance.DBInstanceArn),
-							"name":                             llx.StringDataPtr(instance.DBName),
-							"clusterIdentifier":                llx.StringDataPtr(instance.DBClusterIdentifier),
-							"engine":                           llx.StringDataPtr(instance.Engine),
-							"engineVersion":                    llx.StringDataPtr(instance.EngineVersion),
-							"kmsKeyId":                         llx.StringDataPtr(instance.KmsKeyId),
-							"region":                           llx.StringData(regionVal),
-							"autoMinorVersionUpgrade":          llx.BoolDataPtr(instance.AutoMinorVersionUpgrade),
-							"availabilityZone":                 llx.StringDataPtr(instance.AvailabilityZone),
-							"backupRetentionPeriod":            llx.IntDataPtr(instance.BackupRetentionPeriod),
-							"createdAt":                        llx.TimeDataPtr(instance.InstanceCreateTime),
-							"instanceClass":                    llx.StringDataPtr(instance.DBInstanceClass),
-							"deletionProtection":               llx.BoolDataPtr(instance.DeletionProtection),
-							"monitoringInterval":               llx.IntDataPtr(instance.MonitoringInterval),
-							"monitoringRoleArn":                llx.StringDataPtr(instance.MonitoringRoleArn),
-							"latestRestorableTime":             llx.TimeDataPtr(instance.LatestRestorableTime),
-							"enabledCloudwatchLogsExports":     llx.ArrayData(convert.SliceAnyToInterface(instance.EnabledCloudwatchLogsExports), types.String),
-							"enhancedMonitoringResourceArn":    llx.StringDataPtr(instance.EnhancedMonitoringResourceArn),
-							"endpoint":                         llx.DictData(endpoint),
-							"iamDatabaseAuthenticationEnabled": llx.BoolDataPtr(instance.IAMDatabaseAuthenticationEnabled),
-							"masterUsername":                   llx.StringDataPtr(instance.MasterUsername),
-							"multiAZ":                          llx.BoolDataPtr(instance.MultiAZ),
-							"port":                             llx.IntDataPtr(instance.DbInstancePort),
-							"preferredBackupWindow":            llx.StringDataPtr(instance.PreferredBackupWindow),
-							"preferredMaintenanceWindow":       llx.StringDataPtr(instance.PreferredMaintenanceWindow),
-							"status":                           llx.StringDataPtr(instance.DBInstanceStatus),
-							"storageType":                      llx.StringDataPtr(instance.StorageType),
-							"storageEncrypted":                 llx.BoolDataPtr(instance.StorageEncrypted),
-						})
+					mqlNeptuneInstance, err := newMqlAwsNeptuneInstance(a.MqlRuntime, regionVal, instance)
 					if err != nil {
 						return nil, err
 					}
-					res = append(res, mqlCluster)
+					res = append(res, mqlNeptuneInstance)
 				}
 				if cluster.Marker == nil {
 					break
@@ -226,4 +216,47 @@ func (a *mqlAwsNeptune) getDbInstances(conn *connection.AwsConnection) []*jobpoo
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func newMqlAwsNeptuneInstance(runtime *plugin.Runtime, region string, instance neptune_types.DBInstance) (*mqlAwsNeptuneInstance, error) {
+	endpoint, _ := convert.JsonToDictSlice(instance.Endpoint)
+
+	resource, err := CreateResource(runtime, "aws.neptune.instance",
+		map[string]*llx.RawData{
+			"__id":                             llx.StringDataPtr(instance.DBInstanceArn),
+			"arn":                              llx.StringDataPtr(instance.DBInstanceArn),
+			"name":                             llx.StringDataPtr(instance.DBName),
+			"clusterIdentifier":                llx.StringDataPtr(instance.DBClusterIdentifier),
+			"engine":                           llx.StringDataPtr(instance.Engine),
+			"engineVersion":                    llx.StringDataPtr(instance.EngineVersion),
+			"kmsKeyId":                         llx.StringDataPtr(instance.KmsKeyId),
+			"region":                           llx.StringData(region),
+			"autoMinorVersionUpgrade":          llx.BoolDataPtr(instance.AutoMinorVersionUpgrade),
+			"availabilityZone":                 llx.StringDataPtr(instance.AvailabilityZone),
+			"backupRetentionPeriod":            llx.IntDataPtr(instance.BackupRetentionPeriod),
+			"createdAt":                        llx.TimeDataPtr(instance.InstanceCreateTime),
+			"instanceClass":                    llx.StringDataPtr(instance.DBInstanceClass),
+			"deletionProtection":               llx.BoolDataPtr(instance.DeletionProtection),
+			"monitoringInterval":               llx.IntDataPtr(instance.MonitoringInterval),
+			"monitoringRoleArn":                llx.StringDataPtr(instance.MonitoringRoleArn),
+			"latestRestorableTime":             llx.TimeDataPtr(instance.LatestRestorableTime),
+			"enabledCloudwatchLogsExports":     llx.ArrayData(convert.SliceAnyToInterface(instance.EnabledCloudwatchLogsExports), types.String),
+			"enhancedMonitoringResourceArn":    llx.StringDataPtr(instance.EnhancedMonitoringResourceArn),
+			"endpoint":                         llx.DictData(endpoint),
+			"iamDatabaseAuthenticationEnabled": llx.BoolDataPtr(instance.IAMDatabaseAuthenticationEnabled),
+			"masterUsername":                   llx.StringDataPtr(instance.MasterUsername),
+			"multiAZ":                          llx.BoolDataPtr(instance.MultiAZ),
+			"port":                             llx.IntDataPtr(instance.DbInstancePort),
+			"preferredBackupWindow":            llx.StringDataPtr(instance.PreferredBackupWindow),
+			"preferredMaintenanceWindow":       llx.StringDataPtr(instance.PreferredMaintenanceWindow),
+			"promotionTier":                    llx.IntDataPtr(instance.PromotionTier),
+			"status":                           llx.StringDataPtr(instance.DBInstanceStatus),
+			"storageType":                      llx.StringDataPtr(instance.StorageType),
+			"storageEncrypted":                 llx.BoolDataPtr(instance.StorageEncrypted),
+			"tdeCredentialArn":                 llx.StringDataPtr(instance.TdeCredentialArn),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlAwsNeptuneInstance), nil
 }
