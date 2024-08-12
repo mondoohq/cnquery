@@ -2132,7 +2132,6 @@ private aws.rds.dbcluster @defaults("id region") {
   preferredMaintenanceWindow string
   // Preferred backup window for the database cluster
   preferredBackupWindow string
-
 }
 
 // Amazon RDS snapshot
