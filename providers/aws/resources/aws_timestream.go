@@ -14,8 +14,8 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-// AWS TimeStream LifeAnalytics is not available in all regions
-var timeStreamLifeRegions = []string{
+// AWS TimeStream LiveAnalytics is not available in all regions
+var timeStreamLiveRegions = []string{
 	"us-gov-west-1",
 	"ap-south-1",
 	"ap-northeast-1",
@@ -29,11 +29,11 @@ var timeStreamLifeRegions = []string{
 	"us-west-2",
 }
 
-func (a *mqlAwsTimestreamLifeanalytics) id() (string, error) {
-	return "aws.timestream.lifeanalytics", nil
+func (a *mqlAwsTimestreamLiveanalytics) id() (string, error) {
+	return "aws.timestream.liveanalytics", nil
 }
 
-func (a *mqlAwsTimestreamLifeanalytics) databases() ([]interface{}, error) {
+func (a *mqlAwsTimestreamLiveanalytics) databases() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	res := []interface{}{}
 	poolOfJobs := jobpool.CreatePool(a.getDatabases(conn), 5)
@@ -53,7 +53,7 @@ func (a *mqlAwsTimestreamLifeanalytics) databases() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsTimestreamLifeanalytics) getDatabases(conn *connection.AwsConnection) []*jobpool.Job {
+func (a *mqlAwsTimestreamLiveanalytics) getDatabases(conn *connection.AwsConnection) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := conn.Regions()
 	if err != nil {
@@ -62,14 +62,14 @@ func (a *mqlAwsTimestreamLifeanalytics) getDatabases(conn *connection.AwsConnect
 
 	for _, region := range regions {
 		regionVal := region
-		if !slices.Contains(timeStreamLifeRegions, regionVal) {
+		if !slices.Contains(timeStreamLiveRegions, regionVal) {
 			log.Debug().Str("region", regionVal).Msg("skipping region since timestream is not available in this region")
 			continue
 		}
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("timestream>getDatabases>calling aws with region %s", regionVal)
 
-			svc := conn.TimestreamLifeAnalytics(regionVal)
+			svc := conn.TimestreamLiveAnalytics(regionVal)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -91,7 +91,7 @@ func (a *mqlAwsTimestreamLifeanalytics) getDatabases(conn *connection.AwsConnect
 				for i := range resp.Databases {
 					database := resp.Databases[i]
 
-					mqlCluster, err := CreateResource(a.MqlRuntime, "aws.timestream.lifeanalytics.database",
+					mqlCluster, err := CreateResource(a.MqlRuntime, "aws.timestream.liveanalytics.database",
 						map[string]*llx.RawData{
 							"__id":       llx.StringDataPtr(database.Arn),
 							"arn":        llx.StringDataPtr(database.Arn),
@@ -119,7 +119,7 @@ func (a *mqlAwsTimestreamLifeanalytics) getDatabases(conn *connection.AwsConnect
 	return tasks
 }
 
-func (a *mqlAwsTimestreamLifeanalytics) tables() ([]interface{}, error) {
+func (a *mqlAwsTimestreamLiveanalytics) tables() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	res := []interface{}{}
 	poolOfJobs := jobpool.CreatePool(a.getTables(conn), 5)
@@ -139,7 +139,7 @@ func (a *mqlAwsTimestreamLifeanalytics) tables() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsTimestreamLifeanalytics) getTables(conn *connection.AwsConnection) []*jobpool.Job {
+func (a *mqlAwsTimestreamLiveanalytics) getTables(conn *connection.AwsConnection) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := conn.Regions()
 	if err != nil {
@@ -148,14 +148,14 @@ func (a *mqlAwsTimestreamLifeanalytics) getTables(conn *connection.AwsConnection
 
 	for _, region := range regions {
 		regionVal := region
-		if !slices.Contains(timeStreamLifeRegions, regionVal) {
+		if !slices.Contains(timeStreamLiveRegions, regionVal) {
 			log.Debug().Str("region", regionVal).Msg("skipping region since timestream is not available in this region")
 			continue
 		}
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("timestream>getTables>calling aws with region %s", regionVal)
 
-			svc := conn.TimestreamLifeAnalytics(regionVal)
+			svc := conn.TimestreamLiveAnalytics(regionVal)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -180,7 +180,7 @@ func (a *mqlAwsTimestreamLifeanalytics) getTables(conn *connection.AwsConnection
 					magneticStoreProperties, _ := convert.JsonToDictSlice(table.MagneticStoreWriteProperties)
 					retentionProperties, _ := convert.JsonToDictSlice(table.RetentionProperties)
 
-					mqlCluster, err := CreateResource(a.MqlRuntime, "aws.timestream.lifeanalytics.table",
+					mqlCluster, err := CreateResource(a.MqlRuntime, "aws.timestream.liveanalytics.table",
 						map[string]*llx.RawData{
 							"__id":                         llx.StringDataPtr(table.Arn),
 							"arn":                          llx.StringDataPtr(table.Arn),

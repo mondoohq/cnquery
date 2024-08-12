@@ -3011,38 +3011,7 @@ resources:
     platform:
       name:
       - aws
-  aws.timestream:
-    fields:
-      backups: {}
-      databases: {}
-      tables: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.timestream.backup:
-    fields:
-      arn: {}
-      createdAt: {}
-      name: {}
-      region: {}
-      updatedAt: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.timestream.database:
-    fields:
-      arn: {}
-      createdAt: {}
-      name: {}
-      region: {}
-      updatedAt: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.timestream.lifeanalytics:
+  aws.timestream.liveanalytics:
     fields:
       databases: {}
       tables: {}
@@ -3050,7 +3019,7 @@ resources:
     platform:
       name:
       - aws
-  aws.timestream.lifeanalytics.database:
+  aws.timestream.liveanalytics.database:
     fields:
       arn: {}
       createdAt: {}
@@ -3064,7 +3033,7 @@ resources:
     platform:
       name:
       - aws
-  aws.timestream.lifeanalytics.table:
+  aws.timestream.liveanalytics.table:
     fields:
       arn: {}
       createdAt: {}
@@ -3075,17 +3044,6 @@ resources:
       retentionProperties: {}
       updatedAt: {}
     is_private: true
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.timestream.table:
-    fields:
-      arn: {}
-      createdAt: {}
-      name: {}
-      region: {}
-      updatedAt: {}
     min_mondoo_version: 9.0.0
     platform:
       name:
