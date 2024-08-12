@@ -5,6 +5,7 @@ package providers
 
 import (
 	"archive/tar"
+	"bytes"
 	"encoding/json"
 	"io"
 	"net"
@@ -426,8 +427,21 @@ func installVersion(name string, version string) (*Provider, error) {
 		return nil, errors.New("failed to install " + name + "-" + version + ", received status code: " + res.Status)
 	}
 
+	log.Debug().Str("url", url).Msg("request complete, installing provider")
+
+	// we have to create new Reader to get rid of the timeouts imposed by the http client
+	var tar []byte
+	if tar, err = io.ReadAll(res.Body); err != nil {
+		log.Debug().Str("url", url).Msg("failed to install from URL (read body)")
+		return nil, errors.Wrap(err, "failed to install "+name+"-"+version+", failed to read body")
+	}
+
+	reader := io.NopCloser(
+		bytes.NewReader(tar),
+	)
+
 	// else we know we got a 200 response, we can safely install
-	installed, err := InstallIO(res.Body, InstallConf{
+	installed, err := InstallIO(reader, InstallConf{
 		Dst: DefaultPath,
 	})
 	if err != nil {
