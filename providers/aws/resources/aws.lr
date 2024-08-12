@@ -2026,8 +2026,8 @@ aws.rds {
   dbClusters() []aws.rds.dbcluster
   // List of RDS database clusters
   clusters() []aws.rds.dbcluster
-  // List of pending maintenance actions for the database instance
-  pendingMaintenanceActions() []aws.rds.pendingMaintenanceAction
+  // List of all pending maintenance actions for the database instance
+  allPendingMaintenanceActions() []aws.rds.pendingMaintenanceAction
 }
 
 // Amazon RDS Backup Setting
@@ -2156,6 +2156,8 @@ private aws.rds.snapshot @defaults("id region type encrypted createdAt") {
   status string
   // The port that the database instance or cluster listens on
   port int
+  // Allocated storage size in gibibytes (GiB)
+  allocatedStorage int
   // The creation date of the snapshot
   createdAt time
 }

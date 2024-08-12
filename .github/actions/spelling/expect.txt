@@ -31,6 +31,7 @@ exo
 gcfs
 gcs
 geomatchstatement
+gibibytes
 gistfile
 gpu
 gvnic

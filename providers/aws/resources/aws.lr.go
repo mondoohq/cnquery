@@ -3084,8 +3084,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRds).GetClusters()).ToDataRes(types.Array(types.Resource("aws.rds.dbcluster")))
 	},
-	"aws.rds.pendingMaintenanceActions": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsRds).GetPendingMaintenanceActions()).ToDataRes(types.Array(types.Resource("aws.rds.pendingMaintenanceAction")))
+	"aws.rds.allPendingMaintenanceActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRds).GetAllPendingMaintenanceActions()).ToDataRes(types.Array(types.Resource("aws.rds.pendingMaintenanceAction")))
 	},
 	"aws.rds.backupsetting.target": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsBackupsetting).GetTarget()).ToDataRes(types.String)
@@ -3260,6 +3260,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.rds.snapshot.port": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsSnapshot).GetPort()).ToDataRes(types.Int)
+	},
+	"aws.rds.snapshot.allocatedStorage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsSnapshot).GetAllocatedStorage()).ToDataRes(types.Int)
 	},
 	"aws.rds.snapshot.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsSnapshot).GetCreatedAt()).ToDataRes(types.Time)
@@ -8348,8 +8351,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsRds).Clusters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
-	"aws.rds.pendingMaintenanceActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRds).PendingMaintenanceActions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+	"aws.rds.allPendingMaintenanceActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRds).AllPendingMaintenanceActions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"aws.rds.backupsetting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8594,6 +8597,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.rds.snapshot.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsSnapshot).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.rds.snapshot.allocatedStorage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsSnapshot).AllocatedStorage, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.rds.snapshot.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21418,7 +21425,7 @@ type mqlAwsRds struct {
 	Instances plugin.TValue[[]interface{}]
 	DbClusters plugin.TValue[[]interface{}]
 	Clusters plugin.TValue[[]interface{}]
-	PendingMaintenanceActions plugin.TValue[[]interface{}]
+	AllPendingMaintenanceActions plugin.TValue[[]interface{}]
 }
 
 // createAwsRds creates a new instance of this resource
@@ -21522,10 +21529,10 @@ func (c *mqlAwsRds) GetClusters() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsRds) GetPendingMaintenanceActions() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.PendingMaintenanceActions, func() ([]interface{}, error) {
+func (c *mqlAwsRds) GetAllPendingMaintenanceActions() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.AllPendingMaintenanceActions, func() ([]interface{}, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds", c.__id, "pendingMaintenanceActions")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds", c.__id, "allPendingMaintenanceActions")
 			if err != nil {
 				return nil, err
 			}
@@ -21534,7 +21541,7 @@ func (c *mqlAwsRds) GetPendingMaintenanceActions() *plugin.TValue[[]interface{}]
 			}
 		}
 
-		return c.pendingMaintenanceActions()
+		return c.allPendingMaintenanceActions()
 	})
 }
 
@@ -21909,6 +21916,7 @@ type mqlAwsRdsSnapshot struct {
 	EngineVersion plugin.TValue[string]
 	Status plugin.TValue[string]
 	Port plugin.TValue[int64]
+	AllocatedStorage plugin.TValue[int64]
 	CreatedAt plugin.TValue[*time.Time]
 }
 
@@ -21997,6 +22005,10 @@ func (c *mqlAwsRdsSnapshot) GetStatus() *plugin.TValue[string] {
 
 func (c *mqlAwsRdsSnapshot) GetPort() *plugin.TValue[int64] {
 	return &c.Port
+}
+
+func (c *mqlAwsRdsSnapshot) GetAllocatedStorage() *plugin.TValue[int64] {
+	return &c.AllocatedStorage
 }
 
 func (c *mqlAwsRdsSnapshot) GetCreatedAt() *plugin.TValue[*time.Time] {

@@ -165,7 +165,7 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 func (a *mqlAwsRds) allPendingMaintenanceActions() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(a.getPpendingMaintenanceActions(conn), 5)
+	poolOfJobs := jobpool.CreatePool(a.getPendingMaintenanceActions(conn), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -210,11 +210,11 @@ func (a *mqlAwsRds) getPendingMaintenanceActions(conn *connection.AwsConnection)
 					}
 					for _, action := range resp.PendingMaintenanceActionDetails {
 						resourceArn := *resp.ResourceIdentifier
-						mqlPendingAction, err := newMqlAwsPendingMaintainceAction(a.MqlRuntime, region, resourceArn, action)
+						mqlPendingAction, err := newMqlAwsPendingMaintenanceAction(a.MqlRuntime, region, resourceArn, action)
 						if err != nil {
 							return nil, err
 						}
-						res = append(res, mqlDbSnapshot)
+						res = append(res, mqlPendingAction)
 					}
 				}
 				if pendingMaintainanceList.Marker == nil {
@@ -349,7 +349,7 @@ func (a *mqlAwsRdsDbinstance) pendingMaintenanceActions() ([]interface{}, error)
 			}
 			for _, action := range resp.PendingMaintenanceActionDetails {
 				resourceArn := *resp.ResourceIdentifier
-				mqlDbSnapshot, err := newMqlAwsPendingMaintainceAction(a.MqlRuntime, region, resourceArn, action)
+				mqlDbSnapshot, err := newMqlAwsPendingMaintenanceAction(a.MqlRuntime, region, resourceArn, action)
 				if err != nil {
 					return nil, err
 				}
@@ -364,8 +364,8 @@ func (a *mqlAwsRdsDbinstance) pendingMaintenanceActions() ([]interface{}, error)
 	return res, nil
 }
 
-// newMqlAwsPendingMaintainceaction creates a new mqlAwsRdsPendingMaintenanceActions from a rdstypes.PendingMaintenanceAction
-func newMqlAwsPendingMaintainceAction(runtime *plugin.Runtime, region string, resourceArn string, maintenanceAction rdstypes.PendingMaintenanceAction) (*mqlAwsRdsPendingMaintenanceAction, error) {
+// newMqlAwsPendingMaintenanceAction creates a new mqlAwsRdsPendingMaintenanceActions from a rdstypes.PendingMaintenanceAction
+func newMqlAwsPendingMaintenanceAction(runtime *plugin.Runtime, region string, resourceArn string, maintenanceAction rdstypes.PendingMaintenanceAction) (*mqlAwsRdsPendingMaintenanceAction, error) {
 	action := ""
 	if maintenanceAction.Action != nil {
 		action = *maintenanceAction.Action
