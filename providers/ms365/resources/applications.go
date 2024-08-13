@@ -13,6 +13,7 @@ import (
 
 	"github.com/microsoftgraph/msgraph-sdk-go/applications"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
+	"github.com/microsoftgraph/msgraph-sdk-go/serviceprincipals"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
@@ -48,6 +49,96 @@ func (a *mqlMicrosoft) applications() ([]interface{}, error) {
 	}
 
 	return res, nil
+}
+
+// newMqlMicrosoftApplication creates a new mqlMicrosoftApplication resource
+// see https://learn.microsoft.com/en-us/entra/identity-platform/reference-microsoft-graph-app-manifest for a
+// better description of the fields
+func newMqlMicrosoftApplication(runtime *plugin.Runtime, app models.Applicationable) (*mqlMicrosoftApplication, error) {
+	// certificates
+	var certificates []interface{}
+	keycredentials := app.GetKeyCredentials()
+	for _, keycredential := range keycredentials {
+		cert, err := newMqlMicrosoftKeyCredential(runtime, keycredential)
+		if err != nil {
+			return nil, err
+		}
+		certificates = append(certificates, cert)
+	}
+	// secrets
+	var secrets []interface{}
+	clientSecrets := app.GetPasswordCredentials()
+	for _, clientSecret := range clientSecrets {
+		secret, err := newMqlMicrosoftPasswordCredential(runtime, clientSecret)
+		if err != nil {
+			return nil, err
+		}
+		secrets = append(secrets, secret)
+	}
+
+	info, err := convert.JsonToDict(newAppInformationUrl(app.GetInfo()))
+	// https://learn.microsoft.com/en-us/entra/identity-platform/reference-microsoft-graph-app-manifest#api-attribute
+	apiInfo, err := convert.JsonToDict(newApiApplication(app.GetApi()))
+	// https://learn.microsoft.com/en-us/entra/identity-platform/reference-microsoft-graph-app-manifest#web-attribute
+	webInfo, err := convert.JsonToDict(newWebApplication(app.GetWeb()))
+	// https://learn.microsoft.com/en-us/entra/identity-platform/reference-microsoft-graph-app-manifest#spa-attribute
+	spaInfo, err := convert.JsonToDict(newSpaApplication(app.GetSpa()))
+
+	certification, err := convert.JsonToDict(newCertificationable(app.GetCertification()))
+	optionalClaims, err := convert.JsonToDict(newOptionalClaimsable(app.GetOptionalClaims()))
+	servicePrincipalLockConfiguration, err := convert.JsonToDict(newServicePrincipalLockConfiguration(app.GetServicePrincipalLockConfiguration()))
+	requestSignatureVerification, err := convert.JsonToDict(newRequestSignatureVerification(app.GetRequestSignatureVerification()))
+	parentalControlSettings, err := convert.JsonToDict(newParentalControlSettings(app.GetParentalControlSettings()))
+	publicClient, err := convert.JsonToDict(newPublicClientApplication(app.GetPublicClient()))
+
+	var nativeAuthenticationApisEnabled *string
+	if app.GetNativeAuthenticationApisEnabled() != nil {
+		val := app.GetNativeAuthenticationApisEnabled().String()
+		nativeAuthenticationApisEnabled = &val
+	}
+
+	mqlResource, err := CreateResource(runtime, "microsoft.application",
+		map[string]*llx.RawData{
+			"__id":                              llx.StringDataPtr(app.GetId()),
+			"id":                                llx.StringDataPtr(app.GetId()),
+			"appId":                             llx.StringDataPtr(app.GetAppId()),
+			"applicationTemplateId":             llx.StringDataPtr(app.GetApplicationTemplateId()),
+			"createdDateTime":                   llx.TimeDataPtr(app.GetCreatedDateTime()),
+			"createdAt":                         llx.TimeDataPtr(app.GetCreatedDateTime()),
+			"displayName":                       llx.StringDataPtr(app.GetDisplayName()),
+			"disabledByMicrosoftStatus":         llx.StringDataPtr(app.GetDisabledByMicrosoftStatus()),
+			"groupMembershipClaims":             llx.StringDataPtr(app.GetGroupMembershipClaims()),
+			"name":                              llx.StringDataPtr(app.GetDisplayName()),
+			"description":                       llx.StringDataPtr(app.GetDescription()),
+			"notes":                             llx.StringDataPtr(app.GetNotes()),
+			"publisherDomain":                   llx.StringDataPtr(app.GetPublisherDomain()),
+			"signInAudience":                    llx.StringDataPtr(app.GetSignInAudience()),
+			"tags":                              llx.ArrayData(convert.SliceAnyToInterface(app.GetTags()), types.String),
+			"identifierUris":                    llx.ArrayData(convert.SliceAnyToInterface(app.GetIdentifierUris()), types.String),
+			"info":                              llx.DictData(info),
+			"api":                               llx.DictData(apiInfo),
+			"web":                               llx.DictData(webInfo),
+			"spa":                               llx.DictData(spaInfo),
+			"secrets":                           llx.ArrayData(secrets, types.Resource("microsoft.passwordCredential")),
+			"certificates":                      llx.ArrayData(certificates, types.Resource("microsoft.keyCredential")),
+			"isDeviceOnlyAuthSupported":         llx.BoolDataPtr(app.GetIsDeviceOnlyAuthSupported()),
+			"isFallbackPublicClient":            llx.BoolDataPtr(app.GetIsFallbackPublicClient()),
+			"nativeAuthenticationApisEnabled":   llx.StringDataPtr(nativeAuthenticationApisEnabled),
+			"serviceManagementReference":        llx.StringDataPtr(app.GetServiceManagementReference()),
+			"tokenEncryptionKeyId":              llx.StringDataPtr(newUuidString(app.GetTokenEncryptionKeyId())),
+			"samlMetadataUrl":                   llx.StringDataPtr(app.GetSamlMetadataUrl()),
+			"defaultRedirectUri":                llx.StringDataPtr(app.GetDefaultRedirectUri()),
+			"certification":                     llx.DictData(certification),
+			"optionalClaims":                    llx.DictData(optionalClaims),
+			"servicePrincipalLockConfiguration": llx.DictData(servicePrincipalLockConfiguration),
+			"requestSignatureVerification":      llx.DictData(requestSignatureVerification),
+			"parentalControlSettings":           llx.DictData(parentalControlSettings),
+			"publicClient":                      llx.DictData(publicClient),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlResource.(*mqlMicrosoftApplication), nil
 }
 
 func initMicrosoftApplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -119,6 +210,30 @@ func (a *mqlMicrosoftApplication) hasExpiredCredentials() (bool, error) {
 	return false, nil
 }
 
+func (a *mqlMicrosoftApplication) servicePrincipal() (*mqlMicrosoftServiceprincipal, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	filter := fmt.Sprintf("appId eq '%s'", a.GetAppId().Data)
+	resp, err := graphClient.ServicePrincipals().Get(ctx, &serviceprincipals.ServicePrincipalsRequestBuilderGetRequestConfiguration{
+		QueryParameters: &serviceprincipals.ServicePrincipalsRequestBuilderGetQueryParameters{
+			Filter: &filter,
+		},
+	})
+	servicePrincipals := resp.GetValue()
+	if len(servicePrincipals) == 0 {
+		return nil, errors.New("service principal not found")
+	}
+	if len(servicePrincipals) > 1 {
+		return nil, errors.New("multiple service principals found")
+	}
+	return newMqlMicrosoftServicePrincipal(a.MqlRuntime, servicePrincipals[0])
+}
+
 func (a *mqlMicrosoftApplication) owners() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 
@@ -168,56 +283,6 @@ func (a *mqlMicrosoftApplication) owners() ([]interface{}, error) {
 		res = append(res, newUserResource)
 	}
 	return res, nil
-}
-
-// newMqlMicrosoftApplication creates a new mqlMicrosoftApplication resource
-func newMqlMicrosoftApplication(runtime *plugin.Runtime, app models.Applicationable) (*mqlMicrosoftApplication, error) {
-	info, _ := convert.JsonToDictSlice(app.GetInfo())
-
-	// certificates
-	var certificates []interface{}
-	keycredentials := app.GetKeyCredentials()
-	for _, keycredential := range keycredentials {
-		cert, err := newMqlMicrosoftKeyCredential(runtime, keycredential)
-		if err != nil {
-			return nil, err
-		}
-		certificates = append(certificates, cert)
-	}
-	// secrets
-	var secrets []interface{}
-	clientSecrets := app.GetPasswordCredentials()
-	for _, clientSecret := range clientSecrets {
-		secret, err := newMqlMicrosoftPasswordCredential(runtime, clientSecret)
-		if err != nil {
-			return nil, err
-		}
-		secrets = append(secrets, secret)
-	}
-
-	mqlResource, err := CreateResource(runtime, "microsoft.application",
-		map[string]*llx.RawData{
-			"__id":            llx.StringDataPtr(app.GetId()),
-			"id":              llx.StringDataPtr(app.GetId()),
-			"appId":           llx.StringDataPtr(app.GetAppId()),
-			"createdDateTime": llx.TimeDataPtr(app.GetCreatedDateTime()),
-			"createdAt":       llx.TimeDataPtr(app.GetCreatedDateTime()),
-			"displayName":     llx.StringDataPtr(app.GetDisplayName()),
-			"name":            llx.StringDataPtr(app.GetDisplayName()),
-			"description":     llx.StringDataPtr(app.GetDescription()),
-			"notes":           llx.StringDataPtr(app.GetNotes()),
-			"publisherDomain": llx.StringDataPtr(app.GetPublisherDomain()),
-			"signInAudience":  llx.StringDataPtr(app.GetSignInAudience()),
-			"tags":            llx.ArrayData(convert.SliceAnyToInterface(app.GetTags()), types.String),
-			"identifierUris":  llx.ArrayData(convert.SliceAnyToInterface(app.GetIdentifierUris()), types.String),
-			"info":            llx.DictData(info),
-			"secrets":         llx.ArrayData(secrets, types.Resource("microsoft.passwordCredential")),
-			"certificates":    llx.ArrayData(certificates, types.Resource("microsoft.keyCredential")),
-		})
-	if err != nil {
-		return nil, err
-	}
-	return mqlResource.(*mqlMicrosoftApplication), nil
 }
 
 // newMqlMicrosoftKeyCredential creates a new mqlMicrosoftKeyCredential resource

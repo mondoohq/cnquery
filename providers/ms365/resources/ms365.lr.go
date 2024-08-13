@@ -432,6 +432,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.application.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftApplication).GetTags()).ToDataRes(types.Array(types.String))
 	},
+	"microsoft.application.applicationTemplateId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplication).GetApplicationTemplateId()).ToDataRes(types.String)
+	},
+	"microsoft.application.disabledByMicrosoftStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplication).GetDisabledByMicrosoftStatus()).ToDataRes(types.String)
+	},
+	"microsoft.application.groupMembershipClaims": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplication).GetGroupMembershipClaims()).ToDataRes(types.String)
+	},
 	"microsoft.application.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftApplication).GetCreatedAt()).ToDataRes(types.Time)
 	},
@@ -450,6 +459,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.application.info": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftApplication).GetInfo()).ToDataRes(types.Dict)
 	},
+	"microsoft.application.api": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplication).GetApi()).ToDataRes(types.Dict)
+	},
+	"microsoft.application.web": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplication).GetWeb()).ToDataRes(types.Dict)
+	},
+	"microsoft.application.spa": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplication).GetSpa()).ToDataRes(types.Dict)
+	},
 	"microsoft.application.secrets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftApplication).GetSecrets()).ToDataRes(types.Array(types.Resource("microsoft.passwordCredential")))
 	},
@@ -461,6 +479,48 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.application.owners": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftApplication).GetOwners()).ToDataRes(types.Array(types.Resource("microsoft.user")))
+	},
+	"microsoft.application.servicePrincipal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplication).GetServicePrincipal()).ToDataRes(types.Resource("microsoft.serviceprincipal"))
+	},
+	"microsoft.application.isDeviceOnlyAuthSupported": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplication).GetIsDeviceOnlyAuthSupported()).ToDataRes(types.Bool)
+	},
+	"microsoft.application.isFallbackPublicClient": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplication).GetIsFallbackPublicClient()).ToDataRes(types.Bool)
+	},
+	"microsoft.application.nativeAuthenticationApisEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplication).GetNativeAuthenticationApisEnabled()).ToDataRes(types.String)
+	},
+	"microsoft.application.serviceManagementReference": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplication).GetServiceManagementReference()).ToDataRes(types.String)
+	},
+	"microsoft.application.tokenEncryptionKeyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplication).GetTokenEncryptionKeyId()).ToDataRes(types.String)
+	},
+	"microsoft.application.samlMetadataUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplication).GetSamlMetadataUrl()).ToDataRes(types.String)
+	},
+	"microsoft.application.defaultRedirectUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplication).GetDefaultRedirectUri()).ToDataRes(types.String)
+	},
+	"microsoft.application.certification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplication).GetCertification()).ToDataRes(types.Dict)
+	},
+	"microsoft.application.optionalClaims": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplication).GetOptionalClaims()).ToDataRes(types.Dict)
+	},
+	"microsoft.application.servicePrincipalLockConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplication).GetServicePrincipalLockConfiguration()).ToDataRes(types.Dict)
+	},
+	"microsoft.application.requestSignatureVerification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplication).GetRequestSignatureVerification()).ToDataRes(types.Dict)
+	},
+	"microsoft.application.parentalControlSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplication).GetParentalControlSettings()).ToDataRes(types.Dict)
+	},
+	"microsoft.application.publicClient": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplication).GetPublicClient()).ToDataRes(types.Dict)
 	},
 	"microsoft.keyCredential.keyId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftKeyCredential).GetKeyId()).ToDataRes(types.String)
@@ -1218,6 +1278,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMicrosoftApplication).Tags, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"microsoft.application.applicationTemplateId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplication).ApplicationTemplateId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.disabledByMicrosoftStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplication).DisabledByMicrosoftStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.groupMembershipClaims": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplication).GroupMembershipClaims, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"microsoft.application.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftApplication).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -1242,6 +1314,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMicrosoftApplication).Info, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
+	"microsoft.application.api": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplication).Api, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.web": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplication).Web, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.spa": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplication).Spa, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
 	"microsoft.application.secrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftApplication).Secrets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
@@ -1256,6 +1340,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.application.owners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftApplication).Owners, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.servicePrincipal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplication).ServicePrincipal, ok = plugin.RawToTValue[*mqlMicrosoftServiceprincipal](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.isDeviceOnlyAuthSupported": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplication).IsDeviceOnlyAuthSupported, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.isFallbackPublicClient": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplication).IsFallbackPublicClient, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.nativeAuthenticationApisEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplication).NativeAuthenticationApisEnabled, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.serviceManagementReference": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplication).ServiceManagementReference, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.tokenEncryptionKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplication).TokenEncryptionKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.samlMetadataUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplication).SamlMetadataUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.defaultRedirectUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplication).DefaultRedirectUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.certification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplication).Certification, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.optionalClaims": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplication).OptionalClaims, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.servicePrincipalLockConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplication).ServicePrincipalLockConfiguration, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.requestSignatureVerification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplication).RequestSignatureVerification, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.parentalControlSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplication).ParentalControlSettings, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.publicClient": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplication).PublicClient, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"microsoft.keyCredential.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2653,16 +2793,36 @@ type mqlMicrosoftApplication struct {
 	Description plugin.TValue[string]
 	Notes plugin.TValue[string]
 	Tags plugin.TValue[[]interface{}]
+	ApplicationTemplateId plugin.TValue[string]
+	DisabledByMicrosoftStatus plugin.TValue[string]
+	GroupMembershipClaims plugin.TValue[string]
 	CreatedAt plugin.TValue[*time.Time]
 	CreatedDateTime plugin.TValue[*time.Time]
 	IdentifierUris plugin.TValue[[]interface{}]
 	PublisherDomain plugin.TValue[string]
 	SignInAudience plugin.TValue[string]
 	Info plugin.TValue[interface{}]
+	Api plugin.TValue[interface{}]
+	Web plugin.TValue[interface{}]
+	Spa plugin.TValue[interface{}]
 	Secrets plugin.TValue[[]interface{}]
 	Certificates plugin.TValue[[]interface{}]
 	HasExpiredCredentials plugin.TValue[bool]
 	Owners plugin.TValue[[]interface{}]
+	ServicePrincipal plugin.TValue[*mqlMicrosoftServiceprincipal]
+	IsDeviceOnlyAuthSupported plugin.TValue[bool]
+	IsFallbackPublicClient plugin.TValue[bool]
+	NativeAuthenticationApisEnabled plugin.TValue[string]
+	ServiceManagementReference plugin.TValue[string]
+	TokenEncryptionKeyId plugin.TValue[string]
+	SamlMetadataUrl plugin.TValue[string]
+	DefaultRedirectUri plugin.TValue[string]
+	Certification plugin.TValue[interface{}]
+	OptionalClaims plugin.TValue[interface{}]
+	ServicePrincipalLockConfiguration plugin.TValue[interface{}]
+	RequestSignatureVerification plugin.TValue[interface{}]
+	ParentalControlSettings plugin.TValue[interface{}]
+	PublicClient plugin.TValue[interface{}]
 }
 
 // createMicrosoftApplication creates a new instance of this resource
@@ -2725,6 +2885,18 @@ func (c *mqlMicrosoftApplication) GetTags() *plugin.TValue[[]interface{}] {
 	return &c.Tags
 }
 
+func (c *mqlMicrosoftApplication) GetApplicationTemplateId() *plugin.TValue[string] {
+	return &c.ApplicationTemplateId
+}
+
+func (c *mqlMicrosoftApplication) GetDisabledByMicrosoftStatus() *plugin.TValue[string] {
+	return &c.DisabledByMicrosoftStatus
+}
+
+func (c *mqlMicrosoftApplication) GetGroupMembershipClaims() *plugin.TValue[string] {
+	return &c.GroupMembershipClaims
+}
+
 func (c *mqlMicrosoftApplication) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
@@ -2747,6 +2919,18 @@ func (c *mqlMicrosoftApplication) GetSignInAudience() *plugin.TValue[string] {
 
 func (c *mqlMicrosoftApplication) GetInfo() *plugin.TValue[interface{}] {
 	return &c.Info
+}
+
+func (c *mqlMicrosoftApplication) GetApi() *plugin.TValue[interface{}] {
+	return &c.Api
+}
+
+func (c *mqlMicrosoftApplication) GetWeb() *plugin.TValue[interface{}] {
+	return &c.Web
+}
+
+func (c *mqlMicrosoftApplication) GetSpa() *plugin.TValue[interface{}] {
+	return &c.Spa
 }
 
 func (c *mqlMicrosoftApplication) GetSecrets() *plugin.TValue[[]interface{}] {
@@ -2777,6 +2961,74 @@ func (c *mqlMicrosoftApplication) GetOwners() *plugin.TValue[[]interface{}] {
 
 		return c.owners()
 	})
+}
+
+func (c *mqlMicrosoftApplication) GetServicePrincipal() *plugin.TValue[*mqlMicrosoftServiceprincipal] {
+	return plugin.GetOrCompute[*mqlMicrosoftServiceprincipal](&c.ServicePrincipal, func() (*mqlMicrosoftServiceprincipal, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.application", c.__id, "servicePrincipal")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftServiceprincipal), nil
+			}
+		}
+
+		return c.servicePrincipal()
+	})
+}
+
+func (c *mqlMicrosoftApplication) GetIsDeviceOnlyAuthSupported() *plugin.TValue[bool] {
+	return &c.IsDeviceOnlyAuthSupported
+}
+
+func (c *mqlMicrosoftApplication) GetIsFallbackPublicClient() *plugin.TValue[bool] {
+	return &c.IsFallbackPublicClient
+}
+
+func (c *mqlMicrosoftApplication) GetNativeAuthenticationApisEnabled() *plugin.TValue[string] {
+	return &c.NativeAuthenticationApisEnabled
+}
+
+func (c *mqlMicrosoftApplication) GetServiceManagementReference() *plugin.TValue[string] {
+	return &c.ServiceManagementReference
+}
+
+func (c *mqlMicrosoftApplication) GetTokenEncryptionKeyId() *plugin.TValue[string] {
+	return &c.TokenEncryptionKeyId
+}
+
+func (c *mqlMicrosoftApplication) GetSamlMetadataUrl() *plugin.TValue[string] {
+	return &c.SamlMetadataUrl
+}
+
+func (c *mqlMicrosoftApplication) GetDefaultRedirectUri() *plugin.TValue[string] {
+	return &c.DefaultRedirectUri
+}
+
+func (c *mqlMicrosoftApplication) GetCertification() *plugin.TValue[interface{}] {
+	return &c.Certification
+}
+
+func (c *mqlMicrosoftApplication) GetOptionalClaims() *plugin.TValue[interface{}] {
+	return &c.OptionalClaims
+}
+
+func (c *mqlMicrosoftApplication) GetServicePrincipalLockConfiguration() *plugin.TValue[interface{}] {
+	return &c.ServicePrincipalLockConfiguration
+}
+
+func (c *mqlMicrosoftApplication) GetRequestSignatureVerification() *plugin.TValue[interface{}] {
+	return &c.RequestSignatureVerification
+}
+
+func (c *mqlMicrosoftApplication) GetParentalControlSettings() *plugin.TValue[interface{}] {
+	return &c.ParentalControlSettings
+}
+
+func (c *mqlMicrosoftApplication) GetPublicClient() *plugin.TValue[interface{}] {
+	return &c.PublicClient
 }
 
 // mqlMicrosoftKeyCredential for the microsoft.keyCredential resource

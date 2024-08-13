@@ -18,32 +18,76 @@ resources:
     min_mondoo_version: 5.15.0
   microsoft.application:
     fields:
+      api:
+        min_mondoo_version: 9.0.0
       appId: {}
+      applicationTemplateId:
+        min_mondoo_version: 9.0.0
       certificates:
+        min_mondoo_version: 9.0.0
+      certification:
         min_mondoo_version: 9.0.0
       createdAt:
         min_mondoo_version: 9.0.0
       createdDateTime: {}
+      defaultRedirectUri:
+        min_mondoo_version: 9.0.0
       description:
         min_mondoo_version: 9.0.0
+      dict:
+        min_mondoo_version: 9.0.0
+      disabledByMicrosoftStatus:
+        min_mondoo_version: 9.0.0
       displayName: {}
+      groupMembershipClaims:
+        min_mondoo_version: 9.0.0
       hasExpiredCredentials:
         min_mondoo_version: 9.0.0
       id: {}
       identifierUris: {}
       info:
         min_mondoo_version: 9.0.0
+      isDeviceOnlyAuthSupported:
+        min_mondoo_version: 9.0.0
+      isFallbackPublicClient:
+        min_mondoo_version: 9.0.0
       name:
+        min_mondoo_version: 9.0.0
+      nativeAuthenticationApisEnabled:
         min_mondoo_version: 9.0.0
       notes:
         min_mondoo_version: 9.0.0
+      optionalClaims:
+        min_mondoo_version: 9.0.0
       owners:
         min_mondoo_version: 9.0.0
+      parentalControlSettings:
+        min_mondoo_version: 9.0.0
+      publicClient:
+        min_mondoo_version: 9.0.0
       publisherDomain: {}
+      requestSignatureVerification:
+        min_mondoo_version: 9.0.0
+      samlMetadataUrl:
+        min_mondoo_version: 9.0.0
       secrets:
         min_mondoo_version: 9.0.0
+      serviceManagementReference:
+        min_mondoo_version: 9.0.0
+      servicePrincipal:
+        min_mondoo_version: 9.0.0
+      servicePrincipalLockConfiguration:
+        min_mondoo_version: 9.0.0
       signInAudience: {}
+      spa:
+        min_mondoo_version: 9.0.0
+      string:
+        min_mondoo_version: 9.0.0
       tags:
+        min_mondoo_version: 9.0.0
+      tokenEncryptionKeyId:
+        min_mondoo_version: 9.0.0
+      web:
         min_mondoo_version: 9.0.0
     min_mondoo_version: 5.15.0
   microsoft.devicemanagement:
