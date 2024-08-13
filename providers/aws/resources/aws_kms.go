@@ -65,7 +65,7 @@ func (a *mqlAwsKms) getKeys(conn *connection.AwsConnection) []*jobpool.Job {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
 					}
-					continue
+					break
 				}
 
 				for _, key := range keyList.Keys {
