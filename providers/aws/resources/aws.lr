@@ -581,7 +581,7 @@ private aws.waf.rule.fieldtomatch.headers {
   matchPattern aws.waf.rule.fieldtomatch.headers.matchpattern
 }
 
-// pattern to match
+// Pattern to match
 private aws.waf.rule.fieldtomatch.headers.matchpattern {
   // Name of the rule this statement belongs to
   ruleName string
