@@ -16,6 +16,11 @@ import (
 	"go.mondoo.com/cnquery/v11/utils/stringx"
 )
 
+const (
+	MicrosoftEntraTenantID = "f8cdef31-a31e-4b4a-93e4-5f571e91255a"
+	MicrosoftTenantID      = "72f988bf-86f1-41af-91ab-2d7cd011db47"
+)
+
 func (m *mqlMicrosoftServiceprincipal) id() (string, error) {
 	return m.Id.Data, nil
 }
@@ -38,11 +43,37 @@ func (a *mqlMicrosoft) enterpriseApplications() ([]interface{}, error) {
 	return fetchServicePrincipals(a.MqlRuntime, conn, params)
 }
 
+var servicePrincipalFields = []string{
+	"id",
+	"servicePrincipalType",
+	"displayName",
+	"appId",
+	"appOwnerOrganizationId",
+	"description",
+	"tags",
+	"accountEnabled",
+	"homepage",
+	"replyUrls",
+	"appRoleAssignmentRequired",
+	"notes",
+	"applicationTemplateId",
+	"loginUrl",
+	"logoutUrl",
+	"servicePrincipalNames",
+	"signInAudience",
+	"preferredSingleSignOnMode",
+	"notificationEmailAddresses",
+	"appRoleAssignmentRequired",
+	"accountEnabled",
+	"verifiedPublisher",
+}
+
 func (a *mqlMicrosoft) serviceprincipals() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	top := int32(999)
 	params := &serviceprincipals.ServicePrincipalsRequestBuilderGetQueryParameters{
-		Top: &top,
+		Top:    &top,
+		Select: servicePrincipalFields,
 	}
 	return fetchServicePrincipals(a.MqlRuntime, conn, params)
 }
@@ -89,11 +120,20 @@ func newMqlMicrosoftServicePrincipal(runtime *plugin.Runtime, sp models.ServiceP
 		}
 		assignments = append(assignments, assignment)
 	}
+
+	var appVerifiedOrganizationID string
+	if sp.GetAppOwnerOrganizationId() != nil {
+		appVerifiedOrganizationID = sp.GetAppOwnerOrganizationId().String()
+	}
+
+	verifiedPublisher, _ := convert.JsonToDict(newVerifiedPublisher(sp.GetVerifiedPublisher()))
+
 	args := map[string]*llx.RawData{
 		"id":                         llx.StringDataPtr(sp.GetId()),
 		"type":                       llx.StringDataPtr(sp.GetServicePrincipalType()),
 		"name":                       llx.StringDataPtr(sp.GetDisplayName()),
 		"appId":                      llx.StringDataPtr(sp.GetAppId()),
+		"appOwnerOrganizationId":     llx.StringData(appVerifiedOrganizationID),
 		"description":                llx.StringDataPtr(sp.GetDescription()),
 		"tags":                       llx.ArrayData(convert.SliceAnyToInterface(sp.GetTags()), types.String),
 		"enabled":                    llx.BoolDataPtr(sp.GetAccountEnabled()),
@@ -112,6 +152,7 @@ func newMqlMicrosoftServicePrincipal(runtime *plugin.Runtime, sp models.ServiceP
 		"notificationEmailAddresses": llx.ArrayData(convert.SliceAnyToInterface(sp.GetNotificationEmailAddresses()), types.String),
 		"appRoleAssignmentRequired":  llx.BoolDataPtr(sp.GetAppRoleAssignmentRequired()),
 		"accountEnabled":             llx.BoolDataPtr(sp.GetAccountEnabled()),
+		"verifiedPublisher":          llx.DictData(verifiedPublisher),
 	}
 	info := sp.GetInfo()
 	if info != nil {
@@ -122,4 +163,13 @@ func newMqlMicrosoftServicePrincipal(runtime *plugin.Runtime, sp models.ServiceP
 		return nil, err
 	}
 	return mqlResource.(*mqlMicrosoftServiceprincipal), nil
+}
+
+func (a *mqlMicrosoftServiceprincipal) isFirstParty() (bool, error) {
+	ownerId := a.AppOwnerOrganizationId.Data
+	// e.g. O365 LinkedIn Connection and YammerOnOls do not have an owner
+	if ownerId == MicrosoftEntraTenantID || ownerId == MicrosoftTenantID || ownerId == "" {
+		return true, nil
+	}
+	return false, nil
 }
