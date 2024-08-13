@@ -273,14 +273,18 @@ private microsoft.passwordCredential @defaults("description expires keyId") {
   expired bool
 }
 
-// Microsoft service principal
+// Microsoft service principal (Enteprise application)
 private microsoft.serviceprincipal @defaults("name") {
-  // Service principal ID
+  // Service principal Object ID
   id string
   // Service principal type
   type string
   // Service principal name
   name string
+  // Application ID
+  appId string
+  // Application description
+  description string
   // Service principal tags
   tags []string
   // Whether users can sign into the service principal (application)
@@ -299,6 +303,24 @@ private microsoft.serviceprincipal @defaults("name") {
   notes string
   // List of assignments (users and groups) this service principal has
   assignments []microsoft.serviceprincipal.assignment
+  // Application template ID
+  applicationTemplateId string
+  // Login URL
+  loginUrl string
+  // Logout URL
+  logoutUrl string
+  // Service principal names
+  servicePrincipalNames []string
+  // Sign in audience
+  signInAudience string
+  // Preferred single sign-on mode
+  preferredSingleSignOnMode string
+  // Notification email addresses
+  notificationEmailAddresses []string
+  // App role assignment required
+  appRoleAssignmentRequired bool
+  // Account enabled
+  accountEnabled bool
 }
 
 // Microsoft Service Principal Assignment
