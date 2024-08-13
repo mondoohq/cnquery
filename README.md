@@ -112,7 +112,7 @@ cnquery scan -f examples/example-os.mql.yaml
 
 Like all other commands, you can specify different providers like `k8s`, `aws`, `docker`, and many more. Run `--help` to see the full list of supported providers.
 
-![](docs/images/cnquery-scan.gif)
+![cnquery scan example](docs/images/cnquery-scan.gif)
 
 These files can also contain multiple query packs for many different target systems.
 
