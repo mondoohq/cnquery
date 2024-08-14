@@ -175,22 +175,27 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	return runtime.Connection.(*connection.GitLabConnection), nil
 }
 
-var (
-	projectPlatform = &inventory.Platform{
-		Name:    "gitlab-project",
-		Title:   "GitLab Project",
-		Family:  []string{"gitlab"},
-		Kind:    "api",
-		Runtime: "gitlab",
+func projectPlatform() *inventory.Platform {
+	return &inventory.Platform{
+		Name:                  "gitlab-project",
+		Title:                 "GitLab Project",
+		Family:                []string{"gitlab"},
+		Kind:                  "api",
+		Runtime:               "gitlab",
+		TechnologyUrlSegments: []string{"saas", "gitlab", "project"},
 	}
-	groupPlatform = &inventory.Platform{
-		Name:    "gitlab-group",
-		Title:   "GitLab Group",
-		Family:  []string{"gitlab"},
-		Kind:    "api",
-		Runtime: "gitlab",
+}
+
+func groupPlatform() *inventory.Platform {
+	return &inventory.Platform{
+		Name:                  "gitlab-group",
+		Title:                 "GitLab Group",
+		Family:                []string{"gitlab"},
+		Kind:                  "api",
+		Runtime:               "gitlab",
+		TechnologyUrlSegments: []string{"saas", "gitlab", "group"},
 	}
-)
+}
 
 func newGitLabGroupID(groupID int) string {
 	return "//platformid.api.mondoo.app/runtime/gitlab/group/" + strconv.Itoa(groupID)
@@ -234,7 +239,7 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.GitLabConnecti
 }
 
 func (s *Service) detectAsProject(asset *inventory.Asset, groupID int, groupFullPath string, project *gitlab.Project) {
-	asset.Platform = projectPlatform
+	asset.Platform = projectPlatform()
 	asset.Name = "GitLab Project " + project.Name
 	asset.PlatformIds = []string{
 		newGitLabProjectID(groupID, project.ID),
@@ -243,7 +248,7 @@ func (s *Service) detectAsProject(asset *inventory.Asset, groupID int, groupFull
 }
 
 func (s *Service) detectAsGroup(asset *inventory.Asset, group *gitlab.Group) error {
-	asset.Platform = groupPlatform
+	asset.Platform = groupPlatform()
 	asset.Name = "GitLab Group " + group.Name
 	asset.PlatformIds = []string{
 		newGitLabGroupID(group.ID),
