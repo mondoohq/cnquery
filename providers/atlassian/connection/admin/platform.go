@@ -14,17 +14,19 @@ func (a *AdminConnection) PlatformInfo() *inventory.Platform {
 func GetPlatformForObject(platformName string) *inventory.Platform {
 	if platformName != "atlassian-admin" && platformName != "" {
 		return &inventory.Platform{
-			Name:    platformName,
-			Title:   "Atlassian Admin",
-			Kind:    "api",
-			Runtime: "atlassian",
+			Name:                  platformName,
+			Title:                 "Atlassian Admin",
+			Kind:                  "api",
+			Runtime:               "atlassian",
+			TechnologyUrlSegments: []string{"saas", "atlassian", "admin"},
 		}
 	}
 	return &inventory.Platform{
-		Name:    "atlassian-admin",
-		Title:   "Atlassian Admin",
-		Kind:    "api",
-		Runtime: "atlassian",
+		Name:                  "atlassian-admin",
+		Title:                 "Atlassian Admin",
+		Kind:                  "api",
+		Runtime:               "atlassian",
+		TechnologyUrlSegments: []string{"saas", "atlassian", "admin"},
 	}
 }
 
