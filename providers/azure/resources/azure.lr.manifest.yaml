@@ -332,6 +332,7 @@ resources:
       url: https://learn.microsoft.com/en-us/azure/role-based-access-control/
   azure.subscription.cloudDefender:
     fields:
+      defenderForAppServices: {}
       defenderForContainers: {}
       defenderForServers: {}
       monitoringAgentAutoProvision: {}
@@ -360,6 +361,8 @@ resources:
       url: https://learn.microsoft.com/en-us/defender-cloud-apps/what-is-defender-for-cloud-apps
   azure.subscription.cloudDefenderService:
     fields:
+      defenderForAppServices:
+        min_mondoo_version: 9.0.0
       defenderForContainers: {}
       defenderForServers: {}
       monitoringAgentAutoProvision: {}

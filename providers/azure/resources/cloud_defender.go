@@ -118,6 +118,35 @@ func (a *mqlAzureSubscriptionCloudDefenderService) defenderForServers() (interfa
 	return convert.JsonToDict(resp)
 }
 
+func (a *mqlAzureSubscriptionCloudDefenderService) defenderForAppServices() (interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	clientFactory, err := armsecurity.NewClientFactory(subId, token, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	appServicePricing, err := clientFactory.NewPricingsClient().Get(ctx, fmt.Sprintf("subscriptions/%s", subId), "AppServices", &security.PricingsClientGetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	type defenderForAppServices struct {
+		Enabled bool `json:"enabled"`
+	}
+
+	resp := defenderForAppServices{}
+	if appServicePricing.Properties.PricingTier != nil {
+		// Check if the pricing tier is set to 'Standard' which indicates that Defender for App Services is enabled
+		resp.Enabled = *appServicePricing.Properties.PricingTier == security.PricingTierStandard
+	}
+
+	return convert.JsonToDict(resp)
+}
+
 func (a *mqlAzureSubscriptionCloudDefenderService) monitoringAgentAutoProvision() (bool, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
