@@ -332,6 +332,8 @@ resources:
   microsoft.user:
     fields:
       accountEnabled: {}
+      authMethods:
+        min_mondoo_version: 9.0.0
       city: {}
       companyName: {}
       contact:
@@ -359,6 +361,19 @@ resources:
       userType: {}
     is_private: true
     min_mondoo_version: 5.15.0
+  microsoft.user.authenticationMethods:
+    fields:
+      count: {}
+      emailMethods: {}
+      fido2Methods: {}
+      microsoftAuthenticator: {}
+      passwordMethods: {}
+      phoneMethods: {}
+      softwareMethods: {}
+      temporaryAccessPassMethods: {}
+      windowsHelloMethods: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   ms365.exchangeonline:
     fields:
       adminAuditLogConfig: {}

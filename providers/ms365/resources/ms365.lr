@@ -94,6 +94,30 @@ private microsoft.user @defaults("id displayName userPrincipalName") {
   job() dict
   // Contact information
   contact() dict
+  // Authentication information
+  authMethods() microsoft.user.authenticationMethods
+}
+
+// Microsoft Entra authentication methods
+private microsoft.user.authenticationMethods @defaults("count") {
+    // Count of authentication methods
+    count int
+    // Phone number and type registered to a user
+    phoneMethods []dict
+    // Email authentication method for self-service password reset (SSPR)
+    emailMethods []dict
+    // FIDO2 security key registered to a user
+    fido2Methods []dict
+    // Software OATH token registered to a user
+    softwareMethods []dict
+    // Microsoft Authenticator app registered to a user
+    microsoftAuthenticator []dict
+    // User password authentication method
+    passwordMethods []dict
+    // Temporary Access Pass registered to a user
+    temporaryAccessPassMethods []dict
+    // Windows Hello for Business authentication method registered to a user
+    windowsHelloMethods []dict
 }
 
 // Microsoft group

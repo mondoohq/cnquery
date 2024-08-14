@@ -264,18 +264,255 @@ func (a *mqlMicrosoftUser) settings() (interface{}, error) {
 	return convert.JsonToDict(newUserSettings(userSettings))
 }
 
-func (a *mqlMicrosoftUser) mfa() (interface{}, error) {
+type authMethod struct {
+	Id string `json:"id"`
+}
+
+type phoneMethod struct {
+	authMethod
+	Type           string  `json:"type"`
+	PhoneNumber    *string `json:"phoneNumber"`
+	SsmSignInState string  `json:"ssmSignInState"`
+}
+
+type fido2Method struct {
+	authMethod
+	Name                    *string  `json:"name"`
+	AttestationLevel        string   `json:"attestationLevel"`
+	Model                   *string  `json:"model"`
+	AttestationCertificates []string `json:"attestationCertificates"`
+}
+
+type emailMethod struct {
+	authMethod
+	EmailAddress *string `json:"emailAddress"`
+}
+
+type windowsHelloMethod struct {
+	authMethod
+	Name        *string `json:"name"`
+	DeviceId    *string `json:"deviceId"`
+	KeyStrength string  `json:"keyStrength"`
+}
+
+type softwareMethod struct {
+	authMethod
+}
+
+type passwordMethod struct {
+	authMethod
+}
+
+type microsoftAuthenticatorMethod struct {
+	authMethod
+	Name            *string `json:"name"`
+	PhoneAppVersion *string `json:"phoneAppVersion"`
+	DeviceTag       *string `json:"deviceTag"`
+}
+
+type temporaryAccessPassMethod struct {
+	authMethod
+	IsUsable          *bool  `json:"isUsable"`
+	IsUsableOnce      *bool  `json:"isUsableOnce"`
+	LifetimeInMinutes *int32 `json:"lifetimeInMinutes"`
+}
+
+type userAuthentication struct {
+	userID                     string                         `json:"userId"`
+	methodCount                int                            `json:"methodCount"`
+	PhoneMethods               []phoneMethod                  `json:"phoneMethods"`
+	Fido2Methods               []fido2Method                  `json:"fido2Methods"`
+	SoftwareMethods            []softwareMethod               `json:"softwareMethods"`
+	MicrosoftAuthenticator     []microsoftAuthenticatorMethod `json:"microsoftAuthenticator"`
+	PasswordMethods            []passwordMethod               `json:"passwordMethods"`
+	TemporaryAccessPassMethods []temporaryAccessPassMethod    `json:"temporaryAccessPassMethods"`
+	WindowsHelloMethods        []windowsHelloMethod           `json:"windowsHelloMethods"`
+	EmailMethods               []emailMethod                  `json:"emailMethods"`
+}
+
+// needs the permission UserAuthenticationMethod.Read.All
+func (a *mqlMicrosoftUser) authMethods() (*mqlMicrosoftUserAuthenticationMethods, error) {
+	runtime := a.MqlRuntime
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
 		return nil, err
 	}
+
+	userID := a.Id.Data
+	ua := userAuthentication{
+		userID: userID,
+	}
+
 	ctx := context.Background()
-	id := a.Id.Data
-	userAuthSettings, err := graphClient.Users().ByUserId(id).Authentication().Get(ctx, &users.ItemAuthenticationRequestBuilderGetRequestConfiguration{})
-	if err != nil {
+	authMethods, err := graphClient.Users().ByUserId(userID).Authentication().Methods().Get(ctx, &users.ItemAuthenticationMethodsRequestBuilderGetRequestConfiguration{})
+	if oErr, ok := isOdataError(err); ok {
+		if oErr.ResponseStatusCode == 403 {
+			return nil, errors.New("UserAuthenticationMethod.Read.All permission is required")
+		}
+		return nil, transformError(err)
+	} else if err != nil {
 		return nil, transformError(err)
 	}
 
-	return convert.JsonToDict(newAuthentication(userAuthSettings))
+	methods := authMethods.GetValue()
+	ua.methodCount = len(methods)
+	for i := range methods {
+		entry := methods[i]
+		switch x := entry.(type) {
+		case *models.PhoneAuthenticationMethod:
+			if x.GetId() == nil {
+				continue
+			}
+
+			m := phoneMethod{
+				authMethod: authMethod{
+					Id: *x.GetId(),
+				},
+				PhoneNumber: x.GetPhoneNumber(),
+			}
+
+			if x.GetPhoneType() != nil {
+				m.Type = x.GetPhoneType().String()
+			}
+
+			if x.GetSmsSignInState() != nil {
+				m.SsmSignInState = x.GetSmsSignInState().String()
+			}
+
+			ua.PhoneMethods = append(ua.PhoneMethods, m)
+		case *models.Fido2AuthenticationMethod:
+			if x.GetId() == nil {
+				continue
+			}
+			m := fido2Method{
+				authMethod: authMethod{
+					Id: *x.GetId(),
+				},
+				Name:                    x.GetDisplayName(),
+				Model:                   x.GetModel(),
+				AttestationCertificates: x.GetAttestationCertificates(),
+			}
+			if x.GetAttestationLevel() != nil {
+				m.AttestationLevel = x.GetAttestationLevel().String()
+			}
+			ua.Fido2Methods = append(ua.Fido2Methods, m)
+		case *models.SoftwareOathAuthenticationMethod:
+			if x.GetId() == nil {
+				continue
+			}
+			m := softwareMethod{
+				authMethod: authMethod{
+					Id: *x.GetId(),
+				},
+			}
+
+			ua.SoftwareMethods = append(ua.SoftwareMethods, m)
+		case *models.MicrosoftAuthenticatorAuthenticationMethod:
+			if x.GetId() == nil {
+				continue
+			}
+			m := microsoftAuthenticatorMethod{
+				authMethod: authMethod{
+					Id: *x.GetId(),
+				},
+				Name:            x.GetDisplayName(),
+				PhoneAppVersion: x.GetPhoneAppVersion(),
+				DeviceTag:       x.GetDeviceTag(),
+			}
+
+			ua.MicrosoftAuthenticator = append(ua.MicrosoftAuthenticator, m)
+		case *models.PasswordAuthenticationMethod:
+			if x.GetId() == nil {
+				continue
+			}
+			m := passwordMethod{
+				authMethod: authMethod{
+					Id: *x.GetId(),
+				},
+			}
+
+			ua.PasswordMethods = append(ua.PasswordMethods, m)
+		case *models.TemporaryAccessPassAuthenticationMethod:
+			if x.GetId() == nil {
+				continue
+			}
+			m := temporaryAccessPassMethod{
+				authMethod: authMethod{
+					Id: *x.GetId(),
+				},
+				IsUsable:          x.GetIsUsable(),
+				IsUsableOnce:      x.GetIsUsableOnce(),
+				LifetimeInMinutes: x.GetLifetimeInMinutes(),
+			}
+			ua.TemporaryAccessPassMethods = append(ua.TemporaryAccessPassMethods, m)
+		case *models.WindowsHelloForBusinessAuthenticationMethod:
+			if x.GetId() == nil {
+				continue
+			}
+			m := windowsHelloMethod{
+				authMethod: authMethod{
+					Id: *x.GetId(),
+				},
+				Name: x.GetDisplayName(),
+			}
+			if x.GetDevice() != nil {
+				m.DeviceId = x.GetDevice().GetDeviceId()
+			}
+
+			if x.GetKeyStrength() != nil {
+				m.KeyStrength = x.GetKeyStrength().String()
+			}
+
+			ua.WindowsHelloMethods = append(ua.WindowsHelloMethods, m)
+		case *models.EmailAuthenticationMethod:
+			if x.GetId() == nil {
+				continue
+			}
+
+			m := emailMethod{
+				authMethod: authMethod{
+					Id: *x.GetId(),
+				},
+				EmailAddress: x.GetEmailAddress(),
+			}
+			ua.EmailMethods = append(ua.EmailMethods, m)
+		default:
+
+		}
+	}
+
+	return newMqlMicrosoftUserAuthentication(runtime, ua)
+}
+
+func newMqlMicrosoftUserAuthentication(runtime *plugin.Runtime, u userAuthentication) (*mqlMicrosoftUserAuthenticationMethods, error) {
+	if u.userID == "" {
+		return nil, errors.New("user id is required")
+	}
+	phoneMethods, _ := convert.JsonToDictSlice(u.PhoneMethods)
+	emailMethods, _ := convert.JsonToDictSlice(u.EmailMethods)
+	fido2Methods, _ := convert.JsonToDictSlice(u.Fido2Methods)
+	softwareMethods, _ := convert.JsonToDictSlice(u.SoftwareMethods)
+	microsoftAuthenticator, _ := convert.JsonToDictSlice(u.MicrosoftAuthenticator)
+	passwordMethods, _ := convert.JsonToDictSlice(u.PasswordMethods)
+	temporaryAccessPassMethods, _ := convert.JsonToDictSlice(u.TemporaryAccessPassMethods)
+	windowsHelloMethods, _ := convert.JsonToDictSlice(u.WindowsHelloMethods)
+
+	graphUser, err := CreateResource(runtime, "microsoft.user.authenticationMethods",
+		map[string]*llx.RawData{
+			"__id":                       llx.StringData(u.userID),
+			"count":                      llx.IntData(u.methodCount),
+			"phoneMethods":               llx.DictData(phoneMethods),
+			"emailMethods":               llx.DictData(emailMethods),
+			"fido2Methods":               llx.DictData(fido2Methods),
+			"softwareMethods":            llx.DictData(softwareMethods),
+			"microsoftAuthenticator":     llx.DictData(microsoftAuthenticator),
+			"passwordMethods":            llx.DictData(passwordMethods),
+			"temporaryAccessPassMethods": llx.DictData(temporaryAccessPassMethods),
+			"windowsHelloMethods":        llx.DictData(windowsHelloMethods),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return graphUser.(*mqlMicrosoftUserAuthenticationMethods), nil
 }
