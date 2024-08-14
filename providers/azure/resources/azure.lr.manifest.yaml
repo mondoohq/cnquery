@@ -334,7 +334,14 @@ resources:
     fields:
       defenderForAppServices: {}
       defenderForContainers: {}
+      defenderForCosmosDb: {}
+      defenderForKeyVaults: {}
+      defenderForOpenSourceDatabases: {}
+      defenderForResourceManager: {}
       defenderForServers: {}
+      defenderForSqlDatabases: {}
+      defenderForSqlServersOnMachines: {}
+      defenderForStorageAccounts: {}
       monitoringAgentAutoProvision: {}
       securityContacts: {}
       subscriptionId: {}
@@ -364,7 +371,21 @@ resources:
       defenderForAppServices:
         min_mondoo_version: 9.0.0
       defenderForContainers: {}
+      defenderForCosmosDb:
+        min_mondoo_version: 9.0.0
+      defenderForKeyVaults:
+        min_mondoo_version: 9.0.0
+      defenderForOpenSourceDatabases:
+        min_mondoo_version: 9.0.0
+      defenderForResourceManager:
+        min_mondoo_version: 9.0.0
       defenderForServers: {}
+      defenderForSqlDatabases:
+        min_mondoo_version: 9.0.0
+      defenderForSqlServersOnMachines:
+        min_mondoo_version: 9.0.0
+      defenderForStorageAccounts:
+        min_mondoo_version: 9.0.0
       monitoringAgentAutoProvision: {}
       securityContacts: {}
       subscriptionId: {}

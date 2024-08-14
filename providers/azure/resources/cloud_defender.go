@@ -147,6 +147,209 @@ func (a *mqlAzureSubscriptionCloudDefenderService) defenderForAppServices() (int
 	return convert.JsonToDict(resp)
 }
 
+func (a *mqlAzureSubscriptionCloudDefenderService) defenderForSqlServersOnMachines() (interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	clientFactory, err := armsecurity.NewClientFactory(subId, token, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	sqlServerVmPricing, err := clientFactory.NewPricingsClient().Get(ctx, fmt.Sprintf("subscriptions/%s", subId), "SqlServerVirtualMachines", &security.PricingsClientGetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	type defenderForSqlServersOnMachines struct {
+		Enabled bool `json:"enabled"`
+	}
+
+	resp := defenderForSqlServersOnMachines{}
+	if sqlServerVmPricing.Properties.PricingTier != nil {
+		// Check if the pricing tier is set to 'Standard' which indicates that Defender for SQL Servers on Machines is enabled
+		resp.Enabled = *sqlServerVmPricing.Properties.PricingTier == security.PricingTierStandard
+	}
+
+	return convert.JsonToDict(resp)
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderService) defenderForSqlDatabases() (interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	clientFactory, err := armsecurity.NewClientFactory(subId, token, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	sqlDbPricing, err := clientFactory.NewPricingsClient().Get(ctx, fmt.Sprintf("subscriptions/%s", subId), "SqlServers", &security.PricingsClientGetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	type defenderForSqlDatabases struct {
+		Enabled bool `json:"enabled"`
+	}
+
+	resp := defenderForSqlDatabases{}
+	if sqlDbPricing.Properties.PricingTier != nil {
+		// Check if the pricing tier is set to 'Standard' which indicates that Defender for SQL Databases is enabled
+		resp.Enabled = *sqlDbPricing.Properties.PricingTier == security.PricingTierStandard
+	}
+
+	return convert.JsonToDict(resp)
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderService) defenderForOpenSourceDatabases() (interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	clientFactory, err := armsecurity.NewClientFactory(subId, token, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	openSourceDbPricing, err := clientFactory.NewPricingsClient().Get(ctx, fmt.Sprintf("subscriptions/%s", subId), "OpenSourceRelationalDatabases", &security.PricingsClientGetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	type defenderForOpenSourceDatabases struct {
+		Enabled bool `json:"enabled"`
+	}
+
+	resp := defenderForOpenSourceDatabases{}
+	if openSourceDbPricing.Properties.PricingTier != nil {
+		// Check if the pricing tier is set to 'Standard' which indicates that Defender for Open-source Relational Databases is enabled
+		resp.Enabled = *openSourceDbPricing.Properties.PricingTier == security.PricingTierStandard
+	}
+
+	return convert.JsonToDict(resp)
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderService) defenderForCosmosDb() (interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	clientFactory, err := armsecurity.NewClientFactory(subId, token, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	cosmosDbPricing, err := clientFactory.NewPricingsClient().Get(ctx, fmt.Sprintf("subscriptions/%s", subId), "CosmosDbs", &security.PricingsClientGetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	type defenderForCosmosDb struct {
+		Enabled bool `json:"enabled"`
+	}
+
+	resp := defenderForCosmosDb{}
+	if cosmosDbPricing.Properties.PricingTier != nil {
+		// Check if the pricing tier is set to 'Standard' which indicates that Defender for Cosmos DB is enabled
+		resp.Enabled = *cosmosDbPricing.Properties.PricingTier == security.PricingTierStandard
+	}
+
+	return convert.JsonToDict(resp)
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderService) defenderForStorageAccounts() (interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	clientFactory, err := armsecurity.NewClientFactory(subId, token, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	storageAccountsPricing, err := clientFactory.NewPricingsClient().Get(ctx, fmt.Sprintf("subscriptions/%s", subId), "StorageAccounts", &security.PricingsClientGetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	type defenderForStorageAccounts struct {
+		Enabled bool `json:"enabled"`
+	}
+
+	resp := defenderForStorageAccounts{}
+	if storageAccountsPricing.Properties.PricingTier != nil {
+		// Check if the pricing tier is set to 'Standard' which indicates that Defender for Storage Accounts is enabled
+		resp.Enabled = *storageAccountsPricing.Properties.PricingTier == security.PricingTierStandard
+	}
+
+	return convert.JsonToDict(resp)
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderService) defenderForKeyVaults() (interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	clientFactory, err := armsecurity.NewClientFactory(subId, token, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	keyVaultsPricing, err := clientFactory.NewPricingsClient().Get(ctx, fmt.Sprintf("subscriptions/%s", subId), "KeyVaults", &security.PricingsClientGetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	type defenderForKeyVaults struct {
+		Enabled bool `json:"enabled"`
+	}
+
+	resp := defenderForKeyVaults{}
+	if keyVaultsPricing.Properties.PricingTier != nil {
+		// Check if the pricing tier is set to 'Standard' which indicates that Defender for Key Vaults is enabled
+		resp.Enabled = *keyVaultsPricing.Properties.PricingTier == security.PricingTierStandard
+	}
+
+	return convert.JsonToDict(resp)
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderService) defenderForResourceManager() (interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	clientFactory, err := armsecurity.NewClientFactory(subId, token, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resourceManagerPricing, err := clientFactory.NewPricingsClient().Get(ctx, fmt.Sprintf("subscriptions/%s", subId), "Arm", &security.PricingsClientGetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	type defenderForResourceManager struct {
+		Enabled bool `json:"enabled"`
+	}
+
+	resp := defenderForResourceManager{}
+	if resourceManagerPricing.Properties.PricingTier != nil {
+		// Check if the pricing tier is set to 'Standard' which indicates that Defender for Resource Manager is enabled
+		resp.Enabled = *resourceManagerPricing.Properties.PricingTier == security.PricingTierStandard
+	}
+
+	return convert.JsonToDict(resp)
+}
+
 func (a *mqlAzureSubscriptionCloudDefenderService) monitoringAgentAutoProvision() (bool, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
@@ -190,6 +393,7 @@ func (a *mqlAzureSubscriptionCloudDefenderService) defenderForContainers() (inte
 	type defenderForContainers struct {
 		DefenderDaemonSet        bool `json:"defenderDaemonSet"`
 		AzurePolicyForKubernetes bool `json:"azurePolicyForKubernetes"`
+		Enabled                  bool `json:"enabled"`
 	}
 
 	kubernetesDefender := false
@@ -215,10 +419,28 @@ func (a *mqlAzureSubscriptionCloudDefenderService) defenderForContainers() (inte
 		}
 	}
 
+	// Check if Defender for Containers is enabled by querying the pricing tier
+	clientFactory, err := armsecurity.NewClientFactory(subId, token, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	containersPricing, err := clientFactory.NewPricingsClient().Get(ctx, fmt.Sprintf("subscriptions/%s", subId), "Containers", &security.PricingsClientGetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	enabled := false
+	if containersPricing.Properties.PricingTier != nil {
+		enabled = *containersPricing.Properties.PricingTier == security.PricingTierStandard
+	}
+
 	def := defenderForContainers{
 		DefenderDaemonSet:        arcDefender && kubernetesDefender,
 		AzurePolicyForKubernetes: arcPolicyExt && kubernetesPolicyExt,
+		Enabled:                  enabled,
 	}
+
 	return convert.JsonToDict(def)
 }
 

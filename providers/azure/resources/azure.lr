@@ -1701,6 +1701,20 @@ private azure.subscription.cloudDefenderService @defaults("defenderForServers de
   defenderForServers() dict
   // Whether Microsoft Defender for App Services is enabled
   defenderForAppServices() dict
+  // Whether Microsoft Defender for SQL Servers on Machines is enabled
+  defenderForSqlServersOnMachines() dict
+  // Whether Microsoft Defender for Azure SQL Databases is enabled
+  defenderForSqlDatabases() dict
+  // Whether Microsoft Defender for Open-source Relational Databases is enabled
+  defenderForOpenSourceDatabases() dict
+  // Whether Microsoft Defender for Cosmos DB is enabled
+  defenderForCosmosDb() dict
+  // Whether Microsoft Defender for Storage Accounts is enabled
+  defenderForStorageAccounts() dict
+  // Whether Microsoft Defender for Key Vaults is enabled
+  defenderForKeyVaults() dict
+  // Whether Microsoft Defender for Resource Manager is enabled
+  defenderForResourceManager() dict
   // List of Defender for Container components and whether they are enabled
   defenderForContainers() dict
   // List of configured security contacts
