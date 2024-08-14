@@ -77,19 +77,19 @@ func (c *GithubConnection) PlatformInfo() (*inventory.Platform, error) {
 
 func NewGithubOrgPlatform(orgId string) *inventory.Platform {
 	pf := GithubOrgPlatform
-	pf.TechnologyUrlSegments = []string{"github", "organization", orgId, "organization"}
+	pf.TechnologyUrlSegments = []string{"saas", "github", "organization", orgId, "organization"}
 	return &pf
 }
 
 func NewGithubUserPlatform(userId string) *inventory.Platform {
 	pf := GithubUserPlatform
-	pf.TechnologyUrlSegments = []string{"github", "user"}
+	pf.TechnologyUrlSegments = []string{"saas", "github", "user"}
 	return &pf
 }
 
 func NewGitHubRepoPlatform(owner, repo string) *inventory.Platform {
 	pf := GithubRepoPlatform
-	pf.TechnologyUrlSegments = []string{"github", "organization", owner, "repository"}
+	pf.TechnologyUrlSegments = []string{"saas", "github", "organization", owner, "repository"}
 	return &pf
 }
 

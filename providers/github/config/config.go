@@ -76,7 +76,7 @@ var Config = plugin.Provider{
 	},
 	AssetUrlTrees: []*inventory.AssetUrlBranch{
 		{
-			PathSegments: []string{"technology=github"},
+			PathSegments: []string{"technology=saas", "provider=github"},
 			Key:          "organization",
 			Title:        "Organization",
 			Values: map[string]*inventory.AssetUrlBranch{
