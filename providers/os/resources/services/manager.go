@@ -40,6 +40,17 @@ type OSServiceManager interface {
 	List() ([]*Service, error)
 }
 
+type noopOsServiceManager struct {
+}
+
+func (n *noopOsServiceManager) Name() string {
+	return "none"
+}
+
+func (n *noopOsServiceManager) List() ([]*Service, error) {
+	return nil, nil
+}
+
 var amazonlinux1version = regexp.MustCompile(`^201\d`)
 
 func ResolveManager(conn shared.Connection) (OSServiceManager, error) {
@@ -50,7 +61,18 @@ func ResolveManager(conn shared.Connection) (OSServiceManager, error) {
 		return nil, errors.New("cannot find OS information for package detection")
 	}
 
+	useNoopInit := false
+	if asset.Platform.IsFamily("linux") {
+		// If we're on linux, check if there is no init system. If there is no init system,
+		// we don't have managed services. This happens in containers.
+		if _, err := conn.FileInfo("/sbin/init"); err != nil {
+			useNoopInit = true
+		}
+	}
+
 	switch {
+	case useNoopInit:
+		osm = &noopOsServiceManager{}
 	case asset.Platform.IsFamily("arch"): // arch family
 		osm = ResolveSystemdServiceManager(conn)
 	case asset.Platform.Name == "amazonlinux":
