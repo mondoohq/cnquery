@@ -153,11 +153,12 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 func (s *Service) detect(asset *inventory.Asset, conn *connection.OktaConnection) error {
 	asset.Name = "Okta Organization " + conn.OrganizationID()
 	asset.Platform = &inventory.Platform{
-		Name:    "okta-org",
-		Family:  []string{"okta"},
-		Kind:    "api",
-		Title:   "Okta Organization",
-		Runtime: "okta",
+		Name:                  "okta-org",
+		Family:                []string{"okta"},
+		Kind:                  "api",
+		Title:                 "Okta Organization",
+		Runtime:               "okta",
+		TechnologyUrlSegments: []string{"saas", "okta", "org"},
 	}
 
 	id, err := conn.Identifier()
