@@ -14,6 +14,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
 	"go.mondoo.com/cnquery/v11/types"
+	"time"
 )
 
 var userSelectFields = []string{
@@ -136,22 +137,22 @@ func newMqlMicrosoftUser(runtime *plugin.Runtime, u models.Userable) (*mqlMicros
 			"__id":              llx.StringDataPtr(u.GetId()),
 			"id":                llx.StringDataPtr(u.GetId()),
 			"accountEnabled":    llx.BoolDataPtr(u.GetAccountEnabled()),
-			"city":              llx.StringDataPtr(u.GetCity()),
-			"companyName":       llx.StringDataPtr(u.GetCompanyName()),
-			"country":           llx.StringDataPtr(u.GetCountry()),
+			"city":              llx.StringDataPtr(u.GetCity()),        // deprecated
+			"companyName":       llx.StringDataPtr(u.GetCompanyName()), // deprecated
+			"country":           llx.StringDataPtr(u.GetCountry()),     // deprecated
 			"createdDateTime":   llx.TimeDataPtr(u.GetCreatedDateTime()),
 			"department":        llx.StringDataPtr(u.GetDepartment()),
 			"displayName":       llx.StringDataPtr(u.GetDisplayName()),
-			"employeeId":        llx.StringDataPtr(u.GetEmployeeId()),
+			"employeeId":        llx.StringDataPtr(u.GetEmployeeId()), // deprecated
 			"givenName":         llx.StringDataPtr(u.GetGivenName()),
-			"jobTitle":          llx.StringDataPtr(u.GetJobTitle()),
+			"jobTitle":          llx.StringDataPtr(u.GetJobTitle()), // deprecated
 			"mail":              llx.StringDataPtr(u.GetMail()),
-			"mobilePhone":       llx.StringDataPtr(u.GetMobilePhone()),
-			"otherMails":        llx.ArrayData(llx.TArr2Raw(u.GetOtherMails()), types.String),
-			"officeLocation":    llx.StringDataPtr(u.GetOfficeLocation()),
-			"postalCode":        llx.StringDataPtr(u.GetPostalCode()),
-			"state":             llx.StringDataPtr(u.GetState()),
-			"streetAddress":     llx.StringDataPtr(u.GetStreetAddress()),
+			"mobilePhone":       llx.StringDataPtr(u.GetMobilePhone()),                        // deprecated
+			"otherMails":        llx.ArrayData(llx.TArr2Raw(u.GetOtherMails()), types.String), // deprecated
+			"officeLocation":    llx.StringDataPtr(u.GetOfficeLocation()),                     // deprecated
+			"postalCode":        llx.StringDataPtr(u.GetPostalCode()),                         // deprecated
+			"state":             llx.StringDataPtr(u.GetState()),                              // deprecated
+			"streetAddress":     llx.StringDataPtr(u.GetStreetAddress()),                      // deprecated
 			"surname":           llx.StringDataPtr(u.GetSurname()),
 			"userPrincipalName": llx.StringDataPtr(u.GetUserPrincipalName()),
 			"userType":          llx.StringDataPtr(u.GetUserType()),
@@ -160,6 +161,91 @@ func newMqlMicrosoftUser(runtime *plugin.Runtime, u models.Userable) (*mqlMicros
 		return nil, err
 	}
 	return graphUser.(*mqlMicrosoftUser), nil
+}
+
+// https://learn.microsoft.com/en-us/graph/api/resources/user?view=graph-rest-1.0#properties
+var userJobContactFields = []string{
+	"jobTitle", "companyName", "department", "employeeId", "employeeType", "employeeHireDate",
+	"officeLocation", "streetAddress", "city", "state", "postalCode", "country", "businessPhones", "mobilePhone", "mail", "otherMails", "faxNumber", "mailNickname",
+}
+
+func (a *mqlMicrosoftUser) populateJobContactData() error {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return err
+	}
+
+	userID := a.Id.Data
+	ctx := context.Background()
+	userData, err := graphClient.Users().ByUserId(userID).Get(ctx, &users.UserItemRequestBuilderGetRequestConfiguration{
+		QueryParameters: &users.UserItemRequestBuilderGetQueryParameters{
+			Select: userJobContactFields,
+		},
+	})
+	if err != nil {
+		return transformError(err)
+	}
+
+	jobDesc, _ := convert.JsonToDict(userJob{
+		JobTitle:    userData.GetJobTitle(),
+		CompanyName: userData.GetCompanyName(),
+		Department:  userData.GetDepartment(),
+		EmployeeId:  userData.GetEmployeeId(),
+		// EmployeeType:     userData.GetEmployeeType(),
+		// EmployeeHireDate: userData.GetEmployeeHireDate(),
+		OfficeLocation: userData.GetOfficeLocation(),
+	})
+	a.Job = plugin.TValue[interface{}]{Data: jobDesc, State: plugin.StateIsSet}
+
+	userContact, _ := convert.JsonToDict(userContact{
+		StreetAddress:  userData.GetStreetAddress(),
+		City:           userData.GetCity(),
+		State:          userData.GetState(),
+		PostalCode:     userData.GetPostalCode(),
+		Country:        userData.GetCountry(),
+		BusinessPhones: userData.GetBusinessPhones(),
+		MobilePhone:    userData.GetMobilePhone(),
+		Email:          userData.GetMail(),
+		OtherMails:     userData.GetOtherMails(),
+		FaxNumber:      userData.GetFaxNumber(),
+		MailNickname:   userData.GetMailNickname(),
+	})
+	a.Contact = plugin.TValue[interface{}]{Data: userContact, State: plugin.StateIsSet}
+
+	return nil
+}
+
+type userJob struct {
+	CompanyName      *string    `json:"companyName"`
+	JobTitle         *string    `json:"jobTitle"`
+	Department       *string    `json:"department"`
+	EmployeeId       *string    `json:"employeeId"`
+	EmployeeType     *string    `json:"employeeType"`
+	EmployeeHireDate *time.Time `json:"employeeHireDate"`
+	OfficeLocation   *string    `json:"officeLocation"`
+}
+
+type userContact struct {
+	StreetAddress  *string  `json:"streetAddress"`
+	City           *string  `json:"city"`
+	State          *string  `json:"state"`
+	PostalCode     *string  `json:"postalCode"`
+	Country        *string  `json:"country"`
+	BusinessPhones []string `json:"BusinessPhones"`
+	MobilePhone    *string  `json:"mobilePhone"`
+	Email          *string  `json:"email"`
+	OtherMails     []string `json:"otherMails"`
+	FaxNumber      *string  `json:"faxNumber"`
+	MailNickname   *string  `json:"mailNickname"`
+}
+
+func (a *mqlMicrosoftUser) job() (interface{}, error) {
+	return nil, a.populateJobContactData()
+}
+
+func (a *mqlMicrosoftUser) contact() (interface{}, error) {
+	return nil, a.populateJobContactData()
 }
 
 func (a *mqlMicrosoftUser) settings() (interface{}, error) {
@@ -176,4 +262,20 @@ func (a *mqlMicrosoftUser) settings() (interface{}, error) {
 	}
 
 	return convert.JsonToDict(newUserSettings(userSettings))
+}
+
+func (a *mqlMicrosoftUser) mfa() (interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, err
+	}
+	ctx := context.Background()
+	id := a.Id.Data
+	userAuthSettings, err := graphClient.Users().ByUserId(id).Authentication().Get(ctx, &users.ItemAuthenticationRequestBuilderGetRequestConfiguration{})
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	return convert.JsonToDict(newAuthentication(userAuthSettings))
 }

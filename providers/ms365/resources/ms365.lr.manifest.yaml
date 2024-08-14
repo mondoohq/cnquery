@@ -334,6 +334,8 @@ resources:
       accountEnabled: {}
       city: {}
       companyName: {}
+      contact:
+        min_mondoo_version: 9.0.0
       country: {}
       createdDateTime: {}
       department: {}
@@ -341,6 +343,8 @@ resources:
       employeeId: {}
       givenName: {}
       id: {}
+      job:
+        min_mondoo_version: 9.0.0
       jobTitle: {}
       mail: {}
       mobilePhone: {}

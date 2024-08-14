@@ -324,6 +324,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.user.settings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUser).GetSettings()).ToDataRes(types.Dict)
 	},
+	"microsoft.user.job": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUser).GetJob()).ToDataRes(types.Dict)
+	},
+	"microsoft.user.contact": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUser).GetContact()).ToDataRes(types.Dict)
+	},
 	"microsoft.group.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftGroup).GetId()).ToDataRes(types.String)
 	},
@@ -1152,6 +1158,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.user.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftUser).Settings, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.job": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUser).Job, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.contact": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUser).Contact, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"microsoft.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2452,6 +2466,8 @@ type mqlMicrosoftUser struct {
 	UserPrincipalName plugin.TValue[string]
 	UserType plugin.TValue[string]
 	Settings plugin.TValue[interface{}]
+	Job plugin.TValue[interface{}]
+	Contact plugin.TValue[interface{}]
 }
 
 // createMicrosoftUser creates a new instance of this resource
@@ -2499,19 +2515,27 @@ func (c *mqlMicrosoftUser) GetCity() *plugin.TValue[string] {
 }
 
 func (c *mqlMicrosoftUser) GetCompanyName() *plugin.TValue[string] {
-	return &c.CompanyName
+	return plugin.GetOrCompute[string](&c.CompanyName, func() (string, error) {
+		return c.companyName()
+	})
 }
 
 func (c *mqlMicrosoftUser) GetCountry() *plugin.TValue[string] {
-	return &c.Country
+	return plugin.GetOrCompute[string](&c.Country, func() (string, error) {
+		return c.country()
+	})
 }
 
 func (c *mqlMicrosoftUser) GetCreatedDateTime() *plugin.TValue[*time.Time] {
-	return &c.CreatedDateTime
+	return plugin.GetOrCompute[*time.Time](&c.CreatedDateTime, func() (*time.Time, error) {
+		return c.createdDateTime()
+	})
 }
 
 func (c *mqlMicrosoftUser) GetDepartment() *plugin.TValue[string] {
-	return &c.Department
+	return plugin.GetOrCompute[string](&c.Department, func() (string, error) {
+		return c.department()
+	})
 }
 
 func (c *mqlMicrosoftUser) GetDisplayName() *plugin.TValue[string] {
@@ -2519,7 +2543,9 @@ func (c *mqlMicrosoftUser) GetDisplayName() *plugin.TValue[string] {
 }
 
 func (c *mqlMicrosoftUser) GetEmployeeId() *plugin.TValue[string] {
-	return &c.EmployeeId
+	return plugin.GetOrCompute[string](&c.EmployeeId, func() (string, error) {
+		return c.employeeId()
+	})
 }
 
 func (c *mqlMicrosoftUser) GetGivenName() *plugin.TValue[string] {
@@ -2527,7 +2553,9 @@ func (c *mqlMicrosoftUser) GetGivenName() *plugin.TValue[string] {
 }
 
 func (c *mqlMicrosoftUser) GetJobTitle() *plugin.TValue[string] {
-	return &c.JobTitle
+	return plugin.GetOrCompute[string](&c.JobTitle, func() (string, error) {
+		return c.jobTitle()
+	})
 }
 
 func (c *mqlMicrosoftUser) GetMail() *plugin.TValue[string] {
@@ -2535,7 +2563,9 @@ func (c *mqlMicrosoftUser) GetMail() *plugin.TValue[string] {
 }
 
 func (c *mqlMicrosoftUser) GetMobilePhone() *plugin.TValue[string] {
-	return &c.MobilePhone
+	return plugin.GetOrCompute[string](&c.MobilePhone, func() (string, error) {
+		return c.mobilePhone()
+	})
 }
 
 func (c *mqlMicrosoftUser) GetOtherMails() *plugin.TValue[[]interface{}] {
@@ -2543,19 +2573,27 @@ func (c *mqlMicrosoftUser) GetOtherMails() *plugin.TValue[[]interface{}] {
 }
 
 func (c *mqlMicrosoftUser) GetOfficeLocation() *plugin.TValue[string] {
-	return &c.OfficeLocation
+	return plugin.GetOrCompute[string](&c.OfficeLocation, func() (string, error) {
+		return c.officeLocation()
+	})
 }
 
 func (c *mqlMicrosoftUser) GetPostalCode() *plugin.TValue[string] {
-	return &c.PostalCode
+	return plugin.GetOrCompute[string](&c.PostalCode, func() (string, error) {
+		return c.postalCode()
+	})
 }
 
 func (c *mqlMicrosoftUser) GetState() *plugin.TValue[string] {
-	return &c.State
+	return plugin.GetOrCompute[string](&c.State, func() (string, error) {
+		return c.state()
+	})
 }
 
 func (c *mqlMicrosoftUser) GetStreetAddress() *plugin.TValue[string] {
-	return &c.StreetAddress
+	return plugin.GetOrCompute[string](&c.StreetAddress, func() (string, error) {
+		return c.streetAddress()
+	})
 }
 
 func (c *mqlMicrosoftUser) GetSurname() *plugin.TValue[string] {
@@ -2573,6 +2611,18 @@ func (c *mqlMicrosoftUser) GetUserType() *plugin.TValue[string] {
 func (c *mqlMicrosoftUser) GetSettings() *plugin.TValue[interface{}] {
 	return plugin.GetOrCompute[interface{}](&c.Settings, func() (interface{}, error) {
 		return c.settings()
+	})
+}
+
+func (c *mqlMicrosoftUser) GetJob() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.Job, func() (interface{}, error) {
+		return c.job()
+	})
+}
+
+func (c *mqlMicrosoftUser) GetContact() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.Contact, func() (interface{}, error) {
+		return c.contact()
 	})
 }
 
