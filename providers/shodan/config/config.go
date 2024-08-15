@@ -4,6 +4,7 @@
 package config
 
 import (
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/shodan/connection"
 	"go.mondoo.com/cnquery/v11/providers/shodan/provider"
@@ -39,6 +40,18 @@ var Config = plugin.Provider{
 					Default: "",
 					Desc:    "Only include repositories with matching names",
 				},
+			},
+		},
+	},
+	AssetUrlTrees: []*inventory.AssetUrlBranch{
+		{
+			PathSegments: []string{"technology=network", "category=shodan"},
+			Key:          "kind",
+			Title:        "Kind",
+			Values: map[string]*inventory.AssetUrlBranch{
+				"host":   nil,
+				"domain": nil,
+				"org":    nil,
 			},
 		},
 	},
