@@ -1692,14 +1692,30 @@ private azure.subscription.monitorService.diagnosticsetting @defaults("id name")
 }
 
 // Microsoft Defender for Cloud
-private azure.subscription.cloudDefenderService @defaults("defenderForServers defenderForContainers"){
+private azure.subscription.cloudDefenderService @defaults("defenderForServers.enabled defenderForContainers.enabled"){
   // Subscription identifier
   subscriptionId string
   // Whether the monitoring agent is automatically provisioned on new VMs
   monitoringAgentAutoProvision() bool
-  // List of Defender for Server components and whether they are enabled
+  // List of Defender for Servers components and whether they are enabled
   defenderForServers() dict
-  // List of Defender for Container components and whether they are enabled
+  // Microsoft Defender for App Service configuration
+  defenderForAppServices() dict
+  // Microsoft Defender for SQL servers on machines configuration
+  defenderForSqlServersOnMachines() dict
+  // Microsoft Defender for Azure SQL Databases configuration
+  defenderForSqlDatabases() dict
+  // Microsoft Defender for open-source relational databases configuration
+  defenderForOpenSourceDatabases() dict
+  // Microsoft Defender for Azure Cosmos DB configuration
+  defenderForCosmosDb() dict
+  // Microsoft Defender for Storage Accounts configuration
+  defenderForStorageAccounts() dict
+  // Microsoft Defender for Key Vault configuration
+  defenderForKeyVaults() dict
+  // Microsoft Defender for Resource Manager configuration
+  defenderForResourceManager() dict
+  // Defender for Containers components configuration
   defenderForContainers() dict
   // List of configured security contacts
   securityContacts() []azure.subscription.cloudDefenderService.securityContact
