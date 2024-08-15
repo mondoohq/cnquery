@@ -155,9 +155,10 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.IpmiConnection
 	asset.Name = conn.Conf.Host
 
 	asset.Platform = &inventory.Platform{
-		Name:  "ipmi",
-		Title: "IPMI",
-		Kind:  "api",
+		Name:                  "ipmi",
+		Title:                 "IPMI",
+		Kind:                  "api",
+		TechnologyUrlSegments: []string{"network", "ipmi"},
 	}
 
 	// TODO: consider using the ipmi vendor id and product id
