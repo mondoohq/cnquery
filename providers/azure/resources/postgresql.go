@@ -97,6 +97,10 @@ func (a *mqlAzureSubscriptionPostgreSqlService) servers() ([]interface{}, error)
 	return res, nil
 }
 
+func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) id() (string, error) {
+	return a.Id.Data, nil
+}
+
 func (a *mqlAzureSubscriptionPostgreSqlService) flexibleServers() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
