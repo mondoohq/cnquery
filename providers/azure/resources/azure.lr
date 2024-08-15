@@ -1699,23 +1699,23 @@ private azure.subscription.cloudDefenderService @defaults("defenderForServers de
   monitoringAgentAutoProvision() bool
   // List of Defender for Servers components and whether they are enabled
   defenderForServers() dict
-  // Whether Microsoft Defender for App Service is enabled
+  // Microsoft Defender for App Service configuration
   defenderForAppServices() dict
-  // Whether Microsoft Defender for SQL servers on machines is enabled
+  // Microsoft Defender for SQL servers on machines configuration
   defenderForSqlServersOnMachines() dict
-  // Whether Microsoft Defender for Azure SQL Databases is enabled
+  // Microsoft Defender for Azure SQL Databases configuration
   defenderForSqlDatabases() dict
-  // Whether Microsoft Defender for open-source relational databases is enabled
+  // Microsoft Defender for open-source relational databases configuration
   defenderForOpenSourceDatabases() dict
-  // Whether Microsoft Defender for Azure Cosmos DB is enabled
+  // Microsoft Defender for Azure Cosmos DB configuration
   defenderForCosmosDb() dict
-  // Whether Microsoft Defender for Storage Accounts is enabled
+  // Microsoft Defender for Storage Accounts configuration
   defenderForStorageAccounts() dict
-  // Whether Microsoft Defender for Key Vault is enabled
+  // Microsoft Defender for Key Vault configuration
   defenderForKeyVaults() dict
-  // Whether Microsoft Defender for Resource Manager is enabled
+  // Microsoft Defender for Resource Manager configuration
   defenderForResourceManager() dict
-  // List of Defender for Containers components and whether they are enabled
+  // Defender for Containers components configuration
   defenderForContainers() dict
   // List of configured security contacts
   securityContacts() []azure.subscription.cloudDefenderService.securityContact

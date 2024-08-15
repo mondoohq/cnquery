@@ -2500,6 +2500,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cloudDefenderService.defenderForServers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderForServers()).ToDataRes(types.Dict)
 	},
+	"azure.subscription.cloudDefenderService.defenderForAppServices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderForAppServices()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderForSqlServersOnMachines()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlDatabases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderForSqlDatabases()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderForOpenSourceDatabases()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.cloudDefenderService.defenderForCosmosDb": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderForCosmosDb()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.cloudDefenderService.defenderForStorageAccounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderForStorageAccounts()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.cloudDefenderService.defenderForKeyVaults": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderForKeyVaults()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.cloudDefenderService.defenderForResourceManager": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderForResourceManager()).ToDataRes(types.Dict)
+	},
 	"azure.subscription.cloudDefenderService.defenderForContainers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderForContainers()).ToDataRes(types.Dict)
 	},
@@ -5773,6 +5797,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"azure.subscription.cloudDefenderService.defenderForServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCloudDefenderService).DefenderForServers, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForAppServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderService).DefenderForAppServices, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderService).DefenderForSqlServersOnMachines, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlDatabases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderService).DefenderForSqlDatabases, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderService).DefenderForOpenSourceDatabases, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForCosmosDb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderService).DefenderForCosmosDb, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForStorageAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderService).DefenderForStorageAccounts, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForKeyVaults": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderService).DefenderForKeyVaults, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForResourceManager": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderService).DefenderForResourceManager, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cloudDefenderService.defenderForContainers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12118,7 +12174,12 @@ func createAzureSubscriptionPostgreSqlServiceFlexibleServer(runtime *plugin.Runt
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("azure.subscription.postgreSqlService.flexibleServer", res.__id)
@@ -14559,6 +14620,14 @@ type mqlAzureSubscriptionCloudDefenderService struct {
 	SubscriptionId plugin.TValue[string]
 	MonitoringAgentAutoProvision plugin.TValue[bool]
 	DefenderForServers plugin.TValue[interface{}]
+	DefenderForAppServices plugin.TValue[interface{}]
+	DefenderForSqlServersOnMachines plugin.TValue[interface{}]
+	DefenderForSqlDatabases plugin.TValue[interface{}]
+	DefenderForOpenSourceDatabases plugin.TValue[interface{}]
+	DefenderForCosmosDb plugin.TValue[interface{}]
+	DefenderForStorageAccounts plugin.TValue[interface{}]
+	DefenderForKeyVaults plugin.TValue[interface{}]
+	DefenderForResourceManager plugin.TValue[interface{}]
 	DefenderForContainers plugin.TValue[interface{}]
 	SecurityContacts plugin.TValue[[]interface{}]
 }
@@ -14613,6 +14682,54 @@ func (c *mqlAzureSubscriptionCloudDefenderService) GetMonitoringAgentAutoProvisi
 func (c *mqlAzureSubscriptionCloudDefenderService) GetDefenderForServers() *plugin.TValue[interface{}] {
 	return plugin.GetOrCompute[interface{}](&c.DefenderForServers, func() (interface{}, error) {
 		return c.defenderForServers()
+	})
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderService) GetDefenderForAppServices() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.DefenderForAppServices, func() (interface{}, error) {
+		return c.defenderForAppServices()
+	})
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderService) GetDefenderForSqlServersOnMachines() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.DefenderForSqlServersOnMachines, func() (interface{}, error) {
+		return c.defenderForSqlServersOnMachines()
+	})
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderService) GetDefenderForSqlDatabases() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.DefenderForSqlDatabases, func() (interface{}, error) {
+		return c.defenderForSqlDatabases()
+	})
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderService) GetDefenderForOpenSourceDatabases() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.DefenderForOpenSourceDatabases, func() (interface{}, error) {
+		return c.defenderForOpenSourceDatabases()
+	})
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderService) GetDefenderForCosmosDb() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.DefenderForCosmosDb, func() (interface{}, error) {
+		return c.defenderForCosmosDb()
+	})
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderService) GetDefenderForStorageAccounts() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.DefenderForStorageAccounts, func() (interface{}, error) {
+		return c.defenderForStorageAccounts()
+	})
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderService) GetDefenderForKeyVaults() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.DefenderForKeyVaults, func() (interface{}, error) {
+		return c.defenderForKeyVaults()
+	})
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderService) GetDefenderForResourceManager() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.DefenderForResourceManager, func() (interface{}, error) {
+		return c.defenderForResourceManager()
 	})
 }
 
