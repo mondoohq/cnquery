@@ -77,5 +77,8 @@ var Config = plugin.Provider{
 				"*": nil,
 			},
 		},
+		{
+			PathSegments: []string{"technology=iac", "category=k8s-manifest"},
+		},
 	},
 }
