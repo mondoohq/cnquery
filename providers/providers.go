@@ -978,6 +978,15 @@ func LoadAssetUrlSchema() (*inventory.AssetUrlSchema, error) {
 		return nil, err
 	}
 
+	err = s.Add(&inventory.AssetUrlBranch{
+		PathSegments: []string{"technology=network"},
+		Key:          "category",
+		Title:        "Category",
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	for _, provider := range providers {
 		for _, b := range provider.AssetUrlTrees {
 			if err := s.Add(b); err != nil {
