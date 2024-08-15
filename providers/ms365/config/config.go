@@ -4,6 +4,7 @@
 package config
 
 import (
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/ms365/provider"
 )
@@ -65,6 +66,11 @@ var Config = plugin.Provider{
 					Desc:    "Passphrase for the authentication certificate file",
 				},
 			},
+		},
+	},
+	AssetUrlTrees: []*inventory.AssetUrlBranch{
+		{
+			PathSegments: []string{"technology=saas", "provider=ms365"},
 		},
 	},
 }
