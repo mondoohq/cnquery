@@ -1701,7 +1701,7 @@ private azure.subscription.cloudDefenderService @defaults("defenderForServers de
   defenderForServers() dict
   // Whether Microsoft Defender for App Service is enabled
   defenderForAppServices() dict
-  // Whether Microsoft Defender for SQL Servers on Machines is enabled
+  // Whether Microsoft Defender for SQL servers on machines is enabled
   defenderForSqlServersOnMachines() dict
   // Whether Microsoft Defender for Azure SQL Databases is enabled
   defenderForSqlDatabases() dict
