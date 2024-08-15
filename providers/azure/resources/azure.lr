@@ -1705,7 +1705,7 @@ private azure.subscription.cloudDefenderService @defaults("defenderForServers de
   defenderForSqlServersOnMachines() dict
   // Whether Microsoft Defender for Azure SQL Databases is enabled
   defenderForSqlDatabases() dict
-  // Whether Microsoft Defender for Open-source Relational Databases is enabled
+  // Whether Microsoft Defender for open-source relational databases is enabled
   defenderForOpenSourceDatabases() dict
   // Whether Microsoft Defender for Azure Cosmos DB is enabled
   defenderForCosmosDb() dict
