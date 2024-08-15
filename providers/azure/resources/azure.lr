@@ -1692,7 +1692,7 @@ private azure.subscription.monitorService.diagnosticsetting @defaults("id name")
 }
 
 // Microsoft Defender for Cloud
-private azure.subscription.cloudDefenderService @defaults("defenderForServers defenderForContainers"){
+private azure.subscription.cloudDefenderService @defaults("defenderForServers.enabled defenderForContainers.enabled"){
   // Subscription identifier
   subscriptionId string
   // Whether the monitoring agent is automatically provisioned on new VMs
