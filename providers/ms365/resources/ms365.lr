@@ -20,6 +20,8 @@ microsoft {
   serviceprincipals() []microsoft.serviceprincipal
   // List of enterprise applications
   enterpriseApplications() []microsoft.serviceprincipal
+  // List of roles
+  roles() []microsoft.rolemanagement.roledefinition
   // Microsoft 365 settings
   settings() dict
   // The connected tenant's default domain name
@@ -357,9 +359,9 @@ microsoft.policies {
   permissionGrantPolicies() []dict
 }
 
-// Microsoft role management
+// Deprecated: use `microsoft.roles` instead
 microsoft.rolemanagement {
-  // List of role definitions
+  // Deprecated: use `microsoft.roles` instead
   roleDefinitions() []microsoft.rolemanagement.roledefinition
 }
 

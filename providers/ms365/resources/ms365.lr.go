@@ -231,6 +231,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.enterpriseApplications": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoft).GetEnterpriseApplications()).ToDataRes(types.Array(types.Resource("microsoft.serviceprincipal")))
 	},
+	"microsoft.roles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoft).GetRoles()).ToDataRes(types.Array(types.Resource("microsoft.rolemanagement.roledefinition")))
+	},
 	"microsoft.settings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoft).GetSettings()).ToDataRes(types.Dict)
 	},
@@ -984,6 +987,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.enterpriseApplications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoft).EnterpriseApplications, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoft).Roles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"microsoft.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2090,6 +2097,7 @@ type mqlMicrosoft struct {
 	Applications plugin.TValue[[]interface{}]
 	Serviceprincipals plugin.TValue[[]interface{}]
 	EnterpriseApplications plugin.TValue[[]interface{}]
+	Roles plugin.TValue[[]interface{}]
 	Settings plugin.TValue[interface{}]
 	TenantDomainName plugin.TValue[string]
 }
@@ -2235,6 +2243,22 @@ func (c *mqlMicrosoft) GetEnterpriseApplications() *plugin.TValue[[]interface{}]
 		}
 
 		return c.enterpriseApplications()
+	})
+}
+
+func (c *mqlMicrosoft) GetRoles() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Roles, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft", c.__id, "roles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.roles()
 	})
 }
 

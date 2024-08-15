@@ -10,6 +10,8 @@ resources:
         min_mondoo_version: latest
       groups: {}
       organizations: {}
+      roles:
+        min_mondoo_version: 9.0.0
       serviceprincipals: {}
       settings: {}
       tenantDomainName:

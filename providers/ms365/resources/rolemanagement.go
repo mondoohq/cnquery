@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 
 	"github.com/microsoftgraph/msgraph-sdk-go/rolemanagement"
 	"go.mondoo.com/cnquery/v11/llx"
@@ -13,21 +14,14 @@ import (
 	"go.mondoo.com/cnquery/v11/types"
 )
 
-func (m *mqlMicrosoftRolemanagementRoledefinition) id() (string, error) {
-	return m.Id.Data, nil
-}
-
-func (m *mqlMicrosoftRolemanagementRoleassignment) id() (string, error) {
-	return m.Id.Data, nil
-}
-
-func (a *mqlMicrosoftRolemanagement) roleDefinitions() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+func fetchRoles(runtime *plugin.Runtime) ([]interface{}, error) {
+	conn := runtime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
 		return nil, err
 	}
 	ctx := context.Background()
+
 	resp, err := graphClient.RoleManagement().Directory().RoleDefinitions().Get(ctx, &rolemanagement.DirectoryRoleDefinitionsRequestBuilderGetRequestConfiguration{})
 	if err != nil {
 		return nil, transformError(err)
@@ -40,7 +34,7 @@ func (a *mqlMicrosoftRolemanagement) roleDefinitions() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.rolemanagement.roledefinition",
+		mqlResource, err := CreateResource(runtime, "microsoft.rolemanagement.roledefinition",
 			map[string]*llx.RawData{
 				"id":              llx.StringDataPtr(role.GetId()),
 				"description":     llx.StringDataPtr(role.GetDescription()),
@@ -58,6 +52,24 @@ func (a *mqlMicrosoftRolemanagement) roleDefinitions() ([]interface{}, error) {
 	}
 
 	return res, nil
+}
+
+func (a *mqlMicrosoft) roles() ([]interface{}, error) {
+	return fetchRoles(a.MqlRuntime)
+}
+
+func (m *mqlMicrosoftRolemanagementRoledefinition) id() (string, error) {
+	return m.Id.Data, nil
+}
+
+// Deprecated: use mqlMicrosoft roles() instead
+func (m *mqlMicrosoftRolemanagementRoleassignment) id() (string, error) {
+	return m.Id.Data, nil
+}
+
+// Deprecated: use mqlMicrosoft roles() instead
+func (a *mqlMicrosoftRolemanagement) roleDefinitions() ([]interface{}, error) {
+	return fetchRoles(a.MqlRuntime)
 }
 
 func (a *mqlMicrosoftRolemanagementRoledefinition) assignments() ([]interface{}, error) {
