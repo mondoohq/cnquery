@@ -56,11 +56,12 @@ func NewDockerfileConnection(_ uint32,
 	}
 
 	asset.Platform = &inventory.Platform{
-		Name:    "dockerfile",
-		Title:   "Dockerfile",
-		Family:  []string{"docker"},
-		Kind:    "code",
-		Runtime: "docker",
+		Name:                  "dockerfile",
+		Title:                 "Dockerfile",
+		Family:                []string{"docker"},
+		Kind:                  "code",
+		Runtime:               "docker",
+		TechnologyUrlSegments: []string{"iac", "dockerfile"},
 	}
 	// this helps with running commands against the local connection
 	asset.Platform.Family = append(asset.Platform.Family, localFamily...)
