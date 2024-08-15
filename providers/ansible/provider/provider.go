@@ -135,7 +135,7 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.AnsibleConnect
 		Family:                []string{"ansible"},
 		Kind:                  "api",
 		Title:                 "Ansible Playbook",
-		TechnologyUrlSegments: []string{"saas", "ansible", "playbook"},
+		TechnologyUrlSegments: []string{"iac", "ansible", "playbook"},
 	}
 
 	projectPath, ok := asset.Connections[0].Options["path"]
