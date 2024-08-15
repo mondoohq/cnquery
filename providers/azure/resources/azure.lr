@@ -1711,7 +1711,7 @@ private azure.subscription.cloudDefenderService @defaults("defenderForServers de
   defenderForCosmosDb() dict
   // Whether Microsoft Defender for Storage Accounts is enabled
   defenderForStorageAccounts() dict
-  // Whether Microsoft Defender for Key Vaults is enabled
+  // Whether Microsoft Defender for Key Vault is enabled
   defenderForKeyVaults() dict
   // Whether Microsoft Defender for Resource Manager is enabled
   defenderForResourceManager() dict
