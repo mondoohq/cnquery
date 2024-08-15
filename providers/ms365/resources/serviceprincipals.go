@@ -65,37 +65,7 @@ func fetchServicePrincipals(runtime *plugin.Runtime, conn *connection.Ms365Conne
 	}
 	res := []interface{}{}
 	for _, sp := range sps {
-		hideApp := stringx.Contains(sp.GetTags(), "HideApp")
-		assignments := []interface{}{}
-		for _, a := range sp.GetAppRoleAssignedTo() {
-			assignment, err := CreateResource(runtime, "microsoft.serviceprincipal.assignment", map[string]*llx.RawData{
-				"id":          llx.StringDataPtr(a.GetId()),
-				"displayName": llx.StringDataPtr(a.GetPrincipalDisplayName()),
-				"type":        llx.StringDataPtr(a.GetPrincipalType()),
-			})
-			if err != nil {
-				return nil, err
-			}
-			assignments = append(assignments, assignment)
-		}
-		args := map[string]*llx.RawData{
-			"id":                 llx.StringDataPtr(sp.GetId()),
-			"name":               llx.StringDataPtr(sp.GetDisplayName()),
-			"type":               llx.StringDataPtr(sp.GetServicePrincipalType()),
-			"tags":               llx.ArrayData(convert.SliceAnyToInterface(sp.GetTags()), types.String),
-			"enabled":            llx.BoolDataPtr(sp.GetAccountEnabled()),
-			"homepageUrl":        llx.StringDataPtr(sp.GetHomepage()),
-			"replyUrls":          llx.ArrayData(convert.SliceAnyToInterface(sp.GetReplyUrls()), types.String),
-			"assignmentRequired": llx.BoolDataPtr(sp.GetAppRoleAssignmentRequired()),
-			"visibleToUsers":     llx.BoolData(!hideApp),
-			"notes":              llx.StringDataPtr(sp.GetNotes()),
-			"assignments":        llx.ArrayData(assignments, types.ResourceLike),
-		}
-		info := sp.GetInfo()
-		if info != nil {
-			args["termsOfServiceUrl"] = llx.StringDataPtr(info.GetTermsOfServiceUrl())
-		}
-		mqlResource, err := CreateResource(runtime, "microsoft.serviceprincipal", args)
+		mqlResource, err := newMqlMicrosoftServicePrincipal(runtime, sp)
 		if err != nil {
 			return nil, err
 		}
@@ -103,4 +73,42 @@ func fetchServicePrincipals(runtime *plugin.Runtime, conn *connection.Ms365Conne
 	}
 
 	return res, nil
+}
+
+func newMqlMicrosoftServicePrincipal(runtime *plugin.Runtime, sp models.ServicePrincipalable) (*mqlMicrosoftServiceprincipal, error) {
+	hideApp := stringx.Contains(sp.GetTags(), "HideApp")
+	assignments := []interface{}{}
+	for _, a := range sp.GetAppRoleAssignedTo() {
+		assignment, err := CreateResource(runtime, "microsoft.serviceprincipal.assignment", map[string]*llx.RawData{
+			"id":          llx.StringDataPtr(a.GetId()),
+			"displayName": llx.StringDataPtr(a.GetPrincipalDisplayName()),
+			"type":        llx.StringDataPtr(a.GetPrincipalType()),
+		})
+		if err != nil {
+			return nil, err
+		}
+		assignments = append(assignments, assignment)
+	}
+	args := map[string]*llx.RawData{
+		"id":                 llx.StringDataPtr(sp.GetId()),
+		"name":               llx.StringDataPtr(sp.GetDisplayName()),
+		"type":               llx.StringDataPtr(sp.GetServicePrincipalType()),
+		"tags":               llx.ArrayData(convert.SliceAnyToInterface(sp.GetTags()), types.String),
+		"enabled":            llx.BoolDataPtr(sp.GetAccountEnabled()),
+		"homepageUrl":        llx.StringDataPtr(sp.GetHomepage()),
+		"replyUrls":          llx.ArrayData(convert.SliceAnyToInterface(sp.GetReplyUrls()), types.String),
+		"assignmentRequired": llx.BoolDataPtr(sp.GetAppRoleAssignmentRequired()),
+		"visibleToUsers":     llx.BoolData(!hideApp),
+		"notes":              llx.StringDataPtr(sp.GetNotes()),
+		"assignments":        llx.ArrayData(assignments, types.ResourceLike),
+	}
+	info := sp.GetInfo()
+	if info != nil {
+		args["termsOfServiceUrl"] = llx.StringDataPtr(info.GetTermsOfServiceUrl())
+	}
+	mqlResource, err := CreateResource(runtime, "microsoft.serviceprincipal", args)
+	if err != nil {
+		return nil, err
+	}
+	return mqlResource.(*mqlMicrosoftServiceprincipal), nil
 }

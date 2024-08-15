@@ -8,6 +8,7 @@ package resources
 
 import (
 	"encoding/json"
+	"github.com/google/uuid"
 	"time"
 
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
@@ -598,5 +599,326 @@ func newAdminConsentRequestPolicy(p models.AdminConsentRequestPolicyable) *Admin
 		RequestDurationInDays: p.GetRequestDurationInDays(),
 		Reviewers:             newAccessReviewReviewerScopes(p.GetReviewers()),
 		Version:               p.GetVersion(),
+	}
+}
+
+type InformationalUrl struct {
+	LogoUrl             *string `json:"logoUrl"`
+	MarketingUrl        *string `json:"marketingUrl"`
+	PrivacyStatementUrl *string `json:"privacyStatementUrl"`
+	SupportUrl          *string `json:"supportUrl"`
+	TermsOfServiceUrl   *string `json:"termsOfServiceUrl"`
+}
+
+func newAppInformationUrl(s models.InformationalUrlable) *InformationalUrl {
+	if s == nil {
+		return nil
+	}
+
+	return &InformationalUrl{
+		LogoUrl:             s.GetLogoUrl(),
+		MarketingUrl:        s.GetMarketingUrl(),
+		PrivacyStatementUrl: s.GetPrivacyStatementUrl(),
+		SupportUrl:          s.GetSupportUrl(),
+		TermsOfServiceUrl:   s.GetTermsOfServiceUrl(),
+	}
+}
+
+type PermissionScopeable struct {
+	AdminConsentDescription *string `json:"adminConsentDescription"`
+	AdminConsentDisplayName *string `json:"adminConsentDisplayName"`
+	Id                      *string `json:"id"`
+	IsEnabled               *bool   `json:"isEnabled"`
+	Origin                  *string `json:"origin"`
+	TypeEscaped             *string `json:"type"`
+	UserConsentDescription  *string `json:"userConsentDescription"`
+	UserConsentDisplayName  *string `json:"userConsentDisplayName"`
+	Value                   *string `json:"value"`
+}
+
+func newUuidString(u *uuid.UUID) *string {
+	if u == nil {
+		return nil
+	}
+	s := u.String()
+	return &s
+}
+
+func newPermissionScopable(s models.PermissionScopeable) *PermissionScopeable {
+	if s == nil {
+		return nil
+	}
+	return &PermissionScopeable{
+		AdminConsentDescription: s.GetAdminConsentDescription(),
+		AdminConsentDisplayName: s.GetAdminConsentDisplayName(),
+		Id:                      newUuidString(s.GetId()),
+		IsEnabled:               s.GetIsEnabled(),
+		Origin:                  s.GetOrigin(),
+		TypeEscaped:             s.GetTypeEscaped(),
+		UserConsentDescription:  s.GetUserConsentDescription(),
+		UserConsentDisplayName:  s.GetUserConsentDisplayName(),
+		Value:                   s.GetValue(),
+	}
+
+}
+
+func newPermissionScopableList(input []models.PermissionScopeable) []*PermissionScopeable {
+	res := []*PermissionScopeable{}
+	for i := range input {
+		res = append(res, newPermissionScopable(input[i]))
+	}
+	return res
+}
+
+type PreAuthorizedApplicationable struct {
+	AppId                  *string  `json:"appId"`
+	DelegatedPermissionIds []string `json:"delegatedPermissionIds"`
+}
+
+func newPreAuthorizedApplications(e models.PreAuthorizedApplicationable) *PreAuthorizedApplicationable {
+	if e == nil {
+		return nil
+	}
+	return &PreAuthorizedApplicationable{
+		AppId:                  e.GetAppId(),
+		DelegatedPermissionIds: e.GetDelegatedPermissionIds(),
+	}
+}
+
+func newPreAuthorizedApplicationsList(input []models.PreAuthorizedApplicationable) []*PreAuthorizedApplicationable {
+	res := []*PreAuthorizedApplicationable{}
+	for i := range input {
+		res = append(res, newPreAuthorizedApplications(input[i]))
+	}
+	return res
+}
+
+type ApiApplication struct {
+	AcceptMappedClaims          *bool                           `json:"acceptMappedClaims"`
+	KnownClientApplications     []uuid.UUID                     `json:"knownClientApplications"`
+	Oauth2PermissionScopes      []*PermissionScopeable          `json:"oauth2PermissionScopes"`
+	PreAuthorizedApplications   []*PreAuthorizedApplicationable `json:"preAuthorizedApplications"`
+	RequestedAccessTokenVersion *int32                          `json:"requestedAccessTokenVersion"`
+}
+
+func newApiApplication(s models.ApiApplicationable) *ApiApplication {
+	if s == nil {
+		return nil
+	}
+	return &ApiApplication{
+		AcceptMappedClaims:          s.GetAcceptMappedClaims(),
+		KnownClientApplications:     s.GetKnownClientApplications(),
+		Oauth2PermissionScopes:      newPermissionScopableList(s.GetOauth2PermissionScopes()),
+		PreAuthorizedApplications:   newPreAuthorizedApplicationsList(s.GetPreAuthorizedApplications()),
+		RequestedAccessTokenVersion: s.GetRequestedAccessTokenVersion(),
+	}
+}
+
+type ImplicitGrantSettings struct {
+	EnableAccessTokenIssuance *bool `json:"enableAccessTokenIssuance"`
+	EnableIdTokenIssuance     *bool `json:"enableIdTokenIssuance"`
+}
+
+func newImplicitGrantSettings(s models.ImplicitGrantSettingsable) *ImplicitGrantSettings {
+	if s == nil {
+		return nil
+	}
+	return &ImplicitGrantSettings{
+		EnableAccessTokenIssuance: s.GetEnableAccessTokenIssuance(),
+		EnableIdTokenIssuance:     s.GetEnableIdTokenIssuance(),
+	}
+}
+
+type RedirectUriSettings struct {
+	Index *int32  `json:"index"`
+	Uri   *string `json:"uri"`
+}
+
+func newRedirectUriSettings(s models.RedirectUriSettingsable) *RedirectUriSettings {
+	if s == nil {
+		return nil
+	}
+	return &RedirectUriSettings{
+		Index: s.GetIndex(),
+		Uri:   s.GetUri(),
+	}
+}
+
+func newRedirectUriSettingsList(input []models.RedirectUriSettingsable) []*RedirectUriSettings {
+	res := []*RedirectUriSettings{}
+	for i := range input {
+		res = append(res, newRedirectUriSettings(input[i]))
+	}
+	return res
+}
+
+type WebApplication struct {
+	HomePageUrl           *string                `json:"homePageUrl"`
+	ImplicitGrantSettings *ImplicitGrantSettings `json:"implicitGrantSettings"`
+	LogoutUrl             *string                `json:"logoutUrl"`
+	RedirectUris          []string               `json:"redirectUris"`
+	RedirectUriSettings   []*RedirectUriSettings `json:"redirectUriSettings"`
+}
+
+func newWebApplication(s models.WebApplicationable) *WebApplication {
+	if s == nil {
+		return nil
+	}
+	return &WebApplication{
+		HomePageUrl:           s.GetHomePageUrl(),
+		ImplicitGrantSettings: newImplicitGrantSettings(s.GetImplicitGrantSettings()),
+		LogoutUrl:             s.GetLogoutUrl(),
+		RedirectUris:          s.GetRedirectUris(),
+		RedirectUriSettings:   newRedirectUriSettingsList(s.GetRedirectUriSettings()),
+	}
+}
+
+type SpaApplication struct {
+	RedirectUris []string `json:"redirectUris"`
+}
+
+func newSpaApplication(s models.SpaApplicationable) *SpaApplication {
+	if s == nil {
+		return nil
+	}
+	return &SpaApplication{
+		RedirectUris: s.GetRedirectUris(),
+	}
+}
+
+type ParentalControlSettingsable struct {
+	CountriesBlockedForMinors []string `json:"countriesBlockedForMinors"`
+	LegalAgeGroupRule         *string  `json:"legalAgeGroupRule"`
+}
+
+func newParentalControlSettings(s models.ParentalControlSettingsable) *ParentalControlSettingsable {
+	if s == nil {
+		return nil
+	}
+	return &ParentalControlSettingsable{
+		CountriesBlockedForMinors: s.GetCountriesBlockedForMinors(),
+		LegalAgeGroupRule:         s.GetLegalAgeGroupRule(),
+	}
+
+}
+
+type PublicClientApplicationable struct {
+	RedirectUris []string `json:"redirectUris"`
+}
+
+func newPublicClientApplication(s models.PublicClientApplicationable) *PublicClientApplicationable {
+	if s == nil {
+		return nil
+	}
+	return &PublicClientApplicationable{
+		RedirectUris: s.GetRedirectUris(),
+	}
+}
+
+type RequestSignatureVerificationable struct {
+	AllowedWeakAlgorithms   *int  `json:"allowedWeakAlgorithms"`
+	IsSignedRequestRequired *bool `json:"isSignedRequestRequired"`
+}
+
+func newRequestSignatureVerification(s models.RequestSignatureVerificationable) *RequestSignatureVerificationable {
+	if s == nil {
+		return nil
+	}
+	var weakAlgorithmsVal *int
+	weakAlgorithms := s.GetAllowedWeakAlgorithms()
+	if weakAlgorithms != nil {
+		weakAlgorithmsVal = new(int)
+		*weakAlgorithmsVal = int(*weakAlgorithms)
+	}
+
+	return &RequestSignatureVerificationable{
+		AllowedWeakAlgorithms:   weakAlgorithmsVal,
+		IsSignedRequestRequired: s.GetIsSignedRequestRequired(),
+	}
+}
+
+type ServicePrincipalLockConfigurationable struct {
+	AllProperties              *bool `json:"allProperties"`
+	CredentialsWithUsageSign   *bool `json:"credentialsWithUsageSignIns"`
+	CredentialsWithUsageVerify *bool `json:"credentialsWithUsageVerify"`
+	IsEnabled                  *bool `json:"isEnabled"`
+	TokenEncryptionKeyId       *bool `json:"tokenEncryptionKeyId"`
+}
+
+func newServicePrincipalLockConfiguration(s models.ServicePrincipalLockConfigurationable) *ServicePrincipalLockConfigurationable {
+	if s == nil {
+		return nil
+	}
+	return &ServicePrincipalLockConfigurationable{
+		AllProperties:              s.GetAllProperties(),
+		CredentialsWithUsageSign:   s.GetCredentialsWithUsageSign(),
+		CredentialsWithUsageVerify: s.GetCredentialsWithUsageVerify(),
+		IsEnabled:                  s.GetIsEnabled(),
+		TokenEncryptionKeyId:       s.GetTokenEncryptionKeyId(),
+	}
+}
+
+type OptionalClaimable struct {
+	Essential *bool   `json:"essential"`
+	Name      *string `json:"name"`
+	Source    *string `json:"source"`
+}
+
+func newOptionalClaimable(s models.OptionalClaimable) *OptionalClaimable {
+	if s == nil {
+		return nil
+	}
+	return &OptionalClaimable{
+		Essential: s.GetEssential(),
+		Name:      s.GetName(),
+		Source:    s.GetSource(),
+	}
+}
+
+func newOptionalClaimableList(input []models.OptionalClaimable) []*OptionalClaimable {
+	res := []*OptionalClaimable{}
+	for i := range input {
+		res = append(res, newOptionalClaimable(input[i]))
+	}
+	return res
+}
+
+type OptionalClaimsable struct {
+	AccessToken []*OptionalClaimable
+	IdToken     []*OptionalClaimable
+	OdataType   *string
+	Saml2Token  []*OptionalClaimable
+}
+
+func newOptionalClaimsable(s models.OptionalClaimsable) *OptionalClaimsable {
+	if s == nil {
+		return nil
+	}
+	return &OptionalClaimsable{
+		AccessToken: newOptionalClaimableList(s.GetAccessToken()),
+		IdToken:     newOptionalClaimableList(s.GetIdToken()),
+		OdataType:   s.GetOdataType(),
+		Saml2Token:  newOptionalClaimableList(s.GetSaml2Token()),
+	}
+}
+
+type Certificationable struct {
+	CertificationDetailsUrl         *string    `json:"certificationDetailsUrl"`
+	CertificationExpirationDateTime *time.Time `json:"certificationExpirationDateTime"`
+	IsCertifiedByMicrosoft          *bool      `json:"isCertifiedByMicrosoft"`
+	IsPublisherAttested             *bool      `json:"isPublisherAttested"`
+	LastCertificationDateTime       *time.Time `json:"lastCertificationDateTime"`
+}
+
+func newCertificationable(s models.Certificationable) *Certificationable {
+	if s == nil {
+		return nil
+	}
+	return &Certificationable{
+		CertificationDetailsUrl:         s.GetCertificationDetailsUrl(),
+		CertificationExpirationDateTime: s.GetCertificationExpirationDateTime(),
+		IsCertifiedByMicrosoft:          s.GetIsCertifiedByMicrosoft(),
+		IsPublisherAttested:             s.GetIsPublisherAttested(),
+		LastCertificationDateTime:       s.GetLastCertificationDateTime(),
 	}
 }

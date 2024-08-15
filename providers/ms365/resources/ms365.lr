@@ -165,9 +165,9 @@ private microsoft.domaindnsrecord @defaults("id label") {
 // Microsoft Entra ID application registration
 microsoft.application @defaults("id displayName hasExpiredCredentials") {
   init(name string)
-  // Application ID
+  // Object ID
   id string
-  // Application app ID
+  // Application (client) ID
   appId string
   // Application display name
   name string
@@ -179,6 +179,12 @@ microsoft.application @defaults("id displayName hasExpiredCredentials") {
   notes string
   // Tags
   tags []string
+  // Application template ID
+  applicationTemplateId string
+  // Microsoft disabled status
+  disabledByMicrosoftStatus string
+  // Group membership claims
+  groupMembershipClaims string
   // Application creation date
   createdAt time
   // Deprecated: Use `createdAt` instead
@@ -191,6 +197,12 @@ microsoft.application @defaults("id displayName hasExpiredCredentials") {
   signInAudience string
   // Basic profile information
   info dict
+  // Settings for an application that implements a web API
+  api dict
+  // Settings for a web application
+  web dict
+  // Settings for a single-page application
+  spa dict
   // Client secrets
   secrets []microsoft.passwordCredential
   // Certificates
@@ -199,6 +211,34 @@ microsoft.application @defaults("id displayName hasExpiredCredentials") {
   hasExpiredCredentials() bool
   // Application owner
   owners() []microsoft.user
+  // Managed application in local directory
+  servicePrincipal() microsoft.serviceprincipal
+  // Whether the application supports device-only authentication
+  isDeviceOnlyAuthSupported bool
+  // Specifies the fallback application type as public client
+  isFallbackPublicClient bool
+  // Whether the application supports native authentication
+  nativeAuthenticationApisEnabled string
+  // Service management reference
+  serviceManagementReference string
+  // Token encryption key ID
+  tokenEncryptionKeyId string
+  // SAML metadata URL
+  samlMetadataUrl string
+  // Default redirect URI
+  defaultRedirectUri string
+  // Certification metadata
+  certification dict
+  // Optional claims
+  optionalClaims dict
+  // Service principal configuration
+  servicePrincipalLockConfiguration dict
+  // Signature verification
+  requestSignatureVerification dict
+  // Parental control settings
+  parentalControlSettings dict
+  // Public client configuration
+  publicClient dict
 }
 
 // Microsoft Entra AD Application certificate
