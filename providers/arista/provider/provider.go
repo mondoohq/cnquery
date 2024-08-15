@@ -168,13 +168,14 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.AristaConnecti
 	}
 
 	asset.Platform = &inventory.Platform{
-		Name:    "arista-eos",
-		Version: version,
-		Arch:    arch,
-		Family:  []string{"arista"},
-		Kind:    "api",
-		Title:   "Arista EOS",
-		Runtime: "arista",
+		Name:                  "arista-eos",
+		Version:               version,
+		Arch:                  arch,
+		Family:                []string{"arista"},
+		Kind:                  "api",
+		Title:                 "Arista EOS",
+		Runtime:               "arista",
+		TechnologyUrlSegments: []string{"network", "arista"},
 	}
 
 	eosClient := eos.NewEos(conn.Client())
