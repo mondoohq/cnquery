@@ -1715,7 +1715,7 @@ private azure.subscription.cloudDefenderService @defaults("defenderForServers de
   defenderForKeyVaults() dict
   // Whether Microsoft Defender for Resource Manager is enabled
   defenderForResourceManager() dict
-  // List of Defender for Container components and whether they are enabled
+  // List of Defender for Containers components and whether they are enabled
   defenderForContainers() dict
   // List of configured security contacts
   securityContacts() []azure.subscription.cloudDefenderService.securityContact
