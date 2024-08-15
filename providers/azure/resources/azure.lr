@@ -1697,7 +1697,7 @@ private azure.subscription.cloudDefenderService @defaults("defenderForServers de
   subscriptionId string
   // Whether the monitoring agent is automatically provisioned on new VMs
   monitoringAgentAutoProvision() bool
-  // List of Defender for Server components and whether they are enabled
+  // List of Defender for Servers components and whether they are enabled
   defenderForServers() dict
   // Whether Microsoft Defender for App Services is enabled
   defenderForAppServices() dict
