@@ -32,7 +32,6 @@ azure.subscription @defaults ("name") {
   resources() []azure.subscription.resource
   // Resource groups in the subscription
   resourceGroups() []azure.subscription.resourcegroup
-
   // Compute resources in the subscription
   compute() azure.subscription.computeService
   // Network resources in the subscription
@@ -63,6 +62,8 @@ azure.subscription @defaults ("name") {
   aks() azure.subscription.aksService
   // Advisor resources in the subscription
   advisor() azure.subscription.advisorService
+  // Policy service in the subscription
+  policy azure.subscription.policy
 }
 
 // Azure resource group
@@ -1905,4 +1906,22 @@ private azure.subscription.advisorService.securityScore {
   categoryCount int
   // The consumption units for the score
   consumptionUnits float
+}
+
+// Azure Policy Service
+private azure.subscription.policy @defaults("subscriptionId") {
+  // Subscription identifier
+  subscriptionId string
+  // List of policy assignments in the subscription
+  policyAssignments() []azure.subscription.policy.assignment
+}
+
+// Azure Policy Assignment
+private azure.subscription.policy.assignment @defaults("name scope type") {
+  // Policy Assignment Name
+  name string
+  // Policy Assignment Scope
+  scope string
+  // Policy Assignment Type
+  type string
 }
