@@ -1908,24 +1908,24 @@ private azure.subscription.advisorService.securityScore {
   consumptionUnits float
 }
 
-// Azure Policy Service
+// Azure Policy service
 private azure.subscription.policy @defaults("subscriptionId") {
   // Subscription identifier
   subscriptionId string
   // List of policy assignments in the subscription
-  assignments() []azure.subscription.policy.assignment
+  assignments () []azure.subscription.policy.assignment
 }
 
-// Azure Policy Assignment
+// Azure Policy assignment
 private azure.subscription.policy.assignment @defaults("name enforcementMode") {
-  // Policy Definition ID
+  // Policy definition ID
   id string
-  // Policy Name
+  // Policy name
   name string
-  // Policy Scope
+  // Policy scope
   scope string
-  // Policy Description
+  // Policy description
   description string
-  // Policy Enforcement Mode
+  // Policy enforcement Mode
   enforcementMode string
 }
