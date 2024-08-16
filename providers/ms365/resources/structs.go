@@ -424,6 +424,17 @@ func newUserSettings(p models.UserSettingsable) *UserSettings {
 	}
 }
 
+type Authentication struct {
+}
+
+func newAuthentication(p models.Authenticationable) *Authentication {
+	if p == nil {
+		return nil
+	}
+	return &Authentication{}
+
+}
+
 type (
 	DeviceAndAppManagementAssignmentSource     int
 	DeviceAndAppManagementAssignmentFilterType int

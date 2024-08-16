@@ -30,6 +30,10 @@ func init() {
 			Init: initMicrosoftUser,
 			Create: createMicrosoftUser,
 		},
+		"microsoft.user.authenticationMethods": {
+			// to override args, implement: initMicrosoftUserAuthenticationMethods(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftUserAuthenticationMethods,
+		},
 		"microsoft.group": {
 			// to override args, implement: initMicrosoftGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftGroup,
@@ -323,6 +327,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.user.settings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUser).GetSettings()).ToDataRes(types.Dict)
+	},
+	"microsoft.user.job": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUser).GetJob()).ToDataRes(types.Dict)
+	},
+	"microsoft.user.contact": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUser).GetContact()).ToDataRes(types.Dict)
+	},
+	"microsoft.user.authMethods": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUser).GetAuthMethods()).ToDataRes(types.Resource("microsoft.user.authenticationMethods"))
+	},
+	"microsoft.user.authenticationMethods.count": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserAuthenticationMethods).GetCount()).ToDataRes(types.Int)
+	},
+	"microsoft.user.authenticationMethods.phoneMethods": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserAuthenticationMethods).GetPhoneMethods()).ToDataRes(types.Array(types.Dict))
+	},
+	"microsoft.user.authenticationMethods.emailMethods": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserAuthenticationMethods).GetEmailMethods()).ToDataRes(types.Array(types.Dict))
+	},
+	"microsoft.user.authenticationMethods.fido2Methods": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserAuthenticationMethods).GetFido2Methods()).ToDataRes(types.Array(types.Dict))
+	},
+	"microsoft.user.authenticationMethods.softwareMethods": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserAuthenticationMethods).GetSoftwareMethods()).ToDataRes(types.Array(types.Dict))
+	},
+	"microsoft.user.authenticationMethods.microsoftAuthenticator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserAuthenticationMethods).GetMicrosoftAuthenticator()).ToDataRes(types.Array(types.Dict))
+	},
+	"microsoft.user.authenticationMethods.passwordMethods": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserAuthenticationMethods).GetPasswordMethods()).ToDataRes(types.Array(types.Dict))
+	},
+	"microsoft.user.authenticationMethods.temporaryAccessPassMethods": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserAuthenticationMethods).GetTemporaryAccessPassMethods()).ToDataRes(types.Array(types.Dict))
+	},
+	"microsoft.user.authenticationMethods.windowsHelloMethods": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserAuthenticationMethods).GetWindowsHelloMethods()).ToDataRes(types.Array(types.Dict))
 	},
 	"microsoft.group.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftGroup).GetId()).ToDataRes(types.String)
@@ -1152,6 +1192,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.user.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftUser).Settings, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.job": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUser).Job, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.contact": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUser).Contact, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.authMethods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUser).AuthMethods, ok = plugin.RawToTValue[*mqlMicrosoftUserAuthenticationMethods](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.authenticationMethods.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftUserAuthenticationMethods).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.user.authenticationMethods.count": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserAuthenticationMethods).Count, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.authenticationMethods.phoneMethods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserAuthenticationMethods).PhoneMethods, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.authenticationMethods.emailMethods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserAuthenticationMethods).EmailMethods, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.authenticationMethods.fido2Methods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserAuthenticationMethods).Fido2Methods, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.authenticationMethods.softwareMethods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserAuthenticationMethods).SoftwareMethods, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.authenticationMethods.microsoftAuthenticator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserAuthenticationMethods).MicrosoftAuthenticator, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.authenticationMethods.passwordMethods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserAuthenticationMethods).PasswordMethods, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.authenticationMethods.temporaryAccessPassMethods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserAuthenticationMethods).TemporaryAccessPassMethods, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.authenticationMethods.windowsHelloMethods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserAuthenticationMethods).WindowsHelloMethods, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"microsoft.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2452,6 +2544,9 @@ type mqlMicrosoftUser struct {
 	UserPrincipalName plugin.TValue[string]
 	UserType plugin.TValue[string]
 	Settings plugin.TValue[interface{}]
+	Job plugin.TValue[interface{}]
+	Contact plugin.TValue[interface{}]
+	AuthMethods plugin.TValue[*mqlMicrosoftUserAuthenticationMethods]
 }
 
 // createMicrosoftUser creates a new instance of this resource
@@ -2574,6 +2669,118 @@ func (c *mqlMicrosoftUser) GetSettings() *plugin.TValue[interface{}] {
 	return plugin.GetOrCompute[interface{}](&c.Settings, func() (interface{}, error) {
 		return c.settings()
 	})
+}
+
+func (c *mqlMicrosoftUser) GetJob() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.Job, func() (interface{}, error) {
+		return c.job()
+	})
+}
+
+func (c *mqlMicrosoftUser) GetContact() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.Contact, func() (interface{}, error) {
+		return c.contact()
+	})
+}
+
+func (c *mqlMicrosoftUser) GetAuthMethods() *plugin.TValue[*mqlMicrosoftUserAuthenticationMethods] {
+	return plugin.GetOrCompute[*mqlMicrosoftUserAuthenticationMethods](&c.AuthMethods, func() (*mqlMicrosoftUserAuthenticationMethods, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.user", c.__id, "authMethods")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftUserAuthenticationMethods), nil
+			}
+		}
+
+		return c.authMethods()
+	})
+}
+
+// mqlMicrosoftUserAuthenticationMethods for the microsoft.user.authenticationMethods resource
+type mqlMicrosoftUserAuthenticationMethods struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftUserAuthenticationMethodsInternal it will be used here
+	Count plugin.TValue[int64]
+	PhoneMethods plugin.TValue[[]interface{}]
+	EmailMethods plugin.TValue[[]interface{}]
+	Fido2Methods plugin.TValue[[]interface{}]
+	SoftwareMethods plugin.TValue[[]interface{}]
+	MicrosoftAuthenticator plugin.TValue[[]interface{}]
+	PasswordMethods plugin.TValue[[]interface{}]
+	TemporaryAccessPassMethods plugin.TValue[[]interface{}]
+	WindowsHelloMethods plugin.TValue[[]interface{}]
+}
+
+// createMicrosoftUserAuthenticationMethods creates a new instance of this resource
+func createMicrosoftUserAuthenticationMethods(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftUserAuthenticationMethods{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.user.authenticationMethods", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftUserAuthenticationMethods) MqlName() string {
+	return "microsoft.user.authenticationMethods"
+}
+
+func (c *mqlMicrosoftUserAuthenticationMethods) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftUserAuthenticationMethods) GetCount() *plugin.TValue[int64] {
+	return &c.Count
+}
+
+func (c *mqlMicrosoftUserAuthenticationMethods) GetPhoneMethods() *plugin.TValue[[]interface{}] {
+	return &c.PhoneMethods
+}
+
+func (c *mqlMicrosoftUserAuthenticationMethods) GetEmailMethods() *plugin.TValue[[]interface{}] {
+	return &c.EmailMethods
+}
+
+func (c *mqlMicrosoftUserAuthenticationMethods) GetFido2Methods() *plugin.TValue[[]interface{}] {
+	return &c.Fido2Methods
+}
+
+func (c *mqlMicrosoftUserAuthenticationMethods) GetSoftwareMethods() *plugin.TValue[[]interface{}] {
+	return &c.SoftwareMethods
+}
+
+func (c *mqlMicrosoftUserAuthenticationMethods) GetMicrosoftAuthenticator() *plugin.TValue[[]interface{}] {
+	return &c.MicrosoftAuthenticator
+}
+
+func (c *mqlMicrosoftUserAuthenticationMethods) GetPasswordMethods() *plugin.TValue[[]interface{}] {
+	return &c.PasswordMethods
+}
+
+func (c *mqlMicrosoftUserAuthenticationMethods) GetTemporaryAccessPassMethods() *plugin.TValue[[]interface{}] {
+	return &c.TemporaryAccessPassMethods
+}
+
+func (c *mqlMicrosoftUserAuthenticationMethods) GetWindowsHelloMethods() *plugin.TValue[[]interface{}] {
+	return &c.WindowsHelloMethods
 }
 
 // mqlMicrosoftGroup for the microsoft.group resource

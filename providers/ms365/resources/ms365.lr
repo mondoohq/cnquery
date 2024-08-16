@@ -46,41 +46,41 @@ private microsoft.organization @defaults("displayName") {
 
 // Microsoft Entra ID user
 private microsoft.user @defaults("id displayName userPrincipalName") {
-  // User ID
+  // User Object ID
   id string
   // Whether the user account is enabled
   accountEnabled bool
   // User city
   city string
-  // User company name
+  // Deprecated: use job.companyName instead
   companyName string
-  // User country
+  // Deprecated: use contact.country instead
   country string
   // User create time
   createdDateTime time
-  // User department
+  // Deprecated: use job.department instead
   department string
   // User display name
   displayName string
-  // User employee ID
+  // Deprecated: use job.employeeId instead
   employeeId string
   // User given name
   givenName string
-  // User job title
+  // Deprecated: use job.title instead
   jobTitle string
-  // User email
+  // Deprecated: use contact.email instead
   mail string
-  // User mobile phone
+  // Deprecated: use contact.mobilePhone instead
   mobilePhone string
-  // List of other email addresses
+  // Deprecated: use contact.otherMails instead
   otherMails []string
-  // User office location
+  // Deprecated: use job.officeLocation instead
   officeLocation string
-  // User postal code
+  // Deprecated: use contact.postalCode instead
   postalCode string
-  // User state
+  // Deprecated: use contact.state instead
   state string
-  // User street address
+  // Deprecated: use contact.streetAddress instead
   streetAddress string
   // User surname
   surname string
@@ -90,6 +90,34 @@ private microsoft.user @defaults("id displayName userPrincipalName") {
   userType string
   // User settings
   settings() dict
+  // Job information
+  job() dict
+  // Contact information
+  contact() dict
+  // Authentication information
+  authMethods() microsoft.user.authenticationMethods
+}
+
+// Microsoft Entra authentication methods
+private microsoft.user.authenticationMethods @defaults("count") {
+    // Count of authentication methods
+    count int
+    // Phone number and type registered to a user
+    phoneMethods []dict
+    // Email authentication method for self-service password reset (SSPR)
+    emailMethods []dict
+    // FIDO2 security key registered to a user
+    fido2Methods []dict
+    // Software OATH token registered to a user
+    softwareMethods []dict
+    // Microsoft Authenticator app registered to a user
+    microsoftAuthenticator []dict
+    // User password authentication method
+    passwordMethods []dict
+    // Temporary Access Pass registered to a user
+    temporaryAccessPassMethods []dict
+    // Windows Hello for Business authentication method registered to a user
+    windowsHelloMethods []dict
 }
 
 // Microsoft group
