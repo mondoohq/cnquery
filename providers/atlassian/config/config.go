@@ -43,10 +43,10 @@ Examples:
 Notes:
   If you set the ATLASSIAN_ADMIN_TOKEN environment, you can omit the admin-token flag. 
 	
-	If you set the ATLASSIAN_USER, ATLASSIAN_HOST, and ATLASSIAN_USER_TOKEN environment variables, you can omit the user, host, and user-token flags.
+If you set the ATLASSIAN_USER, ATLASSIAN_HOST, and ATLASSIAN_USER_TOKEN environment variables, you can omit the user, host, and user-token flags.
 
-  For the SCIM token and the directory-id values: 
-	Atlassian provides these values when you set up an identity provider.
+For the SCIM token and the directory-id values: 
+Atlassian provides these values when you set up an identity provider.
 `,
 			MaxArgs:   2,
 			Discovery: []string{},
