@@ -1719,6 +1719,20 @@ private azure.subscription.cloudDefenderService @defaults("defenderForServers.en
   defenderForContainers() dict
   // List of configured security contacts
   securityContacts() []azure.subscription.cloudDefenderService.securityContact
+  // List of recommendations
+  defenderRecommendations() []azure.subscription.cloudDefenderService.recommendation
+}
+
+// Microsoft Defender for Cloud recommendation
+private azure.subscription.cloudDefenderService.recommendation @defaults("title affectedResource status properties") {
+  // Recommendation title
+  title string
+  // Affected resource
+  affectedResource string
+  // Recommendation status
+  status string
+  // Properties of the recommendation
+  properties dict
 }
 
 // Microsoft Defender for Cloud security contact

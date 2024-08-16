@@ -657,3 +657,56 @@ type ServerVulnerabilityAssessmentsSettings struct {
 type ServerVulnerabilityAssessmentsSettingsList struct {
 	Settings []ServerVulnerabilityAssessmentsSettings `json:"value"`
 }
+
+func (r *mqlAzureSubscriptionCloudDefenderServiceRecommendation) id() (string, error) {
+	return r.Title.Data, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderService) defenderRecommendations() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	clientFactory, err := armsecurity.NewClientFactory(subId, token, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	assessmentsClient := clientFactory.NewAssessmentsClient()
+	pager := assessmentsClient.NewListPager(fmt.Sprintf("subscriptions/%s", subId), &security.AssessmentsClientListOptions{})
+	res := []interface{}{}
+
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, assessment := range page.Value {
+			if assessment.Properties == nil {
+				continue
+			}
+
+			properties, err := convert.JsonToDict(assessment.Properties)
+			if err != nil {
+				return nil, err
+			}
+
+			recommendationData := map[string]*llx.RawData{
+				"title":            llx.StringData(*assessment.Properties.DisplayName),
+				"affectedResource": llx.StringData(*assessment.ID),
+				"properties":       llx.DictData(properties),
+				"status":           llx.StringData(string(*assessment.Properties.Status.Code)),
+			}
+
+			mqlRecommendation, err := CreateResource(a.MqlRuntime, "azure.subscription.cloudDefenderService.recommendation", recommendationData)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlRecommendation)
+		}
+	}
+
+	return res, nil
+}
