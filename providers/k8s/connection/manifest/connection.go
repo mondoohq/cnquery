@@ -144,7 +144,7 @@ func (c *Connection) Platform() *inventory.Platform {
 		Kind:                  "code",
 		Runtime:               c.Runtime(),
 		Title:                 "Kubernetes Manifest",
-		TechnologyUrlSegments: []string{"k8s", "k8s-manifest"},
+		TechnologyUrlSegments: []string{"iac", "k8s-manifest"},
 	}
 }
 

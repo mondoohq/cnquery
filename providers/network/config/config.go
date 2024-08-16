@@ -4,6 +4,7 @@
 package config
 
 import (
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/network/provider"
 )
@@ -42,6 +43,11 @@ var Config = plugin.Provider{
 					Desc:    "Disable TLS/SSL verification",
 				},
 			},
+		},
+	},
+	AssetUrlTrees: []*inventory.AssetUrlBranch{
+		{
+			PathSegments: []string{"technology=network", "category=host"},
 		},
 	},
 }

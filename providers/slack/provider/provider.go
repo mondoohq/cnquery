@@ -175,11 +175,12 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.SlackConnectio
 
 	asset.Name = "Slack team " + teamInfo.Name
 	asset.Platform = &inventory.Platform{
-		Name:    "slack-team",
-		Family:  []string{"slack"},
-		Kind:    "api",
-		Title:   "Slack Team",
-		Runtime: "slack",
+		Name:                  "slack-team",
+		Family:                []string{"slack"},
+		Kind:                  "api",
+		Title:                 "Slack Team",
+		Runtime:               "slack",
+		TechnologyUrlSegments: []string{"saas", "slack", "team"},
 	}
 	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/slack/team/" + teamInfo.ID}
 	return nil

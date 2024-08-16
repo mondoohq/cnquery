@@ -204,18 +204,24 @@ func (a *AssetUrlBranch) validate() error {
 			continue
 		}
 
-		if err := validateKey(branch.Key); err != nil {
-			return err
-		}
-
-		for value, next := range branch.Values {
-			if err := validateValue(value); err != nil {
+		if branch.Key != "" {
+			if err := validateKey(branch.Key); err != nil {
 				return err
 			}
-			if next != nil {
-				branches = append(branches, next)
+			for value, next := range branch.Values {
+				if err := validateValue(value); err != nil {
+					return err
+				}
+				if next != nil {
+					branches = append(branches, next)
+				}
+			}
+		} else {
+			if len(branch.Values) != 0 {
+				return errors.New("asset url segment without key must not have values set")
 			}
 		}
+
 	}
 
 	return nil

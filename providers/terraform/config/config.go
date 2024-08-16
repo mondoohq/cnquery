@@ -4,6 +4,7 @@
 package config
 
 import (
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/terraform/provider"
 )
@@ -35,6 +36,18 @@ var Config = plugin.Provider{
 					Desc:        "Ignore the .terraform directory",
 					ConfigEntry: "ignore_dot_terraform",
 				},
+			},
+		},
+	},
+	AssetUrlTrees: []*inventory.AssetUrlBranch{
+		{
+			PathSegments: []string{"technology=iac", "category=terraform"},
+			Key:          "kind",
+			Title:        "Kind",
+			Values: map[string]*inventory.AssetUrlBranch{
+				"hcl":   nil,
+				"plan":  nil,
+				"state": nil,
 			},
 		},
 	},

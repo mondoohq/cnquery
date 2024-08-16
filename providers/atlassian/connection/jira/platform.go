@@ -16,17 +16,19 @@ func (a *JiraConnection) PlatformInfo() *inventory.Platform {
 func GetPlatformForObject(platformName string) *inventory.Platform {
 	if platformName != "atlassian-jira" && platformName != "" {
 		return &inventory.Platform{
-			Name:    platformName,
-			Title:   "Atlassian Jira",
-			Kind:    "api",
-			Runtime: "atlassian",
+			Name:                  platformName,
+			Title:                 "Atlassian Jira",
+			Kind:                  "api",
+			Runtime:               "atlassian",
+			TechnologyUrlSegments: []string{"saas", "atlassian", "jira"},
 		}
 	}
 	return &inventory.Platform{
-		Name:    "atlassian-jira",
-		Title:   "Atlassian Jira",
-		Kind:    "api",
-		Runtime: "atlassian",
+		Name:                  "atlassian-jira",
+		Title:                 "Atlassian Jira",
+		Kind:                  "api",
+		Runtime:               "atlassian",
+		TechnologyUrlSegments: []string{"saas", "atlassian", "jira"},
 	}
 }
 

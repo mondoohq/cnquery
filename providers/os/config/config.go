@@ -332,5 +332,8 @@ var Config = plugin.Provider{
 				},
 			},
 		},
+		{
+			PathSegments: []string{"technology=iac", "category=dockerfile"},
+		},
 	},
 }

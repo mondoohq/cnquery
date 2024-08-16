@@ -75,29 +75,38 @@ func (s *ShodanConnection) Client() *shodan.Client {
 	return s.client
 }
 
-var (
-	ShodanHostPlatform = inventory.Platform{
-		Name:    "shodan-host",
-		Title:   "Shodan Host",
-		Family:  []string{"shodan"},
-		Kind:    "api",
-		Runtime: "shodan",
+func shodanHostPlatform() *inventory.Platform {
+	return &inventory.Platform{
+		Name:                  "shodan-host",
+		Title:                 "Shodan Host",
+		Family:                []string{"shodan"},
+		Kind:                  "api",
+		Runtime:               "shodan",
+		TechnologyUrlSegments: []string{"network", "shodan", "host"},
 	}
-	ShodanDomainPlatform = inventory.Platform{
-		Name:    "shodan-domain",
-		Title:   "Shodan Domain",
-		Family:  []string{"shodan"},
-		Kind:    "api",
-		Runtime: "shodan",
+}
+
+func shodanDomainPlatform() *inventory.Platform {
+	return &inventory.Platform{
+		Name:                  "shodan-domain",
+		Title:                 "Shodan Domain",
+		Family:                []string{"shodan"},
+		Kind:                  "api",
+		Runtime:               "shodan",
+		TechnologyUrlSegments: []string{"network", "shodan", "domain"},
 	}
-	ShodanPlatform = inventory.Platform{
-		Name:    "shodan-org",
-		Title:   "Shodan",
-		Family:  []string{"shodan"},
-		Kind:    "api",
-		Runtime: "shodan",
+}
+
+func shodanOrgPlatform() *inventory.Platform {
+	return &inventory.Platform{
+		Name:                  "shodan-org",
+		Title:                 "Shodan",
+		Family:                []string{"shodan"},
+		Kind:                  "api",
+		Runtime:               "shodan",
+		TechnologyUrlSegments: []string{"network", "shodan", "org"},
 	}
-)
+}
 
 func (c *ShodanConnection) PlatformInfo() (*inventory.Platform, error) {
 	conf := c.asset.Connections[0]
@@ -106,12 +115,12 @@ func (c *ShodanConnection) PlatformInfo() (*inventory.Platform, error) {
 		search := conf.Options["search"]
 		switch search {
 		case "host":
-			return &ShodanHostPlatform, nil
+			return shodanHostPlatform(), nil
 		case "domain":
-			return &ShodanDomainPlatform, nil
+			return shodanDomainPlatform(), nil
 		}
 	}
-	return &ShodanPlatform, nil
+	return shodanOrgPlatform(), nil
 }
 
 func (c *ShodanConnection) Identifier() string {

@@ -14,17 +14,19 @@ func (a *ScimConnection) PlatformInfo() *inventory.Platform {
 func GetPlatformForObject(platformName string) *inventory.Platform {
 	if platformName != "atlassian-scim" && platformName != "" {
 		return &inventory.Platform{
-			Name:    platformName,
-			Title:   "Atlassian SCIM",
-			Kind:    "api",
-			Runtime: "atlassian",
+			Name:                  platformName,
+			Title:                 "Atlassian SCIM",
+			Kind:                  "api",
+			Runtime:               "atlassian",
+			TechnologyUrlSegments: []string{"saas", "atlassian", "scim"},
 		}
 	}
 	return &inventory.Platform{
-		Name:    "atlassian-scim",
-		Title:   "Atlassian SCIM",
-		Kind:    "api",
-		Runtime: "atlassian",
+		Name:                  "atlassian-scim",
+		Title:                 "Atlassian SCIM",
+		Kind:                  "api",
+		Runtime:               "atlassian",
+		TechnologyUrlSegments: []string{"saas", "atlassian", "scim"},
 	}
 }
 

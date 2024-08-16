@@ -4,6 +4,7 @@
 package config
 
 import (
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/gitlab/provider"
 )
@@ -54,6 +55,17 @@ var Config = plugin.Provider{
 					Default: "",
 					Desc:    "Custom GitLab base url",
 				},
+			},
+		},
+	},
+	AssetUrlTrees: []*inventory.AssetUrlBranch{
+		{
+			PathSegments: []string{"technology=saas", "provider=gitlab"},
+			Key:          "kind",
+			Title:        "Kind",
+			Values: map[string]*inventory.AssetUrlBranch{
+				"project": nil,
+				"group":   nil,
 			},
 		},
 	},

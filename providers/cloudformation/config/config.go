@@ -4,6 +4,7 @@
 package config
 
 import (
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/cloudformation/provider"
 )
@@ -22,6 +23,16 @@ var Config = plugin.Provider{
 			MaxArgs:   1,
 			Discovery: []string{},
 			Flags:     []plugin.Flag{},
+		},
+	},
+	AssetUrlTrees: []*inventory.AssetUrlBranch{
+		{
+			PathSegments: []string{"technology=iac", "category=cloudformation"},
+			Key:          "kind",
+			Title:        "Kind",
+			Values: map[string]*inventory.AssetUrlBranch{
+				"template": nil,
+			},
 		},
 	},
 }

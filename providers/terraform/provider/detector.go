@@ -23,29 +23,32 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.Connection) er
 	switch connType {
 	case StateConnectionType:
 		p = &inventory.Platform{
-			Name:    "terraform-state",
-			Title:   "Terraform State",
-			Family:  []string{"terraform"},
-			Kind:    "code",
-			Runtime: "terraform",
+			Name:                  "terraform-state",
+			Title:                 "Terraform State",
+			Family:                []string{"terraform"},
+			Kind:                  "code",
+			Runtime:               "terraform",
+			TechnologyUrlSegments: []string{"iac", "terraform", "state"},
 		}
 	case PlanConnectionType:
 		p = &inventory.Platform{
-			Name:    "terraform-plan",
-			Title:   "Terraform Plan",
-			Family:  []string{"terraform"},
-			Kind:    "code",
-			Runtime: "terraform",
+			Name:                  "terraform-plan",
+			Title:                 "Terraform Plan",
+			Family:                []string{"terraform"},
+			Kind:                  "code",
+			Runtime:               "terraform",
+			TechnologyUrlSegments: []string{"iac", "terraform", "plan"},
 		}
 	case HclConnectionType:
 		fallthrough
 	default:
 		p = &inventory.Platform{
-			Name:    "terraform-hcl",
-			Title:   "Terraform HCL",
-			Family:  []string{"terraform"},
-			Kind:    "code",
-			Runtime: "terraform",
+			Name:                  "terraform-hcl",
+			Title:                 "Terraform HCL",
+			Family:                []string{"terraform"},
+			Kind:                  "code",
+			Runtime:               "terraform",
+			TechnologyUrlSegments: []string{"iac", "terraform", "hcl"},
 		}
 	}
 	asset.Platform = p

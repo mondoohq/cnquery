@@ -150,11 +150,12 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.Ms365Connection) error {
 	asset.Platform = &inventory.Platform{
-		Name:    "ms365",
-		Runtime: "ms365",
-		Family:  []string{""},
-		Kind:    "api",
-		Title:   "Microsoft Azure",
+		Name:                  "ms365",
+		Runtime:               "ms365",
+		Family:                []string{""},
+		Kind:                  "api",
+		Title:                 "Microsoft Azure",
+		TechnologyUrlSegments: []string{"saas", "ms365"},
 	}
 
 	return nil
@@ -175,10 +176,11 @@ func (s *Service) discover(conn *connection.Ms365Connection, conf *inventory.Con
 		PlatformIds: []string{identifier},
 		Name:        "Microsoft 365 tenant " + conn.TenantId(),
 		Platform: &inventory.Platform{
-			Name:    "microsoft365",
-			Title:   "Microsoft 365",
-			Runtime: "ms-graph",
-			Kind:    "api",
+			Name:                  "microsoft365",
+			Title:                 "Microsoft 365",
+			Runtime:               "ms-graph",
+			Kind:                  "api",
+			TechnologyUrlSegments: []string{"saas", "ms365"},
 		},
 		Connections: []*inventory.Config{conf.Clone()}, // pass-in the current config
 		Labels: map[string]string{

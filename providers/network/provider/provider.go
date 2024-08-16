@@ -200,10 +200,11 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.HostConnection
 		asset.Name = conn.Conf.Host
 	}
 	asset.Platform = &inventory.Platform{
-		Name:   "host",
-		Family: []string{"network"},
-		Kind:   "network",
-		Title:  "Network Host",
+		Name:                  "host",
+		Family:                []string{"network"},
+		Kind:                  "network",
+		Title:                 "Network Host",
+		TechnologyUrlSegments: []string{"network", "host"},
 	}
 
 	asset.Fqdn = conn.FQDN()
