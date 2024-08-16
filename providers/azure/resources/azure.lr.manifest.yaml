@@ -28,6 +28,8 @@ resources:
       mySql: {}
       name: {}
       network: {}
+      policy:
+        min_mondoo_version: 9.0.0
       postgreSql: {}
       resourceGroups: {}
       resources: {}
@@ -1954,6 +1956,27 @@ resources:
     refs:
     - title: Virtual Network documentation
       url: https://learn.microsoft.com/en-us/azure/virtual-network/
+  azure.subscription.policy:
+    fields:
+      assignments: {}
+      subscriptionId: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.policy.assignment:
+    fields:
+      description: {}
+      enforcementMode: {}
+      id: {}
+      name: {}
+      scope: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
   azure.subscription.postgreSql:
     fields:
       servers: {}
