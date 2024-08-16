@@ -1913,15 +1913,19 @@ private azure.subscription.policy @defaults("subscriptionId") {
   // Subscription identifier
   subscriptionId string
   // List of policy assignments in the subscription
-  policyAssignments() []azure.subscription.policy.assignment
+  assignments() []azure.subscription.policy.assignment
 }
 
 // Azure Policy Assignment
-private azure.subscription.policy.assignment @defaults("name scope type") {
-  // Policy Assignment Name
+private azure.subscription.policy.assignment @defaults("name enforcementMode") {
+  // Policy Definition ID
+  id string
+  // Policy Name
   name string
-  // Policy Assignment Scope
+  // Policy Scope
   scope string
-  // Policy Assignment Type
-  type string
+  // Policy Description
+  description string
+  // Policy Enforcement Mode
+  enforcementMode string
 }

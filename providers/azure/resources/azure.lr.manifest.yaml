@@ -13,8 +13,6 @@ resources:
       desc: Use the `azure.subscription` resource to assess the configuration of Azure
         subscriptions.
     fields:
-      Policy:
-        min_mondoo_version: 9.0.0
       advisor: {}
       aks: {}
       authorization: {}
@@ -31,8 +29,6 @@ resources:
       name: {}
       network: {}
       policy:
-        min_mondoo_version: 9.0.0
-      policyAssignments:
         min_mondoo_version: 9.0.0
       postgreSql: {}
       resourceGroups: {}
@@ -1962,7 +1958,7 @@ resources:
       url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.policy:
     fields:
-      policyAssignments: {}
+      assignments: {}
       subscriptionId: {}
     is_private: true
     min_mondoo_version: 9.0.0
@@ -1971,9 +1967,11 @@ resources:
       - azure
   azure.subscription.policy.assignment:
     fields:
+      description: {}
+      enforcementMode: {}
+      id: {}
       name: {}
       scope: {}
-      type: {}
     is_private: true
     min_mondoo_version: 9.0.0
     platform:
@@ -2340,8 +2338,6 @@ resources:
       id: {}
       maxSizeBytes: {}
       name: {}
-      policyAssignments:
-        min_mondoo_version: 9.0.0
       readScale: {}
       recoveryServicesRecoveryPointResourceId: {}
       requestedServiceObjectiveName: {}
