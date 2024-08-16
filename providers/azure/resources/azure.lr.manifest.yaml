@@ -386,6 +386,8 @@ resources:
         min_mondoo_version: 9.0.0
       defenderForStorageAccounts:
         min_mondoo_version: 9.0.0
+      defenderRecommendations:
+        min_mondoo_version: 9.0.0
       monitoringAgentAutoProvision: {}
       securityContacts: {}
       subscriptionId: {}
@@ -397,6 +399,17 @@ resources:
     refs:
     - title: Microsoft Defender for Cloud Apps overview
       url: https://learn.microsoft.com/en-us/defender-cloud-apps/what-is-defender-for-cloud-apps
+  azure.subscription.cloudDefenderService.recommendation:
+    fields:
+      affectedResource: {}
+      properties: {}
+      status: {}
+      title: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
   azure.subscription.cloudDefenderService.securityContact:
     fields:
       alertNotifications: {}
