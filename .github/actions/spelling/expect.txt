@@ -89,6 +89,7 @@ spo
 sqli
 sqlimatchstatement
 sqlserver
+SSPR
 targetgroup
 tde
 testutils
