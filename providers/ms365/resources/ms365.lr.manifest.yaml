@@ -259,25 +259,47 @@ resources:
     min_mondoo_version: 5.15.0
   microsoft.serviceprincipal:
     fields:
+      accountEnabled:
+        min_mondoo_version: 9.0.0
+      appId:
+        min_mondoo_version: 9.0.0
+      appRoleAssignmentRequired:
+        min_mondoo_version: 9.0.0
       appRoleAssignments:
         min_mondoo_version: latest
+      applicationTemplateId:
+        min_mondoo_version: 9.0.0
       assignmentRequired:
         min_mondoo_version: latest
       assignments:
         min_mondoo_version: latest
+      description:
+        min_mondoo_version: 9.0.0
       enabled:
         min_mondoo_version: latest
       homepageUrl:
         min_mondoo_version: latest
       id: {}
+      loginUrl:
+        min_mondoo_version: 9.0.0
+      logoutUrl:
+        min_mondoo_version: 9.0.0
       name:
         min_mondoo_version: latest
       notes:
         min_mondoo_version: latest
+      notificationEmailAddresses:
+        min_mondoo_version: 9.0.0
+      preferredSingleSignOnMode:
+        min_mondoo_version: 9.0.0
       properties:
         min_mondoo_version: latest
       replyUrls:
         min_mondoo_version: latest
+      servicePrincipalNames:
+        min_mondoo_version: 9.0.0
+      signInAudience:
+        min_mondoo_version: 9.0.0
       tags:
         min_mondoo_version: latest
       termsOfServiceUrl:

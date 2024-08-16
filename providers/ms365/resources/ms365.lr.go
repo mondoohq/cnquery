@@ -567,6 +567,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.serviceprincipal.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftServiceprincipal).GetName()).ToDataRes(types.String)
 	},
+	"microsoft.serviceprincipal.appId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipal).GetAppId()).ToDataRes(types.String)
+	},
+	"microsoft.serviceprincipal.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipal).GetDescription()).ToDataRes(types.String)
+	},
 	"microsoft.serviceprincipal.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftServiceprincipal).GetTags()).ToDataRes(types.Array(types.String))
 	},
@@ -593,6 +599,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.serviceprincipal.assignments": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftServiceprincipal).GetAssignments()).ToDataRes(types.Array(types.Resource("microsoft.serviceprincipal.assignment")))
+	},
+	"microsoft.serviceprincipal.applicationTemplateId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipal).GetApplicationTemplateId()).ToDataRes(types.String)
+	},
+	"microsoft.serviceprincipal.loginUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipal).GetLoginUrl()).ToDataRes(types.String)
+	},
+	"microsoft.serviceprincipal.logoutUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipal).GetLogoutUrl()).ToDataRes(types.String)
+	},
+	"microsoft.serviceprincipal.servicePrincipalNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipal).GetServicePrincipalNames()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.serviceprincipal.signInAudience": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipal).GetSignInAudience()).ToDataRes(types.String)
+	},
+	"microsoft.serviceprincipal.preferredSingleSignOnMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipal).GetPreferredSingleSignOnMode()).ToDataRes(types.String)
+	},
+	"microsoft.serviceprincipal.notificationEmailAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipal).GetNotificationEmailAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.serviceprincipal.appRoleAssignmentRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipal).GetAppRoleAssignmentRequired()).ToDataRes(types.Bool)
+	},
+	"microsoft.serviceprincipal.accountEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipal).GetAccountEnabled()).ToDataRes(types.Bool)
 	},
 	"microsoft.serviceprincipal.assignment.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftServiceprincipalAssignment).GetId()).ToDataRes(types.String)
@@ -1470,6 +1503,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMicrosoftServiceprincipal).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"microsoft.serviceprincipal.appId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipal).AppId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.serviceprincipal.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipal).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"microsoft.serviceprincipal.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftServiceprincipal).Tags, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
@@ -1504,6 +1545,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.serviceprincipal.assignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftServiceprincipal).Assignments, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.serviceprincipal.applicationTemplateId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipal).ApplicationTemplateId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.serviceprincipal.loginUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipal).LoginUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.serviceprincipal.logoutUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipal).LogoutUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.serviceprincipal.servicePrincipalNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipal).ServicePrincipalNames, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.serviceprincipal.signInAudience": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipal).SignInAudience, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.serviceprincipal.preferredSingleSignOnMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipal).PreferredSingleSignOnMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.serviceprincipal.notificationEmailAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipal).NotificationEmailAddresses, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.serviceprincipal.appRoleAssignmentRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipal).AppRoleAssignmentRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.serviceprincipal.accountEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipal).AccountEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"microsoft.serviceprincipal.assignment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3177,6 +3254,8 @@ type mqlMicrosoftServiceprincipal struct {
 	Id plugin.TValue[string]
 	Type plugin.TValue[string]
 	Name plugin.TValue[string]
+	AppId plugin.TValue[string]
+	Description plugin.TValue[string]
 	Tags plugin.TValue[[]interface{}]
 	Enabled plugin.TValue[bool]
 	HomepageUrl plugin.TValue[string]
@@ -3186,6 +3265,15 @@ type mqlMicrosoftServiceprincipal struct {
 	VisibleToUsers plugin.TValue[bool]
 	Notes plugin.TValue[string]
 	Assignments plugin.TValue[[]interface{}]
+	ApplicationTemplateId plugin.TValue[string]
+	LoginUrl plugin.TValue[string]
+	LogoutUrl plugin.TValue[string]
+	ServicePrincipalNames plugin.TValue[[]interface{}]
+	SignInAudience plugin.TValue[string]
+	PreferredSingleSignOnMode plugin.TValue[string]
+	NotificationEmailAddresses plugin.TValue[[]interface{}]
+	AppRoleAssignmentRequired plugin.TValue[bool]
+	AccountEnabled plugin.TValue[bool]
 }
 
 // createMicrosoftServiceprincipal creates a new instance of this resource
@@ -3237,6 +3325,14 @@ func (c *mqlMicrosoftServiceprincipal) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
+func (c *mqlMicrosoftServiceprincipal) GetAppId() *plugin.TValue[string] {
+	return &c.AppId
+}
+
+func (c *mqlMicrosoftServiceprincipal) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
 func (c *mqlMicrosoftServiceprincipal) GetTags() *plugin.TValue[[]interface{}] {
 	return &c.Tags
 }
@@ -3271,6 +3367,42 @@ func (c *mqlMicrosoftServiceprincipal) GetNotes() *plugin.TValue[string] {
 
 func (c *mqlMicrosoftServiceprincipal) GetAssignments() *plugin.TValue[[]interface{}] {
 	return &c.Assignments
+}
+
+func (c *mqlMicrosoftServiceprincipal) GetApplicationTemplateId() *plugin.TValue[string] {
+	return &c.ApplicationTemplateId
+}
+
+func (c *mqlMicrosoftServiceprincipal) GetLoginUrl() *plugin.TValue[string] {
+	return &c.LoginUrl
+}
+
+func (c *mqlMicrosoftServiceprincipal) GetLogoutUrl() *plugin.TValue[string] {
+	return &c.LogoutUrl
+}
+
+func (c *mqlMicrosoftServiceprincipal) GetServicePrincipalNames() *plugin.TValue[[]interface{}] {
+	return &c.ServicePrincipalNames
+}
+
+func (c *mqlMicrosoftServiceprincipal) GetSignInAudience() *plugin.TValue[string] {
+	return &c.SignInAudience
+}
+
+func (c *mqlMicrosoftServiceprincipal) GetPreferredSingleSignOnMode() *plugin.TValue[string] {
+	return &c.PreferredSingleSignOnMode
+}
+
+func (c *mqlMicrosoftServiceprincipal) GetNotificationEmailAddresses() *plugin.TValue[[]interface{}] {
+	return &c.NotificationEmailAddresses
+}
+
+func (c *mqlMicrosoftServiceprincipal) GetAppRoleAssignmentRequired() *plugin.TValue[bool] {
+	return &c.AppRoleAssignmentRequired
+}
+
+func (c *mqlMicrosoftServiceprincipal) GetAccountEnabled() *plugin.TValue[bool] {
+	return &c.AccountEnabled
 }
 
 // mqlMicrosoftServiceprincipalAssignment for the microsoft.serviceprincipal.assignment resource
