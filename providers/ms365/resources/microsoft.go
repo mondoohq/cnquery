@@ -3,7 +3,14 @@
 
 package resources
 
+import (
+	"sync"
+)
+
+var idxUsersById = &sync.RWMutex{}
+
 type mqlMicrosoftInternal struct {
+	permissionIndexer
 	// index users by id
 	idxUsersById map[string]*mqlMicrosoftUser
 }
@@ -19,7 +26,9 @@ func (a *mqlMicrosoft) initIndex() {
 // index adds a user to the internal indexes
 func (a *mqlMicrosoft) index(user *mqlMicrosoftUser) {
 	a.initIndex()
+	idxUsersById.Lock()
 	a.idxUsersById[user.Id.Data] = user
+	idxUsersById.Unlock()
 }
 
 // userById returns a user by id if it exists in the index
@@ -28,6 +37,8 @@ func (a *mqlMicrosoft) userById(id string) (*mqlMicrosoftUser, bool) {
 		return nil, false
 	}
 
+	idxUsersById.RLock()
 	res, ok := a.idxUsersById[id]
+	idxUsersById.RUnlock()
 	return res, ok
 }

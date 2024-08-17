@@ -72,6 +72,8 @@ resources:
       publisherDomain: {}
       requestSignatureVerification:
         min_mondoo_version: 9.0.0
+      requiredResourceAccess:
+        min_mondoo_version: 9.0.0
       samlMetadataUrl:
         min_mondoo_version: 9.0.0
       secrets:
@@ -94,6 +96,18 @@ resources:
       web:
         min_mondoo_version: 9.0.0
     min_mondoo_version: 5.15.0
+  microsoft.application.permission:
+    fields:
+      adminConsent: {}
+      appId: {}
+      appName: {}
+      description: {}
+      id: {}
+      name: {}
+      status: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   microsoft.application.role:
     fields:
       allowedMemberTypes: {}
@@ -321,6 +335,8 @@ resources:
       notes:
         min_mondoo_version: latest
       notificationEmailAddresses:
+        min_mondoo_version: 9.0.0
+      permissions:
         min_mondoo_version: 9.0.0
       preferredSingleSignOnMode:
         min_mondoo_version: 9.0.0
