@@ -22,7 +22,11 @@ func fetchRoles(runtime *plugin.Runtime) ([]interface{}, error) {
 	}
 	ctx := context.Background()
 
-	resp, err := graphClient.RoleManagement().Directory().RoleDefinitions().Get(ctx, &rolemanagement.DirectoryRoleDefinitionsRequestBuilderGetRequestConfiguration{})
+	resp, err := graphClient.RoleManagement().Directory().RoleDefinitions().Get(ctx, &rolemanagement.DirectoryRoleDefinitionsRequestBuilderGetRequestConfiguration{
+		QueryParameters: &rolemanagement.DirectoryRoleDefinitionsRequestBuilderGetQueryParameters{
+			Select: []string{"id", "description", "displayName", "isBuiltIn", "isEnabled", "rolePermissions", "templateId", "version"},
+		},
+	})
 	if err != nil {
 		return nil, transformError(err)
 	}
