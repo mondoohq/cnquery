@@ -254,8 +254,21 @@ resources:
   microsoft.security:
     fields:
       latestSecureScores: {}
+      riskyUsers:
+        min_mondoo_version: 9.0.0
       secureScores: {}
     min_mondoo_version: 5.15.0
+  microsoft.security.riskyUser:
+    fields:
+      id: {}
+      lastUpdatedAt: {}
+      name: {}
+      principalName: {}
+      riskDetail: {}
+      riskLevel: {}
+      riskState: {}
+      user: {}
+    min_mondoo_version: 9.0.0
   microsoft.security.securityscore:
     fields:
       activeUserCount: {}

@@ -22,6 +22,9 @@ var userSelectFields = []string{
 	"jobTitle", "mail", "mobilePhone", "otherMails", "officeLocation", "postalCode", "state", "streetAddress", "surname", "userPrincipalName", "userType",
 }
 
+// users reads all users from Entra ID
+// Permissions: User.Read.All, Directory.Read.All
+// see https://learn.microsoft.com/en-us/graph/api/user-list?view=graph-rest-1.0&tabs=http
 func (a *mqlMicrosoft) users() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()

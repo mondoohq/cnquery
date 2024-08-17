@@ -395,6 +395,8 @@ microsoft.security {
   secureScores() []microsoft.security.securityscore
   // Latest security score
   latestSecureScores() microsoft.security.securityscore
+  // List Microsoft Entra users who are at risk
+  riskyUsers() []microsoft.security.riskyUser
 }
 
 // Microsoft Secure Score
@@ -421,6 +423,26 @@ private microsoft.security.securityscore @defaults("id azureTenantId") {
   maxScore float
   // Secure Score vendor information
   vendorInformation dict
+}
+
+// Microsoft Entra users who are at risk
+microsoft.security.riskyUser @defaults("principalName riskLevel riskState lastUpdatedAt"){
+  // Risky user ID
+  id string
+  // User name
+  name string
+  // User principal
+  principalName string
+  // Entra User
+  user() microsoft.user
+  // Risk detail
+  riskDetail string
+  // Risk level
+  riskLevel string
+  // Risk state
+  riskState string
+  // Risk last updated
+  lastUpdatedAt time
 }
 
 // Microsoft policies

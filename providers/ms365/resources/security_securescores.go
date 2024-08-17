@@ -20,7 +20,7 @@ func (m *mqlMicrosoftSecuritySecurityscore) id() (string, error) {
 	return m.Id.Data, nil
 }
 
-func msSecureScoreToMql(runtime *plugin.Runtime, score models.SecureScoreable) (*mqlMicrosoftSecuritySecurityscore, error) {
+func newMqlMicrosoftSecureScore(runtime *plugin.Runtime, score models.SecureScoreable) (*mqlMicrosoftSecuritySecurityscore, error) {
 	if score == nil {
 		return nil, nil
 	}
@@ -109,7 +109,7 @@ func (a *mqlMicrosoftSecurity) secureScores() ([]interface{}, error) {
 	scores := resp.GetValue()
 	for i := range scores {
 		score := scores[i]
-		mqlResource, err := msSecureScoreToMql(a.MqlRuntime, score)
+		mqlResource, err := newMqlMicrosoftSecureScore(a.MqlRuntime, score)
 		if err != nil {
 			return nil, err
 		}
