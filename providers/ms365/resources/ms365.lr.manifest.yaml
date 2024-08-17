@@ -23,6 +23,8 @@ resources:
       api:
         min_mondoo_version: 9.0.0
       appId: {}
+      appRoles:
+        min_mondoo_version: 9.0.0
       applicationTemplateId:
         min_mondoo_version: 9.0.0
       certificates:
@@ -92,6 +94,16 @@ resources:
       web:
         min_mondoo_version: 9.0.0
     min_mondoo_version: 5.15.0
+  microsoft.application.role:
+    fields:
+      allowedMemberTypes: {}
+      description: {}
+      id: {}
+      isEnabled: {}
+      name: {}
+      value: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   microsoft.devicemanagement:
     fields:
       deviceCompliancePolicies: {}

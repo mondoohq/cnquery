@@ -50,6 +50,10 @@ func init() {
 			Init: initMicrosoftApplication,
 			Create: createMicrosoftApplication,
 		},
+		"microsoft.application.role": {
+			// to override args, implement: initMicrosoftApplicationRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftApplicationRole,
+		},
 		"microsoft.keyCredential": {
 			// to override args, implement: initMicrosoftKeyCredential(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftKeyCredential,
@@ -564,6 +568,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.application.publicClient": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftApplication).GetPublicClient()).ToDataRes(types.Dict)
+	},
+	"microsoft.application.appRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplication).GetAppRoles()).ToDataRes(types.Array(types.Resource("microsoft.application.role")))
+	},
+	"microsoft.application.role.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplicationRole).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.application.role.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplicationRole).GetName()).ToDataRes(types.String)
+	},
+	"microsoft.application.role.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplicationRole).GetDescription()).ToDataRes(types.String)
+	},
+	"microsoft.application.role.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplicationRole).GetValue()).ToDataRes(types.String)
+	},
+	"microsoft.application.role.allowedMemberTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplicationRole).GetAllowedMemberTypes()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.application.role.isEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplicationRole).GetIsEnabled()).ToDataRes(types.Bool)
 	},
 	"microsoft.keyCredential.keyId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftKeyCredential).GetKeyId()).ToDataRes(types.String)
@@ -1537,6 +1562,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.application.publicClient": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftApplication).PublicClient, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.appRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplication).AppRoles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftApplicationRole).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.application.role.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplicationRole).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.role.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplicationRole).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.role.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplicationRole).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.role.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplicationRole).Value, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.role.allowedMemberTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplicationRole).AllowedMemberTypes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.role.isEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplicationRole).IsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"microsoft.keyCredential.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3152,6 +3209,7 @@ type mqlMicrosoftApplication struct {
 	RequestSignatureVerification plugin.TValue[interface{}]
 	ParentalControlSettings plugin.TValue[interface{}]
 	PublicClient plugin.TValue[interface{}]
+	AppRoles plugin.TValue[[]interface{}]
 }
 
 // createMicrosoftApplication creates a new instance of this resource
@@ -3358,6 +3416,79 @@ func (c *mqlMicrosoftApplication) GetParentalControlSettings() *plugin.TValue[in
 
 func (c *mqlMicrosoftApplication) GetPublicClient() *plugin.TValue[interface{}] {
 	return &c.PublicClient
+}
+
+func (c *mqlMicrosoftApplication) GetAppRoles() *plugin.TValue[[]interface{}] {
+	return &c.AppRoles
+}
+
+// mqlMicrosoftApplicationRole for the microsoft.application.role resource
+type mqlMicrosoftApplicationRole struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftApplicationRoleInternal it will be used here
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	Description plugin.TValue[string]
+	Value plugin.TValue[string]
+	AllowedMemberTypes plugin.TValue[[]interface{}]
+	IsEnabled plugin.TValue[bool]
+}
+
+// createMicrosoftApplicationRole creates a new instance of this resource
+func createMicrosoftApplicationRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftApplicationRole{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.application.role", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftApplicationRole) MqlName() string {
+	return "microsoft.application.role"
+}
+
+func (c *mqlMicrosoftApplicationRole) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftApplicationRole) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftApplicationRole) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlMicrosoftApplicationRole) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMicrosoftApplicationRole) GetValue() *plugin.TValue[string] {
+	return &c.Value
+}
+
+func (c *mqlMicrosoftApplicationRole) GetAllowedMemberTypes() *plugin.TValue[[]interface{}] {
+	return &c.AllowedMemberTypes
+}
+
+func (c *mqlMicrosoftApplicationRole) GetIsEnabled() *plugin.TValue[bool] {
+	return &c.IsEnabled
 }
 
 // mqlMicrosoftKeyCredential for the microsoft.keyCredential resource
