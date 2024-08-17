@@ -28,7 +28,7 @@ var Config = plugin.Provider{
 			Short: "an Atlassian Cloud Jira, Confluence or Bitbucket instance",
 			Long: `Use the atlassian provider to query resources within Atlassian Cloud, including Jira, Confluence, and SCIM.
 
-Available Commands:
+Available commands:
   admin                     Atlassian administrative instance
   jira                      Jira instance
   confluence                Confluence instance
@@ -40,10 +40,13 @@ Examples:
   cnquery shell atlassian confluence --host <host> --user <user> --user-token <token>
   cnquery shell atlassian scim <directory-id> --scim-token <token>
 
-If you set the ATLASSIAN_ADMIN_TOKEN environment, you can omit the admin-token flag. If you set the ATLASSIAN_USER,
-ATLASSIAN_HOST, and ATLASSIAN_USER_TOKEN environment variables, you can omit the user, host, and user-token flags.
+Notes:
+  If you set the ATLASSIAN_ADMIN_TOKEN environment, you can omit the admin-token flag. 
+	
+  If you set the ATLASSIAN_USER, ATLASSIAN_HOST, and ATLASSIAN_USER_TOKEN environment variables, you can omit the user, host, and user-token flags.
 
-For the SCIM token and the directory-id values: Atlassian provides these values when you set up an identity provider.
+  For the SCIM token and the directory-id values: 
+  Atlassian provides these values when you set up an identity provider.
 `,
 			MaxArgs:   2,
 			Discovery: []string{},
