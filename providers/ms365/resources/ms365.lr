@@ -4,10 +4,12 @@
 option provider = "go.mondoo.com/cnquery/v9/providers/ms365"
 option go_package = "go.mondoo.com/cnquery/v11/providers/ms365/resources"
 
+alias microsoft.organization = microsoft.tenant
+
 // Microsoft
 microsoft {
-  // List of organizations
-  organizations() []microsoft.organization
+  // Deprecated: use `microsoft.tenant` instead
+  organizations() []microsoft.tenant
   // List of users
   users() []microsoft.user
   // List of groups
@@ -28,20 +30,30 @@ microsoft {
   tenantDomainName() string
 }
 
-// Microsoft organization
-private microsoft.organization @defaults("displayName") {
+//  Microsoft Entra tenant
+microsoft.tenant @defaults("name") {
   // Organization ID
   id string
-  // Organization assigned plans
+  // Service plans associated with the tenant
   assignedPlans []dict
-  // Organization creation date
+  // Provisioned plan
+  provisionedPlans []dict
+  // Deprecated: use `createdAt` instead
   createdDateTime time
-  // Organization display name
+  // Deprecated: use `name` instead
   displayName string
+  // Tenant display name
+  name string
   // Organization verified domains
   verifiedDomains []dict
   // Whether password hash sync is enabled for hybrid deployments
   onPremisesSyncEnabled bool
+  // Tenant creation date
+  createdAt time
+  // Tenant type
+  type string
+  // Commercial subscription
+  subscriptions() []dict
 }
 
 // Microsoft Entra ID user
