@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"sync"
 
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
@@ -190,6 +191,56 @@ func (m *mqlMicrosoftServiceprincipal) id() (string, error) {
 
 func (m *mqlMicrosoftServiceprincipalAssignment) id() (string, error) {
 	return m.Id.Data, nil
+}
+
+func initMicrosoftServiceprincipal(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// we only look up the service principal if we have been supplied by its name and nothing else
+	rawName, okName := args["name"]
+	rawId, okId := args["id"]
+	rawAppId, okAppId := args["appId"]
+
+	if len(args) != 1 || (!okName && !okId && !okAppId) {
+		return args, nil, nil
+	}
+
+	var filter func(sp *mqlMicrosoftServiceprincipal) bool
+
+	if okId {
+		id := rawId.Value.(string)
+		filter = func(sp *mqlMicrosoftServiceprincipal) bool {
+			return sp.Id.Data == id
+		}
+	} else if okAppId {
+		appId := rawAppId.Value.(string)
+		filter = func(sp *mqlMicrosoftServiceprincipal) bool {
+			return sp.AppId.Data == appId
+		}
+	} else if okName {
+		// NOTE: be aware that service principal names are not unique
+		name := rawName.Value.(string)
+		filter = func(sp *mqlMicrosoftServiceprincipal) bool {
+			return sp.Name.Data == name
+		}
+	}
+
+	if filter == nil {
+		return nil, nil, errors.New("invalid filter")
+	}
+
+	mqlResource, err := runtime.CreateResource(runtime, "microsoft", nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	microsoftResource := mqlResource.(*mqlMicrosoft)
+	servicePrincipalList := microsoftResource.GetServiceprincipals()
+	for i := range servicePrincipalList.Data {
+		sp := servicePrincipalList.Data[i].(*mqlMicrosoftServiceprincipal)
+		if filter(sp) {
+			return nil, sp, nil
+		}
+	}
+
+	return nil, nil, errors.New("service principal not found")
 }
 
 // enterprise applications are just service principals with a special tag, attached to them

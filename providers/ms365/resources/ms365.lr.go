@@ -63,7 +63,7 @@ func init() {
 			Create: createMicrosoftPasswordCredential,
 		},
 		"microsoft.serviceprincipal": {
-			// to override args, implement: initMicrosoftServiceprincipal(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initMicrosoftServiceprincipal,
 			Create: createMicrosoftServiceprincipal,
 		},
 		"microsoft.serviceprincipal.assignment": {

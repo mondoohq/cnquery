@@ -360,7 +360,6 @@ resources:
         min_mondoo_version: 9.0.0
       visibleToUsers:
         min_mondoo_version: latest
-    is_private: true
     min_mondoo_version: 5.15.0
   microsoft.serviceprincipal.appRoleAssignment:
     fields:

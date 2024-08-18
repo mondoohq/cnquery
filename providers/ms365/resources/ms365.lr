@@ -334,7 +334,7 @@ private microsoft.passwordCredential @defaults("description expires keyId") {
 }
 
 // Microsoft service principal (Enterprise application)
-private microsoft.serviceprincipal @defaults("name") {
+microsoft.serviceprincipal @defaults("name") {
   // Service principal Object ID
   id string
   // Service principal type
