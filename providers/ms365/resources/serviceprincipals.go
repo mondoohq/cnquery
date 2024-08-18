@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"strings"
 	"sync"
 
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
@@ -472,26 +473,35 @@ func (a *mqlMicrosoftServiceprincipal) permissions() ([]interface{}, error) {
 			continue
 		}
 
-		desc := ""
-		role, ok := mqlMicrosoftResource.getOauthPermissionScope(*spId, *scope)
-		if ok {
-			desc = role.desc
-		}
+		// one line can include multiple scopes
+		scopeList := strings.Split(*scope, " ")
 
-		assignment, err := CreateResource(a.MqlRuntime, "microsoft.application.permission", map[string]*llx.RawData{
-			"__id":        llx.StringDataPtr(roleAssignment.GetId()),
-			"appId":       llx.StringDataPtr(spId),
-			"appName":     llx.StringData(appName),
-			"description": llx.StringData(desc),
-			"id":          llx.StringDataPtr(roleAssignment.GetId()),
-			"name":        llx.StringDataPtr(scope),
-			"type":        llx.StringData("delegated"),
-			"status":      llx.StringData("granted"),
-		})
-		if err != nil {
-			return nil, err
+		for _, scopeEntry := range scopeList {
+			if scopeEntry == "" {
+				continue
+			}
+			id := convert.ToString(roleAssignment.GetId())
+			desc := ""
+			role, ok := mqlMicrosoftResource.getOauthPermissionScope(*spId, scopeEntry)
+			if ok {
+				desc = role.desc
+			}
+
+			assignment, err := CreateResource(a.MqlRuntime, "microsoft.application.permission", map[string]*llx.RawData{
+				"__id":        llx.StringData(id + "/" + scopeEntry),
+				"appId":       llx.StringDataPtr(spId),
+				"appName":     llx.StringData(appName),
+				"description": llx.StringData(desc),
+				"id":          llx.StringData(id),
+				"name":        llx.StringData(scopeEntry),
+				"type":        llx.StringData("delegated"),
+				"status":      llx.StringData("granted"),
+			})
+			if err != nil {
+				return nil, err
+			}
+			list = append(list, assignment)
 		}
-		list = append(list, assignment)
 	}
 	return list, nil
 }
