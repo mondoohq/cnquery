@@ -375,6 +375,8 @@ private microsoft.serviceprincipal @defaults("name") {
   accountEnabled bool
   // Whether it is a first-party Microsoft application
   isFirstParty() bool
+  // Application roles
+  appRoles []microsoft.application.role
 }
 
 // Microsoft Service Principal Assignment

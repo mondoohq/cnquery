@@ -283,6 +283,8 @@ resources:
         min_mondoo_version: 9.0.0
       appRoleAssignments:
         min_mondoo_version: latest
+      appRoles:
+        min_mondoo_version: 9.0.0
       applicationTemplateId:
         min_mondoo_version: 9.0.0
       assignmentRequired:

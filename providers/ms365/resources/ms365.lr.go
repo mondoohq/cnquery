@@ -704,6 +704,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.serviceprincipal.isFirstParty": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftServiceprincipal).GetIsFirstParty()).ToDataRes(types.Bool)
 	},
+	"microsoft.serviceprincipal.appRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipal).GetAppRoles()).ToDataRes(types.Array(types.Resource("microsoft.application.role")))
+	},
 	"microsoft.serviceprincipal.assignment.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftServiceprincipalAssignment).GetId()).ToDataRes(types.String)
 	},
@@ -1758,6 +1761,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.serviceprincipal.isFirstParty": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftServiceprincipal).IsFirstParty, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.serviceprincipal.appRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipal).AppRoles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"microsoft.serviceprincipal.assignment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3660,6 +3667,7 @@ type mqlMicrosoftServiceprincipal struct {
 	AppRoleAssignmentRequired plugin.TValue[bool]
 	AccountEnabled plugin.TValue[bool]
 	IsFirstParty plugin.TValue[bool]
+	AppRoles plugin.TValue[[]interface{}]
 }
 
 // createMicrosoftServiceprincipal creates a new instance of this resource
@@ -3803,6 +3811,10 @@ func (c *mqlMicrosoftServiceprincipal) GetIsFirstParty() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.IsFirstParty, func() (bool, error) {
 		return c.isFirstParty()
 	})
+}
+
+func (c *mqlMicrosoftServiceprincipal) GetAppRoles() *plugin.TValue[[]interface{}] {
+	return &c.AppRoles
 }
 
 // mqlMicrosoftServiceprincipalAssignment for the microsoft.serviceprincipal.assignment resource
