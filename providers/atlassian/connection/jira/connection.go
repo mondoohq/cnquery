@@ -6,6 +6,7 @@ package jira
 import (
 	"context"
 	"errors"
+	"net/url"
 	"os"
 
 	v2 "github.com/ctreminiom/go-atlassian/jira/v2"
@@ -26,13 +27,18 @@ type JiraConnection struct {
 	name   string
 }
 
+func isValidHostValue(val string) bool {
+	u, err := url.Parse(val)
+	return err == nil && u.Scheme != "" && u.Host != ""
+}
+
 func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*JiraConnection, error) {
 	host := conf.Options["host"]
 	if host == "" {
 		host = os.Getenv("ATLASSIAN_HOST")
 	}
-	if host == "" {
-		return nil, errors.New("you must provide an Atlassian host e.g. via ATLASSIAN_HOST env or via the --host flag")
+	if host == "" || !isValidHostValue(host) {
+		return nil, errors.New("you must provide an Atlassian host e.g. via ATLASSIAN_HOST env or via the --host flag. Host must be prefixed with https://")
 	}
 
 	user := conf.Options["user"]
