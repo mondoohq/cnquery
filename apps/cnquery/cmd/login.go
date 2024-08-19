@@ -26,6 +26,11 @@ import (
 	"go.mondoo.com/ranger-rpc/status"
 )
 
+var (
+	tokenValidationErr = errors.New("The token is not a valid token to register this client with Mondoo platform")
+	tokenExpiredErr    = errors.New("The token is expired")
+)
+
 func init() {
 	rootCmd.AddCommand(LoginCmd)
 	LoginCmd.Flags().StringP("token", "t", "", "Set a client registration token")
@@ -63,6 +68,12 @@ You remain logged in until you explicitly log out using the 'logout' subcommand.
 		apiEndpointOverride, _ := cmd.Flags().GetString("api-endpoint")
 		err := register(token, annotations, timer, splay, apiEndpointOverride)
 		if err != nil {
+			if err == tokenValidationErr {
+				log.Error().Msg(err.Error())
+
+				// Prevents help message from being printed
+				return nil
+			}
 			defer func() {
 				s, err := checkStatus()
 				if err != nil {
@@ -70,6 +81,13 @@ You remain logged in until you explicitly log out using the 'logout' subcommand.
 				}
 				s.RenderCliStatus()
 			}()
+
+			if err == tokenExpiredErr {
+				log.Error().Msg(err.Error())
+
+				// Prevents help message from being printed
+				return nil
+			}
 		}
 		return err
 	},
@@ -105,14 +123,22 @@ func register(token string, annotations map[string]string, timer int, splay int,
 		claims, err := upstream.ExtractTokenClaims(token)
 		if err != nil {
 			log.Warn().Err(err).Msg("could not read the token")
+			return tokenValidationErr
 		} else {
 			if len(claims.Description) > 0 {
 				log.Info().Msg("token description: " + claims.Description)
 			}
 			if claims.IsExpired() {
-				log.Warn().Msg("token is expired")
+				return tokenExpiredErr
+			} else if claims.Expiry == nil {
+				log.Warn().Msg("token does not contain an expiry date")
 			} else {
 				log.Info().Msg("token will expire at " + claims.Claims.Expiry.Time().Format(time.RFC1123))
+			}
+			if claims.Space == "" {
+				log.Warn().
+					Msg("token does not contain a space")
+				return tokenValidationErr
 			}
 
 			// use the api endpoint from the token if not overridden via flag
