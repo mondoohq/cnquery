@@ -78,6 +78,10 @@ func init() {
 			// to override args, implement: initMicrosoftSecuritySecurityscore(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftSecuritySecurityscore,
 		},
+		"microsoft.security.riskyUser": {
+			// to override args, implement: initMicrosoftSecurityRiskyUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftSecurityRiskyUser,
+		},
 		"microsoft.policies": {
 			// to override args, implement: initMicrosoftPolicies(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftPolicies,
@@ -722,6 +726,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.security.latestSecureScores": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftSecurity).GetLatestSecureScores()).ToDataRes(types.Resource("microsoft.security.securityscore"))
 	},
+	"microsoft.security.riskyUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurity).GetRiskyUsers()).ToDataRes(types.Array(types.Resource("microsoft.security.riskyUser")))
+	},
 	"microsoft.security.securityscore.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftSecuritySecurityscore).GetId()).ToDataRes(types.String)
 	},
@@ -754,6 +761,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.security.securityscore.vendorInformation": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftSecuritySecurityscore).GetVendorInformation()).ToDataRes(types.Dict)
+	},
+	"microsoft.security.riskyUser.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityRiskyUser).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.security.riskyUser.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityRiskyUser).GetName()).ToDataRes(types.String)
+	},
+	"microsoft.security.riskyUser.principalName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityRiskyUser).GetPrincipalName()).ToDataRes(types.String)
+	},
+	"microsoft.security.riskyUser.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityRiskyUser).GetUser()).ToDataRes(types.Resource("microsoft.user"))
+	},
+	"microsoft.security.riskyUser.riskDetail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityRiskyUser).GetRiskDetail()).ToDataRes(types.String)
+	},
+	"microsoft.security.riskyUser.riskLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityRiskyUser).GetRiskLevel()).ToDataRes(types.String)
+	},
+	"microsoft.security.riskyUser.riskState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityRiskyUser).GetRiskState()).ToDataRes(types.String)
+	},
+	"microsoft.security.riskyUser.lastUpdatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityRiskyUser).GetLastUpdatedAt()).ToDataRes(types.Time)
 	},
 	"microsoft.policies.authorizationPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftPolicies).GetAuthorizationPolicy()).ToDataRes(types.Dict)
@@ -1795,6 +1826,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMicrosoftSecurity).LatestSecureScores, ok = plugin.RawToTValue[*mqlMicrosoftSecuritySecurityscore](v.Value, v.Error)
 		return
 	},
+	"microsoft.security.riskyUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurity).RiskyUsers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"microsoft.security.securityscore.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlMicrosoftSecuritySecurityscore).__id, ok = v.Value.(string)
 			return
@@ -1841,6 +1876,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.security.securityscore.vendorInformation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftSecuritySecurityscore).VendorInformation, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.riskyUser.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftSecurityRiskyUser).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.security.riskyUser.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityRiskyUser).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.riskyUser.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityRiskyUser).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.riskyUser.principalName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityRiskyUser).PrincipalName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.riskyUser.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityRiskyUser).User, ok = plugin.RawToTValue[*mqlMicrosoftUser](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.riskyUser.riskDetail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityRiskyUser).RiskDetail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.riskyUser.riskLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityRiskyUser).RiskLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.riskyUser.riskState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityRiskyUser).RiskState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.riskyUser.lastUpdatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityRiskyUser).LastUpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"microsoft.policies.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3883,6 +3954,7 @@ type mqlMicrosoftSecurity struct {
 	// optional: if you define mqlMicrosoftSecurityInternal it will be used here
 	SecureScores plugin.TValue[[]interface{}]
 	LatestSecureScores plugin.TValue[*mqlMicrosoftSecuritySecurityscore]
+	RiskyUsers plugin.TValue[[]interface{}]
 }
 
 // createMicrosoftSecurity creates a new instance of this resource
@@ -3946,6 +4018,22 @@ func (c *mqlMicrosoftSecurity) GetLatestSecureScores() *plugin.TValue[*mqlMicros
 		}
 
 		return c.latestSecureScores()
+	})
+}
+
+func (c *mqlMicrosoftSecurity) GetRiskyUsers() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.RiskyUsers, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.security", c.__id, "riskyUsers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.riskyUsers()
 	})
 }
 
@@ -4046,6 +4134,97 @@ func (c *mqlMicrosoftSecuritySecurityscore) GetMaxScore() *plugin.TValue[float64
 
 func (c *mqlMicrosoftSecuritySecurityscore) GetVendorInformation() *plugin.TValue[interface{}] {
 	return &c.VendorInformation
+}
+
+// mqlMicrosoftSecurityRiskyUser for the microsoft.security.riskyUser resource
+type mqlMicrosoftSecurityRiskyUser struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftSecurityRiskyUserInternal it will be used here
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	PrincipalName plugin.TValue[string]
+	User plugin.TValue[*mqlMicrosoftUser]
+	RiskDetail plugin.TValue[string]
+	RiskLevel plugin.TValue[string]
+	RiskState plugin.TValue[string]
+	LastUpdatedAt plugin.TValue[*time.Time]
+}
+
+// createMicrosoftSecurityRiskyUser creates a new instance of this resource
+func createMicrosoftSecurityRiskyUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftSecurityRiskyUser{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.security.riskyUser", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftSecurityRiskyUser) MqlName() string {
+	return "microsoft.security.riskyUser"
+}
+
+func (c *mqlMicrosoftSecurityRiskyUser) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftSecurityRiskyUser) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftSecurityRiskyUser) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlMicrosoftSecurityRiskyUser) GetPrincipalName() *plugin.TValue[string] {
+	return &c.PrincipalName
+}
+
+func (c *mqlMicrosoftSecurityRiskyUser) GetUser() *plugin.TValue[*mqlMicrosoftUser] {
+	return plugin.GetOrCompute[*mqlMicrosoftUser](&c.User, func() (*mqlMicrosoftUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.security.riskyUser", c.__id, "user")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftUser), nil
+			}
+		}
+
+		return c.user()
+	})
+}
+
+func (c *mqlMicrosoftSecurityRiskyUser) GetRiskDetail() *plugin.TValue[string] {
+	return &c.RiskDetail
+}
+
+func (c *mqlMicrosoftSecurityRiskyUser) GetRiskLevel() *plugin.TValue[string] {
+	return &c.RiskLevel
+}
+
+func (c *mqlMicrosoftSecurityRiskyUser) GetRiskState() *plugin.TValue[string] {
+	return &c.RiskState
+}
+
+func (c *mqlMicrosoftSecurityRiskyUser) GetLastUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.LastUpdatedAt
 }
 
 // mqlMicrosoftPolicies for the microsoft.policies resource
