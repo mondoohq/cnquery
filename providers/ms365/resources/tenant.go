@@ -149,10 +149,6 @@ func (a *mqlMicrosoft) tenantDomainName() (string, error) {
 	tenantDomainName := ""
 
 	for _, org := range resp.GetValue() {
-		org.GetId()
-		org.GetTenantType()
-		org.GetDisplayName()
-		org.GetProvisionedPlans()
 		for _, d := range org.GetVerifiedDomains() {
 			if *d.GetIsInitial() {
 				tenantDomainName = *d.GetName()
