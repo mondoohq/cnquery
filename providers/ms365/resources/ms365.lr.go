@@ -613,6 +613,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.serviceprincipal.appId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftServiceprincipal).GetAppId()).ToDataRes(types.String)
 	},
+	"microsoft.serviceprincipal.appOwnerOrganizationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipal).GetAppOwnerOrganizationId()).ToDataRes(types.String)
+	},
 	"microsoft.serviceprincipal.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftServiceprincipal).GetDescription()).ToDataRes(types.String)
 	},
@@ -646,6 +649,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.serviceprincipal.applicationTemplateId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftServiceprincipal).GetApplicationTemplateId()).ToDataRes(types.String)
 	},
+	"microsoft.serviceprincipal.verifiedPublisher": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipal).GetVerifiedPublisher()).ToDataRes(types.Dict)
+	},
 	"microsoft.serviceprincipal.loginUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftServiceprincipal).GetLoginUrl()).ToDataRes(types.String)
 	},
@@ -669,6 +675,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.serviceprincipal.accountEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftServiceprincipal).GetAccountEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.serviceprincipal.isFirstParty": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipal).GetIsFirstParty()).ToDataRes(types.Bool)
 	},
 	"microsoft.serviceprincipal.assignment.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftServiceprincipalAssignment).GetId()).ToDataRes(types.String)
@@ -1606,6 +1615,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMicrosoftServiceprincipal).AppId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"microsoft.serviceprincipal.appOwnerOrganizationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipal).AppOwnerOrganizationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"microsoft.serviceprincipal.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftServiceprincipal).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1650,6 +1663,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMicrosoftServiceprincipal).ApplicationTemplateId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"microsoft.serviceprincipal.verifiedPublisher": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipal).VerifiedPublisher, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
 	"microsoft.serviceprincipal.loginUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftServiceprincipal).LoginUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1680,6 +1697,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.serviceprincipal.accountEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftServiceprincipal).AccountEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.serviceprincipal.isFirstParty": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipal).IsFirstParty, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"microsoft.serviceprincipal.assignment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3486,6 +3507,7 @@ type mqlMicrosoftServiceprincipal struct {
 	Type plugin.TValue[string]
 	Name plugin.TValue[string]
 	AppId plugin.TValue[string]
+	AppOwnerOrganizationId plugin.TValue[string]
 	Description plugin.TValue[string]
 	Tags plugin.TValue[[]interface{}]
 	Enabled plugin.TValue[bool]
@@ -3497,6 +3519,7 @@ type mqlMicrosoftServiceprincipal struct {
 	Notes plugin.TValue[string]
 	Assignments plugin.TValue[[]interface{}]
 	ApplicationTemplateId plugin.TValue[string]
+	VerifiedPublisher plugin.TValue[interface{}]
 	LoginUrl plugin.TValue[string]
 	LogoutUrl plugin.TValue[string]
 	ServicePrincipalNames plugin.TValue[[]interface{}]
@@ -3505,6 +3528,7 @@ type mqlMicrosoftServiceprincipal struct {
 	NotificationEmailAddresses plugin.TValue[[]interface{}]
 	AppRoleAssignmentRequired plugin.TValue[bool]
 	AccountEnabled plugin.TValue[bool]
+	IsFirstParty plugin.TValue[bool]
 }
 
 // createMicrosoftServiceprincipal creates a new instance of this resource
@@ -3560,6 +3584,10 @@ func (c *mqlMicrosoftServiceprincipal) GetAppId() *plugin.TValue[string] {
 	return &c.AppId
 }
 
+func (c *mqlMicrosoftServiceprincipal) GetAppOwnerOrganizationId() *plugin.TValue[string] {
+	return &c.AppOwnerOrganizationId
+}
+
 func (c *mqlMicrosoftServiceprincipal) GetDescription() *plugin.TValue[string] {
 	return &c.Description
 }
@@ -3604,6 +3632,10 @@ func (c *mqlMicrosoftServiceprincipal) GetApplicationTemplateId() *plugin.TValue
 	return &c.ApplicationTemplateId
 }
 
+func (c *mqlMicrosoftServiceprincipal) GetVerifiedPublisher() *plugin.TValue[interface{}] {
+	return &c.VerifiedPublisher
+}
+
 func (c *mqlMicrosoftServiceprincipal) GetLoginUrl() *plugin.TValue[string] {
 	return &c.LoginUrl
 }
@@ -3634,6 +3666,12 @@ func (c *mqlMicrosoftServiceprincipal) GetAppRoleAssignmentRequired() *plugin.TV
 
 func (c *mqlMicrosoftServiceprincipal) GetAccountEnabled() *plugin.TValue[bool] {
 	return &c.AccountEnabled
+}
+
+func (c *mqlMicrosoftServiceprincipal) GetIsFirstParty() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsFirstParty, func() (bool, error) {
+		return c.isFirstParty()
+	})
 }
 
 // mqlMicrosoftServiceprincipalAssignment for the microsoft.serviceprincipal.assignment resource

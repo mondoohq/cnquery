@@ -933,3 +933,17 @@ func newCertificationable(s models.Certificationable) *Certificationable {
 		LastCertificationDateTime:       s.GetLastCertificationDateTime(),
 	}
 }
+
+type VerifiedPublisher struct {
+	DisplayName         *string    `json:"name"`
+	VerifiedPublisherId *string    `json:"verifiedPublisherId"`
+	CreatedAt           *time.Time `json:"createdAt"`
+}
+
+func newVerifiedPublisher(p models.VerifiedPublisherable) VerifiedPublisher {
+	return VerifiedPublisher{
+		DisplayName:         p.GetDisplayName(),
+		VerifiedPublisherId: p.GetVerifiedPublisherId(),
+		CreatedAt:           p.GetAddedDateTime(),
+	}
+}

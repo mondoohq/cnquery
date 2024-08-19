@@ -265,6 +265,8 @@ resources:
         min_mondoo_version: 9.0.0
       appId:
         min_mondoo_version: 9.0.0
+      appOwnerOrganizationId:
+        min_mondoo_version: 9.0.0
       appRoleAssignmentRequired:
         min_mondoo_version: 9.0.0
       appRoleAssignments:
@@ -282,6 +284,8 @@ resources:
       homepageUrl:
         min_mondoo_version: latest
       id: {}
+      isFirstParty:
+        min_mondoo_version: 9.0.0
       loginUrl:
         min_mondoo_version: 9.0.0
       logoutUrl:
@@ -310,6 +314,8 @@ resources:
         min_mondoo_version: latest
       userAccessUrl:
         min_mondoo_version: latest
+      verifiedPublisher:
+        min_mondoo_version: 9.0.0
       visibleToUsers:
         min_mondoo_version: latest
     is_private: true

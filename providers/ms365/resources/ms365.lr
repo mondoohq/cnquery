@@ -313,6 +313,8 @@ private microsoft.serviceprincipal @defaults("name") {
   name string
   // Application ID
   appId string
+  // Application owner ID
+  appOwnerOrganizationId string
   // Application description
   description string
   // Service principal tags
@@ -335,6 +337,8 @@ private microsoft.serviceprincipal @defaults("name") {
   assignments []microsoft.serviceprincipal.assignment
   // Application template ID
   applicationTemplateId string
+  // Application publisher
+  verifiedPublisher dict
   // Login URL
   loginUrl string
   // Logout URL
@@ -349,8 +353,10 @@ private microsoft.serviceprincipal @defaults("name") {
   notificationEmailAddresses []string
   // App role assignment required
   appRoleAssignmentRequired bool
-  // Account enabled
+  // Deprecated: use `enabled` instead
   accountEnabled bool
+  // Whether it is a first-party Microsoft application
+  isFirstParty() bool
 }
 
 // Microsoft Service Principal Assignment
