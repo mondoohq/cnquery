@@ -7,15 +7,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
+	authorization "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization/v2"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v11/providers/azure/connection"
 	"go.mondoo.com/cnquery/v11/types"
-
-	authorization "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization/v2"
 )
 
 func (a *mqlAzureSubscription) iam() (*mqlAzureSubscriptionAuthorizationService, error) {
@@ -50,14 +50,6 @@ func initAzureSubscriptionAuthorizationService(runtime *plugin.Runtime, args map
 	args["subscriptionId"] = llx.StringData(conn.SubId())
 
 	return args, nil, nil
-}
-
-func (a *mqlAzureSubscriptionAuthorizationServiceRoleDefinition) id() (string, error) {
-	return a.Id.Data, nil
-}
-
-func (a *mqlAzureSubscriptionAuthorizationServiceRoleDefinitionPermission) id() (string, error) {
-	return a.Id.Data, nil
 }
 
 // Deprecated: use roles instead
@@ -99,7 +91,7 @@ func (a *mqlAzureSubscriptionAuthorizationService) roles() ([]interface{}, error
 			permissions := []interface{}{}
 			for idx, p := range roleDef.Properties.Permissions {
 				id := fmt.Sprintf("%s/azure.subscription.authorizationService.roleDefinition.permission/%d", *roleDef.ID, idx)
-				permission, err := azureToMqlPermission(a.MqlRuntime, id, p)
+				permission, err := newMqlRolePermission(a.MqlRuntime, id, p)
 				if err != nil {
 					return nil, err
 				}
@@ -107,6 +99,7 @@ func (a *mqlAzureSubscriptionAuthorizationService) roles() ([]interface{}, error
 			}
 			mqlRoleDefinition, err := CreateResource(a.MqlRuntime, "azure.subscription.authorizationService.roleDefinition",
 				map[string]*llx.RawData{
+					"__id":        llx.StringDataPtr(roleDef.ID),
 					"id":          llx.StringDataPtr(roleDef.ID),
 					"name":        llx.StringDataPtr(roleDef.Properties.RoleName),
 					"description": llx.StringDataPtr(roleDef.Properties.Description),
@@ -124,7 +117,7 @@ func (a *mqlAzureSubscriptionAuthorizationService) roles() ([]interface{}, error
 	return res, nil
 }
 
-func azureToMqlPermission(runtime *plugin.Runtime, id string, permission *authorization.Permission) (interface{}, error) {
+func newMqlRolePermission(runtime *plugin.Runtime, id string, permission *authorization.Permission) (interface{}, error) {
 	allowedActions := []interface{}{}
 	deniedActions := []interface{}{}
 	allowedDataActions := []interface{}{}
@@ -153,6 +146,7 @@ func azureToMqlPermission(runtime *plugin.Runtime, id string, permission *author
 
 	p, err := CreateResource(runtime, "azure.subscription.authorizationService.roleDefinition.permission",
 		map[string]*llx.RawData{
+			"__id":               llx.StringData(id),
 			"id":                 llx.StringData(id),
 			"allowedActions":     llx.ArrayData(allowedActions, types.String),
 			"deniedActions":      llx.ArrayData(deniedActions, types.String),
@@ -163,4 +157,107 @@ func azureToMqlPermission(runtime *plugin.Runtime, id string, permission *author
 		return nil, err
 	}
 	return p, nil
+}
+
+func (a *mqlAzureSubscriptionAuthorizationService) roleAssignments() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	var client, err = authorization.NewRoleAssignmentsClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	// we're interested in subscription-level role definitions, so we scope this to the subscription,
+	// on which this connection is running
+	pager := client.NewListForSubscriptionPager(&authorization.RoleAssignmentsClientListForSubscriptionOptions{})
+	res := []interface{}{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, roleAssignment := range page.Value {
+			mqlRoleAssignment, err := newMqlRoleAssignment(a.MqlRuntime, roleAssignment)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlRoleAssignment)
+		}
+	}
+	return res, nil
+}
+
+type mqlAzureSubscriptionAuthorizationServiceRoleAssignmentInternal struct {
+	roleDefinitionId string
+}
+
+func newMqlRoleAssignment(runtime *plugin.Runtime, roleAssignment *authorization.RoleAssignment) (*mqlAzureSubscriptionAuthorizationServiceRoleAssignment, error) {
+	r, err := CreateResource(runtime, "azure.subscription.authorizationService.roleAssignment",
+		map[string]*llx.RawData{
+			"__id":        llx.StringDataPtr(roleAssignment.ID),
+			"id":          llx.StringDataPtr(roleAssignment.Name), // name is the id :-)
+			"description": llx.StringDataPtr(roleAssignment.Properties.Description),
+			"scope":       llx.StringDataPtr(roleAssignment.Properties.Scope),
+			"type":        llx.StringData(string(*roleAssignment.Properties.PrincipalType)),
+			"principalId": llx.StringData(*roleAssignment.Properties.PrincipalID),
+			"condition":   llx.StringDataPtr(roleAssignment.Properties.Condition),
+			"createdAt":   llx.TimeDataPtr(roleAssignment.Properties.CreatedOn),
+			"updatedAt":   llx.TimeDataPtr(roleAssignment.Properties.UpdatedOn),
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	mqlRoleDefinition := r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment)
+	if roleAssignment.Properties.RoleDefinitionID != nil {
+		mqlRoleDefinition.roleDefinitionId = *roleAssignment.Properties.RoleDefinitionID
+	}
+	return mqlRoleDefinition, nil
+}
+
+func extractSubscriptionID(roleDefinitionID string) (string, error) {
+	parts := strings.Split(roleDefinitionID, "/")
+
+	for i, part := range parts {
+		if part == "subscriptions" && i+1 < len(parts) {
+			return parts[i+1], nil
+		}
+	}
+
+	return "", fmt.Errorf("subscription ID not found in role definition ID")
+}
+
+func (a *mqlAzureSubscriptionAuthorizationServiceRoleAssignment) role() (*mqlAzureSubscriptionAuthorizationServiceRoleDefinition, error) {
+	if a.roleDefinitionId == "" {
+		return nil, nil
+	}
+
+	// extract subscription id from role definition id
+	subId, err := extractSubscriptionID(a.roleDefinitionId)
+	if err != nil {
+		return nil, err
+	}
+
+	r, err := CreateResource(a.MqlRuntime, "azure.subscription", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(subId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlResource := r.(*mqlAzureSubscription)
+	iamResource := mqlResource.GetIam().Data
+	roles := iamResource.GetRoles().Data
+	for i := range roles {
+		role := roles[i].(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition)
+		if role.__id == a.roleDefinitionId {
+			return role, nil
+		}
+	}
+
+	return nil, errors.New("role definition not found")
 }
