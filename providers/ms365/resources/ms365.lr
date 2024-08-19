@@ -269,6 +269,24 @@ microsoft.application @defaults("id displayName hasExpiredCredentials") {
   parentalControlSettings dict
   // Public client configuration
   publicClient dict
+  // Application roles
+  appRoles []microsoft.application.role
+}
+
+// Microsoft Entra ID app roles are custom roles to assign permissions to users or apps
+private microsoft.application.role @defaults("name value isEnabled"){
+  // App role ID
+  id string
+  // Display name
+  name string
+  // Description
+  description string
+  // Value
+  value string
+  // Allowed member types
+  allowedMemberTypes []string
+  // App state
+  isEnabled bool
 }
 
 // Microsoft Entra AD Application certificate
@@ -357,6 +375,8 @@ private microsoft.serviceprincipal @defaults("name") {
   accountEnabled bool
   // Whether it is a first-party Microsoft application
   isFirstParty() bool
+  // Application roles
+  appRoles []microsoft.application.role
 }
 
 // Microsoft Service Principal Assignment

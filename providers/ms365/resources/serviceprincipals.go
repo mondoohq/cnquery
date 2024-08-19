@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"github.com/rs/zerolog/log"
 
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/serviceprincipals"
@@ -68,6 +69,7 @@ var servicePrincipalFields = []string{
 	"appRoleAssignmentRequired",
 	"accountEnabled",
 	"verifiedPublisher",
+	"appRoles",
 }
 
 func (a *mqlMicrosoft) serviceprincipals() ([]interface{}, error) {
@@ -130,6 +132,33 @@ func newMqlMicrosoftServicePrincipal(runtime *plugin.Runtime, sp models.ServiceP
 
 	verifiedPublisher, _ := convert.JsonToDict(newVerifiedPublisher(sp.GetVerifiedPublisher()))
 
+	mqlAppRoleList := []interface{}{}
+	appRoles := sp.GetAppRoles()
+	for i := range appRoles {
+		appRole := appRoles[i]
+
+		uuid := appRole.GetId()
+		if uuid == nil {
+			log.Debug().Msg("appRole ID is nil")
+			continue
+		}
+
+		mqlAppRoleResource, err := CreateResource(runtime, "microsoft.application.role",
+			map[string]*llx.RawData{
+				"__id":               llx.StringData(uuid.String()),
+				"id":                 llx.StringData(uuid.String()),
+				"name":               llx.StringDataPtr(appRole.GetDisplayName()),
+				"description":        llx.StringDataPtr(appRole.GetDescription()),
+				"value":              llx.StringDataPtr(appRole.GetValue()),
+				"allowedMemberTypes": llx.ArrayData(convert.SliceAnyToInterface(appRole.GetAllowedMemberTypes()), types.String),
+				"isEnabled":          llx.BoolDataPtr(appRole.GetIsEnabled()),
+			})
+		if err != nil {
+			return nil, err
+		}
+		mqlAppRoleList = append(mqlAppRoleList, mqlAppRoleResource)
+	}
+
 	args := map[string]*llx.RawData{
 		"id":                         llx.StringDataPtr(sp.GetId()),
 		"type":                       llx.StringDataPtr(sp.GetServicePrincipalType()),
@@ -155,6 +184,7 @@ func newMqlMicrosoftServicePrincipal(runtime *plugin.Runtime, sp models.ServiceP
 		"appRoleAssignmentRequired":  llx.BoolDataPtr(sp.GetAppRoleAssignmentRequired()),
 		"accountEnabled":             llx.BoolDataPtr(sp.GetAccountEnabled()),
 		"verifiedPublisher":          llx.DictData(verifiedPublisher),
+		"appRoles":                   llx.ArrayData(mqlAppRoleList, types.Resource("microsoft.application.role")),
 	}
 	info := sp.GetInfo()
 	if info != nil {

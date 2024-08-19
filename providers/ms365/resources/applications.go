@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"net/url"
 	"time"
 
@@ -97,6 +98,33 @@ func newMqlMicrosoftApplication(runtime *plugin.Runtime, app models.Applicationa
 		nativeAuthenticationApisEnabled = &val
 	}
 
+	mqlAppRoleList := []interface{}{}
+	appRoles := app.GetAppRoles()
+	for i := range appRoles {
+		appRole := appRoles[i]
+
+		uuid := appRole.GetId()
+		if uuid == nil {
+			log.Debug().Msg("appRole ID is nil")
+			continue
+		}
+
+		mqlAppRoleResource, err := CreateResource(runtime, "microsoft.application.role",
+			map[string]*llx.RawData{
+				"__id":               llx.StringData(uuid.String()),
+				"id":                 llx.StringData(uuid.String()),
+				"name":               llx.StringDataPtr(appRole.GetDisplayName()),
+				"description":        llx.StringDataPtr(appRole.GetDescription()),
+				"value":              llx.StringDataPtr(appRole.GetValue()),
+				"allowedMemberTypes": llx.ArrayData(convert.SliceAnyToInterface(appRole.GetAllowedMemberTypes()), types.String),
+				"isEnabled":          llx.BoolDataPtr(appRole.GetIsEnabled()),
+			})
+		if err != nil {
+			return nil, err
+		}
+		mqlAppRoleList = append(mqlAppRoleList, mqlAppRoleResource)
+	}
+
 	mqlResource, err := CreateResource(runtime, "microsoft.application",
 		map[string]*llx.RawData{
 			"__id":                              llx.StringDataPtr(app.GetId()),
@@ -134,6 +162,7 @@ func newMqlMicrosoftApplication(runtime *plugin.Runtime, app models.Applicationa
 			"requestSignatureVerification":      llx.DictData(requestSignatureVerification),
 			"parentalControlSettings":           llx.DictData(parentalControlSettings),
 			"publicClient":                      llx.DictData(publicClient),
+			"appRoles":                          llx.ArrayData(mqlAppRoleList, types.Resource("microsoft.application.role")),
 		})
 	if err != nil {
 		return nil, err
