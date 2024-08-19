@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/cockroachdb/errors"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
 )
