@@ -18,6 +18,22 @@ import (
 	authorization "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization/v2"
 )
 
+func (a *mqlAzureSubscription) iam() (*mqlAzureSubscriptionAuthorizationService, error) {
+	svc, err := NewResource(a.MqlRuntime, "azure.subscription.authorizationService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	authSvc := svc.(*mqlAzureSubscriptionAuthorizationService)
+	return authSvc, nil
+}
+
+// Deprecated: use iam instead
+func (a *mqlAzureSubscription) authorization() (*mqlAzureSubscriptionAuthorizationService, error) {
+	return a.iam()
+}
+
 func (a *mqlAzureSubscriptionAuthorizationService) id() (string, error) {
 	return "azure.subscription.authorization/" + a.SubscriptionId.Data, nil
 }
@@ -44,7 +60,12 @@ func (a *mqlAzureSubscriptionAuthorizationServiceRoleDefinitionPermission) id() 
 	return a.Id.Data, nil
 }
 
+// Deprecated: use roles instead
 func (a *mqlAzureSubscriptionAuthorizationService) roleDefinitions() ([]interface{}, error) {
+	return a.roles()
+}
+
+func (a *mqlAzureSubscriptionAuthorizationService) roles() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -84,14 +105,12 @@ func (a *mqlAzureSubscriptionAuthorizationService) roleDefinitions() ([]interfac
 				}
 				permissions = append(permissions, permission)
 			}
-			if isCustom {
-				isCustom = true
-			}
 			mqlRoleDefinition, err := CreateResource(a.MqlRuntime, "azure.subscription.authorizationService.roleDefinition",
 				map[string]*llx.RawData{
 					"id":          llx.StringDataPtr(roleDef.ID),
 					"name":        llx.StringDataPtr(roleDef.Properties.RoleName),
 					"description": llx.StringDataPtr(roleDef.Properties.Description),
+					"type":        llx.StringData(roleType),
 					"isCustom":    llx.BoolData(isCustom),
 					"scopes":      llx.ArrayData(scopes, types.String),
 					"permissions": llx.ArrayData(permissions, types.ResourceLike),
