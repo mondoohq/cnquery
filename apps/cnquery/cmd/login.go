@@ -27,7 +27,7 @@ import (
 )
 
 var (
-	tokenValidationErr = errors.New("The token is not a valid token to register this client with Mondoo platform")
+	tokenValidationErr = errors.New("The token is not a valid token to register this client with Mondoo Platform")
 	tokenExpiredErr    = errors.New("The token is expired")
 )
 
