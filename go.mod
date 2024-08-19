@@ -268,7 +268,7 @@ require (
 	github.com/spf13/cast v1.7.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/vbatts/tar-split v0.11.5 // indirect
-	go.mondoo.com/mondoo-go v0.0.0-20240812115428-5d14ca400964
+	go.mondoo.com/mondoo-go v0.0.0-20240819110653-687d75eb1183
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/otel/trace v1.28.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect

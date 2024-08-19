@@ -218,7 +218,7 @@ require (
 	github.com/ulikunitz/xz v0.5.12 // indirect
 	github.com/vbatts/tar-split v0.11.5 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
-	go.mondoo.com/mondoo-go v0.0.0-20240812115428-5d14ca400964 // indirect
+	go.mondoo.com/mondoo-go v0.0.0-20240819110653-687d75eb1183 // indirect
 	go.mondoo.com/ranger-rpc v0.6.2 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.53.0 // indirect

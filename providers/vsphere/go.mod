@@ -12,7 +12,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/vmware/govmomi v0.42.0
 	go.mondoo.com/cnquery/v11 v11.17.0
-	go.mondoo.com/mondoo-go v0.0.0-20240812115428-5d14ca400964
+	go.mondoo.com/mondoo-go v0.0.0-20240819110653-687d75eb1183
 )
 
 require (
