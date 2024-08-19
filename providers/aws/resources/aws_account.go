@@ -6,7 +6,6 @@ package resources
 import (
 	"context"
 	"errors"
-	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
@@ -111,11 +110,10 @@ func initAwsAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	if len(args) >= 2 {
 		return args, nil, nil
 	}
+
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			id := strings.TrimPrefix(ids.arn, "arn:aws:sts::")
-			args["id"] = llx.StringData(id)
-		}
+		conn := runtime.Connection.(*connection.AwsConnection)
+		args["id"] = llx.StringData(conn.AccountId())
 	}
 	if args["id"] == nil {
 		return args, nil, errors.New("no account id specified")
