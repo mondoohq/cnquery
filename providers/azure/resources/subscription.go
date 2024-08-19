@@ -187,17 +187,6 @@ func (a *mqlAzureSubscription) keyVault() (*mqlAzureSubscriptionKeyVaultService,
 	return kvSvc, nil
 }
 
-func (a *mqlAzureSubscription) authorization() (*mqlAzureSubscriptionAuthorizationService, error) {
-	svc, err := NewResource(a.MqlRuntime, "azure.subscription.authorizationService", map[string]*llx.RawData{
-		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
-	})
-	if err != nil {
-		return nil, err
-	}
-	authSvc := svc.(*mqlAzureSubscriptionAuthorizationService)
-	return authSvc, nil
-}
-
 func (a *mqlAzureSubscription) cloudDefender() (*mqlAzureSubscriptionCloudDefenderService, error) {
 	svc, err := NewResource(a.MqlRuntime, "azure.subscription.cloudDefenderService", map[string]*llx.RawData{
 		"subscriptionId": llx.StringData(a.SubscriptionId.Data),

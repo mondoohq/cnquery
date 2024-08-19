@@ -549,6 +549,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.keyVault": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscription).GetKeyVault()).ToDataRes(types.Resource("azure.subscription.keyVaultService"))
 	},
+	"azure.subscription.iam": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscription).GetIam()).ToDataRes(types.Resource("azure.subscription.authorizationService"))
+	},
 	"azure.subscription.authorization": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscription).GetAuthorization()).ToDataRes(types.Resource("azure.subscription.authorizationService"))
 	},
@@ -2559,6 +2562,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.authorizationService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAuthorizationService).GetSubscriptionId()).ToDataRes(types.String)
 	},
+	"azure.subscription.authorizationService.roles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationService).GetRoles()).ToDataRes(types.Array(types.Resource("azure.subscription.authorizationService.roleDefinition")))
+	},
 	"azure.subscription.authorizationService.roleDefinitions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAuthorizationService).GetRoleDefinitions()).ToDataRes(types.Array(types.Resource("azure.subscription.authorizationService.roleDefinition")))
 	},
@@ -2570,6 +2576,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.authorizationService.roleDefinition.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleDefinition.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition).GetType()).ToDataRes(types.String)
 	},
 	"azure.subscription.authorizationService.roleDefinition.isCustom": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition).GetIsCustom()).ToDataRes(types.Bool)
@@ -2877,6 +2886,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"azure.subscription.keyVault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscription).KeyVault, ok = plugin.RawToTValue[*mqlAzureSubscriptionKeyVaultService](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.iam": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscription).Iam, ok = plugin.RawToTValue[*mqlAzureSubscriptionAuthorizationService](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.authorization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5907,6 +5920,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAzureSubscriptionAuthorizationService).SubscriptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.authorizationService.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationService).Roles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.authorizationService.roleDefinitions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionAuthorizationService).RoleDefinitions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
@@ -5925,6 +5942,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"azure.subscription.authorizationService.roleDefinition.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleDefinition.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.authorizationService.roleDefinition.isCustom": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6328,6 +6349,7 @@ type mqlAzureSubscription struct {
 	MariaDb plugin.TValue[*mqlAzureSubscriptionMariaDbService]
 	CosmosDb plugin.TValue[*mqlAzureSubscriptionCosmosDbService]
 	KeyVault plugin.TValue[*mqlAzureSubscriptionKeyVaultService]
+	Iam plugin.TValue[*mqlAzureSubscriptionAuthorizationService]
 	Authorization plugin.TValue[*mqlAzureSubscriptionAuthorizationService]
 	Monitor plugin.TValue[*mqlAzureSubscriptionMonitorService]
 	CloudDefender plugin.TValue[*mqlAzureSubscriptionCloudDefenderService]
@@ -6598,6 +6620,22 @@ func (c *mqlAzureSubscription) GetKeyVault() *plugin.TValue[*mqlAzureSubscriptio
 		}
 
 		return c.keyVault()
+	})
+}
+
+func (c *mqlAzureSubscription) GetIam() *plugin.TValue[*mqlAzureSubscriptionAuthorizationService] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionAuthorizationService](&c.Iam, func() (*mqlAzureSubscriptionAuthorizationService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription", c.__id, "iam")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionAuthorizationService), nil
+			}
+		}
+
+		return c.iam()
 	})
 }
 
@@ -14907,6 +14945,7 @@ type mqlAzureSubscriptionAuthorizationService struct {
 	__id string
 	// optional: if you define mqlAzureSubscriptionAuthorizationServiceInternal it will be used here
 	SubscriptionId plugin.TValue[string]
+	Roles plugin.TValue[[]interface{}]
 	RoleDefinitions plugin.TValue[[]interface{}]
 }
 
@@ -14951,6 +14990,22 @@ func (c *mqlAzureSubscriptionAuthorizationService) GetSubscriptionId() *plugin.T
 	return &c.SubscriptionId
 }
 
+func (c *mqlAzureSubscriptionAuthorizationService) GetRoles() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Roles, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.authorizationService", c.__id, "roles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.roles()
+	})
+}
+
 func (c *mqlAzureSubscriptionAuthorizationService) GetRoleDefinitions() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.RoleDefinitions, func() ([]interface{}, error) {
 		if c.MqlRuntime.HasRecording {
@@ -14975,6 +15030,7 @@ type mqlAzureSubscriptionAuthorizationServiceRoleDefinition struct {
 	Id plugin.TValue[string]
 	Description plugin.TValue[string]
 	Name plugin.TValue[string]
+	Type plugin.TValue[string]
 	IsCustom plugin.TValue[bool]
 	Scopes plugin.TValue[[]interface{}]
 	Permissions plugin.TValue[[]interface{}]
@@ -15027,6 +15083,10 @@ func (c *mqlAzureSubscriptionAuthorizationServiceRoleDefinition) GetDescription(
 
 func (c *mqlAzureSubscriptionAuthorizationServiceRoleDefinition) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleDefinition) GetType() *plugin.TValue[string] {
+	return &c.Type
 }
 
 func (c *mqlAzureSubscriptionAuthorizationServiceRoleDefinition) GetIsCustom() *plugin.TValue[bool] {

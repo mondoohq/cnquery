@@ -20,6 +20,8 @@ resources:
       cloudDefender: {}
       compute: {}
       cosmosDb: {}
+      iam:
+        min_mondoo_version: 9.0.0
       id: {}
       keyVault: {}
       managedByTenants: {}
@@ -292,6 +294,8 @@ resources:
   azure.subscription.authorizationService:
     fields:
       roleDefinitions: {}
+      roles:
+        min_mondoo_version: 9.0.0
       subscriptionId: {}
     is_private: true
     min_mondoo_version: latest
@@ -309,6 +313,8 @@ resources:
       name: {}
       permissions: {}
       scopes: {}
+      type:
+        min_mondoo_version: 9.0.0
     is_private: true
     min_mondoo_version: latest
     platform:

@@ -53,6 +53,8 @@ azure.subscription @defaults ("name") {
   // Azure Key Vault resources in the subscription
   keyVault() azure.subscription.keyVaultService
   // Authorization resources in the subscription
+  iam() azure.subscription.authorizationService
+  // Deprecated: use `iam` instead
   authorization() azure.subscription.authorizationService
   // Monitor resources in the subscription
   monitor() azure.subscription.monitorService
@@ -1736,23 +1738,27 @@ private azure.subscription.cloudDefenderService.securityContact @defaults("name 
   notificationsByRole dict
 }
 
-// Azure authorization
+// Azure IAM service
 private azure.subscription.authorizationService {
   // Subscription identifier
   subscriptionId string
   // Role definitions for the Azure subscription
+  roles() []azure.subscription.authorizationService.roleDefinition
+  // Deprecated: use `roles` instead
   roleDefinitions() []azure.subscription.authorizationService.roleDefinition
 }
 
 // Azure role definition
-private azure.subscription.authorizationService.roleDefinition @defaults ("id name scopes") {
+private azure.subscription.authorizationService.roleDefinition @defaults ("name type") {
   // ID of the role definition
   id string
   // Description of the role definition
   description string
   // Name of the role definition
   name string
-  // Whether the role definition is manually created
+  // Role type
+  type string
+  // Deprecated: use `type` instead
   isCustom bool
   // Scopes for which the role definition applies
   scopes []string
