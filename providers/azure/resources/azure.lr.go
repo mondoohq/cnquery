@@ -382,6 +382,14 @@ func init() {
 			// to override args, implement: initAzureSubscriptionAuthorizationServiceRoleDefinitionPermission(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionAuthorizationServiceRoleDefinitionPermission,
 		},
+		"azure.subscription.authorizationService.roleAssignment": {
+			// to override args, implement: initAzureSubscriptionAuthorizationServiceRoleAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionAuthorizationServiceRoleAssignment,
+		},
+		"azure.subscription.managedIdentity": {
+			// to override args, implement: initAzureSubscriptionManagedIdentity(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionManagedIdentity,
+		},
 		"azure.subscription.aksService": {
 			// to override args, implement: initAzureSubscriptionAksService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionAksService,
@@ -2568,6 +2576,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.authorizationService.roleDefinitions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAuthorizationService).GetRoleDefinitions()).ToDataRes(types.Array(types.Resource("azure.subscription.authorizationService.roleDefinition")))
 	},
+	"azure.subscription.authorizationService.roleAssignments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationService).GetRoleAssignments()).ToDataRes(types.Array(types.Resource("azure.subscription.authorizationService.roleAssignment")))
+	},
+	"azure.subscription.authorizationService.managedIdentities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationService).GetManagedIdentities()).ToDataRes(types.Array(types.Resource("azure.subscription.managedIdentity")))
+	},
 	"azure.subscription.authorizationService.roleDefinition.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition).GetId()).ToDataRes(types.String)
 	},
@@ -2603,6 +2617,48 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.authorizationService.roleDefinition.permission.deniedDataActions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleDefinitionPermission).GetDeniedDataActions()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.authorizationService.roleAssignment.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleAssignment.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleAssignment.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleAssignment.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment).GetScope()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleAssignment.principalId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment).GetPrincipalId()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleAssignment.condition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment).GetCondition()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleAssignment.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"azure.subscription.authorizationService.roleAssignment.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"azure.subscription.authorizationService.roleAssignment.role": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment).GetRole()).ToDataRes(types.Resource("azure.subscription.authorizationService.roleDefinition"))
+	},
+	"azure.subscription.managedIdentity.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionManagedIdentity).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.managedIdentity.clientId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionManagedIdentity).GetClientId()).ToDataRes(types.String)
+	},
+	"azure.subscription.managedIdentity.principalId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionManagedIdentity).GetPrincipalId()).ToDataRes(types.String)
+	},
+	"azure.subscription.managedIdentity.tenantId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionManagedIdentity).GetTenantId()).ToDataRes(types.String)
+	},
+	"azure.subscription.managedIdentity.roleAssignments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionManagedIdentity).GetRoleAssignments()).ToDataRes(types.Array(types.Resource("azure.subscription.authorizationService.roleAssignment")))
 	},
 	"azure.subscription.aksService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAksService).GetSubscriptionId()).ToDataRes(types.String)
@@ -5928,6 +5984,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAzureSubscriptionAuthorizationService).RoleDefinitions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.authorizationService.roleAssignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationService).RoleAssignments, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.managedIdentities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationService).ManagedIdentities, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.authorizationService.roleDefinition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition).__id, ok = v.Value.(string)
 			return
@@ -5982,6 +6046,70 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"azure.subscription.authorizationService.roleDefinition.permission.deniedDataActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionAuthorizationServiceRoleDefinitionPermission).DeniedDataActions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleAssignment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment).__id, ok = v.Value.(string)
+			return
+		},
+	"azure.subscription.authorizationService.roleAssignment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleAssignment.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleAssignment.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleAssignment.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleAssignment.principalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment).PrincipalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleAssignment.condition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment).Condition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleAssignment.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleAssignment.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleAssignment.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment).Role, ok = plugin.RawToTValue[*mqlAzureSubscriptionAuthorizationServiceRoleDefinition](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.managedIdentity.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAzureSubscriptionManagedIdentity).__id, ok = v.Value.(string)
+			return
+		},
+	"azure.subscription.managedIdentity.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionManagedIdentity).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.managedIdentity.clientId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionManagedIdentity).ClientId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.managedIdentity.principalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionManagedIdentity).PrincipalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.managedIdentity.tenantId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionManagedIdentity).TenantId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.managedIdentity.roleAssignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionManagedIdentity).RoleAssignments, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.aksService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14947,6 +15075,8 @@ type mqlAzureSubscriptionAuthorizationService struct {
 	SubscriptionId plugin.TValue[string]
 	Roles plugin.TValue[[]interface{}]
 	RoleDefinitions plugin.TValue[[]interface{}]
+	RoleAssignments plugin.TValue[[]interface{}]
+	ManagedIdentities plugin.TValue[[]interface{}]
 }
 
 // createAzureSubscriptionAuthorizationService creates a new instance of this resource
@@ -15022,6 +15152,38 @@ func (c *mqlAzureSubscriptionAuthorizationService) GetRoleDefinitions() *plugin.
 	})
 }
 
+func (c *mqlAzureSubscriptionAuthorizationService) GetRoleAssignments() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.RoleAssignments, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.authorizationService", c.__id, "roleAssignments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.roleAssignments()
+	})
+}
+
+func (c *mqlAzureSubscriptionAuthorizationService) GetManagedIdentities() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.ManagedIdentities, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.authorizationService", c.__id, "managedIdentities")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.managedIdentities()
+	})
+}
+
 // mqlAzureSubscriptionAuthorizationServiceRoleDefinition for the azure.subscription.authorizationService.roleDefinition resource
 type mqlAzureSubscriptionAuthorizationServiceRoleDefinition struct {
 	MqlRuntime *plugin.Runtime
@@ -15047,12 +15209,7 @@ func createAzureSubscriptionAuthorizationServiceRoleDefinition(runtime *plugin.R
 		return res, err
 	}
 
-	if res.__id == "" {
-	res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("azure.subscription.authorizationService.roleDefinition", res.__id)
@@ -15124,12 +15281,7 @@ func createAzureSubscriptionAuthorizationServiceRoleDefinitionPermission(runtime
 		return res, err
 	}
 
-	if res.__id == "" {
-	res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("azure.subscription.authorizationService.roleDefinition.permission", res.__id)
@@ -15168,6 +15320,178 @@ func (c *mqlAzureSubscriptionAuthorizationServiceRoleDefinitionPermission) GetAl
 
 func (c *mqlAzureSubscriptionAuthorizationServiceRoleDefinitionPermission) GetDeniedDataActions() *plugin.TValue[[]interface{}] {
 	return &c.DeniedDataActions
+}
+
+// mqlAzureSubscriptionAuthorizationServiceRoleAssignment for the azure.subscription.authorizationService.roleAssignment resource
+type mqlAzureSubscriptionAuthorizationServiceRoleAssignment struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlAzureSubscriptionAuthorizationServiceRoleAssignmentInternal
+	Id plugin.TValue[string]
+	Description plugin.TValue[string]
+	Type plugin.TValue[string]
+	Scope plugin.TValue[string]
+	PrincipalId plugin.TValue[string]
+	Condition plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
+	UpdatedAt plugin.TValue[*time.Time]
+	Role plugin.TValue[*mqlAzureSubscriptionAuthorizationServiceRoleDefinition]
+}
+
+// createAzureSubscriptionAuthorizationServiceRoleAssignment creates a new instance of this resource
+func createAzureSubscriptionAuthorizationServiceRoleAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionAuthorizationServiceRoleAssignment{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.authorizationService.roleAssignment", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignment) MqlName() string {
+	return "azure.subscription.authorizationService.roleAssignment"
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignment) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignment) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignment) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignment) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignment) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignment) GetPrincipalId() *plugin.TValue[string] {
+	return &c.PrincipalId
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignment) GetCondition() *plugin.TValue[string] {
+	return &c.Condition
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignment) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignment) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignment) GetRole() *plugin.TValue[*mqlAzureSubscriptionAuthorizationServiceRoleDefinition] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionAuthorizationServiceRoleDefinition](&c.Role, func() (*mqlAzureSubscriptionAuthorizationServiceRoleDefinition, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.authorizationService.roleAssignment", c.__id, "role")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition), nil
+			}
+		}
+
+		return c.role()
+	})
+}
+
+// mqlAzureSubscriptionManagedIdentity for the azure.subscription.managedIdentity resource
+type mqlAzureSubscriptionManagedIdentity struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAzureSubscriptionManagedIdentityInternal it will be used here
+	Name plugin.TValue[string]
+	ClientId plugin.TValue[string]
+	PrincipalId plugin.TValue[string]
+	TenantId plugin.TValue[string]
+	RoleAssignments plugin.TValue[[]interface{}]
+}
+
+// createAzureSubscriptionManagedIdentity creates a new instance of this resource
+func createAzureSubscriptionManagedIdentity(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionManagedIdentity{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.managedIdentity", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionManagedIdentity) MqlName() string {
+	return "azure.subscription.managedIdentity"
+}
+
+func (c *mqlAzureSubscriptionManagedIdentity) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionManagedIdentity) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionManagedIdentity) GetClientId() *plugin.TValue[string] {
+	return &c.ClientId
+}
+
+func (c *mqlAzureSubscriptionManagedIdentity) GetPrincipalId() *plugin.TValue[string] {
+	return &c.PrincipalId
+}
+
+func (c *mqlAzureSubscriptionManagedIdentity) GetTenantId() *plugin.TValue[string] {
+	return &c.TenantId
+}
+
+func (c *mqlAzureSubscriptionManagedIdentity) GetRoleAssignments() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.RoleAssignments, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.managedIdentity", c.__id, "roleAssignments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.roleAssignments()
+	})
 }
 
 // mqlAzureSubscriptionAksService for the azure.subscription.aksService resource

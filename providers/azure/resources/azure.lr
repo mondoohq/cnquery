@@ -1746,6 +1746,10 @@ private azure.subscription.authorizationService {
   roles() []azure.subscription.authorizationService.roleDefinition
   // Deprecated: use `roles` instead
   roleDefinitions() []azure.subscription.authorizationService.roleDefinition
+  // Role assignments
+  roleAssignments() []azure.subscription.authorizationService.roleAssignment
+  // Managed identities
+  managedIdentities() []azure.subscription.managedIdentity
 }
 
 // Azure role definition
@@ -1778,6 +1782,28 @@ private azure.subscription.authorizationService.roleDefinition.permission @defau
   allowedDataActions []string
   // List of denied data actions that are attached to the permission
   deniedDataActions []string
+}
+
+// Azure role assignment
+private azure.subscription.authorizationService.roleAssignment  @defaults("principalId type role.name") {
+  id string
+  description string
+  type string
+  scope string
+  principalId string
+  condition string
+  createdAt time
+  updatedAt time
+  role() azure.subscription.authorizationService.roleDefinition
+}
+
+// Azure managed identity
+private azure.subscription.managedIdentity @defaults("name") {
+  name string
+  clientId string
+  principalId string
+  tenantId string
+  roleAssignments() []azure.subscription.authorizationService.roleAssignment
 }
 
 // Azure Kubernetes Service
