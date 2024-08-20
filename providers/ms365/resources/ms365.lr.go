@@ -63,12 +63,16 @@ func init() {
 			Create: createMicrosoftPasswordCredential,
 		},
 		"microsoft.serviceprincipal": {
-			// to override args, implement: initMicrosoftServiceprincipal(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initMicrosoftServiceprincipal,
 			Create: createMicrosoftServiceprincipal,
 		},
 		"microsoft.serviceprincipal.assignment": {
 			// to override args, implement: initMicrosoftServiceprincipalAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftServiceprincipalAssignment,
+		},
+		"microsoft.application.permission": {
+			// to override args, implement: initMicrosoftApplicationPermission(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftApplicationPermission,
 		},
 		"microsoft.security": {
 			// to override args, implement: initMicrosoftSecurity(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -726,6 +730,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.serviceprincipal.appRoles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftServiceprincipal).GetAppRoles()).ToDataRes(types.Array(types.Resource("microsoft.application.role")))
 	},
+	"microsoft.serviceprincipal.permissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipal).GetPermissions()).ToDataRes(types.Array(types.Resource("microsoft.application.permission")))
+	},
 	"microsoft.serviceprincipal.assignment.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftServiceprincipalAssignment).GetId()).ToDataRes(types.String)
 	},
@@ -734,6 +741,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.serviceprincipal.assignment.type": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftServiceprincipalAssignment).GetType()).ToDataRes(types.String)
+	},
+	"microsoft.application.permission.appId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplicationPermission).GetAppId()).ToDataRes(types.String)
+	},
+	"microsoft.application.permission.appName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplicationPermission).GetAppName()).ToDataRes(types.String)
+	},
+	"microsoft.application.permission.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplicationPermission).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.application.permission.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplicationPermission).GetName()).ToDataRes(types.String)
+	},
+	"microsoft.application.permission.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplicationPermission).GetDescription()).ToDataRes(types.String)
+	},
+	"microsoft.application.permission.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplicationPermission).GetType()).ToDataRes(types.String)
+	},
+	"microsoft.application.permission.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplicationPermission).GetStatus()).ToDataRes(types.String)
 	},
 	"microsoft.security.secureScores": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftSecurity).GetSecureScores()).ToDataRes(types.Array(types.Resource("microsoft.security.securityscore")))
@@ -1833,6 +1861,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMicrosoftServiceprincipal).AppRoles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"microsoft.serviceprincipal.permissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipal).Permissions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"microsoft.serviceprincipal.assignment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlMicrosoftServiceprincipalAssignment).__id, ok = v.Value.(string)
 			return
@@ -1847,6 +1879,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.serviceprincipal.assignment.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftServiceprincipalAssignment).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.permission.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftApplicationPermission).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.application.permission.appId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplicationPermission).AppId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.permission.appName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplicationPermission).AppName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.permission.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplicationPermission).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.permission.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplicationPermission).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.permission.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplicationPermission).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.permission.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplicationPermission).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.application.permission.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplicationPermission).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.security.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3801,6 +3865,7 @@ type mqlMicrosoftServiceprincipal struct {
 	AccountEnabled plugin.TValue[bool]
 	IsFirstParty plugin.TValue[bool]
 	AppRoles plugin.TValue[[]interface{}]
+	Permissions plugin.TValue[[]interface{}]
 }
 
 // createMicrosoftServiceprincipal creates a new instance of this resource
@@ -3950,6 +4015,22 @@ func (c *mqlMicrosoftServiceprincipal) GetAppRoles() *plugin.TValue[[]interface{
 	return &c.AppRoles
 }
 
+func (c *mqlMicrosoftServiceprincipal) GetPermissions() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Permissions, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.serviceprincipal", c.__id, "permissions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.permissions()
+	})
+}
+
 // mqlMicrosoftServiceprincipalAssignment for the microsoft.serviceprincipal.assignment resource
 type mqlMicrosoftServiceprincipalAssignment struct {
 	MqlRuntime *plugin.Runtime
@@ -4007,6 +4088,80 @@ func (c *mqlMicrosoftServiceprincipalAssignment) GetDisplayName() *plugin.TValue
 
 func (c *mqlMicrosoftServiceprincipalAssignment) GetType() *plugin.TValue[string] {
 	return &c.Type
+}
+
+// mqlMicrosoftApplicationPermission for the microsoft.application.permission resource
+type mqlMicrosoftApplicationPermission struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftApplicationPermissionInternal it will be used here
+	AppId plugin.TValue[string]
+	AppName plugin.TValue[string]
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	Description plugin.TValue[string]
+	Type plugin.TValue[string]
+	Status plugin.TValue[string]
+}
+
+// createMicrosoftApplicationPermission creates a new instance of this resource
+func createMicrosoftApplicationPermission(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftApplicationPermission{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.application.permission", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftApplicationPermission) MqlName() string {
+	return "microsoft.application.permission"
+}
+
+func (c *mqlMicrosoftApplicationPermission) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftApplicationPermission) GetAppId() *plugin.TValue[string] {
+	return &c.AppId
+}
+
+func (c *mqlMicrosoftApplicationPermission) GetAppName() *plugin.TValue[string] {
+	return &c.AppName
+}
+
+func (c *mqlMicrosoftApplicationPermission) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftApplicationPermission) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlMicrosoftApplicationPermission) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMicrosoftApplicationPermission) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlMicrosoftApplicationPermission) GetStatus() *plugin.TValue[string] {
+	return &c.Status
 }
 
 // mqlMicrosoftSecurity for the microsoft.security resource

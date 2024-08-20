@@ -334,7 +334,7 @@ private microsoft.passwordCredential @defaults("description expires keyId") {
 }
 
 // Microsoft service principal (Enterprise application)
-private microsoft.serviceprincipal @defaults("name") {
+microsoft.serviceprincipal @defaults("name") {
   // Service principal Object ID
   id string
   // Service principal type
@@ -389,6 +389,8 @@ private microsoft.serviceprincipal @defaults("name") {
   isFirstParty() bool
   // Application roles
   appRoles []microsoft.application.role
+  // Permissions
+  permissions() []microsoft.application.permission
 }
 
 // Microsoft Service Principal Assignment
@@ -399,6 +401,24 @@ private microsoft.serviceprincipal.assignment @defaults("id") {
   displayName string
   // Service Principal Assignment type
   type string
+}
+
+// Microsoft Service Principal Permission
+private microsoft.application.permission @defaults("appName name type status") {
+  // Id of the API
+  appId string
+  // Name of the API
+  appName string
+  // Permission ID
+  id  string
+  // Permission name
+  name string
+  // Permission description
+  description string
+  // Type eg. `application` or `delegated`
+  type string
+  // Status
+  status string
 }
 
 // Microsoft Security
