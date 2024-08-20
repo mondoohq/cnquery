@@ -303,25 +303,9 @@ func (a *mqlAwsIam) virtualMfaDevices() ([]interface{}, error) {
 	for i := range devicesResp.VirtualMFADevices {
 		device := devicesResp.VirtualMFADevices[i]
 
-		var mqlAwsIamUser plugin.Resource
 		args := map[string]*llx.RawData{
 			"serialNumber": llx.StringDataPtr(device.SerialNumber),
 			"enableDate":   llx.TimeDataPtr(device.EnableDate),
-		}
-
-		usr := device.User
-		if usr != nil {
-			mqlAwsIamUser, err = NewResource(a.MqlRuntime, "aws.iam.user", map[string]*llx.RawData{
-				"arn":  llx.StringDataPtr(usr.Arn),
-				"name": llx.StringDataPtr(usr.UserName),
-			})
-			if err == nil {
-				args["user"] = llx.ResourceData(mqlAwsIamUser, "aws.iam.user")
-			}
-		}
-
-		if usr == nil || err != nil {
-			args["user"] = llx.NilData
 		}
 
 		mqlAwsIamMfaDevice, err := CreateResource(a.MqlRuntime, "aws.iam.virtualmfadevice", args)
@@ -330,9 +314,33 @@ func (a *mqlAwsIam) virtualMfaDevices() ([]interface{}, error) {
 		}
 
 		res = append(res, mqlAwsIamMfaDevice)
+		if device.User != nil {
+			mqlAwsIamMfaDevice.(*mqlAwsIamVirtualmfadevice).cacheUserArn = device.User.Arn
+			mqlAwsIamMfaDevice.(*mqlAwsIamVirtualmfadevice).cacheUserName = device.User.UserName
+		}
 	}
 
 	return res, nil
+}
+
+func (a *mqlAwsIamVirtualmfadevice) user() (*mqlAwsIamUser, error) {
+	if a.cacheUserArn != nil && a.cacheUserName != nil {
+		awsIamUser, err := NewResource(a.MqlRuntime, "aws.iam.user", map[string]*llx.RawData{
+			"arn":  llx.StringDataPtr(a.cacheUserArn),
+			"name": llx.StringDataPtr(a.cacheUserName),
+		})
+		if err != nil {
+			return nil, err
+		}
+		return awsIamUser.(*mqlAwsIamUser), nil
+	}
+	a.User.State = plugin.StateIsNull | plugin.StateIsSet
+	return nil, nil
+}
+
+type mqlAwsIamVirtualmfadeviceInternal struct {
+	cacheUserName *string
+	cacheUserArn  *string
 }
 
 func (a *mqlAwsIam) mqlPolicies(policies []iamtypes.Policy) ([]interface{}, error) {

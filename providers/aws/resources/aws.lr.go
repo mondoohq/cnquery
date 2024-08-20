@@ -15721,7 +15721,7 @@ func (c *mqlAwsIamGroup) GetUsernames() *plugin.TValue[[]interface{}] {
 type mqlAwsIamVirtualmfadevice struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlAwsIamVirtualmfadeviceInternal it will be used here
+	mqlAwsIamVirtualmfadeviceInternal
 	SerialNumber plugin.TValue[string]
 	EnableDate plugin.TValue[*time.Time]
 	User plugin.TValue[*mqlAwsIamUser]
@@ -15773,7 +15773,19 @@ func (c *mqlAwsIamVirtualmfadevice) GetEnableDate() *plugin.TValue[*time.Time] {
 }
 
 func (c *mqlAwsIamVirtualmfadevice) GetUser() *plugin.TValue[*mqlAwsIamUser] {
-	return &c.User
+	return plugin.GetOrCompute[*mqlAwsIamUser](&c.User, func() (*mqlAwsIamUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.virtualmfadevice", c.__id, "user")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamUser), nil
+			}
+		}
+
+		return c.user()
+	})
 }
 
 // mqlAwsIamAccessAnalyzer for the aws.iam.accessAnalyzer resource

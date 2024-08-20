@@ -260,7 +260,7 @@ func (a *mqlAwsSagemakerNotebookinstanceDetails) kmsKey() (*mqlAwsKmsKey, error)
 		}
 		return mqlKeyResource.(*mqlAwsKmsKey), nil
 	}
-	a.KmsKey.State = plugin.StateIsNull
+	a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
 	return nil, nil
 }
 
