@@ -207,7 +207,6 @@ resources:
       onPremisesSyncEnabled:
         min_mondoo_version: 9.0.0
       verifiedDomains: {}
-    is_private: true
     min_mondoo_version: 5.15.0
   microsoft.passwordCredential:
     fields:
@@ -362,6 +361,21 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
+  microsoft.tenant:
+    fields:
+      assignedPlans: {}
+      createdAt: {}
+      createdDateTime: {}
+      displayName: {}
+      id: {}
+      name: {}
+      onPremisesSyncEnabled: {}
+      provisionedPlans: {}
+      subscription: {}
+      subscriptions: {}
+      type: {}
+      verifiedDomains: {}
+    min_mondoo_version: 9.0.0
   microsoft.user:
     fields:
       accountEnabled: {}

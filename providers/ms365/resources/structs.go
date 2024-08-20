@@ -39,6 +39,50 @@ func newAssignedPlan(p models.AssignedPlanable) AssignedPlan {
 	}
 }
 
+type ProvisionedPlan struct {
+	CapabilityStatus string `json:"capabilityStatus"`
+	Service          string `json:"service"`
+}
+
+func newProvisionedPlans(p []models.ProvisionedPlanable) []ProvisionedPlan {
+	res := []ProvisionedPlan{}
+	for i := range p {
+		res = append(res, newProvisionedPlan(p[i]))
+	}
+	return res
+}
+
+func newProvisionedPlan(p models.ProvisionedPlanable) ProvisionedPlan {
+	return ProvisionedPlan{
+		CapabilityStatus: convert.ToString(p.GetCapabilityStatus()),
+		Service:          convert.ToString(p.GetService()),
+	}
+}
+
+type ServicePlanInfo struct {
+	ServicePlanId      *string `json:"servicePlanId"`
+	ServicePlanName    *string `json:"servicePlanName"`
+	ProvisioningStatus *string `json:"provisioningStatus"`
+	AppliesTo          *string `json:"appliesTo"`
+}
+
+func newServicePlanInfos(p []models.ServicePlanInfoable) []ServicePlanInfo {
+	res := []ServicePlanInfo{}
+	for i := range p {
+		res = append(res, newServicePlanInfo(p[i]))
+	}
+	return res
+}
+
+func newServicePlanInfo(p models.ServicePlanInfoable) ServicePlanInfo {
+	return ServicePlanInfo{
+		ServicePlanId:      newUuidString(p.GetServicePlanId()),
+		ServicePlanName:    p.GetServicePlanName(),
+		ProvisioningStatus: p.GetProvisioningStatus(),
+		AppliesTo:          p.GetAppliesTo(),
+	}
+}
+
 type VerifiedDomain struct {
 	Capabilities string `json:"capabilities"`
 	IsDefault    bool   `json:"isDefault"`
@@ -946,4 +990,27 @@ func newVerifiedPublisher(p models.VerifiedPublisherable) VerifiedPublisher {
 		VerifiedPublisherId: p.GetVerifiedPublisherId(),
 		CreatedAt:           p.GetAddedDateTime(),
 	}
+}
+
+type companySubscription struct {
+	Id            *string           `json:"id"`
+	CreatedAt     *time.Time        `json:"createdAt"`
+	IsTrial       *bool             `json:"isTrial"`
+	SkuPartNumber *string           `json:"skuPartNumber"`
+	Status        *string           `json:"status"`
+	TotalLicenses *int32            `json:"totalLicenses"`
+	ServicePlans  []ServicePlanInfo `json:"servicePlans"`
+}
+
+func newCompanySubscription(p models.CompanySubscriptionable) companySubscription {
+	sub := companySubscription{
+		Id:            p.GetId(),
+		CreatedAt:     p.GetCreatedDateTime(),
+		IsTrial:       p.GetIsTrial(),
+		SkuPartNumber: p.GetSkuPartNumber(),
+		Status:        p.GetStatus(),
+		TotalLicenses: p.GetTotalLicenses(),
+		ServicePlans:  newServicePlanInfos(p.GetServiceStatus()),
+	}
+	return sub
 }

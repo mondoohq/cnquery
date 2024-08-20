@@ -22,9 +22,9 @@ func init() {
 			// to override args, implement: initMicrosoft(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoft,
 		},
-		"microsoft.organization": {
-			// to override args, implement: initMicrosoftOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createMicrosoftOrganization,
+		"microsoft.tenant": {
+			Init: initMicrosoftTenant,
+			Create: createMicrosoftTenant,
 		},
 		"microsoft.user": {
 			Init: initMicrosoftUser,
@@ -223,7 +223,7 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 
 var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.organizations": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoft).GetOrganizations()).ToDataRes(types.Array(types.Resource("microsoft.organization")))
+		return (r.(*mqlMicrosoft).GetOrganizations()).ToDataRes(types.Array(types.Resource("microsoft.tenant")))
 	},
 	"microsoft.users": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoft).GetUsers()).ToDataRes(types.Array(types.Resource("microsoft.user")))
@@ -252,23 +252,38 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.tenantDomainName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoft).GetTenantDomainName()).ToDataRes(types.String)
 	},
-	"microsoft.organization.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftOrganization).GetId()).ToDataRes(types.String)
+	"microsoft.tenant.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenant).GetId()).ToDataRes(types.String)
 	},
-	"microsoft.organization.assignedPlans": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftOrganization).GetAssignedPlans()).ToDataRes(types.Array(types.Dict))
+	"microsoft.tenant.assignedPlans": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenant).GetAssignedPlans()).ToDataRes(types.Array(types.Dict))
 	},
-	"microsoft.organization.createdDateTime": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftOrganization).GetCreatedDateTime()).ToDataRes(types.Time)
+	"microsoft.tenant.provisionedPlans": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenant).GetProvisionedPlans()).ToDataRes(types.Array(types.Dict))
 	},
-	"microsoft.organization.displayName": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftOrganization).GetDisplayName()).ToDataRes(types.String)
+	"microsoft.tenant.createdDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenant).GetCreatedDateTime()).ToDataRes(types.Time)
 	},
-	"microsoft.organization.verifiedDomains": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftOrganization).GetVerifiedDomains()).ToDataRes(types.Array(types.Dict))
+	"microsoft.tenant.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenant).GetDisplayName()).ToDataRes(types.String)
 	},
-	"microsoft.organization.onPremisesSyncEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftOrganization).GetOnPremisesSyncEnabled()).ToDataRes(types.Bool)
+	"microsoft.tenant.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenant).GetName()).ToDataRes(types.String)
+	},
+	"microsoft.tenant.verifiedDomains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenant).GetVerifiedDomains()).ToDataRes(types.Array(types.Dict))
+	},
+	"microsoft.tenant.onPremisesSyncEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenant).GetOnPremisesSyncEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.tenant.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenant).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"microsoft.tenant.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenant).GetType()).ToDataRes(types.String)
+	},
+	"microsoft.tenant.subscriptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenant).GetSubscriptions()).ToDataRes(types.Array(types.Dict))
 	},
 	"microsoft.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUser).GetId()).ToDataRes(types.String)
@@ -1142,32 +1157,52 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMicrosoft).TenantDomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"microsoft.organization.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftOrganization).__id, ok = v.Value.(string)
+	"microsoft.tenant.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftTenant).__id, ok = v.Value.(string)
 			return
 		},
-	"microsoft.organization.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftOrganization).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"microsoft.tenant.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenant).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"microsoft.organization.assignedPlans": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftOrganization).AssignedPlans, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+	"microsoft.tenant.assignedPlans": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenant).AssignedPlans, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
-	"microsoft.organization.createdDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftOrganization).CreatedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"microsoft.tenant.provisionedPlans": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenant).ProvisionedPlans, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
-	"microsoft.organization.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftOrganization).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"microsoft.tenant.createdDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenant).CreatedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
-	"microsoft.organization.verifiedDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftOrganization).VerifiedDomains, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+	"microsoft.tenant.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenant).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"microsoft.organization.onPremisesSyncEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftOrganization).OnPremisesSyncEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"microsoft.tenant.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenant).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.tenant.verifiedDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenant).VerifiedDomains, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.tenant.onPremisesSyncEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenant).OnPremisesSyncEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.tenant.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenant).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.tenant.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenant).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.tenant.subscriptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenant).Subscriptions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"microsoft.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2599,22 +2634,27 @@ func (c *mqlMicrosoft) GetTenantDomainName() *plugin.TValue[string] {
 	})
 }
 
-// mqlMicrosoftOrganization for the microsoft.organization resource
-type mqlMicrosoftOrganization struct {
+// mqlMicrosoftTenant for the microsoft.tenant resource
+type mqlMicrosoftTenant struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlMicrosoftOrganizationInternal it will be used here
+	// optional: if you define mqlMicrosoftTenantInternal it will be used here
 	Id plugin.TValue[string]
 	AssignedPlans plugin.TValue[[]interface{}]
+	ProvisionedPlans plugin.TValue[[]interface{}]
 	CreatedDateTime plugin.TValue[*time.Time]
 	DisplayName plugin.TValue[string]
+	Name plugin.TValue[string]
 	VerifiedDomains plugin.TValue[[]interface{}]
 	OnPremisesSyncEnabled plugin.TValue[bool]
+	CreatedAt plugin.TValue[*time.Time]
+	Type plugin.TValue[string]
+	Subscriptions plugin.TValue[[]interface{}]
 }
 
-// createMicrosoftOrganization creates a new instance of this resource
-func createMicrosoftOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlMicrosoftOrganization{
+// createMicrosoftTenant creates a new instance of this resource
+func createMicrosoftTenant(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftTenant{
 		MqlRuntime: runtime,
 	}
 
@@ -2631,7 +2671,7 @@ func createMicrosoftOrganization(runtime *plugin.Runtime, args map[string]*llx.R
 	}
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("microsoft.organization", res.__id)
+		args, err = runtime.ResourceFromRecording("microsoft.tenant", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -2641,36 +2681,58 @@ func createMicrosoftOrganization(runtime *plugin.Runtime, args map[string]*llx.R
 	return res, nil
 }
 
-func (c *mqlMicrosoftOrganization) MqlName() string {
-	return "microsoft.organization"
+func (c *mqlMicrosoftTenant) MqlName() string {
+	return "microsoft.tenant"
 }
 
-func (c *mqlMicrosoftOrganization) MqlID() string {
+func (c *mqlMicrosoftTenant) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMicrosoftOrganization) GetId() *plugin.TValue[string] {
+func (c *mqlMicrosoftTenant) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
-func (c *mqlMicrosoftOrganization) GetAssignedPlans() *plugin.TValue[[]interface{}] {
+func (c *mqlMicrosoftTenant) GetAssignedPlans() *plugin.TValue[[]interface{}] {
 	return &c.AssignedPlans
 }
 
-func (c *mqlMicrosoftOrganization) GetCreatedDateTime() *plugin.TValue[*time.Time] {
+func (c *mqlMicrosoftTenant) GetProvisionedPlans() *plugin.TValue[[]interface{}] {
+	return &c.ProvisionedPlans
+}
+
+func (c *mqlMicrosoftTenant) GetCreatedDateTime() *plugin.TValue[*time.Time] {
 	return &c.CreatedDateTime
 }
 
-func (c *mqlMicrosoftOrganization) GetDisplayName() *plugin.TValue[string] {
+func (c *mqlMicrosoftTenant) GetDisplayName() *plugin.TValue[string] {
 	return &c.DisplayName
 }
 
-func (c *mqlMicrosoftOrganization) GetVerifiedDomains() *plugin.TValue[[]interface{}] {
+func (c *mqlMicrosoftTenant) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlMicrosoftTenant) GetVerifiedDomains() *plugin.TValue[[]interface{}] {
 	return &c.VerifiedDomains
 }
 
-func (c *mqlMicrosoftOrganization) GetOnPremisesSyncEnabled() *plugin.TValue[bool] {
+func (c *mqlMicrosoftTenant) GetOnPremisesSyncEnabled() *plugin.TValue[bool] {
 	return &c.OnPremisesSyncEnabled
+}
+
+func (c *mqlMicrosoftTenant) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlMicrosoftTenant) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlMicrosoftTenant) GetSubscriptions() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Subscriptions, func() ([]interface{}, error) {
+		return c.subscriptions()
+	})
 }
 
 // mqlMicrosoftUser for the microsoft.user resource
