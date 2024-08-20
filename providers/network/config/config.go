@@ -12,7 +12,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "network",
 	ID:              "go.mondoo.com/cnquery/v9/providers/network",
-	Version:         "11.0.20",
+	Version:         "11.0.21",
 	ConnectionTypes: []string{provider.HostConnectionType},
 	CrossProviderTypes: []string{
 		"go.mondoo.com/cnquery/providers/os",
