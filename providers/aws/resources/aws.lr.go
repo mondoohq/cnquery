@@ -16200,7 +16200,7 @@ func (c *mqlAwsSagemakerNotebookinstance) GetTags() *plugin.TValue[map[string]in
 type mqlAwsSagemakerNotebookinstanceDetails struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlAwsSagemakerNotebookinstanceDetailsInternal it will be used here
+	mqlAwsSagemakerNotebookinstanceDetailsInternal
 	Arn plugin.TValue[string]
 	KmsKey plugin.TValue[*mqlAwsKmsKey]
 	DirectInternetAccess plugin.TValue[string]
