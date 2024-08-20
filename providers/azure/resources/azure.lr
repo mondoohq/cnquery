@@ -1748,6 +1748,8 @@ private azure.subscription.authorizationService {
   roleDefinitions() []azure.subscription.authorizationService.roleDefinition
   // Role assignments
   roleAssignments() []azure.subscription.authorizationService.roleAssignment
+  // Managed identities
+  managedIdentities() []azure.subscription.managedIdentity
 }
 
 // Azure role definition
@@ -1793,6 +1795,15 @@ private azure.subscription.authorizationService.roleAssignment  @defaults("princ
   createdAt time
   updatedAt time
   role() azure.subscription.authorizationService.roleDefinition
+}
+
+// Azure managed identity
+private azure.subscription.managedIdentity @defaults("name") {
+  name string
+  clientId string
+  principalId string
+  tenantId string
+  roleAssignments() []azure.subscription.authorizationService.roleAssignment
 }
 
 // Azure Kubernetes Service

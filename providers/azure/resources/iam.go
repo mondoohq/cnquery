@@ -11,6 +11,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	authorization "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization/v2"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/msi/armmsi"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
@@ -260,4 +261,78 @@ func (a *mqlAzureSubscriptionAuthorizationServiceRoleAssignment) role() (*mqlAzu
 	}
 
 	return nil, errors.New("role definition not found")
+}
+
+func (a *mqlAzureSubscriptionAuthorizationService) managedIdentities() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	var client, err = armmsi.NewUserAssignedIdentitiesClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+
+	// list all role assignemnts since we need to attach them to the managed identities
+	roleAssignments := a.GetRoleAssignments().Data
+
+	// list user assigned identities
+	pager := client.NewListBySubscriptionPager(nil)
+	res := []interface{}{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, v := range page.Value {
+			mqlManagedIdentity, err := newMqlManagedIdentity(a.MqlRuntime, v)
+			if err != nil {
+				return nil, err
+			}
+
+			// set assigned roles to nil
+			mqlManagedIdentity.RoleAssignments = plugin.TValue[[]interface{}]{Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
+
+			assignedRoles := []interface{}{}
+			for i := range roleAssignments {
+				roleAssignment := roleAssignments[i].(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment)
+				if roleAssignment.PrincipalId == mqlManagedIdentity.PrincipalId {
+					assignedRoles = append(assignedRoles, roleAssignment)
+				}
+			}
+
+			if len(assignedRoles) > 0 {
+				mqlManagedIdentity.RoleAssignments = plugin.TValue[[]interface{}]{Error: nil, Data: assignedRoles, State: plugin.StateIsSet}
+			}
+
+			res = append(res, mqlManagedIdentity)
+		}
+	}
+	return res, nil
+}
+
+func newMqlManagedIdentity(runtime *plugin.Runtime, managedIdentity *armmsi.Identity) (*mqlAzureSubscriptionManagedIdentity, error) {
+	r, err := CreateResource(runtime, "azure.subscription.managedIdentity",
+		map[string]*llx.RawData{
+			"__id":        llx.StringDataPtr(managedIdentity.ID),
+			"name":        llx.StringDataPtr(managedIdentity.Name),
+			"clientId":    llx.StringDataPtr(managedIdentity.Properties.ClientID),
+			"principalId": llx.StringDataPtr(managedIdentity.Properties.PrincipalID),
+			"tenantId":    llx.StringData(string(*managedIdentity.Properties.TenantID)),
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	mqlManagedIdentity := r.(*mqlAzureSubscriptionManagedIdentity)
+	return mqlManagedIdentity, nil
+}
+
+func (a *mqlAzureSubscriptionManagedIdentity) roleAssignments() ([]interface{}, error) {
+	// NOTE: this should never be called since we assign roles during the managed identities query
+	return nil, errors.New("could not fetch role assignments for managed identities")
 }

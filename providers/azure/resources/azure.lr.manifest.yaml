@@ -293,6 +293,8 @@ resources:
       url: https://learn.microsoft.com/en-us/azure/role-based-access-control/
   azure.subscription.authorizationService:
     fields:
+      managedIdentities:
+        min_mondoo_version: 9.0.0
       roleAssignments:
         min_mondoo_version: 9.0.0
       roleDefinitions: {}
@@ -794,6 +796,19 @@ resources:
     refs:
     - title: Azure Key Vault
       url: https://learn.microsoft.com/en-us/azure/key-vault/
+  azure.subscription.managedIdentity:
+    fields:
+      clientId: {}
+      id: {}
+      name: {}
+      principalId: {}
+      roleAssignments: {}
+      tenantId: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
   azure.subscription.managedIdentityService:
     fields:
       managedIdentities: {}
