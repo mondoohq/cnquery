@@ -247,7 +247,8 @@ func (s *Service) Heartbeat(req *HeartbeatReq) (*HeartbeatRes, error) {
 		s.heartbeatLock.Unlock()
 
 		if isDead {
-			os.Exit(1)
+			// use 4 since we actually do not want to reach the point, see tetraphobia
+			os.Exit(4)
 		}
 	}()
 
