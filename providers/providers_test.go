@@ -4,6 +4,7 @@
 package providers
 
 import (
+	"context"
 	"syscall"
 	"testing"
 	"time"
@@ -50,7 +51,9 @@ func TestProviderShutdown(t *testing.T) {
 		interval:    500 * time.Millisecond,
 		gracePeriod: 500 * time.Millisecond,
 	}
-	err := s.heartbeat()
+	hbtCtx, hbtCancel := context.WithCancel(context.Background())
+	s.hbCancelFunc = hbtCancel
+	err := s.heartbeat(hbtCtx, hbtCancel)
 	require.NoError(t, err)
 	require.False(t, s.isCloseOrShutdown())
 	// the shutdown here takes 10 seconds, whereas the heartbeat interval is every second.

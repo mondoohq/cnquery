@@ -9,7 +9,6 @@ import (
 	"os/exec"
 	"strconv"
 	"sync"
-	"time"
 
 	"github.com/cockroachdb/errors"
 	"github.com/hashicorp/go-hclog"
@@ -310,51 +309,51 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 		}
 	}
 
-	pluginCmd := exec.Command(provider.binPath(), []string{"run_as_plugin", "--log-level", zerolog.GlobalLevel().String()}...)
+	connectFunc := func() (pp.ProviderPlugin, *plugin.Client, error) {
+		pluginCmd := exec.Command(provider.binPath(), []string{"run_as_plugin", "--log-level", zerolog.GlobalLevel().String()}...)
 
-	addColorConfig(pluginCmd)
+		addColorConfig(pluginCmd)
 
-	pluginLogger := &hclogger{Logger: log.Logger}
-	pluginLogger.SetLevel(hclog.Warn)
-	client := plugin.NewClient(&plugin.ClientConfig{
-		HandshakeConfig: pp.Handshake,
-		Plugins:         pp.PluginMap,
-		Cmd:             pluginCmd,
-		AllowedProtocols: []plugin.Protocol{
-			plugin.ProtocolNetRPC, plugin.ProtocolGRPC,
-		},
-		Logger: pluginLogger,
-		Stderr: os.Stderr,
-	})
+		pluginLogger := &hclogger{Logger: log.Logger}
+		pluginLogger.SetLevel(hclog.Warn)
+		client := plugin.NewClient(&plugin.ClientConfig{
+			HandshakeConfig: pp.Handshake,
+			Plugins:         pp.PluginMap,
+			Cmd:             pluginCmd,
+			AllowedProtocols: []plugin.Protocol{
+				plugin.ProtocolNetRPC, plugin.ProtocolGRPC,
+			},
+			Logger: pluginLogger,
+			Stderr: os.Stderr,
+		})
 
-	// Connect via RPC
-	rpcClient, err := client.Client()
-	if err != nil {
-		client.Kill()
-		return nil, errors.Wrap(err, "failed to initialize plugin client")
+		// Connect via RPC
+		rpcClient, err := client.Client()
+		if err != nil {
+			client.Kill()
+			return nil, nil, errors.Wrap(err, "failed to initialize plugin client")
+		}
+
+		// Request the plugin
+		pluginName := "provider"
+		raw, err := rpcClient.Dispense(pluginName)
+		if err != nil {
+			client.Kill()
+			return nil, nil, errors.Wrap(err, "failed to call "+pluginName+" plugin")
+		}
+
+		return raw.(pp.ProviderPlugin), client, nil
 	}
 
-	// Request the plugin
-	pluginName := "provider"
-	raw, err := rpcClient.Dispense(pluginName)
+	plug, client, err := connectFunc()
 	if err != nil {
-		client.Kill()
-		return nil, errors.Wrap(err, "failed to call "+pluginName+" plugin")
-	}
-
-	res := &RunningProvider{
-		Name:        provider.Name,
-		ID:          provider.ID,
-		Plugin:      raw.(pp.ProviderPlugin),
-		Client:      client,
-		Schema:      provider.Schema,
-		interval:    2 * time.Second,
-		gracePeriod: 3 * time.Second,
+		return nil, err
 	}
 
 	c.schema.Add(provider.ID, provider.Schema)
 
-	if err := res.heartbeat(); err != nil {
+	res, err := SupervisedRunningProivder(provider.Name, provider.ID, plug, client, provider.Schema, connectFunc)
+	if err != nil {
 		return nil, err
 	}
 	c.runningByID[res.ID] = res
@@ -388,7 +387,7 @@ func (c *coordinator) Shutdown() {
 		if err := provider.Shutdown(); err != nil {
 			log.Warn().Err(err).Str("provider", provider.Name).Msg("failed to shut down provider")
 		}
-		provider.Client.Kill()
+		provider.KillClient()
 	}
 	c.runningByID = map[string]*RunningProvider{}
 	c.runtimes = map[string]*Runtime{}

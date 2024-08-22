@@ -179,6 +179,29 @@ func (r *Runtime) providerForAsset(asset *inventory.Asset) (*Provider, error) {
 	return nil, multierr.Wrap(errs.Deduplicate(), "cannot find provider for this asset")
 }
 
+func (r *Runtime) EnsureProvidersConnected() error {
+	if r.Provider == nil {
+		return errors.New("cannot reconnect, no provider set")
+	}
+
+	if r.Provider.Connection == nil {
+		return errors.New("cannot reconnect, no connection set")
+	}
+
+	err := r.Provider.Instance.Reconnect()
+	if err != nil {
+		return err
+	}
+
+	for _, p := range r.providers {
+		if err := p.Instance.Reconnect(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // Connect to an asset using the main provider
 func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 	if r.Provider == nil {

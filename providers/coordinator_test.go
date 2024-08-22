@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/go-plugin"
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	pp "go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
@@ -32,7 +31,6 @@ func TestShutdown(t *testing.T) {
 		c.runningByID[id] = &RunningProvider{
 			ID:     id,
 			Plugin: mockPlugin,
-			Client: &plugin.Client{},
 		}
 	}
 
