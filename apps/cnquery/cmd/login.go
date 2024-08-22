@@ -19,11 +19,17 @@ import (
 	cnquery_providers "go.mondoo.com/cnquery/v11/providers"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/sysinfo"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream/health"
 	rangerUtils "go.mondoo.com/cnquery/v11/utils/ranger"
 	"go.mondoo.com/ranger-rpc"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/plugins/authentication/statictoken"
 	"go.mondoo.com/ranger-rpc/status"
+)
+
+var (
+	tokenValidationErr = errors.New("The token is not a valid token to register this client with Mondoo Platform")
+	tokenExpiredErr    = errors.New("The token is expired")
 )
 
 func init() {
@@ -63,13 +69,42 @@ You remain logged in until you explicitly log out using the 'logout' subcommand.
 		apiEndpointOverride, _ := cmd.Flags().GetString("api-endpoint")
 		err := register(token, annotations, timer, splay, apiEndpointOverride)
 		if err != nil {
+			if err == tokenValidationErr {
+				log.Error().Msg(err.Error())
+
+				// Prevents help message from being printed
+				return nil
+			}
 			defer func() {
-				s, err := checkStatus()
-				if err != nil {
-					log.Warn().Err(err).Msg("could not run status command")
+				opts, optsErr := config.Read()
+				if optsErr != nil {
+					log.Error().Err(optsErr).Msg("could not load configuration")
+					return
 				}
-				s.RenderCliStatus()
+
+				httpClient, err := opts.GetHttpClient()
+				if err != nil {
+					log.Error().Err(optsErr).Msg("failed to set up Mondoo API client")
+					return
+				}
+
+				upstreamStatus, err := health.CheckApiHealth(httpClient, opts.UpstreamApiEndpoint())
+				if err != nil {
+					log.Error().Err(err).Msg("could not check upstream health")
+					return
+				}
+
+				for _, warn := range upstreamStatus.Warnings {
+					log.Warn().Msg(warn)
+				}
 			}()
+
+			if err == tokenExpiredErr {
+				log.Error().Msg(err.Error())
+
+				// Prevents help message from being printed
+				return nil
+			}
 		}
 		return err
 	},
@@ -105,14 +140,22 @@ func register(token string, annotations map[string]string, timer int, splay int,
 		claims, err := upstream.ExtractTokenClaims(token)
 		if err != nil {
 			log.Warn().Err(err).Msg("could not read the token")
+			return tokenValidationErr
 		} else {
 			if len(claims.Description) > 0 {
 				log.Info().Msg("token description: " + claims.Description)
 			}
 			if claims.IsExpired() {
-				log.Warn().Msg("token is expired")
+				return tokenExpiredErr
+			} else if claims.Expiry == nil {
+				log.Warn().Msg("token does not contain an expiry date")
 			} else {
 				log.Info().Msg("token will expire at " + claims.Claims.Expiry.Time().Format(time.RFC1123))
+			}
+			if claims.Space == "" {
+				log.Warn().
+					Msg("token does not contain a space")
+				return tokenValidationErr
 			}
 
 			// use the api endpoint from the token if not overridden via flag
