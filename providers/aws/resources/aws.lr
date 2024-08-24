@@ -891,7 +891,7 @@ private aws.iam.virtualmfadevice @defaults("serialNumber") {
   // Time when the MFA device was enabled
   enableDate time
   // User associated with the MFA device
-  user aws.iam.user
+  user() aws.iam.user
 }
 
 // AWS IAM Access Analyzer resource (for assessing the configuration of AWS IAM Access Analyzer)

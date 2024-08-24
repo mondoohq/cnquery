@@ -238,27 +238,30 @@ func (a *mqlAwsSagemakerNotebookinstance) details() (*mqlAwsSagemakerNotebookins
 		"directInternetAccess": llx.StringData(string(instanceDetails.DirectInternetAccess)),
 	}
 
-	if instanceDetails.KmsKeyId != nil && *instanceDetails.KmsKeyId != "" {
-		mqlKeyResource, err := NewResource(a.MqlRuntime, "aws.kms.key",
-			map[string]*llx.RawData{"arn": llx.StringData(convert.ToString(instanceDetails.KmsKeyId))},
-		)
-		if err != nil {
-			log.Error().Err(err).Msg("cannot create kms key resource")
-		} else {
-			args["kmsKey"] = llx.ResourceData(mqlKeyResource, mqlKeyResource.MqlName())
-		}
-	} else {
-		args["kmsKey"] = llx.NilData
-	}
 	mqlInstanceDetails, err := CreateResource(a.MqlRuntime, "aws.sagemaker.notebookinstance.details", args)
 	if err != nil {
 		return nil, err
 	}
+	mqlInstanceDetails.(*mqlAwsSagemakerNotebookinstanceDetails).cacheKmsKey = instanceDetails.KmsKeyId
 	return mqlInstanceDetails.(*mqlAwsSagemakerNotebookinstanceDetails), nil
 }
 
+type mqlAwsSagemakerNotebookinstanceDetailsInternal struct {
+	cacheKmsKey *string
+}
+
 func (a *mqlAwsSagemakerNotebookinstanceDetails) kmsKey() (*mqlAwsKmsKey, error) {
-	return &mqlAwsKmsKey{}, nil
+	if a.cacheKmsKey != nil && *a.cacheKmsKey != "" {
+		mqlKeyResource, err := NewResource(a.MqlRuntime, "aws.kms.key",
+			map[string]*llx.RawData{"arn": llx.StringData(convert.ToString(a.cacheKmsKey))},
+		)
+		if err != nil {
+			return nil, err
+		}
+		return mqlKeyResource.(*mqlAwsKmsKey), nil
+	}
+	a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+	return nil, nil
 }
 
 func (a *mqlAwsSagemakerEndpoint) id() (string, error) {
