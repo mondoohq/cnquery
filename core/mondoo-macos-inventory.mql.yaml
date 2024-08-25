@@ -4,7 +4,7 @@
 packs:
   - uid: mondoo-macos-inventory
     name: macOS Inventory Pack
-    version: 1.4.1
+    version: 1.5.0
     license: BUSL-1.1
     authors:
       - name: Mondoo, Inc
@@ -132,3 +132,6 @@ packs:
       - uid: mondoo-macos-logged-in-users
         title: Logged-in users
         mql: command('users').stdout
+      - uid: mondoo-macos-system-extensions
+        title: macOS System Extensions
+        mql: macos.systemExtensions { active enabled identifier state version }
