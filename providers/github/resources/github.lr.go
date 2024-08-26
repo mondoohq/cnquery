@@ -810,6 +810,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.commit.stats": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubCommit).GetStats()).ToDataRes(types.Dict)
 	},
+	"github.commit.authoredDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCommit).GetAuthoredDate()).ToDataRes(types.Time)
+	},
+	"github.commit.commitedDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCommit).GetCommitedDate()).ToDataRes(types.Time)
+	},
 	"github.mergeRequest.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubMergeRequest).GetId()).ToDataRes(types.Int)
 	},
@@ -1863,6 +1869,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"github.commit.stats": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubCommit).Stats, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"github.commit.authoredDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCommit).AuthoredDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"github.commit.commitedDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCommit).CommitedDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"github.mergeRequest.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4341,6 +4355,8 @@ type mqlGithubCommit struct {
 	Committer plugin.TValue[*mqlGithubUser]
 	Commit plugin.TValue[*mqlGitCommit]
 	Stats plugin.TValue[interface{}]
+	AuthoredDate plugin.TValue[*time.Time]
+	CommitedDate plugin.TValue[*time.Time]
 }
 
 // createGithubCommit creates a new instance of this resource
@@ -4410,6 +4426,14 @@ func (c *mqlGithubCommit) GetCommit() *plugin.TValue[*mqlGitCommit] {
 
 func (c *mqlGithubCommit) GetStats() *plugin.TValue[interface{}] {
 	return &c.Stats
+}
+
+func (c *mqlGithubCommit) GetAuthoredDate() *plugin.TValue[*time.Time] {
+	return &c.AuthoredDate
+}
+
+func (c *mqlGithubCommit) GetCommitedDate() *plugin.TValue[*time.Time] {
+	return &c.CommitedDate
 }
 
 // mqlGithubMergeRequest for the github.mergeRequest resource
