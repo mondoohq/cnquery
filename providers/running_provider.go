@@ -87,7 +87,7 @@ func (c *connectionGraph) topoSort() []uint32 {
 	return sorted
 }
 
-func (c *connectionGraph) garbageCollect() {
+func (c *connectionGraph) garbageCollect() []uint32 {
 	sorted := c.topoSort()
 
 	keep := map[uint32]struct{}{}
@@ -95,12 +95,16 @@ func (c *connectionGraph) garbageCollect() {
 		keep[node] = struct{}{}
 	}
 
+	collected := []uint32{}
 	for node := range c.nodes {
 		if _, ok := keep[node]; !ok {
+			collected = append(collected, node)
 			delete(c.nodes, node)
 			delete(c.edges, node)
 		}
 	}
+
+	return collected
 }
 
 type ReconnectFunc func() (pp.ProviderPlugin, *plugin.Client, error)
@@ -187,10 +191,24 @@ func (r *RestartableProvider) Reconnect() error {
 func (r *RestartableProvider) Disconnect(req *pp.DisconnectReq) (*pp.DisconnectRes, error) {
 	r.lock.Lock()
 	r.connectionGraph.markDisconnected(req.Connection)
-	r.connectionGraph.garbageCollect()
+	collected := r.connectionGraph.garbageCollect()
 	r.lock.Unlock()
 
-	return r.plugin.Disconnect(req)
+	resp, err := r.plugin.Disconnect(req)
+
+	for _, c := range collected {
+		if c == req.Connection {
+			continue
+		}
+		_, err := r.plugin.Disconnect(&pp.DisconnectReq{
+			Connection: c,
+		})
+		if err != nil {
+			log.Warn().Err(err).Uint32("connection", c).Msg("failed to disconnect garbage collected connection")
+		}
+	}
+
+	return resp, err
 }
 
 // GetData implements plugin.ProviderPlugin.
