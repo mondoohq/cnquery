@@ -28,43 +28,65 @@ packs:
         Our goal is to build query packs that are simple to deploy and provide accurate and useful data. 
 
         If you have any suggestions for improving this query pack, or if you need support, [join the Mondoo community](https://github.com/orgs/mondoohq/discussions) in GitHub Discussions.
-    filters:
-      - mql: asset.platform == "shodan-host"
+    filters: asset.family.contains("shodan")
     queries:
       - uid: mondoo-shodan-inventory-hostnames
         title: Shodan info about Hostnames / DNS
+        filters: asset.platform == "shodan-host"
         mql: |
           shodan.host.hostnames
       - uid: mondoo-shodan-inventory-asn
         title: Shodan info about ASN
+        filters: asset.platform == "shodan-host"
         mql: |
           shodan.host.asn
       - uid: mondoo-shodan-inventory-tags
         title: Shodan info about Tags
+        filters: asset.platform == "shodan-host"
         mql: |
           shodan.host.tags
       - uid: mondoo-shodan-inventory-isp
         title: Shodan info about ISP
+        filters: asset.platform == "shodan-host"
         mql: |
           shodan.host.isp
       - uid: mondoo-shodan-inventory-org
         title: Shodan info about Org
+        filters: asset.platform == "shodan-host"
         mql: |
           shodan.host.org
       - uid: mondoo-shodan-inventory-ip
         title: Shodan info about IP
+        filters: asset.platform == "shodan-host"
         mql: |
           shodan.host.ip
       - uid: mondoo-shodan-inventory-os
         title: Shodan info about OS
+        filters: asset.platform == "shodan-host"
         mql: |
           shodan.host.os
       - uid: mondoo-shodan-inventory-ports
         title: Shodan info about Ports
+        filters: asset.platform == "shodan-host"
         mql: |
           shodan.host.ports
       - uid: mondoo-shodan-inventory-vulns
         title: Shodan info about vulnerabilities
+        filters: asset.platform == "shodan-host"
         mql: |
           shodan.host.vulnerabilities
-   
+      - uid: mondoo-shodan-inventory-nsrecords
+        title: Shodan info about DNS NS records
+        filters: asset.platform == "shodan-domain"
+        mql: |
+          shodan.domain.nsrecords
+      - uid: mondoo-shodan-inventory-subdomains
+        title: Shodan info about Subdomains
+        filters: asset.platform == "shodan-domain"
+        mql: |
+          shodan.domain.subdomains
+      - uid: mondoo-shodan-inventory-tags
+        title: Shodan info about Tags
+        filters: asset.platform == "shodan-domain"
+        mql: |
+          shodan.domain.tags

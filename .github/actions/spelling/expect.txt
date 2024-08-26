@@ -4,6 +4,7 @@ cea
 CUSTOMERID
 linux
 mpim
+nsrecords
 openssh
 saas
 spdx
