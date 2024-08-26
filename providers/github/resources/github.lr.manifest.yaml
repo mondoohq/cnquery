@@ -76,8 +76,14 @@ resources:
   github.commit:
     fields:
       author: {}
+      authoredDate:
+        min_mondoo_version: 9.0.0
       commit:
         min_mondoo_version: 6.11.0
+      commitedDate:
+        min_mondoo_version: 9.0.0
+      committedDate:
+        min_mondoo_version: 9.0.0
       committer: {}
       message: {}
       organizationName: {}

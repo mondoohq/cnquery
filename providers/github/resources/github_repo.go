@@ -645,7 +645,7 @@ func newMqlGithubCommit(runtime *plugin.Runtime, rc *github.RepositoryCommit, ow
 	conn := runtime.Connection.(*connection.GithubConnection)
 
 	// if the github author is nil, we have to load the commit again
-	if rc.Author == nil {
+	if rc.Author == nil || rc.Commit == nil {
 		rc, _, err = conn.Client().Repositories.GetCommit(conn.Context(), owner, repo, rc.GetSHA(), nil)
 		if err != nil {
 			return nil, err
@@ -685,14 +685,16 @@ func newMqlGithubCommit(runtime *plugin.Runtime, rc *github.RepositoryCommit, ow
 	}
 
 	return CreateResource(runtime, "github.commit", map[string]*llx.RawData{
-		"url":        llx.StringData(rc.GetURL()),
-		"sha":        llx.StringData(sha),
-		"author":     llx.AnyData(githubAuthor),
-		"committer":  llx.AnyData(githubCommitter),
-		"owner":      llx.StringData(owner),
-		"repository": llx.StringData(repo),
-		"commit":     llx.AnyData(mqlGitCommit),
-		"stats":      llx.MapData(stats, types.Any),
+		"url":           llx.StringData(rc.GetURL()),
+		"sha":           llx.StringData(sha),
+		"author":        llx.AnyData(githubAuthor),
+		"committer":     llx.AnyData(githubCommitter),
+		"owner":         llx.StringData(owner),
+		"repository":    llx.StringData(repo),
+		"commit":        llx.AnyData(mqlGitCommit),
+		"stats":         llx.MapData(stats, types.Any),
+		"authoredDate":  llx.TimeData(rc.Commit.Author.Date.Time),
+		"committedDate": llx.TimeData(rc.Commit.Committer.Date.Time),
 	})
 }
 
