@@ -494,8 +494,8 @@ private github.commit @defaults("sha") {
   stats dict
   // Authored Date
   authoredDate time
-  // Commited Date
-  commitedDate time
+  // Committed Date
+  committedDate time
 }
 
 // GitHub repository pull request

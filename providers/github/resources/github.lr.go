@@ -813,8 +813,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.commit.authoredDate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubCommit).GetAuthoredDate()).ToDataRes(types.Time)
 	},
-	"github.commit.commitedDate": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGithubCommit).GetCommitedDate()).ToDataRes(types.Time)
+	"github.commit.committedDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCommit).GetCommittedDate()).ToDataRes(types.Time)
 	},
 	"github.mergeRequest.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubMergeRequest).GetId()).ToDataRes(types.Int)
@@ -1875,8 +1875,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlGithubCommit).AuthoredDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
-	"github.commit.commitedDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubCommit).CommitedDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"github.commit.committedDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCommit).CommittedDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"github.mergeRequest.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4356,7 +4356,7 @@ type mqlGithubCommit struct {
 	Commit plugin.TValue[*mqlGitCommit]
 	Stats plugin.TValue[interface{}]
 	AuthoredDate plugin.TValue[*time.Time]
-	CommitedDate plugin.TValue[*time.Time]
+	CommittedDate plugin.TValue[*time.Time]
 }
 
 // createGithubCommit creates a new instance of this resource
@@ -4432,8 +4432,8 @@ func (c *mqlGithubCommit) GetAuthoredDate() *plugin.TValue[*time.Time] {
 	return &c.AuthoredDate
 }
 
-func (c *mqlGithubCommit) GetCommitedDate() *plugin.TValue[*time.Time] {
-	return &c.CommitedDate
+func (c *mqlGithubCommit) GetCommittedDate() *plugin.TValue[*time.Time] {
+	return &c.CommittedDate
 }
 
 // mqlGithubMergeRequest for the github.mergeRequest resource
