@@ -85,7 +85,7 @@ packs:
         filters: asset.platform == "shodan-domain"
         mql: |
           shodan.domain.subdomains
-      - uid: mondoo-shodan-inventory-tags
+      - uid: mondoo-shodan-inventory-domain-tags
         title: Shodan info about Tags
         filters: asset.platform == "shodan-domain"
         mql: |
