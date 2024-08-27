@@ -18,13 +18,36 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+// connectionGraphNode is a node in the connection graph. It represents a connection.
 type connectionGraphNode struct {
-	connected bool
-	data      connectReq
+	// explicitlyConnected is true if the connection was explicitly connected
+	// it is set to false when explicitly disconnected.
+	// When reconnecting, disconnected connections are not set to explicitly connected,
+	// even if we require the connection to connect another connection.
+	explicitlyConnected bool
+	// data is the connect request data for the connection
+	data connectReq
 }
 
+// connectionGraph is a directed graph of connections.
+// Each node represents a connection. It can have one edge to its parent connection.
+//
+// When a connection is first connected, addNode is called to add the connection to the graph
+// and keep track of the connect request data. This is also when setEdge is called to set the
+// edge to the parent connection.
+//
+// When a connection is disconnected, markDisconnected is called to mark the connection as disconnected.
+// When a connection is marked as disconnected, it indicates that the connection is not explicitly required.
+// It is still possible that the connection needs to be reconnected if another connection has it set as its
+// parent.
+// This is also when garbageCollect is called to remove connections from the graph is they are not explicitly
+// connected and are not required by any other connection.
 type connectionGraph struct {
+	// nodes is a map of connection id to connectionGraphNode. We store data to
+	// reestablish the connection when reconnecting. We also store if the connection
+	// has been disconnected.
 	nodes map[uint32]connectionGraphNode
+	// edges is a map of connection id to parent connection id
 	edges map[uint32]uint32
 }
 
@@ -35,13 +58,15 @@ func newConnectionGraph() *connectionGraph {
 	}
 }
 
+// addNode adds a node to the graph with the given data.
 func (c *connectionGraph) addNode(node uint32, data connectReq) {
 	c.nodes[node] = connectionGraphNode{
-		connected: true,
-		data:      data,
+		explicitlyConnected: true,
+		data:                data,
 	}
 }
 
+// getNode returns the connect request data for the given node.
 func (c *connectionGraph) getNode(node uint32) (connectReq, bool) {
 	n, ok := c.nodes[node]
 	if !ok {
@@ -50,18 +75,22 @@ func (c *connectionGraph) getNode(node uint32) (connectReq, bool) {
 	return n.data, ok
 }
 
+// setEdge sets the edge from the from node to the to node.
+// from is the child node and to is the parent node.
 func (c *connectionGraph) setEdge(from, to uint32) {
 	c.edges[from] = to
 }
 
+// markDisconnected marks the connection as disconnected. It may still be needed by other connections.
 func (c *connectionGraph) markDisconnected(id uint32) {
 	if node, ok := c.nodes[id]; ok {
-		node.connected = false
+		node.explicitlyConnected = false
 		c.nodes[id] = node
 	}
 }
 
-// topoSort returns a topological sorted list of the nodes in the graph.
+// topoSort returns a topological sorted list of the nodes in the graph. Connecting in this order
+// will ensure that all connections are connected in the correct order.
 func (c *connectionGraph) topoSort() []uint32 {
 	var sorted []uint32
 	var visit func(node uint32, visited map[uint32]bool, sorted *[]uint32)
@@ -79,7 +108,7 @@ func (c *connectionGraph) topoSort() []uint32 {
 	}
 	visited := map[uint32]bool{}
 	for nodeId, node := range c.nodes {
-		if !node.connected {
+		if !node.explicitlyConnected {
 			continue
 		}
 		visit(nodeId, visited, &sorted)
@@ -87,6 +116,7 @@ func (c *connectionGraph) topoSort() []uint32 {
 	return sorted
 }
 
+// garbageCollect removes nodes from the graph that are not explicitly connected and are not required by any other connection.
 func (c *connectionGraph) garbageCollect() []uint32 {
 	sorted := c.topoSort()
 
