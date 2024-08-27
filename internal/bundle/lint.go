@@ -6,9 +6,10 @@ package bundle
 import (
 	"context"
 	"fmt"
+	"strconv"
+
 	"go.mondoo.com/cnquery/v11/explorer"
 	"go.mondoo.com/cnquery/v11/providers"
-	"strconv"
 )
 
 func Lint(queryPackBundle *explorer.Bundle) []string {
@@ -29,12 +30,17 @@ func Lint(queryPackBundle *explorer.Bundle) []string {
 			errors = append(errors, fmt.Sprintf("pack %s does not define a name", packId))
 		}
 
+		queryUids := map[string]struct{}{}
 		for j := range pack.Queries {
 			query := pack.Queries[j]
 			queryId := strconv.Itoa(j)
 			if query.Uid == "" {
 				errors = append(errors, fmt.Sprintf("query %s/%s does not define a uid", packId, queryId))
 			} else {
+				if _, ok := queryUids[query.Uid]; ok {
+					errors = append(errors, fmt.Sprintf("query %s/%s has a duplicate uid", packId, query.Uid))
+				}
+				queryUids[query.Uid] = struct{}{}
 				queryId = query.Uid
 			}
 
