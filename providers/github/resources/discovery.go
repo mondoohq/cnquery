@@ -104,7 +104,9 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 		return nil, err
 	}
 
-	if reposFilter.empty() {
+	// only scan the org if the discover flag is provided, this allows you to scan all repos in an org with simply using
+	// --discover repos. If users provide a repo filter, we also want to skip org scan.
+	if stringx.ContainsAnyOf(targets, connection.DiscoveryOrganization, connection.DiscoveryAll, connection.DiscoveryAuto) && reposFilter.empty() {
 		assetList = append(assetList, &inventory.Asset{
 			PlatformIds: []string{connection.NewGithubOrgIdentifier(org.Login.Data)},
 			Name:        org.Name.Data,
