@@ -492,9 +492,9 @@ private github.commit @defaults("sha") {
   commit git.commit
   // Commit stats
   stats dict
-  // Authored Date
+  // Authored date
   authoredDate time
-  // Committed Date
+  // Committed date
   committedDate time
 }
 
