@@ -341,31 +341,14 @@ func discoverTerraform(conn *connection.GithubConnection, repo *mqlGithubReposit
 
 // hasTerraformHcl will check if the repository contains terraform files
 func hasTerraformHcl(ctx context.Context, client *github.Client, repo *mqlGithubRepository) (bool, error) {
-	query := "repo:" + repo.FullName.Data + " extension:tf"
-	res, _, err := client.Search.Code(ctx, query, &github.SearchOptions{})
+	languages, _, err := client.Repositories.ListLanguages(ctx, repo.Owner.Data.Login.Data, repo.Name.Data)
 	if err != nil {
 		return false, err
 	}
-
-	// Ignore tf files that are hidden or are in a hidden folder
-	nonHiddenTf := 0
-	for _, code := range res.CodeResults {
-		fragments := strings.Split(code.GetPath(), "/")
-		// skip hidden files
-		isHidden := false
-		for _, fragment := range fragments {
-			if strings.HasPrefix(fragment, ".") {
-				isHidden = true
-				break
-			}
-		}
-
-		if !isHidden {
-			nonHiddenTf++
-		}
+	if languages["HCL"] > 0 {
+		return true, nil
 	}
-
-	return nonHiddenTf > 0, nil
+	return false, nil
 }
 
 func discoverK8sManifests(conn *connection.GithubConnection, repo *mqlGithubRepository) ([]*inventory.Asset, error) {
