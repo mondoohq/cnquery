@@ -12,7 +12,7 @@ import (
 	"go.mondoo.com/ranger-rpc"
 )
 
-// GetAPIProxy returns the proxy URL from the environment variable MONDOO_API_PROXY and cli flag --api-proxy.
+// GetAPIProxy returns the proxy URL from the environment variable MONDOO_API_PROXY, HTTPS_PROXY and cli flag --api-proxy.
 // It should only be used when the options are not yet parsed, see CommonCliConfig.GetAPIProxy().
 func GetAPIProxy() (*url.URL, error) {
 	proxy, envSet := os.LookupEnv("MONDOO_API_PROXY")
@@ -22,6 +22,11 @@ func GetAPIProxy() (*url.URL, error) {
 
 	proxy = viper.GetString("api_proxy")
 	if proxy != "" {
+		return url.Parse(proxy)
+	}
+
+	proxy, envSet = os.LookupEnv("HTTPS_PROXY")
+	if envSet {
 		return url.Parse(proxy)
 	}
 
