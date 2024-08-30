@@ -98,7 +98,7 @@ atlassian.jira {
   users() []atlassian.jira.user
   // Jira projects
   projects() []atlassian.jira.project
-  // Jira groups
+  // Jira issues
   issues() []atlassian.jira.issue
   // Jira groups
   groups() []atlassian.jira.group
@@ -106,7 +106,7 @@ atlassian.jira {
   serverInfos() atlassian.jira.serverInfo
 }
 
-// Issue
+// Jira issue
 atlassian.jira.issue @defaults("id createdAt") {
   // Issue ID
   id string
