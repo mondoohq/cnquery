@@ -20165,7 +20165,7 @@ func (c *mqlAwsS3) GetBuckets() *plugin.TValue[[]interface{}] {
 type mqlAwsS3Bucket struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlAwsS3BucketInternal it will be used here
+	mqlAwsS3BucketInternal
 	Arn plugin.TValue[string]
 	Name plugin.TValue[string]
 	Policy plugin.TValue[*mqlAwsS3BucketPolicy]

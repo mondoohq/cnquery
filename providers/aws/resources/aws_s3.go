@@ -58,41 +58,29 @@ func (a *mqlAwsS3) buckets() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.S3("")
-	ctx := context.Background()
 
-	buckets, err := svc.ListBuckets(ctx, &s3.ListBucketsInput{})
-	if err != nil {
-		return nil, err
+	totalBuckets := make([]s3types.Bucket, 0)
+	params := &s3.ListBucketsInput{}
+	paginator := s3.NewListBucketsPaginator(svc, params, func(o *s3.ListBucketsPaginatorOptions) {
+		o.Limit = 100
+	})
+	for paginator.HasMorePages() {
+		output, err := paginator.NextPage(context.TODO())
+		if err != nil {
+			return nil, err
+		}
+		totalBuckets = append(totalBuckets, output.Buckets...)
 	}
 
 	res := []interface{}{}
-	for i := range buckets.Buckets {
-		bucket := buckets.Buckets[i]
+	for i := range totalBuckets {
+		bucket := totalBuckets[i]
 
-		location, err := svc.GetBucketLocation(ctx, &s3.GetBucketLocationInput{
-			Bucket: bucket.Name,
-		})
-		if err != nil {
-			log.Error().Err(err).Str("bucket", *bucket.Name).Msg("Could not get bucket location")
-			continue
-		}
-		if location == nil {
-			log.Error().Err(err).Str("bucket", *bucket.Name).Msg("Could not get bucket location (returned null)")
-			continue
-		}
-
-		region := string(location.LocationConstraint)
-		// us-east-1 returns "" therefore we set it explicitly
-		// https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketLocation.html#API_GetBucketLocation_ResponseSyntax
-		if region == "" {
-			region = "us-east-1"
-		}
 		mqlS3Bucket, err := CreateResource(a.MqlRuntime, "aws.s3.bucket",
 			map[string]*llx.RawData{
 				"name":        llx.StringDataPtr(bucket.Name),
 				"arn":         llx.StringData(fmt.Sprintf(s3ArnPattern, convert.ToString(bucket.Name))),
 				"exists":      llx.BoolData(true),
-				"location":    llx.StringData(region),
 				"createdTime": llx.TimeDataPtr(bucket.CreationDate),
 			})
 		if err != nil {
@@ -102,6 +90,28 @@ func (a *mqlAwsS3) buckets() ([]interface{}, error) {
 	}
 
 	return res, nil
+}
+
+type mqlAwsS3BucketInternal struct {
+	cacheSvc      *s3.Client
+	cacheLocation *string
+}
+
+func (s *mqlAwsS3Bucket) location() (string, error) {
+	if s.cacheLocation != nil {
+		ctx := context.Background()
+		location, err := s.cacheSvc.HeadBucket(ctx, &s3.HeadBucketInput{
+			Bucket: aws.String(s.Name.Data),
+		})
+		if err != nil {
+			return "", err
+		}
+		if location == nil || location.BucketRegion == nil {
+			return "", errors.Newf("no location found for bucket %s", s.Name.Data)
+		}
+		return *location.BucketRegion, nil
+	}
+	return "", errors.Newf("no location found for bucket %s", s.Name.Data)
 }
 
 func initAwsS3Bucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -249,30 +259,6 @@ func (a *mqlAwsS3Bucket) tags() (map[string]interface{}, error) {
 	}
 
 	return res, nil
-}
-
-func (a *mqlAwsS3Bucket) location() (string, error) {
-	bucketname := a.Name.Data
-
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
-	svc := conn.S3("")
-	ctx := context.Background()
-
-	location, err := svc.GetBucketLocation(ctx, &s3.GetBucketLocationInput{
-		Bucket: &bucketname,
-	})
-	if err != nil {
-		return "", err
-	}
-
-	region := string(location.LocationConstraint)
-	// us-east-1 returns "" therefore we set it explicitly
-	// https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketLocation.html#API_GetBucketLocation_ResponseSyntax
-	if region == "" {
-		region = "us-east-1"
-	}
-	return region, nil
 }
 
 func (a *mqlAwsS3Bucket) gatherAcl() (*s3.GetBucketAclOutput, error) {
