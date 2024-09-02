@@ -11,9 +11,7 @@ replace k8s.io/apimachinery => k8s.io/apimachinery v0.28.9
 
 replace k8s.io/client-go => k8s.io/client-go v0.28.9
 
-go 1.22.0
-
-toolchain go1.22.4
+go 1.23.0
 
 require (
 	github.com/cockroachdb/errors v1.11.3

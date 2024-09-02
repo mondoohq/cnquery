@@ -1,8 +1,6 @@
 module go.mondoo.com/cnquery/v11/providers/cloudformation
 
-go 1.22.1
-
-toolchain go1.22.4
+go 1.23.0
 
 replace go.mondoo.com/cnquery/v11 => ../..
 

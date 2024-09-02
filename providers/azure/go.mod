@@ -5,9 +5,7 @@ replace go.mondoo.com/cnquery/v11 => ../..
 // 0.14.0 onwards drops AlertNotifications from SecurityContacts. We need to find a replacement before we can upgrade.
 replace github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity => github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity v0.13.0
 
-go 1.22.0
-
-toolchain go1.22.4
+go 1.23.0
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.14.0

@@ -1,8 +1,6 @@
 module go.mondoo.com/cnquery/v11/providers/snowflake
 
-go 1.22.0
-
-toolchain go1.22.4
+go 1.23.0
 
 require (
 	github.com/Snowflake-Labs/terraform-provider-snowflake v0.92.0
