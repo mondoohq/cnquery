@@ -265,6 +265,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.jira.issue.project": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraIssue).GetProject()).ToDataRes(types.String)
 	},
+	"atlassian.jira.issue.projectKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraIssue).GetProjectKey()).ToDataRes(types.String)
+	},
 	"atlassian.jira.issue.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraIssue).GetStatus()).ToDataRes(types.String)
 	},
@@ -273,6 +276,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"atlassian.jira.issue.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraIssue).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"atlassian.jira.issue.creator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraIssue).GetCreator()).ToDataRes(types.Resource("atlassian.jira.user"))
+	},
+	"atlassian.jira.issue.typeName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraIssue).GetTypeName()).ToDataRes(types.String)
 	},
 	"atlassian.jira.serverInfo.baseUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraServerInfo).GetBaseUrl()).ToDataRes(types.String)
@@ -557,6 +566,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAtlassianJiraIssue).Project, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"atlassian.jira.issue.projectKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraIssue).ProjectKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"atlassian.jira.issue.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianJiraIssue).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -567,6 +580,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"atlassian.jira.issue.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianJiraIssue).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.issue.creator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraIssue).Creator, ok = plugin.RawToTValue[*mqlAtlassianJiraUser](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.issue.typeName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraIssue).TypeName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"atlassian.jira.serverInfo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1395,9 +1416,12 @@ type mqlAtlassianJiraIssue struct {
 	// optional: if you define mqlAtlassianJiraIssueInternal it will be used here
 	Id plugin.TValue[string]
 	Project plugin.TValue[string]
+	ProjectKey plugin.TValue[string]
 	Status plugin.TValue[string]
 	Description plugin.TValue[string]
 	CreatedAt plugin.TValue[*time.Time]
+	Creator plugin.TValue[*mqlAtlassianJiraUser]
+	TypeName plugin.TValue[string]
 }
 
 // createAtlassianJiraIssue creates a new instance of this resource
@@ -1445,6 +1469,10 @@ func (c *mqlAtlassianJiraIssue) GetProject() *plugin.TValue[string] {
 	return &c.Project
 }
 
+func (c *mqlAtlassianJiraIssue) GetProjectKey() *plugin.TValue[string] {
+	return &c.ProjectKey
+}
+
 func (c *mqlAtlassianJiraIssue) GetStatus() *plugin.TValue[string] {
 	return &c.Status
 }
@@ -1455,6 +1483,14 @@ func (c *mqlAtlassianJiraIssue) GetDescription() *plugin.TValue[string] {
 
 func (c *mqlAtlassianJiraIssue) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
+}
+
+func (c *mqlAtlassianJiraIssue) GetCreator() *plugin.TValue[*mqlAtlassianJiraUser] {
+	return &c.Creator
+}
+
+func (c *mqlAtlassianJiraIssue) GetTypeName() *plugin.TValue[string] {
+	return &c.TypeName
 }
 
 // mqlAtlassianJiraServerInfo for the atlassian.jira.serverInfo resource

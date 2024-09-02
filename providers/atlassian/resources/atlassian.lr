@@ -112,12 +112,18 @@ atlassian.jira.issue @defaults("id createdAt") {
   id string
   // Project
   project string
+  // Project key
+  projectKey string
   // Status
   status string
   // Description
   description string
   // Issue create time in UTC
   createdAt time
+  // Issue creator
+  creator atlassian.jira.user
+  // Issue type name
+  typeName string
 }
 
 // Jira server info

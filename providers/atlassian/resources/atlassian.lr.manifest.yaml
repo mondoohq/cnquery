@@ -148,10 +148,13 @@ resources:
   atlassian.jira.issue:
     fields:
       createdAt: {}
+      creator: {}
       description: {}
       id: {}
       project: {}
+      projectKey: {}
       status: {}
+      typeName: {}
     min_mondoo_version: 9.0.0
   atlassian.jira.project:
     fields:
