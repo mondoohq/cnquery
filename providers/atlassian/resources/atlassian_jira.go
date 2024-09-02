@@ -208,7 +208,7 @@ func (a *mqlAtlassianJira) issues() ([]interface{}, error) {
 	jira := conn.Client()
 	validate := ""
 	jql := "order by created DESC"
-	fields := []string{"created", "status", "project", "description"}
+	fields := []string{"created", "creator", "status", "project", "description", "issuetype"}
 	expands := []string{"changelog", "renderedFields", "names", "schema", "transitions", "operations", "editmeta"}
 
 	res := []interface{}{}
@@ -226,13 +226,28 @@ func (a *mqlAtlassianJira) issues() ([]interface{}, error) {
 				return nil, err
 			}
 
+			creator := issue.Fields.Creator
+			mqlAtlassianJiraUser, err := CreateResource(a.MqlRuntime, "atlassian.jira.user",
+				map[string]*llx.RawData{
+					"id":      llx.StringData(creator.AccountID),
+					"name":    llx.StringData(creator.DisplayName),
+					"type":    llx.StringData(creator.AccountType),
+					"picture": llx.StringData(creator.AvatarUrls.One6X16),
+				})
+			if err != nil {
+				return nil, err
+			}
+
 			mqlAtlassianJiraIssue, err := CreateResource(a.MqlRuntime, "atlassian.jira.issue",
 				map[string]*llx.RawData{
 					"id":          llx.StringData(issue.ID),
 					"project":     llx.StringData(issue.Fields.Project.Name),
+					"projectKey":  llx.StringData(issue.Fields.Project.Key),
 					"status":      llx.StringData(issue.Fields.Status.Name),
 					"description": llx.StringData(issue.Fields.Description),
 					"createdAt":   llx.TimeData(created.UTC()),
+					"creator":     llx.AnyData(mqlAtlassianJiraUser),
+					"typeName":    llx.StringData(issue.Fields.IssueType.Name),
 				})
 			if err != nil {
 				return nil, err
