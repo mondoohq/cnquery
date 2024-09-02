@@ -2,9 +2,7 @@ module go.mondoo.com/cnquery/v11/providers/arista
 
 replace go.mondoo.com/cnquery/v11 => ../..
 
-go 1.22.0
-
-toolchain go1.22.4
+go 1.23.0
 
 require (
 	github.com/aristanetworks/goeapi v1.0.0

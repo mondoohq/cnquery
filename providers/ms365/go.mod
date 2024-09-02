@@ -2,9 +2,7 @@ module go.mondoo.com/cnquery/v11/providers/ms365
 
 replace go.mondoo.com/cnquery/v11 => ../..
 
-go 1.22.0
-
-toolchain go1.22.4
+go 1.23.0
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.14.0
