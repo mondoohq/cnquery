@@ -743,6 +743,8 @@ resources:
       url: https://learn.microsoft.com/en-us/azure/key-vault/
   azure.subscription.keyVaultService.key:
     fields:
+      autoRotationEnabled:
+        min_mondoo_version: 9.0.0
       created: {}
       enabled: {}
       expires: {}

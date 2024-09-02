@@ -1542,6 +1542,8 @@ private azure.subscription.keyVaultService.key @defaults("kid keyName") {
   version() string
   // List of key versions
   versions() []azure.subscription.keyVaultService.key
+  // Auto-rotation enabled status
+  autoRotationEnabled bool
 }
 
 // Azure Key Vault certificate

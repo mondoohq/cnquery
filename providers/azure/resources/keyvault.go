@@ -189,17 +189,36 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) keys() ([]interface{}, error)
 		}
 
 		for _, entry := range page.Value {
+			autoRotationEnabled := false
+			// Fetch the rotation policy for each key
+			if entry.KID != nil {
+				keyID := string(*entry.KID)
+				kvid, err := parseKeyVaultId(keyID)
+				if err == nil && kvid.Type == "keys" {
+					policyResp, err := client.GetKeyRotationPolicy(ctx, kvid.Name, nil)
+					if err == nil && policyResp.LifetimeActions != nil {
+						for _, action := range policyResp.LifetimeActions {
+							if action.Action != nil && string(*action.Action.Type) == "Rotate" {
+								autoRotationEnabled = true
+								break
+							}
+						}
+					}
+				}
+			}
+
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.key",
 				map[string]*llx.RawData{
-					"kid":           llx.StringDataPtr((*string)(entry.KID)),
-					"managed":       llx.BoolDataPtr(entry.Managed),
-					"tags":          llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
-					"enabled":       llx.BoolDataPtr(entry.Attributes.Enabled),
-					"created":       llx.TimeDataPtr(entry.Attributes.Created),
-					"updated":       llx.TimeDataPtr(entry.Attributes.Updated),
-					"expires":       llx.TimeDataPtr(entry.Attributes.Expires),
-					"notBefore":     llx.TimeDataPtr(entry.Attributes.NotBefore),
-					"recoveryLevel": llx.StringDataPtr((*string)(entry.Attributes.RecoveryLevel)),
+					"kid":                 llx.StringDataPtr((*string)(entry.KID)),
+					"managed":             llx.BoolDataPtr(entry.Managed),
+					"tags":                llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
+					"enabled":             llx.BoolDataPtr(entry.Attributes.Enabled),
+					"created":             llx.TimeDataPtr(entry.Attributes.Created),
+					"updated":             llx.TimeDataPtr(entry.Attributes.Updated),
+					"expires":             llx.TimeDataPtr(entry.Attributes.Expires),
+					"notBefore":           llx.TimeDataPtr(entry.Attributes.NotBefore),
+					"recoveryLevel":       llx.StringDataPtr((*string)(entry.Attributes.RecoveryLevel)),
+					"autoRotationEnabled": llx.BoolData(autoRotationEnabled),
 				})
 			if err != nil {
 				return nil, err
