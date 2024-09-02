@@ -16,16 +16,16 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.25.6
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.31.2
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.43.5
-	github.com/aws/aws-sdk-go-v2/service/backup v1.36.4
+	github.com/aws/aws-sdk-go-v2/service/backup v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.38.5
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.42.5
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.40.5
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.37.5
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.42.1
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.48.5
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.40.5
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.6
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.176.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.177.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.32.2
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.25.4
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.45.2
@@ -45,18 +45,18 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/rds v1.82.2
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.46.6
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.60.1
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.61.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.46.5
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.154.0
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.32.6
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.52.0
 	github.com/aws/aws-sdk-go-v2/service/sns v1.31.5
-	github.com/aws/aws-sdk-go-v2/service/sqs v1.34.5
+	github.com/aws/aws-sdk-go-v2/service/sqs v1.34.6
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.52.6
 	github.com/aws/aws-sdk-go-v2/service/sts v1.30.5
 	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.2.4
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.27.4
-	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.51.5
+	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.52.0
 	github.com/aws/smithy-go v1.20.4
 	github.com/cockroachdb/errors v1.11.3
 	github.com/google/uuid v1.6.0
@@ -64,14 +64,14 @@ require (
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/afero v1.11.0
 	github.com/stretchr/testify v1.9.0
-	go.mondoo.com/cnquery/v11 v11.18.0
+	go.mondoo.com/cnquery/v11 v11.19.1
 	golang.org/x/exp v0.0.0-20240823005443-9b4947da3948
 	k8s.io/client-go v0.31.0
 )
 
 require (
 	cloud.google.com/go v0.115.1 // indirect
-	cloud.google.com/go/auth v0.9.1 // indirect
+	cloud.google.com/go/auth v0.9.2 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.4 // indirect
 	cloud.google.com/go/compute/metadata v0.5.0 // indirect
 	cloud.google.com/go/iam v1.2.0 // indirect
@@ -118,9 +118,9 @@ require (
 	github.com/danieljoos/wincred v1.2.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/distribution/reference v0.6.0 // indirect
-	github.com/docker/cli v27.1.2+incompatible // indirect
+	github.com/docker/cli v27.2.0+incompatible // indirect
 	github.com/docker/distribution v2.8.3+incompatible // indirect
-	github.com/docker/docker v27.1.2+incompatible // indirect
+	github.com/docker/docker v27.2.0+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.8.2 // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
@@ -223,11 +223,11 @@ require (
 	golang.org/x/text v0.17.0 // indirect
 	golang.org/x/time v0.6.0 // indirect
 	golang.org/x/tools v0.24.0 // indirect
-	google.golang.org/api v0.194.0 // indirect
-	google.golang.org/genproto v0.0.0-20240826202546-f6391c0de4c7 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20240826202546-f6391c0de4c7 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240826202546-f6391c0de4c7 // indirect
-	google.golang.org/grpc v1.65.0 // indirect
+	google.golang.org/api v0.195.0 // indirect
+	google.golang.org/genproto v0.0.0-20240827150818-7e3bb234dfed // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20240827150818-7e3bb234dfed // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240827150818-7e3bb234dfed // indirect
+	google.golang.org/grpc v1.66.0 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
