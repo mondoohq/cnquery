@@ -66,6 +66,8 @@ azure.subscription @defaults ("name") {
   advisor() azure.subscription.advisorService
   // Policy service in the subscription
   policy azure.subscription.policy
+  // IoT resources in the subscription
+  iot() azure.subscription.iotService
 }
 
 // Azure resource group
@@ -1960,4 +1962,12 @@ private azure.subscription.policy.assignment @defaults("name enforcementMode") {
   description string
   // Policy enforcement Mode
   enforcementMode string
+}
+
+// Azure IoT Hub Service
+private azure.subscription.iotService {
+  // Subscription identifier
+  subscriptionId string
+  // List of IoT Hubs in the subscription
+  hubs() []dict
 }

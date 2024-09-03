@@ -23,6 +23,8 @@ resources:
       iam:
         min_mondoo_version: 9.0.0
       id: {}
+      iot:
+        min_mondoo_version: 9.0.0
       keyVault: {}
       managedByTenants: {}
       mariaDb: {}
@@ -602,6 +604,15 @@ resources:
     refs:
     - title: Azure Cosmos DB documentation
       url: https://learn.microsoft.com/en-us/azure/cosmos-db/
+  azure.subscription.iotService:
+    fields:
+      hubs: {}
+      subscriptionId: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
   azure.subscription.keyVault:
     fields:
       subscriptionId: {}

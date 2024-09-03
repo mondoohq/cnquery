@@ -230,3 +230,14 @@ func (a *mqlAzureSubscription) advisor() (*mqlAzureSubscriptionAdvisorService, e
 	advisorSvc := svc.(*mqlAzureSubscriptionAdvisorService)
 	return advisorSvc, nil
 }
+
+func (a *mqlAzureSubscription) iot() (*mqlAzureSubscriptionIotService, error) {
+	svc, err := NewResource(a.MqlRuntime, "azure.subscription.iotService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	iotSvc := svc.(*mqlAzureSubscriptionIotService)
+	return iotSvc, nil
+}
