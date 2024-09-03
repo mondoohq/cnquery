@@ -93,6 +93,10 @@ func (s *WindowsSmbiosManager) Info() (*SmBiosInfo, error) {
 		return nil, err
 	}
 
+	if len(winBios.Chassis) == 0 {
+		winBios.Chassis = append(winBios.Chassis, smbiosChassis{})
+	}
+
 	smInfo := SmBiosInfo{
 		BIOS: BiosInfo{
 			Vendor:      winBios.Bios.Manufacturer,
