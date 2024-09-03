@@ -1027,6 +1027,8 @@ private azure.subscription.webService.appsite @defaults("id name location") {
   connectionSettings() dict
   // App site stack
   stack() dict
+  // Diagnostic settings for the web app site
+  diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
 }
 
 // Azure AppSite authentication settings
