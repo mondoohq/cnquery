@@ -83,6 +83,11 @@ func (a *mqlAzureSubscriptionWebServiceAppsiteconfig) id() (string, error) {
 	return a.Id.Data, nil
 }
 
+func (a *mqlAzureSubscriptionWebServiceAppsite) diagnosticSettings() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	return getDiagnosticSettings(a.Id.Data, a.MqlRuntime, conn)
+}
+
 func (a *mqlAzureSubscriptionWebService) apps() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
