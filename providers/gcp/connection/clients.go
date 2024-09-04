@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/hashicorp/go-cleanhttp"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
 	"golang.org/x/oauth2"
@@ -68,13 +69,13 @@ func serviceAccountAuth(ctx context.Context, subject string, serviceAccount []by
 
 	credentials, err := googleoauth.CredentialsFromJSONWithParams(ctx, serviceAccount, credParams)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to create google credentials")
 	}
 
 	cleanCtx := context.WithValue(ctx, oauth2.HTTPClient, cleanhttp.DefaultClient())
 	client, _, err := transport.NewHTTPClient(cleanCtx, option.WithTokenSource(credentials.TokenSource))
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to create google http client")
 	}
 
 	return client, nil
