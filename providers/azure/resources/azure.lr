@@ -1968,6 +1968,6 @@ private azure.subscription.policy.assignment @defaults("name enforcementMode") {
 private azure.subscription.iotService {
   // Subscription identifier
   subscriptionId string
-  // List of IoT Hubs in the subscription
+  // List of IoT hubs in the subscription
   hubs() []dict
 }
