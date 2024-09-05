@@ -56,6 +56,12 @@ microsoft.tenant @defaults("name") {
   subscriptions() []dict
 }
 
+// Microsoft Conditional Access Policies
+private microsoft.conditionalAccess {
+  // Return the name of the first named location
+  namedLocations() string
+}
+
 // Microsoft Entra ID user
 private microsoft.user @defaults("id displayName userPrincipalName") {
   // User Object ID
