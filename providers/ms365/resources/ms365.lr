@@ -58,7 +58,7 @@ microsoft.tenant @defaults("name") {
 
 // Microsoft Conditional Access Policies
 private microsoft.conditionalAccess {
-  // Return the name of the first named location
+  // IP named location
   namedLocations() []string
 }
 
