@@ -252,6 +252,8 @@ resources:
     min_mondoo_version: 9.0.0
   microsoft.policies:
     fields:
+      ConsentPolicySettings:
+        min_mondoo_version: 9.0.0
       adminConsentRequestPolicy: {}
       authorizationPolicy: {}
       identitySecurityDefaultsEnforcementPolicy: {}
