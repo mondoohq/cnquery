@@ -211,7 +211,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) keys() ([]interface{}, error)
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionKeyVaultServiceKeyAutorotation) keyName() (string, error) {
+func (a *mqlAzureSubscriptionKeyVaultServiceKeyAutorotation) id() (string, error) {
 	id := a.Kid.Data
 	kvid, err := parseKeyVaultId(id)
 	if err != nil {
