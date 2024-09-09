@@ -211,6 +211,71 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) keys() ([]interface{}, error)
 	return res, nil
 }
 
+func (a *mqlAzureSubscriptionKeyVaultServiceKeyAutorotation) id() (string, error) {
+	id := a.Kid.Data
+	kvid, err := parseKeyVaultId(id)
+	if err != nil {
+		return "", err
+	}
+
+	return kvid.Name, nil
+}
+
+func (a *mqlAzureSubscriptionKeyVaultServiceVault) autorotation() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	vaultUri := a.GetVaultUri()
+	client, err := azkeys.NewClient(vaultUri.Data, token, &azkeys.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListKeyPropertiesPager(&azkeys.ListKeyPropertiesOptions{})
+	res := []interface{}{}
+
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, entry := range page.Value {
+			autoRotationEnabled := false
+
+			if entry.KID != nil {
+				keyID := string(*entry.KID)
+				kvid, err := parseKeyVaultId(keyID)
+				if err == nil && kvid.Type == "keys" {
+					policyResp, err := client.GetKeyRotationPolicy(ctx, kvid.Name, nil)
+					if err == nil && policyResp.LifetimeActions != nil {
+						for _, action := range policyResp.LifetimeActions {
+							if action.Action != nil && string(*action.Action.Type) == "Rotate" {
+								autoRotationEnabled = true
+								break
+							}
+						}
+					}
+				}
+			}
+
+			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.key.autorotation",
+				map[string]*llx.RawData{
+					"kid":     llx.StringDataPtr((*string)(entry.KID)),
+					"enabled": llx.BoolData(autoRotationEnabled),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAzure)
+		}
+	}
+
+	return res, nil
+}
+
 func (a *mqlAzureSubscriptionKeyVaultServiceVault) secrets() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()

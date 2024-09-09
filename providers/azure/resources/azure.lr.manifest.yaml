@@ -787,6 +787,8 @@ resources:
       url: https://learn.microsoft.com/en-us/azure/key-vault/
   azure.subscription.keyVaultService.vault:
     fields:
+      autorotation:
+        min_mondoo_version: 9.0.0
       certificates: {}
       diagnosticSettings: {}
       id: {}
