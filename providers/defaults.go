@@ -380,7 +380,7 @@ var DefaultProviders Providers = map[string]*Provider{
 				{
 					Name:  "snowflake",
 					Use:   "snowflake",
-					Short: "a Snowflake account",
+					Short: "a Snowflake Data Cloud account",
 				},
 			},
 		},

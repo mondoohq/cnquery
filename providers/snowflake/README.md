@@ -6,10 +6,10 @@ cnquery shell snowflake
 
 Required arguments:
 
-- `--account` - The Snowflake account name.
-- `--region` - The Snowflake region.
-- `--user` - The Snowflake username.
-- `--role` - The Snowflake role.
+- `--account` - The Snowflake Data Cloud account name.
+- `--region` - The Snowflake Data Cloud region.
+- `--user` - The Snowflake Data Cloud username.
+- `--role` - The Snowflake Data Cloud role.
 
 > The easiest way to get the account name and region is to look at the URL when you log in to the Snowflake web interface. When clicking on the account icon you can copy the account URL that included the account name and region.
 
@@ -17,8 +17,8 @@ Required arguments:
 
 Arguments:
 
-- `--password` - The Snowflake password.
-- `--ask-pass` - Prompt for the Snowflake password.
+- `--password` - The Snowflake Data Cloud password.
+- `--ask-pass` - Prompt for the Snowflake Data Cloud password.
 
 ```shell
 shell snowflake --account zi12345 --region us-central1.gcp --user CHRIS  --role ACCOUNTADMIN --ask-pass
@@ -89,7 +89,7 @@ snowflake.account.users.where: [
 cnquery> snowflake.account.users.where(time.now - lastSuccessLogin > time.day * 30) { lastSuccessLogin }
 snowflake.account.users.where: [
   0: {
-    lastSuccessLogin: 366 days 
+    lastSuccessLogin: 366 days
   }
 ]
 ```
@@ -118,5 +118,3 @@ snowflake.account.databases: [
   2: snowflake.database name="SNOWFLAKE_SAMPLE_DATA"
 ]
 ```
-
-

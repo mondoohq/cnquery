@@ -604,7 +604,7 @@ lr/docs/markdown: providers/lr
 		--output ../docs/docs/mql/resources/vsphere-pack
 	./lr markdown providers/snowflake/resources/snowflake.lr \
 		--pack-name "Snowflake" \
-		--description "The Snowflake resource pack lets you use MQL to query and assess the security of your Snowflake identities and configuration." \
+		--description "The Snowflake resource pack lets you use MQL to query and assess the security of your Snowflake Data Cloud identities and configuration." \
 		--docs-file providers/snowflake/resources/snowflake.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/snowflake-pack
 	./lr markdown providers/mondoo/resources/mondoo.lr \

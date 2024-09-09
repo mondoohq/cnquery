@@ -17,14 +17,14 @@ var Config = plugin.Provider{
 		{
 			Name:      "snowflake",
 			Use:       "snowflake",
-			Short:     "a Snowflake account",
+			Short:     "a Snowflake Data Cloud account",
 			Discovery: []string{},
 			Flags: []plugin.Flag{
 				{
 					Long:    "user",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "Snowflake user name",
+					Desc:    "Snowflake Data Cloud user name",
 				},
 				{
 					Long:        "ask-pass",
@@ -53,19 +53,19 @@ var Config = plugin.Provider{
 					Long:    "account",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "Snowflake account",
+					Desc:    "Snowflake Data Cloud account",
 				},
 				{
 					Long:    "region",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "Snowflake region",
+					Desc:    "Snowflake Data Cloud region",
 				},
 				{
 					Long:    "role",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "Snowflake role",
+					Desc:    "Snowflake Data Cloud role",
 				},
 			},
 		},
