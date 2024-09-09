@@ -14,7 +14,7 @@ import (
 const smbiosWindowsScript = `
 $bios = Get-WmiObject -class Win32_Bios
 $baseboard = Get-WmiObject Win32_BaseBoard
-$chassis = Get-WmiObject Win32_SystemEnclosure
+$chassis = @(Get-WmiObject Win32_SystemEnclosure)
 $sys = Get-WmiObject Win32_ComputerSystem
 $sysProduct = Get-WmiObject Win32_ComputerSystemProduct
 
@@ -31,7 +31,7 @@ $smbios | ConvertTo-Json
 type smbiosWindows struct {
 	Bios          smbiosWinBios       `json:"Bios"`
 	BaseBoard     smbiosBaseBoard     `json:"BaseBoard"`
-	Chassis       smbiosChassis       `json:"Chassis"`
+	Chassis       []smbiosChassis     `json:"Chassis"`
 	System        smbiosSystem        `json:"System"`
 	SystemProduct smbiosSystemProduct `json:"SystemProduct"`
 }
@@ -93,6 +93,10 @@ func (s *WindowsSmbiosManager) Info() (*SmBiosInfo, error) {
 		return nil, err
 	}
 
+	if len(winBios.Chassis) == 0 {
+		winBios.Chassis = append(winBios.Chassis, smbiosChassis{})
+	}
+
 	smInfo := SmBiosInfo{
 		BIOS: BiosInfo{
 			Vendor:      winBios.Bios.Manufacturer,
@@ -112,11 +116,11 @@ func (s *WindowsSmbiosManager) Info() (*SmBiosInfo, error) {
 			SerialNumber: winBios.BaseBoard.SerialNumber,
 			Version:      winBios.BaseBoard.Version,
 		},
-		ChassisInfo: ChassisInfo{
-			Vendor:       winBios.Chassis.Manufacturer,
-			Model:        toString(winBios.Chassis.Model),
-			Version:      winBios.Chassis.Version,
-			SerialNumber: winBios.Chassis.SerialNumber,
+		ChassisInfo: ChassisInfo{ // TODO: Might want to make this a slice
+			Vendor:       winBios.Chassis[0].Manufacturer,
+			Model:        toString(winBios.Chassis[0].Model),
+			Version:      winBios.Chassis[0].Version,
+			SerialNumber: winBios.Chassis[0].SerialNumber,
 		},
 	}
 
