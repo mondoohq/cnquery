@@ -763,15 +763,6 @@ resources:
     refs:
     - title: Azure Key Vault
       url: https://learn.microsoft.com/en-us/azure/key-vault/
-  azure.subscription.keyVaultService.key.autorotation:
-    fields:
-      enabled: {}
-      kid: {}
-    is_private: true
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - azure
   azure.subscription.keyVaultService.secret:
     fields:
       contentType: {}
