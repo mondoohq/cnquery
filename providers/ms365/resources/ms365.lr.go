@@ -26,6 +26,10 @@ func init() {
 			Init: initMicrosoftTenant,
 			Create: createMicrosoftTenant,
 		},
+		"microsoft.conditionalAccess": {
+			// to override args, implement: initMicrosoftConditionalAccess(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftConditionalAccess,
+		},
 		"microsoft.user": {
 			Init: initMicrosoftUser,
 			Create: createMicrosoftUser,
@@ -288,6 +292,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.tenant.subscriptions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenant).GetSubscriptions()).ToDataRes(types.Array(types.Dict))
+	},
+	"microsoft.conditionalAccess.namedLocations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccess).GetNamedLocations()).ToDataRes(types.Array(types.String))
 	},
 	"microsoft.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUser).GetId()).ToDataRes(types.String)
@@ -1231,6 +1238,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.tenant.subscriptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftTenant).Subscriptions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftConditionalAccess).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.conditionalAccess.namedLocations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccess).NamedLocations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"microsoft.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2796,6 +2811,52 @@ func (c *mqlMicrosoftTenant) GetType() *plugin.TValue[string] {
 func (c *mqlMicrosoftTenant) GetSubscriptions() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.Subscriptions, func() ([]interface{}, error) {
 		return c.subscriptions()
+	})
+}
+
+// mqlMicrosoftConditionalAccess for the microsoft.conditionalAccess resource
+type mqlMicrosoftConditionalAccess struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftConditionalAccessInternal it will be used here
+	NamedLocations plugin.TValue[[]interface{}]
+}
+
+// createMicrosoftConditionalAccess creates a new instance of this resource
+func createMicrosoftConditionalAccess(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftConditionalAccess{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.conditionalAccess", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftConditionalAccess) MqlName() string {
+	return "microsoft.conditionalAccess"
+}
+
+func (c *mqlMicrosoftConditionalAccess) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftConditionalAccess) GetNamedLocations() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.NamedLocations, func() ([]interface{}, error) {
+		return c.namedLocations()
 	})
 }
 
