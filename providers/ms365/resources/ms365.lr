@@ -59,7 +59,15 @@ microsoft.tenant @defaults("name") {
 // Microsoft Conditional Access Policies
 microsoft.conditionalAccess {
   // IP named location
-  namedLocations() []string
+  namedLocations() []microsoft.conditionalAccess.ipNamedLocation
+}
+
+// Microsoft Conditional Access IP named location
+microsoft.conditionalAccess.ipNamedLocation @defaults("name trusted") {
+  // Named location name
+  name string
+  // Whether the location is marked as trusted
+  trusted bool
 }
 
 // Microsoft Entra ID user

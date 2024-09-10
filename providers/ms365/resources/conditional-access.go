@@ -8,6 +8,7 @@ import (
 	"log"
 
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
+	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
 )
 
@@ -18,29 +19,41 @@ func (a *mqlMicrosoftConditionalAccess) namedLocations() ([]interface{}, error) 
 		return nil, err
 	}
 
-	// Make a request to get named locations
 	ctx := context.Background()
 	namedLocations, err := graphClient.Identity().ConditionalAccess().NamedLocations().Get(ctx, nil)
 	if err != nil {
 		return nil, transformError(err)
 	}
 
-	// Collect all named location names
-	var locationNames []interface{} // Changed to interface{} to match the expected return type
+	var locationDetails []interface{}
 	for _, location := range namedLocations.GetValue() {
-		// Use type assertion to check for IP named locations
 		if ipLocation, ok := location.(*models.IpNamedLocation); ok {
 			displayName := ipLocation.GetDisplayName()
+			isTrusted := ipLocation.GetIsTrusted()
+
 			if displayName != nil {
-				locationNames = append(locationNames, *displayName)
+				trusted := false
+				if isTrusted != nil {
+					trusted = *isTrusted
+				}
+
+				locationInfo, err := CreateResource(a.MqlRuntime, "microsoft.conditionalAccess.ipNamedLocation",
+					map[string]*llx.RawData{
+						"name":    llx.StringDataPtr(displayName),
+						"trusted": llx.BoolData(trusted),
+					})
+				if err != nil {
+					return nil, err
+				}
+				locationDetails = append(locationDetails, locationInfo)
 			}
 		}
 	}
 
-	if len(locationNames) == 0 {
+	if len(locationDetails) == 0 {
 		log.Println("No named locations are defined.")
 		return nil, nil
 	}
 
-	return locationNames, nil
+	return locationDetails, nil
 }

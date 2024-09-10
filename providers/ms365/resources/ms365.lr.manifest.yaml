@@ -122,7 +122,19 @@ resources:
     min_mondoo_version: 9.0.0
   microsoft.conditionalAccess:
     fields:
+      name: {}
       namedLocations: {}
+      trusted: {}
+    min_mondoo_version: 9.0.0
+  microsoft.conditionalAccess.ipNamedLocation:
+    fields:
+      name: {}
+      trusted: {}
+    min_mondoo_version: 9.0.0
+  microsoft.conditionalAccess.namedLocation:
+    fields:
+      name: {}
+      trusted: {}
     min_mondoo_version: 9.0.0
   microsoft.devicemanagement:
     fields:
