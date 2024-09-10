@@ -326,6 +326,10 @@ func init() {
 			Init: initAzureSubscriptionKeyVaultServiceVault,
 			Create: createAzureSubscriptionKeyVaultServiceVault,
 		},
+		"azure.subscription.keyVaultService.key.autorotation": {
+			// to override args, implement: initAzureSubscriptionKeyVaultServiceKeyAutorotation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionKeyVaultServiceKeyAutorotation,
+		},
 		"azure.subscription.keyVaultService.key": {
 			// to override args, implement: initAzureSubscriptionKeyVaultServiceKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionKeyVaultServiceKey,
@@ -2303,6 +2307,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.keyVaultService.vault.diagnosticSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultServiceVault).GetDiagnosticSettings()).ToDataRes(types.Array(types.Resource("azure.subscription.monitorService.diagnosticsetting")))
+	},
+	"azure.subscription.keyVaultService.vault.autorotation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceVault).GetAutorotation()).ToDataRes(types.Array(types.Resource("azure.subscription.keyVaultService.key.autorotation")))
+	},
+	"azure.subscription.keyVaultService.key.autorotation.kid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceKeyAutorotation).GetKid()).ToDataRes(types.String)
+	},
+	"azure.subscription.keyVaultService.key.autorotation.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceKeyAutorotation).GetEnabled()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.keyVaultService.key.kid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultServiceKey).GetKid()).ToDataRes(types.String)
@@ -5582,6 +5595,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"azure.subscription.keyVaultService.vault.diagnosticSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionKeyVaultServiceVault).DiagnosticSettings, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.vault.autorotation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceVault).Autorotation, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.key.autorotation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAzureSubscriptionKeyVaultServiceKeyAutorotation).__id, ok = v.Value.(string)
+			return
+		},
+	"azure.subscription.keyVaultService.key.autorotation.kid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceKeyAutorotation).Kid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.key.autorotation.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceKeyAutorotation).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.keyVaultService.key.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13891,6 +13920,7 @@ type mqlAzureSubscriptionKeyVaultServiceVault struct {
 	Certificates plugin.TValue[[]interface{}]
 	Secrets plugin.TValue[[]interface{}]
 	DiagnosticSettings plugin.TValue[[]interface{}]
+	Autorotation plugin.TValue[[]interface{}]
 }
 
 // createAzureSubscriptionKeyVaultServiceVault creates a new instance of this resource
@@ -14030,6 +14060,76 @@ func (c *mqlAzureSubscriptionKeyVaultServiceVault) GetDiagnosticSettings() *plug
 
 		return c.diagnosticSettings()
 	})
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceVault) GetAutorotation() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Autorotation, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.keyVaultService.vault", c.__id, "autorotation")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.autorotation()
+	})
+}
+
+// mqlAzureSubscriptionKeyVaultServiceKeyAutorotation for the azure.subscription.keyVaultService.key.autorotation resource
+type mqlAzureSubscriptionKeyVaultServiceKeyAutorotation struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAzureSubscriptionKeyVaultServiceKeyAutorotationInternal it will be used here
+	Kid plugin.TValue[string]
+	Enabled plugin.TValue[bool]
+}
+
+// createAzureSubscriptionKeyVaultServiceKeyAutorotation creates a new instance of this resource
+func createAzureSubscriptionKeyVaultServiceKeyAutorotation(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionKeyVaultServiceKeyAutorotation{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.keyVaultService.key.autorotation", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceKeyAutorotation) MqlName() string {
+	return "azure.subscription.keyVaultService.key.autorotation"
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceKeyAutorotation) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceKeyAutorotation) GetKid() *plugin.TValue[string] {
+	return &c.Kid
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceKeyAutorotation) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
 }
 
 // mqlAzureSubscriptionKeyVaultServiceKey for the azure.subscription.keyVaultService.key resource
