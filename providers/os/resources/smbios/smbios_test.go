@@ -207,7 +207,7 @@ func TestManagerWindows(t *testing.T) {
 			Version:      "N/A",
 			SerialNumber: "None",
 			AssetTag:     "",
-			Type:         "",
+			Type:         "1",
 		},
 	}, biosInfo)
 }
