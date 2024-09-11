@@ -257,31 +257,9 @@ resources:
       streetAddress: {}
     min_mondoo_version: 5.15.0
   platform:
-    docs:
-      desc: |
-        The `platform.runtimeEnv` fields is deprecated. Please use `platform.runtime` instead.
-        The `platform.release` field is deprecated. Please use `platform.version` instead.
     fields:
-      arch: {}
-      build: {}
-      family: {}
-      fqdn: {}
-      kind: {}
-      labels:
-        min_mondoo_version: 5.37.0
-      name: {}
-      release: {}
-      runtime:
-        min_mondoo_version: 6.9.0
-      runtimeEnv: {}
-      title: {}
-      version:
-        min_mondoo_version: 6.9.0
       vulnerabilityReport: {}
     min_mondoo_version: 5.15.0
-    snippets:
-    - query: platform { name release }
-      title: Platform Name and Release
   platform.advisories:
     fields:
       cvss: {}
