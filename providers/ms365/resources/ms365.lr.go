@@ -158,6 +158,14 @@ func init() {
 			// to override args, implement: initMs365TeamsTeamsMessagingPolicyConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMs365TeamsTeamsMessagingPolicyConfig,
 		},
+		"microsoft.adminPortal": {
+			// to override args, implement: initMicrosoftAdminPortal(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftAdminPortal,
+		},
+		"microsoft.adminPortal.delegatedAdminPartner": {
+			// to override args, implement: initMicrosoftAdminPortalDelegatedAdminPartner(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftAdminPortalDelegatedAdminPartner,
+		},
 	}
 }
 
@@ -1128,6 +1136,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ms365.teams.teamsMessagingPolicyConfig.allowSecurityEndUserReporting": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365TeamsTeamsMessagingPolicyConfig).GetAllowSecurityEndUserReporting()).ToDataRes(types.Bool)
+	},
+	"microsoft.adminPortal.delegatedAdminPartners": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftAdminPortal).GetDelegatedAdminPartners()).ToDataRes(types.Array(types.Resource("microsoft.adminPortal.delegatedAdminPartner")))
+	},
+	"microsoft.adminPortal.delegatedAdminPartner.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftAdminPortalDelegatedAdminPartner).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.adminPortal.delegatedAdminPartner.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftAdminPortalDelegatedAdminPartner).GetDisplayName()).ToDataRes(types.String)
 	},
 }
 
@@ -2483,6 +2500,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		},
 	"ms365.teams.teamsMessagingPolicyConfig.allowSecurityEndUserReporting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365TeamsTeamsMessagingPolicyConfig).AllowSecurityEndUserReporting, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.adminPortal.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftAdminPortal).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.adminPortal.delegatedAdminPartners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftAdminPortal).DelegatedAdminPartners, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.adminPortal.delegatedAdminPartner.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftAdminPortalDelegatedAdminPartner).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.adminPortal.delegatedAdminPartner.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftAdminPortalDelegatedAdminPartner).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.adminPortal.delegatedAdminPartner.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftAdminPortalDelegatedAdminPartner).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -5883,4 +5920,109 @@ func (c *mqlMs365TeamsTeamsMessagingPolicyConfig) MqlID() string {
 
 func (c *mqlMs365TeamsTeamsMessagingPolicyConfig) GetAllowSecurityEndUserReporting() *plugin.TValue[bool] {
 	return &c.AllowSecurityEndUserReporting
+}
+
+// mqlMicrosoftAdminPortal for the microsoft.adminPortal resource
+type mqlMicrosoftAdminPortal struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftAdminPortalInternal it will be used here
+	DelegatedAdminPartners plugin.TValue[[]interface{}]
+}
+
+// createMicrosoftAdminPortal creates a new instance of this resource
+func createMicrosoftAdminPortal(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftAdminPortal{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.adminPortal", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftAdminPortal) MqlName() string {
+	return "microsoft.adminPortal"
+}
+
+func (c *mqlMicrosoftAdminPortal) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftAdminPortal) GetDelegatedAdminPartners() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.DelegatedAdminPartners, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.adminPortal", c.__id, "delegatedAdminPartners")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.delegatedAdminPartners()
+	})
+}
+
+// mqlMicrosoftAdminPortalDelegatedAdminPartner for the microsoft.adminPortal.delegatedAdminPartner resource
+type mqlMicrosoftAdminPortalDelegatedAdminPartner struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftAdminPortalDelegatedAdminPartnerInternal it will be used here
+	Id plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+}
+
+// createMicrosoftAdminPortalDelegatedAdminPartner creates a new instance of this resource
+func createMicrosoftAdminPortalDelegatedAdminPartner(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftAdminPortalDelegatedAdminPartner{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.adminPortal.delegatedAdminPartner", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftAdminPortalDelegatedAdminPartner) MqlName() string {
+	return "microsoft.adminPortal.delegatedAdminPartner"
+}
+
+func (c *mqlMicrosoftAdminPortalDelegatedAdminPartner) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftAdminPortalDelegatedAdminPartner) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftAdminPortalDelegatedAdminPartner) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
 }
