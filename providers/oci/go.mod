@@ -7,7 +7,7 @@ replace go.mondoo.com/cnquery/v11 => ../..
 require (
 	github.com/oracle/oci-go-sdk/v65 v65.73.0
 	github.com/rs/zerolog v1.33.0
-	go.mondoo.com/cnquery/v11 v11.21.0
+	go.mondoo.com/cnquery/v11 v11.21.1
 )
 
 require (

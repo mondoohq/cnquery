@@ -8,7 +8,7 @@ require (
 	github.com/rs/zerolog v1.33.0
 	github.com/stretchr/testify v1.9.0
 	github.com/vmware/go-vcloud-director/v2 v2.25.0
-	go.mondoo.com/cnquery/v11 v11.21.0
+	go.mondoo.com/cnquery/v11 v11.21.1
 )
 
 require (

@@ -20,7 +20,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.33.0
 	github.com/stretchr/testify v1.9.0
-	go.mondoo.com/cnquery/v11 v11.21.0
+	go.mondoo.com/cnquery/v11 v11.21.1
 	// pin v0.28.9
 	k8s.io/api v0.28.9
 	// pin v0.28.9

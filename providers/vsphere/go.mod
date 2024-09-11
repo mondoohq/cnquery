@@ -9,7 +9,7 @@ require (
 	github.com/rs/zerolog v1.33.0
 	github.com/stretchr/testify v1.9.0
 	github.com/vmware/govmomi v0.43.0
-	go.mondoo.com/cnquery/v11 v11.21.0
+	go.mondoo.com/cnquery/v11 v11.21.1
 	go.mondoo.com/mondoo-go v0.0.0-20240819110653-687d75eb1183
 )
 

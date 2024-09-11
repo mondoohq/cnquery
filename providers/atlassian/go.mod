@@ -7,7 +7,7 @@ go 1.23.0
 require (
 	github.com/ctreminiom/go-atlassian v1.6.1
 	github.com/pkg/errors v0.9.1
-	go.mondoo.com/cnquery/v11 v11.21.0
+	go.mondoo.com/cnquery/v11 v11.21.1
 	go.mondoo.com/ranger-rpc v0.6.3
 )
 

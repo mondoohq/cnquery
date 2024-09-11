@@ -6,7 +6,7 @@ go 1.23.0
 
 require (
 	github.com/stretchr/testify v1.9.0
-	go.mondoo.com/cnquery/v11 v11.21.0
+	go.mondoo.com/cnquery/v11 v11.21.1
 	go.mondoo.com/mondoo-go v0.0.0-20240819110653-687d75eb1183
 )
 

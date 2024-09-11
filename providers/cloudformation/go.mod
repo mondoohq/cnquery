@@ -7,7 +7,7 @@ replace go.mondoo.com/cnquery/v11 => ../..
 require (
 	github.com/aws-cloudformation/rain v1.15.0
 	github.com/stretchr/testify v1.9.0
-	go.mondoo.com/cnquery/v11 v11.21.0
+	go.mondoo.com/cnquery/v11 v11.21.1
 	go.mondoo.com/ranger-rpc v0.6.3
 	gopkg.in/yaml.v3 v3.0.1
 )
