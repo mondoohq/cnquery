@@ -748,3 +748,17 @@ private ms365.teams.teamsMessagingPolicyConfig {
   // Whether users can report security concerns
   allowSecurityEndUserReporting bool
 }
+
+// Microsoft Admin Portal
+microsoft.adminPortal {
+  // List of delegated admin partners
+  delegatedAdminPartners() []microsoft.adminPortal.delegatedAdminPartner
+}
+
+// Microsoft 365 Entra ID Delegated Admin Partner
+microsoft.adminPortal.delegatedAdminPartner @defaults("id displayName") {
+  // Partner ID
+  id string
+  // Partner Display Name
+  displayName string
+}
