@@ -4,6 +4,7 @@
 package smbios
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -12,6 +13,75 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/connection/mock"
 	"go.mondoo.com/cnquery/v11/providers/os/detector"
 )
+
+func Test_WindowsSmbiosChassis_AdHoc(t *testing.T) {
+	// First two are real-life examples, others are augmented test cases
+	data := `
+{
+  "Chassis": [
+    {
+      "Manufacturer": "Redacted",
+      "Model": null,
+      "LockPresent": "False",
+      "SerialNumber": "R3D4CT3D",
+      "SMBIOSAssetTag": "none",
+      "SecurityStatus": "2",
+			"ChassisTypes": [1]
+    },
+    {
+      "Manufacturer": "Redacted",
+      "Model": null,
+      "LockPresent": "False",
+      "SerialNumber": "R3D4CT3D",
+      "SMBIOSAssetTag": "SomeTag_77",
+      "SecurityStatus": "2",
+			"ChassisTypes": "unknown"
+    },
+		{
+      "Manufacturer": "Redacted",
+      "Model": null,
+      "LockPresent": "False",
+      "SerialNumber": "R3D4CT3D",
+      "SMBIOSAssetTag": "none",
+      "SecurityStatus": "2",
+			"ChassisTypes": ["1"]
+    },
+    {
+      "Manufacturer": "Redacted",
+      "Model": null,
+      "LockPresent": "False",
+      "SerialNumber": "R3D4CT3D",
+      "SMBIOSAssetTag": "SomeTag_77",
+      "SecurityStatus": "2",
+			"ChassisTypes": null
+		},
+    {
+      "Manufacturer": "Redacted",
+      "Model": null,
+      "LockPresent": "False",
+      "SerialNumber": "R3D4CT3D",
+      "SMBIOSAssetTag": "SomeTag_77",
+      "SecurityStatus": "2",
+			"ChassisTypes": [null]
+    }
+  ]
+}
+`
+
+	dataReader := strings.NewReader(data)
+
+	smi, err := ParseWindowsSmbiosInfo(dataReader)
+	require.NoError(t, err)
+
+	chassis := smi.Chassis
+	require.Len(t, chassis, 5)
+
+	require.Equal(t, []string{"1"}, chassis[0].GetChassisTypes().Value())
+	require.Equal(t, []string{"unknown"}, chassis[1].GetChassisTypes().Value())
+	require.Equal(t, []string{"1"}, chassis[2].GetChassisTypes().Value())
+	require.Equal(t, []string{""}, chassis[3].GetChassisTypes().Value())
+	require.Equal(t, []string{""}, chassis[4].GetChassisTypes().Value())
+}
 
 func TestManagerCentos(t *testing.T) {
 	conn, err := mock.New(0, "./testdata/centos.toml", &inventory.Asset{})

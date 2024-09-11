@@ -6,6 +6,7 @@ package smbios
 import (
 	"encoding/json"
 	"io"
+	"strconv"
 
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/powershell"
@@ -54,11 +55,61 @@ type smbiosChassis struct {
 	Manufacturer string  `json:"Manufacturer"`
 	Model        *string `json:"Model"`
 
-	ChassisTypes []uint `json:"ChassisTypes"`
+	ChassisTypes *smbiosChassisTypes `json:"ChassisTypes"`
 
 	Version        string `json:"Version"`
 	SerialNumber   string `json:"SerialNumber"`
 	SMBIOSAssetTag string `json:"SMBIOSAssetTag"`
+}
+
+func (s smbiosChassis) GetChassisTypes() *smbiosChassisTypes {
+	if s.ChassisTypes == nil {
+		return &smbiosChassisTypes{}
+	}
+
+	return s.ChassisTypes
+}
+
+type smbiosChassisTypes struct {
+	ChassisTypes []string
+}
+
+func (t *smbiosChassisTypes) Value() []string {
+	if len(t.ChassisTypes) == 0 {
+		return []string{""}
+	}
+	return t.ChassisTypes
+}
+
+func (t *smbiosChassisTypes) UnmarshalJSON(data []byte) error {
+	var value any
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+
+	var handleValue func(value any)
+	handleValue = func(value any) {
+		switch v := value.(type) {
+		case []any:
+			for _, val := range v {
+				handleValue(val)
+			}
+		case string:
+			t.ChassisTypes = append(t.ChassisTypes, v)
+		case int:
+			t.ChassisTypes = append(t.ChassisTypes, strconv.Itoa(v))
+		case float64:
+			t.ChassisTypes = append(t.ChassisTypes, strconv.Itoa(int(v)))
+		case nil:
+			t.ChassisTypes = append(t.ChassisTypes, "")
+		default:
+			return
+		}
+	}
+
+	handleValue(value)
+
+	return nil
 }
 
 type smbiosSystem struct{}
@@ -121,6 +172,7 @@ func (s *WindowsSmbiosManager) Info() (*SmBiosInfo, error) {
 			Model:        toString(winBios.Chassis[0].Model),
 			Version:      winBios.Chassis[0].Version,
 			SerialNumber: winBios.Chassis[0].SerialNumber,
+			Type:         winBios.Chassis[0].GetChassisTypes().Value()[0],
 		},
 	}
 
