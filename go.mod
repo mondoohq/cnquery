@@ -282,7 +282,7 @@ require (
 	modernc.org/libc v1.60.1 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.8.0 // indirect
-	modernc.org/sqlite v1.33.0 // indirect
+	modernc.org/sqlite v1.32.0 // indirect
 	moul.io/http2curl v1.0.0 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
