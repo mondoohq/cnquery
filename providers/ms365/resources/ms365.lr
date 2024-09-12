@@ -761,4 +761,8 @@ microsoft.adminPortal.delegatedAdminPartner @defaults("id displayName") {
   id string
   // Partner Display Name
   displayName string
+  // List of Unified Roles for the partner
+  unifiedRoles []string
+  // Status of the delegated admin relationship
+  status string
 }

@@ -129,29 +129,60 @@ func (a *mqlMicrosoftAdminPortal) delegatedAdminPartners() ([]interface{}, error
 	}
 
 	ctx := context.Background()
+
 	partnersResp, err := graphClient.TenantRelationships().DelegatedAdminRelationships().Get(ctx, nil)
 	if err != nil {
 		return nil, transformError(err)
 	}
 
 	var partnerDetails []interface{}
+
 	for _, partner := range partnersResp.GetValue() {
 		partnerId := partner.GetId()
 		displayName := partner.GetDisplayName()
+		accessDetails := partner.GetAccessDetails()
+		status := partner.GetStatus() // Fetch the status property
 
 		if partnerId != nil && displayName != nil {
+			unifiedRoles := []interface{}{}
+			if accessDetails != nil && accessDetails.GetUnifiedRoles() != nil {
+				for _, role := range accessDetails.GetUnifiedRoles() {
+					roleDefinitionId := role.GetRoleDefinitionId()
+					if roleDefinitionId != nil {
+						unifiedRoles = append(unifiedRoles, *roleDefinitionId)
+					}
+				}
+			}
+
+			unifiedRolesData, err := convert.JsonToDictSlice(unifiedRoles)
+			if err != nil {
+				return nil, err
+			}
+
+			var statusStr *string
+			if status != nil {
+				s := status.String()
+				statusStr = &s
+			}
+
 			partnerInfo, err := CreateResource(a.MqlRuntime, "microsoft.adminPortal.delegatedAdminPartner",
 				map[string]*llx.RawData{
-					"id":          llx.StringDataPtr(partnerId),
-					"displayName": llx.StringDataPtr(displayName),
+					"id":           llx.StringDataPtr(partnerId),
+					"displayName":  llx.StringDataPtr(displayName),
+					"unifiedRoles": llx.ArrayData(unifiedRolesData, types.String),
+					"status":       llx.StringDataPtr(statusStr),
 				})
 			if err != nil {
 				return nil, err
 			}
+
 			partnerDetails = append(partnerDetails, partnerInfo)
+		} else {
+			log.Printf("Skipped a partner with missing ID or Display Name")
 		}
 	}
 
+	// If no partners are found
 	if len(partnerDetails) == 0 {
 		log.Println("No delegated admin partners are defined.")
 		return nil, nil
