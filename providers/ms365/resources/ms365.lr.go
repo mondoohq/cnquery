@@ -1146,6 +1146,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.adminPortal.delegatedAdminPartner.displayName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftAdminPortalDelegatedAdminPartner).GetDisplayName()).ToDataRes(types.String)
 	},
+	"microsoft.adminPortal.delegatedAdminPartner.unifiedRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftAdminPortalDelegatedAdminPartner).GetUnifiedRoles()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.adminPortal.delegatedAdminPartner.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftAdminPortalDelegatedAdminPartner).GetStatus()).ToDataRes(types.String)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -2520,6 +2526,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.adminPortal.delegatedAdminPartner.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftAdminPortalDelegatedAdminPartner).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.adminPortal.delegatedAdminPartner.unifiedRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftAdminPortalDelegatedAdminPartner).UnifiedRoles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.adminPortal.delegatedAdminPartner.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftAdminPortalDelegatedAdminPartner).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -5985,6 +5999,8 @@ type mqlMicrosoftAdminPortalDelegatedAdminPartner struct {
 	// optional: if you define mqlMicrosoftAdminPortalDelegatedAdminPartnerInternal it will be used here
 	Id plugin.TValue[string]
 	DisplayName plugin.TValue[string]
+	UnifiedRoles plugin.TValue[[]interface{}]
+	Status plugin.TValue[string]
 }
 
 // createMicrosoftAdminPortalDelegatedAdminPartner creates a new instance of this resource
@@ -6025,4 +6041,12 @@ func (c *mqlMicrosoftAdminPortalDelegatedAdminPartner) GetId() *plugin.TValue[st
 
 func (c *mqlMicrosoftAdminPortalDelegatedAdminPartner) GetDisplayName() *plugin.TValue[string] {
 	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftAdminPortalDelegatedAdminPartner) GetUnifiedRoles() *plugin.TValue[[]interface{}] {
+	return &c.UnifiedRoles
+}
+
+func (c *mqlMicrosoftAdminPortalDelegatedAdminPartner) GetStatus() *plugin.TValue[string] {
+	return &c.Status
 }
