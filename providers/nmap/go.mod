@@ -1,6 +1,6 @@
 module go.mondoo.com/cnquery/v11/providers/nmap
 
-go 1.22
+go 1.23
 
 require (
 	github.com/Ullaakut/nmap/v3 v3.0.3
