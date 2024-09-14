@@ -27,7 +27,7 @@ func init() {
 			Create: createNmapTarget,
 		},
 		"nmap.host": {
-			// to override args, implement: initNmapHost(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initNmapHost,
 			Create: createNmapHost,
 		},
 		"nmap.port": {

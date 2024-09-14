@@ -6,6 +6,7 @@ package provider
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
@@ -40,9 +41,48 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		Options: map[string]string{},
 	}
 
-	// Do custom flag parsing here
+	// discovery flags
+	discoverTargets := []string{}
+	if x, ok := flags["discover"]; ok && len(x.Array) != 0 {
+		for i := range x.Array {
+			entry := string(x.Array[i].Value)
+			discoverTargets = append(discoverTargets, entry)
+		}
+	} else {
+		discoverTargets = []string{"auto"}
+	}
+	conf.Discover = &inventory.Discovery{Targets: discoverTargets}
+
+	// nmap also supports the following sub-commands, those are optional
+	name := ""
+	if len(req.Args) > 0 {
+		switch req.Args[0] {
+		case "host":
+			conf.Host = req.Args[1]
+			conf.Options["search"] = "host"
+		case "domain":
+			conf.Host = req.Args[1]
+			conf.Options["search"] = "domain"
+		default:
+			return nil, errors.New("invalid nmap sub-command, supported are: host or domain")
+		}
+	} else {
+		name = "Nmap"
+	}
+
+	if networks, ok := flags["networks"]; ok {
+		if networks.Array != nil {
+			networksValues := []string{}
+			for _, network := range networks.Array {
+				networksValues = append(networksValues, string(network.Value))
+			}
+
+			conf.Options["networks"] = strings.Join(networksValues, ",")
+		}
+	}
 
 	asset := inventory.Asset{
+		Name:        name,
 		Connections: []*inventory.Config{conf},
 	}
 
@@ -66,11 +106,16 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		}
 	}
 
+	inv, err := s.discover(conn)
+	if err != nil {
+		return nil, err
+	}
+
 	return &plugin.ConnectRes{
 		Id:        conn.ID(),
 		Name:      conn.Name(),
 		Asset:     req.Asset,
-		Inventory: nil,
+		Inventory: inv,
 	}, nil
 }
 
@@ -120,20 +165,31 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.NmapConnection) error {
-	// TODO: adjust asset detection
 	asset.Id = conn.Conf.Type
 	asset.Name = conn.Conf.Host
 
-	asset.Platform = &inventory.Platform{
-		Name:   "nmap",
-		Family: []string{"nmap"},
-		Kind:   "api",
-		Title:  "nmap",
+	platform, err := conn.PlatformInfo()
+	if err != nil {
+		return err
 	}
 
-	// TODO: Add platform IDs
-	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/nmap"}
+	asset.Platform = platform
+	asset.PlatformIds = []string{conn.Identifier()}
 	return nil
+}
+
+func (s *Service) discover(conn *connection.NmapConnection) (*inventory.Inventory, error) {
+	conf := conn.Asset().Connections[0]
+	if conf.Discover == nil {
+		return nil, nil
+	}
+
+	runtime, err := s.GetRuntime(conn.ID())
+	if err != nil {
+		return nil, err
+	}
+
+	return resources.Discover(runtime, conf.Options)
 }
 
 func (s *Service) MockConnect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*plugin.ConnectRes, error) {
