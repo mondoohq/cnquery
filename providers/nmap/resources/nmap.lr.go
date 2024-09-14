@@ -22,9 +22,9 @@ func init() {
 			// to override args, implement: initNmap(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createNmap,
 		},
-		"nmap.target": {
-			Init: initNmapTarget,
-			Create: createNmapTarget,
+		"nmap.network": {
+			Init: initNmapNetwork,
+			Create: createNmapNetwork,
 		},
 		"nmap.host": {
 			Init: initNmapHost,
@@ -109,14 +109,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"nmap.version": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNmap).GetVersion()).ToDataRes(types.Resource("nmap.versionInformation"))
 	},
-	"nmap.target.target": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlNmapTarget).GetTarget()).ToDataRes(types.String)
+	"nmap.network.target": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNmapNetwork).GetTarget()).ToDataRes(types.String)
 	},
-	"nmap.target.hosts": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlNmapTarget).GetHosts()).ToDataRes(types.Array(types.Resource("nmap.host")))
+	"nmap.network.hosts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNmapNetwork).GetHosts()).ToDataRes(types.Array(types.Resource("nmap.host")))
 	},
-	"nmap.target.warnings": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlNmapTarget).GetWarnings()).ToDataRes(types.Array(types.String))
+	"nmap.network.warnings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNmapNetwork).GetWarnings()).ToDataRes(types.Array(types.String))
 	},
 	"nmap.host.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNmapHost).GetName()).ToDataRes(types.String)
@@ -204,20 +204,20 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlNmap).Version, ok = plugin.RawToTValue[*mqlNmapVersionInformation](v.Value, v.Error)
 		return
 	},
-	"nmap.target.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlNmapTarget).__id, ok = v.Value.(string)
+	"nmap.network.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlNmapNetwork).__id, ok = v.Value.(string)
 			return
 		},
-	"nmap.target.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlNmapTarget).Target, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"nmap.network.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNmapNetwork).Target, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"nmap.target.hosts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlNmapTarget).Hosts, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+	"nmap.network.hosts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNmapNetwork).Hosts, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
-	"nmap.target.warnings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlNmapTarget).Warnings, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+	"nmap.network.warnings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNmapNetwork).Warnings, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"nmap.host.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -405,19 +405,19 @@ func (c *mqlNmap) GetVersion() *plugin.TValue[*mqlNmapVersionInformation] {
 	})
 }
 
-// mqlNmapTarget for the nmap.target resource
-type mqlNmapTarget struct {
+// mqlNmapNetwork for the nmap.network resource
+type mqlNmapNetwork struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlNmapTargetInternal it will be used here
+	// optional: if you define mqlNmapNetworkInternal it will be used here
 	Target plugin.TValue[string]
 	Hosts plugin.TValue[[]interface{}]
 	Warnings plugin.TValue[[]interface{}]
 }
 
-// createNmapTarget creates a new instance of this resource
-func createNmapTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlNmapTarget{
+// createNmapNetwork creates a new instance of this resource
+func createNmapNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNmapNetwork{
 		MqlRuntime: runtime,
 	}
 
@@ -434,7 +434,7 @@ func createNmapTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 	}
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("nmap.target", res.__id)
+		args, err = runtime.ResourceFromRecording("nmap.network", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -444,22 +444,22 @@ func createNmapTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 	return res, nil
 }
 
-func (c *mqlNmapTarget) MqlName() string {
-	return "nmap.target"
+func (c *mqlNmapNetwork) MqlName() string {
+	return "nmap.network"
 }
 
-func (c *mqlNmapTarget) MqlID() string {
+func (c *mqlNmapNetwork) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlNmapTarget) GetTarget() *plugin.TValue[string] {
+func (c *mqlNmapNetwork) GetTarget() *plugin.TValue[string] {
 	return &c.Target
 }
 
-func (c *mqlNmapTarget) GetHosts() *plugin.TValue[[]interface{}] {
+func (c *mqlNmapNetwork) GetHosts() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.Hosts, func() ([]interface{}, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("nmap.target", c.__id, "hosts")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nmap.network", c.__id, "hosts")
 			if err != nil {
 				return nil, err
 			}
@@ -472,7 +472,7 @@ func (c *mqlNmapTarget) GetHosts() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlNmapTarget) GetWarnings() *plugin.TValue[[]interface{}] {
+func (c *mqlNmapNetwork) GetWarnings() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.Warnings, func() ([]interface{}, error) {
 		return c.warnings()
 	})

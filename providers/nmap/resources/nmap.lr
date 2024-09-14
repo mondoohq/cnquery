@@ -10,8 +10,8 @@ nmap {
   version() nmap.versionInformation
 }
 
-// nmap target
-nmap.target {
+// nmap network
+nmap.network {
   init(target string)
   // Target IP address or hostname
   target string

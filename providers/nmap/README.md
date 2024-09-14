@@ -19,8 +19,8 @@ cnquery shell nmap
 *Scan active IP address in network*
 
 ```shell
-nmap.target("192.168.178.0/24").hosts { name ports { * }  }
-nmap.target.hosts: [
+nmap.network("192.168.178.0/24").hosts { name ports { * }  }
+nmap.network.hosts: [
   0: {
     ports: [
       0: {
@@ -73,8 +73,8 @@ nmap.target.hosts: [
 *Host scan with specific ip*
 
 ```shell
-nmap.target(target: "192.168.178.25").hosts { ports }
-nmap.target.hosts: [
+nmap.network(target: "192.168.178.25").hosts { ports }
+nmap.network.hosts: [
   0: {
     ports: [
       0: nmap.port port=5000 service="rtsp"

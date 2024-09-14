@@ -22,6 +22,12 @@ resources:
       trace: {}
     is_private: true
     min_mondoo_version: latest
+  nmap.network:
+    fields:
+      hosts: {}
+      target: {}
+      warnings: {}
+    min_mondoo_version: 9.0.0
   nmap.port:
     fields:
       method: {}
@@ -32,12 +38,6 @@ resources:
       state: {}
       version: {}
     is_private: true
-    min_mondoo_version: latest
-  nmap.target:
-    fields:
-      hosts: {}
-      target: {}
-      warnings: {}
     min_mondoo_version: latest
   nmap.version:
     fields:
