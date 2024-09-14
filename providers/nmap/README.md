@@ -97,3 +97,31 @@ Connect to a specific IP address and display all open ports.
 ```shell
 cnquery shell nmap host 8.8.8.8
 ```
+
+## Verifying the Installation of nmap
+
+To verify the installation of nmap, run the following command:
+
+```shell
+cnquery run nmap -c "nmap.version { * }"
+nmap.version: {
+  compiledWithout: []
+  nsockEngines: [
+    0: "kqueue"
+    1: "poll"
+    2: "select"
+  ]
+  version: "7.95"
+  platform: "arm-apple-darwin23.4.0"
+  compiledWith: [
+    0: "liblua-5.4.6"
+    1: "openssl-3.3.1"
+    2: "libssh2-1.11.0"
+    3: "libz-1.2.12"
+    4: "libpcre2-10.44"
+    5: "nmap-libpcap-1.10.4"
+    6: "nmap-libdnet-1.12"
+    7: "ipv6"
+  ]
+}
+```

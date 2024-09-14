@@ -13,7 +13,8 @@ import (
 	"github.com/Ullaakut/nmap/v3"
 )
 
-func TestNmap(t *testing.T) {
+func TestRawNmap(t *testing.T) {
+	// t.Skip("skipping nmap test - only used for local testing")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
@@ -34,7 +35,7 @@ func TestNmap(t *testing.T) {
 
 	result, warnings, err := scanner.Run()
 	if len(*warnings) > 0 {
-		log.Printf("run finished with warnings: %s\n", *warnings) // Warnings are non-critical errors from nmap.
+		log.Fatalf("run finished with warnings: %s\n", *warnings) // Warnings are non-critical errors from nmap.
 	}
 	if err != nil {
 		log.Fatalf("unable to run nmap scan: %v", err)

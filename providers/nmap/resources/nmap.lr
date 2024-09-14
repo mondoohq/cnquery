@@ -5,7 +5,10 @@ option provider = "go.mondoo.com/cnquery/v11/providers/nmap"
 option go_package = "go.mondoo.com/cnquery/v11/providers/nmap/resources"
 
 // nmap
-nmap {}
+nmap {
+  // Nmap version information
+  version() nmap.versionInformation
+}
 
 // nmap target
 nmap.target {
@@ -57,4 +60,18 @@ private nmap.port @defaults("port service"){
   version string
   // State of the port (e.g., open, closed)
   state string
+}
+
+// nmap version information
+private nmap.versionInformation @defaults("version") {
+  // Version of nmap
+  version string
+  // Platform nmap is running on
+  platform string
+  // libraries compiled with
+  compiledWith []string
+  // libraries not compiled with
+  compiledWithout []string
+  // nsock engines
+  nsockEngines []string
 }

@@ -5,6 +5,8 @@ resources:
   nmap:
     fields:
       field: {}
+      version:
+        min_mondoo_version: 9.0.0
     min_mondoo_version: latest
   nmap.host:
     fields:
@@ -37,3 +39,20 @@ resources:
       target: {}
       warnings: {}
     min_mondoo_version: latest
+  nmap.version:
+    fields:
+      compiledWith: {}
+      compiledWithout: {}
+      nsockEngines: {}
+      platform: {}
+      version: {}
+    min_mondoo_version: 9.0.0
+  nmap.versionInformation:
+    fields:
+      compiledWith: {}
+      compiledWithout: {}
+      nsockEngines: {}
+      platform: {}
+      version: {}
+    is_private: true
+    min_mondoo_version: 9.0.0

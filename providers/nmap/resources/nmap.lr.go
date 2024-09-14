@@ -34,6 +34,10 @@ func init() {
 			// to override args, implement: initNmapPort(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createNmapPort,
 		},
+		"nmap.versionInformation": {
+			// to override args, implement: initNmapVersionInformation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNmapVersionInformation,
+		},
 	}
 }
 
@@ -102,6 +106,9 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 }
 
 var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
+	"nmap.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNmap).GetVersion()).ToDataRes(types.Resource("nmap.versionInformation"))
+	},
 	"nmap.target.target": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNmapTarget).GetTarget()).ToDataRes(types.String)
 	},
@@ -162,6 +169,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"nmap.port.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNmapPort).GetState()).ToDataRes(types.String)
 	},
+	"nmap.versionInformation.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNmapVersionInformation).GetVersion()).ToDataRes(types.String)
+	},
+	"nmap.versionInformation.platform": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNmapVersionInformation).GetPlatform()).ToDataRes(types.String)
+	},
+	"nmap.versionInformation.compiledWith": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNmapVersionInformation).GetCompiledWith()).ToDataRes(types.Array(types.String))
+	},
+	"nmap.versionInformation.compiledWithout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNmapVersionInformation).GetCompiledWithout()).ToDataRes(types.Array(types.String))
+	},
+	"nmap.versionInformation.nsockEngines": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNmapVersionInformation).GetNsockEngines()).ToDataRes(types.Array(types.String))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -178,6 +200,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlNmap).__id, ok = v.Value.(string)
 			return
 		},
+	"nmap.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNmap).Version, ok = plugin.RawToTValue[*mqlNmapVersionInformation](v.Value, v.Error)
+		return
+	},
 	"nmap.target.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlNmapTarget).__id, ok = v.Value.(string)
 			return
@@ -270,6 +296,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlNmapPort).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"nmap.versionInformation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlNmapVersionInformation).__id, ok = v.Value.(string)
+			return
+		},
+	"nmap.versionInformation.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNmapVersionInformation).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nmap.versionInformation.platform": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNmapVersionInformation).Platform, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nmap.versionInformation.compiledWith": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNmapVersionInformation).CompiledWith, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"nmap.versionInformation.compiledWithout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNmapVersionInformation).CompiledWithout, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"nmap.versionInformation.nsockEngines": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNmapVersionInformation).NsockEngines, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -299,6 +349,7 @@ type mqlNmap struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlNmapInternal it will be used here
+	Version plugin.TValue[*mqlNmapVersionInformation]
 }
 
 // createNmap creates a new instance of this resource
@@ -336,6 +387,22 @@ func (c *mqlNmap) MqlName() string {
 
 func (c *mqlNmap) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlNmap) GetVersion() *plugin.TValue[*mqlNmapVersionInformation] {
+	return plugin.GetOrCompute[*mqlNmapVersionInformation](&c.Version, func() (*mqlNmapVersionInformation, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nmap", c.__id, "version")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNmapVersionInformation), nil
+			}
+		}
+
+		return c.version()
+	})
 }
 
 // mqlNmapTarget for the nmap.target resource
@@ -572,4 +639,68 @@ func (c *mqlNmapPort) GetVersion() *plugin.TValue[string] {
 
 func (c *mqlNmapPort) GetState() *plugin.TValue[string] {
 	return &c.State
+}
+
+// mqlNmapVersionInformation for the nmap.versionInformation resource
+type mqlNmapVersionInformation struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlNmapVersionInformationInternal it will be used here
+	Version plugin.TValue[string]
+	Platform plugin.TValue[string]
+	CompiledWith plugin.TValue[[]interface{}]
+	CompiledWithout plugin.TValue[[]interface{}]
+	NsockEngines plugin.TValue[[]interface{}]
+}
+
+// createNmapVersionInformation creates a new instance of this resource
+func createNmapVersionInformation(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNmapVersionInformation{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nmap.versionInformation", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNmapVersionInformation) MqlName() string {
+	return "nmap.versionInformation"
+}
+
+func (c *mqlNmapVersionInformation) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNmapVersionInformation) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlNmapVersionInformation) GetPlatform() *plugin.TValue[string] {
+	return &c.Platform
+}
+
+func (c *mqlNmapVersionInformation) GetCompiledWith() *plugin.TValue[[]interface{}] {
+	return &c.CompiledWith
+}
+
+func (c *mqlNmapVersionInformation) GetCompiledWithout() *plugin.TValue[[]interface{}] {
+	return &c.CompiledWithout
+}
+
+func (c *mqlNmapVersionInformation) GetNsockEngines() *plugin.TValue[[]interface{}] {
+	return &c.NsockEngines
 }
