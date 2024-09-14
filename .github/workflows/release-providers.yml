@@ -55,7 +55,7 @@ jobs:
 # We have to use this extensions, becasuse `gh pr create` does not support the ssh key case
       - name: Create pull request
         id: cpr
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v7
         with:
           base: main
           labels: providers
