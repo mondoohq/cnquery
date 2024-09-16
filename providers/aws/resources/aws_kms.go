@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
+	"github.com/aws/aws-sdk-go-v2/service/kms/types"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
@@ -56,35 +57,34 @@ func (a *mqlAwsKms) getKeys(conn *connection.AwsConnection) []*jobpool.Job {
 			log.Debug().Msgf("kms>getKeys>calling aws with region %s", regionVal)
 
 			svc := conn.Kms(regionVal)
-			ctx := context.Background()
 			res := []interface{}{}
-			var marker *string
-			for {
-				keyList, err := svc.ListKeys(ctx, &kms.ListKeysInput{Marker: marker})
-				if err != nil {
-					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
-					}
-					break
-				}
 
-				for _, key := range keyList.Keys {
-					mqlRecorder, err := CreateResource(a.MqlRuntime, "aws.kms.key",
-						map[string]*llx.RawData{
-							"id":     llx.StringDataPtr(key.KeyId),
-							"arn":    llx.StringDataPtr(key.KeyArn),
-							"region": llx.StringData(regionVal),
-						})
-					if err != nil {
-						return nil, err
-					}
-					res = append(res, mqlRecorder)
+			keys := make([]types.KeyListEntry, 0)
+			params := &kms.ListKeysInput{}
+			paginator := kms.NewListKeysPaginator(svc, params, func(o *kms.ListKeysPaginatorOptions) {
+				o.Limit = 100
+			})
+			for paginator.HasMorePages() {
+				output, err := paginator.NextPage(context.TODO())
+				if err != nil {
+					return nil, err
 				}
-				if !keyList.Truncated {
-					break
-				}
-				marker = keyList.NextMarker
+				keys = append(keys, output.Keys...)
 			}
+
+			for _, key := range keys {
+				mqlKey, err := CreateResource(a.MqlRuntime, "aws.kms.key",
+					map[string]*llx.RawData{
+						"id":     llx.StringDataPtr(key.KeyId),
+						"arn":    llx.StringDataPtr(key.KeyArn),
+						"region": llx.StringData(regionVal),
+					})
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, mqlKey)
+			}
+
 			return jobpool.JobResult(res), nil
 		}
 		tasks = append(tasks, jobpool.NewJob(f))
