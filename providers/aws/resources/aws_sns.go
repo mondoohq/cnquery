@@ -157,7 +157,9 @@ func getSNSTags(ctx context.Context, svc *sns.Client, arn *string) (map[string]i
 	}
 	tags := make(map[string]interface{})
 	for _, t := range resp.Tags {
-		tags[*t.Key] = *t.Value
+		if t.Key != nil && t.Value != nil {
+			tags[*t.Key] = *t.Value
+		}
 	}
 	return tags, nil
 }
