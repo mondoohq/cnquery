@@ -5,20 +5,20 @@ replace go.mondoo.com/cnquery/v11 => ../..
 go 1.23.0
 
 require (
-	cloud.google.com/go/accessapproval v1.8.0
+	cloud.google.com/go/accessapproval v1.8.1
 	cloud.google.com/go/bigquery v1.62.0
-	cloud.google.com/go/compute v1.28.0
-	cloud.google.com/go/container v1.39.0
-	cloud.google.com/go/functions v1.19.0
-	cloud.google.com/go/iam v1.2.0
-	cloud.google.com/go/kms v1.19.0
+	cloud.google.com/go/compute v1.28.1
+	cloud.google.com/go/container v1.40.0
+	cloud.google.com/go/functions v1.19.1
+	cloud.google.com/go/iam v1.2.1
+	cloud.google.com/go/kms v1.19.1
 	cloud.google.com/go/logging v1.11.0
-	cloud.google.com/go/longrunning v0.6.0
-	cloud.google.com/go/monitoring v1.21.0
+	cloud.google.com/go/longrunning v0.6.1
+	cloud.google.com/go/monitoring v1.21.1
 	cloud.google.com/go/pubsub v1.43.0
-	cloud.google.com/go/recommender v1.13.0
-	cloud.google.com/go/run v1.5.0
-	cloud.google.com/go/serviceusage v1.9.0
+	cloud.google.com/go/recommender v1.13.1
+	cloud.google.com/go/run v1.5.1
+	cloud.google.com/go/serviceusage v1.9.1
 	github.com/aws/smithy-go v1.20.4
 	github.com/cockroachdb/errors v1.11.3
 	github.com/google/go-containerregistry v0.20.2
@@ -35,11 +35,11 @@ require (
 
 require (
 	cloud.google.com/go v0.115.1 // indirect
-	cloud.google.com/go/auth v0.9.3 // indirect
+	cloud.google.com/go/auth v0.9.4 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.4 // indirect
-	cloud.google.com/go/binaryauthorization v1.9.0
-	cloud.google.com/go/compute/metadata v0.5.0 // indirect
-	cloud.google.com/go/secretmanager v1.14.0 // indirect
+	cloud.google.com/go/binaryauthorization v1.9.1
+	cloud.google.com/go/compute/metadata v0.5.1 // indirect
+	cloud.google.com/go/secretmanager v1.14.1 // indirect
 	cloud.google.com/go/storage v1.43.0 // indirect
 	dario.cat/mergo v1.0.1 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -64,7 +64,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.177.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.25.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ecr v1.32.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ecr v1.33.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.25.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.19 // indirect
@@ -81,7 +81,7 @@ require (
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/containerd/log v0.1.0 // indirect
 	github.com/containerd/stargz-snapshotter/estargz v0.15.1 // indirect
-	github.com/cyphar/filepath-securejoin v0.3.1 // indirect
+	github.com/cyphar/filepath-securejoin v0.3.2 // indirect
 	github.com/danieljoos/wincred v1.2.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/distribution/reference v0.6.0 // indirect
@@ -177,8 +177,8 @@ require (
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	github.com/zeebo/xxh3 v1.0.2 // indirect
 	go.opencensus.io v0.24.0 // indirect
-	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.54.0 // indirect
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.54.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.55.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.55.0 // indirect
 	go.opentelemetry.io/otel v1.30.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.22.0 // indirect
 	go.opentelemetry.io/otel/metric v1.30.0 // indirect
@@ -198,7 +198,7 @@ require (
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240903143218-8af14fe29dc1 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240903143218-8af14fe29dc1 // indirect
-	google.golang.org/grpc v1.66.1 // indirect
+	google.golang.org/grpc v1.66.2 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	howett.net/plist v1.0.1 // indirect
