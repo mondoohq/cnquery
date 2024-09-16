@@ -26,7 +26,7 @@ func Test_WindowsSmbiosChassis_AdHoc(t *testing.T) {
       "SerialNumber": "R3D4CT3D",
       "SMBIOSAssetTag": "none",
       "SecurityStatus": "2",
-			"ChassisTypes": [1]
+      "ChassisTypes": [1]
     },
     {
       "Manufacturer": "Redacted",
