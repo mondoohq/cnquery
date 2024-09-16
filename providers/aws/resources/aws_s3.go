@@ -60,14 +60,22 @@ func (a *mqlAwsS3) buckets() ([]interface{}, error) {
 	svc := conn.S3("")
 	ctx := context.Background()
 
-	buckets, err := svc.ListBuckets(ctx, &s3.ListBucketsInput{})
-	if err != nil {
-		return nil, err
+	totalBuckets := make([]s3types.Bucket, 0)
+	params := &s3.ListBucketsInput{}
+	paginator := s3.NewListBucketsPaginator(svc, params, func(o *s3.ListBucketsPaginatorOptions) {
+		o.Limit = 100
+	})
+	for paginator.HasMorePages() {
+		output, err := paginator.NextPage(context.TODO())
+		if err != nil {
+			return nil, err
+		}
+		totalBuckets = append(totalBuckets, output.Buckets...)
 	}
 
 	res := []interface{}{}
-	for i := range buckets.Buckets {
-		bucket := buckets.Buckets[i]
+	for i := range totalBuckets {
+		bucket := totalBuckets[i]
 
 		location, err := svc.GetBucketLocation(ctx, &s3.GetBucketLocationInput{
 			Bucket: bucket.Name,
