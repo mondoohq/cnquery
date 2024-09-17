@@ -262,9 +262,9 @@ func init() {
 			Init: initAwsSagemakerNotebookinstance,
 			Create: createAwsSagemakerNotebookinstance,
 		},
-		"aws.sagemaker.notebookinstance.details": {
-			// to override args, implement: initAwsSagemakerNotebookinstanceDetails(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createAwsSagemakerNotebookinstanceDetails,
+		"aws.sagemaker.notebookinstancedetails": {
+			// to override args, implement: initAwsSagemakerNotebookinstancedetails(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerNotebookinstancedetails,
 		},
 		"aws.sagemaker.endpoint": {
 			// to override args, implement: initAwsSagemakerEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1895,7 +1895,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsSagemakerNotebookinstance).GetName()).ToDataRes(types.String)
 	},
 	"aws.sagemaker.notebookinstance.details": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsSagemakerNotebookinstance).GetDetails()).ToDataRes(types.Resource("aws.sagemaker.notebookinstance.details"))
+		return (r.(*mqlAwsSagemakerNotebookinstance).GetDetails()).ToDataRes(types.Resource("aws.sagemaker.notebookinstancedetails"))
 	},
 	"aws.sagemaker.notebookinstance.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerNotebookinstance).GetRegion()).ToDataRes(types.String)
@@ -1903,14 +1903,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.sagemaker.notebookinstance.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerNotebookinstance).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
-	"aws.sagemaker.notebookinstance.details.arn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsSagemakerNotebookinstanceDetails).GetArn()).ToDataRes(types.String)
+	"aws.sagemaker.notebookinstancedetails.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerNotebookinstancedetails).GetArn()).ToDataRes(types.String)
 	},
-	"aws.sagemaker.notebookinstance.details.kmsKey": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsSagemakerNotebookinstanceDetails).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	"aws.sagemaker.notebookinstancedetails.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerNotebookinstancedetails).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
-	"aws.sagemaker.notebookinstance.details.directInternetAccess": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsSagemakerNotebookinstanceDetails).GetDirectInternetAccess()).ToDataRes(types.String)
+	"aws.sagemaker.notebookinstancedetails.directInternetAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerNotebookinstancedetails).GetDirectInternetAccess()).ToDataRes(types.String)
 	},
 	"aws.sagemaker.endpoint.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerEndpoint).GetArn()).ToDataRes(types.String)
@@ -6616,7 +6616,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.sagemaker.notebookinstance.details": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsSagemakerNotebookinstance).Details, ok = plugin.RawToTValue[*mqlAwsSagemakerNotebookinstanceDetails](v.Value, v.Error)
+		r.(*mqlAwsSagemakerNotebookinstance).Details, ok = plugin.RawToTValue[*mqlAwsSagemakerNotebookinstancedetails](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.notebookinstance.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6627,20 +6627,20 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsSagemakerNotebookinstance).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
 		return
 	},
-	"aws.sagemaker.notebookinstance.details.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAwsSagemakerNotebookinstanceDetails).__id, ok = v.Value.(string)
+	"aws.sagemaker.notebookinstancedetails.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsSagemakerNotebookinstancedetails).__id, ok = v.Value.(string)
 			return
 		},
-	"aws.sagemaker.notebookinstance.details.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsSagemakerNotebookinstanceDetails).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.sagemaker.notebookinstancedetails.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerNotebookinstancedetails).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.sagemaker.notebookinstance.details.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsSagemakerNotebookinstanceDetails).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+	"aws.sagemaker.notebookinstancedetails.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerNotebookinstancedetails).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
-	"aws.sagemaker.notebookinstance.details.directInternetAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsSagemakerNotebookinstanceDetails).DirectInternetAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.sagemaker.notebookinstancedetails.directInternetAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerNotebookinstancedetails).DirectInternetAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.endpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16134,7 +16134,7 @@ type mqlAwsSagemakerNotebookinstance struct {
 	// optional: if you define mqlAwsSagemakerNotebookinstanceInternal it will be used here
 	Arn plugin.TValue[string]
 	Name plugin.TValue[string]
-	Details plugin.TValue[*mqlAwsSagemakerNotebookinstanceDetails]
+	Details plugin.TValue[*mqlAwsSagemakerNotebookinstancedetails]
 	Region plugin.TValue[string]
 	Tags plugin.TValue[map[string]interface{}]
 }
@@ -16184,15 +16184,15 @@ func (c *mqlAwsSagemakerNotebookinstance) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlAwsSagemakerNotebookinstance) GetDetails() *plugin.TValue[*mqlAwsSagemakerNotebookinstanceDetails] {
-	return plugin.GetOrCompute[*mqlAwsSagemakerNotebookinstanceDetails](&c.Details, func() (*mqlAwsSagemakerNotebookinstanceDetails, error) {
+func (c *mqlAwsSagemakerNotebookinstance) GetDetails() *plugin.TValue[*mqlAwsSagemakerNotebookinstancedetails] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerNotebookinstancedetails](&c.Details, func() (*mqlAwsSagemakerNotebookinstancedetails, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.notebookinstance", c.__id, "details")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.(*mqlAwsSagemakerNotebookinstanceDetails), nil
+				return d.Value.(*mqlAwsSagemakerNotebookinstancedetails), nil
 			}
 		}
 
@@ -16208,19 +16208,19 @@ func (c *mqlAwsSagemakerNotebookinstance) GetTags() *plugin.TValue[map[string]in
 	return &c.Tags
 }
 
-// mqlAwsSagemakerNotebookinstanceDetails for the aws.sagemaker.notebookinstance.details resource
-type mqlAwsSagemakerNotebookinstanceDetails struct {
+// mqlAwsSagemakerNotebookinstancedetails for the aws.sagemaker.notebookinstancedetails resource
+type mqlAwsSagemakerNotebookinstancedetails struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	mqlAwsSagemakerNotebookinstanceDetailsInternal
+	mqlAwsSagemakerNotebookinstancedetailsInternal
 	Arn plugin.TValue[string]
 	KmsKey plugin.TValue[*mqlAwsKmsKey]
 	DirectInternetAccess plugin.TValue[string]
 }
 
-// createAwsSagemakerNotebookinstanceDetails creates a new instance of this resource
-func createAwsSagemakerNotebookinstanceDetails(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlAwsSagemakerNotebookinstanceDetails{
+// createAwsSagemakerNotebookinstancedetails creates a new instance of this resource
+func createAwsSagemakerNotebookinstancedetails(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerNotebookinstancedetails{
 		MqlRuntime: runtime,
 	}
 
@@ -16237,7 +16237,7 @@ func createAwsSagemakerNotebookinstanceDetails(runtime *plugin.Runtime, args map
 	}
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("aws.sagemaker.notebookinstance.details", res.__id)
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.notebookinstancedetails", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -16247,22 +16247,22 @@ func createAwsSagemakerNotebookinstanceDetails(runtime *plugin.Runtime, args map
 	return res, nil
 }
 
-func (c *mqlAwsSagemakerNotebookinstanceDetails) MqlName() string {
-	return "aws.sagemaker.notebookinstance.details"
+func (c *mqlAwsSagemakerNotebookinstancedetails) MqlName() string {
+	return "aws.sagemaker.notebookinstancedetails"
 }
 
-func (c *mqlAwsSagemakerNotebookinstanceDetails) MqlID() string {
+func (c *mqlAwsSagemakerNotebookinstancedetails) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsSagemakerNotebookinstanceDetails) GetArn() *plugin.TValue[string] {
+func (c *mqlAwsSagemakerNotebookinstancedetails) GetArn() *plugin.TValue[string] {
 	return &c.Arn
 }
 
-func (c *mqlAwsSagemakerNotebookinstanceDetails) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+func (c *mqlAwsSagemakerNotebookinstancedetails) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
 	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.notebookinstance.details", c.__id, "kmsKey")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.notebookinstancedetails", c.__id, "kmsKey")
 			if err != nil {
 				return nil, err
 			}
@@ -16275,7 +16275,7 @@ func (c *mqlAwsSagemakerNotebookinstanceDetails) GetKmsKey() *plugin.TValue[*mql
 	})
 }
 
-func (c *mqlAwsSagemakerNotebookinstanceDetails) GetDirectInternetAccess() *plugin.TValue[string] {
+func (c *mqlAwsSagemakerNotebookinstancedetails) GetDirectInternetAccess() *plugin.TValue[string] {
 	return &c.DirectInternetAccess
 }
 

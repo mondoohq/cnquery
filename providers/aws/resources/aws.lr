@@ -967,7 +967,7 @@ private aws.sagemaker.notebookinstance @defaults("arn name") {
   // Name of the notebook instance
   name string
   // Details about the notebook
-  details() aws.sagemaker.notebookinstance.details
+  details() aws.sagemaker.notebookinstancedetails
   // Region where the notebook instance exists
   region string
   // Tags for the notebook instance
@@ -975,7 +975,7 @@ private aws.sagemaker.notebookinstance @defaults("arn name") {
 }
 
 // AWS SageMaker notebook instance details
-private aws.sagemaker.notebookinstance.details @defaults("arn") {
+private aws.sagemaker.notebookinstancedetails @defaults("arn") {
   // ARN for the notebook instance
   arn string
   // KMS key used to encrypt data
