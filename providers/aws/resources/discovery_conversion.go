@@ -545,6 +545,7 @@ func addConnectionInfoToECSContainerAsset(container *mqlAwsEcsContainer, account
 	if publicIp != "" {
 		a.Connections = []*inventory.Config{{
 			Host: publicIp,
+			Type: "ssh",
 			Options: map[string]string{
 				"region":         region,
 				"container_name": container.Name.Data,
@@ -555,7 +556,8 @@ func addConnectionInfoToECSContainerAsset(container *mqlAwsEcsContainer, account
 		log.Warn().Str("asset", a.Name).Msg("no public ip address found")
 		a = MqlObjectToAsset(accountId,
 			mqlObject{
-				name: container.Name.Data, labels: make(map[string]string),
+				name:   container.Name.Data,
+				labels: make(map[string]string),
 				awsObject: awsObject{
 					account: accountId, region: container.Region.Data, arn: container.Arn.Data,
 					id: container.Arn.Data, service: "ecs", objectType: "container",
