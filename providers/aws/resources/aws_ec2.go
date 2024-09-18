@@ -764,18 +764,22 @@ func (a *mqlAwsEc2) instances() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsEc2) getEc2Instances(ctx context.Context, svc *ec2.Client, tags map[string]string) ([]ec2types.Reservation, error) {
+func (a *mqlAwsEc2) getEc2Instances(ctx context.Context, svc *ec2.Client, filters connection.Ec2DiscoveryFilters) ([]ec2types.Reservation, error) {
 	res := []ec2types.Reservation{}
 	nextToken := aws.String("no_token_to_start_with")
 	params := &ec2.DescribeInstancesInput{
 		Filters: []ec2types.Filter{},
 	}
-	for k, v := range tags {
+	for k, v := range filters.Tags {
 		params.Filters = append(params.Filters, ec2types.Filter{
 			Name:   aws.String(fmt.Sprintf("tag:%s", k)),
 			Values: []string{v},
 		})
 	}
+	if len(filters.InstanceIds) > 0 {
+		params.InstanceIds = filters.InstanceIds
+	}
+
 	for nextToken != nil {
 		instances, err := svc.DescribeInstances(ctx, params)
 		if err != nil {
@@ -808,7 +812,7 @@ func (a *mqlAwsEc2) getInstances(conn *connection.AwsConnection) []*jobpool.Job 
 			ctx := context.Background()
 			var res []interface{}
 
-			instances, err := a.getEc2Instances(ctx, svc, conn.Filters.Ec2DiscoveryFilters.Tags)
+			instances, err := a.getEc2Instances(ctx, svc, conn.Filters.Ec2DiscoveryFilters)
 			if err != nil {
 				if Is400AccessDeniedError(err) {
 					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
