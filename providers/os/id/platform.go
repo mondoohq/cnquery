@@ -8,7 +8,9 @@ import (
 	"fmt"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/v11"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v11/providers/os/detector"
 	"go.mondoo.com/cnquery/v11/providers/os/id/awsec2"
@@ -17,6 +19,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/id/hostname"
 	"go.mondoo.com/cnquery/v11/providers/os/id/ids"
 	"go.mondoo.com/cnquery/v11/providers/os/id/machineid"
+	"go.mondoo.com/cnquery/v11/providers/os/id/serialnumber"
 	"go.mondoo.com/cnquery/v11/providers/os/id/sshhostkey"
 )
 
@@ -35,7 +38,7 @@ type PlatformInfo struct {
 	RelatedPlatformIDs []string
 }
 
-func IdentifyPlatform(conn shared.Connection, p *inventory.Platform, idDetectors []string) (*PlatformFingerprint, *inventory.Platform, error) {
+func IdentifyPlatform(conn shared.Connection, req *plugin.ConnectReq, p *inventory.Platform, idDetectors []string) (*PlatformFingerprint, *inventory.Platform, error) {
 	var ok bool
 	if p == nil {
 		p, ok = detector.DetectOS(conn)
@@ -53,6 +56,9 @@ func IdentifyPlatform(conn shared.Connection, p *inventory.Platform, idDetectors
 		switch conn.Type() {
 		case shared.Type_Local:
 			idDetectors = []string{ids.IdDetector_Hostname, ids.IdDetector_CloudDetect}
+			if cnquery.Features(req.Features).IsActive(cnquery.SerialNumberAsID) {
+				idDetectors = append(idDetectors, ids.IdDetector_SerialNumber)
+			}
 		case shared.Type_SSH:
 			idDetectors = []string{ids.IdDetector_Hostname, ids.IdDetector_CloudDetect, ids.IdDetector_SshHostkey}
 		case shared.Type_Tar, shared.Type_FileSystem, shared.Type_DockerSnapshot:
@@ -159,6 +165,17 @@ func GatherPlatformInfo(conn shared.Connection, pf *inventory.Platform, idDetect
 				Name:               "",
 				RelatedPlatformIDs: []string{},
 			}, hostErr
+		}
+		return &PlatformInfo{}, nil
+	case idDetector == ids.IdDetector_SerialNumber:
+		serial, err := serialnumber.SerialNumber(conn, pf)
+		if err == nil && len(serial) > 0 {
+			identifier = "//platformid.api.mondoo.app/serialnumber/" + serial
+			return &PlatformInfo{
+				IDs:                []string{identifier},
+				Name:               "",
+				RelatedPlatformIDs: []string{},
+			}, nil
 		}
 		return &PlatformInfo{}, nil
 	case idDetector == ids.IdDetector_AwsEcs:

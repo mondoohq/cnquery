@@ -88,6 +88,12 @@ const (
 	// start: v11.x
 	// end:   tbd (candidate: v12.0)
 	FineGrainedAssets
+
+	// SerialNumberAsID feature flag
+	// desc:  Use serial number as the asset ID
+	// start: v11.x
+	// end:   tbd (candidate: v12.0)
+	SerialNumberAsID
 )
 
 // FeaturesValue is a map from feature name to feature flag
@@ -99,6 +105,7 @@ var FeaturesValue = map[string]Feature{
 	ErrorsAsFailures.String():   ErrorsAsFailures,
 	StoreResourcesData.String(): StoreResourcesData,
 	FineGrainedAssets.String():  FineGrainedAssets,
+	SerialNumberAsID.String():   SerialNumberAsID,
 }
 
 // DefaultFeatures are a set of default flags that are active

@@ -350,7 +350,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		case shared.Type_Local.String(), "k8s": // FIXME: k8s is a temp workaround for cross-provider resources
 			conn = local.NewConnection(connId, conf, asset)
 
-			fingerprint, p, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
+			fingerprint, p, err := id.IdentifyPlatform(conn, req, asset.Platform, asset.IdDetector)
 			if err == nil {
 				if asset.Name == "" {
 					asset.Name = fingerprint.Name
@@ -368,7 +368,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 				return nil, err
 			}
 
-			fingerprint, p, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
+			fingerprint, p, err := id.IdentifyPlatform(conn, req, asset.Platform, asset.IdDetector)
 			if err == nil {
 				if conn.Asset().Connections[0].Runtime != "vagrant" {
 					asset.Name = fingerprint.Name
@@ -385,7 +385,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 				return nil, err
 			}
 
-			fingerprint, p, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
+			fingerprint, p, err := id.IdentifyPlatform(conn, req, asset.Platform, asset.IdDetector)
 			if err == nil {
 				asset.Name = fingerprint.Name
 				asset.PlatformIds = fingerprint.PlatformIDs
@@ -400,7 +400,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 				return nil, err
 			}
 
-			fingerprint, p, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
+			fingerprint, p, err := id.IdentifyPlatform(conn, req, asset.Platform, asset.IdDetector)
 			if err == nil {
 				asset.Name = fingerprint.Name
 				asset.PlatformIds = fingerprint.PlatformIDs
@@ -415,7 +415,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 				return nil, err
 			}
 
-			fingerprint, p, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
+			fingerprint, p, err := id.IdentifyPlatform(conn, req, asset.Platform, asset.IdDetector)
 			if err == nil {
 				asset.Name = fingerprint.Name
 				asset.PlatformIds = fingerprint.PlatformIDs
@@ -467,7 +467,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			// This is a workaround to set Google COS platform IDs when scanned from inside k8s
 			pID, err := conn.(*fs.FileSystemConnection).Identifier()
 			if err != nil {
-				fingerprint, p, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
+				fingerprint, p, err := id.IdentifyPlatform(conn, req, asset.Platform, asset.IdDetector)
 				if err == nil {
 					asset.Name = fingerprint.Name
 					asset.PlatformIds = fingerprint.PlatformIDs
