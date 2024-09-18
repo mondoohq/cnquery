@@ -48,7 +48,11 @@ func (a *mqlAwsEcs) containers() ([]interface{}, error) {
 			return nil, err
 		}
 		for i := range tasks {
-			c := tasks[i].(*mqlAwsEcsTask).Containers
+			t := tasks[i].(*mqlAwsEcsTask)
+			c := t.GetContainers()
+			if c.Error != nil {
+				return nil, c.Error
+			}
 			containers = append(containers, c.Data...)
 		}
 	}
@@ -69,11 +73,12 @@ func (a *mqlAwsEcs) containerInstances() ([]interface{}, error) {
 	containerInstances := []interface{}{}
 
 	for i := range clusters {
-		ci, err := clusters[i].(*mqlAwsEcsCluster).containerInstances()
-		if err != nil {
-			return nil, err
+		c := clusters[i].(*mqlAwsEcsCluster)
+		ci := c.GetContainerInstances()
+		if ci.Error != nil {
+			return nil, ci.Error
 		}
-		containerInstances = append(containerInstances, ci...)
+		containerInstances = append(containerInstances, ci.Data...)
 
 	}
 	return containerInstances, nil
