@@ -111,7 +111,7 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 	}
 	asset.Platform = p
 	asset.IdDetector = []string{ids.IdDetector_Hostname}
-	fingerprint, p, err := id.IdentifyPlatform(res, asset.Platform, asset.IdDetector)
+	fingerprint, p, err := id.IdentifyPlatform(res, &plugin.ConnectReq{}, asset.Platform, asset.IdDetector)
 	if err == nil {
 		if asset.Name == "" {
 			asset.Name = fingerprint.Name

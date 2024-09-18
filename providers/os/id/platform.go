@@ -8,7 +8,9 @@ import (
 	"fmt"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/v11"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v11/providers/os/detector"
 	"go.mondoo.com/cnquery/v11/providers/os/id/awsec2"
@@ -36,7 +38,7 @@ type PlatformInfo struct {
 	RelatedPlatformIDs []string
 }
 
-func IdentifyPlatform(conn shared.Connection, p *inventory.Platform, idDetectors []string) (*PlatformFingerprint, *inventory.Platform, error) {
+func IdentifyPlatform(conn shared.Connection, req *plugin.ConnectReq, p *inventory.Platform, idDetectors []string) (*PlatformFingerprint, *inventory.Platform, error) {
 	var ok bool
 	if p == nil {
 		p, ok = detector.DetectOS(conn)
@@ -53,7 +55,10 @@ func IdentifyPlatform(conn shared.Connection, p *inventory.Platform, idDetectors
 		// fallback to default id detectors
 		switch conn.Type() {
 		case shared.Type_Local:
-			idDetectors = []string{ids.IdDetector_Hostname, ids.IdDetector_SerialNumber, ids.IdDetector_CloudDetect}
+			idDetectors = []string{ids.IdDetector_Hostname, ids.IdDetector_CloudDetect}
+			if cnquery.Features(req.Features).IsActive(cnquery.SerialNumberAsID) {
+				idDetectors = append(idDetectors, ids.IdDetector_SerialNumber)
+			}
 		case shared.Type_SSH:
 			idDetectors = []string{ids.IdDetector_Hostname, ids.IdDetector_CloudDetect, ids.IdDetector_SshHostkey}
 		case shared.Type_Tar, shared.Type_FileSystem, shared.Type_DockerSnapshot:

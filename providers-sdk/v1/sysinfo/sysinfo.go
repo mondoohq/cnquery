@@ -11,6 +11,7 @@ import (
 	"go.mondoo.com/cnquery/v11"
 	"go.mondoo.com/cnquery/v11/cli/execruntime"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/local"
 	"go.mondoo.com/cnquery/v11/providers/os/id"
 	"go.mondoo.com/cnquery/v11/providers/os/id/hostname"
@@ -46,7 +47,7 @@ func Get() (*SystemInfo, error) {
 		Type: "local",
 	}, &asset)
 
-	fingerprint, platform, _ := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
+	fingerprint, platform, _ := id.IdentifyPlatform(conn, &plugin.ConnectReq{}, asset.Platform, asset.IdDetector)
 	if fingerprint != nil {
 		if len(fingerprint.PlatformIDs) > 0 {
 			sysInfo.PlatformId = fingerprint.PlatformIDs[0]
