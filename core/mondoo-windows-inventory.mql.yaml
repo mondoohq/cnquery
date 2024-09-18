@@ -74,7 +74,7 @@ packs:
       - uid: mondoo-windows-active-connections
         title: Active connections of the system
         filters: mondoo.capabilities.contains("run-command")
-        query: ports.where(state != "close") { user state port address protocol process remoteAddress remotePort }
+        mql: ports.where(state != "close") { user state port address protocol process remoteAddress remotePort }
       - uid: mondoo-windows-interface-configuration
         title: Network interfaces
         mql: windows.computerInfo['CsNetworkAdapters']

@@ -14,7 +14,7 @@ packs:
       mondoo.com/category: best-practices
     docs:
       desc: |
-        The Linux Inventory Pack by Mondoo retrieves data about Linux hosts for asset inventory. 
+        The Linux Inventory Pack by Mondoo retrieves data about Linux hosts for asset inventory.
 
         ## Local scan
         To run this pack locally on a Linux host:
@@ -31,7 +31,7 @@ packs:
         ```
 
         ## Join the community!
-        Our goal is to build query packs that are simple to deploy and provide accurate and useful data. 
+        Our goal is to build query packs that are simple to deploy and provide accurate and useful data.
 
         If you have any suggestions for improving this query pack, or if you need support, [join the Mondoo community](https://github.com/orgs/mondoohq/discussions) in GitHub Discussions.
     filters:
@@ -78,7 +78,7 @@ packs:
       - uid: mondoo-linux-active-connections
         title: Active network connections
         filters: mondoo.capabilities.contains("run-command")
-        query: ports.where(state != "close") { user state port address protocol process remoteAddress remotePort }
+        mql: ports.where(state != "close") { user state port address protocol process remoteAddress remotePort }
       - uid: mondoo-linux-uptime
         title: Operating system uptime
         filters: mondoo.capabilities.contains("run-command")

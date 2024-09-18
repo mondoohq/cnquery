@@ -220,7 +220,7 @@ queries:
         filters: |
           asset.platform == "aws"
         mql: |
-          aws.rds.dbClusters
+          aws.rds.clusters
 
 
 
@@ -233,7 +233,7 @@ queries:
         filters: |
           asset.platform == "aws"
         mql: |
-          aws.rds.dbInstances
+          aws.rds.instances
       - uid: mondoo-asset-inventory-aws-rds-dbinstances-all-data-single
         filters: |
           asset.platform == "aws-rds-dbinstance"

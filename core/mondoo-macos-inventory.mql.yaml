@@ -99,7 +99,7 @@ packs:
       - uid: mondoo-macos-active-connections
         title: Active network connections
         filters: mondoo.capabilities.contains("run-command")
-        query: ports.where(state != "close") { user state port address protocol process remoteAddress remotePort }
+        mql: ports.where(state != "close") { user state port address protocol process remoteAddress remotePort }
       - uid: mondoo-macos-interface-configuration
         title: Network interface configuration
         filters: mondoo.capabilities.contains("run-command")

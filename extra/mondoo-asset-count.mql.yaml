@@ -65,7 +65,6 @@ packs:
           - uid: mondoo-asset-count-aws-efs-filesystems
           - uid: mondoo-asset-count-aws-eks-clusters
           - uid: mondoo-asset-count-aws-elasticache-cache-clusters
-          - uid: mondoo-asset-count-aws-elasticache-clusters
           - uid: mondoo-asset-count-aws-elb-application
           - uid: mondoo-asset-count-aws-elb-classic
           - uid: mondoo-asset-count-aws-emr-clusters
@@ -302,7 +301,7 @@ queries:
 
   - uid: mondoo-asset-count-aws-rds-dbclusters
     title: AWS RDS Database Clusters
-    mql: aws.rds.dbClusters.length
+    mql: aws.rds.clusters.length
 
   - uid: mondoo-asset-count-aws-cloudtrails
     title: AWS CloudTrails
@@ -331,10 +330,6 @@ queries:
   - uid: mondoo-asset-count-aws-efs-filesystems
     title: AWS EFS Filesystems
     mql: aws.efs.filesystems.length
-
-  - uid: mondoo-asset-count-aws-elasticache-clusters
-    title: AWS ElastiCache Clusters
-    mql: aws.elasticache.clusters.length
 
   - uid: mondoo-asset-count-aws-elasticache-cache-clusters
     title: AWS ElastiCache Cache Clusters
