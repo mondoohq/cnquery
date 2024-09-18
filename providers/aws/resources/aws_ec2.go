@@ -875,8 +875,6 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, regionV
 				"deviceMappings":        llx.ArrayData(mqlDevices, types.Resource("aws.ec2.instance.device")),
 				"ebsOptimized":          llx.BoolDataPtr(instance.EbsOptimized),
 				"enaSupported":          llx.BoolDataPtr(instance.EnaSupport),
-				"httpEndpoint":          llx.StringData(string(instance.MetadataOptions.HttpEndpoint)),
-				"httpTokens":            llx.StringData(string(instance.MetadataOptions.HttpTokens)),
 				"hypervisor":            llx.StringData(string(instance.Hypervisor)),
 				"instanceId":            llx.StringDataPtr(instance.InstanceId),
 				"instanceLifecycle":     llx.StringData(string(instance.InstanceLifecycle)),
@@ -898,6 +896,10 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, regionV
 				"tpmSupport":            llx.StringDataPtr(instance.TpmSupport),
 			}
 
+			if instance.MetadataOptions != nil {
+				args["httpEndpoint"] = llx.StringData(string(instance.MetadataOptions.HttpEndpoint))
+				args["httpTokens"] = llx.StringData(string(instance.MetadataOptions.HttpTokens))
+			}
 			// add vpc if there is one
 			if instance.VpcId != nil {
 				arn := fmt.Sprintf(vpcArnPattern, regionVal, conn.AccountId(), convert.ToString(instance.VpcId))
