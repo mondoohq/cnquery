@@ -5,7 +5,6 @@ package resources
 
 import (
 	"context"
-	"log"
 
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"go.mondoo.com/cnquery/v11/llx"
@@ -51,7 +50,6 @@ func (a *mqlMicrosoftConditionalAccess) namedLocations() ([]interface{}, error) 
 	}
 
 	if len(locationDetails) == 0 {
-		log.Println("No named locations are defined.")
 		return nil, nil
 	}
 
