@@ -5,6 +5,8 @@ resources:
   microsoft:
     fields:
       applications: {}
+      conditionalAccess:
+        min_mondoo_version: 9.0.0
       domains: {}
       enterpriseApplications:
         min_mondoo_version: latest
@@ -117,6 +119,22 @@ resources:
       name: {}
       value: {}
     is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.conditionalAccess:
+    fields:
+      name: {}
+      namedLocations: {}
+      trusted: {}
+    min_mondoo_version: 9.0.0
+  microsoft.conditionalAccess.ipNamedLocation:
+    fields:
+      name: {}
+      trusted: {}
+    min_mondoo_version: 9.0.0
+  microsoft.conditionalAccess.namedLocation:
+    fields:
+      name: {}
+      trusted: {}
     min_mondoo_version: 9.0.0
   microsoft.devicemanagement:
     fields:

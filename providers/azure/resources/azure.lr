@@ -1520,7 +1520,7 @@ private azure.subscription.keyVaultService.vault @defaults("vaultName type vault
 
 // Azure Key Vault key auto-rotation
 private azure.subscription.keyVaultService.key.autorotation @defaults("enabled") {
-  // Key ID (Key Identifier)
+  // Key ID
   kid string
   // Auto-rotation enabled status
   enabled bool
