@@ -764,36 +764,22 @@ func (a *mqlAwsEc2) instances() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsEc2) getImdsv2Instances(ctx context.Context, svc *ec2.Client, filterName string) ([]ec2types.Reservation, error) {
+func (a *mqlAwsEc2) getEc2Instances(ctx context.Context, svc *ec2.Client, filters connection.Ec2DiscoveryFilters) ([]ec2types.Reservation, error) {
 	res := []ec2types.Reservation{}
 	nextToken := aws.String("no_token_to_start_with")
 	params := &ec2.DescribeInstancesInput{
-		Filters: []ec2types.Filter{
-			{Name: &filterName, Values: []string{"required"}},
-		},
+		Filters: []ec2types.Filter{},
 	}
-	for nextToken != nil {
-		instances, err := svc.DescribeInstances(ctx, params)
-		if err != nil {
-			return nil, err
-		}
-		nextToken = instances.NextToken
-		if instances.NextToken != nil {
-			params.NextToken = nextToken
-		}
-		res = append(res, instances.Reservations...)
+	for k, v := range filters.Tags {
+		params.Filters = append(params.Filters, ec2types.Filter{
+			Name:   aws.String(fmt.Sprintf("tag:%s", k)),
+			Values: []string{v},
+		})
 	}
-	return res, nil
-}
+	if len(filters.InstanceIds) > 0 {
+		params.InstanceIds = filters.InstanceIds
+	}
 
-func (a *mqlAwsEc2) getImdsv1Instances(ctx context.Context, svc *ec2.Client, filterName string) ([]ec2types.Reservation, error) {
-	res := []ec2types.Reservation{}
-	nextToken := aws.String("no_token_to_start_with")
-	params := &ec2.DescribeInstancesInput{
-		Filters: []ec2types.Filter{
-			{Name: &filterName, Values: []string{"optional"}},
-		},
-	}
 	for nextToken != nil {
 		instances, err := svc.DescribeInstances(ctx, params)
 		if err != nil {
@@ -826,10 +812,7 @@ func (a *mqlAwsEc2) getInstances(conn *connection.AwsConnection) []*jobpool.Job 
 			ctx := context.Background()
 			var res []interface{}
 
-			// the value for http tokens is not available on api output i've been able to find, so here
-			// we make two calls to get the instances, one with the imdsv1 filter and another with the imdsv2 filter
-			filterName := "metadata-options.http-tokens"
-			imdsv2Instances, err := a.getImdsv2Instances(ctx, svc, filterName)
+			instances, err := a.getEc2Instances(ctx, svc, conn.Filters.Ec2DiscoveryFilters)
 			if err != nil {
 				if Is400AccessDeniedError(err) {
 					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -837,24 +820,10 @@ func (a *mqlAwsEc2) getInstances(conn *connection.AwsConnection) []*jobpool.Job 
 				}
 				return nil, err
 			}
-			res, err = a.gatherInstanceInfo(imdsv2Instances, 2, regionVal)
+			res, err = a.gatherInstanceInfo(instances, regionVal)
 			if err != nil {
 				return nil, err
 			}
-
-			imdsv1Instances, err := a.getImdsv1Instances(ctx, svc, filterName)
-			if err != nil {
-				if Is400AccessDeniedError(err) {
-					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
-					return res, nil
-				}
-				return nil, err
-			}
-			imdsv1Res, err := a.gatherInstanceInfo(imdsv1Instances, 1, regionVal)
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, imdsv1Res...)
 
 			return jobpool.JobResult(res), nil
 		}
@@ -863,13 +832,9 @@ func (a *mqlAwsEc2) getInstances(conn *connection.AwsConnection) []*jobpool.Job 
 	return tasks
 }
 
-func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, imdsvVersion int, regionVal string) ([]interface{}, error) {
+func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, regionVal string) ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	res := []interface{}{}
-	httpTokens := "required"
-	if imdsvVersion == 1 {
-		httpTokens = "optional"
-	}
 	for _, reservation := range instances {
 		for _, instance := range reservation.Instances {
 			mqlDevices := []interface{}{}
@@ -910,8 +875,6 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, imdsvVe
 				"deviceMappings":        llx.ArrayData(mqlDevices, types.Resource("aws.ec2.instance.device")),
 				"ebsOptimized":          llx.BoolDataPtr(instance.EbsOptimized),
 				"enaSupported":          llx.BoolDataPtr(instance.EnaSupport),
-				"httpEndpoint":          llx.StringData(string(instance.MetadataOptions.HttpEndpoint)),
-				"httpTokens":            llx.StringData(httpTokens),
 				"hypervisor":            llx.StringData(string(instance.Hypervisor)),
 				"instanceId":            llx.StringDataPtr(instance.InstanceId),
 				"instanceLifecycle":     llx.StringData(string(instance.InstanceLifecycle)),
@@ -933,6 +896,13 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, imdsvVe
 				"tpmSupport":            llx.StringDataPtr(instance.TpmSupport),
 			}
 
+			if instance.MetadataOptions != nil {
+				args["httpEndpoint"] = llx.StringData(string(instance.MetadataOptions.HttpEndpoint))
+				args["httpTokens"] = llx.StringData(string(instance.MetadataOptions.HttpTokens))
+			} else {
+				args["httpEndpoint"] = llx.NilData
+				args["httpTokens"] = llx.NilData
+			}
 			// add vpc if there is one
 			if instance.VpcId != nil {
 				arn := fmt.Sprintf(vpcArnPattern, regionVal, conn.AccountId(), convert.ToString(instance.VpcId))
