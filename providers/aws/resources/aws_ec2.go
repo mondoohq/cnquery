@@ -899,6 +899,9 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, regionV
 			if instance.MetadataOptions != nil {
 				args["httpEndpoint"] = llx.StringData(string(instance.MetadataOptions.HttpEndpoint))
 				args["httpTokens"] = llx.StringData(string(instance.MetadataOptions.HttpTokens))
+			} else {
+				args["httpEndpoint"] = llx.NilData
+				args["httpTokens"] = llx.NilData
 			}
 			// add vpc if there is one
 			if instance.VpcId != nil {
