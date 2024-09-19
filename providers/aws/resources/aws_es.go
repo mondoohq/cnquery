@@ -135,7 +135,9 @@ func getESTags(ctx context.Context, svc *elasticsearchservice.Client, arn *strin
 	}
 	tags := make(map[string]interface{})
 	for _, t := range resp.TagList {
-		tags[*t.Key] = *t.Value
+		if t.Key != nil && t.Value != nil {
+			tags[*t.Key] = *t.Value
+		}
 	}
 	return tags, nil
 }

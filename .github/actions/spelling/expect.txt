@@ -61,6 +61,7 @@ natgateway
 networkinterface
 nodegroup
 nodepool
+notebookinstancedetails
 nsrecord
 nullgroup
 nullstring

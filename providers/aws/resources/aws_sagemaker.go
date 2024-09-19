@@ -222,7 +222,7 @@ func initAwsSagemakerNotebookinstance(runtime *plugin.Runtime, args map[string]*
 	return nil, nil, errors.New("sagemaker notebookinstance does not exist")
 }
 
-func (a *mqlAwsSagemakerNotebookinstance) details() (*mqlAwsSagemakerNotebookinstanceDetails, error) {
+func (a *mqlAwsSagemakerNotebookinstance) details() (*mqlAwsSagemakerNotebookinstancedetails, error) {
 	name := a.Name.Data
 	region := a.Region.Data
 
@@ -234,23 +234,23 @@ func (a *mqlAwsSagemakerNotebookinstance) details() (*mqlAwsSagemakerNotebookins
 		return nil, err
 	}
 	args := map[string]*llx.RawData{
-		"arn":                  llx.StringData(convert.ToString(instanceDetails.NotebookInstanceArn)),
+		"arn":                  llx.StringDataPtr(instanceDetails.NotebookInstanceArn),
 		"directInternetAccess": llx.StringData(string(instanceDetails.DirectInternetAccess)),
 	}
 
-	mqlInstanceDetails, err := CreateResource(a.MqlRuntime, "aws.sagemaker.notebookinstance.details", args)
+	mqlInstanceDetails, err := CreateResource(a.MqlRuntime, "aws.sagemaker.notebookinstancedetails", args)
 	if err != nil {
 		return nil, err
 	}
-	mqlInstanceDetails.(*mqlAwsSagemakerNotebookinstanceDetails).cacheKmsKey = instanceDetails.KmsKeyId
-	return mqlInstanceDetails.(*mqlAwsSagemakerNotebookinstanceDetails), nil
+	mqlInstanceDetails.(*mqlAwsSagemakerNotebookinstancedetails).cacheKmsKey = instanceDetails.KmsKeyId
+	return mqlInstanceDetails.(*mqlAwsSagemakerNotebookinstancedetails), nil
 }
 
-type mqlAwsSagemakerNotebookinstanceDetailsInternal struct {
+type mqlAwsSagemakerNotebookinstancedetailsInternal struct {
 	cacheKmsKey *string
 }
 
-func (a *mqlAwsSagemakerNotebookinstanceDetails) kmsKey() (*mqlAwsKmsKey, error) {
+func (a *mqlAwsSagemakerNotebookinstancedetails) kmsKey() (*mqlAwsKmsKey, error) {
 	if a.cacheKmsKey != nil && *a.cacheKmsKey != "" {
 		mqlKeyResource, err := NewResource(a.MqlRuntime, "aws.kms.key",
 			map[string]*llx.RawData{"arn": llx.StringData(convert.ToString(a.cacheKmsKey))},
@@ -272,7 +272,7 @@ func (a *mqlAwsSagemakerNotebookinstance) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func (a *mqlAwsSagemakerNotebookinstanceDetails) id() (string, error) {
+func (a *mqlAwsSagemakerNotebookinstancedetails) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
@@ -289,7 +289,9 @@ func getSagemakerTags(ctx context.Context, svc *sagemaker.Client, arn *string) (
 	}
 	tags := make(map[string]interface{})
 	for _, t := range resp.Tags {
-		tags[*t.Key] = *t.Value
+		if t.Key != nil && t.Value != nil {
+			tags[*t.Key] = *t.Value
+		}
 	}
 	return tags, nil
 }
