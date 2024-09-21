@@ -26,6 +26,10 @@ func init() {
 			Init: initAzureSubscription,
 			Create: createAzureSubscription,
 		},
+		"azure.subscription.webService.function": {
+			// to override args, implement: initAzureSubscriptionWebServiceFunction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionWebServiceFunction,
+		},
 		"azure.subscription.resourcegroup": {
 			// to override args, implement: initAzureSubscriptionResourcegroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionResourcegroup,
@@ -588,6 +592,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.iot": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscription).GetIot()).ToDataRes(types.Resource("azure.subscription.iotService"))
+	},
+	"azure.subscription.webService.function.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceFunction).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.function.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceFunction).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.function.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceFunction).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.function.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceFunction).GetKind()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.function.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceFunction).GetProperties()).ToDataRes(types.Dict)
 	},
 	"azure.subscription.resourcegroup.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionResourcegroup).GetId()).ToDataRes(types.String)
@@ -1737,6 +1756,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.webService.appsite.diagnosticSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetDiagnosticSettings()).ToDataRes(types.Array(types.Resource("azure.subscription.monitorService.diagnosticsetting")))
+	},
+	"azure.subscription.webService.appsite.functions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetFunctions()).ToDataRes(types.Array(types.Resource("azure.subscription.webService.function")))
 	},
 	"azure.subscription.webService.appsiteauthsettings.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettings).GetId()).ToDataRes(types.String)
@@ -3003,6 +3025,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"azure.subscription.iot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscription).Iot, ok = plugin.RawToTValue[*mqlAzureSubscriptionIotService](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.function.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAzureSubscriptionWebServiceFunction).__id, ok = v.Value.(string)
+			return
+		},
+	"azure.subscription.webService.function.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceFunction).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.function.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceFunction).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.function.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceFunction).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.function.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceFunction).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.function.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceFunction).Properties, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.resourcegroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4731,6 +4777,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"azure.subscription.webService.appsite.diagnosticSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionWebServiceAppsite).DiagnosticSettings, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.functions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsite).Functions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.webService.appsiteauthsettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6931,6 +6981,75 @@ func (c *mqlAzureSubscription) GetIot() *plugin.TValue[*mqlAzureSubscriptionIotS
 
 		return c.iot()
 	})
+}
+
+// mqlAzureSubscriptionWebServiceFunction for the azure.subscription.webService.function resource
+type mqlAzureSubscriptionWebServiceFunction struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAzureSubscriptionWebServiceFunctionInternal it will be used here
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	Type plugin.TValue[string]
+	Kind plugin.TValue[string]
+	Properties plugin.TValue[interface{}]
+}
+
+// createAzureSubscriptionWebServiceFunction creates a new instance of this resource
+func createAzureSubscriptionWebServiceFunction(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionWebServiceFunction{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.webService.function", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionWebServiceFunction) MqlName() string {
+	return "azure.subscription.webService.function"
+}
+
+func (c *mqlAzureSubscriptionWebServiceFunction) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionWebServiceFunction) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionWebServiceFunction) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionWebServiceFunction) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionWebServiceFunction) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlAzureSubscriptionWebServiceFunction) GetProperties() *plugin.TValue[interface{}] {
+	return &c.Properties
 }
 
 // mqlAzureSubscriptionResourcegroup for the azure.subscription.resourcegroup resource
@@ -11407,6 +11526,7 @@ type mqlAzureSubscriptionWebServiceAppsite struct {
 	ConnectionSettings plugin.TValue[interface{}]
 	Stack plugin.TValue[interface{}]
 	DiagnosticSettings plugin.TValue[[]interface{}]
+	Functions plugin.TValue[[]interface{}]
 }
 
 // createAzureSubscriptionWebServiceAppsite creates a new instance of this resource
@@ -11548,6 +11668,10 @@ func (c *mqlAzureSubscriptionWebServiceAppsite) GetDiagnosticSettings() *plugin.
 
 		return c.diagnosticSettings()
 	})
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsite) GetFunctions() *plugin.TValue[[]interface{}] {
+	return &c.Functions
 }
 
 // mqlAzureSubscriptionWebServiceAppsiteauthsettings for the azure.subscription.webService.appsiteauthsettings resource
