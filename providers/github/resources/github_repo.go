@@ -976,6 +976,70 @@ func (g *mqlGithubRepository) collaborators() ([]interface{}, error) {
 	return res, nil
 }
 
+func (g *mqlGithubRepository) adminCollaborators() ([]interface{}, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	repoName := g.Name.Data
+	if g.Owner.Error != nil {
+		return nil, g.Owner.Error
+	}
+	ownerName := g.Owner.Data
+	if ownerName.Login.Error != nil {
+		return nil, ownerName.Login.Error
+	}
+	ownerLogin := ownerName.Login.Data
+
+	listOpts := &github.ListCollaboratorsOptions{
+		Permission:  "admin",
+		ListOptions: github.ListOptions{PerPage: paginationPerPage},
+	}
+	var adminCollaborators []*github.User
+	for {
+		contributors, resp, err := conn.Client().Repositories.ListCollaborators(conn.Context(), ownerLogin, repoName, listOpts)
+		if err != nil {
+			if strings.Contains(err.Error(), "404") {
+				return nil, nil
+			}
+			return nil, err
+		}
+		adminCollaborators = append(adminCollaborators, contributors...)
+		if resp.NextPage == 0 {
+			break
+		}
+		listOpts.Page = resp.NextPage
+	}
+	res := []interface{}{}
+	for i := range adminCollaborators {
+		contributor := adminCollaborators[i]
+		mqlUser, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
+			"id":    llx.IntDataPtr(contributor.ID),
+			"login": llx.StringDataPtr(contributor.Login),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		permissions := []string{}
+		for k := range contributor.Permissions {
+			permissions = append(permissions, k)
+		}
+
+		mqlContributor, err := CreateResource(g.MqlRuntime, "github.collaborator", map[string]*llx.RawData{
+			"id":          llx.IntDataPtr(contributor.ID),
+			"user":        llx.ResourceData(mqlUser, mqlUser.MqlName()),
+			"permissions": llx.ArrayData(convert.SliceAnyToInterface[string](permissions), types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlContributor)
+	}
+	return res, nil
+}
+
 func (g *mqlGithubRepository) releases() ([]interface{}, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 

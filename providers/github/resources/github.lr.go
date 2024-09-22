@@ -606,6 +606,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.repository.collaborators": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetCollaborators()).ToDataRes(types.Array(types.Resource("github.collaborator")))
 	},
+	"github.repository.adminCollaborators": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepository).GetAdminCollaborators()).ToDataRes(types.Array(types.Resource("github.collaborator")))
+	},
 	"github.repository.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetFiles()).ToDataRes(types.Array(types.Resource("github.file")))
 	},
@@ -1574,6 +1577,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"github.repository.collaborators": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubRepository).Collaborators, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"github.repository.adminCollaborators": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepository).AdminCollaborators, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"github.repository.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3292,6 +3299,7 @@ type mqlGithubRepository struct {
 	Commits plugin.TValue[[]interface{}]
 	Contributors plugin.TValue[[]interface{}]
 	Collaborators plugin.TValue[[]interface{}]
+	AdminCollaborators plugin.TValue[[]interface{}]
 	Files plugin.TValue[[]interface{}]
 	Releases plugin.TValue[[]interface{}]
 	Owner plugin.TValue[*mqlGithubUser]
@@ -3604,6 +3612,22 @@ func (c *mqlGithubRepository) GetCollaborators() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.collaborators()
+	})
+}
+
+func (c *mqlGithubRepository) GetAdminCollaborators() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.AdminCollaborators, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "adminCollaborators")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.adminCollaborators()
 	})
 }
 

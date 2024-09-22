@@ -322,8 +322,10 @@ private github.repository @defaults("fullName") {
   commits() []github.commit
   // List of contributors for the repository
   contributors() []github.user
-  // List of collaborators for the repository
+  // List of all collaborators for the repository
   collaborators() []github.collaborator
+  // List of admin collaborators for the repository
+  adminCollaborators() []github.collaborator
   // List of files in the repository
   files() []github.file
   // List of releases for the repository

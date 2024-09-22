@@ -318,6 +318,8 @@ resources:
     fields:
       MergeRequests:
         min_mondoo_version: 9.0.0
+      adminCollaborators:
+        min_mondoo_version: 9.0.0
       allMergeRequests:
         min_mondoo_version: 9.0.0
       allowAutoMerge:
