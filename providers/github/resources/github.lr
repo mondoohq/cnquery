@@ -350,6 +350,8 @@ private github.repository @defaults("fullName") {
   codeOfConduct() github.file
   // Repository support file
   support() github.file
+  // Repository security file
+  security() github.file
 }
 
 // GitHub license

@@ -1682,6 +1682,18 @@ func (g *mqlGithubRepository) codeOfConduct() (*mqlGithubFile, error) {
 	return g.CodeOfConduct.Data, nil
 }
 
+func (g *mqlGithubRepository) security() (*mqlGithubFile, error) {
+	err := g.findSpecialFilesFunc()
+	if err != nil {
+		return nil, err
+	}
+	if g.Security.Error != nil {
+		return nil, g.Security.Error
+	}
+
+	return g.Security.Data, nil
+}
+
 type mqlGithubRepositoryInternal struct {
 	findSpecialFilesFunc func() error
 }
@@ -1708,6 +1720,7 @@ func (g *mqlGithubRepository) findSpecialFiles() error {
 	specialFilesCaseInsensitive := map[string]*plugin.TValue[*mqlGithubFile]{
 		"code_of_conduct.md": &g.CodeOfConduct,
 		"support.md":         &g.Support,
+		"security.md":        &g.Security,
 	}
 	foundFiles := map[string]struct{}{}
 

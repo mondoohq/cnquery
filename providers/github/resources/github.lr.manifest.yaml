@@ -403,6 +403,8 @@ resources:
         min_mondoo_version: 9.0.0
       releases:
         min_mondoo_version: 6.4.0
+      security:
+        min_mondoo_version: 9.0.0
       sshUrl:
         min_mondoo_version: 7.14.0
       stargazers:
