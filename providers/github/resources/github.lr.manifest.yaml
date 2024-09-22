@@ -105,6 +105,8 @@ resources:
       content: {}
       downloadUrl:
         min_mondoo_version: 9.0.0
+      exists:
+        min_mondoo_version: 9.0.0
       files: {}
       isBinary: {}
       name:
@@ -337,6 +339,8 @@ resources:
         min_mondoo_version: 7.14.0
       closedMergeRequests:
         min_mondoo_version: 9.0.0
+      codeOfConduct:
+        min_mondoo_version: 9.0.0
       collaborators:
         min_mondoo_version: 6.11.0
       commits:
@@ -393,6 +397,8 @@ resources:
       private: {}
       pushedAt:
         min_mondoo_version: 7.14.0
+      readme:
+        min_mondoo_version: 9.0.0
       releases:
         min_mondoo_version: 6.4.0
       sshUrl:
@@ -401,6 +407,8 @@ resources:
         min_mondoo_version: 7.14.0
       stargazersCount:
         min_mondoo_version: 7.14.0
+      support:
+        min_mondoo_version: 9.0.0
       topics:
         min_mondoo_version: 7.14.0
       updatedAt: {}
@@ -413,6 +421,19 @@ resources:
         min_mondoo_version: 6.11.0
     is_private: true
     min_mondoo_version: 5.31.0
+  github.repository.file:
+    fields:
+      content: {}
+      downloadUrl: {}
+      files: {}
+      isBinary: {}
+      name: {}
+      ownerName: {}
+      path: {}
+      repoName: {}
+      sha: {}
+      type: {}
+    min_mondoo_version: 9.0.0
   github.review:
     fields:
       authorAssociation: {}

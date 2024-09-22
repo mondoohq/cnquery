@@ -636,6 +636,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.repository.license": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetLicense()).ToDataRes(types.Resource("github.license"))
 	},
+	"github.repository.codeOfConduct": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepository).GetCodeOfConduct()).ToDataRes(types.Resource("github.file"))
+	},
+	"github.repository.support": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepository).GetSupport()).ToDataRes(types.Resource("github.file"))
+	},
 	"github.license.key": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubLicense).GetKey()).ToDataRes(types.String)
 	},
@@ -677,6 +683,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"github.file.downloadUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubFile).GetDownloadUrl()).ToDataRes(types.String)
+	},
+	"github.file.exists": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubFile).GetExists()).ToDataRes(types.Bool)
 	},
 	"github.release.url": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRelease).GetUrl()).ToDataRes(types.String)
@@ -1607,6 +1616,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlGithubRepository).License, ok = plugin.RawToTValue[*mqlGithubLicense](v.Value, v.Error)
 		return
 	},
+	"github.repository.codeOfConduct": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepository).CodeOfConduct, ok = plugin.RawToTValue[*mqlGithubFile](v.Value, v.Error)
+		return
+	},
+	"github.repository.support": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepository).Support, ok = plugin.RawToTValue[*mqlGithubFile](v.Value, v.Error)
+		return
+	},
 	"github.license.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlGithubLicense).__id, ok = v.Value.(string)
 			return
@@ -1669,6 +1686,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"github.file.downloadUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubFile).DownloadUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.file.exists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubFile).Exists, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"github.release.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3228,7 +3249,7 @@ func (c *mqlGithubPackages) GetList() *plugin.TValue[[]interface{}] {
 type mqlGithubRepository struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlGithubRepositoryInternal it will be used here
+	mqlGithubRepositoryInternal
 	Id plugin.TValue[int64]
 	Name plugin.TValue[string]
 	FullName plugin.TValue[string]
@@ -3281,6 +3302,8 @@ type mqlGithubRepository struct {
 	OpenIssues plugin.TValue[[]interface{}]
 	ClosedIssues plugin.TValue[[]interface{}]
 	License plugin.TValue[*mqlGithubLicense]
+	CodeOfConduct plugin.TValue[*mqlGithubFile]
+	Support plugin.TValue[*mqlGithubFile]
 }
 
 // createGithubRepository creates a new instance of this resource
@@ -3732,6 +3755,38 @@ func (c *mqlGithubRepository) GetLicense() *plugin.TValue[*mqlGithubLicense] {
 	})
 }
 
+func (c *mqlGithubRepository) GetCodeOfConduct() *plugin.TValue[*mqlGithubFile] {
+	return plugin.GetOrCompute[*mqlGithubFile](&c.CodeOfConduct, func() (*mqlGithubFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "codeOfConduct")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGithubFile), nil
+			}
+		}
+
+		return c.codeOfConduct()
+	})
+}
+
+func (c *mqlGithubRepository) GetSupport() *plugin.TValue[*mqlGithubFile] {
+	return plugin.GetOrCompute[*mqlGithubFile](&c.Support, func() (*mqlGithubFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "support")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGithubFile), nil
+			}
+		}
+
+		return c.support()
+	})
+}
+
 // mqlGithubLicense for the github.license resource
 type mqlGithubLicense struct {
 	MqlRuntime *plugin.Runtime
@@ -3811,6 +3866,7 @@ type mqlGithubFile struct {
 	RepoName plugin.TValue[string]
 	Content plugin.TValue[string]
 	DownloadUrl plugin.TValue[string]
+	Exists plugin.TValue[bool]
 }
 
 // createGithubFile creates a new instance of this resource
@@ -3902,6 +3958,10 @@ func (c *mqlGithubFile) GetContent() *plugin.TValue[string] {
 
 func (c *mqlGithubFile) GetDownloadUrl() *plugin.TValue[string] {
 	return &c.DownloadUrl
+}
+
+func (c *mqlGithubFile) GetExists() *plugin.TValue[bool] {
+	return &c.Exists
 }
 
 // mqlGithubRelease for the github.release resource

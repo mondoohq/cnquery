@@ -344,6 +344,10 @@ private github.repository @defaults("fullName") {
   closedIssues() []github.issue
   // Repository license
   license() github.license
+  // Repository code of conduct
+  codeOfConduct() github.file
+  // Repository support file
+  support() github.file
 }
 
 // GitHub license
@@ -380,6 +384,8 @@ private github.file @defaults("name type") {
   content() string
   // File download URL
   downloadUrl string
+  // File exists in repository
+  exists bool
 }
 
 // GitHub release

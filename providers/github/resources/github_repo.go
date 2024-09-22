@@ -6,8 +6,10 @@ package resources
 import (
 	"errors"
 	"fmt"
+	"path"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/google/go-github/v62/github"
 	"github.com/rs/zerolog/log"
@@ -72,7 +74,9 @@ func newMqlGithubRepository(runtime *plugin.Runtime, repo *github.Repository) (*
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlGithubRepository), nil
+	r := res.(*mqlGithubRepository)
+	r.mqlGithubRepositoryInternal.findSpecialFilesFunc = sync.OnceValue[error](r.findSpecialFiles)
+	return r, nil
 }
 
 func (g *mqlGithubBranchprotection) id() (string, error) {
@@ -1177,6 +1181,27 @@ func newMqlGithubFile(runtime *plugin.Runtime, ownerName string, repoName string
 		"ownerName":   llx.StringData(ownerName),
 		"repoName":    llx.StringData(repoName),
 		"downloadUrl": llx.StringDataPtr(content.DownloadURL),
+		"exists":      llx.BoolData(true),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGithubFile), nil
+}
+
+func newMqlGithubFileDoesNotExist(runtime *plugin.Runtime, ownerName string, repoName string, filePath string) (*mqlGithubFile, error) {
+	name := path.Base(filePath)
+
+	res, err := CreateResource(runtime, "github.file", map[string]*llx.RawData{
+		"path":        llx.StringData(filePath),
+		"name":        llx.StringData(name),
+		"type":        llx.StringDataPtr(nil),
+		"sha":         llx.StringData("0000000000000000000000000000000000000000"),
+		"isBinary":    llx.BoolData(false),
+		"ownerName":   llx.StringData(ownerName),
+		"repoName":    llx.StringData(repoName),
+		"downloadUrl": llx.StringDataPtr(nil),
+		"exists":      llx.BoolData(false),
 	})
 	if err != nil {
 		return nil, err
@@ -1567,4 +1592,105 @@ func (g *mqlGithubRepository) getIssues(state string) ([]interface{}, error) {
 		res = append(res, r)
 	}
 	return res, nil
+}
+
+func (g *mqlGithubRepository) support() (*mqlGithubFile, error) {
+	err := g.findSpecialFilesFunc()
+	if err != nil {
+		return nil, err
+	}
+	if g.Support.Error != nil {
+		return nil, g.Support.Error
+	}
+
+	return g.Support.Data, nil
+}
+
+func (g *mqlGithubRepository) codeOfConduct() (*mqlGithubFile, error) {
+	err := g.findSpecialFilesFunc()
+	if err != nil {
+		return nil, err
+	}
+	if g.CodeOfConduct.Error != nil {
+		return nil, g.CodeOfConduct.Error
+	}
+
+	return g.CodeOfConduct.Data, nil
+}
+
+type mqlGithubRepositoryInternal struct {
+	findSpecialFilesFunc func() error
+}
+
+func (g *mqlGithubRepository) findSpecialFiles() error {
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+
+	if g.Name.Error != nil {
+		return g.Name.Error
+	}
+	repoName := g.Name.Data
+
+	if g.Owner.Error != nil {
+		return g.Owner.Error
+	}
+	owner := g.Owner.Data
+	if owner.Login.Error != nil {
+		return owner.Login.Error
+	}
+	ownerLogin := owner.Login.Data
+
+	specialDirectories := []string{".", ".github"}
+
+	specialFilesCaseInsensitive := map[string]*plugin.TValue[*mqlGithubFile]{
+		"code_of_conduct.md": &g.CodeOfConduct,
+		"support.md":         &g.Support,
+	}
+	foundFiles := map[string]struct{}{}
+
+	for _, dir := range specialDirectories {
+		if len(foundFiles) == len(specialFilesCaseInsensitive) {
+			break
+		}
+		_, dirContent, _, err := conn.Client().Repositories.GetContents(conn.Context(), ownerLogin, repoName, dir, &github.RepositoryContentGetOptions{})
+		if err != nil {
+			if strings.Contains(err.Error(), "404") {
+				continue
+			}
+			return err
+		}
+
+		for i := range dirContent {
+			if dirContent[i].GetType() != "file" {
+				continue
+			}
+			if _, ok := foundFiles[dirContent[i].GetName()]; ok {
+				continue
+			}
+
+			name := strings.ToLower(dirContent[i].GetName())
+			if _, ok := specialFilesCaseInsensitive[name]; ok {
+				v := specialFilesCaseInsensitive[name]
+				if v != nil {
+					file, err := newMqlGithubFile(g.MqlRuntime, ownerLogin, repoName, dirContent[i])
+					if err != nil {
+						return err
+					}
+					(*v) = plugin.TValue[*mqlGithubFile]{Data: file, State: plugin.StateIsSet, Error: nil}
+				}
+				foundFiles[name] = struct{}{}
+			}
+		}
+	}
+
+	for k, v := range specialFilesCaseInsensitive {
+		if _, ok := foundFiles[k]; !ok {
+			dneFile, err := newMqlGithubFileDoesNotExist(g.MqlRuntime, ownerLogin, repoName, k)
+			if err != nil {
+				return err
+			}
+			(*v) = plugin.TValue[*mqlGithubFile]{Data: dneFile, State: plugin.StateIsSet, Error: nil}
+		}
+	}
+
+	return nil
 }
