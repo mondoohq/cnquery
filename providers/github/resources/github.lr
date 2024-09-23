@@ -388,7 +388,7 @@ private github.file @defaults("name type") {
   content() string
   // File download URL
   downloadUrl string
-  // File exists in repository
+  // Whether the file exists in the repository
   exists bool
 }
 
