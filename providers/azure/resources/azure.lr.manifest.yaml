@@ -1483,6 +1483,10 @@ resources:
       properties: {}
       tags: {}
       type: {}
+      wafConfig:
+        min_mondoo_version: 9.0.0
+      wafConfiguration:
+        min_mondoo_version: 9.0.0
     min_mondoo_version: latest
     platform:
       name:
@@ -1988,6 +1992,17 @@ resources:
     refs:
     - title: Virtual Network documentation
       url: https://learn.microsoft.com/en-us/azure/virtual-network/
+  azure.subscription.networkService.wafConfig:
+    fields:
+      id: {}
+      kind: {}
+      name: {}
+      properties: {}
+      type: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
   azure.subscription.networkService.watcher:
     fields:
       etag: {}

@@ -414,6 +414,7 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) functions() ([]interface{}, erro
 	if err != nil {
 		return nil, err
 	}
+
 	pager := client.NewListFunctionsPager(resourceID.ResourceGroup, site, &web.WebAppsClientListFunctionsOptions{})
 	res := []interface{}{}
 

@@ -182,6 +182,10 @@ func init() {
 			// to override args, implement: initAzureSubscriptionNetworkServiceApplicationGateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionNetworkServiceApplicationGateway,
 		},
+		"azure.subscription.networkService.wafConfig": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceWafConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceWafConfig,
+		},
 		"azure.subscription.networkService.applicationFirewallPolicy": {
 			// to override args, implement: initAzureSubscriptionNetworkServiceApplicationFirewallPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionNetworkServiceApplicationFirewallPolicy,
@@ -1546,6 +1550,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.networkService.applicationGateway.policy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGateway).GetPolicy()).ToDataRes(types.Resource("azure.subscription.networkService.applicationFirewallPolicy"))
+	},
+	"azure.subscription.networkService.applicationGateway.wafConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGateway).GetWafConfiguration()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.wafConfig")))
+	},
+	"azure.subscription.networkService.wafConfig.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWafConfig).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.wafConfig.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWafConfig).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.wafConfig.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWafConfig).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.wafConfig.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWafConfig).GetKind()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.wafConfig.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWafConfig).GetProperties()).ToDataRes(types.Dict)
 	},
 	"azure.subscription.networkService.applicationFirewallPolicy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy).GetId()).ToDataRes(types.String)
@@ -4453,6 +4475,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"azure.subscription.networkService.applicationGateway.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceApplicationGateway).Policy, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.wafConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGateway).WafConfiguration, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.wafConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAzureSubscriptionNetworkServiceWafConfig).__id, ok = v.Value.(string)
+			return
+		},
+	"azure.subscription.networkService.wafConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWafConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.wafConfig.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWafConfig).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.wafConfig.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWafConfig).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.wafConfig.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWafConfig).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.wafConfig.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWafConfig).Properties, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.applicationFirewallPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10610,6 +10660,7 @@ type mqlAzureSubscriptionNetworkServiceApplicationGateway struct {
 	Etag plugin.TValue[string]
 	Properties plugin.TValue[interface{}]
 	Policy plugin.TValue[*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy]
+	WafConfiguration plugin.TValue[[]interface{}]
 }
 
 // createAzureSubscriptionNetworkServiceApplicationGateway creates a new instance of this resource
@@ -10691,6 +10742,91 @@ func (c *mqlAzureSubscriptionNetworkServiceApplicationGateway) GetPolicy() *plug
 
 		return c.policy()
 	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGateway) GetWafConfiguration() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.WafConfiguration, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.applicationGateway", c.__id, "wafConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.wafConfiguration()
+	})
+}
+
+// mqlAzureSubscriptionNetworkServiceWafConfig for the azure.subscription.networkService.wafConfig resource
+type mqlAzureSubscriptionNetworkServiceWafConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceWafConfigInternal it will be used here
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	Type plugin.TValue[string]
+	Kind plugin.TValue[string]
+	Properties plugin.TValue[interface{}]
+}
+
+// createAzureSubscriptionNetworkServiceWafConfig creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceWafConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceWafConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.wafConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWafConfig) MqlName() string {
+	return "azure.subscription.networkService.wafConfig"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWafConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWafConfig) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWafConfig) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWafConfig) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWafConfig) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWafConfig) GetProperties() *plugin.TValue[interface{}] {
+	return &c.Properties
 }
 
 // mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy for the azure.subscription.networkService.applicationFirewallPolicy resource
@@ -11671,7 +11807,19 @@ func (c *mqlAzureSubscriptionWebServiceAppsite) GetDiagnosticSettings() *plugin.
 }
 
 func (c *mqlAzureSubscriptionWebServiceAppsite) GetFunctions() *plugin.TValue[[]interface{}] {
-	return &c.Functions
+	return plugin.GetOrCompute[[]interface{}](&c.Functions, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.webService.appsite", c.__id, "functions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.functions()
+	})
 }
 
 // mqlAzureSubscriptionWebServiceAppsiteauthsettings for the azure.subscription.webService.appsiteauthsettings resource
