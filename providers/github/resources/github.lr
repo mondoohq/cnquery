@@ -347,11 +347,11 @@ private github.repository @defaults("fullName") {
   // Repository license
   license() github.license
   // Repository code of conduct
-  codeOfConduct() github.file
+  codeOfConductFile() github.file
   // Repository support file
-  support() github.file
+  supportFile() github.file
   // Repository security file
-  security() github.file
+  securityFile() github.file
 }
 
 // GitHub license

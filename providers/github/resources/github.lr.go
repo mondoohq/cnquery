@@ -639,14 +639,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.repository.license": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetLicense()).ToDataRes(types.Resource("github.license"))
 	},
-	"github.repository.codeOfConduct": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGithubRepository).GetCodeOfConduct()).ToDataRes(types.Resource("github.file"))
+	"github.repository.codeOfConductFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepository).GetCodeOfConductFile()).ToDataRes(types.Resource("github.file"))
 	},
-	"github.repository.support": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGithubRepository).GetSupport()).ToDataRes(types.Resource("github.file"))
+	"github.repository.supportFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepository).GetSupportFile()).ToDataRes(types.Resource("github.file"))
 	},
-	"github.repository.security": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGithubRepository).GetSecurity()).ToDataRes(types.Resource("github.file"))
+	"github.repository.securityFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepository).GetSecurityFile()).ToDataRes(types.Resource("github.file"))
 	},
 	"github.license.key": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubLicense).GetKey()).ToDataRes(types.String)
@@ -1626,16 +1626,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlGithubRepository).License, ok = plugin.RawToTValue[*mqlGithubLicense](v.Value, v.Error)
 		return
 	},
-	"github.repository.codeOfConduct": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubRepository).CodeOfConduct, ok = plugin.RawToTValue[*mqlGithubFile](v.Value, v.Error)
+	"github.repository.codeOfConductFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepository).CodeOfConductFile, ok = plugin.RawToTValue[*mqlGithubFile](v.Value, v.Error)
 		return
 	},
-	"github.repository.support": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubRepository).Support, ok = plugin.RawToTValue[*mqlGithubFile](v.Value, v.Error)
+	"github.repository.supportFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepository).SupportFile, ok = plugin.RawToTValue[*mqlGithubFile](v.Value, v.Error)
 		return
 	},
-	"github.repository.security": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubRepository).Security, ok = plugin.RawToTValue[*mqlGithubFile](v.Value, v.Error)
+	"github.repository.securityFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepository).SecurityFile, ok = plugin.RawToTValue[*mqlGithubFile](v.Value, v.Error)
 		return
 	},
 	"github.license.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3317,9 +3317,9 @@ type mqlGithubRepository struct {
 	OpenIssues plugin.TValue[[]interface{}]
 	ClosedIssues plugin.TValue[[]interface{}]
 	License plugin.TValue[*mqlGithubLicense]
-	CodeOfConduct plugin.TValue[*mqlGithubFile]
-	Support plugin.TValue[*mqlGithubFile]
-	Security plugin.TValue[*mqlGithubFile]
+	CodeOfConductFile plugin.TValue[*mqlGithubFile]
+	SupportFile plugin.TValue[*mqlGithubFile]
+	SecurityFile plugin.TValue[*mqlGithubFile]
 }
 
 // createGithubRepository creates a new instance of this resource
@@ -3787,10 +3787,10 @@ func (c *mqlGithubRepository) GetLicense() *plugin.TValue[*mqlGithubLicense] {
 	})
 }
 
-func (c *mqlGithubRepository) GetCodeOfConduct() *plugin.TValue[*mqlGithubFile] {
-	return plugin.GetOrCompute[*mqlGithubFile](&c.CodeOfConduct, func() (*mqlGithubFile, error) {
+func (c *mqlGithubRepository) GetCodeOfConductFile() *plugin.TValue[*mqlGithubFile] {
+	return plugin.GetOrCompute[*mqlGithubFile](&c.CodeOfConductFile, func() (*mqlGithubFile, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "codeOfConduct")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "codeOfConductFile")
 			if err != nil {
 				return nil, err
 			}
@@ -3799,14 +3799,14 @@ func (c *mqlGithubRepository) GetCodeOfConduct() *plugin.TValue[*mqlGithubFile] 
 			}
 		}
 
-		return c.codeOfConduct()
+		return c.codeOfConductFile()
 	})
 }
 
-func (c *mqlGithubRepository) GetSupport() *plugin.TValue[*mqlGithubFile] {
-	return plugin.GetOrCompute[*mqlGithubFile](&c.Support, func() (*mqlGithubFile, error) {
+func (c *mqlGithubRepository) GetSupportFile() *plugin.TValue[*mqlGithubFile] {
+	return plugin.GetOrCompute[*mqlGithubFile](&c.SupportFile, func() (*mqlGithubFile, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "support")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "supportFile")
 			if err != nil {
 				return nil, err
 			}
@@ -3815,14 +3815,14 @@ func (c *mqlGithubRepository) GetSupport() *plugin.TValue[*mqlGithubFile] {
 			}
 		}
 
-		return c.support()
+		return c.supportFile()
 	})
 }
 
-func (c *mqlGithubRepository) GetSecurity() *plugin.TValue[*mqlGithubFile] {
-	return plugin.GetOrCompute[*mqlGithubFile](&c.Security, func() (*mqlGithubFile, error) {
+func (c *mqlGithubRepository) GetSecurityFile() *plugin.TValue[*mqlGithubFile] {
+	return plugin.GetOrCompute[*mqlGithubFile](&c.SecurityFile, func() (*mqlGithubFile, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "security")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "securityFile")
 			if err != nil {
 				return nil, err
 			}
@@ -3831,7 +3831,7 @@ func (c *mqlGithubRepository) GetSecurity() *plugin.TValue[*mqlGithubFile] {
 			}
 		}
 
-		return c.security()
+		return c.securityFile()
 	})
 }
 

@@ -75,7 +75,7 @@ func newMqlGithubRepository(runtime *plugin.Runtime, repo *github.Repository) (*
 		return nil, err
 	}
 	r := res.(*mqlGithubRepository)
-	r.mqlGithubRepositoryInternal.findSpecialFilesFunc = sync.OnceValue[error](r.findSpecialFiles)
+	r.mqlGithubRepositoryInternal.findSpecialFilesOnceFunc = sync.OnceValue[error](r.findSpecialFiles)
 	return r, nil
 }
 
@@ -1658,44 +1658,44 @@ func (g *mqlGithubRepository) getIssues(state string) ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGithubRepository) support() (*mqlGithubFile, error) {
-	err := g.findSpecialFilesFunc()
+func (g *mqlGithubRepository) supportFile() (*mqlGithubFile, error) {
+	err := g.findSpecialFilesOnceFunc()
 	if err != nil {
 		return nil, err
 	}
-	if g.Support.Error != nil {
-		return nil, g.Support.Error
+	if g.SupportFile.Error != nil {
+		return nil, g.SupportFile.Error
 	}
 
-	return g.Support.Data, nil
+	return g.SupportFile.Data, nil
 }
 
-func (g *mqlGithubRepository) codeOfConduct() (*mqlGithubFile, error) {
-	err := g.findSpecialFilesFunc()
+func (g *mqlGithubRepository) codeOfConductFile() (*mqlGithubFile, error) {
+	err := g.findSpecialFilesOnceFunc()
 	if err != nil {
 		return nil, err
 	}
-	if g.CodeOfConduct.Error != nil {
-		return nil, g.CodeOfConduct.Error
+	if g.CodeOfConductFile.Error != nil {
+		return nil, g.CodeOfConductFile.Error
 	}
 
-	return g.CodeOfConduct.Data, nil
+	return g.CodeOfConductFile.Data, nil
 }
 
-func (g *mqlGithubRepository) security() (*mqlGithubFile, error) {
-	err := g.findSpecialFilesFunc()
+func (g *mqlGithubRepository) securityFile() (*mqlGithubFile, error) {
+	err := g.findSpecialFilesOnceFunc()
 	if err != nil {
 		return nil, err
 	}
-	if g.Security.Error != nil {
-		return nil, g.Security.Error
+	if g.SecurityFile.Error != nil {
+		return nil, g.SecurityFile.Error
 	}
 
-	return g.Security.Data, nil
+	return g.SecurityFile.Data, nil
 }
 
 type mqlGithubRepositoryInternal struct {
-	findSpecialFilesFunc func() error
+	findSpecialFilesOnceFunc func() error
 }
 
 func (g *mqlGithubRepository) findSpecialFiles() error {
@@ -1718,9 +1718,9 @@ func (g *mqlGithubRepository) findSpecialFiles() error {
 	specialDirectories := []string{".", ".github"}
 
 	specialFilesCaseInsensitive := map[string]*plugin.TValue[*mqlGithubFile]{
-		"code_of_conduct.md": &g.CodeOfConduct,
-		"support.md":         &g.Support,
-		"security.md":        &g.Security,
+		"code_of_conduct.md": &g.CodeOfConductFile,
+		"support.md":         &g.SupportFile,
+		"security.md":        &g.SecurityFile,
 	}
 	foundFiles := map[string]struct{}{}
 

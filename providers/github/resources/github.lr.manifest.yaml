@@ -343,6 +343,8 @@ resources:
         min_mondoo_version: 9.0.0
       codeOfConduct:
         min_mondoo_version: 9.0.0
+      codeOfConductFile:
+        min_mondoo_version: 9.0.0
       collaborators:
         min_mondoo_version: 6.11.0
       commits:
@@ -405,6 +407,8 @@ resources:
         min_mondoo_version: 6.4.0
       security:
         min_mondoo_version: 9.0.0
+      securityFile:
+        min_mondoo_version: 9.0.0
       sshUrl:
         min_mondoo_version: 7.14.0
       stargazers:
@@ -412,6 +416,8 @@ resources:
       stargazersCount:
         min_mondoo_version: 7.14.0
       support:
+        min_mondoo_version: 9.0.0
+      supportFile:
         min_mondoo_version: 9.0.0
       topics:
         min_mondoo_version: 7.14.0
