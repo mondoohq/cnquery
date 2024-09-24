@@ -1079,7 +1079,7 @@ func (a *mqlAzureSubscriptionNetworkServiceApplicationGateway) wafConfiguration(
 	if err != nil {
 		return nil, err
 	}
-	client, err := networkv6.NewClientFactory(resourceID.SubscriptionID, token, &arm.ClientOptions{
+	client, err := network.NewClientFactory(resourceID.SubscriptionID, token, &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
 	if err != nil {
@@ -1088,7 +1088,7 @@ func (a *mqlAzureSubscriptionNetworkServiceApplicationGateway) wafConfiguration(
 	c := client.NewApplicationGatewayWafDynamicManifestsClient()
 
 	res := []interface{}{}
-	pager := c.NewGetPager(a.Location.Data, &networkv6.ApplicationGatewayWafDynamicManifestsClientGetOptions{})
+	pager := c.NewGetPager(a.Location.Data, &network.ApplicationGatewayWafDynamicManifestsClientGetOptions{})
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
