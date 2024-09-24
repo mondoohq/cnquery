@@ -70,6 +70,20 @@ azure.subscription @defaults ("name") {
   iot() azure.subscription.iotService
 }
 
+// Azure function
+private azure.subscription.webService.function @defaults("name type") {
+  // ID of the function
+  id string
+  // Name of the function
+  name string
+  // Type of function
+  type string
+  // Kind of function
+  kind string
+  // Properties for the function
+  properties dict
+}
+
 // Azure resource group
 private azure.subscription.resourcegroup @defaults("name location") {
   // Resource group ID
@@ -846,6 +860,22 @@ azure.subscription.networkService.applicationGateway @defaults("id name location
   properties dict
   // Gets the attached application firewall policy
   policy() azure.subscription.networkService.applicationFirewallPolicy
+  // WAF configurations
+  wafConfiguration() []azure.subscription.networkService.wafConfig
+}
+
+// Azure Application Firewall Config
+azure.subscription.networkService.wafConfig @defaults("id name type") {
+  // ID of the WAF configuration
+  id string
+  // Name of the WAF configuration
+  name string
+  // Type of WAF configuration
+  type string
+  // Kind of WAF configuration
+  kind string
+  // Properties for the WAF configuration
+  properties dict
 }
 
 // Azure Application Firewall Policy (WAF)
@@ -1031,6 +1061,8 @@ private azure.subscription.webService.appsite @defaults("id name location") {
   stack() dict
   // Diagnostic settings for the web app site
   diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
+  // List of functions for the web app site
+  functions() []azure.subscription.webService.function
 }
 
 // Azure AppSite authentication settings

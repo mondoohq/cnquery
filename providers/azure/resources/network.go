@@ -17,7 +17,7 @@ import (
 	"go.mondoo.com/cnquery/v11/types"
 	"go.mondoo.com/cnquery/v11/utils/stringx"
 
-	network "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork"
+	network "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
 )
 
 func (a *mqlAzureSubscriptionNetworkService) id() (string, error) {
@@ -1060,6 +1060,57 @@ func (a *mqlAzureSubscriptionNetworkService) applicationGateways() ([]interface{
 					return nil, err
 				}
 				res = append(res, mqlAg)
+			}
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceWafConfig) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceApplicationGateway) wafConfiguration() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	id := a.Id.Data
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+	client, err := network.NewClientFactory(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	c := client.NewApplicationGatewayWafDynamicManifestsClient()
+
+	res := []interface{}{}
+	pager := c.NewGetPager(a.Location.Data, &network.ApplicationGatewayWafDynamicManifestsClientGetOptions{})
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, entry := range page.Value {
+			if entry != nil {
+				props, err := convert.JsonToDict(entry.Properties)
+				if err != nil {
+					return nil, err
+				}
+				mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.applicationGateway.wafconfig",
+					map[string]*llx.RawData{
+						"id":         llx.StringDataPtr(entry.ID),
+						"name":       llx.StringDataPtr(entry.Name),
+						"type":       llx.StringDataPtr(entry.Type),
+						"properties": llx.AnyData(props),
+					})
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, mqlAzure)
 			}
 		}
 	}

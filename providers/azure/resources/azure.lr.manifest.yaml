@@ -20,6 +20,8 @@ resources:
       cloudDefender: {}
       compute: {}
       cosmosDb: {}
+      functions:
+        min_mondoo_version: 9.0.0
       iam:
         min_mondoo_version: 9.0.0
       id: {}
@@ -604,6 +606,17 @@ resources:
     refs:
     - title: Azure Cosmos DB documentation
       url: https://learn.microsoft.com/en-us/azure/cosmos-db/
+  azure.subscription.function:
+    fields:
+      id: {}
+      kind: {}
+      name: {}
+      properties: {}
+      type: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
   azure.subscription.iotService:
     fields:
       hubs: {}
@@ -1470,6 +1483,8 @@ resources:
       properties: {}
       tags: {}
       type: {}
+      wafConfiguration:
+        min_mondoo_version: 9.0.0
     min_mondoo_version: latest
     platform:
       name:
@@ -1975,6 +1990,17 @@ resources:
     refs:
     - title: Virtual Network documentation
       url: https://learn.microsoft.com/en-us/azure/virtual-network/
+  azure.subscription.networkService.wafConfig:
+    fields:
+      id: {}
+      kind: {}
+      name: {}
+      properties: {}
+      type: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
   azure.subscription.networkService.watcher:
     fields:
       etag: {}
@@ -2853,6 +2879,8 @@ resources:
       connectionSettings: {}
       diagnosticSettings:
         min_mondoo_version: 9.0.0
+      functions:
+        min_mondoo_version: 9.0.0
       id: {}
       identity: {}
       kind: {}
@@ -2901,3 +2929,15 @@ resources:
     refs:
     - title: Azure Web documentation
       url: https://learn.microsoft.com/en-us/azure/?product=web
+  azure.subscription.webService.function:
+    fields:
+      id: {}
+      kind: {}
+      name: {}
+      properties: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure

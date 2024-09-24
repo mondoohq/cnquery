@@ -394,6 +394,61 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) metadata() (interface{}, error) 
 	return res, nil
 }
 
+func (a *mqlAzureSubscriptionWebServiceAppsite) functions() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	id := a.Id.Data
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+	client, err := web.NewWebAppsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	site, err := resourceID.Component("sites")
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListFunctionsPager(resourceID.ResourceGroup, site, &web.WebAppsClientListFunctionsOptions{})
+	res := []interface{}{}
+
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, entry := range page.Value {
+			props, err := convert.JsonToDict(entry.Properties)
+			if err != nil {
+				return nil, err
+			}
+			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.webService.function",
+				map[string]*llx.RawData{
+					"id":         llx.StringDataPtr(entry.ID),
+					"name":       llx.StringDataPtr(entry.Name),
+					"type":       llx.StringDataPtr(entry.Type),
+					"kind":       llx.StringDataPtr(entry.Kind),
+					"properties": llx.AnyData(props),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAzure)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionWebServiceFunction) id() (string, error) {
+	return a.id()
+}
+
 func (a *mqlAzureSubscriptionWebServiceAppsite) connectionSettings() (interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
