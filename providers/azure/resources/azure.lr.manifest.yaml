@@ -1483,8 +1483,6 @@ resources:
       properties: {}
       tags: {}
       type: {}
-      wafConfig:
-        min_mondoo_version: 9.0.0
       wafConfiguration:
         min_mondoo_version: 9.0.0
     min_mondoo_version: latest
