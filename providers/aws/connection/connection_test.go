@@ -52,8 +52,7 @@ func TestParseOptsToFilters(t *testing.T) {
 			"all:tag:key1": "val1",
 			"all:tag:key2": "val2",
 			// EcrDiscoveryFilters.Tags
-			"ecr:tag:tag1": "tag1",
-			"ecr:tag:tag2": "tag2",
+			"ecr:tags": "tag1,tag2",
 			// EcsDiscoveryFilters
 			"ecs:only-running-containers": "true",
 			"ecs:discover-images":         "T",

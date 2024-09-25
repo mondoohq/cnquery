@@ -143,20 +143,20 @@ func parseOptsToFilters(opts map[string]string) DiscoveryFilters {
 			d.Ec2DiscoveryFilters.Tags[strings.TrimPrefix(k, "ec2:tag:")] = v
 		case strings.HasPrefix(k, "exclude:ec2:tag:"):
 			d.Ec2DiscoveryFilters.ExcludeTags[strings.TrimPrefix(k, "exclude:ec2:tag:")] = v
-		case strings.HasPrefix(k, "ec2:regions"):
+		case k == "ec2:regions":
 			d.Ec2DiscoveryFilters.Regions = append(d.Ec2DiscoveryFilters.Regions, strings.Split(v, ",")...)
-		case strings.HasPrefix(k, "exclude:ec2:regions"):
+		case k == "exclude:ec2:regions":
 			d.Ec2DiscoveryFilters.ExcludeRegions = append(d.Ec2DiscoveryFilters.ExcludeRegions, strings.Split(v, ",")...)
-		case strings.HasPrefix(k, "all:regions"), strings.HasPrefix(k, "regions"):
+		case k == "all:regions", k == "regions":
 			d.GeneralDiscoveryFilters.Regions = append(d.GeneralDiscoveryFilters.Regions, strings.Split(v, ",")...)
-		case strings.HasPrefix(k, "ec2:instance-ids"):
+		case k == "ec2:instance-ids":
 			d.Ec2DiscoveryFilters.InstanceIds = append(d.Ec2DiscoveryFilters.InstanceIds, strings.Split(v, ",")...)
-		case strings.HasPrefix(k, "exclude:ec2:instance-ids"):
+		case k == "exclude:ec2:instance-ids":
 			d.Ec2DiscoveryFilters.ExcludeInstanceIds = append(d.Ec2DiscoveryFilters.ExcludeInstanceIds, strings.Split(v, ",")...)
 		case strings.HasPrefix(k, "all:tag:"):
 			d.GeneralDiscoveryFilters.Tags[strings.TrimPrefix(k, "all:tag:")] = v
-		case strings.HasPrefix(k, "ecr:tag:"):
-			d.EcrDiscoveryFilters.Tags = append(d.EcrDiscoveryFilters.Tags, v)
+		case k == "ecr:tags":
+			d.EcrDiscoveryFilters.Tags = append(d.EcrDiscoveryFilters.Tags, strings.Split(v, ",")...)
 		case k == "ecs:only-running-containers":
 			parsed, err := strconv.ParseBool(v)
 			if err == nil {

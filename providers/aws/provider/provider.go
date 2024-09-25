@@ -93,7 +93,7 @@ func parseFlagsToFiltersOpts(m map[string]*llx.Primitive) map[string]string {
 			"ec2:instance-ids",
 			"exclude:ec2:instance-ids",
 			"all:tag:",
-			"ecr:tag:",
+			"ecr:tags",
 			"ecs:only-running-containers",
 			"ecs:discover-instances",
 			"ecs:discover-images",
