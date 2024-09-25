@@ -143,16 +143,16 @@ func parseOptsToFilters(opts map[string]string) DiscoveryFilters {
 			d.Ec2DiscoveryFilters.Tags[strings.TrimPrefix(k, "ec2:tag:")] = v
 		case strings.HasPrefix(k, "exclude:ec2:tag:"):
 			d.Ec2DiscoveryFilters.ExcludeTags[strings.TrimPrefix(k, "exclude:ec2:tag:")] = v
-		case strings.HasPrefix(k, "ec2:region:"):
-			d.Ec2DiscoveryFilters.Regions = append(d.Ec2DiscoveryFilters.Regions, v)
-		case strings.HasPrefix(k, "exclude:ec2:region"):
-			d.Ec2DiscoveryFilters.ExcludeRegions = append(d.Ec2DiscoveryFilters.ExcludeRegions, v)
-		case strings.HasPrefix(k, "all:region:"), strings.HasPrefix(k, "region:"):
-			d.GeneralDiscoveryFilters.Regions = append(d.GeneralDiscoveryFilters.Regions, v)
-		case strings.HasPrefix(k, "ec2:instance-id:"):
-			d.Ec2DiscoveryFilters.InstanceIds = append(d.Ec2DiscoveryFilters.InstanceIds, v)
-		case strings.HasPrefix(k, "exclude:ec2:instance-id:"):
-			d.Ec2DiscoveryFilters.ExcludeInstanceIds = append(d.Ec2DiscoveryFilters.ExcludeInstanceIds, v)
+		case strings.HasPrefix(k, "ec2:regions"):
+			d.Ec2DiscoveryFilters.Regions = append(d.Ec2DiscoveryFilters.Regions, strings.Split(v, ",")...)
+		case strings.HasPrefix(k, "exclude:ec2:regions"):
+			d.Ec2DiscoveryFilters.ExcludeRegions = append(d.Ec2DiscoveryFilters.ExcludeRegions, strings.Split(v, ",")...)
+		case strings.HasPrefix(k, "all:regions"), strings.HasPrefix(k, "regions"):
+			d.GeneralDiscoveryFilters.Regions = append(d.GeneralDiscoveryFilters.Regions, strings.Split(v, ",")...)
+		case strings.HasPrefix(k, "ec2:instance-ids"):
+			d.Ec2DiscoveryFilters.InstanceIds = append(d.Ec2DiscoveryFilters.InstanceIds, strings.Split(v, ",")...)
+		case strings.HasPrefix(k, "exclude:ec2:instance-ids"):
+			d.Ec2DiscoveryFilters.ExcludeInstanceIds = append(d.Ec2DiscoveryFilters.ExcludeInstanceIds, strings.Split(v, ",")...)
 		case strings.HasPrefix(k, "all:tag:"):
 			d.GeneralDiscoveryFilters.Tags[strings.TrimPrefix(k, "all:tag:")] = v
 		case strings.HasPrefix(k, "ecr:tag:"):
