@@ -800,12 +800,7 @@ func (a *mqlAwsEc2) getInstances(conn *connection.AwsConnection) []*jobpool.Job 
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
-	if len(conn.Filters.Ec2DiscoveryFilters.Regions) > 0 {
-		regions = conn.Filters.Ec2DiscoveryFilters.Regions
-	}
-	for _, regionToExclude := range conn.Filters.Ec2DiscoveryFilters.ExcludeRegions {
-		regions = removeElement(regions, regionToExclude)
-	}
+	regions = determineApplicableRegions(regions, conn.Filters.Ec2DiscoveryFilters.Regions, conn.Filters.Ec2DiscoveryFilters.ExcludeRegions)
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
@@ -1792,6 +1787,19 @@ func shouldExcludeInstance(instance ec2types.Instance, filters connection.Ec2Dis
 		}
 	}
 	return false
+}
+
+// given an initial set of regions, applies the allowed regions filter and the excluded regions filter on it
+// returning a resulting slice of only applicable region to which queries should be targeted
+func determineApplicableRegions(regions, regionsToInclude, regionsToExclude []string) []string {
+	res := regions
+	if len(regionsToInclude) > 0 {
+		res = regionsToInclude
+	}
+	for _, regionToExclude := range regionsToExclude {
+		res = removeElement(res, regionToExclude)
+	}
+	return res
 }
 
 func removeElement(slice []string, value string) []string {
