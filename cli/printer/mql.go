@@ -17,15 +17,7 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-// Results prints a full query with all data points
-// NOTE: ensure that results only contains results that match the bundle!
-func (print *Printer) Results(bundle *llx.CodeBundle, results map[string]*llx.RawResult) string {
-	assessment := llx.Results2Assessment(bundle, results)
-
-	if assessment != nil {
-		return print.Assessment(bundle, assessment)
-	}
-
+func (print *Printer) Datas(bundle *llx.CodeBundle, results map[string]*llx.RawResult) string {
 	var res strings.Builder
 	i := 0
 	for _, v := range results {
@@ -36,6 +28,18 @@ func (print *Printer) Results(bundle *llx.CodeBundle, results map[string]*llx.Ra
 		i++
 	}
 	return res.String()
+}
+
+// Results prints a full query with all data points
+// NOTE: ensure that results only contains results that match the bundle!
+func (print *Printer) Results(bundle *llx.CodeBundle, results map[string]*llx.RawResult) string {
+	assessment := llx.Results2Assessment(bundle, results)
+
+	if assessment != nil {
+		return print.Assessment(bundle, assessment)
+	}
+
+	return print.Datas(bundle, results)
 }
 
 // Assessment prints a complete comparable assessment
