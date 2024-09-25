@@ -26,6 +26,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/cnquery/v11/providers/aws/connection"
 	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v11/utils/stringx"
 )
 
 func (e *mqlAwsEc2) id() (string, error) {
@@ -1792,22 +1793,15 @@ func shouldExcludeInstance(instance ec2types.Instance, filters connection.Ec2Dis
 // given an initial set of regions, applies the allowed regions filter and the excluded regions filter on it
 // returning a resulting slice of only applicable region to which queries should be targeted
 func determineApplicableRegions(regions, regionsToInclude, regionsToExclude []string) []string {
-	res := regions
 	if len(regionsToInclude) > 0 {
-		res = regionsToInclude
+		return regionsToInclude
 	}
-	for _, regionToExclude := range regionsToExclude {
-		res = removeElement(res, regionToExclude)
-	}
-	return res
-}
-
-func removeElement(slice []string, value string) []string {
-	result := []string{}
-	for _, v := range slice {
-		if v != value {
-			result = append(result, v)
+	res := []string{}
+	for _, r := range regions {
+		if !stringx.Contains(regionsToExclude, r) {
+			res = append(res, r)
 		}
 	}
-	return result
+
+	return res
 }
