@@ -45,11 +45,11 @@ func TestParseOptsToFilters(t *testing.T) {
 			"exclude:ec2:region:us-east-1": "us-east-1",
 			"exclude:ec2:region:us-west-1": "us-west-1",
 			// Ec2DiscoveryFilters.InstanceIds
-			"instance-id:iid-1": "iid-1",
-			"instance-id:iid-2": "iid-2",
+			"ec2:instance-id:iid-1": "iid-1",
+			"ec2:instance-id:iid-2": "iid-2",
 			// Ec2DiscoveryFilters.ExcludeInstanceIds
-			"exclude:instance-id:iid-1": "iid-1",
-			"exclude:instance-id:iid-2": "iid-2",
+			"exclude:ec2:instance-id:iid-1": "iid-1",
+			"exclude:ec2:instance-id:iid-2": "iid-2",
 			// GeneralDiscoveryFilters.Regions
 			"all:region:us-east-1": "us-east-1",
 			"all:region:us-west-1": "us-west-1",
