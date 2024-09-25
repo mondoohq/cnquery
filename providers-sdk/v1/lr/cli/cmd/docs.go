@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"text/template"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -22,6 +23,7 @@ import (
 func init() {
 	docsYamlCmd.Flags().String("docs-file", "", "optional file path to write content to a file")
 	docsYamlCmd.Flags().String("version", defaultVersionField, "optional version to mark resource, default is latest")
+	docsYamlCmd.Flags().String("license-header-file", "", "optional file path to read license header from")
 	docsCmd.AddCommand(docsYamlCmd)
 	docsJSONCmd.Flags().String("dist", "", "folder for output json generation")
 	docsCmd.AddCommand(docsJSONCmd)
@@ -136,7 +138,23 @@ var docsYamlCmd = &cobra.Command{
 		}
 
 		// add license header
-		data = append([]byte("# Copyright (c) Mondoo, Inc.\n# SPDX-License-Identifier: BUSL-1.1\n\n"), data...)
+		var headerTpl *template.Template
+		if headerFile, err := cmd.Flags().GetString("license-header-file"); err == nil && headerFile != "" {
+			headerRaw, err := os.ReadFile(headerFile)
+			if err != nil {
+				log.Fatal().Err(err).Msg("could not read license header file")
+			}
+			headerTpl, err = template.New("license_header").Parse(string(headerRaw))
+			if err != nil {
+				log.Fatal().Err(err).Msg("could not parse license header template")
+			}
+		}
+
+		header, err := lr.LicenseHeader(headerTpl, lr.LicenseHeaderOptions{LineStarter: "#"})
+		if err != nil {
+			log.Fatal().Err(err).Msg("could not generate license header")
+		}
+		data = append([]byte(header), data...)
 
 		log.Info().Str("file", filepath).Msg("write file")
 		err = os.WriteFile(filepath, data, 0o700)

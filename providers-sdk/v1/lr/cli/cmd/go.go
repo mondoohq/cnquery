@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"text/template"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -38,8 +39,21 @@ var goCmd = &cobra.Command{
 			return
 		}
 
+		// add license header
+		var headerTpl *template.Template
+		if headerFile, err := cmd.Flags().GetString("license-header-file"); err == nil && headerFile != "" {
+			headerRaw, err := os.ReadFile(headerFile)
+			if err != nil {
+				log.Fatal().Err(err).Msg("could not read license header file")
+			}
+			headerTpl, err = template.New("license_header").Parse(string(headerRaw))
+			if err != nil {
+				log.Fatal().Err(err).Msg("could not parse license header template")
+			}
+		}
+
 		collector := lr.NewCollector(args[0])
-		godata, err := lr.Go(packageName, res, collector)
+		godata, err := lr.Go(packageName, res, collector, headerTpl)
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to compile go code")
 		}
@@ -102,4 +116,5 @@ var goCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(goCmd)
 	goCmd.Flags().String("dist", "", "folder for output json generation")
+	goCmd.Flags().String("license-header-file", "", "optional file path to read license header from")
 }
