@@ -76,3 +76,35 @@ func TestShouldExcludeInstance(t *testing.T) {
 		require.False(t, shouldExcludeInstance(instance, filters))
 	})
 }
+
+func TestDetermineApplicableRegions(t *testing.T) {
+	t.Run("allow regions override initial region list", func(t *testing.T) {
+		initialRegions := []string{"a", "b"}
+		allowedRegions := []string{"b", "c"}
+		excludedRegions := []string{}
+
+		expected := []string{"b", "c"}
+		actual := determineApplicableRegions(initialRegions, allowedRegions, excludedRegions)
+		require.ElementsMatch(t, expected, actual)
+	})
+
+	t.Run("excluded regions work correctly", func(t *testing.T) {
+		initialRegions := []string{"a", "b"}
+		allowedRegions := []string{}
+		excludedRegions := []string{"b"}
+
+		expected := []string{"a"}
+		actual := determineApplicableRegions(initialRegions, allowedRegions, excludedRegions)
+		require.ElementsMatch(t, expected, actual)
+	})
+
+	t.Run("excluded regions not present in the initial slice are ignored", func(t *testing.T) {
+		initialRegions := []string{"a", "b"}
+		allowedRegions := []string{}
+		excludedRegions := []string{"b", "c", "d", "e"}
+
+		expected := []string{"a"}
+		actual := determineApplicableRegions(initialRegions, allowedRegions, excludedRegions)
+		require.ElementsMatch(t, expected, actual)
+	})
+}
