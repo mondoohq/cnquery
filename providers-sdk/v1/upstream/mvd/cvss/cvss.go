@@ -122,7 +122,7 @@ func init() {
 
 const NoneVector = "0.0/CVSS:3.0"
 
-var CVSS_VERSION = regexp.MustCompile(`^.*\/CVSS:([\d.]+)(?:\/.*)*$`)
+var CVSS_VERSION = regexp.MustCompile(`^(?:.*\/)?CVSS:([\d.]+)(?:\/.*)*$`)
 
 func New(vector string) (*Cvss, error) {
 	if len(vector) == 0 {
