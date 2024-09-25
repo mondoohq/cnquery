@@ -96,15 +96,6 @@ var AllAPIResources = []string{
 	DiscoverySagemakerNotebookInstances,
 }
 
-func contains(sl []string, s string) bool {
-	for i := range sl {
-		if sl[i] == s {
-			return true
-		}
-	}
-	return false
-}
-
 func containsInterfaceSlice(sl []interface{}, s string) bool {
 	for i := range sl {
 		if sl[i].(string) == s {

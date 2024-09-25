@@ -6,6 +6,7 @@ package connection
 import (
 	"context"
 	"errors"
+	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -129,7 +130,6 @@ func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 	return c, nil
 }
 
-// TODO: @vasil - unit test.
 func parseOptsToFilters(opts map[string]string) DiscoveryFilters {
 	d := DiscoveryFilters{
 		Ec2DiscoveryFilters:     Ec2DiscoveryFilters{Tags: map[string]string{}, ExcludeTags: map[string]string{}},
@@ -147,7 +147,7 @@ func parseOptsToFilters(opts map[string]string) DiscoveryFilters {
 			d.Ec2DiscoveryFilters.Regions = append(d.Ec2DiscoveryFilters.Regions, v)
 		case strings.HasPrefix(k, "exclude:ec2:region"):
 			d.Ec2DiscoveryFilters.ExcludeRegions = append(d.Ec2DiscoveryFilters.ExcludeRegions, v)
-		case k == "all:region", k == "region":
+		case strings.HasPrefix(k, "all:region:"), strings.HasPrefix(k, "region:"):
 			d.GeneralDiscoveryFilters.Regions = append(d.GeneralDiscoveryFilters.Regions, v)
 		case strings.HasPrefix(k, "instance-id:"):
 			d.Ec2DiscoveryFilters.InstanceIds = append(d.Ec2DiscoveryFilters.InstanceIds, v)
@@ -155,8 +155,23 @@ func parseOptsToFilters(opts map[string]string) DiscoveryFilters {
 			d.Ec2DiscoveryFilters.ExcludeInstanceIds = append(d.Ec2DiscoveryFilters.ExcludeInstanceIds, v)
 		case strings.HasPrefix(k, "all:tag:"):
 			d.GeneralDiscoveryFilters.Tags[strings.TrimPrefix(k, "all:tag:")] = v
-		case k == "ecr:tag":
+		case strings.HasPrefix(k, "ecr:tag:"):
 			d.EcrDiscoveryFilters.Tags = append(d.EcrDiscoveryFilters.Tags, v)
+		case k == "ecs:only-running-containers":
+			parsed, err := strconv.ParseBool(v)
+			if err == nil {
+				d.EcsDiscoveryFilters.OnlyRunningContainers = parsed
+			}
+		case k == "ecs:discover-instances":
+			parsed, err := strconv.ParseBool(v)
+			if err == nil {
+				d.EcsDiscoveryFilters.DiscoverInstances = parsed
+			}
+		case k == "ecs:discover-images":
+			parsed, err := strconv.ParseBool(v)
+			if err == nil {
+				d.EcsDiscoveryFilters.DiscoverImages = parsed
+			}
 		}
 	}
 	return d

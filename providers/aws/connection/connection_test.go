@@ -23,7 +23,7 @@ func compareFilters(t *testing.T, expected, actual DiscoveryFilters) {
 
 	require.Equal(t, expected.EcsDiscoveryFilters, actual.EcsDiscoveryFilters)
 
-	require.Equal(t, expected.EcrDiscoveryFilters.Tags, actual.EcrDiscoveryFilters.Tags)
+	require.ElementsMatch(t, expected.EcrDiscoveryFilters.Tags, actual.EcrDiscoveryFilters.Tags)
 
 	require.ElementsMatch(t, expected.GeneralDiscoveryFilters.Regions, actual.GeneralDiscoveryFilters.Regions)
 	require.Equal(t, expected.GeneralDiscoveryFilters.Tags, actual.GeneralDiscoveryFilters.Tags)
@@ -50,7 +50,20 @@ func TestParseOptsToFilters(t *testing.T) {
 			// Ec2DiscoveryFilters.ExcludeInstanceIds
 			"exclude:instance-id:iid-1": "iid-1",
 			"exclude:instance-id:iid-2": "iid-2",
-			// TODO: @vasil - include others?
+			// GeneralDiscoveryFilters.Regions
+			"all:region:us-east-1": "us-east-1",
+			"all:region:us-west-1": "us-west-1",
+			"region:eu-west-1":     "eu-west-1",
+			// GeneralDiscoveryFilters.Tags
+			"all:tag:key1": "val1",
+			"all:tag:key2": "val2",
+			// EcrDiscoveryFilters.Tags
+			"ecr:tag:tag1": "tag1",
+			"ecr:tag:tag2": "tag2",
+			// EcsDiscoveryFilters
+			"ecs:only-running-containers": "true",
+			"ecs:discover-images":         "T",
+			"ecs:discover-instances":      "false",
 		}
 		expected := DiscoveryFilters{
 			Ec2DiscoveryFilters: Ec2DiscoveryFilters{
@@ -75,9 +88,23 @@ func TestParseOptsToFilters(t *testing.T) {
 					"key2": "val2",
 				},
 			},
-			EcsDiscoveryFilters:     EcsDiscoveryFilters{},
-			EcrDiscoveryFilters:     EcrDiscoveryFilters{Tags: []string{}},
-			GeneralDiscoveryFilters: GeneralResourceDiscoveryFilters{Tags: map[string]string{}},
+			EcsDiscoveryFilters: EcsDiscoveryFilters{
+				OnlyRunningContainers: true,
+				DiscoverImages:        true,
+				DiscoverInstances:     false,
+			},
+			EcrDiscoveryFilters: EcrDiscoveryFilters{Tags: []string{
+				"tag1", "tag2",
+			}},
+			GeneralDiscoveryFilters: GeneralResourceDiscoveryFilters{
+				Regions: []string{
+					"us-east-1", "us-west-1", "eu-west-1",
+				},
+				Tags: map[string]string{
+					"key1": "val1",
+					"key2": "val2",
+				},
+			},
 		}
 
 		actual := parseOptsToFilters(opts)
