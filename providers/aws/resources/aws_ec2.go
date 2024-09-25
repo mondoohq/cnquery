@@ -803,6 +803,9 @@ func (a *mqlAwsEc2) getInstances(conn *connection.AwsConnection) []*jobpool.Job 
 	if len(conn.Filters.Ec2DiscoveryFilters.Regions) > 0 {
 		regions = conn.Filters.Ec2DiscoveryFilters.Regions
 	}
+	for _, regionToExclude := range conn.Filters.Ec2DiscoveryFilters.ExcludeRegions {
+		regions = removeElement(regions, regionToExclude)
+	}
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
@@ -837,6 +840,9 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, regionV
 	res := []interface{}{}
 	for _, reservation := range instances {
 		for _, instance := range reservation.Instances {
+			if shouldExcludeInstance(instance, conn.Filters.Ec2DiscoveryFilters) {
+				continue
+			}
 			mqlDevices := []interface{}{}
 			for i := range instance.BlockDeviceMappings {
 				device := instance.BlockDeviceMappings[i]
@@ -1768,4 +1774,32 @@ func (a *mqlAwsEc2Vpnconnection) id() (string, error) {
 
 func (a *mqlAwsEc2Vgwtelemetry) id() (string, error) {
 	return a.OutsideIpAddress.Data, nil
+}
+
+// true if the instance should be excluded from results. filtering for excluded regions should happen before we retrieve the EC2 instance.
+func shouldExcludeInstance(instance ec2types.Instance, filters connection.Ec2DiscoveryFilters) bool {
+	for _, id := range filters.ExcludeInstanceIds {
+		if instance.InstanceId != nil && *instance.InstanceId == id {
+			return true
+		}
+	}
+	for k, v := range filters.ExcludeTags {
+		for _, iTag := range instance.Tags {
+			if iTag.Key != nil && *iTag.Key == k &&
+				iTag.Value != nil && *iTag.Value == v {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func removeElement(slice []string, value string) []string {
+	result := []string{}
+	for _, v := range slice {
+		if v != value {
+			result = append(result, v)
+		}
+	}
+	return result
 }

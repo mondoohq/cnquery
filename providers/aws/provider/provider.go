@@ -269,5 +269,5 @@ func (s *Service) discover(conn *connection.AwsConnection) (*inventory.Inventory
 		return nil, err
 	}
 
-	return resources.Discover(runtime, conn.Filters)
+	return resources.Discover(runtime)
 }

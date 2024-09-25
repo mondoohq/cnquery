@@ -114,35 +114,6 @@ func containsInterfaceSlice(sl []interface{}, s string) bool {
 	return false
 }
 
-func instanceMatchesFilters(instance *mqlAwsEc2Instance, filters connection.DiscoveryFilters) bool {
-	regions := []string{}
-	if len(filters.GeneralDiscoveryFilters.Regions) > 0 {
-		regions = append(regions, filters.GeneralDiscoveryFilters.Regions...)
-	}
-	if len(filters.Ec2DiscoveryFilters.Regions) > 0 {
-		regions = append(regions, filters.Ec2DiscoveryFilters.Regions...)
-	}
-	if len(regions) > 0 && !contains(regions, instance.Region.Data) {
-		return false
-	}
-	if len(filters.Ec2DiscoveryFilters.InstanceIds) > 0 {
-		if !contains(filters.Ec2DiscoveryFilters.InstanceIds, instance.InstanceId.Data) {
-			return false
-		}
-	}
-	if len(filters.Ec2DiscoveryFilters.Tags) > 0 {
-		for k, v := range filters.Ec2DiscoveryFilters.Tags {
-			if instance.Tags.Data[k] == nil {
-				return false
-			}
-			if instance.Tags.Data[k].(string) != v {
-				return false
-			}
-		}
-	}
-	return true
-}
-
 func imageMatchesFilters(image *mqlAwsEcrImage, filters connection.DiscoveryFilters) bool {
 	f := filters.EcrDiscoveryFilters
 	if len(f.Tags) > 0 {
@@ -185,9 +156,8 @@ func discoveredAssetMatchesGeneralFilters(asset *inventory.Asset, filters connec
 	return true
 }
 
-func Discover(runtime *plugin.Runtime, filters connection.DiscoveryFilters) (*inventory.Inventory, error) {
+func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 	conn := runtime.Connection.(*connection.AwsConnection)
-
 	in := &inventory.Inventory{Spec: &inventory.InventorySpec{
 		Assets: []*inventory.Asset{},
 	}}
@@ -202,15 +172,15 @@ func Discover(runtime *plugin.Runtime, filters connection.DiscoveryFilters) (*in
 	targets := handleTargets(conn.Conf.Discover.Targets)
 	for i := range targets {
 		target := targets[i]
-		list, err := discover(runtime, awsAccount, target, filters)
+		list, err := discover(runtime, awsAccount, target, conn.Filters)
 		if err != nil {
 			log.Error().Err(err).Msg("error during discovery")
 			continue
 		}
-		if len(filters.GeneralDiscoveryFilters.Tags) > 0 {
+		if len(conn.Filters.GeneralDiscoveryFilters.Tags) > 0 {
 			newList := []*inventory.Asset{}
 			for i := range list {
-				if discoveredAssetMatchesGeneralFilters(list[i], filters.GeneralDiscoveryFilters) {
+				if discoveredAssetMatchesGeneralFilters(list[i], conn.Filters.GeneralDiscoveryFilters) {
 					newList = append(newList, list[i])
 				}
 			}
@@ -274,6 +244,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 
 		ec2 := res.(*mqlAwsEc2)
 
+		// get instances already filters out instances not matched by the filters specified in the AwsConnection
 		ins := ec2.GetInstances()
 		if ins == nil {
 			return assetList, nil
@@ -281,11 +252,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 
 		for i := range ins.Data {
 			instance := ins.Data[i].(*mqlAwsEc2Instance)
-			if !instanceMatchesFilters(instance, filters) {
-				continue
-			}
 			assetList = append(assetList, addConnectionInfoToEc2Asset(instance, accountId, conn))
-
 		}
 	case DiscoverySSMInstances:
 		res, err := NewResource(runtime, "aws.ssm", map[string]*llx.RawData{})
@@ -431,6 +398,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 
 		ec2 := res.(*mqlAwsEc2)
 
+		// get instances already filters out instances not matched by the filters specified in the AwsConnection
 		ins := ec2.GetInstances()
 		if ins == nil {
 			return assetList, nil
@@ -438,9 +406,6 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 
 		for i := range ins.Data {
 			instance := ins.Data[i].(*mqlAwsEc2Instance)
-			if !instanceMatchesFilters(instance, filters) {
-				continue
-			}
 			l := mapStringInterfaceToStringString(instance.Tags.Data)
 			assetList = append(assetList, MqlObjectToAsset(accountId,
 				mqlObject{
