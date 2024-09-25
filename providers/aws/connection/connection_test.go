@@ -39,21 +39,15 @@ func TestParseOptsToFilters(t *testing.T) {
 			"exclude:ec2:tag:key1": "val1",
 			"exclude:ec2:tag:key2": "val2",
 			// Ec2DiscoveryFilters.Regions
-			"ec2:region:us-east-1": "us-east-1",
-			"ec2:region:us-west-1": "us-west-1",
+			"ec2:regions": "us-east-1,us-west-1",
 			// Ec2DiscoveryFilters.ExcludeRegions
-			"exclude:ec2:region:us-east-1": "us-east-1",
-			"exclude:ec2:region:us-west-1": "us-west-1",
+			"exclude:ec2:regions": "us-east-1,us-west-1",
 			// Ec2DiscoveryFilters.InstanceIds
-			"ec2:instance-id:iid-1": "iid-1",
-			"ec2:instance-id:iid-2": "iid-2",
+			"ec2:instance-ids": "iid-1,iid-2",
 			// Ec2DiscoveryFilters.ExcludeInstanceIds
-			"exclude:ec2:instance-id:iid-1": "iid-1",
-			"exclude:ec2:instance-id:iid-2": "iid-2",
+			"exclude:ec2:instance-ids": "iid-1,iid-2",
 			// GeneralDiscoveryFilters.Regions
-			"all:region:us-east-1": "us-east-1",
-			"all:region:us-west-1": "us-west-1",
-			"region:eu-west-1":     "eu-west-1",
+			"all:regions": "us-east-1,us-west-1,eu-west-1",
 			// GeneralDiscoveryFilters.Tags
 			"all:tag:key1": "val1",
 			"all:tag:key2": "val2",
