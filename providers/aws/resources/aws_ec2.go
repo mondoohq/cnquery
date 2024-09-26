@@ -817,6 +817,13 @@ func (a *mqlAwsEc2) getInstances(conn *connection.AwsConnection) []*jobpool.Job 
 					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
 					return res, nil
 				}
+				// AWS returns an error response when trying to find an instance with a specific identifier if it cannot find it in some region.
+				// we do not propagate this error upward because an instance can be found in one region and return an error for all others which
+				// would be the expected behavior.
+				if Is400InstanceNotFoundError(err) {
+					log.Debug().Str("region", regionVal).Msg("could not find instance in region")
+					return res, nil
+				}
 				return nil, err
 			}
 			res, err = a.gatherInstanceInfo(instances, regionVal)

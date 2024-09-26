@@ -70,6 +70,16 @@ func Is400AccessDeniedError(err error) bool {
 	return false
 }
 
+func Is400InstanceNotFoundError(err error) bool {
+	var respErr *http.ResponseError
+	if errors.As(err, &respErr) {
+		if respErr.HTTPStatusCode() == 400 && (strings.Contains(respErr.Error(), "InvalidInstanceID.NotFound") || strings.Contains(respErr.Error(), "InvalidInstanceID.Malformed")) {
+			return true
+		}
+	}
+	return false
+}
+
 func strMapToInterface(m map[string]string) map[string]interface{} {
 	res := map[string]interface{}{}
 	for k, v := range m {
