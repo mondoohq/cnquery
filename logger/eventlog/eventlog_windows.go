@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-// +build windows
+//go:build windows
 
 // Package eventlog provides a io.Writer to send the logs
 // to Windows event log.
@@ -86,7 +86,7 @@ func (w eventlogWriter) Write(p []byte) (n int, err error) {
 	case eventlog.Warning:
 		w.elog.Warning(1, string(p))
 	default:
-		w.elog.Info(1, string(p))
+		w.elog.Info(0, string(p))
 	}
 
 	return
