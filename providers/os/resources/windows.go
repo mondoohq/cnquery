@@ -4,8 +4,11 @@
 package resources
 
 import (
+	"encoding/json"
 	"errors"
+	"io"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
@@ -17,16 +20,35 @@ import (
 func (s *mqlWindows) computerInfo() (map[string]interface{}, error) {
 	conn := s.MqlRuntime.Connection.(shared.Connection)
 
-	cmd := windows.PSGetComputerInfo
-
-	// encode the powershell command
-	encodedCmd := powershell.Encode(cmd)
-	executedCmd, err := conn.RunCommand(encodedCmd)
+	// Fetch computer info in JSON format
+	cmd := "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"Get-ComputerInfo | ConvertTo-Json\""
+	executedCmd, err := conn.RunCommand(cmd)
 	if err != nil {
+		log.Error().Err(err).Msg("Failed to execute PowerShell command")
 		return nil, err
 	}
 
-	return windows.ParseComputerInfo(executedCmd.Stdout)
+	outputBytes, err := io.ReadAll(executedCmd.Stdout)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to read PowerShell command output")
+		return nil, errors.New("failed to read command output: " + err.Error())
+	}
+
+	outputString := string(outputBytes)
+
+	if outputString == "" {
+		return nil, errors.New("no output from PowerShell command")
+	}
+
+	// Parsing the JSON output
+	var result map[string]interface{}
+	err = json.Unmarshal(outputBytes, &result)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to parse JSON output")
+		return nil, errors.New("failed to parse JSON: " + err.Error())
+	}
+
+	return result, nil
 }
 
 func (wh *mqlWindowsHotfix) id() (string, error) {
