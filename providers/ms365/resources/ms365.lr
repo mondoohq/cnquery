@@ -501,7 +501,10 @@ microsoft.policies {
   adminConsentRequestPolicy() dict
   // Permission grant policies
   permissionGrantPolicies() []dict
+  // Consent policy settings
+  consentPolicySettings() dict
 }
+
 
 // Deprecated: use `microsoft.roles` instead
 microsoft.rolemanagement {

@@ -73,3 +73,40 @@ func (a *mqlMicrosoftPolicies) permissionGrantPolicies() ([]interface{}, error) 
 	}
 	return convert.JsonToDictSlice(newPermissionGrantPolicies(resp.GetValue()))
 }
+
+// https://learn.microsoft.com/en-us/graph/api/groupsetting-get?view=graph-rest-1.0&tabs=http
+
+func (a *mqlMicrosoftPolicies) consentPolicySettings() (interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+
+	groupSettings, err := graphClient.GroupSettings().Get(ctx, nil)
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	actualSettingsMap := make(map[string]map[string]interface{})
+	for _, setting := range groupSettings.GetValue() {
+		displayName := setting.GetDisplayName()
+		if displayName != nil {
+			if _, exists := actualSettingsMap[*displayName]; !exists {
+				actualSettingsMap[*displayName] = make(map[string]interface{})
+			}
+
+			for _, settingValue := range setting.GetValues() {
+				name := settingValue.GetName()
+				value := settingValue.GetValue()
+				if name != nil && value != nil {
+					actualSettingsMap[*displayName][*name] = *value
+				}
+			}
+		}
+	}
+
+	return convert.JsonToDict(actualSettingsMap)
+}

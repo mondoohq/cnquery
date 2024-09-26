@@ -858,6 +858,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.policies.permissionGrantPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftPolicies).GetPermissionGrantPolicies()).ToDataRes(types.Array(types.Dict))
 	},
+	"microsoft.policies.consentPolicySettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPolicies).GetConsentPolicySettings()).ToDataRes(types.Dict)
+	},
 	"microsoft.rolemanagement.roleDefinitions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftRolemanagement).GetRoleDefinitions()).ToDataRes(types.Array(types.Resource("microsoft.rolemanagement.roledefinition")))
 	},
@@ -2068,6 +2071,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.policies.permissionGrantPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftPolicies).PermissionGrantPolicies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.policies.consentPolicySettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPolicies).ConsentPolicySettings, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"microsoft.rolemanagement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4595,6 +4602,7 @@ type mqlMicrosoftPolicies struct {
 	IdentitySecurityDefaultsEnforcementPolicy plugin.TValue[interface{}]
 	AdminConsentRequestPolicy plugin.TValue[interface{}]
 	PermissionGrantPolicies plugin.TValue[[]interface{}]
+	ConsentPolicySettings plugin.TValue[interface{}]
 }
 
 // createMicrosoftPolicies creates a new instance of this resource
@@ -4650,6 +4658,12 @@ func (c *mqlMicrosoftPolicies) GetAdminConsentRequestPolicy() *plugin.TValue[int
 func (c *mqlMicrosoftPolicies) GetPermissionGrantPolicies() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.PermissionGrantPolicies, func() ([]interface{}, error) {
 		return c.permissionGrantPolicies()
+	})
+}
+
+func (c *mqlMicrosoftPolicies) GetConsentPolicySettings() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.ConsentPolicySettings, func() (interface{}, error) {
+		return c.consentPolicySettings()
 	})
 }
 
