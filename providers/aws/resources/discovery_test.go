@@ -15,64 +15,6 @@ import (
 )
 
 func TestFilters(t *testing.T) {
-	require.True(t, instanceMatchesFilters(&mqlAwsEc2Instance{InstanceId: plugin.TValue[string]{Data: "i-test"}}, connection.DiscoveryFilters{
-		Ec2DiscoveryFilters: connection.Ec2DiscoveryFilters{
-			InstanceIds: []string{"i-test"},
-		},
-	},
-	))
-	require.True(t, instanceMatchesFilters(&mqlAwsEc2Instance{
-		InstanceId: plugin.TValue[string]{Data: "i-test"},
-		Tags:       plugin.TValue[map[string]interface{}]{Data: map[string]interface{}{"tester2": "val2", "test-tag": "val"}},
-	}, connection.DiscoveryFilters{
-		Ec2DiscoveryFilters: connection.Ec2DiscoveryFilters{
-			InstanceIds: []string{"i-test"},
-			Tags:        map[string]string{"tester2": "val2"},
-		},
-	},
-	))
-	require.True(t, instanceMatchesFilters(&mqlAwsEc2Instance{
-		InstanceId: plugin.TValue[string]{Data: "i-test"},
-		Tags:       plugin.TValue[map[string]interface{}]{Data: map[string]interface{}{"tester2": "val2", "test-tag": "val"}},
-		Region:     plugin.TValue[string]{Data: "us-west-1"},
-	}, connection.DiscoveryFilters{
-		Ec2DiscoveryFilters: connection.Ec2DiscoveryFilters{
-			Regions: []string{"us-east-2", "us-east-1", "us-west-1"},
-		},
-	},
-	))
-	require.True(t, instanceMatchesFilters(&mqlAwsEc2Instance{
-		InstanceId: plugin.TValue[string]{Data: "i-test"},
-		Tags:       plugin.TValue[map[string]interface{}]{Data: map[string]interface{}{"tester2": "val2", "test-tag": "val"}},
-		Region:     plugin.TValue[string]{Data: "us-west-1"},
-	}, connection.DiscoveryFilters{}))
-	require.False(t, instanceMatchesFilters(&mqlAwsEc2Instance{InstanceId: plugin.TValue[string]{Data: "i-test"}}, connection.DiscoveryFilters{
-		Ec2DiscoveryFilters: connection.Ec2DiscoveryFilters{
-			InstanceIds: []string{"i-test2"},
-		},
-	},
-	))
-	require.False(t, instanceMatchesFilters(&mqlAwsEc2Instance{
-		InstanceId: plugin.TValue[string]{Data: "i-test"},
-		Tags:       plugin.TValue[map[string]interface{}]{Data: map[string]interface{}{"tester2": "val2", "test-tag": "val"}},
-	}, connection.DiscoveryFilters{
-		Ec2DiscoveryFilters: connection.Ec2DiscoveryFilters{
-			InstanceIds: []string{"i-test"},
-			Tags:        map[string]string{"test-tag": "val2"},
-		},
-	},
-	))
-	require.False(t, instanceMatchesFilters(&mqlAwsEc2Instance{
-		InstanceId: plugin.TValue[string]{Data: "i-test"},
-		Tags:       plugin.TValue[map[string]interface{}]{Data: map[string]interface{}{"tester2": "val2", "test-tag": "val"}},
-		Region:     plugin.TValue[string]{Data: "us-west-2"},
-	}, connection.DiscoveryFilters{
-		Ec2DiscoveryFilters: connection.Ec2DiscoveryFilters{
-			Regions: []string{"us-east-2", "us-east-1", "us-west-1"},
-		},
-	},
-	))
-
 	require.True(t, imageMatchesFilters(&mqlAwsEcrImage{
 		Tags: plugin.TValue[[]interface{}]{Data: []interface{}{"latest"}},
 	}, connection.DiscoveryFilters{}))

@@ -83,15 +83,27 @@ func parseFlagsToFiltersOpts(m map[string]*llx.Primitive) map[string]string {
 	o := make(map[string]string, 0)
 
 	if x, ok := m["filters"]; ok && len(x.Map) != 0 {
+		knownTagPrefixes := []string{
+			"ec2:tag:",
+			"exclude:ec2:tag:",
+			"ec2:regions",
+			"exclude:ec2:regions",
+			"all:regions",
+			"regions",
+			"ec2:instance-ids",
+			"exclude:ec2:instance-ids",
+			"all:tag:",
+			"ecr:tags",
+			"ecs:only-running-containers",
+			"ecs:discover-instances",
+			"ecs:discover-images",
+		}
 		for k, v := range x.Map {
-			if strings.Contains(k, "tag:") {
-				o[k] = string(v.Value)
-			}
-			if k == "instance-id" {
-				o[k] = string(v.Value)
-			}
-			if strings.Contains(k, "region") {
-				o[k] = string(v.Value)
+			for _, prefix := range knownTagPrefixes {
+				if strings.HasPrefix(k, prefix) {
+					o[k] = string(v.Value)
+					break
+				}
 			}
 		}
 	}
@@ -269,5 +281,5 @@ func (s *Service) discover(conn *connection.AwsConnection) (*inventory.Inventory
 		return nil, err
 	}
 
-	return resources.Discover(runtime, conn.Filters)
+	return resources.Discover(runtime)
 }

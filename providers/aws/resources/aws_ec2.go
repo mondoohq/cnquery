@@ -26,6 +26,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/cnquery/v11/providers/aws/connection"
 	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v11/utils/stringx"
 )
 
 func (e *mqlAwsEc2) id() (string, error) {
@@ -800,9 +801,7 @@ func (a *mqlAwsEc2) getInstances(conn *connection.AwsConnection) []*jobpool.Job 
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
-	if len(conn.Filters.Ec2DiscoveryFilters.Regions) > 0 {
-		regions = conn.Filters.Ec2DiscoveryFilters.Regions
-	}
+	regions = determineApplicableRegions(regions, conn.Filters.Ec2DiscoveryFilters.Regions, conn.Filters.Ec2DiscoveryFilters.ExcludeRegions)
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
@@ -816,6 +815,13 @@ func (a *mqlAwsEc2) getInstances(conn *connection.AwsConnection) []*jobpool.Job 
 			if err != nil {
 				if Is400AccessDeniedError(err) {
 					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+					return res, nil
+				}
+				// AWS returns an error response when trying to find an instance with a specific identifier if it cannot find it in some region.
+				// we do not propagate this error upward because an instance can be found in one region and return an error for all others which
+				// would be the expected behavior.
+				if Is400InstanceNotFoundError(err) {
+					log.Debug().Str("region", regionVal).Msg("could not find instance in region")
 					return res, nil
 				}
 				return nil, err
@@ -837,6 +843,9 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, regionV
 	res := []interface{}{}
 	for _, reservation := range instances {
 		for _, instance := range reservation.Instances {
+			if shouldExcludeInstance(instance, conn.Filters.Ec2DiscoveryFilters) {
+				continue
+			}
 			mqlDevices := []interface{}{}
 			for i := range instance.BlockDeviceMappings {
 				device := instance.BlockDeviceMappings[i]
@@ -1768,4 +1777,38 @@ func (a *mqlAwsEc2Vpnconnection) id() (string, error) {
 
 func (a *mqlAwsEc2Vgwtelemetry) id() (string, error) {
 	return a.OutsideIpAddress.Data, nil
+}
+
+// true if the instance should be excluded from results. filtering for excluded regions should happen before we retrieve the EC2 instance.
+func shouldExcludeInstance(instance ec2types.Instance, filters connection.Ec2DiscoveryFilters) bool {
+	for _, id := range filters.ExcludeInstanceIds {
+		if instance.InstanceId != nil && *instance.InstanceId == id {
+			return true
+		}
+	}
+	for k, v := range filters.ExcludeTags {
+		for _, iTag := range instance.Tags {
+			if iTag.Key != nil && *iTag.Key == k &&
+				iTag.Value != nil && *iTag.Value == v {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// given an initial set of regions, applies the allowed regions filter and the excluded regions filter on it
+// returning a resulting slice of only applicable region to which queries should be targeted
+func determineApplicableRegions(regions, regionsToInclude, regionsToExclude []string) []string {
+	if len(regionsToInclude) > 0 {
+		return regionsToInclude
+	}
+	res := []string{}
+	for _, r := range regions {
+		if !stringx.Contains(regionsToExclude, r) {
+			res = append(res, r)
+		}
+	}
+
+	return res
 }

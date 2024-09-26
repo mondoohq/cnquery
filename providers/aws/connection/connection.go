@@ -6,6 +6,7 @@ package connection
 import (
 	"context"
 	"errors"
+	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -53,9 +54,12 @@ type GeneralResourceDiscoveryFilters struct {
 }
 
 type Ec2DiscoveryFilters struct {
-	Regions     []string
-	Tags        map[string]string
-	InstanceIds []string
+	Regions            []string
+	Tags               map[string]string
+	InstanceIds        []string
+	ExcludeRegions     []string
+	ExcludeTags        map[string]string
+	ExcludeInstanceIds []string
 }
 type EcrDiscoveryFilters struct {
 	Tags []string
@@ -128,7 +132,7 @@ func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 
 func parseOptsToFilters(opts map[string]string) DiscoveryFilters {
 	d := DiscoveryFilters{
-		Ec2DiscoveryFilters:     Ec2DiscoveryFilters{Tags: map[string]string{}},
+		Ec2DiscoveryFilters:     Ec2DiscoveryFilters{Tags: map[string]string{}, ExcludeTags: map[string]string{}},
 		EcsDiscoveryFilters:     EcsDiscoveryFilters{},
 		EcrDiscoveryFilters:     EcrDiscoveryFilters{Tags: []string{}},
 		GeneralDiscoveryFilters: GeneralResourceDiscoveryFilters{Tags: map[string]string{}},
@@ -137,16 +141,37 @@ func parseOptsToFilters(opts map[string]string) DiscoveryFilters {
 		switch {
 		case strings.HasPrefix(k, "ec2:tag:"):
 			d.Ec2DiscoveryFilters.Tags[strings.TrimPrefix(k, "ec2:tag:")] = v
-		case k == "ec2:region":
-			d.Ec2DiscoveryFilters.Regions = append(d.Ec2DiscoveryFilters.Regions, v)
-		case k == "all:region", k == "region":
-			d.GeneralDiscoveryFilters.Regions = append(d.GeneralDiscoveryFilters.Regions, v)
-		case k == "instance-id":
-			d.Ec2DiscoveryFilters.InstanceIds = append(d.Ec2DiscoveryFilters.InstanceIds, v)
+		case strings.HasPrefix(k, "exclude:ec2:tag:"):
+			d.Ec2DiscoveryFilters.ExcludeTags[strings.TrimPrefix(k, "exclude:ec2:tag:")] = v
+		case k == "ec2:regions":
+			d.Ec2DiscoveryFilters.Regions = append(d.Ec2DiscoveryFilters.Regions, strings.Split(v, ",")...)
+		case k == "exclude:ec2:regions":
+			d.Ec2DiscoveryFilters.ExcludeRegions = append(d.Ec2DiscoveryFilters.ExcludeRegions, strings.Split(v, ",")...)
+		case k == "all:regions", k == "regions":
+			d.GeneralDiscoveryFilters.Regions = append(d.GeneralDiscoveryFilters.Regions, strings.Split(v, ",")...)
+		case k == "ec2:instance-ids":
+			d.Ec2DiscoveryFilters.InstanceIds = append(d.Ec2DiscoveryFilters.InstanceIds, strings.Split(v, ",")...)
+		case k == "exclude:ec2:instance-ids":
+			d.Ec2DiscoveryFilters.ExcludeInstanceIds = append(d.Ec2DiscoveryFilters.ExcludeInstanceIds, strings.Split(v, ",")...)
 		case strings.HasPrefix(k, "all:tag:"):
 			d.GeneralDiscoveryFilters.Tags[strings.TrimPrefix(k, "all:tag:")] = v
-		case k == "ecr:tag":
-			d.EcrDiscoveryFilters.Tags = append(d.EcrDiscoveryFilters.Tags, v)
+		case k == "ecr:tags":
+			d.EcrDiscoveryFilters.Tags = append(d.EcrDiscoveryFilters.Tags, strings.Split(v, ",")...)
+		case k == "ecs:only-running-containers":
+			parsed, err := strconv.ParseBool(v)
+			if err == nil {
+				d.EcsDiscoveryFilters.OnlyRunningContainers = parsed
+			}
+		case k == "ecs:discover-instances":
+			parsed, err := strconv.ParseBool(v)
+			if err == nil {
+				d.EcsDiscoveryFilters.DiscoverInstances = parsed
+			}
+		case k == "ecs:discover-images":
+			parsed, err := strconv.ParseBool(v)
+			if err == nil {
+				d.EcsDiscoveryFilters.DiscoverImages = parsed
+			}
 		}
 	}
 	return d
