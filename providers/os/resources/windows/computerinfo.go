@@ -8,6 +8,14 @@ import (
 	"io"
 )
 
+// PSGetComputerInfoShort is a PowerShell script that retrieves computer information.
+// This is inteded to be used only as fallback when PSGetComputerInfo fails because
+// the command is too long.
+const PSGetComputerInfoShort = `Get-ComputerInfo | ConvertTo-Json`
+
+// PSGetComputerInfo is a PowerShell script that retrieves computer information. It also
+// implements a fallback to work on systems with winrm disabled. See https://github.com/mondoohq/cnquery/pull/4520
+// for more information.
 const PSGetComputerInfo = `
 function Get-CustomComputerInfo {
     $bios = Get-CimInstance -ClassName Win32_BIOS
