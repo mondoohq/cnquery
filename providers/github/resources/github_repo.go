@@ -1291,10 +1291,10 @@ func (g *mqlGithubRepository) files() ([]interface{}, error) {
 	ownerLogin := owner.Login.Data
 	_, dirContent, _, err := conn.Client().Repositories.GetContents(conn.Context(), ownerLogin, repoName, "", &github.RepositoryContentGetOptions{})
 	if err != nil {
-		log.Error().Err(err).Msg("unable to get contents list")
 		if strings.Contains(err.Error(), "404") {
 			return nil, nil
 		}
+		log.Error().Err(err).Msg("unable to get contents list")
 		return nil, err
 	}
 	res := []interface{}{}
@@ -1375,10 +1375,10 @@ func (g *mqlGithubFile) files() ([]interface{}, error) {
 	path := g.Path.Data
 	_, dirContent, _, err := conn.Client().Repositories.GetContents(conn.Context(), ownerName, repoName, path, &github.RepositoryContentGetOptions{})
 	if err != nil {
-		log.Error().Err(err).Msg("unable to get contents list")
 		if strings.Contains(err.Error(), "404") {
 			return nil, nil
 		}
+		log.Error().Err(err).Msg("unable to get contents list")
 		return nil, err
 	}
 	res := []interface{}{}
@@ -1477,10 +1477,10 @@ func (g *mqlGithubRepository) forks() ([]interface{}, error) {
 	for {
 		forks, resp, err := conn.Client().Repositories.ListForks(conn.Context(), ownerLogin, repoName, listOpts)
 		if err != nil {
-			log.Error().Err(err).Msg("unable to get contents list")
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
 			}
+			log.Error().Err(err).Msg("unable to get forks")
 			return nil, err
 		}
 		allForks = append(allForks, forks...)
@@ -1525,10 +1525,10 @@ func (g *mqlGithubRepository) stargazers() ([]interface{}, error) {
 	for {
 		stargazers, resp, err := conn.Client().Activity.ListStargazers(conn.Context(), ownerLogin, repoName, listOpts)
 		if err != nil {
-			log.Error().Err(err).Msg("unable to get contents list")
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
 			}
+			log.Error().Err(err).Msg("unable to get stargazers")
 			return nil, err
 		}
 		allStargazers = append(allStargazers, stargazers...)
@@ -1596,10 +1596,10 @@ func (g *mqlGithubRepository) getIssues(state string) ([]interface{}, error) {
 	for {
 		issues, resp, err := conn.Client().Issues.ListByRepo(conn.Context(), ownerLogin, repoName, listOpts)
 		if err != nil {
-			log.Error().Err(err).Msg("unable to get contents list")
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
 			}
+			log.Error().Err(err).Msg("unable to get issues")
 			return nil, err
 		}
 		allIssues = append(allIssues, issues...)
