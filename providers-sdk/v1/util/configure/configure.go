@@ -73,13 +73,13 @@ var rootCmd = &cobra.Command{
 		if err = os.WriteFile(outPath, builtinGo, 0o644); err != nil {
 			log.Fatal().Err(err).Str("path", outPath).Msg("failed to write output")
 		}
-		log.Info().Str("path", outPath).Any("providers", conf.Builtin).Msg("(1/3) configured builtin providers")
+		log.Info().Str("path", outPath).Strs("providers", conf.Providers()).Msg("(1/3) configured builtin providers")
 
 		buildProviders(conf.Builtin)
-		log.Info().Any("providers", conf.Builtin).Msg("(2/3) built providers")
+		log.Info().Strs("providers", conf.Providers()).Msg("(2/3) built providers")
 
 		rewireDependencies(conf.Builtin)
-		log.Info().Str("path", outPath).Any("providers", conf.Builtin).Msg("(3/3) rewired dependencies/files")
+		log.Info().Str("path", outPath).Strs("providers", conf.Providers()).Msg("(3/3) rewired dependencies/files")
 	},
 }
 
@@ -104,7 +104,7 @@ var editProvidersCmd = &cobra.Command{
 		}
 
 		if len(conf.Builtin) > 0 {
-			log.Warn().Any("providers", conf.Builtin).Msg("overwrite existing providers in config")
+			log.Warn().Strs("providers", conf.Providers()).Msg("overwrite existing providers in config")
 		}
 
 		// set new providers
@@ -116,7 +116,7 @@ var editProvidersCmd = &cobra.Command{
 		})
 		conf.Builtin = slices.Compact(conf.Builtin)
 
-		log.Info().Any("providers", conf.Builtin).Msg("configured providers")
+		log.Info().Strs("providers", conf.Providers()).Msg("configured providers")
 
 		raw, err = yaml.Marshal(conf)
 		if err != nil {
