@@ -3,11 +3,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
-
-	"sigs.k8s.io/yaml"
 )
 
 type ProvidersConf struct {
@@ -59,7 +58,7 @@ func (b Builtin) GoMod() string {
 
 func (b *Builtin) UnmarshalJSON(data []byte) error {
 	var name string
-	if err := yaml.Unmarshal(data, &name); err == nil {
+	if err := json.Unmarshal(data, &name); err == nil {
 		b.Name = name
 		b.GoPackage = "go.mondoo.com/cnquery/v11/providers/" + name
 
@@ -71,7 +70,7 @@ func (b *Builtin) UnmarshalJSON(data []byte) error {
 		Remote    string `json:"remote"`
 		GoPackage string `json:"goPackage"`
 	}
-	if err := yaml.Unmarshal(data, &raw); err != nil {
+	if err := json.Unmarshal(data, &raw); err != nil {
 		return err
 	}
 
@@ -84,4 +83,20 @@ func (b *Builtin) UnmarshalJSON(data []byte) error {
 	b.GoPackage = raw.GoPackage
 
 	return nil
+}
+
+func (b *Builtin) MarshalJSON() ([]byte, error) {
+	if b.Remote == "" && b.GoPackage == "" {
+		return json.Marshal(b.Name)
+	}
+
+	return json.Marshal(struct {
+		Name      string `json:"name"`
+		Remote    string `json:"remote"`
+		GoPackage string `json:"goPackage"`
+	}{
+		Name:      b.Name,
+		Remote:    b.Remote,
+		GoPackage: b.GoPackage,
+	})
 }

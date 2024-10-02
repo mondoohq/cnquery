@@ -109,7 +109,17 @@ var editProvidersCmd = &cobra.Command{
 
 		// set new providers
 		for _, arg := range args {
-			conf.Builtin = append(conf.Builtin, Builtin{Name: arg})
+			if !strings.Contains(arg, ":") {
+				conf.Builtin = append(conf.Builtin, Builtin{Name: arg})
+				continue
+			}
+
+			parts := strings.Split(arg, ":")
+			if len(parts) != 3 {
+				log.Fatal().Str("provider", arg).Msg("invalid provider format, must be NAME:REMOTE:GOPACKAGE")
+			}
+
+			conf.Builtin = append(conf.Builtin, Builtin{Name: parts[0], Remote: parts[1], GoPackage: parts[2]})
 		}
 		slices.SortFunc(conf.Builtin, func(a, b Builtin) int {
 			return strings.Compare(a.Name, b.Name)
