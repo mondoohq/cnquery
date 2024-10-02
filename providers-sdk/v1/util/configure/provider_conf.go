@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"strings"
 
 	"sigs.k8s.io/yaml"
 )
@@ -73,6 +75,10 @@ func (b *Builtin) UnmarshalJSON(data []byte) error {
 
 	b.Name = raw.Name
 	b.Remote = raw.Remote
+	if strings.HasPrefix(b.Remote, "~/") {
+		b.Remote = os.ExpandEnv(strings.Replace(b.Remote, "~/", "$HOME/", 1))
+	}
+
 	b.GoPackage = raw.GoPackage
 
 	return nil
