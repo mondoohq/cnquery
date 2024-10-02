@@ -84,7 +84,7 @@ var rootCmd = &cobra.Command{
 }
 
 var editProvidersCmd = &cobra.Command{
-	Use:   "edit-providers NAME1 NAME2 [-f config]",
+	Use:   "edit-providers NAME1 NAME2:REMOTE:GOPACKAGE [-f config]",
 	Short: "adds a provider to the config",
 	Run: func(cmd *cobra.Command, args []string) {
 		confPath, err := cmd.Flags().GetString("file")
