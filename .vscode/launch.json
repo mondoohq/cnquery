@@ -197,6 +197,17 @@
       "args": [
         "shell", "ssh", "user@18.215.249.49",
       ],
+    },
+    {
+      "name": "Configure Built-in Providers",
+      "type": "go",
+      "request": "launch",
+      "program": "${workspaceRoot}/providers-sdk/v1/util/configure",
+      "cwd": "${workspaceRoot}",
+      "args": [
+        "-f", "${workspaceRoot}/providers.yaml", 
+        "-o", "${workspaceRoot}/providers/builtin_dev.go"
+      ]
     }
   ]
 }

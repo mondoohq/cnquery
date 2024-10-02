@@ -12,4 +12,11 @@
 # In this case it will be pulled from your local repo
 # instead of using the pre-installed provider in 
 # your OS (like ~/.mondoo/providers/os).
+#
+# If you want to test a provider that is not part of
+# the cnquery repo, you can add it here as well.
+# Example:
+# - name: my-awesome-provider
+#   remote: ~/path/to/my-awesome-provider
+#   goPackage: github.com/me/my-awesome-provider
 builtin: []

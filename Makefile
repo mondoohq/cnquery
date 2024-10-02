@@ -169,7 +169,7 @@ providers/proto:
 
 .PHONY: providers/config
 providers/config:
-	go run ./providers-sdk/v1/util/configure/configure.go -f providers.yaml -o providers/builtin_dev.go
+	go run ./providers-sdk/v1/util/configure -f providers.yaml -o providers/builtin_dev.go
 
 .PHONY: providers/defaults
 providers/defaults:
