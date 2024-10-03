@@ -15,6 +15,7 @@ import (
 	"go.mondoo.com/cnquery/v11/explorer"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/mqlc"
+	"go.mondoo.com/cnquery/v11/utils/iox"
 	"go.mondoo.com/cnquery/v11/utils/multierr"
 )
 
@@ -235,14 +236,14 @@ func (e *instance) WaitUntilDone(timeout time.Duration) error {
 	}
 }
 
-func (e *instance) snapshotResults() map[string]*llx.Result {
+func (e *instance) snapshotResults() []*llx.Result {
 	if e.datapoints != nil {
 		e.mutex.Lock()
-		results := make(map[string]*llx.Result, len(e.datapoints))
+		results := make([]*llx.Result, 0, len(e.datapoints))
 		for id := range e.datapoints {
 			c := e.results[id]
 			if c != nil {
-				results[id] = c.Result()
+				results = append(results, c.Result())
 			}
 		}
 		e.mutex.Unlock()
@@ -250,9 +251,9 @@ func (e *instance) snapshotResults() map[string]*llx.Result {
 	}
 
 	e.mutex.Lock()
-	results := make(map[string]*llx.Result, len(e.results))
-	for id, v := range e.results {
-		results[id] = v.Result()
+	results := make([]*llx.Result, 0, len(e.results))
+	for _, v := range e.results {
+		results = append(results, v.Result())
 	}
 	e.mutex.Unlock()
 	return results
@@ -263,12 +264,32 @@ func (e *instance) StoreQueryData() error {
 		return errors.New("cannot store data, no collector provided")
 	}
 
-	_, err := e.collector.StoreResults(context.Background(), &explorer.StoreResultsReq{
-		AssetMrn: e.assetMrn,
-		Data:     e.snapshotResults(),
-	})
+	results := e.snapshotResults()
 
-	return err
+	if len(results) > 0 {
+		err := iox.ChunkMessages(func(chunk []*llx.Result) error {
+			log.Debug().Msg("Sending datapoints")
+			resultsToSend := make(map[string]*llx.Result, len(chunk))
+			for _, rr := range chunk {
+				resultsToSend[rr.CodeId] = rr
+			}
+			_, err := e.collector.StoreResults(context.Background(), &explorer.StoreResultsReq{
+				AssetMrn: e.assetMrn,
+				Data:     resultsToSend,
+			})
+			if err != nil {
+				return err
+			}
+			return nil
+		}, func(item *llx.Result, msgSize int) {
+			log.Warn().Msgf("Data %s (%d) exceeds maximum message size", item.CodeId, msgSize)
+		}, results...)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (e *instance) isCollected(query *llx.CodeBundle) bool {
