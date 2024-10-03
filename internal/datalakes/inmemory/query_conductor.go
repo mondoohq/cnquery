@@ -172,8 +172,9 @@ func (db *Db) GetReport(ctx context.Context, assetMrn string, packMrn string) (*
 				Data:   llx.NilPrimitive,
 				CodeId: id,
 			}
+		} else {
+			data[id] = datum.(*llx.Result)
 		}
-		data[id] = datum.(*llx.Result)
 	}
 
 	return &explorer.Report{
