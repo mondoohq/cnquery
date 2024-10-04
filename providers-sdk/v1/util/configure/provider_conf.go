@@ -12,16 +12,16 @@ import (
 type ProvidersConf struct {
 	Builtin []Builtin `json:"builtin"`
 
-	_providers []string // Providers names
+	providers []string // Providers names
 }
 
 func (c ProvidersConf) Providers() []string {
-	if len(c._providers) == 0 {
+	if len(c.providers) == 0 {
 		for _, b := range c.Builtin {
-			c._providers = append(c._providers, b.Name)
+			c.providers = append(c.providers, b.Name)
 		}
 	}
-	return c._providers
+	return c.providers
 }
 
 type Builtin struct {
