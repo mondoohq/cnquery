@@ -16,9 +16,14 @@ var Config = plugin.Provider{
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{
 		{
-			Name:      "ansible",
-			Use:       "ansible PATH",
-			Short:     "an Ansible playbook",
+			Name:  "ansible",
+			Use:   "ansible PATH",
+			Short: "an Ansible playbook",
+			Long: `Use the ansible provider to query resources in an Ansible playbook.
+
+Example:
+  cnquery shell ansible <path>
+`,
 			MinArgs:   1,
 			MaxArgs:   1,
 			Discovery: []string{},
