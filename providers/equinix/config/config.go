@@ -18,14 +18,14 @@ var Config = plugin.Provider{
 			Name:  "equinix",
 			Use:   "equinix [org <org id>] [project <project-id>] [--token <token>]",
 			Short: "an Equinix Metal organization",
-			Long: `equinix is designed for querying resources within a specified
+			Long: `Use the equinix provider to query resources in a specified
 project or organization on the Equinix Metal platform.
 
-Available Commands:
+Available commands:
   org <org id>              Specifies the organization to interact with, using the organization identifier.
   project <project-id>      Specifies the project to interact with, using the project identifier.
 
-If the PACKET_AUTH_TOKEN environment variable is set, the token flag is not required.
+If you set the PACKET_AUTH_TOKEN environment variable, you can omit the token flag.
 `,
 			MinArgs:   2,
 			MaxArgs:   2,
