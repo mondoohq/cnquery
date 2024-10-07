@@ -16,15 +16,14 @@ var Config = plugin.Provider{
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
 		{
-			Name:      "arista",
-			Use:       "arista user@host",
-			Short:     "an Arista EOS device",
-			Long: `Use the arista provider to query resources on an Arista EOS device
+			Name:  "arista",
+			Use:   "arista user@host",
+			Short: "an Arista EOS device",
+			Long: `Use the arista provider to query resources on an Arista EOS device.
 
 Example:
   cnquery shell arista <user@host>
-			'
-			,
+`,
 			Discovery: []string{},
 			MinArgs:   1,
 			MaxArgs:   1,
