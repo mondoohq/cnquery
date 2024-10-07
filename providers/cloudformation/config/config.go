@@ -16,9 +16,14 @@ var Config = plugin.Provider{
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{
 		{
-			Name:      "cloudformation",
-			Use:       "cloudformation PATH",
-			Short:     "an AWS CloudFormation template or AWS SAM template",
+			Name:  "cloudformation",
+			Use:   "cloudformation PATH",
+			Short: "an AWS CloudFormation template or AWS SAM template",
+			Long: `Use the cloudformation provider to query AWS CloudFormation templates or AWS SAM templates.
+
+Example:
+  cnquery shell cloudformation <path>
+`,
 			MinArgs:   1,
 			MaxArgs:   1,
 			Discovery: []string{},
