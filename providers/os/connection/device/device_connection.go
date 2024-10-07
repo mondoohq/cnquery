@@ -181,3 +181,7 @@ func (p *DeviceConnection) FileSystem() afero.Fs {
 func (p *DeviceConnection) FileInfo(path string) (shared.FileInfoDetails, error) {
 	return p.FsConnections[0].FileInfo(path)
 }
+
+func (p *DeviceConnection) Conf() *inventory.Config {
+	return p.FsConnections[0].Conf
+}

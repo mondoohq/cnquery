@@ -300,5 +300,5 @@ func (c *GcpSnapshotConnection) Type() shared.ConnectionType {
 }
 
 func (c *GcpSnapshotConnection) Config() *inventory.Config {
-	return c.DeviceConnection.Conf
+	return c.DeviceConnection.Conf()
 }

@@ -202,5 +202,5 @@ func (c *AzureSnapshotConnection) Type() shared.ConnectionType {
 }
 
 func (c *AzureSnapshotConnection) Config() *inventory.Config {
-	return c.DeviceConnection.Conf
+	return c.DeviceConnection.Conf()
 }
