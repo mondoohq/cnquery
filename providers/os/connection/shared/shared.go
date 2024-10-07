@@ -47,6 +47,15 @@ const (
 	ContainerProxyOption string = "container-proxy"
 )
 
+type OSFamily string
+
+const (
+	OSFamily_Darwin  OSFamily = "darwin"
+	OSFamily_Unix    OSFamily = "unix"
+	OSFamily_Windows OSFamily = "windows"
+	OSFamily_None    OSFamily = "none"
+)
+
 type Connection interface {
 	plugin.Connection
 	RunCommand(command string) (*Command, error)
@@ -57,6 +66,10 @@ type Connection interface {
 	Asset() *inventory.Asset
 	UpdateAsset(asset *inventory.Asset)
 	Capabilities() Capabilities
+}
+
+type ConnectionWithOSFamily interface {
+	OSFamily() OSFamily
 }
 
 type SimpleConnection interface {
