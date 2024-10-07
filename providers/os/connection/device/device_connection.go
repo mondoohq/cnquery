@@ -25,7 +25,7 @@ import (
 const PlatformIdInject = "inject-platform-ids"
 
 type DeviceConnection struct {
-	*fs.FileSystemConnection
+	FsConnections []*fs.FileSystemConnection
 	plugin.Connection
 	asset         *inventory.Asset
 	deviceManager DeviceManager
@@ -54,12 +54,9 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 	if err != nil {
 		return nil, err
 	}
-	if len(blocks) != 1 {
-		// FIXME: remove this when we start scanning multiple blocks
-		return nil, errors.New("internal>blocks size is not equal to 1")
+	if len(blocks) == 0 {
+		return nil, errors.New("internal> no blocks found")
 	}
-	block := blocks[0]
-	log.Debug().Str("name", block.Name).Str("type", block.FsType).Msg("identified partition for mounting")
 
 	res := &DeviceConnection{
 		Connection:    plugin.NewConnection(connId, asset),
@@ -67,60 +64,66 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 		asset:         asset,
 	}
 
-	scanDir, err := manager.Mount(block)
-	if err != nil {
-		log.Error().Err(err).Msg("unable to complete mount step")
-		res.Close()
-		return nil, err
-	}
-	if conf.Options == nil {
-		conf.Options = make(map[string]string)
-	}
+	for i := range blocks {
+		block := blocks[i]
+		log.Debug().Str("name", block.Name).Str("type", block.FsType).Msg("identified partition for mounting")
 
-	conf.Options["path"] = scanDir
-	// create and initialize fs provider
-	fsConn, err := fs.NewConnection(connId, &inventory.Config{
-		Path:       scanDir,
-		PlatformId: conf.PlatformId,
-		Options:    conf.Options,
-		Type:       "fs",
-		Record:     conf.Record,
-	}, asset)
-	if err != nil {
-		res.Close()
-		return nil, err
-	}
-
-	res.FileSystemConnection = fsConn
-
-	// allow injecting platform ids into the device connection. we cannot always know the asset that's being scanned, e.g.
-	// if we can scan an azure VM's disk we should be able to inject the platform ids of the VM
-	if platformIDs, ok := conf.Options[PlatformIdInject]; ok {
-		platformIds := strings.Split(platformIDs, ",")
-		if len(platformIds) > 0 {
-			log.Debug().Strs("platform-ids", platformIds).Msg("device connection> injecting platform ids")
-			conf.PlatformId = platformIds[0]
-			asset.PlatformIds = append(asset.PlatformIds, platformIds...)
+		scanDir, err := manager.Mount(block)
+		if err != nil {
+			log.Error().Err(err).Msg("unable to complete mount step")
+			res.Close()
+			return nil, err
 		}
-	}
-
-	p, ok := detector.DetectOS(fsConn)
-	if !ok {
-		res.Close()
-		return nil, errors.New("failed to detect OS")
-	}
-	asset.Platform = p
-	asset.IdDetector = []string{ids.IdDetector_Hostname}
-	fingerprint, p, err := id.IdentifyPlatform(res, &plugin.ConnectReq{}, asset.Platform, asset.IdDetector)
-	if err == nil {
-		if asset.Name == "" {
-			asset.Name = fingerprint.Name
+		if conf.Options == nil {
+			conf.Options = make(map[string]string)
 		}
-		asset.PlatformIds = append(asset.PlatformIds, fingerprint.PlatformIDs...)
-		asset.IdDetector = fingerprint.ActiveIdDetectors
+
+		conf.Options["path"] = scanDir
+		// create and initialize fs provider
+		fsConn, err := fs.NewConnection(connId, &inventory.Config{
+			Path:       scanDir,
+			PlatformId: conf.PlatformId,
+			Options:    conf.Options,
+			Type:       "fs",
+			Record:     conf.Record,
+		}, asset)
+		if err != nil {
+			res.Close()
+			return nil, err
+		}
+
+		res.FsConnections = append(res.FsConnections, fsConn)
+
+		// allow injecting platform ids into the device connection. we cannot always know the asset that's being scanned, e.g.
+		// if we can scan an azure VM's disk we should be able to inject the platform ids of the VM
+		if platformIDs, ok := conf.Options[PlatformIdInject]; ok {
+			platformIds := strings.Split(platformIDs, ",")
+			if len(platformIds) > 0 {
+				log.Debug().Strs("platform-ids", platformIds).Msg("device connection> injecting platform ids")
+				conf.PlatformId = platformIds[0]
+				asset.PlatformIds = append(asset.PlatformIds, platformIds...)
+			}
+		}
+
+		p, ok := detector.DetectOS(fsConn)
+		if !ok {
+			res.Close()
+			return nil, errors.New("failed to detect OS")
+		}
 		asset.Platform = p
-		asset.Id = conf.Type
+		asset.IdDetector = []string{ids.IdDetector_Hostname}
+		fingerprint, p, err := id.IdentifyPlatform(fsConn, &plugin.ConnectReq{}, asset.Platform, asset.IdDetector)
+		if err == nil {
+			if asset.Name == "" {
+				asset.Name = fingerprint.Name
+			}
+			asset.PlatformIds = append(asset.PlatformIds, fingerprint.PlatformIDs...)
+			asset.IdDetector = fingerprint.ActiveIdDetectors
+			asset.Platform = p
+			asset.Id = conf.Type
+		}
 	}
+
 	return res, nil
 }
 
@@ -152,7 +155,7 @@ func (p *DeviceConnection) UpdateAsset(asset *inventory.Asset) {
 }
 
 func (p *DeviceConnection) Capabilities() shared.Capabilities {
-	return p.FileSystemConnection.Capabilities()
+	return p.FsConnections[0].Capabilities()
 }
 
 func (p *DeviceConnection) RunCommand(command string) (*shared.Command, error) {
@@ -160,9 +163,9 @@ func (p *DeviceConnection) RunCommand(command string) (*shared.Command, error) {
 }
 
 func (p *DeviceConnection) FileSystem() afero.Fs {
-	return p.FileSystemConnection.FileSystem()
+	return p.FsConnections[0].FileSystem()
 }
 
 func (p *DeviceConnection) FileInfo(path string) (shared.FileInfoDetails, error) {
-	return p.FileSystemConnection.FileInfo(path)
+	return p.FsConnections[0].FileInfo(path)
 }
