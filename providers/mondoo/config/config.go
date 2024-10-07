@@ -15,9 +15,17 @@ var Config = plugin.Provider{
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{
 		{
-			Name:      "mondoo",
-			Use:       "mondoo",
-			Short:     "Mondoo Platform",
+			Name:  "mondoo",
+			Use:   "mondoo",
+			Short: "Mondoo Platform",
+			Long: `Use the mondoo provider to query resources in a Mondoo organization.
+
+To query a Mondoo organization from a workstation, the workstation must be registered with Mondoo. To learn how to register a workstation, read https://mondoo.com/docs/cnspec/cnspec-adv-install/registration/. 
+
+Examples:
+  cnquery shell mondoo
+	cnspec scan mondoo
+`,
 			MinArgs:   0,
 			MaxArgs:   4,
 			Discovery: []string{},

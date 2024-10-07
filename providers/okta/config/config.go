@@ -16,22 +16,30 @@ var Config = plugin.Provider{
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
 		{
-			Name:      "okta",
-			Use:       "okta",
-			Short:     "an Okta organization",
+			Name:  "okta",
+			Use:   "okta",
+			Short: "an Okta organization",
+			Long: `Use the okta provider to query resources in an Okta organization.
+
+To query an Okta organization, you need the organization's domain and an API token to access that domain. To learn how, read https://mondoo.com/docs/cnquery/saas/okta/.
+
+Examples:
+  cnquery shell okta -organization <okta-domain> -token <api-token>
+	cnspec scan okta -organization <okta-domain> -token <api-token>
+`,
 			Discovery: []string{},
 			Flags: []plugin.Flag{
 				{
 					Long:    "organization",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "The Okta organization to scan",
+					Desc:    "The domain of the Okta organization to scan",
 				},
 				{
 					Long:    "token",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "Okta access token",
+					Desc:    "Access token for the Okta organization",
 				},
 			},
 		},
