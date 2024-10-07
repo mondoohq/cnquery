@@ -118,7 +118,7 @@ func (blockEntries BlockDevices) GetMountablePartitionByDevice(device string) (*
 	}
 
 	// sort the candidates by size, so we can pick the largest one
-	sortPartitionsBySize(partitions)
+	sortBlockDevicesBySize(partitions)
 
 	// return the largest partition. we can extend this to be a parameter in the future
 	devFsName := "/dev/" + partitions[0].Name
@@ -151,15 +151,33 @@ func (blockEntries BlockDevices) FindDevice(name string) (BlockDevice, error) {
 }
 
 // Searches all the partitions in the device and finds one that can be mounted. It must be unmounted, non-boot partition
-// If multiple partitions meet this criteria, the largest one is returned.
-func (device BlockDevice) GetMountablePartition() (*PartitionInfo, error) {
+func (device BlockDevice) GetMountablePartitions(includeBoot bool) ([]*PartitionInfo, error) {
 	log.Debug().Str("device", device.Name).Msg("get partitions for device")
-	partitions := []BlockDevice{}
-	for _, partition := range device.Children {
+
+	blockDevices := device.Children
+	// sort the candidates by size, so we can pick the largest one
+	sortBlockDevicesBySize(blockDevices)
+
+	filter := func(partition BlockDevice) bool {
+		return partition.IsNoBootVolumeAndUnmounted()
+	}
+	if includeBoot {
+		filter = func(partition BlockDevice) bool {
+			return !partition.IsMounted()
+		}
+	}
+
+	partitions := []*PartitionInfo{}
+	for _, partition := range blockDevices {
 		log.Debug().Str("name", partition.Name).Int("size", partition.Size).Msg("checking partition")
-		if partition.IsNoBootVolumeAndUnmounted() {
+		if partition.FsType == "" {
+			log.Debug().Str("name", partition.Name).Msg("skipping partition without filesystem type")
+			continue
+		}
+		if filter(partition) {
 			log.Debug().Str("name", partition.Name).Msg("found suitable partition")
-			partitions = append(partitions, partition)
+			devFsName := "/dev/" + partition.Name
+			partitions = append(partitions, &PartitionInfo{Name: devFsName, FsType: partition.FsType})
 		}
 	}
 
@@ -167,15 +185,21 @@ func (device BlockDevice) GetMountablePartition() (*PartitionInfo, error) {
 		return nil, fmt.Errorf("no suitable partitions found on device %s", device.Name)
 	}
 
-	// sort the candidates by size, so we can pick the largest one
-	sortPartitionsBySize(partitions)
-
-	// return the largest partition. we can extend this to be a parameter in the future
-	devFsName := "/dev/" + partitions[0].Name
-	return &PartitionInfo{Name: devFsName, FsType: partitions[0].FsType}, nil
+	return partitions, nil
 }
 
-func sortPartitionsBySize(partitions []BlockDevice) {
+// If multiple partitions meet this criteria, the largest one is returned.
+func (device BlockDevice) GetMountablePartition() (*PartitionInfo, error) {
+	// return the largest partition. we can extend this to be a parameter in the future
+	partitions, err := device.GetMountablePartitions(false)
+	if err != nil {
+		return nil, err
+	}
+
+	return partitions[0], nil
+}
+
+func sortBlockDevicesBySize(partitions []BlockDevice) {
 	sort.Slice(partitions, func(i, j int) bool {
 		return partitions[i].Size > partitions[j].Size
 	})
@@ -195,6 +219,20 @@ func (blockEntries BlockDevices) GetUnnamedBlockEntry() (*PartitionInfo, error) 
 		}
 	}
 	return nil, errors.New("target volume not found on instance")
+}
+
+func (blockEntries BlockDevices) GetDeviceWithUnmountedPartitions() (BlockDevice, error) {
+	log.Debug().Msg("get device with unmounted partitions")
+	for i := range blockEntries.BlockDevices {
+		d := blockEntries.BlockDevices[i]
+		log.Debug().Str("name", d.Name).Interface("children", d.Children).Interface("mountpoint", d.MountPoint).Msg("found block device")
+		if d.MountPoint != "" { // empty string means it is not mounted
+			continue
+		}
+
+		return d, nil
+	}
+	return BlockDevice{}, errors.New("target block device not found on instance")
 }
 
 func (blockEntries BlockDevices) GetUnmountedBlockEntry() (*PartitionInfo, error) {
@@ -224,7 +262,7 @@ func findVolume(children []BlockDevice) *PartitionInfo {
 	if len(candidates) == 0 {
 		return nil
 	}
-	sortPartitionsBySize(candidates)
+	sortBlockDevicesBySize(candidates)
 	return &PartitionInfo{Name: "/dev/" + candidates[0].Name, FsType: candidates[0].FsType}
 }
 

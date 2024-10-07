@@ -12,8 +12,9 @@ import (
 )
 
 const (
-	LunOption  = "lun"
-	DeviceName = "device-name"
+	LunOption          = "lun"
+	DeviceName         = "device-name"
+	MountAllPartitions = "mount-all-partitions"
 )
 
 type LinuxDeviceManager struct {
@@ -52,11 +53,11 @@ func (d *LinuxDeviceManager) IdentifyMountTargets(opts map[string]string) ([]*sn
 		return []*snapshot.PartitionInfo{pi}, nil
 	}
 
-	pi, err := d.identifyViaDeviceName(opts[DeviceName])
+	partitions, err := d.identifyViaDeviceName(opts[DeviceName], opts[MountAllPartitions] == "true")
 	if err != nil {
 		return nil, err
 	}
-	return []*snapshot.PartitionInfo{pi}, nil
+	return partitions, nil
 }
 
 func (d *LinuxDeviceManager) Mount(pi *snapshot.PartitionInfo) (string, error) {
@@ -123,7 +124,7 @@ func (c *LinuxDeviceManager) identifyViaLun(lun int) (*snapshot.PartitionInfo, e
 	return device.GetMountablePartition()
 }
 
-func (c *LinuxDeviceManager) identifyViaDeviceName(deviceName string) (*snapshot.PartitionInfo, error) {
+func (c *LinuxDeviceManager) identifyViaDeviceName(deviceName string, mountAll bool) ([]*snapshot.PartitionInfo, error) {
 	blockDevices, err := c.volumeMounter.CmdRunner.GetBlockDevices()
 	if err != nil {
 		return nil, err
@@ -133,7 +134,11 @@ func (c *LinuxDeviceManager) identifyViaDeviceName(deviceName string) (*snapshot
 	// this is a best-guess approach
 	if deviceName == "" {
 		// TODO: we should rename/simplify this method
-		return blockDevices.GetUnnamedBlockEntry()
+		pi, err := blockDevices.GetUnnamedBlockEntry()
+		if err != nil {
+			return nil, err
+		}
+		return []*snapshot.PartitionInfo{pi}, nil
 	}
 
 	// if we have a specific device we're looking for we can just ask only for that
@@ -142,5 +147,14 @@ func (c *LinuxDeviceManager) identifyViaDeviceName(deviceName string) (*snapshot
 		return nil, err
 	}
 
-	return device.GetMountablePartition()
+	if mountAll {
+		log.Debug().Str("device", device.Name).Msg("mounting all partitions")
+		return device.GetMountablePartitions(true)
+	}
+
+	pi, err := device.GetMountablePartition()
+	if err != nil {
+		return nil, err
+	}
+	return []*snapshot.PartitionInfo{pi}, nil
 }

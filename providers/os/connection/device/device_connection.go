@@ -105,10 +105,17 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 			}
 		}
 
+		if asset.Platform != nil {
+			log.Debug().Msg("device connection> platform already detected")
+			continue
+		}
+
 		p, ok := detector.DetectOS(fsConn)
 		if !ok {
-			res.Close()
-			return nil, errors.New("failed to detect OS")
+			log.Debug().
+				Str("block", block.Name).
+				Msg("device connection> cannot detect os")
+			continue
 		}
 		asset.Platform = p
 		asset.IdDetector = []string{ids.IdDetector_Hostname}
@@ -122,6 +129,11 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 			asset.Platform = p
 			asset.Id = conf.Type
 		}
+	}
+
+	if asset.Platform == nil {
+		res.Close()
+		return nil, errors.New("failed to detect OS")
 	}
 
 	return res, nil
