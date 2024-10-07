@@ -31,17 +31,31 @@ func ResolveManager(conn shared.Connection) (OSUserManager, error) {
 	var um OSUserManager
 
 	asset := conn.Asset()
-	if asset == nil || asset.Platform == nil {
-		return nil, errors.New("cannot find OS information for users detection")
-	}
+	if osFamilyConn, ok := conn.(shared.ConnectionWithOSFamily); ok {
+		osFamily := osFamilyConn.OSFamily()
+		switch osFamily {
+		case shared.OSFamily_Windows:
+			um = &WindowsUserManager{conn: conn}
+		case shared.OSFamily_Unix:
+			um = &UnixUserManager{conn: conn}
+		case shared.OSFamily_Darwin:
+			um = &OSXUserManager{conn: conn}
+		default:
+			return nil, errors.New("could not detect suitable group manager for platform: " + string(osFamily))
+		}
+	} else {
+		if asset == nil || asset.Platform == nil {
+			return nil, errors.New("cannot find OS information for users detection")
+		}
 
-	// check darwin before unix since darwin is also a unix
-	if asset.Platform.IsFamily("darwin") {
-		um = &OSXUserManager{conn: conn}
-	} else if asset.Platform.IsFamily("unix") {
-		um = &UnixUserManager{conn: conn}
-	} else if asset.Platform.IsFamily("windows") {
-		um = &WindowsUserManager{conn: conn}
+		// check darwin before unix since darwin is also a unix
+		if asset.Platform.IsFamily("darwin") {
+			um = &OSXUserManager{conn: conn}
+		} else if asset.Platform.IsFamily("unix") {
+			um = &UnixUserManager{conn: conn}
+		} else if asset.Platform.IsFamily("windows") {
+			um = &WindowsUserManager{conn: conn}
+		}
 	}
 
 	if um == nil {

@@ -9,6 +9,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"slices"
 
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/local"
@@ -24,6 +25,7 @@ type DockerfileConnection struct {
 	// FileAbsSrc must be the absolute path of the Dockerfile so
 	// that we find the file downstream
 	FileAbsSrc string
+	osFamily   shared.OSFamily
 }
 
 func NewDockerfileConnection(_ uint32,
@@ -63,8 +65,6 @@ func NewDockerfileConnection(_ uint32,
 		Runtime:               "docker",
 		TechnologyUrlSegments: []string{"iac", "dockerfile"},
 	}
-	// this helps with running commands against the local connection
-	asset.Platform.Family = append(asset.Platform.Family, localFamily...)
 
 	if url, ok := conf.Options["ssh-url"]; ok {
 		domain, org, repo, err := urlx.ParseGitSshUrl(url)
@@ -94,5 +94,19 @@ func NewDockerfileConnection(_ uint32,
 		FileAbsSrc: absSrc,
 	}
 
+	if slices.Contains(localFamily, "darwin") {
+		conn.osFamily = shared.OSFamily_Darwin
+	} else if slices.Contains(localFamily, "unix") {
+		conn.osFamily = shared.OSFamily_Unix
+	} else if slices.Contains(localFamily, "windows") {
+		conn.osFamily = shared.OSFamily_Windows
+	} else {
+		conn.osFamily = shared.OSFamily_None
+	}
+
 	return conn, nil
+}
+
+func (p *DockerfileConnection) OSFamily() shared.OSFamily {
+	return p.osFamily
 }
