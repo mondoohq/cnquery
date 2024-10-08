@@ -343,7 +343,7 @@ func TestSuSEParser(t *testing.T) {
 	assert.Equal(t, p, m[0], p.Name)
 }
 
-func TestVendorRegex(t *testing.T) {
+func TestVendorNameCleanup(t *testing.T) {
 	vendorFromRpm := "SUSE LLC"
 	actual := cleanupVendorName(vendorFromRpm)
 	require.Equal(t, "SUSE LLC", actual)
