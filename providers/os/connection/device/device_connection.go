@@ -25,10 +25,12 @@ import (
 const PlatformIdInject = "inject-platform-ids"
 
 type DeviceConnection struct {
-	FsConnections []*fs.FileSystemConnection
+	*fs.FileSystemConnection
 	plugin.Connection
 	asset         *inventory.Asset
 	deviceManager DeviceManager
+
+	MountedDirs []string
 }
 
 func getDeviceManager(conf *inventory.Config) (DeviceManager, error) {
@@ -74,12 +76,14 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 			res.Close()
 			return nil, err
 		}
+		res.MountedDirs = append(res.MountedDirs, scanDir)
+
 		if conf.Options == nil {
 			conf.Options = make(map[string]string)
 		}
 
-		conf.Options["path"] = scanDir
 		// create and initialize fs provider
+		conf.Options["path"] = scanDir
 		fsConn, err := fs.NewConnection(connId, &inventory.Config{
 			Path:       scanDir,
 			PlatformId: conf.PlatformId,
@@ -91,8 +95,6 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 			res.Close()
 			return nil, err
 		}
-
-		res.FsConnections = append(res.FsConnections, fsConn)
 
 		// allow injecting platform ids into the device connection. we cannot always know the asset that's being scanned, e.g.
 		// if we can scan an azure VM's disk we should be able to inject the platform ids of the VM
@@ -119,8 +121,16 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 		}
 		asset.Platform = p
 		asset.IdDetector = []string{ids.IdDetector_Hostname}
-		fingerprint, p, err := id.IdentifyPlatform(fsConn, &plugin.ConnectReq{}, asset.Platform, asset.IdDetector)
+		res.FileSystemConnection = fsConn
+
+		fingerprint, p, err := id.IdentifyPlatform(res, &plugin.ConnectReq{}, asset.Platform, asset.IdDetector)
+		if err != nil {
+			log.Debug().Err(err).Msg("device connection> failed to identify platform from device")
+			asset.Platform = nil
+		}
+
 		if err == nil {
+			log.Debug().Str("scan_dir", scanDir).Msg("device connection> detected platform from device")
 			if asset.Name == "" {
 				asset.Name = fingerprint.Name
 			}
@@ -134,6 +144,11 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 	if asset.Platform == nil {
 		res.Close()
 		return nil, errors.New("failed to detect OS")
+	}
+
+	if res.FileSystemConnection == nil {
+		res.Close()
+		return nil, errors.New("failed to create fs connection")
 	}
 
 	return res, nil
@@ -167,7 +182,7 @@ func (p *DeviceConnection) UpdateAsset(asset *inventory.Asset) {
 }
 
 func (p *DeviceConnection) Capabilities() shared.Capabilities {
-	return p.FsConnections[0].Capabilities()
+	return p.FileSystemConnection.Capabilities()
 }
 
 func (p *DeviceConnection) RunCommand(command string) (*shared.Command, error) {
@@ -175,13 +190,13 @@ func (p *DeviceConnection) RunCommand(command string) (*shared.Command, error) {
 }
 
 func (p *DeviceConnection) FileSystem() afero.Fs {
-	return p.FsConnections[0].FileSystem()
+	return p.FileSystemConnection.FileSystem()
 }
 
 func (p *DeviceConnection) FileInfo(path string) (shared.FileInfoDetails, error) {
-	return p.FsConnections[0].FileInfo(path)
+	return p.FileSystemConnection.FileInfo(path)
 }
 
 func (p *DeviceConnection) Conf() *inventory.Config {
-	return p.FsConnections[0].Conf
+	return p.FileSystemConnection.Conf
 }
