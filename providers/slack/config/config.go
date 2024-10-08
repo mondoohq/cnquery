@@ -12,7 +12,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "slack",
 	ID:              "go.mondoo.com/cnquery/v9/providers/slack",
-	Version:         "11.0.34",
+	Version:         "11.0.35",
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
 		{
