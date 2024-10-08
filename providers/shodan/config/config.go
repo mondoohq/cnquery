@@ -17,9 +17,17 @@ var Config = plugin.Provider{
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{
 		{
-			Name:    "shodan",
-			Use:     "shodan",
-			Short:   "a Shodan account",
+			Name:  "shodan",
+			Use:   "shodan",
+			Short: "a Shodan account",
+			Long: `Use the shodan provider to query domain and IP security information in the Shodan search engine. 
+
+If you set the SHODAN_TOKEN environment variable, you can omit the token flag.
+
+Examples:
+  cnquery shell shodan --token <api-token>
+	cnquery shell shodan --networks <ip-range> --discover hosts
+`,
 			MinArgs: 0,
 			MaxArgs: 2,
 			Discovery: []string{

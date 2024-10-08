@@ -17,11 +17,16 @@ var Config = plugin.Provider{
 	Connectors: []plugin.Connector{
 		{
 			Name:  "ipmi",
-			Use:   "ipmi user@host",
+			Use:   "ipmi USER@HOST",
 			Short: "an IPMI interface",
-			Long: `ipmi is designed for querying resources via the Intelligent Platform Management Interface (IPMI).
-IPMI provides management and monitoring capabilities  independently of the host system's CPU,
+			Long: `Use the ipmi provider to query resources using the Intelligent Platform Management Interface (IPMI).
+
+IPMI provides management and monitoring capabilities independently of the host system's CPU,
 firmware (BIOS or UEFI), and operating system.
+
+Examples:
+  cnquery shell ipmi <user@host>
+	cnspec scan ipmi <user@host>
 `,
 			MinArgs:   1,
 			MaxArgs:   1,
