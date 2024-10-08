@@ -109,6 +109,11 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 
 		if asset.Platform != nil {
 			log.Debug().Msg("device connection> platform already detected")
+
+			// Edge case: asset platform is provided from the inventory
+			if res.FileSystemConnection == nil {
+				res.FileSystemConnection = fsConn
+			}
 			continue
 		}
 
