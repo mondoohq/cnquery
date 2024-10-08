@@ -106,20 +106,24 @@ func (m *VolumeMounter) UnmountVolumeFromInstance() error {
 		return nil
 	}
 
+	var errs []error
 	for name, dir := range m.ScanDirs {
 		log.Debug().
 			Str("dir", dir).
 			Str("name", name).
 			Msg("unmount volume")
 		if err := Unmount(dir); err != nil {
-			log.Error().Err(err).Msg("failed to unmount dir")
-			return err
+			log.Error().
+				Str("dir", dir).
+				Err(err).Msg("failed to unmount dir")
+			errs = append(errs, err)
 		}
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 func (m *VolumeMounter) RemoveTempScanDir() error {
+	var errs []error
 	for name, dir := range m.ScanDirs {
 		log.Debug().
 			Str("dir", dir).
@@ -129,9 +133,9 @@ func (m *VolumeMounter) RemoveTempScanDir() error {
 			log.Error().Err(err).
 				Str("dir", dir).
 				Msg("failed to remove dir")
-			return err
+			errs = append(errs, err)
 		}
 	}
 
-	return nil
+	return errors.Join(errs...)
 }
