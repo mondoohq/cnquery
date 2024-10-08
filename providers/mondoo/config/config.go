@@ -20,7 +20,7 @@ var Config = plugin.Provider{
 			Short: "Mondoo Platform",
 			Long: `Use the mondoo provider to query resources in Mondoo Platform.
 
-To query Mondoo Platform from a workstation, the workstation must be registered with Mondoo. To learn how to register a workstation, read https://mondoo.com/docs/cnspec/cnspec-adv-install/registration/. 
+To query Mondoo Platform from a workstation, the workstation must be registered with Mondoo Platform. To learn how to register a workstation, read https://mondoo.com/docs/cnspec/cnspec-adv-install/registration/. 
 
 Examples:
   cnquery shell mondoo
