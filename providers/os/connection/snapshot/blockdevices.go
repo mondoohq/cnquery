@@ -151,7 +151,7 @@ func (blockEntries BlockDevices) FindDevice(name string) (BlockDevice, error) {
 }
 
 // Searches all the partitions in the device and finds one that can be mounted. It must be unmounted, non-boot partition
-func (device BlockDevice) GetMountablePartitions(includeBoot bool) ([]*PartitionInfo, error) {
+func (device BlockDevice) GetMountablePartitions(includeAll bool) ([]*PartitionInfo, error) {
 	log.Debug().Str("device", device.Name).Msg("get partitions for device")
 
 	blockDevices := device.Children
@@ -161,7 +161,7 @@ func (device BlockDevice) GetMountablePartitions(includeBoot bool) ([]*Partition
 	filter := func(partition BlockDevice) bool {
 		return partition.IsNoBootVolumeAndUnmounted()
 	}
-	if includeBoot {
+	if includeAll {
 		filter = func(partition BlockDevice) bool {
 			return !partition.IsMounted()
 		}
