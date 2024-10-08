@@ -4,7 +4,7 @@
 packs:
   - uid: mondoo-linux-inventory
     name: Linux Inventory Pack
-    version: 1.7.0
+    version: 1.7.1
     license: BUSL-1.1
     authors:
       - name: Mondoo, Inc
@@ -159,7 +159,7 @@ packs:
           asset.family.contains('linux')
           packages.where(name == /xorg|xserver|wayland/i).any(installed)
         mql: |
-          parse.json(content: command('lsblk --json').stdout).params
+          lsblk { name label uuid fstype mountpoints }
       - uid: mondoo-linux-logged-in-users
         title: Logged-in users
         mql: command('w -h').stdout
