@@ -322,22 +322,53 @@ func TestSuSEParser(t *testing.T) {
 	assert.Equal(t, 1, len(m), "detected the right amount of packages")
 
 	p := Package{
-		Name:        "grep",
-		Version:     "3.1-150000.4.6.1",
-		Vendor:      "SUSE LLC <https://www.suse.com/>",
+		Name:    "grep",
+		Version: "3.1-150000.4.6.1",
+		// Note that the tag <https://suse.com/> has been removed.
+		Vendor:      "SUSE LLC",
 		Arch:        "x86_64",
 		Description: "Print lines matching a pattern",
 		PUrl:        "pkg:rpm/suse/grep@3.1-150000.4.6.1?arch=x86_64&distro=suse-15.6",
 		CPEs: []string{
-			"cpe:2.3:a:suse_llc_\\<https:grep:3.1-150000.4.6.1:*:*:*:*:*:x86_64:*",
-			"cpe:2.3:a:suse_llc_\\<https:grep:3.1-150000.4:*:*:*:*:*:x86_64:*",
-			"cpe:2.3:a:suse_llc_\\<https:grep:3.1:*:*:*:*:*:x86_64:*",
-			"cpe:2.3:a:suse_llc_\\<https:grep:3.1-150000.4.6.1:*:*:*:*:*:*:*",
-			"cpe:2.3:a:suse_llc_\\<https:grep:3.1-150000.4:*:*:*:*:*:*:*",
-			"cpe:2.3:a:suse_llc_\\<https:grep:3.1:*:*:*:*:*:*:*",
+			"cpe:2.3:a:suse_llc:grep:3.1-150000.4.6.1:*:*:*:*:*:x86_64:*",
+			"cpe:2.3:a:suse_llc:grep:3.1-150000.4:*:*:*:*:*:x86_64:*",
+			"cpe:2.3:a:suse_llc:grep:3.1:*:*:*:*:*:x86_64:*",
+			"cpe:2.3:a:suse_llc:grep:3.1-150000.4.6.1:*:*:*:*:*:*:*",
+			"cpe:2.3:a:suse_llc:grep:3.1-150000.4:*:*:*:*:*:*:*",
+			"cpe:2.3:a:suse_llc:grep:3.1:*:*:*:*:*:*:*",
 		},
 		Format:         RpmPkgFormat,
 		FilesAvailable: PkgFilesAsync,
 	}
 	assert.Equal(t, p, m[0], p.Name)
+}
+
+func TestVendorRegex(t *testing.T) {
+	vendorFromRpm := "SUSE LLC"
+	actual := cleanupVendorName(vendorFromRpm)
+	require.Equal(t, "SUSE LLC", actual)
+
+	vendorFromRpm = "SUSE LLC<https://suse.com/>"
+	actual = cleanupVendorName(vendorFromRpm)
+	require.Equal(t, "SUSE LLC", actual)
+
+	vendorFromRpm = "SUSE LLC <https://suse.com/>"
+	actual = cleanupVendorName(vendorFromRpm)
+	require.Equal(t, "SUSE LLC", actual)
+
+	vendorFromRpm = "SUSE LLC     <https://suse.com/>"
+	actual = cleanupVendorName(vendorFromRpm)
+	require.Equal(t, "SUSE LLC", actual)
+
+	vendorFromRpm = "SUSE LLC <abc><def>"
+	actual = cleanupVendorName(vendorFromRpm)
+	require.Equal(t, "SUSE LLC", actual)
+
+	vendorFromRpm = "SUSE LLC <>"
+	actual = cleanupVendorName(vendorFromRpm)
+	require.Equal(t, "SUSE LLC", actual)
+
+	vendorFromRpm = "SUSE LLC <<>>"
+	actual = cleanupVendorName(vendorFromRpm)
+	require.Equal(t, "SUSE LLC", actual)
 }
