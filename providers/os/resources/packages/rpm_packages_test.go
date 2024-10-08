@@ -287,3 +287,57 @@ func TestPhoton4ImageParser(t *testing.T) {
 	}
 	assert.Equal(t, p, findPkg(m, p.Name), p.Name)
 }
+
+// ensure that the tag in the SuSE vendor name is parsed correctly
+func TestSuSEParser(t *testing.T) {
+	epoch := int(0)
+	pkgList := []*rpmdb.PackageInfo{
+		{
+			Name:    "grep",
+			Epoch:   &epoch,
+			Version: "3.1",
+			Release: "150000.4.6.1",
+			Arch:    "x86_64",
+			Vendor:  "SUSE LLC <https://www.suse.com/>",
+			Summary: "Print lines matching a pattern",
+		},
+	}
+
+	var packageList bytes.Buffer
+	for _, pkg := range pkgList {
+		packageList.WriteString(fmt.Sprintf("%s %d:%s-%s %s__%s__%s\n", pkg.Name, pkg.EpochNum(), pkg.Version, pkg.Release, pkg.Arch, pkg.Vendor, pkg.Summary))
+	}
+
+	pf := &inventory.Platform{
+		Name:    "suse",
+		Version: "15.6",
+		Arch:    "x86_64",
+		Family:  []string{"linux", "unix", "os"},
+		Labels: map[string]string{
+			"distro-id": "suse",
+		},
+	}
+
+	m := ParseRpmPackages(pf, &packageList)
+	assert.Equal(t, 1, len(m), "detected the right amount of packages")
+
+	p := Package{
+		Name:        "grep",
+		Version:     "3.1-150000.4.6.1",
+		Vendor:      "SUSE LLC <https://www.suse.com/>",
+		Arch:        "x86_64",
+		Description: "Print lines matching a pattern",
+		PUrl:        "pkg:rpm/suse/grep@3.1-150000.4.6.1?arch=x86_64&distro=suse-15.6",
+		CPEs: []string{
+			"cpe:2.3:a:suse_llc_\\<https:grep:3.1-150000.4.6.1:*:*:*:*:*:x86_64:*",
+			"cpe:2.3:a:suse_llc_\\<https:grep:3.1-150000.4:*:*:*:*:*:x86_64:*",
+			"cpe:2.3:a:suse_llc_\\<https:grep:3.1:*:*:*:*:*:x86_64:*",
+			"cpe:2.3:a:suse_llc_\\<https:grep:3.1-150000.4.6.1:*:*:*:*:*:*:*",
+			"cpe:2.3:a:suse_llc_\\<https:grep:3.1-150000.4:*:*:*:*:*:*:*",
+			"cpe:2.3:a:suse_llc_\\<https:grep:3.1:*:*:*:*:*:*:*",
+		},
+		Format:         RpmPkgFormat,
+		FilesAvailable: PkgFilesAsync,
+	}
+	assert.Equal(t, p, m[0], p.Name)
+}
