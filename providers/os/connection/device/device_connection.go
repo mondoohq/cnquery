@@ -66,6 +66,10 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 		asset:         asset,
 	}
 
+	if conf.Options == nil {
+		conf.Options = make(map[string]string)
+	}
+
 	for i := range blocks {
 		block := blocks[i]
 		log.Debug().Str("name", block.Name).Str("type", block.FsType).Msg("identified partition for mounting")
@@ -77,10 +81,6 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 			return nil, err
 		}
 		res.MountedDirs = append(res.MountedDirs, scanDir)
-
-		if conf.Options == nil {
-			conf.Options = make(map[string]string)
-		}
 
 		// create and initialize fs provider
 		conf.Options["path"] = scanDir
