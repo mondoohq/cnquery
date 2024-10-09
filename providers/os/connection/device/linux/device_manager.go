@@ -87,8 +87,12 @@ func (d *LinuxDeviceManager) UnmountAndClose() {
 func validateOpts(opts map[string]string) error {
 	lun := opts[LunOption]
 	deviceName := opts[DeviceName]
+	mountAll := opts[MountAllPartitions] == "true"
 	if lun != "" && deviceName != "" {
 		return errors.New("both lun and device name provided")
+	}
+	if deviceName == "" && mountAll {
+		return errors.New("mount-all-partitions requires a device name")
 	}
 
 	return nil
