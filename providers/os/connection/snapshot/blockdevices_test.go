@@ -118,6 +118,73 @@ func TestGetMountablePartitionByDevice(t *testing.T) {
 	})
 }
 
+func BenchmarkFindDevice(b *testing.B) {
+	cases := []struct {
+		Entries   BlockDevices
+		Requested string
+	}{
+		{
+			BlockDevices{
+				BlockDevices: []BlockDevice{
+					{Name: "sda", Children: []BlockDevice{{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoint: "/"}}},
+					{Name: "nvme0n1", Children: []BlockDevice{{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+					{Name: "sdx", Children: []BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+				},
+			},
+			"/dev/sdx",
+		},
+		{
+			BlockDevices{
+				BlockDevices: []BlockDevice{
+					{Name: "sda", Children: []BlockDevice{{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoint: "/"}}},
+					{Name: "nvme0n1", Children: []BlockDevice{{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+					{Name: "xvdc", Children: []BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+				},
+			},
+			"/dev/sdc",
+		},
+		{
+			BlockDevices{
+				BlockDevices: []BlockDevice{
+					{Name: "sda", Children: []BlockDevice{{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoint: "/"}}},
+					{Name: "nvme0n1", Children: []BlockDevice{{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+					{Name: "xvdc", Children: []BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+				},
+			},
+			"/dev/sdd",
+		},
+		{
+			BlockDevices{
+				BlockDevices: []BlockDevice{
+					{Name: "sda", Children: []BlockDevice{{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoint: "/"}}},
+					{Name: "nvme0n1", Children: []BlockDevice{{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+					{Name: "stc", Children: []BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+					{Name: "xvdc", Children: []BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+				},
+			},
+			"/dev/sdc",
+		},
+		{
+			BlockDevices{
+				BlockDevices: []BlockDevice{
+					{Name: "sda", Children: []BlockDevice{{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoint: "/"}}},
+					{Name: "nvme0n1", Children: []BlockDevice{{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+					{Name: "sta", Children: []BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+					{Name: "xvda", Children: []BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+				},
+			},
+			"/dev/sda",
+		},
+	}
+
+	b.StopTimer()
+	for _, c := range cases {
+		b.StartTimer()
+		c.Entries.FindDevice(c.Requested)
+		b.StopTimer()
+	}
+}
+
 func TestFindDevice(t *testing.T) {
 	t.Run("match by exact name", func(t *testing.T) {
 		blockEntries := BlockDevices{
@@ -128,9 +195,10 @@ func TestFindDevice(t *testing.T) {
 			},
 		}
 
+		expected := blockEntries.BlockDevices[2]
 		res, err := blockEntries.FindDevice("/dev/sdx")
 		require.Nil(t, err)
-		require.Equal(t, blockEntries.BlockDevices[2], res)
+		require.Equal(t, expected, res)
 	})
 
 	t.Run("match by interchangeable name", func(t *testing.T) {
@@ -142,9 +210,10 @@ func TestFindDevice(t *testing.T) {
 			},
 		}
 
+		expected := blockEntries.BlockDevices[2]
 		res, err := blockEntries.FindDevice("/dev/sdc")
 		require.Nil(t, err)
-		require.Equal(t, blockEntries.BlockDevices[2], res)
+		require.Equal(t, expected, res)
 	})
 
 	t.Run("no match", func(t *testing.T) {
@@ -171,9 +240,10 @@ func TestFindDevice(t *testing.T) {
 			},
 		}
 
+		expected := blockEntries.BlockDevices[3]
 		res, err := blockEntries.FindDevice("/dev/sdc")
 		require.Nil(t, err)
-		require.Equal(t, blockEntries.BlockDevices[3], res)
+		require.Equal(t, expected, res)
 	})
 
 	t.Run("perfect match and trailing letter matches", func(t *testing.T) {
@@ -186,9 +256,10 @@ func TestFindDevice(t *testing.T) {
 			},
 		}
 
+		expected := blockEntries.BlockDevices[0]
 		res, err := blockEntries.FindDevice("/dev/sda")
 		require.Nil(t, err)
-		require.Equal(t, blockEntries.BlockDevices[0], res)
+		require.Equal(t, expected, res)
 	})
 }
 
