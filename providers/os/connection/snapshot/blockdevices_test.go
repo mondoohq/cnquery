@@ -261,6 +261,22 @@ func TestFindDevice(t *testing.T) {
 		require.Nil(t, err)
 		require.Equal(t, expected, res)
 	})
+
+	t.Run("perfect match and trailing letter matches (scrambled)", func(t *testing.T) {
+		blockEntries := BlockDevices{
+			BlockDevices: []BlockDevice{
+				{Name: "xvda", Children: []BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+				{Name: "sta", Children: []BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+				{Name: "nvme0n1", Children: []BlockDevice{{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+				{Name: "sda", Children: []BlockDevice{{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoint: "/"}}},
+			},
+		}
+
+		expected := blockEntries.BlockDevices[3]
+		res, err := blockEntries.FindDevice("/dev/sda")
+		require.Nil(t, err)
+		require.Equal(t, expected, res)
+	})
 }
 
 func TestGetMountablePartition(t *testing.T) {
