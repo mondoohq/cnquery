@@ -132,8 +132,8 @@ func (blockEntries BlockDevices) FindDevice(requested string) (BlockDevice, erro
 
 	requestedName := strings.TrimPrefix(requested, "/dev/")
 
-	// LongestMatchingSuffix returns the length of the longest common suffix of requested and provided string
 	lmsCache := map[string]int{}
+	// LongestMatchingSuffix returns the length of the longest common suffix of requested and provided string
 	lms := func(s string) int {
 		if v, ok := lmsCache[s]; ok {
 			return v
@@ -155,6 +155,8 @@ func (blockEntries BlockDevices) FindDevice(requested string) (BlockDevice, erro
 	sorted := false
 	devices := blockEntries.BlockDevices
 
+	// Bubble sort the devices by the longest matching suffix
+	// Longest matches will be at the beginning of the slice
 	for !sorted {
 		sorted = true
 
@@ -170,6 +172,7 @@ func (blockEntries BlockDevices) FindDevice(requested string) (BlockDevice, erro
 		}
 	}
 
+	// If the first device has matching suffix, return it
 	if lms(devices[0].Name) > 0 {
 		return devices[0], nil
 	}
