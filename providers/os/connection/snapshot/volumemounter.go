@@ -19,16 +19,16 @@ const (
 )
 
 type VolumeMounter struct {
-	// the tmp dir we create; serves as the directory we mount the volume to
-	ScanDir string
-	// where we tell AWS to attach the volume; it doesn't necessarily get attached there, but we have to reference this same location when detaching
-	VolumeAttachmentLoc string
-	CmdRunner           *LocalCommandRunner
+	// the tmp dirs we create; serves as the directory we mount the volumes to
+	// maps the device name to the directory
+	ScanDirs  map[string]string
+	CmdRunner *LocalCommandRunner
 }
 
 func NewVolumeMounter(shell []string) *VolumeMounter {
 	return &VolumeMounter{
 		CmdRunner: &LocalCommandRunner{Shell: shell},
+		ScanDirs:  make(map[string]string),
 	}
 }
 
@@ -47,6 +47,8 @@ func (m *VolumeMounter) MountP(partition *PartitionInfo) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	m.ScanDirs[partition.Name] = dir
+
 	return dir, m.mountVolume(partition)
 }
 
@@ -56,7 +58,6 @@ func (m *VolumeMounter) createScanDir() (string, error) {
 		log.Error().Err(err).Msg("error creating directory")
 		return "", err
 	}
-	m.ScanDir = dir
 	log.Debug().Str("dir", dir).Msg("created tmp scan dir")
 	return dir, nil
 }
@@ -94,24 +95,47 @@ func (m *VolumeMounter) mountVolume(fsInfo *PartitionInfo) error {
 		opts = append(opts, "nouuid")
 	}
 	opts = stringx.DedupStringArray(opts)
-	log.Debug().Str("fstype", fsInfo.FsType).Str("device", fsInfo.Name).Str("scandir", m.ScanDir).Str("opts", strings.Join(opts, ",")).Msg("mount volume to scan dir")
-	return Mount(fsInfo.Name, m.ScanDir, fsInfo.FsType, opts)
+	scanDir := m.ScanDirs[fsInfo.Name]
+	log.Debug().Str("fstype", fsInfo.FsType).Str("device", fsInfo.Name).Str("scandir", scanDir).Str("opts", strings.Join(opts, ",")).Msg("mount volume to scan dir")
+	return Mount(fsInfo.Name, scanDir, fsInfo.FsType, opts)
 }
 
 func (m *VolumeMounter) UnmountVolumeFromInstance() error {
-	if m.ScanDir == "" {
-		log.Warn().Msg("no scan dir to unmount, skipping")
+	if len(m.ScanDirs) == 0 {
+		log.Warn().Msg("no scan dirs to unmount, skipping")
 		return nil
 	}
-	log.Debug().Str("dir", m.ScanDir).Msg("unmount volume")
-	if err := Unmount(m.ScanDir); err != nil {
-		log.Error().Err(err).Msg("failed to unmount dir")
-		return err
+
+	var errs []error
+	for name, dir := range m.ScanDirs {
+		log.Debug().
+			Str("dir", dir).
+			Str("name", name).
+			Msg("unmount volume")
+		if err := Unmount(dir); err != nil {
+			log.Error().
+				Str("dir", dir).
+				Err(err).Msg("failed to unmount dir")
+			errs = append(errs, err)
+		}
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 func (m *VolumeMounter) RemoveTempScanDir() error {
-	log.Debug().Str("dir", m.ScanDir).Msg("remove created dir")
-	return os.RemoveAll(m.ScanDir)
+	var errs []error
+	for name, dir := range m.ScanDirs {
+		log.Debug().
+			Str("dir", dir).
+			Str("name", name).
+			Msg("remove created dir")
+		if err := os.RemoveAll(dir); err != nil {
+			log.Error().Err(err).
+				Str("dir", dir).
+				Msg("failed to remove dir")
+			errs = append(errs, err)
+		}
+	}
+
+	return errors.Join(errs...)
 }

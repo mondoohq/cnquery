@@ -289,6 +289,12 @@ var Config = plugin.Provider{
 					Option: plugin.FlagOption_Hidden,
 				},
 				{
+					Long:   "mount-all-partitions",
+					Type:   plugin.FlagType_String,
+					Desc:   "Mount all partitions of the block device",
+					Option: plugin.FlagOption_Hidden,
+				},
+				{
 					Long:   "platform-ids",
 					Type:   plugin.FlagType_List,
 					Desc:   "List of platform IDs to inject to the asset",

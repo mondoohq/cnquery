@@ -233,6 +233,9 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	if serialNumber, ok := flags["serial-number"]; ok {
 		conf.Options["serial-number"] = serialNumber.RawData().Value.(string)
 	}
+	if mountAll, ok := flags["mount-all-partitions"]; ok {
+		conf.Options["mount-all-partitions"] = mountAll.RawData().Value.(string)
+	}
 
 	if platformIDs, ok := flags["platform-ids"]; ok {
 		platformIDs := platformIDs.Array

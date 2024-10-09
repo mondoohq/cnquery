@@ -29,6 +29,8 @@ type DeviceConnection struct {
 	plugin.Connection
 	asset         *inventory.Asset
 	deviceManager DeviceManager
+
+	MountedDirs []string
 }
 
 func getDeviceManager(conf *inventory.Config) (DeviceManager, error) {
@@ -54,12 +56,9 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 	if err != nil {
 		return nil, err
 	}
-	if len(blocks) != 1 {
-		// FIXME: remove this when we start scanning multiple blocks
-		return nil, errors.New("internal>blocks size is not equal to 1")
+	if len(blocks) == 0 {
+		return nil, errors.New("internal> no blocks found")
 	}
-	block := blocks[0]
-	log.Debug().Str("name", block.Name).Str("type", block.FsType).Msg("identified partition for mounting")
 
 	res := &DeviceConnection{
 		Connection:    plugin.NewConnection(connId, asset),
@@ -67,60 +66,96 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 		asset:         asset,
 	}
 
-	scanDir, err := manager.Mount(block)
-	if err != nil {
-		log.Error().Err(err).Msg("unable to complete mount step")
-		res.Close()
-		return nil, err
-	}
 	if conf.Options == nil {
 		conf.Options = make(map[string]string)
 	}
 
-	conf.Options["path"] = scanDir
-	// create and initialize fs provider
-	fsConn, err := fs.NewConnection(connId, &inventory.Config{
-		Path:       scanDir,
-		PlatformId: conf.PlatformId,
-		Options:    conf.Options,
-		Type:       "fs",
-		Record:     conf.Record,
-	}, asset)
-	if err != nil {
-		res.Close()
-		return nil, err
-	}
+	for i := range blocks {
+		block := blocks[i]
+		log.Debug().Str("name", block.Name).Str("type", block.FsType).Msg("identified partition for mounting")
 
-	res.FileSystemConnection = fsConn
+		scanDir, err := manager.Mount(block)
+		if err != nil {
+			log.Error().Err(err).Msg("unable to complete mount step")
+			res.Close()
+			return nil, err
+		}
+		res.MountedDirs = append(res.MountedDirs, scanDir)
 
-	// allow injecting platform ids into the device connection. we cannot always know the asset that's being scanned, e.g.
-	// if we can scan an azure VM's disk we should be able to inject the platform ids of the VM
-	if platformIDs, ok := conf.Options[PlatformIdInject]; ok {
-		platformIds := strings.Split(platformIDs, ",")
-		if len(platformIds) > 0 {
-			log.Debug().Strs("platform-ids", platformIds).Msg("device connection> injecting platform ids")
-			conf.PlatformId = platformIds[0]
-			asset.PlatformIds = append(asset.PlatformIds, platformIds...)
+		// create and initialize fs provider
+		conf.Options["path"] = scanDir
+		fsConn, err := fs.NewConnection(connId, &inventory.Config{
+			Path:       scanDir,
+			PlatformId: conf.PlatformId,
+			Options:    conf.Options,
+			Type:       "fs",
+			Record:     conf.Record,
+		}, asset)
+		if err != nil {
+			res.Close()
+			return nil, err
+		}
+
+		// allow injecting platform ids into the device connection. we cannot always know the asset that's being scanned, e.g.
+		// if we can scan an azure VM's disk we should be able to inject the platform ids of the VM
+		if platformIDs, ok := conf.Options[PlatformIdInject]; ok {
+			platformIds := strings.Split(platformIDs, ",")
+			if len(platformIds) > 0 {
+				log.Debug().Strs("platform-ids", platformIds).Msg("device connection> injecting platform ids")
+				conf.PlatformId = platformIds[0]
+				asset.PlatformIds = append(asset.PlatformIds, platformIds...)
+			}
+		}
+
+		if asset.Platform != nil {
+			log.Debug().Msg("device connection> platform already detected")
+
+			// Edge case: asset platform is provided from the inventory
+			if res.FileSystemConnection == nil {
+				res.FileSystemConnection = fsConn
+			}
+			continue
+		}
+
+		p, ok := detector.DetectOS(fsConn)
+		if !ok {
+			log.Debug().
+				Str("block", block.Name).
+				Msg("device connection> cannot detect os")
+			continue
+		}
+		asset.Platform = p
+		asset.IdDetector = []string{ids.IdDetector_Hostname}
+		res.FileSystemConnection = fsConn
+
+		fingerprint, p, err := id.IdentifyPlatform(res, &plugin.ConnectReq{}, asset.Platform, asset.IdDetector)
+		if err != nil {
+			log.Debug().Err(err).Msg("device connection> failed to identify platform from device")
+			asset.Platform = nil
+		}
+
+		if err == nil {
+			log.Debug().Str("scan_dir", scanDir).Msg("device connection> detected platform from device")
+			if asset.Name == "" {
+				asset.Name = fingerprint.Name
+			}
+			asset.PlatformIds = append(asset.PlatformIds, fingerprint.PlatformIDs...)
+			asset.IdDetector = fingerprint.ActiveIdDetectors
+			asset.Platform = p
+			asset.Id = conf.Type
 		}
 	}
 
-	p, ok := detector.DetectOS(fsConn)
-	if !ok {
+	if asset.Platform == nil {
 		res.Close()
 		return nil, errors.New("failed to detect OS")
 	}
-	asset.Platform = p
-	asset.IdDetector = []string{ids.IdDetector_Hostname}
-	fingerprint, p, err := id.IdentifyPlatform(res, &plugin.ConnectReq{}, asset.Platform, asset.IdDetector)
-	if err == nil {
-		if asset.Name == "" {
-			asset.Name = fingerprint.Name
-		}
-		asset.PlatformIds = append(asset.PlatformIds, fingerprint.PlatformIDs...)
-		asset.IdDetector = fingerprint.ActiveIdDetectors
-		asset.Platform = p
-		asset.Id = conf.Type
+
+	if res.FileSystemConnection == nil {
+		res.Close()
+		return nil, errors.New("failed to create fs connection")
 	}
+
 	return res, nil
 }
 
@@ -165,4 +200,8 @@ func (p *DeviceConnection) FileSystem() afero.Fs {
 
 func (p *DeviceConnection) FileInfo(path string) (shared.FileInfoDetails, error) {
 	return p.FileSystemConnection.FileInfo(path)
+}
+
+func (p *DeviceConnection) Conf() *inventory.Config {
+	return p.FileSystemConnection.Conf
 }
