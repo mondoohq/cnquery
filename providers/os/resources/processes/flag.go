@@ -38,6 +38,9 @@ func (f *FlagSet) ParseCommand(cmd string) error {
 	n := len(args)
 	for i := 0; i < n; i++ {
 		key := args[i]
+		if key == "--" {
+			break
+		}
 		if strings.HasPrefix(key, "-") {
 			if i+1 < n && !strings.HasPrefix(args[i+1], "-") {
 				preparedArgs = append(preparedArgs, key+"="+args[i+1])
