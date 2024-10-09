@@ -129,43 +129,49 @@ func (blockEntries BlockDevices) GetMountablePartitionByDevice(device string) (*
 // Searches for a device by name
 func (blockEntries BlockDevices) FindDevice(requested string) (BlockDevice, error) {
 	log.Debug().Str("device", requested).Msg("searching for device")
-	trailing := requested[len(requested)-1:]
-	trailingMatched := []BlockDevice{}
 
-	// LongestMatchingSuffix returns the length of the longest common suffix of two strings
-	lms := func(s1, s2 string) int {
-		n1 := len(s1)
-		n2 := len(s2)
+	requestedName := strings.TrimPrefix(requested, "/dev/")
+
+	// LongestMatchingSuffix returns the length of the longest common suffix of requested and provided string
+	lmsCache := map[string]int{}
+	lms := func(s string) int {
+		if v, ok := lmsCache[s]; ok {
+			return v
+		}
+
+		n1 := len(requested)
+		n2 := len(s)
 
 		// Start from the end of both strings
 		i := 0
-		for i < int(math.Min(float64(n1), float64(n2))) && s1[n1-i-1] == s2[n2-i-1] {
+		for i < int(math.Min(float64(n1), float64(n2))) && requested[n1-i-1] == s[n2-i-1] {
 			i++
 		}
+
+		lmsCache[s] = i
 		return i
 	}
 
-	for i := range blockEntries.BlockDevices {
-		d := blockEntries.BlockDevices[i]
-		log.Debug().Str("name", d.Name).Interface("children", d.Children).Interface("mountpoint", d.MountPoint).Msg("found block device")
-		fullDeviceName := "/dev/" + d.Name
-		if fullDeviceName == requested {
-			log.Debug().Str("name", d.Name).Msg("found matching device")
-			return d, nil
-		}
+	sorted := false
+	devices := blockEntries.BlockDevices
 
-		if d.Name[len(d.Name)-1:] == trailing {
-			trailingMatched = append(trailingMatched, d)
+	for !sorted {
+		sorted = true
+
+		for i := 0; i < len(devices)-1; i++ {
+			if devices[i].Name == requestedName {
+				return blockEntries.BlockDevices[i], nil
+			}
+
+			if lms(devices[i].Name) < lms(devices[i+1].Name) {
+				devices[i], devices[i+1] = devices[i+1], devices[i]
+				sorted = false
+			}
 		}
 	}
 
-	sort.SliceStable(trailingMatched, func(i, j int) bool {
-		return lms(trailingMatched[i].Name, requested) > lms(trailingMatched[j].Name, requested)
-	})
-
-	if len(trailingMatched) > 0 {
-		log.Debug().Str("name", trailingMatched[0].Name).Msg("found matching device")
-		return trailingMatched[0], nil
+	if lms(devices[0].Name) > 0 {
+		return devices[0], nil
 	}
 
 	return BlockDevice{}, fmt.Errorf("no block device found with name %s", requested)
