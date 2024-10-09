@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"sort"
 	"strings"
 
@@ -126,28 +127,48 @@ func (blockEntries BlockDevices) GetMountablePartitionByDevice(device string) (*
 }
 
 // Searches for a device by name
-func (blockEntries BlockDevices) FindDevice(name string) (BlockDevice, error) {
-	log.Debug().Str("device", name).Msg("searching for device")
-	var secondName string
-	if strings.HasPrefix(name, "/dev/sd") {
-		// sdh and xvdh are interchangeable
-		end := strings.TrimPrefix(name, "/dev/sd")
-		secondName = "/dev/xvd" + end
+func (blockEntries BlockDevices) FindDevice(requested string) (BlockDevice, error) {
+	log.Debug().Str("device", requested).Msg("searching for device")
+	trailing := requested[len(requested)-1:]
+	trailingMatched := []BlockDevice{}
+
+	// LongestMatchingSuffix returns the length of the longest common suffix of two strings
+	lms := func(s1, s2 string) int {
+		n1 := len(s1)
+		n2 := len(s2)
+
+		// Start from the end of both strings
+		i := 0
+		for i < int(math.Min(float64(n1), float64(n2))) && s1[n1-i-1] == s2[n2-i-1] {
+			i++
+		}
+		return i
 	}
+
 	for i := range blockEntries.BlockDevices {
 		d := blockEntries.BlockDevices[i]
 		log.Debug().Str("name", d.Name).Interface("children", d.Children).Interface("mountpoint", d.MountPoint).Msg("found block device")
 		fullDeviceName := "/dev/" + d.Name
-		if name != fullDeviceName { // check if the device name matches
-			if secondName == "" || secondName != fullDeviceName {
-				continue
-			}
+		if fullDeviceName == requested {
+			log.Debug().Str("name", d.Name).Msg("found matching device")
+			return d, nil
 		}
-		log.Debug().Str("name", d.Name).Msg("found matching device")
-		return d, nil
+
+		if d.Name[len(d.Name)-1:] == trailing {
+			trailingMatched = append(trailingMatched, d)
+		}
 	}
 
-	return BlockDevice{}, fmt.Errorf("no block device found with name %s", name)
+	sort.SliceStable(trailingMatched, func(i, j int) bool {
+		return lms(trailingMatched[i].Name, requested) > lms(trailingMatched[j].Name, requested)
+	})
+
+	if len(trailingMatched) > 0 {
+		log.Debug().Str("name", trailingMatched[0].Name).Msg("found matching device")
+		return trailingMatched[0], nil
+	}
+
+	return BlockDevice{}, fmt.Errorf("no block device found with name %s", requested)
 }
 
 // Searches all the partitions in the device and finds one that can be mounted. It must be unmounted, non-boot partition

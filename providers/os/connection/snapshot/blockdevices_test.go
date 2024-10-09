@@ -130,7 +130,7 @@ func TestFindDevice(t *testing.T) {
 
 		res, err := blockEntries.FindDevice("/dev/sdx")
 		require.Nil(t, err)
-		require.Equal(t, res, blockEntries.BlockDevices[2])
+		require.Equal(t, blockEntries.BlockDevices[2], res)
 	})
 
 	t.Run("match by interchangeable name", func(t *testing.T) {
@@ -144,7 +144,7 @@ func TestFindDevice(t *testing.T) {
 
 		res, err := blockEntries.FindDevice("/dev/sdc")
 		require.Nil(t, err)
-		require.Equal(t, res, blockEntries.BlockDevices[2])
+		require.Equal(t, blockEntries.BlockDevices[2], res)
 	})
 
 	t.Run("no match", func(t *testing.T) {
@@ -159,6 +159,36 @@ func TestFindDevice(t *testing.T) {
 		_, err := blockEntries.FindDevice("/dev/sdd")
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "no block device found with name")
+	})
+
+	t.Run("multiple matches by trailing letter", func(t *testing.T) {
+		blockEntries := BlockDevices{
+			BlockDevices: []BlockDevice{
+				{Name: "sda", Children: []BlockDevice{{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoint: "/"}}},
+				{Name: "nvme0n1", Children: []BlockDevice{{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+				{Name: "stc", Children: []BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+				{Name: "xvdc", Children: []BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+			},
+		}
+
+		res, err := blockEntries.FindDevice("/dev/sdc")
+		require.Nil(t, err)
+		require.Equal(t, blockEntries.BlockDevices[3], res)
+	})
+
+	t.Run("perfect match and trailing letter matches", func(t *testing.T) {
+		blockEntries := BlockDevices{
+			BlockDevices: []BlockDevice{
+				{Name: "sda", Children: []BlockDevice{{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoint: "/"}}},
+				{Name: "nvme0n1", Children: []BlockDevice{{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+				{Name: "sta", Children: []BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+				{Name: "xvda", Children: []BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+			},
+		}
+
+		res, err := blockEntries.FindDevice("/dev/sda")
+		require.Nil(t, err)
+		require.Equal(t, blockEntries.BlockDevices[0], res)
 	})
 }
 
