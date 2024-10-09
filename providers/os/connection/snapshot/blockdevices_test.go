@@ -180,7 +180,7 @@ func BenchmarkFindDevice(b *testing.B) {
 	b.StopTimer()
 	for _, c := range cases {
 		b.StartTimer()
-		c.Entries.FindDevice(c.Requested)
+		_, _ = c.Entries.FindDevice(c.Requested)
 		b.StopTimer()
 	}
 }
