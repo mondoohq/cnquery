@@ -21,7 +21,7 @@ var Config = plugin.Provider{
 			Name:  "aws",
 			Use:   "aws",
 			Short: "an AWS account",
-			Long: `Use the aws provider to query the resources in an AWS Organization.
+			Long: `Use the aws provider to query the resources in an AWS account.
 
 To query or scan AWS resources, you must have an AWS credentials file. To learn how to create one, read https://docs.aws.amazon.com/cli/v1/userguide/cli-configure-files.html. Mondoo uses the default profile in the credentials file unless you specify a different one using the --profile flag.
 
@@ -49,7 +49,7 @@ Examples:
 	cnspec scan aws --filters region=ap-south-1
 
 Notes:
-  If you set the ATLASSIAN_ADMIN_TOKEN environment variable, you can omit the profile flag.
+  If you set the AWS_PROFILE environment variable, you can omit the profile flag.
 	To learn about setting up your AWS credentials, read https://mondoo.com/docs/cnspec/cloud/aws/.
 `,
 			MinArgs: 0,
