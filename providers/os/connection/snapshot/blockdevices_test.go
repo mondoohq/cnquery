@@ -528,3 +528,18 @@ func TestAttachedBlockEntryFedora(t *testing.T) {
 	require.Equal(t, "xfs", info.FsType)
 	require.True(t, strings.Contains(info.Name, "xvdh4"))
 }
+
+func Test_lms(t *testing.T) {
+	requested := "abcde"
+	entries := []string{"a", "e", "de"}
+
+	cache := make(map[string]int)
+
+	for i, entry := range entries {
+		r := lms(cache, requested, entry)
+		require.Equal(t, i, r)
+		r, ok := cache[entry]
+		require.True(t, ok)
+		require.Equal(t, i, r)
+	}
+}
