@@ -290,7 +290,7 @@ var Config = plugin.Provider{
 				},
 				{
 					Long:   "mount-all-partitions",
-					Type:   plugin.FlagType_String,
+					Type:   plugin.FlagType_Bool,
 					Desc:   "Mount all partitions of the block device",
 					Option: plugin.FlagOption_Hidden,
 				},

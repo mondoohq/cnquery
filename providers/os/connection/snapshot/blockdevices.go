@@ -72,59 +72,6 @@ func (blockEntries BlockDevices) GetRootBlockEntry() (*PartitionInfo, error) {
 	return nil, errors.New("target volume not found on instance")
 }
 
-// Searches all the partitions in the target device and finds one that can be mounted. It must be unmounted, non-boot partition
-// If multiple partitions meet this criteria, the largest one is returned.
-// Deprecated: Use GetMountablePartition instead
-func (blockEntries BlockDevices) GetMountablePartitionByDevice(device string) (*PartitionInfo, error) {
-	log.Debug().Str("device", device).Msg("get partitions for device")
-	var block BlockDevice
-	partitions := []BlockDevice{}
-	var secondName string
-	if strings.HasPrefix(device, "/dev/sd") {
-		// sdh and xvdh are interchangeable
-		end := strings.TrimPrefix(device, "/dev/sd")
-		secondName = "/dev/xvd" + end
-	}
-	for i := range blockEntries.BlockDevices {
-		d := blockEntries.BlockDevices[i]
-		log.Debug().Str("name", d.Name).Interface("children", d.Children).Interface("mountpoint", d.MountPoint).Msg("found block device")
-		fullDeviceName := "/dev/" + d.Name
-		if device != fullDeviceName { // check if the device name matches
-			if secondName == "" {
-				continue
-			}
-			if secondName != fullDeviceName { // check if the device name matches the second name option (sdh and xvdh are interchangeable)
-				continue
-			}
-		}
-		log.Debug().Str("name", d.Name).Msg("found matching device")
-		block = d
-		break
-	}
-	if len(block.Name) == 0 {
-		return nil, fmt.Errorf("no block device found with name %s", device)
-	}
-
-	for _, partition := range block.Children {
-		log.Debug().Str("name", partition.Name).Int("size", partition.Size).Msg("checking partition")
-		if partition.IsNotBootOrRootVolumeAndUnmounted() {
-			log.Debug().Str("name", partition.Name).Msg("found suitable partition")
-			partitions = append(partitions, partition)
-		}
-	}
-
-	if len(partitions) == 0 {
-		return nil, fmt.Errorf("no suitable partitions found on device %s", block.Name)
-	}
-
-	// sort the candidates by size, so we can pick the largest one
-	sortBlockDevicesBySize(partitions)
-
-	// return the largest partition. we can extend this to be a parameter in the future
-	devFsName := "/dev/" + partitions[0].Name
-	return &PartitionInfo{Name: devFsName, FsType: partitions[0].FsType}, nil
-}
-
 // Searches for a device by name
 func (blockEntries BlockDevices) FindDevice(name string) (BlockDevice, error) {
 	log.Debug().Str("device", name).Msg("searching for device")
@@ -178,6 +125,8 @@ func (device BlockDevice) GetMountablePartitions(includeAll bool) ([]*PartitionI
 			log.Debug().Str("name", partition.Name).Msg("found suitable partition")
 			devFsName := "/dev/" + partition.Name
 			partitions = append(partitions, &PartitionInfo{Name: devFsName, FsType: partition.FsType})
+		} else {
+			log.Debug().Str("name", partition.Name).Msg("skipping partition, not suitable")
 		}
 	}
 
