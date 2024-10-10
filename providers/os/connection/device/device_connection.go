@@ -14,6 +14,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/device/linux"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/device/windows"
+	"go.mondoo.com/cnquery/v11/utils/stringx"
 
 	"go.mondoo.com/cnquery/v11/providers/os/connection/fs"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
@@ -70,6 +71,8 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 		conf.Options = make(map[string]string)
 	}
 
+	// we iterate over all the blocks and try to run OS detection on each one of them
+	// we only return one asset, if we find the right block (e.g. the one with the root FS)
 	for i := range blocks {
 		block := blocks[i]
 		log.Debug().Str("name", block.Name).Str("type", block.FsType).Msg("identified partition for mounting")
@@ -96,20 +99,8 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 			return nil, err
 		}
 
-		// allow injecting platform ids into the device connection. we cannot always know the asset that's being scanned, e.g.
-		// if we can scan an azure VM's disk we should be able to inject the platform ids of the VM
-		if platformIDs, ok := conf.Options[PlatformIdInject]; ok {
-			platformIds := strings.Split(platformIDs, ",")
-			if len(platformIds) > 0 {
-				log.Debug().Strs("platform-ids", platformIds).Msg("device connection> injecting platform ids")
-				conf.PlatformId = platformIds[0]
-				asset.PlatformIds = append(asset.PlatformIds, platformIds...)
-			}
-		}
-
 		if asset.Platform != nil {
 			log.Debug().Msg("device connection> platform already detected")
-
 			// Edge case: asset platform is provided from the inventory
 			if res.FileSystemConnection == nil {
 				res.FileSystemConnection = fsConn
@@ -124,11 +115,13 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 				Msg("device connection> cannot detect os")
 			continue
 		}
-		asset.Platform = p
-		asset.IdDetector = []string{ids.IdDetector_Hostname}
+
+		if len(asset.IdDetector) == 0 {
+			asset.IdDetector = []string{ids.IdDetector_Hostname, ids.IdDetector_SshHostkey}
+		}
 		res.FileSystemConnection = fsConn
 
-		fingerprint, p, err := id.IdentifyPlatform(res, &plugin.ConnectReq{}, asset.Platform, asset.IdDetector)
+		fingerprint, p, err := id.IdentifyPlatform(fsConn, &plugin.ConnectReq{}, p, asset.IdDetector)
 		if err != nil {
 			log.Debug().Err(err).Msg("device connection> failed to identify platform from device")
 			asset.Platform = nil
@@ -154,6 +147,18 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 	if res.FileSystemConnection == nil {
 		res.Close()
 		return nil, errors.New("failed to create fs connection")
+	}
+
+	// allow injecting platform ids into the device connection. we cannot always know the asset that's being scanned, e.g.
+	// if we can scan an azure VM's disk we should be able to inject the platform ids of the VM
+	if platformIDs, ok := conf.Options[PlatformIdInject]; ok {
+		platformIds := strings.Split(platformIDs, ",")
+		for _, id := range platformIds {
+			if !stringx.Contains(asset.PlatformIds, id) {
+				log.Debug().Str("platform-id", id).Msg("device connection> injecting platform id")
+				asset.PlatformIds = append(asset.PlatformIds, id)
+			}
+		}
 	}
 
 	return res, nil
