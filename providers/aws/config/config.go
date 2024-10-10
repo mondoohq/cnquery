@@ -18,9 +18,40 @@ var Config = plugin.Provider{
 	ConnectionTypes: []string{provider.DefaultConnectionType, string(awsec2ebsconn.EBSConnectionType)},
 	Connectors: []plugin.Connector{
 		{
-			Name:    "aws",
-			Use:     "aws",
-			Short:   "an AWS account",
+			Name:  "aws",
+			Use:   "aws",
+			Short: "an AWS account",
+			Long: `Use the aws provider to query the resources in an AWS account.
+
+To query or scan AWS resources, you must have an AWS credentials file. To learn how to create one, read https://docs.aws.amazon.com/cli/v1/userguide/cli-configure-files.html. Mondoo uses the default profile in the credentials file unless you specify a different one using the --profile flag.
+
+Available commands:
+  ec2                  		Query or scan an AWS EC2 instance
+													Subcommands:
+														instance-connect			Access the EC2 instance using Amazon EC2 Instance Connect
+																									Provide <user@host>
+														ssm										Access the EC2 instance using AWS Systems Manager
+																									Provide a path to the identity file
+																									--identity-file <path>
+														ebs										Query or scan an EBS volume
+																									Provide the volume ID
+														ebs snapshot					Query or scan an EBS volume snapshot
+																									Provide the snapshot ID
+
+Examples:
+  cnquery shell aws 
+	cnspec scan aws
+	cnquery scan aws -f mondoo-aws-incident-response.mql.yaml --querypack mondoo-incident-response-aws
+	cnquery shell aws --role <role-arn>
+	cnspec scan aws ec2 instance-connect <user@host>
+	cnspec scan aws ec2 instance-connect <user@host> --identity-file <path>
+	cnspec scan aws ec2 ebs <snapshot-id>
+	cnspec scan aws --filters region=ap-south-1
+
+Notes:
+  If you set the AWS_PROFILE environment variable, you can omit the profile flag.
+	To learn about setting up your AWS credentials, read https://mondoo.com/docs/cnspec/cloud/aws/.
+`,
 			MinArgs: 0,
 			MaxArgs: 4,
 			Discovery: []string{
@@ -68,7 +99,7 @@ var Config = plugin.Provider{
 					Long:    "region",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "Region to use for authentication with the API. Note: this does not limit the discovery to the region",
+					Desc:    "Region to use for authentication with the API (Note: This does not limit the discovery to the region.)",
 				},
 				{
 					Long:    "role",
@@ -92,13 +123,13 @@ var Config = plugin.Provider{
 					Long:    "scope",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "Set Scope for the aws wafv2 either CLOUDFRONT or REGIONAL",
+					Desc:    "Set the scope for the AWS WAFV2 to either CLOUDFRONT or REGIONAL",
 				},
 				{
 					Long:    "filters",
 					Type:    plugin.FlagType_KeyValue,
 					Default: "",
-					Desc:    "Filter options e.g --filters region=us-east-2",
+					Desc:    "Filter options, e.g., --filters region=us-east-2",
 				},
 			},
 		},

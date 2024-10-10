@@ -41,7 +41,7 @@ Examples:
   cnquery shell atlassian scim <directory-id> --scim-token <token>
 
 Notes:
-  If you set the ATLASSIAN_ADMIN_TOKEN environment, you can omit the admin-token flag. 
+  If you set the ATLASSIAN_ADMIN_TOKEN environment variable, you can omit the admin-token flag. 
 	
   If you set the ATLASSIAN_USER, ATLASSIAN_HOST, and ATLASSIAN_USER_TOKEN environment variables, you can omit the user, host, and user-token flags.
 
