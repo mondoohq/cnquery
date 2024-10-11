@@ -774,7 +774,7 @@ func (a *mqlAwsEc2) getEc2Instances(ctx context.Context, svc *ec2.Client, filter
 	for k, v := range filters.Tags {
 		params.Filters = append(params.Filters, ec2types.Filter{
 			Name:   aws.String(fmt.Sprintf("tag:%s", k)),
-			Values: []string{v},
+			Values: strings.Split(v, ","),
 		})
 	}
 	if len(filters.InstanceIds) > 0 {
@@ -1787,10 +1787,12 @@ func shouldExcludeInstance(instance ec2types.Instance, filters connection.Ec2Dis
 		}
 	}
 	for k, v := range filters.ExcludeTags {
-		for _, iTag := range instance.Tags {
-			if iTag.Key != nil && *iTag.Key == k &&
-				iTag.Value != nil && *iTag.Value == v {
-				return true
+		for _, tagValue := range strings.Split(v, ",") {
+			for _, iTag := range instance.Tags {
+				if iTag.Key != nil && *iTag.Key == k &&
+					iTag.Value != nil && *iTag.Value == tagValue {
+					return true
+				}
 			}
 		}
 	}
