@@ -1,0 +1,150 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+resources:
+  cloudflare:
+    fields:
+      accounts: {}
+      zones: {}
+    min_mondoo_version: 9.0.0
+  cloudflare.account:
+    fields:
+      created_on: {}
+      id: {}
+      live_inputs: {}
+      name: {}
+      settings: {}
+      videos: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  cloudflare.account.settings:
+    fields:
+      enforce_twofactor: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  cloudflare.dns:
+    fields:
+      records: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  cloudflare.dns.record:
+    fields:
+      comment: {}
+      content: {}
+      created_on: {}
+      id: {}
+      modified_on: {}
+      name: {}
+      proxiable: {}
+      proxied: {}
+      tags: {}
+      ttl: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  cloudflare.r2:
+    fields:
+      buckets: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  cloudflare.r2.bucket:
+    fields:
+      created_on: {}
+      location: {}
+      name: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  cloudflare.streams:
+    fields: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  cloudflare.streams.live_input:
+    fields:
+      delete_recording_after_days: {}
+      id: {}
+      name: {}
+      uid: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  cloudflare.streams.video:
+    fields:
+      creator: {}
+      dash: {}
+      duration: {}
+      height: {}
+      hls: {}
+      id: {}
+      live_input: {}
+      name: {}
+      preview: {}
+      ready: {}
+      require_signed_urls: {}
+      scheduled_deletion: {}
+      size: {}
+      thumbnail: {}
+      thumbnail_timestamp_pct: {}
+      uid: {}
+      uploaded: {}
+      width: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  cloudflare.workers:
+    fields:
+      pages: {}
+      workers: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  cloudflare.workers.page:
+    fields:
+      aliases: {}
+      created_on: {}
+      environment: {}
+      id: {}
+      modified_on: {}
+      production_branch: {}
+      project_id: {}
+      project_name: {}
+      short_id: {}
+      url: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  cloudflare.workers.worker:
+    fields:
+      created_on: {}
+      deployment_id: {}
+      etag: {}
+      id: {}
+      last_deployed_from: {}
+      log_push: {}
+      modified_on: {}
+      pipeline_hash: {}
+      placement_mode: {}
+      size: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  cloudflare.zone:
+    fields:
+      account: {}
+      created_on: {}
+      dns: {}
+      id: {}
+      live_inputs: {}
+      modified_on: {}
+      name: {}
+      name_servers: {}
+      original_name_servers: {}
+      paused: {}
+      r2: {}
+      status: {}
+      type: {}
+      videos: {}
+      workers: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  cloudflare.zone.account:
+    fields:
+      id: {}
+      name: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
