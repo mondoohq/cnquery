@@ -75,6 +75,26 @@ func TestShouldExcludeInstance(t *testing.T) {
 		}
 		require.False(t, shouldExcludeInstance(instance, filters))
 	})
+
+	t.Run("should exclude instances with matching values for the same tag", func(t *testing.T) {
+		filters := connection.Ec2DiscoveryFilters{
+			ExcludeTags: map[string]string{
+				"key-1": "val-1,val-2,val-3",
+			},
+		}
+		require.True(t, shouldExcludeInstance(instance, filters))
+	})
+
+	t.Run("should not exclude instances when no tag values match", func(t *testing.T) {
+		filters := connection.Ec2DiscoveryFilters{
+			ExcludeTags: map[string]string{
+				"key-1": "val-2,val-3",
+				"key-2": "val-1,val-3",
+				"key-3": "val-1,val-2",
+			},
+		}
+		require.False(t, shouldExcludeInstance(instance, filters))
+	})
 }
 
 func TestDetermineApplicableRegions(t *testing.T) {
