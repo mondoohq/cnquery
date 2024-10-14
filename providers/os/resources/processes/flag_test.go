@@ -120,6 +120,17 @@ func TestFlagParser(t *testing.T) {
 				"node-labels":               "eks.amazonaws.com/sourceLaunchTemplateVersion=1,alpha.eksctl.io/nodegroup-name=ng-1c08897f,alpha.eksctl.io/cluster-name=cluster1,eks.amazonaws.com/nodegroup-image=ami-0656dd273bd6e9a2f,eks.amazonaws.com/capacityType=ON_DEMAND,eks.amazonaws.com/nodegroup=ng-1c08897f,eks.amazonaws.com/sourceLaunchTemplateId=lt-079b3a8f38d6aa1a9",
 			},
 		},
+		{
+			cmd:   "tini -- fleetcontroller gitjob --gitjob-image rancher/fleet:v0.10.2",
+			flags: map[string]string{},
+		},
+		{
+			cmd: "/sbin/agetty -o -p -- \\u --noclear - linux",
+			flags: map[string]string{
+				"o": "",
+				"p": "",
+			},
+		},
 	}
 
 	for i := range tests {
