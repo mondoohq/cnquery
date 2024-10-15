@@ -156,6 +156,14 @@ func (wpm *WindowsProcessManager) List() ([]*OSProcess, error) {
 		return nil, fmt.Errorf("processes> could not run command")
 	}
 
+	if c.ExitStatus != 0 {
+		stderr, err := io.ReadAll(c.Stderr)
+		if err != nil {
+			return nil, err
+		}
+		return nil, errors.New("failed to retrieve process list: " + string(stderr))
+	}
+
 	entries, err := ParseWindowsProcesses(c.Stdout)
 	if err != nil {
 		return nil, err
