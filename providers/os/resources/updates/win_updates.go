@@ -5,6 +5,7 @@ package updates
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 
@@ -65,6 +66,13 @@ func (um *WindowsUpdateManager) List() ([]OperatingSystemUpdate, error) {
 	c, err := um.conn.RunCommand(cmd)
 	if err != nil {
 		return nil, fmt.Errorf("could not read package list")
+	}
+	if c.ExitStatus != 0 {
+		stderr, err := io.ReadAll(c.Stderr)
+		if err != nil {
+			return nil, err
+		}
+		return nil, errors.New("failed to retrieve updates: " + string(stderr))
 	}
 	return ParseWindowsUpdates(c.Stdout)
 }

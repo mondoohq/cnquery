@@ -5,6 +5,7 @@ package windows
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"time"
 
@@ -155,6 +156,14 @@ func GetSecurityProducts(p shared.Connection) ([]securityProduct, error) {
 	c, err := p.RunCommand(powershell.Encode(windowsSecurityProducts))
 	if err != nil {
 		return nil, err
+	}
+
+	if c.ExitStatus != 0 {
+		stderr, err := io.ReadAll(c.Stderr)
+		if err != nil {
+			return nil, err
+		}
+		return nil, errors.New("failed to retrieve security products: " + string(stderr))
 	}
 
 	return ParseWindowsSecurityProducts(c.Stdout)

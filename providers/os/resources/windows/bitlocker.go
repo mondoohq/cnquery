@@ -5,6 +5,7 @@ package windows
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
@@ -146,7 +147,13 @@ func GetBitLockerVolumes(p shared.Connection) ([]bitlockerVolumeStatus, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	if c.ExitStatus != 0 {
+		stderr, err := io.ReadAll(c.Stderr)
+		if err != nil {
+			return nil, err
+		}
+		return nil, errors.New("failed to retrieve bitlocker info: " + string(stderr))
+	}
 	return ParseWindowsBitlockerStatus(c.Stdout)
 }
 
