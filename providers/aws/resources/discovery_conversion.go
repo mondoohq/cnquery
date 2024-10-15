@@ -565,6 +565,14 @@ func addConnectionInfoToECSContainerAsset(container *mqlAwsEcsContainer, account
 			}, conn)
 	}
 
+	// set some values as asset labels for ease of access during scanning
+	a.Labels = map[string]string{
+		"cluster_name":   container.ClusterName.Data,
+		"task_arn":       taskArn,
+		"container_name": container.ContainerName.Data,
+		"region":         container.Region.Data,
+	}
+
 	return a
 }
 
