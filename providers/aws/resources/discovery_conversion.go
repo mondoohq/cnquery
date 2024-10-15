@@ -568,7 +568,6 @@ func addConnectionInfoToECSContainerAsset(container *mqlAwsEcsContainer, account
 			}, conn)
 	}
 
-	// set some values as asset labels for ease of access during scanning
 	a.Labels = map[string]string{
 		MondooClusterNameLabelKey:   container.ClusterName.Data,
 		MondooTaskArnLabelKey:       taskArn,
