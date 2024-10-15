@@ -109,6 +109,14 @@ func (w *mqlWindows) hotfixes() ([]interface{}, error) {
 		return nil, err
 	}
 
+	if executedCmd.ExitStatus != 0 {
+		stderr, err := io.ReadAll(executedCmd.Stderr)
+		if err != nil {
+			return nil, err
+		}
+		return nil, errors.New("failed to retrieve hotfixes: " + string(stderr))
+	}
+
 	hotfixes, err := packages.ParseWindowsHotfixes(executedCmd.Stdout)
 	if err != nil {
 		return nil, err
@@ -183,6 +191,14 @@ func (w *mqlWindows) features() ([]interface{}, error) {
 	executedCmd, err := conn.RunCommand(encodedCmd)
 	if err != nil {
 		return nil, err
+	}
+
+	if executedCmd.ExitStatus != 0 {
+		stderr, err := io.ReadAll(executedCmd.Stderr)
+		if err != nil {
+			return nil, err
+		}
+		return nil, errors.New("failed to retrieve features: " + string(stderr))
 	}
 
 	features, err := windows.ParseWindowsFeatures(executedCmd.Stdout)
@@ -263,6 +279,14 @@ func (w *mqlWindows) serverFeatures() ([]interface{}, error) {
 		return nil, err
 	}
 
+	if executedCmd.ExitStatus != 0 {
+		stderr, err := io.ReadAll(executedCmd.Stderr)
+		if err != nil {
+			return nil, err
+		}
+		return nil, errors.New("failed to retrieve features: " + string(stderr))
+	}
+
 	features, err := windows.ParseWindowsFeatures(executedCmd.Stdout)
 	if err != nil {
 		return nil, err
@@ -339,6 +363,14 @@ func (w *mqlWindows) optionalFeatures() ([]interface{}, error) {
 	executedCmd, err := conn.RunCommand(encodedCmd)
 	if err != nil {
 		return nil, err
+	}
+
+	if executedCmd.ExitStatus != 0 {
+		stderr, err := io.ReadAll(executedCmd.Stderr)
+		if err != nil {
+			return nil, err
+		}
+		return nil, errors.New("failed to retrieve optional features: " + string(stderr))
 	}
 
 	features, err := windows.ParseWindowsOptionalFeatures(executedCmd.Stdout)

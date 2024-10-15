@@ -4,6 +4,9 @@
 package resources
 
 import (
+	"errors"
+	"io"
+
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
@@ -29,6 +32,14 @@ func (w *mqlWindowsFirewall) settings() (map[string]interface{}, error) {
 		return nil, err
 	}
 
+	if executedCmd.ExitStatus != 0 {
+		stderr, err := io.ReadAll(executedCmd.Stderr)
+		if err != nil {
+			return nil, err
+		}
+		return nil, errors.New("failed to retrieve computer info: " + string(stderr))
+	}
+
 	fwSettings, err := windows.ParseWindowsFirewallSettings(executedCmd.Stdout)
 	if err != nil {
 		return nil, err
@@ -44,6 +55,14 @@ func (w *mqlWindowsFirewall) profiles() ([]interface{}, error) {
 	executedCmd, err := conn.RunCommand(encodedCmd)
 	if err != nil {
 		return nil, err
+	}
+
+	if executedCmd.ExitStatus != 0 {
+		stderr, err := io.ReadAll(executedCmd.Stderr)
+		if err != nil {
+			return nil, err
+		}
+		return nil, errors.New("failed to retrieve firewall profiles: " + string(stderr))
 	}
 
 	fwProfiles, err := windows.ParseWindowsFirewallProfiles(executedCmd.Stdout)
@@ -93,6 +112,14 @@ func (w *mqlWindowsFirewall) rules() ([]interface{}, error) {
 	executedCmd, err := conn.RunCommand(encodedCmd)
 	if err != nil {
 		return nil, err
+	}
+
+	if executedCmd.ExitStatus != 0 {
+		stderr, err := io.ReadAll(executedCmd.Stderr)
+		if err != nil {
+			return nil, err
+		}
+		return nil, errors.New("failed to retrieve firewall rules: " + string(stderr))
 	}
 
 	fwRules, err := windows.ParseWindowsFirewallRules(executedCmd.Stdout)

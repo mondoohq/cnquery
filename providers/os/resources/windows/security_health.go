@@ -5,6 +5,7 @@ package windows
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
@@ -87,6 +88,14 @@ func GetSecurityProviderHealth(p shared.Connection) (*windowsSecurityHealth, err
 	c, err := p.RunCommand(powershell.Encode(windowsSecurityHealthScript))
 	if err != nil {
 		return nil, err
+	}
+
+	if c.ExitStatus != 0 {
+		stderr, err := io.ReadAll(c.Stderr)
+		if err != nil {
+			return nil, err
+		}
+		return nil, errors.New("failed to retrieve security health: " + string(stderr))
 	}
 
 	return ParseSecurityProviderHealth(c.Stdout)

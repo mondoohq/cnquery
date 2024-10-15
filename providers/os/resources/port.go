@@ -451,6 +451,14 @@ func (p *mqlPorts) listWindows() ([]interface{}, error) {
 		return nil, err
 	}
 
+	if executedCmd.ExitStatus != 0 {
+		stderr, err := io.ReadAll(executedCmd.Stderr)
+		if err != nil {
+			return nil, err
+		}
+		return nil, errors.New("failed to retrieve network connections: " + string(stderr))
+	}
+
 	list, err := p.parseWindowsPorts(executedCmd.Stdout, processes)
 	if err != nil {
 		return nil, err

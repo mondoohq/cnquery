@@ -5,6 +5,7 @@ package smbios
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"strconv"
 
@@ -137,6 +138,14 @@ func (s *WindowsSmbiosManager) Info() (*SmBiosInfo, error) {
 	c, err := s.provider.RunCommand(powershell.Encode(smbiosWindowsScript))
 	if err != nil {
 		return nil, err
+	}
+
+	if c.ExitStatus != 0 {
+		stderr, err := io.ReadAll(c.Stderr)
+		if err != nil {
+			return nil, err
+		}
+		return nil, errors.New("failed to retrieve smbios info: " + string(stderr))
 	}
 
 	winBios, err := ParseWindowsSmbiosInfo(c.Stdout)

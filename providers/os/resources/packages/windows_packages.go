@@ -256,6 +256,15 @@ func (w *WinPkgManager) getInstalledApps() ([]Package, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not read app package list")
 	}
+
+	if cmd.ExitStatus != 0 {
+		stderr, err := io.ReadAll(cmd.Stderr)
+		if err != nil {
+			return nil, err
+		}
+		return nil, errors.New("failed to retrieve installed apps: " + string(stderr))
+	}
+
 	return ParseWindowsAppPackages(cmd.Stdout)
 }
 
