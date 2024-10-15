@@ -1,0 +1,234 @@
+option provider = "go.mondoo.com/cnquery/v11/providers/cloudflare"
+option go_package = "go.mondoo.com/cnquery/v11/providers/cloudflare/resources"
+
+// Cloudflare Provider
+cloudflare {
+	// List all zones
+	zones() []cloudflare.zone 
+
+	// List available accounts
+	accounts() []cloudflare.account
+}
+
+// Cloudflare DNS Zone
+private cloudflare.zone @defaults("name account.name") {
+	// The zone identifier
+	id string 
+	// The zone name
+	name string 
+	// The name servers for this zone
+	name_servers []string 
+	// Original NameServers
+	original_name_servers []string 
+
+	// The current status of the zone, allowed values: initializing pending active moved
+	status string 
+	paused bool
+	type string
+
+	// The time the zone was created
+	created_on time 
+	// The time the zone was last modified
+	modified_on time 
+
+	// Zone Owner Account
+  account cloudflare.zone.account 
+
+	// DNS records associated with the zone
+	dns() cloudflare.dns
+
+	// Live Inputs 
+	live_inputs() []cloudflare.streams.live_input
+
+	// Videos
+	videos() []cloudflare.streams.video
+
+	// R2
+	r2() cloudflare.r2
+
+	workers() cloudflare.workers
+}
+
+private cloudflare.zone.account @defaults("name") {
+	// The account identifier
+	id string 
+	// The account name
+	name string 
+	// The account type
+	type string 
+	// email string // The account email
+}
+
+private cloudflare.dns {
+	records() []cloudflare.dns.record 
+}
+
+// DNS Record
+private cloudflare.dns.record @defaults("type content name") {
+	// Cloudflare Internal ID
+	id string 
+
+	name string
+	comment string
+	tags []string
+	proxied bool
+	proxiable bool
+
+	// A, AAAA, CNAME, etc
+	type string 
+	// Hostname, IP Address, etc
+	content string 
+	ttl int 
+
+	created_on time
+	modified_on time
+}
+
+// Cloudflare Account
+private cloudflare.account @defaults("name") {
+	// Cloudflare Account identifier
+	id string
+
+	// Account name
+	name string
+
+	// Settings
+	settings cloudflare.account.settings
+
+	// Account Created On
+	created_on time
+
+	// Live Inputs 
+	live_inputs() []cloudflare.streams.live_input
+
+	// Videos
+	videos() []cloudflare.streams.video
+}
+
+// Account Settings
+private cloudflare.account.settings {
+	// Indicates whether membership in this account requires that Two-Factor Authentication is enabled
+	enforce_twofactor bool
+}
+
+private cloudflare.streams {}
+
+// Cloudflare Live Input (Stream)
+private cloudflare.streams.live_input @defaults("uid name") {
+	// cnquery resource id
+	id string
+
+	// Unique identifier
+	uid string
+
+	// Input name
+	name string
+
+	// Delete Recording After Days
+	delete_recording_after_days int
+}
+
+// Cloudflare Videos and Recordings
+private cloudflare.streams.video @defaults("name id") {
+	// cnquery resource id
+	id string
+
+	// Unique identifier
+	uid string
+
+	// Name
+	name string
+
+	// Creator ID
+	creator string
+
+	// Video duration in seconds
+	duration float
+
+	// Height (px)
+	height int
+
+	// Width (px)
+	width int
+
+	// Live Input ID
+	live_input string
+
+	// Dash URL
+	dash string
+
+	// HLS URL
+	hls string
+
+	// Preview URL
+	preview string
+
+	// Ready to Stream
+	ready bool
+
+	// Whether the video can be a accessed using the UID
+	require_signed_urls bool
+
+	// Indicates the date and time at which the video will be deleted. Omit the field to indicate no change, or include with a null value to remove an existing scheduled deletion. If specified, must be at least 30 days from upload time.
+	scheduled_deletion time
+
+	// Size in Bytes
+	size int
+
+	// Thumbnail URL
+	thumbnail string
+
+	// The timestamp for a thumbnail image calculated as a percentage value of the video's duration. To convert from a second-wise timestamp to a percentage, divide the desired timestamp by the total duration of the video. If this value is not set, the default thumbnail image is taken from 0s of the video.
+	thumbnail_timestamp_pct float
+
+	// Upload timestamp
+	uploaded time
+}
+
+private cloudflare.r2 {
+	buckets() []cloudflare.r2.bucket
+}
+
+private cloudflare.r2.bucket {
+	name string
+	location string
+	created_on time
+}
+
+private cloudflare.workers {
+	// List all workers
+	workers() []cloudflare.workers.worker
+
+	// List all pages
+	pages() []cloudflare.workers.page
+}
+
+private cloudflare.workers.worker {
+	id string
+	etag string
+	size int
+	deployment_id string
+	pipeline_hash string
+	placement_mode string
+
+	last_deployed_from string
+	log_push bool
+	created_on time
+	modified_on time
+}
+
+private cloudflare.workers.page {
+	id string
+	short_id string
+	project_id string
+	project_name string
+	environment string
+	url string
+
+	aliases []string
+
+	production_branch string
+
+	created_on time
+	modified_on time
+}
