@@ -24,13 +24,16 @@ import (
 )
 
 const (
-	MondooRegionLabelKey       = "mondoo.com/region"
-	MondooInstanceLabelKey     = "mondoo.com/instance-id"
-	MondooPlatformLabelKey     = "mondoo.com/platform"
-	MondooLaunchTimeLabelKey   = "mondoo.com/launch-time"
-	MondooInstanceTypeLabelKey = "mondoo.com/instance-type"
-	MondooParentIdLabelKey     = "mondoo.com/parent-id"
-	MondooImageLabelKey        = "mondoo.com/image"
+	MondooRegionLabelKey        = "mondoo.com/region"
+	MondooInstanceLabelKey      = "mondoo.com/instance-id"
+	MondooPlatformLabelKey      = "mondoo.com/platform"
+	MondooLaunchTimeLabelKey    = "mondoo.com/launch-time"
+	MondooInstanceTypeLabelKey  = "mondoo.com/instance-type"
+	MondooParentIdLabelKey      = "mondoo.com/parent-id"
+	MondooImageLabelKey         = "mondoo.com/image"
+	MondooContainerNameLabelKey = "mondoo.com/container-name"
+	MondooClusterNameLabelKey   = "mondoo.com/cluster-name"
+	MondooTaskArnLabelKey       = "mondoo.com/task-arn"
 )
 
 type mqlObject struct {
@@ -563,6 +566,13 @@ func addConnectionInfoToECSContainerAsset(container *mqlAwsEcsContainer, account
 					id: container.Arn.Data, service: "ecs", objectType: "container",
 				},
 			}, conn)
+	}
+
+	a.Labels = map[string]string{
+		MondooClusterNameLabelKey:   container.ClusterName.Data,
+		MondooTaskArnLabelKey:       taskArn,
+		MondooContainerNameLabelKey: container.ContainerName.Data,
+		MondooRegionLabelKey:        container.Region.Data,
 	}
 
 	return a
