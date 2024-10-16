@@ -573,6 +573,7 @@ func addConnectionInfoToECSContainerAsset(container *mqlAwsEcsContainer, account
 		MondooTaskArnLabelKey:       taskArn,
 		MondooContainerNameLabelKey: container.ContainerName.Data,
 		MondooRegionLabelKey:        container.Region.Data,
+		MondooPlatformLabelKey:      container.PlatformFamily.Data,
 	}
 
 	return a
