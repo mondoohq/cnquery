@@ -21,13 +21,14 @@ var Config = plugin.Provider{
 			Short: "a Google Workspace account",
 			Long: `Use the google-workspace provider to query resources in a Google Workspace domain.
 
-The provider requires these three flags:
+Examples:
+  cnquery shell google-workspace --customer-id <customer-id>
+  cnquery shell google-workspace --credentials-path <credentials-path> --customer-id <customer-id>
+  cnspec scan google-workspace --credentials-path <credentials-path> --customer-id <customer-id>
 
-* '--customer-id <customer-id>': This flag specifies the unique ID of the Google Workspace customer. The customer ID is an immutable, unique identifier for a Google Workspace account.
+Note:
 
-* '--impersonated-user-email <user-email>': This flag specifies the email address of the user to impersonate in the session. This is useful when the user executing the command does not have the necessary permissions, but can impersonate a user who does.
-
-* '--credentials-path <credentials-file-path>': This flag specifies the path to the credentials file (typically a JSON file) to use for authentication. You can omit this flag if the GOOGLE_APPLICATION_CREDENTIALS environment variable is set.
+If you set the GOOGLE_APPLICATION_CREDENTIALS environment variable, you don't need to provide the --credentials-path flag.
 `,
 
 			Aliases:   []string{"googleworkspace"},
@@ -37,21 +38,21 @@ The provider requires these three flags:
 					Long:    "credentials-path",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "Path to the service account credentials with which to access the APIs",
+					Desc:    "Path to the service account credentials file (typically a JSON file) with which to access the APIs",
 					Option:  plugin.FlagOption_Required,
 				},
 				{
 					Long:    "customer-id",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "Google Workspace customer ID to scan",
+					Desc:    "Unique ID of the Google Workspace customer account",
 					Option:  plugin.FlagOption_Required,
 				},
 				{
 					Long:    "impersonated-user-email",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "Email address of the user to impersonate in the session",
+					Desc:    "Email address of the user to impersonate in the session (This is useful when the user executing the command does not have the necessary permissions, but can impersonate a user who does.)",
 				},
 			},
 		},
