@@ -6,7 +6,6 @@ package resources
 import (
 	"errors"
 	"io"
-	"strings"
 
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
@@ -30,27 +29,18 @@ func (s *mqlWindows) computerInfo() (map[string]interface{}, error) {
 
 	// If the exit code is not 0, then we got an error and we should read stderr for details
 	if executedCmd.ExitStatus != 0 {
-		stderr, err := io.ReadAll(executedCmd.Stderr)
+		// First attempt to use the short computer info command
+		encodedCmd := powershell.Encode(windows.PSGetComputerInfoShort)
+		executedCmd, err = conn.RunCommand(encodedCmd)
 		if err != nil {
 			return nil, err
 		}
 
-		// If the command is too long, then we fallback to the short command
-		if strings.HasPrefix(string(stderr), "The command line is too long.") {
-			encodedCmd := powershell.Encode(windows.PSGetComputerInfoShort)
-			executedCmd, err = conn.RunCommand(encodedCmd)
+		if executedCmd.ExitStatus != 0 {
+			stderr, err := io.ReadAll(executedCmd.Stderr)
 			if err != nil {
 				return nil, err
 			}
-
-			if executedCmd.ExitStatus != 0 {
-				stderr, err := io.ReadAll(executedCmd.Stderr)
-				if err != nil {
-					return nil, err
-				}
-				return nil, errors.New("failed to retrieve computer info: " + string(stderr))
-			}
-		} else {
 			return nil, errors.New("failed to retrieve computer info: " + string(stderr))
 		}
 	}
