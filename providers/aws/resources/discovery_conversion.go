@@ -24,16 +24,17 @@ import (
 )
 
 const (
-	MondooRegionLabelKey        = "mondoo.com/region"
-	MondooInstanceLabelKey      = "mondoo.com/instance-id"
-	MondooPlatformLabelKey      = "mondoo.com/platform"
-	MondooLaunchTimeLabelKey    = "mondoo.com/launch-time"
-	MondooInstanceTypeLabelKey  = "mondoo.com/instance-type"
-	MondooParentIdLabelKey      = "mondoo.com/parent-id"
-	MondooImageLabelKey         = "mondoo.com/image"
-	MondooContainerNameLabelKey = "mondoo.com/container-name"
-	MondooClusterNameLabelKey   = "mondoo.com/cluster-name"
-	MondooTaskArnLabelKey       = "mondoo.com/task-arn"
+	MondooRegionLabelKey         = "mondoo.com/region"
+	MondooInstanceLabelKey       = "mondoo.com/instance-id"
+	MondooPlatformLabelKey       = "mondoo.com/platform"
+	MondooLaunchTimeLabelKey     = "mondoo.com/launch-time"
+	MondooInstanceTypeLabelKey   = "mondoo.com/instance-type"
+	MondooParentIdLabelKey       = "mondoo.com/parent-id"
+	MondooImageLabelKey          = "mondoo.com/image"
+	MondooContainerNameLabelKey  = "mondoo.com/container-name"
+	MondooClusterNameLabelKey    = "mondoo.com/cluster-name"
+	MondooTaskArnLabelKey        = "mondoo.com/task-arn"
+	MondooPlatformFamilyLabelKey = "mondoo.com/platform-family"
 )
 
 type mqlObject struct {
@@ -569,10 +570,11 @@ func addConnectionInfoToECSContainerAsset(container *mqlAwsEcsContainer, account
 	}
 
 	a.Labels = map[string]string{
-		MondooClusterNameLabelKey:   container.ClusterName.Data,
-		MondooTaskArnLabelKey:       taskArn,
-		MondooContainerNameLabelKey: container.ContainerName.Data,
-		MondooRegionLabelKey:        container.Region.Data,
+		MondooClusterNameLabelKey:    container.ClusterName.Data,
+		MondooTaskArnLabelKey:        taskArn,
+		MondooContainerNameLabelKey:  container.ContainerName.Data,
+		MondooRegionLabelKey:         container.Region.Data,
+		MondooPlatformFamilyLabelKey: container.PlatformFamily.Data,
 	}
 
 	return a
