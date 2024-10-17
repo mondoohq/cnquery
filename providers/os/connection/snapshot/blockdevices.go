@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"sort"
 	"strings"
 
@@ -125,29 +126,59 @@ func (blockEntries BlockDevices) GetMountablePartitionByDevice(device string) (*
 	return &PartitionInfo{Name: devFsName, FsType: partitions[0].FsType}, nil
 }
 
-// Searches for a device by name
-func (blockEntries BlockDevices) FindDevice(name string) (BlockDevice, error) {
-	log.Debug().Str("device", name).Msg("searching for device")
-	var secondName string
-	if strings.HasPrefix(name, "/dev/sd") {
-		// sdh and xvdh are interchangeable
-		end := strings.TrimPrefix(name, "/dev/sd")
-		secondName = "/dev/xvd" + end
-	}
-	for i := range blockEntries.BlockDevices {
-		d := blockEntries.BlockDevices[i]
-		log.Debug().Str("name", d.Name).Interface("children", d.Children).Interface("mountpoint", d.MountPoint).Msg("found block device")
-		fullDeviceName := "/dev/" + d.Name
-		if name != fullDeviceName { // check if the device name matches
-			if secondName == "" || secondName != fullDeviceName {
-				continue
-			}
-		}
-		log.Debug().Str("name", d.Name).Msg("found matching device")
-		return d, nil
+func lms(lmsCache map[string]int, s1, s2 string) int {
+	if v, ok := lmsCache[s2]; ok {
+		return v
 	}
 
-	return BlockDevice{}, fmt.Errorf("no block device found with name %s", name)
+	n1 := len(s1)
+	n2 := len(s2)
+
+	// Start from the end of both strings
+	i := 0
+	for i < int(math.Min(float64(n1), float64(n2))) && s1[n1-i-1] == s2[n2-i-1] {
+		i++
+	}
+
+	lmsCache[s2] = i
+	return i
+}
+
+// Searches for a device by name
+func (blockEntries BlockDevices) FindDevice(requested string) (BlockDevice, error) {
+	log.Debug().Str("device", requested).Msg("searching for device")
+
+	requestedName := strings.TrimPrefix(requested, "/dev/")
+
+	lmsCache := map[string]int{}
+	// LongestMatchingSuffix returns the length of the longest common suffix of requested and provided string
+
+	sorted := false
+	devices := blockEntries.BlockDevices
+
+	// Bubble sort the devices by the longest matching suffix
+	// Longest matches will be at the beginning of the slice
+	for !sorted {
+		sorted = true
+
+		for i := 0; i < len(devices)-1; i++ {
+			if devices[i].Name == requestedName {
+				return blockEntries.BlockDevices[i], nil
+			}
+
+			if lms(lmsCache, requested, devices[i].Name) < lms(lmsCache, requested, devices[i+1].Name) {
+				devices[i], devices[i+1] = devices[i+1], devices[i]
+				sorted = false
+			}
+		}
+	}
+
+	// If the first device has matching suffix, return it
+	if lms(lmsCache, requested, devices[0].Name) > 0 {
+		return devices[0], nil
+	}
+
+	return BlockDevice{}, fmt.Errorf("no block device found with name %s", requested)
 }
 
 // Searches all the partitions in the device and finds one that can be mounted. It must be unmounted, non-boot partition
