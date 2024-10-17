@@ -6,9 +6,10 @@ package provider
 import (
 	"context"
 	"errors"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
 	"os"
 	"strings"
+
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
 
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
@@ -51,10 +52,9 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	if token == "" {
 		token = os.Getenv("SHODAN_TOKEN")
 	}
-	if token == "" {
-		return nil, errors.New("no shodan token provided, use --token or SHODAN_TOKEN")
+	if token != "" {
+		conf.Credentials = append(conf.Credentials, vault.NewPasswordCredential("", token))
 	}
-	conf.Credentials = append(conf.Credentials, vault.NewPasswordCredential("", token))
 
 	// discovery flags
 	discoverTargets := []string{}
