@@ -1356,7 +1356,7 @@ private gcp.project.dnsService.managedzone @defaults("name") {
   dnssecConfig dict
   // DNS name of this managed zone
   dnsName string
-  //  Optionally specifies the name server set for this managed zone
+  // Optionally specifies the name server set for this managed zone
   nameServerSet string
   // Delegated to these virtual name servers
   nameServers []string
