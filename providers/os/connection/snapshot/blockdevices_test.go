@@ -462,14 +462,14 @@ func TestAttachedBlockEntryFedora(t *testing.T) {
 	require.True(t, strings.Contains(info.Name, "xvdh4"))
 }
 
-func Test_lms(t *testing.T) {
+func TestLongestMatchingSuffix(t *testing.T) {
 	requested := "abcde"
 	entries := []string{"a", "e", "de"}
 
 	cache := make(map[string]int)
 
 	for i, entry := range entries {
-		r := lms(cache, requested, entry)
+		r := LongestMatchingSuffix(cache, requested, entry)
 		require.Equal(t, i, r)
 		r, ok := cache[entry]
 		require.True(t, ok)
