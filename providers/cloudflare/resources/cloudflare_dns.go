@@ -18,7 +18,7 @@ type mqlCloudflareDnsInternal struct {
 
 func (c *mqlCloudflareZone) dns() (*mqlCloudflareDns, error) {
 	res, err := CreateResource(c.MqlRuntime, "cloudflare.dns", map[string]*llx.RawData{
-		"__id": llx.StringData("cloudflare.dns"),
+		"__id": llx.StringData("cloudflare.dns@" + c.Id.Data),
 	})
 	if err != nil {
 		return nil, err
