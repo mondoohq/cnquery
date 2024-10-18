@@ -1,0 +1,305 @@
+option provider = "go.mondoo.com/cnquery/v11/providers/cloudflare"
+option go_package = "go.mondoo.com/cnquery/v11/providers/cloudflare/resources"
+
+// Cloudflare provider
+cloudflare {
+	// List all zones
+	zones() []cloudflare.zone 
+
+	// List available accounts
+	accounts() []cloudflare.account
+}
+
+// Cloudflare DNS zone
+private cloudflare.zone @defaults("name account.name") {
+	// Zone identifier
+	id string 
+	// Zone name
+	name string 
+	// Nameservers for this zone
+	nameServers []string 
+	// Original nameservers
+	originalNameServers []string 
+
+	// The current status of the zone (initializing, pending, active, or moved)  
+  status string  
+  // Whether the zone is paused  
+  paused bool  
+  // DNS zone type (full or partial)  
+  type string  
+
+	// Time the zone was created
+	createdOn time 
+	// Time the zone was last modified
+	modifiedOn time 
+
+	// Zone owner account
+  account cloudflare.zone.account 
+
+	// DNS records associated with the zone
+	dns() cloudflare.dns
+
+	// Live inputs 
+	liveInputs() []cloudflare.streams.liveInput
+
+	// Videos
+	videos() []cloudflare.streams.video
+
+	// R2
+	r2() cloudflare.r2
+
+	workers() cloudflare.workers
+
+	one() cloudflare.one
+}
+
+private cloudflare.zone.account @defaults("name") {
+	// Account identifier
+	id string 
+	// Account name
+	name string 
+	// Account type
+	type string 
+	// Account email
+	email string
+}
+
+private cloudflare.dns {
+	records() []cloudflare.dns.record 
+}
+
+// DNS record
+private cloudflare.dns.record @defaults("type content name") {
+	// Cloudflare internal ID
+	id string 
+
+        // Record name
+	name string
+	// Comment
+	comment string
+	// Tags
+	tags []string
+	// Whether the record is proxied (false indicated DNS only)
+	proxied bool
+	// Whether the record can be proxied
+	proxiable bool
+
+	// Type of record (A, AAAA, CNAME, etc.)
+	type string 
+	// Content of the record (hostname, IP Address, etc.)
+	content string 
+	// Time to live (in seconds)
+	ttl int 
+
+	// Time the record was created
+	createdOn time
+	// Time the record was last modified
+	modifiedOn time
+}
+
+// Cloudflare account
+private cloudflare.account @defaults("name") {
+	// Cloudflare account identifier
+	id string
+
+	// Account name
+	name string
+
+	// Settings
+	settings cloudflare.account.settings
+
+	// Time the account was created
+	createdOn time
+
+	// Live inputs 
+	liveInputs() []cloudflare.streams.liveInput
+
+	// Videos
+	videos() []cloudflare.streams.video
+}
+
+// Account settings
+private cloudflare.account.settings {
+	// Whether membership in this account requires that two-factor authentication is enabled
+	enforceTwoFactor bool
+}
+
+private cloudflare.streams {}
+
+// Cloudflare live input (stream)
+private cloudflare.streams.liveInput @defaults("uid name") {
+	// cnquery resource ID
+	id string
+
+	// Unique identifier
+	uid string
+
+	// Input name
+	name string
+
+	// Number of days after which to delete the recording
+	deleteRecordingAfterDays int
+}
+
+// Cloudflare videos and recordings
+private cloudflare.streams.video @defaults("name id") {
+	// cnquery resource id
+	id string
+
+	// Unique identifier
+	uid string
+
+	// Name
+	name string
+
+	// Creator ID
+	creator string
+
+	// Video duration in seconds
+	duration float
+
+	// Height (px)
+	height int
+
+	// Width (px)
+	width int
+
+	// Live Input ID
+	liveInput string
+
+	// Dash URL
+	dash string
+
+	// HLS URL
+	hls string
+
+	// Preview URL
+	preview string
+
+	// Ready to Stream
+	ready bool
+
+	// Whether the video can be a accessed using the UID
+	requireSignedUrls bool
+
+	// Indicates the date and time at which the video will be deleted. Omit the field to indicate no change, or include with a null value to remove an existing scheduled deletion. If specified, must be at least 30 days from upload time.
+	scheduledDeletion time
+
+	// Size in Bytes
+	size int
+
+	// Thumbnail URL
+	thumbnail string
+
+	// The timestamp for a thumbnail image calculated as a percentage value of the video's duration. To convert from a second-wise timestamp to a percentage, divide the desired timestamp by the total duration of the video. If this value is not set, the default thumbnail image is taken from 0s of the video.
+	thumbnailTimestampPct float
+
+	// Upload timestamp
+	uploaded time
+}
+
+private cloudflare.r2 {
+	buckets() []cloudflare.r2.bucket
+}
+
+private cloudflare.r2.bucket {
+	name string
+	location string
+	createdOn time
+}
+
+private cloudflare.workers {
+	// List all workers
+	workers() []cloudflare.workers.worker
+
+	// List all pages
+	pages() []cloudflare.workers.page
+}
+
+private cloudflare.workers.worker {
+	id string
+	etag string
+	size int
+	deploymentId string
+	pipelineHash string
+	placementMode string
+
+	lastDeployedFrom string
+	logPush bool
+	createdOn time
+	modifiedOn time
+}
+
+private cloudflare.workers.page {
+	id string
+	shortId string
+	projectId string
+	projectName string
+	environment string
+	url string
+
+	aliases []string
+
+	productionBranch string
+
+	createdOn time
+	modifiedOn time
+}
+
+private cloudflare.one {
+	apps() []cloudflare.one.app // Zero Trust Applications
+	idps() []cloudflare.one.idp // Identity Providers
+}
+
+private cloudflare.one.app @defaults("name id") {
+	id string // UUID
+	aud string // Audience tag
+
+	name string // The name of the application
+	domain string // The domain of the application
+
+	allowedIdps []string // Allowed Identity Providers
+	appLauncherVisible bool // Displays the application in the App Launcher
+	autoRedirectToIdentity bool // When set to true, users skip the identity provider selection step during login.
+
+	cordHeaders cloudflare.cordHeaders // CORS Headers
+	optionsPreflightBypass bool // Allows options preflight requests to bypass Access authentication and go directly to the origin. Cannot turn on if corsHeaders is set.
+
+	customDenyMessage string // The custom error message shown to a user when they are denied access to the application.
+	customDenyUrl string // The custom URL to redirect a user to when they are denied access to the application.
+	serviceAuth401Redirect bool // Returns a 401 status code when the request is blocked by a Service Auth policy.
+
+	enableBindingCookie bool // Enables the binding cookie, which increases security against compromised authorization tokens and CSRF attacks.
+	httpOnlyCookieAttribute bool // Enables the HttpOnly cookie attribute, which increases security against XSS attacks.
+	sameSiteCookieAttribute string // Sets the SameSite cookie setting, which provides increased security against CSRF attacks.
+
+	logoUrl string // The URL of the application's logo
+
+	sessionDuration string // The amount of time that tokens issued for this application will be valid. Must be in the format 300ms or 2h45m. Valid time units are: ns, us (or µs), ms, s, m, h.
+
+	skipInterstitial bool // Enables automatic authentication through cloudflared.
+
+	type string // The type of the application.
+
+	createdAt time
+	updatedAt time
+}
+
+private cloudflare.cordHeaders {
+	allowAllHeaders bool
+	allowAllMethods bool
+	allowAllOrigins bool
+	allowCredentials bool
+
+	allowedHeaders []string
+	allowedMethods []string
+	allowedOrigins []string
+
+	maxAge int // The maximum number of seconds the results of a preflight request can be cached.
+}
+
+private cloudflare.one.idp @defaults("name") {
+	id string // UUID
+	name string // The name of the identity provider, shown to users on the login page.
+	type string // The type of the identity provider.
+}
