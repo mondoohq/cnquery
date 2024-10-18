@@ -4300,7 +4300,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.instance.instanceStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetInstanceStatus()).ToDataRes(types.Dict)
 	},
-	"aws.ec2.instance.iamInstanceProfiles": func(r plugin.Resource) *plugin.DataRes {
+	"aws.ec2.instance.iamInstanceProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetIamInstanceProfile()).ToDataRes(types.Dict)
 	},
 	"aws.ec2.instance.stateReason": func(r plugin.Resource) *plugin.DataRes {
@@ -10252,6 +10252,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.ec2.instance.instanceStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Instance).InstanceStatus, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.iamInstanceProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).IamInstanceProfile, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.instance.stateReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26391,9 +26395,7 @@ func (c *mqlAwsEc2Instance) GetInstanceStatus() *plugin.TValue[interface{}] {
 }
 
 func (c *mqlAwsEc2Instance) GetIamInstanceProfile() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.IamInstanceProfile, func() (interface{}, error) {
-		return c.IamInstanceProfile()
-	})
+	return &c.IamInstanceProfile
 }
 
 func (c *mqlAwsEc2Instance) GetStateReason() *plugin.TValue[interface{}] {

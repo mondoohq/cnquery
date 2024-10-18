@@ -867,6 +867,12 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, regionV
 			if err != nil {
 				return nil, err
 			}
+
+			iamInstanceProfile, err := convert.JsonToDict(instance.IamInstanceProfile)
+			if err != nil {
+				return nil, err
+			}
+
 			var stateTransitionTime time.Time
 			reg := regexp.MustCompile(`.*\((\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}) GMT\)`)
 			timeString := reg.FindStringSubmatch(convert.ToString(instance.StateTransitionReason))
@@ -899,6 +905,7 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, regionV
 				"rootDeviceType":        llx.StringData(string(instance.RootDeviceType)),
 				"state":                 llx.StringData(string(instance.State.Name)),
 				"stateReason":           llx.MapData(stateReason, types.Any),
+				"iamInstanceProfile":    llx.MapData(iamInstanceProfile, types.Any),
 				"stateTransitionReason": llx.StringDataPtr(instance.StateTransitionReason),
 				"stateTransitionTime":   llx.TimeData(stateTransitionTime),
 				"tags":                  llx.MapData(Ec2TagsToMap(instance.Tags), types.String),
@@ -1282,6 +1289,35 @@ func (a *mqlAwsEc2Instance) patchState() (interface{}, error) {
 }
 
 func (a *mqlAwsEc2Instance) instanceStatus() (interface{}, error) {
+	var res interface{}
+	instanceId := a.InstanceId.Data
+	region := a.Region.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Ec2(region)
+	ctx := context.Background()
+
+	instanceStatus, err := svc.DescribeInstanceStatus(ctx, &ec2.DescribeInstanceStatusInput{
+		InstanceIds:         []string{instanceId},
+		IncludeAllInstances: aws.Bool(true),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(instanceStatus.InstanceStatuses) > 0 {
+		if instanceId == convert.ToString(instanceStatus.InstanceStatuses[0].InstanceId) {
+			res, err = convert.JsonToDict(instanceStatus.InstanceStatuses[0])
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return res, nil
+}
+
+func (a *mqlAwsEc2Instance) iamInstanceProfile() (interface{}, error) {
 	var res interface{}
 	instanceId := a.InstanceId.Data
 	region := a.Region.Data
