@@ -12,7 +12,7 @@ import (
 
 func (c *mqlCloudflareZone) workers() (*mqlCloudflareWorkers, error) {
 	res, err := CreateResource(c.MqlRuntime, "cloudflare.workers", map[string]*llx.RawData{
-		"__id": llx.StringData("cloudflare.workers"),
+		"__id": llx.StringData("cloudflare.workers@" + c.GetAccount().Data.GetId().Data),
 	})
 	if err != nil {
 		return nil, err

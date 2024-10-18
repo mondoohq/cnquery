@@ -20,7 +20,7 @@ type mqlCloudflareR2Internal struct {
 
 func (c *mqlCloudflareZone) r2() (*mqlCloudflareR2, error) {
 	res, err := CreateResource(c.MqlRuntime, "cloudflare.r2", map[string]*llx.RawData{
-		"__id": llx.StringData("cloudflare.r2"),
+		"__id": llx.StringData("cloudflare.r2@" + c.GetAccount().Data.GetId().Data),
 	})
 	if err != nil {
 		return nil, err
