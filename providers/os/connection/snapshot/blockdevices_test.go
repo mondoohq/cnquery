@@ -128,9 +128,10 @@ func TestFindDevice(t *testing.T) {
 			},
 		}
 
+		expected := blockEntries.BlockDevices[2]
 		res, err := blockEntries.FindDevice("/dev/sdx")
 		require.Nil(t, err)
-		require.Equal(t, res, blockEntries.BlockDevices[2])
+		require.Equal(t, expected, res)
 	})
 
 	t.Run("match by interchangeable name", func(t *testing.T) {
@@ -142,9 +143,10 @@ func TestFindDevice(t *testing.T) {
 			},
 		}
 
+		expected := blockEntries.BlockDevices[2]
 		res, err := blockEntries.FindDevice("/dev/sdc")
 		require.Nil(t, err)
-		require.Equal(t, res, blockEntries.BlockDevices[2])
+		require.Equal(t, expected, res)
 	})
 
 	t.Run("no match", func(t *testing.T) {
@@ -159,6 +161,54 @@ func TestFindDevice(t *testing.T) {
 		_, err := blockEntries.FindDevice("/dev/sdd")
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "no block device found with name")
+	})
+
+	t.Run("multiple matches by trailing letter", func(t *testing.T) {
+		blockEntries := BlockDevices{
+			BlockDevices: []BlockDevice{
+				{Name: "sda", Children: []BlockDevice{{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoint: "/"}}},
+				{Name: "nvme0n1", Children: []BlockDevice{{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+				{Name: "stc", Children: []BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+				{Name: "xvdc", Children: []BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+			},
+		}
+
+		expected := blockEntries.BlockDevices[3]
+		res, err := blockEntries.FindDevice("/dev/sdc")
+		require.Nil(t, err)
+		require.Equal(t, expected, res)
+	})
+
+	t.Run("perfect match and trailing letter matches", func(t *testing.T) {
+		blockEntries := BlockDevices{
+			BlockDevices: []BlockDevice{
+				{Name: "sda", Children: []BlockDevice{{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoint: "/"}}},
+				{Name: "nvme0n1", Children: []BlockDevice{{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+				{Name: "sta", Children: []BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+				{Name: "xvda", Children: []BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+			},
+		}
+
+		expected := blockEntries.BlockDevices[0]
+		res, err := blockEntries.FindDevice("/dev/sda")
+		require.Nil(t, err)
+		require.Equal(t, expected, res)
+	})
+
+	t.Run("perfect match and trailing letter matches (scrambled)", func(t *testing.T) {
+		blockEntries := BlockDevices{
+			BlockDevices: []BlockDevice{
+				{Name: "xvda", Children: []BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+				{Name: "sta", Children: []BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+				{Name: "nvme0n1", Children: []BlockDevice{{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+				{Name: "sda", Children: []BlockDevice{{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoint: "/"}}},
+			},
+		}
+
+		expected := blockEntries.BlockDevices[3]
+		res, err := blockEntries.FindDevice("/dev/sda")
+		require.Nil(t, err)
+		require.Equal(t, expected, res)
 	})
 }
 
@@ -410,4 +460,19 @@ func TestAttachedBlockEntryFedora(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "xfs", info.FsType)
 	require.True(t, strings.Contains(info.Name, "xvdh4"))
+}
+
+func TestLongestMatchingSuffix(t *testing.T) {
+	requested := "abcde"
+	entries := []string{"a", "e", "de"}
+
+	cache := make(map[string]int)
+
+	for i, entry := range entries {
+		r := LongestMatchingSuffix(cache, requested, entry)
+		require.Equal(t, i, r)
+		r, ok := cache[entry]
+		require.True(t, ok)
+		require.Equal(t, i, r)
+	}
 }
