@@ -11,6 +11,7 @@ cavium
 cdn
 certificatechains
 cloudflare
+cloudflared
 Clusterwide
 cmek
 cnames

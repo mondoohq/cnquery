@@ -22,6 +22,18 @@ resources:
       enforceTwoFactor: {}
     is_private: true
     min_mondoo_version: 9.0.0
+  cloudflare.cordHeaders:
+    fields:
+      allowAllHeaders: {}
+      allowAllMethods: {}
+      allowAllOrigins: {}
+      allowCredentials: {}
+      allowedHeaders: {}
+      allowedMethods: {}
+      allowedOrigins: {}
+      maxAge: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   cloudflare.dns:
     fields:
       records: {}
@@ -40,6 +52,37 @@ resources:
       tags: {}
       ttl: {}
       type: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  cloudflare.one:
+    fields:
+      apps: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  cloudflare.one.app:
+    fields:
+      allowedIdps: {}
+      appLauncherVisible: {}
+      aud: {}
+      autoRedirectToIdentity: {}
+      cordHeaders: {}
+      createdAt: {}
+      customDenyMessage: {}
+      customDenyUrl: {}
+      domain: {}
+      enableBindingCookie: {}
+      httpOnlyCookieAttribute: {}
+      id: {}
+      logoUrl: {}
+      name: {}
+      optionsPreflightBypass: {}
+      sameSiteCookieAttribute: {}
+      serviceAuth401Redirect: {}
+      sessionDuration: {}
+      skip_interstitial: {}
+      skipInterstitial: {}
+      type: {}
+      updatedAt: {}
     is_private: true
     min_mondoo_version: 9.0.0
   cloudflare.r2:
@@ -132,6 +175,7 @@ resources:
       modifiedOn: {}
       name: {}
       nameServers: {}
+      one: {}
       originalNameServers: {}
       paused: {}
       r2: {}

@@ -78,6 +78,18 @@ func init() {
 			// to override args, implement: initCloudflareWorkersPage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createCloudflareWorkersPage,
 		},
+		"cloudflare.one": {
+			// to override args, implement: initCloudflareOne(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCloudflareOne,
+		},
+		"cloudflare.one.app": {
+			// to override args, implement: initCloudflareOneApp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCloudflareOneApp,
+		},
+		"cloudflare.cordHeaders": {
+			// to override args, implement: initCloudflareCordHeaders(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCloudflareCordHeaders,
+		},
 	}
 }
 
@@ -196,6 +208,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"cloudflare.zone.workers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareZone).GetWorkers()).ToDataRes(types.Resource("cloudflare.workers"))
+	},
+	"cloudflare.zone.one": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZone).GetOne()).ToDataRes(types.Resource("cloudflare.one"))
 	},
 	"cloudflare.zone.account.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareZoneAccount).GetId()).ToDataRes(types.String)
@@ -407,6 +422,95 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cloudflare.workers.page.modifiedOn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareWorkersPage).GetModifiedOn()).ToDataRes(types.Time)
 	},
+	"cloudflare.one.apps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOne).GetApps()).ToDataRes(types.Array(types.Resource("cloudflare.one.app")))
+	},
+	"cloudflare.one.app.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneApp).GetId()).ToDataRes(types.String)
+	},
+	"cloudflare.one.app.aud": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneApp).GetAud()).ToDataRes(types.String)
+	},
+	"cloudflare.one.app.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneApp).GetName()).ToDataRes(types.String)
+	},
+	"cloudflare.one.app.domain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneApp).GetDomain()).ToDataRes(types.String)
+	},
+	"cloudflare.one.app.allowedIdps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneApp).GetAllowedIdps()).ToDataRes(types.Array(types.String))
+	},
+	"cloudflare.one.app.appLauncherVisible": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneApp).GetAppLauncherVisible()).ToDataRes(types.Bool)
+	},
+	"cloudflare.one.app.autoRedirectToIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneApp).GetAutoRedirectToIdentity()).ToDataRes(types.Bool)
+	},
+	"cloudflare.one.app.cordHeaders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneApp).GetCordHeaders()).ToDataRes(types.Resource("cloudflare.cordHeaders"))
+	},
+	"cloudflare.one.app.optionsPreflightBypass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneApp).GetOptionsPreflightBypass()).ToDataRes(types.Bool)
+	},
+	"cloudflare.one.app.customDenyMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneApp).GetCustomDenyMessage()).ToDataRes(types.String)
+	},
+	"cloudflare.one.app.customDenyUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneApp).GetCustomDenyUrl()).ToDataRes(types.String)
+	},
+	"cloudflare.one.app.serviceAuth401Redirect": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneApp).GetServiceAuth401Redirect()).ToDataRes(types.Bool)
+	},
+	"cloudflare.one.app.enableBindingCookie": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneApp).GetEnableBindingCookie()).ToDataRes(types.Bool)
+	},
+	"cloudflare.one.app.httpOnlyCookieAttribute": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneApp).GetHttpOnlyCookieAttribute()).ToDataRes(types.Bool)
+	},
+	"cloudflare.one.app.sameSiteCookieAttribute": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneApp).GetSameSiteCookieAttribute()).ToDataRes(types.String)
+	},
+	"cloudflare.one.app.logoUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneApp).GetLogoUrl()).ToDataRes(types.String)
+	},
+	"cloudflare.one.app.sessionDuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneApp).GetSessionDuration()).ToDataRes(types.String)
+	},
+	"cloudflare.one.app.skipInterstitial": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneApp).GetSkipInterstitial()).ToDataRes(types.Bool)
+	},
+	"cloudflare.one.app.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneApp).GetType()).ToDataRes(types.String)
+	},
+	"cloudflare.one.app.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneApp).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"cloudflare.one.app.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneApp).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"cloudflare.cordHeaders.allowAllHeaders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareCordHeaders).GetAllowAllHeaders()).ToDataRes(types.Bool)
+	},
+	"cloudflare.cordHeaders.allowAllMethods": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareCordHeaders).GetAllowAllMethods()).ToDataRes(types.Bool)
+	},
+	"cloudflare.cordHeaders.allowAllOrigins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareCordHeaders).GetAllowAllOrigins()).ToDataRes(types.Bool)
+	},
+	"cloudflare.cordHeaders.allowCredentials": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareCordHeaders).GetAllowCredentials()).ToDataRes(types.Bool)
+	},
+	"cloudflare.cordHeaders.allowedHeaders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareCordHeaders).GetAllowedHeaders()).ToDataRes(types.Array(types.String))
+	},
+	"cloudflare.cordHeaders.allowedMethods": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareCordHeaders).GetAllowedMethods()).ToDataRes(types.Array(types.String))
+	},
+	"cloudflare.cordHeaders.allowedOrigins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareCordHeaders).GetAllowedOrigins()).ToDataRes(types.Array(types.String))
+	},
+	"cloudflare.cordHeaders.maxAge": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareCordHeaders).GetMaxAge()).ToDataRes(types.Int)
 	},
 }
 
@@ -494,6 +598,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"cloudflare.zone.workers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareZone).Workers, ok = plugin.RawToTValue[*mqlCloudflareWorkers](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.one": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZone).One, ok = plugin.RawToTValue[*mqlCloudflareOne](v.Value, v.Error)
 		return
 	},
 	"cloudflare.zone.account.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -827,6 +935,137 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	"cloudflare.workers.page.modifiedOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareWorkersPage).ModifiedOn, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
+	},
+	"cloudflare.one.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlCloudflareOne).__id, ok = v.Value.(string)
+			return
+		},
+	"cloudflare.one.apps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOne).Apps, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.app.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlCloudflareOneApp).__id, ok = v.Value.(string)
+			return
+		},
+	"cloudflare.one.app.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneApp).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.app.aud": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneApp).Aud, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.app.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneApp).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.app.domain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneApp).Domain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.app.allowedIdps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneApp).AllowedIdps, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.app.appLauncherVisible": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneApp).AppLauncherVisible, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.app.autoRedirectToIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneApp).AutoRedirectToIdentity, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.app.cordHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneApp).CordHeaders, ok = plugin.RawToTValue[*mqlCloudflareCordHeaders](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.app.optionsPreflightBypass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneApp).OptionsPreflightBypass, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.app.customDenyMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneApp).CustomDenyMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.app.customDenyUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneApp).CustomDenyUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.app.serviceAuth401Redirect": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneApp).ServiceAuth401Redirect, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.app.enableBindingCookie": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneApp).EnableBindingCookie, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.app.httpOnlyCookieAttribute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneApp).HttpOnlyCookieAttribute, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.app.sameSiteCookieAttribute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneApp).SameSiteCookieAttribute, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.app.logoUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneApp).LogoUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.app.sessionDuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneApp).SessionDuration, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.app.skipInterstitial": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneApp).SkipInterstitial, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.app.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneApp).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.app.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneApp).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.app.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneApp).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"cloudflare.cordHeaders.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlCloudflareCordHeaders).__id, ok = v.Value.(string)
+			return
+		},
+	"cloudflare.cordHeaders.allowAllHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareCordHeaders).AllowAllHeaders, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.cordHeaders.allowAllMethods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareCordHeaders).AllowAllMethods, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.cordHeaders.allowAllOrigins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareCordHeaders).AllowAllOrigins, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.cordHeaders.allowCredentials": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareCordHeaders).AllowCredentials, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.cordHeaders.allowedHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareCordHeaders).AllowedHeaders, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"cloudflare.cordHeaders.allowedMethods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareCordHeaders).AllowedMethods, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"cloudflare.cordHeaders.allowedOrigins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareCordHeaders).AllowedOrigins, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"cloudflare.cordHeaders.maxAge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareCordHeaders).MaxAge, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 }
@@ -951,6 +1190,7 @@ type mqlCloudflareZone struct {
 	Videos plugin.TValue[[]interface{}]
 	R2 plugin.TValue[*mqlCloudflareR2]
 	Workers plugin.TValue[*mqlCloudflareWorkers]
+	One plugin.TValue[*mqlCloudflareOne]
 }
 
 // createCloudflareZone creates a new instance of this resource
@@ -1107,6 +1347,22 @@ func (c *mqlCloudflareZone) GetWorkers() *plugin.TValue[*mqlCloudflareWorkers] {
 		}
 
 		return c.workers()
+	})
+}
+
+func (c *mqlCloudflareZone) GetOne() *plugin.TValue[*mqlCloudflareOne] {
+	return plugin.GetOrCompute[*mqlCloudflareOne](&c.One, func() (*mqlCloudflareOne, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.zone", c.__id, "one")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlCloudflareOne), nil
+			}
+		}
+
+		return c.one()
 	})
 }
 
@@ -2067,4 +2323,283 @@ func (c *mqlCloudflareWorkersPage) GetCreatedOn() *plugin.TValue[*time.Time] {
 
 func (c *mqlCloudflareWorkersPage) GetModifiedOn() *plugin.TValue[*time.Time] {
 	return &c.ModifiedOn
+}
+
+// mqlCloudflareOne for the cloudflare.one resource
+type mqlCloudflareOne struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlCloudflareOneInternal
+	Apps plugin.TValue[[]interface{}]
+}
+
+// createCloudflareOne creates a new instance of this resource
+func createCloudflareOne(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloudflareOne{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloudflare.one", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloudflareOne) MqlName() string {
+	return "cloudflare.one"
+}
+
+func (c *mqlCloudflareOne) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloudflareOne) GetApps() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Apps, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.one", c.__id, "apps")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.apps()
+	})
+}
+
+// mqlCloudflareOneApp for the cloudflare.one.app resource
+type mqlCloudflareOneApp struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlCloudflareOneAppInternal it will be used here
+	Id plugin.TValue[string]
+	Aud plugin.TValue[string]
+	Name plugin.TValue[string]
+	Domain plugin.TValue[string]
+	AllowedIdps plugin.TValue[[]interface{}]
+	AppLauncherVisible plugin.TValue[bool]
+	AutoRedirectToIdentity plugin.TValue[bool]
+	CordHeaders plugin.TValue[*mqlCloudflareCordHeaders]
+	OptionsPreflightBypass plugin.TValue[bool]
+	CustomDenyMessage plugin.TValue[string]
+	CustomDenyUrl plugin.TValue[string]
+	ServiceAuth401Redirect plugin.TValue[bool]
+	EnableBindingCookie plugin.TValue[bool]
+	HttpOnlyCookieAttribute plugin.TValue[bool]
+	SameSiteCookieAttribute plugin.TValue[string]
+	LogoUrl plugin.TValue[string]
+	SessionDuration plugin.TValue[string]
+	SkipInterstitial plugin.TValue[bool]
+	Type plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
+	UpdatedAt plugin.TValue[*time.Time]
+}
+
+// createCloudflareOneApp creates a new instance of this resource
+func createCloudflareOneApp(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloudflareOneApp{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloudflare.one.app", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloudflareOneApp) MqlName() string {
+	return "cloudflare.one.app"
+}
+
+func (c *mqlCloudflareOneApp) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloudflareOneApp) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlCloudflareOneApp) GetAud() *plugin.TValue[string] {
+	return &c.Aud
+}
+
+func (c *mqlCloudflareOneApp) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlCloudflareOneApp) GetDomain() *plugin.TValue[string] {
+	return &c.Domain
+}
+
+func (c *mqlCloudflareOneApp) GetAllowedIdps() *plugin.TValue[[]interface{}] {
+	return &c.AllowedIdps
+}
+
+func (c *mqlCloudflareOneApp) GetAppLauncherVisible() *plugin.TValue[bool] {
+	return &c.AppLauncherVisible
+}
+
+func (c *mqlCloudflareOneApp) GetAutoRedirectToIdentity() *plugin.TValue[bool] {
+	return &c.AutoRedirectToIdentity
+}
+
+func (c *mqlCloudflareOneApp) GetCordHeaders() *plugin.TValue[*mqlCloudflareCordHeaders] {
+	return &c.CordHeaders
+}
+
+func (c *mqlCloudflareOneApp) GetOptionsPreflightBypass() *plugin.TValue[bool] {
+	return &c.OptionsPreflightBypass
+}
+
+func (c *mqlCloudflareOneApp) GetCustomDenyMessage() *plugin.TValue[string] {
+	return &c.CustomDenyMessage
+}
+
+func (c *mqlCloudflareOneApp) GetCustomDenyUrl() *plugin.TValue[string] {
+	return &c.CustomDenyUrl
+}
+
+func (c *mqlCloudflareOneApp) GetServiceAuth401Redirect() *plugin.TValue[bool] {
+	return &c.ServiceAuth401Redirect
+}
+
+func (c *mqlCloudflareOneApp) GetEnableBindingCookie() *plugin.TValue[bool] {
+	return &c.EnableBindingCookie
+}
+
+func (c *mqlCloudflareOneApp) GetHttpOnlyCookieAttribute() *plugin.TValue[bool] {
+	return &c.HttpOnlyCookieAttribute
+}
+
+func (c *mqlCloudflareOneApp) GetSameSiteCookieAttribute() *plugin.TValue[string] {
+	return &c.SameSiteCookieAttribute
+}
+
+func (c *mqlCloudflareOneApp) GetLogoUrl() *plugin.TValue[string] {
+	return &c.LogoUrl
+}
+
+func (c *mqlCloudflareOneApp) GetSessionDuration() *plugin.TValue[string] {
+	return &c.SessionDuration
+}
+
+func (c *mqlCloudflareOneApp) GetSkipInterstitial() *plugin.TValue[bool] {
+	return &c.SkipInterstitial
+}
+
+func (c *mqlCloudflareOneApp) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlCloudflareOneApp) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlCloudflareOneApp) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlCloudflareCordHeaders for the cloudflare.cordHeaders resource
+type mqlCloudflareCordHeaders struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlCloudflareCordHeadersInternal it will be used here
+	AllowAllHeaders plugin.TValue[bool]
+	AllowAllMethods plugin.TValue[bool]
+	AllowAllOrigins plugin.TValue[bool]
+	AllowCredentials plugin.TValue[bool]
+	AllowedHeaders plugin.TValue[[]interface{}]
+	AllowedMethods plugin.TValue[[]interface{}]
+	AllowedOrigins plugin.TValue[[]interface{}]
+	MaxAge plugin.TValue[int64]
+}
+
+// createCloudflareCordHeaders creates a new instance of this resource
+func createCloudflareCordHeaders(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloudflareCordHeaders{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloudflare.cordHeaders", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloudflareCordHeaders) MqlName() string {
+	return "cloudflare.cordHeaders"
+}
+
+func (c *mqlCloudflareCordHeaders) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloudflareCordHeaders) GetAllowAllHeaders() *plugin.TValue[bool] {
+	return &c.AllowAllHeaders
+}
+
+func (c *mqlCloudflareCordHeaders) GetAllowAllMethods() *plugin.TValue[bool] {
+	return &c.AllowAllMethods
+}
+
+func (c *mqlCloudflareCordHeaders) GetAllowAllOrigins() *plugin.TValue[bool] {
+	return &c.AllowAllOrigins
+}
+
+func (c *mqlCloudflareCordHeaders) GetAllowCredentials() *plugin.TValue[bool] {
+	return &c.AllowCredentials
+}
+
+func (c *mqlCloudflareCordHeaders) GetAllowedHeaders() *plugin.TValue[[]interface{}] {
+	return &c.AllowedHeaders
+}
+
+func (c *mqlCloudflareCordHeaders) GetAllowedMethods() *plugin.TValue[[]interface{}] {
+	return &c.AllowedMethods
+}
+
+func (c *mqlCloudflareCordHeaders) GetAllowedOrigins() *plugin.TValue[[]interface{}] {
+	return &c.AllowedOrigins
+}
+
+func (c *mqlCloudflareCordHeaders) GetMaxAge() *plugin.TValue[int64] {
+	return &c.MaxAge
 }

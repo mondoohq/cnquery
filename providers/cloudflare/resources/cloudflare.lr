@@ -47,6 +47,8 @@ private cloudflare.zone @defaults("name account.name") {
 	r2() cloudflare.r2
 
 	workers() cloudflare.workers
+
+	one() cloudflare.one
 }
 
 private cloudflare.zone.account @defaults("name") {
@@ -233,4 +235,53 @@ private cloudflare.workers.page {
 	modifiedOn time
 }
 
+private cloudflare.one {
+	apps() []cloudflare.one.app
+}
+
+private cloudflare.one.app {
+	id string // UUID
+	aud string // Audience tag
+
+	name string // The name of the application
+	domain string // The domain of the application
+
+	allowedIdps []string // Allowed Identity Providers
+	appLauncherVisible bool // Displays the application in the App Launcher
+	autoRedirectToIdentity bool // When set to true, users skip the identity provider selection step during login.
+
+	cordHeaders cloudflare.cordHeaders // CORS Headers
+	optionsPreflightBypass bool // Allows options preflight requests to bypass Access authentication and go directly to the origin. Cannot turn on if corsHeaders is set.
+
+	customDenyMessage string // The custom error message shown to a user when they are denied access to the application.
+	customDenyUrl string // The custom URL to redirect a user to when they are denied access to the application.
+	serviceAuth401Redirect bool // Returns a 401 status code when the request is blocked by a Service Auth policy.
+
+	enableBindingCookie bool // Enables the binding cookie, which increases security against compromised authorization tokens and CSRF attacks.
+	httpOnlyCookieAttribute bool // Enables the HttpOnly cookie attribute, which increases security against XSS attacks.
+	sameSiteCookieAttribute string // Sets the SameSite cookie setting, which provides increased security against CSRF attacks.
+
+	logoUrl string // The URL of the application's logo
+
+	sessionDuration string // The amount of time that tokens issued for this application will be valid. Must be in the format 300ms or 2h45m. Valid time units are: ns, us (or µs), ms, s, m, h.
+
+	skipInterstitial bool // Enables automatic authentication through cloudflared.
+
+	type string // The type of the application.
+
+	createdAt time
+	updatedAt time
+}
+
+private cloudflare.cordHeaders {
+	allowAllHeaders bool
+	allowAllMethods bool
+	allowAllOrigins bool
+	allowCredentials bool
+
+	allowedHeaders []string
+	allowedMethods []string
+	allowedOrigins []string
+
+	maxAge int // The maximum number of seconds the results of a preflight request can be cached.
 }
