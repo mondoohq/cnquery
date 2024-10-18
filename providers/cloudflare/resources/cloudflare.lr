@@ -236,10 +236,11 @@ private cloudflare.workers.page {
 }
 
 private cloudflare.one {
-	apps() []cloudflare.one.app
+	apps() []cloudflare.one.app // Zero Trust Applications
+	idps() []cloudflare.one.idp // Identity Providers
 }
 
-private cloudflare.one.app {
+private cloudflare.one.app @defaults("name id") {
 	id string // UUID
 	aud string // Audience tag
 
@@ -284,4 +285,10 @@ private cloudflare.cordHeaders {
 	allowedOrigins []string
 
 	maxAge int // The maximum number of seconds the results of a preflight request can be cached.
+}
+
+private cloudflare.one.idp @defaults("name") {
+	id string // UUID
+	name string // The name of the identity provider, shown to users on the login page.
+	type string // The type of the identity provider.
 }

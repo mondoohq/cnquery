@@ -28,6 +28,13 @@ func (c *mqlCloudflareZone) one() (*mqlCloudflareOne, error) {
 	return one, nil
 }
 
+func (c *mqlCloudflareOneApp) id() (string, error) {
+	if c.Id.Error != nil {
+		return "", c.Id.Error
+	}
+	return c.Id.Data, nil
+}
+
 func (c *mqlCloudflareOne) apps() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
@@ -106,6 +113,54 @@ func (c *mqlCloudflareOne) apps() ([]any, error) {
 
 			result = append(result, res)
 
+		}
+
+		if !cursor.HasMorePages() {
+			break
+		}
+	}
+
+	return result, nil
+}
+
+func (c *mqlCloudflareOneIdp) id() (string, error) {
+	if c.Id.Error != nil {
+		return "", c.Id.Error
+	}
+	return c.Id.Data, nil
+}
+
+func (c *mqlCloudflareOne) idps() ([]any, error) {
+	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
+
+	cursor := &cloudflare.ResultInfo{}
+	var result []any
+	for {
+		records, info, err := conn.Cf.ListAccessIdentityProviders(context.TODO(), &cloudflare.ResourceContainer{
+			Identifier: c.ZoneID,
+			Level:      cloudflare.ZoneRouteLevel,
+		}, cloudflare.ListAccessIdentityProvidersParams{
+			ResultInfo: *cursor,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		cursor = info
+
+		for i := range records {
+			rec := records[i]
+
+			res, err := NewResource(c.MqlRuntime, "cloudflare.one.idp", map[string]*llx.RawData{
+				"id":   llx.StringData(rec.ID),
+				"name": llx.StringData(rec.Name),
+				"type": llx.StringData(string(rec.Type)),
+			})
+			if err != nil {
+				return nil, err
+			}
+
+			result = append(result, res)
 		}
 
 		if !cursor.HasMorePages() {
