@@ -9,9 +9,9 @@ resources:
     min_mondoo_version: 9.0.0
   cloudflare.account:
     fields:
-      created_on: {}
+      createdOn: {}
       id: {}
-      live_inputs: {}
+      liveInputs: {}
       name: {}
       settings: {}
       videos: {}
@@ -19,7 +19,7 @@ resources:
     min_mondoo_version: 9.0.0
   cloudflare.account.settings:
     fields:
-      enforce_two_factor: {}
+      enforceTwoFactor: {}
     is_private: true
     min_mondoo_version: 9.0.0
   cloudflare.dns:
@@ -31,9 +31,9 @@ resources:
     fields:
       comment: {}
       content: {}
-      created_on: {}
+      createdOn: {}
       id: {}
-      modified_on: {}
+      modifiedOn: {}
       name: {}
       proxiable: {}
       proxied: {}
@@ -49,7 +49,7 @@ resources:
     min_mondoo_version: 9.0.0
   cloudflare.r2.bucket:
     fields:
-      created_on: {}
+      createdOn: {}
       location: {}
       name: {}
     is_private: true
@@ -58,9 +58,9 @@ resources:
     fields: {}
     is_private: true
     min_mondoo_version: 9.0.0
-  cloudflare.streams.live_input:
+  cloudflare.streams.liveInput:
     fields:
-      delete_recording_after_days: {}
+      deleteRecordingAfterDays: {}
       id: {}
       name: {}
       uid: {}
@@ -74,15 +74,15 @@ resources:
       height: {}
       hls: {}
       id: {}
-      live_input: {}
+      liveInput: {}
       name: {}
       preview: {}
       ready: {}
-      require_signed_urls: {}
-      scheduled_deletion: {}
+      requireSignedUrls: {}
+      scheduledDeletion: {}
       size: {}
       thumbnail: {}
-      thumbnail_timestamp_pct: {}
+      thumbnailTimestampPct: {}
       uid: {}
       uploaded: {}
       width: {}
@@ -97,42 +97,42 @@ resources:
   cloudflare.workers.page:
     fields:
       aliases: {}
-      created_on: {}
+      createdOn: {}
       environment: {}
       id: {}
-      modified_on: {}
-      production_branch: {}
-      project_id: {}
-      project_name: {}
-      short_id: {}
+      modifiedOn: {}
+      productionBranch: {}
+      projectId: {}
+      projectName: {}
+      shortId: {}
       url: {}
     is_private: true
     min_mondoo_version: 9.0.0
   cloudflare.workers.worker:
     fields:
-      created_on: {}
-      deployment_id: {}
+      createdOn: {}
+      deploymentId: {}
       etag: {}
       id: {}
-      last_deployed_from: {}
-      log_push: {}
-      modified_on: {}
-      pipeline_hash: {}
-      placement_mode: {}
+      lastDeployedFrom: {}
+      logPush: {}
+      modifiedOn: {}
+      pipelineHash: {}
+      placementMode: {}
       size: {}
     is_private: true
     min_mondoo_version: 9.0.0
   cloudflare.zone:
     fields:
       account: {}
-      created_on: {}
+      createdOn: {}
       dns: {}
       id: {}
-      live_inputs: {}
-      modified_on: {}
+      liveInputs: {}
+      modifiedOn: {}
       name: {}
-      name_servers: {}
-      original_name_servers: {}
+      nameServers: {}
+      originalNameServers: {}
       paused: {}
       r2: {}
       status: {}

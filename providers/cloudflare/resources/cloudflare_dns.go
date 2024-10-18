@@ -69,8 +69,8 @@ func (c *mqlCloudflareDns) records() ([]any, error) {
 				"content": llx.StringData(rec.Content),
 				"ttl":     llx.IntData(rec.TTL),
 
-				"created_on":  llx.TimeData(rec.CreatedOn),
-				"modified_on": llx.TimeData(rec.ModifiedOn),
+				"createdOn":  llx.TimeData(rec.CreatedOn),
+				"modifiedOn": llx.TimeData(rec.ModifiedOn),
 			})
 			if err != nil {
 				return nil, err

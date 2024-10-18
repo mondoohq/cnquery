@@ -46,9 +46,9 @@ func (c *mqlCloudflareR2) buckets() ([]any, error) {
 	for i := range buckets {
 		bucket := buckets[i]
 		res, err := NewResource(c.MqlRuntime, "cloudflare.r2.bucket", map[string]*llx.RawData{
-			"name":       llx.StringData(bucket.Name),
-			"location":   llx.StringData(bucket.Location),
-			"created_on": llx.TimeData(*bucket.CreationDate),
+			"name":      llx.StringData(bucket.Name),
+			"location":  llx.StringData(bucket.Location),
+			"createdOn": llx.TimeData(*bucket.CreationDate),
 		})
 		if err != nil {
 			return nil, err
