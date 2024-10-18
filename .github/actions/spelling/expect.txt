@@ -59,6 +59,7 @@ mgroup
 Mpim
 natgateway
 networkinterface
+nmap
 nodegroup
 nodepool
 notebookinstancedetails
@@ -78,6 +79,7 @@ regexpatternsetreferencestatement
 resourcegroup
 rulegroup
 rulegroupreferencestatement
+rtsp
 Sas
 scim
 serviceprincipals
