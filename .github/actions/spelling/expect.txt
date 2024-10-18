@@ -31,7 +31,6 @@ exo
 gcfs
 gcs
 geomatchstatement
-gibibytes
 gistfile
 gpu
 gvnic
@@ -90,7 +89,6 @@ spo
 sqli
 sqlimatchstatement
 sqlserver
-SSPR
 targetgroup
 tde
 testutils

@@ -23,31 +23,31 @@
 #
 
 # s.b. Allow list
-\s[Ww]hitelist\b
-\s[Ww]hitelisting\b
-\s[Ww]hitelisted\b
-\s[Ww]hite list\b
-\s[Ww]hite listing\b
-\s[Ww]hite listed\b
+\b[Ww]hitelist\b
+\b[Ww]hitelisting\b
+\b[Ww]hitelisted\b
+\b[Ww]hite list\b
+\b[Ww]hite listing\b
+\b[Ww]hite listed\b
 
 # s.b. Block list
-\s[Bb]lacklist\b
-\s[Bb]lacklisting\b
-\s[Bb]lacklisted\b
-\s[Bb]lack list\b
-\s[Bb]lack listing\b
-\s[Bb]lack listed\b
+\b[Bb]lacklist\b
+\b[Bb]lacklisting\b
+\b[Bb]lacklisted\b
+\b[Bb]lack list\b
+\b[Bb]lack listing\b
+\b[Bb]lack listed\b
 
 #
 # Our Terms
 #
 
 # s.b. Mondoo Platform
-\sthe Mondoo Platform\b
-\sMondoo platform\b
+\bthe Mondoo Platform\b
+\bMondoo platform\b
 
 # s.b. Compliance Hub
-\s[Cc]ompliance hub\b
+\b[Cc]ompliance hub\b
 
 #
 # Compliance Terms
@@ -78,6 +78,7 @@
 
 # s.b. Docker Hub
 \bDocker[Hh]ub\b
+\bdocker hub\b
 
 # s.b. REST API
 \b[Rr]est API\b
@@ -211,12 +212,23 @@
 
 # s.b. SentinelOne
 \bSentinal[Oo]ne\b
-\bSentinelone\b
-\bSentinal One\b
+\bSentin[ae]lone\b
+\bSentin[ae]l One\b
 
 # s.b. CrowdStrike
 \bCrowd Strike\b
 \b[Cc]rowdstrike\b
+
+# s.b. Zendesk
+\bZenDesk\b
+
+# s.b. ServiceNow
+\bService Now\b
+\bServicenow\b
+
+# s.b. name server
+\bnameserver\b
+\bnameservers\b
 
 #
 # Kubernetes Terms
