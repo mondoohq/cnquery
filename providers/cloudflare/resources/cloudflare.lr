@@ -1,7 +1,7 @@
 option provider = "go.mondoo.com/cnquery/v11/providers/cloudflare"
 option go_package = "go.mondoo.com/cnquery/v11/providers/cloudflare/resources"
 
-// Cloudflare Provider
+// Cloudflare provider
 cloudflare {
 	// List all zones
 	zones() []cloudflare.zone 
@@ -10,15 +10,15 @@ cloudflare {
 	accounts() []cloudflare.account
 }
 
-// Cloudflare DNS Zone
+// Cloudflare DNS zone
 private cloudflare.zone @defaults("name account.name") {
-	// The zone identifier
+	// Zone identifier
 	id string 
-	// The zone name
+	// Zone name
 	name string 
-	// The name servers for this zone
+	// Nameservers for this zone
 	nameServers []string 
-	// Original NameServers
+	// Original nameservers
 	originalNameServers []string 
 
 	// The current status of the zone, allowed values: initializing pending active moved
@@ -31,13 +31,13 @@ private cloudflare.zone @defaults("name account.name") {
 	// The time the zone was last modified
 	modifiedOn time 
 
-	// Zone Owner Account
+	// Zone owner account
   account cloudflare.zone.account 
 
 	// DNS records associated with the zone
 	dns() cloudflare.dns
 
-	// Live Inputs 
+	// Live inputs 
 	liveInputs() []cloudflare.streams.liveInput
 
 	// Videos
@@ -52,33 +52,39 @@ private cloudflare.zone @defaults("name account.name") {
 }
 
 private cloudflare.zone.account @defaults("name") {
-	// The account identifier
+	// Account identifier
 	id string 
-	// The account name
+	// Account name
 	name string 
-	// The account type
+	// Account type
 	type string 
-	// email string // The account email
+	// Account email
+	email string
 }
 
 private cloudflare.dns {
 	records() []cloudflare.dns.record 
 }
 
-// DNS Record
+// DNS record
 private cloudflare.dns.record @defaults("type content name") {
-	// Cloudflare Internal ID
+	// Cloudflare internal ID
 	id string 
 
+        // Record name
 	name string
+	// Comment
 	comment string
+	// Tags
 	tags []string
+	// Whether the record is proxied (false indicated DNS only)
 	proxied bool
+	// Whether the record can be proxied
 	proxiable bool
 
-	// A, AAAA, CNAME, etc
+	// Type of record (A, AAAA, CNAME, etc.)
 	type string 
-	// Hostname, IP Address, etc
+	// Content of the record (hostname, IP Address, etc.)
 	content string 
 	ttl int 
 
@@ -86,9 +92,9 @@ private cloudflare.dns.record @defaults("type content name") {
 	modifiedOn time
 }
 
-// Cloudflare Account
+// Cloudflare account
 private cloudflare.account @defaults("name") {
-	// Cloudflare Account identifier
+	// Cloudflare account identifier
 	id string
 
 	// Account name
@@ -97,27 +103,27 @@ private cloudflare.account @defaults("name") {
 	// Settings
 	settings cloudflare.account.settings
 
-	// Account Created On
+	// Time the account was created
 	createdOn time
 
-	// Live Inputs 
+	// Live inputs 
 	liveInputs() []cloudflare.streams.liveInput
 
 	// Videos
 	videos() []cloudflare.streams.video
 }
 
-// Account Settings
+// Account settings
 private cloudflare.account.settings {
-	// Indicates whether membership in this account requires that Two-Factor Authentication is enabled
+	// Whether membership in this account requires that two-factor authentication is enabled
 	enforceTwoFactor bool
 }
 
 private cloudflare.streams {}
 
-// Cloudflare Live Input (Stream)
+// Cloudflare live input (stream)
 private cloudflare.streams.liveInput @defaults("uid name") {
-	// cnquery resource id
+	// cnquery resource ID
 	id string
 
 	// Unique identifier
@@ -126,11 +132,11 @@ private cloudflare.streams.liveInput @defaults("uid name") {
 	// Input name
 	name string
 
-	// Delete Recording After Days
+	// Number of days after which to delete the recording
 	deleteRecordingAfterDays int
 }
 
-// Cloudflare Videos and Recordings
+// Cloudflare videos and recordings
 private cloudflare.streams.video @defaults("name id") {
 	// cnquery resource id
 	id string
