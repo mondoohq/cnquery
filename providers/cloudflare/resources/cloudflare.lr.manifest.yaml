@@ -19,7 +19,7 @@ resources:
     min_mondoo_version: 9.0.0
   cloudflare.account.settings:
     fields:
-      enforce_twofactor: {}
+      enforce_two_factor: {}
     is_private: true
     min_mondoo_version: 9.0.0
   cloudflare.dns:

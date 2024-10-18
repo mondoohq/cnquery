@@ -10,6 +10,7 @@ bytematchstatement
 cavium
 cdn
 certificatechains
+cloudflare
 Clusterwide
 cmek
 cnames
@@ -69,6 +70,7 @@ orstatement
 PAYG
 Pids
 postgre
+proxiable
 pushconfig
 querypack
 ratebasedstatement
