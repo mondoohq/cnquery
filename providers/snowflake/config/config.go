@@ -15,9 +15,21 @@ var Config = plugin.Provider{
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{
 		{
-			Name:      "snowflake",
-			Use:       "snowflake",
-			Short:     "a Snowflake account",
+			Name:  "snowflake",
+			Use:   "snowflake",
+			Short: "a Snowflake account",
+			Long: `Use the snowflake provider to query a Snowflake account.
+
+To access a Snowflake account, you must first authenticate with Snowflake. To do so, create an RSA key pair and assign the public key to your user account using Snowsight. To learn how, read https://docs.snowflake.com/en/user-guide/key-pair-auth. Then, in your shell, run:
+
+shell snowflake --account <account id> --region <region> --user <your id>  --role <the role you use> --private-key <path to your private RSA key>
+
+Once you successfully authenticate, you can scan or query the Snowflake account.
+
+Examples:
+  cnquery shell snowflake --account <account id> --region <region> --user <your id>  --role <the role you use> --private-key <path to your private RSA key>
+  cnspec scan snowflake --account <account id> --region <region> --user <your id>  --role <the role you use> --private-key <path to your private RSA key>
+`,
 			Discovery: []string{},
 			Flags: []plugin.Flag{
 				{
@@ -30,7 +42,7 @@ var Config = plugin.Provider{
 					Long:        "ask-pass",
 					Type:        plugin.FlagType_Bool,
 					Default:     "false",
-					Desc:        "Prompt for connection password",
+					Desc:        "Prompt for the connection password",
 					ConfigEntry: "-",
 				},
 				{
@@ -53,7 +65,7 @@ var Config = plugin.Provider{
 					Long:    "account",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "Snowflake account",
+					Desc:    "Snowflake account ID",
 				},
 				{
 					Long:    "region",
@@ -65,7 +77,7 @@ var Config = plugin.Provider{
 					Long:    "role",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "Snowflake role",
+					Desc:    "The role you use to access Snowflake",
 				},
 			},
 		},
