@@ -90,6 +90,10 @@ func init() {
 			// to override args, implement: initCloudflareCordHeaders(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createCloudflareCordHeaders,
 		},
+		"cloudflare.one.idp": {
+			// to override args, implement: initCloudflareOneIdp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCloudflareOneIdp,
+		},
 	}
 }
 
@@ -425,6 +429,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cloudflare.one.apps": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareOne).GetApps()).ToDataRes(types.Array(types.Resource("cloudflare.one.app")))
 	},
+	"cloudflare.one.idps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOne).GetIdps()).ToDataRes(types.Array(types.Resource("cloudflare.one.idp")))
+	},
 	"cloudflare.one.app.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareOneApp).GetId()).ToDataRes(types.String)
 	},
@@ -511,6 +518,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"cloudflare.cordHeaders.maxAge": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareCordHeaders).GetMaxAge()).ToDataRes(types.Int)
+	},
+	"cloudflare.one.idp.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneIdp).GetId()).ToDataRes(types.String)
+	},
+	"cloudflare.one.idp.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneIdp).GetName()).ToDataRes(types.String)
+	},
+	"cloudflare.one.idp.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneIdp).GetType()).ToDataRes(types.String)
 	},
 }
 
@@ -944,6 +960,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlCloudflareOne).Apps, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"cloudflare.one.idps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOne).Idps, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"cloudflare.one.app.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlCloudflareOneApp).__id, ok = v.Value.(string)
 			return
@@ -1066,6 +1086,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"cloudflare.cordHeaders.maxAge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareCordHeaders).MaxAge, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.idp.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlCloudflareOneIdp).__id, ok = v.Value.(string)
+			return
+		},
+	"cloudflare.one.idp.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneIdp).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.idp.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneIdp).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.idp.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneIdp).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -2331,6 +2367,7 @@ type mqlCloudflareOne struct {
 	__id string
 	mqlCloudflareOneInternal
 	Apps plugin.TValue[[]interface{}]
+	Idps plugin.TValue[[]interface{}]
 }
 
 // createCloudflareOne creates a new instance of this resource
@@ -2381,6 +2418,22 @@ func (c *mqlCloudflareOne) GetApps() *plugin.TValue[[]interface{}] {
 	})
 }
 
+func (c *mqlCloudflareOne) GetIdps() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Idps, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.one", c.__id, "idps")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.idps()
+	})
+}
+
 // mqlCloudflareOneApp for the cloudflare.one.app resource
 type mqlCloudflareOneApp struct {
 	MqlRuntime *plugin.Runtime
@@ -2420,7 +2473,12 @@ func createCloudflareOneApp(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("cloudflare.one.app", res.__id)
@@ -2602,4 +2660,63 @@ func (c *mqlCloudflareCordHeaders) GetAllowedOrigins() *plugin.TValue[[]interfac
 
 func (c *mqlCloudflareCordHeaders) GetMaxAge() *plugin.TValue[int64] {
 	return &c.MaxAge
+}
+
+// mqlCloudflareOneIdp for the cloudflare.one.idp resource
+type mqlCloudflareOneIdp struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlCloudflareOneIdpInternal it will be used here
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	Type plugin.TValue[string]
+}
+
+// createCloudflareOneIdp creates a new instance of this resource
+func createCloudflareOneIdp(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloudflareOneIdp{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloudflare.one.idp", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloudflareOneIdp) MqlName() string {
+	return "cloudflare.one.idp"
+}
+
+func (c *mqlCloudflareOneIdp) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloudflareOneIdp) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlCloudflareOneIdp) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlCloudflareOneIdp) GetType() *plugin.TValue[string] {
+	return &c.Type
 }

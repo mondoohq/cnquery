@@ -57,6 +57,7 @@ resources:
   cloudflare.one:
     fields:
       apps: {}
+      idps: {}
     is_private: true
     min_mondoo_version: 9.0.0
   cloudflare.one.app:
@@ -83,6 +84,13 @@ resources:
       skipInterstitial: {}
       type: {}
       updatedAt: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  cloudflare.one.idp:
+    fields:
+      id: {}
+      name: {}
+      type: {}
     is_private: true
     min_mondoo_version: 9.0.0
   cloudflare.r2:
