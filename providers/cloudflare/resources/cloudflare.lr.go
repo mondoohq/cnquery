@@ -225,6 +225,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cloudflare.zone.account.type": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareZoneAccount).GetType()).ToDataRes(types.String)
 	},
+	"cloudflare.zone.account.email": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneAccount).GetEmail()).ToDataRes(types.String)
+	},
 	"cloudflare.dns.records": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareDns).GetRecords()).ToDataRes(types.Array(types.Resource("cloudflare.dns.record")))
 	},
@@ -634,6 +637,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"cloudflare.zone.account.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareZoneAccount).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.account.email": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneAccount).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"cloudflare.dns.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1410,6 +1417,7 @@ type mqlCloudflareZoneAccount struct {
 	Id plugin.TValue[string]
 	Name plugin.TValue[string]
 	Type plugin.TValue[string]
+	Email plugin.TValue[string]
 }
 
 // createCloudflareZoneAccount creates a new instance of this resource
@@ -1459,6 +1467,10 @@ func (c *mqlCloudflareZoneAccount) GetName() *plugin.TValue[string] {
 
 func (c *mqlCloudflareZoneAccount) GetType() *plugin.TValue[string] {
 	return &c.Type
+}
+
+func (c *mqlCloudflareZoneAccount) GetEmail() *plugin.TValue[string] {
+	return &c.Email
 }
 
 // mqlCloudflareDns for the cloudflare.dns resource

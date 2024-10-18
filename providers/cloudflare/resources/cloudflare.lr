@@ -21,14 +21,16 @@ private cloudflare.zone @defaults("name account.name") {
 	// Original nameservers
 	originalNameServers []string 
 
-	// The current status of the zone, allowed values: initializing pending active moved
-	status string 
-	paused bool
-	type string
+	// The current status of the zone (initializing, pending, active, or moved)  
+  status string  
+  // Whether the zone is paused  
+  paused bool  
+  // DNS zone type (full or partial)  
+  type string  
 
-	// The time the zone was created
+	// Time the zone was created
 	createdOn time 
-	// The time the zone was last modified
+	// Time the zone was last modified
 	modifiedOn time 
 
 	// Zone owner account
@@ -86,9 +88,12 @@ private cloudflare.dns.record @defaults("type content name") {
 	type string 
 	// Content of the record (hostname, IP Address, etc.)
 	content string 
+	// Time to live (in seconds)
 	ttl int 
 
+	// Time the record was created
 	createdOn time
+	// Time the record was last modified
 	modifiedOn time
 }
 
