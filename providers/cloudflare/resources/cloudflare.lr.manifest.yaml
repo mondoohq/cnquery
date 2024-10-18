@@ -195,6 +195,7 @@ resources:
     min_mondoo_version: 9.0.0
   cloudflare.zone.account:
     fields:
+      email: {}
       id: {}
       name: {}
       type: {}
