@@ -108,7 +108,7 @@ private cloudflare.account @defaults("name") {
 // Account Settings
 private cloudflare.account.settings {
 	// Indicates whether membership in this account requires that Two-Factor Authentication is enabled
-	enforce_twofactor bool
+	enforce_two_factor bool
 }
 
 private cloudflare.streams {}

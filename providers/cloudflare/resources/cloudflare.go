@@ -85,7 +85,7 @@ func (c *mqlCloudflare) accounts() ([]any, error) {
 			acc := _accounts[i]
 
 			settings, err := NewResource(c.MqlRuntime, "cloudflare.account.settings", map[string]*llx.RawData{
-				"enforce_twofactor": llx.BoolData(acc.Settings.EnforceTwoFactor),
+				"enforce_two_factor": llx.BoolData(acc.Settings.EnforceTwoFactor),
 			})
 			if err != nil {
 				return nil, err

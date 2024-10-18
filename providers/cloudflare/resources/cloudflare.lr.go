@@ -260,8 +260,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cloudflare.account.videos": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareAccount).GetVideos()).ToDataRes(types.Array(types.Resource("cloudflare.streams.video")))
 	},
-	"cloudflare.account.settings.enforce_twofactor": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlCloudflareAccountSettings).GetEnforce_twofactor()).ToDataRes(types.Bool)
+	"cloudflare.account.settings.enforce_two_factor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccountSettings).GetEnforce_two_factor()).ToDataRes(types.Bool)
 	},
 	"cloudflare.streams.live_input.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareStreamsLive_input).GetId()).ToDataRes(types.String)
@@ -599,8 +599,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlCloudflareAccountSettings).__id, ok = v.Value.(string)
 			return
 		},
-	"cloudflare.account.settings.enforce_twofactor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudflareAccountSettings).Enforce_twofactor, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"cloudflare.account.settings.enforce_two_factor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccountSettings).Enforce_two_factor, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"cloudflare.streams.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1425,7 +1425,7 @@ type mqlCloudflareAccountSettings struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlCloudflareAccountSettingsInternal it will be used here
-	Enforce_twofactor plugin.TValue[bool]
+	Enforce_two_factor plugin.TValue[bool]
 }
 
 // createCloudflareAccountSettings creates a new instance of this resource
@@ -1460,8 +1460,8 @@ func (c *mqlCloudflareAccountSettings) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlCloudflareAccountSettings) GetEnforce_twofactor() *plugin.TValue[bool] {
-	return &c.Enforce_twofactor
+func (c *mqlCloudflareAccountSettings) GetEnforce_two_factor() *plugin.TValue[bool] {
+	return &c.Enforce_two_factor
 }
 
 // mqlCloudflareStreams for the cloudflare.streams resource
