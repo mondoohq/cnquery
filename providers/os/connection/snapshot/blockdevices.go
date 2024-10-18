@@ -126,7 +126,9 @@ func (blockEntries BlockDevices) GetMountablePartitionByDevice(device string) (*
 	return &PartitionInfo{Name: devFsName, FsType: partitions[0].FsType}, nil
 }
 
-func lms(lmsCache map[string]int, s1, s2 string) int {
+// LongestMatchingSuffix returns the length of the longest common suffix of two strings
+// and caches the result (lengths of the matching suffix) for future calls with the same string
+func LongestMatchingSuffix(lmsCache map[string]int, s1, s2 string) int {
 	if v, ok := lmsCache[s2]; ok {
 		return v
 	}
@@ -166,7 +168,7 @@ func (blockEntries BlockDevices) FindDevice(requested string) (BlockDevice, erro
 				return blockEntries.BlockDevices[i], nil
 			}
 
-			if lms(lmsCache, requested, devices[i].Name) < lms(lmsCache, requested, devices[i+1].Name) {
+			if LongestMatchingSuffix(lmsCache, requested, devices[i].Name) < LongestMatchingSuffix(lmsCache, requested, devices[i+1].Name) {
 				devices[i], devices[i+1] = devices[i+1], devices[i]
 				sorted = false
 			}
@@ -174,7 +176,7 @@ func (blockEntries BlockDevices) FindDevice(requested string) (BlockDevice, erro
 	}
 
 	// If the first device has matching suffix, return it
-	if lms(lmsCache, requested, devices[0].Name) > 0 {
+	if LongestMatchingSuffix(lmsCache, requested, devices[0].Name) > 0 {
 		return devices[0], nil
 	}
 
