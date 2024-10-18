@@ -4300,6 +4300,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.instance.instanceStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetInstanceStatus()).ToDataRes(types.Dict)
 	},
+	"aws.ec2.instance.iamInstanceProfiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetIamInstanceProfile()).ToDataRes(types.Dict)
+	},
 	"aws.ec2.instance.stateReason": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetStateReason()).ToDataRes(types.Dict)
 	},
@@ -26233,6 +26236,7 @@ type mqlAwsEc2Instance struct {
 	PlatformDetails plugin.TValue[string]
 	PublicDnsName plugin.TValue[string]
 	InstanceStatus plugin.TValue[interface{}]
+	IamInstanceProfile plugin.TValue[interface{}]
 	StateReason plugin.TValue[interface{}]
 	StateTransitionReason plugin.TValue[string]
 	EbsOptimized plugin.TValue[bool]
@@ -26383,6 +26387,12 @@ func (c *mqlAwsEc2Instance) GetPublicDnsName() *plugin.TValue[string] {
 func (c *mqlAwsEc2Instance) GetInstanceStatus() *plugin.TValue[interface{}] {
 	return plugin.GetOrCompute[interface{}](&c.InstanceStatus, func() (interface{}, error) {
 		return c.instanceStatus()
+	})
+}
+
+func (c *mqlAwsEc2Instance) GetIamInstanceProfile() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.IamInstanceProfile, func() (interface{}, error) {
+		return c.IamInstanceProfile()
 	})
 }
 

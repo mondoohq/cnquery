@@ -3014,6 +3014,8 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   instanceType string
   // Tags on the instance
   tags map[string]string
+  // Instance profile of the instance.
+  IamInstanceProfile() dict
   // Image that was used for the instance
   image() aws.ec2.image
   // Launch time of the instance
