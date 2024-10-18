@@ -262,7 +262,7 @@ private cloudflare.one.app @defaults("name id") {
 	appLauncherVisible bool // Displays the application in the App Launcher
 	autoRedirectToIdentity bool // When set to true, users skip the identity provider selection step during login.
 
-	cordHeaders cloudflare.cordHeaders // CORS Headers
+	corsHeaders cloudflare.corsHeaders // CORS Headers
 	optionsPreflightBypass bool // Allows options preflight requests to bypass Access authentication and go directly to the origin. Cannot turn on if corsHeaders is set.
 
 	customDenyMessage string // The custom error message shown to a user when they are denied access to the application.
@@ -285,7 +285,7 @@ private cloudflare.one.app @defaults("name id") {
 	updatedAt time
 }
 
-private cloudflare.cordHeaders {
+private cloudflare.corsHeaders {
 	allowAllHeaders bool
 	allowAllMethods bool
 	allowAllOrigins bool

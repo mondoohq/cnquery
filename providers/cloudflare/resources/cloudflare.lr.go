@@ -86,9 +86,9 @@ func init() {
 			// to override args, implement: initCloudflareOneApp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createCloudflareOneApp,
 		},
-		"cloudflare.cordHeaders": {
-			// to override args, implement: initCloudflareCordHeaders(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createCloudflareCordHeaders,
+		"cloudflare.corsHeaders": {
+			// to override args, implement: initCloudflareCorsHeaders(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCloudflareCorsHeaders,
 		},
 		"cloudflare.one.idp": {
 			// to override args, implement: initCloudflareOneIdp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -456,8 +456,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cloudflare.one.app.autoRedirectToIdentity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareOneApp).GetAutoRedirectToIdentity()).ToDataRes(types.Bool)
 	},
-	"cloudflare.one.app.cordHeaders": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlCloudflareOneApp).GetCordHeaders()).ToDataRes(types.Resource("cloudflare.cordHeaders"))
+	"cloudflare.one.app.corsHeaders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneApp).GetCorsHeaders()).ToDataRes(types.Resource("cloudflare.corsHeaders"))
 	},
 	"cloudflare.one.app.optionsPreflightBypass": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareOneApp).GetOptionsPreflightBypass()).ToDataRes(types.Bool)
@@ -498,29 +498,29 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cloudflare.one.app.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareOneApp).GetUpdatedAt()).ToDataRes(types.Time)
 	},
-	"cloudflare.cordHeaders.allowAllHeaders": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlCloudflareCordHeaders).GetAllowAllHeaders()).ToDataRes(types.Bool)
+	"cloudflare.corsHeaders.allowAllHeaders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareCorsHeaders).GetAllowAllHeaders()).ToDataRes(types.Bool)
 	},
-	"cloudflare.cordHeaders.allowAllMethods": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlCloudflareCordHeaders).GetAllowAllMethods()).ToDataRes(types.Bool)
+	"cloudflare.corsHeaders.allowAllMethods": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareCorsHeaders).GetAllowAllMethods()).ToDataRes(types.Bool)
 	},
-	"cloudflare.cordHeaders.allowAllOrigins": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlCloudflareCordHeaders).GetAllowAllOrigins()).ToDataRes(types.Bool)
+	"cloudflare.corsHeaders.allowAllOrigins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareCorsHeaders).GetAllowAllOrigins()).ToDataRes(types.Bool)
 	},
-	"cloudflare.cordHeaders.allowCredentials": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlCloudflareCordHeaders).GetAllowCredentials()).ToDataRes(types.Bool)
+	"cloudflare.corsHeaders.allowCredentials": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareCorsHeaders).GetAllowCredentials()).ToDataRes(types.Bool)
 	},
-	"cloudflare.cordHeaders.allowedHeaders": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlCloudflareCordHeaders).GetAllowedHeaders()).ToDataRes(types.Array(types.String))
+	"cloudflare.corsHeaders.allowedHeaders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareCorsHeaders).GetAllowedHeaders()).ToDataRes(types.Array(types.String))
 	},
-	"cloudflare.cordHeaders.allowedMethods": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlCloudflareCordHeaders).GetAllowedMethods()).ToDataRes(types.Array(types.String))
+	"cloudflare.corsHeaders.allowedMethods": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareCorsHeaders).GetAllowedMethods()).ToDataRes(types.Array(types.String))
 	},
-	"cloudflare.cordHeaders.allowedOrigins": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlCloudflareCordHeaders).GetAllowedOrigins()).ToDataRes(types.Array(types.String))
+	"cloudflare.corsHeaders.allowedOrigins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareCorsHeaders).GetAllowedOrigins()).ToDataRes(types.Array(types.String))
 	},
-	"cloudflare.cordHeaders.maxAge": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlCloudflareCordHeaders).GetMaxAge()).ToDataRes(types.Int)
+	"cloudflare.corsHeaders.maxAge": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareCorsHeaders).GetMaxAge()).ToDataRes(types.Int)
 	},
 	"cloudflare.one.idp.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareOneIdp).GetId()).ToDataRes(types.String)
@@ -1003,8 +1003,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlCloudflareOneApp).AutoRedirectToIdentity, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"cloudflare.one.app.cordHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudflareOneApp).CordHeaders, ok = plugin.RawToTValue[*mqlCloudflareCordHeaders](v.Value, v.Error)
+	"cloudflare.one.app.corsHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneApp).CorsHeaders, ok = plugin.RawToTValue[*mqlCloudflareCorsHeaders](v.Value, v.Error)
 		return
 	},
 	"cloudflare.one.app.optionsPreflightBypass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1059,40 +1059,40 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlCloudflareOneApp).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
-	"cloudflare.cordHeaders.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlCloudflareCordHeaders).__id, ok = v.Value.(string)
+	"cloudflare.corsHeaders.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlCloudflareCorsHeaders).__id, ok = v.Value.(string)
 			return
 		},
-	"cloudflare.cordHeaders.allowAllHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudflareCordHeaders).AllowAllHeaders, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"cloudflare.corsHeaders.allowAllHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareCorsHeaders).AllowAllHeaders, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"cloudflare.cordHeaders.allowAllMethods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudflareCordHeaders).AllowAllMethods, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"cloudflare.corsHeaders.allowAllMethods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareCorsHeaders).AllowAllMethods, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"cloudflare.cordHeaders.allowAllOrigins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudflareCordHeaders).AllowAllOrigins, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"cloudflare.corsHeaders.allowAllOrigins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareCorsHeaders).AllowAllOrigins, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"cloudflare.cordHeaders.allowCredentials": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudflareCordHeaders).AllowCredentials, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"cloudflare.corsHeaders.allowCredentials": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareCorsHeaders).AllowCredentials, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"cloudflare.cordHeaders.allowedHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudflareCordHeaders).AllowedHeaders, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+	"cloudflare.corsHeaders.allowedHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareCorsHeaders).AllowedHeaders, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
-	"cloudflare.cordHeaders.allowedMethods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudflareCordHeaders).AllowedMethods, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+	"cloudflare.corsHeaders.allowedMethods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareCorsHeaders).AllowedMethods, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
-	"cloudflare.cordHeaders.allowedOrigins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudflareCordHeaders).AllowedOrigins, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+	"cloudflare.corsHeaders.allowedOrigins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareCorsHeaders).AllowedOrigins, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
-	"cloudflare.cordHeaders.maxAge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudflareCordHeaders).MaxAge, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"cloudflare.corsHeaders.maxAge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareCorsHeaders).MaxAge, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"cloudflare.one.idp.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2458,7 +2458,7 @@ type mqlCloudflareOneApp struct {
 	AllowedIdps plugin.TValue[[]interface{}]
 	AppLauncherVisible plugin.TValue[bool]
 	AutoRedirectToIdentity plugin.TValue[bool]
-	CordHeaders plugin.TValue[*mqlCloudflareCordHeaders]
+	CorsHeaders plugin.TValue[*mqlCloudflareCorsHeaders]
 	OptionsPreflightBypass plugin.TValue[bool]
 	CustomDenyMessage plugin.TValue[string]
 	CustomDenyUrl plugin.TValue[string]
@@ -2539,8 +2539,8 @@ func (c *mqlCloudflareOneApp) GetAutoRedirectToIdentity() *plugin.TValue[bool] {
 	return &c.AutoRedirectToIdentity
 }
 
-func (c *mqlCloudflareOneApp) GetCordHeaders() *plugin.TValue[*mqlCloudflareCordHeaders] {
-	return &c.CordHeaders
+func (c *mqlCloudflareOneApp) GetCorsHeaders() *plugin.TValue[*mqlCloudflareCorsHeaders] {
+	return &c.CorsHeaders
 }
 
 func (c *mqlCloudflareOneApp) GetOptionsPreflightBypass() *plugin.TValue[bool] {
@@ -2595,11 +2595,11 @@ func (c *mqlCloudflareOneApp) GetUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.UpdatedAt
 }
 
-// mqlCloudflareCordHeaders for the cloudflare.cordHeaders resource
-type mqlCloudflareCordHeaders struct {
+// mqlCloudflareCorsHeaders for the cloudflare.corsHeaders resource
+type mqlCloudflareCorsHeaders struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlCloudflareCordHeadersInternal it will be used here
+	// optional: if you define mqlCloudflareCorsHeadersInternal it will be used here
 	AllowAllHeaders plugin.TValue[bool]
 	AllowAllMethods plugin.TValue[bool]
 	AllowAllOrigins plugin.TValue[bool]
@@ -2610,9 +2610,9 @@ type mqlCloudflareCordHeaders struct {
 	MaxAge plugin.TValue[int64]
 }
 
-// createCloudflareCordHeaders creates a new instance of this resource
-func createCloudflareCordHeaders(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlCloudflareCordHeaders{
+// createCloudflareCorsHeaders creates a new instance of this resource
+func createCloudflareCorsHeaders(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloudflareCorsHeaders{
 		MqlRuntime: runtime,
 	}
 
@@ -2624,7 +2624,7 @@ func createCloudflareCordHeaders(runtime *plugin.Runtime, args map[string]*llx.R
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("cloudflare.cordHeaders", res.__id)
+		args, err = runtime.ResourceFromRecording("cloudflare.corsHeaders", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -2634,43 +2634,43 @@ func createCloudflareCordHeaders(runtime *plugin.Runtime, args map[string]*llx.R
 	return res, nil
 }
 
-func (c *mqlCloudflareCordHeaders) MqlName() string {
-	return "cloudflare.cordHeaders"
+func (c *mqlCloudflareCorsHeaders) MqlName() string {
+	return "cloudflare.corsHeaders"
 }
 
-func (c *mqlCloudflareCordHeaders) MqlID() string {
+func (c *mqlCloudflareCorsHeaders) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlCloudflareCordHeaders) GetAllowAllHeaders() *plugin.TValue[bool] {
+func (c *mqlCloudflareCorsHeaders) GetAllowAllHeaders() *plugin.TValue[bool] {
 	return &c.AllowAllHeaders
 }
 
-func (c *mqlCloudflareCordHeaders) GetAllowAllMethods() *plugin.TValue[bool] {
+func (c *mqlCloudflareCorsHeaders) GetAllowAllMethods() *plugin.TValue[bool] {
 	return &c.AllowAllMethods
 }
 
-func (c *mqlCloudflareCordHeaders) GetAllowAllOrigins() *plugin.TValue[bool] {
+func (c *mqlCloudflareCorsHeaders) GetAllowAllOrigins() *plugin.TValue[bool] {
 	return &c.AllowAllOrigins
 }
 
-func (c *mqlCloudflareCordHeaders) GetAllowCredentials() *plugin.TValue[bool] {
+func (c *mqlCloudflareCorsHeaders) GetAllowCredentials() *plugin.TValue[bool] {
 	return &c.AllowCredentials
 }
 
-func (c *mqlCloudflareCordHeaders) GetAllowedHeaders() *plugin.TValue[[]interface{}] {
+func (c *mqlCloudflareCorsHeaders) GetAllowedHeaders() *plugin.TValue[[]interface{}] {
 	return &c.AllowedHeaders
 }
 
-func (c *mqlCloudflareCordHeaders) GetAllowedMethods() *plugin.TValue[[]interface{}] {
+func (c *mqlCloudflareCorsHeaders) GetAllowedMethods() *plugin.TValue[[]interface{}] {
 	return &c.AllowedMethods
 }
 
-func (c *mqlCloudflareCordHeaders) GetAllowedOrigins() *plugin.TValue[[]interface{}] {
+func (c *mqlCloudflareCorsHeaders) GetAllowedOrigins() *plugin.TValue[[]interface{}] {
 	return &c.AllowedOrigins
 }
 
-func (c *mqlCloudflareCordHeaders) GetMaxAge() *plugin.TValue[int64] {
+func (c *mqlCloudflareCorsHeaders) GetMaxAge() *plugin.TValue[int64] {
 	return &c.MaxAge
 }
 

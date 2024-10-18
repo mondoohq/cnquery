@@ -88,7 +88,7 @@ func (c *mqlCloudflareOne) apps() ([]any, error) {
 				"createdAt": llx.TimeDataPtr(rec.CreatedAt),
 				"updatedAt": llx.TimeDataPtr(rec.UpdatedAt),
 
-				"cordHeaders": llx.NilData,
+				"corsHeaders": llx.NilData,
 			}
 
 			if rec.CorsHeaders != nil {
