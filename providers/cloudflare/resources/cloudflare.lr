@@ -17,9 +17,9 @@ private cloudflare.zone @defaults("name account.name") {
 	// The zone name
 	name string 
 	// The name servers for this zone
-	name_servers []string 
+	nameServers []string 
 	// Original NameServers
-	original_name_servers []string 
+	originalNameServers []string 
 
 	// The current status of the zone, allowed values: initializing pending active moved
 	status string 
@@ -27,9 +27,9 @@ private cloudflare.zone @defaults("name account.name") {
 	type string
 
 	// The time the zone was created
-	created_on time 
+	createdOn time 
 	// The time the zone was last modified
-	modified_on time 
+	modifiedOn time 
 
 	// Zone Owner Account
   account cloudflare.zone.account 
@@ -38,7 +38,7 @@ private cloudflare.zone @defaults("name account.name") {
 	dns() cloudflare.dns
 
 	// Live Inputs 
-	live_inputs() []cloudflare.streams.live_input
+	liveInputs() []cloudflare.streams.liveInput
 
 	// Videos
 	videos() []cloudflare.streams.video
@@ -80,8 +80,8 @@ private cloudflare.dns.record @defaults("type content name") {
 	content string 
 	ttl int 
 
-	created_on time
-	modified_on time
+	createdOn time
+	modifiedOn time
 }
 
 // Cloudflare Account
@@ -96,10 +96,10 @@ private cloudflare.account @defaults("name") {
 	settings cloudflare.account.settings
 
 	// Account Created On
-	created_on time
+	createdOn time
 
 	// Live Inputs 
-	live_inputs() []cloudflare.streams.live_input
+	liveInputs() []cloudflare.streams.liveInput
 
 	// Videos
 	videos() []cloudflare.streams.video
@@ -108,13 +108,13 @@ private cloudflare.account @defaults("name") {
 // Account Settings
 private cloudflare.account.settings {
 	// Indicates whether membership in this account requires that Two-Factor Authentication is enabled
-	enforce_two_factor bool
+	enforceTwoFactor bool
 }
 
 private cloudflare.streams {}
 
 // Cloudflare Live Input (Stream)
-private cloudflare.streams.live_input @defaults("uid name") {
+private cloudflare.streams.liveInput @defaults("uid name") {
 	// cnquery resource id
 	id string
 
@@ -125,7 +125,7 @@ private cloudflare.streams.live_input @defaults("uid name") {
 	name string
 
 	// Delete Recording After Days
-	delete_recording_after_days int
+	deleteRecordingAfterDays int
 }
 
 // Cloudflare Videos and Recordings
@@ -152,7 +152,7 @@ private cloudflare.streams.video @defaults("name id") {
 	width int
 
 	// Live Input ID
-	live_input string
+	liveInput string
 
 	// Dash URL
 	dash string
@@ -167,10 +167,10 @@ private cloudflare.streams.video @defaults("name id") {
 	ready bool
 
 	// Whether the video can be a accessed using the UID
-	require_signed_urls bool
+	requireSignedUrls bool
 
 	// Indicates the date and time at which the video will be deleted. Omit the field to indicate no change, or include with a null value to remove an existing scheduled deletion. If specified, must be at least 30 days from upload time.
-	scheduled_deletion time
+	scheduledDeletion time
 
 	// Size in Bytes
 	size int
@@ -179,7 +179,7 @@ private cloudflare.streams.video @defaults("name id") {
 	thumbnail string
 
 	// The timestamp for a thumbnail image calculated as a percentage value of the video's duration. To convert from a second-wise timestamp to a percentage, divide the desired timestamp by the total duration of the video. If this value is not set, the default thumbnail image is taken from 0s of the video.
-	thumbnail_timestamp_pct float
+	thumbnailTimestampPct float
 
 	// Upload timestamp
 	uploaded time
@@ -192,7 +192,7 @@ private cloudflare.r2 {
 private cloudflare.r2.bucket {
 	name string
 	location string
-	created_on time
+	createdOn time
 }
 
 private cloudflare.workers {
@@ -207,28 +207,30 @@ private cloudflare.workers.worker {
 	id string
 	etag string
 	size int
-	deployment_id string
-	pipeline_hash string
-	placement_mode string
+	deploymentId string
+	pipelineHash string
+	placementMode string
 
-	last_deployed_from string
-	log_push bool
-	created_on time
-	modified_on time
+	lastDeployedFrom string
+	logPush bool
+	createdOn time
+	modifiedOn time
 }
 
 private cloudflare.workers.page {
 	id string
-	short_id string
-	project_id string
-	project_name string
+	shortId string
+	projectId string
+	projectName string
 	environment string
 	url string
 
 	aliases []string
 
-	production_branch string
+	productionBranch string
 
-	created_on time
-	modified_on time
+	createdOn time
+	modifiedOn time
+}
+
 }

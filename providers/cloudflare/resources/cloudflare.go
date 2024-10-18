@@ -41,8 +41,8 @@ func (c *mqlCloudflare) zones() ([]any, error) {
 			"id":   llx.StringData(zone.ID),
 			"name": llx.StringData(zone.Name),
 
-			"name_servers":          llx.ArrayData(convert.SliceAnyToInterface(zone.NameServers), types.String),
-			"original_name_servers": llx.ArrayData(convert.SliceAnyToInterface(zone.OriginalNS), types.String),
+			"nameServers":         llx.ArrayData(convert.SliceAnyToInterface(zone.NameServers), types.String),
+			"originalNameServers": llx.ArrayData(convert.SliceAnyToInterface(zone.OriginalNS), types.String),
 
 			"status": llx.StringData(zone.Status),
 			"paused": llx.BoolData(zone.Paused),
@@ -50,8 +50,8 @@ func (c *mqlCloudflare) zones() ([]any, error) {
 
 			"account": llx.ResourceData(acc, acc.MqlName()),
 
-			"created_on":  llx.TimeData(zone.CreatedOn),
-			"modified_on": llx.TimeData(zone.ModifiedOn),
+			"createdOn":  llx.TimeData(zone.CreatedOn),
+			"modifiedOn": llx.TimeData(zone.ModifiedOn),
 		})
 		if err != nil {
 			return nil, err
@@ -85,17 +85,17 @@ func (c *mqlCloudflare) accounts() ([]any, error) {
 			acc := _accounts[i]
 
 			settings, err := NewResource(c.MqlRuntime, "cloudflare.account.settings", map[string]*llx.RawData{
-				"enforce_two_factor": llx.BoolData(acc.Settings.EnforceTwoFactor),
+				"enforceTwoFactor": llx.BoolData(acc.Settings.EnforceTwoFactor),
 			})
 			if err != nil {
 				return nil, err
 			}
 
 			res, err := NewResource(c.MqlRuntime, "cloudflare.account", map[string]*llx.RawData{
-				"id":         llx.StringData(acc.ID),
-				"name":       llx.StringData(acc.Name),
-				"settings":   llx.ResourceData(settings, settings.MqlName()),
-				"created_on": llx.TimeData(acc.CreatedOn),
+				"id":        llx.StringData(acc.ID),
+				"name":      llx.StringData(acc.Name),
+				"settings":  llx.ResourceData(settings, settings.MqlName()),
+				"createdOn": llx.TimeData(acc.CreatedOn),
 			})
 			if err != nil {
 				return nil, err

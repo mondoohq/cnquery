@@ -43,22 +43,22 @@ func (c *mqlCloudflareWorkers) workers() ([]any, error) {
 	for i := range resp.WorkerList {
 		w := resp.WorkerList[i]
 
-		placement_mode := ""
+		placementMode := ""
 		if w.PlacementMode != nil {
-			placement_mode = string(*w.PlacementMode)
+			placementMode = string(*w.PlacementMode)
 		}
 
 		res, err := NewResource(c.MqlRuntime, "cloudflare.workers.worker", map[string]*llx.RawData{
-			"id":                 llx.StringData(w.ID),
-			"etag":               llx.StringData(w.ETAG),
-			"size":               llx.IntData(w.Size),
-			"deployment_id":      llx.StringDataPtr(w.DeploymentId),
-			"pipeline_hash":      llx.StringDataPtr(w.PipelineHash),
-			"placement_mode":     llx.StringData(placement_mode),
-			"last_deployed_from": llx.StringDataPtr(w.LastDeployedFrom),
-			"log_push":           llx.BoolDataPtr(w.Logpush),
-			"created_on":         llx.TimeData(w.CreatedOn),
-			"modified_on":        llx.TimeData(w.ModifiedOn),
+			"id":               llx.StringData(w.ID),
+			"etag":             llx.StringData(w.ETAG),
+			"size":             llx.IntData(w.Size),
+			"deploymentId":     llx.StringDataPtr(w.DeploymentId),
+			"pipelineHash":     llx.StringDataPtr(w.PipelineHash),
+			"placementMode":    llx.StringData(placementMode),
+			"lastDeployedFrom": llx.StringDataPtr(w.LastDeployedFrom),
+			"logPush":          llx.BoolDataPtr(w.Logpush),
+			"createdOn":        llx.TimeData(w.CreatedOn),
+			"modifiedOn":       llx.TimeData(w.ModifiedOn),
 		})
 		if err != nil {
 			return nil, err

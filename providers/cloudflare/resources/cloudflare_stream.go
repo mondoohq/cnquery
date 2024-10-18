@@ -15,7 +15,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/cloudflare/connection"
 )
 
-func (c *mqlCloudflareStreamsLive_input) id() (string, error) {
+func (c *mqlCloudflareStreamsLiveInput) id() (string, error) {
 	if c.Id.Error != nil {
 		return "", c.Id.Error
 	}
@@ -29,11 +29,11 @@ func (c *mqlCloudflareStreamsVideo) id() (string, error) {
 	return c.Id.Data, nil
 }
 
-func (c *mqlCloudflareZone) live_inputs() ([]any, error) {
+func (c *mqlCloudflareZone) liveInputs() ([]any, error) {
 	return fetchLiveInputs(c.MqlRuntime, c.Account.Data.GetId().Data)
 }
 
-func (c *mqlCloudflareAccount) live_inputs() ([]any, error) {
+func (c *mqlCloudflareAccount) liveInputs() ([]any, error) {
 	return fetchLiveInputs(c.MqlRuntime, c.Id.Data)
 }
 
@@ -73,11 +73,11 @@ func fetchLiveInputs(runtime *plugin.Runtime, account_id string) ([]any, error) 
 	var res []any
 
 	for _, result := range results.Result {
-		input, err := NewResource(runtime, "cloudflare.streams.live_input", map[string]*llx.RawData{
-			"id":                          llx.StringData(result.Uid),
-			"uid":                         llx.StringData(result.Uid),
-			"delete_recording_after_days": llx.IntData(result.DeleteRecordingAfterDays),
-			"name":                        llx.StringData(result.Meta["name"].(string)),
+		input, err := NewResource(runtime, "cloudflare.streams.liveInput", map[string]*llx.RawData{
+			"id":                       llx.StringData(result.Uid),
+			"uid":                      llx.StringData(result.Uid),
+			"deleteRecordingAfterDays": llx.IntData(result.DeleteRecordingAfterDays),
+			"name":                     llx.StringData(result.Meta["name"].(string)),
 		})
 		if err != nil {
 			return nil, err
@@ -112,24 +112,24 @@ func fetchVideos(runtime *plugin.Runtime, account_id string) ([]any, error) {
 		video := results[i]
 
 		res, err := NewResource(runtime, "cloudflare.streams.video", map[string]*llx.RawData{
-			"id":                      llx.StringData(video.UID),
-			"uid":                     llx.StringData(video.UID),
-			"name":                    llx.StringData(video.Meta["name"].(string)),
-			"creator":                 llx.StringData(video.Creator),
-			"duration":                llx.FloatData(video.Duration),
-			"height":                  llx.IntData(video.Input.Height),
-			"width":                   llx.IntData(video.Input.Width),
-			"live_input":              llx.StringData(video.LiveInput),
-			"dash":                    llx.StringData(video.Playback.Dash),
-			"hls":                     llx.StringData(video.Playback.HLS),
-			"preview":                 llx.StringData(video.Preview),
-			"ready":                   llx.BoolData(video.ReadyToStream),
-			"require_signed_urls":     llx.BoolData(video.RequireSignedURLs),
-			"scheduled_deletion":      llx.TimeDataPtr(video.ScheduledDeletion),
-			"size":                    llx.IntData(video.Size),
-			"thumbnail":               llx.StringData(video.Thumbnail),
-			"thumbnail_timestamp_pct": llx.FloatData(video.ThumbnailTimestampPct),
-			"uploaded":                llx.TimeDataPtr(video.Uploaded),
+			"id":                    llx.StringData(video.UID),
+			"uid":                   llx.StringData(video.UID),
+			"name":                  llx.StringData(video.Meta["name"].(string)),
+			"creator":               llx.StringData(video.Creator),
+			"duration":              llx.FloatData(video.Duration),
+			"height":                llx.IntData(video.Input.Height),
+			"width":                 llx.IntData(video.Input.Width),
+			"liveInput":             llx.StringData(video.LiveInput),
+			"dash":                  llx.StringData(video.Playback.Dash),
+			"hls":                   llx.StringData(video.Playback.HLS),
+			"preview":               llx.StringData(video.Preview),
+			"ready":                 llx.BoolData(video.ReadyToStream),
+			"requireSignedUrls":     llx.BoolData(video.RequireSignedURLs),
+			"scheduledDeletion":     llx.TimeDataPtr(video.ScheduledDeletion),
+			"size":                  llx.IntData(video.Size),
+			"thumbnail":             llx.StringData(video.Thumbnail),
+			"thumbnailTimestampPct": llx.FloatData(video.ThumbnailTimestampPct),
+			"uploaded":              llx.TimeDataPtr(video.Uploaded),
 		})
 		if err != nil {
 			return nil, err
