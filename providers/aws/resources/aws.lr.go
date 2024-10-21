@@ -4300,9 +4300,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.instance.instanceStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetInstanceStatus()).ToDataRes(types.Dict)
 	},
-	"aws.ec2.instance.iamInstanceProfile": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEc2Instance).GetIamInstanceProfile()).ToDataRes(types.Dict)
-	},
 	"aws.ec2.instance.stateReason": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetStateReason()).ToDataRes(types.Dict)
 	},
@@ -4320,6 +4317,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.instance.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.ec2.instance.iamInstanceProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetIamInstanceProfile()).ToDataRes(types.Dict)
 	},
 	"aws.ec2.instance.image": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetImage()).ToDataRes(types.Resource("aws.ec2.image"))
@@ -10254,10 +10254,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsEc2Instance).InstanceStatus, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
-	"aws.ec2.instance.iamInstanceProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Instance).IamInstanceProfile, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
-		return
-	},
 	"aws.ec2.instance.stateReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Instance).StateReason, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
@@ -10280,6 +10276,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.ec2.instance.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Instance).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.iamInstanceProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).IamInstanceProfile, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.instance.image": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26240,13 +26240,13 @@ type mqlAwsEc2Instance struct {
 	PlatformDetails plugin.TValue[string]
 	PublicDnsName plugin.TValue[string]
 	InstanceStatus plugin.TValue[interface{}]
-	IamInstanceProfile plugin.TValue[interface{}]
 	StateReason plugin.TValue[interface{}]
 	StateTransitionReason plugin.TValue[string]
 	EbsOptimized plugin.TValue[bool]
 	EnaSupported plugin.TValue[bool]
 	InstanceType plugin.TValue[string]
 	Tags plugin.TValue[map[string]interface{}]
+	IamInstanceProfile plugin.TValue[interface{}]
 	Image plugin.TValue[*mqlAwsEc2Image]
 	LaunchTime plugin.TValue[*time.Time]
 	PrivateIp plugin.TValue[string]
@@ -26394,10 +26394,6 @@ func (c *mqlAwsEc2Instance) GetInstanceStatus() *plugin.TValue[interface{}] {
 	})
 }
 
-func (c *mqlAwsEc2Instance) GetIamInstanceProfile() *plugin.TValue[interface{}] {
-	return &c.IamInstanceProfile
-}
-
 func (c *mqlAwsEc2Instance) GetStateReason() *plugin.TValue[interface{}] {
 	return &c.StateReason
 }
@@ -26420,6 +26416,10 @@ func (c *mqlAwsEc2Instance) GetInstanceType() *plugin.TValue[string] {
 
 func (c *mqlAwsEc2Instance) GetTags() *plugin.TValue[map[string]interface{}] {
 	return &c.Tags
+}
+
+func (c *mqlAwsEc2Instance) GetIamInstanceProfile() *plugin.TValue[interface{}] {
+	return &c.IamInstanceProfile
 }
 
 func (c *mqlAwsEc2Instance) GetImage() *plugin.TValue[*mqlAwsEc2Image] {
