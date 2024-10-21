@@ -1317,6 +1317,35 @@ func (a *mqlAwsEc2Instance) instanceStatus() (interface{}, error) {
 	return res, nil
 }
 
+func (a *mqlAwsEc2Instance) iamInstanceProfile() (interface{}, error) {
+	var res interface{}
+	instanceId := a.InstanceId.Data
+	region := a.Region.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Ec2(region)
+	ctx := context.Background()
+
+	instanceStatus, err := svc.DescribeInstanceStatus(ctx, &ec2.DescribeInstanceStatusInput{
+		InstanceIds:         []string{instanceId},
+		IncludeAllInstances: aws.Bool(true),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(instanceStatus.InstanceStatuses) > 0 {
+		if instanceId == convert.ToString(instanceStatus.InstanceStatuses[0].InstanceId) {
+			res, err = convert.JsonToDict(instanceStatus.InstanceStatuses[0])
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return res, nil
+}
+
 func (a *mqlAwsEc2) volumes() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	res := []interface{}{}

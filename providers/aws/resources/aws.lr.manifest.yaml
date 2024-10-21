@@ -982,8 +982,7 @@ resources:
       httpTokens: {}
       hypervisor:
         min_mondoo_version: 9.0.0
-      iamInstanceProfile:
-        min_mondoo_version: 9.0.0
+      iamInstanceProfile: {}
       image: {}
       instanceId: {}
       instanceLifecycle:

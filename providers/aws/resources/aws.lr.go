@@ -26419,7 +26419,9 @@ func (c *mqlAwsEc2Instance) GetTags() *plugin.TValue[map[string]interface{}] {
 }
 
 func (c *mqlAwsEc2Instance) GetIamInstanceProfile() *plugin.TValue[interface{}] {
-	return &c.IamInstanceProfile
+	return plugin.GetOrCompute[interface{}](&c.IamInstanceProfile, func() (interface{}, error) {
+		return c.iamInstanceProfile()
+	})
 }
 
 func (c *mqlAwsEc2Instance) GetImage() *plugin.TValue[*mqlAwsEc2Image] {
