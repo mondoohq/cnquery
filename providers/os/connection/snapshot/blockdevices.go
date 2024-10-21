@@ -180,6 +180,11 @@ func (blockEntries BlockDevices) FindDevice(requested string) (BlockDevice, erro
 		return devices[0], nil
 	}
 
+	log.Debug().
+		Str("device", requested).
+		Any("checked_names", lmsCache).
+		Msg("no device found")
+
 	return BlockDevice{}, fmt.Errorf("no block device found with name %s", requested)
 }
 
