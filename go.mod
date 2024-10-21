@@ -104,13 +104,13 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 	howett.net/plist v1.0.1
 	// pin v0.28.9
-	k8s.io/apimachinery v0.28.9
+	k8s.io/apimachinery v0.31.1
 	// pin v0.28.9
-	k8s.io/client-go v0.28.9
+	k8s.io/client-go v0.31.1
 	// pin v0.28.9
-	k8s.io/component-base v0.28.9
+	k8s.io/component-base v0.31.1
 	// pin v0.28.9
-	k8s.io/kubelet v0.28.9
+	k8s.io/kubelet v0.31.1
 	k8s.io/utils v0.0.0-20240921022957-49e7df575cb6
 	sigs.k8s.io/yaml v1.4.0
 )
@@ -252,7 +252,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_golang v1.19.1 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
-	github.com/prometheus/common v0.54.0 // indirect
+	github.com/prometheus/common v0.55.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rogpeppe/go-internal v1.13.1 // indirect
@@ -277,8 +277,8 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20241015192408-796eee8c2d53 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	k8s.io/api v0.28.9 // indirect
-	k8s.io/klog/v2 v2.120.1 // indirect
+	k8s.io/api v0.31.1 // indirect
+	k8s.io/klog/v2 v2.130.1 // indirect
 	modernc.org/libc v1.61.0 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.8.0 // indirect
@@ -310,15 +310,17 @@ require (
 	github.com/envoyproxy/go-control-plane v0.13.1 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.1.0 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
+	github.com/fxamacker/cbor/v2 v2.7.0 // indirect
 	github.com/go-errors/errors v1.5.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.0.4 // indirect
 	github.com/go-test/deep v1.1.0 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
-	github.com/onsi/gomega v1.33.1 // indirect
+	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/smarty/assertions v1.15.1 // indirect
 	github.com/tonistiigi/go-csvvalue v0.0.0-20240710180619-ddb21b71c0b4 // indirect
+	github.com/x448/float16 v0.8.4 // indirect
 	go.opentelemetry.io/contrib/detectors/gcp v1.31.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.25.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.31.0 // indirect
