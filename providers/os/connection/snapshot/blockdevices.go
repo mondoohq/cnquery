@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"os"
 	"sort"
 	"strings"
 
@@ -27,6 +28,8 @@ type BlockDevice struct {
 	MountPoint string        `json:"mountpoint,omitempty"`
 	Children   []BlockDevice `json:"children,omitempty"`
 	Size       int           `json:"size,omitempty"`
+
+	Aliases []string `json:"-"`
 }
 
 type PartitionInfo struct {
@@ -54,7 +57,42 @@ func (cmdRunner *LocalCommandRunner) GetBlockDevices() (*BlockDevices, error) {
 	if err := json.Unmarshal(data, blockEntries); err != nil {
 		return nil, err
 	}
+	blockEntries.FindAliases()
+
 	return blockEntries, nil
+}
+
+func (blockEntries *BlockDevices) FindAliases() {
+	entries, err := os.ReadDir("/dev")
+	if err != nil {
+		log.Warn().Err(err).Msg("Can't read /dev directory")
+		return
+	}
+
+process_symlinks:
+	for _, entry := range entries {
+		if entry.Type().Type() != os.ModeSymlink {
+			continue
+		}
+
+		path := fmt.Sprintf("/dev/%s", entry.Name())
+		target, err := os.Readlink(path)
+		if err != nil {
+			log.Warn().Err(err).Str("path", path).Msg("Can't read link target")
+			continue
+		}
+
+		log.Info().Any("target", target).Msg("file")
+		targetName := strings.TrimPrefix(target, "/dev/")
+		for i := range blockEntries.BlockDevices {
+			device := blockEntries.BlockDevices[i]
+			if targetName == device.Name {
+				device.Aliases = append(device.Aliases, path)
+				blockEntries.BlockDevices[i] = device
+				continue process_symlinks
+			}
+		}
+	}
 }
 
 func (blockEntries BlockDevices) GetRootBlockEntry() (*PartitionInfo, error) {
@@ -168,7 +206,16 @@ func (blockEntries BlockDevices) FindDevice(requested string) (BlockDevice, erro
 				return blockEntries.BlockDevices[i], nil
 			}
 
-			if LongestMatchingSuffix(lmsCache, requested, devices[i].Name) < LongestMatchingSuffix(lmsCache, requested, devices[i+1].Name) {
+			lms := LongestMatchingSuffix(lmsCache, requested, devices[i].Name)
+			for _, alias := range devices[i].Aliases {
+				aliasLms := LongestMatchingSuffix(map[string]int{}, requested, alias)
+				if aliasLms > lms {
+					lms = aliasLms
+					lmsCache[devices[i].Name] = aliasLms
+				}
+			}
+
+			if lms < LongestMatchingSuffix(lmsCache, requested, devices[i+1].Name) {
 				devices[i], devices[i+1] = devices[i+1], devices[i]
 				sorted = false
 			}
