@@ -206,43 +206,43 @@ func LongestMatchingSuffix(lmsCache map[string]int, s1, s2 string) int {
 func (blockEntries BlockDevices) FindDevice(requested string) (BlockDevice, error) {
 	log.Debug().Str("device", requested).Msg("searching for device")
 
-	requestedName := strings.TrimPrefix(requested, "/dev/")
-
-	lmsCache := map[string]int{}
-	// LongestMatchingSuffix returns the length of the longest common suffix of requested and provided string
-
-	sorted := false
 	devices := blockEntries.BlockDevices
+	if len(devices) == 0 {
+		return BlockDevice{}, fmt.Errorf("no block devices found")
+	}
 
-	// Bubble sort the devices by the longest matching suffix
-	// Longest matches will be at the beginning of the slice
-	for !sorted {
-		sorted = true
+	requestedName := strings.TrimPrefix(requested, "/dev/")
+	lmsCache := map[string]int{}
+	bestMatch := struct {
+		Device BlockDevice
+		Lms    int
+	}{
+		Device: devices[0],
+		Lms:    LongestMatchingSuffix(lmsCache, requested, devices[0].Name),
+	}
 
-		for i := 0; i < len(devices)-1; i++ {
-			if devices[i].Name == requestedName {
-				return blockEntries.BlockDevices[i], nil
+	for i := 1; i < len(devices); i++ {
+		if devices[i].Name == requestedName {
+			return blockEntries.BlockDevices[i], nil
+		}
+
+		lms := LongestMatchingSuffix(lmsCache, requested, devices[i].Name)
+		for _, alias := range devices[i].Aliases {
+			aliasLms := LongestMatchingSuffix(map[string]int{}, requested, alias)
+			if aliasLms > lms {
+				lms = aliasLms
+				lmsCache[devices[i].Name] = aliasLms
 			}
+		}
 
-			lms := LongestMatchingSuffix(lmsCache, requested, devices[i].Name)
-			for _, alias := range devices[i].Aliases {
-				aliasLms := LongestMatchingSuffix(map[string]int{}, requested, alias)
-				if aliasLms > lms {
-					lms = aliasLms
-					lmsCache[devices[i].Name] = aliasLms
-				}
-			}
-
-			if lms < LongestMatchingSuffix(lmsCache, requested, devices[i+1].Name) {
-				devices[i], devices[i+1] = devices[i+1], devices[i]
-				sorted = false
-			}
+		if lms > bestMatch.Lms {
+			bestMatch.Device = devices[i]
+			bestMatch.Lms = lms
 		}
 	}
 
-	// If the first device has matching suffix, return it
-	if LongestMatchingSuffix(lmsCache, requested, devices[0].Name) > 0 {
-		return devices[0], nil
+	if bestMatch.Lms > 0 {
+		return bestMatch.Device, nil
 	}
 
 	log.Debug().
