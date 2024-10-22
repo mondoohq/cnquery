@@ -101,7 +101,6 @@ process_symlinks:
 			continue
 		}
 
-		log.Info().Any("target", target).Msg("file")
 		targetName := strings.TrimPrefix(target, "/dev/")
 		for i := range blockEntries.BlockDevices {
 			device := blockEntries.BlockDevices[i]
