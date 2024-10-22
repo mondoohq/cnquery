@@ -11,6 +11,7 @@ import (
 	"math"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -27,9 +28,27 @@ type BlockDevice struct {
 	Uuid       string        `json:"uuid,omitempty"`
 	MountPoint string        `json:"mountpoint,omitempty"`
 	Children   []BlockDevice `json:"children,omitempty"`
-	Size       int           `json:"size,omitempty"`
+	Size       Size          `json:"size,omitempty"`
 
 	Aliases []string `json:"-"`
+}
+
+type Size int64
+
+func (s *Size) UnmarshalJSON(data []byte) error {
+	var size any
+	if err := json.Unmarshal(data, &size); err != nil {
+		return err
+	}
+	switch size := size.(type) {
+	case string:
+		isize, err := strconv.Atoi(size)
+		*s = Size(isize)
+		return err
+	case float64:
+		*s = Size(size)
+	}
+	return nil
 }
 
 type PartitionInfo struct {
@@ -145,7 +164,7 @@ func (blockEntries BlockDevices) GetMountablePartitionByDevice(device string) (*
 	}
 
 	for _, partition := range block.Children {
-		log.Debug().Str("name", partition.Name).Int("size", partition.Size).Msg("checking partition")
+		log.Debug().Str("name", partition.Name).Int64("size", int64(partition.Size)).Msg("checking partition")
 		if partition.IsNotBootOrRootVolumeAndUnmounted() {
 			log.Debug().Str("name", partition.Name).Msg("found suitable partition")
 			partitions = append(partitions, partition)
@@ -254,7 +273,7 @@ func (device BlockDevice) GetMountablePartitions(includeAll bool) ([]*PartitionI
 
 	partitions := []*PartitionInfo{}
 	for _, partition := range blockDevices {
-		log.Debug().Str("name", partition.Name).Int("size", partition.Size).Msg("checking partition")
+		log.Debug().Str("name", partition.Name).Int64("size", int64(partition.Size)).Msg("checking partition")
 		if partition.FsType == "" {
 			log.Debug().Str("name", partition.Name).Msg("skipping partition without filesystem type")
 			continue

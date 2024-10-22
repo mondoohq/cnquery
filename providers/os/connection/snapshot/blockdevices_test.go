@@ -12,6 +12,54 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestBlockDevicesUnamrshal(t *testing.T) {
+	common := `{
+   "blockdevices": [
+      {"name": "nvme1n1", "size": 8589934592, "fstype": null, "mountpoint": null, "label": null, "uuid": null,
+         "children": [
+            {"name": "nvme1n1p1", "size": 7515127296, "fstype": "ext4", "mountpoint": null, "label": "cloudimg-rootfs", "uuid": "d84ccd9b-0384-4314-88be-5bd38eb59f30"},
+            {"name": "nvme1n1p14", "size": 4194304, "fstype": null, "mountpoint": null, "label": null, "uuid": null},
+            {"name": "nvme1n1p15", "size": 111149056, "fstype": "vfat", "mountpoint": null, "label": "UEFI", "uuid": "9601-9938"},
+            {"name": "nvme1n1p16", "size": 957350400, "fstype": "ext4", "mountpoint": null, "label": "BOOT", "uuid": "c2032e48-1c8e-4f92-87c6-9db270bf4274"}
+         ]
+      },
+      {"name": "nvme0n1", "size": "8589934592", "fstype": null, "mountpoint": null, "label": null, "uuid": null,
+         "children": [
+            {"name": "nvme0n1p1", "size": 8578383360, "fstype": "xfs", "mountpoint": "/", "label": "/", "uuid": "804f6603-f3df-4054-8161-50bd9cbd9cf9"},
+            {"name": "nvme0n1p128", "size": 10485760, "fstype": "vfat", "mountpoint": "/boot/efi", "label": null, "uuid": "BCB5-3E0E"}
+         ]
+      }
+   ]
+}`
+
+	blockEntries := &BlockDevices{}
+	err := json.Unmarshal([]byte(common), blockEntries)
+	require.NoError(t, err)
+
+	stringer := `{
+   "blockdevices": [
+      {"name": "nvme1n1", "size": "8589934592", "fstype": null, "mountpoint": null, "label": null, "uuid": null,
+         "children": [
+            {"name": "nvme1n1p1", "size": "7515127296", "fstype": "ext4", "mountpoint": null, "label": "cloudimg-rootfs", "uuid": "d84ccd9b-0384-4314-88be-5bd38eb59f30"},
+            {"name": "nvme1n1p14", "size": "4194304", "fstype": null, "mountpoint": null, "label": null, "uuid": null},
+            {"name": "nvme1n1p15", "size": "111149056", "fstype": "vfat", "mountpoint": null, "label": "UEFI", "uuid": "9601-9938"},
+            {"name": "nvme1n1p16", "size": "957350400", "fstype": "ext4", "mountpoint": null, "label": "BOOT", "uuid": "c2032e48-1c8e-4f92-87c6-9db270bf4274"}
+         ]
+      },
+      {"name": "nvme0n1", "size": "8589934592", "fstype": null, "mountpoint": null, "label": null, "uuid": null,
+         "children": [
+            {"name": "nvme0n1p1", "size": "8578383360", "fstype": "xfs", "mountpoint": "/", "label": "/", "uuid": "804f6603-f3df-4054-8161-50bd9cbd9cf9"},
+            {"name": "nvme0n1p128", "size": "10485760", "fstype": "vfat", "mountpoint": "/boot/efi", "label": null, "uuid": "BCB5-3E0E"}
+         ]
+      }
+   ]
+}`
+
+	blockEntries = &BlockDevices{}
+	err = json.Unmarshal([]byte(stringer), blockEntries)
+	require.NoError(t, err)
+}
+
 func TestGetMountablePartitionByDevice(t *testing.T) {
 	t.Run("match by exact name", func(t *testing.T) {
 		blockEntries := BlockDevices{
