@@ -184,11 +184,7 @@ func (blockEntries BlockDevices) GetMountablePartitionByDevice(device string) (*
 
 // LongestMatchingSuffix returns the length of the longest common suffix of two strings
 // and caches the result (lengths of the matching suffix) for future calls with the same string
-func LongestMatchingSuffix(lmsCache map[string]int, s1, s2 string) int {
-	if v, ok := lmsCache[s2]; ok {
-		return v
-	}
-
+func LongestMatchingSuffix(s1, s2 string) int {
 	n1 := len(s1)
 	n2 := len(s2)
 
@@ -198,7 +194,6 @@ func LongestMatchingSuffix(lmsCache map[string]int, s1, s2 string) int {
 		i++
 	}
 
-	lmsCache[s2] = i
 	return i
 }
 
@@ -218,7 +213,7 @@ func (blockEntries BlockDevices) FindDevice(requested string) (BlockDevice, erro
 		Lms    int
 	}{
 		Device: devices[0],
-		Lms:    LongestMatchingSuffix(lmsCache, requested, devices[0].Name),
+		Lms:    LongestMatchingSuffix(requested, devices[0].Name),
 	}
 
 	for i := 1; i < len(devices); i++ {
@@ -226,9 +221,9 @@ func (blockEntries BlockDevices) FindDevice(requested string) (BlockDevice, erro
 			return blockEntries.BlockDevices[i], nil
 		}
 
-		lms := LongestMatchingSuffix(lmsCache, requested, devices[i].Name)
+		lms := LongestMatchingSuffix(requested, devices[i].Name)
 		for _, alias := range devices[i].Aliases {
-			aliasLms := LongestMatchingSuffix(map[string]int{}, requested, alias)
+			aliasLms := LongestMatchingSuffix(requested, alias)
 			if aliasLms > lms {
 				lms = aliasLms
 				lmsCache[devices[i].Name] = aliasLms
