@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestBlockDevicesUnamrshal(t *testing.T) {
+func TestBlockDevicesUnmarshal(t *testing.T) {
 	common := `{
    "blockdevices": [
       {"name": "nvme1n1", "size": 8589934592, "fstype": null, "mountpoint": null, "label": null, "uuid": null,
