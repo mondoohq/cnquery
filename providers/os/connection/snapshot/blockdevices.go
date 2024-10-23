@@ -88,7 +88,6 @@ func (blockEntries *BlockDevices) FindAliases() {
 		return
 	}
 
-process_symlinks:
 	for _, entry := range entries {
 		if entry.Type().Type() != os.ModeSymlink {
 			continue
@@ -102,13 +101,17 @@ process_symlinks:
 		}
 
 		targetName := strings.TrimPrefix(target, "/dev/")
-		for i := range blockEntries.BlockDevices {
-			device := blockEntries.BlockDevices[i]
-			if targetName == device.Name {
-				device.Aliases = append(device.Aliases, path)
-				blockEntries.BlockDevices[i] = device
-				continue process_symlinks
-			}
+		blockEntries.findAlias(targetName, path)
+	}
+}
+
+func (blockEntries *BlockDevices) findAlias(alias, path string) {
+	for i := range blockEntries.BlockDevices {
+		device := blockEntries.BlockDevices[i]
+		if alias == device.Name {
+			device.Aliases = append(device.Aliases, path)
+			blockEntries.BlockDevices[i] = device
+			return
 		}
 	}
 }
