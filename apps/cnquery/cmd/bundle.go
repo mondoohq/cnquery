@@ -115,7 +115,7 @@ var queryPackLintCmd = &cobra.Command{
 var queryPackPublishCmd = &cobra.Command{
 	Use:     "publish [path]",
 	Aliases: []string{"upload"},
-	Short:   "Add a user-owned query pack to the Mondoo Security Registry",
+	Short:   "Add a user-owned query pack to Mondoo Platform",
 	Args:    cobra.ExactArgs(1),
 	PreRun: func(cmd *cobra.Command, args []string) {
 		viper.BindPFlag("pack-version", cmd.Flags().Lookup("pack-version"))
@@ -175,7 +175,7 @@ var queryPackPublishCmd = &cobra.Command{
 		}
 		queryHubServices, err := explorer.NewQueryHubClient(opts.UpstreamApiEndpoint(), httpClient, certAuth)
 		if err != nil {
-			return cli_errors.NewCommandError(errors.Wrap(err, "could not connect to the Mondoo Security Registry"), 1)
+			return cli_errors.NewCommandError(errors.Wrap(err, "could not connect to Mondoo Platform"), 1)
 		}
 
 		// set the owner mrn for spaces
