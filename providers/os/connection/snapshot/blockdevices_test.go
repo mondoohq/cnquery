@@ -182,6 +182,21 @@ func TestFindDevice(t *testing.T) {
 		require.Equal(t, expected, res)
 	})
 
+	t.Run("match by alias name", func(t *testing.T) {
+		blockEntries := BlockDevices{
+			BlockDevices: []BlockDevice{
+				{Name: "sda", Children: []BlockDevice{{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoint: "/"}}},
+				{Name: "nvme0n1", Children: []BlockDevice{{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+				{Name: "sdx", Aliases: []string{"xvdx"}, Children: []BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+			},
+		}
+
+		expected := blockEntries.BlockDevices[2]
+		res, err := blockEntries.FindDevice("/dev/xvdx")
+		require.Nil(t, err)
+		require.Equal(t, expected, res)
+	})
+
 	t.Run("match by interchangeable name", func(t *testing.T) {
 		blockEntries := BlockDevices{
 			BlockDevices: []BlockDevice{
