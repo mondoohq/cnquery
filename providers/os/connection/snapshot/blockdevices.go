@@ -93,6 +93,7 @@ func (blockEntries *BlockDevices) FindAliases() {
 			continue
 		}
 
+		log.Debug().Str("name", entry.Name()).Msg("found symlink")
 		path := fmt.Sprintf("/dev/%s", entry.Name())
 		target, err := os.Readlink(path)
 		if err != nil {
@@ -220,6 +221,10 @@ func (blockEntries BlockDevices) FindDevice(requested string) (BlockDevice, erro
 	}
 
 	for i := 1; i < len(devices); i++ {
+		log.Debug().
+			Str("name", devices[i].Name).
+			Strs("aliases", devices[i].Aliases).
+			Msg("checking device")
 		if devices[i].Name == requestedName {
 			return blockEntries.BlockDevices[i], nil
 		}
