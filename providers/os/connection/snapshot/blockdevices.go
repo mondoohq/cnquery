@@ -110,6 +110,11 @@ func (blockEntries *BlockDevices) findAlias(alias, path string) {
 	for i := range blockEntries.BlockDevices {
 		device := blockEntries.BlockDevices[i]
 		if alias == device.Name {
+			log.Debug().
+				Str("alias", alias).
+				Str("path", path).
+				Str("name", device.Name).
+				Msg("found alias")
 			device.Aliases = append(device.Aliases, path)
 			blockEntries.BlockDevices[i] = device
 			return
@@ -216,11 +221,11 @@ func (blockEntries BlockDevices) FindDevice(requested string) (BlockDevice, erro
 		Device BlockDevice
 		Lms    int
 	}{
-		Device: devices[0],
-		Lms:    LongestMatchingSuffix(requested, devices[0].Name),
+		Device: BlockDevice{},
+		Lms:    0,
 	}
 
-	for i := 1; i < len(devices); i++ {
+	for i := 0; i < len(devices); i++ {
 		log.Debug().
 			Str("name", devices[i].Name).
 			Strs("aliases", devices[i].Aliases).
