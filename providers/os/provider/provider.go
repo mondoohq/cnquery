@@ -373,7 +373,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 
 			fingerprint, p, err := id.IdentifyPlatform(conn, req, asset.Platform, asset.IdDetector)
 			if err == nil {
-				if conn.Asset().Connections[0].Runtime != "vagrant" {
+				if asset.Name == "" && conn.Asset().Connections[0].Runtime != "vagrant" {
 					asset.Name = fingerprint.Name
 				}
 				asset.PlatformIds = fingerprint.PlatformIDs
