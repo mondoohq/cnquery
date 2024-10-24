@@ -120,7 +120,7 @@ func imageMatchesFilters(image *mqlAwsEcrImage, filters connection.EcrDiscoveryF
 }
 
 func containerMatchesFilters(container *mqlAwsEcsContainer, ecsFilters connection.EcsDiscoveryFilters) bool {
-	return ecsFilters.OnlyRunningContainers && container.Status.Data == "RUNNING"
+	return container.Status.Data == "RUNNING" || !ecsFilters.OnlyRunningContainers
 }
 
 func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
