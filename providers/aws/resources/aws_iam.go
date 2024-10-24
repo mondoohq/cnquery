@@ -277,24 +277,24 @@ func (a *mqlAwsIam) instanceProfiles() ([]interface{}, error) {
 	var marker *string
 	res := []interface{}{}
 	for {
-		usersResp, err := svc.ListInstanceProfiles(ctx, &iam.ListInstanceProfilesInput{Marker: marker})
+		instanceProfilesResp, err := svc.ListInstanceProfiles(ctx, &iam.ListInstanceProfilesInput{Marker: marker})
 		if err != nil {
 			return nil, errors.Wrap(err, "could not gather aws iam instance profiles")
 		}
-		for i := range usersResp.Users {
-			usr := usersResp.Users[i]
+		for i := range instanceProfilesResp.InstanceProfiles {
+			itp := instanceProfilesResp.InstanceProfiles[i]
 
-			mqlAwsIamUser, err := a.createIamUser(&usr)
+			mqlAwsIamUser, err := a.createInstanceProfile(&itp)
 			if err != nil {
 				return nil, err
 			}
 
 			res = append(res, mqlAwsIamUser)
 		}
-		if !usersResp.IsTruncated {
+		if !instanceProfilesResp.IsTruncated {
 			break
 		}
-		marker = usersResp.Marker
+		marker = instanceProfilesResp.Marker
 	}
 	return res, nil
 }
