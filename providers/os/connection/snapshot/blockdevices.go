@@ -225,26 +225,26 @@ func (blockEntries BlockDevices) FindDevice(requested string) (BlockDevice, erro
 		Lms:    0,
 	}
 
-	for i := 0; i < len(devices); i++ {
+	for _, d := range devices {
 		log.Debug().
-			Str("name", devices[i].Name).
-			Strs("aliases", devices[i].Aliases).
+			Str("name", d.Name).
+			Strs("aliases", d.Aliases).
 			Msg("checking device")
-		if devices[i].Name == requestedName {
-			return blockEntries.BlockDevices[i], nil
+		if d.Name == requestedName {
+			return d, nil
 		}
 
-		lms := LongestMatchingSuffix(requested, devices[i].Name)
-		for _, alias := range devices[i].Aliases {
+		lms := LongestMatchingSuffix(requested, d.Name)
+		for _, alias := range d.Aliases {
 			aliasLms := LongestMatchingSuffix(requested, alias)
 			if aliasLms > lms {
 				lms = aliasLms
-				lmsCache[devices[i].Name] = aliasLms
+				lmsCache[d.Name] = aliasLms
 			}
 		}
 
 		if lms > bestMatch.Lms {
-			bestMatch.Device = devices[i]
+			bestMatch.Device = d
 			bestMatch.Lms = lms
 		}
 	}
