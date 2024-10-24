@@ -799,7 +799,7 @@ private aws.iam.user @defaults("arn name") {
 }
 
 // AWS IAM instanceProfile
-private aws.iam.instanceProfile @defaults("arn instanceProfileName") {
+private aws.iam.instanceProfile @defaults("arn instanceProfileId") {
   // ARN of the IAM instanceProfile
   arn string
   // Time when instanceProfile was created
@@ -3030,7 +3030,7 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   // Tags on the instance
   tags map[string]string
   // Instance profile of the instance.
-  iamInstanceProfile() dict
+  iamInstanceProfile() aws.iam.instanceProfile
   // Image that was used for the instance
   image() aws.ec2.image
   // Launch time of the instance
