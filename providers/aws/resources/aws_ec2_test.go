@@ -78,6 +78,7 @@ func TestShouldExcludeInstance(t *testing.T) {
 
 	t.Run("should exclude instances with matching values for the same tag", func(t *testing.T) {
 		filters := connection.Ec2DiscoveryFilters{
+			ExcludeInstanceIds: []string{},
 			ExcludeTags: map[string]string{
 				"key-1": "val-1,val-2,val-3",
 			},
@@ -87,6 +88,7 @@ func TestShouldExcludeInstance(t *testing.T) {
 
 	t.Run("should not exclude instances when no tag values match", func(t *testing.T) {
 		filters := connection.Ec2DiscoveryFilters{
+			ExcludeInstanceIds: []string{},
 			ExcludeTags: map[string]string{
 				"key-1": "val-2,val-3",
 				"key-2": "val-1,val-3",
@@ -94,37 +96,5 @@ func TestShouldExcludeInstance(t *testing.T) {
 			},
 		}
 		require.False(t, shouldExcludeInstance(instance, filters))
-	})
-}
-
-func TestDetermineApplicableRegions(t *testing.T) {
-	t.Run("allow regions override initial region list", func(t *testing.T) {
-		initialRegions := []string{"a", "b"}
-		allowedRegions := []string{"b", "c"}
-		excludedRegions := []string{}
-
-		expected := []string{"b", "c"}
-		actual := determineApplicableRegions(initialRegions, allowedRegions, excludedRegions)
-		require.ElementsMatch(t, expected, actual)
-	})
-
-	t.Run("excluded regions work correctly", func(t *testing.T) {
-		initialRegions := []string{"a", "b"}
-		allowedRegions := []string{}
-		excludedRegions := []string{"b"}
-
-		expected := []string{"a"}
-		actual := determineApplicableRegions(initialRegions, allowedRegions, excludedRegions)
-		require.ElementsMatch(t, expected, actual)
-	})
-
-	t.Run("excluded regions not present in the initial slice are ignored", func(t *testing.T) {
-		initialRegions := []string{"a", "b"}
-		allowedRegions := []string{}
-		excludedRegions := []string{"b", "c", "d", "e"}
-
-		expected := []string{"a"}
-		actual := determineApplicableRegions(initialRegions, allowedRegions, excludedRegions)
-		require.ElementsMatch(t, expected, actual)
 	})
 }

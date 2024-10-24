@@ -84,16 +84,18 @@ func parseFlagsToFiltersOpts(m map[string]*llx.Primitive) map[string]string {
 
 	if x, ok := m["filters"]; ok && len(x.Map) != 0 {
 		knownTagPrefixes := []string{
-			"ec2:tag:",
-			"exclude:ec2:tag:",
-			"ec2:regions",
-			"exclude:ec2:regions",
-			"all:regions",
+			// general filters
 			"regions",
+			"exclude:regions",
+			// ec2 filters
 			"ec2:instance-ids",
-			"exclude:ec2:instance-ids",
-			"all:tag:",
+			"ec2:exclude:instance-ids",
+			"ec2:tag:",
+			"ec2:exclude:tag:",
+			// ecr filters
 			"ecr:tags",
+			"ecr:exclude:tags",
+			// ecs filters
 			"ecs:only-running-containers",
 			"ecs:discover-instances",
 			"ecs:discover-images",

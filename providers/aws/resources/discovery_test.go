@@ -15,70 +15,31 @@ import (
 )
 
 func TestFilters(t *testing.T) {
+	// image filters
 	require.True(t, imageMatchesFilters(&mqlAwsEcrImage{
 		Tags: plugin.TValue[[]interface{}]{Data: []interface{}{"latest"}},
-	}, connection.DiscoveryFilters{}))
+	}, connection.EcrDiscoveryFilters{}))
+
 	require.True(t, imageMatchesFilters(&mqlAwsEcrImage{
 		Tags: plugin.TValue[[]interface{}]{Data: []interface{}{"latest"}},
-	}, connection.DiscoveryFilters{
-		EcrDiscoveryFilters: connection.EcrDiscoveryFilters{
-			Tags: []string{"latest"},
-		},
-	}))
+	}, connection.EcrDiscoveryFilters{Tags: []string{"latest"}}))
+
 	require.False(t, imageMatchesFilters(&mqlAwsEcrImage{
 		Tags: plugin.TValue[[]interface{}]{Data: []interface{}{"ubu", "test"}},
-	}, connection.DiscoveryFilters{
-		EcrDiscoveryFilters: connection.EcrDiscoveryFilters{
-			Tags: []string{"latest"},
-		},
-	}))
+	}, connection.EcrDiscoveryFilters{Tags: []string{"latest"}}))
+
+	// container filters
+	require.True(t, containerMatchesFilters(&mqlAwsEcsContainer{
+		Status: plugin.TValue[string]{Data: "RUNNING"},
+	}, connection.EcsDiscoveryFilters{}))
 
 	require.True(t, containerMatchesFilters(&mqlAwsEcsContainer{
 		Status: plugin.TValue[string]{Data: "RUNNING"},
-	}, connection.DiscoveryFilters{}))
-
-	require.True(t, containerMatchesFilters(&mqlAwsEcsContainer{
-		Status: plugin.TValue[string]{Data: "RUNNING"},
-	}, connection.DiscoveryFilters{EcsDiscoveryFilters: connection.EcsDiscoveryFilters{
-		OnlyRunningContainers: true,
-	}}))
+	}, connection.EcsDiscoveryFilters{OnlyRunningContainers: true}))
 
 	require.False(t, containerMatchesFilters(&mqlAwsEcsContainer{
 		Status: plugin.TValue[string]{Data: "STOPPED"},
-	}, connection.DiscoveryFilters{EcsDiscoveryFilters: connection.EcsDiscoveryFilters{
-		OnlyRunningContainers: true,
-	}}))
-
-	require.True(t, discoveredAssetMatchesGeneralFilters(&inventory.Asset{
-		Labels: map[string]string{"test": "val", "another": "value"},
-	}, connection.GeneralResourceDiscoveryFilters{}))
-	require.True(t, discoveredAssetMatchesGeneralFilters(&inventory.Asset{
-		Labels: nil,
-	}, connection.GeneralResourceDiscoveryFilters{}))
-	require.True(t, discoveredAssetMatchesGeneralFilters(&inventory.Asset{
-		Labels: map[string]string{"test": "val", "another": "value"},
-	}, connection.GeneralResourceDiscoveryFilters{Tags: map[string]string{"another": "value"}}))
-
-	require.False(t, discoveredAssetMatchesGeneralFilters(&inventory.Asset{
-		Labels: map[string]string{"test": "val", "another": "value"},
-	}, connection.GeneralResourceDiscoveryFilters{Tags: map[string]string{"something": "else"}}))
-	require.False(t, discoveredAssetMatchesGeneralFilters(&inventory.Asset{
-		Labels: nil,
-	}, connection.GeneralResourceDiscoveryFilters{Tags: map[string]string{"something": "else"}}))
-
-	require.True(t, shouldScanEcsContainerImages(connection.DiscoveryFilters{
-		EcsDiscoveryFilters: connection.EcsDiscoveryFilters{
-			DiscoverImages: true,
-		},
-	}))
-	require.False(t, shouldScanEcsContainerImages(connection.DiscoveryFilters{}))
-	require.True(t, shouldScanEcsContainerInstances(connection.DiscoveryFilters{
-		EcsDiscoveryFilters: connection.EcsDiscoveryFilters{
-			DiscoverImages:    false,
-			DiscoverInstances: true,
-		},
-	}))
-	require.False(t, shouldScanEcsContainerInstances(connection.DiscoveryFilters{}))
+	}, connection.EcsDiscoveryFilters{OnlyRunningContainers: true}))
 }
 
 func TestAddConnInfoToEc2Instances(t *testing.T) {

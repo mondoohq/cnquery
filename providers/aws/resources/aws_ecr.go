@@ -159,11 +159,10 @@ func (a *mqlAwsEcrRepository) images() ([]interface{}, error) {
 			return nil, err
 		}
 
-		for i := range res.ImageDetails {
-			image := res.ImageDetails[i]
+		for _, image := range res.ImageDetails {
 			tags := []interface{}{}
-			for i := range image.ImageTags {
-				tags = append(tags, image.ImageTags[i])
+			for _, imageTag := range image.ImageTags {
+				tags = append(tags, imageTag)
 			}
 			mqlImage, err := CreateResource(a.MqlRuntime, "aws.ecr.image",
 				map[string]*llx.RawData{

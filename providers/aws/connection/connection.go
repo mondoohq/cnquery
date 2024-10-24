@@ -6,6 +6,7 @@ package connection
 import (
 	"context"
 	"errors"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -37,33 +38,43 @@ type AwsConnection struct {
 	PlatformOverride  string
 	connectionOptions map[string]string
 	Filters           DiscoveryFilters
-	RegionLimits      []string
 	scope             string
 }
 
 type DiscoveryFilters struct {
-	Ec2DiscoveryFilters     Ec2DiscoveryFilters
-	EcrDiscoveryFilters     EcrDiscoveryFilters
-	EcsDiscoveryFilters     EcsDiscoveryFilters
-	GeneralDiscoveryFilters GeneralResourceDiscoveryFilters
+	Ec2DiscoveryFilters Ec2DiscoveryFilters
+	EcrDiscoveryFilters EcrDiscoveryFilters
+	EcsDiscoveryFilters EcsDiscoveryFilters
+	DiscoveryFilters    GeneralDiscoveryFilters
 }
 
-type GeneralResourceDiscoveryFilters struct {
-	Tags    map[string]string
-	Regions []string
+// ensure all underlying reference types aren't `nil`
+func EmptyDiscoveryFilters() DiscoveryFilters {
+	return DiscoveryFilters{
+		DiscoveryFilters:    GeneralDiscoveryFilters{Regions: []string{}, ExcludeRegions: []string{}},
+		Ec2DiscoveryFilters: Ec2DiscoveryFilters{InstanceIds: []string{}, ExcludeInstanceIds: []string{}, Tags: map[string]string{}, ExcludeTags: map[string]string{}},
+		EcrDiscoveryFilters: EcrDiscoveryFilters{Tags: []string{}, ExcludeTags: []string{}},
+		EcsDiscoveryFilters: EcsDiscoveryFilters{},
+	}
+}
+
+type GeneralDiscoveryFilters struct {
+	Regions        []string
+	ExcludeRegions []string
 }
 
 type Ec2DiscoveryFilters struct {
-	Regions            []string
-	Tags               map[string]string
 	InstanceIds        []string
-	ExcludeRegions     []string
-	ExcludeTags        map[string]string
 	ExcludeInstanceIds []string
+	Tags               map[string]string
+	ExcludeTags        map[string]string
 }
+
 type EcrDiscoveryFilters struct {
-	Tags []string
+	Tags        []string
+	ExcludeTags []string
 }
+
 type EcsDiscoveryFilters struct {
 	OnlyRunningContainers bool
 	DiscoverImages        bool
@@ -82,6 +93,7 @@ func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 	// check flags for connection options
 	c := &AwsConnection{
 		awsConfigOptions: []func(*config.LoadOptions) error{},
+		Filters:          EmptyDiscoveryFilters(),
 	}
 	opts := parseFlagsForConnectionOptions(asset.Options, conf.Options, conf.GetCredentials())
 	for _, opt := range opts {
@@ -125,38 +137,30 @@ func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 	c.connectionOptions = asset.Options
 	if conf.Discover != nil {
 		c.Filters = parseOptsToFilters(conf.Discover.Filter)
-		c.RegionLimits = c.Filters.GeneralDiscoveryFilters.Regions
 	}
 	return c, nil
 }
 
 func parseOptsToFilters(opts map[string]string) DiscoveryFilters {
-	d := DiscoveryFilters{
-		Ec2DiscoveryFilters:     Ec2DiscoveryFilters{Tags: map[string]string{}, ExcludeTags: map[string]string{}},
-		EcsDiscoveryFilters:     EcsDiscoveryFilters{},
-		EcrDiscoveryFilters:     EcrDiscoveryFilters{Tags: []string{}},
-		GeneralDiscoveryFilters: GeneralResourceDiscoveryFilters{Tags: map[string]string{}},
-	}
+	d := EmptyDiscoveryFilters()
 	for k, v := range opts {
 		switch {
-		case strings.HasPrefix(k, "ec2:tag:"):
-			d.Ec2DiscoveryFilters.Tags[strings.TrimPrefix(k, "ec2:tag:")] = v
-		case strings.HasPrefix(k, "exclude:ec2:tag:"):
-			d.Ec2DiscoveryFilters.ExcludeTags[strings.TrimPrefix(k, "exclude:ec2:tag:")] = v
-		case k == "ec2:regions":
-			d.Ec2DiscoveryFilters.Regions = append(d.Ec2DiscoveryFilters.Regions, strings.Split(v, ",")...)
-		case k == "exclude:ec2:regions":
-			d.Ec2DiscoveryFilters.ExcludeRegions = append(d.Ec2DiscoveryFilters.ExcludeRegions, strings.Split(v, ",")...)
-		case k == "all:regions", k == "regions":
-			d.GeneralDiscoveryFilters.Regions = append(d.GeneralDiscoveryFilters.Regions, strings.Split(v, ",")...)
+		case k == "regions":
+			d.DiscoveryFilters.Regions = append(d.DiscoveryFilters.Regions, strings.Split(v, ",")...)
+		case k == "exclude:regions":
+			d.DiscoveryFilters.ExcludeRegions = append(d.DiscoveryFilters.ExcludeRegions, strings.Split(v, ",")...)
 		case k == "ec2:instance-ids":
 			d.Ec2DiscoveryFilters.InstanceIds = append(d.Ec2DiscoveryFilters.InstanceIds, strings.Split(v, ",")...)
-		case k == "exclude:ec2:instance-ids":
+		case k == "ec2:exclude:instance-ids":
 			d.Ec2DiscoveryFilters.ExcludeInstanceIds = append(d.Ec2DiscoveryFilters.ExcludeInstanceIds, strings.Split(v, ",")...)
-		case strings.HasPrefix(k, "all:tag:"):
-			d.GeneralDiscoveryFilters.Tags[strings.TrimPrefix(k, "all:tag:")] = v
+		case strings.HasPrefix(k, "ec2:tag:"):
+			d.Ec2DiscoveryFilters.Tags[strings.TrimPrefix(k, "ec2:tag:")] = v
+		case strings.HasPrefix(k, "ec2:exclude:tag:"):
+			d.Ec2DiscoveryFilters.ExcludeTags[strings.TrimPrefix(k, "ec2:exclude:tag:")] = v
 		case k == "ecr:tags":
 			d.EcrDiscoveryFilters.Tags = append(d.EcrDiscoveryFilters.Tags, strings.Split(v, ",")...)
+		case k == "ecr:exclude:tags":
+			d.EcrDiscoveryFilters.ExcludeTags = append(d.EcrDiscoveryFilters.ExcludeTags, strings.Split(v, ",")...)
 		case k == "ecs:only-running-containers":
 			parsed, err := strconv.ParseBool(v)
 			if err == nil {
@@ -360,15 +364,17 @@ func (h *AwsConnection) Regions() ([]string, error) {
 		log.Debug().Msg("use regions from cache")
 		return c.Data.([]string), nil
 	}
-	log.Debug().Msg("no region cache found. fetching regions")
 
-	if len(h.RegionLimits) > 0 {
-		log.Debug().Interface("regions", h.RegionLimits).Msg("using region limits")
+	// include filters have precedense over exclude filters. in any normal situation they should be mutually exclusive.
+	regionLimits := h.Filters.DiscoveryFilters.Regions
+	if len(regionLimits) > 0 {
+		log.Debug().Interface("regions", regionLimits).Msg("using region limits")
 		// cache the regions as part of the provider instance
-		h.clientcache.Store("_regions", &CacheEntry{Data: h.RegionLimits})
-		return h.RegionLimits, nil
+		h.clientcache.Store("_regions", &CacheEntry{Data: regionLimits})
+		return regionLimits, nil
 	}
 	// if no cache, get regions using ec2 client (using the ssm list global regions does not give the same list)
+	log.Debug().Msg("no region cache or region limits found. fetching regions")
 	regions := []string{}
 	svc := h.Ec2("us-east-1")
 	ctx := context.Background()
@@ -383,7 +389,10 @@ func (h *AwsConnection) Regions() ([]string, error) {
 		}
 	}
 	for _, region := range res.Regions {
-		regions = append(regions, *region.RegionName)
+		// ensure excluded regions are discarded
+		if !slices.Contains(h.Filters.DiscoveryFilters.ExcludeRegions, *region.RegionName) {
+			regions = append(regions, *region.RegionName)
+		}
 	}
 	// cache the regions as part of the provider instance
 	h.clientcache.Store("_regions", &CacheEntry{Data: regions})
