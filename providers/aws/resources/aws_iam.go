@@ -268,6 +268,37 @@ func iamTagsToMap(tags []iamtypes.Tag) map[string]interface{} {
 	return tagsMap
 }
 
+func (a *mqlAwsIam) instanceProfiles() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Iam("")
+	ctx := context.Background()
+
+	var marker *string
+	res := []interface{}{}
+	for {
+		usersResp, err := svc.ListInstanceProfiles(ctx, &iam.ListInstanceProfilesInput{Marker: marker})
+		if err != nil {
+			return nil, errors.Wrap(err, "could not gather aws iam instance profiles")
+		}
+		for i := range usersResp.Users {
+			usr := usersResp.Users[i]
+
+			mqlAwsIamUser, err := a.createIamUser(&usr)
+			if err != nil {
+				return nil, err
+			}
+
+			res = append(res, mqlAwsIamUser)
+		}
+		if !usersResp.IsTruncated {
+			break
+		}
+		marker = usersResp.Marker
+	}
+	return res, nil
+}
+
 func (a *mqlAwsIam) createInstanceProfile(instanceProfile *iamtypes.InstanceProfile) (plugin.Resource, error) {
 	if instanceProfile == nil {
 		return nil, errors.New("no instance profile provided")
