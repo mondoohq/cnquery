@@ -45,20 +45,20 @@ type DiscoveryFilters struct {
 	Ec2DiscoveryFilters Ec2DiscoveryFilters
 	EcrDiscoveryFilters EcrDiscoveryFilters
 	EcsDiscoveryFilters EcsDiscoveryFilters
-	DiscoveryFilters    GeneralResourceDiscoveryFilters
+	DiscoveryFilters    GeneralDiscoveryFilters
 }
 
 // ensure all underlying reference types aren't `nil`
 func EmptyDiscoveryFilters() DiscoveryFilters {
 	return DiscoveryFilters{
-		DiscoveryFilters:    GeneralResourceDiscoveryFilters{Regions: []string{}, ExcludeRegions: []string{}},
+		DiscoveryFilters:    GeneralDiscoveryFilters{Regions: []string{}, ExcludeRegions: []string{}},
 		Ec2DiscoveryFilters: Ec2DiscoveryFilters{InstanceIds: []string{}, ExcludeInstanceIds: []string{}, Tags: map[string]string{}, ExcludeTags: map[string]string{}},
 		EcrDiscoveryFilters: EcrDiscoveryFilters{Tags: []string{}, ExcludeTags: []string{}},
 		EcsDiscoveryFilters: EcsDiscoveryFilters{},
 	}
 }
 
-type GeneralResourceDiscoveryFilters struct {
+type GeneralDiscoveryFilters struct {
 	Regions        []string
 	ExcludeRegions []string
 }

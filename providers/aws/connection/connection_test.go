@@ -36,7 +36,7 @@ func TestParseOptsToFilters(t *testing.T) {
 			"ecs:discover-instances":      "false",
 		}
 		expected := DiscoveryFilters{
-			DiscoveryFilters: GeneralResourceDiscoveryFilters{
+			DiscoveryFilters: GeneralDiscoveryFilters{
 				Regions:        []string{"us-east-1", "us-west-1", "eu-west-1"},
 				ExcludeRegions: []string{"us-east-2", "us-west-2", "eu-west-2"},
 			},
