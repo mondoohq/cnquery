@@ -268,6 +268,54 @@ func iamTagsToMap(tags []iamtypes.Tag) map[string]interface{} {
 	return tagsMap
 }
 
+func (a *mqlAwsIam) instanceProfiles() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Iam("")
+	ctx := context.Background()
+
+	var marker *string
+	res := []interface{}{}
+	for {
+		instanceProfilesResp, err := svc.ListInstanceProfiles(ctx, &iam.ListInstanceProfilesInput{Marker: marker})
+		if err != nil {
+			return nil, errors.Wrap(err, "could not gather aws iam instance profiles")
+		}
+		for i := range instanceProfilesResp.InstanceProfiles {
+			itp := instanceProfilesResp.InstanceProfiles[i]
+
+			mqlAwsIamUser, err := a.createInstanceProfile(&itp)
+			if err != nil {
+				return nil, err
+			}
+
+			res = append(res, mqlAwsIamUser)
+		}
+		if !instanceProfilesResp.IsTruncated {
+			break
+		}
+		marker = instanceProfilesResp.Marker
+	}
+	return res, nil
+}
+
+func (a *mqlAwsIam) createInstanceProfile(instanceProfile *iamtypes.InstanceProfile) (plugin.Resource, error) {
+	if instanceProfile == nil {
+		return nil, errors.New("no instance profile provided")
+	}
+
+	return CreateResource(a.MqlRuntime, "aws.iam.instanceProfile",
+		map[string]*llx.RawData{
+			"arn":                 llx.StringDataPtr(instanceProfile.Arn),
+			"createDate":          llx.TimeDataPtr(instanceProfile.CreateDate),
+			"instanceProfileId":   llx.StringDataPtr(instanceProfile.InstanceProfileId),
+			"instanceProfileName": llx.StringDataPtr(instanceProfile.InstanceProfileName),
+			//"roles":               llx.StringDataPtr(instanceProfile.Roles), Don't know how to implement this
+			"tags": llx.MapData(iamTagsToMap(instanceProfile.Tags), types.String),
+		},
+	)
+}
+
 func (a *mqlAwsIam) createIamUser(usr *iamtypes.User) (plugin.Resource, error) {
 	if usr == nil {
 		return nil, errors.New("no iam user provided")
