@@ -17,9 +17,9 @@ func TestParseOptsToFilters(t *testing.T) {
 			// DiscoveryFilters.ExcludeRegions
 			"exclude:regions": "us-east-2,us-west-2,eu-west-2",
 			// Ec2DiscoveryFilters.InstanceIds
-			"ec2:iid": "iid-1,iid-2",
+			"ec2:instance-ids": "iid-1,iid-2",
 			// Ec2DiscoveryFilters.ExcludeInstanceIds
-			"ec2:exclude:iid": "iid-1,iid-2",
+			"ec2:exclude:instance-ids": "iid-1,iid-2",
 			// Ec2DiscoveryFilters.Tags
 			"ec2:tag:key1": "val1",
 			"ec2:tag:key2": "val2",

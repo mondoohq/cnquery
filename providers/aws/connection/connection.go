@@ -149,9 +149,9 @@ func parseOptsToFilters(opts map[string]string) DiscoveryFilters {
 			d.DiscoveryFilters.Regions = append(d.DiscoveryFilters.Regions, strings.Split(v, ",")...)
 		case k == "exclude:regions":
 			d.DiscoveryFilters.ExcludeRegions = append(d.DiscoveryFilters.ExcludeRegions, strings.Split(v, ",")...)
-		case k == "ec2:iid":
+		case k == "ec2:instance-ids":
 			d.Ec2DiscoveryFilters.InstanceIds = append(d.Ec2DiscoveryFilters.InstanceIds, strings.Split(v, ",")...)
-		case k == "ec2:exclude:iid":
+		case k == "ec2:exclude:instance-ids":
 			d.Ec2DiscoveryFilters.ExcludeInstanceIds = append(d.Ec2DiscoveryFilters.ExcludeInstanceIds, strings.Split(v, ",")...)
 		case strings.HasPrefix(k, "ec2:tag:"):
 			d.Ec2DiscoveryFilters.Tags[strings.TrimPrefix(k, "ec2:tag:")] = v

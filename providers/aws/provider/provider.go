@@ -88,8 +88,8 @@ func parseFlagsToFiltersOpts(m map[string]*llx.Primitive) map[string]string {
 			"regions",
 			"exclude:regions",
 			// ec2 filters
-			"ec2:iid",
-			"ec2:exclude:iid",
+			"ec2:instance-ids",
+			"ec2:exclude:instance-ids",
 			"ec2:tag:",
 			"ec2:exclude:tag:",
 			// ecr filters
