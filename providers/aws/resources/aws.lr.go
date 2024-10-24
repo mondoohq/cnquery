@@ -6145,6 +6145,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsIam).Users, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"aws.iam.instanceProfiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIam).InstanceProfiles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"aws.iam.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIam).Roles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
