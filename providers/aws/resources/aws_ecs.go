@@ -136,10 +136,10 @@ func (a *mqlAwsEcs) getECSClusters(conn *connection.AwsConnection) []*jobpool.Jo
 				if resp.NextToken != nil {
 					params.NextToken = nextToken
 				}
-				for _, cluster := range resp.ClusterArns {
+				for _, clusterArn := range resp.ClusterArns {
 					mqlCluster, err := NewResource(a.MqlRuntime, "aws.ecs.cluster",
 						map[string]*llx.RawData{
-							"arn": llx.StringData(cluster),
+							"arn": llx.StringData(clusterArn),
 						})
 					if err != nil {
 						return nil, err
@@ -179,7 +179,7 @@ func initAwsEcsCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	}
 	svc := conn.Ecs(region)
 	ctx := context.Background()
-	clusterDetails, err := svc.DescribeClusters(ctx, &ecs.DescribeClustersInput{Clusters: []string{a}})
+	clusterDetails, err := svc.DescribeClusters(ctx, &ecs.DescribeClustersInput{Clusters: []string{a}, Include: []ecstypes.ClusterField{ecstypes.ClusterFieldTags}})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -192,7 +192,7 @@ func initAwsEcsCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 		return nil, nil, err
 	}
 	args["name"] = llx.StringDataPtr(c.ClusterName)
-	args["tags"] = llx.MapData(ecsTags(c.Tags), types.String)
+	args["tags"] = llx.MapData(ecsTagsToMap(c.Tags), types.String)
 	args["runningTasksCount"] = llx.IntData(int64(c.RunningTasksCount))
 	args["pendingTasksCount"] = llx.IntData(int64(c.PendingTasksCount))
 	args["registeredContainerInstancesCount"] = llx.IntData(int64(c.RegisteredContainerInstancesCount))
@@ -200,17 +200,6 @@ func initAwsEcsCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	args["status"] = llx.StringDataPtr(c.Status)
 	args["region"] = llx.StringData(region)
 	return args, nil, nil
-}
-
-func ecsTags(t []ecstypes.Tag) map[string]interface{} {
-	res := map[string]interface{}{}
-	for i := range t {
-		tag := t[i]
-		if tag.Key != nil && tag.Value != nil {
-			res[*tag.Key] = *tag.Value
-		}
-	}
-	return res
 }
 
 func (a *mqlAwsEcsCluster) containerInstances() ([]interface{}, error) {
@@ -302,10 +291,10 @@ func (a *mqlAwsEcsCluster) tasks() ([]interface{}, error) {
 		if resp.NextToken != nil {
 			params.NextToken = nextToken
 		}
-		for _, task := range resp.TaskArns {
+		for _, taskArn := range resp.TaskArns {
 			mqlTask, err := NewResource(a.MqlRuntime, "aws.ecs.task",
 				map[string]*llx.RawData{
-					"arn":         llx.StringData(task),
+					"arn":         llx.StringData(taskArn),
 					"clusterName": llx.StringData(name),
 				})
 			if err != nil {
@@ -351,7 +340,7 @@ func initAwsEcsTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	}
 	svc := conn.Ecs(region)
 	ctx := context.Background()
-	params := &ecs.DescribeTasksInput{Tasks: []string{a}, Cluster: &clusterName}
+	params := &ecs.DescribeTasksInput{Tasks: []string{a}, Cluster: &clusterName, Include: []ecstypes.TaskField{ecstypes.TaskFieldTags}}
 	params.Cluster = &clusterName
 	taskDetails, err := svc.DescribeTasks(ctx, params)
 	if err != nil {
@@ -367,7 +356,7 @@ func initAwsEcsTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	args["lastStatus"] = llx.StringData(convert.ToString(t.LastStatus))
 	args["platformFamily"] = llx.StringData(convert.ToString(t.PlatformFamily))
 	args["platformVersion"] = llx.StringData(convert.ToString(t.PlatformVersion))
-	args["tags"] = llx.MapData(ecsTags(t.Tags), types.String)
+	args["tags"] = llx.MapData(ecsTagsToMap(t.Tags), types.String)
 	res, err := CreateResource(runtime, "aws.ecs.task", args)
 	if err != nil {
 		return args, nil, err
@@ -486,4 +475,14 @@ func getPublicIpForContainer(ctx context.Context, conn *connection.AwsConnection
 
 func (s *mqlAwsEcsContainer) id() (string, error) {
 	return s.Arn.Data, nil
+}
+
+func ecsTagsToMap(tags []ecstypes.Tag) map[string]interface{} {
+	res := map[string]interface{}{}
+	for _, tag := range tags {
+		if tag.Key != nil && tag.Value != nil {
+			res[convert.ToString(tag.Key)] = convert.ToString(tag.Value)
+		}
+	}
+	return res
 }

@@ -26,7 +26,6 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/cnquery/v11/providers/aws/connection"
 	"go.mondoo.com/cnquery/v11/types"
-	"go.mondoo.com/cnquery/v11/utils/stringx"
 )
 
 func (e *mqlAwsEc2) id() (string, error) {
@@ -765,20 +764,20 @@ func (a *mqlAwsEc2) instances() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsEc2) getEc2Instances(ctx context.Context, svc *ec2.Client, filters connection.Ec2DiscoveryFilters) ([]ec2types.Reservation, error) {
+func (a *mqlAwsEc2) getEc2Instances(ctx context.Context, svc *ec2.Client, filters connection.DiscoveryFilters) ([]ec2types.Reservation, error) {
 	res := []ec2types.Reservation{}
 	nextToken := aws.String("no_token_to_start_with")
 	params := &ec2.DescribeInstancesInput{
 		Filters: []ec2types.Filter{},
 	}
-	for k, v := range filters.Tags {
+	for k, v := range filters.Ec2DiscoveryFilters.Tags {
 		params.Filters = append(params.Filters, ec2types.Filter{
 			Name:   aws.String(fmt.Sprintf("tag:%s", k)),
 			Values: strings.Split(v, ","),
 		})
 	}
-	if len(filters.InstanceIds) > 0 {
-		params.InstanceIds = filters.InstanceIds
+	if len(filters.Ec2DiscoveryFilters.InstanceIds) > 0 {
+		params.InstanceIds = filters.Ec2DiscoveryFilters.InstanceIds
 	}
 
 	for nextToken != nil {
@@ -801,7 +800,7 @@ func (a *mqlAwsEc2) getInstances(conn *connection.AwsConnection) []*jobpool.Job 
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
-	regions = determineApplicableRegions(regions, conn.Filters.Ec2DiscoveryFilters.Regions, conn.Filters.Ec2DiscoveryFilters.ExcludeRegions)
+	// regions = determineApplicableRegions(regions, conn.Filters.GeneralDiscoveryFilters.Regions, conn.Filters.GeneralDiscoveryFilters.ExcludeRegions)
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
@@ -811,7 +810,7 @@ func (a *mqlAwsEc2) getInstances(conn *connection.AwsConnection) []*jobpool.Job 
 			ctx := context.Background()
 			var res []interface{}
 
-			instances, err := a.getEc2Instances(ctx, svc, conn.Filters.Ec2DiscoveryFilters)
+			instances, err := a.getEc2Instances(ctx, svc, conn.Filters)
 			if err != nil {
 				if Is400AccessDeniedError(err) {
 					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -843,7 +842,7 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, regionV
 	res := []interface{}{}
 	for _, reservation := range instances {
 		for _, instance := range reservation.Instances {
-			if shouldExcludeInstance(instance, conn.Filters.Ec2DiscoveryFilters) {
+			if shouldExcludeInstance(instance, conn.Filters) {
 				continue
 			}
 			mqlDevices := []interface{}{}
@@ -1780,13 +1779,13 @@ func (a *mqlAwsEc2Vgwtelemetry) id() (string, error) {
 }
 
 // true if the instance should be excluded from results. filtering for excluded regions should happen before we retrieve the EC2 instance.
-func shouldExcludeInstance(instance ec2types.Instance, filters connection.Ec2DiscoveryFilters) bool {
-	for _, id := range filters.ExcludeInstanceIds {
+func shouldExcludeInstance(instance ec2types.Instance, filters connection.DiscoveryFilters) bool {
+	for _, id := range filters.Ec2DiscoveryFilters.ExcludeInstanceIds {
 		if instance.InstanceId != nil && *instance.InstanceId == id {
 			return true
 		}
 	}
-	for k, v := range filters.ExcludeTags {
+	for k, v := range filters.Ec2DiscoveryFilters.ExcludeTags {
 		for _, tagValue := range strings.Split(v, ",") {
 			for _, iTag := range instance.Tags {
 				if iTag.Key != nil && *iTag.Key == k &&
@@ -1797,20 +1796,4 @@ func shouldExcludeInstance(instance ec2types.Instance, filters connection.Ec2Dis
 		}
 	}
 	return false
-}
-
-// given an initial set of regions, applies the allowed regions filter and the excluded regions filter on it
-// returning a resulting slice of only applicable region to which queries should be targeted
-func determineApplicableRegions(regions, regionsToInclude, regionsToExclude []string) []string {
-	if len(regionsToInclude) > 0 {
-		return regionsToInclude
-	}
-	res := []string{}
-	for _, r := range regions {
-		if !stringx.Contains(regionsToExclude, r) {
-			res = append(res, r)
-		}
-	}
-
-	return res
 }

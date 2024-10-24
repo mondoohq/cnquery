@@ -105,46 +105,22 @@ func containsInterfaceSlice(sl []interface{}, s string) bool {
 	return false
 }
 
-func imageMatchesFilters(image *mqlAwsEcrImage, filters connection.DiscoveryFilters) bool {
-	f := filters.EcrDiscoveryFilters
-	if len(f.Tags) > 0 {
-		for i := range f.Tags {
-			t := f.Tags[i]
-			if !containsInterfaceSlice(image.Tags.Data, t) {
-				return false
-			}
+func imageMatchesFilters(image *mqlAwsEcrImage, filters connection.EcrDiscoveryFilters) bool {
+	for _, t := range filters.Tags {
+		if !containsInterfaceSlice(image.Tags.Data, t) {
+			return false
 		}
 	}
-	return true
-}
-
-func containerMatchesFilters(container *mqlAwsEcsContainer, filters connection.DiscoveryFilters) bool {
-	f := filters.EcsDiscoveryFilters
-	if f.OnlyRunningContainers {
-		if container.Status.Data != "RUNNING" {
+	for _, t := range filters.ExcludeTags {
+		if containsInterfaceSlice(image.Tags.Data, t) {
 			return false
 		}
 	}
 	return true
 }
 
-func shouldScanEcsContainerInstances(filters connection.DiscoveryFilters) bool {
-	return filters.EcsDiscoveryFilters.DiscoverInstances
-}
-
-func shouldScanEcsContainerImages(filters connection.DiscoveryFilters) bool {
-	return filters.EcsDiscoveryFilters.DiscoverImages
-}
-
-func discoveredAssetMatchesGeneralFilters(asset *inventory.Asset, filters connection.GeneralResourceDiscoveryFilters) bool {
-	if len(filters.Tags) > 0 {
-		for k, v := range filters.Tags {
-			if asset.Labels[k] != v {
-				return false
-			}
-		}
-	}
-	return true
+func containerMatchesFilters(container *mqlAwsEcsContainer, ecsFilters connection.EcsDiscoveryFilters) bool {
+	return ecsFilters.OnlyRunningContainers && container.Status.Data == "RUNNING"
 }
 
 func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
@@ -167,15 +143,6 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 		if err != nil {
 			log.Error().Err(err).Msg("error during discovery")
 			continue
-		}
-		if len(conn.Filters.GeneralDiscoveryFilters.Tags) > 0 {
-			newList := []*inventory.Asset{}
-			for i := range list {
-				if discoveredAssetMatchesGeneralFilters(list[i], conn.Filters.GeneralDiscoveryFilters) {
-					newList = append(newList, list[i])
-				}
-			}
-			list = newList
 		}
 		in.Spec.Assets = append(in.Spec.Assets, list...)
 	}
@@ -277,7 +244,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 
 		for i := range images.Data {
 			a := images.Data[i].(*mqlAwsEcrImage)
-			if !imageMatchesFilters(a, filters) {
+			if !imageMatchesFilters(a, filters.EcrDiscoveryFilters) {
 				continue
 			}
 			ecrAsset := addConnectionInfoToEcrAsset(a, conn)
@@ -302,12 +269,12 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 
 		for i := range containers.Data {
 			c := containers.Data[i].(*mqlAwsEcsContainer)
-			if !containerMatchesFilters(c, filters) {
+			if !containerMatchesFilters(c, filters.EcsDiscoveryFilters) {
 				continue
 			}
 			assetList = append(assetList, addConnectionInfoToECSContainerAsset(c, accountId, conn))
 		}
-		if shouldScanEcsContainerInstances(filters) {
+		if filters.EcsDiscoveryFilters.DiscoverInstances {
 			containerInst := ecs.GetContainerInstances()
 			if containerInst == nil {
 				return assetList, nil
@@ -336,7 +303,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 
 		for i := range containers.Data {
 			c := containers.Data[i].(*mqlAwsEcsContainer)
-			if !containerMatchesFilters(c, filters) {
+			if !containerMatchesFilters(c, filters.EcsDiscoveryFilters) {
 				continue
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId,
@@ -364,7 +331,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 
 		for i := range images.Data {
 			a := images.Data[i].(*mqlAwsEcrImage)
-			if !imageMatchesFilters(a, filters) {
+			if !imageMatchesFilters(a, filters.EcrDiscoveryFilters) {
 				continue
 			}
 			l := make(map[string]string)
