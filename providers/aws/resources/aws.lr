@@ -798,6 +798,7 @@ private aws.iam.user @defaults("arn name") {
   loginProfile() aws.iam.loginProfile
 }
 
+// AWS IAM instanceProfile
 private aws.iam.instanceProfile @defaults("arn instanceProfileName") {
   // ARN of the IAM instanceProfile
   arn string
