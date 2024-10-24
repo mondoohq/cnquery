@@ -14755,6 +14755,7 @@ type mqlAwsIam struct {
 	AccountSummary plugin.TValue[map[string]interface{}]
 	VirtualMfaDevices plugin.TValue[[]interface{}]
 	ServerCertificates plugin.TValue[[]interface{}]
+	IamInstanceProfile plugin.TValue[[]interface{}]
 }
 
 // createAwsIam creates a new instance of this resource

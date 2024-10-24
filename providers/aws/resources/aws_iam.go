@@ -268,6 +268,23 @@ func iamTagsToMap(tags []iamtypes.Tag) map[string]interface{} {
 	return tagsMap
 }
 
+func (a *mqlAwsIam) createInstanceProfile(instanceProfile *iamtypes.InstanceProfile) (plugin.Resource, error) {
+	if instanceProfile == nil {
+		return nil, errors.New("no instance profile provided")
+	}
+
+	return CreateResource(a.MqlRuntime, "aws.iam.instanceProfile",
+		map[string]*llx.RawData{
+			"arn":                 llx.StringDataPtr(instanceProfile.Arn),
+			"createDate":          llx.TimeDataPtr(instanceProfile.CreateDate),
+			"instanceProfileId":   llx.StringDataPtr(instanceProfile.InstanceProfileId),
+			"instanceProfileName": llx.StringDataPtr(instanceProfile.InstanceProfileName),
+			"roles":               llx.StringDataPtr(instanceProfile.Roles),
+			"tags":                llx.MapData(iamTagsToMap(instanceProfile.Tags), types.String),
+		},
+	)
+}
+
 func (a *mqlAwsIam) createIamUser(usr *iamtypes.User) (plugin.Resource, error) {
 	if usr == nil {
 		return nil, errors.New("no iam user provided")
