@@ -202,6 +202,9 @@ func convertTeamsProtectionPolicy(r *mqlMs365Exchangeonline, data []*TeamsProtec
 func convertReportSubmissionPolicy(r *mqlMs365Exchangeonline, data []*ReportSubmissionPolicy) ([]interface{}, error) {
 	var result []interface{}
 	for _, t := range data {
+		if t == nil {
+			continue
+		}
 		policy, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.reportSubmissionPolicy",
 			map[string]*llx.RawData{
 				"reportJunkToCustomizedAddress":               llx.BoolData(t.ReportJunkToCustomizedAddress),
@@ -338,6 +341,9 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 	externalInOutlook := []interface{}{}
 	var externalInOutlookErr error
 	for _, e := range report.ExternalInOutlook {
+		if e == nil {
+			continue
+		}
 		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.externalSender",
 			map[string]*llx.RawData{
 				"identity":  llx.StringData(e.Identity),
@@ -356,6 +362,9 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 	sharedMailboxes := []interface{}{}
 	var sharedMailboxesErr error
 	for _, m := range report.ExoMailbox {
+		if m == nil {
+			continue
+		}
 		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.exoMailbox",
 			map[string]*llx.RawData{
 				"identity":                  llx.StringData(m.Identity),
@@ -371,13 +380,20 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 	r.SharedMailboxes = plugin.TValue[[]interface{}]{Data: sharedMailboxes, State: plugin.StateIsSet, Error: sharedMailboxesErr}
 
 	// Related to TeamsProtectionPolicy
-	teamsProtectionPolicies, teamsProtectionPolicyErr := convertTeamsProtectionPolicy(r, report.TeamsProtectionPolicy)
-	r.TeamsProtectionPolicies = plugin.TValue[[]interface{}]{Data: teamsProtectionPolicies, State: plugin.StateIsSet, Error: teamsProtectionPolicyErr}
+	if report.TeamsProtectionPolicy != nil {
+		teamsProtectionPolicies, teamsProtectionPolicyErr := convertTeamsProtectionPolicy(r, report.TeamsProtectionPolicy)
+		r.TeamsProtectionPolicies = plugin.TValue[[]interface{}]{Data: teamsProtectionPolicies, State: plugin.StateIsSet, Error: teamsProtectionPolicyErr}
+	} else {
+		r.TeamsProtectionPolicies = plugin.TValue[[]interface{}]{State: plugin.StateIsSet | plugin.StateIsNull}
+	}
 
 	// Related to ReportSubmissionPolicy
-	reportSubmissionPolicies, reportSubmissionPolicyErr := convertReportSubmissionPolicy(r, report.ReportSubmissionPolicy)
-	r.ReportSubmissionPolicies = plugin.TValue[[]interface{}]{Data: reportSubmissionPolicies, State: plugin.StateIsSet, Error: reportSubmissionPolicyErr}
-
+	if report.ReportSubmissionPolicy != nil {
+		reportSubmissionPolicies, reportSubmissionPolicyErr := convertReportSubmissionPolicy(r, report.ReportSubmissionPolicy)
+		r.ReportSubmissionPolicies = plugin.TValue[[]interface{}]{Data: reportSubmissionPolicies, State: plugin.StateIsSet, Error: reportSubmissionPolicyErr}
+	} else {
+		r.ReportSubmissionPolicies = plugin.TValue[[]interface{}]{State: plugin.StateIsSet | plugin.StateIsNull}
+	}
 	return nil
 }
 
