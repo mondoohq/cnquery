@@ -1576,6 +1576,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.iam.users": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIam).GetUsers()).ToDataRes(types.Array(types.Resource("aws.iam.user")))
 	},
+	"aws.iam.instanceProfiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIam).GetInstanceProfiles()).ToDataRes(types.Array(types.Resource("aws.iam.instanceProfile")))
+	},
 	"aws.iam.roles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIam).GetRoles()).ToDataRes(types.Array(types.Resource("aws.iam.role")))
 	},
@@ -14755,7 +14758,7 @@ type mqlAwsIam struct {
 	AccountSummary plugin.TValue[map[string]interface{}]
 	VirtualMfaDevices plugin.TValue[[]interface{}]
 	ServerCertificates plugin.TValue[[]interface{}]
-	IamInstanceProfile plugin.TValue[[]interface{}]
+	InstanceProfiles plugin.TValue[[]interface{}]
 }
 
 // createAwsIam creates a new instance of this resource
@@ -14808,6 +14811,22 @@ func (c *mqlAwsIam) GetUsers() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.users()
+	})
+}
+
+func (c *mqlAwsIam) GetInstanceProfiles() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.InstanceProfiles, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam", c.__id, "instanceProfiles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.instanceProfiles()
 	})
 }
 
