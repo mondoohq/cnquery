@@ -136,7 +136,6 @@ func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 	c.scope = asset.Options["scope"]
 	c.connectionOptions = asset.Options
 	if conf.Discover != nil {
-		log.Warn().Interface("opts", conf.Discover.Filter).Msg("PARSING OPTS TO FILTERS!")
 		c.Filters = parseOptsToFilters(conf.Discover.Filter)
 	}
 	return c, nil
@@ -368,7 +367,6 @@ func (h *AwsConnection) Regions() ([]string, error) {
 
 	// include filters have precedense over exclude filters. in any normal situation they should be mutually exclusive.
 	regionLimits := h.Filters.DiscoveryFilters.Regions
-	log.Warn().Interface("regionLimits", regionLimits).Msg("region limits when Regions() is called")
 	if len(regionLimits) > 0 {
 		log.Debug().Interface("regions", regionLimits).Msg("using region limits")
 		// cache the regions as part of the provider instance
