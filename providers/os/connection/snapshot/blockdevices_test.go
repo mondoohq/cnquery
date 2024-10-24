@@ -12,6 +12,54 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestBlockDevicesUnmarshal(t *testing.T) {
+	common := `{
+   "blockdevices": [
+      {"name": "nvme1n1", "size": 8589934592, "fstype": null, "mountpoint": null, "label": null, "uuid": null,
+         "children": [
+            {"name": "nvme1n1p1", "size": 7515127296, "fstype": "ext4", "mountpoint": null, "label": "cloudimg-rootfs", "uuid": "d84ccd9b-0384-4314-88be-5bd38eb59f30"},
+            {"name": "nvme1n1p14", "size": 4194304, "fstype": null, "mountpoint": null, "label": null, "uuid": null},
+            {"name": "nvme1n1p15", "size": 111149056, "fstype": "vfat", "mountpoint": null, "label": "UEFI", "uuid": "9601-9938"},
+            {"name": "nvme1n1p16", "size": 957350400, "fstype": "ext4", "mountpoint": null, "label": "BOOT", "uuid": "c2032e48-1c8e-4f92-87c6-9db270bf4274"}
+         ]
+      },
+      {"name": "nvme0n1", "size": "8589934592", "fstype": null, "mountpoint": null, "label": null, "uuid": null,
+         "children": [
+            {"name": "nvme0n1p1", "size": 8578383360, "fstype": "xfs", "mountpoint": "/", "label": "/", "uuid": "804f6603-f3df-4054-8161-50bd9cbd9cf9"},
+            {"name": "nvme0n1p128", "size": 10485760, "fstype": "vfat", "mountpoint": "/boot/efi", "label": null, "uuid": "BCB5-3E0E"}
+         ]
+      }
+   ]
+}`
+
+	blockEntries := &BlockDevices{}
+	err := json.Unmarshal([]byte(common), blockEntries)
+	require.NoError(t, err)
+
+	stringer := `{
+   "blockdevices": [
+      {"name": "nvme1n1", "size": "8589934592", "fstype": null, "mountpoint": null, "label": null, "uuid": null,
+         "children": [
+            {"name": "nvme1n1p1", "size": "7515127296", "fstype": "ext4", "mountpoint": null, "label": "cloudimg-rootfs", "uuid": "d84ccd9b-0384-4314-88be-5bd38eb59f30"},
+            {"name": "nvme1n1p14", "size": "4194304", "fstype": null, "mountpoint": null, "label": null, "uuid": null},
+            {"name": "nvme1n1p15", "size": "111149056", "fstype": "vfat", "mountpoint": null, "label": "UEFI", "uuid": "9601-9938"},
+            {"name": "nvme1n1p16", "size": "957350400", "fstype": "ext4", "mountpoint": null, "label": "BOOT", "uuid": "c2032e48-1c8e-4f92-87c6-9db270bf4274"}
+         ]
+      },
+      {"name": "nvme0n1", "size": "8589934592", "fstype": null, "mountpoint": null, "label": null, "uuid": null,
+         "children": [
+            {"name": "nvme0n1p1", "size": "8578383360", "fstype": "xfs", "mountpoint": "/", "label": "/", "uuid": "804f6603-f3df-4054-8161-50bd9cbd9cf9"},
+            {"name": "nvme0n1p128", "size": "10485760", "fstype": "vfat", "mountpoint": "/boot/efi", "label": null, "uuid": "BCB5-3E0E"}
+         ]
+      }
+   ]
+}`
+
+	blockEntries = &BlockDevices{}
+	err = json.Unmarshal([]byte(stringer), blockEntries)
+	require.NoError(t, err)
+}
+
 func TestGetMountablePartitionByDevice(t *testing.T) {
 	t.Run("match by exact name", func(t *testing.T) {
 		blockEntries := BlockDevices{
@@ -128,9 +176,25 @@ func TestFindDevice(t *testing.T) {
 			},
 		}
 
+		expected := blockEntries.BlockDevices[2]
 		res, err := blockEntries.FindDevice("/dev/sdx")
 		require.Nil(t, err)
-		require.Equal(t, res, blockEntries.BlockDevices[2])
+		require.Equal(t, expected, res)
+	})
+
+	t.Run("match by alias name", func(t *testing.T) {
+		blockEntries := BlockDevices{
+			BlockDevices: []BlockDevice{
+				{Name: "sda", Children: []BlockDevice{{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoint: "/"}}},
+				{Name: "nvme0n1", Children: []BlockDevice{{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+				{Name: "sdx", Aliases: []string{"xvdx"}, Children: []BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+			},
+		}
+
+		expected := blockEntries.BlockDevices[2]
+		res, err := blockEntries.FindDevice("/dev/xvdx")
+		require.Nil(t, err)
+		require.Equal(t, expected, res)
 	})
 
 	t.Run("match by interchangeable name", func(t *testing.T) {
@@ -142,9 +206,10 @@ func TestFindDevice(t *testing.T) {
 			},
 		}
 
+		expected := blockEntries.BlockDevices[2]
 		res, err := blockEntries.FindDevice("/dev/sdc")
 		require.Nil(t, err)
-		require.Equal(t, res, blockEntries.BlockDevices[2])
+		require.Equal(t, expected, res)
 	})
 
 	t.Run("no match", func(t *testing.T) {
@@ -159,6 +224,54 @@ func TestFindDevice(t *testing.T) {
 		_, err := blockEntries.FindDevice("/dev/sdd")
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "no block device found with name")
+	})
+
+	t.Run("multiple matches by trailing letter", func(t *testing.T) {
+		blockEntries := BlockDevices{
+			BlockDevices: []BlockDevice{
+				{Name: "sda", Children: []BlockDevice{{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoint: "/"}}},
+				{Name: "nvme0n1", Children: []BlockDevice{{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+				{Name: "stc", Children: []BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+				{Name: "xvdc", Children: []BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+			},
+		}
+
+		expected := blockEntries.BlockDevices[3]
+		res, err := blockEntries.FindDevice("/dev/sdc")
+		require.Nil(t, err)
+		require.Equal(t, expected, res)
+	})
+
+	t.Run("perfect match and trailing letter matches", func(t *testing.T) {
+		blockEntries := BlockDevices{
+			BlockDevices: []BlockDevice{
+				{Name: "sda", Children: []BlockDevice{{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoint: "/"}}},
+				{Name: "nvme0n1", Children: []BlockDevice{{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+				{Name: "sta", Children: []BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+				{Name: "xvda", Children: []BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+			},
+		}
+
+		expected := blockEntries.BlockDevices[0]
+		res, err := blockEntries.FindDevice("/dev/sda")
+		require.Nil(t, err)
+		require.Equal(t, expected, res)
+	})
+
+	t.Run("perfect match and trailing letter matches (scrambled)", func(t *testing.T) {
+		blockEntries := BlockDevices{
+			BlockDevices: []BlockDevice{
+				{Name: "xvda", Children: []BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+				{Name: "sta", Children: []BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+				{Name: "nvme0n1", Children: []BlockDevice{{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+				{Name: "sda", Children: []BlockDevice{{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoint: "/"}}},
+			},
+		}
+
+		expected := blockEntries.BlockDevices[3]
+		res, err := blockEntries.FindDevice("/dev/sda")
+		require.Nil(t, err)
+		require.Equal(t, expected, res)
 	})
 }
 
@@ -410,4 +523,14 @@ func TestAttachedBlockEntryFedora(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "xfs", info.FsType)
 	require.True(t, strings.Contains(info.Name, "xvdh4"))
+}
+
+func TestLongestMatchingSuffix(t *testing.T) {
+	requested := "abcde"
+	entries := []string{"a", "e", "de"}
+
+	for i, entry := range entries {
+		r := LongestMatchingSuffix(requested, entry)
+		require.Equal(t, i, r)
+	}
 }
