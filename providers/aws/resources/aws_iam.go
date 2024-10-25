@@ -310,8 +310,8 @@ func (a *mqlAwsIam) createInstanceProfile(instanceProfile *iamtypes.InstanceProf
 			"createDate":          llx.TimeDataPtr(instanceProfile.CreateDate),
 			"instanceProfileId":   llx.StringDataPtr(instanceProfile.InstanceProfileId),
 			"instanceProfileName": llx.StringDataPtr(instanceProfile.InstanceProfileName),
-			//"roles":               llx.StringDataPtr(instanceProfile.Roles), Don't know how to implement this
-			"tags": llx.MapData(iamTagsToMap(instanceProfile.Tags), types.String),
+			"roles":               llx.MapDataPtr(instanceProfile.Roles),
+			"tags":                llx.MapData(iamTagsToMap(instanceProfile.Tags), types.String),
 		},
 	)
 }
