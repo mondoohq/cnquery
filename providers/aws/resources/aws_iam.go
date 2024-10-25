@@ -1509,6 +1509,15 @@ func initAwsIamInstanceProfile(runtime *plugin.Runtime, args map[string]*llx.Raw
 		instanceProfileName = strings.TrimPrefix(a.Resource, "instance-profile/")
 	}
 
+	//var Arn string
+	//if args["arn"] != nil {
+	//	a, err := arn.Parse(args["arn"].Value.(string))
+	//	if err != nil {
+	//		return nil, nil, err
+	//	}
+	//	Arn = a.Resource
+	//}
+
 	conn := runtime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Iam("")
@@ -1524,6 +1533,7 @@ func initAwsIamInstanceProfile(runtime *plugin.Runtime, args map[string]*llx.Raw
 
 		ip := resp.InstanceProfile
 		res, err := CreateResource(runtime, "aws.iam.instanceProfile", map[string]*llx.RawData{
+			"arn":                 llx.StringDataPtr(ip.Arn),
 			"createDate":          llx.TimeDataPtr(ip.CreateDate),
 			"instanceProfileId":   llx.StringDataPtr(ip.InstanceProfileId),
 			"instanceProfileName": llx.StringDataPtr(ip.InstanceProfileName),
