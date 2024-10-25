@@ -982,6 +982,7 @@ resources:
       httpTokens: {}
       hypervisor:
         min_mondoo_version: 9.0.0
+      iamInstanceProfile: {}
       image: {}
       instanceId: {}
       instanceLifecycle:
@@ -1893,6 +1894,8 @@ resources:
       attachedPolicies: {}
       credentialReport: {}
       groups: {}
+      instanceProfiles:
+        min_mondoo_version: 9.0.0
       policies: {}
       roles: {}
       serverCertificates: {}
@@ -2000,6 +2003,19 @@ resources:
       usernames: {}
     is_private: true
     min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - aws
+  aws.iam.instanceProfile:
+    fields:
+      arn: {}
+      createDate: {}
+      iamRoles: {}
+      instanceProfileId: {}
+      instanceProfileName: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - aws

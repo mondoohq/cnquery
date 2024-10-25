@@ -865,6 +865,7 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, regionV
 			if err != nil {
 				return nil, err
 			}
+
 			var stateTransitionTime time.Time
 			reg := regexp.MustCompile(`.*\((\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}) GMT\)`)
 			timeString := reg.FindStringSubmatch(convert.ToString(instance.StateTransitionReason))
@@ -876,27 +877,28 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, regionV
 				}
 			}
 			args := map[string]*llx.RawData{
-				"architecture":          llx.StringData(string(instance.Architecture)),
-				"arn":                   llx.StringData(fmt.Sprintf(ec2InstanceArnPattern, regionVal, conn.AccountId(), convert.ToString(instance.InstanceId))),
-				"detailedMonitoring":    llx.StringData(string(instance.Monitoring.State)),
-				"deviceMappings":        llx.ArrayData(mqlDevices, types.Resource("aws.ec2.instance.device")),
-				"ebsOptimized":          llx.BoolDataPtr(instance.EbsOptimized),
-				"enaSupported":          llx.BoolDataPtr(instance.EnaSupport),
-				"hypervisor":            llx.StringData(string(instance.Hypervisor)),
-				"instanceId":            llx.StringDataPtr(instance.InstanceId),
-				"instanceLifecycle":     llx.StringData(string(instance.InstanceLifecycle)),
-				"instanceType":          llx.StringData(string(instance.InstanceType)),
-				"launchTime":            llx.TimeDataPtr(instance.LaunchTime),
-				"platformDetails":       llx.StringDataPtr(instance.PlatformDetails),
-				"privateDnsName":        llx.StringDataPtr(instance.PrivateDnsName),
-				"privateIp":             llx.StringDataPtr(instance.PrivateIpAddress),
-				"publicDnsName":         llx.StringDataPtr(instance.PublicDnsName),
-				"publicIp":              llx.StringDataPtr(instance.PublicIpAddress),
-				"region":                llx.StringData(regionVal),
-				"rootDeviceName":        llx.StringDataPtr(instance.RootDeviceName),
-				"rootDeviceType":        llx.StringData(string(instance.RootDeviceType)),
-				"state":                 llx.StringData(string(instance.State.Name)),
-				"stateReason":           llx.MapData(stateReason, types.Any),
+				"architecture":       llx.StringData(string(instance.Architecture)),
+				"arn":                llx.StringData(fmt.Sprintf(ec2InstanceArnPattern, regionVal, conn.AccountId(), convert.ToString(instance.InstanceId))),
+				"detailedMonitoring": llx.StringData(string(instance.Monitoring.State)),
+				"deviceMappings":     llx.ArrayData(mqlDevices, types.Resource("aws.ec2.instance.device")),
+				"ebsOptimized":       llx.BoolDataPtr(instance.EbsOptimized),
+				"enaSupported":       llx.BoolDataPtr(instance.EnaSupport),
+				"hypervisor":         llx.StringData(string(instance.Hypervisor)),
+				"instanceId":         llx.StringDataPtr(instance.InstanceId),
+				"instanceLifecycle":  llx.StringData(string(instance.InstanceLifecycle)),
+				"instanceType":       llx.StringData(string(instance.InstanceType)),
+				"launchTime":         llx.TimeDataPtr(instance.LaunchTime),
+				"platformDetails":    llx.StringDataPtr(instance.PlatformDetails),
+				"privateDnsName":     llx.StringDataPtr(instance.PrivateDnsName),
+				"privateIp":          llx.StringDataPtr(instance.PrivateIpAddress),
+				"publicDnsName":      llx.StringDataPtr(instance.PublicDnsName),
+				"publicIp":           llx.StringDataPtr(instance.PublicIpAddress),
+				"region":             llx.StringData(regionVal),
+				"rootDeviceName":     llx.StringDataPtr(instance.RootDeviceName),
+				"rootDeviceType":     llx.StringData(string(instance.RootDeviceType)),
+				"state":              llx.StringData(string(instance.State.Name)),
+				"stateReason":        llx.MapData(stateReason, types.Any),
+				// "iamInstanceProfile":    llx.MapData(iamInstanceProfile, types.Any),
 				"stateTransitionReason": llx.StringDataPtr(instance.StateTransitionReason),
 				"stateTransitionTime":   llx.TimeData(stateTransitionTime),
 				"tags":                  llx.MapData(Ec2TagsToMap(instance.Tags), types.String),
@@ -1306,6 +1308,30 @@ func (a *mqlAwsEc2Instance) instanceStatus() (interface{}, error) {
 	}
 
 	return res, nil
+}
+
+// # go.mondoo.com/cnquery/v11/providers/aws/resources
+// resources/aws.lr.go:15420:12: c.iamRole undefined (type *mqlAwsIamInstanceProfile has no field or method iamRole, but does have field IamRole)
+// make[1]: *** [providers/build/aws] Error 1
+
+// x failed to build provider error="exit status 2" provider=aws
+
+func (a *mqlAwsEc2Instance) iamInstanceProfile() (*mqlAwsIamInstanceProfile, error) {
+	if a.instanceCache.IamInstanceProfile == nil {
+		a.IamInstanceProfile.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	arn := a.instanceCache.IamInstanceProfile.Arn
+
+	res, err := NewResource(a.MqlRuntime, "aws.iam.instanceProfile", map[string]*llx.RawData{
+		"arn": llx.StringDataPtr(arn),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return res.(*mqlAwsIamInstanceProfile), nil
 }
 
 func (a *mqlAwsEc2) volumes() ([]interface{}, error) {

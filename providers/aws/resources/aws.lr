@@ -711,6 +711,7 @@ aws.iam {
   virtualMfaDevices() []aws.iam.virtualmfadevice
   // List of server certificates stored in IAM
   serverCertificates() []dict
+  instanceProfiles() []aws.iam.instanceProfile
 }
 
 // Entry in AWS IAM credential report
@@ -795,6 +796,22 @@ private aws.iam.user @defaults("arn name") {
   accessKeys() []dict
   // Login profile for the user
   loginProfile() aws.iam.loginProfile
+}
+
+// AWS IAM instance profile
+private aws.iam.instanceProfile @defaults("arn instanceProfileId") {
+  // ARN of the instance profile
+  arn string
+  // Time when the instance profile was created
+  createDate time
+  // ID of the IAM instance profile
+  instanceProfileId string
+  // Name of the instance profile
+  instanceProfileName string
+  // Tags for the instance profile
+  tags map[string]string
+  // role attached to the instanceProfile
+  iamRoles() []aws.iam.role
 }
 
 // AWS IAM login profile for a user
@@ -3014,6 +3031,8 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   instanceType string
   // Tags on the instance
   tags map[string]string
+  // Instance profile of the instance
+  iamInstanceProfile() aws.iam.instanceProfile
   // Image that was used for the instance
   image() aws.ec2.image
   // Launch time of the instance
