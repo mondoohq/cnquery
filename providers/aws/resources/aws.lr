@@ -798,18 +798,20 @@ private aws.iam.user @defaults("arn name") {
   loginProfile() aws.iam.loginProfile
 }
 
-// AWS IAM instanceProfile
+// AWS IAM instance profile
 private aws.iam.instanceProfile @defaults("arn instanceProfileId") {
-  // ARN of the IAM instanceProfile
+  // ARN of the IAM instance profile
   arn string
-  // Time when instanceProfile was created
+  // Time when the instance profile was created
   createDate time
-  // ID of the IAM instanceProfile
+  // ID of the IAM instance profile
   instanceProfileId string
-  // name of the IAM instanceProfile
+  // Name of the instance profile
   instanceProfileName string
-  // Tags for the IAM user
+  // Tags of the instance profile
   tags map[string]string
+  // role attached to the instanceProfile
+  iamRole() aws.iam.role
 }
 
 // AWS IAM login profile for a user
@@ -3029,7 +3031,7 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   instanceType string
   // Tags on the instance
   tags map[string]string
-  // Instance profile of the instance.
+  // Instance profile of the instance
   iamInstanceProfile() aws.iam.instanceProfile
   // Image that was used for the instance
   image() aws.ec2.image
