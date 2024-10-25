@@ -811,7 +811,7 @@ private aws.iam.instanceProfile @defaults("arn instanceProfileId") {
   // Tags of the instance profile
   tags map[string]string
   // role attached to the instanceProfile
-  iamRole() aws.iam.role
+  iamRoles() []aws.iam.role
 }
 
 // AWS IAM login profile for a user

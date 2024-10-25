@@ -303,17 +303,44 @@ func (a *mqlAwsIam) createInstanceProfile(instanceProfile *iamtypes.InstanceProf
 	if instanceProfile == nil {
 		return nil, errors.New("no instance profile provided")
 	}
-
-	return CreateResource(a.MqlRuntime, "aws.iam.instanceProfile",
+	res, err := CreateResource(a.MqlRuntime, "aws.iam.instanceProfile",
 		map[string]*llx.RawData{
 			"arn":                 llx.StringDataPtr(instanceProfile.Arn),
 			"createDate":          llx.TimeDataPtr(instanceProfile.CreateDate),
 			"instanceProfileId":   llx.StringDataPtr(instanceProfile.InstanceProfileId),
 			"instanceProfileName": llx.StringDataPtr(instanceProfile.InstanceProfileName),
-			"roles":               llx.MapDataPtr(instanceProfile.Roles),
-			"tags":                llx.MapData(iamTagsToMap(instanceProfile.Tags), types.String),
+			// "roles":               llx.MapDataPtr(instanceProfile.Roles),
+			"tags": llx.MapData(iamTagsToMap(instanceProfile.Tags), types.String),
 		},
 	)
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlAwsIamInstanceProfile).rolesCache = instanceProfile.Roles
+	return res, nil
+}
+
+func (a *mqlAwsIamInstanceProfile) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+type mqlAwsIamInstanceProfileInternal struct {
+	rolesCache []iamtypes.Role
+}
+
+func (a *mqlAwsIamInstanceProfile) iamRoles() ([]interface{}, error) {
+	res := []interface{}{}
+	for _, role := range a.rolesCache {
+		roleRes, err := NewResource(a.MqlRuntime, "aws.iam.role", map[string]*llx.RawData{
+			"arn": llx.StringDataPtr(role.Arn),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, roleRes)
+	}
+
+	return res, nil
 }
 
 func (a *mqlAwsIam) createIamUser(usr *iamtypes.User) (plugin.Resource, error) {
@@ -1463,4 +1490,47 @@ func (a *mqlAwsIamLoginProfile) init() (string, error) {
 	// Note: the precision of AWS logins is in seconds. Current AWS docs don't
 	// specify a precision. Using seconds is reasonable.
 	return strconv.FormatInt(date.Unix(), 10), nil
+}
+
+func initAwsIamInstanceProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	if args["arn"] == nil && args["id"] == nil {
+		return nil, nil, errors.New("arn or id required to fetch aws iam instance profile")
+	}
+	var instanceProfileName string
+	if args["arn"] != nil {
+		a, err := arn.Parse(args["arn"].Value.(string))
+		if err != nil {
+			return nil, nil, err
+		}
+		instanceProfileName = strings.TrimPrefix(a.Resource, "instance-profile/")
+	}
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Iam("")
+	ctx := context.Background()
+
+	if instanceProfileName != "" {
+		resp, err := svc.GetInstanceProfile(ctx, &iam.GetInstanceProfileInput{
+			InstanceProfileName: &instanceProfileName,
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+
+		ip := resp.InstanceProfile
+		res, err := CreateResource(runtime, "aws.iam.instanceProfile", map[string]*llx.RawData{
+			"createDate":          llx.TimeDataPtr(ip.CreateDate),
+			"instanceProfileId":   llx.StringDataPtr(ip.InstanceProfileId),
+			"instanceProfileName": llx.StringDataPtr(ip.InstanceProfileName),
+			"tags":                llx.MapData(iamTagsToMap(ip.Tags), types.String),
+		})
+		res.(*mqlAwsIamInstanceProfile).rolesCache = ip.Roles
+		return args, res, nil
+	}
+	return args, nil, nil
 }

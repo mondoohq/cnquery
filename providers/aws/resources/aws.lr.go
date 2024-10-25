@@ -219,7 +219,7 @@ func init() {
 			Create: createAwsIamUser,
 		},
 		"aws.iam.instanceProfile": {
-			// to override args, implement: initAwsIamInstanceProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initAwsIamInstanceProfile,
 			Create: createAwsIamInstanceProfile,
 		},
 		"aws.iam.loginProfile": {
@@ -1726,6 +1726,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.iam.instanceProfile.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamInstanceProfile).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.iam.instanceProfile.iamRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamInstanceProfile).GetIamRoles()).ToDataRes(types.Array(types.Resource("aws.iam.role")))
 	},
 	"aws.iam.loginProfile.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamLoginProfile).GetCreatedAt()).ToDataRes(types.Time)
@@ -4341,7 +4344,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsEc2Instance).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.ec2.instance.iamInstanceProfile": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEc2Instance).GetIamInstanceProfile()).ToDataRes(types.Dict)
+		return (r.(*mqlAwsEc2Instance).GetIamInstanceProfile()).ToDataRes(types.Resource("aws.iam.instanceProfile"))
 	},
 	"aws.ec2.instance.image": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetImage()).ToDataRes(types.Resource("aws.ec2.image"))
@@ -6368,15 +6371,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsIamInstanceProfile).InstanceProfileName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-
-	"aws.iam.instanceProfile.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamInstanceProfile).Roles, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
-		return
-	},
-
-
 	"aws.iam.instanceProfile.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamInstanceProfile).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.iam.instanceProfile.iamRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamInstanceProfile).IamRoles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"aws.iam.loginProfile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10336,7 +10336,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.ec2.instance.iamInstanceProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Instance).IamInstanceProfile, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2Instance).IamInstanceProfile, ok = plugin.RawToTValue[*mqlAwsIamInstanceProfile](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.instance.image": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15344,13 +15344,13 @@ func (c *mqlAwsIamUser) GetLoginProfile() *plugin.TValue[*mqlAwsIamLoginProfile]
 type mqlAwsIamInstanceProfile struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlAwsIamInstanceProfileInternal it will be used here
+	mqlAwsIamInstanceProfileInternal
 	Arn plugin.TValue[string]
 	CreateDate plugin.TValue[*time.Time]
 	InstanceProfileId plugin.TValue[string]
 	InstanceProfileName plugin.TValue[string]
-	Roles plugin.TValue[map[string]interface{}]
 	Tags plugin.TValue[map[string]interface{}]
+	IamRoles plugin.TValue[[]interface{}]
 }
 
 // createAwsIamInstanceProfile creates a new instance of this resource
@@ -15364,7 +15364,12 @@ func createAwsIamInstanceProfile(runtime *plugin.Runtime, args map[string]*llx.R
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aws.iam.instanceProfile", res.__id)
@@ -15403,6 +15408,22 @@ func (c *mqlAwsIamInstanceProfile) GetInstanceProfileName() *plugin.TValue[strin
 
 func (c *mqlAwsIamInstanceProfile) GetTags() *plugin.TValue[map[string]interface{}] {
 	return &c.Tags
+}
+
+func (c *mqlAwsIamInstanceProfile) GetIamRoles() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.IamRoles, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.instanceProfile", c.__id, "iamRoles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.iamRoles()
+	})
 }
 
 // mqlAwsIamLoginProfile for the aws.iam.loginProfile resource
@@ -26385,7 +26406,7 @@ type mqlAwsEc2Instance struct {
 	EnaSupported plugin.TValue[bool]
 	InstanceType plugin.TValue[string]
 	Tags plugin.TValue[map[string]interface{}]
-	IamInstanceProfile plugin.TValue[interface{}]
+	IamInstanceProfile plugin.TValue[*mqlAwsIamInstanceProfile]
 	Image plugin.TValue[*mqlAwsEc2Image]
 	LaunchTime plugin.TValue[*time.Time]
 	PrivateIp plugin.TValue[string]
@@ -26557,8 +26578,18 @@ func (c *mqlAwsEc2Instance) GetTags() *plugin.TValue[map[string]interface{}] {
 	return &c.Tags
 }
 
-func (c *mqlAwsEc2Instance) GetIamInstanceProfile() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.IamInstanceProfile, func() (interface{}, error) {
+func (c *mqlAwsEc2Instance) GetIamInstanceProfile() *plugin.TValue[*mqlAwsIamInstanceProfile] {
+	return plugin.GetOrCompute[*mqlAwsIamInstanceProfile](&c.IamInstanceProfile, func() (*mqlAwsIamInstanceProfile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.instance", c.__id, "iamInstanceProfile")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamInstanceProfile), nil
+			}
+		}
+
 		return c.iamInstanceProfile()
 	})
 }
