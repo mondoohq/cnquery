@@ -1509,15 +1509,6 @@ func initAwsIamInstanceProfile(runtime *plugin.Runtime, args map[string]*llx.Raw
 		instanceProfileName = strings.TrimPrefix(a.Resource, "instance-profile/")
 	}
 
-	//var Arn string
-	//if args["arn"] != nil {
-	//	a, err := arn.Parse(args["arn"].Value.(string))
-	//	if err != nil {
-	//		return nil, nil, err
-	//	}
-	//	Arn = a.Resource
-	//}
-
 	conn := runtime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Iam("")

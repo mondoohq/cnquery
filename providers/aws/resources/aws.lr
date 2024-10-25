@@ -800,7 +800,7 @@ private aws.iam.user @defaults("arn name") {
 
 // AWS IAM instance profile
 private aws.iam.instanceProfile @defaults("arn instanceProfileId") {
-  // ARN of the IAM instance profile
+  // ARN of the instance profile
   arn string
   // Time when the instance profile was created
   createDate time
@@ -808,7 +808,7 @@ private aws.iam.instanceProfile @defaults("arn instanceProfileId") {
   instanceProfileId string
   // Name of the instance profile
   instanceProfileName string
-  // Tags of the instance profile
+  // Tags for the instance profile
   tags map[string]string
   // role attached to the instanceProfile
   iamRoles() []aws.iam.role

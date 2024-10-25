@@ -2010,7 +2010,6 @@ resources:
     fields:
       arn: {}
       createDate: {}
-      iamRole: {}
       iamRoles: {}
       instanceProfileId: {}
       instanceProfileName: {}
