@@ -8,6 +8,17 @@
 \b[Ll]orem [Ii]psum\b
 
 #
+# Overly formal style
+#
+
+# s.b. Whether
+\bIndicates whether\b
+\bIndicates if\b
+\bIndicates\b
+\bWhether or not\b
+\bDenotes if\b
+
+#
 # Terms to avoid
 #
 
@@ -202,12 +213,23 @@
 
 # s.b. SentinelOne
 \bSentinal[Oo]ne\b
-\bSentinelone\b
-\bSentinal One\b
+\bSentin[ae]lone\b
+\bSentin[ae]l One\b
 
 # s.b. CrowdStrike
 \bCrowd Strike\b
 \b[Cc]rowdstrike\b
+
+# s.b. Zendesk
+\bZenDesk\b
+
+# s.b. ServiceNow
+\bService Now\b
+\bServicenow\b
+
+# s.b. name server
+\bnameserver\b
+\bnameservers\b
 
 #
 # Kubernetes Terms
@@ -678,6 +700,9 @@
 
 # s.b. policies
 [Pp]olices
+
+# s.b. ID
+# \bId\b # disabled in this repo due to false positives
 
 # s.b. CSV
 \bCVS\b
