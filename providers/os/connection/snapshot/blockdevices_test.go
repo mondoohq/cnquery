@@ -264,6 +264,29 @@ func TestGetMountablePartition(t *testing.T) {
 	})
 }
 
+func TestGetMountablePartitions(t *testing.T) {
+	t.Run("get all non-mounted partitions", func(t *testing.T) {
+		block := BlockDevice{
+			Name: "sda",
+			Children: []BlockDevice{
+				// already mounted
+				{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoint: "/"},
+				{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "sda2", MountPoint: ""},
+				{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sda3", MountPoint: ""},
+				// no fs type
+				{Uuid: "12347", FsType: "", Label: "ROOT", Name: "sda4", MountPoint: ""},
+			},
+		}
+		parts, err := block.GetMountablePartitions(true)
+		require.NoError(t, err)
+		expected := []*PartitionInfo{
+			{Name: "/dev/sda2", FsType: "xfs"},
+			{Name: "/dev/sda3", FsType: "xfs"},
+		}
+		require.ElementsMatch(t, expected, parts)
+	})
+}
+
 func TestLongestMatchingSuffix(t *testing.T) {
 	requested := "abcde"
 	entries := []string{"a", "e", "de"}

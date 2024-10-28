@@ -99,37 +99,6 @@ func (blockEntries *BlockDevices) findAliases() {
 	}
 }
 
-func (blockEntries *BlockDevices) findAlias(alias, path string) {
-	for i := range blockEntries.BlockDevices {
-		device := blockEntries.BlockDevices[i]
-		if alias == device.Name {
-			log.Debug().
-				Str("alias", alias).
-				Str("path", path).
-				Str("name", device.Name).
-				Msg("found alias")
-			device.Aliases = append(device.Aliases, path)
-			blockEntries.BlockDevices[i] = device
-			return
-		}
-	}
-}
-
-// longestMatchingSuffix returns the length of the longest common suffix of two strings
-// and caches the result (lengths of the matching suffix) for future calls with the same string
-func longestMatchingSuffix(s1, s2 string) int {
-	n1 := len(s1)
-	n2 := len(s2)
-
-	// Start from the end of both strings
-	i := 0
-	for i < int(math.Min(float64(n1), float64(n2))) && s1[n1-i-1] == s2[n2-i-1] {
-		i++
-	}
-
-	return i
-}
-
 // Searches for a device by name
 func (blockEntries BlockDevices) FindDevice(requested string) (BlockDevice, error) {
 	log.Debug().Str("device", requested).Msg("searching for device")
@@ -195,25 +164,30 @@ func (device BlockDevice) GetMountablePartitions(includeAll bool) ([]*PartitionI
 	sortBlockDevicesBySize(blockDevices)
 
 	filter := func(partition BlockDevice) bool {
-		return partition.isNoBootVolumeAndUnmounted()
-	}
-	if includeAll {
-		filter = func(partition BlockDevice) bool {
+		if partition.FsType == "" {
+			log.Debug().Str("name", partition.Name).Msg("skipping partition without filesystem type")
+			return false
+		}
+		if includeAll {
 			return !partition.isMounted()
 		}
+
+		return partition.isNoBootVolumeAndUnmounted()
 	}
 
 	partitions := []*PartitionInfo{}
 	for _, partition := range blockDevices {
 		log.Debug().Str("name", partition.Name).Int64("size", int64(partition.Size)).Msg("checking partition")
-		if partition.FsType == "" {
-			log.Debug().Str("name", partition.Name).Msg("skipping partition without filesystem type")
-			continue
-		}
 		if filter(partition) {
 			log.Debug().Str("name", partition.Name).Msg("found suitable partition")
 			devFsName := "/dev/" + partition.Name
 			partitions = append(partitions, &PartitionInfo{Name: devFsName, FsType: partition.FsType})
+		} else {
+			log.Debug().
+				Str("name", partition.Name).
+				Str("fs_type", partition.FsType).
+				Str("mountpoint", partition.MountPoint).
+				Msg("skipping partition, because the filter did not match")
 		}
 	}
 
@@ -239,4 +213,35 @@ func sortBlockDevicesBySize(partitions []BlockDevice) {
 	sort.Slice(partitions, func(i, j int) bool {
 		return partitions[i].Size > partitions[j].Size
 	})
+}
+
+func (blockEntries *BlockDevices) findAlias(alias, path string) {
+	for i := range blockEntries.BlockDevices {
+		device := blockEntries.BlockDevices[i]
+		if alias == device.Name {
+			log.Debug().
+				Str("alias", alias).
+				Str("path", path).
+				Str("name", device.Name).
+				Msg("found alias")
+			device.Aliases = append(device.Aliases, path)
+			blockEntries.BlockDevices[i] = device
+			return
+		}
+	}
+}
+
+// longestMatchingSuffix returns the length of the longest common suffix of two strings
+// and caches the result (lengths of the matching suffix) for future calls with the same string
+func longestMatchingSuffix(s1, s2 string) int {
+	n1 := len(s1)
+	n2 := len(s2)
+
+	// Start from the end of both strings
+	i := 0
+	for i < int(math.Min(float64(n1), float64(n2))) && s1[n1-i-1] == s2[n2-i-1] {
+		i++
+	}
+
+	return i
 }
