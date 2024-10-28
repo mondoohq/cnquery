@@ -273,6 +273,10 @@ func (a *mqlAwsEksNodegroup) diskSize() (int64, error) {
 	if err != nil {
 		return 0, err
 	}
+	if ng.DiskSize == nil {
+		a.DiskSize.State = plugin.StateIsNull | plugin.StateIsSet
+		return 0, nil
+	}
 	return int64(*ng.DiskSize), nil
 }
 
