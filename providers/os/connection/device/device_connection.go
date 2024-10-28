@@ -159,23 +159,22 @@ func (p *DeviceConnection) Conf() *inventory.Config {
 }
 
 // tryDetectAsset tries to detect the OS on a given block device
-func tryDetectAsset(connId uint32, block *snapshot.PartitionInfo, manager DeviceManager, conf *inventory.Config, asset *inventory.Asset) (*fs.FileSystemConnection, string, error) {
-	log.Debug().Str("name", block.Name).Str("type", block.FsType).Msg("identified partition for mounting")
-	confC := conf.Clone()
-	scanDir, err := manager.Mount(block)
+func tryDetectAsset(connId uint32, partition *snapshot.PartitionInfo, manager DeviceManager, conf *inventory.Config, asset *inventory.Asset) (*fs.FileSystemConnection, string, error) {
+	log.Debug().Str("name", partition.Name).Str("type", partition.FsType).Msg("mounting partition")
+	scanDir, err := manager.Mount(partition)
 	if err != nil {
 		log.Error().Err(err).Msg("unable to complete mount step")
 		return nil, "", err
 	}
 
 	// create and initialize fs provider
-	confC.Options["path"] = scanDir
+	conf.Options["path"] = scanDir
 	fsConn, err := fs.NewConnection(connId, &inventory.Config{
 		Path:       scanDir,
-		PlatformId: confC.PlatformId,
-		Options:    confC.Options,
+		PlatformId: conf.PlatformId,
+		Options:    conf.Options,
 		Type:       "fs",
-		Record:     confC.Record,
+		Record:     conf.Record,
 	}, asset)
 	if err != nil {
 		return nil, scanDir, err
@@ -184,7 +183,7 @@ func tryDetectAsset(connId uint32, block *snapshot.PartitionInfo, manager Device
 	p, ok := detector.DetectOS(fsConn)
 	if !ok {
 		log.Debug().
-			Str("block", block.Name).
+			Str("partition", partition.Name).
 			Msg("device connection> cannot detect os")
 		return nil, scanDir, errors.New("cannot detect os")
 	}
