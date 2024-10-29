@@ -37,7 +37,7 @@ func TestRedhat8Parser(t *testing.T) {
 	}
 
 	m := ParseRpmPackages(pf, c.Stdout)
-	assert.Equal(t, 190, len(m), "detected the right amount of packages")
+	assert.Equal(t, 192, len(m), "detected the right amount of packages")
 
 	p := Package{
 		Name:        "ncurses-base",
@@ -144,6 +144,24 @@ func TestRedhat8Parser(t *testing.T) {
 		},
 		Format:         RpmPkgFormat,
 		FilesAvailable: PkgFilesAsync,
+	}
+	assert.Equal(t, p, findPkg(m, p.Name), p.Name)
+
+	// Package with (none) vendor and arch
+	p = Package{
+		Name:           "gpg-pubkey",
+		Version:        "d4082792-5b32db75",
+		Vendor:         "(none)",
+		Description:    "gpg(Red Hat, Inc. (auxiliary key) <security@redhat.com>)",
+		Format:         RpmPkgFormat,
+		FilesAvailable: PkgFilesAsync,
+		PUrl:           "pkg:rpm/rhel/gpg-pubkey@d4082792-5b32db75?distro=rhel-8.4",
+		CPEs: []string{
+			"cpe:2.3:a:\\(none\\):gpg-pubkey:d4082792-5b32db75:*:*:*:*:*:*:*",
+			"cpe:2.3:a:\\(none\\):gpg-pubkey:d4082792:*:*:*:*:*:*:*",
+			"cpe:2.3:a:\\(none\\):gpg-pubkey:d4082792-5b32db75:*:*:*:*:*:*:*",
+			"cpe:2.3:a:\\(none\\):gpg-pubkey:d4082792:*:*:*:*:*:*:*",
+		},
 	}
 	assert.Equal(t, p, findPkg(m, p.Name), p.Name)
 
