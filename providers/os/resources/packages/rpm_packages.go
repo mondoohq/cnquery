@@ -292,7 +292,7 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 			version = version + "-" + pkg.Release
 		}
 
-		rpmPkg := newRpmPackage(rpm.platform, pkg.Name, version, pkg.Arch, epoch, pkg.Vendor, pkg.Summary)
+		rpmPkg := newRpmPackage(rpm.platform, pkg.Name, version, pkg.Arch, epoch, cleanupVendorName(pkg.Vendor), pkg.Summary)
 
 		// determine all files attached
 		records := []FileRecord{}
