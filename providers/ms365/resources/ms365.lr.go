@@ -381,6 +381,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.user.authMethods": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUser).GetAuthMethods()).ToDataRes(types.Resource("microsoft.user.authenticationMethods"))
 	},
+	"microsoft.user.mfaEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUser).GetMfaEnabled()).ToDataRes(types.Bool)
+	},
 	"microsoft.user.authenticationMethods.count": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUserAuthenticationMethods).GetCount()).ToDataRes(types.Int)
 	},
@@ -1375,6 +1378,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.user.authMethods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftUser).AuthMethods, ok = plugin.RawToTValue[*mqlMicrosoftUserAuthenticationMethods](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.mfaEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUser).MfaEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"microsoft.user.authenticationMethods.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2978,6 +2985,7 @@ type mqlMicrosoftUser struct {
 	Job plugin.TValue[interface{}]
 	Contact plugin.TValue[interface{}]
 	AuthMethods plugin.TValue[*mqlMicrosoftUserAuthenticationMethods]
+	MfaEnabled plugin.TValue[bool]
 }
 
 // createMicrosoftUser creates a new instance of this resource
@@ -3127,6 +3135,12 @@ func (c *mqlMicrosoftUser) GetAuthMethods() *plugin.TValue[*mqlMicrosoftUserAuth
 		}
 
 		return c.authMethods()
+	})
+}
+
+func (c *mqlMicrosoftUser) GetMfaEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MfaEnabled, func() (bool, error) {
+		return c.mfaEnabled()
 	})
 }
 

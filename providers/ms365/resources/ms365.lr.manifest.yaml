@@ -433,6 +433,8 @@ resources:
         min_mondoo_version: 9.0.0
       jobTitle: {}
       mail: {}
+      mfaEnabled:
+        min_mondoo_version: 9.0.0
       mobilePhone: {}
       officeLocation: {}
       otherMails: {}
