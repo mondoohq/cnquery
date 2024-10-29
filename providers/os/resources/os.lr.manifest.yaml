@@ -6,6 +6,8 @@ resources:
     fields:
       cpe: {}
       cpes: {}
+      purl:
+        min_mondoo_version: 9.0.0
       vulnerabilityReport: {}
     min_mondoo_version: latest
   asset.eol:

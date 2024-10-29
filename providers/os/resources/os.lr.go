@@ -552,6 +552,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"asset.vulnerabilityReport": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAsset).GetVulnerabilityReport()).ToDataRes(types.Dict)
 	},
+	"asset.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAsset).GetPurl()).ToDataRes(types.String)
+	},
 	"asset.eol.docsUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAssetEol).GetDocsUrl()).ToDataRes(types.String)
 	},
@@ -2299,6 +2302,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"asset.vulnerabilityReport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAsset).VulnerabilityReport, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"asset.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAsset).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"asset.eol.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5088,6 +5095,7 @@ type mqlAsset struct {
 	// optional: if you define mqlAssetInternal it will be used here
 	Cpes plugin.TValue[[]interface{}]
 	VulnerabilityReport plugin.TValue[interface{}]
+	Purl plugin.TValue[string]
 }
 
 // createAsset creates a new instance of this resource
@@ -5141,6 +5149,12 @@ func (c *mqlAsset) GetCpes() *plugin.TValue[[]interface{}] {
 func (c *mqlAsset) GetVulnerabilityReport() *plugin.TValue[interface{}] {
 	return plugin.GetOrCompute[interface{}](&c.VulnerabilityReport, func() (interface{}, error) {
 		return c.vulnerabilityReport()
+	})
+}
+
+func (c *mqlAsset) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
 	})
 }
 

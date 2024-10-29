@@ -23,6 +23,9 @@ extend asset {
   // Deprecated; will be removed in version 12.0
   // use vulnmgmt instead
   vulnerabilityReport() dict
+  // Platform URL in the Package URL format
+  // That's a URL as alternative to the CPE format
+  purl() string
 }
 
 asset.eol @defaults("date") {
