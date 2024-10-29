@@ -30,7 +30,7 @@ const (
 	RpmPkgFormat = "rpm"
 )
 
-var RPM_REGEX = regexp.MustCompile(`^([\w-+]*)\s(\d*|\(none\)):([\w\d-+.:]+)\s([\w\d]*|\(none\))__([\w\d\s,\.]+)__(.*)$`)
+var RPM_REGEX = regexp.MustCompile(`^([\w-+]*)\s(\d*|\(none\)):([\w\d-+.:]+)\s([\w\d]*|\(none\))__([\w\d\s,/<>:\.]+)__(.*)$`)
 
 // ParseRpmPackages parses output from:
 // rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}\n'
@@ -58,7 +58,10 @@ func ParseRpmPackages(pf *inventory.Platform, input io.Reader) []Package {
 			if arch == "(none)" {
 				arch = ""
 			}
-			pkg := newRpmPackage(pf, name, version, arch, epoch, m[5], m[6])
+
+			vendor := cleanupVendorName(m[5])
+
+			pkg := newRpmPackage(pf, name, version, arch, epoch, vendor, m[6])
 			pkg.FilesAvailable = PkgFilesAsync // when we use commands we need to fetch the files async
 			pkgs = append(pkgs, pkg)
 
@@ -97,8 +100,19 @@ func newRpmPackage(pf *inventory.Platform, name, version, arch, epoch, vendor, d
 	}
 }
 
+// matches a closed pair of angle brackets with any number of characters inside.
+var CLEANUP_VENDOR_REGEX = regexp.MustCompile(`<.*>`)
+
+// it is possible for the vendor name to contain a HTML tag with a website inside, e.g. SUSE.
+// we remove it because it is not necessary and later causes troubles for the CPE generation.
+// this assumes angle brackets are not used anywhere else in the names of vendors which is already the case.
+func cleanupVendorName(vendor string) string {
+	cleaned := CLEANUP_VENDOR_REGEX.ReplaceAllString(vendor, "")
+	return strings.TrimRight(cleaned, " ")
+}
+
 // RpmPkgManager is the package manager for Redhat, CentOS, Oracle, Photon and Suse
-// it support two modes: runtime where the rpm command is available and static analysis for images (e.g. container tar)
+// it supports two modes: runtime where the rpm command is available and static analysis for images (e.g. container tar)
 // If the RpmPkgManager is used in static mode, it extracts the rpm database from the system and copies it to the local
 // filesystem to run a local rpm command to extract the data. The static analysis is always slower than using the running
 // one since more data need to copied. Therefore the runtime check should be preferred over the static analysis
@@ -278,7 +292,7 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 			version = version + "-" + pkg.Release
 		}
 
-		rpmPkg := newRpmPackage(rpm.platform, pkg.Name, version, pkg.Arch, epoch, pkg.Vendor, pkg.Summary)
+		rpmPkg := newRpmPackage(rpm.platform, pkg.Name, version, pkg.Arch, epoch, cleanupVendorName(pkg.Vendor), pkg.Summary)
 
 		// determine all files attached
 		records := []FileRecord{}
