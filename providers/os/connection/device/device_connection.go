@@ -14,6 +14,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/device/linux"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/device/windows"
+	"go.mondoo.com/cnquery/v11/providers/os/connection/snapshot"
 	"go.mondoo.com/cnquery/v11/utils/stringx"
 
 	"go.mondoo.com/cnquery/v11/providers/os/connection/fs"
@@ -58,7 +59,7 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 		return nil, err
 	}
 	if len(blocks) == 0 {
-		return nil, errors.New("internal> no blocks found")
+		return nil, errors.New("device connection> internal: blocks found")
 	}
 
 	res := &DeviceConnection{
@@ -71,82 +72,28 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 		conf.Options = make(map[string]string)
 	}
 
+	if len(asset.IdDetector) == 0 {
+		asset.IdDetector = []string{ids.IdDetector_Hostname, ids.IdDetector_SshHostkey}
+	}
+
 	// we iterate over all the blocks and try to run OS detection on each one of them
 	// we only return one asset, if we find the right block (e.g. the one with the root FS)
-	for i := range blocks {
-		block := blocks[i]
-		log.Debug().Str("name", block.Name).Str("type", block.FsType).Msg("identified partition for mounting")
-
-		scanDir, err := manager.Mount(block)
+	for _, block := range blocks {
+		fsConn, scanDir, err := tryDetectAsset(connId, block, manager, conf, asset)
+		if scanDir != "" {
+			res.MountedDirs = append(res.MountedDirs, scanDir)
+		}
 		if err != nil {
-			log.Error().Err(err).Msg("unable to complete mount step")
-			res.Close()
-			return nil, err
-		}
-		res.MountedDirs = append(res.MountedDirs, scanDir)
-
-		// create and initialize fs provider
-		conf.Options["path"] = scanDir
-		fsConn, err := fs.NewConnection(connId, &inventory.Config{
-			Path:       scanDir,
-			PlatformId: conf.PlatformId,
-			Options:    conf.Options,
-			Type:       "fs",
-			Record:     conf.Record,
-		}, asset)
-		if err != nil {
-			res.Close()
-			return nil, err
-		}
-
-		if asset.Platform != nil {
-			log.Debug().Msg("device connection> platform already detected")
-			// Edge case: asset platform is provided from the inventory
-			if res.FileSystemConnection == nil {
-				res.FileSystemConnection = fsConn
-			}
-			continue
-		}
-
-		p, ok := detector.DetectOS(fsConn)
-		if !ok {
-			log.Debug().
-				Str("block", block.Name).
-				Msg("device connection> cannot detect os")
-			continue
-		}
-
-		if len(asset.IdDetector) == 0 {
-			asset.IdDetector = []string{ids.IdDetector_Hostname, ids.IdDetector_SshHostkey}
-		}
-		res.FileSystemConnection = fsConn
-
-		fingerprint, p, err := id.IdentifyPlatform(fsConn, &plugin.ConnectReq{}, p, asset.IdDetector)
-		if err != nil {
-			log.Debug().Err(err).Msg("device connection> failed to identify platform from device")
-			asset.Platform = nil
-		}
-
-		if err == nil {
-			log.Debug().Str("scan_dir", scanDir).Msg("device connection> detected platform from device")
-			if asset.Name == "" {
-				asset.Name = fingerprint.Name
-			}
-			asset.PlatformIds = append(asset.PlatformIds, fingerprint.PlatformIDs...)
-			asset.IdDetector = fingerprint.ActiveIdDetectors
-			asset.Platform = p
-			asset.Id = conf.Type
+			log.Error().Err(err).Msg("partition did not return an asset, continuing")
+		} else {
+			res.FileSystemConnection = fsConn
 		}
 	}
 
+	// if none of the blocks returned a platform that we could detect, we return an error
 	if asset.Platform == nil {
 		res.Close()
-		return nil, errors.New("failed to detect OS")
-	}
-
-	if res.FileSystemConnection == nil {
-		res.Close()
-		return nil, errors.New("failed to create fs connection")
+		return nil, errors.New("device connection> no platform detected")
 	}
 
 	// allow injecting platform ids into the device connection. we cannot always know the asset that's being scanned, e.g.
@@ -209,4 +156,52 @@ func (p *DeviceConnection) FileInfo(path string) (shared.FileInfoDetails, error)
 
 func (p *DeviceConnection) Conf() *inventory.Config {
 	return p.FileSystemConnection.Conf
+}
+
+// tryDetectAsset tries to detect the OS on a given block device
+func tryDetectAsset(connId uint32, partition *snapshot.PartitionInfo, manager DeviceManager, conf *inventory.Config, asset *inventory.Asset) (*fs.FileSystemConnection, string, error) {
+	log.Debug().Str("name", partition.Name).Str("type", partition.FsType).Msg("mounting partition")
+	scanDir, err := manager.Mount(partition)
+	if err != nil {
+		log.Error().Err(err).Msg("unable to complete mount step")
+		return nil, "", err
+	}
+
+	// create and initialize fs provider
+	conf.Options["path"] = scanDir
+	fsConn, err := fs.NewConnection(connId, &inventory.Config{
+		Path:       scanDir,
+		PlatformId: conf.PlatformId,
+		Options:    conf.Options,
+		Type:       "fs",
+		Record:     conf.Record,
+	}, asset)
+	if err != nil {
+		return nil, scanDir, err
+	}
+
+	p, ok := detector.DetectOS(fsConn)
+	if !ok {
+		log.Debug().
+			Str("partition", partition.Name).
+			Msg("device connection> cannot detect os")
+		return nil, scanDir, errors.New("cannot detect os")
+	}
+
+	fingerprint, p, err := id.IdentifyPlatform(fsConn, &plugin.ConnectReq{}, p, asset.IdDetector)
+	if err != nil {
+		log.Debug().Err(err).Msg("device connection> failed to identify platform from device")
+		return nil, scanDir, err
+	}
+	log.Debug().Str("scan_dir", scanDir).Msg("device connection> detected platform from device")
+	asset.Platform = p
+	if asset.Name == "" {
+		asset.Name = fingerprint.Name
+	}
+	asset.PlatformIds = append(asset.PlatformIds, fingerprint.PlatformIDs...)
+	asset.IdDetector = fingerprint.ActiveIdDetectors
+	asset.Platform = p
+	asset.Id = conf.Type
+
+	return fsConn, scanDir, nil
 }

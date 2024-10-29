@@ -116,7 +116,7 @@ func NewGcpSnapshotConnection(id uint32, conf *inventory.Config, asset *inventor
 	// setup disk image so and attach it to the instance
 	var diskUrl string
 	mi := mountInfo{
-		deviceName: "cnspec",
+		deviceName: "/dev/sdh",
 	}
 	switch target.TargetType {
 	case "instance":
@@ -191,7 +191,8 @@ func NewGcpSnapshotConnection(id uint32, conf *inventory.Config, asset *inventor
 	if err != nil {
 		return nil, err
 	}
-
+	// this indicates to the device connection which device to mount
+	conf.Options["device-name"] = mi.deviceName
 	errorHandler := func() {
 		// use different err variable to ensure it does not overshadow the real error
 		dErr := sc.detachDisk(scanner.projectID, scanner.zone, scanner.instanceName, mi.deviceName)

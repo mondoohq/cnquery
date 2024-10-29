@@ -91,6 +91,11 @@ func validateOpts(opts map[string]string) error {
 	if lun != "" && deviceName != "" {
 		return errors.New("both lun and device name provided")
 	}
+
+	if lun == "" && deviceName == "" {
+		return errors.New("either lun or device name must be provided")
+	}
+
 	if deviceName == "" && mountAll {
 		return errors.New("mount-all-partitions requires a device name")
 	}
@@ -134,18 +139,6 @@ func (c *LinuxDeviceManager) identifyViaDeviceName(deviceName string, mountAll b
 		return nil, err
 	}
 
-	// if we don't have a device name we can just return the first non-boot, non-mounted partition.
-	// this is a best-guess approach
-	if deviceName == "" {
-		// TODO: we should rename/simplify this method
-		pi, err := blockDevices.GetUnnamedBlockEntry()
-		if err != nil {
-			return nil, err
-		}
-		return []*snapshot.PartitionInfo{pi}, nil
-	}
-
-	// if we have a specific device we're looking for we can just ask only for that
 	device, err := blockDevices.FindDevice(deviceName)
 	if err != nil {
 		return nil, err

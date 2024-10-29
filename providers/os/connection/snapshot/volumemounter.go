@@ -62,33 +62,6 @@ func (m *VolumeMounter) createScanDir() (string, error) {
 	return dir, nil
 }
 
-// GetDeviceForMounting iterates through all the partitions of the target and returns the first one that matches the filters
-// If device is not specified, it will return the first non-mounted, non-boot partition (best-effort guessing)
-// E.g. if target is "sda", it will return the first partition of the block device "sda" that satisfies the filters
-func (m *VolumeMounter) GetMountablePartition(device string) (*PartitionInfo, error) {
-	if device == "" {
-		log.Debug().Msg("no device provided, searching for unnamed block device")
-	} else {
-		log.Debug().Str("device", device).Msg("search for target partition")
-	}
-
-	blockDevices, err := m.CmdRunner.GetBlockDevices()
-	if err != nil {
-		return nil, err
-	}
-	if device == "" {
-		// TODO: i dont know what the difference between GetUnnamedBlockEntry and GetUnmountedBlockEntry is
-		// we need to simplify those
-		return blockDevices.GetUnnamedBlockEntry()
-	}
-
-	d, err := blockDevices.FindDevice(device)
-	if err != nil {
-		return nil, err
-	}
-	return d.GetMountablePartition()
-}
-
 func (m *VolumeMounter) mountVolume(fsInfo *PartitionInfo) error {
 	opts := []string{}
 	if fsInfo.FsType == "xfs" {

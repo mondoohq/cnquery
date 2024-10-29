@@ -156,6 +156,8 @@ func NewAwsEbsConnection(id uint32, conf *inventory.Config, asset *inventory.Ass
 	asset.PlatformIds = []string{conf.PlatformId}
 	c.deviceLocation = volLocation
 
+	// this indicates to the device connection which device to mount
+	conf.Options["device-name"] = c.deviceLocation
 	deviceConn, err := device.NewDeviceConnection(id, &inventory.Config{
 		Type:       "device",
 		PlatformId: conf.PlatformId,
@@ -190,11 +192,6 @@ func (c *AwsEbsConnection) Close() {
 	if c.DeviceProvider != nil {
 		c.DeviceProvider.Close()
 	}
-	// we seem to be losing all the connection info we
-	// had when we started by the time we get here.
-	// we should figure out what is happening
-	// for now, reassemble the info needed from the asset
-	// connection options
 	ctx := context.Background()
 	err := c.DetachVolumeFromInstance(ctx, c.scanVolumeInfo)
 	if err != nil {
