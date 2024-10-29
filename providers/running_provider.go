@@ -137,11 +137,13 @@ func (c *connectionGraph) garbageCollect() []uint32 {
 	return collected
 }
 
-type ReconnectFunc func() (pp.ProviderPlugin, *plugin.Client, error)
-type connectReq struct {
-	req *pp.ConnectReq
-	cb  pp.ProviderCallback
-}
+type (
+	ReconnectFunc func() (pp.ProviderPlugin, *plugin.Client, error)
+	connectReq    struct {
+		req *pp.ConnectReq
+		cb  pp.ProviderCallback
+	}
+)
 
 const maxRestartCount = 3
 
@@ -359,6 +361,7 @@ func (p *RunningProvider) doOneHeartbeat(t time.Duration) error {
 		Interval: uint64(t),
 	})
 	if err != nil {
+		log.Err(err).Str("plugin", p.Name).Msg("error in plugin heartbeat")
 		if status, ok := status.FromError(err); ok {
 			if status.Code() == 12 {
 				return errors.New("please update the provider plugin for " + p.Name)
