@@ -7,11 +7,13 @@ import (
 	"io"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/cockroachdb/errors"
 	"github.com/google/go-github/v62/github"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/tracer"
 	"go.mondoo.com/cnquery/v11/providers/github/connection"
 	"go.mondoo.com/cnquery/v11/types"
 	"go.mondoo.com/cnquery/v11/utils/stringx"
@@ -35,6 +37,7 @@ func initGithubUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 		return args, nil, nil
 	}
 
+	defer tracer.FuncDur(time.Now(), "provider.github.initGithubUser")
 	conn := runtime.Connection.(*connection.GithubConnection)
 
 	userLogin := ""

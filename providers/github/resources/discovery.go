@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/gobwas/glob"
 	"github.com/google/go-github/v62/github"
@@ -13,6 +14,7 @@ import (
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/tracer"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/v11/providers/github/connection"
 	"go.mondoo.com/cnquery/v11/utils/stringx"
@@ -49,6 +51,8 @@ func handleTargets(targets []string) []string {
 }
 
 func discover(runtime *plugin.Runtime, targets []string) ([]*inventory.Asset, error) {
+	defer tracer.FuncDur(time.Now(), "provider.github.discover")
+
 	conn := runtime.Connection.(*connection.GithubConnection)
 	conf := conn.Asset().Connections[0]
 	assetList := []*inventory.Asset{}

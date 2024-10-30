@@ -6,6 +6,7 @@ package scan
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/cli/config"
@@ -16,6 +17,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory/manager"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/tracer"
 )
 
 type AssetWithRuntime struct {
@@ -151,6 +153,8 @@ func DiscoverAssets(ctx context.Context, inv *inventory.Inventory, upstream *ups
 }
 
 func discoverAssets(rootAssetWithRuntime *AssetWithRuntime, resolvedRootAsset *inventory.Asset, discoveredAssets *DiscoveredAssets, runtimeLabels map[string]string, upstream *upstream.UpstreamConfig, recording llx.Recording) {
+	defer tracer.FuncDur(time.Now(), "explorer.discoverAssets")
+
 	// It is possible that we did not discover any assets under the root asset. In that case the inventory
 	// would be nil and we can return
 	if rootAssetWithRuntime.Runtime.Provider.Connection.Inventory == nil {
