@@ -122,6 +122,8 @@ private microsoft.user @defaults("id displayName userPrincipalName") {
   contact() dict
   // Authentication information
   authMethods() microsoft.user.authenticationMethods
+  // Whether MFA is enabled for the user.
+  mfaEnabled() bool
 }
 
 // Microsoft Entra authentication methods

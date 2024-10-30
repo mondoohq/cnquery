@@ -9,10 +9,18 @@ import (
 
 var idxUsersById = &sync.RWMutex{}
 
+type mfaResp struct {
+	// holds the error if that is what the request returned
+	err    error
+	mfaMap map[string]bool
+}
+
 type mqlMicrosoftInternal struct {
 	permissionIndexer
 	// index users by id
 	idxUsersById map[string]*mqlMicrosoftUser
+	// the response when asking for the user registration details
+	mfaResp mfaResp
 }
 
 // initIndex ensures the user indexes are initialized,

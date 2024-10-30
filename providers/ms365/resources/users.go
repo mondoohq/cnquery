@@ -7,6 +7,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
+
+	betamodels "github.com/microsoftgraph/msgraph-beta-sdk-go/models"
+	"github.com/microsoftgraph/msgraph-beta-sdk-go/reports"
+	betausers "github.com/microsoftgraph/msgraph-beta-sdk-go/users"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/users"
 	"go.mondoo.com/cnquery/v11/llx"
@@ -14,7 +19,6 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
 	"go.mondoo.com/cnquery/v11/types"
-	"time"
 )
 
 var userSelectFields = []string{
@@ -32,6 +36,10 @@ func (a *mqlMicrosoft) users() ([]interface{}, error) {
 		return nil, err
 	}
 
+	betaClient, err := conn.BetaGraphClient()
+	if err != nil {
+		return nil, err
+	}
 	// fetch user data
 	ctx := context.Background()
 	top := int32(999)
@@ -49,6 +57,33 @@ func (a *mqlMicrosoft) users() ([]interface{}, error) {
 	users, err := iterate[*models.User](ctx, resp, graphClient.GetAdapter(), users.CreateDeltaGetResponseFromDiscriminatorValue)
 	if err != nil {
 		return nil, transformError(err)
+	}
+
+	detailsResp, err := betaClient.Reports().AuthenticationMethods().UserRegistrationDetails().Get(
+		ctx,
+		&reports.AuthenticationMethodsUserRegistrationDetailsRequestBuilderGetRequestConfiguration{
+			QueryParameters: &reports.AuthenticationMethodsUserRegistrationDetailsRequestBuilderGetQueryParameters{
+				Top: &top,
+			},
+		})
+	// we do not want to fail the user fetching here, this likely means the tenant does not have the right license
+	if err != nil {
+		a.mfaResp = mfaResp{err: err}
+	} else {
+		userRegistrationDetails, err := iterate[*betamodels.UserRegistrationDetails](ctx, detailsResp, betaClient.GetAdapter(), betausers.CreateDeltaGetResponseFromDiscriminatorValue)
+		// we do not want to fail the user fetching here, this likely means the tenant does not have the right license
+		if err != nil {
+			a.mfaResp = mfaResp{err: err}
+		} else {
+			mfaMap := map[string]bool{}
+			for _, u := range userRegistrationDetails {
+				if u.GetId() == nil || u.GetIsMfaRegistered() == nil {
+					continue
+				}
+				mfaMap[*u.GetId()] = *u.GetIsMfaRegistered()
+			}
+			a.mfaResp = mfaResp{mfaMap: mfaMap}
+		}
 	}
 
 	// construct the result
@@ -170,6 +205,27 @@ func newMqlMicrosoftUser(runtime *plugin.Runtime, u models.Userable) (*mqlMicros
 var userJobContactFields = []string{
 	"jobTitle", "companyName", "department", "employeeId", "employeeType", "employeeHireDate",
 	"officeLocation", "streetAddress", "city", "state", "postalCode", "country", "businessPhones", "mobilePhone", "mail", "otherMails", "faxNumber", "mailNickname",
+}
+
+func (a *mqlMicrosoftUser) mfaEnabled() (bool, error) {
+	mql, err := CreateResource(a.MqlRuntime, "microsoft", map[string]*llx.RawData{})
+	if err != nil {
+		return false, err
+	}
+
+	microsoft := mql.(*mqlMicrosoft)
+	if microsoft.mfaResp.mfaMap == nil {
+		microsoft.mfaResp.mfaMap = make(map[string]bool)
+	}
+	if microsoft.mfaResp.err != nil {
+		a.MfaEnabled.Error = microsoft.mfaResp.err
+		a.MfaEnabled.State = plugin.StateIsSet
+		return false, a.MfaEnabled.Error
+	}
+
+	a.MfaEnabled.Data = microsoft.mfaResp.mfaMap[a.Id.Data]
+	a.MfaEnabled.State = plugin.StateIsSet
+	return a.MfaEnabled.Data, nil
 }
 
 func (a *mqlMicrosoftUser) populateJobContactData() error {
@@ -348,6 +404,7 @@ func (a *mqlMicrosoftUser) authMethods() (*mqlMicrosoftUserAuthenticationMethods
 	}
 
 	ctx := context.Background()
+
 	authMethods, err := graphClient.Users().ByUserId(userID).Authentication().Methods().Get(ctx, &users.ItemAuthenticationMethodsRequestBuilderGetRequestConfiguration{})
 	if oErr, ok := isOdataError(err); ok {
 		if oErr.ResponseStatusCode == 403 {
