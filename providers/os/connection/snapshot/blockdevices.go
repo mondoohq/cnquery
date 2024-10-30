@@ -70,32 +70,40 @@ func (cmdRunner *LocalCommandRunner) GetBlockDevices() (*BlockDevices, error) {
 	if err := json.Unmarshal(data, blockEntries); err != nil {
 		return nil, err
 	}
+
 	blockEntries.findAliases()
 
 	return blockEntries, nil
 }
 
 func (blockEntries *BlockDevices) findAliases() {
-	entries, err := os.ReadDir("/dev")
-	if err != nil {
-		log.Warn().Err(err).Msg("Can't read /dev directory")
-		return
-	}
-
-	for _, entry := range entries {
-		if entry.Type().Type() != os.ModeSymlink {
-			continue
-		}
-
-		path := fmt.Sprintf("/dev/%s", entry.Name())
-		target, err := os.Readlink(path)
+	paths := []string{"/dev", "/dev/disk/by-id"}
+	for _, path := range paths {
+		entries, err := os.ReadDir(path)
 		if err != nil {
-			log.Warn().Err(err).Str("path", path).Msg("Can't read link target")
-			continue
+			log.Warn().Err(err).Msgf("Can't read %s directory", path)
+			return
 		}
 
-		targetName := strings.TrimPrefix(target, "/dev/")
-		blockEntries.findAlias(targetName, path)
+		for _, entry := range entries {
+			if entry.Type().Type() != os.ModeSymlink {
+				continue
+			}
+
+			path := fmt.Sprintf("%s/%s", path, entry.Name())
+			target, err := os.Readlink(path)
+			if err != nil {
+				log.Warn().Err(err).Str("path", path).Msg("Can't read link target")
+				continue
+			}
+
+			parts := strings.Split(target, "/")
+			if len(parts) == 0 {
+				continue
+			}
+			target = parts[len(parts)-1]
+			blockEntries.findAlias(target, path)
+		}
 	}
 }
 

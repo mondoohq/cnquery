@@ -116,7 +116,7 @@ func NewGcpSnapshotConnection(id uint32, conf *inventory.Config, asset *inventor
 	// setup disk image so and attach it to the instance
 	var diskUrl string
 	mi := mountInfo{
-		deviceName: "/dev/sdh",
+		deviceName: "cnspec",
 	}
 	switch target.TargetType {
 	case "instance":
