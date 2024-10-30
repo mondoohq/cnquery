@@ -29,7 +29,7 @@ func getUser(ctx context.Context, runtime *plugin.Runtime, conn *connection.Gith
 	}
 	g := obj.(*mqlGithub)
 	if g.memoize == nil {
-		g.memoize = memoize.NewMemoizer(30*time.Minute, 1*time.Hour)
+		g.memoize = memoize.NewMemoizer(0, 0)
 	}
 	res, err, _ := g.memoize.Memoize("user-"+user, func() (interface{}, error) {
 		log.Debug().Msgf("fetching user %s", user)
@@ -49,7 +49,7 @@ func getOrg(ctx context.Context, runtime *plugin.Runtime, conn *connection.Githu
 	}
 	g := obj.(*mqlGithub)
 	if g.memoize == nil {
-		g.memoize = memoize.NewMemoizer(30*time.Minute, 1*time.Hour)
+		g.memoize = memoize.NewMemoizer(0, 0)
 	}
 	res, err, _ := g.memoize.Memoize("org-"+name, func() (interface{}, error) {
 		log.Debug().Msgf("fetching organization %s", name)
