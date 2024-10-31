@@ -10,10 +10,12 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/google/go-github/v62/github"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/logger"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v11/providers/github/connection"
@@ -132,6 +134,8 @@ func initGithubRepository(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	if len(args) > 2 {
 		return args, nil, nil
 	}
+	defer logger.FuncDur(time.Now(), "provider.github.initGithubRepository")
+
 	conn := runtime.Connection.(*connection.GithubConnection)
 
 	// determine the owner object
