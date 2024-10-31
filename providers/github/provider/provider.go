@@ -8,8 +8,10 @@ import (
 	"errors"
 	"os"
 	"strings"
+	"time"
 
 	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/logger"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream"
@@ -187,6 +189,8 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.GithubConnection) error {
+	defer logger.FuncDur(time.Now(), "provider.github.service.detect")
+
 	conf := asset.Connections[0]
 	asset.Name = conf.Host
 
@@ -211,6 +215,8 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.GithubConnecti
 }
 
 func (s *Service) discover(conn *connection.GithubConnection) (*inventory.Inventory, error) {
+	defer logger.FuncDur(time.Now(), "provider.github.service.discover")
+
 	conf := conn.Asset().Connections[0]
 	if conf.Discover == nil {
 		return nil, nil
