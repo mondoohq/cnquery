@@ -22,6 +22,11 @@ type mqlGithubInternal struct {
 	memoize *memoize.Memoizer
 }
 
+var (
+	cacheExpirationTime = 24 * time.Hour
+	cacheCleanupTime    = 48 * time.Hour
+)
+
 func getUser(ctx context.Context, runtime *plugin.Runtime, conn *connection.GithubConnection, user string) (*github.User, error) {
 	obj, err := CreateResource(runtime, "github", map[string]*llx.RawData{})
 	if err != nil {
@@ -29,8 +34,9 @@ func getUser(ctx context.Context, runtime *plugin.Runtime, conn *connection.Gith
 	}
 	g := obj.(*mqlGithub)
 	if g.memoize == nil {
-		g.memoize = memoize.NewMemoizer(30*time.Minute, 1*time.Hour)
+		g.memoize = memoize.NewMemoizer(cacheExpirationTime, cacheCleanupTime)
 	}
+
 	res, err, _ := g.memoize.Memoize("user-"+user, func() (interface{}, error) {
 		log.Debug().Msgf("fetching user %s", user)
 		user, _, err := conn.Client().Users.Get(ctx, user)
@@ -49,7 +55,7 @@ func getOrg(ctx context.Context, runtime *plugin.Runtime, conn *connection.Githu
 	}
 	g := obj.(*mqlGithub)
 	if g.memoize == nil {
-		g.memoize = memoize.NewMemoizer(30*time.Minute, 1*time.Hour)
+		g.memoize = memoize.NewMemoizer(cacheExpirationTime, cacheCleanupTime)
 	}
 	res, err, _ := g.memoize.Memoize("org-"+name, func() (interface{}, error) {
 		log.Debug().Msgf("fetching organization %s", name)
