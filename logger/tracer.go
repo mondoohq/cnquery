@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package tracer
+package logger
 
 import (
 	"time"
@@ -10,12 +10,12 @@ import (
 )
 
 // FuncDur must be used in a `defer` statement. It receives the function name and the time
-// when a function started and logs out the time it took to run.
+// when the function started and logs out the time it took to execute.
 //
 // ```go
 //
 //	func MyFunction() {
-//		defer tracer.FuncDur(time.Now(), "mypackage.MyFunction")
+//		defer logger.FuncDur(time.Now(), "mypackage.MyFunction")
 //
 //		...
 //	}
@@ -24,5 +24,5 @@ import (
 func FuncDur(start time.Time, name string) {
 	log.Trace().Str("func", name).
 		TimeDiff("took", time.Now(), start).
-		Msgf("tracer.FuncDur>")
+		Msgf("logger.FuncDur>")
 }

@@ -14,8 +14,8 @@ import (
 
 	uuid "github.com/gofrs/uuid"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/v11/logger"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/resources"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/tracer"
 	"go.mondoo.com/cnquery/v11/types"
 	"go.mondoo.com/cnquery/v11/utils/multierr"
 )
@@ -324,7 +324,7 @@ func (b *blockExecutor) mustLookup(ref uint64) *RawData {
 
 // run code with a runtime and return results
 func (b *blockExecutor) run() {
-	defer tracer.FuncDur(time.Now(), "llx.blockExecutor.run")
+	defer logger.FuncDur(time.Now(), "llx.blockExecutor.run")
 
 	for ref, codeID := range b.callbackPoints {
 		if !b.isInMyBlock(ref) {

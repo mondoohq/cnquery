@@ -11,9 +11,9 @@ import (
 
 	"github.com/google/go-github/v62/github"
 	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/logger"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/tracer"
 	"go.mondoo.com/cnquery/v11/providers/github/connection"
 	"go.mondoo.com/cnquery/v11/types"
 )
@@ -33,7 +33,7 @@ func initGithubOrganization(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	if len(args) > 2 {
 		return args, nil, nil
 	}
-	defer tracer.FuncDur(time.Now(), "provider.github.initGithubOrganization")
+	defer logger.FuncDur(time.Now(), "provider.github.initGithubOrganization")
 
 	conn := runtime.Connection.(*connection.GithubConnection)
 
@@ -254,7 +254,7 @@ func (g *mqlGithubOrganization) teams() ([]interface{}, error) {
 }
 
 func (g *mqlGithubOrganization) repositories() ([]interface{}, error) {
-	defer tracer.FuncDur(time.Now(), "provider.github.repositories")
+	defer logger.FuncDur(time.Now(), "provider.github.repositories")
 
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
@@ -304,7 +304,7 @@ func (g *mqlGithubOrganization) repositories() ([]interface{}, error) {
 }
 
 func (g *mqlGithubOrganization) webhooks() ([]interface{}, error) {
-	defer tracer.FuncDur(time.Now(), "provider.github.webhooks")
+	defer logger.FuncDur(time.Now(), "provider.github.webhooks")
 
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 

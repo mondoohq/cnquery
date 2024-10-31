@@ -23,8 +23,8 @@ type mqlGithubInternal struct {
 }
 
 var (
-	cacheExpirationTime = 2 * time.Hour
-	cacheCleanupTime    = 4 * time.Hour
+	cacheExpirationTime = 24 * time.Hour
+	cacheCleanupTime    = 48 * time.Hour
 )
 
 func getUser(ctx context.Context, runtime *plugin.Runtime, conn *connection.GithubConnection, user string) (*github.User, error) {
