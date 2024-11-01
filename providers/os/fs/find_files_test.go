@@ -165,6 +165,10 @@ func TestFindFiles(t *testing.T) {
 	require.NoError(t, err)
 	assert.ElementsMatch(t, rootBFiles, []string{"root/b/file1"})
 
+	file1Files, err := FindFiles(afero.NewIOFS(fs), "root", regexp.MustCompile(".*/file1"), "f", nil)
+	require.NoError(t, err)
+	assert.ElementsMatch(t, file1Files, []string{"root/b/file1", "root/a/file1"})
+
 	perm := uint32(0o002)
 	permFiles, err := FindFiles(afero.NewIOFS(fs), "root", nil, "f", &perm)
 	require.NoError(t, err)

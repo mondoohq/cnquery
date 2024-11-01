@@ -194,3 +194,28 @@ func TestGetPackageFromRegistryKeyItems(t *testing.T) {
 		assert.Equal(t, expected, p)
 	})
 }
+
+func TestToPackage(t *testing.T) {
+	winAppxPkg := winAppxPackages{
+		Name:         "Microsoft.Windows.Cortana",
+		Version:      "1.11.5.17763",
+		Publisher:    "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US",
+		Architecture: 0,
+	}
+
+	pkg := winAppxPkg.toPackage()
+
+	expected := Package{
+		Name:    "Microsoft.Windows.Cortana",
+		Version: "1.11.5.17763",
+		Arch:    "x86",
+		Format:  "windows/appx",
+		Vendor:  "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US",
+		CPEs: []string{
+			"cpe:2.3:a:cn\\=microsoft_corporation\\,_o\\=microsoft_corporation\\,_l\\=redmond\\,_s\\=washington\\,_c\\=us:microsoft.windows.cortana:1.11.5.17763:*:*:*:*:*:*:*",
+			"cpe:2.3:a:cn\\=microsoft_corporation\\,_o\\=microsoft_corporation\\,_l\\=redmond\\,_s\\=washington\\,_c\\=us:microsoft.windows.cortana:1.11.5:*:*:*:*:*:*:*",
+		},
+	}
+
+	assert.Equal(t, expected, pkg)
+}
