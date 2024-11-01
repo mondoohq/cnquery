@@ -47,6 +47,10 @@ func Lint(queryPackBundle *explorer.Bundle) []string {
 			if query.Title == "" {
 				errors = append(errors, fmt.Sprintf("query %s/%s does not define a name", packId, queryId))
 			}
+
+			if query.Mql == "" || query.Variants == [] {
+				errors = append(errors, fmt.Sprintf("query %s/%s or variant query does not define a mql field", packId, queryId))
+			}
 		}
 	}
 
