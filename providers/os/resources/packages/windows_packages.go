@@ -295,16 +295,20 @@ func (w *WinPkgManager) getAppxPackages() ([]Package, error) {
 		return nil, err
 	}
 
+	// only win 10+ are compatible with app x packages
 	if b.Build > 10240 {
-		// only win 10+ are compatible with app x packages
-		cmd, err := w.conn.RunCommand(powershell.Wrap(WINDOWS_QUERY_APPX_PACKAGES))
-		if err != nil {
-			return nil, fmt.Errorf("could not read appx package list")
-		}
-		return ParseWindowsAppxPackages(cmd.Stdout)
+		return w.getPwshAppxPackages()
 	}
 
 	return []Package{}, nil
+}
+
+func (w *WinPkgManager) getPwshAppxPackages() ([]Package, error) {
+	cmd, err := w.conn.RunCommand(powershell.Wrap(WINDOWS_QUERY_APPX_PACKAGES))
+	if err != nil {
+		return nil, fmt.Errorf("could not read appx package list")
+	}
+	return ParseWindowsAppxPackages(cmd.Stdout)
 }
 
 func (w *WinPkgManager) getFsInstalledApps() ([]Package, error) {
@@ -383,22 +387,23 @@ func (w *WinPkgManager) getFsAppxPackages() ([]Package, error) {
 			log.Debug().Err(err).Str("path", p).Msg("could not read appx manifest")
 			continue
 		}
-		pkg, err := parseAppxManifest(res)
+		winAppxPkg, err := parseAppxManifest(res)
 		if err != nil {
 			log.Debug().Err(err).Str("path", p).Msg("could not parse appx manifest")
 			continue
 		}
+		pkg := winAppxPkg.toPackage()
 		pkgs = append(pkgs, pkg)
 
 	}
 	return pkgs, nil
 }
 
-func parseAppxManifest(input []byte) (Package, error) {
+func parseAppxManifest(input []byte) (winAppxPackages, error) {
 	manifest := &AppxManifest{}
 	err := xml.Unmarshal(input, manifest)
 	if err != nil {
-		return Package{}, err
+		return winAppxPackages{}, err
 	}
 	pkg := winAppxPackages{
 		Name:      manifest.Identity.Name,
@@ -406,7 +411,7 @@ func parseAppxManifest(input []byte) (Package, error) {
 		Publisher: manifest.Identity.Publisher,
 		arch:      manifest.Identity.ProcessorArchitecture,
 	}
-	return pkg.toPackage(), nil
+	return pkg, nil
 }
 
 func getPackageFromRegistryKey(key registry.RegistryKeyChild) (*Package, error) {
