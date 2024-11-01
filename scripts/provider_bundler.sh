@@ -68,7 +68,7 @@ build_bundle(){
   if [[ "${GOOS}" == "windows" ]]; then
     ### SIGN THE BINARY
     echo "  - Signing the binary ${PROVIDER_DIST}/${PROVIDER_EXECUTABLE}..."
-    jsign --storetype DIGICERTONE --alias "cert_492206180" \
+    jsign --storetype DIGICERTONE --alias "${SM_CERT_ALIAS}" \
           --storepass "${SM_API_KEY}|${SM_CLIENT_CERT_FILE}|${SM_CLIENT_CERT_PASSWORD}" \
           --tsaurl "http://timestamp.digicert.com"  ${PROVIDER_DIST}/${PROVIDER_EXECUTABLE}
   fi
