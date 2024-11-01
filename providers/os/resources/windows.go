@@ -29,13 +29,25 @@ func (s *mqlWindows) computerInfo() (map[string]interface{}, error) {
 
 	// If the exit code is not 0, then we got an error and we should read stderr for details
 	if executedCmd.ExitStatus != 0 {
-		// First attempt to use the short computer info command
-		encodedCmd := powershell.Encode(windows.PSGetComputerInfoShort)
-		executedCmd, err = conn.RunCommand(encodedCmd)
+		stderr, err := io.ReadAll(executedCmd.Stderr)
 		if err != nil {
 			return nil, err
 		}
+		return nil, errors.New("failed to retrieve computer info: " + string(stderr))
+	}
 
+	parsedInfo, err := windows.ParseComputerInfo(executedCmd.Stdout)
+	if err != nil {
+		return nil, err
+	}
+
+	// If we have no error but OsProductType is nil, we need to run a custom command to get the info
+	// For reference, see https://github.com/mondoohq/cnquery/pull/4520
+	if parsedInfo["OsProductType"] == nil {
+		executedCmd, err := conn.RunCommand(powershell.Encode(windows.PSGetComputerInfoCustom))
+		if err != nil {
+			return nil, err
+		}
 		if executedCmd.ExitStatus != 0 {
 			stderr, err := io.ReadAll(executedCmd.Stderr)
 			if err != nil {
@@ -43,9 +55,13 @@ func (s *mqlWindows) computerInfo() (map[string]interface{}, error) {
 			}
 			return nil, errors.New("failed to retrieve computer info: " + string(stderr))
 		}
+		parsedInfo, err = windows.ParseCustomComputerInfo(executedCmd.Stdout)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return windows.ParseComputerInfo(executedCmd.Stdout)
+	return parsedInfo, nil
 }
 
 func (wh *mqlWindowsHotfix) id() (string, error) {
