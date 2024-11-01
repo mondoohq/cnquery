@@ -40,8 +40,7 @@ type OSServiceManager interface {
 	List() ([]*Service, error)
 }
 
-type noopOsServiceManager struct {
-}
+type noopOsServiceManager struct{}
 
 func (n *noopOsServiceManager) Name() string {
 	return "none"
@@ -164,6 +163,8 @@ func ResolveManager(conn shared.Connection) (OSServiceManager, error) {
 	case asset.Platform.Name == "aix":
 		osm = &AixServiceManager{conn: conn}
 	case asset.Platform.Name == "kali": // debian based with versions from 2015 onwards being systemd based
+		osm = ResolveSystemdServiceManager(conn)
+	case asset.Platform.Name == "cloudlinux": // rhel based
 		osm = ResolveSystemdServiceManager(conn)
 	}
 
