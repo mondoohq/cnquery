@@ -17,10 +17,10 @@ func FindFiles(iofs fs.FS, from string, r *regexp.Regexp, typ string, perm *uint
 		if err != nil {
 			return err
 		}
+
 		if skip {
 			return nil
 		}
-
 		if matcher.Match(p, d.Type()) {
 			matchedPaths = append(matchedPaths, p)
 		}
@@ -54,7 +54,8 @@ func (m findFilesMatcher) matchesRegex(path string) bool {
 	// We don't use r.Match because we need the entire path to match
 	// if we want to be compatible with find. It would probably be
 	// more efficient add anchors to the regular expression
-	return m.r.FindString(path) == path
+	match := m.r.FindString(path)
+	return match == path
 }
 
 func (m findFilesMatcher) matchesType(entryType fs.FileMode) bool {

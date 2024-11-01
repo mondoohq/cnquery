@@ -5,13 +5,16 @@ package packages
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"io"
+	"regexp"
 	"runtime"
 	"time"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v11/providers/os/detector/windows"
@@ -38,20 +41,20 @@ const (
 // https://docs.microsoft.com/en-us/previous-versions/windows/desktop/ff357803(v=vs.85)
 var (
 	wsusClassificationGUID = map[string]WSUSClassification{
-		"5c9376ab-8ce6-464a-b136-22113dd69801 ": Application,
-		"434de588-ed14-48f5-8eed-a15e09a991f6":  Connectors,
-		"e6cf1350-c01b-414d-a61f-263d14d133b4":  CriticalUpdates,
-		"e0789628-ce08-4437-be74-2495b842f43b":  DefinitionUpdates,
-		"e140075d-8433-45c3-ad87-e72345b3607":   DeveloperKits,
-		"b54e7d24-7add-428f-8b75-90a396fa584f ": FeaturePacks,
-		"9511D615-35B2-47BB-927F-F73D8E9260BB":  Guidance,
-		"0fa1201d-4330-4fa8-8ae9-b877473b6441":  SecurityUpdates,
-		"68c5b0a3-d1a6-4553-ae49-01d3a7827828":  ServicePacks,
-		"b4832bd8-e735-4761-8daf-37f882276dab":  Tools,
-		"28bc880e-0592-4cbf-8f95-c79b17911d5f":  UpdateRollups,
-		"cd5ffd1e-e932-4e3a-bf74-18bf0b1bbd83":  Updates,
-		"ebfc1fc5-71a4-4f7b-9aca-3b9a503104a0":  Drivers,
-		"8c3fcc84-7410-4a95-8b89-a166a0190486":  Defender,
+		"5c9376ab-8ce6-464a-b136-22113dd69801": Application,
+		"434de588-ed14-48f5-8eed-a15e09a991f6": Connectors,
+		"e6cf1350-c01b-414d-a61f-263d14d133b4": CriticalUpdates,
+		"e0789628-ce08-4437-be74-2495b842f43b": DefinitionUpdates,
+		"e140075d-8433-45c3-ad87-e72345b3607":  DeveloperKits,
+		"b54e7d24-7add-428f-8b75-90a396fa584f": FeaturePacks,
+		"9511D615-35B2-47BB-927F-F73D8E9260BB": Guidance,
+		"0fa1201d-4330-4fa8-8ae9-b877473b6441": SecurityUpdates,
+		"68c5b0a3-d1a6-4553-ae49-01d3a7827828": ServicePacks,
+		"b4832bd8-e735-4761-8daf-37f882276dab": Tools,
+		"28bc880e-0592-4cbf-8f95-c79b17911d5f": UpdateRollups,
+		"cd5ffd1e-e932-4e3a-bf74-18bf0b1bbd83": Updates,
+		"ebfc1fc5-71a4-4f7b-9aca-3b9a503104a0": Drivers,
+		"8c3fcc84-7410-4a95-8b89-a166a0190486": Defender,
 	}
 
 	appxArchitecture = map[int]string{
@@ -98,12 +101,46 @@ var (
 	WINDOWS_QUERY_APPX_PACKAGES = `Get-AppxPackage -AllUsers | Select Name, PackageFullName, Architecture, Version, Publisher  | ConvertTo-Json`
 )
 
-type powershellWinAppxPackages struct {
+type winAppxPackages struct {
 	Name         string `json:"Name"`
 	FullName     string `json:"PackageFullName"`
 	Architecture int    `json:"Architecture"`
 	Version      string `json:"Version"`
 	Publisher    string `json:"Publisher"`
+	// can directly set it to the architecture string, the pwsh script returns it as int (Architecture)
+	arch string `json:"-"`
+}
+
+func (p winAppxPackages) toPackage() Package {
+	if p.arch == "" {
+		arch, ok := appxArchitecture[p.Architecture]
+		if !ok {
+			log.Warn().Int("arch", p.Architecture).Msg("unknown architecture value for windows appx package")
+			arch = "unknown"
+		}
+		p.arch = arch
+	}
+
+	pkg := Package{
+		Name:    p.Name,
+		Version: p.Version,
+		Arch:    p.arch,
+		Format:  "windows/appx",
+		Vendor:  p.Publisher,
+	}
+
+	if p.Name != "" && p.Version != "" {
+		cpeWfns, err := cpe.NewPackage2Cpe(p.Publisher, p.Name, p.Version, "", "")
+		if err != nil {
+			log.Debug().Err(err).Str("name", p.Name).Str("version", p.Version).Msg("could not create cpe for windows appx package")
+		} else {
+			pkg.CPEs = cpeWfns
+		}
+	} else {
+		log.Debug().Msg("ignored package since information is missing")
+	}
+
+	return pkg
 }
 
 // Good read: https://www.wintips.org/view-installed-apps-and-packages-in-windows-10-8-1-8-from-powershell/
@@ -113,7 +150,7 @@ func ParseWindowsAppxPackages(input io.Reader) ([]Package, error) {
 		return nil, err
 	}
 
-	var appxPackages []powershellWinAppxPackages
+	var appxPackages []winAppxPackages
 
 	// handle case where no packages are installed
 	if len(data) == 0 {
@@ -126,31 +163,9 @@ func ParseWindowsAppxPackages(input io.Reader) ([]Package, error) {
 	}
 
 	pkgs := make([]Package, len(appxPackages))
-	for i := range appxPackages {
-		arch, ok := appxArchitecture[appxPackages[i].Architecture]
-		if !ok {
-			log.Warn().Int("arch", appxPackages[i].Architecture).Msg("unknown architecture value for windows appx package")
-			arch = "unknown"
-		}
-
-		cpeWfns := []string{}
-		if appxPackages[i].Name != "" && appxPackages[i].Version != "" {
-			cpeWfns, err = cpe.NewPackage2Cpe(appxPackages[i].Publisher, appxPackages[i].Name, appxPackages[i].Version, "", "")
-			if err != nil {
-				log.Debug().Err(err).Str("name", appxPackages[i].Name).Str("version", appxPackages[i].Version).Msg("could not create cpe for windows appx package")
-			}
-		} else {
-			log.Debug().Msg("ignored package since information is missing")
-		}
-
-		pkgs[i] = Package{
-			Name:    appxPackages[i].Name,
-			Version: appxPackages[i].Version,
-			Arch:    arch,
-			Format:  "windows/appx",
-			CPEs:    cpeWfns,
-			Vendor:  appxPackages[i].Publisher,
-		}
+	for i, p := range appxPackages {
+		pkg := p.toPackage()
+		pkgs[i] = pkg
 	}
 	return pkgs, nil
 }
@@ -268,6 +283,30 @@ func (w *WinPkgManager) getInstalledApps() ([]Package, error) {
 	return ParseWindowsAppPackages(cmd.Stdout)
 }
 
+func (w *WinPkgManager) getAppxPackages() ([]Package, error) {
+	canRunCmd := w.conn.Capabilities().Has(shared.Capability_RunCommand)
+	// we always prefer to use the powershell command to get the appx packages, fallback to filesystem if not possible
+	if !canRunCmd && (w.conn.Type() == shared.Type_FileSystem || w.conn.Type() == shared.Type_Device) {
+		return w.getFsAppxPackages()
+	}
+
+	b, err := windows.Version(w.platform.Version)
+	if err != nil {
+		return nil, err
+	}
+
+	if b.Build > 10240 {
+		// only win 10+ are compatible with app x packages
+		cmd, err := w.conn.RunCommand(powershell.Wrap(WINDOWS_QUERY_APPX_PACKAGES))
+		if err != nil {
+			return nil, fmt.Errorf("could not read appx package list")
+		}
+		return ParseWindowsAppxPackages(cmd.Stdout)
+	}
+
+	return []Package{}, nil
+}
+
 func (w *WinPkgManager) getFsInstalledApps() ([]Package, error) {
 	rh := registry.NewRegistryHandler()
 	defer func() {
@@ -308,6 +347,66 @@ func (w *WinPkgManager) getFsInstalledApps() ([]Package, error) {
 		}
 	}
 	return packages, nil
+}
+
+func (w *WinPkgManager) getFsAppxPackages() ([]Package, error) {
+	if !w.conn.Capabilities().Has(shared.Capability_FindFile) {
+		return nil, errors.New("find file is not supported for your platform")
+	}
+	fs := w.conn.FileSystem()
+	fsSearch, ok := fs.(shared.FileSearch)
+	if !ok {
+		return nil, errors.New("find file is not supported for your platform")
+	}
+
+	paths := []string{
+		`Windows\SystemApps`,
+		`Program Files\WindowsApps`,
+	}
+	appxPaths := map[string]struct{}{}
+	for _, p := range paths {
+		res, err := fsSearch.Find(p, regexp.MustCompile(".*/[Aa]ppx[Mm]anifest.xml"), "f", nil)
+		if err != nil {
+			continue
+		}
+		for _, r := range res {
+			appxPaths[r] = struct{}{}
+		}
+	}
+	log.Debug().Int("amount", len(appxPaths)).Msg("found appx manifest files")
+
+	pkgs := []Package{}
+	afs := &afero.Afero{Fs: fs}
+	for p := range appxPaths {
+		res, err := afs.ReadFile(p)
+		if err != nil {
+			log.Debug().Err(err).Str("path", p).Msg("could not read appx manifest")
+			continue
+		}
+		pkg, err := parseAppxManifest(res)
+		if err != nil {
+			log.Debug().Err(err).Str("path", p).Msg("could not parse appx manifest")
+			continue
+		}
+		pkgs = append(pkgs, pkg)
+
+	}
+	return pkgs, nil
+}
+
+func parseAppxManifest(input []byte) (Package, error) {
+	manifest := &AppxManifest{}
+	err := xml.Unmarshal(input, manifest)
+	if err != nil {
+		return Package{}, err
+	}
+	pkg := winAppxPackages{
+		Name:      manifest.Identity.Name,
+		Version:   manifest.Identity.Version,
+		Publisher: manifest.Identity.Publisher,
+		arch:      manifest.Identity.ProcessorArchitecture,
+	}
+	return pkg.toPackage(), nil
 }
 
 func getPackageFromRegistryKey(key registry.RegistryKeyChild) (*Package, error) {
@@ -364,35 +463,23 @@ func getPackageFromRegistryKeyItems(children []registry.RegistryKeyItem) *Packag
 
 // returns installed appx packages as well as hot fixes
 func (w *WinPkgManager) List() ([]Package, error) {
-	b, err := windows.Version(w.platform.Version)
-	if err != nil {
-		return nil, err
-	}
-
 	pkgs := []Package{}
 	appPkgs, err := w.getInstalledApps()
 	if err != nil {
-		return nil, fmt.Errorf("could not read app package list")
+		return nil, errors.Wrap(err, "could not read app package list")
 	}
 	pkgs = append(pkgs, appPkgs...)
 
+	appxPackages, err := w.getAppxPackages()
+	if err != nil {
+		return nil, errors.Wrap(err, "could not read appx package list")
+	}
+	pkgs = append(pkgs, appxPackages...)
+
 	canRunCmd := w.conn.Capabilities().Has(shared.Capability_RunCommand)
 	if !canRunCmd {
-		log.Debug().Msg("cannot run command on windows, skipping appx package and hotfixes list")
+		log.Debug().Msg("cannot run command on windows, skipping hotfixes list")
 		return pkgs, nil
-	}
-
-	if b.Build > 10240 {
-		// only win 10+ are compatible with app x packages
-		cmd, err := w.conn.RunCommand(powershell.Wrap(WINDOWS_QUERY_APPX_PACKAGES))
-		if err != nil {
-			return nil, fmt.Errorf("could not read appx package list")
-		}
-		appxPkgs, err := ParseWindowsAppxPackages(cmd.Stdout)
-		if err != nil {
-			return nil, fmt.Errorf("could not read appx package list")
-		}
-		pkgs = append(pkgs, appxPkgs...)
 	}
 
 	// hotfixes
