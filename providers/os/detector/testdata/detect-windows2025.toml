@@ -1,0 +1,13 @@
+[commands."55dbc0e9b838caa11145eed07f6e73644bda27bf65a0c58a52291f9a18384481"]
+stdout="""
+{
+    "CurrentBuild":  "26311",
+    "UBR":  5000,
+    "InstallationType":  "Server",
+    "EditionID":  "ServerDatacenter",
+    "ProductName":  "Windows Server 2025 Datacenter",
+    "DisplayVersion":  "24H2",
+    "Architecture":  "ARM64",
+    "ProductType":  "ServerNT"
+}
+"""

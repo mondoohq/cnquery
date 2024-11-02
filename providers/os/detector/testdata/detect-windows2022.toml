@@ -1,0 +1,18 @@
+[commands."wmic os get * /format:csv"]
+stdout = """NNode,BootDevice,BuildNumber,BuildType,Caption,CodeSet,CountryCode,CreationClassName,CSCreationClassName,CSDVersion,CSName,CurrentTimeZone,DataExecutionPrevention_32BitApplications,DataExecutionPrevention_Available,DataExecutionPrevention_Drivers,DataExecutionPrevention_SupportPolicy,Debug,Description,Distributed,EncryptionLevel,ForegroundApplicationBoost,FreePhysicalMemory,FreeSpaceInPagingFiles,FreeVirtualMemory,InstallDate,LargeSystemCache,LastBootUpTime,LocalDateTime,Locale,Manufacturer,MaxNumberOfProcesses,MaxProcessMemorySize,MUILanguages,Name,NumberOfLicensedUsers,NumberOfProcesses,NumberOfUsers,OperatingSystemSKU,Organization,OSArchitecture,OSLanguage,OSProductSuite,OSType,OtherTypeDescription,PAEEnabled,PlusProductID,PlusVersionNumber,PortableOperatingSystem,Primary,ProductType,RegisteredUser,SerialNumber,ServicePackMajorVersion,ServicePackMinorVersion,SizeStoredInPagingFiles,Status,SuiteMask,SystemDevice,SystemDirectory,SystemDrive,TotalSwapSpaceSize,TotalVirtualMemorySize,TotalVisibleMemorySize,Version,WindowsDirectory
+EC2AMAZ-EBJBV88,\\Device\\HarddiskVolume1,20348,Multiprocessor Free,Microsoft Windows Server 2022 Datacenter,1252,1,Win32_OperatingSystem,Win32_ComputerSystem,,EC2AMAZ-EBJBV88,0,TRUE,TRUE,TRUE,3,FALSE,,FALSE,256,2,2675412,1249808,4264104,20241030064719.000000+000,,20241030111529.500000+000,20241102105726.901000+000,0409,Microsoft Corporation,4294967295,137438953344,{en-US},Microsoft Windows Server 2022 Datacenter|C:\\Windows|\\Device\\Harddisk0\\Partition1,0,79,2,8,Amazon.com,64-bit,1033,400,18,,,,,FALSE,TRUE,3,EC2,00454-60000-00001-AA631,0,0,1441792,OK,400,\\Device\\HarddiskVolume1,C:\\Windows\\system32,C:,,5635696,4193904,10.0.20348,C:\\Windows
+"""
+
+[commands."55dbc0e9b838caa11145eed07f6e73644bda27bf65a0c58a52291f9a18384481"]
+stdout="""
+{
+    "CurrentBuild":  "20348",
+    "UBR":  2762,
+    "InstallationType":  "Server",
+    "EditionID":  "ServerDatacenter",
+    "ProductName":  "Windows Server 2022 Datacenter",
+    "DisplayVersion":  "21H2",
+    "Architecture":  "AMD64",
+    "ProductType":  "ServerNT"
+}
+"""

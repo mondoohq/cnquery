@@ -31,7 +31,7 @@ func Encode(cmd string) string {
 	return fmt.Sprintf("powershell.exe -NoProfile -EncodedCommand %s", encodedScript)
 }
 
-// The Encode equivalent for running powershell script in unix systems
+// EncodeUnix is equivalent to Encode for running powershell script on unix systems
 func EncodeUnix(cmd string) string {
 	// avoid messages to stderr that are not required in our execution
 	script := "$ProgressPreference='SilentlyContinue';" + cmd
@@ -60,6 +60,9 @@ func ToBase64String(script string) (string, error) {
 	return base64.StdEncoding.EncodeToString([]byte(encoded)), nil
 }
 
+// Wrap runs a powershell script by calling powershell. Note that this is not encoded and therefore does not support
+// multiline scripts or special characters. You should use Encode for that or ensure the script is a single line and
+// does use semicolons to separate commands.
 func Wrap(cmd string) string {
 	return fmt.Sprintf("powershell -c \"%s\"", cmd)
 }

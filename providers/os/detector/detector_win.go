@@ -13,7 +13,41 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/registry"
 )
 
+// runtimeWindowsDetector uses powershell to gather information about the windows system
 func runtimeWindowsDetector(pf *inventory.Platform, conn shared.Connection) (bool, error) {
+	// most systems support wmi, but windows on arm does not ship with wmic, therefore we are trying to use windows
+	// builds from registry key first. If that fails, we try to use wmi
+	// see https://techcommunity.microsoft.com/t5/windows-it-pro-blog/wmi-command-line-wmic-utility-deprecation-next-steps/ba-p/4039242
+
+	if pf.Labels == nil {
+		pf.Labels = map[string]string{}
+	}
+
+	//  try to get build + ubr number (win 10+, 2019+)
+	current, err := win.GetWindowsOSBuild(conn)
+	if err == nil && current.UBR > 0 {
+		pf.Name = "windows"
+		pf.Title = current.ProductName
+		pf.Version = current.CurrentBuild
+		pf.Build = strconv.Itoa(current.UBR)
+		pf.Arch = current.Architecture
+
+		var productType string
+		switch current.ProductType {
+		case "WinNT":
+			productType = "1" // Workstation
+		case "ServerNT":
+			productType = "3" // Server
+		case "LanmanNT":
+			productType = "2" // Domain Controller
+		}
+
+		pf.Labels["windows.mondoo.com/product-type"] = productType
+		pf.Labels["windows.mondoo.com/display-version"] = current.DisplayVersion
+		return true, nil
+	}
+
+	// fallback to wmi if the registry key is not available
 	data, err := win.GetWmiInformation(conn)
 	if err != nil {
 		log.Debug().Err(err).Msg("could not gather wmi information")
@@ -29,19 +63,7 @@ func runtimeWindowsDetector(pf *inventory.Platform, conn shared.Connection) (boo
 
 	// FIXME: we need to ask wmic cpu get architecture
 	pf.Arch = data.OSArchitecture
-
-	if pf.Labels == nil {
-		pf.Labels = map[string]string{}
-	}
 	pf.Labels["windows.mondoo.com/product-type"] = data.ProductType
-
-	// optional: try to get the ubr number (win 10 + 2019)
-	current, err := win.GetWindowsOSBuild(conn)
-	if err != nil {
-		log.Debug().Err(err).Msg("could not parse windows current version")
-	} else if current.UBR > 0 {
-		pf.Build = strconv.Itoa(current.UBR)
-	}
 
 	return true, nil
 }
