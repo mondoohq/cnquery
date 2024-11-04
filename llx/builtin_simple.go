@@ -2244,8 +2244,12 @@ func stringInArray(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 
 	arr := arg.Value.([]interface{})
 	for i := range arr {
-		v := arr[i].(string)
-		if bind.Value.(string) == v {
+		v, ok := arr[i].(string)
+		if !ok {
+			return nil, 0, errors.New("invalid type in array")
+		}
+
+		if v == bind.Value.(string) {
 			return BoolTrue, 0, nil
 		}
 	}
