@@ -22,12 +22,17 @@ func (a *Asset) PrintableKeys() []string {
 func (a *Asset) PrintableValue(index int) string {
 	switch assetPrintableKeys[index] {
 	case "name":
-		return a.HumanName()
+		return a.Display()
 	case "platform-id":
 		return strings.Join(a.PlatformIds, " ")
 	default:
 		return a.String()
 	}
+}
+
+// Display implements SelectableItem from the cli/components package.
+func (a *Asset) Display() string {
+	return a.HumanName()
 }
 
 func (a *Asset) HumanName() string {

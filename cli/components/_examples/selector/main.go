@@ -11,7 +11,7 @@ import (
 
 type CustomString string
 
-func (s CustomString) HumanName() string {
+func (s CustomString) Display() string {
 	return string(s)
 }
 

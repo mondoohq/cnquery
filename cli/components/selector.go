@@ -11,12 +11,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// Selector is the interface that items need to implement so that we can select them.
-type Selector interface {
-	HumanName() string
+// SelectableItem is the interface that items need to implement so that we can select them.
+type SelectableItem interface {
+	Display() string
 }
 
-// Select is an interactive prompt that displays the provided message and displays a
+// SelectableItem is an interactive prompt that displays the provided message and displays a
 // list of items to be selected.
 //
 // e.g.
@@ -24,7 +24,7 @@ type Selector interface {
 //
 //	type CustomString string
 //
-//	func (s CustomString) HumanName() string {
+//	func (s CustomString) Display() string {
 //		return string(s)
 //	}
 //
@@ -35,11 +35,11 @@ type Selector interface {
 //	}
 //
 // ```
-func Select[S Selector](msg string, items []S) int {
+func Select[S SelectableItem](msg string, items []S) int {
 	list := make([]string, len(items))
 
 	for i := range items {
-		list[i] = items[i].HumanName()
+		list[i] = items[i].Display()
 	}
 
 	selection := -1 // make sure we have an invalid index
@@ -58,7 +58,7 @@ func Select[S Selector](msg string, items []S) int {
 	selected := items[selection]
 	log.Debug().
 		Int("selection", selection).
-		Str("asset", selected.HumanName()).
+		Str("item", selected.Display()).
 		Msg("selected")
 	return selection
 }

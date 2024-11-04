@@ -8,12 +8,11 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/cli/theme"
 )
 
-// Object is the interface that a list need to implement so we can display its objects.
-type Object interface {
+// ListableItem is the interface that a list need to implement so we can display its items.
+type ListableItem interface {
 	// PrintableKeys returns the list of keys that will be printed.
 	PrintableKeys() []string
 
@@ -21,7 +20,7 @@ type Object interface {
 	PrintableValue(index int) string
 }
 
-// List is a non-interactive function that lists objects to the user.
+// List is a non-interactive function that lists items to the user.
 //
 // e.g.
 // ```go
@@ -37,16 +36,14 @@ type Object interface {
 //
 //	func main() {
 //		customStrings := []CustomString{"first", "second", "third"}
-//		list := components.List(theme.OperatingSystemTheme, "string", customStrings)
+//		list := components.List(theme.OperatingSystemTheme, customStrings)
 //		fmt.Printf(list)
 //	}
 //
 // ```
-func List[O Object](theme *theme.Theme, listType string, list []O) string {
+func List[O ListableItem](theme *theme.Theme, list []O) string {
 	b := &strings.Builder{}
 	w := tabwriter.NewWriter(b, 1, 1, 1, ' ', tabwriter.TabIndent)
-
-	log.Debug().Msgf("discovered %d %s(s)", len(list), listType)
 
 	for i := range list {
 		assetObj := list[i]

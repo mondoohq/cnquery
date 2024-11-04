@@ -131,7 +131,8 @@ func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 				connectAsset = filteredAssets[selectedAsset]
 			}
 		} else {
-			fmt.Println(components.List(theme.OperatingSystemTheme, "assets", invAssets))
+			log.Info().Msgf("discovered %d assets(s)", len(invAssets))
+			fmt.Println(components.List(theme.OperatingSystemTheme, invAssets))
 			log.Fatal().Msg("cannot connect to more than one asset, use --platform-id to select a specific asset")
 		}
 	}

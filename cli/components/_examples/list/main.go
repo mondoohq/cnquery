@@ -21,6 +21,6 @@ func (s CustomString) PrintableValue(_ int) string {
 
 func main() {
 	customStrings := []CustomString{"first", "second", "third"}
-	list := components.List(theme.OperatingSystemTheme, "string", customStrings)
+	list := components.List(theme.OperatingSystemTheme, customStrings)
 	fmt.Printf(list)
 }
