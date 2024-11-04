@@ -5,20 +5,20 @@ go 1.23.0
 require (
 	github.com/rs/zerolog v1.33.0
 	github.com/shadowscatcher/shodan v1.0.7
-	go.mondoo.com/cnquery/v11 v11.27.0
+	go.mondoo.com/cnquery/v11 v11.28.1
 )
 
 require (
-	cel.dev/expr v0.16.2 // indirect
+	cel.dev/expr v0.18.0 // indirect
 	cloud.google.com/go v0.116.0 // indirect
-	cloud.google.com/go/auth v0.9.8 // indirect
+	cloud.google.com/go/auth v0.9.9 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.4 // indirect
 	cloud.google.com/go/compute/metadata v0.5.2 // indirect
-	cloud.google.com/go/iam v1.2.1 // indirect
-	cloud.google.com/go/kms v1.20.0 // indirect
-	cloud.google.com/go/longrunning v0.6.1 // indirect
-	cloud.google.com/go/monitoring v1.21.1 // indirect
-	cloud.google.com/go/secretmanager v1.14.1 // indirect
+	cloud.google.com/go/iam v1.2.2 // indirect
+	cloud.google.com/go/kms v1.20.1 // indirect
+	cloud.google.com/go/longrunning v0.6.2 // indirect
+	cloud.google.com/go/monitoring v1.21.2 // indirect
+	cloud.google.com/go/secretmanager v1.14.2 // indirect
 	cloud.google.com/go/storage v1.45.0 // indirect
 	dario.cat/mergo v1.0.1 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -60,11 +60,11 @@ require (
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/envoyproxy/go-control-plane v0.13.1 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.1.0 // indirect
-	github.com/fatih/color v1.17.0 // indirect
+	github.com/fatih/color v1.18.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/getsentry/sentry-go v0.29.1 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
-	github.com/go-git/go-billy/v5 v5.5.0 // indirect
+	github.com/go-git/go-billy/v5 v5.6.0 // indirect
 	github.com/go-git/go-git/v5 v5.12.0 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.3 // indirect
 	github.com/go-jose/go-jose/v4 v4.0.4 // indirect
@@ -85,7 +85,7 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-hclog v1.6.3 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
-	github.com/hashicorp/go-plugin v1.6.1 // indirect
+	github.com/hashicorp/go-plugin v1.6.2 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.7 // indirect
 	github.com/hashicorp/go-rootcerts v1.0.2 // indirect
 	github.com/hashicorp/go-secure-stdlib/parseutil v0.1.8 // indirect
@@ -105,7 +105,6 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
-	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/muesli/termenv v0.15.2 // indirect
@@ -146,12 +145,12 @@ require (
 	golang.org/x/text v0.19.0 // indirect
 	golang.org/x/time v0.7.0 // indirect
 	golang.org/x/tools v0.26.0 // indirect
-	google.golang.org/api v0.201.0 // indirect
-	google.golang.org/genproto v0.0.0-20241015192408-796eee8c2d53 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20241015192408-796eee8c2d53 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20241015192408-796eee8c2d53 // indirect
+	google.golang.org/api v0.203.0 // indirect
+	google.golang.org/genproto v0.0.0-20241021214115-324edc3d5d38 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20241021214115-324edc3d5d38 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20241021214115-324edc3d5d38 // indirect
 	google.golang.org/grpc v1.67.1 // indirect
-	google.golang.org/grpc/stats/opentelemetry v0.0.0-20241018153737-98959d9a4904 // indirect
+	google.golang.org/grpc/stats/opentelemetry v0.0.0-20241025232817-cb329375b14e // indirect
 	google.golang.org/protobuf v1.35.1 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	moul.io/http2curl v1.0.0 // indirect
