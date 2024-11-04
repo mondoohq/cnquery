@@ -116,7 +116,7 @@ func (c Capabilities) String() []string {
 }
 
 type FileSearch interface {
-	Find(from string, r *regexp.Regexp, typ string, perm *uint32) ([]string, error)
+	Find(from string, r *regexp.Regexp, typ string, perm *uint32, depth *int) ([]string, error)
 }
 
 type PerfStats struct {
