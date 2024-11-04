@@ -13,6 +13,23 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// Printable Keys and Values are used by the cli/components package.
+var assetPrintableKeys = []string{"name", "platform-id"}
+
+func (a *Asset) PrintableKeys() []string {
+	return assetPrintableKeys
+}
+func (a *Asset) PrintableValue(index int) string {
+	switch assetPrintableKeys[index] {
+	case "name":
+		return a.HumanName()
+	case "platform-id":
+		return strings.Join(a.PlatformIds, " ")
+	default:
+		return a.String()
+	}
+}
+
 func (a *Asset) HumanName() string {
 	if a == nil {
 		return ""
