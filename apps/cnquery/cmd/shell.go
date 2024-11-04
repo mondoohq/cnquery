@@ -126,12 +126,13 @@ func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 
 		isTTY := isatty.IsTerminal(os.Stdout.Fd())
 		if isTTY {
-			selectedAsset := components.AssetSelect(invAssets)
+			selectedAsset := components.Select("Available assets", invAssets)
 			if selectedAsset >= 0 {
 				connectAsset = filteredAssets[selectedAsset]
 			}
 		} else {
-			fmt.Println(components.AssetList(theme.OperatingSystemTheme, invAssets))
+			log.Info().Msgf("discovered %d assets(s)", len(invAssets))
+			fmt.Println(components.List(theme.OperatingSystemTheme, invAssets))
 			log.Fatal().Msg("cannot connect to more than one asset, use --platform-id to select a specific asset")
 		}
 	}
