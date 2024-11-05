@@ -7,9 +7,8 @@ import (
 	"errors"
 	"testing"
 
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-
 	"github.com/stretchr/testify/assert"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/mock"
 )
 
@@ -690,10 +689,34 @@ func TestWindows2019Detector(t *testing.T) {
 	assert.Nil(t, err, "was able to create the provider")
 
 	assert.Equal(t, "windows", di.Name, "os name should be identified")
-	assert.Equal(t, "Microsoft Windows Server 2019 Datacenter Evaluation", di.Title, "os title should be identified")
+	assert.Equal(t, "Windows Server 2019 Datacenter", di.Title, "os title should be identified")
 	assert.Equal(t, "17763", di.Version, "os version should be identified")
-	assert.Equal(t, "720", di.Build, "os build version should be identified")
-	assert.Equal(t, "64-bit", di.Arch, "os arch should be identified")
+	assert.Equal(t, "6414", di.Build, "os build version should be identified")
+	assert.Equal(t, "AMD64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"windows", "os"}, di.Family)
+}
+
+func TestWindows2022Detector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-windows2022.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "windows", di.Name, "os name should be identified")
+	assert.Equal(t, "Windows Server 2022 Datacenter", di.Title, "os title should be identified")
+	assert.Equal(t, "20348", di.Version, "os version should be identified")
+	assert.Equal(t, "2762", di.Build, "os build version should be identified")
+	assert.Equal(t, "AMD64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"windows", "os"}, di.Family)
+}
+
+func TestWindows2025Detector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-windows2025.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "windows", di.Name, "os name should be identified")
+	assert.Equal(t, "Windows Server 2025 Datacenter", di.Title, "os title should be identified")
+	assert.Equal(t, "26311", di.Version, "os version should be identified")
+	assert.Equal(t, "5000", di.Build, "os build version should be identified")
+	assert.Equal(t, "ARM64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"windows", "os"}, di.Family)
 }
 

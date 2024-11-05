@@ -58,11 +58,16 @@ func (b BuildVersion) OSBuild() string {
 }
 
 type WindowsCurrentVersion struct {
-	CurrentBuild string `json:"CurrentBuild"`
-	EditionID    string `json:"EditionID"`
-	ReleaseId    string `json:"ReleaseId"`
+	CurrentBuild     string `json:"CurrentBuild"`
+	EditionID        string `json:"EditionID"`
+	ReleaseId        string `json:"ReleaseId"`
+	InstallationType string `json:"InstallationType"`
+	ProductName      string `json:"ProductName"`
+	DisplayVersion   string `json:"DisplayVersion"`
 	// Update Build Revision
-	UBR int `json:"UBR"`
+	UBR          int    `json:"UBR"`
+	Architecture string `json:"Architecture"`
+	ProductType  string `json:"ProductType"`
 }
 
 func ParseWinRegistryCurrentVersion(r io.Reader) (*WindowsCurrentVersion, error) {
@@ -82,8 +87,15 @@ func ParseWinRegistryCurrentVersion(r io.Reader) (*WindowsCurrentVersion, error)
 
 // powershellGetWindowsOSBuild runs a powershell script to retrieve the current version from windows
 func powershellGetWindowsOSBuild(conn shared.Connection) (*WindowsCurrentVersion, error) {
-	pscommand := "Get-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion' -Name CurrentBuild, UBR, EditionID | ConvertTo-Json"
-	cmd, err := conn.RunCommand(powershell.Wrap(pscommand))
+	pscommand := `
+$info = Get-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\ProductOptions' -Name ProductType
+$sysInfo = Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name CurrentBuild, UBR, InstallationType, EditionID, ProductName, DisplayVersion
+$sysInfo | Add-Member -MemberType NoteProperty -Name Architecture -Value $env:PROCESSOR_ARCHITECTURE
+$sysInfo | Add-Member -MemberType NoteProperty -Name ProductType -Value $info.ProductType
+$sysInfo | Select-Object CurrentBuild, UBR, InstallationType, EditionID, ProductName, DisplayVersion, Architecture, ProductType | ConvertTo-Json
+`
+
+	cmd, err := conn.RunCommand(powershell.Encode(pscommand))
 	if err != nil {
 		return nil, err
 	}
