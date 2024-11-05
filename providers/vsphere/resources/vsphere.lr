@@ -132,6 +132,10 @@ private vsphere.datacenter @defaults("moid name") {
   vms() []vsphere.vm
   // Clusters in the datacenter
   clusters() []vsphere.cluster
+  // Distributed virtual switches
+  distributedSwitches() []vsphere.vswitch.dvs
+  // List of distributed virtual port groups
+  distributedPortGroups() []vsphere.vswitch.portgroup
 }
 
 // vSphere cluster resource
@@ -216,12 +220,24 @@ private vsphere.vswitch.standard @defaults("name") {
 
 // vSphere distributed virtual switch
 private vsphere.vswitch.dvs @defaults("name") {
+  // vSphere managed object ID
+  moid string
   // Virtual switch name
   name string
   // Virtual switch properties
   properties dict
   // List of physical NICs currently configured as uplinks
   uplinks() []vsphere.vmnic
+}
+
+// vSphere distributed virtual port group
+private vsphere.vswitch.portgroup @defaults("name") {
+  // vSphere managed object ID
+  moid string
+  // Port group name
+  name string
+  // Port group properties
+  properties dict
 }
 
 // vSphere ESXi physical network interface resource

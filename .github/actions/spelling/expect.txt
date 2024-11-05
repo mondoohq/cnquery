@@ -102,3 +102,4 @@ vulnerabilityassessmentsettings
 vulnmgmt
 wil
 xssmatchstatement
+portgroup

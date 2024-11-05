@@ -166,6 +166,14 @@ resources:
   vsphere.datacenter:
     fields:
       clusters: {}
+      distributedPortGroups:
+        min_mondoo_version: 9.0.0
+      distributedPortgroups:
+        min_mondoo_version: 9.0.0
+      distributedSwitches:
+        min_mondoo_version: 9.0.0
+      distributedVirtualPortgroups:
+        min_mondoo_version: 9.0.0
       hosts: {}
       inventoryPath: {}
       moid: {}
@@ -273,11 +281,35 @@ resources:
       - vmware-vsphere
   vsphere.vswitch.dvs:
     fields:
+      moid:
+        min_mondoo_version: 9.0.0
       name: {}
+      portgroups:
+        min_mondoo_version: 9.0.0
       properties: {}
       uplinks: {}
     is_private: true
     min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - vmware-esxi
+      - vmware-vsphere
+  vsphere.vswitch.dvs.portgroup:
+    fields:
+      config: {}
+      name: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - vmware-esxi
+      - vmware-vsphere
+  vsphere.vswitch.portgroup:
+    fields:
+      moid: {}
+      name: {}
+      properties: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - vmware-esxi
