@@ -11,7 +11,6 @@ import (
 
 	betamodels "github.com/microsoftgraph/msgraph-beta-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/reports"
-	betausers "github.com/microsoftgraph/msgraph-beta-sdk-go/users"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/users"
 	"go.mondoo.com/cnquery/v11/llx"
@@ -70,7 +69,7 @@ func (a *mqlMicrosoft) users() ([]interface{}, error) {
 	if err != nil {
 		a.mfaResp = mfaResp{err: err}
 	} else {
-		userRegistrationDetails, err := iterate[*betamodels.UserRegistrationDetails](ctx, detailsResp, betaClient.GetAdapter(), betausers.CreateDeltaGetResponseFromDiscriminatorValue)
+		userRegistrationDetails, err := iterate[*betamodels.UserRegistrationDetails](ctx, detailsResp, betaClient.GetAdapter(), betamodels.CreateUserRegistrationDetailsCollectionResponseFromDiscriminatorValue)
 		// we do not want to fail the user fetching here, this likely means the tenant does not have the right license
 		if err != nil {
 			a.mfaResp = mfaResp{err: err}
