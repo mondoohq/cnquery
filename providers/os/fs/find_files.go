@@ -5,20 +5,25 @@ package fs
 
 import (
 	"io/fs"
+	"os"
 	"regexp"
 	"strings"
 )
 
-func FindFiles(iofs fs.FS, from string, r *regexp.Regexp, typ string, perm *uint32) ([]string, error) {
-	matcher := createFindFilesMatcher(iofs, typ, r, perm)
+func FindFiles(iofs fs.FS, from string, r *regexp.Regexp, typ string, perm *uint32, depth *int) ([]string, error) {
+	matcher := createFindFilesMatcher(iofs, typ, from, r, perm, depth)
 	matchedPaths := []string{}
 	err := fs.WalkDir(iofs, from, func(p string, d fs.DirEntry, err error) error {
-		skip, err := handleFsError(err)
+		if d.IsDir() && matcher.DepthReached(p) {
+			return fs.SkipDir
+		}
+
+		skipFile, err := handleFsError(err)
 		if err != nil {
 			return err
 		}
 
-		if skip {
+		if skipFile {
 			return nil
 		}
 		if matcher.Match(p, d.Type()) {
@@ -36,7 +41,24 @@ type findFilesMatcher struct {
 	types []byte
 	r     *regexp.Regexp
 	perm  *uint32
+	depth *int
+	from  string
 	iofs  fs.FS
+}
+
+// Depth 0 means we only walk the current directory
+// Depth 1 means we walk the current directory and its children
+// Depth 2 means we walk the current directory, its children and their children
+func (m findFilesMatcher) DepthReached(p string) bool {
+	if m.depth == nil {
+		return false
+	}
+
+	trimmed := strings.TrimPrefix(p, m.from)
+	// WalkDir always uses slash for separating, ignoring the OS separator. This is why we need to replace it.
+	normalized := strings.ReplaceAll(trimmed, string(os.PathSeparator), "/")
+	depth := strings.Count(normalized, "/")
+	return depth > *m.depth
 }
 
 func (m findFilesMatcher) Match(path string, t fs.FileMode) bool {
@@ -101,7 +123,7 @@ func (m findFilesMatcher) matchesPerm(path string) bool {
 	return true
 }
 
-func createFindFilesMatcher(iofs fs.FS, typeStr string, r *regexp.Regexp, perm *uint32) findFilesMatcher {
+func createFindFilesMatcher(iofs fs.FS, typeStr string, from string, r *regexp.Regexp, perm *uint32, depth *int) findFilesMatcher {
 	allowed := []byte{}
 	types := strings.Split(typeStr, ",")
 	for _, t := range types {
@@ -120,5 +142,7 @@ func createFindFilesMatcher(iofs fs.FS, typeStr string, r *regexp.Regexp, perm *
 		r:     r,
 		perm:  perm,
 		iofs:  iofs,
+		depth: depth,
+		from:  from,
 	}
 }

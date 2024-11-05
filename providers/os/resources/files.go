@@ -87,7 +87,7 @@ func (l *mqlFilesFind) list() ([]interface{}, error) {
 			perm = &p
 		}
 
-		foundFiles, err = fsSearch.Find(l.From.Data, compiledRegexp, l.Type.Data, perm)
+		foundFiles, err = fsSearch.Find(l.From.Data, compiledRegexp, l.Type.Data, perm, nil)
 		if err != nil {
 			return nil, err
 		}

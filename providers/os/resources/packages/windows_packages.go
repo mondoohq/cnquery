@@ -8,6 +8,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"time"
@@ -363,13 +364,14 @@ func (w *WinPkgManager) getFsAppxPackages() ([]Package, error) {
 		return nil, errors.New("find file is not supported for your platform")
 	}
 
-	paths := []string{
-		`Windows\SystemApps`,
-		`Program Files\WindowsApps`,
+	paths := map[string]int{
+		filepath.Join("Windows", "SystemApps"):        1,
+		filepath.Join("Program Files", "WindowsApps"): 1,
+		"Windows": 1,
 	}
 	appxPaths := map[string]struct{}{}
-	for _, p := range paths {
-		res, err := fsSearch.Find(p, regexp.MustCompile(".*/[Aa]ppx[Mm]anifest.xml"), "f", nil)
+	for p, depth := range paths {
+		res, err := fsSearch.Find(p, regexp.MustCompile(".*/[Aa]ppx[Mm]anifest.xml"), "f", nil, &depth)
 		if err != nil {
 			continue
 		}
