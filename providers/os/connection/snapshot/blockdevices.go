@@ -189,7 +189,10 @@ func (device BlockDevice) GetMountablePartitions(includeAll bool) ([]*PartitionI
 		if filter(partition) {
 			log.Debug().Str("name", partition.Name).Msg("found suitable partition")
 			devFsName := "/dev/" + partition.Name
-			partitions = append(partitions, &PartitionInfo{Name: devFsName, FsType: partition.FsType})
+			partitions = append(partitions, &PartitionInfo{
+				Name: devFsName, FsType: partition.FsType,
+				Label: partition.Label, Uuid: partition.Uuid,
+			})
 		} else {
 			log.Debug().
 				Str("name", partition.Name).

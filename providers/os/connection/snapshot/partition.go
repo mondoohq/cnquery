@@ -10,6 +10,11 @@ import (
 type PartitionInfo struct {
 	Name   string
 	FsType string
+
+	// (optional) Label is the partition label
+	Label string
+	// (optional) UUID is the partition UUID
+	Uuid string
 }
 
 func (entry BlockDevice) isNoBootVolume() bool {
