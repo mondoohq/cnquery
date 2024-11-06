@@ -247,7 +247,7 @@ func TestGetMountablePartition(t *testing.T) {
 		}
 		partition, err := block.GetMountablePartition()
 		require.Nil(t, err)
-		require.Equal(t, &PartitionInfo{FsType: "xfs", Name: "/dev/sde1"}, partition)
+		require.Equal(t, &PartitionInfo{FsType: "xfs", Name: "/dev/sde1", Uuid: "12346", Label: "ROOT"}, partition)
 	})
 
 	t.Run("largest suitable partition", func(t *testing.T) {
@@ -260,7 +260,7 @@ func TestGetMountablePartition(t *testing.T) {
 		}
 		partition, err := block.GetMountablePartition()
 		require.Nil(t, err)
-		require.Equal(t, &PartitionInfo{FsType: "xfs", Name: "/dev/sda2"}, partition)
+		require.Equal(t, &PartitionInfo{FsType: "xfs", Name: "/dev/sda2", Uuid: "12346", Label: "ROOT"}, partition)
 	})
 }
 
@@ -280,8 +280,8 @@ func TestGetMountablePartitions(t *testing.T) {
 		parts, err := block.GetMountablePartitions(true)
 		require.NoError(t, err)
 		expected := []*PartitionInfo{
-			{Name: "/dev/sda2", FsType: "xfs"},
-			{Name: "/dev/sda3", FsType: "xfs"},
+			{Name: "/dev/sda2", FsType: "xfs", Uuid: "12345", Label: "ROOT"},
+			{Name: "/dev/sda3", FsType: "xfs", Uuid: "12346", Label: "ROOT"},
 		}
 		require.ElementsMatch(t, expected, parts)
 	})
