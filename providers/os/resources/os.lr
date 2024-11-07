@@ -947,7 +947,7 @@ private fstab.entry @defaults("device mountpoint") {
   fstype string
   // Mount options, e.g., defaults
   options string
-  // Dump frequency, e.g. 0
+  // Dump frequency (0 for full backup or an integer above 0, incremental backup, copies all files new or modified since the last dump of a lower level)
   dump int
   // File system check order, e.g., 1
   fsck int
