@@ -15,7 +15,13 @@ import (
 
 func (f *mqlFstab) entries() ([]any, error) {
 	conn := f.MqlRuntime.Connection.(shared.Connection)
-	fstabFile, err := conn.FileSystem().Open("/etc/fstab")
+
+	fs := conn.FileSystem()
+	if fs == nil {
+		return nil, errors.New("filesystem not available")
+	}
+
+	fstabFile, err := fs.Open("/etc/fstab")
 	if err != nil {
 		return nil, err
 	}
