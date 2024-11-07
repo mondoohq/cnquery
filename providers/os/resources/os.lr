@@ -939,17 +939,17 @@ fstab @defaults("path") {
 }
 
 private fstab.entry @defaults("device mountpoint") {
-  // Device referenced in the fstab, e.g. LABEL=rootfs
+  // Device referenced in the fstab, e.g., LABEL=rootfs
   device string
-  // Mountpoint, e.g. '/'
+  // Mount point, e.g., '/'
   mountpoint string
-  // Filesystem type, e.g. ext4
+  // File system type, e.g., ext4
   fstype string
-  // Mount options, e.g. defaults
+  // Mount options, e.g., defaults
   options string
   // Dump frequency, e.g. 0
   dump int
-  // Filesystem check order, e.g. 1
+  // File system check order, e.g., 1
   fsck int
 }
 
