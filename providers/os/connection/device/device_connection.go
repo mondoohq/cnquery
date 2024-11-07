@@ -33,6 +33,8 @@ type DeviceConnection struct {
 	deviceManager DeviceManager
 
 	MountedDirs []string
+	// map of mountpoints to partition infos
+	partitions map[string]*snapshot.PartitionInfo
 }
 
 func getDeviceManager(conf *inventory.Config) (DeviceManager, error) {
@@ -76,12 +78,15 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 		asset.IdDetector = []string{ids.IdDetector_Hostname, ids.IdDetector_SshHostkey}
 	}
 
+	res.partitions = make(map[string]*snapshot.PartitionInfo)
+
 	// we iterate over all the blocks and try to run OS detection on each one of them
 	// we only return one asset, if we find the right block (e.g. the one with the root FS)
 	for _, block := range blocks {
 		fsConn, scanDir, err := tryDetectAsset(connId, block, manager, conf, asset)
 		if scanDir != "" {
 			res.MountedDirs = append(res.MountedDirs, scanDir)
+			res.partitions[scanDir] = block
 		}
 		if err != nil {
 			log.Error().Err(err).Msg("partition did not return an asset, continuing")
@@ -156,6 +161,14 @@ func (p *DeviceConnection) FileInfo(path string) (shared.FileInfoDetails, error)
 
 func (p *DeviceConnection) Conf() *inventory.Config {
 	return p.FileSystemConnection.Conf
+}
+
+func (p *DeviceConnection) Partitions() map[string]*snapshot.PartitionInfo {
+	if p.partitions == nil {
+		p.partitions = make(map[string]*snapshot.PartitionInfo)
+	}
+
+	return p.partitions
 }
 
 // tryDetectAsset tries to detect the OS on a given block device
