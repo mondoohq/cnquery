@@ -17,9 +17,28 @@ var Config = plugin.Provider{
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
 		{
-			Name:    "github",
-			Use:     "github",
-			Short:   "a GitHub organization or repository",
+			Name:  "github",
+			Use:   "github",
+			Short: "a GitHub organization or repository",
+			Long: `Use the github provider to query resources within GitHub organizations and repositories.
+
+Available commands:
+  org					              GitHub organization
+  repo                      GitHub repo
+
+Examples:
+  cnspec scan github org <ORG_NAME> --discover organization
+  cnspec scan github org <ORG_NAME> --repos "<REPO1>,<REPO2>"
+  cnquery shell github org <ORG_NAME>
+	cnquery shell github org <YOUR-GITHUB-ORG> --app-id <YOUR-GITHUB-APP-ID> --app-installation-id <YOUR-GITHUB-APP-INSTALL-ID> --app-private-key <PATH-TO-PEM-FILE>
+
+Notes:
+  Mondoo needs a personal access token to scan a GitHub organization, public repo, or private repo. The token's level of access determines how much information Mondoo can retrieve. Supply your personal access token to Mondoo by setting the GITHUB_TOKEN environment variable. To learn how, read https://mondoo.com/docs/cnspec/saas/github/.
+
+	If you have very large GitHub organizations, consider giving Mondoo access using custom GitHub app credentials. To learn how, read https://mondoo.com/docs/cnspec/saas/gh-app/.
+
+	If you have a GitHub Enterprise Server account, you must provide the URL for the account using the --enterprise-url flag.
+`,
 			MinArgs: 2,
 			MaxArgs: 2,
 			Discovery: []string{
@@ -45,7 +64,7 @@ var Config = plugin.Provider{
 					Long:    "repos",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "Only include repositories with matching names",
+					Desc:    "Only include repositories matching these names",
 				},
 				{
 					Long:    "app-id",
@@ -69,7 +88,7 @@ var Config = plugin.Provider{
 					Long:    "enterprise-url",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "GitHub Enterprise URL",
+					Desc:    "GitHub Enterprise Server URL",
 				},
 			},
 		},
