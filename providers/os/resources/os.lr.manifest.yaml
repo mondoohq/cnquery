@@ -389,6 +389,7 @@ resources:
   fstab:
     fields:
       entries: {}
+      path: {}
     min_mondoo_version: 9.0.0
   fstab.entry:
     fields:

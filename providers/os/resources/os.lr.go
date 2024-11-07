@@ -299,7 +299,7 @@ func init() {
 			Create: createIptablesEntry,
 		},
 		"fstab": {
-			// to override args, implement: initFstab(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initFstab,
 			Create: createFstab,
 		},
 		"fstab.entry": {
@@ -1516,6 +1516,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"iptables.entry.chain": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIptablesEntry).GetChain()).ToDataRes(types.String)
+	},
+	"fstab.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFstab).GetPath()).ToDataRes(types.String)
 	},
 	"fstab.entries": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFstab).GetEntries()).ToDataRes(types.Array(types.Resource("fstab.entry")))
@@ -3895,6 +3898,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlFstab).__id, ok = v.Value.(string)
 			return
 		},
+	"fstab.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFstab).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"fstab.entries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlFstab).Entries, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
@@ -10690,6 +10697,7 @@ type mqlFstab struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlFstabInternal it will be used here
+	Path plugin.TValue[string]
 	Entries plugin.TValue[[]interface{}]
 }
 
@@ -10723,6 +10731,10 @@ func (c *mqlFstab) MqlName() string {
 
 func (c *mqlFstab) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlFstab) GetPath() *plugin.TValue[string] {
+	return &c.Path
 }
 
 func (c *mqlFstab) GetEntries() *plugin.TValue[[]interface{}] {

@@ -10,8 +10,30 @@ import (
 	"strings"
 
 	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 )
+
+func initFstab(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if x, ok := args["path"]; ok {
+		path, ok := x.Value.(string)
+		if !ok || path == "" {
+			path = "/etc/fstab"
+		}
+
+		f, err := CreateResource(runtime, "fstab", map[string]*llx.RawData{
+			"path": llx.StringData(path),
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+		args["path"] = llx.StringData(path)
+		return args, f, nil
+	}
+
+	args["path"] = llx.StringData("/etc/fstab")
+	return args, nil, nil
+}
 
 func (f *mqlFstab) entries() ([]any, error) {
 	conn := f.MqlRuntime.Connection.(shared.Connection)
@@ -21,7 +43,7 @@ func (f *mqlFstab) entries() ([]any, error) {
 		return nil, errors.New("filesystem not available")
 	}
 
-	fstabFile, err := fs.Open("/etc/fstab")
+	fstabFile, err := fs.Open(f.GetPath().Data)
 	if err != nil {
 		return nil, err
 	}

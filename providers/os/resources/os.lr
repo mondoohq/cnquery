@@ -931,7 +931,10 @@ iptables.entry {
   chain string
 }
 
-fstab {
+fstab @defaults("path") {
+  init(path? string)
+  path string
+
   entries() []fstab.entry
 }
 
