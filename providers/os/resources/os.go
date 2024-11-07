@@ -680,3 +680,11 @@ func (s *mqlOsLinux) ip6tables() (*mqlIp6tables, error) {
 	}
 	return res.(*mqlIp6tables), nil
 }
+
+func (s *mqlOsLinux) fstab() (*mqlFstab, error) {
+	res, err := CreateResource(s.MqlRuntime, "fstab", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlFstab), nil
+}

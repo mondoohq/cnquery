@@ -298,6 +298,14 @@ func init() {
 			// to override args, implement: initIptablesEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createIptablesEntry,
 		},
+		"fstab": {
+			// to override args, implement: initFstab(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFstab,
+		},
+		"fstab.entry": {
+			// to override args, implement: initFstabEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFstabEntry,
+		},
 		"process": {
 			Init: initProcess,
 			Create: createProcess,
@@ -857,6 +865,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"os.linux.ip6tables": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOsLinux).GetIp6tables()).ToDataRes(types.Resource("ip6tables"))
+	},
+	"os.linux.fstab": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsLinux).GetFstab()).ToDataRes(types.Resource("fstab"))
 	},
 	"os.rootCertificates.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOsRootCertificates).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
@@ -1505,6 +1516,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"iptables.entry.chain": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIptablesEntry).GetChain()).ToDataRes(types.String)
+	},
+	"fstab.entries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFstab).GetEntries()).ToDataRes(types.Array(types.Resource("fstab.entry")))
+	},
+	"fstab.entry.device": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFstabEntry).GetDevice()).ToDataRes(types.String)
+	},
+	"fstab.entry.mountpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFstabEntry).GetMountpoint()).ToDataRes(types.String)
+	},
+	"fstab.entry.fstype": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFstabEntry).GetFstype()).ToDataRes(types.String)
+	},
+	"fstab.entry.options": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFstabEntry).GetOptions()).ToDataRes(types.String)
+	},
+	"fstab.entry.dump": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFstabEntry).GetDump()).ToDataRes(types.Int)
+	},
+	"fstab.entry.fsck": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFstabEntry).GetFsck()).ToDataRes(types.Int)
 	},
 	"process.pid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProcess).GetPid()).ToDataRes(types.Int)
@@ -2807,6 +2839,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlOsLinux).Ip6tables, ok = plugin.RawToTValue[*mqlIp6tables](v.Value, v.Error)
 		return
 	},
+	"os.linux.fstab": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsLinux).Fstab, ok = plugin.RawToTValue[*mqlFstab](v.Value, v.Error)
+		return
+	},
 	"os.rootCertificates.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlOsRootCertificates).__id, ok = v.Value.(string)
 			return
@@ -3853,6 +3889,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"iptables.entry.chain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIptablesEntry).Chain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"fstab.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlFstab).__id, ok = v.Value.(string)
+			return
+		},
+	"fstab.entries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFstab).Entries, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"fstab.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlFstabEntry).__id, ok = v.Value.(string)
+			return
+		},
+	"fstab.entry.device": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFstabEntry).Device, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"fstab.entry.mountpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFstabEntry).Mountpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"fstab.entry.fstype": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFstabEntry).Fstype, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"fstab.entry.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFstabEntry).Options, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"fstab.entry.dump": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFstabEntry).Dump, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"fstab.entry.fsck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFstabEntry).Fsck, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"process.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6780,6 +6852,7 @@ type mqlOsLinux struct {
 	Unix plugin.TValue[*mqlOsUnix]
 	Iptables plugin.TValue[*mqlIptables]
 	Ip6tables plugin.TValue[*mqlIp6tables]
+	Fstab plugin.TValue[*mqlFstab]
 }
 
 // createOsLinux creates a new instance of this resource
@@ -6864,6 +6937,22 @@ func (c *mqlOsLinux) GetIp6tables() *plugin.TValue[*mqlIp6tables] {
 		}
 
 		return c.ip6tables()
+	})
+}
+
+func (c *mqlOsLinux) GetFstab() *plugin.TValue[*mqlFstab] {
+	return plugin.GetOrCompute[*mqlFstab](&c.Fstab, func() (*mqlFstab, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("os.linux", c.__id, "fstab")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFstab), nil
+			}
+		}
+
+		return c.fstab()
 	})
 }
 
@@ -10594,6 +10683,136 @@ func (c *mqlIptablesEntry) GetOptions() *plugin.TValue[string] {
 
 func (c *mqlIptablesEntry) GetChain() *plugin.TValue[string] {
 	return &c.Chain
+}
+
+// mqlFstab for the fstab resource
+type mqlFstab struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlFstabInternal it will be used here
+	Entries plugin.TValue[[]interface{}]
+}
+
+// createFstab creates a new instance of this resource
+func createFstab(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFstab{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("fstab", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFstab) MqlName() string {
+	return "fstab"
+}
+
+func (c *mqlFstab) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFstab) GetEntries() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Entries, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("fstab", c.__id, "entries")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.entries()
+	})
+}
+
+// mqlFstabEntry for the fstab.entry resource
+type mqlFstabEntry struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlFstabEntryInternal it will be used here
+	Device plugin.TValue[string]
+	Mountpoint plugin.TValue[string]
+	Fstype plugin.TValue[string]
+	Options plugin.TValue[string]
+	Dump plugin.TValue[int64]
+	Fsck plugin.TValue[int64]
+}
+
+// createFstabEntry creates a new instance of this resource
+func createFstabEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFstabEntry{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("fstab.entry", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFstabEntry) MqlName() string {
+	return "fstab.entry"
+}
+
+func (c *mqlFstabEntry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFstabEntry) GetDevice() *plugin.TValue[string] {
+	return &c.Device
+}
+
+func (c *mqlFstabEntry) GetMountpoint() *plugin.TValue[string] {
+	return &c.Mountpoint
+}
+
+func (c *mqlFstabEntry) GetFstype() *plugin.TValue[string] {
+	return &c.Fstype
+}
+
+func (c *mqlFstabEntry) GetOptions() *plugin.TValue[string] {
+	return &c.Options
+}
+
+func (c *mqlFstabEntry) GetDump() *plugin.TValue[int64] {
+	return &c.Dump
+}
+
+func (c *mqlFstabEntry) GetFsck() *plugin.TValue[int64] {
+	return &c.Fsck
 }
 
 // mqlProcess for the process resource

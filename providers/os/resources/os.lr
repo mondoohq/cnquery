@@ -310,6 +310,8 @@ os.linux {
   iptables() iptables
   // iptables firewall for IPv6
   ip6tables() ip6tables
+  // /etc/fstab entries
+  fstab() fstab
 }
 
 // Operating system root certificates
@@ -927,6 +929,25 @@ iptables.entry {
   options string
   // Input or output, which is used to create the ID
   chain string
+}
+
+fstab {
+  entries() []fstab.entry
+}
+
+private fstab.entry @defaults("device mountpoint") {
+  // Device referenced in the fstab, e.g. LABEL=rootfs
+  device string
+  // Mountpoint, e.g. '/'
+  mountpoint string
+  // Filesystem type, e.g. ext4
+  fstype string
+  // Mount options, e.g. defaults
+  options string
+  // Dump frequency, e.g. 0
+  dump int
+  // Filesystem check order, e.g. 1
+  fsck int
 }
 
 // Process on this system
