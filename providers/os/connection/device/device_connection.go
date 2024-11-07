@@ -95,8 +95,6 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 		}
 	}
 
-	log.Info().Any("partitions", res.partitions).Msg("device connection> == PARTITIONS ==")
-
 	// if none of the blocks returned a platform that we could detect, we return an error
 	if asset.Platform == nil {
 		res.Close()
