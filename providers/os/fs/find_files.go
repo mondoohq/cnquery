@@ -14,7 +14,7 @@ func FindFiles(iofs fs.FS, from string, r *regexp.Regexp, typ string, perm *uint
 	matcher := createFindFilesMatcher(iofs, typ, from, r, perm, depth)
 	matchedPaths := []string{}
 	err := fs.WalkDir(iofs, from, func(p string, d fs.DirEntry, err error) error {
-		if d.IsDir() && matcher.DepthReached(p) {
+		if d != nil && d.IsDir() && matcher.DepthReached(p) {
 			return fs.SkipDir
 		}
 
