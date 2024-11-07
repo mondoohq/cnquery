@@ -990,6 +990,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"files.find.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFilesFind).GetName()).ToDataRes(types.String)
 	},
+	"files.find.depth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFilesFind).GetDepth()).ToDataRes(types.Int)
+	},
 	"files.find.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFilesFind).GetList()).ToDataRes(types.Array(types.Resource("file")))
 	},
@@ -3006,6 +3009,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"files.find.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlFilesFind).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"files.find.depth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFilesFind).Depth, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"files.find.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7461,6 +7468,7 @@ type mqlFilesFind struct {
 	Regex plugin.TValue[string]
 	Permissions plugin.TValue[int64]
 	Name plugin.TValue[string]
+	Depth plugin.TValue[int64]
 	List plugin.TValue[[]interface{}]
 }
 
@@ -7523,6 +7531,10 @@ func (c *mqlFilesFind) GetPermissions() *plugin.TValue[int64] {
 
 func (c *mqlFilesFind) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlFilesFind) GetDepth() *plugin.TValue[int64] {
+	return &c.Depth
 }
 
 func (c *mqlFilesFind) GetList() *plugin.TValue[[]interface{}] {

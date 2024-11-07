@@ -375,6 +375,8 @@ resources:
     min_mondoo_version: latest
   files.find:
     fields:
+      depth:
+        min_mondoo_version: 9.0.0
       from: {}
       list:
         min_mondoo_version: latest

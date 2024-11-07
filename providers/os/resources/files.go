@@ -87,7 +87,13 @@ func (l *mqlFilesFind) list() ([]interface{}, error) {
 			perm = &p
 		}
 
-		foundFiles, err = fsSearch.Find(l.From.Data, compiledRegexp, l.Type.Data, perm, nil)
+		var depth *int
+		if l.Depth.IsSet() {
+			d := int(l.Depth.Data)
+			depth = &d
+		}
+
+		foundFiles, err = fsSearch.Find(l.From.Data, compiledRegexp, l.Type.Data, perm, depth)
 		if err != nil {
 			return nil, err
 		}
@@ -122,6 +128,11 @@ func (l *mqlFilesFind) list() ([]interface{}, error) {
 		if l.Name.Data != "" {
 			call.WriteString(" -name ")
 			call.WriteString(l.Name.Data)
+		}
+
+		if l.Depth.IsSet() {
+			call.WriteString(" -maxdepth ")
+			call.WriteString(octal2string(l.Depth.Data))
 		}
 
 		rawCmd, err := CreateResource(l.MqlRuntime, "command", map[string]*llx.RawData{

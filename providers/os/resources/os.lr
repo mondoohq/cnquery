@@ -426,6 +426,8 @@ files.find {
   permissions int
   // Search name
   name string
+  // The depth of the file search.
+  depth int
 }
 
 // Parse INI files
