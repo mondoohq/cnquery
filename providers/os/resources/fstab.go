@@ -36,7 +36,10 @@ func initFstab(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[strin
 }
 
 func (f *mqlFstab) entries() ([]any, error) {
-	conn := f.MqlRuntime.Connection.(shared.Connection)
+	conn, ok := f.MqlRuntime.Connection.(shared.Connection)
+	if !ok {
+		return nil, errors.New("wrong connection type")
+	}
 
 	fs := conn.FileSystem()
 	if fs == nil {
