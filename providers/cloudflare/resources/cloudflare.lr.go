@@ -432,8 +432,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cloudflare.one.apps": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareOne).GetApps()).ToDataRes(types.Array(types.Resource("cloudflare.one.app")))
 	},
-	"cloudflare.one.idps": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlCloudflareOne).GetIdps()).ToDataRes(types.Array(types.Resource("cloudflare.one.idp")))
+	"cloudflare.one.identityProviders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOne).GetIdentityProviders()).ToDataRes(types.Array(types.Resource("cloudflare.one.idp")))
 	},
 	"cloudflare.one.app.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareOneApp).GetId()).ToDataRes(types.String)
@@ -447,8 +447,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cloudflare.one.app.domain": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareOneApp).GetDomain()).ToDataRes(types.String)
 	},
-	"cloudflare.one.app.allowedIdps": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlCloudflareOneApp).GetAllowedIdps()).ToDataRes(types.Array(types.String))
+	"cloudflare.one.app.allowedIdentityProviders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneApp).GetAllowedIdentityProviders()).ToDataRes(types.Array(types.String))
 	},
 	"cloudflare.one.app.appLauncherVisible": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareOneApp).GetAppLauncherVisible()).ToDataRes(types.Bool)
@@ -967,8 +967,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlCloudflareOne).Apps, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
-	"cloudflare.one.idps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudflareOne).Idps, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+	"cloudflare.one.identityProviders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOne).IdentityProviders, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"cloudflare.one.app.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -991,8 +991,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlCloudflareOneApp).Domain, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"cloudflare.one.app.allowedIdps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudflareOneApp).AllowedIdps, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+	"cloudflare.one.app.allowedIdentityProviders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneApp).AllowedIdentityProviders, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"cloudflare.one.app.appLauncherVisible": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2379,7 +2379,7 @@ type mqlCloudflareOne struct {
 	__id string
 	mqlCloudflareOneInternal
 	Apps plugin.TValue[[]interface{}]
-	Idps plugin.TValue[[]interface{}]
+	IdentityProviders plugin.TValue[[]interface{}]
 }
 
 // createCloudflareOne creates a new instance of this resource
@@ -2430,10 +2430,10 @@ func (c *mqlCloudflareOne) GetApps() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlCloudflareOne) GetIdps() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Idps, func() ([]interface{}, error) {
+func (c *mqlCloudflareOne) GetIdentityProviders() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.IdentityProviders, func() ([]interface{}, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.one", c.__id, "idps")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.one", c.__id, "identityProviders")
 			if err != nil {
 				return nil, err
 			}
@@ -2442,7 +2442,7 @@ func (c *mqlCloudflareOne) GetIdps() *plugin.TValue[[]interface{}] {
 			}
 		}
 
-		return c.idps()
+		return c.identityProviders()
 	})
 }
 
@@ -2455,7 +2455,7 @@ type mqlCloudflareOneApp struct {
 	Aud plugin.TValue[string]
 	Name plugin.TValue[string]
 	Domain plugin.TValue[string]
-	AllowedIdps plugin.TValue[[]interface{}]
+	AllowedIdentityProviders plugin.TValue[[]interface{}]
 	AppLauncherVisible plugin.TValue[bool]
 	AutoRedirectToIdentity plugin.TValue[bool]
 	CorsHeaders plugin.TValue[*mqlCloudflareCorsHeaders]
@@ -2527,8 +2527,8 @@ func (c *mqlCloudflareOneApp) GetDomain() *plugin.TValue[string] {
 	return &c.Domain
 }
 
-func (c *mqlCloudflareOneApp) GetAllowedIdps() *plugin.TValue[[]interface{}] {
-	return &c.AllowedIdps
+func (c *mqlCloudflareOneApp) GetAllowedIdentityProviders() *plugin.TValue[[]interface{}] {
+	return &c.AllowedIdentityProviders
 }
 
 func (c *mqlCloudflareOneApp) GetAppLauncherVisible() *plugin.TValue[bool] {

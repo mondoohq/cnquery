@@ -269,7 +269,7 @@ private cloudflare.workers.page {
 
 private cloudflare.one {
 	apps() []cloudflare.one.app // Cloudflare Zero Trust applications  
-	idps() []cloudflare.one.idp // Identity providers
+	identityProviders() []cloudflare.one.idp // Identity providers
 }
 
 // Cloudflare One application 
@@ -280,7 +280,7 @@ private cloudflare.one.app @defaults("name id") {
 	name string // Name of the application  
 	domain string // Domain of the application  
 
-	allowedIdps []string // Allowed identity providers
+	allowedIdentityProviders []string // Allowed identity providers
 	appLauncherVisible bool // Whether the application displays in the App Launcher  
 	autoRedirectToIdentity bool // Whether users skip the identity provider selection step during login  
 

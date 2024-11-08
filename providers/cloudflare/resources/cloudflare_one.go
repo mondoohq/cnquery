@@ -65,7 +65,7 @@ func (c *mqlCloudflareOne) apps() ([]any, error) {
 				"name":   llx.StringData(rec.Name),
 				"domain": llx.StringData(rec.Domain),
 
-				"allowedIdps": llx.ArrayData(convert.SliceAnyToInterface(rec.AllowedIdps), types.String),
+				"allowedIdentityProviders": llx.ArrayData(convert.SliceAnyToInterface(rec.AllowedIdps), types.String),
 
 				"appLauncherVisible":     llx.BoolData(*rec.AppLauncherVisible),
 				"autoRedirectToIdentity": llx.BoolData(*rec.AutoRedirectToIdentity),
@@ -132,7 +132,7 @@ func (c *mqlCloudflareOneIdp) id() (string, error) {
 	return c.Id.Data, nil
 }
 
-func (c *mqlCloudflareOne) idps() ([]any, error) {
+func (c *mqlCloudflareOne) identityProviders() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
 	cursor := &cloudflare.ResultInfo{}

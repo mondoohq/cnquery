@@ -57,12 +57,12 @@ resources:
   cloudflare.one:
     fields:
       apps: {}
-      idps: {}
+      identityProviders: {}
     is_private: true
     min_mondoo_version: 9.0.0
   cloudflare.one.app:
     fields:
-      allowedIdps: {}
+      allowedIdentityProviders: {}
       appLauncherVisible: {}
       aud: {}
       autoRedirectToIdentity: {}
