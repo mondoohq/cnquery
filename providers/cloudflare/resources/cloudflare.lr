@@ -164,7 +164,7 @@ private cloudflare.streams.video @defaults("name id") {
 	// Width (px)
 	width int
 
-	// Live Input ID
+	// Live input ID
 	liveInput string
 
 	// Dash URL
@@ -176,13 +176,13 @@ private cloudflare.streams.video @defaults("name id") {
 	// Preview URL
 	preview string
 
-	// Ready to Stream
+	// Whether the video is ready to stream
 	ready bool
 
 	// Whether the video can be a accessed using the UID
 	requireSignedUrls bool
 
-	// Indicates the date and time at which the video will be deleted. Omit the field to indicate no change, or include with a null value to remove an existing scheduled deletion. If specified, must be at least 30 days from upload time.
+	// Date and time at which the video will be deleted (No value or a null value means that the video won't be deleted.)
 	scheduledDeletion time
 
 	// Size in Bytes
@@ -191,23 +191,29 @@ private cloudflare.streams.video @defaults("name id") {
 	// Thumbnail URL
 	thumbnail string
 
-	// The timestamp for a thumbnail image calculated as a percentage value of the video's duration. To convert from a second-wise timestamp to a percentage, divide the desired timestamp by the total duration of the video. If this value is not set, the default thumbnail image is taken from 0s of the video.
+	// Timestamp for a thumbnail image, calculated as a percentage value of the video's duration (To convert from a second-wise timestamp to a percentage, divide the desired timestamp by the total duration of the video. If this value is not set, the default thumbnail image is taken from 0s of the video.)
 	thumbnailTimestampPct float
 
-	// Upload timestamp
+	// Time the video was uploaded
 	uploaded time
 }
 
+// Cloudflare R2
 private cloudflare.r2 {
 	buckets() []cloudflare.r2.bucket
 }
 
+// Cloudflare R2 bucket
 private cloudflare.r2.bucket {
-	name string
-	location string
-	createdOn time
+ 	// Bucket name  
+  name string  
+  // Bucket location  
+  location string  
+  // Time the bucket was created  
+  createdOn time  
 }
 
+// Cloudflare workers
 private cloudflare.workers {
 	// List all workers
 	workers() []cloudflare.workers.worker
@@ -216,22 +222,35 @@ private cloudflare.workers {
 	pages() []cloudflare.workers.page
 }
 
+// Cloudflare worker  
 private cloudflare.workers.worker {
-	id string
-	etag string
-	size int
-	deploymentId string
-	pipelineHash string
-	placementMode string
+	// Worker ID  
+  id string  
+  // Worker etag  
+  etag string  
+  // Worker size  
+  size int  
+  // Deployment for the worker  
+  deploymentId string  
+  // CI/CD pipeline for the worker  
+  pipelineHash string  
+  // Placement mode for the worker (e.g., smart)  
+  placementMode string  
 
-	lastDeployedFrom string
-	logPush bool
-	createdOn time
-	modifiedOn time
+  // Worker was last deployed from  
+  lastDeployedFrom string  
+  // Whether LogPush is enabled for the worker  
+  logPush bool  
+  // Time the worker was created
+  createdOn time  
+  // Time the worker was last modified
+  modifiedOn time  
 }
 
 private cloudflare.workers.page {
+	// Worker ID  
 	id string
+	// Worker short ID  
 	shortId string
 	projectId string
 	projectName string
@@ -242,46 +261,51 @@ private cloudflare.workers.page {
 
 	productionBranch string
 
+  // Time the worker was created
 	createdOn time
+  // Time the worker was last modified
 	modifiedOn time
 }
 
 private cloudflare.one {
-	apps() []cloudflare.one.app // Zero Trust Applications
-	idps() []cloudflare.one.idp // Identity Providers
+	apps() []cloudflare.one.app // Cloudflare Zero Trust applications  
+	idps() []cloudflare.one.idp // Identity providers
 }
 
+// Cloudflare One application 
 private cloudflare.one.app @defaults("name id") {
 	id string // UUID
 	aud string // Audience tag
 
-	name string // The name of the application
-	domain string // The domain of the application
+	name string // Name of the application  
+	domain string // Domain of the application  
 
-	allowedIdps []string // Allowed Identity Providers
-	appLauncherVisible bool // Displays the application in the App Launcher
-	autoRedirectToIdentity bool // When set to true, users skip the identity provider selection step during login.
+	allowedIdps []string // Allowed identity providers
+	appLauncherVisible bool // Whether the application displays in the App Launcher  
+	autoRedirectToIdentity bool // Whether users skip the identity provider selection step during login  
 
-	corsHeaders cloudflare.corsHeaders // CORS Headers
-	optionsPreflightBypass bool // Allows options preflight requests to bypass Access authentication and go directly to the origin. Cannot turn on if corsHeaders is set.
+	corsHeaders cloudflare.corsHeaders // CORS headers
+	optionsPreflightBypass bool // Whether preflight requests are allowed to bypass Access authentication and go directly to the origin (can't be true if corsHeaders is set)  
 
-	customDenyMessage string // The custom error message shown to a user when they are denied access to the application.
-	customDenyUrl string // The custom URL to redirect a user to when they are denied access to the application.
-	serviceAuth401Redirect bool // Returns a 401 status code when the request is blocked by a Service Auth policy.
+	customDenyMessage string // Custom error message shown to a user when they are denied access to the application
+	customDenyUrl string // Custom URL to redirect a user to when they are denied access to the application  
+	serviceAuth401Redirect bool // Whether to return a 401 status code when the request is blocked by a Service Auth policy
 
-	enableBindingCookie bool // Enables the binding cookie, which increases security against compromised authorization tokens and CSRF attacks.
-	httpOnlyCookieAttribute bool // Enables the HttpOnly cookie attribute, which increases security against XSS attacks.
-	sameSiteCookieAttribute string // Sets the SameSite cookie setting, which provides increased security against CSRF attacks.
+	enableBindingCookie bool // Whether to allow the binding cookie, which increases security against compromised authorization tokens and CSRF attacks
+	httpOnlyCookieAttribute bool // Whether the HttpOnly cookie attribute, which increases security against XSS attacks, is enabled
+	sameSiteCookieAttribute string // SameSite cookie setting, which provides increased security against CSRF attacks
 
-	logoUrl string // The URL of the application's logo
+	logoUrl string // URL of the application's logo
 
-	sessionDuration string // The amount of time that tokens issued for this application will be valid. Must be in the format 300ms or 2h45m. Valid time units are: ns, us (or µs), ms, s, m, h.
+	sessionDuration string // Amount of time that tokens issued for this application will be valid (Format is 300ms or 2h45m. Valid time units are: ns, us (or µs), ms, s, m, and h.)  
 
-	skipInterstitial bool // Enables automatic authentication through cloudflared.
+	skipInterstitial bool // Whether automatic authentication through cloudflared is enabled
 
-	type string // The type of the application.
+	type string // Application type
 
+	// Time the application was created  
 	createdAt time
+	// Time the application was last updated
 	updatedAt time
 }
 
