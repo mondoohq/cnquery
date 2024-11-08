@@ -40,6 +40,17 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	// Do custom flag parsing here
+	// discovery flags
+	discoverTargets := []string{}
+	if x, ok := flags["discover"]; ok && len(x.Array) != 0 {
+		for i := range x.Array {
+			entry := string(x.Array[i].Value)
+			discoverTargets = append(discoverTargets, entry)
+		}
+	} else {
+		discoverTargets = []string{connection.DiscoveryAuto}
+	}
+	conf.Discover = &inventory.Discovery{Targets: discoverTargets}
 
 	asset := inventory.Asset{
 		Connections: []*inventory.Config{conf},
@@ -65,11 +76,16 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		}
 	}
 
+	inv, err := s.discover(conn)
+	if err != nil {
+		return nil, err
+	}
+
 	return &plugin.ConnectRes{
 		Id:        conn.ID(),
 		Name:      conn.Name(),
 		Asset:     req.Asset,
-		Inventory: nil,
+		Inventory: inv,
 	}, nil
 }
 
@@ -119,19 +135,6 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.CloudflareConnection) error {
-	// TODO: adjust asset detection
-	asset.Id = conn.Conf.Type
-	asset.Name = conn.Conf.Host
-
-	asset.Platform = &inventory.Platform{
-		Name:   "cloudflare",
-		Family: []string{"cloudflare"},
-		Kind:   "api",
-		Title:  "My Provider",
-	}
-
-	// TODO: Add platform IDs
-	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/oci/"}
 	return nil
 }
 
