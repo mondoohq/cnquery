@@ -75,6 +75,7 @@ ratebasedstatement
 regexmatchstatement
 regexpatternsetreferencestatement
 resourcegroup
+rootfs
 rulegroup
 rulegroupreferencestatement
 Sas

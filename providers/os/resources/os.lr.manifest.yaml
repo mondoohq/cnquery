@@ -386,6 +386,21 @@ resources:
       type: {}
       xdev: {}
     min_mondoo_version: 5.15.0
+  fstab:
+    fields:
+      entries: {}
+      path: {}
+    min_mondoo_version: 9.0.0
+  fstab.entry:
+    fields:
+      device: {}
+      dump: {}
+      fsck: {}
+      fstype: {}
+      mountpoint: {}
+      options: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   group:
     fields:
       gid: {}
@@ -673,6 +688,8 @@ resources:
     min_mondoo_version: 6.19.0
   os.linux:
     fields:
+      fstab:
+        min_mondoo_version: 9.0.0
       ip6tables: {}
       iptables: {}
       unix: {}
