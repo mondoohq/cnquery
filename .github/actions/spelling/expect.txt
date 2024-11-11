@@ -10,6 +10,7 @@ bytematchstatement
 cavium
 cdn
 certificatechains
+cloudflare
 Clusterwide
 cmek
 cnames
