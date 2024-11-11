@@ -222,14 +222,14 @@ func attachConnectorCmd(provider *plugin.Provider, connector *plugin.Connector, 
 	setConnector(provider, connector, cmd.Run, res)
 }
 
-func genBuiltinFlags(discoveries ...string) []plugin.Flag {
+func genBuiltinFlags(supportedDiscoveries ...string) []plugin.Flag {
 	flags := []plugin.Flag{}
 
-	if len(discoveries) > 0 {
+	if len(supportedDiscoveries) > 0 {
 		flags = append(flags, plugin.Flag{
 			Long: "discover",
 			Type: plugin.FlagType_List,
-			Desc: "Enable the discovery of nested assets. Supports: " + strings.Join(discoveries, ","),
+			Desc: "Enable the discovery of nested assets. Supports: " + strings.Join(supportedDiscoveries, ","),
 		})
 	}
 	return append(flags, plugin.Flag{
@@ -245,8 +245,7 @@ func genBuiltinFlags(discoveries ...string) []plugin.Flag {
 		Long: "use-recording",
 		Type: plugin.FlagType_String,
 		Desc: "Use a recording to inject resource data (read-only)",
-	},
-	)
+	})
 }
 
 // the following flags are not processed by providers
