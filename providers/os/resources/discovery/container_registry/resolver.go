@@ -21,14 +21,6 @@ type Resolver struct {
 	NoStrictValidation bool
 }
 
-func (r *Resolver) Name() string {
-	return "Container Registry Discover"
-}
-
-func (r *Resolver) AvailableDiscoveryTargets() []string {
-	return []string{"auto", "all"}
-}
-
 func (r *Resolver) Resolve(ctx context.Context, root *inventory.Asset, conf *inventory.Config, credsResolver vault.Resolver) ([]*inventory.Asset, error) {
 	resolved := []*inventory.Asset{}
 

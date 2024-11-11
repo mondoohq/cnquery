@@ -28,6 +28,7 @@ var Config = plugin.Provider{
 				provider.DiscoveryGroup,
 				provider.DiscoveryProject,
 				provider.DiscoveryTerraform,
+				provider.DiscoveryK8sManifests,
 			},
 			Flags: []plugin.Flag{
 				{

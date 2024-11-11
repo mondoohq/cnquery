@@ -10,6 +10,9 @@ import (
 	"os"
 	"strings"
 
+	"go.mondoo.com/cnquery/v11/utils/piped"
+	"go.mondoo.com/ranger-rpc/status"
+
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -220,33 +223,30 @@ func attachConnectorCmd(provider *plugin.Provider, connector *plugin.Connector, 
 }
 
 func genBuiltinFlags(discoveries ...string) []plugin.Flag {
-	supportedDiscoveries := append([]string{"all", "auto"}, discoveries...)
+	flags := []plugin.Flag{}
 
-	return []plugin.Flag{
-		// flags for providers:
-		{
+	if len(discoveries) > 0 {
+		flags = append(flags, plugin.Flag{
 			Long: "discover",
 			Type: plugin.FlagType_List,
-			Desc: "Enable the discovery of nested assets. Supports: " + strings.Join(supportedDiscoveries, ","),
-		},
-		{
-			Long:   "pretty",
-			Type:   plugin.FlagType_Bool,
-			Desc:   "Pretty-print JSON",
-			Option: plugin.FlagOption_Hidden,
-		},
-		// runtime-only flags:
-		{
-			Long: "record",
-			Type: plugin.FlagType_String,
-			Desc: "Record all resource calls and use resources in the recording",
-		},
-		{
-			Long: "use-recording",
-			Type: plugin.FlagType_String,
-			Desc: "Use a recording to inject resource data (read-only)",
-		},
+			Desc: "Enable the discovery of nested assets. Supports: " + strings.Join(discoveries, ","),
+		})
 	}
+	return append(flags, plugin.Flag{
+		Long:   "pretty",
+		Type:   plugin.FlagType_Bool,
+		Desc:   "Pretty-print JSON",
+		Option: plugin.FlagOption_Hidden,
+	}, plugin.Flag{
+		Long: "record",
+		Type: plugin.FlagType_String,
+		Desc: "Record all resource calls and use resources in the recording",
+	}, plugin.Flag{
+		Long: "use-recording",
+		Type: plugin.FlagType_String,
+		Desc: "Use a recording to inject resource data (read-only)",
+	},
+	)
 }
 
 // the following flags are not processed by providers
@@ -544,7 +544,6 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 		for _, tmpFile := range temporaryFiles {
 			_ = os.Remove(tmpFile)
 		}
-
 	}
 
 	attachFlags(cmd.Flags(), allFlags)

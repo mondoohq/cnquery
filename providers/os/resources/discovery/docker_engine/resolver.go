@@ -23,14 +23,6 @@ const (
 
 type Resolver struct{}
 
-func (r *Resolver) Name() string {
-	return "Docker Resolver"
-}
-
-func (r *Resolver) AvailableDiscoveryTargets() []string {
-	return []string{"auto", "all", DiscoveryContainerRunning, DiscoveryContainerImages}
-}
-
 // func (r *Resolver) Resolve(ctx context.Context, root *inventory.Asset, conf *inventory.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*inventory.Asset, error) {
 func (r *Resolver) Resolve(ctx context.Context, root *inventory.Asset, conf *inventory.Config, credsResolver vault.Resolver) ([]*inventory.Asset, error) {
 	if conf == nil {

@@ -28,7 +28,6 @@ var Config = plugin.Provider{
 			Discovery: []string{
 				resources.DiscoveryAll,
 				resources.DiscoveryAuto,
-				resources.DiscoveryOrganization,
 				resources.DiscoveryFolders,
 				resources.DiscoveryInstances,
 				resources.DiscoveryProjects,

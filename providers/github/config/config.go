@@ -42,8 +42,11 @@ Notes:
 			MinArgs: 2,
 			MaxArgs: 2,
 			Discovery: []string{
+				connection.DiscoveryAll,
+				connection.DiscoveryAuto,
 				connection.DiscoveryRepos,
 				connection.DiscoveryUsers,
+				connection.DiscoveryOrganization,
 				connection.DiscoveryTerraform,
 				connection.DiscoveryK8sManifests,
 			},

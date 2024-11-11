@@ -24,7 +24,6 @@ const (
 	// Discovery flags
 	DiscoveryAuto               = "auto"
 	DiscoveryAll                = "all"
-	DiscoveryOrganization       = "organization"
 	DiscoveryFolders            = "folders"
 	DiscoveryInstances          = "instances"
 	DiscoveryProjects           = "projects"

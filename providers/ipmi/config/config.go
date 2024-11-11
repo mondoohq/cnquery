@@ -30,7 +30,7 @@ Examples:
 `,
 			MinArgs:   1,
 			MaxArgs:   1,
-			Discovery: []string{provider.ConnectionType},
+			Discovery: []string{},
 			Flags: []plugin.Flag{
 				{
 					Long:        "ask-pass",
