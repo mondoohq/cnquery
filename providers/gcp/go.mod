@@ -7,7 +7,7 @@ go 1.23.0
 require (
 	cloud.google.com/go/accessapproval v1.8.2
 	cloud.google.com/go/bigquery v1.64.0
-	cloud.google.com/go/compute v1.28.2
+	cloud.google.com/go/compute v1.28.3
 	cloud.google.com/go/container v1.41.0
 	cloud.google.com/go/functions v1.19.2
 	cloud.google.com/go/iam v1.2.2
@@ -27,8 +27,8 @@ require (
 	github.com/stretchr/testify v1.9.0
 	go.mondoo.com/cnquery/v11 v11.28.1
 	go.mondoo.com/ranger-rpc v0.6.4
-	golang.org/x/oauth2 v0.23.0
-	google.golang.org/api v0.204.0
+	golang.org/x/oauth2 v0.24.0
+	google.golang.org/api v0.205.0
 	google.golang.org/genproto v0.0.0-20241021214115-324edc3d5d38
 	google.golang.org/protobuf v1.35.1
 )
@@ -52,7 +52,7 @@ require (
 
 require (
 	cloud.google.com/go v0.116.0 // indirect
-	cloud.google.com/go/auth v0.10.0 // indirect
+	cloud.google.com/go/auth v0.10.1 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.5 // indirect
 	cloud.google.com/go/binaryauthorization v1.9.2
 	cloud.google.com/go/compute/metadata v0.5.2 // indirect
