@@ -216,8 +216,18 @@ message Remediation {
 }
 
 message TypedDoc {
+  // Identifier
   string id = 1;
+  // Description
   string desc = 2;
+  // Optional. Language of the description (e.g. markdown, english)
+  string language = 3;
+  // Optional. Creation date of the description
+  int64 created = 20;
+  // Optional. Modification date of the description
+  int64 modified = 21;
+  // Optional. Tags for the description
+  map<string,string> tags = 22;
 }
 
 message Author {
