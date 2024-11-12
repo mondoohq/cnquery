@@ -15,7 +15,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.33.5
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.48.0
 	github.com/aws/aws-sdk-go-v2/service/backup v1.39.6
-	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.40.4
+	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.44.5
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.42.4
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.43.2
@@ -36,9 +36,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/emr v1.46.3
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.51.1
 	github.com/aws/aws-sdk-go-v2/service/iam v1.37.4
-	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.32.5
+	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/kms v1.37.5
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.65.0
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.66.0
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.35.4
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.34.5
 	github.com/aws/aws-sdk-go-v2/service/rds v1.89.1
