@@ -24,8 +24,6 @@ var Config = plugin.Provider{
 			MinArgs: 0,
 			MaxArgs: 1,
 			Discovery: []string{
-				resources.DiscoveryAll,
-				resources.DiscoveryAuto,
 				resources.DiscoveryAdmissionReviews,
 				resources.DiscoveryClusters,
 				resources.DiscoveryContainerImages,

@@ -222,30 +222,34 @@ func attachConnectorCmd(provider *plugin.Provider, connector *plugin.Connector, 
 	setConnector(provider, connector, cmd.Run, res)
 }
 
-func genBuiltinFlags(supportedDiscoveries ...string) []plugin.Flag {
-	flags := []plugin.Flag{}
+func genBuiltinFlags(discoveries ...string) []plugin.Flag {
+	supportedDiscoveries := append([]string{"all", "auto"}, discoveries...)
 
-	if len(supportedDiscoveries) > 0 {
-		flags = append(flags, plugin.Flag{
+	return []plugin.Flag{
+		// flags for providers:
+		{
 			Long: "discover",
 			Type: plugin.FlagType_List,
 			Desc: "Enable the discovery of nested assets. Supports: " + strings.Join(supportedDiscoveries, ","),
-		})
+		},
+		{
+			Long:   "pretty",
+			Type:   plugin.FlagType_Bool,
+			Desc:   "Pretty-print JSON",
+			Option: plugin.FlagOption_Hidden,
+		},
+		// runtime-only flags:
+		{
+			Long: "record",
+			Type: plugin.FlagType_String,
+			Desc: "Record all resource calls and use resources in the recording",
+		},
+		{
+			Long: "use-recording",
+			Type: plugin.FlagType_String,
+			Desc: "Use a recording to inject resource data (read-only)",
+		},
 	}
-	return append(flags, plugin.Flag{
-		Long:   "pretty",
-		Type:   plugin.FlagType_Bool,
-		Desc:   "Pretty-print JSON",
-		Option: plugin.FlagOption_Hidden,
-	}, plugin.Flag{
-		Long: "record",
-		Type: plugin.FlagType_String,
-		Desc: "Record all resource calls and use resources in the recording",
-	}, plugin.Flag{
-		Long: "use-recording",
-		Type: plugin.FlagType_String,
-		Desc: "Use a recording to inject resource data (read-only)",
-	})
 }
 
 // the following flags are not processed by providers

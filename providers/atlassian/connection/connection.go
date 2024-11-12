@@ -14,6 +14,10 @@ import (
 )
 
 const (
+	DiscoveryOrganization = "organization"
+)
+
+const (
 	Admin shared.ConnectionType = "atlassian"
 )
 

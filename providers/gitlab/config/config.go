@@ -24,7 +24,6 @@ var Config = plugin.Provider{
 			Use:   "gitlab",
 			Short: "a GitLab group or project",
 			Discovery: []string{
-				provider.DiscoveryAuto,
 				provider.DiscoveryGroup,
 				provider.DiscoveryProject,
 				provider.DiscoveryTerraform,

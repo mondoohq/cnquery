@@ -6,6 +6,7 @@ package config
 import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers/atlassian/connection"
 	"go.mondoo.com/cnquery/v11/providers/atlassian/connection/confluence"
 	"go.mondoo.com/cnquery/v11/providers/atlassian/provider"
 )
@@ -49,7 +50,7 @@ Notes:
   Atlassian provides these values when you set up an identity provider.
 `,
 			MaxArgs:   2,
-			Discovery: []string{},
+			Discovery: []string{connection.DiscoveryOrganization},
 			Flags: []plugin.Flag{
 				{
 					Long:    "admin-token",

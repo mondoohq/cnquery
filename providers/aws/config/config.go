@@ -55,8 +55,6 @@ Notes:
 			MinArgs: 0,
 			MaxArgs: 4,
 			Discovery: []string{
-				resources.DiscoveryAll,
-				resources.DiscoveryAuto,
 				resources.DiscoveryAccounts,
 
 				resources.DiscoveryInstances,

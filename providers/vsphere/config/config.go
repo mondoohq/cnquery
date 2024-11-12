@@ -21,8 +21,6 @@ var Config = plugin.Provider{
 			Use:   "vsphere user@host",
 			Short: "a VMware vSphere installation",
 			Discovery: []string{
-				resources.DiscoveryAll,
-				resources.DiscoveryAuto,
 				resources.DiscoveryApi,
 				resources.DiscoveryInstances,
 				resources.DiscoveryHostMachines,
