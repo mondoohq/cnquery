@@ -18,7 +18,7 @@ private cloudflare.zone @defaults("name account.name") {
 	name string 
 	// Nameservers for this zone
 	nameServers []string 
-	// Original nameservers
+	// Original name servers
 	originalNameServers []string 
 
 	// The current status of the zone (initializing, pending, active, or moved)  
