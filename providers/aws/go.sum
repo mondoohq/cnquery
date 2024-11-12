@@ -101,8 +101,8 @@ github.com/aws/aws-sdk-go-v2/service/autoscaling v1.48.0 h1:jqGxMEnsD0NHc2Id2H5T
 github.com/aws/aws-sdk-go-v2/service/autoscaling v1.48.0/go.mod h1:DkO2AXbNiahaTv8J/LAwx3ddx/I1Dzxx+YpVB9ONUEU=
 github.com/aws/aws-sdk-go-v2/service/backup v1.39.6 h1:9pJEHqk5XAm+H+mAfj0pld1Xn0Fx2N5ql6hlz+GoEyQ=
 github.com/aws/aws-sdk-go-v2/service/backup v1.39.6/go.mod h1:ojOfXYWv9GyPbT9Q4AA/UzSG0b7DhqDi+vvLARlE5oE=
-github.com/aws/aws-sdk-go-v2/service/cloudfront v1.40.4 h1:nM1+AHCnpGbYzOCcWi4Q7IDCH/Hh3LJ+146rcI184nU=
-github.com/aws/aws-sdk-go-v2/service/cloudfront v1.40.4/go.mod h1:GM6Olux4KAMUmRw0XgadfpN1cOpm5eWYZ31PAj59JSk=
+github.com/aws/aws-sdk-go-v2/service/cloudfront v1.41.0 h1:sLXpWohpuSh6fSvI7q/D5k3yUB9KtUyIEUDAQnasG0c=
+github.com/aws/aws-sdk-go-v2/service/cloudfront v1.41.0/go.mod h1:GM6Olux4KAMUmRw0XgadfpN1cOpm5eWYZ31PAj59JSk=
 github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.44.5 h1:6ThDGpCuve3xc5GIk88EuB1YJk135KpWpGGYkPO54Tc=
 github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.44.5/go.mod h1:dMy3o3W5gG5aOON5Y5EMMWeQDby9nFOeU7egskS4rrk=
 github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.42.4 h1:c60zN18a3zQsBWdwE/v5xhK2Mtl1HG1gj9BLIEFxjWc=
@@ -145,8 +145,8 @@ github.com/aws/aws-sdk-go-v2/service/guardduty v1.51.1 h1:nAK988z7ZsAYHZtVD8IYV1
 github.com/aws/aws-sdk-go-v2/service/guardduty v1.51.1/go.mod h1:ISU8hcBgCVmpZTUmD2ONSQO+0dGpIjyCU1r+yIy7ha0=
 github.com/aws/aws-sdk-go-v2/service/iam v1.37.4 h1:MrH2MJRzxPGXtavvL1JtDLFJzXN+4ObO090jzauqcPk=
 github.com/aws/aws-sdk-go-v2/service/iam v1.37.4/go.mod h1:WJARDpnEOhixhh41f+kTTr67y28OvjIUVht++rfcILY=
-github.com/aws/aws-sdk-go-v2/service/inspector2 v1.32.5 h1:Y3AICTgFL+c4FYwvQ6jEauyzovbZMi/KgaucjMph0/o=
-github.com/aws/aws-sdk-go-v2/service/inspector2 v1.32.5/go.mod h1:0k0bKt4vbdveXIB7g3NY7rq05Awlynb0tnncRjNW/is=
+github.com/aws/aws-sdk-go-v2/service/inspector2 v1.33.0 h1:A+ejJGqWDEHFd5yQI31LdFuVhAuAztm9pQyj2uKpUwo=
+github.com/aws/aws-sdk-go-v2/service/inspector2 v1.33.0/go.mod h1:0k0bKt4vbdveXIB7g3NY7rq05Awlynb0tnncRjNW/is=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.12.0 h1:TToQNkvGguu209puTojY/ozlqy2d/SFNcoLIqTFi42g=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.12.0/go.mod h1:0jp+ltwkf+SwG2fm/PKo8t4y8pJSgOCO4D8Lz3k0aHQ=
 github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.4.4 h1:aaPpoG15S2qHkWm4KlEyF01zovK1nW4BBbyXuHNSE90=
@@ -159,8 +159,8 @@ github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.18.4 h1:E5ZAVOmI2apR8A
 github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.18.4/go.mod h1:wezzqVUOVVdk+2Z/JzQT4NxAU0NbhRe5W8pIE72jsWI=
 github.com/aws/aws-sdk-go-v2/service/kms v1.37.5 h1:5dQJ6Q5QrQOqZxXjSbRXukBqU8Pgu6Ro6Qqtyd8yiz4=
 github.com/aws/aws-sdk-go-v2/service/kms v1.37.5/go.mod h1:A9vfQcNHVBCE7ZZN6H+UUJpXtbH26Vv6L7Zhk5nIJAY=
-github.com/aws/aws-sdk-go-v2/service/lambda v1.65.0 h1:c4eYRkhqXsyoIQ4Z8e3E1fBmxOB3XnAfbYw0x+kyHdw=
-github.com/aws/aws-sdk-go-v2/service/lambda v1.65.0/go.mod h1:4L6vIpiChdahncljlDFzKWGiZsLgszGwDoYqMDhb6T4=
+github.com/aws/aws-sdk-go-v2/service/lambda v1.66.0 h1:jMqMB8t/xbJnDdr11kH5rKdAhoW2a3Nq3XxrkTp0gso=
+github.com/aws/aws-sdk-go-v2/service/lambda v1.66.0/go.mod h1:4L6vIpiChdahncljlDFzKWGiZsLgszGwDoYqMDhb6T4=
 github.com/aws/aws-sdk-go-v2/service/neptune v1.35.4 h1:Ap8DVZBHRJOKdv7O4McKsAaX/qRYzvgXP3z3yM0T1Wk=
 github.com/aws/aws-sdk-go-v2/service/neptune v1.35.4/go.mod h1:1QCYjo1AT6YcFBt5ZJx3f87dDDwRpSUrf6Qi33h19Bo=
 github.com/aws/aws-sdk-go-v2/service/organizations v1.34.5 h1:OnGlQW7LQ+dnmSWJQOkIhQ+Q+O/kGZGLmMEifjFTq+0=
