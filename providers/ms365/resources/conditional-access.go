@@ -11,6 +11,10 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
 )
 
+func (m *mqlMicrosoftConditionalAccessIpNamedLocation) id() (string, error) {
+	return m.Name.Data, nil
+}
+
 func (a *mqlMicrosoftConditionalAccess) namedLocations() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
