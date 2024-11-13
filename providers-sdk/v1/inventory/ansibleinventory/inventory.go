@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/mitchellh/mapstructure"
+	mapstructure "github.com/go-viper/mapstructure/v2"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"

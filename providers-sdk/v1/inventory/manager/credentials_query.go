@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/cockroachdb/errors"
-	"github.com/mitchellh/mapstructure"
+	mapstructure "github.com/go-viper/mapstructure/v2"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11"
 	"go.mondoo.com/cnquery/v11/llx"

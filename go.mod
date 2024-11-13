@@ -31,7 +31,7 @@ require (
 	// pin v0.2.6
 	github.com/c-bata/go-prompt v0.2.6
 	github.com/charmbracelet/bubbles v0.20.0
-	github.com/charmbracelet/bubbletea v1.2.1
+	github.com/charmbracelet/bubbletea v1.2.2
 	github.com/charmbracelet/lipgloss v1.0.0
 	github.com/cockroachdb/errors v1.11.3
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
@@ -41,6 +41,7 @@ require (
 	github.com/glebarez/go-sqlite v1.22.0
 	github.com/go-git/go-git/v5 v5.12.0
 	github.com/go-jose/go-jose/v3 v3.0.3
+	github.com/go-viper/mapstructure/v2 v2.2.1
 	github.com/gobwas/glob v0.2.3
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/golang-jwt/jwt/v5 v5.2.1
@@ -64,7 +65,6 @@ require (
 	github.com/miekg/dns v1.1.62
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/hashstructure/v2 v2.0.2
-	github.com/mitchellh/mapstructure v1.5.0
 	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6
 	github.com/muesli/reflow v0.3.0
 	github.com/muesli/termenv v0.15.2
@@ -82,7 +82,7 @@ require (
 	github.com/spdx/tools-golang v0.5.5
 	github.com/spf13/afero v1.11.0
 	github.com/spf13/cobra v1.8.1
-	github.com/spf13/pflag v1.0.6-0.20201009195203-85dd5c8bc61c
+	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.9.0
 	github.com/toravir/csd v0.0.0-20200911003203-13ae77ad849c
@@ -197,7 +197,7 @@ require (
 	github.com/docker/docker-credential-helpers v0.8.2 // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
-	github.com/dvsekhvalnov/jose2go v1.7.0 // indirect
+	github.com/dvsekhvalnov/jose2go v1.8.0 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/getsentry/sentry-go v0.29.1 // indirect
@@ -291,7 +291,7 @@ require github.com/moby/buildkit v0.17.1
 
 require (
 	cel.dev/expr v0.18.0 // indirect
-	cloud.google.com/go/auth v0.10.1 // indirect
+	cloud.google.com/go/auth v0.10.2 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.5 // indirect
 	cloud.google.com/go/monitoring v1.21.2 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
@@ -314,6 +314,7 @@ require (
 	github.com/go-test/deep v1.1.0 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
+	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/smarty/assertions v1.15.1 // indirect
 	github.com/tonistiigi/go-csvvalue v0.0.0-20240710180619-ddb21b71c0b4 // indirect
