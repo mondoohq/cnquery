@@ -58,9 +58,15 @@ microsoft.tenant @defaults("name") {
 
 // Microsoft Conditional Access Policies
 microsoft.conditionalAccess {
-  // IP named location
-  namedLocations() []microsoft.conditionalAccess.ipNamedLocation
-  // Country-based named location
+  // Named locations container
+  namedLocations microsoft.conditionalAccess.namedLocations
+}
+
+// Container for Microsoft Conditional Access Named Locations
+microsoft.conditionalAccess.namedLocations {
+  // IP-based named locations
+  ipLocations() []microsoft.conditionalAccess.ipNamedLocation
+  // Country-based named locations
   countryLocations() []microsoft.conditionalAccess.countryNamedLocation
 }
 
