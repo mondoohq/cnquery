@@ -11,7 +11,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "vcd",
 	ID:              "go.mondoo.com/cnquery/v9/providers/vcd",
-	Version:         "11.0.38",
+	Version:         "11.0.39",
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
 		{
