@@ -20,6 +20,9 @@ func (a *mqlMicrosoftConditionalAccess) namedLocations() ([]interface{}, error) 
 
 	ctx := context.Background()
 	namedLocations, err := graphClient.Identity().ConditionalAccess().NamedLocations().Get(ctx, nil)
+	if err != nil {
+		return nil, transformError(err)
+	}
 
 	var locationDetails []interface{}
 	for _, location := range namedLocations.GetValue() {
@@ -66,6 +69,9 @@ func (a *mqlMicrosoftConditionalAccessNamedLocations) countryLocations() ([]inte
 
 	ctx := context.Background()
 	namedLocations, err := graphClient.Identity().ConditionalAccess().NamedLocations().Get(ctx, nil)
+	if err != nil {
+		return nil, transformError(err)
+	}
 
 	var locationDetails []interface{}
 	for _, location := range namedLocations.GetValue() {
