@@ -130,6 +130,7 @@ jobs:
         shell: bash
         run: |
           echo "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > Certificate_pkcs12.p12
+          echo "SM_CERT_ALIAS=${{ secrets.SM_CERT_ALIAS }}" >> "$GITHUB_ENV"
           echo "SM_HOST=${{ secrets.SM_HOST }}" >> "$GITHUB_ENV"
           echo "SM_API_KEY=${{ secrets.SM_API_KEY }}" >> "$GITHUB_ENV"
           echo "SM_CLIENT_CERT_FILE=`realpath Certificate_pkcs12.p12`" >> "$GITHUB_ENV"
