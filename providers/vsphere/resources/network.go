@@ -157,10 +157,14 @@ func (v *mqlVsphereVswitchDvs) uplinks() ([]interface{}, error) {
 		return nil, nil
 	}
 
-	uplinksRaw := properties["Uplinks"]
+	uplinksRaw, ok := properties["Uplinks"]
+	if !ok {
+		// no uplinks for dvs
+		return nil, nil
+	}
 
-	// no uplinks for dvs
-	if properties == nil {
+	// empty uplinks for dvs
+	if uplinksRaw == nil {
 		return nil, nil
 	}
 
@@ -176,4 +180,8 @@ func (v *mqlVsphereVswitchDvs) uplinks() ([]interface{}, error) {
 
 	// get all host adapter
 	return findHostAdapter(v.parentResource, uplinkNames)
+}
+
+func (v *mqlVsphereVswitchPortgroup) id() (string, error) {
+	return v.Name.Data, v.Name.Error
 }

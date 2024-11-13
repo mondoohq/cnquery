@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/vmware/govmomi/object"
@@ -177,4 +178,93 @@ func (v *mqlVsphereDatacenter) vms() ([]interface{}, error) {
 	}
 
 	return mqlVms, nil
+}
+
+func (v *mqlVsphereDatacenter) distributedSwitches() ([]interface{}, error) {
+	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
+	client := getClientInstance(conn)
+
+	if v.InventoryPath.Error != nil {
+		return nil, v.InventoryPath.Error
+	}
+	path := v.InventoryPath.Data
+	if path == "" {
+		path = "/"
+	}
+
+	vswitches, err := client.GetDistributedVirtualSwitches(context.Background(), path)
+	if err != nil {
+		return nil, err
+	}
+
+	mqlVswitches := make([]interface{}, len(vswitches))
+	for i, s := range vswitches {
+
+		config, err := client.GetDistributedVirtualSwitchConfig(context.Background(), s)
+		if err != nil {
+			return nil, err
+		}
+		configMap, err := resourceclient.DistributedVirtualSwitchConfig(config)
+		if err != nil {
+			return nil, err
+		}
+
+		mqlVswitch, err := CreateResource(v.MqlRuntime, "vsphere.vswitch.dvs", map[string]*llx.RawData{
+			"moid":       llx.StringData(s.Reference().Encode()),
+			"name":       llx.StringData(s.Name()),
+			"properties": llx.DictData(configMap),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		// store host inventory path, so that sub resources can use that to quickly query more
+		r := mqlVswitch.(*mqlVsphereVswitchDvs)
+		r.hostInventoryPath = s.InventoryPath
+
+		mqlVswitches[i] = mqlVswitch
+	}
+
+	return mqlVswitches, nil
+}
+
+func (v *mqlVsphereDatacenter) distributedPortGroups() ([]interface{}, error) {
+	if v.InventoryPath.Error != nil {
+		return nil, v.InventoryPath.Error
+	}
+	path := v.InventoryPath.Data
+	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
+	client := resourceclient.New(conn.Client())
+
+	distPGs, err := client.GetDistributedVirtualPortgroups(context.Background(), path)
+	if err != nil {
+		return nil, err
+	}
+
+	mqlPGs := make([]interface{}, len(distPGs))
+	for i, distPG := range distPGs {
+		config, err := client.GetDistributedVirtualPortgroupConfig(context.Background(), distPG)
+		if err != nil {
+			return nil, err
+		}
+
+		configMap, err := resourceclient.DistributedVirtualPortgroupConfig(config)
+		if err != nil {
+			return nil, err
+		}
+
+		name := distPG.Name()
+		mqlDistPG, err := NewResource(v.MqlRuntime, "vsphere.vswitch.portgroup", map[string]*llx.RawData{
+			"moid":       llx.StringData(distPG.Reference().Encode()),
+			"name":       llx.StringData(name),
+			"properties": llx.DictData(configMap),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		mqlPGs[i] = mqlDistPG.(*mqlVsphereVswitchPortgroup)
+	}
+
+	return mqlPGs, nil
 }

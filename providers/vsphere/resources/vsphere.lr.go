@@ -82,6 +82,10 @@ func init() {
 			// to override args, implement: initVsphereVswitchDvs(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVsphereVswitchDvs,
 		},
+		"vsphere.vswitch.portgroup": {
+			// to override args, implement: initVsphereVswitchPortgroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereVswitchPortgroup,
+		},
 		"vsphere.vmnic": {
 			// to override args, implement: initVsphereVmnic(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVsphereVmnic,
@@ -305,6 +309,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.datacenter.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereDatacenter).GetClusters()).ToDataRes(types.Array(types.Resource("vsphere.cluster")))
 	},
+	"vsphere.datacenter.distributedSwitches": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereDatacenter).GetDistributedSwitches()).ToDataRes(types.Array(types.Resource("vsphere.vswitch.dvs")))
+	},
+	"vsphere.datacenter.distributedPortGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereDatacenter).GetDistributedPortGroups()).ToDataRes(types.Array(types.Resource("vsphere.vswitch.portgroup")))
+	},
 	"vsphere.cluster.moid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereCluster).GetMoid()).ToDataRes(types.String)
 	},
@@ -401,6 +411,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.vswitch.standard.uplinks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVswitchStandard).GetUplinks()).ToDataRes(types.Array(types.Resource("vsphere.vmnic")))
 	},
+	"vsphere.vswitch.dvs.moid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchDvs).GetMoid()).ToDataRes(types.String)
+	},
 	"vsphere.vswitch.dvs.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVswitchDvs).GetName()).ToDataRes(types.String)
 	},
@@ -409,6 +422,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vsphere.vswitch.dvs.uplinks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVswitchDvs).GetUplinks()).ToDataRes(types.Array(types.Resource("vsphere.vmnic")))
+	},
+	"vsphere.vswitch.portgroup.moid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchPortgroup).GetMoid()).ToDataRes(types.String)
+	},
+	"vsphere.vswitch.portgroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchPortgroup).GetName()).ToDataRes(types.String)
+	},
+	"vsphere.vswitch.portgroup.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchPortgroup).GetProperties()).ToDataRes(types.Dict)
 	},
 	"vsphere.vmnic.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVmnic).GetName()).ToDataRes(types.String)
@@ -762,6 +784,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlVsphereDatacenter).Clusters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"vsphere.datacenter.distributedSwitches": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereDatacenter).DistributedSwitches, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"vsphere.datacenter.distributedPortGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereDatacenter).DistributedPortGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"vsphere.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlVsphereCluster).__id, ok = v.Value.(string)
 			return
@@ -910,6 +940,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlVsphereVswitchDvs).__id, ok = v.Value.(string)
 			return
 		},
+	"vsphere.vswitch.dvs.moid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchDvs).Moid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"vsphere.vswitch.dvs.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereVswitchDvs).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -920,6 +954,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"vsphere.vswitch.dvs.uplinks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereVswitchDvs).Uplinks, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.portgroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlVsphereVswitchPortgroup).__id, ok = v.Value.(string)
+			return
+		},
+	"vsphere.vswitch.portgroup.moid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchPortgroup).Moid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.portgroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchPortgroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.portgroup.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchPortgroup).Properties, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"vsphere.vmnic.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1871,6 +1921,8 @@ type mqlVsphereDatacenter struct {
 	Hosts plugin.TValue[[]interface{}]
 	Vms plugin.TValue[[]interface{}]
 	Clusters plugin.TValue[[]interface{}]
+	DistributedSwitches plugin.TValue[[]interface{}]
+	DistributedPortGroups plugin.TValue[[]interface{}]
 }
 
 // createVsphereDatacenter creates a new instance of this resource
@@ -1967,6 +2019,38 @@ func (c *mqlVsphereDatacenter) GetClusters() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.clusters()
+	})
+}
+
+func (c *mqlVsphereDatacenter) GetDistributedSwitches() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.DistributedSwitches, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.datacenter", c.__id, "distributedSwitches")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.distributedSwitches()
+	})
+}
+
+func (c *mqlVsphereDatacenter) GetDistributedPortGroups() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.DistributedPortGroups, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.datacenter", c.__id, "distributedPortGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.distributedPortGroups()
 	})
 }
 
@@ -2457,6 +2541,7 @@ type mqlVsphereVswitchDvs struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	mqlVsphereVswitchDvsInternal
+	Moid plugin.TValue[string]
 	Name plugin.TValue[string]
 	Properties plugin.TValue[interface{}]
 	Uplinks plugin.TValue[[]interface{}]
@@ -2499,6 +2584,10 @@ func (c *mqlVsphereVswitchDvs) MqlID() string {
 	return c.__id
 }
 
+func (c *mqlVsphereVswitchDvs) GetMoid() *plugin.TValue[string] {
+	return &c.Moid
+}
+
 func (c *mqlVsphereVswitchDvs) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
@@ -2521,6 +2610,65 @@ func (c *mqlVsphereVswitchDvs) GetUplinks() *plugin.TValue[[]interface{}] {
 
 		return c.uplinks()
 	})
+}
+
+// mqlVsphereVswitchPortgroup for the vsphere.vswitch.portgroup resource
+type mqlVsphereVswitchPortgroup struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlVsphereVswitchPortgroupInternal it will be used here
+	Moid plugin.TValue[string]
+	Name plugin.TValue[string]
+	Properties plugin.TValue[interface{}]
+}
+
+// createVsphereVswitchPortgroup creates a new instance of this resource
+func createVsphereVswitchPortgroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereVswitchPortgroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.vswitch.portgroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereVswitchPortgroup) MqlName() string {
+	return "vsphere.vswitch.portgroup"
+}
+
+func (c *mqlVsphereVswitchPortgroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereVswitchPortgroup) GetMoid() *plugin.TValue[string] {
+	return &c.Moid
+}
+
+func (c *mqlVsphereVswitchPortgroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlVsphereVswitchPortgroup) GetProperties() *plugin.TValue[interface{}] {
+	return &c.Properties
 }
 
 // mqlVsphereVmnic for the vsphere.vmnic resource
