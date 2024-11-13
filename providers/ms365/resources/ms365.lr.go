@@ -2926,7 +2926,12 @@ func createMicrosoftConditionalAccessIpNamedLocation(runtime *plugin.Runtime, ar
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("microsoft.conditionalAccess.ipNamedLocation", res.__id)
