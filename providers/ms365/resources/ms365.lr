@@ -58,8 +58,16 @@ microsoft.tenant @defaults("name") {
 
 // Microsoft Conditional Access Policies
 microsoft.conditionalAccess {
-  // IP named location
-  namedLocations() []microsoft.conditionalAccess.ipNamedLocation
+  // Named locations container
+  namedLocations microsoft.conditionalAccess.namedLocations
+}
+
+// Container for Microsoft Conditional Access Named Locations
+microsoft.conditionalAccess.namedLocations {
+  // IP-based named locations
+  ipLocations() []microsoft.conditionalAccess.ipNamedLocation
+  // Country-based named locations
+  countryLocations() []microsoft.conditionalAccess.countryNamedLocation
 }
 
 // Microsoft Conditional Access IP named location
@@ -68,6 +76,14 @@ microsoft.conditionalAccess.ipNamedLocation @defaults("name trusted") {
   name string
   // Whether the location is marked as trusted
   trusted bool
+}
+
+// Microsoft Conditional Access Country named location
+microsoft.conditionalAccess.countryNamedLocation @defaults("name lookupMethod") {
+  // Named location name
+  name string
+  // Method to determine the country location
+  lookupMethod string
 }
 
 // Microsoft Entra ID user

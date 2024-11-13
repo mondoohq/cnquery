@@ -30,9 +30,17 @@ func init() {
 			// to override args, implement: initMicrosoftConditionalAccess(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftConditionalAccess,
 		},
+		"microsoft.conditionalAccess.namedLocations": {
+			// to override args, implement: initMicrosoftConditionalAccessNamedLocations(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftConditionalAccessNamedLocations,
+		},
 		"microsoft.conditionalAccess.ipNamedLocation": {
 			// to override args, implement: initMicrosoftConditionalAccessIpNamedLocation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftConditionalAccessIpNamedLocation,
+		},
+		"microsoft.conditionalAccess.countryNamedLocation": {
+			// to override args, implement: initMicrosoftConditionalAccessCountryNamedLocation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftConditionalAccessCountryNamedLocation,
 		},
 		"microsoft.user": {
 			Init: initMicrosoftUser,
@@ -298,13 +306,25 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlMicrosoftTenant).GetSubscriptions()).ToDataRes(types.Array(types.Dict))
 	},
 	"microsoft.conditionalAccess.namedLocations": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftConditionalAccess).GetNamedLocations()).ToDataRes(types.Array(types.Resource("microsoft.conditionalAccess.ipNamedLocation")))
+		return (r.(*mqlMicrosoftConditionalAccess).GetNamedLocations()).ToDataRes(types.Resource("microsoft.conditionalAccess.namedLocations"))
+	},
+	"microsoft.conditionalAccess.namedLocations.ipLocations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessNamedLocations).GetIpLocations()).ToDataRes(types.Array(types.Resource("microsoft.conditionalAccess.ipNamedLocation")))
+	},
+	"microsoft.conditionalAccess.namedLocations.countryLocations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessNamedLocations).GetCountryLocations()).ToDataRes(types.Array(types.Resource("microsoft.conditionalAccess.countryNamedLocation")))
 	},
 	"microsoft.conditionalAccess.ipNamedLocation.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftConditionalAccessIpNamedLocation).GetName()).ToDataRes(types.String)
 	},
 	"microsoft.conditionalAccess.ipNamedLocation.trusted": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftConditionalAccessIpNamedLocation).GetTrusted()).ToDataRes(types.Bool)
+	},
+	"microsoft.conditionalAccess.countryNamedLocation.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessCountryNamedLocation).GetName()).ToDataRes(types.String)
+	},
+	"microsoft.conditionalAccess.countryNamedLocation.lookupMethod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessCountryNamedLocation).GetLookupMethod()).ToDataRes(types.String)
 	},
 	"microsoft.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUser).GetId()).ToDataRes(types.String)
@@ -1261,7 +1281,19 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"microsoft.conditionalAccess.namedLocations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftConditionalAccess).NamedLocations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlMicrosoftConditionalAccess).NamedLocations, ok = plugin.RawToTValue[*mqlMicrosoftConditionalAccessNamedLocations](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.namedLocations.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftConditionalAccessNamedLocations).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.conditionalAccess.namedLocations.ipLocations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessNamedLocations).IpLocations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.namedLocations.countryLocations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessNamedLocations).CountryLocations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"microsoft.conditionalAccess.ipNamedLocation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1274,6 +1306,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.conditionalAccess.ipNamedLocation.trusted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftConditionalAccessIpNamedLocation).Trusted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.countryNamedLocation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftConditionalAccessCountryNamedLocation).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.conditionalAccess.countryNamedLocation.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessCountryNamedLocation).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.countryNamedLocation.lookupMethod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessCountryNamedLocation).LookupMethod, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2855,7 +2899,7 @@ type mqlMicrosoftConditionalAccess struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlMicrosoftConditionalAccessInternal it will be used here
-	NamedLocations plugin.TValue[[]interface{}]
+	NamedLocations plugin.TValue[*mqlMicrosoftConditionalAccessNamedLocations]
 }
 
 // createMicrosoftConditionalAccess creates a new instance of this resource
@@ -2890,10 +2934,55 @@ func (c *mqlMicrosoftConditionalAccess) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMicrosoftConditionalAccess) GetNamedLocations() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.NamedLocations, func() ([]interface{}, error) {
+func (c *mqlMicrosoftConditionalAccess) GetNamedLocations() *plugin.TValue[*mqlMicrosoftConditionalAccessNamedLocations] {
+	return &c.NamedLocations
+}
+
+// mqlMicrosoftConditionalAccessNamedLocations for the microsoft.conditionalAccess.namedLocations resource
+type mqlMicrosoftConditionalAccessNamedLocations struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftConditionalAccessNamedLocationsInternal it will be used here
+	IpLocations plugin.TValue[[]interface{}]
+	CountryLocations plugin.TValue[[]interface{}]
+}
+
+// createMicrosoftConditionalAccessNamedLocations creates a new instance of this resource
+func createMicrosoftConditionalAccessNamedLocations(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftConditionalAccessNamedLocations{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.conditionalAccess.namedLocations", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftConditionalAccessNamedLocations) MqlName() string {
+	return "microsoft.conditionalAccess.namedLocations"
+}
+
+func (c *mqlMicrosoftConditionalAccessNamedLocations) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftConditionalAccessNamedLocations) GetIpLocations() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.IpLocations, func() ([]interface{}, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.conditionalAccess", c.__id, "namedLocations")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.conditionalAccess.namedLocations", c.__id, "ipLocations")
 			if err != nil {
 				return nil, err
 			}
@@ -2902,7 +2991,23 @@ func (c *mqlMicrosoftConditionalAccess) GetNamedLocations() *plugin.TValue[[]int
 			}
 		}
 
-		return c.namedLocations()
+		return c.ipLocations()
+	})
+}
+
+func (c *mqlMicrosoftConditionalAccessNamedLocations) GetCountryLocations() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.CountryLocations, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.conditionalAccess.namedLocations", c.__id, "countryLocations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.countryLocations()
 	})
 }
 
@@ -2958,6 +3063,60 @@ func (c *mqlMicrosoftConditionalAccessIpNamedLocation) GetName() *plugin.TValue[
 
 func (c *mqlMicrosoftConditionalAccessIpNamedLocation) GetTrusted() *plugin.TValue[bool] {
 	return &c.Trusted
+}
+
+// mqlMicrosoftConditionalAccessCountryNamedLocation for the microsoft.conditionalAccess.countryNamedLocation resource
+type mqlMicrosoftConditionalAccessCountryNamedLocation struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftConditionalAccessCountryNamedLocationInternal it will be used here
+	Name plugin.TValue[string]
+	LookupMethod plugin.TValue[string]
+}
+
+// createMicrosoftConditionalAccessCountryNamedLocation creates a new instance of this resource
+func createMicrosoftConditionalAccessCountryNamedLocation(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftConditionalAccessCountryNamedLocation{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.conditionalAccess.countryNamedLocation", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftConditionalAccessCountryNamedLocation) MqlName() string {
+	return "microsoft.conditionalAccess.countryNamedLocation"
+}
+
+func (c *mqlMicrosoftConditionalAccessCountryNamedLocation) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftConditionalAccessCountryNamedLocation) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlMicrosoftConditionalAccessCountryNamedLocation) GetLookupMethod() *plugin.TValue[string] {
+	return &c.LookupMethod
 }
 
 // mqlMicrosoftUser for the microsoft.user resource
