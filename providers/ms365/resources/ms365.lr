@@ -60,6 +60,8 @@ microsoft.tenant @defaults("name") {
 microsoft.conditionalAccess {
   // IP named location
   namedLocations() []microsoft.conditionalAccess.ipNamedLocation
+  // Country-based named location
+  countryLocations() []microsoft.conditionalAccess.countryNamedLocation
 }
 
 // Microsoft Conditional Access IP named location
@@ -68,6 +70,14 @@ microsoft.conditionalAccess.ipNamedLocation @defaults("name trusted") {
   name string
   // Whether the location is marked as trusted
   trusted bool
+}
+
+// Microsoft Conditional Access Country named location
+microsoft.conditionalAccess.countryNamedLocation @defaults("name lookupMethod") {
+  // Named location name
+  name string
+  // Method to determine the country location
+  lookupMethod string
 }
 
 // Microsoft Entra ID user
