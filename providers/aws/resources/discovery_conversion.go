@@ -306,14 +306,14 @@ func addConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, 
 		info.image = &instance.GetImage().Data.Id.Data
 	}
 	addMondooLabels(info, asset)
+	imageName := ""
+	if instance.GetImage().Data != nil {
+		imageName = instance.GetImage().Data.Name.Data
+	}
+	probableUsername := getProbableUsernameFromImageName(imageName)
 
 	// if there is a public ip & it is running, we assume ssh is an option
 	if instance.PublicIp.Data != "" && instance.State.Data == string(types.InstanceStateNameRunning) {
-		imageName := ""
-		if instance.GetImage().Data != nil {
-			imageName = instance.GetImage().Data.Name.Data
-		}
-		probableUsername := getProbableUsernameFromImageName(imageName)
 		asset.Connections = []*inventory.Config{{
 			Type:     "ssh",
 			Host:     instance.PublicIp.Data,
@@ -331,15 +331,43 @@ func addConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, 
 				"instance": instance.InstanceId.Data,
 			},
 		}}
-
-		// if the ssm agent indicates it is online, we assume ssm is an option
-		if instance.GetSsm() != nil && instance.GetSsm().Data != nil && len(instance.GetSsm().Data.(map[string]interface{})["InstanceInformationList"].([]interface{})) > 0 {
-			if instance.GetSsm().Data.(map[string]interface{})["InstanceInformationList"].([]interface{})[0].(map[string]interface{})["PingStatus"] == "Online" {
+	}
+	// if the ssm agent indicates it is online, we assume ssm is an option
+	if instance.GetSsm() != nil && instance.GetSsm().Data != nil && len(instance.GetSsm().Data.(map[string]interface{})["InstanceInformationList"].([]interface{})) > 0 {
+		if instance.GetSsm().Data.(map[string]interface{})["InstanceInformationList"].([]interface{})[0].(map[string]interface{})["PingStatus"] == "Online" {
+			asset.Labels[MondooSsmConnection] = "Online"
+			if len(asset.Connections) > 0 {
 				asset.Connections[0].Credentials = append(asset.Connections[0].Credentials, &vault.Credential{
 					User: probableUsername,
 					Type: vault.CredentialType_aws_ec2_ssm_session,
 				})
-				asset.Labels[MondooSsmConnection] = "Online"
+			} else {
+				// if we dont have a connection already, we need to add one
+				creds := []*vault.Credential{
+					{
+						User: probableUsername,
+						Type: vault.CredentialType_aws_ec2_ssm_session,
+					},
+				}
+
+				// try the public ip first, the private ip last.
+				host := instance.InstanceId.Data
+				if instance.PublicIp.Data != "" {
+					host = instance.PublicIp.Data
+				} else if instance.PrivateIp.Data != "" {
+					host = instance.PrivateIp.Data
+				}
+				asset.Connections = []*inventory.Config{{
+					Host:        host,
+					Insecure:    true,
+					Runtime:     "aws_ec2",
+					Credentials: creds,
+					Options: map[string]string{
+						"region":   instance.Region.Data,
+						"profile":  conn.Profile(),
+						"instance": instance.InstanceId.Data,
+					},
+				}}
 			}
 		}
 	}
