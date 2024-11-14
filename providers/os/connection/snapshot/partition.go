@@ -8,9 +8,13 @@ import (
 )
 
 type PartitionInfo struct {
-	Name   string
+	// Device name (e.g. /dev/sda1)
+	Name string
+	// Filesystem type (e.g. ext4)
 	FsType string
 
+	// Resolved device name aliases (e.g. /dev/sda1 -> /dev/nvme0n1p1)
+	Aliases []string
 	// (optional) Label is the partition label
 	Label string
 	// (optional) UUID is the partition UUID
