@@ -10,9 +10,6 @@ import (
 	"os"
 	"strings"
 
-	"go.mondoo.com/cnquery/v11/utils/piped"
-	"go.mondoo.com/ranger-rpc/status"
-
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
