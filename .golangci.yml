@@ -36,3 +36,5 @@ linters-settings:
         deny:
           - pkg: "gotest.tools"
             desc: Should be replaced with "github.com/stretchr/testify/assert"
+          - pkg: "github.com/mitchellh/mapstructure"
+            desc: "no longer maintained; use github.com/go-viper/mapstructure/v2 v2.2.1 instead"
