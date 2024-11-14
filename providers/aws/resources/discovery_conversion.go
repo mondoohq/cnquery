@@ -306,13 +306,14 @@ func addConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, 
 		info.image = &instance.GetImage().Data.Id.Data
 	}
 	addMondooLabels(info, asset)
-	imageName := ""
-	if instance.GetImage().Data != nil {
-		imageName = instance.GetImage().Data.Name.Data
-	}
-	probableUsername := getProbableUsernameFromImageName(imageName)
+
 	// if there is a public ip & it is running, we assume ssh is an option
 	if instance.PublicIp.Data != "" && instance.State.Data == string(types.InstanceStateNameRunning) {
+		imageName := ""
+		if instance.GetImage().Data != nil {
+			imageName = instance.GetImage().Data.Name.Data
+		}
+		probableUsername := getProbableUsernameFromImageName(imageName)
 		asset.Connections = []*inventory.Config{{
 			Type:     "ssh",
 			Host:     instance.PublicIp.Data,
@@ -330,15 +331,16 @@ func addConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, 
 				"instance": instance.InstanceId.Data,
 			},
 		}}
-	}
-	// if the ssm agent indicates it is online, we assume ssm is an option
-	if instance.GetSsm() != nil && instance.GetSsm().Data != nil && len(instance.GetSsm().Data.(map[string]interface{})["InstanceInformationList"].([]interface{})) > 0 {
-		if instance.GetSsm().Data.(map[string]interface{})["InstanceInformationList"].([]interface{})[0].(map[string]interface{})["PingStatus"] == "Online" {
-			asset.Connections[0].Credentials = append(asset.Connections[0].Credentials, &vault.Credential{
-				User: probableUsername,
-				Type: vault.CredentialType_aws_ec2_ssm_session,
-			})
-			asset.Labels[MondooSsmConnection] = "Online"
+
+		// if the ssm agent indicates it is online, we assume ssm is an option
+		if instance.GetSsm() != nil && instance.GetSsm().Data != nil && len(instance.GetSsm().Data.(map[string]interface{})["InstanceInformationList"].([]interface{})) > 0 {
+			if instance.GetSsm().Data.(map[string]interface{})["InstanceInformationList"].([]interface{})[0].(map[string]interface{})["PingStatus"] == "Online" {
+				asset.Connections[0].Credentials = append(asset.Connections[0].Credentials, &vault.Credential{
+					User: probableUsername,
+					Type: vault.CredentialType_aws_ec2_ssm_session,
+				})
+				asset.Labels[MondooSsmConnection] = "Online"
+			}
 		}
 	}
 	return asset
