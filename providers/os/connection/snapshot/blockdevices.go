@@ -166,10 +166,13 @@ func (blockEntries BlockDevices) FindDevice(requested string) (BlockDevice, erro
 func (device BlockDevice) GetMountablePartitions(includeAll bool) ([]*PartitionInfo, error) {
 	log.Debug().Str("device", device.Name).Msg("get partitions for device")
 
-	blockDevices := device.Children
+	blockDevices := &BlockDevices{
+		BlockDevices: device.Children,
+	}
 
 	// sort the candidates by size, so we can pick the largest one
-	sortBlockDevicesBySize(blockDevices)
+	sortBlockDevicesBySize(blockDevices.BlockDevices)
+	blockDevices.findAliases()
 
 	filter := func(partition BlockDevice) bool {
 		if partition.FsType == "" {
@@ -184,7 +187,7 @@ func (device BlockDevice) GetMountablePartitions(includeAll bool) ([]*PartitionI
 	}
 
 	partitions := []*PartitionInfo{}
-	for _, partition := range blockDevices {
+	for _, partition := range blockDevices.BlockDevices {
 		log.Debug().Str("name", partition.Name).Int64("size", int64(partition.Size)).Msg("checking partition")
 		if filter(partition) {
 			log.Debug().Str("name", partition.Name).Msg("found suitable partition")
@@ -192,6 +195,7 @@ func (device BlockDevice) GetMountablePartitions(includeAll bool) ([]*PartitionI
 			partitions = append(partitions, &PartitionInfo{
 				Name: devFsName, FsType: partition.FsType,
 				Label: partition.Label, Uuid: partition.Uuid,
+				Aliases: partition.Aliases,
 			})
 		} else {
 			log.Debug().

@@ -11,6 +11,7 @@ type PartitionInfo struct {
 	Name   string
 	FsType string
 
+	Aliases []string
 	// (optional) Label is the partition label
 	Label string
 	// (optional) UUID is the partition UUID
