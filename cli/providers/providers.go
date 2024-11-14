@@ -5,6 +5,8 @@ package providers
 
 import (
 	"encoding/json"
+	"go.mondoo.com/cnquery/v11/utils/piped"
+	"go.mondoo.com/ranger-rpc/status"
 	"os"
 	"strings"
 
@@ -19,8 +21,6 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/recording"
 	"go.mondoo.com/cnquery/v11/types"
-	"go.mondoo.com/cnquery/v11/utils/piped"
-	"go.mondoo.com/ranger-rpc/status"
 )
 
 type Command struct {
@@ -318,22 +318,35 @@ func attachFlags(flagset *pflag.FlagSet, flags []plugin.Flag) {
 	}
 }
 
-func getFlagValue(flag plugin.Flag) *llx.Primitive {
+func getFlagValue(flag plugin.Flag, cmd *cobra.Command) *llx.Primitive {
 	switch flag.Type {
 	case plugin.FlagType_Bool:
-		return llx.BoolPrimitive(viper.GetBool(flag.Long))
+		v, err := cmd.Flags().GetBool(flag.Long)
+		if err == nil {
+			return llx.BoolPrimitive(v)
+		}
+		log.Warn().Err(err).Msg("failed to get flag " + flag.Long)
 	case plugin.FlagType_Int:
-		return llx.IntPrimitive(viper.GetInt64(flag.Long))
+		if v, err := cmd.Flags().GetInt(flag.Long); err == nil {
+			return llx.IntPrimitive(int64(v))
+		}
 	case plugin.FlagType_String:
-		return llx.StringPrimitive(viper.GetString(flag.Long))
+		if v, err := cmd.Flags().GetString(flag.Long); err == nil {
+			return llx.StringPrimitive(v)
+		}
 	case plugin.FlagType_List:
-		return llx.ArrayPrimitiveT(viper.GetStringSlice(flag.Long), llx.StringPrimitive, types.String)
+		if v, err := cmd.Flags().GetStringSlice(flag.Long); err == nil {
+			return llx.ArrayPrimitiveT(v, llx.StringPrimitive, types.String)
+		}
 	case plugin.FlagType_KeyValue:
-		return llx.MapPrimitiveT(viper.GetStringMapString(flag.Long), llx.StringPrimitive, types.String)
+		if v, err := cmd.Flags().GetStringToString(flag.Long); err == nil {
+			return llx.MapPrimitiveT(v, llx.StringPrimitive, types.String)
+		}
 	default:
 		log.Warn().Msg("unknown flag type for " + flag.Long)
 		return nil
 	}
+	return nil
 }
 
 func setConnector(provider *plugin.Provider, connector *plugin.Connector, run func(*cobra.Command, *providers.Runtime, *plugin.ParseCLIRes), cmd *cobra.Command) {
@@ -408,7 +421,7 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 				continue
 			}
 
-			if v := getFlagValue(flag); v != nil {
+			if v := getFlagValue(flag, cmd); v != nil {
 				flagVals[flag.Long] = v
 			}
 		}
