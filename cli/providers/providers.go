@@ -318,7 +318,7 @@ func attachFlags(flagset *pflag.FlagSet, flags []plugin.Flag) {
 	}
 }
 
-func getFlagValue(flag plugin.Flag) *llx.Primitive {
+func getFlagValueFromConfig(flag plugin.Flag) *llx.Primitive {
 	switch flag.Type {
 	case plugin.FlagType_Bool:
 		return llx.BoolPrimitive(viper.GetBool(flag.Long))
@@ -334,6 +334,38 @@ func getFlagValue(flag plugin.Flag) *llx.Primitive {
 		log.Warn().Msg("unknown flag type for " + flag.Long)
 		return nil
 	}
+}
+
+func getFlagValueFromCobra(flag plugin.Flag, cmd *cobra.Command) *llx.Primitive {
+	var err error
+	switch flag.Type {
+	case plugin.FlagType_Bool:
+		if v, err := cmd.Flags().GetBool(flag.Long); err == nil {
+			return llx.BoolPrimitive(v)
+		}
+	case plugin.FlagType_Int:
+		if v, err := cmd.Flags().GetInt(flag.Long); err == nil {
+			return llx.IntPrimitive(int64(v))
+		}
+	case plugin.FlagType_String:
+		if v, err := cmd.Flags().GetString(flag.Long); err == nil {
+			return llx.StringPrimitive(v)
+		}
+	case plugin.FlagType_List:
+		if v, err := cmd.Flags().GetStringSlice(flag.Long); err == nil {
+			return llx.ArrayPrimitiveT(v, llx.StringPrimitive, types.String)
+		}
+	case plugin.FlagType_KeyValue:
+		if v, err := cmd.Flags().GetStringToString(flag.Long); err == nil {
+			return llx.MapPrimitiveT(v, llx.StringPrimitive, types.String)
+		}
+	default:
+		log.Warn().Msg("unknown flag type for " + flag.Long)
+		return nil
+	}
+
+	log.Warn().Err(err).Msg("failed to get flag " + flag.Long)
+	return nil
 }
 
 func setConnector(provider *plugin.Provider, connector *plugin.Connector, run func(*cobra.Command, *providers.Runtime, *plugin.ParseCLIRes), cmd *cobra.Command) {
@@ -353,6 +385,7 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 		for i := range allFlags {
 			flag := allFlags[i]
 			if flag.ConfigEntry == "-" {
+				log.Debug().Msg("skipping config binding for " + flag.Long)
 				continue
 			}
 
@@ -408,8 +441,16 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 				continue
 			}
 
-			if v := getFlagValue(flag); v != nil {
-				flagVals[flag.Long] = v
+			// if the provider flag was configured to avoid using the config,
+			// we should instead fetch the flag value from `cobra` directly.
+			if flag.ConfigEntry == "-" {
+				if v := getFlagValueFromCobra(flag, cmd); v != nil {
+					flagVals[flag.Long] = v
+				}
+			} else {
+				if v := getFlagValueFromConfig(flag); v != nil {
+					flagVals[flag.Long] = v
+				}
 			}
 		}
 

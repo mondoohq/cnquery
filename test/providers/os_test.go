@@ -225,4 +225,31 @@ func TestProvidersEnvVarsLoading(t *testing.T) {
 			assert.True(t, len(x.Packages) > 0)
 		}
 	})
+
+	t.Run("command with	flags set to not bind to config (ConfigEntry=\"-\")", func(t *testing.T) {
+		t.Run("should work via direct flag", func(t *testing.T) {
+			r := test.NewCliTestRunner("./cnquery", "run", "ssh", "localhost", "-c", "ls", "-p", "test", "-v")
+			err := r.Run()
+			require.NoError(t, err)
+			assert.Equal(t, 0, r.ExitCode())
+			assert.NotNil(t, r.Stdout())
+			if assert.NotNil(t, r.Stderr()) {
+				assert.Contains(t, string(r.Stderr()), "skipping config binding for password")
+				assert.Contains(t, string(r.Stderr()), "enabled ssh password authentication")
+			}
+		})
+		t.Run("should NOT work via config/env-vars", func(t *testing.T) {
+			os.Setenv("MONDOO_PASSWORD", "test")
+			defer os.Unsetenv("MONDOO_PASSWORD")
+			r := test.NewCliTestRunner("./cnquery", "run", "ssh", "localhost", "-c", "ls", "-v")
+			err := r.Run()
+			require.NoError(t, err)
+			assert.Equal(t, 0, r.ExitCode())
+			assert.NotNil(t, r.Stdout())
+			if assert.NotNil(t, r.Stderr()) {
+				assert.Contains(t, string(r.Stderr()), "skipping config binding for password")
+				assert.NotContains(t, string(r.Stderr()), "enabled ssh password authentication")
+			}
+		})
+	})
 }
