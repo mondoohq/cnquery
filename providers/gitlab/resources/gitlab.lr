@@ -98,7 +98,7 @@ gitlab.project @defaults("fullName visibility webURL") {
   webhooks() []gitlab.project.webhook
   // Whether CI jobs are enabled
   jobsEnabled bool
-  // Whether the repo is empty or not
+  // Whether the repo is empty
   emptyRepo bool
 	// The license of the project if present
   license string
