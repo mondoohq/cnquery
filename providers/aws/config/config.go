@@ -160,6 +160,8 @@ Notes:
 						"kms":        nil,
 						"sagemaker":  nil,
 						"ecr":        nil,
+						"dynamodb":   nil,
+						"elb":        nil,
 						"other":      nil,
 					},
 				},
