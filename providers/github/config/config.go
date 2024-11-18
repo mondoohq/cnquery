@@ -44,6 +44,7 @@ Notes:
 			Discovery: []string{
 				connection.DiscoveryRepos,
 				connection.DiscoveryUsers,
+				connection.DiscoveryOrganization,
 				connection.DiscoveryTerraform,
 				connection.DiscoveryK8sManifests,
 			},

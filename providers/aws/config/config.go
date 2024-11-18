@@ -56,16 +56,17 @@ Notes:
 			MaxArgs: 4,
 			Discovery: []string{
 				resources.DiscoveryAccounts,
-				resources.DiscoveryAll,
-				resources.DiscoveryAuto,
 
 				resources.DiscoveryInstances,
 				resources.DiscoveryEC2InstanceAPI,
 				resources.DiscoverySSMInstances,
 				resources.DiscoverySSMInstanceAPI,
 				resources.DiscoveryECR,
+				resources.DiscoveryECRImageAPI,
 				resources.DiscoveryECS,
+				resources.DiscoveryECSContainersAPI,
 
+				resources.DiscoveryOrg,
 				resources.DiscoveryResources,
 				resources.DiscoveryS3Buckets,
 				resources.DiscoveryCloudtrailTrails,
@@ -78,6 +79,7 @@ Notes:
 				resources.DiscoveryCloudwatchLoggroups,
 				resources.DiscoveryLambdaFunctions,
 				resources.DiscoveryDynamoDBTables,
+				resources.DiscoveryDynamoDBGlobalTables,
 				resources.DiscoveryRedshiftClusters,
 				resources.DiscoveryVolumes,
 				resources.DiscoverySnapshots,

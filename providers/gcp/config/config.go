@@ -26,8 +26,6 @@ var Config = plugin.Provider{
 			Short:   "a Google Cloud project or folder",
 			MaxArgs: 2,
 			Discovery: []string{
-				resources.DiscoveryAll,
-				resources.DiscoveryAuto,
 				resources.DiscoveryOrganization,
 				resources.DiscoveryFolders,
 				resources.DiscoveryInstances,

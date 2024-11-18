@@ -31,8 +31,6 @@ Examples:
 			MinArgs: 0,
 			MaxArgs: 2,
 			Discovery: []string{
-				connection.DiscoveryAll,
-				connection.DiscoveryAuto,
 				connection.DiscoveryHosts,
 			},
 			Flags: []plugin.Flag{

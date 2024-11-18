@@ -544,7 +544,6 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 		for _, tmpFile := range temporaryFiles {
 			_ = os.Remove(tmpFile)
 		}
-
 	}
 
 	attachFlags(cmd.Flags(), allFlags)
