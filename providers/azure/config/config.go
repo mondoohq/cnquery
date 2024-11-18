@@ -107,12 +107,12 @@ var Config = plugin.Provider{
 						"*": {
 							Key: "service",
 							Values: map[string]*inventory.AssetUrlBranch{
-								"account":  nil,
-								"compute":  nil,
-								"mysql":    nil,
-								"postgres": nil,
-								"mariadb":  nil,
-								"sql":      nil,
+								"account":    nil,
+								"compute":    nil,
+								"mysql":      nil,
+								"postgresql": nil,
+								"mariadb":    nil,
+								"sql":        nil,
 								"storage": {
 									Key: "object",
 									Values: map[string]*inventory.AssetUrlBranch{
