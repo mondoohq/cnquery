@@ -7,8 +7,8 @@ go 1.23.0
 require (
 	cloud.google.com/go/accessapproval v1.8.2
 	cloud.google.com/go/bigquery v1.64.0
-	cloud.google.com/go/compute v1.28.3
-	cloud.google.com/go/container v1.41.0
+	cloud.google.com/go/compute v1.29.0
+	cloud.google.com/go/container v1.42.0
 	cloud.google.com/go/functions v1.19.2
 	cloud.google.com/go/iam v1.2.2
 	cloud.google.com/go/kms v1.20.1
@@ -17,9 +17,9 @@ require (
 	cloud.google.com/go/monitoring v1.21.2
 	cloud.google.com/go/pubsub v1.45.1
 	cloud.google.com/go/recommender v1.13.2
-	cloud.google.com/go/run v1.6.1
+	cloud.google.com/go/run v1.7.0
 	cloud.google.com/go/serviceusage v1.9.2
-	github.com/aws/smithy-go v1.22.0
+	github.com/aws/smithy-go v1.22.1
 	github.com/cockroachdb/errors v1.11.3
 	github.com/google/go-containerregistry v0.20.2
 	github.com/hashicorp/go-cleanhttp v0.5.2
@@ -28,9 +28,9 @@ require (
 	go.mondoo.com/cnquery/v11 v11.29.0
 	go.mondoo.com/ranger-rpc v0.6.4
 	golang.org/x/oauth2 v0.24.0
-	google.golang.org/api v0.205.0
+	google.golang.org/api v0.206.0
 	google.golang.org/genproto v0.0.0-20241104194629-dd2ea8efbc28
-	google.golang.org/protobuf v1.35.1
+	google.golang.org/protobuf v1.35.2
 )
 
 require (
@@ -133,7 +133,7 @@ require (
 	github.com/google/s2a-go v0.1.8 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.4 // indirect
-	github.com/googleapis/gax-go/v2 v2.13.0 // indirect
+	github.com/googleapis/gax-go/v2 v2.14.0 // indirect
 	github.com/gsterjov/go-libsecret v0.0.0-20161001094733-a6f4afe4910c // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-hclog v1.6.3 // indirect
