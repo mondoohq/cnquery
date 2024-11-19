@@ -54,8 +54,6 @@ resources:
         min_mondoo_version: 9.0.0
       jobsEnabled:
         min_mondoo_version: 9.0.0
-      license:
-        min_mondoo_version: 9.0.0
       mergeMethod:
         min_mondoo_version: 9.0.0
       mergeRequestsEnabled:
@@ -120,7 +118,6 @@ resources:
     min_mondoo_version: 9.0.0
   gitlab.project.member:
     fields:
-      email: {}
       id: {}
       name: {}
       role: {}

@@ -253,9 +253,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gitlab.project.emptyRepo": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetEmptyRepo()).ToDataRes(types.Bool)
 	},
-	"gitlab.project.license": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGitlabProject).GetLicense()).ToDataRes(types.String)
-	},
 	"gitlab.project.sharedRunnersEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetSharedRunnersEnabled()).ToDataRes(types.Bool)
 	},
@@ -315,9 +312,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gitlab.project.member.username": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectMember).GetUsername()).ToDataRes(types.String)
-	},
-	"gitlab.project.member.email": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGitlabProjectMember).GetEmail()).ToDataRes(types.String)
 	},
 	"gitlab.project.member.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectMember).GetState()).ToDataRes(types.String)
@@ -540,10 +534,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlGitlabProject).EmptyRepo, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"gitlab.project.license": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGitlabProject).License, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"gitlab.project.sharedRunnersEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProject).SharedRunnersEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -638,10 +628,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"gitlab.project.member.username": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProjectMember).Username, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"gitlab.project.member.email": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGitlabProjectMember).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gitlab.project.member.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -858,7 +844,6 @@ type mqlGitlabProject struct {
 	Webhooks plugin.TValue[[]interface{}]
 	JobsEnabled plugin.TValue[bool]
 	EmptyRepo plugin.TValue[bool]
-	License plugin.TValue[string]
 	SharedRunnersEnabled plugin.TValue[bool]
 	GroupRunnersEnabled plugin.TValue[bool]
 }
@@ -1106,10 +1091,6 @@ func (c *mqlGitlabProject) GetEmptyRepo() *plugin.TValue[bool] {
 	return &c.EmptyRepo
 }
 
-func (c *mqlGitlabProject) GetLicense() *plugin.TValue[string] {
-	return &c.License
-}
-
 func (c *mqlGitlabProject) GetSharedRunnersEnabled() *plugin.TValue[bool] {
 	return &c.SharedRunnersEnabled
 }
@@ -1319,7 +1300,6 @@ type mqlGitlabProjectMember struct {
 	Name plugin.TValue[string]
 	Role plugin.TValue[string]
 	Username plugin.TValue[string]
-	Email plugin.TValue[string]
 	State plugin.TValue[string]
 }
 
@@ -1374,10 +1354,6 @@ func (c *mqlGitlabProjectMember) GetRole() *plugin.TValue[string] {
 
 func (c *mqlGitlabProjectMember) GetUsername() *plugin.TValue[string] {
 	return &c.Username
-}
-
-func (c *mqlGitlabProjectMember) GetEmail() *plugin.TValue[string] {
-	return &c.Email
 }
 
 func (c *mqlGitlabProjectMember) GetState() *plugin.TValue[string] {

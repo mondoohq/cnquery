@@ -103,7 +103,6 @@ func getGitlabProjectArgs(prj *gitlab.Project) map[string]*llx.RawData {
 		"wikiEnabled":                               llx.BoolData(prj.WikiEnabled),
 		"jobsEnabled":                               llx.BoolData(prj.JobsEnabled),
 		"emptyRepo":                                 llx.BoolData(prj.EmptyRepo),
-		"license":                                   llx.StringData(prj.License.Name),
 		"sharedRunnersEnabled":                      llx.BoolData(prj.SharedRunnersEnabled),
 		"groupRunnersEnabled":                       llx.BoolData(prj.GroupRunnersEnabled),
 	}
@@ -295,7 +294,6 @@ func (p *mqlGitlabProject) projectMembers() ([]interface{}, error) {
 			"id":       llx.IntData(int64(member.ID)),
 			"username": llx.StringData(member.Username),
 			"state":    llx.StringData(member.State),
-			"email":    llx.StringData(member.Email),
 			"name":     llx.StringData(member.Name),
 			"role":     llx.StringData(role),
 		}

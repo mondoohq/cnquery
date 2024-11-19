@@ -100,14 +100,11 @@ gitlab.project @defaults("fullName visibility webURL") {
   jobsEnabled bool
   // Whether the repo is empty
   emptyRepo bool
-	// The license of the project if present
-  license string
   // Whether the project is enabled for shared runners
 	sharedRunnersEnabled bool
   // Whether the project is enabled for group runners
 	groupRunnersEnabled bool
 }
-
 
 // GitLab project approval rule
 private gitlab.project.approvalRule @defaults("id name approvalsRequired") {
@@ -137,7 +134,6 @@ private gitlab.project.approvalSetting @defaults("approvalsBeforeMerge requirePa
   selectiveCodeOwnerRemovals bool
 }
 
-
 // GitLab protected branch
 private gitlab.project.protectedBranch @defaults("name allowForcePush") {
   // Branch name
@@ -151,7 +147,7 @@ private gitlab.project.protectedBranch @defaults("name allowForcePush") {
 }
 
 // GitLab project member
-gitlab.project.member @defaults("id name role") {
+gitlab.project.member @defaults("username role name") {
   // Member ID
   id int
   // Member name
@@ -160,8 +156,6 @@ gitlab.project.member @defaults("id name role") {
   role string
   // Member username
   username string
-  // Member email
-  email string
   // Member state
   state string
 }
