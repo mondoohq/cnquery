@@ -43,7 +43,7 @@ gitlab.project @defaults("fullName visibility webURL") {
   // Project path
   path string
   // Create date of the project
-  createdAt time  
+  createdAt time
   // Project description
   description string
   // Default Git branch
@@ -66,21 +66,21 @@ gitlab.project @defaults("fullName visibility webURL") {
   onlyAllowMergeIfAllDiscussionsAreResolved bool
   // Whether the issues feature is enabled
   issuesEnabled bool
-	// Whether the merge request feature is enabled
+  // Whether the merge request feature is enabled
   mergeRequestsEnabled bool
-	// Whether the wiki feature is enabled
+  // Whether the wiki feature is enabled
   wikiEnabled bool
-	// Whether the snippets feature is enabled
+  // Whether the snippets feature is enabled
   snippetsEnabled bool
-	// Whether the container registry feature is enabled
+  // Whether the container registry feature is enabled
   containerRegistryEnabled bool
-	// Whether the Service Desk feature is enabled
+  // Whether the Service Desk feature is enabled
   serviceDeskEnabled bool
-	// Whether the packages feature is enabled
+  // Whether the packages feature is enabled
   packagesEnabled bool
-	// Whether the Auto DevOps feature is enabled
+  // Whether the Auto DevOps feature is enabled
   autoDevopsEnabled bool
-	// Whether the requirements feature is enabled
+  // Whether the requirements feature is enabled
   requirementsEnabled bool
   // Approval rules for the project
   approvalRules() []gitlab.project.approvalRule
@@ -96,8 +96,15 @@ gitlab.project @defaults("fullName visibility webURL") {
   projectFiles() []gitlab.project.file
   // List of webhooks for the project
   webhooks() []gitlab.project.webhook
+  // Whether CI jobs are enabled
+  jobsEnabled bool
+  // Whether the repo is empty
+  emptyRepo bool
+  // Whether the project is enabled for shared runners
+  sharedRunnersEnabled bool
+  // Whether the project is enabled for group runners
+  groupRunnersEnabled bool
 }
-
 
 // GitLab project approval rule
 private gitlab.project.approvalRule @defaults("id name approvalsRequired") {
@@ -123,8 +130,9 @@ private gitlab.project.approvalSetting @defaults("approvalsBeforeMerge requirePa
   mergeRequestsDisableCommittersApproval bool
   // Whether a password is required to approve
   requirePasswordToApprove bool
+  // Whether approvals are reset from Code Owners if their files changed
+  selectiveCodeOwnerRemovals bool
 }
-
 
 // GitLab protected branch
 private gitlab.project.protectedBranch @defaults("name allowForcePush") {
@@ -139,13 +147,17 @@ private gitlab.project.protectedBranch @defaults("name allowForcePush") {
 }
 
 // GitLab project member
-gitlab.project.member @defaults("id name role") {
+gitlab.project.member @defaults("username role name") {
   // Member ID
   id int
   // Member name
   name string
   // Member role
   role string
+  // Member username
+  username string
+  // Member state
+  state string
 }
 
 // GitLab project file

@@ -101,6 +101,10 @@ func getGitlabProjectArgs(prj *gitlab.Project) map[string]*llx.RawData {
 		"visibility":                                llx.StringData(string(prj.Visibility)),
 		"webURL":                                    llx.StringData(prj.WebURL),
 		"wikiEnabled":                               llx.BoolData(prj.WikiEnabled),
+		"jobsEnabled":                               llx.BoolData(prj.JobsEnabled),
+		"emptyRepo":                                 llx.BoolData(prj.EmptyRepo),
+		"sharedRunnersEnabled":                      llx.BoolData(prj.SharedRunnersEnabled),
+		"groupRunnersEnabled":                       llx.BoolData(prj.GroupRunnersEnabled),
 	}
 }
 
@@ -141,6 +145,7 @@ func (p *mqlGitlabProject) approvalSettings() (*mqlGitlabProjectApprovalSetting,
 		"mergeRequestsAuthorApproval":               llx.BoolData(approvalConfig.MergeRequestsAuthorApproval),
 		"mergeRequestsDisableCommittersApproval":    llx.BoolData(approvalConfig.MergeRequestsDisableCommittersApproval),
 		"requirePasswordToApprove":                  llx.BoolData(approvalConfig.RequirePasswordToApprove),
+		"selectiveCodeOwnerRemovals":                llx.BoolData(approvalConfig.SelectiveCodeOwnerRemovals),
 	}
 
 	mqlApprovalSettings, err := CreateResource(p.MqlRuntime, "gitlab.project.approvalSetting", approvalSettings)
@@ -286,9 +291,11 @@ func (p *mqlGitlabProject) projectMembers() ([]interface{}, error) {
 	for _, member := range members {
 		role := mapAccessLevelToRole(int(member.AccessLevel))
 		memberInfo := map[string]*llx.RawData{
-			"id":   llx.IntData(int64(member.ID)),
-			"name": llx.StringData(member.Name),
-			"role": llx.StringData(role),
+			"id":       llx.IntData(int64(member.ID)),
+			"username": llx.StringData(member.Username),
+			"state":    llx.StringData(member.State),
+			"name":     llx.StringData(member.Name),
+			"role":     llx.StringData(role),
 		}
 
 		mqlMember, err := CreateResource(p.MqlRuntime, "gitlab.project.member", memberInfo)

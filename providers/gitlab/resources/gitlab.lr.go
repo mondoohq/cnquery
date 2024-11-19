@@ -247,6 +247,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gitlab.project.webhooks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetWebhooks()).ToDataRes(types.Array(types.Resource("gitlab.project.webhook")))
 	},
+	"gitlab.project.jobsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetJobsEnabled()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.emptyRepo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetEmptyRepo()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.sharedRunnersEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetSharedRunnersEnabled()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.groupRunnersEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetGroupRunnersEnabled()).ToDataRes(types.Bool)
+	},
 	"gitlab.project.approvalRule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectApprovalRule).GetId()).ToDataRes(types.Int)
 	},
@@ -274,6 +286,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gitlab.project.approvalSetting.requirePasswordToApprove": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectApprovalSetting).GetRequirePasswordToApprove()).ToDataRes(types.Bool)
 	},
+	"gitlab.project.approvalSetting.selectiveCodeOwnerRemovals": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectApprovalSetting).GetSelectiveCodeOwnerRemovals()).ToDataRes(types.Bool)
+	},
 	"gitlab.project.protectedBranch.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectProtectedBranch).GetName()).ToDataRes(types.String)
 	},
@@ -294,6 +309,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gitlab.project.member.role": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectMember).GetRole()).ToDataRes(types.String)
+	},
+	"gitlab.project.member.username": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMember).GetUsername()).ToDataRes(types.String)
+	},
+	"gitlab.project.member.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMember).GetState()).ToDataRes(types.String)
 	},
 	"gitlab.project.file.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectFile).GetPath()).ToDataRes(types.String)
@@ -505,6 +526,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlGitlabProject).Webhooks, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"gitlab.project.jobsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).JobsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.emptyRepo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).EmptyRepo, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.sharedRunnersEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).SharedRunnersEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.groupRunnersEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).GroupRunnersEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"gitlab.project.approvalRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlGitlabProjectApprovalRule).__id, ok = v.Value.(string)
 			return
@@ -549,6 +586,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlGitlabProjectApprovalSetting).RequirePasswordToApprove, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"gitlab.project.approvalSetting.selectiveCodeOwnerRemovals": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectApprovalSetting).SelectiveCodeOwnerRemovals, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"gitlab.project.protectedBranch.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlGitlabProjectProtectedBranch).__id, ok = v.Value.(string)
 			return
@@ -583,6 +624,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"gitlab.project.member.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProjectMember).Role, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.member.username": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMember).Username, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.member.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMember).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gitlab.project.file.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -793,6 +842,10 @@ type mqlGitlabProject struct {
 	ProjectMembers plugin.TValue[[]interface{}]
 	ProjectFiles plugin.TValue[[]interface{}]
 	Webhooks plugin.TValue[[]interface{}]
+	JobsEnabled plugin.TValue[bool]
+	EmptyRepo plugin.TValue[bool]
+	SharedRunnersEnabled plugin.TValue[bool]
+	GroupRunnersEnabled plugin.TValue[bool]
 }
 
 // createGitlabProject creates a new instance of this resource
@@ -1030,6 +1083,22 @@ func (c *mqlGitlabProject) GetWebhooks() *plugin.TValue[[]interface{}] {
 	})
 }
 
+func (c *mqlGitlabProject) GetJobsEnabled() *plugin.TValue[bool] {
+	return &c.JobsEnabled
+}
+
+func (c *mqlGitlabProject) GetEmptyRepo() *plugin.TValue[bool] {
+	return &c.EmptyRepo
+}
+
+func (c *mqlGitlabProject) GetSharedRunnersEnabled() *plugin.TValue[bool] {
+	return &c.SharedRunnersEnabled
+}
+
+func (c *mqlGitlabProject) GetGroupRunnersEnabled() *plugin.TValue[bool] {
+	return &c.GroupRunnersEnabled
+}
+
 // mqlGitlabProjectApprovalRule for the gitlab.project.approvalRule resource
 type mqlGitlabProjectApprovalRule struct {
 	MqlRuntime *plugin.Runtime
@@ -1095,6 +1164,7 @@ type mqlGitlabProjectApprovalSetting struct {
 	MergeRequestsAuthorApproval plugin.TValue[bool]
 	MergeRequestsDisableCommittersApproval plugin.TValue[bool]
 	RequirePasswordToApprove plugin.TValue[bool]
+	SelectiveCodeOwnerRemovals plugin.TValue[bool]
 }
 
 // createGitlabProjectApprovalSetting creates a new instance of this resource
@@ -1151,6 +1221,10 @@ func (c *mqlGitlabProjectApprovalSetting) GetMergeRequestsDisableCommittersAppro
 
 func (c *mqlGitlabProjectApprovalSetting) GetRequirePasswordToApprove() *plugin.TValue[bool] {
 	return &c.RequirePasswordToApprove
+}
+
+func (c *mqlGitlabProjectApprovalSetting) GetSelectiveCodeOwnerRemovals() *plugin.TValue[bool] {
+	return &c.SelectiveCodeOwnerRemovals
 }
 
 // mqlGitlabProjectProtectedBranch for the gitlab.project.protectedBranch resource
@@ -1225,6 +1299,8 @@ type mqlGitlabProjectMember struct {
 	Id plugin.TValue[int64]
 	Name plugin.TValue[string]
 	Role plugin.TValue[string]
+	Username plugin.TValue[string]
+	State plugin.TValue[string]
 }
 
 // createGitlabProjectMember creates a new instance of this resource
@@ -1274,6 +1350,14 @@ func (c *mqlGitlabProjectMember) GetName() *plugin.TValue[string] {
 
 func (c *mqlGitlabProjectMember) GetRole() *plugin.TValue[string] {
 	return &c.Role
+}
+
+func (c *mqlGitlabProjectMember) GetUsername() *plugin.TValue[string] {
+	return &c.Username
+}
+
+func (c *mqlGitlabProjectMember) GetState() *plugin.TValue[string] {
+	return &c.State
 }
 
 // mqlGitlabProjectFile for the gitlab.project.file resource

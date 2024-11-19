@@ -21,7 +21,6 @@ resources:
       visibility: {}
       webURL:
         min_mondoo_version: 9.0.0
-    maturity: experimental
     min_mondoo_version: 5.15.0
   gitlab.project:
     fields:
@@ -44,10 +43,16 @@ resources:
       description: {}
       emailsDisabled:
         min_mondoo_version: 9.0.0
+      emptyRepo:
+        min_mondoo_version: 9.0.0
       fullName:
+        min_mondoo_version: 9.0.0
+      groupRunnersEnabled:
         min_mondoo_version: 9.0.0
       id: {}
       issuesEnabled:
+        min_mondoo_version: 9.0.0
+      jobsEnabled:
         min_mondoo_version: 9.0.0
       mergeMethod:
         min_mondoo_version: 9.0.0
@@ -73,6 +78,8 @@ resources:
         min_mondoo_version: 9.0.0
       serviceDeskEnabled:
         min_mondoo_version: 9.0.0
+      sharedRunnersEnabled:
+        min_mondoo_version: 9.0.0
       snippetsEnabled:
         min_mondoo_version: 9.0.0
       visibility: {}
@@ -82,7 +89,6 @@ resources:
         min_mondoo_version: 9.0.0
       wikiEnabled:
         min_mondoo_version: 9.0.0
-    maturity: experimental
     min_mondoo_version: 5.15.0
   gitlab.project.approvalRule:
     fields:
@@ -99,6 +105,7 @@ resources:
       mergeRequestsDisableCommittersApproval: {}
       requirePasswordToApprove: {}
       resetApprovalsOnPush: {}
+      selectiveCodeOwnerRemovals: {}
     is_private: true
     min_mondoo_version: 9.0.0
   gitlab.project.file:
@@ -114,6 +121,8 @@ resources:
       id: {}
       name: {}
       role: {}
+      state: {}
+      username: {}
     min_mondoo_version: 9.0.0
   gitlab.project.protectedBranch:
     fields:
