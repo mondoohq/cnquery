@@ -66,21 +66,21 @@ gitlab.project @defaults("fullName visibility webURL") {
   onlyAllowMergeIfAllDiscussionsAreResolved bool
   // Whether the issues feature is enabled
   issuesEnabled bool
-	// Whether the merge request feature is enabled
+  // Whether the merge request feature is enabled
   mergeRequestsEnabled bool
-	// Whether the wiki feature is enabled
+  // Whether the wiki feature is enabled
   wikiEnabled bool
-	// Whether the snippets feature is enabled
+  // Whether the snippets feature is enabled
   snippetsEnabled bool
-	// Whether the container registry feature is enabled
+  // Whether the container registry feature is enabled
   containerRegistryEnabled bool
-	// Whether the Service Desk feature is enabled
+  // Whether the Service Desk feature is enabled
   serviceDeskEnabled bool
-	// Whether the packages feature is enabled
+  // Whether the packages feature is enabled
   packagesEnabled bool
-	// Whether the Auto DevOps feature is enabled
+  // Whether the Auto DevOps feature is enabled
   autoDevopsEnabled bool
-	// Whether the requirements feature is enabled
+  // Whether the requirements feature is enabled
   requirementsEnabled bool
   // Approval rules for the project
   approvalRules() []gitlab.project.approvalRule
@@ -101,9 +101,9 @@ gitlab.project @defaults("fullName visibility webURL") {
   // Whether the repo is empty
   emptyRepo bool
   // Whether the project is enabled for shared runners
-	sharedRunnersEnabled bool
+  sharedRunnersEnabled bool
   // Whether the project is enabled for group runners
-	groupRunnersEnabled bool
+  groupRunnersEnabled bool
 }
 
 // GitLab project approval rule
