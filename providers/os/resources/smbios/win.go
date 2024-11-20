@@ -193,6 +193,7 @@ func (s *WindowsSmbiosManager) Info() (*SmBiosInfo, error) {
 			Type:         winBios.Chassis[0].GetChassisTypes().Value()[0],
 		},
 	}
+	s.smInfo = &smInfo
 
 	return &smInfo, nil
 }

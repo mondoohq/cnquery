@@ -11,6 +11,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/mock"
 	"go.mondoo.com/cnquery/v11/providers/os/detector"
+	"go.mondoo.com/cnquery/v11/providers/os/resources/smbios"
 )
 
 func TestDetectLinuxInstance(t *testing.T) {
@@ -19,7 +20,10 @@ func TestDetectLinuxInstance(t *testing.T) {
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
 
-	identifier, name, relatedIdentifiers := Detect(conn, platform)
+	mgr, err := smbios.ResolveManager(conn, platform)
+	require.NoError(t, err)
+
+	identifier, name, relatedIdentifiers := Detect(conn, platform, mgr)
 
 	assert.Equal(t, "//platformid.api.mondoo.app/runtime/gcp/compute/v1/projects/mondoo-dev-262313/zones/us-central1-a/instances/6001244637815193808", identifier)
 	assert.Equal(t, "", name)
@@ -33,7 +37,10 @@ func TestDetectWindowsInstance(t *testing.T) {
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
 
-	identifier, name, relatedIdentifiers := Detect(conn, platform)
+	mgr, err := smbios.ResolveManager(conn, platform)
+	require.NoError(t, err)
+
+	identifier, name, relatedIdentifiers := Detect(conn, platform, mgr)
 
 	assert.Equal(t, "//platformid.api.mondoo.app/runtime/gcp/compute/v1/projects/mondoo-dev-262313/zones/us-central1-a/instances/5275377306317132843", identifier)
 	assert.Equal(t, "", name)
@@ -47,7 +54,10 @@ func TestNoMatch(t *testing.T) {
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
 
-	identifier, name, relatedIdentifiers := Detect(conn, platform)
+	mgr, err := smbios.ResolveManager(conn, platform)
+	require.NoError(t, err)
+
+	identifier, name, relatedIdentifiers := Detect(conn, platform, mgr)
 
 	assert.Empty(t, identifier)
 	assert.Empty(t, name)
