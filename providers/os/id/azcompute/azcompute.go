@@ -57,7 +57,7 @@ func (m *commandInstanceMetadata) Identify() (Identity, error) {
 	var instanceDocument string
 	switch {
 	case m.platform.IsFamily(inventory.FAMILY_UNIX):
-		cmd, err := m.conn.RunCommand("curl --noproxy '*' -H Metadata:true " + identityUrl)
+		cmd, err := m.conn.RunCommand("curl --max-time 1 --noproxy '*' -H Metadata:true " + identityUrl)
 		if err != nil {
 			return Identity{}, err
 		}
