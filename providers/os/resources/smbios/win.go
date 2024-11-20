@@ -15,11 +15,11 @@ import (
 )
 
 const smbiosWindowsScript = `
-$bios = Get-WmiObject -class Win32_Bios
-$baseboard = Get-WmiObject Win32_BaseBoard
-$chassis = @(Get-WmiObject Win32_SystemEnclosure)
-$sys = Get-WmiObject Win32_ComputerSystem
-$sysProduct = Get-WmiObject Win32_ComputerSystemProduct
+$bios = Get-CimInstance -ClassName Win32_Bios
+$baseboard = Get-CimInstance -ClassName Win32_BaseBoard
+$chassis = @(Get-CimInstance -ClassName Win32_SystemEnclosure)
+$sys = Get-CimInstance -ClassName Win32_ComputerSystem
+$sysProduct = Get-CimInstance -ClassName Win32_ComputerSystemProduct
 
 $smbios = New-Object -TypeName PSObject
 $smbios | Add-Member -MemberType NoteProperty -Value $bios -Name Bios
