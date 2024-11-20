@@ -20,6 +20,7 @@ func GetWindowsOSBuild(conn shared.Connection) (*WindowsCurrentVersion, error) {
 		if err != nil {
 			return nil, err
 		}
+		defer k.Close()
 
 		currentBuild, _, err := k.GetStringValue("CurrentBuild")
 		if err != nil && err != registry.ErrNotExist {
@@ -35,12 +36,53 @@ func GetWindowsOSBuild(conn shared.Connection) (*WindowsCurrentVersion, error) {
 		if err != nil && err != registry.ErrNotExist {
 			return nil, err
 		}
-		defer k.Close()
+
+		displayVersion, _, err := k.GetStringValue("DisplayVersion")
+		if err != nil && err != registry.ErrNotExist {
+			return nil, err
+		}
+
+		title, _, err := k.GetStringValue("ProductName")
+		if err != nil && err != registry.ErrNotExist {
+			return nil, err
+		}
+
+		installationType, _, err := k.GetStringValue("InstallationType")
+		if err != nil && err != registry.ErrNotExist {
+			return nil, err
+		}
+
+		systemKey, err := registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\CurrentControlSet\Control\ProductOptions`, registry.QUERY_VALUE)
+		if err != nil {
+			return nil, err
+		}
+		defer systemKey.Close()
+
+		productType, _, err := systemKey.GetStringValue("ProductType")
+		if err != nil && err != registry.ErrNotExist {
+			return nil, err
+		}
+
+		envKey, err := registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\CurrentControlSet\Control\Session Manager\Environment`, registry.QUERY_VALUE)
+		if err != nil {
+			return nil, err
+		}
+		defer envKey.Close()
+
+		arch, _, err := envKey.GetStringValue("PROCESSOR_ARCHITECTURE")
+		if err != nil && err != registry.ErrNotExist {
+			return nil, err
+		}
 
 		return &WindowsCurrentVersion{
-			CurrentBuild: currentBuild,
-			EditionID:    edition,
-			UBR:          int(ubr),
+			CurrentBuild:     currentBuild,
+			EditionID:        edition,
+			UBR:              int(ubr),
+			Architecture:     arch,
+			DisplayVersion:   displayVersion,
+			ProductName:      title,
+			ProductType:      productType,
+			InstallationType: installationType,
 		}, nil
 	}
 
