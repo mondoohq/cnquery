@@ -279,8 +279,8 @@ var Config = plugin.Provider{
 				{
 					Long:   "device-name",
 					Type:   plugin.FlagType_String,
-					Desc:   "The target device to scan, e.g. /dev/sda. Supported only for Linux scanning. Do not use together with --lun or --serial-number (Deprecated: use --device-names instead)",
-					Option: plugin.FlagOption_Hidden,
+					Desc:   "The target device to scan, e.g. /dev/sda. Supported only for Linux scanning. Do not use together with --lun or --serial-number",
+					Option: plugin.FlagOption_Hidden | plugin.FlagOption_Deprecated,
 				},
 				{
 					Long:   "device-names",
