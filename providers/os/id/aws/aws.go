@@ -24,7 +24,7 @@ func readValue(conn shared.Connection, fPath string) string {
 	return string(content)
 }
 
-func Detect(conn shared.Connection, p *inventory.Platform) (string, string, []string) {
+func Detect(conn shared.Connection, p *inventory.Platform, smbiosMgr smbios.SmBiosManager) (string, string, []string) {
 	var values []string
 	if p.IsFamily("linux") {
 		// Fetching the data from the smbios manager is slow for some transports
@@ -38,11 +38,7 @@ func Detect(conn shared.Connection, p *inventory.Platform) (string, string, []st
 			readValue(conn, "/sys/class/dmi/id/bios_vendor"),
 		}
 	} else {
-		mgr, err := smbios.ResolveManager(conn, p)
-		if err != nil {
-			return "", "", nil
-		}
-		info, err := mgr.Info()
+		info, err := smbiosMgr.Info()
 		if err != nil {
 			log.Debug().Err(err).Msg("failed to query smbios")
 			return "", "", nil
