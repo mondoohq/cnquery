@@ -227,9 +227,19 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	if lun, ok := flags["lun"]; ok {
 		conf.Options["lun"] = lun.RawData().Value.(string)
 	}
+
+	deviceNames := []string{}
 	if deviceName, ok := flags["device-name"]; ok {
-		conf.Options["device-name"] = deviceName.RawData().Value.(string)
+		deviceNames = append(deviceNames, deviceName.RawData().Value.(string))
 	}
+	if deviceName, ok := flags["device-names"]; ok {
+		deviceNamesList := deviceName.RawData().Value.([]any)
+		for _, deviceName := range deviceNamesList {
+			deviceNames = append(deviceNames, deviceName.(string))
+		}
+	}
+	conf.Options["device-names"] = strings.Join(deviceNames, ",")
+
 	if serialNumber, ok := flags["serial-number"]; ok {
 		conf.Options["serial-number"] = serialNumber.RawData().Value.(string)
 	}

@@ -285,6 +285,21 @@ func TestGetMountablePartitions(t *testing.T) {
 		}
 		require.ElementsMatch(t, expected, parts)
 	})
+
+	t.Run("get all non-mounted partitions (unpartitioned)", func(t *testing.T) {
+		block := BlockDevice{
+			Name:   "sda",
+			FsType: "xfs",
+			Label:  "ROOT",
+			Uuid:   "1234",
+		}
+		parts, err := block.GetMountablePartitions(true)
+		require.NoError(t, err)
+		expected := []*PartitionInfo{
+			{Name: "/dev/sda", FsType: "xfs", Uuid: "1234", Label: "ROOT"},
+		}
+		require.ElementsMatch(t, expected, parts)
+	})
 }
 
 func TestLongestMatchingSuffix(t *testing.T) {

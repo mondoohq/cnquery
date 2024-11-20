@@ -5,6 +5,7 @@ package linux
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
@@ -14,6 +15,7 @@ import (
 const (
 	LunOption          = "lun"
 	DeviceName         = "device-name"
+	DeviceNames        = "device-names"
 	MountAllPartitions = "mount-all-partitions"
 )
 
@@ -53,11 +55,23 @@ func (d *LinuxDeviceManager) IdentifyMountTargets(opts map[string]string) ([]*sn
 		return []*snapshot.PartitionInfo{pi}, nil
 	}
 
-	partitions, err := d.identifyViaDeviceName(opts[DeviceName], opts[MountAllPartitions] == "true")
-	if err != nil {
-		return nil, err
+	deviceNames := strings.Split(opts[DeviceNames], ",")
+	if opts[DeviceName] != "" {
+		deviceNames = append(deviceNames, opts[DeviceName])
 	}
-	return partitions, nil
+
+	var partitions []*snapshot.PartitionInfo
+	var errs []error
+	for _, deviceName := range deviceNames {
+		partitionsForDevice, err := d.identifyViaDeviceName(deviceName, opts[MountAllPartitions] == "true")
+		if err != nil {
+			errs = append(errs, err)
+			continue
+		}
+		partitions = append(partitions, partitionsForDevice...)
+	}
+
+	return partitions, errors.Join(errs...)
 }
 
 func (d *LinuxDeviceManager) Mount(pi *snapshot.PartitionInfo) (string, error) {
@@ -86,18 +100,21 @@ func (d *LinuxDeviceManager) UnmountAndClose() {
 // we cannot have both LUN and device name provided, those are mutually exclusive
 func validateOpts(opts map[string]string) error {
 	lun := opts[LunOption]
-	deviceName := opts[DeviceName]
+
+	// this is needed only for the validation purposes
+	deviceNames := opts[DeviceNames] + opts[DeviceName]
+
 	mountAll := opts[MountAllPartitions] == "true"
-	if lun != "" && deviceName != "" {
-		return errors.New("both lun and device name provided")
+	if lun != "" && deviceNames != "" {
+		return errors.New("both lun and device names provided")
 	}
 
-	if lun == "" && deviceName == "" {
-		return errors.New("either lun or device name must be provided")
+	if lun == "" && deviceNames == "" {
+		return errors.New("either lun or device names must be provided")
 	}
 
-	if deviceName == "" && mountAll {
-		return errors.New("mount-all-partitions requires a device name")
+	if deviceNames == "" && mountAll {
+		return errors.New("mount-all-partitions requires device names")
 	}
 
 	return nil

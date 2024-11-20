@@ -169,6 +169,9 @@ func (device BlockDevice) GetMountablePartitions(includeAll bool) ([]*PartitionI
 	blockDevices := &BlockDevices{
 		BlockDevices: device.Children,
 	}
+	if len(blockDevices.BlockDevices) == 0 && device.FsType != "" {
+		blockDevices.BlockDevices = append(blockDevices.BlockDevices, device)
+	}
 
 	// sort the candidates by size, so we can pick the largest one
 	sortBlockDevicesBySize(blockDevices.BlockDevices)
