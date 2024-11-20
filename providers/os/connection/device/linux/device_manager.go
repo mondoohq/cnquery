@@ -55,7 +55,10 @@ func (d *LinuxDeviceManager) IdentifyMountTargets(opts map[string]string) ([]*sn
 		return []*snapshot.PartitionInfo{pi}, nil
 	}
 
-	deviceNames := strings.Split(opts[DeviceNames], ",")
+	var deviceNames []string
+	if opts[DeviceNames] != "" {
+		deviceNames = strings.Split(opts[DeviceNames], ",")
+	}
 	if opts[DeviceName] != "" {
 		deviceNames = append(deviceNames, opts[DeviceName])
 	}
