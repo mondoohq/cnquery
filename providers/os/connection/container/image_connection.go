@@ -120,7 +120,13 @@ func NewRegistryImage(id uint32, conf *inventory.Config, asset *inventory.Asset)
 	}
 
 	conn.Metadata.Labels = labels
-	asset.Labels = labels
+	if asset.Labels == nil {
+		asset.Labels = map[string]string{}
+	}
+
+	for k, v := range labels {
+		asset.Labels[k] = v
+	}
 
 	return conn, err
 }
