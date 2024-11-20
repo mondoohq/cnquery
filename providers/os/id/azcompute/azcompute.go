@@ -17,7 +17,7 @@ import (
 
 const (
 	identityUrl                   = "http://169.254.169.254/metadata/instance?api-version=2021-02-01"
-	metadataIdentityScriptWindows = `Invoke-RestMethod -TimeoutSec 15 -Headers @{"Metadata"="true"} -Method GET -URI http://169.254.169.254/metadata/instance?api-version=2021-02-01 -UseBasicParsing | ConvertTo-Json`
+	metadataIdentityScriptWindows = `Invoke-RestMethod -TimeoutSec 5 -Headers @{"Metadata"="true"} -Method GET -URI http://169.254.169.254/metadata/instance?api-version=2021-02-01 -UseBasicParsing | ConvertTo-Json`
 )
 
 func MondooAzureInstanceID(instanceID string) string {
@@ -57,7 +57,7 @@ func (m *commandInstanceMetadata) Identify() (Identity, error) {
 	var instanceDocument string
 	switch {
 	case m.platform.IsFamily(inventory.FAMILY_UNIX):
-		cmd, err := m.conn.RunCommand("curl --retry 3 --retry-delay 1 --connect-timeout 5 --max-time 30 --noproxy '*' -H Metadata:true " + identityUrl)
+		cmd, err := m.conn.RunCommand("curl --retry 5 --retry-delay 1 --max-time 5 --noproxy '*' -H Metadata:true " + identityUrl)
 		if err != nil {
 			return Identity{}, err
 		}
