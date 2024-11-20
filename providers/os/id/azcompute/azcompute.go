@@ -17,7 +17,7 @@ import (
 
 const (
 	identityUrl                   = "http://169.254.169.254/metadata/instance?api-version=2021-02-01"
-	metadataIdentityScriptWindows = `Invoke-RestMethod -TimeoutSec 5 -Headers @{"Metadata"="true"} -Method GET -URI http://169.254.169.254/metadata/instance?api-version=2021-02-01 -UseBasicParsing | ConvertTo-Json`
+	metadataIdentityScriptWindows = `Invoke-RestMethod -TimeoutSec 15 -Headers @{"Metadata"="true"} -Method GET -URI http://169.254.169.254/metadata/instance?api-version=2021-02-01 -UseBasicParsing | ConvertTo-Json`
 )
 
 func MondooAzureInstanceID(instanceID string) string {
