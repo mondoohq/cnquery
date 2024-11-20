@@ -19,6 +19,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/id/ids"
 	"go.mondoo.com/cnquery/v11/providers/os/id/machineid"
 	"go.mondoo.com/cnquery/v11/providers/os/id/sshhostkey"
+	"go.mondoo.com/cnquery/v11/providers/os/resources/smbios"
 )
 
 // default id detectors
@@ -75,8 +76,13 @@ func (s *Service) detect(asset *inventory.Asset, conn shared.Connection) error {
 	}
 
 	if hasDetector(detectors, ids.IdDetector_CloudDetect) {
+		mgr, err := smbios.ResolveManager(conn, asset.Platform)
+		if err != nil {
+			return err
+		}
+
 		log.Debug().Msg("run cloud platform detector")
-		if id, name, related := aws.Detect(conn, asset.Platform); id != "" {
+		if id, name, related := aws.Detect(conn, asset.Platform, mgr); id != "" {
 			asset.PlatformIds = append(asset.PlatformIds, id)
 			if name != "" {
 				// if we weren't able to detect a name for this asset, don't update to an empty value
@@ -85,12 +91,12 @@ func (s *Service) detect(asset *inventory.Asset, conn shared.Connection) error {
 			asset.RelatedAssets = append(asset.RelatedAssets, relatedIds2assets(related)...)
 		}
 
-		if id, _, related := azure.Detect(conn, asset.Platform); id != "" {
+		if id, _, related := azure.Detect(conn, asset.Platform, mgr); id != "" {
 			asset.PlatformIds = append(asset.PlatformIds, id)
 			asset.RelatedAssets = append(asset.RelatedAssets, relatedIds2assets(related)...)
 		}
 
-		if id, _, related := gcp.Detect(conn, asset.Platform); id != "" {
+		if id, _, related := gcp.Detect(conn, asset.Platform, mgr); id != "" {
 			asset.PlatformIds = append(asset.PlatformIds, id)
 			asset.RelatedAssets = append(asset.RelatedAssets, relatedIds2assets(related)...)
 		}

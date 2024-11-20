@@ -8,6 +8,7 @@ import (
 	"errors"
 	"io"
 	"strconv"
+	"sync"
 
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/powershell"
@@ -128,6 +129,8 @@ type smbiosSystemProduct struct {
 // https://docs.microsoft.com/en-us/windows-hardware/drivers/bringup/smbios
 type WindowsSmbiosManager struct {
 	provider shared.Connection
+	smInfo   *SmBiosInfo
+	lock     sync.Mutex
 }
 
 func (s *WindowsSmbiosManager) Name() string {
@@ -135,6 +138,12 @@ func (s *WindowsSmbiosManager) Name() string {
 }
 
 func (s *WindowsSmbiosManager) Info() (*SmBiosInfo, error) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	if s.smInfo != nil {
+		return s.smInfo, nil
+	}
+
 	c, err := s.provider.RunCommand(powershell.Encode(smbiosWindowsScript))
 	if err != nil {
 		return nil, err
@@ -184,6 +193,7 @@ func (s *WindowsSmbiosManager) Info() (*SmBiosInfo, error) {
 			Type:         winBios.Chassis[0].GetChassisTypes().Value()[0],
 		},
 	}
+	s.smInfo = &smInfo
 
 	return &smInfo, nil
 }

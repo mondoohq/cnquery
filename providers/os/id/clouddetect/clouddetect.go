@@ -12,6 +12,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/id/aws"
 	"go.mondoo.com/cnquery/v11/providers/os/id/azure"
 	"go.mondoo.com/cnquery/v11/providers/os/id/gcp"
+	"go.mondoo.com/cnquery/v11/providers/os/resources/smbios"
 )
 
 type (
@@ -20,7 +21,7 @@ type (
 	PlatformID        = string
 )
 
-type detectorFunc func(conn shared.Connection, p *inventory.Platform) (PlatformID, PlatformName, []RelatedPlatformID)
+type detectorFunc func(conn shared.Connection, p *inventory.Platform, smbiosMgr smbios.SmBiosManager) (PlatformID, PlatformName, []RelatedPlatformID)
 
 var detectors = []detectorFunc{
 	aws.Detect,
@@ -35,6 +36,11 @@ type detectResult struct {
 }
 
 func Detect(conn shared.Connection, p *inventory.Platform) (PlatformID, PlatformName, []RelatedPlatformID) {
+	mgr, err := smbios.ResolveManager(conn, p)
+	if err != nil {
+		return "", "", nil
+	}
+
 	wg := sync.WaitGroup{}
 	wg.Add(len(detectors))
 
@@ -43,7 +49,7 @@ func Detect(conn shared.Connection, p *inventory.Platform) (PlatformID, Platform
 		go func(f detectorFunc) {
 			defer wg.Done()
 
-			v, name, related := f(conn, p)
+			v, name, related := f(conn, p, mgr)
 			if v != "" {
 				valChan <- detectResult{
 					platformName:       name,
