@@ -8,8 +8,8 @@ stdout = "x86_64"
 stdout = "4.9.125-linuxkit"
 
 
-[commands.e836b2521559a328a3f268b48fcde22c18a189f6a759923d9a610180507171e8]
-command = "curl --noproxy '*' -H Metadata:true http://169.254.169.254/metadata/instance?api-version=2021-02-01"
+[commands.a419040a7b125c49546d58475ce656422b349fd6cc1e72a57debe0825e707c11]
+command = "curl --retry 5 --retry-delay 1 --connect-timeout 1 --retry-max-time 5 --max-time 10 --noproxy '*' -H Metadata:true http://169.254.169.254/metadata/instance?api-version=2021-02-01"
 stdout = """
 {
     "compute": {
