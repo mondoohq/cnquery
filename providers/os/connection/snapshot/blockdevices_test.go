@@ -264,7 +264,7 @@ func TestGetMountablePartition(t *testing.T) {
 	})
 }
 
-func TestGetMountablePartitions(t *testing.T) {
+func TestGetPartitions(t *testing.T) {
 	t.Run("get all non-mounted partitions", func(t *testing.T) {
 		block := BlockDevice{
 			Name: "sda",
@@ -297,6 +297,28 @@ func TestGetMountablePartitions(t *testing.T) {
 		require.NoError(t, err)
 		expected := []*PartitionInfo{
 			{Name: "/dev/sda", FsType: "xfs", Uuid: "1234", Label: "ROOT"},
+		}
+		require.ElementsMatch(t, expected, parts)
+	})
+
+	t.Run("get all partitions (include mounted)", func(t *testing.T) {
+		block := BlockDevice{
+			Name: "sda",
+			Children: []BlockDevice{
+				// already mounted
+				{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoint: "/"},
+				{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "sda2", MountPoint: ""},
+				{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sda3", MountPoint: ""},
+				// no fs type
+				{Uuid: "12347", FsType: "", Label: "ROOT", Name: "sda4", MountPoint: ""},
+			},
+		}
+		parts, err := block.GetPartitions(true, true)
+		require.NoError(t, err)
+		expected := []*PartitionInfo{
+			{Name: "/dev/sda1", FsType: "xfs", Uuid: "1234", Label: "ROOT", MountPoint: "/"},
+			{Name: "/dev/sda2", FsType: "xfs", Uuid: "12345", Label: "ROOT"},
+			{Name: "/dev/sda3", FsType: "xfs", Uuid: "12346", Label: "ROOT"},
 		}
 		require.ElementsMatch(t, expected, parts)
 	})
