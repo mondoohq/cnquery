@@ -17,6 +17,7 @@ const (
 	DeviceName         = "device-name"
 	DeviceNames        = "device-names"
 	MountAllPartitions = "mount-all-partitions"
+	IncludeMounted     = "include-mounted"
 )
 
 type LinuxDeviceManager struct {
@@ -66,7 +67,7 @@ func (d *LinuxDeviceManager) IdentifyMountTargets(opts map[string]string) ([]*sn
 	var partitions []*snapshot.PartitionInfo
 	var errs []error
 	for _, deviceName := range deviceNames {
-		partitionsForDevice, err := d.identifyViaDeviceName(deviceName, opts[MountAllPartitions] == "true")
+		partitionsForDevice, err := d.identifyViaDeviceName(deviceName, opts[MountAllPartitions] == "true", opts[IncludeMounted] == "true")
 		if err != nil {
 			errs = append(errs, err)
 			continue
@@ -153,7 +154,7 @@ func (c *LinuxDeviceManager) identifyViaLun(lun int) (*snapshot.PartitionInfo, e
 	return device.GetMountablePartition()
 }
 
-func (c *LinuxDeviceManager) identifyViaDeviceName(deviceName string, mountAll bool) ([]*snapshot.PartitionInfo, error) {
+func (c *LinuxDeviceManager) identifyViaDeviceName(deviceName string, mountAll bool, includeMounted bool) ([]*snapshot.PartitionInfo, error) {
 	blockDevices, err := c.volumeMounter.CmdRunner.GetBlockDevices()
 	if err != nil {
 		return nil, err
@@ -166,7 +167,7 @@ func (c *LinuxDeviceManager) identifyViaDeviceName(deviceName string, mountAll b
 
 	if mountAll {
 		log.Debug().Str("device", device.Name).Msg("mounting all partitions")
-		return device.GetMountablePartitions(true)
+		return device.GetMountablePartitions(true, includeMounted)
 	}
 
 	pi, err := device.GetMountablePartition()
