@@ -19,6 +19,8 @@ type PartitionInfo struct {
 	Label string
 	// (optional) UUID is the partition UUID
 	Uuid string
+	// (optional) MountPoint is the partition mount point
+	MountPoint string
 }
 
 func (entry BlockDevice) isNoBootVolume() bool {

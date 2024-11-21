@@ -174,10 +174,15 @@ func (p *DeviceConnection) Partitions() map[string]*snapshot.PartitionInfo {
 // tryDetectAsset tries to detect the OS on a given block device
 func tryDetectAsset(connId uint32, partition *snapshot.PartitionInfo, manager DeviceManager, conf *inventory.Config, asset *inventory.Asset) (*fs.FileSystemConnection, string, error) {
 	log.Debug().Str("name", partition.Name).Str("type", partition.FsType).Msg("mounting partition")
-	scanDir, err := manager.Mount(partition)
-	if err != nil {
-		log.Error().Err(err).Msg("unable to complete mount step")
-		return nil, "", err
+
+	scanDir := partition.MountPoint
+	var err error
+	if scanDir == "" {
+		scanDir, err = manager.Mount(partition)
+		if err != nil {
+			log.Error().Err(err).Msg("unable to complete mount step")
+			return nil, "", err
+		}
 	}
 
 	// create and initialize fs provider

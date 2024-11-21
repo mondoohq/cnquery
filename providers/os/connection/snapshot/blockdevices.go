@@ -163,7 +163,7 @@ func (blockEntries BlockDevices) FindDevice(requested string) (BlockDevice, erro
 }
 
 // Searches all the partitions in the device and finds one that can be mounted. It must be unmounted, non-boot partition
-func (device BlockDevice) GetMountablePartitions(includeAll bool) ([]*PartitionInfo, error) {
+func (device BlockDevice) GetPartitions(includeBoot bool, includeMounted bool) ([]*PartitionInfo, error) {
 	log.Debug().Str("device", device.Name).Msg("get partitions for device")
 
 	blockDevices := &BlockDevices{
@@ -182,11 +182,19 @@ func (device BlockDevice) GetMountablePartitions(includeAll bool) ([]*PartitionI
 			log.Debug().Str("name", partition.Name).Msg("skipping partition without filesystem type")
 			return false
 		}
-		if includeAll {
-			return !partition.isMounted()
+
+		// skip boot partitions unless includeBoot is true
+		if !partition.isNoBootVolume() && !includeBoot {
+			log.Debug().Str("name", partition.Name).Msg("skipping boot partition")
+			return false
 		}
 
-		return partition.isNoBootVolumeAndUnmounted()
+		// skip mounted partitions unless includeMounted is true
+		if partition.isMounted() && !includeMounted {
+			return false
+		}
+
+		return true
 	}
 
 	partitions := []*PartitionInfo{}
@@ -198,7 +206,8 @@ func (device BlockDevice) GetMountablePartitions(includeAll bool) ([]*PartitionI
 			partitions = append(partitions, &PartitionInfo{
 				Name: devFsName, FsType: partition.FsType,
 				Label: partition.Label, Uuid: partition.Uuid,
-				Aliases: partition.Aliases,
+				Aliases:    partition.Aliases,
+				MountPoint: partition.MountPoint,
 			})
 		} else {
 			log.Debug().
@@ -219,7 +228,7 @@ func (device BlockDevice) GetMountablePartitions(includeAll bool) ([]*PartitionI
 // If multiple partitions meet this criteria, the largest one is returned.
 func (device BlockDevice) GetMountablePartition() (*PartitionInfo, error) {
 	// return the largest partition. we can extend this to be a parameter in the future
-	partitions, err := device.GetMountablePartitions(false)
+	partitions, err := device.GetPartitions(false, false)
 	if err != nil {
 		return nil, err
 	}
