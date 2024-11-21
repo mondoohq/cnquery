@@ -277,7 +277,7 @@ func TestGetMountablePartitions(t *testing.T) {
 				{Uuid: "12347", FsType: "", Label: "ROOT", Name: "sda4", MountPoint: ""},
 			},
 		}
-		parts, err := block.GetMountablePartitions(true, false)
+		parts, err := block.GetPartitions(true, false)
 		require.NoError(t, err)
 		expected := []*PartitionInfo{
 			{Name: "/dev/sda2", FsType: "xfs", Uuid: "12345", Label: "ROOT"},
@@ -293,7 +293,7 @@ func TestGetMountablePartitions(t *testing.T) {
 			Label:  "ROOT",
 			Uuid:   "1234",
 		}
-		parts, err := block.GetMountablePartitions(true, false)
+		parts, err := block.GetPartitions(true, false)
 		require.NoError(t, err)
 		expected := []*PartitionInfo{
 			{Name: "/dev/sda", FsType: "xfs", Uuid: "1234", Label: "ROOT"},

@@ -167,7 +167,7 @@ func (c *LinuxDeviceManager) identifyViaDeviceName(deviceName string, mountAll b
 
 	if mountAll {
 		log.Debug().Str("device", device.Name).Msg("mounting all partitions")
-		return device.GetMountablePartitions(true, includeMounted)
+		return device.GetPartitions(true, includeMounted)
 	}
 
 	pi, err := device.GetMountablePartition()

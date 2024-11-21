@@ -163,7 +163,7 @@ func (blockEntries BlockDevices) FindDevice(requested string) (BlockDevice, erro
 }
 
 // Searches all the partitions in the device and finds one that can be mounted. It must be unmounted, non-boot partition
-func (device BlockDevice) GetMountablePartitions(includeBoot bool, includeMounted bool) ([]*PartitionInfo, error) {
+func (device BlockDevice) GetPartitions(includeBoot bool, includeMounted bool) ([]*PartitionInfo, error) {
 	log.Debug().Str("device", device.Name).Msg("get partitions for device")
 
 	blockDevices := &BlockDevices{
@@ -228,7 +228,7 @@ func (device BlockDevice) GetMountablePartitions(includeBoot bool, includeMounte
 // If multiple partitions meet this criteria, the largest one is returned.
 func (device BlockDevice) GetMountablePartition() (*PartitionInfo, error) {
 	// return the largest partition. we can extend this to be a parameter in the future
-	partitions, err := device.GetMountablePartitions(false, false)
+	partitions, err := device.GetPartitions(false, false)
 	if err != nil {
 		return nil, err
 	}
