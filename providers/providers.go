@@ -24,10 +24,10 @@ import (
 	"github.com/spf13/afero"
 	"github.com/ulikunitz/xz"
 	"go.mondoo.com/cnquery/v11/cli/config"
+	"go.mondoo.com/cnquery/v11/logger/zerologadapter"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/resources"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/zerologadapter"
 	"go.mondoo.com/cnquery/v11/providers/core/resources/versions/semver"
 	"golang.org/x/exp/slices"
 )
