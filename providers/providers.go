@@ -20,7 +20,6 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/hashicorp/go-retryablehttp"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"github.com/ulikunitz/xz"
@@ -28,6 +27,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/zerologadapter"
 	"go.mondoo.com/cnquery/v11/providers/core/resources/versions/semver"
 	"golang.org/x/exp/slices"
 )
@@ -191,7 +191,7 @@ func httpClientWithRetry() (*http.Client, error) {
 
 	retryClient := retryablehttp.NewClient()
 	retryClient.RetryMax = 3
-	retryClient.Logger = &ZerologAdapter{logger: log.Logger}
+	retryClient.Logger = zerologadapter.New(log.Logger)
 	retryClient.HTTPClient = &http.Client{
 		Transport: &http.Transport{
 			Proxy: proxyFn,
@@ -929,38 +929,6 @@ func MustLoadSchemaFromFile(name string, path string) *resources.Schema {
 		panic("cannot read schema file: " + path)
 	}
 	return MustLoadSchema(name, raw)
-}
-
-// ZerologAdapter adapts the zerolog logger to the LeveledLogger interface.
-// Converts all retry logs to debug logs
-type ZerologAdapter struct {
-	logger zerolog.Logger
-}
-
-func (z *ZerologAdapter) Error(msg string, keysAndValues ...interface{}) {
-	z.logger.Debug().Fields(convertToFields(keysAndValues...)).Msg(msg)
-}
-
-func (z *ZerologAdapter) Info(msg string, keysAndValues ...interface{}) {
-	z.logger.Debug().Fields(convertToFields(keysAndValues...)).Msg(msg)
-}
-
-func (z *ZerologAdapter) Debug(msg string, keysAndValues ...interface{}) {
-	z.logger.Debug().Fields(convertToFields(keysAndValues...)).Msg(msg)
-}
-
-func (z *ZerologAdapter) Warn(msg string, keysAndValues ...interface{}) {
-	z.logger.Debug().Fields(convertToFields(keysAndValues...)).Msg(msg)
-}
-
-func convertToFields(keysAndValues ...interface{}) map[string]interface{} {
-	fields := make(map[string]interface{})
-	for i := 0; i < len(keysAndValues); i += 2 {
-		if i+1 < len(keysAndValues) {
-			fields[keysAndValues[i].(string)] = keysAndValues[i+1]
-		}
-	}
-	return fields
 }
 
 func LoadAssetUrlSchema() (*inventory.AssetUrlSchema, error) {

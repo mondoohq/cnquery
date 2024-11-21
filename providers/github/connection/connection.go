@@ -19,6 +19,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/zerologadapter"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
 	"golang.org/x/oauth2"
 )
@@ -181,7 +182,7 @@ func newGithubTokenClient(conf *inventory.Config) (*github.Client, error) {
 func newGithubRetryableClient(httpClient *http.Client) *http.Client {
 	retryClient := retryablehttp.NewClient()
 	retryClient.RetryMax = 5
-	retryClient.Logger = &zeroLogAdapter{}
+	retryClient.Logger = zerologadapter.New(log.Logger)
 
 	if httpClient == nil {
 		httpClient = http.DefaultClient
@@ -239,33 +240,4 @@ func newGithubRetryableClient(httpClient *http.Client) *http.Client {
 	}
 
 	return retryClient.StandardClient()
-}
-
-// zeroLogAdapter is the adapter for retryablehttp is outputting debug messages
-type zeroLogAdapter struct{}
-
-func (l *zeroLogAdapter) Msg(msg string, keysAndValues ...interface{}) {
-	var e *zerolog.Event
-	// retry messages should only go to debug
-	e = log.Debug()
-	for i := 0; i < len(keysAndValues); i += 2 {
-		e = e.Interface(keysAndValues[i].(string), keysAndValues[i+1])
-	}
-	e.Msg(msg)
-}
-
-func (l *zeroLogAdapter) Error(msg string, keysAndValues ...interface{}) {
-	l.Msg(msg, keysAndValues...)
-}
-
-func (l *zeroLogAdapter) Info(msg string, keysAndValues ...interface{}) {
-	l.Msg(msg, keysAndValues...)
-}
-
-func (l *zeroLogAdapter) Debug(msg string, keysAndValues ...interface{}) {
-	l.Msg(msg, keysAndValues...)
-}
-
-func (l *zeroLogAdapter) Warn(msg string, keysAndValues ...interface{}) {
-	l.Msg(msg, keysAndValues...)
 }

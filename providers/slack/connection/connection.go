@@ -9,11 +9,11 @@ import (
 	"os"
 
 	"github.com/hashicorp/go-retryablehttp"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/slack-go/slack"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/zerologadapter"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
 )
 
@@ -60,7 +60,7 @@ func NewSlackConnection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 	// retryablehttp is able to handle the Retry-After header, so we do not have to do it ourselves
 	retryClient := retryablehttp.NewClient()
 	retryClient.RetryMax = 5
-	retryClient.Logger = &zeroLogAdapter{}
+	retryClient.Logger = zerologadapter.New(log.Logger)
 	client := slack.New(token, slack.OptionHTTPClient(retryClient.StandardClient()))
 
 	teamID := conf.Options["team-id"]
@@ -101,33 +101,4 @@ func (s *SlackConnection) Client() *slack.Client {
 
 func (p *SlackConnection) TeamInfo() *slack.TeamInfo {
 	return p.teamInfo
-}
-
-// zeroLogAdapter is the adapter for retryablehttp is outputting debug messages
-type zeroLogAdapter struct{}
-
-func (l *zeroLogAdapter) Msg(msg string, keysAndValues ...interface{}) {
-	var e *zerolog.Event
-	// retry messages should only go to debug
-	e = log.Debug()
-	for i := 0; i < len(keysAndValues); i += 2 {
-		e = e.Interface(keysAndValues[i].(string), keysAndValues[i+1])
-	}
-	e.Msg(msg)
-}
-
-func (l *zeroLogAdapter) Error(msg string, keysAndValues ...interface{}) {
-	l.Msg(msg, keysAndValues...)
-}
-
-func (l *zeroLogAdapter) Info(msg string, keysAndValues ...interface{}) {
-	l.Msg(msg, keysAndValues...)
-}
-
-func (l *zeroLogAdapter) Debug(msg string, keysAndValues ...interface{}) {
-	l.Msg(msg, keysAndValues...)
-}
-
-func (l *zeroLogAdapter) Warn(msg string, keysAndValues ...interface{}) {
-	l.Msg(msg, keysAndValues...)
 }
