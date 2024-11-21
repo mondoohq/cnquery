@@ -13,7 +13,7 @@ import (
 var Config = plugin.Provider{
 	Name:    "os",
 	ID:      "go.mondoo.com/cnquery/v9/providers/os",
-	Version: "11.3.9",
+	Version: "11.3.10",
 	ConnectionTypes: []string{
 		shared.Type_Local.String(),
 		shared.Type_SSH.String(),
@@ -298,6 +298,12 @@ var Config = plugin.Provider{
 					Long:   "mount-all-partitions",
 					Type:   plugin.FlagType_Bool,
 					Desc:   "Mount all partitions of the block device",
+					Option: plugin.FlagOption_Hidden,
+				},
+				{
+					Long:   "include-mounted",
+					Type:   plugin.FlagType_Bool,
+					Desc:   "Include mounted block devices in the scan",
 					Option: plugin.FlagOption_Hidden,
 				},
 				{
