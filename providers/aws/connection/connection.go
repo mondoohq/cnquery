@@ -17,9 +17,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/hashicorp/go-retryablehttp"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
+	"go.mondoo.com/cnquery/v11/logger/zerologadapter"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
@@ -102,7 +102,7 @@ func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 	// custom retry client
 	retryClient := retryablehttp.NewClient()
 	retryClient.RetryMax = 5
-	retryClient.Logger = &zeroLogAdapter{}
+	retryClient.Logger = zerologadapter.New(log.Logger)
 	c.awsConfigOptions = append(c.awsConfigOptions, config.WithHTTPClient(retryClient.StandardClient()))
 
 	cfg, err := config.LoadDefaultConfig(context.Background(), c.awsConfigOptions...)
@@ -397,33 +397,4 @@ func (h *AwsConnection) Regions() ([]string, error) {
 	// cache the regions as part of the provider instance
 	h.clientcache.Store("_regions", &CacheEntry{Data: regions})
 	return regions, nil
-}
-
-// zeroLogAdapter is the adapter for retryablehttp is outputting debug messages
-type zeroLogAdapter struct{}
-
-func (l *zeroLogAdapter) Msg(msg string, keysAndValues ...interface{}) {
-	var e *zerolog.Event
-	// retry messages should only go to debug
-	e = log.Debug()
-	for i := 0; i < len(keysAndValues); i += 2 {
-		e = e.Interface(keysAndValues[i].(string), keysAndValues[i+1])
-	}
-	e.Msg(msg)
-}
-
-func (l *zeroLogAdapter) Error(msg string, keysAndValues ...interface{}) {
-	l.Msg(msg, keysAndValues...)
-}
-
-func (l *zeroLogAdapter) Info(msg string, keysAndValues ...interface{}) {
-	l.Msg(msg, keysAndValues...)
-}
-
-func (l *zeroLogAdapter) Debug(msg string, keysAndValues ...interface{}) {
-	l.Msg(msg, keysAndValues...)
-}
-
-func (l *zeroLogAdapter) Warn(msg string, keysAndValues ...interface{}) {
-	l.Msg(msg, keysAndValues...)
 }
