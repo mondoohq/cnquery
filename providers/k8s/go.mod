@@ -19,7 +19,7 @@ require (
 	github.com/google/go-containerregistry v0.20.2 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.33.0
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	go.mondoo.com/cnquery/v11 v11.30.2
 	// pin v0.28.9
 	k8s.io/api v0.28.9
