@@ -7,8 +7,8 @@ go 1.23.0
 require (
 	github.com/facebookincubator/nvdtools v0.1.5
 	github.com/rs/zerolog v1.33.0
-	github.com/stretchr/testify v1.9.0
-	github.com/vmware/govmomi v0.46.1
+	github.com/stretchr/testify v1.10.0
+	github.com/vmware/govmomi v0.46.2
 	go.mondoo.com/cnquery/v11 v11.30.2
 	go.mondoo.com/mondoo-go v0.0.0-20241118222255-5299c9adc97c
 )
