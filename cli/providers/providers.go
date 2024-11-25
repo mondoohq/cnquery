@@ -5,8 +5,6 @@ package providers
 
 import (
 	"encoding/json"
-	"go.mondoo.com/cnquery/v11/utils/piped"
-	"go.mondoo.com/ranger-rpc/status"
 	"os"
 	"strings"
 
@@ -21,6 +19,8 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/recording"
 	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v11/utils/piped"
+	"go.mondoo.com/ranger-rpc/status"
 )
 
 type Command struct {
@@ -318,14 +318,31 @@ func attachFlags(flagset *pflag.FlagSet, flags []plugin.Flag) {
 	}
 }
 
-func getFlagValue(flag plugin.Flag, cmd *cobra.Command) *llx.Primitive {
+func getFlagValueFromConfig(flag plugin.Flag) *llx.Primitive {
 	switch flag.Type {
 	case plugin.FlagType_Bool:
-		v, err := cmd.Flags().GetBool(flag.Long)
-		if err == nil {
+		return llx.BoolPrimitive(viper.GetBool(flag.Long))
+	case plugin.FlagType_Int:
+		return llx.IntPrimitive(viper.GetInt64(flag.Long))
+	case plugin.FlagType_String:
+		return llx.StringPrimitive(viper.GetString(flag.Long))
+	case plugin.FlagType_List:
+		return llx.ArrayPrimitiveT(viper.GetStringSlice(flag.Long), llx.StringPrimitive, types.String)
+	case plugin.FlagType_KeyValue:
+		return llx.MapPrimitiveT(viper.GetStringMapString(flag.Long), llx.StringPrimitive, types.String)
+	default:
+		log.Warn().Msg("unknown flag type for " + flag.Long)
+		return nil
+	}
+}
+
+func getFlagValueFromCobra(flag plugin.Flag, cmd *cobra.Command) *llx.Primitive {
+	var err error
+	switch flag.Type {
+	case plugin.FlagType_Bool:
+		if v, err := cmd.Flags().GetBool(flag.Long); err == nil {
 			return llx.BoolPrimitive(v)
 		}
-		log.Warn().Err(err).Msg("failed to get flag " + flag.Long)
 	case plugin.FlagType_Int:
 		if v, err := cmd.Flags().GetInt(flag.Long); err == nil {
 			return llx.IntPrimitive(int64(v))
@@ -346,6 +363,8 @@ func getFlagValue(flag plugin.Flag, cmd *cobra.Command) *llx.Primitive {
 		log.Warn().Msg("unknown flag type for " + flag.Long)
 		return nil
 	}
+
+	log.Warn().Err(err).Msg("failed to get flag " + flag.Long)
 	return nil
 }
 
@@ -366,6 +385,7 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 		for i := range allFlags {
 			flag := allFlags[i]
 			if flag.ConfigEntry == "-" {
+				log.Debug().Msg("skipping config binding for " + flag.Long)
 				continue
 			}
 
@@ -421,8 +441,16 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 				continue
 			}
 
-			if v := getFlagValue(flag, cmd); v != nil {
-				flagVals[flag.Long] = v
+			// if the provider flag was configured to avoid using the config,
+			// we should instead fetch the flag value from `cobra` directly.
+			if flag.ConfigEntry == "-" {
+				if v := getFlagValueFromCobra(flag, cmd); v != nil {
+					flagVals[flag.Long] = v
+				}
+			} else {
+				if v := getFlagValueFromConfig(flag); v != nil {
+					flagVals[flag.Long] = v
+				}
 			}
 		}
 
