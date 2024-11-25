@@ -8,13 +8,13 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.16.0
 	github.com/cockroachdb/errors v1.11.3
 	github.com/google/uuid v1.6.0
-	github.com/microsoft/kiota-abstractions-go v1.7.0
+	github.com/microsoft/kiota-abstractions-go v1.8.1
 	github.com/microsoft/kiota-authentication-azure-go v1.1.0
-	github.com/microsoftgraph/msgraph-beta-sdk-go v0.112.0
+	github.com/microsoftgraph/msgraph-beta-sdk-go v0.113.0
 	github.com/microsoftgraph/msgraph-sdk-go v1.51.0
 	github.com/microsoftgraph/msgraph-sdk-go-core v1.2.1
 	github.com/rs/zerolog v1.33.0
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	go.mondoo.com/cnquery/v11 v11.30.2
 )
 
@@ -145,7 +145,7 @@ require (
 	github.com/skeema/knownhosts v1.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/pflag v1.0.6-0.20201009195203-85dd5c8bc61c // indirect
-	github.com/std-uritemplate/std-uritemplate/go v1.0.6 // indirect
+	github.com/std-uritemplate/std-uritemplate/go/v2 v2.0.1 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	go.mondoo.com/ranger-rpc v0.6.4 // indirect
 	go.opencensus.io v0.24.0 // indirect
