@@ -6,7 +6,7 @@ go 1.23.0
 
 require (
 	github.com/rs/zerolog v1.33.0
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	github.com/xanzy/go-gitlab v0.114.0
 	go.mondoo.com/cnquery/v11 v11.30.2
 	golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f
