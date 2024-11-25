@@ -11,49 +11,49 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.20
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/acm v1.30.6
-	github.com/aws/aws-sdk-go-v2/service/apigateway v1.27.6
-	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.33.6
-	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.49.0
+	github.com/aws/aws-sdk-go-v2/service/apigateway v1.28.0
+	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.34.0
+	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.51.0
 	github.com/aws/aws-sdk-go-v2/service/backup v1.39.7
-	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.41.1
-	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.45.1
+	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.43.0
+	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.46.1
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.43.1
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.43.3
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.49.1
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.50.6
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.44.4
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.37.1
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.190.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.193.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.36.6
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.27.6
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.50.0
-	github.com/aws/aws-sdk-go-v2/service/efs v1.33.6
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.52.0
+	github.com/aws/aws-sdk-go-v2/service/efs v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/eks v1.52.1
-	github.com/aws/aws-sdk-go-v2/service/elasticache v1.43.3
+	github.com/aws/aws-sdk-go-v2/service/elasticache v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.28.5
-	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.41.2
+	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.32.6
-	github.com/aws/aws-sdk-go-v2/service/emr v1.46.4
+	github.com/aws/aws-sdk-go-v2/service/emr v1.47.0
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.51.2
 	github.com/aws/aws-sdk-go-v2/service/iam v1.38.1
-	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.33.1
+	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/kms v1.37.6
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.66.1
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.69.0
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.35.5
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.35.1
-	github.com/aws/aws-sdk-go-v2/service/rds v1.90.0
+	github.com/aws/aws-sdk-go-v2/service/rds v1.91.0
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.52.1
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.67.1
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.68.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.50.1
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.167.1
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.168.0
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.34.6
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.54.7
-	github.com/aws/aws-sdk-go-v2/service/sns v1.33.5
+	github.com/aws/aws-sdk-go-v2/service/sns v1.33.6
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.37.1
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.55.6
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.56.0
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.6.6
-	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.29.6
+	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.29.7
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.55.5
 	github.com/aws/smithy-go v1.22.1
 	github.com/cockroachdb/errors v1.11.3
@@ -61,21 +61,21 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/afero v1.11.0
-	github.com/stretchr/testify v1.9.0
-	go.mondoo.com/cnquery/v11 v11.30.2
+	github.com/stretchr/testify v1.10.0
+	go.mondoo.com/cnquery/v11 v11.31.1
 	golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f
-	k8s.io/client-go v0.31.2
+	k8s.io/client-go v0.31.3
 )
 
 require (
 	cel.dev/expr v0.18.0 // indirect
 	cloud.google.com/go v0.116.0 // indirect
-	cloud.google.com/go/auth v0.10.2 // indirect
-	cloud.google.com/go/auth/oauth2adapt v0.2.5 // indirect
+	cloud.google.com/go/auth v0.11.0 // indirect
+	cloud.google.com/go/auth/oauth2adapt v0.2.6 // indirect
 	cloud.google.com/go/compute/metadata v0.5.2 // indirect
 	cloud.google.com/go/iam v1.2.2 // indirect
 	cloud.google.com/go/kms v1.20.1 // indirect
-	cloud.google.com/go/longrunning v0.6.2 // indirect
+	cloud.google.com/go/longrunning v0.6.3 // indirect
 	cloud.google.com/go/monitoring v1.21.2 // indirect
 	cloud.google.com/go/secretmanager v1.14.2 // indirect
 	cloud.google.com/go/storage v1.47.0 // indirect
@@ -108,7 +108,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.18.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.24.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.28.5 // indirect
-	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20241118174206-7ab30f848c9b // indirect
+	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20241120205238-92ffab8364f2 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/census-instrumentation/opencensus-proto v0.4.1 // indirect
@@ -233,7 +233,7 @@ require (
 	golang.org/x/text v0.20.0 // indirect
 	golang.org/x/time v0.8.0 // indirect
 	golang.org/x/tools v0.27.0 // indirect
-	google.golang.org/api v0.206.0 // indirect
+	google.golang.org/api v0.209.0 // indirect
 	google.golang.org/genproto v0.0.0-20241118233622-e639e219e697 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20241118233622-e639e219e697 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241118233622-e639e219e697 // indirect

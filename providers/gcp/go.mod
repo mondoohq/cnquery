@@ -13,22 +13,22 @@ require (
 	cloud.google.com/go/iam v1.2.2
 	cloud.google.com/go/kms v1.20.1
 	cloud.google.com/go/logging v1.12.0
-	cloud.google.com/go/longrunning v0.6.2
+	cloud.google.com/go/longrunning v0.6.3
 	cloud.google.com/go/monitoring v1.21.2
 	cloud.google.com/go/pubsub v1.45.1
 	cloud.google.com/go/recommender v1.13.2
-	cloud.google.com/go/run v1.7.0
+	cloud.google.com/go/run v1.8.0
 	cloud.google.com/go/serviceusage v1.9.2
 	github.com/aws/smithy-go v1.22.1
 	github.com/cockroachdb/errors v1.11.3
 	github.com/google/go-containerregistry v0.20.2
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/rs/zerolog v1.33.0
-	github.com/stretchr/testify v1.9.0
-	go.mondoo.com/cnquery/v11 v11.30.2
+	github.com/stretchr/testify v1.10.0
+	go.mondoo.com/cnquery/v11 v11.31.1
 	go.mondoo.com/ranger-rpc v0.6.4
 	golang.org/x/oauth2 v0.24.0
-	google.golang.org/api v0.206.0
+	google.golang.org/api v0.209.0
 	google.golang.org/genproto v0.0.0-20241118233622-e639e219e697
 	google.golang.org/protobuf v1.35.2
 )
@@ -52,8 +52,8 @@ require (
 
 require (
 	cloud.google.com/go v0.116.0 // indirect
-	cloud.google.com/go/auth v0.10.2 // indirect
-	cloud.google.com/go/auth/oauth2adapt v0.2.5 // indirect
+	cloud.google.com/go/auth v0.11.0 // indirect
+	cloud.google.com/go/auth/oauth2adapt v0.2.6 // indirect
 	cloud.google.com/go/binaryauthorization v1.9.2
 	cloud.google.com/go/compute/metadata v0.5.2 // indirect
 	cloud.google.com/go/secretmanager v1.14.2 // indirect
@@ -79,18 +79,18 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.24 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.24 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.190.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.193.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.27.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.36.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.27.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.12.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.34.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.55.6 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.56.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.24.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.28.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.1 // indirect
-	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20241118174206-7ab30f848c9b // indirect
+	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20241120205238-92ffab8364f2 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cloudflare/circl v1.5.0 // indirect
