@@ -6,7 +6,7 @@ go 1.23.0
 
 require (
 	github.com/aristanetworks/goeapi v1.0.0
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	go.mondoo.com/cnquery/v11 v11.30.2
 )
 
