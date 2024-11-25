@@ -13,22 +13,22 @@ require (
 	cloud.google.com/go/iam v1.2.2
 	cloud.google.com/go/kms v1.20.1
 	cloud.google.com/go/logging v1.12.0
-	cloud.google.com/go/longrunning v0.6.2
+	cloud.google.com/go/longrunning v0.6.3
 	cloud.google.com/go/monitoring v1.21.2
 	cloud.google.com/go/pubsub v1.45.1
 	cloud.google.com/go/recommender v1.13.2
-	cloud.google.com/go/run v1.7.0
+	cloud.google.com/go/run v1.8.0
 	cloud.google.com/go/serviceusage v1.9.2
 	github.com/aws/smithy-go v1.22.1
 	github.com/cockroachdb/errors v1.11.3
 	github.com/google/go-containerregistry v0.20.2
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/rs/zerolog v1.33.0
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	go.mondoo.com/cnquery/v11 v11.30.2
 	go.mondoo.com/ranger-rpc v0.6.4
 	golang.org/x/oauth2 v0.24.0
-	google.golang.org/api v0.206.0
+	google.golang.org/api v0.209.0
 	google.golang.org/genproto v0.0.0-20241118233622-e639e219e697
 	google.golang.org/protobuf v1.35.2
 )
