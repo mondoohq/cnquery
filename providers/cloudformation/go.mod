@@ -6,8 +6,8 @@ replace go.mondoo.com/cnquery/v11 => ../..
 
 require (
 	github.com/aws-cloudformation/rain v1.19.0
-	github.com/stretchr/testify v1.9.0
-	go.mondoo.com/cnquery/v11 v11.30.2
+	github.com/stretchr/testify v1.10.0
+	go.mondoo.com/cnquery/v11 v11.31.1
 	go.mondoo.com/ranger-rpc v0.6.4
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -15,12 +15,12 @@ require (
 require (
 	cel.dev/expr v0.18.0 // indirect
 	cloud.google.com/go v0.116.0 // indirect
-	cloud.google.com/go/auth v0.10.2 // indirect
-	cloud.google.com/go/auth/oauth2adapt v0.2.5 // indirect
+	cloud.google.com/go/auth v0.11.0 // indirect
+	cloud.google.com/go/auth/oauth2adapt v0.2.6 // indirect
 	cloud.google.com/go/compute/metadata v0.5.2 // indirect
 	cloud.google.com/go/iam v1.2.2 // indirect
 	cloud.google.com/go/kms v1.20.1 // indirect
-	cloud.google.com/go/longrunning v0.6.2 // indirect
+	cloud.google.com/go/longrunning v0.6.3 // indirect
 	cloud.google.com/go/monitoring v1.21.2 // indirect
 	cloud.google.com/go/secretmanager v1.14.2 // indirect
 	cloud.google.com/go/storage v1.47.0 // indirect
@@ -44,7 +44,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.12.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.34.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.55.6 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.56.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.24.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.28.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.1 // indirect
@@ -155,7 +155,7 @@ require (
 	golang.org/x/text v0.20.0 // indirect
 	golang.org/x/time v0.8.0 // indirect
 	golang.org/x/tools v0.27.0 // indirect
-	google.golang.org/api v0.206.0 // indirect
+	google.golang.org/api v0.209.0 // indirect
 	google.golang.org/genproto v0.0.0-20241118233622-e639e219e697 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20241118233622-e639e219e697 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241118233622-e639e219e697 // indirect
