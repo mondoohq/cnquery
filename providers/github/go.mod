@@ -11,7 +11,7 @@ require (
 	github.com/google/go-github/v62 v62.0.0
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/rs/zerolog v1.33.0
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	go.mondoo.com/cnquery/v11 v11.30.2
 	go.mondoo.com/ranger-rpc v0.6.4
 	golang.org/x/oauth2 v0.24.0
