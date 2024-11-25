@@ -226,7 +226,7 @@ func TestProvidersEnvVarsLoading(t *testing.T) {
 		}
 	})
 
-	t.Run("command with	flags set to not bind to config (ConfigEntry=\"-\")", func(t *testing.T) {
+	t.Run("command with flags set to not bind to config (ConfigEntry=\"-\")", func(t *testing.T) {
 		t.Run("should work via direct flag", func(t *testing.T) {
 			r := test.NewCliTestRunner("./cnquery", "run", "ssh", "localhost", "-c", "ls", "-p", "test", "-v")
 			err := r.Run()
