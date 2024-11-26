@@ -13,7 +13,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "k8s",
 	ID:              "go.mondoo.com/cnquery/v9/providers/k8s",
-	Version:         "11.1.36",
+	Version:         "11.1.37",
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
 		{
