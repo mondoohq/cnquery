@@ -48,6 +48,7 @@ private cloudflare.zone @defaults("name account.name") {
 	// R2
 	r2() cloudflare.r2
 
+  // Workers
 	workers() cloudflare.workers
 
 	one() cloudflare.one
@@ -223,7 +224,7 @@ private cloudflare.workers {
 }
 
 // Cloudflare worker  
-private cloudflare.workers.worker {
+private cloudflare.workers.worker @defaults("id") {
 	// Worker ID  
   id string  
   // Worker etag  
@@ -247,7 +248,7 @@ private cloudflare.workers.worker {
   modifiedOn time  
 }
 
-private cloudflare.workers.page {
+private cloudflare.workers.page @defaults("shortId") {
 	// Worker ID  
 	id string
 	// Worker short ID  
