@@ -13,7 +13,11 @@ const (
 	DiscoveryAuto     = "auto"
 	DiscoveryZones    = "zones"
 	DiscoveryAccounts = "accounts"
-	// DiscoveryWorkers = "workers"
+)
+
+var (
+	PlatformIdCloudflareZone    = "//platformid.api.mondoo.app/runtime/cloudflare/zone/"
+	PlatformIdCloudflareAccount = "//platformid.api.mondoo.app/runtime/cloudflare/account/"
 )
 
 var CloudflareZonePlatform = inventory.Platform{
@@ -57,9 +61,9 @@ func NewCloudflareAccountPlatform(accountId string) *inventory.Platform {
 }
 
 func NewCloudflareZoneIdentifier(zoneId string) string {
-	return "//platformid.api.mondoo.app/runtime/cloudflare/zone/" + zoneId
+	return PlatformIdCloudflareZone + zoneId
 }
 
 func NewCloudflareAccountIdentifier(accountId string) string {
-	return "//platformid.api.mondoo.app/runtime/cloudflare/account/" + accountId
+	return PlatformIdCloudflareAccount + accountId
 }

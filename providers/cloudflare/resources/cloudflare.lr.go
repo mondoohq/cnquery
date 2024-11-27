@@ -23,7 +23,7 @@ func init() {
 			Create: createCloudflare,
 		},
 		"cloudflare.zone": {
-			// to override args, implement: initCloudflareZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initCloudflareZone,
 			Create: createCloudflareZone,
 		},
 		"cloudflare.zone.account": {
