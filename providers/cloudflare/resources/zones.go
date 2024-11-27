@@ -19,7 +19,7 @@ func (c *mqlCloudflareZone) id() (string, error) {
 }
 
 func initCloudflareZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) > 2 {
+	if len(args) > 0 {
 		resource, err := CreateResource(runtime, "cloudflare.zone", args)
 		if err != nil {
 			return nil, nil, err

@@ -39,7 +39,7 @@ func init() {
 			Create: createCloudflareDnsRecord,
 		},
 		"cloudflare.account": {
-			// to override args, implement: initCloudflareAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initCloudflareAccount,
 			Create: createCloudflareAccount,
 		},
 		"cloudflare.account.settings": {
