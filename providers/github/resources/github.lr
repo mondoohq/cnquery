@@ -195,7 +195,7 @@ private github.team @defaults("id name") {
 }
 
 // GitHub collaborator
-private github.collaborator @defaults("user") {
+private github.collaborator @defaults("user.login user.name") {
   // Collaborator ID
   id int
   // Collaborator's user information
@@ -235,7 +235,7 @@ github.packages {
   private() []github.package
   // Internal packages
   internal() []github.package
-} 
+}
 
 // GitHub repository
 private github.repository @defaults("fullName") {
