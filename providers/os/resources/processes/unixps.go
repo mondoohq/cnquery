@@ -54,16 +54,17 @@ type ProcessEntry struct {
 }
 
 func (p ProcessEntry) ToOSProcess() *OSProcess {
-	executable := ""
+	executablePath := ""
 	args, err := shellquote.Split(p.Command)
 	if err == nil && len(args) > 0 {
-		executable = args[0]
+		executablePath = args[0]
 	}
 
+	executablePathParts := strings.Split(executablePath, "/")
 	return &OSProcess{
 		Pid:        p.Pid,
 		Command:    p.Command,
-		Executable: executable,
+		Executable: executablePathParts[len(executablePathParts)-1],
 		State:      "",
 	}
 }
