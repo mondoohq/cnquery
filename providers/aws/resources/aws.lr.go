@@ -2195,6 +2195,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.elb.loadbalancer.createdTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbLoadbalancer).GetCreatedTime()).ToDataRes(types.Time)
 	},
+	"aws.elb.loadbalancer.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbLoadbalancer).GetCreatedAt()).ToDataRes(types.Time)
+	},
 	"aws.elb.loadbalancer.availabilityZones": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbLoadbalancer).GetAvailabilityZones()).ToDataRes(types.Array(types.String))
 	},
@@ -2699,6 +2702,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cloudfront.function.createdTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfrontFunction).GetCreatedTime()).ToDataRes(types.Time)
 	},
+	"aws.cloudfront.function.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontFunction).GetCreatedAt()).ToDataRes(types.Time)
+	},
 	"aws.cloudfront.function.stage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfrontFunction).GetStage()).ToDataRes(types.String)
 	},
@@ -2815,6 +2821,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.s3.bucket.createdTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3Bucket).GetCreatedTime()).ToDataRes(types.Time)
+	},
+	"aws.s3.bucket.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"aws.s3.bucket.grant.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3BucketGrant).GetId()).ToDataRes(types.String)
@@ -3047,6 +3056,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.dynamodb.table.createdTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDynamodbTable).GetCreatedTime()).ToDataRes(types.Time)
 	},
+	"aws.dynamodb.table.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetCreatedAt()).ToDataRes(types.Time)
+	},
 	"aws.dynamodb.table.deletionProtectionEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDynamodbTable).GetDeletionProtectionEnabled()).ToDataRes(types.Bool)
 	},
@@ -3193,6 +3205,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.rds.dbcluster.createdTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbcluster).GetCreatedTime()).ToDataRes(types.Time)
+	},
+	"aws.rds.dbcluster.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"aws.rds.dbcluster.backupRetentionPeriod": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbcluster).GetBackupRetentionPeriod()).ToDataRes(types.Int)
@@ -3391,6 +3406,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.rds.dbinstance.createdTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetCreatedTime()).ToDataRes(types.Time)
+	},
+	"aws.rds.dbinstance.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"aws.rds.dbinstance.port": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetPort()).ToDataRes(types.Int)
@@ -7099,6 +7117,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsElbLoadbalancer).CreatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"aws.elb.loadbalancer.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbLoadbalancer).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.elb.loadbalancer.availabilityZones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElbLoadbalancer).AvailabilityZones, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
@@ -7883,6 +7905,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsCloudfrontFunction).CreatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"aws.cloudfront.function.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontFunction).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.cloudfront.function.stage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudfrontFunction).Stage, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8057,6 +8083,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.s3.bucket.createdTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsS3Bucket).CreatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.s3.bucket.grant.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8419,6 +8449,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsDynamodbTable).CreatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"aws.dynamodb.table.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.dynamodb.table.deletionProtectionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDynamodbTable).DeletionProtectionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -8633,6 +8667,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.rds.dbcluster.createdTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbcluster).CreatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.rds.dbcluster.backupRetentionPeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8905,6 +8943,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.rds.dbinstance.createdTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbinstance).CreatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.rds.dbinstance.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -17527,6 +17569,7 @@ type mqlAwsElbLoadbalancer struct {
 	Attributes plugin.TValue[[]interface{}]
 	VpcId plugin.TValue[string]
 	CreatedTime plugin.TValue[*time.Time]
+	CreatedAt plugin.TValue[*time.Time]
 	AvailabilityZones plugin.TValue[[]interface{}]
 	SecurityGroups plugin.TValue[[]interface{}]
 	HostedZoneId plugin.TValue[string]
@@ -17607,6 +17650,10 @@ func (c *mqlAwsElbLoadbalancer) GetVpcId() *plugin.TValue[string] {
 
 func (c *mqlAwsElbLoadbalancer) GetCreatedTime() *plugin.TValue[*time.Time] {
 	return &c.CreatedTime
+}
+
+func (c *mqlAwsElbLoadbalancer) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 func (c *mqlAwsElbLoadbalancer) GetAvailabilityZones() *plugin.TValue[[]interface{}] {
@@ -19922,6 +19969,7 @@ type mqlAwsCloudfrontFunction struct {
 	Arn plugin.TValue[string]
 	LastModifiedTime plugin.TValue[*time.Time]
 	CreatedTime plugin.TValue[*time.Time]
+	CreatedAt plugin.TValue[*time.Time]
 	Stage plugin.TValue[string]
 	Comment plugin.TValue[string]
 	Runtime plugin.TValue[string]
@@ -19982,6 +20030,10 @@ func (c *mqlAwsCloudfrontFunction) GetLastModifiedTime() *plugin.TValue[*time.Ti
 
 func (c *mqlAwsCloudfrontFunction) GetCreatedTime() *plugin.TValue[*time.Time] {
 	return &c.CreatedTime
+}
+
+func (c *mqlAwsCloudfrontFunction) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 func (c *mqlAwsCloudfrontFunction) GetStage() *plugin.TValue[string] {
@@ -20351,6 +20403,7 @@ type mqlAwsS3Bucket struct {
 	PublicAccessBlock plugin.TValue[interface{}]
 	Exists plugin.TValue[bool]
 	CreatedTime plugin.TValue[*time.Time]
+	CreatedAt plugin.TValue[*time.Time]
 }
 
 // createAwsS3Bucket creates a new instance of this resource
@@ -20518,6 +20571,10 @@ func (c *mqlAwsS3Bucket) GetExists() *plugin.TValue[bool] {
 
 func (c *mqlAwsS3Bucket) GetCreatedTime() *plugin.TValue[*time.Time] {
 	return &c.CreatedTime
+}
+
+func (c *mqlAwsS3Bucket) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 // mqlAwsS3BucketGrant for the aws.s3.bucket.grant resource
@@ -21538,6 +21595,7 @@ type mqlAwsDynamodbTable struct {
 	ContinuousBackups plugin.TValue[interface{}]
 	Tags plugin.TValue[map[string]interface{}]
 	CreatedTime plugin.TValue[*time.Time]
+	CreatedAt plugin.TValue[*time.Time]
 	DeletionProtectionEnabled plugin.TValue[bool]
 	GlobalTableVersion plugin.TValue[string]
 	Items plugin.TValue[int64]
@@ -21627,6 +21685,10 @@ func (c *mqlAwsDynamodbTable) GetTags() *plugin.TValue[map[string]interface{}] {
 
 func (c *mqlAwsDynamodbTable) GetCreatedTime() *plugin.TValue[*time.Time] {
 	return &c.CreatedTime
+}
+
+func (c *mqlAwsDynamodbTable) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 func (c *mqlAwsDynamodbTable) GetDeletionProtectionEnabled() *plugin.TValue[bool] {
@@ -22131,6 +22193,7 @@ type mqlAwsRdsDbcluster struct {
 	StorageType plugin.TValue[string]
 	Status plugin.TValue[string]
 	CreatedTime plugin.TValue[*time.Time]
+	CreatedAt plugin.TValue[*time.Time]
 	BackupRetentionPeriod plugin.TValue[int64]
 	AutoMinorVersionUpgrade plugin.TValue[bool]
 	ClusterDbInstanceClass plugin.TValue[string]
@@ -22254,6 +22317,10 @@ func (c *mqlAwsRdsDbcluster) GetStatus() *plugin.TValue[string] {
 
 func (c *mqlAwsRdsDbcluster) GetCreatedTime() *plugin.TValue[*time.Time] {
 	return &c.CreatedTime
+}
+
+func (c *mqlAwsRdsDbcluster) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 func (c *mqlAwsRdsDbcluster) GetBackupRetentionPeriod() *plugin.TValue[int64] {
@@ -22531,6 +22598,7 @@ type mqlAwsRdsDbinstance struct {
 	Status plugin.TValue[string]
 	AutoMinorVersionUpgrade plugin.TValue[bool]
 	CreatedTime plugin.TValue[*time.Time]
+	CreatedAt plugin.TValue[*time.Time]
 	Port plugin.TValue[int64]
 	Endpoint plugin.TValue[string]
 	MasterUsername plugin.TValue[string]
@@ -22713,6 +22781,10 @@ func (c *mqlAwsRdsDbinstance) GetAutoMinorVersionUpgrade() *plugin.TValue[bool] 
 
 func (c *mqlAwsRdsDbinstance) GetCreatedTime() *plugin.TValue[*time.Time] {
 	return &c.CreatedTime
+}
+
+func (c *mqlAwsRdsDbinstance) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 func (c *mqlAwsRdsDbinstance) GetPort() *plugin.TValue[int64] {
