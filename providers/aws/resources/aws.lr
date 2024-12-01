@@ -2501,7 +2501,7 @@ private aws.ecr.image @defaults("uri region") {
   pushedAt time
   // Size of the image in bytes
   sizeInBytes int
-  // Time of most recent image pull (Amazon only refreshes this data once every 24 hours.)
+  // Time of the most recent image pull (Amazon only refreshes this data once every 24 hours.)
   lastRecordedPullTime time
 }
 
