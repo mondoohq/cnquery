@@ -1223,7 +1223,7 @@ private aws.elb.loadbalancer @defaults("name region elbType scheme vpcId dnsName
   vpcId string
   // Deprecated (use `createdAt` instead)
   createdTime time
-  // Date and time when the load balancer was created
+  // Date and time the load balancer was created
   createdAt time
   // Availability zone where the load balancer runs
   availabilityZones []string
@@ -1675,7 +1675,7 @@ private aws.cloudfront.function @defaults("name status") {
   lastModifiedTime time
   // Deprecated (use `createdAt` instead)
   createdTime time
-  // Date and time when the function was created
+  // Date and time the function was created
   createdAt time
   // Stage that the function is in
   stage string
@@ -1775,7 +1775,7 @@ private aws.s3.bucket @defaults("name location public") {
   exists bool
   // Deprecated (use `createdAt` instead)
   createdTime time
-  // Date the bucket was created
+  // Date and time the bucket was created
   createdAt time
 }
 
@@ -1985,7 +1985,7 @@ private aws.dynamodb.table @defaults("name region") {
   tags() map[string]string
   // Deprecated (use `createdAt` instead)
   createdTime time
-  // Creation time of the table
+  // Date and time the table was created
   createdAt time
   // Whether deletion protection is enabled
   deletionProtectionEnabled bool
@@ -2105,7 +2105,7 @@ private aws.rds.dbcluster @defaults("id region") {
   status string
   // Deprecated (use `createdAt` instead)
   createdTime time
-  // Creation date of the RDS cluster
+  // Date and time the RDS cluster was created
   createdAt time
   // Number of days automated snapshots are retained
   backupRetentionPeriod int
@@ -2247,7 +2247,7 @@ private aws.rds.dbinstance @defaults("id region engine engineVersion") {
   autoMinorVersionUpgrade bool
   // Deprecated (use `createdAt` instead)
   createdTime time
-  // Creation date of the RDS instance
+  // Date and time the RDS instance was created
   createdAt time
   // Port that the database instance listens on. If the database instance is part of a DB cluster, this can be a different port than the DB cluster port.
   port int
