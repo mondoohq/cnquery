@@ -2497,11 +2497,11 @@ private aws.ecr.image @defaults("uri region") {
   arn string
   // uri for the image repository
   uri string
-  // The time the image was pushed
+  // Time the image was pushed
   pushedAt time
-  // The size of the image in bytes
+  // Size of the image in bytes
   sizeInBytes int
-  // The last time Amazon recorded an image pull. Note: Amazon only refreshes this data once every 24 hours so it is not fully granular.
+  // Time of most recent image pull (Amazon only refreshes this data once every 24 hours.)
   lastRecordedPullTime time
 }
 
