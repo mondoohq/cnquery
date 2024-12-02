@@ -54,7 +54,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 
 	// token
 	if x, ok := flags["token"]; ok {
-		conf.Options[connection.OPTION_API_TOKEN] = x.String()
+		conf.Options[connection.OPTION_API_TOKEN] = string(x.GetValue())
 	}
 
 	asset := inventory.Asset{
