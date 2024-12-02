@@ -243,7 +243,8 @@ providers/install: \
 	providers/install/shodan \
 	providers/install/ansible \
 	providers/install/snowflake \
-	providers/install/mondoo
+	providers/install/mondoo \
+	providers/build/cloudflare
 
 providers/build/mock: providers/lr
 	./lr go providers-sdk/v1/testutils/mockprovider/resources/mockprovider.lr
@@ -618,6 +619,11 @@ lr/docs/markdown: providers/lr
 		--description "The Mondoo resource pack lets you interact with Mondoo Platform and its assets and resources." \
 		--docs-file providers/mondoo/resources/mondoo.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/mondoo-pack
+	./lr markdown providers/cloudflare/resources/cloudflare.lr \
+		--pack-name "Cloudflare" \
+		--description "The Cloudflare resource pack lets you use MQL to query and assess the security of your Cloureflare configuration." \
+		--docs-file providers/cloudflare/resources/cloudflare.lr.manifest.yaml \
+		--output ../docs/docs/mql/resources/cloudflare-pack
 
 lr/docs/stats:
 	@echo "Please remember to re-run before using this:"
