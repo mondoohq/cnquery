@@ -24,7 +24,14 @@ var Config = plugin.Provider{
 				connection.DiscoveryZones,
 				connection.DiscoveryAccounts,
 			},
-			Flags: []plugin.Flag{},
+			Flags: []plugin.Flag{
+				{
+					Long:    "token",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "Cloudflare access token",
+				},
+			},
 		},
 	},
 }

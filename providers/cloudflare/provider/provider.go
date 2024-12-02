@@ -52,6 +52,11 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 	conf.Discover = &inventory.Discovery{Targets: discoverTargets}
 
+	// token
+	if x, ok := flags["token"]; ok {
+		conf.Options[connection.OPTION_API_TOKEN] = x.String()
+	}
+
 	asset := inventory.Asset{
 		Connections: []*inventory.Config{conf},
 	}

@@ -35,7 +35,7 @@ func NewCloudflareConnection(id uint32, asset *inventory.Asset, conf *inventory.
 	if token == "" {
 		token = os.Getenv("CLOUDFLARE_TOKEN")
 		if token == "" {
-			return nil, errors.New("API Token is required")
+			return nil, errors.New("a valid Cloudflare authentication is required, pass --token '<yourtoken>', set CLOUDFLARE_TOKEN environment variable")
 		}
 	}
 
