@@ -1,0 +1,203 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+resources:
+  cloudflare:
+    fields:
+      accounts: {}
+      zones: {}
+    min_mondoo_version: 9.0.0
+  cloudflare.account:
+    fields:
+      createdOn: {}
+      id: {}
+      liveInputs: {}
+      name: {}
+      settings: {}
+      videos: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  cloudflare.account.settings:
+    fields:
+      enforceTwoFactor: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  cloudflare.corsHeaders:
+    fields:
+      allowAllHeaders: {}
+      allowAllMethods: {}
+      allowAllOrigins: {}
+      allowCredentials: {}
+      allowedHeaders: {}
+      allowedMethods: {}
+      allowedOrigins: {}
+      maxAge: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  cloudflare.dns:
+    fields:
+      records: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  cloudflare.dns.record:
+    fields:
+      comment: {}
+      content: {}
+      createdOn: {}
+      id: {}
+      modifiedOn: {}
+      name: {}
+      proxiable: {}
+      proxied: {}
+      tags: {}
+      ttl: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  cloudflare.one:
+    fields:
+      apps: {}
+      identityProviders: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  cloudflare.one.app:
+    fields:
+      allowedIdentityProviders: {}
+      appLauncherVisible: {}
+      aud: {}
+      autoRedirectToIdentity: {}
+      corsHeaders: {}
+      createdAt: {}
+      customDenyMessage: {}
+      customDenyUrl: {}
+      domain: {}
+      enableBindingCookie: {}
+      httpOnlyCookieAttribute: {}
+      id: {}
+      logoUrl: {}
+      name: {}
+      optionsPreflightBypass: {}
+      sameSiteCookieAttribute: {}
+      serviceAuth401Redirect: {}
+      sessionDuration: {}
+      skip_interstitial: {}
+      skipInterstitial: {}
+      type: {}
+      updatedAt: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  cloudflare.one.idp:
+    fields:
+      id: {}
+      name: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  cloudflare.r2:
+    fields:
+      buckets: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  cloudflare.r2.bucket:
+    fields:
+      createdOn: {}
+      location: {}
+      name: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  cloudflare.streams:
+    fields: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  cloudflare.streams.liveInput:
+    fields:
+      deleteRecordingAfterDays: {}
+      id: {}
+      name: {}
+      uid: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  cloudflare.streams.video:
+    fields:
+      creator: {}
+      dash: {}
+      duration: {}
+      height: {}
+      hls: {}
+      id: {}
+      liveInput: {}
+      name: {}
+      preview: {}
+      ready: {}
+      requireSignedUrls: {}
+      scheduledDeletion: {}
+      size: {}
+      thumbnail: {}
+      thumbnailTimestampPct: {}
+      uid: {}
+      uploaded: {}
+      width: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  cloudflare.workers:
+    fields:
+      pages: {}
+      workers: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  cloudflare.workers.page:
+    fields:
+      aliases: {}
+      createdOn: {}
+      environment: {}
+      id: {}
+      modifiedOn: {}
+      productionBranch: {}
+      projectId: {}
+      projectName: {}
+      shortId: {}
+      url: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  cloudflare.workers.worker:
+    fields:
+      createdOn: {}
+      deploymentId: {}
+      etag: {}
+      id: {}
+      lastDeployedFrom: {}
+      logPush: {}
+      modifiedOn: {}
+      pipelineHash: {}
+      placementMode: {}
+      size: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  cloudflare.zone:
+    fields:
+      account: {}
+      createdOn: {}
+      dns: {}
+      id: {}
+      liveInputs: {}
+      modifiedOn: {}
+      name: {}
+      nameServers: {}
+      one: {}
+      originalNameServers: {}
+      paused: {}
+      r2: {}
+      status: {}
+      type: {}
+      videos: {}
+      workers: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  cloudflare.zone.account:
+    fields:
+      email: {}
+      id: {}
+      name: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: 9.0.0

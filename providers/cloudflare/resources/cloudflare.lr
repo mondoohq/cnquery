@@ -1,0 +1,330 @@
+option provider = "go.mondoo.com/cnquery/v11/providers/cloudflare"
+option go_package = "go.mondoo.com/cnquery/v11/providers/cloudflare/resources"
+
+// Cloudflare provider
+cloudflare {
+	// List all zones
+	zones() []cloudflare.zone 
+
+	// List available accounts
+	accounts() []cloudflare.account
+}
+
+// Cloudflare DNS zone
+private cloudflare.zone @defaults("name account.name") {
+	// Zone identifier
+	id string 
+	// Zone name
+	name string 
+	// Nameservers for this zone
+	nameServers []string 
+	// Original name servers
+	originalNameServers []string 
+
+	// The current status of the zone (initializing, pending, active, or moved)  
+  status string  
+  // Whether the zone is paused  
+  paused bool  
+  // DNS zone type (full or partial)  
+  type string  
+
+	// Time the zone was created
+	createdOn time 
+	// Time the zone was last modified
+	modifiedOn time 
+
+	// Zone owner account
+  account cloudflare.zone.account 
+
+	// DNS records associated with the zone
+	dns() cloudflare.dns
+
+	// Live inputs 
+	liveInputs() []cloudflare.streams.liveInput
+
+	// Videos
+	videos() []cloudflare.streams.video
+
+	// R2
+	r2() cloudflare.r2
+
+  // Workers
+	workers() cloudflare.workers
+
+	one() cloudflare.one
+}
+
+private cloudflare.zone.account @defaults("name") {
+	// Account identifier
+	id string 
+	// Account name
+	name string 
+	// Account type
+	type string 
+	// Account email
+	email string
+}
+
+private cloudflare.dns {
+	records() []cloudflare.dns.record 
+}
+
+// DNS record
+private cloudflare.dns.record @defaults("type content name") {
+	// Cloudflare internal ID
+	id string 
+
+        // Record name
+	name string
+	// Comment
+	comment string
+	// Tags
+	tags []string
+	// Whether the record is proxied (false indicated DNS only)
+	proxied bool
+	// Whether the record can be proxied
+	proxiable bool
+
+	// Type of record (A, AAAA, CNAME, etc.)
+	type string 
+	// Content of the record (hostname, IP Address, etc.)
+	content string 
+	// Time to live (in seconds)
+	ttl int 
+
+	// Time the record was created
+	createdOn time
+	// Time the record was last modified
+	modifiedOn time
+}
+
+// Cloudflare account
+private cloudflare.account @defaults("name") {
+	// Cloudflare account identifier
+	id string
+
+	// Account name
+	name string
+
+	// Settings
+	settings cloudflare.account.settings
+
+	// Time the account was created
+	createdOn time
+
+	// Live inputs 
+	liveInputs() []cloudflare.streams.liveInput
+
+	// Videos
+	videos() []cloudflare.streams.video
+}
+
+// Account settings
+private cloudflare.account.settings {
+	// Whether membership in this account requires that two-factor authentication is enabled
+	enforceTwoFactor bool
+}
+
+private cloudflare.streams {}
+
+// Cloudflare live input (stream)
+private cloudflare.streams.liveInput @defaults("uid name") {
+	// cnquery resource ID
+	id string
+
+	// Unique identifier
+	uid string
+
+	// Input name
+	name string
+
+	// Number of days after which to delete the recording
+	deleteRecordingAfterDays int
+}
+
+// Cloudflare videos and recordings
+private cloudflare.streams.video @defaults("name id") {
+	// cnquery resource id
+	id string
+
+	// Unique identifier
+	uid string
+
+	// Name
+	name string
+
+	// Creator ID
+	creator string
+
+	// Video duration in seconds
+	duration float
+
+	// Height (px)
+	height int
+
+	// Width (px)
+	width int
+
+	// Live input ID
+	liveInput string
+
+	// Dash URL
+	dash string
+
+	// HLS URL
+	hls string
+
+	// Preview URL
+	preview string
+
+	// Whether the video is ready to stream
+	ready bool
+
+	// Whether the video can be a accessed using the UID
+	requireSignedUrls bool
+
+	// Date and time at which the video will be deleted (No value or a null value means that the video won't be deleted.)
+	scheduledDeletion time
+
+	// Size in Bytes
+	size int
+
+	// Thumbnail URL
+	thumbnail string
+
+	// Timestamp for a thumbnail image, calculated as a percentage value of the video's duration (To convert from a second-wise timestamp to a percentage, divide the desired timestamp by the total duration of the video. If this value is not set, the default thumbnail image is taken from 0s of the video.)
+	thumbnailTimestampPct float
+
+	// Time the video was uploaded
+	uploaded time
+}
+
+// Cloudflare R2
+private cloudflare.r2 {
+	buckets() []cloudflare.r2.bucket
+}
+
+// Cloudflare R2 bucket
+private cloudflare.r2.bucket {
+ 	// Bucket name  
+  name string  
+  // Bucket location  
+  location string  
+  // Time the bucket was created  
+  createdOn time  
+}
+
+// Cloudflare workers
+private cloudflare.workers {
+	// List all workers
+	workers() []cloudflare.workers.worker
+
+	// List all pages
+	pages() []cloudflare.workers.page
+}
+
+// Cloudflare worker  
+private cloudflare.workers.worker @defaults("id") {
+	// Worker ID  
+  id string  
+  // Worker etag  
+  etag string  
+  // Worker size  
+  size int  
+  // Deployment for the worker  
+  deploymentId string  
+  // CI/CD pipeline for the worker  
+  pipelineHash string  
+  // Placement mode for the worker (e.g., smart)  
+  placementMode string  
+
+  // Worker was last deployed from  
+  lastDeployedFrom string  
+  // Whether LogPush is enabled for the worker  
+  logPush bool  
+  // Time the worker was created
+  createdOn time  
+  // Time the worker was last modified
+  modifiedOn time  
+}
+
+private cloudflare.workers.page @defaults("shortId") {
+	// Worker ID  
+	id string
+	// Worker short ID  
+	shortId string
+	projectId string
+	projectName string
+	environment string
+	url string
+
+	aliases []string
+
+	productionBranch string
+
+  // Time the worker was created
+	createdOn time
+  // Time the worker was last modified
+	modifiedOn time
+}
+
+private cloudflare.one {
+	apps() []cloudflare.one.app // Cloudflare Zero Trust applications  
+	identityProviders() []cloudflare.one.idp // Identity providers
+}
+
+// Cloudflare One application 
+private cloudflare.one.app @defaults("name id") {
+	id string // UUID
+	aud string // Audience tag
+
+	name string // Name of the application  
+	domain string // Domain of the application  
+
+	allowedIdentityProviders []string // Allowed identity providers
+	appLauncherVisible bool // Whether the application displays in the App Launcher  
+	autoRedirectToIdentity bool // Whether users skip the identity provider selection step during login  
+
+	corsHeaders cloudflare.corsHeaders // CORS headers
+	optionsPreflightBypass bool // Whether preflight requests are allowed to bypass Access authentication and go directly to the origin (can't be true if corsHeaders is set)  
+
+	customDenyMessage string // Custom error message shown to a user when they are denied access to the application
+	customDenyUrl string // Custom URL to redirect a user to when they are denied access to the application  
+	serviceAuth401Redirect bool // Whether to return a 401 status code when the request is blocked by a Service Auth policy
+
+	enableBindingCookie bool // Whether to allow the binding cookie, which increases security against compromised authorization tokens and CSRF attacks
+	httpOnlyCookieAttribute bool // Whether the HttpOnly cookie attribute, which increases security against XSS attacks, is enabled
+	sameSiteCookieAttribute string // SameSite cookie setting, which provides increased security against CSRF attacks
+
+	logoUrl string // URL of the application's logo
+
+	sessionDuration string // Amount of time that tokens issued for this application will be valid (Format is 300ms or 2h45m. Valid time units are: ns, us (or µs), ms, s, m, and h.)  
+
+	skipInterstitial bool // Whether automatic authentication through cloudflared is enabled
+
+	type string // Application type
+
+	// Time the application was created  
+	createdAt time
+	// Time the application was last updated
+	updatedAt time
+}
+
+private cloudflare.corsHeaders {
+	allowAllHeaders bool
+	allowAllMethods bool
+	allowAllOrigins bool
+	allowCredentials bool
+
+	allowedHeaders []string
+	allowedMethods []string
+	allowedOrigins []string
+
+	maxAge int // The maximum number of seconds the results of a preflight request can be cached.
+}
+
+private cloudflare.one.idp @defaults("name") {
+	id string // UUID
+	name string // The name of the identity provider, shown to users on the login page.
+	type string // The type of the identity provider.
+}

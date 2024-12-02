@@ -212,7 +212,8 @@ providers/build: \
 	providers/build/shodan \
 	providers/build/ansible \
 	providers/build/snowflake \
-	providers/build/mondoo
+	providers/build/mondoo \
+	providers/build/cloudflare
 
 .PHONY: providers/install
 # Note we need \ to escape the target line into multiple lines
@@ -279,6 +280,11 @@ providers/build/github: providers/lr
 	@$(call buildProvider, providers/github)
 providers/install/github:
 	@$(call installProvider, providers/github)
+
+providers/build/cloudflare: providers/lr
+	@$(call buildProvider, providers/cloudflare)
+providers/install/cloudflare:
+	@$(call installProvider, providers/cloudflare)
 
 providers/build/gitlab: providers/lr
 	@$(call buildProvider, providers/gitlab)
