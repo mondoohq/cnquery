@@ -244,7 +244,7 @@ providers/install: \
 	providers/install/ansible \
 	providers/install/snowflake \
 	providers/install/mondoo \
-	providers/build/cloudflare
+	providers/install/cloudflare
 
 providers/build/mock: providers/lr
 	./lr go providers-sdk/v1/testutils/mockprovider/resources/mockprovider.lr
