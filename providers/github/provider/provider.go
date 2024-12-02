@@ -72,7 +72,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		token = os.Getenv("GITHUB_TOKEN")
 	}
 	if token == "" && !isAppAuth {
-		return nil, errors.New("a valid GitHub authentication is required, pass --token '<yourtoken>', set GITHUB_TOKEN environment variable or provider GitHub App credentials")
+		return nil, errors.New("a valid GitHub authentication is required, pass --token '<yourtoken>', set GITHUB_TOKEN environment variable or provide GitHub App credentials")
 	}
 	if token != "" {
 		conf.Credentials = append(conf.Credentials, vault.NewPasswordCredential("", token))
