@@ -140,6 +140,55 @@ private microsoft.user @defaults("id displayName userPrincipalName") {
   authMethods() microsoft.user.authenticationMethods
   // Whether MFA is enabled for the user.
   mfaEnabled() bool
+  // The user creation type.
+  creationType string
+  // The user's identities.
+  identities []microsoft.user.identity
+  // The user's audit-log.
+  auditlog() microsoft.user.auditlog
+}
+
+// Microsoft User Audit log
+private microsoft.user.auditlog {
+  // The user's identifier.
+  userId string
+  // The user's sign-in entries. Only entries from the last 24 hours are fetched and up to 50 at most.
+  // Note that only interactive sign-in entries are currently returned.
+  signins() []microsoft.user.signin
+  // The user's last interactive sign-in.
+  lastInteractiveSignIn() microsoft.user.signin 
+  // The user's last non-interactive sign-in. Only entries from the last 24 hours are currently considered.
+  lastNonInteractiveSignIn() microsoft.user.signin 
+}
+
+// Microsoft User Identity
+private microsoft.user.identity @defaults("issuerAssignedId") {
+  // The id as assigned by the issuer.
+  issuerAssignedId string
+  // The identity issuer.
+  issuer string
+  // The sign-in type for the identity (e.g. 'federated', 'userPrincipalName')
+  signInType string
+}
+
+// Microsoft User Sign in
+private microsoft.user.signin {
+  // The sign-in entry's identifier.
+  id string
+  // The creation time of the sign-in entry.
+  createdDateTime time
+  // The id of the user.
+  userId string
+  // The display name of the user.
+  userDisplayName string
+  // The client app, used to perform the sign-in.
+  clientAppUsed string
+  // The app's display name.
+  appDisplayName string
+  // The resource's display name.
+  resourceDisplayName string
+  // Whether the sign-in was interactive.
+  interactive bool
 }
 
 // Microsoft Entra authentication methods
