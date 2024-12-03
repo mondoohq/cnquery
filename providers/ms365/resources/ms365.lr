@@ -138,56 +138,55 @@ private microsoft.user @defaults("id displayName userPrincipalName") {
   contact() dict
   // Authentication information
   authMethods() microsoft.user.authenticationMethods
-  // Whether MFA is enabled for the user.
+  // Whether MFA is enabled for the user
   mfaEnabled() bool
-  // The user creation type.
+  // The user's creation type
   creationType string
-  // The user's identities.
+  // The user's identities
   identities []microsoft.user.identity
-  // The user's audit-log.
+  // The user's audit log
   auditlog() microsoft.user.auditlog
 }
 
-// Microsoft User Audit log
+// Microsoft user audit log
 private microsoft.user.auditlog {
-  // The user's identifier.
+  // The user's ID
   userId string
-  // The user's sign-in entries. Only entries from the last 24 hours are fetched and up to 50 at most.
-  // Note that only interactive sign-in entries are currently returned.
+  // The user's interactive sign-in entries (a maximum of 50 entries from the last 24 hours only)
   signins() []microsoft.user.signin
-  // The user's last interactive sign-in.
+  // The user's last interactive sign-in
   lastInteractiveSignIn() microsoft.user.signin 
-  // The user's last non-interactive sign-in. Only entries from the last 24 hours are currently considered.
+  // The user's last non-interactive sign-in (from the last 24 hours only)
   lastNonInteractiveSignIn() microsoft.user.signin 
 }
 
-// Microsoft User Identity
+// Microsoft user identity
 private microsoft.user.identity @defaults("issuerAssignedId") {
-  // The id as assigned by the issuer.
+  // The identity as assigned by the issuer
   issuerAssignedId string
-  // The identity issuer.
+  // The identity issuer
   issuer string
-  // The sign-in type for the identity (e.g. 'federated', 'userPrincipalName')
+  // The sign-in type for the identity (e.g., 'federated' or 'userPrincipalName')
   signInType string
 }
 
-// Microsoft User Sign in
+// Microsoft user sign-in
 private microsoft.user.signin {
-  // The sign-in entry's identifier.
+  // The sign-in entry's identifier
   id string
-  // The creation time of the sign-in entry.
+  // The date and time the sign-in entry was created
   createdDateTime time
-  // The id of the user.
+  // The ID of the user
   userId string
-  // The display name of the user.
+  // The display name of the user
   userDisplayName string
-  // The client app, used to perform the sign-in.
+  // The client app used to perform the sign-in
   clientAppUsed string
-  // The app's display name.
+  // The display name of the client app used to perform the sign-in
   appDisplayName string
-  // The resource's display name.
+  // The resource's display name
   resourceDisplayName string
-  // Whether the sign-in was interactive.
+  // Whether the sign-in was interactive
   interactive bool
 }
 
