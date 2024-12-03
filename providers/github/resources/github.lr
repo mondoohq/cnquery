@@ -205,7 +205,7 @@ private github.collaborator @defaults("user") {
 }
 
 // GitHub package
-private github.package @defaults("id name") {
+private github.package @defaults("name packageType visibility repository.fullName") {
   // Package ID
   id int
   // Package name
@@ -235,7 +235,7 @@ github.packages {
   private() []github.package
   // Internal packages
   internal() []github.package
-} 
+}
 
 // GitHub repository
 private github.repository @defaults("fullName") {
