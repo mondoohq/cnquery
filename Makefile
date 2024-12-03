@@ -621,7 +621,7 @@ lr/docs/markdown: providers/lr
 		--output ../docs/docs/mql/resources/mondoo-pack
 	./lr markdown providers/cloudflare/resources/cloudflare.lr \
 		--pack-name "Cloudflare" \
-		--description "The Cloudflare resource pack lets you use MQL to query and assess the security of your Cloureflare configuration." \
+		--description "The Cloudflare resource pack lets you use MQL to query and assess the security of your Cloudflare configuration." \
 		--docs-file providers/cloudflare/resources/cloudflare.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/cloudflare-pack
 

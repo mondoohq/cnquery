@@ -85,9 +85,9 @@ private cloudflare.dns.record @defaults("type content name") {
 	// Whether the record can be proxied
 	proxiable bool
 
-	// Type of record (A, AAAA, CNAME, etc.)
+	// Type of record (e.g., A, AAAA, or CNAME)
 	type string 
-	// Content of the record (hostname, IP Address, etc.)
+	// Content of the record (e.g., hostname or IP Address)
 	content string 
 	// Time to live (in seconds)
 	ttl int 
