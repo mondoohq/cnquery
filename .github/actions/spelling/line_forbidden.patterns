@@ -103,6 +103,9 @@
 # Product Names
 #
 
+# s.b. Cloudflare
+\bCloudFlare\b
+
 # s.b. Memcached
 \bMemCached\b
 
