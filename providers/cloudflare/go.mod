@@ -5,7 +5,7 @@ replace go.mondoo.com/cnquery/v11 => ../..
 go 1.23.0
 
 require (
-	github.com/cloudflare/cloudflare-go v0.104.0
+	github.com/cloudflare/cloudflare-go v0.110.0
 	go.mondoo.com/cnquery/v11 v11.22.0
 )
 
