@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/microsoftgraph/msgraph-beta-sdk-go/auditlogs"
 	betamodels "github.com/microsoftgraph/msgraph-beta-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/reports"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
@@ -23,6 +24,7 @@ import (
 var userSelectFields = []string{
 	"id", "accountEnabled", "city", "companyName", "country", "createdDateTime", "department", "displayName", "employeeId", "givenName",
 	"jobTitle", "mail", "mobilePhone", "otherMails", "officeLocation", "postalCode", "state", "streetAddress", "surname", "userPrincipalName", "userType",
+	"creationType", "identities",
 }
 
 // users reads all users from Entra ID
@@ -169,6 +171,21 @@ func initMicrosoftUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 }
 
 func newMqlMicrosoftUser(runtime *plugin.Runtime, u models.Userable) (*mqlMicrosoftUser, error) {
+	identities := []interface{}{}
+	for idx, userId := range u.GetIdentities() {
+		id := fmt.Sprintf("%s-%d", *u.GetId(), idx)
+		identity, err := CreateResource(runtime, "microsoft.user.identity", map[string]*llx.RawData{
+			"signInType":       llx.StringDataPtr(userId.GetSignInType()),
+			"issuer":           llx.StringDataPtr(userId.GetIssuer()),
+			"issuerAssignedId": llx.StringDataPtr(userId.GetIssuerAssignedId()),
+			"__id":             llx.StringData(id),
+		})
+		if err != nil {
+			return nil, err
+		}
+		identities = append(identities, identity)
+	}
+
 	graphUser, err := CreateResource(runtime, "microsoft.user",
 		map[string]*llx.RawData{
 			"__id":              llx.StringDataPtr(u.GetId()),
@@ -193,6 +210,8 @@ func newMqlMicrosoftUser(runtime *plugin.Runtime, u models.Userable) (*mqlMicros
 			"surname":           llx.StringDataPtr(u.GetSurname()),
 			"userPrincipalName": llx.StringDataPtr(u.GetUserPrincipalName()),
 			"userType":          llx.StringDataPtr(u.GetUserType()),
+			"creationType":      llx.StringDataPtr(u.GetCreationType()),
+			"identities":        llx.ArrayData(identities, types.ResourceLike),
 		})
 	if err != nil {
 		return nil, err
@@ -272,6 +291,125 @@ func (a *mqlMicrosoftUser) populateJobContactData() error {
 	a.Contact = plugin.TValue[interface{}]{Data: userContact, State: plugin.StateIsSet}
 
 	return nil
+}
+
+func (a *mqlMicrosoftUser) auditlog() (*mqlMicrosoftUserAuditlog, error) {
+	res, err := CreateResource(a.MqlRuntime, "microsoft.user.auditlog", map[string]*llx.RawData{
+		"__id":   llx.StringData(a.Id.Data),
+		"userId": llx.StringData(a.Id.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlMicrosoftUserAuditlog), nil
+}
+
+func (a *mqlMicrosoftUserAuditlog) signins() ([]interface{}, error) {
+	ctx := context.Background()
+	now := time.Now()
+	dayAgo := now.AddDate(0, 0, -1)
+	filter := fmt.Sprintf(
+		"createdDateTime ge %s and createdDateTime lt %s and (userId eq '%s' or contains(tolower(userDisplayName), '%s'))",
+		dayAgo.Format(time.RFC3339),
+		now.Format(time.RFC3339),
+		a.UserId.Data,
+		a.UserId.Data)
+	top := int32(50)
+	res := []interface{}{}
+	signIns, err := fetchUserSignins(ctx, a.MqlRuntime, filter, top)
+	if err != nil {
+		return nil, err
+	}
+	for _, s := range signIns {
+		res = append(res, s)
+	}
+	return res, nil
+}
+
+func fetchUserSignins(ctx context.Context, runtime *plugin.Runtime, filter string, top int32) ([]*mqlMicrosoftUserSignin, error) {
+	conn := runtime.Connection.(*connection.Ms365Connection)
+	betaClient, err := conn.BetaGraphClient()
+	if err != nil {
+		return nil, err
+	}
+	orderBy := "createdDateTime desc"
+	req := &auditlogs.SignInsRequestBuilderGetRequestConfiguration{
+		QueryParameters: &auditlogs.SignInsRequestBuilderGetQueryParameters{
+			Top:     &top,
+			Filter:  &filter,
+			Orderby: []string{orderBy},
+		},
+	}
+	resp, err := betaClient.AuditLogs().SignIns().Get(ctx, req)
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	res := []*mqlMicrosoftUserSignin{}
+	for _, s := range resp.GetValue() {
+		signIn, err := newMqlMicrosoftSignIn(runtime, s)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, signIn)
+	}
+	return res, nil
+}
+
+func (a *mqlMicrosoftUserAuditlog) lastInteractiveSignIn() (*mqlMicrosoftUserSignin, error) {
+	signIns := a.GetSignins()
+	if signIns.Error != nil {
+		return nil, signIns.Error
+	}
+	if len(signIns.Data) == 0 {
+		return nil, nil
+	}
+
+	latest := signIns.Data[0].(*mqlMicrosoftUserSignin)
+	return latest, nil
+}
+
+// Note: the audit log API by default excludes the non-interactive sign-ins. This is a workaround to fetch the last non-interactive sign-in.
+// We could also grab those as part of the `sign-ins` query but then the amount of data would be much larger as non-interactive logins are much more frequent.
+func (a *mqlMicrosoftUserAuditlog) lastNonInteractiveSignIn() (*mqlMicrosoftUserSignin, error) {
+	ctx := context.Background()
+	now := time.Now()
+	dayAgo := now.AddDate(0, 0, -1)
+	filter := fmt.Sprintf(
+		"signInEventTypes/any(t: t ne 'interactiveUser') and createdDateTime ge %s and createdDateTime lt %s and (userId eq '%s' or contains(tolower(userDisplayName), '%s'))",
+		dayAgo.Format(time.RFC3339),
+		now.Format(time.RFC3339),
+		a.UserId.Data,
+		a.UserId.Data)
+	top := int32(1)
+	signIns, err := fetchUserSignins(ctx, a.MqlRuntime, filter, top)
+	if err != nil {
+		return nil, err
+	}
+	if len(signIns) == 0 {
+		return nil, nil
+	}
+	return signIns[0], nil
+}
+
+func newMqlMicrosoftSignIn(runtime *plugin.Runtime, signIn betamodels.SignInable) (*mqlMicrosoftUserSignin, error) {
+	mqlSignIn, err := CreateResource(runtime, "microsoft.user.signin",
+		map[string]*llx.RawData{
+			"__id":                llx.StringDataPtr(signIn.GetId()),
+			"id":                  llx.StringDataPtr(signIn.GetId()),
+			"createdDateTime":     llx.TimeDataPtr(signIn.GetCreatedDateTime()),
+			"userId":              llx.StringDataPtr(signIn.GetUserId()),
+			"clientAppUsed":       llx.StringDataPtr(signIn.GetClientAppUsed()),
+			"resourceDisplayName": llx.StringDataPtr(signIn.GetResourceDisplayName()),
+			"userDisplayName":     llx.StringDataPtr(signIn.GetUserDisplayName()),
+			"appDisplayName":      llx.StringDataPtr(signIn.GetAppDisplayName()),
+			"interactive":         llx.BoolDataPtr(signIn.GetIsInteractive()),
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	return mqlSignIn.(*mqlMicrosoftUserSignin), nil
 }
 
 type userJob struct {

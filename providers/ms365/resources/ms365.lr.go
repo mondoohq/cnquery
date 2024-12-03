@@ -46,6 +46,18 @@ func init() {
 			Init: initMicrosoftUser,
 			Create: createMicrosoftUser,
 		},
+		"microsoft.user.auditlog": {
+			// to override args, implement: initMicrosoftUserAuditlog(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftUserAuditlog,
+		},
+		"microsoft.user.identity": {
+			// to override args, implement: initMicrosoftUserIdentity(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftUserIdentity,
+		},
+		"microsoft.user.signin": {
+			// to override args, implement: initMicrosoftUserSignin(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftUserSignin,
+		},
 		"microsoft.user.authenticationMethods": {
 			// to override args, implement: initMicrosoftUserAuthenticationMethods(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftUserAuthenticationMethods,
@@ -403,6 +415,60 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.user.mfaEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUser).GetMfaEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.user.creationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUser).GetCreationType()).ToDataRes(types.String)
+	},
+	"microsoft.user.identities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUser).GetIdentities()).ToDataRes(types.Array(types.Resource("microsoft.user.identity")))
+	},
+	"microsoft.user.auditlog": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUser).GetAuditlog()).ToDataRes(types.Resource("microsoft.user.auditlog"))
+	},
+	"microsoft.user.auditlog.userId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserAuditlog).GetUserId()).ToDataRes(types.String)
+	},
+	"microsoft.user.auditlog.signins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserAuditlog).GetSignins()).ToDataRes(types.Array(types.Resource("microsoft.user.signin")))
+	},
+	"microsoft.user.auditlog.lastInteractiveSignIn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserAuditlog).GetLastInteractiveSignIn()).ToDataRes(types.Resource("microsoft.user.signin"))
+	},
+	"microsoft.user.auditlog.lastNonInteractiveSignIn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserAuditlog).GetLastNonInteractiveSignIn()).ToDataRes(types.Resource("microsoft.user.signin"))
+	},
+	"microsoft.user.identity.issuerAssignedId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserIdentity).GetIssuerAssignedId()).ToDataRes(types.String)
+	},
+	"microsoft.user.identity.issuer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserIdentity).GetIssuer()).ToDataRes(types.String)
+	},
+	"microsoft.user.identity.signInType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserIdentity).GetSignInType()).ToDataRes(types.String)
+	},
+	"microsoft.user.signin.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserSignin).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.user.signin.createdDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserSignin).GetCreatedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.user.signin.userId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserSignin).GetUserId()).ToDataRes(types.String)
+	},
+	"microsoft.user.signin.userDisplayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserSignin).GetUserDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.user.signin.clientAppUsed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserSignin).GetClientAppUsed()).ToDataRes(types.String)
+	},
+	"microsoft.user.signin.appDisplayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserSignin).GetAppDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.user.signin.resourceDisplayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserSignin).GetResourceDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.user.signin.interactive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserSignin).GetInteractive()).ToDataRes(types.Bool)
 	},
 	"microsoft.user.authenticationMethods.count": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUserAuthenticationMethods).GetCount()).ToDataRes(types.Int)
@@ -1426,6 +1492,90 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.user.mfaEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftUser).MfaEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.creationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUser).CreationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.identities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUser).Identities, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.auditlog": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUser).Auditlog, ok = plugin.RawToTValue[*mqlMicrosoftUserAuditlog](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.auditlog.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftUserAuditlog).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.user.auditlog.userId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserAuditlog).UserId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.auditlog.signins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserAuditlog).Signins, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.auditlog.lastInteractiveSignIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserAuditlog).LastInteractiveSignIn, ok = plugin.RawToTValue[*mqlMicrosoftUserSignin](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.auditlog.lastNonInteractiveSignIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserAuditlog).LastNonInteractiveSignIn, ok = plugin.RawToTValue[*mqlMicrosoftUserSignin](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.identity.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftUserIdentity).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.user.identity.issuerAssignedId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserIdentity).IssuerAssignedId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.identity.issuer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserIdentity).Issuer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.identity.signInType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserIdentity).SignInType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.signin.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftUserSignin).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.user.signin.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserSignin).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.signin.createdDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserSignin).CreatedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.signin.userId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserSignin).UserId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.signin.userDisplayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserSignin).UserDisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.signin.clientAppUsed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserSignin).ClientAppUsed, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.signin.appDisplayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserSignin).AppDisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.signin.resourceDisplayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserSignin).ResourceDisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.signin.interactive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserSignin).Interactive, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"microsoft.user.authenticationMethods.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3150,6 +3300,9 @@ type mqlMicrosoftUser struct {
 	Contact plugin.TValue[interface{}]
 	AuthMethods plugin.TValue[*mqlMicrosoftUserAuthenticationMethods]
 	MfaEnabled plugin.TValue[bool]
+	CreationType plugin.TValue[string]
+	Identities plugin.TValue[[]interface{}]
+	Auditlog plugin.TValue[*mqlMicrosoftUserAuditlog]
 }
 
 // createMicrosoftUser creates a new instance of this resource
@@ -3306,6 +3459,258 @@ func (c *mqlMicrosoftUser) GetMfaEnabled() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.MfaEnabled, func() (bool, error) {
 		return c.mfaEnabled()
 	})
+}
+
+func (c *mqlMicrosoftUser) GetCreationType() *plugin.TValue[string] {
+	return &c.CreationType
+}
+
+func (c *mqlMicrosoftUser) GetIdentities() *plugin.TValue[[]interface{}] {
+	return &c.Identities
+}
+
+func (c *mqlMicrosoftUser) GetAuditlog() *plugin.TValue[*mqlMicrosoftUserAuditlog] {
+	return plugin.GetOrCompute[*mqlMicrosoftUserAuditlog](&c.Auditlog, func() (*mqlMicrosoftUserAuditlog, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.user", c.__id, "auditlog")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftUserAuditlog), nil
+			}
+		}
+
+		return c.auditlog()
+	})
+}
+
+// mqlMicrosoftUserAuditlog for the microsoft.user.auditlog resource
+type mqlMicrosoftUserAuditlog struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftUserAuditlogInternal it will be used here
+	UserId plugin.TValue[string]
+	Signins plugin.TValue[[]interface{}]
+	LastInteractiveSignIn plugin.TValue[*mqlMicrosoftUserSignin]
+	LastNonInteractiveSignIn plugin.TValue[*mqlMicrosoftUserSignin]
+}
+
+// createMicrosoftUserAuditlog creates a new instance of this resource
+func createMicrosoftUserAuditlog(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftUserAuditlog{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.user.auditlog", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftUserAuditlog) MqlName() string {
+	return "microsoft.user.auditlog"
+}
+
+func (c *mqlMicrosoftUserAuditlog) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftUserAuditlog) GetUserId() *plugin.TValue[string] {
+	return &c.UserId
+}
+
+func (c *mqlMicrosoftUserAuditlog) GetSignins() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Signins, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.user.auditlog", c.__id, "signins")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.signins()
+	})
+}
+
+func (c *mqlMicrosoftUserAuditlog) GetLastInteractiveSignIn() *plugin.TValue[*mqlMicrosoftUserSignin] {
+	return plugin.GetOrCompute[*mqlMicrosoftUserSignin](&c.LastInteractiveSignIn, func() (*mqlMicrosoftUserSignin, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.user.auditlog", c.__id, "lastInteractiveSignIn")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftUserSignin), nil
+			}
+		}
+
+		return c.lastInteractiveSignIn()
+	})
+}
+
+func (c *mqlMicrosoftUserAuditlog) GetLastNonInteractiveSignIn() *plugin.TValue[*mqlMicrosoftUserSignin] {
+	return plugin.GetOrCompute[*mqlMicrosoftUserSignin](&c.LastNonInteractiveSignIn, func() (*mqlMicrosoftUserSignin, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.user.auditlog", c.__id, "lastNonInteractiveSignIn")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftUserSignin), nil
+			}
+		}
+
+		return c.lastNonInteractiveSignIn()
+	})
+}
+
+// mqlMicrosoftUserIdentity for the microsoft.user.identity resource
+type mqlMicrosoftUserIdentity struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftUserIdentityInternal it will be used here
+	IssuerAssignedId plugin.TValue[string]
+	Issuer plugin.TValue[string]
+	SignInType plugin.TValue[string]
+}
+
+// createMicrosoftUserIdentity creates a new instance of this resource
+func createMicrosoftUserIdentity(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftUserIdentity{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.user.identity", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftUserIdentity) MqlName() string {
+	return "microsoft.user.identity"
+}
+
+func (c *mqlMicrosoftUserIdentity) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftUserIdentity) GetIssuerAssignedId() *plugin.TValue[string] {
+	return &c.IssuerAssignedId
+}
+
+func (c *mqlMicrosoftUserIdentity) GetIssuer() *plugin.TValue[string] {
+	return &c.Issuer
+}
+
+func (c *mqlMicrosoftUserIdentity) GetSignInType() *plugin.TValue[string] {
+	return &c.SignInType
+}
+
+// mqlMicrosoftUserSignin for the microsoft.user.signin resource
+type mqlMicrosoftUserSignin struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftUserSigninInternal it will be used here
+	Id plugin.TValue[string]
+	CreatedDateTime plugin.TValue[*time.Time]
+	UserId plugin.TValue[string]
+	UserDisplayName plugin.TValue[string]
+	ClientAppUsed plugin.TValue[string]
+	AppDisplayName plugin.TValue[string]
+	ResourceDisplayName plugin.TValue[string]
+	Interactive plugin.TValue[bool]
+}
+
+// createMicrosoftUserSignin creates a new instance of this resource
+func createMicrosoftUserSignin(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftUserSignin{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.user.signin", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftUserSignin) MqlName() string {
+	return "microsoft.user.signin"
+}
+
+func (c *mqlMicrosoftUserSignin) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftUserSignin) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftUserSignin) GetCreatedDateTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedDateTime
+}
+
+func (c *mqlMicrosoftUserSignin) GetUserId() *plugin.TValue[string] {
+	return &c.UserId
+}
+
+func (c *mqlMicrosoftUserSignin) GetUserDisplayName() *plugin.TValue[string] {
+	return &c.UserDisplayName
+}
+
+func (c *mqlMicrosoftUserSignin) GetClientAppUsed() *plugin.TValue[string] {
+	return &c.ClientAppUsed
+}
+
+func (c *mqlMicrosoftUserSignin) GetAppDisplayName() *plugin.TValue[string] {
+	return &c.AppDisplayName
+}
+
+func (c *mqlMicrosoftUserSignin) GetResourceDisplayName() *plugin.TValue[string] {
+	return &c.ResourceDisplayName
+}
+
+func (c *mqlMicrosoftUserSignin) GetInteractive() *plugin.TValue[bool] {
+	return &c.Interactive
 }
 
 // mqlMicrosoftUserAuthenticationMethods for the microsoft.user.authenticationMethods resource

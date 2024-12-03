@@ -419,6 +419,8 @@ resources:
   microsoft.user:
     fields:
       accountEnabled: {}
+      auditlog:
+        min_mondoo_version: 9.0.0
       authMethods:
         min_mondoo_version: 9.0.0
       city: {}
@@ -427,11 +429,15 @@ resources:
         min_mondoo_version: 9.0.0
       country: {}
       createdDateTime: {}
+      creationType:
+        min_mondoo_version: 9.0.0
       department: {}
       displayName: {}
       employeeId: {}
       givenName: {}
       id: {}
+      identities:
+        min_mondoo_version: 9.0.0
       job:
         min_mondoo_version: 9.0.0
       jobTitle: {}
@@ -443,6 +449,8 @@ resources:
       otherMails: {}
       postalCode: {}
       settings: {}
+      signins:
+        min_mondoo_version: 9.0.0
       state: {}
       streetAddress: {}
       surname: {}
@@ -450,6 +458,14 @@ resources:
       userType: {}
     is_private: true
     min_mondoo_version: 5.15.0
+  microsoft.user.auditlog:
+    fields:
+      lastInteractiveSignIn: {}
+      lastNonInteractiveSignIn: {}
+      signins: {}
+      userId: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   microsoft.user.authenticationMethods:
     fields:
       count: {}
@@ -461,6 +477,26 @@ resources:
       softwareMethods: {}
       temporaryAccessPassMethods: {}
       windowsHelloMethods: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.user.identity:
+    fields:
+      issuer: {}
+      issuerAssignedId: {}
+      signInType: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.user.signin:
+    fields:
+      appDisplayName: {}
+      clientAppUsed: {}
+      createdDateTime: {}
+      id: {}
+      interactive: {}
+      requestId: {}
+      resourceDisplayName: {}
+      userDisplayName: {}
+      userId: {}
     is_private: true
     min_mondoo_version: 9.0.0
   ms365.exchangeonline:
