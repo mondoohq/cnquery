@@ -181,6 +181,7 @@ enum ScoringSystem {
   // score value. This means that a few critical findings will quickly reduce
   // the resulting score, but it won't just drop it to the lowest value.
   DECAYED = 7;
+  DISABLED = 8;
 }
 
 // Impact explains how important certain queries are. They are especially useful

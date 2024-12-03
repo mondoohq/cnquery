@@ -135,6 +135,8 @@ func (s *ScoringSystem) UnmarshalJSON(data []byte) error {
 			*s = ScoringSystem_BANDED
 		case "decayed":
 			*s = ScoringSystem_DECAYED
+		case "disabled":
+			*s = ScoringSystem_DISABLED
 		default:
 			return errors.New("unknown scoring system: " + string(data))
 		}
@@ -169,6 +171,8 @@ func (s *ScoringSystem) UnmarshalYAML(node *yaml.Node) error {
 			*s = ScoringSystem_BANDED
 		case "decayed":
 			*s = ScoringSystem_DECAYED
+		case "disabled":
+			*s = ScoringSystem_DISABLED
 		default:
 			return errors.New("unknown scoring system: " + string(name))
 		}
@@ -195,6 +199,8 @@ func (s ScoringSystem) MarshalJSON() ([]byte, error) {
 		result = "banded"
 	case ScoringSystem_DECAYED:
 		result = "decayed"
+	case ScoringSystem_DISABLED:
+		result = "disabled"
 	default:
 		result = "unknown"
 	}
@@ -220,6 +226,8 @@ func (s ScoringSystem) MarshalYAML() (interface{}, error) {
 		return "banded", nil
 	case ScoringSystem_DECAYED:
 		return "decayed", nil
+	case ScoringSystem_DISABLED:
+		return "disabled", nil
 	default:
 		return s, nil
 	}
