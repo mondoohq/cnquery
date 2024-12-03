@@ -155,9 +155,9 @@ private microsoft.user.auditlog {
   // The user's sign-in entries. Only entries from the last 24 hours are fetched and up to 50 at most.
   // Note that only interactive sign-in entries are currently returned.
   signins() []microsoft.user.signin
-  // The user's last interactive sign-in
+  // The user's last interactive sign-in.
   lastInteractiveSignIn() microsoft.user.signin 
-  // The user's last non-interactive sign-in
+  // The user's last non-interactive sign-in. Only entries from the last 24 hours are currently considered.
   lastNonInteractiveSignIn() microsoft.user.signin 
 }
 
@@ -181,11 +181,11 @@ private microsoft.user.signin {
   userId string
   // The display name of the user.
   userDisplayName string
-  // The client app, used to perform the sig-in.
+  // The client app, used to perform the sign-in.
   clientAppUsed string
   // The app's display name.
   appDisplayName string
-  // The resource display name.
+  // The resource's display name.
   resourceDisplayName string
   // Whether the sign-in was interactive.
   interactive bool

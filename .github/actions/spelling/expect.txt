@@ -1,5 +1,6 @@
 ACCOUNTADMIN
 atlassian
+auditlog
 Auths
 autoaccept
 autoscaler
@@ -69,6 +70,7 @@ opcplc
 orstatement
 PAYG
 Pids
+portgroup
 postgre
 pushconfig
 querypack
@@ -76,12 +78,12 @@ ratebasedstatement
 regexmatchstatement
 regexpatternsetreferencestatement
 resourcegroup
-rootfs
 rulegroup
 rulegroupreferencestatement
 Sas
 scim
 serviceprincipals
+signin
 singlequeryargument
 sizeconstraintstatement
 Snat
@@ -104,4 +106,3 @@ vulnerabilityassessmentsettings
 vulnmgmt
 wil
 xssmatchstatement
-portgroup
