@@ -78,6 +78,7 @@ func (a *mqlAwsElb) getClassicLoadBalancers(conn *connection.AwsConnection) []*j
 						map[string]*llx.RawData{
 							"arn":                  llx.StringData(fmt.Sprintf(elbv1LbArnPattern, regionVal, conn.AccountId(), convert.ToString(lb.LoadBalancerName))),
 							"createdTime":          llx.TimeDataPtr(lb.CreatedTime),
+							"createdAt":            llx.TimeDataPtr(lb.CreatedTime),
 							"dnsName":              llx.StringDataPtr(lb.DNSName),
 							"elbType":              llx.StringData("classic"),
 							"listenerDescriptions": llx.AnyData(jsonListeners),
@@ -173,6 +174,7 @@ func (a *mqlAwsElb) getLoadBalancers(conn *connection.AwsConnection) []*jobpool.
 						"arn":               llx.StringDataPtr(lb.LoadBalancerArn),
 						"availabilityZones": llx.ArrayData(availabilityZones, types.String),
 						"createdTime":       llx.TimeDataPtr(lb.CreatedTime),
+						"createdAt":         llx.TimeDataPtr(lb.CreatedTime),
 						"dnsName":           llx.StringDataPtr(lb.DNSName),
 						"hostedZoneId":      llx.StringDataPtr(lb.CanonicalHostedZoneId),
 						"name":              llx.StringDataPtr(lb.LoadBalancerName),

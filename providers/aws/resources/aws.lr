@@ -1221,8 +1221,10 @@ private aws.elb.loadbalancer @defaults("name region elbType scheme vpcId dnsName
   attributes() []dict
   // Deprecated: Use `vpc` instead
   vpcId string
-  // Date and time when the load balancer was created
+  // Deprecated (use `createdAt` instead)
   createdTime time
+  // Date and time the load balancer was created
+  createdAt time
   // Availability zone where the load balancer runs
   availabilityZones []string
   // VPC security groups for the load balancer
@@ -1671,8 +1673,10 @@ private aws.cloudfront.function @defaults("name status") {
   arn string
   // Date and time when the function was last updated
   lastModifiedTime time
-  // Date and time when the function was created
+  // Deprecated (use `createdAt` instead)
   createdTime time
+  // Date and time the function was created
+  createdAt time
   // Stage that the function is in
   stage string
   // Comment to describe the function
@@ -1769,8 +1773,10 @@ private aws.s3.bucket @defaults("name location public") {
   publicAccessBlock() dict
   // Whether the bucket still exists (stale reference)
   exists bool
-  // Date the bucket was created
+  // Deprecated (use `createdAt` instead)
   createdTime time
+  // Date and time the bucket was created
+  createdAt time
 }
 
 // Amazon S3 bucket grant
@@ -1977,8 +1983,10 @@ private aws.dynamodb.table @defaults("name region") {
   continuousBackups() dict
   // Tags for the table
   tags() map[string]string
-  // Creation time of the table
+  // Deprecated (use `createdAt` instead)
   createdTime time
+  // Date and time the table was created
+  createdAt time
   // Whether deletion protection is enabled
   deletionProtectionEnabled bool
   // Global table version
@@ -2095,8 +2103,10 @@ private aws.rds.dbcluster @defaults("id region") {
   storageType string
   // Current state of the cluster
   status string
-  // Creation date of the RDS cluster
+  // Deprecated (use `createdAt` instead)
   createdTime time
+  // Date and time the RDS cluster was created
+  createdAt time
   // Number of days automated snapshots are retained
   backupRetentionPeriod int
   // Whether minor version patches are applied automatically
@@ -2235,8 +2245,10 @@ private aws.rds.dbinstance @defaults("id region engine engineVersion") {
   status string
   // Whether minor version patches are applied automatically
   autoMinorVersionUpgrade bool
-  // Creation date of the RDS instance
+  // Deprecated (use `createdAt` instead)
   createdTime time
+  // Date and time the RDS instance was created
+  createdAt time
   // Port that the database instance listens on. If the database instance is part of a DB cluster, this can be a different port than the DB cluster port.
   port int
   // Connection endpoint for the database instance
