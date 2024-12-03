@@ -198,14 +198,17 @@ func (a *mqlAwsEcrRepository) images() ([]interface{}, error) {
 			}
 			mqlImage, err := CreateResource(a.MqlRuntime, "aws.ecr.image",
 				map[string]*llx.RawData{
-					"digest":     llx.StringDataPtr(image.ImageDigest),
-					"mediaType":  llx.StringDataPtr(image.ImageManifestMediaType),
-					"tags":       llx.ArrayData(tags, types.String),
-					"registryId": llx.StringDataPtr(image.RegistryId),
-					"repoName":   llx.StringData(name),
-					"region":     llx.StringData(region),
-					"arn":        llx.StringData(ecrImageArn(ImageInfo{Region: region, RegistryId: convert.ToString(image.RegistryId), RepoName: name, Digest: convert.ToString(image.ImageDigest)})),
-					"uri":        llx.StringData(uri),
+					"arn":                  llx.StringData(ecrImageArn(ImageInfo{Region: region, RegistryId: convert.ToString(image.RegistryId), RepoName: name, Digest: convert.ToString(image.ImageDigest)})),
+					"digest":               llx.StringDataPtr(image.ImageDigest),
+					"lastRecordedPullTime": llx.TimeDataPtr(image.LastRecordedPullTime),
+					"mediaType":            llx.StringDataPtr(image.ImageManifestMediaType),
+					"pushedAt":             llx.TimeDataPtr(image.ImagePushedAt),
+					"region":               llx.StringData(region),
+					"registryId":           llx.StringDataPtr(image.RegistryId),
+					"repoName":             llx.StringData(name),
+					"sizeInBytes":          llx.IntDataPtr(image.ImageSizeInBytes),
+					"tags":                 llx.ArrayData(tags, types.String),
+					"uri":                  llx.StringData(uri),
 				})
 			if err != nil {
 				return nil, err

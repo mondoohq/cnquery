@@ -3728,6 +3728,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ecr.image.uri": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcrImage).GetUri()).ToDataRes(types.String)
 	},
+	"aws.ecr.image.pushedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrImage).GetPushedAt()).ToDataRes(types.Time)
+	},
+	"aws.ecr.image.sizeInBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrImage).GetSizeInBytes()).ToDataRes(types.Int)
+	},
+	"aws.ecr.image.lastRecordedPullTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrImage).GetLastRecordedPullTime()).ToDataRes(types.Time)
+	},
 	"aws.dms.replicationInstances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDms).GetReplicationInstances()).ToDataRes(types.Array(types.Dict))
 	},
@@ -9389,6 +9398,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.ecr.image.uri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcrImage).Uri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.image.pushedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrImage).PushedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.image.sizeInBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrImage).SizeInBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.image.lastRecordedPullTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrImage).LastRecordedPullTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.dms.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -23718,6 +23739,9 @@ type mqlAwsEcrImage struct {
 	Region plugin.TValue[string]
 	Arn plugin.TValue[string]
 	Uri plugin.TValue[string]
+	PushedAt plugin.TValue[*time.Time]
+	SizeInBytes plugin.TValue[int64]
+	LastRecordedPullTime plugin.TValue[*time.Time]
 }
 
 // createAwsEcrImage creates a new instance of this resource
@@ -23787,6 +23811,18 @@ func (c *mqlAwsEcrImage) GetArn() *plugin.TValue[string] {
 
 func (c *mqlAwsEcrImage) GetUri() *plugin.TValue[string] {
 	return &c.Uri
+}
+
+func (c *mqlAwsEcrImage) GetPushedAt() *plugin.TValue[*time.Time] {
+	return &c.PushedAt
+}
+
+func (c *mqlAwsEcrImage) GetSizeInBytes() *plugin.TValue[int64] {
+	return &c.SizeInBytes
+}
+
+func (c *mqlAwsEcrImage) GetLastRecordedPullTime() *plugin.TValue[*time.Time] {
+	return &c.LastRecordedPullTime
 }
 
 // mqlAwsDms for the aws.dms resource

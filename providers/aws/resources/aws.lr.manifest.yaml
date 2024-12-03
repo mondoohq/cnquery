@@ -1294,10 +1294,16 @@ resources:
     fields:
       arn: {}
       digest: {}
+      lastRecordedPullTime:
+        min_mondoo_version: 9.0.0
       mediaType: {}
+      pushedAt:
+        min_mondoo_version: 9.0.0
       region: {}
       registryId: {}
       repoName: {}
+      sizeInBytes:
+        min_mondoo_version: 9.0.0
       tags: {}
       uri: {}
     is_private: true
