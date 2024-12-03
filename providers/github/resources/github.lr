@@ -195,7 +195,7 @@ private github.team @defaults("id name") {
 }
 
 // GitHub collaborator
-private github.collaborator @defaults("user") {
+private github.collaborator @defaults("user.login user.name") {
   // Collaborator ID
   id int
   // Collaborator's user information
