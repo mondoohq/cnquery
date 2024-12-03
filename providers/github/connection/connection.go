@@ -13,7 +13,7 @@ import (
 
 	"github.com/bradleyfalzon/ghinstallation/v2"
 	"github.com/cockroachdb/errors"
-	"github.com/google/go-github/v62/github"
+	"github.com/google/go-github/v67/github"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
