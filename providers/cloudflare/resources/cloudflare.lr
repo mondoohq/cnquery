@@ -54,6 +54,7 @@ private cloudflare.zone @defaults("name account.name") {
 	one() cloudflare.one
 }
 
+// Cloudflare account
 private cloudflare.zone.account @defaults("name") {
 	// Account identifier
 	id string 
@@ -65,7 +66,9 @@ private cloudflare.zone.account @defaults("name") {
 	email string
 }
 
+// Cloudflare DNS
 private cloudflare.dns {
+	// List all DNS records
 	records() []cloudflare.dns.record 
 }
 
@@ -74,7 +77,7 @@ private cloudflare.dns.record @defaults("type content name") {
 	// Cloudflare internal ID
 	id string 
 
-        // Record name
+  // Record name
 	name string
 	// Comment
 	comment string
@@ -248,6 +251,7 @@ private cloudflare.workers.worker @defaults("id") {
   modifiedOn time  
 }
 
+// Cloudflare Pages page
 private cloudflare.workers.page @defaults("shortId") {
 	// Worker ID  
 	id string
@@ -268,9 +272,12 @@ private cloudflare.workers.page @defaults("shortId") {
 	modifiedOn time
 }
 
+// Cloudflare One
 private cloudflare.one {
-	apps() []cloudflare.one.app // Cloudflare Zero Trust applications  
-	identityProviders() []cloudflare.one.idp // Identity providers
+	// Cloudflare Zero Trust applications  
+	apps() []cloudflare.one.app
+	// Identity providers
+	identityProviders() []cloudflare.one.idp
 }
 
 // Cloudflare One application 
@@ -310,6 +317,7 @@ private cloudflare.one.app @defaults("name id") {
 	updatedAt time
 }
 
+// CORS headers
 private cloudflare.corsHeaders {
 	allowAllHeaders bool
 	allowAllMethods bool
@@ -323,6 +331,7 @@ private cloudflare.corsHeaders {
 	maxAge int // The maximum number of seconds the results of a preflight request can be cached.
 }
 
+// Cloudflare One identity provider
 private cloudflare.one.idp @defaults("name") {
 	id string // UUID
 	name string // The name of the identity provider, shown to users on the login page.

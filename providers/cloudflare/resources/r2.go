@@ -32,6 +32,10 @@ func (c *mqlCloudflareZone) r2() (*mqlCloudflareR2, error) {
 	return r2, nil
 }
 
+func (c *mqlCloudflareR2Bucket) id() (string, error) {
+	return c.GetName().Data, nil
+}
+
 func (c *mqlCloudflareR2) buckets() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
