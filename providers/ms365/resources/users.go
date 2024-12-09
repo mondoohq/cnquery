@@ -362,6 +362,7 @@ func (a *mqlMicrosoftUserAuditlog) lastInteractiveSignIn() (*mqlMicrosoftUserSig
 		return nil, signIns.Error
 	}
 	if len(signIns.Data) == 0 {
+		a.LastInteractiveSignIn.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 
@@ -387,6 +388,7 @@ func (a *mqlMicrosoftUserAuditlog) lastNonInteractiveSignIn() (*mqlMicrosoftUser
 		return nil, err
 	}
 	if len(signIns) == 0 {
+		a.LastNonInteractiveSignIn.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	return signIns[0], nil
