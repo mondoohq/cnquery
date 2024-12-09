@@ -23,6 +23,24 @@ var Config = plugin.Provider{
 			Name:  "gitlab",
 			Use:   "gitlab",
 			Short: "a GitLab group or project",
+			Long: `Use the gitlab provider to query resources within GitLab groups and projects.
+
+			Available commands:
+				group					              GitLab group
+				project                     GitLab project
+			
+			Examples:
+				cnspec scan gitlab --group <GROUP_NAME> --token <YOUR_TOKEN>
+				cnspec scan gitlab --discover projects --token <YOUR_TOKEN>
+				cnspec scan gitlab --group <GROUP_NAME> --project <PROJECT_NAME> --token <YOUR_TOKEN>
+				cnspec scan gitlab --group <GROUP_NAME> --discover projects --token <YOUR_TOKEN>
+				cnspec scan gitlab --discover terraform --token <YOUR_TOKEN>
+				cnquery shell gitlab --group <GROUP_NAME> --token <YOUR_TOKEN>
+				cnquery shell gitlab --group <GROUP_NAME> --project <PROJECT_NAME> --token <YOUR_TOKEN>
+			
+			Notes:
+				Mondoo needs a personal access token to scan a GitHub group or project. The token's level of access determines how much information Mondoo can retrieve. Instead of providing a token with every command, you can supply your personal access token to Mondoo by setting the GITLAB_TOKEN environment variable. To learn how, read https://mondoo.com/docs/cnspec/saas/gitlab/.
+			`,
 			Discovery: []string{
 				provider.DiscoveryGroup,
 				provider.DiscoveryProject,
