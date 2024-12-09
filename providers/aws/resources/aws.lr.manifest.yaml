@@ -394,6 +394,8 @@ resources:
     fields:
       arn: {}
       comment: {}
+      createdAt:
+        min_mondoo_version: 9.0.0
       createdTime: {}
       lastModifiedTime: {}
       name: {}
@@ -850,6 +852,8 @@ resources:
       arn: {}
       backups: {}
       continuousBackups: {}
+      createdAt:
+        min_mondoo_version: 9.0.0
       createdTime:
         min_mondoo_version: 9.0.0
       deletionProtectionEnabled:
@@ -1685,6 +1689,8 @@ resources:
       attributes: {}
       availabilityZones:
         min_mondoo_version: 9.0.0
+      createdAt:
+        min_mondoo_version: 9.0.0
       createdTime:
         min_mondoo_version: 9.0.0
       dnsName: {}
@@ -2454,6 +2460,8 @@ resources:
         min_mondoo_version: latest
       clusterDbInstanceClass:
         min_mondoo_version: 9.0.0
+      createdAt:
+        min_mondoo_version: 9.0.0
       createdTime:
         min_mondoo_version: 9.0.0
       deletionProtection:
@@ -2531,6 +2539,8 @@ resources:
         min_mondoo_version: latest
       certificateExpiresAt:
         min_mondoo_version: latest
+      createdAt:
+        min_mondoo_version: 9.0.0
       createdTime:
         min_mondoo_version: 9.0.0
       customIamInstanceProfile:
@@ -2775,6 +2785,8 @@ resources:
       acl: {}
       arn: {}
       cors: {}
+      createdAt:
+        min_mondoo_version: 9.0.0
       createdTime:
         min_mondoo_version: 9.0.0
       defaultLock: {}
