@@ -50,7 +50,10 @@ func NewOpcuaConnection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 	if err != nil {
 		return nil, err
 	}
-	ep := opcua.SelectEndpoint(endpoints, policy, ua.MessageSecurityModeFromString(mode))
+	ep, err := opcua.SelectEndpoint(endpoints, policy, ua.MessageSecurityModeFromString(mode))
+	if err != nil {
+		return nil, err
+	}
 	if ep == nil {
 		return nil, errors.New("failed to find suitable endpoint")
 	}
