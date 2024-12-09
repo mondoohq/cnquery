@@ -5,7 +5,7 @@ replace go.mondoo.com/cnquery/v11 => ../..
 go 1.23.0
 
 require (
-	github.com/gopcua/opcua v0.5.3
+	github.com/gopcua/opcua v0.6.0
 	github.com/mozillazg/go-slugify v0.2.0
 	go.mondoo.com/cnquery/v11 v11.32.0
 )
@@ -140,7 +140,6 @@ require (
 	go.opentelemetry.io/otel/trace v1.32.0 // indirect
 	go.uber.org/mock v0.5.0 // indirect
 	golang.org/x/crypto v0.29.0 // indirect
-	golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f // indirect
 	golang.org/x/mod v0.22.0 // indirect
 	golang.org/x/net v0.31.0 // indirect
 	golang.org/x/oauth2 v0.24.0 // indirect
