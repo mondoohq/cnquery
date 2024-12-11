@@ -53,7 +53,8 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	isAppAuth := false
-	if appId, ok := req.Flags[connection.OPTION_APP_ID]; ok && len(appId.Value) > 0 {
+	appId, ok := flags[connection.OPTION_APP_ID]
+	if ok && len(appId.Value) > 0 {
 		conf.Options[connection.OPTION_APP_ID] = string(appId.Value)
 
 		installId := req.Flags[connection.OPTION_APP_INSTALLATION_ID]

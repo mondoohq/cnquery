@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/google/go-github/v67/github"
+	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/v11/internal/workerpool"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/logger"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
@@ -70,6 +72,7 @@ func initGithubOrganization(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	args["createdAt"] = llx.TimeDataPtr(githubTimestamp(org.CreatedAt))
 	args["updatedAt"] = llx.TimeDataPtr(githubTimestamp(org.UpdatedAt))
 	args["totalPrivateRepos"] = llx.IntDataPtr(org.TotalPrivateRepos)
+	args["totalPublicRepos"] = llx.IntDataPtr(org.PublicRepos)
 	args["ownedPrivateRepos"] = llx.IntDataPtr(org.OwnedPrivateRepos)
 	args["privateGists"] = llx.IntDataDefault(org.PrivateGists, 0)
 	args["diskUsage"] = llx.IntDataDefault(org.DiskUsage, 0)
@@ -262,26 +265,66 @@ func (g *mqlGithubOrganization) repositories() ([]interface{}, error) {
 		return nil, g.Login.Error
 	}
 	orgLogin := g.Login.Data
-
-	listOpts := &github.RepositoryListByOrgOptions{
-		ListOptions: github.ListOptions{PerPage: paginationPerPage},
-		Type:        "all",
+	listOpts := github.RepositoryListByOrgOptions{
+		ListOptions: github.ListOptions{
+			PerPage: paginationPerPage,
+			Page:    1,
+		},
+		Type: "all",
 	}
+
+	repoCount := g.TotalPrivateRepos.Data + g.TotalPublicRepos.Data
+	workerPool := workerpool.New[[]*github.Repository](workers)
+	workerPool.Start()
+	defer workerPool.Close()
+
+	log.Debug().
+		Int("workers", workers).
+		Int64("total_repos", repoCount).
+		Str("organization", g.Name.Data).
+		Msg("list repositories")
 
 	var allRepos []*github.Repository
 	for {
-		repos, resp, err := conn.Client().Repositories.ListByOrg(conn.Context(), orgLogin, listOpts)
-		if err != nil {
+
+		// exit as soon as we collect all repositories
+		if len(allRepos) >= int(repoCount) {
+			break
+		}
+
+		// send as many request as workers we have
+		for i := 1; i <= workers; i++ {
+			opts := listOpts
+			workerPool.Submit(func() ([]*github.Repository, error) {
+				repos, _, err := conn.Client().Repositories.ListByOrg(conn.Context(), orgLogin, &opts)
+				return repos, err
+			})
+
+			// check if we need to submit more requests
+			newRepoCount := len(allRepos) + i*paginationPerPage
+			if newRepoCount > int(repoCount) {
+				break
+			}
+
+			// next page
+			listOpts.Page++
+		}
+
+		// wait for the results
+		for i := 0; i < workers; i++ {
+			if workerPool.HasPendingRequests() {
+				allRepos = append(allRepos, workerPool.GetResult()...)
+			}
+		}
+
+		// check if any request failed
+		if err := workerPool.GetError(); err != nil {
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
 			}
 			return nil, err
 		}
-		allRepos = append(allRepos, repos...)
-		if resp.NextPage == 0 {
-			break
-		}
-		listOpts.Page = resp.NextPage
+
 	}
 
 	if g.repoCacheMap == nil {

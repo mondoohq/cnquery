@@ -274,6 +274,8 @@ resources:
       total_private_repos: {}
       totalPrivateRepos:
         min_mondoo_version: 6.11.0
+      totalPublicRepos:
+        min_mondoo_version: 9.0.0
       twitter_username: {}
       twitterUsername:
         min_mondoo_version: 6.11.0

@@ -80,6 +80,8 @@ github.organization @defaults("login name") {
   updatedAt time
   // Number of private repositories
   totalPrivateRepos int
+  // Number of public repositories
+  totalPublicRepos int
   // Number of owned private repositories for the organization
   ownedPrivateRepos int
   // Number of private gists

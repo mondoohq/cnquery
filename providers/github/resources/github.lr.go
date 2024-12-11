@@ -276,6 +276,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.organization.totalPrivateRepos": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubOrganization).GetTotalPrivateRepos()).ToDataRes(types.Int)
 	},
+	"github.organization.totalPublicRepos": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganization).GetTotalPublicRepos()).ToDataRes(types.Int)
+	},
 	"github.organization.ownedPrivateRepos": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubOrganization).GetOwnedPrivateRepos()).ToDataRes(types.Int)
 	},
@@ -1116,6 +1119,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"github.organization.totalPrivateRepos": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubOrganization).TotalPrivateRepos, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"github.organization.totalPublicRepos": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganization).TotalPublicRepos, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"github.organization.ownedPrivateRepos": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2404,6 +2411,7 @@ type mqlGithubOrganization struct {
 	CreatedAt plugin.TValue[*time.Time]
 	UpdatedAt plugin.TValue[*time.Time]
 	TotalPrivateRepos plugin.TValue[int64]
+	TotalPublicRepos plugin.TValue[int64]
 	OwnedPrivateRepos plugin.TValue[int64]
 	PrivateGists plugin.TValue[int64]
 	DiskUsage plugin.TValue[int64]
@@ -2531,6 +2539,10 @@ func (c *mqlGithubOrganization) GetUpdatedAt() *plugin.TValue[*time.Time] {
 
 func (c *mqlGithubOrganization) GetTotalPrivateRepos() *plugin.TValue[int64] {
 	return &c.TotalPrivateRepos
+}
+
+func (c *mqlGithubOrganization) GetTotalPublicRepos() *plugin.TValue[int64] {
+	return &c.TotalPublicRepos
 }
 
 func (c *mqlGithubOrganization) GetOwnedPrivateRepos() *plugin.TValue[int64] {
