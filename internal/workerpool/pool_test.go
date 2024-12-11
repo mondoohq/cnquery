@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"math/rand"
+
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.com/cnquery/v11/internal/workerpool"
 )
@@ -21,24 +23,23 @@ func TestPoolSubmitAndRetrieveResult(t *testing.T) {
 		return 42, nil
 	}
 
-	// no requests
-	assert.False(t, pool.HasPendingRequests())
+	// no results
+	assert.Empty(t, pool.GetResults())
 
 	// submit a request
 	pool.Submit(task)
 
-	// should have pending requests
-	assert.True(t, pool.HasPendingRequests())
+	// wait for the request to process
+	pool.Wait()
 
-	// assert results comes back
-	result := pool.GetResult()
-	assert.Equal(t, 42, result)
-
-	// no more requests pending
-	assert.False(t, pool.HasPendingRequests())
+	// should have one result
+	results := pool.GetResults()
+	if assert.Len(t, results, 1) {
+		assert.Equal(t, 42, results[0])
+	}
 
 	// no errors
-	assert.Nil(t, pool.GetError())
+	assert.Nil(t, pool.GetErrors())
 }
 
 func TestPoolHandleErrors(t *testing.T) {
@@ -53,9 +54,9 @@ func TestPoolHandleErrors(t *testing.T) {
 	pool.Submit(task)
 
 	// Wait for error collector to process
-	time.Sleep(100 * time.Millisecond)
+	pool.Wait()
 
-	err := pool.GetError()
+	err := pool.GetErrors()
 	if assert.Error(t, err) {
 		assert.Contains(t, err.Error(), "task error")
 	}
@@ -82,14 +83,15 @@ func TestPoolMultipleTasksWithErrors(t *testing.T) {
 		pool.Submit(task)
 	}
 
-	var results []*test
-	for range tasks {
-		results = append(results, pool.GetResult())
+	// Wait for error collector to process
+	pool.Wait()
+
+	results := pool.GetResults()
+	assert.ElementsMatch(t, []*test{&test{1}, &test{2}, &test{3}}, results)
+	err := pool.GetErrors()
+	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), "task error")
 	}
-
-	assert.ElementsMatch(t, []*test{nil, &test{1}, &test{2}, &test{3}}, results)
-	assert.False(t, pool.HasPendingRequests())
-
 }
 
 func TestPoolHandlesNilTasks(t *testing.T) {
@@ -100,14 +102,13 @@ func TestPoolHandlesNilTasks(t *testing.T) {
 	var nilTask workerpool.Task[int]
 	pool.Submit(nilTask)
 
-	// Wait for worker to process the nil task
-	time.Sleep(100 * time.Millisecond)
+	pool.Wait()
 
-	err := pool.GetError()
+	err := pool.GetErrors()
 	assert.NoError(t, err)
 }
 
-func TestPoolHasPendingRequests(t *testing.T) {
+func TestPoolProcessing(t *testing.T) {
 	pool := workerpool.New[int](2)
 	pool.Start()
 	defer pool.Close()
@@ -118,11 +119,19 @@ func TestPoolHasPendingRequests(t *testing.T) {
 	}
 
 	pool.Submit(task)
-	assert.True(t, pool.HasPendingRequests())
 
-	result := pool.GetResult()
-	assert.Equal(t, 10, result)
-	assert.False(t, pool.HasPendingRequests())
+	// should be processing
+	assert.True(t, pool.Processing())
+
+	// wait
+	pool.Wait()
+
+	// read results
+	result := pool.GetResults()
+	assert.Equal(t, []int{10}, result)
+
+	// should not longer be processing
+	assert.False(t, pool.Processing())
 }
 
 func TestPoolClosesGracefully(t *testing.T) {
@@ -142,4 +151,35 @@ func TestPoolClosesGracefully(t *testing.T) {
 	assert.PanicsWithError(t, "send on closed channel", func() {
 		pool.Submit(task)
 	})
+}
+
+func TestPoolWithManyTasks(t *testing.T) {
+	// 30k requests with a pool of 100 workers
+	// should be around 15 seconds
+	requestCount := 30000
+	pool := workerpool.New[int](100)
+	pool.Start()
+	defer pool.Close()
+
+	task := func() (int, error) {
+		random := rand.Intn(100)
+		time.Sleep(time.Duration(random) * time.Millisecond)
+		return random, nil
+	}
+
+	for i := 0; i < requestCount; i++ {
+		pool.Submit(task)
+	}
+
+	// should be processing
+	assert.True(t, pool.Processing())
+
+	// wait
+	pool.Wait()
+
+	// read results
+	assert.Equal(t, requestCount, len(pool.GetResults()))
+
+	// should not longer be processing
+	assert.False(t, pool.Processing())
 }

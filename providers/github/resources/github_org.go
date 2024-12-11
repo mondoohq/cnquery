@@ -5,6 +5,7 @@ package resources
 
 import (
 	"errors"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -284,47 +285,30 @@ func (g *mqlGithubOrganization) repositories() ([]interface{}, error) {
 		Str("organization", g.Name.Data).
 		Msg("list repositories")
 
-	var allRepos []*github.Repository
 	for {
-
 		// exit as soon as we collect all repositories
-		if len(allRepos) >= int(repoCount) {
+		reposLen := len(slices.Concat(workerPool.GetResults()...))
+		if reposLen >= int(repoCount) {
 			break
 		}
 
-		// send as many request as workers we have
-		for i := 1; i <= workers; i++ {
-			opts := listOpts
-			workerPool.Submit(func() ([]*github.Repository, error) {
-				repos, _, err := conn.Client().Repositories.ListByOrg(conn.Context(), orgLogin, &opts)
-				return repos, err
-			})
+		// send requests to workers
+		opts := listOpts
+		workerPool.Submit(func() ([]*github.Repository, error) {
+			repos, _, err := conn.Client().Repositories.ListByOrg(conn.Context(), orgLogin, &opts)
+			return repos, err
+		})
 
-			// check if we need to submit more requests
-			newRepoCount := len(allRepos) + i*paginationPerPage
-			if newRepoCount > int(repoCount) {
-				break
-			}
-
-			// next page
-			listOpts.Page++
-		}
-
-		// wait for the results
-		for i := 0; i < workers; i++ {
-			if workerPool.HasPendingRequests() {
-				allRepos = append(allRepos, workerPool.GetResult()...)
-			}
-		}
+		// next page
+		listOpts.Page++
 
 		// check if any request failed
-		if err := workerPool.GetError(); err != nil {
+		if err := workerPool.GetErrors(); err != nil {
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
 			}
 			return nil, err
 		}
-
 	}
 
 	if g.repoCacheMap == nil {
@@ -332,15 +316,17 @@ func (g *mqlGithubOrganization) repositories() ([]interface{}, error) {
 	}
 
 	res := []interface{}{}
-	for i := range allRepos {
-		repo := allRepos[i]
+	for _, repos := range workerPool.GetResults() {
+		for i := range repos {
+			repo := repos[i]
 
-		r, err := newMqlGithubRepository(g.MqlRuntime, repo)
-		if err != nil {
-			return nil, err
+			r, err := newMqlGithubRepository(g.MqlRuntime, repo)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, r)
+			g.repoCacheMap[repo.GetName()] = r
 		}
-		res = append(res, r)
-		g.repoCacheMap[repo.GetName()] = r
 	}
 
 	return res, nil

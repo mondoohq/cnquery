@@ -4,25 +4,27 @@
 package workerpool
 
 type worker[R any] struct {
-	id      int
-	queue   <-chan Task[R]
-	results chan<- R
-	errors  chan<- error
+	id        int
+	queueCh   <-chan Task[R]
+	resultsCh chan<- R
+	errorsCh  chan<- error
 }
 
 func (w *worker[R]) Start() {
 	go func() {
-		for task := range w.queue {
+		for task := range w.queueCh {
 			if task == nil {
+				// let the collector know we processed the request
+				w.errorsCh <- nil
 				continue
 			}
 
 			data, err := task()
 			if err != nil {
-				w.errors <- err
+				w.errorsCh <- err
+			} else {
+				w.resultsCh <- data
 			}
-
-			w.results <- data
 		}
 	}()
 }
