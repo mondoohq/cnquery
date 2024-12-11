@@ -27,7 +27,7 @@ UUID=b411dc99-f0a0-4c87-9e05-184977be8539 /home ext4   defaults  0      2`
 			Device:     "UUID=0a3407de-014b-458b-b5c1-848e92a327a3",
 			Mountpoint: "/",
 			Fstype:     "ext4",
-			Options:    "defaults",
+			Options:    []string{"defaults"},
 			Dump:       ptr.To(0),
 			Fsck:       ptr.To(1),
 		}, entries[0])
@@ -35,7 +35,7 @@ UUID=b411dc99-f0a0-4c87-9e05-184977be8539 /home ext4   defaults  0      2`
 			Device:     "UUID=f9fe0b69-a280-415d-a03a-a32752370dee",
 			Mountpoint: "none",
 			Fstype:     "swap",
-			Options:    "defaults",
+			Options:    []string{"defaults"},
 			Dump:       ptr.To(0),
 			Fsck:       ptr.To(0),
 		}, entries[1])
@@ -43,7 +43,7 @@ UUID=b411dc99-f0a0-4c87-9e05-184977be8539 /home ext4   defaults  0      2`
 			Device:     "UUID=b411dc99-f0a0-4c87-9e05-184977be8539",
 			Mountpoint: "/home",
 			Fstype:     "ext4",
-			Options:    "defaults",
+			Options:    []string{"defaults"},
 			Dump:       ptr.To(0),
 			Fsck:       ptr.To(2),
 		}, entries[2])
@@ -65,19 +65,19 @@ UUID=b411dc99-f0a0-4c87-9e05-184977be8539 /home ext4   defaults`
 			Device:     "UUID=0a3407de-014b-458b-b5c1-848e92a327a3",
 			Mountpoint: "/",
 			Fstype:     "ext4",
-			Options:    "defaults",
+			Options:    []string{"defaults"},
 		}, entries[0])
 		require.Equal(t, FstabEntry{
 			Device:     "UUID=f9fe0b69-a280-415d-a03a-a32752370dee",
 			Mountpoint: "none",
 			Fstype:     "swap",
-			Options:    "defaults",
+			Options:    []string{"defaults"},
 		}, entries[1])
 		require.Equal(t, FstabEntry{
 			Device:     "UUID=b411dc99-f0a0-4c87-9e05-184977be8539",
 			Mountpoint: "/home",
 			Fstype:     "ext4",
-			Options:    "defaults",
+			Options:    []string{"defaults"},
 		}, entries[2])
 	})
 
@@ -97,7 +97,7 @@ LABEL=UEFI	/boot/efi	vfat	umask=0077	0 1`
 			Device:     "LABEL=cloudimg-rootfs",
 			Mountpoint: "/",
 			Fstype:     "ext4",
-			Options:    "discard,commit=30,errors=remount-ro",
+			Options:    []string{"discard,commit=30,errors=remount-ro"},
 			Dump:       ptr.To(0),
 			Fsck:       ptr.To(1),
 		}, entries[0])
@@ -105,7 +105,7 @@ LABEL=UEFI	/boot/efi	vfat	umask=0077	0 1`
 			Device:     "LABEL=BOOT",
 			Mountpoint: "/boot",
 			Fstype:     "ext4",
-			Options:    "defaults",
+			Options:    []string{"defaults"},
 			Dump:       ptr.To(0),
 			Fsck:       ptr.To(2),
 		}, entries[1])
@@ -113,7 +113,7 @@ LABEL=UEFI	/boot/efi	vfat	umask=0077	0 1`
 			Device:     "LABEL=UEFI",
 			Mountpoint: "/boot/efi",
 			Fstype:     "vfat",
-			Options:    "umask=0077",
+			Options:    []string{"umask=0077"},
 			Dump:       ptr.To(0),
 			Fsck:       ptr.To(1),
 		}, entries[2])
