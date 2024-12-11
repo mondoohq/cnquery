@@ -4,12 +4,19 @@
 package linux
 
 import (
+	"bytes"
+	"os/exec"
+	"path"
 	"strconv"
 	"strings"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/snapshot"
+	"go.mondoo.com/cnquery/v11/providers/os/fs"
+	"go.mondoo.com/cnquery/v11/providers/os/resources"
+	"k8s.io/utils/ptr"
 )
 
 const (
@@ -18,6 +25,7 @@ const (
 	DeviceNames        = "device-names"
 	MountAllPartitions = "mount-all-partitions"
 	IncludeMounted     = "include-mounted"
+	SkipFstabDiscovery = "skip-fstab-discovery"
 )
 
 type LinuxDeviceManager struct {
@@ -75,11 +83,137 @@ func (d *LinuxDeviceManager) IdentifyMountTargets(opts map[string]string) ([]*sn
 		partitions = append(partitions, partitionsForDevice...)
 	}
 
-	return partitions, errors.Join(errs...)
+	if err := errors.Join(errs...); err != nil {
+		return partitions, err
+	}
+
+	if opts[SkipFstabDiscovery] == "true" {
+		return partitions, nil
+	}
+
+	fstabEntries, err := d.AttemptFindFstab(partitions)
+	if err != nil {
+		log.Warn().Err(err).Msg("could not find fstab")
+		return partitions, nil
+	}
+
+	partitions, err = d.MountWithFstab(partitions, fstabEntries)
+	if err != nil {
+		log.Error().Err(err).Msg("unable to mount partitions with fstab")
+		d.UnmountAndClose()
+		return partitions, nil
+	}
+
+	return partitions, nil
+}
+
+func (d *LinuxDeviceManager) AttemptFindFstab(partitions []*snapshot.PartitionInfo) ([]resources.FstabEntry, error) {
+	for _, partition := range partitions {
+		dir, err := d.volumeMounter.MountP(&snapshot.MountPartitionDto{PartitionInfo: partition})
+		if err != nil {
+			continue
+		}
+		defer d.volumeMounter.UmountP(partition)
+
+		cmd := exec.Command("find", dir, "-type", "f", "-wholename", `*/etc/fstab`)
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			log.Error().Err(err).Msg("error finding fstab")
+			continue
+		}
+
+		if len(strings.Split(string(out), "\n")) != 2 {
+			log.Debug().Bytes("find", out).Msg("fstab not found, too many results")
+			continue
+		}
+
+		mnt, fstab := path.Split(strings.TrimSpace(string(out)))
+		fstabFile, err := afero.ReadFile(
+			fs.NewMountedFs(mnt),
+			path.Base(fstab))
+		if err != nil {
+			log.Error().Err(err).Msg("error reading fstab")
+			continue
+		}
+
+		return resources.ParseFstab(bytes.NewReader(fstabFile))
+	}
+
+	return nil, errors.New("fstab not found")
+}
+
+// MountWithFstab mounts partitions adjusting the mountpoint and mount options according to the discovered fstab entries
+func (d *LinuxDeviceManager) MountWithFstab(partitions []*snapshot.PartitionInfo, entries []resources.FstabEntry) ([]*snapshot.PartitionInfo, error) {
+	for _, entry := range entries {
+		for i := range partitions {
+			if !cmpPartition2Fstab(partitions[i], entry) {
+				continue
+			}
+
+			if partitions[i].MountPoint == "" {
+				partitions[i].MountOptions = entry.Options
+				log.Debug().Str("device", partitions[i].Name).
+					Strs("options", partitions[i].MountOptions).
+					Msg("mounting partition")
+				mnt, err := d.Mount(partitions[i])
+				if err != nil {
+					log.Error().Err(err).Str("device", partitions[i].Name).Msg("unable to mount partition")
+					return partitions, err
+				}
+				partitions[i].MountPoint = mnt
+
+				break
+			}
+
+			// if partitions is already mounted, but there is an entry in fstab, we should register it and mount as subvolume
+			partition := ptr.To(*partitions[i]) // copy the partition
+			partition.MountOptions = entry.Options
+			log.Debug().Str("device", partition.Name).
+				Strs("options", partition.MountOptions).
+				Str("scan-dir", path.Join(partition.MountPoint, entry.Mountpoint)).
+				Msg("mounting partition as subvolume")
+			mnt, err := d.volumeMounter.MountP(&snapshot.MountPartitionDto{
+				PartitionInfo: partition,
+				ScanDir:       ptr.To(path.Join(partition.MountPoint, entry.Mountpoint)),
+			})
+			if err != nil {
+				log.Error().Err(err).Str("device", partition.Name).Msg("unable to mount partition")
+				return partitions, err
+			}
+			partition.MountPoint = mnt
+			partitions = append(partitions, partition)
+
+			break
+		}
+	}
+	return partitions, nil
+}
+
+func cmpPartition2Fstab(partition *snapshot.PartitionInfo, entry resources.FstabEntry) bool {
+	parts := strings.Split(entry.Device, "=")
+	if len(parts) != 2 {
+		log.Warn().Str("device", entry.Device).Msg("possibly invalid fstab entry, skipping")
+		return false
+	}
+
+	if parts[1] == "" {
+		log.Warn().Str("device", entry.Device).Msg("possibly invalid fstab entry, skipping")
+		return false
+	}
+
+	switch parts[0] {
+	case "UUID":
+		return partition.Uuid == parts[1]
+	case "LABEL":
+		return partition.Label == parts[1]
+	default:
+		log.Warn().Str("device", entry.Device).Msg("couldn't identify fstab device")
+		return false
+	}
 }
 
 func (d *LinuxDeviceManager) Mount(pi *snapshot.PartitionInfo) (string, error) {
-	return d.volumeMounter.MountP(pi)
+	return d.volumeMounter.MountP(&snapshot.MountPartitionDto{PartitionInfo: pi})
 }
 
 func (d *LinuxDeviceManager) UnmountAndClose() {
