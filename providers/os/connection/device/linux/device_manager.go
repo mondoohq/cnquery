@@ -113,7 +113,11 @@ func (d *LinuxDeviceManager) AttemptFindFstab(partitions []*snapshot.PartitionIn
 		if err != nil {
 			continue
 		}
-		defer d.volumeMounter.UmountP(partition)
+		defer func() {
+			if err := d.volumeMounter.UmountP(partition); err != nil {
+				log.Warn().Err(err).Str("device", partition.Name).Msg("unable to unmount partition")
+			}
+		}()
 
 		cmd := exec.Command("find", dir, "-type", "f", "-wholename", `*/etc/fstab`)
 		out, err := cmd.CombinedOutput()
