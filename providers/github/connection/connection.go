@@ -74,6 +74,7 @@ func NewGithubConnection(id uint32, asset *inventory.Asset) (*GithubConnection, 
 	ctx := context.WithValue(context.Background(), github.SleepUntilPrimaryRateLimitResetWhenRateLimited, true)
 
 	// perform a quick call to verify the token's validity.
+	// @afiune do we need to validate the token for every connection? can this be a "once" operation?
 	_, resp, err := client.Meta.Zen(ctx)
 	if err != nil {
 		if resp != nil && resp.StatusCode == 401 {

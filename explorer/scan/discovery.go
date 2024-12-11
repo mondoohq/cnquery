@@ -6,11 +6,13 @@ package scan
 import (
 	"context"
 	"errors"
+	"sync"
 	"time"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/cli/config"
 	"go.mondoo.com/cnquery/v11/cli/execruntime"
+	"go.mondoo.com/cnquery/v11/internal/workerpool"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/logger"
 	"go.mondoo.com/cnquery/v11/providers"
@@ -19,6 +21,9 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream"
 )
+
+// number of parallel goroutines discovering assets
+const workers = 10
 
 type AssetWithRuntime struct {
 	Asset   *inventory.Asset
@@ -34,11 +39,15 @@ type DiscoveredAssets struct {
 	platformIds map[string]struct{}
 	Assets      []*AssetWithRuntime
 	Errors      []*AssetWithError
+	assetsLock  sync.Mutex
 }
 
 // Add adds an asset and its runtime to the discovered assets list. It returns true if the
 // asset has been added, false if it is a duplicate
 func (d *DiscoveredAssets) Add(asset *inventory.Asset, runtime *providers.Runtime) bool {
+	d.assetsLock.Lock()
+	defer d.assetsLock.Unlock()
+
 	isDuplicate := false
 	for _, platformId := range asset.PlatformIds {
 		if _, ok := d.platformIds[platformId]; ok {
@@ -161,35 +170,45 @@ func discoverAssets(rootAssetWithRuntime *AssetWithRuntime, resolvedRootAsset *i
 		return
 	}
 
+	pool := workerpool.New[bool](workers)
+	pool.Start()
+	defer pool.Close()
+
 	// for all discovered assets, we apply mondoo-specific labels and annotations that come from the root asset
 	for _, a := range rootAssetWithRuntime.Runtime.Provider.Connection.Inventory.Spec.Assets {
-		// create runtime for root asset
-		assetWithRuntime, err := createRuntimeForAsset(a, upstream, recording)
-		if err != nil {
-			log.Error().Err(err).Str("asset", a.Name).Msg("unable to create runtime for asset")
-			discoveredAssets.AddError(a, err)
-			continue
-		}
+		pool.Submit(func() (bool, error) {
+			// create runtime for root asset
+			assetWithRuntime, err := createRuntimeForAsset(a, upstream, recording)
+			if err != nil {
+				log.Error().Err(err).Str("asset", a.Name).Msg("unable to create runtime for asset")
+				discoveredAssets.AddError(a, err)
+				return false, err
+			}
 
-		// If no asset was returned and no error, then we observed a duplicate asset with a
-		// runtime that already exists.
-		if assetWithRuntime == nil {
-			continue
-		}
+			// If no asset was returned and no error, then we observed a duplicate asset with a
+			// runtime that already exists.
+			if assetWithRuntime == nil {
+				return false, nil
+			}
 
-		resolvedAsset := assetWithRuntime.Runtime.Provider.Connection.Asset
-		if len(resolvedAsset.PlatformIds) > 0 {
-			prepareAsset(resolvedAsset, resolvedRootAsset, runtimeLabels)
+			resolvedAsset := assetWithRuntime.Runtime.Provider.Connection.Asset
+			if len(resolvedAsset.PlatformIds) > 0 {
+				prepareAsset(resolvedAsset, resolvedRootAsset, runtimeLabels)
 
-			// If the asset has been already added, we should close its runtime
-			if !discoveredAssets.Add(resolvedAsset, assetWithRuntime.Runtime) {
+				// If the asset has been already added, we should close its runtime
+				if !discoveredAssets.Add(resolvedAsset, assetWithRuntime.Runtime) {
+					assetWithRuntime.Runtime.Close()
+				}
+			} else {
+				discoverAssets(assetWithRuntime, resolvedRootAsset, discoveredAssets, runtimeLabels, upstream, recording)
 				assetWithRuntime.Runtime.Close()
 			}
-		} else {
-			discoverAssets(assetWithRuntime, resolvedRootAsset, discoveredAssets, runtimeLabels, upstream, recording)
-			assetWithRuntime.Runtime.Close()
-		}
+			return true, nil
+		})
 	}
+
+	// Wait for the workers to finish processing
+	pool.Wait()
 }
 
 func createRuntimeForAsset(asset *inventory.Asset, upstream *upstream.UpstreamConfig, recording llx.Recording) (*AssetWithRuntime, error) {
