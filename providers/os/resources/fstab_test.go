@@ -97,7 +97,7 @@ LABEL=UEFI	/boot/efi	vfat	umask=0077	0 1`
 			Device:     "LABEL=cloudimg-rootfs",
 			Mountpoint: "/",
 			Fstype:     "ext4",
-			Options:    []string{"discard,commit=30,errors=remount-ro"},
+			Options:    []string{"discard", "commit=30", "errors=remount-ro"},
 			Dump:       ptr.To(0),
 			Fsck:       ptr.To(1),
 		}, entries[0])
