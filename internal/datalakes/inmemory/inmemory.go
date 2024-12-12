@@ -8,12 +8,13 @@ import (
 
 	"github.com/google/uuid"
 	"go.mondoo.com/cnquery/v11/explorer"
+	"go.mondoo.com/cnquery/v11/internal/datalakes/inmemory/store"
 	"go.mondoo.com/cnquery/v11/llx"
 )
 
 // Db is the database backend, it allows the interaction with the underlying data.
 type Db struct {
-	cache       KVStore
+	cache       store.KeyValue
 	services    *explorer.LocalServices // bidirectional connection between db + services
 	uuid        string                  // used for all object identifiers to prevent clashes (eg in-memory pubsub)
 	nowProvider func() time.Time
@@ -21,7 +22,7 @@ type Db struct {
 
 // NewServices creates a new set of backend services
 func NewServices(runtime llx.Runtime) (*Db, *explorer.LocalServices, error) {
-	var cache KVStore = NewKissDb()
+	var cache store.KeyValue = store.NewKissDb()
 
 	db := &Db{
 		cache:       cache,

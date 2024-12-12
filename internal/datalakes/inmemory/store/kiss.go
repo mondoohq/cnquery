@@ -1,12 +1,12 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package inmemory
+package store
 
 import "sync"
 
-// KVStore is an general-purpose abstraction for key-value stores
-type KVStore interface {
+// KeyValue is an general-purpose abstraction for key-value stores
+type KeyValue interface {
 	Get(key interface{}) (interface{}, bool)
 	Set(key interface{}, value interface{}, cost int64) bool
 	Del(key interface{})
