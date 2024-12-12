@@ -48,16 +48,12 @@ func (d *DiscoveredAssets) Add(asset *inventory.Asset, runtime *providers.Runtim
 	d.assetsLock.Lock()
 	defer d.assetsLock.Unlock()
 
-	isDuplicate := false
 	for _, platformId := range asset.PlatformIds {
 		if _, ok := d.platformIds[platformId]; ok {
-			isDuplicate = true
-			break
+			// duplicate
+			return false
 		}
 		d.platformIds[platformId] = struct{}{}
-	}
-	if isDuplicate {
-		return false
 	}
 
 	d.Assets = append(d.Assets, &AssetWithRuntime{Asset: asset, Runtime: runtime})
@@ -65,6 +61,8 @@ func (d *DiscoveredAssets) Add(asset *inventory.Asset, runtime *providers.Runtim
 }
 
 func (d *DiscoveredAssets) AddError(asset *inventory.Asset, err error) {
+	d.assetsLock.Lock()
+	defer d.assetsLock.Unlock()
 	d.Errors = append(d.Errors, &AssetWithError{Asset: asset, Err: err})
 }
 
