@@ -77,4 +77,5 @@ func githubTimestamp(ts *github.Timestamp) *time.Time {
 
 const (
 	paginationPerPage = 100
+	workers           = 10
 )
