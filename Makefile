@@ -700,6 +700,10 @@ test: test/go test/lint
 benchmark/go:
 	go test -bench=. -benchmem go.mondoo.com/cnquery/v11/explorer/scan/benchmark
 
+race/go:
+	go test -race go.mondoo.com/cnquery/v11/internal/workerpool
+	go test -race go.mondoo.com/cnquery/v11/explorer/scan
+
 test/generate: prep/tools/mockgen
 	go generate ./providers
 

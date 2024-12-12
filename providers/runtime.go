@@ -39,6 +39,9 @@ type Runtime struct {
 	isClosed        bool
 	close           sync.Once
 	shutdownTimeout time.Duration
+
+	// used to lock unsafe tasks
+	mu sync.Mutex
 }
 
 type ConnectedProvider struct {
@@ -232,7 +235,9 @@ func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 
 	// }
 
+	r.mu.Lock()
 	r.Provider.Connection, r.Provider.ConnectionError = r.Provider.Instance.Plugin.Connect(req, &callbacks)
+	r.mu.Unlock()
 	if r.Provider.ConnectionError != nil {
 		return r.Provider.ConnectionError
 	}
