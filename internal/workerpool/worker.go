@@ -10,7 +10,7 @@ type worker[R any] struct {
 	errorsCh  chan<- error
 }
 
-func (w *worker[R]) Start() {
+func (w *worker[R]) start() {
 	go func() {
 		for task := range w.queueCh {
 			if task == nil {

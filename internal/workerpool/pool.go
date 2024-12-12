@@ -4,6 +4,7 @@
 package workerpool
 
 import (
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -14,10 +15,12 @@ type Task[R any] func() (result R, err error)
 
 // Pool is a generic pool of workers.
 type Pool[R any] struct {
-	queueCh      chan Task[R]
-	resultsCh    chan R
-	errorsCh     chan error
+	queueCh   chan Task[R]
+	resultsCh chan R
+	errorsCh  chan error
+
 	requestsSent int64
+	once         sync.Once
 
 	workers     []*worker[R]
 	workerCount int
@@ -51,13 +54,15 @@ func New[R any](count int) *Pool[R] {
 //	pool.Start()
 //	defer pool.Close()
 func (p *Pool[R]) Start() {
-	for i := 0; i < p.workerCount; i++ {
-		w := worker[R]{id: i, queueCh: p.queueCh, resultsCh: p.resultsCh, errorsCh: p.errorsCh}
-		w.Start()
-		p.workers = append(p.workers, &w)
-	}
+	p.once.Do(func() {
+		for i := 0; i < p.workerCount; i++ {
+			w := worker[R]{id: i, queueCh: p.queueCh, resultsCh: p.resultsCh, errorsCh: p.errorsCh}
+			w.start()
+			p.workers = append(p.workers, &w)
+		}
 
-	p.collector.Start()
+		p.collector.start()
+	})
 }
 
 // Submit sends a task to the workers
@@ -68,14 +73,14 @@ func (p *Pool[R]) Submit(t Task[R]) {
 
 // GetErrors returns any error from a processed task
 func (p *Pool[R]) GetErrors() error {
-	return errors.Join(p.collector.errors...)
+	return errors.Join(p.collector.GetErrors()...)
 }
 
 // GetResults returns the tasks results.
 //
 // It is recommended to call `Wait()` before reading the results.
 func (p *Pool[R]) GetResults() []R {
-	return p.collector.results
+	return p.collector.GetResults()
 }
 
 // Close waits for workers and collector to process all the requests, and then closes
@@ -98,20 +103,10 @@ func (p *Pool[R]) Wait() {
 
 // PendingRequests returns the number of pending requests.
 func (p *Pool[R]) PendingRequests() int64 {
-	return p.requestsSent - p.collector.RequestsRead()
+	return atomic.LoadInt64(&p.requestsSent) - p.collector.RequestsRead()
 }
 
 // Processing return true if tasks are being processed.
 func (p *Pool[R]) Processing() bool {
-	if !p.empty() {
-		return false
-	}
-
 	return p.PendingRequests() != 0
-}
-
-func (p *Pool[R]) empty() bool {
-	return len(p.queueCh) == 0 &&
-		len(p.resultsCh) == 0 &&
-		len(p.errorsCh) == 0
 }
