@@ -15,6 +15,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/google/go-github/v67/github"
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/mitchellh/hashstructure/v2"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/logger/zerologadapter"
@@ -38,6 +39,9 @@ type GithubConnection struct {
 	asset  *inventory.Asset
 	client *github.Client
 	ctx    context.Context
+
+	// Used to avoid verifying a client with the same options more than once
+	Hash uint64
 }
 
 func NewGithubConnection(id uint32, asset *inventory.Asset) (*GithubConnection, error) {
@@ -73,20 +77,20 @@ func NewGithubConnection(id uint32, asset *inventory.Asset) (*GithubConnection, 
 	// (default behaviour is to send fake 403 response bypassing the retry logic)
 	ctx := context.WithValue(context.Background(), github.SleepUntilPrimaryRateLimitResetWhenRateLimited, true)
 
-	// perform a quick call to verify the token's validity.
-	// @afiune do we need to validate the token for every connection? can this be a "once" operation?
-	_, resp, err := client.Meta.Zen(ctx)
+	// store the hash of the config options used to generate this client
+	hash, err := hashstructure.Hash(conf.Options, hashstructure.FormatV2, nil)
 	if err != nil {
-		if resp != nil && resp.StatusCode == 401 {
-			return nil, errors.New("invalid GitHub token provided. check the value passed with the --token flag or the GITHUB_TOKEN environment variable")
-		}
-		return nil, err
+		// not a blocker since this is only used to avoid validating
+		// the client multiple times
+		log.Warn().Err(err).Msg("unable to hash config options")
 	}
+
 	return &GithubConnection{
 		Connection: plugin.NewConnection(id, asset),
 		asset:      asset,
 		client:     client,
 		ctx:        ctx,
+		Hash:       hash,
 	}, nil
 }
 
@@ -104,6 +108,20 @@ func (c *GithubConnection) Client() *github.Client {
 
 func (c *GithubConnection) Context() context.Context {
 	return c.ctx
+}
+
+func (c *GithubConnection) Verify() error {
+	// perform a quick call to verify the token's validity.
+	_, resp, err := c.client.Meta.Zen(c.ctx)
+	if err != nil {
+		if resp != nil && resp.StatusCode == 401 {
+			return errors.New(
+				"invalid GitHub token provided. check the value passed with the --token flag or the GITHUB_TOKEN environment variable",
+			)
+		}
+		return err
+	}
+	return nil
 }
 
 func newGithubAppClient(conf *inventory.Config) (*github.Client, error) {

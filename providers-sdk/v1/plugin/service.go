@@ -11,6 +11,7 @@ import (
 	sync "sync"
 	"time"
 
+	"go.mondoo.com/cnquery/v11/internal/datalakes/inmemory"
 	llx "go.mondoo.com/cnquery/v11/llx"
 	inventory "go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 )
@@ -24,11 +25,14 @@ type Service struct {
 
 	lastHeartbeat int64
 	heartbeatLock sync.Mutex
+
+	Cache inmemory.KVStore
 }
 
 func NewService() *Service {
 	return &Service{
 		runtimes: make(map[uint32]*Runtime),
+		Cache:    inmemory.NewKissDb(),
 	}
 }
 

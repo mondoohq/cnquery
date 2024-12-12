@@ -5,8 +5,8 @@ package inmemory
 
 import "sync"
 
-// kvStore is an general-purpose abstraction for key-value stores
-type kvStore interface {
+// KVStore is an general-purpose abstraction for key-value stores
+type KVStore interface {
 	Get(key interface{}) (interface{}, bool)
 	Set(key interface{}, value interface{}, cost int64) bool
 	Del(key interface{})
@@ -18,7 +18,7 @@ type kissDb struct {
 	data map[string]interface{}
 }
 
-func newKissDb() *kissDb {
+func NewKissDb() *kissDb {
 	return &kissDb{
 		data: map[string]interface{}{},
 	}

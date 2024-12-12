@@ -163,6 +163,15 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			return nil, err
 		}
 
+		if _, ok := s.Cache.Get(conn.Hash); !ok {
+			// verify the connection only once
+			if err := conn.Verify(); err != nil {
+				return nil, err
+			}
+			// store the hash of the connection
+			s.Cache.Set(conn.Hash, true, 1)
+		}
+
 		var upstream *upstream.UpstreamClient
 		if req.Upstream != nil && !req.Upstream.Incognito {
 			upstream, err = req.Upstream.InitClient(context.Background())

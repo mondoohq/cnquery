@@ -13,7 +13,7 @@ import (
 
 // Db is the database backend, it allows the interaction with the underlying data.
 type Db struct {
-	cache       kvStore
+	cache       KVStore
 	services    *explorer.LocalServices // bidirectional connection between db + services
 	uuid        string                  // used for all object identifiers to prevent clashes (eg in-memory pubsub)
 	nowProvider func() time.Time
@@ -21,7 +21,7 @@ type Db struct {
 
 // NewServices creates a new set of backend services
 func NewServices(runtime llx.Runtime) (*Db, *explorer.LocalServices, error) {
-	var cache kvStore = newKissDb()
+	var cache KVStore = NewKissDb()
 
 	db := &Db{
 		cache:       cache,
