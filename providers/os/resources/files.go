@@ -70,6 +70,11 @@ func (l *mqlFilesFind) list() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
+	} else if len(l.Name.Data) > 0 {
+		compiledRegexp, err = regexp.Compile(l.Name.Data)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	var foundFiles []string

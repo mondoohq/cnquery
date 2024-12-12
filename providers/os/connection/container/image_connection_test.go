@@ -231,11 +231,11 @@ func TestImageConnections(t *testing.T) {
 				fSearch := fs.(*tar.FS)
 
 				if test.testfile == "/etc/alpine-release" {
-					infos, err := fSearch.Find("/", regexp.MustCompile(`alpine-release`), "file")
+					infos, err := fSearch.Find("/", regexp.MustCompile(`alpine-release`), "file", nil, nil)
 					require.NoError(t, err)
 					assert.Equal(t, 1, len(infos))
 				} else if test.testfile == "/etc/centos-release" {
-					infos, err := fSearch.Find("/", regexp.MustCompile(`centos-release`), "file")
+					infos, err := fSearch.Find("/", regexp.MustCompile(`centos-release`), "file", nil, nil)
 					require.NoError(t, err)
 					assert.Equal(t, 6, len(infos))
 				}

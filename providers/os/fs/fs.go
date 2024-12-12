@@ -11,7 +11,10 @@ import (
 	"time"
 
 	"github.com/spf13/afero"
+	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 )
+
+var _ shared.FileSearch = (*MountedFs)(nil)
 
 var notSupported = errors.New("not supported")
 
