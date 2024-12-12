@@ -92,7 +92,7 @@ func (p *Pool[R]) Close() {
 
 // Wait waits until all tasks have been processed.
 func (p *Pool[R]) Wait() {
-	ticker := time.NewTicker(100 * time.Millisecond)
+	ticker := time.NewTicker(10 * time.Millisecond)
 	for {
 		if !p.Processing() {
 			return
