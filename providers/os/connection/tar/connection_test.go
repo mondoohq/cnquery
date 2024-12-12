@@ -236,7 +236,7 @@ func TestTarFileFind(t *testing.T) {
 
 	fSearch := fs.(*tar.FS)
 
-	infos, err := fSearch.Find("/", regexp.MustCompile(`alpine-release`), "file")
+	infos, err := fSearch.Find("/", regexp.MustCompile(`alpine-release`), "file", nil, nil)
 	require.NoError(t, err)
 
 	assert.Equal(t, 1, len(infos))

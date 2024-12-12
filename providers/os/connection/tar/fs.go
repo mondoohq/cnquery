@@ -16,8 +16,11 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
+	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v11/providers/os/fsutil"
 )
+
+var _ shared.FileSearch = (*FS)(nil)
 
 func NewFs(source string) *FS {
 	return &FS{
@@ -192,13 +195,16 @@ func (fs *FS) tar(path string, header *tar.Header) (io.ReadCloser, error) {
 
 // searches for files and returns the file info
 // regex can be nil
-func (fs *FS) Find(from string, r *regexp.Regexp, typ string) ([]string, error) {
+func (fs *FS) Find(from string, r *regexp.Regexp, typ string, perm *uint32, depth *int) ([]string, error) {
 	list := []string{}
 	for k := range fs.FileMap {
 		p := strings.HasPrefix(k, from)
 		m := true
 		if r != nil {
 			m = r.MatchString(k)
+		}
+		if !depthMatch(from, k, depth) {
+			continue
 		}
 		log.Trace().Str("path", k).Str("from", from).Str("prefix", from).Bool("prefix", p).Bool("m", m).Msg("check if matches")
 		if p && m {
@@ -211,4 +217,16 @@ func (fs *FS) Find(from string, r *regexp.Regexp, typ string) ([]string, error) 
 		}
 	}
 	return list, nil
+}
+
+func depthMatch(from, filepath string, depth *int) bool {
+	if depth == nil {
+		return true
+	}
+
+	trimmed := strings.TrimPrefix(filepath, from)
+	// WalkDir always uses slash for separating, ignoring the OS separator. This is why we need to replace it.
+	normalized := strings.ReplaceAll(trimmed, string(os.PathSeparator), "/")
+	fileDepth := strings.Count(normalized, "/")
+	return fileDepth <= *depth
 }
