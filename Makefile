@@ -748,6 +748,3 @@ license/headers/check:
 license/headers/apply:
 	copywrite headers
 
-os:
-	@$(call buildProviderDist, providers/os)
-	@$(call bundleProvider, providers/os)
