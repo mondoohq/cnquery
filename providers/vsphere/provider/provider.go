@@ -184,7 +184,7 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.VsphereConnect
 		Build:                 vSphereInfo.Build,
 		Kind:                  "api",
 		Runtime:               "vsphere",
-		TechnologyUrlSegments: []string{"vsphere", "vsphere", vSphereInfo.Version + "-" + vSphereInfo.Build},
+		TechnologyUrlSegments: []string{"vmware", "vsphere", vSphereInfo.Version + "-" + vSphereInfo.Build},
 	}
 
 	id, err := conn.Identifier()
