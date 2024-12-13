@@ -5,8 +5,10 @@ package linux
 
 import (
 	"bytes"
+	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -91,7 +93,7 @@ func (d *LinuxDeviceManager) IdentifyMountTargets(opts map[string]string) ([]*sn
 		return partitions, nil
 	}
 
-	fstabEntries, err := d.AttemptFindFstab(partitions)
+	fstabEntries, err := d.HintFSTypes(partitions)
 	if err != nil {
 		log.Warn().Err(err).Msg("could not find fstab")
 		return partitions, nil
@@ -107,8 +109,10 @@ func (d *LinuxDeviceManager) IdentifyMountTargets(opts map[string]string) ([]*sn
 	return partitions, nil
 }
 
-func (d *LinuxDeviceManager) AttemptFindFstab(partitions []*snapshot.PartitionInfo) ([]resources.FstabEntry, error) {
-	for _, partition := range partitions {
+func (d *LinuxDeviceManager) HintFSTypes(partitions []*snapshot.PartitionInfo) ([]resources.FstabEntry, error) {
+	for i := range partitions {
+		partition := partitions[i]
+
 		dir, err := d.volumeMounter.MountP(&snapshot.MountPartitionDto{PartitionInfo: partition})
 		if err != nil {
 			continue
@@ -119,31 +123,83 @@ func (d *LinuxDeviceManager) AttemptFindFstab(partitions []*snapshot.PartitionIn
 			}
 		}()
 
-		cmd := exec.Command("find", dir, "-type", "f", "-wholename", `*/etc/fstab`)
-		out, err := cmd.CombinedOutput()
+		entries, err := d.AttemptFindFstab(dir)
 		if err != nil {
-			log.Error().Err(err).Msg("error finding fstab")
-			continue
+			return nil, err
+		}
+		if entries != nil {
+			return entries, nil
 		}
 
-		if len(strings.Split(string(out), "\n")) != 2 {
-			log.Debug().Bytes("find", out).Msg("fstab not found, too many results")
-			continue
+		if ok := d.AttemptFindOSTree(dir, partition); ok {
+			return nil, nil
 		}
 
-		mnt, fstab := path.Split(strings.TrimSpace(string(out)))
-		fstabFile, err := afero.ReadFile(
-			fs.NewMountedFs(mnt),
-			path.Base(fstab))
-		if err != nil {
-			log.Error().Err(err).Msg("error reading fstab")
-			continue
-		}
-
-		return resources.ParseFstab(bytes.NewReader(fstabFile))
 	}
 
 	return nil, errors.New("fstab not found")
+}
+
+func (d *LinuxDeviceManager) AttemptFindFstab(dir string) ([]resources.FstabEntry, error) {
+	cmd := exec.Command("find", dir, "-type", "f", "-wholename", `*/etc/fstab`)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Error().Err(err).Msg("error searching for fstab")
+		return nil, nil
+	}
+
+	if len(strings.Split(string(out), "\n")) != 2 {
+		log.Debug().Bytes("find", out).Msg("fstab not found, too many results")
+		return nil, nil
+	}
+
+	mnt, fstab := path.Split(strings.TrimSpace(string(out)))
+	fstabFile, err := afero.ReadFile(
+		fs.NewMountedFs(mnt),
+		path.Base(fstab))
+	if err != nil {
+		log.Error().Err(err).Msg("error reading fstab")
+		return nil, nil
+	}
+
+	return resources.ParseFstab(bytes.NewReader(fstabFile))
+}
+
+func (d *LinuxDeviceManager) AttemptFindOSTree(dir string, partition *snapshot.PartitionInfo) bool {
+	info, err := os.Stat(path.Join(dir, "ostree"))
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false
+		}
+
+		log.Error().Err(err).Str("device", partition.Name).Msg("unable to stat ostree")
+		return false
+	}
+
+	if !info.IsDir() {
+		return false
+	}
+
+	boot1, err := os.Readlink(path.Join(dir, "ostree", "boot.1"))
+	if err != nil {
+		log.Error().Err(err).Str("device", partition.Name).Msg("unable to readlink boot.1")
+		return false
+	}
+
+	matches, err := filepath.Glob(path.Join(dir, "ostree", boot1, "*", "*", "0"))
+	if err != nil {
+		log.Error().Err(err).Str("device", partition.Name).Msg("unable to glob ostree")
+		return false
+	}
+
+	if len(matches) == 0 {
+		return false
+	} else if len(matches) > 1 {
+		log.Warn().Str("device", partition.Name).Msg("multiple ostree matches")
+	}
+
+	partition.Bind = strings.TrimPrefix(matches[0], dir)
+	return true
 }
 
 // MountWithFstab mounts partitions adjusting the mountpoint and mount options according to the discovered fstab entries

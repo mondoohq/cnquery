@@ -24,6 +24,8 @@ type PartitionInfo struct {
 
 	// (optional) MountOptions are the mount options
 	MountOptions []string
+	// (optional) Bind adjusts the root for FS connection
+	Bind string
 }
 
 type MountPartitionDto struct {
