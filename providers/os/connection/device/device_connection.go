@@ -5,6 +5,7 @@ package device
 
 import (
 	"errors"
+	"os"
 	"path"
 	"runtime"
 	"strings"
@@ -195,6 +196,12 @@ func tryDetectAsset(connId uint32, partition *snapshot.PartitionInfo, conf *inve
 	if partition.Bind != "" {
 		fsPath = path.Join(fsPath, partition.Bind)
 	}
+
+	// debug
+	etc, err := os.ReadDir(path.Join(fsPath, "etc"))
+	log.Debug().Any("etc", etc).Err(err).Msg("device connection> etc dir")
+	ssh, err := os.ReadDir(path.Join(fsPath, "etc", "ssh"))
+	log.Debug().Any("ssh", ssh).Err(err).Msg("device connection> etc/ssh dir")
 
 	// create and initialize fs provider
 	log.Debug().Str("path", fsPath).Msg("device connection> trying to detect asset")
