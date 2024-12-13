@@ -221,7 +221,8 @@ func tryDetectAsset(connId uint32, partition *snapshot.PartitionInfo, conf *inve
 	fingerprint, p, err := id.IdentifyPlatform(fsConn, &plugin.ConnectReq{}, p, asset.IdDetector)
 	if err != nil {
 		log.Debug().Err(err).
-			Strs("platform-ids", asset.PlatformIds). // debug
+			Str("path", fsPath).                    // debug
+			Strs("id-detectors", asset.IdDetector). // debug
 			Msg("device connection> failed to identify platform from device")
 		return nil, err
 	}
