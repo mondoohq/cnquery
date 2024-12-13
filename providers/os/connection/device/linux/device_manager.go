@@ -98,6 +98,7 @@ func (d *LinuxDeviceManager) IdentifyMountTargets(opts map[string]string) ([]*sn
 		log.Warn().Err(err).Msg("could not find fstab")
 		return partitions, nil
 	}
+	log.Debug().Any("fstab", fstabEntries).Msg("fstab entries found")
 
 	partitions, err = d.MountWithFstab(partitions, fstabEntries)
 	if err != nil {
