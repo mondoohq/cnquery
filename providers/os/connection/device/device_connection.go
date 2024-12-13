@@ -218,6 +218,12 @@ func tryDetectAsset(connId uint32, partition *snapshot.PartitionInfo, conf *inve
 		return nil, errors.New("cannot detect os")
 	}
 
+	log.Debug().Err(err).
+		Str("partition", partition.Name).       // debug
+		Str("path", fsPath).                    // debug
+		Strs("id-detectors", asset.IdDetector). // debug
+		Msg("device connection> detecting platform from device")
+
 	fingerprint, p, err := id.IdentifyPlatform(fsConn, &plugin.ConnectReq{}, p, asset.IdDetector)
 	if err != nil {
 		log.Debug().Err(err).
