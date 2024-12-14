@@ -205,12 +205,17 @@ func tryDetectAsset(connId uint32, partition *snapshot.PartitionInfo, conf *inve
 	}
 	log.Debug().Any("etc", etcs).Err(err).Msg("device connection> etc dir")
 
+	// debug
 	ssh, err := os.ReadDir(path.Join(fsPath, "etc", "ssh"))
 	sshs := make([]string, 0)
 	for _, s := range ssh {
 		sshs = append(sshs, s.Name())
 	}
 	log.Debug().Any("ssh", sshs).Err(err).Msg("device connection> etc/ssh dir")
+
+	// debug
+	_, err = os.Stat(path.Join(fsPath, "etc", "machine-id"))
+	log.Debug().Err(err).Msg("device connection> machine-id existance check")
 
 	// create and initialize fs provider
 	log.Debug().Str("path", fsPath).Msg("device connection> trying to detect asset")
