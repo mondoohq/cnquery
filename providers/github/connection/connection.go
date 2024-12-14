@@ -73,14 +73,6 @@ func NewGithubConnection(id uint32, asset *inventory.Asset) (*GithubConnection, 
 	// (default behaviour is to send fake 403 response bypassing the retry logic)
 	ctx := context.WithValue(context.Background(), github.SleepUntilPrimaryRateLimitResetWhenRateLimited, true)
 
-	// perform a quick call to verify the token's validity.
-	_, resp, err := client.Meta.Zen(ctx)
-	if err != nil {
-		if resp != nil && resp.StatusCode == 401 {
-			return nil, errors.New("invalid GitHub token provided. check the value passed with the --token flag or the GITHUB_TOKEN environment variable")
-		}
-		return nil, err
-	}
 	return &GithubConnection{
 		Connection: plugin.NewConnection(id, asset),
 		asset:      asset,
@@ -103,6 +95,20 @@ func (c *GithubConnection) Client() *github.Client {
 
 func (c *GithubConnection) Context() context.Context {
 	return c.ctx
+}
+
+func (c *GithubConnection) Verify() error {
+	// perform a quick call to verify the token's validity.
+	_, resp, err := c.client.Meta.Zen(c.ctx)
+	if err != nil {
+		if resp != nil && resp.StatusCode == 401 {
+			return errors.New(
+				"invalid GitHub token provided. check the value passed with the --token flag or the GITHUB_TOKEN environment variable",
+			)
+		}
+		return err
+	}
+	return nil
 }
 
 func newGithubAppClient(conf *inventory.Config) (*github.Client, error) {
