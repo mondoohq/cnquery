@@ -35,11 +35,10 @@ func TestPoolSubmitAndRetrieveResult(t *testing.T) {
 	// should have one result
 	results := pool.GetResults()
 	if assert.Len(t, results, 1) {
-		assert.Equal(t, 42, results[0])
+		assert.Equal(t, 42, results[0].Value)
+		// without errors
+		assert.NoError(t, results[0].Error)
 	}
-
-	// no errors
-	assert.Nil(t, pool.GetErrors())
 }
 
 func TestPoolHandleErrors(t *testing.T) {
@@ -53,12 +52,12 @@ func TestPoolHandleErrors(t *testing.T) {
 	}
 	pool.Submit(task)
 
-	// Wait for error collector to process
+	// Wait for collector to process the results
 	pool.Wait()
 
-	err := pool.GetErrors()
-	if assert.Error(t, err) {
-		assert.Contains(t, err.Error(), "task error")
+	errs := pool.GetErrors()
+	if assert.Len(t, errs, 1) {
+		assert.Equal(t, errs[0].Error(), "task error")
 	}
 }
 
@@ -86,12 +85,26 @@ func TestPoolMultipleTasksWithErrors(t *testing.T) {
 	// Wait for error collector to process
 	pool.Wait()
 
-	results := pool.GetResults()
-	assert.ElementsMatch(t, []*test{&test{1}, &test{2}, &test{3}}, results)
-	err := pool.GetErrors()
-	if assert.Error(t, err) {
-		assert.Contains(t, err.Error(), "task error")
-	}
+	// Access results together
+	assert.ElementsMatch(t,
+		[]workerpool.Result[*test]{
+			{&test{1}, nil},
+			{&test{2}, nil},
+			{&test{3}, nil},
+			{nil, errors.New("task error")},
+		},
+		pool.GetResults(),
+	)
+
+	// You can also access values and errors directly
+	assert.ElementsMatch(t,
+		[]*test{nil, &test{1}, &test{2}, &test{3}},
+		pool.GetValues(),
+	)
+	assert.ElementsMatch(t,
+		[]error{nil, nil, errors.New("task error"), nil},
+		pool.GetErrors(),
+	)
 }
 
 func TestPoolHandlesNilTasks(t *testing.T) {
@@ -104,8 +117,8 @@ func TestPoolHandlesNilTasks(t *testing.T) {
 
 	pool.Wait()
 
-	err := pool.GetErrors()
-	assert.NoError(t, err)
+	assert.Empty(t, pool.GetErrors())
+	assert.Empty(t, pool.GetValues())
 }
 
 func TestPoolProcessing(t *testing.T) {
@@ -126,9 +139,8 @@ func TestPoolProcessing(t *testing.T) {
 	// wait
 	pool.Wait()
 
-	// read results
-	result := pool.GetResults()
-	assert.Equal(t, []int{10}, result)
+	// read values
+	assert.Equal(t, []int{10}, pool.GetValues())
 
 	// should not longer be processing
 	assert.False(t, pool.Processing())

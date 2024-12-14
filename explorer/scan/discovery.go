@@ -188,7 +188,9 @@ func discoverAssets(rootAssetWithRuntime *AssetWithRuntime, resolvedRootAsset *i
 	pool.Wait()
 
 	// Get all assets with runtimes from the pool
-	for _, assetWithRuntime := range pool.GetResults() {
+	for _, result := range pool.GetResults() {
+		assetWithRuntime := result.Value
+
 		// If asset is nil, then we observed a duplicate asset with a
 		// runtime that already exists.
 		if assetWithRuntime == nil {

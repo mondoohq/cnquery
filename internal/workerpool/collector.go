@@ -9,13 +9,11 @@ import (
 )
 
 type collector[R any] struct {
-	resultsCh <-chan R
-	results   []R
+	resultsCh <-chan Result[R]
+	results   []Result[R]
 	read      sync.Mutex
 
-	errorsCh <-chan error
-	errors   []error
-
+	// The total number of requests read.
 	requestsRead int64
 }
 
@@ -27,29 +25,35 @@ func (c *collector[R]) start() {
 				c.read.Lock()
 				c.results = append(c.results, result)
 				c.read.Unlock()
-
-			case err := <-c.errorsCh:
-				c.read.Lock()
-				c.errors = append(c.errors, err)
-				c.read.Unlock()
 			}
 
 			atomic.AddInt64(&c.requestsRead, 1)
 		}
 	}()
 }
-func (c *collector[R]) GetResults() []R {
+
+func (c *collector[R]) RequestsRead() int64 {
+	return atomic.LoadInt64(&c.requestsRead)
+}
+
+func (c *collector[R]) GetResults() []Result[R] {
 	c.read.Lock()
 	defer c.read.Unlock()
 	return c.results
 }
 
-func (c *collector[R]) GetErrors() []error {
-	c.read.Lock()
-	defer c.read.Unlock()
-	return c.errors
+func (c *collector[R]) GetValues() (slice []R) {
+	results := c.GetResults()
+	for i := range results {
+		slice = append(slice, results[i].Value)
+	}
+	return
 }
 
-func (c *collector[R]) RequestsRead() int64 {
-	return atomic.LoadInt64(&c.requestsRead)
+func (c *collector[R]) GetErrors() (slice []error) {
+	results := c.GetResults()
+	for i := range results {
+		slice = append(slice, results[i].Error)
+	}
+	return
 }
