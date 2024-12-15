@@ -50,12 +50,6 @@ jira
 jsonbody
 kqueue
 labelmatchstatement
-libdnet
-liblua
-libpcap
-libpcre
-libssh
-libz
 liveanalytics
 loggingservice
 managedrulegroupstatement
@@ -71,7 +65,6 @@ nmap
 nodegroup
 nodepool
 notebookinstancedetails
-nsock
 nsrecord
 nullgroup
 nullstring
@@ -111,7 +104,6 @@ timestream
 toplevel
 tpu
 vdcs
-VNIC
 Vtpm
 vulnerabilityassessmentsettings
 vulnmgmt

@@ -4,13 +4,13 @@
 option provider = "go.mondoo.com/cnquery/v11/providers/nmap"
 option go_package = "go.mondoo.com/cnquery/v11/providers/nmap/resources"
 
-// nmap
+// Nmap
 nmap {
   // Nmap version information
   version() nmap.versionInformation
 }
 
-// nmap network
+// Nmap network
 nmap.network {
   init(target string)
   // Target IP address or hostname
@@ -21,7 +21,7 @@ nmap.network {
   warnings() []string
 }
 
-// nmap host
+// Nmap host
 nmap.host @defaults("name") {
  init(name string)
   // Name of the host
@@ -46,7 +46,7 @@ nmap.host @defaults("name") {
  state() string
 }
 
-// nmap port
+// Nmap port
 private nmap.port @defaults("port service"){
   // Port number
   port int
@@ -64,15 +64,15 @@ private nmap.port @defaults("port service"){
   state string
 }
 
-// nmap version information
+// Nmap version information
 private nmap.versionInformation @defaults("version") {
-  // Version of nmap
+  // Version of Nmap
   version string
-  // Platform nmap is running on
+  // Platform Nmap is running on
   platform string
-  // libraries compiled with
+  // Libraries compiled with
   compiledWith []string
-  // libraries not compiled with
+  // Libraries not compiled with
   compiledWithout []string
   // nsock engines
   nsockEngines []string
