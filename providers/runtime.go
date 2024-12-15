@@ -133,6 +133,13 @@ func (r *Runtime) AddConnectedProvider(c *ConnectedProvider) {
 	r.mu.Unlock()
 }
 
+func (r *Runtime) setProviderConnection(c *plugin.ConnectRes, err error) {
+	r.mu.Lock()
+	r.Provider.Connection = c
+	r.Provider.ConnectionError = err
+	r.mu.Unlock()
+}
+
 func (r *Runtime) addProvider(id string) (*ConnectedProvider, error) {
 	// TODO: we need to detect only the shared running providers
 	running, err := r.coordinator.GetRunningProvider(id, r.AutoUpdate)
@@ -239,11 +246,10 @@ func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 
 	// }
 
-	r.mu.Lock()
-	r.Provider.Connection, r.Provider.ConnectionError = r.Provider.Instance.Plugin.Connect(req, &callbacks)
-	r.mu.Unlock()
-	if r.Provider.ConnectionError != nil {
-		return r.Provider.ConnectionError
+	conn, err := r.Provider.Instance.Plugin.Connect(req, &callbacks)
+	r.setProviderConnection(conn, err)
+	if err != nil {
+		return err
 	}
 
 	// TODO: This is a stopgap that detects if the connect call returned an asset
@@ -265,9 +271,10 @@ func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 	if postProvider.ID != r.Provider.Instance.ID {
 		req.Asset = r.Provider.Connection.Asset
 		r.UseProvider(postProvider.ID)
-		r.Provider.Connection, r.Provider.ConnectionError = r.Provider.Instance.Plugin.Connect(req, &callbacks)
-		if r.Provider.ConnectionError != nil {
-			return r.Provider.ConnectionError
+		conn, err := r.Provider.Instance.Plugin.Connect(req, &callbacks)
+		r.setProviderConnection(conn, err)
+		if err != nil {
+			return err
 		}
 	}
 
