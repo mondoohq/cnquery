@@ -121,12 +121,16 @@ func (r *Runtime) UseProvider(id string) error {
 		return err
 	}
 
+	r.mu.Lock()
 	r.Provider = res
+	r.mu.Unlock()
 	return nil
 }
 
 func (r *Runtime) AddConnectedProvider(c *ConnectedProvider) {
+	r.mu.Lock()
 	r.providers[c.Instance.ID] = c
+	r.mu.Unlock()
 }
 
 func (r *Runtime) addProvider(id string) (*ConnectedProvider, error) {
@@ -752,6 +756,9 @@ func (r *Runtime) Schema() resources.ResourcesSchema {
 }
 
 func (r *Runtime) asset() *inventory.Asset {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
 	if r.Provider == nil || r.Provider.Connection == nil {
 		return nil
 	}
