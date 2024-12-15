@@ -639,6 +639,12 @@ lr/docs/markdown: providers/lr
 		--description "The Cloudflare resource pack lets you use MQL to query and assess the security of your Cloudflare configuration." \
 		--docs-file providers/cloudflare/resources/cloudflare.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/cloudflare-pack
+	./lr markdown providers/nmap/resources/nmap.lr \
+		--pack-name "Nmap" \
+		--description "The Nmap resource pack lets you use MQL to query and assess the network devices with Nmap." \
+		--docs-file providers/nmap/resources/nmap.lr.manifest.yaml \
+		--output ../docs/docs/mql/resources/nmap-pack
+
 
 lr/docs/stats:
 	@echo "Please remember to re-run before using this:"
