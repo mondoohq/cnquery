@@ -7,25 +7,40 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-
-	"github.com/cockroachdb/errors"
 )
 
+// Represent the tasks that can be sent to the pool.
 type Task[R any] func() (result R, err error)
+
+// The result generated from a task.
+type Result[R any] struct {
+	Value R
+	Error error
+}
 
 // Pool is a generic pool of workers.
 type Pool[R any] struct {
-	queueCh   chan Task[R]
-	resultsCh chan R
-	errorsCh  chan error
+	// The queue where tasks are submitted.
+	queueCh chan Task[R]
 
+	// Where workers send the results after a task is executed,
+	// the collector then reads them and aggregate them.
+	resultsCh chan Result[R]
+
+	// The total number of requests sent.
 	requestsSent int64
-	once         sync.Once
 
-	workers     []*worker[R]
+	// Number of workers to spawn.
 	workerCount int
 
+	// The list of workers that are listening to the queue.
+	workers []*worker[R]
+
+	// A single collector to aggregate results.
 	collector[R]
+
+	// used to protect starting the pool multiple times
+	once sync.Once
 }
 
 // New initializes a new Pool with the provided number of workers. The pool is generic and can
@@ -37,14 +52,12 @@ type Pool[R any] struct {
 //		return 42, nil
 //	}
 func New[R any](count int) *Pool[R] {
-	resultsCh := make(chan R)
-	errorsCh := make(chan error)
+	resultsCh := make(chan Result[R])
 	return &Pool[R]{
 		queueCh:     make(chan Task[R]),
 		resultsCh:   resultsCh,
-		errorsCh:    errorsCh,
 		workerCount: count,
-		collector:   collector[R]{resultsCh: resultsCh, errorsCh: errorsCh},
+		collector:   collector[R]{resultsCh: resultsCh},
 	}
 }
 
@@ -56,7 +69,7 @@ func New[R any](count int) *Pool[R] {
 func (p *Pool[R]) Start() {
 	p.once.Do(func() {
 		for i := 0; i < p.workerCount; i++ {
-			w := worker[R]{id: i, queueCh: p.queueCh, resultsCh: p.resultsCh, errorsCh: p.errorsCh}
+			w := worker[R]{id: i, queueCh: p.queueCh, resultsCh: p.resultsCh}
 			w.start()
 			p.workers = append(p.workers, &w)
 		}
@@ -67,20 +80,31 @@ func (p *Pool[R]) Start() {
 
 // Submit sends a task to the workers
 func (p *Pool[R]) Submit(t Task[R]) {
-	p.queueCh <- t
-	atomic.AddInt64(&p.requestsSent, 1)
-}
-
-// GetErrors returns any error from a processed task
-func (p *Pool[R]) GetErrors() error {
-	return errors.Join(p.collector.GetErrors()...)
+	if t != nil {
+		p.queueCh <- t
+		atomic.AddInt64(&p.requestsSent, 1)
+	}
 }
 
 // GetResults returns the tasks results.
 //
 // It is recommended to call `Wait()` before reading the results.
-func (p *Pool[R]) GetResults() []R {
+func (p *Pool[R]) GetResults() []Result[R] {
 	return p.collector.GetResults()
+}
+
+// GetValues returns only the values of the pool results
+//
+// It is recommended to call `Wait()` before reading the results.
+func (p *Pool[R]) GetValues() []R {
+	return p.collector.GetValues()
+}
+
+// GetErrors returns only the errors of the pool results
+//
+// It is recommended to call `Wait()` before reading the results.
+func (p *Pool[R]) GettErrors() []error {
+	return p.collector.GetErrors()
 }
 
 // Close waits for workers and collector to process all the requests, and then closes
@@ -92,7 +116,7 @@ func (p *Pool[R]) Close() {
 
 // Wait waits until all tasks have been processed.
 func (p *Pool[R]) Wait() {
-	ticker := time.NewTicker(100 * time.Millisecond)
+	ticker := time.NewTicker(10 * time.Millisecond)
 	for {
 		if !p.Processing() {
 			return

@@ -199,6 +199,18 @@
       ],
     },
     {
+      "name": "scan github org",
+      "type": "go",
+      "request": "launch",
+      "program": "${workspaceRoot}/apps/cnquery/cnquery.go",
+      "args": [
+        "scan",
+        "github",
+        "org", "hit-training",
+        "--log-level", "trace"
+      ]
+    },
+    {
       "name": "Configure Built-in Providers",
       "type": "go",
       "request": "launch",

@@ -51,11 +51,8 @@ func (s *Service) AddRuntime(conf *inventory.Config, createRuntime func(connId u
 	}
 	// ^^
 
-	s.runtimesLock.Lock()
-	defer s.runtimesLock.Unlock()
-
 	// If a runtime with this ID already exists, then return that
-	if runtime, ok := s.runtimes[conf.Id]; ok {
+	if runtime, err := s.GetRuntime(conf.Id); err == nil {
 		return runtime, nil
 	}
 
@@ -66,7 +63,7 @@ func (s *Service) AddRuntime(conf *inventory.Config, createRuntime func(connId u
 
 	if runtime.Connection != nil {
 		if parentId := runtime.Connection.ParentID(); parentId > 0 {
-			parentRuntime, err := s.doGetRuntime(parentId)
+			parentRuntime, err := s.GetRuntime(parentId)
 			if err != nil {
 				return nil, errors.New("parent connection " + strconv.FormatUint(uint64(parentId), 10) + " not found")
 			}
@@ -74,8 +71,17 @@ func (s *Service) AddRuntime(conf *inventory.Config, createRuntime func(connId u
 
 		}
 	}
-	s.runtimes[conf.Id] = runtime
+
+	// store the new runtime
+	s.addRuntime(conf.Id, runtime)
+
 	return runtime, nil
+}
+
+func (s *Service) addRuntime(id uint32, runtime *Runtime) {
+	s.runtimesLock.Lock()
+	defer s.runtimesLock.Unlock()
+	s.runtimes[id] = runtime
 }
 
 // FIXME: DEPRECATED, remove in v12.0 vv
