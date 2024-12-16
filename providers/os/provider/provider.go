@@ -357,6 +357,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 
 	asset := req.Asset
 	conf := asset.Connections[0]
+	log.Debug().Str("asset-name", asset.Name).Strs("platform-ids", asset.PlatformIds).Msg("pre-detection platform-ids")
 
 	runtime, err := s.AddRuntime(conf, func(connId uint32) (*plugin.Runtime, error) {
 		var conn shared.Connection
@@ -371,7 +372,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 				if asset.Name == "" {
 					asset.Name = fingerprint.Name
 				}
-				asset.PlatformIds = fingerprint.PlatformIDs
+				asset.PlatformIds = append(asset.PlatformIds, fingerprint.PlatformIDs...)
 				asset.IdDetector = fingerprint.ActiveIdDetectors
 				asset.Platform = p
 				appendRelatedAssetsFromFingerprint(fingerprint, asset)
@@ -389,7 +390,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 				if asset.Name == "" && conn.Asset().Connections[0].Runtime != "vagrant" {
 					asset.Name = fingerprint.Name
 				}
-				asset.PlatformIds = fingerprint.PlatformIDs
+				asset.PlatformIds = append(asset.PlatformIds, fingerprint.PlatformIDs...)
 				asset.IdDetector = fingerprint.ActiveIdDetectors
 				asset.Platform = p
 				appendRelatedAssetsFromFingerprint(fingerprint, asset)
@@ -404,7 +405,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			fingerprint, p, err := id.IdentifyPlatform(conn, req, asset.Platform, asset.IdDetector)
 			if err == nil {
 				asset.Name = fingerprint.Name
-				asset.PlatformIds = fingerprint.PlatformIDs
+				asset.PlatformIds = append(asset.PlatformIds, fingerprint.PlatformIDs...)
 				asset.IdDetector = fingerprint.ActiveIdDetectors
 				asset.Platform = p
 				appendRelatedAssetsFromFingerprint(fingerprint, asset)
@@ -419,7 +420,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			fingerprint, p, err := id.IdentifyPlatform(conn, req, asset.Platform, asset.IdDetector)
 			if err == nil {
 				asset.Name = fingerprint.Name
-				asset.PlatformIds = fingerprint.PlatformIDs
+				asset.PlatformIds = append(asset.PlatformIds, fingerprint.PlatformIDs...)
 				asset.IdDetector = fingerprint.ActiveIdDetectors
 				asset.Platform = p
 				appendRelatedAssetsFromFingerprint(fingerprint, asset)
@@ -434,7 +435,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			fingerprint, p, err := id.IdentifyPlatform(conn, req, asset.Platform, asset.IdDetector)
 			if err == nil {
 				asset.Name = fingerprint.Name
-				asset.PlatformIds = fingerprint.PlatformIDs
+				asset.PlatformIds = append(asset.PlatformIds, fingerprint.PlatformIDs...)
 				asset.IdDetector = fingerprint.ActiveIdDetectors
 				asset.Platform = p
 				appendRelatedAssetsFromFingerprint(fingerprint, asset)
@@ -486,7 +487,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 				fingerprint, p, err := id.IdentifyPlatform(conn, req, asset.Platform, asset.IdDetector)
 				if err == nil {
 					asset.Name = fingerprint.Name
-					asset.PlatformIds = fingerprint.PlatformIDs
+					asset.PlatformIds = append(asset.PlatformIds, fingerprint.PlatformIDs...)
 					asset.IdDetector = fingerprint.ActiveIdDetectors
 					asset.Platform = p
 				}
@@ -507,6 +508,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			return nil, err
 		}
 
+		log.Debug().Str("asset-name", asset.Name).Strs("platform-ids", asset.PlatformIds).Msg("used platform-ids")
 		var upstream *upstream.UpstreamClient
 		if req.Upstream != nil && !req.Upstream.Incognito {
 			upstream, err = req.Upstream.InitClient(context.Background())
