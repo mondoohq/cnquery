@@ -5,7 +5,6 @@ package device
 
 import (
 	"errors"
-	"os"
 	"path"
 	"runtime"
 	"strings"
@@ -197,26 +196,6 @@ func tryDetectAsset(connId uint32, partition *snapshot.PartitionInfo, conf *inve
 		fsPath = path.Join(fsPath, partition.Bind)
 	}
 
-	// debug
-	etc, err := os.ReadDir(path.Join(fsPath, "etc"))
-	etcs := make([]string, 0)
-	for _, e := range etc {
-		etcs = append(etcs, e.Name())
-	}
-	log.Debug().Any("etc", etcs).Err(err).Msg("device connection> etc dir")
-
-	// debug
-	ssh, err := os.ReadDir(path.Join(fsPath, "etc", "ssh"))
-	sshs := make([]string, 0)
-	for _, s := range ssh {
-		sshs = append(sshs, s.Name())
-	}
-	log.Debug().Any("ssh", sshs).Err(err).Msg("device connection> etc/ssh dir")
-
-	// debug
-	_, err = os.Stat(path.Join(fsPath, "etc", "machine-id"))
-	log.Debug().Err(err).Msg("device connection> machine-id existance check")
-
 	// create and initialize fs provider
 	log.Debug().Str("path", fsPath).Msg("device connection> trying to detect asset")
 	conf.Options["path"] = fsPath
@@ -240,9 +219,6 @@ func tryDetectAsset(connId uint32, partition *snapshot.PartitionInfo, conf *inve
 	}
 
 	log.Debug().Err(err).
-		Str("partition", partition.Name).       // debug
-		Str("path", fsPath).                    // debug
-		Strs("id-detectors", asset.IdDetector). // debug
 		Msg("device connection> detecting platform from device")
 
 	asset.IdDetector = append(asset.IdDetector, ids.IdDetector_MachineID)
@@ -250,15 +226,12 @@ func tryDetectAsset(connId uint32, partition *snapshot.PartitionInfo, conf *inve
 	if err != nil {
 		if len(asset.PlatformIds) == 0 {
 			log.Debug().Err(err).
-				Str("partition", partition.Name).       // debug
-				Str("path", fsPath).                    // debug
-				Strs("id-detectors", asset.IdDetector). // debug
 				Msg("device connection> failed to identify platform from device")
 			return nil, err
 		}
 
 		log.Warn().Err(err).
-			Msg("device connection> failed to identify platform from device")
+			Msg("device connection> failed to identify platform from device, using existing platform ids")
 	}
 	if p == nil {
 		log.Debug().Msg("device connection> no platform detected")

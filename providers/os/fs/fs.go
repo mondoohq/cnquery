@@ -10,7 +10,6 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 )
 
@@ -54,7 +53,6 @@ func (t *MountedFs) MkdirAll(path string, perm os.FileMode) error {
 
 func (t *MountedFs) Open(name string) (afero.File, error) {
 	mountedPath := t.getPath(name)
-	log.Debug().Str("mountedPath", mountedPath).Str("requestedPath", name).Msg("opening file") // debug
 	f, e := os.Open(mountedPath)
 	if f == nil {
 		// while this looks strange, we need to return a bare nil (of type nil) not
