@@ -102,6 +102,7 @@ func (a *mqlAwsS3) buckets() ([]interface{}, error) {
 				"exists":      llx.BoolData(true),
 				"location":    llx.StringData(region),
 				"createdTime": llx.TimeDataPtr(bucket.CreationDate),
+				"createdAt":   llx.TimeDataPtr(bucket.CreationDate),
 			})
 		if err != nil {
 			return nil, err
