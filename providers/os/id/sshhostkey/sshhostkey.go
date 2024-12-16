@@ -36,6 +36,8 @@ func Detect(t shared.Connection, p *inventory.Platform) ([]string, error) {
 		if os.IsPermission(err) {
 			log.Warn().Err(err).Str("hostkey", hostKeyFilePath).Msg("no permission to access ssh hostkey")
 			continue
+		} else if os.IsNotExist(err) {
+			continue
 		} else if err != nil {
 			return nil, errors.Wrap(err, "could not read file:"+hostKeyFilePath)
 		}
