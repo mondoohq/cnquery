@@ -10,13 +10,13 @@ require (
 	github.com/stretchr/testify v1.10.0
 	go.mondoo.com/cnquery/v11 v11.33.1
 	golang.org/x/oauth2 v0.24.0
-	google.golang.org/api v0.210.0
+	google.golang.org/api v0.211.0
 )
 
 require (
 	cel.dev/expr v0.19.1 // indirect
 	cloud.google.com/go v0.116.0 // indirect
-	cloud.google.com/go/auth v0.12.0 // indirect
+	cloud.google.com/go/auth v0.12.1 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.6 // indirect
 	cloud.google.com/go/compute/metadata v0.5.2 // indirect
 	cloud.google.com/go/iam v1.3.0 // indirect
