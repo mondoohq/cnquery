@@ -128,6 +128,24 @@ jobs:
           name: test-results-cli
           path: report.xml
 
+  go-race:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Import environment variables from file
+        run: cat ".github/env" >> $GITHUB_ENV
+
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ">=${{ env.golang-version }}"
+          cache: false
+
+      - name: Run race detector on selected packages
+        run: make race/go
+
   go-bench:
     runs-on: ubuntu-latest
     if: github.ref != 'refs/heads/main'

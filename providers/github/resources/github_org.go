@@ -4,12 +4,12 @@
 package resources
 
 import (
-	"errors"
 	"slices"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/google/go-github/v67/github"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/internal/workerpool"
@@ -287,7 +287,7 @@ func (g *mqlGithubOrganization) repositories() ([]interface{}, error) {
 
 	for {
 		// exit as soon as we collect all repositories
-		reposLen := len(slices.Concat(workerPool.GetResults()...))
+		reposLen := len(slices.Concat(workerPool.GetValues()...))
 		if reposLen >= int(repoCount) {
 			break
 		}
@@ -303,7 +303,8 @@ func (g *mqlGithubOrganization) repositories() ([]interface{}, error) {
 		listOpts.Page++
 
 		// check if any request failed
-		if err := workerPool.GetErrors(); err != nil {
+		if errs := workerPool.GetErrors(); len(errs) != 0 {
+			err := errors.Join(errs...)
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
 			}
@@ -316,7 +317,7 @@ func (g *mqlGithubOrganization) repositories() ([]interface{}, error) {
 	}
 
 	res := []interface{}{}
-	for _, repos := range workerPool.GetResults() {
+	for _, repos := range workerPool.GetValues() {
 		for i := range repos {
 			repo := repos[i]
 

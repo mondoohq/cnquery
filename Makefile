@@ -213,7 +213,8 @@ providers/build: \
 	providers/build/ansible \
 	providers/build/snowflake \
 	providers/build/mondoo \
-	providers/build/cloudflare
+	providers/build/cloudflare \
+	providers/build/nmap
 
 .PHONY: providers/install
 # Note we need \ to escape the target line into multiple lines
@@ -244,7 +245,8 @@ providers/install: \
 	providers/install/ansible \
 	providers/install/snowflake \
 	providers/install/mondoo \
-	providers/install/cloudflare
+	providers/install/cloudflare \
+	providers/build/nmap
 
 providers/build/mock: providers/lr
 	./lr go providers-sdk/v1/testutils/mockprovider/resources/mockprovider.lr
@@ -387,6 +389,11 @@ providers/build/mondoo: providers/lr
 providers/install/mondoo:
 	@$(call installProvider, providers/mondoo)
 
+providers/build/nmap: providers/lr
+	@$(call buildProvider, providers/nmap)
+providers/install/nmap:
+	@$(call installProvider, providers/nmap)
+
 providers/dist:
 	@$(call buildProviderDist, providers/network)
 	@$(call buildProviderDist, providers/os)
@@ -414,6 +421,7 @@ providers/dist:
 	@$(call buildProviderDist, providers/ansible)
 	@$(call buildProviderDist, providers/snowflake)
 	@$(call buildProviderDist, providers/mondoo)
+	@$(call buildProviderDist, providers/nmap)
 
 providers/bundle:
 	@$(call bundleProvider, providers/network)
@@ -442,6 +450,7 @@ providers/bundle:
 	@$(call bundleProvider, providers/ansible)
 	@$(call bundleProvider, providers/snowflake)
 	@$(call bundleProvider, providers/mondoo)
+	@$(call bundleProvider, providers/nmap)
 
 providers/test:
 	@$(call testProvider, providers/core)
@@ -471,6 +480,7 @@ providers/test:
 	@$(call testGoModProvider, providers/ansible)
 	@$(call testGoModProvider, providers/snowflake)
 	@$(call testGoModProvider, providers/mondoo)
+	@$(call testGoModProvider, providers/nmap)
 
 lr/test:
 	go test ./resources/lr/...
@@ -564,6 +574,11 @@ lr/docs/markdown: providers/lr
 		--description "The Network resource pack lets you use MQL to query and assess the security of domains and network services." \
 		--docs-file providers/network/resources/network.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/network-pack
+	./lr markdown providers/network/resources/nmap.lr \
+		--pack-name "nmap" \
+		--description "The Nmap resource pack lets you use MQL to query and assess Nmap data." \
+		--docs-file providers/network/resources/nmap.lr.manifest.yaml \
+		--output ../docs/docs/mql/resources/nmap-pack
 	./lr markdown providers/oci/resources/oci.lr \
 		--pack-name "Oracle Cloud Infrastructure (OCI)" \
 		--description "The Oracle Cloud Infrastructure (OCI) resource pack lets you use MQL to query and assess the security of your OCI services." \
@@ -624,6 +639,12 @@ lr/docs/markdown: providers/lr
 		--description "The Cloudflare resource pack lets you use MQL to query and assess the security of your Cloudflare configuration." \
 		--docs-file providers/cloudflare/resources/cloudflare.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/cloudflare-pack
+	./lr markdown providers/nmap/resources/nmap.lr \
+		--pack-name "Nmap" \
+		--description "The Nmap resource pack lets you use MQL to query and assess the network devices with Nmap." \
+		--docs-file providers/nmap/resources/nmap.lr.manifest.yaml \
+		--output ../docs/docs/mql/resources/nmap-pack
+
 
 lr/docs/stats:
 	@echo "Please remember to re-run before using this:"
@@ -699,6 +720,10 @@ test: test/go test/lint
 
 benchmark/go:
 	go test -bench=. -benchmem go.mondoo.com/cnquery/v11/explorer/scan/benchmark
+
+race/go:
+	go test -race go.mondoo.com/cnquery/v11/internal/workerpool
+	go test -race go.mondoo.com/cnquery/v11/explorer/scan
 
 test/generate: prep/tools/mockgen
 	go generate ./providers
