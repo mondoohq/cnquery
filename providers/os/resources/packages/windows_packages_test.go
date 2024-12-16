@@ -22,7 +22,13 @@ func TestWindowsAppPackagesParser(t *testing.T) {
 	require.NoError(t, err)
 	defer f.Close()
 
-	pkgs, err := ParseWindowsAppPackages(f)
+	pf := &inventory.Platform{
+		Name:    "windows",
+		Version: "10.0.18363",
+		Arch:    "x86",
+		Family:  []string{"windows"},
+	}
+	pkgs, err := ParseWindowsAppPackages(pf, f)
 	assert.Nil(t, err)
 	assert.Equal(t, 19, len(pkgs), "detected the right amount of packages")
 
@@ -32,6 +38,7 @@ func TestWindowsAppPackagesParser(t *testing.T) {
 		Version: "14.28.29913.0",
 		Arch:    "",
 		Format:  "windows/app",
+		PUrl:    `pkg:windows/Microsoft%20Visual%20C%2B%2B%202015-2019%20Redistributable%20%28x86%29%20-%2014.28.29913@14.28.29913.0?arch=x86&distro=windows-10.0.18363`,
 		CPEs: []string{
 			"cpe:2.3:a:microsoft_corporation:microsoft_visual_c\\+\\+_2015-2019_redistributable_\\(x86\\)_-_14.28.29913:14.28.29913.0:*:*:*:*:*:*:*",
 			"cpe:2.3:a:microsoft:microsoft_visual_c\\+\\+_2015-2019_redistributable_\\(x86\\)_-_14.28.29913:14.28.29913.0:*:*:*:*:*:*:*",
@@ -41,7 +48,7 @@ func TestWindowsAppPackagesParser(t *testing.T) {
 	}, p)
 
 	// check empty return
-	pkgs, err = ParseWindowsAppxPackages(strings.NewReader(""))
+	pkgs, err = ParseWindowsAppxPackages(pf, strings.NewReader(""))
 	assert.Nil(t, err)
 	assert.Equal(t, 0, len(pkgs), "detected the right amount of packages")
 }
@@ -61,7 +68,14 @@ func TestWindowsAppxPackagesParser(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	pkgs, err := ParseWindowsAppxPackages(c.Stdout)
+	pf := &inventory.Platform{
+		Name:    "windows",
+		Version: "10.0.18363",
+		Arch:    "x86",
+		Family:  []string{"windows"},
+	}
+
+	pkgs, err := ParseWindowsAppxPackages(pf, c.Stdout)
 	assert.Nil(t, err)
 	assert.Equal(t, 28, len(pkgs), "detected the right amount of packages")
 
@@ -71,6 +85,7 @@ func TestWindowsAppxPackagesParser(t *testing.T) {
 		Version: "1.11.5.17763",
 		Arch:    "neutral",
 		Format:  "windows/appx",
+		PUrl:    "pkg:appx/windows/Microsoft.Windows.Cortana@1.11.5.17763?arch=x86&distro=windows-10.0.18363",
 		// TODO: this is a bug in the CPE generation, we need to extract the publisher from the package
 		CPEs: []string{
 			"cpe:2.3:a:cn\\=microsoft_corporation\\,_o\\=microsoft_corporation\\,_l\\=redmond\\,_s\\=washington\\,_c\\=us:microsoft.windows.cortana:1.11.5.17763:*:*:*:*:*:*:*",
@@ -80,7 +95,7 @@ func TestWindowsAppxPackagesParser(t *testing.T) {
 	}, p)
 
 	// check empty return
-	pkgs, err = ParseWindowsAppxPackages(strings.NewReader(""))
+	pkgs, err = ParseWindowsAppxPackages(pf, strings.NewReader(""))
 	assert.Nil(t, err)
 	assert.Equal(t, 0, len(pkgs), "detected the right amount of packages")
 }
@@ -203,13 +218,21 @@ func TestToPackage(t *testing.T) {
 		Architecture: 0,
 	}
 
-	pkg := winAppxPkg.toPackage()
+	pf := &inventory.Platform{
+		Name:    "windows",
+		Version: "10.0.18363",
+		Arch:    "x86",
+		Family:  []string{"windows"},
+	}
+
+	pkg := winAppxPkg.toPackage(pf)
 
 	expected := Package{
 		Name:    "Microsoft.Windows.Cortana",
 		Version: "1.11.5.17763",
 		Arch:    "x86",
 		Format:  "windows/appx",
+		PUrl:    "pkg:appx/windows/Microsoft.Windows.Cortana@1.11.5.17763?arch=x86&distro=windows-10.0.18363",
 		Vendor:  "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US",
 		CPEs: []string{
 			"cpe:2.3:a:cn\\=microsoft_corporation\\,_o\\=microsoft_corporation\\,_l\\=redmond\\,_s\\=washington\\,_c\\=us:microsoft.windows.cortana:1.11.5.17763:*:*:*:*:*:*:*",

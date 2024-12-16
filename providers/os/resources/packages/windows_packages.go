@@ -22,6 +22,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/registry"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/cpe"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/powershell"
+	"go.mondoo.com/cnquery/v11/providers/os/resources/purl"
 )
 
 // ProcessorArchitecture Enum
@@ -112,7 +113,7 @@ type winAppxPackages struct {
 	arch string `json:"-"`
 }
 
-func (p winAppxPackages) toPackage() Package {
+func (p winAppxPackages) toPackage(platform *inventory.Platform) Package {
 	if p.arch == "" {
 		arch, ok := appxArchitecture[p.Architecture]
 		if !ok {
@@ -128,12 +129,18 @@ func (p winAppxPackages) toPackage() Package {
 		Arch:    p.arch,
 		Format:  "windows/appx",
 		Vendor:  p.Publisher,
+		PUrl: purl.NewPackageUrl(
+			platform, p.Name, p.Version, platform.Arch, "", purl.TypeWindowsAppx,
+		),
 	}
 
 	if p.Name != "" && p.Version != "" {
 		cpeWfns, err := cpe.NewPackage2Cpe(p.Publisher, p.Name, p.Version, "", "")
 		if err != nil {
-			log.Debug().Err(err).Str("name", p.Name).Str("version", p.Version).Msg("could not create cpe for windows appx package")
+			log.Debug().Err(err).
+				Str("name", p.Name).
+				Str("version", p.Version).
+				Msg("could not create cpe for windows appx package")
 		} else {
 			pkg.CPEs = cpeWfns
 		}
@@ -145,7 +152,7 @@ func (p winAppxPackages) toPackage() Package {
 }
 
 // Good read: https://www.wintips.org/view-installed-apps-and-packages-in-windows-10-8-1-8-from-powershell/
-func ParseWindowsAppxPackages(input io.Reader) ([]Package, error) {
+func ParseWindowsAppxPackages(platform *inventory.Platform, input io.Reader) ([]Package, error) {
 	data, err := io.ReadAll(input)
 	if err != nil {
 		return nil, err
@@ -165,8 +172,7 @@ func ParseWindowsAppxPackages(input io.Reader) ([]Package, error) {
 
 	pkgs := make([]Package, len(appxPackages))
 	for i, p := range appxPackages {
-		pkg := p.toPackage()
-		pkgs[i] = pkg
+		pkgs[i] = p.toPackage(platform)
 	}
 	return pkgs, nil
 }
@@ -281,7 +287,7 @@ func (w *WinPkgManager) getInstalledApps() ([]Package, error) {
 		return nil, errors.New("failed to retrieve installed apps: " + string(stderr))
 	}
 
-	return ParseWindowsAppPackages(cmd.Stdout)
+	return ParseWindowsAppPackages(w.platform, cmd.Stdout)
 }
 
 func (w *WinPkgManager) getAppxPackages() ([]Package, error) {
@@ -309,7 +315,7 @@ func (w *WinPkgManager) getPwshAppxPackages() ([]Package, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not read appx package list")
 	}
-	return ParseWindowsAppxPackages(cmd.Stdout)
+	return ParseWindowsAppxPackages(w.platform, cmd.Stdout)
 }
 
 func (w *WinPkgManager) getFsInstalledApps() ([]Package, error) {
@@ -394,7 +400,7 @@ func (w *WinPkgManager) getFsAppxPackages() ([]Package, error) {
 			log.Debug().Err(err).Str("path", p).Msg("could not parse appx manifest")
 			continue
 		}
-		pkg := winAppxPkg.toPackage()
+		pkg := winAppxPkg.toPackage(w.platform)
 		pkgs = append(pkgs, pkg)
 
 	}
@@ -504,7 +510,7 @@ func (w *WinPkgManager) List() ([]Package, error) {
 	return pkgs, nil
 }
 
-func ParseWindowsAppPackages(input io.Reader) ([]Package, error) {
+func ParseWindowsAppPackages(platform *inventory.Platform, input io.Reader) ([]Package, error) {
 	data, err := io.ReadAll(input)
 	if err != nil {
 		return nil, err
@@ -540,7 +546,10 @@ func ParseWindowsAppPackages(input io.Reader) ([]Package, error) {
 		if entry.DisplayName != "" && entry.DisplayVersion != "" {
 			cpeWfns, err = cpe.NewPackage2Cpe(entry.Publisher, entry.DisplayName, entry.DisplayVersion, "", "")
 			if err != nil {
-				log.Debug().Err(err).Str("name", entry.DisplayName).Str("version", entry.DisplayVersion).Msg("could not create cpe for windows app package")
+				log.Debug().Err(err).
+					Str("name", entry.DisplayName).
+					Str("version", entry.DisplayVersion).
+					Msg("could not create cpe for windows app package")
 			}
 		} else {
 			log.Debug().Msg("ignored package since information is missing")
@@ -551,6 +560,9 @@ func ParseWindowsAppPackages(input io.Reader) ([]Package, error) {
 			Format:  "windows/app",
 			CPEs:    cpeWfns,
 			Vendor:  entry.Publisher,
+			PUrl: purl.NewPackageUrl(
+				platform, entry.DisplayName, entry.DisplayVersion, platform.Arch, "", purl.TypeWindows,
+			),
 		})
 	}
 

@@ -4,11 +4,12 @@
 package purl
 
 import (
+	"sort"
+	"strings"
+
 	"github.com/package-url/packageurl-go"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers/os/detector"
-	"sort"
-	"strings"
 )
 
 const (
@@ -68,6 +69,11 @@ func NewPackageUrl(pf *inventory.Platform, name string, version string, arch str
 		distroQualifiers = append(distroQualifiers, pf.Build)
 	}
 	qualifiers[QualifierDistro] = strings.Join(distroQualifiers, "-")
+
+	// Avoids creating purl's like: 'pkg:macos/macos/Package'
+	if namespace == purlType {
+		namespace = ""
+	}
 
 	return packageurl.NewPackageURL(
 		purlType,
