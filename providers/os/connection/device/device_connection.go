@@ -52,6 +52,18 @@ func getDeviceManager(conf *inventory.Config) (DeviceManager, error) {
 }
 
 func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory.Asset) (*DeviceConnection, error) {
+	// allow injecting platform ids into the device connection. we cannot always know the asset that's being scanned, e.g.
+	// if we can scan an azure VM's disk we should be able to inject the platform ids of the VM
+	if platformIDs, ok := conf.Options[PlatformIdInject]; ok {
+		platformIds := strings.Split(platformIDs, ",")
+		for _, id := range platformIds {
+			if !stringx.Contains(asset.PlatformIds, id) {
+				log.Debug().Str("platform-id", id).Msg("device connection> injecting platform id")
+				asset.PlatformIds = append(asset.PlatformIds, id)
+			}
+		}
+	}
+
 	manager, err := getDeviceManager(conf)
 	if err != nil {
 		return nil, err
@@ -118,18 +130,6 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 	if asset.Platform == nil {
 		res.Close()
 		return nil, errors.New("device connection> no platform detected")
-	}
-
-	// allow injecting platform ids into the device connection. we cannot always know the asset that's being scanned, e.g.
-	// if we can scan an azure VM's disk we should be able to inject the platform ids of the VM
-	if platformIDs, ok := conf.Options[PlatformIdInject]; ok {
-		platformIds := strings.Split(platformIDs, ",")
-		for _, id := range platformIds {
-			if !stringx.Contains(asset.PlatformIds, id) {
-				log.Debug().Str("platform-id", id).Msg("device connection> injecting platform id")
-				asset.PlatformIds = append(asset.PlatformIds, id)
-			}
-		}
 	}
 
 	return res, nil
@@ -248,21 +248,34 @@ func tryDetectAsset(connId uint32, partition *snapshot.PartitionInfo, conf *inve
 	asset.IdDetector = append(asset.IdDetector, ids.IdDetector_MachineID)
 	fingerprint, p, err := id.IdentifyPlatform(fsConn, &plugin.ConnectReq{}, p, asset.IdDetector)
 	if err != nil {
-		log.Debug().Err(err).
-			Str("partition", partition.Name).       // debug
-			Str("path", fsPath).                    // debug
-			Strs("id-detectors", asset.IdDetector). // debug
+		if len(asset.PlatformIds) == 0 {
+			log.Debug().Err(err).
+				Str("partition", partition.Name).       // debug
+				Str("path", fsPath).                    // debug
+				Strs("id-detectors", asset.IdDetector). // debug
+				Msg("device connection> failed to identify platform from device")
+			return nil, err
+		}
+
+		log.Warn().Err(err).
 			Msg("device connection> failed to identify platform from device")
-		return nil, err
 	}
+	if p == nil {
+		log.Debug().Msg("device connection> no platform detected")
+		return nil, errors.New("device connection> no platform detected")
+	}
+
 	log.Debug().Str("scan_dir", partition.MountPoint).Msg("device connection> detected platform from device")
 	asset.Platform = p
-	if asset.Name == "" {
+	if asset.Name == "" && fingerprint != nil {
 		asset.Name = fingerprint.Name
 	}
-	asset.PlatformIds = append(asset.PlatformIds, fingerprint.PlatformIDs...)
-	asset.IdDetector = fingerprint.ActiveIdDetectors
-	asset.Platform = p
+
+	if fingerprint != nil {
+		asset.PlatformIds = append(asset.PlatformIds, fingerprint.PlatformIDs...)
+		asset.IdDetector = fingerprint.ActiveIdDetectors
+	}
+
 	asset.Id = conf.Type
 
 	return fsConn, nil
