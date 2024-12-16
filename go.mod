@@ -10,7 +10,7 @@ require (
 	cloud.google.com/go/secretmanager v1.14.2
 	github.com/99designs/keyring v1.2.2
 	github.com/BurntSushi/toml v1.4.0
-	github.com/CycloneDX/cyclonedx-go v0.9.1
+	github.com/CycloneDX/cyclonedx-go v0.9.2
 	github.com/GoogleCloudPlatform/berglas v1.0.3
 	github.com/Masterminds/semver v1.5.0
 	github.com/ProtonMail/go-crypto v1.1.3
@@ -22,7 +22,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.28.6
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.47
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.21
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.195.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.197.0
 	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.27.7
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.34.7
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.56.1
@@ -71,7 +71,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/opencontainers/image-spec v1.1.0
 	github.com/package-url/packageurl-go v0.1.3
-	github.com/pierrec/lz4/v4 v4.1.21
+	github.com/pierrec/lz4/v4 v4.1.22
 	github.com/pkg/sftp v1.13.7
 	// pin v1.2.0-beta.2
 	github.com/pkg/term v1.2.0-beta.2
@@ -89,7 +89,7 @@ require (
 	github.com/ulikunitz/xz v0.5.12
 	go.mondoo.com/ranger-rpc v0.6.4
 	go.opentelemetry.io/otel v1.32.0 // indirect
-	golang.org/x/crypto v0.30.0
+	golang.org/x/crypto v0.31.0
 	golang.org/x/net v0.32.0
 	golang.org/x/sync v0.10.0
 	golang.org/x/sys v0.28.0
@@ -98,19 +98,19 @@ require (
 	golang.org/x/tools v0.28.0
 	google.golang.org/genproto v0.0.0-20241206012308-a4fef0638583
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241206012308-a4fef0638583
-	google.golang.org/grpc v1.68.1
+	google.golang.org/grpc v1.69.0
 	google.golang.org/protobuf v1.35.2
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/yaml.v3 v3.0.1
 	howett.net/plist v1.0.1
 	// pin v0.28.9
-	k8s.io/apimachinery v0.28.9
+	k8s.io/apimachinery v0.32.0
 	// pin v0.28.9
-	k8s.io/client-go v0.28.9
+	k8s.io/client-go v0.32.0
 	// pin v0.28.9
-	k8s.io/component-base v0.28.9
+	k8s.io/component-base v0.32.0
 	// pin v0.28.9
-	k8s.io/kubelet v0.28.9
+	k8s.io/kubelet v0.32.0
 	k8s.io/utils v0.0.0-20241104163129-6fe5fd82f078
 	sigs.k8s.io/yaml v1.4.0
 )
@@ -275,16 +275,15 @@ require (
 	google.golang.org/api v0.210.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20241206012308-a4fef0638583 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
-	k8s.io/api v0.28.9 // indirect
-	k8s.io/klog/v2 v2.120.1 // indirect
+	k8s.io/api v0.32.0 // indirect
+	k8s.io/klog/v2 v2.130.1 // indirect
 	modernc.org/libc v1.61.4 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.8.0 // indirect
 	modernc.org/sqlite v1.34.2 // indirect
 	moul.io/http2curl v1.0.0 // indirect
-	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
-	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
+	sigs.k8s.io/json v0.0.0-20241010143419-9aa6b5e7a4b3 // indirect
+	sigs.k8s.io/structured-merge-diff/v4 v4.4.2 // indirect
 )
 
 require github.com/moby/buildkit v0.18.1
@@ -294,7 +293,6 @@ require (
 	cloud.google.com/go/auth v0.12.0 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.6 // indirect
 	cloud.google.com/go/monitoring v1.22.0 // indirect
-	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.25.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.49.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.49.0 // indirect
@@ -309,6 +307,7 @@ require (
 	github.com/envoyproxy/go-control-plane v0.13.1 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.1.0 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
+	github.com/fxamacker/cbor/v2 v2.7.0 // indirect
 	github.com/go-errors/errors v1.5.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.0.4 // indirect
 	github.com/go-test/deep v1.1.0 // indirect
@@ -319,9 +318,9 @@ require (
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/smarty/assertions v1.15.1 // indirect
 	github.com/tonistiigi/go-csvvalue v0.0.0-20240710180619-ddb21b71c0b4 // indirect
+	github.com/x448/float16 v0.8.4 // indirect
 	go.opentelemetry.io/contrib/detectors/gcp v1.32.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.32.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v1.32.0 // indirect
-	google.golang.org/grpc/stats/opentelemetry v0.0.0-20241028142157-ada6787961b3 // indirect
 	gotest.tools/v3 v3.5.1 // indirect
 )
