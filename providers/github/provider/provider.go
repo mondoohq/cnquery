@@ -6,6 +6,7 @@ package provider
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -173,7 +174,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		}
 
 		// verify the connection only once
-		_, err, _ = s.Memoize("conn_verify", func() (interface{}, error) {
+		_, err, _ = s.Memoize(fmt.Sprintf("conn_%d", conn.Hash), func() (interface{}, error) {
 			log.Trace().Msg("verifying github connection client")
 			err := conn.Verify()
 			return nil, err
