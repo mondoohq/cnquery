@@ -4,11 +4,12 @@
 package purl
 
 import (
+	"sort"
+	"strings"
+
 	"github.com/package-url/packageurl-go"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers/os/detector"
-	"sort"
-	"strings"
 )
 
 const (
@@ -16,6 +17,23 @@ const (
 	QualifierDistro = "distro"
 	QualifierEpoch  = "epoch"
 )
+
+// PackageURL is a helper struct that renters a package url based of an inventory
+// platform, purl type, and modifiers.
+type PackageURL struct {
+	// Required: minimal attributes to render a PURL.
+	Type    Type
+	Name    string
+	Version string
+
+	// Optional: can be set via modifiers.
+	Namespace string
+	Arch      string
+	Epoch     string
+
+	// Used as metadata to fetch things like the architecture or linux distribution.
+	platform *inventory.Platform
+}
 
 // NewQualifiers creates a new Qualifiers slice from a map of key/value pairs.
 // see https://github.com/package-url/purl-spec/blob/master/PURL-TYPES.rst for more information
@@ -42,39 +60,92 @@ func NewQualifiers(qualifier map[string]string) packageurl.Qualifiers {
 	return list
 }
 
-// NewPackageUrl creates a new package url for a given platform, name, version, arch, epoch and purlType
-// see https://github.com/package-url/purl-spec/blob/master/PURL-TYPES.rst for more information
-func NewPackageUrl(pf *inventory.Platform, name string, version string, arch string, epoch string, purlType string) string {
+// NewPackageURL creates a new package url for a given platform, name, version, and type.
+//
+// For more information, see:
+// https://github.com/package-url/purl-spec/blob/master/PURL-TYPES.rst
+func NewPackageURL(pf *inventory.Platform, t Type, name, version string, modifiers ...Modifier) *PackageURL {
+	purl := &PackageURL{
+		Type:     t,
+		Name:     name,
+		Version:  version,
+		platform: pf,
+	}
+
+	// if a platform was provided
+	if pf != nil {
+		// use the platform architecture for the package
+		purl.Arch = pf.Arch
+
+		// and if the distro is set via labels, set it as a namespace
+		if pf.Labels != nil && pf.Labels[detector.LabelDistroID] != "" {
+			purl.Namespace = pf.Labels[detector.LabelDistroID]
+		}
+	}
+
+	// apply modifiers
+	for _, modifier := range modifiers {
+		modifier(purl)
+	}
+
+	return purl
+}
+
+func (purl PackageURL) String() string {
 	qualifiers := map[string]string{}
-	if arch != "" {
-		qualifiers[QualifierArch] = arch
+	if purl.Arch != "" {
+		qualifiers[QualifierArch] = purl.Arch
 	}
 
-	if epoch != "" && epoch != "0" {
-		qualifiers[QualifierEpoch] = epoch
+	if purl.Epoch != "" && purl.Epoch != "0" {
+		qualifiers[QualifierEpoch] = purl.Epoch
 	}
 
-	namespace := pf.Name
-	if pf.Labels != nil && pf.Labels[detector.LabelDistroID] != "" {
-		namespace = pf.Labels[detector.LabelDistroID]
+	if distroQualifiers, ok := purl.distroQualifiers(); ok {
+		qualifiers[QualifierDistro] = distroQualifiers
 	}
-
-	// generate distro qualifier
-	distroQualifiers := []string{}
-	distroQualifiers = append(distroQualifiers, namespace)
-	if pf.Version != "" {
-		distroQualifiers = append(distroQualifiers, pf.Version)
-	} else if pf.Build != "" {
-		distroQualifiers = append(distroQualifiers, pf.Build)
-	}
-	qualifiers[QualifierDistro] = strings.Join(distroQualifiers, "-")
 
 	return packageurl.NewPackageURL(
-		purlType,
-		namespace,
-		name,
-		version,
+		string(purl.Type),
+		purl.Namespace,
+		purl.Name,
+		purl.Version,
 		NewQualifiers(qualifiers),
 		"",
 	).ToString()
+}
+
+// generate distro qualifier
+func (purl PackageURL) distroQualifiers() (string, bool) {
+	if purl.Namespace == "" {
+		return "", false
+	}
+
+	distroQualifiers := []string{}
+	distroQualifiers = append(distroQualifiers, purl.Namespace)
+	if purl.platform.Version != "" {
+		distroQualifiers = append(distroQualifiers, purl.platform.Version)
+	} else if purl.platform.Build != "" {
+		distroQualifiers = append(distroQualifiers, purl.platform.Build)
+	}
+
+	return strings.Join(distroQualifiers, "-"), true
+}
+
+type Modifier func(*PackageURL)
+
+func WithArch(arch string) Modifier {
+	return func(purl *PackageURL) {
+		purl.Arch = arch
+	}
+}
+func WithEpoch(epoch string) Modifier {
+	return func(purl *PackageURL) {
+		purl.Epoch = epoch
+	}
+}
+func WithNamespace(namespace string) Modifier {
+	return func(purl *PackageURL) {
+		purl.Namespace = namespace
+	}
 }

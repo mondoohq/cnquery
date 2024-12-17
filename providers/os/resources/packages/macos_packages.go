@@ -9,7 +9,9 @@ import (
 	"strings"
 
 	"github.com/cockroachdb/errors"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v11/providers/os/resources/purl"
 	plist "howett.net/plist"
 )
 
@@ -18,7 +20,7 @@ const (
 )
 
 // parse macos system version property list
-func ParseMacOSPackages(input io.Reader) ([]Package, error) {
+func ParseMacOSPackages(platform *inventory.Platform, input io.Reader) ([]Package, error) {
 	var r io.ReadSeeker
 	r, ok := input.(io.ReadSeeker)
 
@@ -58,6 +60,9 @@ func ParseMacOSPackages(input io.Reader) ([]Package, error) {
 		pkgs[i].Version = entry.Version
 		pkgs[i].Format = MacosPkgFormat
 		pkgs[i].FilesAvailable = PkgFilesIncluded
+		pkgs[i].PUrl = purl.NewPackageURL(
+			platform, purl.TypeMacos, entry.Name, entry.Version,
+		).String()
 		if entry.Path != "" {
 			pkgs[i].Files = []FileRecord{
 				{
@@ -72,7 +77,8 @@ func ParseMacOSPackages(input io.Reader) ([]Package, error) {
 
 // MacOS
 type MacOSPkgManager struct {
-	conn shared.Connection
+	conn     shared.Connection
+	platform *inventory.Platform
 }
 
 func (mpm *MacOSPkgManager) Name() string {
@@ -89,7 +95,7 @@ func (mpm *MacOSPkgManager) List() ([]Package, error) {
 		return nil, fmt.Errorf("could not read package list")
 	}
 
-	return ParseMacOSPackages(cmd.Stdout)
+	return ParseMacOSPackages(mpm.platform, cmd.Stdout)
 }
 
 func (mpm *MacOSPkgManager) Available() (map[string]PackageUpdate, error) {

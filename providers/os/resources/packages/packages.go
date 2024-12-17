@@ -111,7 +111,7 @@ func ResolveSystemPkgManager(conn shared.Connection) (OperatingSystemPkgManager,
 	case asset.Platform.Name == "alpine" || asset.Platform.Name == "wolfi": // alpine & wolfi share apk
 		pm = &AlpinePkgManager{conn: conn, platform: asset.Platform}
 	case asset.Platform.Name == "macos": // mac os family
-		pm = &MacOSPkgManager{conn: conn}
+		pm = &MacOSPkgManager{conn: conn, platform: asset.Platform}
 	case asset.Platform.Name == "windows":
 		pm = &WinPkgManager{conn: conn, platform: asset.Platform}
 	case asset.Platform.Name == "scratch" || asset.Platform.Name == "coreos":
