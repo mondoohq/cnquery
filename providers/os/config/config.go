@@ -301,7 +301,7 @@ var Config = plugin.Provider{
 					Option: plugin.FlagOption_Hidden,
 				},
 				{
-					Long:   "skip-fstab-discovery",
+					Long:   "skip-attempt-expand-partitions",
 					Type:   plugin.FlagType_Bool,
 					Desc:   "Skip attempt on trying to discover the fstab file on the device",
 					Option: plugin.FlagOption_Hidden,

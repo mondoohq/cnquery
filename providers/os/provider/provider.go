@@ -246,8 +246,8 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	if mountAll, ok := flags["mount-all-partitions"]; ok {
 		conf.Options["mount-all-partitions"] = strconv.FormatBool(mountAll.RawData().Value.(bool))
 	}
-	if skipFstab, ok := flags["skip-fstab-discovery"]; ok {
-		conf.Options["skip-fstab-discovery"] = strconv.FormatBool(skipFstab.RawData().Value.(bool))
+	if skipFstab, ok := flags["skip-attempt-expand-partitions"]; ok {
+		conf.Options["skip-attempt-expand-partitions"] = strconv.FormatBool(skipFstab.RawData().Value.(bool))
 	}
 	if includeMounted, ok := flags["include-mounted"]; ok {
 		conf.Options["include-mounted"] = strconv.FormatBool(includeMounted.RawData().Value.(bool))

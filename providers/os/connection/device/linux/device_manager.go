@@ -22,12 +22,12 @@ import (
 )
 
 const (
-	LunOption          = "lun"
-	DeviceName         = "device-name"
-	DeviceNames        = "device-names"
-	MountAllPartitions = "mount-all-partitions"
-	IncludeMounted     = "include-mounted"
-	SkipFstabDiscovery = "skip-fstab-discovery"
+	LunOption                   = "lun"
+	DeviceName                  = "device-name"
+	DeviceNames                 = "device-names"
+	MountAllPartitions          = "mount-all-partitions"
+	IncludeMounted              = "include-mounted"
+	SkipAttemptExpandPartitions = "skip-attempt-expand-partitions"
 )
 
 type LinuxDeviceManager struct {
@@ -63,7 +63,8 @@ func (d *LinuxDeviceManager) IdentifyMountTargets(opts map[string]string) ([]*sn
 		if err != nil {
 			return nil, err
 		}
-		return []*snapshot.PartitionInfo{pi}, nil
+
+		return d.attemptExpandPartitions([]*snapshot.PartitionInfo{pi})
 	}
 
 	var deviceNames []string
@@ -89,10 +90,14 @@ func (d *LinuxDeviceManager) IdentifyMountTargets(opts map[string]string) ([]*sn
 		return partitions, err
 	}
 
-	if opts[SkipFstabDiscovery] == "true" {
+	if opts[SkipAttemptExpandPartitions] == "true" {
 		return partitions, nil
 	}
 
+	return d.attemptExpandPartitions(partitions)
+}
+
+func (d *LinuxDeviceManager) attemptExpandPartitions(partitions []*snapshot.PartitionInfo) ([]*snapshot.PartitionInfo, error) {
 	fstabEntries, err := d.HintFSTypes(partitions)
 	if err != nil {
 		log.Warn().Err(err).Msg("could not find fstab")
