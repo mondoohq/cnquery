@@ -28,7 +28,7 @@ nmap.host @defaults("name") {
  name string
  // Distance to the host
  distance() dict
- // Information about the operating system of the host
+ // Information about the host operating system
  os() dict
  //
  endTime() time
@@ -42,7 +42,7 @@ nmap.host @defaults("name") {
  hostnames() []dict
  // Ports on the host
  ports() []nmap.port
- // State of the host (e.g., up, down)
+ // State of the host (e.g., up or down)
  state() string
 }
 
@@ -54,13 +54,13 @@ private nmap.port @defaults("port service"){
   service string
   // Method used to discover the port (e.g., SYN scan)
   method string
-  // Protocol used (e.g., TCP, UDP)
+  // Protocol used (e.g., TCP or UDP)
   protocol string
   // Product running on the port
   product string
-  // Version of the product
+  // Version of the product running on the port
   version string
-  // State of the port (e.g., open, closed)
+  // State of the port (e.g., open or closed)
   state string
 }
 
