@@ -37,13 +37,13 @@ func TestMacOsXPackageParser(t *testing.T) {
 	assert.Equal(t, "10.0", m[0].Version, "pkg version detected")
 	assert.Equal(t, packages.MacosPkgFormat, m[0].Format, "pkg format detected")
 	assert.Equal(t, packages.PkgFilesIncluded, m[0].FilesAvailable)
-	assert.Equal(t, "pkg:macos/Preview@10.0?arch=x86_64&distro=macos-15.2", m[0].PUrl)
+	assert.Equal(t, "pkg:macos/Preview@10.0?arch=x86_64", m[0].PUrl)
 	assert.Equal(t, []packages.FileRecord{{Path: "/Applications/Preview.app"}}, m[0].Files)
 
 	assert.Equal(t, "Contacts", m[1].Name, "pkg name detected")
 	assert.Equal(t, "11.0", m[1].Version, "pkg version detected")
 	assert.Equal(t, packages.MacosPkgFormat, m[1].Format, "pkg format detected")
 	assert.Equal(t, packages.PkgFilesIncluded, m[1].FilesAvailable)
-	assert.Equal(t, "pkg:macos/Contacts@11.0?arch=x86_64&distro=macos-15.2", m[1].PUrl)
+	assert.Equal(t, "pkg:macos/Contacts@11.0?arch=x86_64", m[1].PUrl)
 	assert.Equal(t, []packages.FileRecord{{Path: "/Applications/Contacts.app"}}, m[1].Files)
 }

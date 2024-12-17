@@ -129,9 +129,7 @@ func (p winAppxPackages) toPackage(platform *inventory.Platform) Package {
 		Arch:    p.arch,
 		Format:  "windows/appx",
 		Vendor:  p.Publisher,
-		PUrl: purl.NewPackageUrl(
-			platform, p.Name, p.Version, platform.Arch, "", purl.TypeWindowsAppx,
-		),
+		PUrl:    purl.NewPackageURL(platform, purl.TypeAppx, p.Name, p.Version).String(),
 	}
 
 	if p.Name != "" && p.Version != "" {
@@ -560,9 +558,9 @@ func ParseWindowsAppPackages(platform *inventory.Platform, input io.Reader) ([]P
 			Format:  "windows/app",
 			CPEs:    cpeWfns,
 			Vendor:  entry.Publisher,
-			PUrl: purl.NewPackageUrl(
-				platform, entry.DisplayName, entry.DisplayVersion, platform.Arch, "", purl.TypeWindows,
-			),
+			PUrl: purl.NewPackageURL(
+				platform, purl.TypeWindows, entry.DisplayName, entry.DisplayVersion,
+			).String(),
 		})
 	}
 

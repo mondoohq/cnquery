@@ -9,30 +9,40 @@ type Type string
 
 // These are only an extension of the known purl types defined at:
 //
-// https://github.com/package-url/packageurl-go/blob/master/packageurl.go#L54
 // https://github.com/package-url/purl-spec#known-purl-types
 var (
 	// TypeWindows is a pkg:windows purl.
-	TypeWindows = "windows"
-	// TypeWindowsAppx is a pkg:appx purl.
-	TypeWindowsAppx = "appx"
+	TypeWindows Type = "windows"
+	// TypeAppx is a pkg:appx purl.
+	TypeAppx Type = "appx"
 	// TypeMacos is a pkg:macos purl.
-	TypeMacos = "macos"
+	TypeMacos Type = "macos"
 
-	KnownTypes = map[string]struct{}{
+	// Types we use coming from:
+	// https://github.com/package-url/packageurl-go/blob/master/packageurl.go#L54
+	TypeGeneric = Type(packageurl.TypeGeneric)
+	TypeApk     = Type(packageurl.TypeApk)
+	TypeDebian  = Type(packageurl.TypeDebian)
+	TypeAlpm    = Type(packageurl.TypeAlpm)
+	TypeRPM     = Type(packageurl.TypeRPM)
+
+	KnownTypes = map[Type]struct{}{
+		TypeAppx:    {},
 		TypeWindows: {},
 		TypeMacos:   {},
+		TypeGeneric: {},
+		TypeApk:     {},
+		TypeDebian:  {},
+		TypeAlpm:    {},
+		TypeRPM:     {},
 	}
 )
 
-func init() {
-	// merge packageurl.KnownTypes and the extension types
-	for t := range packageurl.KnownTypes {
-		KnownTypes[t] = struct{}{}
-	}
+func ValidTypeString(t string) bool {
+	return ValidType(Type(t))
 }
 
-func ValidType(t string) bool {
+func ValidType(t Type) bool {
 	_, ok := KnownTypes[t]
 	return ok
 }

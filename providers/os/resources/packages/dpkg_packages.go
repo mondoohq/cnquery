@@ -11,7 +11,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/package-url/packageurl-go"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
@@ -39,7 +38,10 @@ func ParseDpkgPackages(pf *inventory.Platform, input io.Reader) ([]Package, erro
 	add := func(pkg Package) {
 		// do sanitization checks to ensure we have minimal information
 		if pkg.Name != "" && pkg.Version != "" {
-			pkg.PUrl = purl.NewPackageUrl(pf, pkg.Name, pkg.Version, pkg.Arch, pkg.Epoch, packageurl.TypeDebian)
+			pkg.PUrl = purl.NewPackageURL(pf, purl.TypeDebian, pkg.Name, pkg.Version,
+				purl.WithArch(pkg.Arch),
+				purl.WithEpoch(pkg.Epoch),
+			).String()
 			cpes, _ := cpe.NewPackage2Cpe(pkg.Name, pkg.Name, pkg.Version, pkg.Epoch, pkg.Arch)
 			cpesWithoutArch, _ := cpe.NewPackage2Cpe(pkg.Name, pkg.Name, pkg.Version, pkg.Epoch, "")
 			cpes = append(cpes, cpesWithoutArch...)

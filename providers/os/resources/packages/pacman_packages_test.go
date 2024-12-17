@@ -4,9 +4,10 @@
 package packages_test
 
 import (
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"strings"
 	"testing"
+
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/packages"
@@ -38,7 +39,7 @@ zziplib 0.13.67-1`
 	p := packages.Package{
 		Name:    "qpdfview",
 		Version: "0.4.17beta1-4.1",
-		PUrl:    "pkg:alpm/arch/qpdfview@0.4.17beta1-4.1?distro=arch",
+		PUrl:    "pkg:alpm/arch/qpdfview@0.4.17beta1-4.1?arch=x86_64&distro=arch",
 		Format:  packages.PacmanPkgFormat,
 	}
 	assert.Contains(t, m, p, "pkg detected")
@@ -46,7 +47,7 @@ zziplib 0.13.67-1`
 	p = packages.Package{
 		Name:    "vertex-maia-themes",
 		Version: "20171114-1",
-		PUrl:    "pkg:alpm/arch/vertex-maia-themes@20171114-1?distro=arch",
+		PUrl:    "pkg:alpm/arch/vertex-maia-themes@20171114-1?arch=x86_64&distro=arch",
 		Format:  packages.PacmanPkgFormat,
 	}
 	assert.Contains(t, m, p, "pkg detected")
@@ -54,7 +55,7 @@ zziplib 0.13.67-1`
 	p = packages.Package{
 		Name:    "xfce4-pulseaudio-plugin",
 		Version: "0.3.2.r13.g553691a-1",
-		PUrl:    "pkg:alpm/arch/xfce4-pulseaudio-plugin@0.3.2.r13.g553691a-1?distro=arch",
+		PUrl:    "pkg:alpm/arch/xfce4-pulseaudio-plugin@0.3.2.r13.g553691a-1?arch=x86_64&distro=arch",
 		Format:  packages.PacmanPkgFormat,
 	}
 	assert.Contains(t, m, p, "pkg detected")
@@ -84,7 +85,7 @@ argon2 20190702-2`
 	p := packages.Package{
 		Name:    "acl",
 		Version: "2.2.53-2",
-		PUrl:    "pkg:alpm/arch/acl@2.2.53-2?distro=arch",
+		PUrl:    "pkg:alpm/arch/acl@2.2.53-2?arch=x86_64&distro=arch",
 		Format:  packages.PacmanPkgFormat,
 	}
 	assert.Contains(t, m, p, "pkg detected")

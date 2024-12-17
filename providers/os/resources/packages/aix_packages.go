@@ -9,7 +9,6 @@ import (
 	"io"
 	"strings"
 
-	"github.com/package-url/packageurl-go"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	cpe2 "go.mondoo.com/cnquery/v11/providers/os/resources/cpe"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/purl"
@@ -43,8 +42,10 @@ func parseAixPackages(pf *inventory.Platform, r io.Reader) ([]Package, error) {
 			Version:     record[2],
 			Description: strings.TrimSpace(record[6]),
 			Format:      AixPkgFormat,
-			PUrl:        purl.NewPackageUrl(pf, record[1], record[2], "", "", packageurl.TypeGeneric),
-			CPEs:        cpes,
+			PUrl: purl.NewPackageURL(
+				pf, purl.TypeGeneric, record[1], record[2], purl.WithNamespace(pf.Name),
+			).String(),
+			CPEs: cpes,
 		})
 
 	}

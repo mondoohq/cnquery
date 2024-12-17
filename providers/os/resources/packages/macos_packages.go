@@ -60,9 +60,9 @@ func ParseMacOSPackages(platform *inventory.Platform, input io.Reader) ([]Packag
 		pkgs[i].Version = entry.Version
 		pkgs[i].Format = MacosPkgFormat
 		pkgs[i].FilesAvailable = PkgFilesIncluded
-		pkgs[i].PUrl = purl.NewPackageUrl(
-			platform, entry.Name, entry.Version, platform.Arch, "", purl.TypeMacos,
-		)
+		pkgs[i].PUrl = purl.NewPackageURL(
+			platform, purl.TypeMacos, entry.Name, entry.Version,
+		).String()
 		if entry.Path != "" {
 			pkgs[i].Files = []FileRecord{
 				{
