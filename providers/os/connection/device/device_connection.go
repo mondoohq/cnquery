@@ -111,6 +111,7 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 			block.MountPoint = scanDir
 		}
 		res.MountedDirs = append(res.MountedDirs, block.MountPoint)
+		res.partitions[block.MountPoint] = block
 
 		if asset.Platform != nil {
 			log.Debug().Msg("device connection> asset already detected, skipping")
@@ -121,7 +122,6 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 			log.Error().Err(err).Msg("partition did not return an asset, continuing")
 		} else {
 			res.FileSystemConnection = fsConn
-			res.partitions[block.MountPoint] = block
 		}
 	}
 
