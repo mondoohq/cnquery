@@ -36,7 +36,7 @@ func Discover(runtime *plugin.Runtime, opts map[string]string) (*inventory.Inven
 	for i := range networks {
 		network := networks[i]
 
-		targetResource, err := runtime.CreateResource(runtime, "nmap.network ", map[string]*llx.RawData{
+		targetResource, err := runtime.CreateResource(runtime, "nmap.network", map[string]*llx.RawData{
 			"target": llx.StringData(network),
 		})
 		if err != nil {
