@@ -84,7 +84,7 @@ func connectionOptionsFromConfigOptions(conf *inventory.Config) (opts githubConn
 			}
 
 		case vault.CredentialType_password:
-			if opts.Token != "" {
+			if opts.Token == "" {
 				opts.Token = string(cred.Secret)
 			}
 		}
@@ -94,6 +94,9 @@ func connectionOptionsFromConfigOptions(conf *inventory.Config) (opts githubConn
 }
 
 func NewGithubConnection(id uint32, asset *inventory.Asset) (*GithubConnection, error) {
+	if asset.Connections == nil {
+		return nil, errors.New("no connection details for the asset")
+	}
 	connectionOpts := connectionOptionsFromConfigOptions(asset.Connections[0])
 
 	var client *github.Client
