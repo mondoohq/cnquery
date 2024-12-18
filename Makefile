@@ -246,7 +246,7 @@ providers/install: \
 	providers/install/snowflake \
 	providers/install/mondoo \
 	providers/install/cloudflare \
-	providers/build/nmap
+	providers/install/nmap
 
 providers/build/mock: providers/lr
 	./lr go providers-sdk/v1/testutils/mockprovider/resources/mockprovider.lr
