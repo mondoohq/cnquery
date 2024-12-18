@@ -64,7 +64,7 @@ func (d *LinuxDeviceManager) IdentifyMountTargets(opts map[string]string) ([]*sn
 			return nil, err
 		}
 
-		return d.attemptExpandPartitions([]*snapshot.PartitionInfo{pi})
+		return d.attemptExpandPartitions(pi)
 	}
 
 	var deviceNames []string
@@ -333,7 +333,7 @@ func validateOpts(opts map[string]string) error {
 	return nil
 }
 
-func (c *LinuxDeviceManager) identifyViaLun(lun int) (*snapshot.PartitionInfo, error) {
+func (c *LinuxDeviceManager) identifyViaLun(lun int) ([]*snapshot.PartitionInfo, error) {
 	scsiDevices, err := c.listScsiDevices()
 	if err != nil {
 		return nil, err
@@ -360,7 +360,7 @@ func (c *LinuxDeviceManager) identifyViaLun(lun int) (*snapshot.PartitionInfo, e
 	if deviceErr != nil {
 		return nil, deviceErr
 	}
-	return device.GetMountablePartition()
+	return device.GetPartitions(false, false)
 }
 
 func (c *LinuxDeviceManager) identifyViaDeviceName(deviceName string, mountAll bool, includeMounted bool) ([]*snapshot.PartitionInfo, error) {
