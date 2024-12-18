@@ -155,8 +155,11 @@ func (d *LinuxDeviceManager) AttemptFindFstab(dir string) ([]resources.FstabEntr
 		return nil, nil
 	}
 
-	if len(strings.Split(string(out), "\n")) != 2 {
+	if l := len(strings.Split(string(out), "\n")); l > 2 {
 		log.Debug().Bytes("find", out).Msg("fstab not found, too many results")
+		return nil, nil
+	} else if l < 2 {
+		log.Debug().Bytes("find", out).Msg("fstab not found, no results")
 		return nil, nil
 	}
 
