@@ -207,6 +207,7 @@ func (device BlockDevice) GetPartitions(includeBoot bool, includeMounted bool) (
 					Str("name", partition.Name).
 					Int("children", len(partition.Children)).
 					Msg("partition is LVM2 member")
+				sortBlockDevicesBySize(partition.Children)
 				mapLVM2Partitions(partition, &partitions)
 				continue
 			}
