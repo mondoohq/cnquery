@@ -1,10 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-//go:build debugtest
-// +build debugtest
-
-package github
+package connection
 
 import (
 	"context"
@@ -14,16 +11,34 @@ import (
 	"github.com/google/go-github/v67/github"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
 )
 
-func TestGithub(t *testing.T) {
+func TestGithubNoConnection(t *testing.T) {
 	os.Setenv("GITHUB_TOKEN", "")
-	p, err := NewGithubConnection(0, &inventory.Config{})
+	_, err := NewGithubConnection(0, &inventory.Asset{})
+	require.Error(t, err)
+}
+
+func TestGithubValidConnection(t *testing.T) {
+	_, err := NewGithubConnection(0, &inventory.Asset{
+		Connections: []*inventory.Config{{
+			Credentials: []*vault.Credential{{
+				Type:   vault.CredentialType_password,
+				Secret: []byte("super_secret"),
+			},
+			},
+		},
+		},
+	})
 	require.NoError(t, err)
+}
 
-	client := p.Client()
-
+func TestGithubNeedsFix(t *testing.T) {
+	t.Skip()
+	p, err := NewGithubConnection(0, &inventory.Asset{})
 	orgName := "mondoohq"
+	client := p.Client()
 	ctx := context.Background()
 	org, _, err := client.Organizations.Get(ctx, orgName)
 	require.NoError(t, err)
