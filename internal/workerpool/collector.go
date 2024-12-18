@@ -53,7 +53,9 @@ func (c *collector[R]) GetValues() (slice []R) {
 func (c *collector[R]) GetErrors() (slice []error) {
 	results := c.GetResults()
 	for i := range results {
-		slice = append(slice, results[i].Error)
+		if results[i].Error != nil {
+			slice = append(slice, results[i].Error)
+		}
 	}
 	return
 }

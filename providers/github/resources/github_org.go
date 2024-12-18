@@ -304,11 +304,12 @@ func (g *mqlGithubOrganization) repositories() ([]interface{}, error) {
 
 		// check if any request failed
 		if errs := workerPool.GetErrors(); len(errs) != 0 {
-			err := errors.Join(errs...)
-			if strings.Contains(err.Error(), "404") {
-				return nil, nil
+			if err := errors.Join(errs...); err != nil {
+				if strings.Contains(err.Error(), "404") {
+					return nil, nil
+				}
+				return nil, err
 			}
-			return nil, err
 		}
 	}
 
