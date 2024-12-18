@@ -202,6 +202,14 @@ func (device BlockDevice) GetPartitions(includeBoot bool, includeMounted bool) (
 		log.Debug().Str("name", partition.Name).Int64("size", int64(partition.Size)).Msg("checking partition")
 		if filter(partition) {
 			log.Debug().Str("name", partition.Name).Msg("found suitable partition")
+			if strings.ToLower(partition.FsType) == "lvm2_member" {
+				log.Debug().
+					Str("name", partition.Name).
+					Int("children", len(partition.Children)).
+					Msg("partition is LVM2 member")
+				mapLVM2Partitions(partition, &partitions)
+				continue
+			}
 			devFsName := "/dev/" + partition.Name
 			partitions = append(partitions, &PartitionInfo{
 				Name: devFsName, FsType: partition.FsType,
@@ -223,6 +231,16 @@ func (device BlockDevice) GetPartitions(includeBoot bool, includeMounted bool) (
 	}
 
 	return partitions, nil
+}
+
+func mapLVM2Partitions(part BlockDevice, partitions *[]*PartitionInfo) {
+	for _, p := range part.Children {
+		devFsName := "/dev/mapper/" + p.Name
+		*partitions = append(*partitions, &PartitionInfo{
+			Name: devFsName, FsType: p.FsType,
+			Label: p.Label, Uuid: p.Uuid,
+		})
+	}
 }
 
 // If multiple partitions meet this criteria, the largest one is returned.

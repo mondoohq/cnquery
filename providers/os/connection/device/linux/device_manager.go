@@ -103,7 +103,8 @@ func (d *LinuxDeviceManager) attemptExpandPartitions(partitions []*snapshot.Part
 		log.Warn().Err(err).Msg("could not find fstab")
 		return partitions, nil
 	}
-	log.Debug().Any("fstab", fstabEntries).Msg("fstab entries found")
+	log.Debug().Any("fstab", fstabEntries).
+		Msg("fstab entries found")
 
 	partitions, err = d.MountWithFstab(partitions, fstabEntries)
 	if err != nil {
@@ -256,6 +257,11 @@ func (d *LinuxDeviceManager) MountWithFstab(partitions []*snapshot.PartitionInfo
 }
 
 func cmpPartition2Fstab(partition *snapshot.PartitionInfo, entry resources.FstabEntry) bool {
+	// Edge case: fstab entry is a symlink to a device mapper device (LVM2)
+	if strings.HasPrefix(entry.Device, "/dev/mapper/") {
+		return entry.Device == partition.Name
+	}
+
 	parts := strings.Split(entry.Device, "=")
 	if len(parts) != 2 {
 		log.Warn().Str("device", entry.Device).Msg("possibly invalid fstab entry, skipping")
