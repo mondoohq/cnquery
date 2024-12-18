@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -212,8 +213,20 @@ func (d *LinuxDeviceManager) AttemptFindOSTree(dir string, partition *snapshot.P
 	return true
 }
 
+func pathDepth(path string) int {
+	if path == "/" {
+		return 0
+	}
+	return len(strings.Split(strings.Trim(path, "/"), "/"))
+}
+
 // MountWithFstab mounts partitions adjusting the mountpoint and mount options according to the discovered fstab entries
 func (d *LinuxDeviceManager) MountWithFstab(partitions []*snapshot.PartitionInfo, entries []resources.FstabEntry) ([]*snapshot.PartitionInfo, error) {
+	// sort the entries by the length of the mountpoint, so we can mount the top level partitions first
+	sort.Slice(entries, func(i, j int) bool {
+		return pathDepth(entries[i].Mountpoint) < pathDepth(entries[j].Mountpoint)
+	})
+
 	for _, entry := range entries {
 		for i := range partitions {
 			if !cmpPartition2Fstab(partitions[i], entry) {
