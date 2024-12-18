@@ -61,6 +61,38 @@ func TestPoolHandleErrors(t *testing.T) {
 	}
 }
 
+func TestPoolMultipleTasksWithEmptyResultsAndNilErrors(t *testing.T) {
+	type test struct {
+		data int
+	}
+	pool := workerpool.New[*test](5)
+	pool.Start()
+	defer pool.Close()
+
+	tasks := []workerpool.Task[*test]{
+		func() (*test, error) { return nil, nil },
+		func() (*test, error) { return &test{1}, nil },
+		func() (*test, error) { return nil, nil },
+		func() (*test, error) { return nil, nil },
+		func() (*test, error) { return nil, nil },
+		func() (*test, error) { return nil, nil },
+		func() (*test, error) { return nil, nil },
+		func() (*test, error) { return nil, nil },
+		func() (*test, error) { return nil, nil },
+		func() (*test, error) { return nil, nil },
+		func() (*test, error) { return nil, nil },
+	}
+
+	for _, task := range tasks {
+		pool.Submit(task)
+	}
+
+	// Wait for error collector to process
+	pool.Wait()
+
+	assert.Empty(t, pool.GetErrors())
+}
+
 func TestPoolMultipleTasksWithErrors(t *testing.T) {
 	type test struct {
 		data int
@@ -102,7 +134,7 @@ func TestPoolMultipleTasksWithErrors(t *testing.T) {
 		pool.GetValues(),
 	)
 	assert.ElementsMatch(t,
-		[]error{nil, nil, errors.New("task error"), nil},
+		[]error{errors.New("task error")},
 		pool.GetErrors(),
 	)
 }
