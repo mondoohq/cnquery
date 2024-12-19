@@ -24,6 +24,10 @@ ifndef TARGETOS
 	TARGETOS = $(shell go env GOOS)
 endif
 
+ifndef TARGETARCH
+	TARGETARCH = $(shell go env GOARCH)
+endif
+
 BIN_SUFFIX = ""
 ifeq ($(TARGETOS),windows)
 	BIN_SUFFIX=".exe"
@@ -94,7 +98,7 @@ define buildProvider
 		echo "--> [${$@_NAME}] skipping compile"; \
 	else \
 		echo "--> [${$@_NAME}] creating ${$@_BIN}"; \
-		cd ${$@_HOME} && GOOS=${TARGETOS} go build -o ${$@_DIST_BIN}${BIN_SUFFIX} ./main.go; \
+		cd ${$@_HOME} && GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -o ${$@_DIST_BIN}${BIN_SUFFIX} ./main.go; \
 	fi
 endef
 
@@ -111,7 +115,7 @@ define buildProviderDist
 	echo "--> [${$@_NAME}] generate CLI json"
 	cd ${$@_HOME} && go run ./gen/main.go .
 	echo "--> [${$@_NAME}] creating ${$@_BIN}"
-	cd ${$@_HOME} && CGO_ENABLED=0 GOOS=${TARGETOS} go build ${LDFLAGSDIST} -o ${$@_DIST_BIN}${BIN_SUFFIX} ./main.go
+	cd ${$@_HOME} && CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build ${LDFLAGSDIST} -o ${$@_DIST_BIN}${BIN_SUFFIX} ./main.go
 endef
 
 define installProvider
@@ -768,3 +772,4 @@ license/headers/check:
 
 license/headers/apply:
 	copywrite headers
+

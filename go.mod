@@ -287,7 +287,10 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 )
 
-require github.com/moby/buildkit v0.18.1
+require (
+	github.com/moby/buildkit v0.18.1
+	github.com/moby/sys/mount v0.3.4
+)
 
 require (
 	cel.dev/expr v0.19.1 // indirect
@@ -315,6 +318,7 @@ require (
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
+	github.com/moby/sys/mountinfo v0.7.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/smarty/assertions v1.15.1 // indirect
