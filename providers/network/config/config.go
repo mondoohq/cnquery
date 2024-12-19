@@ -6,6 +6,7 @@ package config
 import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers/network/connection"
 	"go.mondoo.com/cnquery/v11/providers/network/provider"
 )
 
@@ -41,6 +42,12 @@ var Config = plugin.Provider{
 					Type:    plugin.FlagType_Bool,
 					Default: "",
 					Desc:    "Disable TLS/SSL verification",
+				},
+				{
+					Long:    connection.OPTION_FOLLOW_REDIRECTS,
+					Type:    plugin.FlagType_Bool,
+					Default: "",
+					Desc:    "Follow HTTP redirects",
 				},
 			},
 		},
