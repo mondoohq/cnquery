@@ -5,8 +5,8 @@ package linux
 
 import (
 	"bytes"
+	"fmt"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
 	"sort"
@@ -149,10 +149,15 @@ func (d *LinuxDeviceManager) hintFSTypes(partitions []*snapshot.PartitionInfo) (
 }
 
 func (d *LinuxDeviceManager) attemptFindFstab(dir string) ([]resources.FstabEntry, error) {
-	cmd := exec.Command("find", dir, "-type", "f", "-wholename", `*/etc/fstab`)
-	out, err := cmd.CombinedOutput()
+	cmd, err := d.volumeMounter.CmdRunner.RunCommand(fmt.Sprintf("find %s -type f -wholename '*/etc/fstab'", dir))
 	if err != nil {
 		log.Error().Err(err).Msg("error searching for fstab")
+		return nil, nil
+	}
+	var out []byte
+	_, err = cmd.Stdout.Read(out)
+	if err != nil {
+		log.Error().Err(err).Msg("error reading find output")
 		return nil, nil
 	}
 
