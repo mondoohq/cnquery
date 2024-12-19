@@ -173,6 +173,20 @@ jobs:
               "version":  "${{  github.ref_name }}"
             }'
 
+      # At this point we know the docker container is published.
+      # We can now trigger the cnquery bump in cnspec, which will also trigger the release of cnspec.
+      # The docker container is a pre-requisite for cnspec release.
+      - name: Trigger cnquery bump in cnspec
+        if: ${{ ! steps.skip-publish.outputs.skip-publish }}
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.RELEASR_ACTION_TOKEN }}
+          repository: "mondoohq/cnspec"
+          event-type: update-cnquery
+          client-payload: '{
+              "version": "${{  github.ref_name }}"
+            }'
+
       - name: Cleanup
         if: always()
         run:
