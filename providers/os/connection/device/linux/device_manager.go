@@ -99,7 +99,7 @@ func (d *LinuxDeviceManager) IdentifyMountTargets(opts map[string]string) ([]*sn
 }
 
 func (d *LinuxDeviceManager) attemptExpandPartitions(partitions []*snapshot.PartitionInfo) ([]*snapshot.PartitionInfo, error) {
-	fstabEntries, err := d.HintFSTypes(partitions)
+	fstabEntries, err := d.hintFSTypes(partitions)
 	if err != nil {
 		log.Warn().Err(err).Msg("could not find fstab")
 		return partitions, nil
@@ -107,7 +107,7 @@ func (d *LinuxDeviceManager) attemptExpandPartitions(partitions []*snapshot.Part
 	log.Debug().Any("fstab", fstabEntries).
 		Msg("fstab entries found")
 
-	partitions, err = d.MountWithFstab(partitions, fstabEntries)
+	partitions, err = d.mountWithFstab(partitions, fstabEntries)
 	if err != nil {
 		log.Error().Err(err).Msg("unable to mount partitions with fstab")
 		d.UnmountAndClose()
@@ -117,7 +117,7 @@ func (d *LinuxDeviceManager) attemptExpandPartitions(partitions []*snapshot.Part
 	return partitions, nil
 }
 
-func (d *LinuxDeviceManager) HintFSTypes(partitions []*snapshot.PartitionInfo) ([]resources.FstabEntry, error) {
+func (d *LinuxDeviceManager) hintFSTypes(partitions []*snapshot.PartitionInfo) ([]resources.FstabEntry, error) {
 	for i := range partitions {
 		partition := partitions[i]
 
@@ -131,7 +131,7 @@ func (d *LinuxDeviceManager) HintFSTypes(partitions []*snapshot.PartitionInfo) (
 			}
 		}()
 
-		entries, err := d.AttemptFindFstab(dir)
+		entries, err := d.attemptFindFstab(dir)
 		if err != nil {
 			return nil, err
 		}
@@ -139,7 +139,7 @@ func (d *LinuxDeviceManager) HintFSTypes(partitions []*snapshot.PartitionInfo) (
 			return entries, nil
 		}
 
-		if ok := d.AttemptFindOSTree(dir, partition); ok {
+		if ok := d.attemptFindOSTree(dir, partition); ok {
 			return nil, nil
 		}
 
@@ -148,7 +148,7 @@ func (d *LinuxDeviceManager) HintFSTypes(partitions []*snapshot.PartitionInfo) (
 	return nil, errors.New("fstab not found")
 }
 
-func (d *LinuxDeviceManager) AttemptFindFstab(dir string) ([]resources.FstabEntry, error) {
+func (d *LinuxDeviceManager) attemptFindFstab(dir string) ([]resources.FstabEntry, error) {
 	cmd := exec.Command("find", dir, "-type", "f", "-wholename", `*/etc/fstab`)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -176,7 +176,7 @@ func (d *LinuxDeviceManager) AttemptFindFstab(dir string) ([]resources.FstabEntr
 	return resources.ParseFstab(bytes.NewReader(fstabFile))
 }
 
-func (d *LinuxDeviceManager) AttemptFindOSTree(dir string, partition *snapshot.PartitionInfo) bool {
+func (d *LinuxDeviceManager) attemptFindOSTree(dir string, partition *snapshot.PartitionInfo) bool {
 	info, err := os.Stat(path.Join(dir, "ostree"))
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -220,8 +220,8 @@ func pathDepth(path string) int {
 	return len(strings.Split(strings.Trim(path, "/"), "/"))
 }
 
-// MountWithFstab mounts partitions adjusting the mountpoint and mount options according to the discovered fstab entries
-func (d *LinuxDeviceManager) MountWithFstab(partitions []*snapshot.PartitionInfo, entries []resources.FstabEntry) ([]*snapshot.PartitionInfo, error) {
+// mountWithFstab mounts partitions adjusting the mountpoint and mount options according to the discovered fstab entries
+func (d *LinuxDeviceManager) mountWithFstab(partitions []*snapshot.PartitionInfo, entries []resources.FstabEntry) ([]*snapshot.PartitionInfo, error) {
 	// sort the entries by the length of the mountpoint, so we can mount the top level partitions first
 	sort.Slice(entries, func(i, j int) bool {
 		return pathDepth(entries[i].Mountpoint) < pathDepth(entries[j].Mountpoint)
