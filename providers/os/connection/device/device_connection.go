@@ -5,7 +5,6 @@ package device
 
 import (
 	"errors"
-	"path"
 	"runtime"
 	"strings"
 
@@ -191,10 +190,7 @@ func (p *DeviceConnection) Partitions() map[string]*snapshot.PartitionInfo {
 
 // tryDetectAsset tries to detect the OS on a given block device
 func tryDetectAsset(connId uint32, partition *snapshot.PartitionInfo, conf *inventory.Config, asset *inventory.Asset) (*fs.FileSystemConnection, error) {
-	fsPath := partition.MountPoint
-	if partition.Bind != "" {
-		fsPath = path.Join(fsPath, partition.Bind)
-	}
+	fsPath := partition.RootDir()
 
 	// create and initialize fs provider
 	log.Debug().Str("path", fsPath).Msg("device connection> trying to detect asset")

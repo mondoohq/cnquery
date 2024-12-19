@@ -4,6 +4,7 @@
 package snapshot
 
 import (
+	"path"
 	"strings"
 )
 
@@ -50,4 +51,8 @@ func (entry BlockDevice) isMounted() bool {
 
 func (entry PartitionInfo) key() string {
 	return strings.Join(append([]string{entry.Name, entry.Uuid}, entry.MountOptions...), "|")
+}
+
+func (i PartitionInfo) RootDir() string {
+	return path.Join(i.MountPoint, i.Bind)
 }
