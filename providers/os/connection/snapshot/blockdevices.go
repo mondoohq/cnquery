@@ -208,7 +208,7 @@ func (device BlockDevice) GetPartitions(includeBoot bool, includeMounted bool) (
 					Int("children", len(partition.Children)).
 					Msg("partition is LVM2 member")
 				sortBlockDevicesBySize(partition.Children)
-				mapLVM2Partitions(partition, &partitions)
+				partitions = append(partitions, mapLVM2Partitions(partition)...)
 				continue
 			}
 			devFsName := "/dev/" + partition.Name
@@ -234,14 +234,16 @@ func (device BlockDevice) GetPartitions(includeBoot bool, includeMounted bool) (
 	return partitions, nil
 }
 
-func mapLVM2Partitions(part BlockDevice, partitions *[]*PartitionInfo) {
+func mapLVM2Partitions(part BlockDevice) (partitions []*PartitionInfo) {
 	for _, p := range part.Children {
 		devFsName := "/dev/mapper/" + p.Name
-		*partitions = append(*partitions, &PartitionInfo{
+		partitions = append(partitions, &PartitionInfo{
 			Name: devFsName, FsType: p.FsType,
 			Label: p.Label, Uuid: p.Uuid,
 		})
 	}
+
+	return partitions
 }
 
 // If multiple partitions meet this criteria, the largest one is returned.
