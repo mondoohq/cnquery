@@ -202,7 +202,7 @@ func (device BlockDevice) GetPartitions(includeBoot bool, includeMounted bool) (
 		log.Debug().Str("name", partition.Name).Int64("size", int64(partition.Size)).Msg("checking partition")
 		if filter(partition) {
 			log.Debug().Str("name", partition.Name).Msg("found suitable partition")
-			if strings.ToLower(partition.FsType) == "lvm2_member" {
+			if strings.ToLower(partition.FsType) == "lvm2_member" && len(partition.Children) > 0 {
 				log.Debug().
 					Str("name", partition.Name).
 					Int("children", len(partition.Children)).
