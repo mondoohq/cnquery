@@ -21,6 +21,17 @@ type PartitionInfo struct {
 	Uuid string
 	// (optional) MountPoint is the partition mount point
 	MountPoint string
+
+	// (optional) MountOptions are the mount options
+	MountOptions []string
+	// (optional) Bind adjusts the root for FS connection
+	Bind string
+}
+
+type MountPartitionDto struct {
+	*PartitionInfo
+
+	ScanDir *string
 }
 
 func (entry BlockDevice) isNoBootVolume() bool {
@@ -35,4 +46,8 @@ func (entry BlockDevice) isNoBootVolumeAndUnmounted() bool {
 
 func (entry BlockDevice) isMounted() bool {
 	return entry.MountPoint != ""
+}
+
+func (entry PartitionInfo) key() string {
+	return strings.Join(append([]string{entry.Name, entry.Uuid}, entry.MountOptions...), "|")
 }
