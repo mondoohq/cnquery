@@ -103,14 +103,14 @@ func (m *VolumeMounter) mountVolume(fsInfo *MountPartitionDto) error {
 		opts = append(opts, "nouuid")
 	}
 	opts = stringx.DedupStringArray(opts)
-	opts = saninizeOptions(opts)
+	opts = sanitizeOptions(opts)
 
 	scanDir := m.ScanDirs[fsInfo.key()]
 	log.Debug().Str("fstype", fsInfo.FsType).Str("device", fsInfo.Name).Str("scandir", scanDir).Str("opts", strings.Join(opts, ",")).Msg("mount volume to scan dir")
 	return Mount(fsInfo.Name, scanDir, fsInfo.FsType, opts)
 }
 
-func saninizeOptions(options []string) []string {
+func sanitizeOptions(options []string) []string {
 	var sanitized []string
 	for _, opt := range options {
 		switch opt {
