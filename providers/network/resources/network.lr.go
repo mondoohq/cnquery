@@ -198,6 +198,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"http.get.url": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHttpGet).GetUrl()).ToDataRes(types.Resource("url"))
 	},
+	"http.get.followRedirects": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHttpGet).GetFollowRedirects()).ToDataRes(types.Bool)
+	},
 	"http.get.header": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHttpGet).GetHeader()).ToDataRes(types.Resource("http.header"))
 	},
@@ -674,6 +677,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		},
 	"http.get.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHttpGet).Url, ok = plugin.RawToTValue[*mqlUrl](v.Value, v.Error)
+		return
+	},
+	"http.get.followRedirects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHttpGet).FollowRedirects, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"http.get.header": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1476,6 +1483,7 @@ type mqlHttpGet struct {
 	__id string
 	mqlHttpGetInternal
 	Url plugin.TValue[*mqlUrl]
+	FollowRedirects plugin.TValue[bool]
 	Header plugin.TValue[*mqlHttpHeader]
 	StatusCode plugin.TValue[int64]
 	Version plugin.TValue[string]
@@ -1521,6 +1529,10 @@ func (c *mqlHttpGet) MqlID() string {
 
 func (c *mqlHttpGet) GetUrl() *plugin.TValue[*mqlUrl] {
 	return &c.Url
+}
+
+func (c *mqlHttpGet) GetFollowRedirects() *plugin.TValue[bool] {
+	return &c.FollowRedirects
 }
 
 func (c *mqlHttpGet) GetHeader() *plugin.TValue[*mqlHttpHeader] {
