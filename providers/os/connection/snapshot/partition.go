@@ -25,8 +25,8 @@ type PartitionInfo struct {
 
 	// (optional) MountOptions are the mount options
 	MountOptions []string
-	// (optional) Bind adjusts the root for FS connection
-	Bind string
+	// (optional) bind adjusts the root for FS connection
+	bind string
 }
 
 type MountPartitionDto struct {
@@ -54,5 +54,15 @@ func (entry PartitionInfo) key() string {
 }
 
 func (i PartitionInfo) RootDir() string {
-	return path.Join(i.MountPoint, i.Bind)
+	return path.Join(i.MountPoint, i.bind)
+}
+
+func (i PartitionInfo) SetBind(bind string) PartitionInfo {
+	i.bind = bind
+	return i
+}
+
+func (i PartitionInfo) SetBind(bind string) PartitionInfo {
+	i.bind = bind
+	return i
 }

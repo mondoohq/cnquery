@@ -214,7 +214,7 @@ func (d *LinuxDeviceManager) attemptFindOSTree(dir string, partition *snapshot.P
 		log.Warn().Str("device", partition.Name).Msg("multiple ostree matches")
 	}
 
-	partition.Bind = strings.TrimPrefix(matches[0], dir)
+	partition.SetBind(strings.TrimPrefix(matches[0], dir))
 	return true
 }
 
