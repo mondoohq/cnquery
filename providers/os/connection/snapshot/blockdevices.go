@@ -9,6 +9,7 @@ import (
 	"io"
 	"math"
 	"os"
+	"path"
 	"sort"
 	"strconv"
 	"strings"
@@ -30,6 +31,17 @@ type BlockDevice struct {
 	Size       Size          `json:"size,omitempty"`
 
 	Aliases []string `json:"-"`
+}
+
+func (b BlockDevice) PartitionInfo(devPath string) *PartitionInfo {
+	return &PartitionInfo{
+		Name:       path.Join(devPath, b.Name),
+		FsType:     b.FsType,
+		Label:      b.Label,
+		Uuid:       b.Uuid,
+		MountPoint: b.MountPoint,
+		Aliases:    b.Aliases,
+	}
 }
 
 type Size int64
@@ -211,13 +223,7 @@ func (device BlockDevice) GetPartitions(includeBoot bool, includeMounted bool) (
 				partitions = append(partitions, mapLVM2Partitions(partition)...)
 				continue
 			}
-			devFsName := "/dev/" + partition.Name
-			partitions = append(partitions, &PartitionInfo{
-				Name: devFsName, FsType: partition.FsType,
-				Label: partition.Label, Uuid: partition.Uuid,
-				Aliases:    partition.Aliases,
-				MountPoint: partition.MountPoint,
-			})
+			partitions = append(partitions, partition.PartitionInfo("/dev"))
 		} else {
 			log.Debug().
 				Str("name", partition.Name).
@@ -236,11 +242,7 @@ func (device BlockDevice) GetPartitions(includeBoot bool, includeMounted bool) (
 
 func mapLVM2Partitions(part BlockDevice) (partitions []*PartitionInfo) {
 	for _, p := range part.Children {
-		devFsName := "/dev/mapper/" + p.Name
-		partitions = append(partitions, &PartitionInfo{
-			Name: devFsName, FsType: p.FsType,
-			Label: p.Label, Uuid: p.Uuid,
-		})
+		partitions = append(partitions, p.PartitionInfo("/dev/mapper"))
 	}
 
 	return partitions
