@@ -111,7 +111,7 @@ func (m *VolumeMounter) mountVolume(fsInfo *MountPartitionDto) error {
 }
 
 func sanitizeOptions(options []string) []string {
-	var sanitized []string
+	sanitized := make([]string, 0)
 	for _, opt := range options {
 		switch opt {
 		case "defaults", "x-systemd.automount":
