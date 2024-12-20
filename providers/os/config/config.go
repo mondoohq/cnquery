@@ -301,6 +301,12 @@ var Config = plugin.Provider{
 					Option: plugin.FlagOption_Hidden,
 				},
 				{
+					Long:   "skip-attempt-expand-partitions",
+					Type:   plugin.FlagType_Bool,
+					Desc:   "Skip attempt on trying to discover the fstab file on the device",
+					Option: plugin.FlagOption_Hidden,
+				},
+				{
 					Long:   "include-mounted",
 					Type:   plugin.FlagType_Bool,
 					Desc:   "Include mounted block devices in the scan",

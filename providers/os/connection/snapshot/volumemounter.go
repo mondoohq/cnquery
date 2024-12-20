@@ -33,7 +33,12 @@ func NewVolumeMounter(shell []string) *VolumeMounter {
 }
 
 // Mounts a specific partition and returns the directory it was mounted to
-func (m *VolumeMounter) MountP(partition *PartitionInfo) (string, error) {
+func (m *VolumeMounter) MountP(dto *MountPartitionDto) (string, error) {
+	if dto == nil {
+		return "", errors.New("mount device> partition is required")
+	}
+
+	partition := dto.PartitionInfo
 	if partition == nil {
 		return "", errors.New("mount device> partition is required")
 	}
@@ -43,13 +48,43 @@ func (m *VolumeMounter) MountP(partition *PartitionInfo) (string, error) {
 	if partition.FsType == "" {
 		return "", errors.New("mount device> partition fs type is required")
 	}
-	dir, err := m.createScanDir()
-	if err != nil {
-		return "", err
-	}
-	m.ScanDirs[partition.Name] = dir
 
-	return dir, m.mountVolume(partition)
+	var dir string
+	var err error
+	if dto.ScanDir == nil {
+		dir, err = m.createScanDir()
+		if err != nil {
+			return "", err
+		}
+	} else {
+		dir = *dto.ScanDir
+	}
+
+	m.ScanDirs[partition.key()] = dir
+
+	return dir, m.mountVolume(dto)
+}
+
+func (m *VolumeMounter) UmountP(partition *PartitionInfo) error {
+	if partition == nil {
+		return errors.New("unmount device> partition is required")
+	}
+	if partition.Name == "" {
+		return errors.New("unmount device> partition name is required")
+	}
+	key := partition.key()
+	dir, ok := m.ScanDirs[key]
+	if !ok {
+		return errors.New("unmount device> partition not found")
+	}
+	log.Debug().Str("dir", dir).Str("name", partition.Name).Msg("unmount volume")
+	if err := Unmount(dir); err != nil {
+		log.Error().Err(err).Str("dir", dir).Msg("failed to unmount dir")
+		return err
+	}
+	delete(m.ScanDirs, key)
+
+	return nil
 }
 
 func (m *VolumeMounter) createScanDir() (string, error) {
@@ -62,15 +97,30 @@ func (m *VolumeMounter) createScanDir() (string, error) {
 	return dir, nil
 }
 
-func (m *VolumeMounter) mountVolume(fsInfo *PartitionInfo) error {
-	opts := []string{}
+func (m *VolumeMounter) mountVolume(fsInfo *MountPartitionDto) error {
+	opts := fsInfo.MountOptions
 	if fsInfo.FsType == "xfs" {
 		opts = append(opts, "nouuid")
 	}
 	opts = stringx.DedupStringArray(opts)
-	scanDir := m.ScanDirs[fsInfo.Name]
+	opts = sanitizeOptions(opts)
+
+	scanDir := m.ScanDirs[fsInfo.key()]
 	log.Debug().Str("fstype", fsInfo.FsType).Str("device", fsInfo.Name).Str("scandir", scanDir).Str("opts", strings.Join(opts, ",")).Msg("mount volume to scan dir")
 	return Mount(fsInfo.Name, scanDir, fsInfo.FsType, opts)
+}
+
+func sanitizeOptions(options []string) []string {
+	sanitized := make([]string, 0)
+	for _, opt := range options {
+		switch opt {
+		case "defaults", "x-systemd.automount":
+			continue
+		default:
+			sanitized = append(sanitized, opt)
+		}
+	}
+	return sanitized
 }
 
 func (m *VolumeMounter) UnmountVolumeFromInstance() error {
