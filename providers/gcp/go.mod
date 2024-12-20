@@ -7,11 +7,11 @@ go 1.23.0
 require (
 	cloud.google.com/go/accessapproval v1.8.2
 	cloud.google.com/go/bigquery v1.65.0
-	cloud.google.com/go/compute v1.29.0
+	cloud.google.com/go/compute v1.31.0
 	cloud.google.com/go/container v1.42.0
 	cloud.google.com/go/functions v1.19.2
 	cloud.google.com/go/iam v1.3.0
-	cloud.google.com/go/kms v1.20.2
+	cloud.google.com/go/kms v1.20.3
 	cloud.google.com/go/logging v1.12.0
 	cloud.google.com/go/longrunning v0.6.3
 	cloud.google.com/go/monitoring v1.22.0
@@ -26,11 +26,11 @@ require (
 	github.com/rs/zerolog v1.33.0
 	github.com/stretchr/testify v1.10.0
 	go.mondoo.com/cnquery/v11 v11.33.1
-	go.mondoo.com/ranger-rpc v0.6.4
+	go.mondoo.com/ranger-rpc v0.6.5
 	golang.org/x/oauth2 v0.24.0
-	google.golang.org/api v0.210.0
+	google.golang.org/api v0.211.0
 	google.golang.org/genproto v0.0.0-20241206012308-a4fef0638583
-	google.golang.org/protobuf v1.35.2
+	google.golang.org/protobuf v1.36.0
 )
 
 require (
@@ -98,7 +98,7 @@ require (
 
 require (
 	cloud.google.com/go v0.116.0 // indirect
-	cloud.google.com/go/auth v0.12.0 // indirect
+	cloud.google.com/go/auth v0.12.1 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.6 // indirect
 	cloud.google.com/go/binaryauthorization v1.9.2
 	cloud.google.com/go/compute/metadata v0.5.2 // indirect
@@ -244,7 +244,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.32.0 // indirect
 	go.opentelemetry.io/otel/trace v1.32.0 // indirect
 	go.uber.org/mock v0.5.0 // indirect
-	golang.org/x/crypto v0.30.0 // indirect
+	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/exp v0.0.0-20241204233417-43b7b7cde48d // indirect
 	golang.org/x/mod v0.22.0 // indirect
 	golang.org/x/net v0.32.0 // indirect
