@@ -29,9 +29,11 @@ type PartitionInfo struct {
 	bind string
 }
 
+// MountPartitionDto is the input for the MountP method
 type MountPartitionDto struct {
 	*PartitionInfo
 
+	// Override the scan dir for the mount
 	ScanDir *string
 }
 
@@ -55,11 +57,6 @@ func (entry PartitionInfo) key() string {
 
 func (i PartitionInfo) RootDir() string {
 	return path.Join(i.MountPoint, i.bind)
-}
-
-func (i PartitionInfo) SetBind(bind string) PartitionInfo {
-	i.bind = bind
-	return i
 }
 
 func (i PartitionInfo) SetBind(bind string) PartitionInfo {
