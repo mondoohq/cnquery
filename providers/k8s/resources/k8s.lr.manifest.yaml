@@ -488,6 +488,8 @@ resources:
     fields:
       annotations:
         min_mondoo_version: 5.29.2
+      created:
+        min_mondoo_version: 9.0.0
       id:
         min_mondoo_version: 6.10.0
       kind: {}
