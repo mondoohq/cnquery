@@ -114,6 +114,8 @@ private k8s.node @defaults("name labels['kubernetes.io/arch'] labels['kubernetes
   name string
   // Kubernetes object type
   kind string
+  // Kubernetes object creation timestamp
+  created time
 }
 
 // Kubernetes Pod
