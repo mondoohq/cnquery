@@ -364,6 +364,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.node.kind": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sNode).GetKind()).ToDataRes(types.String)
 	},
+	"k8s.node.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNode).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.node.nodeInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNode).GetNodeInfo()).ToDataRes(types.Dict)
+	},
+	"k8s.node.kubeletPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNode).GetKubeletPort()).ToDataRes(types.Int)
+	},
 	"k8s.pod.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPod).GetId()).ToDataRes(types.String)
 	},
@@ -1498,6 +1507,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"k8s.node.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sNode).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.node.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNode).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.node.nodeInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNode).NodeInfo, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.node.kubeletPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNode).KubeletPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"k8s.pod.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3486,6 +3507,9 @@ type mqlK8sNode struct {
 	ResourceVersion plugin.TValue[string]
 	Name plugin.TValue[string]
 	Kind plugin.TValue[string]
+	Created plugin.TValue[*time.Time]
+	NodeInfo plugin.TValue[interface{}]
+	KubeletPort plugin.TValue[int64]
 }
 
 // createK8sNode creates a new instance of this resource
@@ -3555,6 +3579,18 @@ func (c *mqlK8sNode) GetName() *plugin.TValue[string] {
 
 func (c *mqlK8sNode) GetKind() *plugin.TValue[string] {
 	return &c.Kind
+}
+
+func (c *mqlK8sNode) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sNode) GetNodeInfo() *plugin.TValue[interface{}] {
+	return &c.NodeInfo
+}
+
+func (c *mqlK8sNode) GetKubeletPort() *plugin.TValue[int64] {
+	return &c.KubeletPort
 }
 
 // mqlK8sPod for the k8s.pod resource
