@@ -8,7 +8,7 @@ require (
 	github.com/packethost/packngo v0.31.0
 	github.com/rs/zerolog v1.33.0
 	go.mondoo.com/cnquery/v11 v11.33.1
-	go.mondoo.com/ranger-rpc v0.6.4
+	go.mondoo.com/ranger-rpc v0.6.5
 )
 
 require (
