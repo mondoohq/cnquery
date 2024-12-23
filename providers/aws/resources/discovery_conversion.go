@@ -342,7 +342,7 @@ func addConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, 
 					Type: vault.CredentialType_aws_ec2_ssm_session,
 				})
 			} else {
-				// if we dont have a connection already, we need to add one
+				// if we don't have a connection already, we need to add one
 				creds := []*vault.Credential{
 					{
 						User: probableUsername,
