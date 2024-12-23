@@ -10,12 +10,13 @@ require (
 	github.com/gobwas/glob v0.2.3
 	github.com/google/go-github/v67 v67.0.0
 	github.com/hashicorp/go-retryablehttp v0.7.7
+	github.com/mitchellh/hashstructure/v2 v2.0.2
 	github.com/rs/zerolog v1.33.0
 	github.com/stretchr/testify v1.10.0
 	go.mondoo.com/cnquery/v11 v11.33.1
-	go.mondoo.com/ranger-rpc v0.6.4
+	go.mondoo.com/ranger-rpc v0.6.5
 	golang.org/x/oauth2 v0.24.0
-	google.golang.org/protobuf v1.35.2
+	google.golang.org/protobuf v1.36.0
 	sigs.k8s.io/yaml v1.4.0
 )
 
@@ -179,7 +180,6 @@ require (
 	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/miekg/dns v1.1.62 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
-	github.com/mitchellh/hashstructure/v2 v2.0.2 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/moby/buildkit v0.18.1 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect
