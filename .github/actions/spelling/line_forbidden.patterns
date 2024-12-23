@@ -66,6 +66,9 @@
 # Industry Terms
 #
 
+# s.b. NetFlow
+\bNetflow\b
+
 # s.b. Side scanning
 \b[Ss]idescanning\b
 
@@ -100,6 +103,9 @@
 #
 # Product Names
 #
+
+# s.b. Cloudflare
+\bCloudFlare\b
 
 # s.b. Memcached
 \bMemCached\b
@@ -166,6 +172,10 @@
 
 # s.b. AlmaLinux
 \bAlma Linux\b
+
+# s.b. CloudLinux
+\bCloud Linux\b
+\bCloudlinux\b
 
 # s.b. openSUSE
 \bOpenSUSE\b
