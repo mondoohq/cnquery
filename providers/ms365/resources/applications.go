@@ -8,9 +8,10 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"net/url"
 	"time"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/microsoftgraph/msgraph-sdk-go/applications"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
@@ -253,6 +254,10 @@ func (a *mqlMicrosoftApplication) servicePrincipal() (*mqlMicrosoftServiceprinci
 			Filter: &filter,
 		},
 	})
+	if err != nil {
+		return nil, err
+	}
+
 	servicePrincipals := resp.GetValue()
 	if len(servicePrincipals) == 0 {
 		return nil, errors.New("service principal not found")
