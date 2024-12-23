@@ -23,7 +23,7 @@ var Config = plugin.Provider{
 			Long: `Use the github provider to query resources within GitHub organizations and repositories.
 
 Available commands:
-  org					              GitHub organization
+  org                       GitHub organization
   repo                      GitHub repo
 
 Examples:
