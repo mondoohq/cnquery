@@ -5,10 +5,10 @@ go 1.23.0
 replace go.mondoo.com/cnquery/v11 => ../..
 
 require (
-	github.com/aws-cloudformation/rain v1.19.0
+	github.com/aws-cloudformation/rain v1.20.2
 	github.com/stretchr/testify v1.10.0
 	go.mondoo.com/cnquery/v11 v11.33.1
-	go.mondoo.com/ranger-rpc v0.6.4
+	go.mondoo.com/ranger-rpc v0.6.5
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -145,7 +145,7 @@ require (
 	go.opentelemetry.io/otel/sdk/metric v1.32.0 // indirect
 	go.opentelemetry.io/otel/trace v1.32.0 // indirect
 	go.uber.org/mock v0.5.0 // indirect
-	golang.org/x/crypto v0.30.0 // indirect
+	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/mod v0.22.0 // indirect
 	golang.org/x/net v0.32.0 // indirect
 	golang.org/x/oauth2 v0.24.0 // indirect
