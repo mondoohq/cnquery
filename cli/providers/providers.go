@@ -227,7 +227,7 @@ func genBuiltinFlags(discoveries ...string) []plugin.Flag {
 		{
 			Long: "discover",
 			Type: plugin.FlagType_List,
-			Desc: "Enable the discovery of nested assets. Supports: " + strings.Join(supportedDiscoveries, ","),
+			Desc: "Enable the discovery of nested assets. Supports: " + strings.Join(supportedDiscoveries, ", "),
 		},
 		{
 			Long:   "pretty",
