@@ -195,6 +195,9 @@ type PolicyAssignment struct {
 			AllowedSkus struct {
 				Value string `json:"value"`
 			} `json:"allowedSkus"`
+			Effect struct {
+				Value string `json:"value"`
+			} `json:"effect"`
 		} `json:"parameters"`
 		Scope     string        `json:"scope"`
 		NotScopes []interface{} `json:"notScopes"`
