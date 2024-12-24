@@ -7,8 +7,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v11/providers/azure/connection"
 )
 
@@ -43,6 +45,11 @@ func (a *mqlAzureSubscriptionPolicy) assignments() ([]interface{}, error) {
 
 	res := []interface{}{}
 	for _, assignment := range pas.PolicyAssignments {
+		parameters, err := convert.JsonToDict(assignment.Properties.Parameters)
+		if err != nil {
+			return nil, err
+		}
+
 		assignmentData := map[string]*llx.RawData{
 			"__id":            llx.StringData(fmt.Sprintf("azure.subscription.policy/%s/%s", assignment.Properties.Scope, assignment.Properties.DisplayName)),
 			"id":              llx.StringData(assignment.Properties.PolicyDefinitionID),
@@ -50,6 +57,7 @@ func (a *mqlAzureSubscriptionPolicy) assignments() ([]interface{}, error) {
 			"scope":           llx.StringData(assignment.Properties.Scope),
 			"description":     llx.StringData(assignment.Properties.Description),
 			"enforcementMode": llx.StringData(assignment.Properties.EnforcementMode),
+			"parameters":      llx.DictData(parameters),
 		}
 
 		mqlAssignment, err := CreateResource(a.MqlRuntime, "azure.subscription.policy.assignment", assignmentData)

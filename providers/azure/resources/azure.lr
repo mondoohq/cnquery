@@ -2006,6 +2006,8 @@ private azure.subscription.policy.assignment @defaults("name enforcementMode") {
   description string
   // Policy enforcement Mode
   enforcementMode string
+  // Policy parameters
+  parameters dict
 }
 
 // Azure IoT Hub Service
