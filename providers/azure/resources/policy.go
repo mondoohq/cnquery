@@ -44,6 +44,12 @@ func (a *mqlAzureSubscriptionPolicy) assignments() ([]interface{}, error) {
 
 	res := []interface{}{}
 	for _, assignment := range pas.PolicyAssignments {
+		properties, err := convert.JsonToDict(assignment.Properties)
+		if err != nil {
+			return nil, err
+		}
+
+	for _, assignment := range pas.PolicyAssignments {
 		assignmentData := map[string]*llx.RawData{
 			"__id":            llx.StringData(fmt.Sprintf("azure.subscription.policy/%s/%s", assignment.Properties.Scope, assignment.Properties.DisplayName)),
 			"id":              llx.StringData(assignment.Properties.PolicyDefinitionID),
