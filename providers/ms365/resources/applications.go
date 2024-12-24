@@ -30,7 +30,7 @@ func (a *mqlMicrosoft) applications() ([]interface{}, error) {
 		return nil, err
 	}
 	ctx := context.Background()
-	top := int32(999)
+	top := int32(500)
 	resp, err := graphClient.Applications().Get(ctx, &applications.ApplicationsRequestBuilderGetRequestConfiguration{
 		QueryParameters: &applications.ApplicationsRequestBuilderGetQueryParameters{
 			Top: &top,
@@ -40,9 +40,13 @@ func (a *mqlMicrosoft) applications() ([]interface{}, error) {
 		return nil, transformError(err)
 	}
 
+	allApps, err := iterate[*models.Application](ctx, resp, graphClient.GetAdapter(), applications.CreateDeltaGetResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, transformError(err)
+	}
+
 	res := []interface{}{}
-	apps := resp.GetValue()
-	for _, app := range apps {
+	for _, app := range allApps {
 		mqlResource, err := newMqlMicrosoftApplication(a.MqlRuntime, app)
 		if err != nil {
 			return nil, err
