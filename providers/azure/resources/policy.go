@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/azure/connection"
@@ -50,6 +51,7 @@ func (a *mqlAzureSubscriptionPolicy) assignments() ([]interface{}, error) {
 			"scope":           llx.StringData(assignment.Properties.Scope),
 			"description":     llx.StringData(assignment.Properties.Description),
 			"enforcementMode": llx.StringData(assignment.Properties.EnforcementMode),
+			"parameters":      llx.StringData(assignment.Properties.Parameters),
 		}
 
 		mqlAssignment, err := CreateResource(a.MqlRuntime, "azure.subscription.policy.assignment", assignmentData)

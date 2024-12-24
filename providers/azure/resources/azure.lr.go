@@ -2907,6 +2907,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.policy.assignment.enforcementMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionPolicyAssignment).GetEnforcementMode()).ToDataRes(types.String)
 	},
+	"azure.subscription.policy.assignment.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyAssignment).GetParameters()).ToDataRes(types.Dict)
+	},
 	"azure.subscription.iotService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionIotService).GetSubscriptionId()).ToDataRes(types.String)
 	},
@@ -16613,6 +16616,7 @@ type mqlAzureSubscriptionPolicyAssignment struct {
 	Scope plugin.TValue[string]
 	Description plugin.TValue[string]
 	EnforcementMode plugin.TValue[string]
+	Parameters plugin.TValue[map[string]interface{}]
 }
 
 // createAzureSubscriptionPolicyAssignment creates a new instance of this resource
@@ -16665,6 +16669,10 @@ func (c *mqlAzureSubscriptionPolicyAssignment) GetDescription() *plugin.TValue[s
 
 func (c *mqlAzureSubscriptionPolicyAssignment) GetEnforcementMode() *plugin.TValue[string] {
 	return &c.EnforcementMode
+}
+
+func (c *mqlAzureSubscriptionPolicyAssignment) GetParameters() *plugin.TValue[string] {
+	return &c.Parameters
 }
 
 // mqlAzureSubscriptionIotService for the azure.subscription.iotService resource
