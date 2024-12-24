@@ -6545,7 +6545,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"azure.subscription.policy.assignment.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionPolicyAssignment).Parameters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAzureSubscriptionPolicyAssignment).Parameters, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.iotService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16620,7 +16620,7 @@ type mqlAzureSubscriptionPolicyAssignment struct {
 	Scope plugin.TValue[string]
 	Description plugin.TValue[string]
 	EnforcementMode plugin.TValue[string]
-	Parameters plugin.TValue[map[string]interface{}]
+	Parameters plugin.TValue[interface{}]
 }
 
 // createAzureSubscriptionPolicyAssignment creates a new instance of this resource
