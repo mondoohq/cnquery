@@ -283,7 +283,7 @@ func Parse(input string) (*LR, error) {
 				name = *f.Embeddable.Alias
 			} else {
 				// use the first part of the type name as a id, i.e. os for os.any
-				// this wont work if there're are multiple embedded resources without aliases that share the same package, i.e os.any and os.base
+				// this won't work if there're are multiple embedded resources without aliases that share the same package, i.e os.any and os.base
 				name = strings.Split(f.Embeddable.Type, ".")[0]
 			}
 			newField := &Field{

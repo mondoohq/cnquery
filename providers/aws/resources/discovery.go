@@ -170,7 +170,7 @@ func handleTargets(targets []string) []string {
 
 // for now we have to post process the filters
 // more ideally, we should pass the filters in when discovering
-// so that we dont unnecessarily discover assets we will later discard
+// so that we don't unnecessarily discover assets we will later discard
 func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string, filters connection.DiscoveryFilters) ([]*inventory.Asset, error) {
 	conn := runtime.Connection.(*connection.AwsConnection)
 	accountId := trimAwsAccountIdToJustId(awsAccount.Id.Data)

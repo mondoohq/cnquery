@@ -182,7 +182,7 @@ func parseOptsToFilters(opts map[string]string) DiscoveryFilters {
 }
 
 func parseFlagsForConnectionOptions(m1 map[string]string, m2 map[string]string, creds []*vault.Credential) []ConnectionOption {
-	// merge the options to make sure we dont miss anything
+	// merge the options to make sure we don't miss anything
 	m := m1
 	if m == nil {
 		m = make(map[string]string)
