@@ -16675,7 +16675,7 @@ func (c *mqlAzureSubscriptionPolicyAssignment) GetEnforcementMode() *plugin.TVal
 	return &c.EnforcementMode
 }
 
-func (c *mqlAzureSubscriptionPolicyAssignment) GetParameters() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionPolicyAssignment) GetParameters() *plugin.TValue[interface{}] {
 	return &c.Parameters
 }
 

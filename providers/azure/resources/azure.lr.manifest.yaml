@@ -2060,8 +2060,8 @@ resources:
       enforcementMode: {}
       id: {}
       name: {}
-      scope: {}
       parameters: {}
+      scope: {}
     is_private: true
     min_mondoo_version: 9.0.0
     platform:
