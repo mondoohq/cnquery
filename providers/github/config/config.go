@@ -23,14 +23,14 @@ var Config = plugin.Provider{
 			Long: `Use the github provider to query resources within GitHub organizations and repositories.
 
 Available commands:
-  org					              GitHub organization
+  org                       GitHub organization
   repo                      GitHub repo
 
 Examples:
   cnspec scan github org <ORG_NAME> --discover organization
   cnspec scan github org <ORG_NAME> --repos "<REPO1>,<REPO2>"
   cnquery shell github org <ORG_NAME>
-	cnquery shell github org <YOUR-GITHUB-ORG> --app-id <YOUR-GITHUB-APP-ID> --app-installation-id <YOUR-GITHUB-APP-INSTALL-ID> --app-private-key <PATH-TO-PEM-FILE>
+  cnquery shell github org <YOUR-GITHUB-ORG> --app-id <YOUR-GITHUB-APP-ID> --app-installation-id <YOUR-GITHUB-APP-INSTALL-ID> --app-private-key <PATH-TO-PEM-FILE>
 
 Notes:
   Mondoo needs a personal access token to scan a GitHub organization, public repo, or private repo. The token's level of access determines how much information Mondoo can retrieve. Supply your personal access token to Mondoo by setting the GITHUB_TOKEN environment variable. To learn how, read https://mondoo.com/docs/cnspec/saas/github/.
