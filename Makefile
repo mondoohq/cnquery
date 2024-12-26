@@ -634,7 +634,7 @@ lr/docs/markdown: providers/lr
 		--docs-file providers/snowflake/resources/snowflake.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/snowflake-pack
 	./lr markdown providers/mondoo/resources/mondoo.lr \
-		--pack-name "Mondoo" \
+		--pack-name "Mondoo Platform" \
 		--description "The Mondoo resource pack lets you interact with Mondoo Platform and its assets and resources." \
 		--docs-file providers/mondoo/resources/mondoo.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/mondoo-pack
