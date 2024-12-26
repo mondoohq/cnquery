@@ -59,7 +59,7 @@ func init() {
 		types.Score:        pscore2raw,
 		types.Empty:        pempty2raw,
 		types.Block:        pblock2rawV2,
-		types.Semver:       pscore2raw,
+		types.Semver:       pstring2raw,
 		types.ArrayLike:    parray2raw,
 		types.MapLike:      pmap2raw,
 		types.ResourceLike: presource2raw,
