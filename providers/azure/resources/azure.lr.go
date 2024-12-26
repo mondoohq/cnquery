@@ -2907,6 +2907,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.policy.assignment.enforcementMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionPolicyAssignment).GetEnforcementMode()).ToDataRes(types.String)
 	},
+	"azure.subscription.policy.assignment.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyAssignment).GetParameters()).ToDataRes(types.Dict)
+	},
 	"azure.subscription.iotService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionIotService).GetSubscriptionId()).ToDataRes(types.String)
 	},
@@ -6539,6 +6542,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"azure.subscription.policy.assignment.enforcementMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionPolicyAssignment).EnforcementMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.assignment.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyAssignment).Parameters, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.iotService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16613,6 +16620,7 @@ type mqlAzureSubscriptionPolicyAssignment struct {
 	Scope plugin.TValue[string]
 	Description plugin.TValue[string]
 	EnforcementMode plugin.TValue[string]
+	Parameters plugin.TValue[interface{}]
 }
 
 // createAzureSubscriptionPolicyAssignment creates a new instance of this resource
@@ -16665,6 +16673,10 @@ func (c *mqlAzureSubscriptionPolicyAssignment) GetDescription() *plugin.TValue[s
 
 func (c *mqlAzureSubscriptionPolicyAssignment) GetEnforcementMode() *plugin.TValue[string] {
 	return &c.EnforcementMode
+}
+
+func (c *mqlAzureSubscriptionPolicyAssignment) GetParameters() *plugin.TValue[interface{}] {
+	return &c.Parameters
 }
 
 // mqlAzureSubscriptionIotService for the azure.subscription.iotService resource
