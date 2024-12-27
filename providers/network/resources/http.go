@@ -75,13 +75,18 @@ func initHttpGet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 			return nil, nil, err
 		}
 		args["url"] = llx.ResourceData(url, "url")
+		args["followRedirects"] = llx.BoolData(conn.FollowRedirects)
+	}
+
+	if _, ok := args["followRedirects"]; !ok {
+		args["followRedirects"] = llx.BoolData(false)
 	}
 
 	return args, nil, nil
 }
 
 func (x *mqlHttpGet) id() (string, error) {
-	return x.Url.Data.__id, nil
+	return strings.Join([]string{x.Url.Data.__id, strconv.FormatBool(x.FollowRedirects.Data)}, ";"), nil
 }
 
 func (x *mqlHttpGet) do() error {
@@ -97,7 +102,7 @@ func (x *mqlHttpGet) do() error {
 	}
 
 	conn := x.MqlRuntime.Connection.(*connection.HostConnection)
-	resp, err := conn.Client().Get(x.Url.Data.String.Data)
+	resp, err := conn.Client(x.FollowRedirects.Data).Get(x.Url.Data.String.Data)
 	x.resp.State = plugin.StateIsSet
 	x.resp.Data = resp
 	x.resp.Error = err
