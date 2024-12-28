@@ -11,6 +11,15 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// Impact represents severity rating scale when impact is provided as human-readable string value
+var impactMapping = map[string]int32{
+	"none":     0,
+	"low":      10,
+	"medium":   40,
+	"high":     70,
+	"critical": 100,
+}
+
 func (v *Impact) HumanReadable() string {
 	if v.Value == nil {
 		return "unknown"
@@ -22,10 +31,10 @@ func (v *Impact) HumanReadable() string {
 		return "high"
 	case v.Value.Value >= 40:
 		return "medium"
-	case v.Value.Value > 0:
+	case v.Value.Value >= 10:
 		return "low"
 	default:
-		return "info"
+		return "none"
 	}
 }
 
@@ -65,14 +74,26 @@ func (v *Impact) Checksum() uint64 {
 	return uint64(res)
 }
 
+// UnmarshalJSON implements the json.Unmarshaler interface for impact value. It supports human-readable string, int and
+// complex struct.
 func (v *Impact) UnmarshalJSON(data []byte) error {
-	var res int32
-	if err := json.Unmarshal(data, &res); err == nil {
-		v.Value = &ImpactValue{Value: res}
+	var intRes int32
+	if err := json.Unmarshal(data, &intRes); err == nil {
+		v.Value = &ImpactValue{Value: intRes}
 
 		if v.Value.Value < 0 || v.Value.Value > 100 {
 			return errors.New("impact must be between 0 and 100")
 		}
+		return nil
+	}
+
+	var stringRes string
+	if err := json.Unmarshal(data, &stringRes); err == nil {
+		val, ok := impactMapping[stringRes]
+		if !ok {
+			return errors.New("impact must use critical, high, medium, low or none")
+		}
+		v.Value = &ImpactValue{Value: val}
 		return nil
 	}
 

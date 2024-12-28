@@ -34,6 +34,20 @@ func TestImpactParsing(t *testing.T) {
 				Value:  &ImpactValue{Value: 40},
 			},
 		},
+		{
+			"critical rating",
+			`"critical"`,
+			&Impact{
+				Value: &ImpactValue{Value: 100},
+			},
+		},
+		{
+			"low rating",
+			`"low"`,
+			&Impact{
+				Value: &ImpactValue{Value: 10},
+			},
+		},
 	}
 
 	for i := range tests {
@@ -70,6 +84,11 @@ func TestImpactParsing(t *testing.T) {
 			"invalid high impact in complex struct",
 			`{"value": 101, "weight": 90}`,
 			"impact must be between 0 and 100",
+		},
+		{
+			"invalid string value",
+			`"mycustomcritical"`,
+			"impact must use critical, high, medium, low or none",
 		},
 	}
 
