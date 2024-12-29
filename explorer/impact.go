@@ -14,10 +14,10 @@ import (
 // Impact represents severity rating scale when impact is provided as human-readable string value
 var impactMapping = map[string]int32{
 	"none":     0,
-	"low":      10,
-	"medium":   40,
-	"high":     70,
-	"critical": 100,
+	"low":      20,
+	"medium":   55,
+	"high":     80,
+	"critical": 95,
 }
 
 func (v *Impact) HumanReadable() string {

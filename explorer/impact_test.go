@@ -38,14 +38,14 @@ func TestImpactParsing(t *testing.T) {
 			"critical rating",
 			`"critical"`,
 			&Impact{
-				Value: &ImpactValue{Value: 100},
+				Value: &ImpactValue{Value: 95},
 			},
 		},
 		{
 			"low rating",
 			`"low"`,
 			&Impact{
-				Value: &ImpactValue{Value: 10},
+				Value: &ImpactValue{Value: 20},
 			},
 		},
 	}
