@@ -54,21 +54,32 @@ func initK8sNode(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 func (k *mqlK8s) nodes() ([]interface{}, error) {
 	k.mqlK8sInternal.nodesByName = make(map[string]*mqlK8sNode)
 	return k8sResourceToMql(k.MqlRuntime, gvkString(corev1.SchemeGroupVersion.WithKind("nodes")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+		ts := obj.GetCreationTimestamp()
+
+		n, ok := obj.(*corev1.Node)
+		if !ok {
+			return nil, errors.New("not a k8s node")
+		}
+
+		nodeInfo, err := convert.JsonToDict(n.Status.NodeInfo)
+		if err != nil {
+			return nil, err
+		}
+
 		r, err := CreateResource(k.MqlRuntime, "k8s.node", map[string]*llx.RawData{
 			"id":              llx.StringData(objIdFromK8sObj(obj, objT)),
 			"uid":             llx.StringData(string(obj.GetUID())),
 			"resourceVersion": llx.StringData(obj.GetResourceVersion()),
 			"name":            llx.StringData(obj.GetName()),
 			"kind":            llx.StringData(objT.GetKind()),
+			"created":         llx.TimeData(ts.Time),
+			"nodeInfo":        llx.DictData(nodeInfo),
+			"kubeletPort":     llx.IntData(n.Status.DaemonEndpoints.KubeletEndpoint.Port),
 		})
 		if err != nil {
 			return nil, err
 		}
 
-		n, ok := resource.(*corev1.Node)
-		if !ok {
-			return nil, errors.New("not a k8s node")
-		}
 		r.(*mqlK8sNode).obj = n
 		k.mqlK8sInternal.nodesByName[obj.GetName()] = r.(*mqlK8sNode)
 
