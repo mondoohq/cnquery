@@ -163,11 +163,20 @@ message Mquery {
 // protolint:disable ENUM_FIELD_NAMES_PREFIX
 // protolint:disable ENUM_FIELD_NAMES_ZERO_VALUE_END_WITH
 enum ScoringSystem {
+  // Default value, should not be used
   SCORING_UNSPECIFIED = 0;
+  // Weighted scoring mechanism which uses the weight defined at the query
+  // level to calculate the score.
   WEIGHTED = 1;
+  // Worst scoring mechanism which uses the worst score of all findings
+  // to calculate the policy score.
   WORST = 2;
+  // Average scoring mechanism which uses the average score of all findings
+  // to calculate the policy score.
   AVERAGE = 3;
+  // Treats the query as data only, no scoring is applied.
   DATA_ONLY = 4;
+  // Ignore scoring mechanism which ignores the score of each query.
   IGNORE_SCORE = 5;
   // Experimental: BANDED scoring mechanism which creates a score based on
   // the 4 categories of criticality (critical, high, medium, low) and
@@ -203,19 +212,27 @@ message QueryPackDocs {
   string desc = 1;
 }
 
+// Documentation for Mquery
 message MqueryDocs {
   reserved 3;
-
+  // Description of the query
   string desc = 1;
+  // Optional. Audit instructions to verify the query results
   string audit = 2;
+  // Optional. References to external sources, typical URLs
   repeated MqueryRef refs = 4;
+  //  Optional. Remediation instructions for the query
   Remediation remediation = 5;
 }
 
+// Remediation is used to provide a fix for a check.
 message Remediation {
+  // items is a list of TypedDoc items that include the description of the
+  // remediation for different platforms.
   repeated TypedDoc items = 1;
 }
 
+// A typed documentation for a remediation
 message TypedDoc {
   // Identifier
   string id = 1;
@@ -231,13 +248,19 @@ message TypedDoc {
   map<string,string> tags = 22;
 }
 
+// Author is used to identify the author of a query
 message Author {
+  // Name of the author
   string name = 1;
+  // Email of the author
   string email = 2;
 }
 
+// MqueryRef is used to reference external sources
 message MqueryRef {
+  // Title of the reference
   string title = 1;
+  // URL of the reference
   string url = 2;
 }
 
