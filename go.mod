@@ -11,7 +11,6 @@ require (
 	github.com/99designs/keyring v1.2.2
 	github.com/BurntSushi/toml v1.4.0
 	github.com/CycloneDX/cyclonedx-go v0.9.1
-	github.com/GoogleCloudPlatform/berglas v1.0.3
 	github.com/Masterminds/semver v1.5.0
 	github.com/ProtonMail/go-crypto v1.1.3
 	github.com/StackExchange/wmi v1.2.1
@@ -288,6 +287,7 @@ require (
 )
 
 require (
+	github.com/GoogleCloudPlatform/berglas/v2 v2.0.6
 	github.com/moby/buildkit v0.18.1
 	github.com/moby/sys/mount v0.3.4
 )

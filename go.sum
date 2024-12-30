@@ -104,8 +104,8 @@ github.com/ChrisTrenkamp/goxpath v0.0.0-20210404020558-97928f7e12b6/go.mod h1:nu
 github.com/CycloneDX/cyclonedx-go v0.9.1 h1:yffaWOZsv77oTJa/SdVZYdgAgFioCeycBUKkqS2qzQM=
 github.com/CycloneDX/cyclonedx-go v0.9.1/go.mod h1:NE/EWvzELOFlG6+ljX/QeMlVt9VKcTwu8u0ccsACEsw=
 github.com/DataDog/datadog-go v3.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
-github.com/GoogleCloudPlatform/berglas v1.0.3 h1:NjJYDz13vWct7+joxkBkIZhD6Cmwf5XP5t0jGTvHyJk=
-github.com/GoogleCloudPlatform/berglas v1.0.3/go.mod h1:JBsGyi6Z5RwyHXMdEebok6MChukLE+dWXzPor2aeMtw=
+github.com/GoogleCloudPlatform/berglas/v2 v2.0.6 h1:c6WHIgUQIQA0aApsBL2y0d41EH8JHRtGALzXwh28ilw=
+github.com/GoogleCloudPlatform/berglas/v2 v2.0.6/go.mod h1:GjFzxOKcz57OGKVAIsSWxTlNLXIPXn2AItkAMVWchx0=
 github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.25.0 h1:3c8yed4lgqTt+oTQ+JNMDo+F4xprBf+O/il4ZC0nRLw=
 github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.25.0/go.mod h1:obipzmGjfSjam60XLwGfqUkJsfiheAl+TUjG+4yzyPM=
 github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.49.0 h1:o90wcURuxekmXrtxmYWTyNla0+ZEHhud6DI1ZTxd1vI=
