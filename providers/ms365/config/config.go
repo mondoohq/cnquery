@@ -74,6 +74,13 @@ Notes:
 					Default: "",
 					Desc:    "Passphrase for the authentication certificate file",
 				},
+				{
+					Long:    "oidc-token",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "JWT token to use for OIDC exchange with MS365",
+					Option:  plugin.FlagOption_Hidden,
+				},
 			},
 		},
 	},
