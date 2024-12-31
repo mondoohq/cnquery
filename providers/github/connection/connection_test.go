@@ -5,6 +5,10 @@ package connection
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
 	"os"
 	"testing"
 
@@ -20,7 +24,35 @@ func TestGithubNoConnection(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestGithubValidConnection(t *testing.T) {
+func TestGithubValidConnection_Private_Key(t *testing.T) {
+	// Generate a new RSA private key
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048) // 2048-bit key size
+	require.NoError(t, err)
+	privateKeyDER := x509.MarshalPKCS1PrivateKey(privateKey)
+	privateKeyPEM := &pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: privateKeyDER,
+	}
+	pemData := pem.EncodeToMemory(privateKeyPEM)
+
+	_, err = NewGithubConnection(0, &inventory.Asset{
+		Connections: []*inventory.Config{{
+			Options: map[string]string{
+				OPTION_APP_ID:              "123",
+				OPTION_APP_INSTALLATION_ID: "890",
+			},
+			Credentials: []*vault.Credential{{
+				Type:   vault.CredentialType_private_key,
+				Secret: pemData,
+			},
+			},
+		},
+		},
+	})
+	require.NoError(t, err)
+}
+
+func TestGithubValidConnection_Password(t *testing.T) {
 	_, err := NewGithubConnection(0, &inventory.Asset{
 		Connections: []*inventory.Config{{
 			Credentials: []*vault.Credential{{
