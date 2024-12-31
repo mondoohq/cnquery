@@ -2022,6 +2022,7 @@ resources:
     fields:
       arn: {}
       createDate: {}
+      createdAt: {}
       iamRoles: {}
       instanceProfileId: {}
       instanceProfileName: {}
@@ -2050,6 +2051,8 @@ resources:
       attachedUsers: {}
       attachmentCount: {}
       createDate: {}
+      createdAt:
+        min_mondoo_version: 9.0.0
       defaultVersion: {}
       description: {}
       id: {}
@@ -2072,6 +2075,8 @@ resources:
     fields:
       arn: {}
       createDate: {}
+      createdAt:
+        min_mondoo_version: 9.0.0
       document: {}
       isDefaultVersion: {}
       versionId: {}
@@ -2088,6 +2093,8 @@ resources:
       arn: {}
       assumeRolePolicyDocument: {}
       createDate: {}
+      createdAt:
+        min_mondoo_version: 9.0.0
       description: {}
       id: {}
       name: {}
@@ -2106,6 +2113,8 @@ resources:
       arn: {}
       attachedPolicies: {}
       createDate: {}
+      createdAt:
+        min_mondoo_version: 9.0.0
       groups: {}
       id: {}
       loginProfile:
@@ -2139,6 +2148,8 @@ resources:
       cert1LastRotated: {}
       cert2Active: {}
       cert2LastRotated: {}
+      createdAt:
+        min_mondoo_version: 9.0.0
       mfaActive: {}
       passwordEnabled: {}
       passwordLastChanged: {}
