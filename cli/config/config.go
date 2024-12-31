@@ -103,6 +103,10 @@ func InitViperConfig() {
 			LoadedConfig = true
 		}
 	}
+	if len(os.Getenv("MONDOO_EXTERNAL_CONFIG")) > 0 || len(os.Getenv("MONDOO_EXTERNAL_CONFIG_PATH")) > 0 {
+		// use the external config to find the local JWT token
+		// use the local JWT token and external config to call SecureTokenService/ExchangeExternalToken
+	}
 
 	// check if the default config file is available
 	if Path == "" && Source != configSourceBase64 {
