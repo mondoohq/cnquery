@@ -17,6 +17,7 @@ import (
 const (
 	OptionTenantID         = "tenant-id"
 	OptionClientID         = "client-id"
+	OIDCToken              = "oidc-token"
 	OptionDataReport       = "mondoo-ms365-datareport"
 	OptionSubscriptionID   = "subscription-id"
 	OptionPlatformOverride = "platform-override"

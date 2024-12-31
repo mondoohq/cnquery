@@ -23,6 +23,7 @@ import (
 const (
 	OptionTenantID      = "tenant-id"
 	OptionClientID      = "client-id"
+	OptionOIDCToken     = "oidc-token"
 	OptionOrganization  = "organization"
 	OptionSharepointUrl = "sharepoint-url"
 )
@@ -41,6 +42,8 @@ type Ms365Connection struct {
 func NewMs365Connection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*Ms365Connection, error) {
 	tenantId := conf.Options[OptionTenantID]
 	clientId := conf.Options[OptionClientID]
+	oidcToken := conf.Options[OptionOIDCToken]
+
 	organization := conf.Options[OptionOrganization]
 	sharepointUrl := conf.Options[OptionSharepointUrl]
 	var cred *vault.Credential
@@ -51,7 +54,7 @@ func NewMs365Connection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 	if len(tenantId) == 0 {
 		return nil, errors.New("ms365 backend requires a tenant-id")
 	}
-	token, err := azauth.GetTokenFromCredential(cred, tenantId, clientId)
+	token, err := azauth.GetTokenFromCredential(cred, tenantId, clientId, oidcToken)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot fetch credentials for microsoft provider")
 	}

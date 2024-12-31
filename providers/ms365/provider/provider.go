@@ -34,6 +34,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 
 	tenantId := flags["tenant-id"]
 	clientId := flags["client-id"]
+	oidcToken := flags["oidc-token"]
 	clientSecret := flags["client-secret"]
 	certificatePath := flags["certificate-path"]
 	certificateSecret := flags["certificate-secret"]
@@ -43,6 +44,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	opts := map[string]string{}
 	creds := []*vault.Credential{}
 
+	opts[connection.OptionOIDCToken] = string(oidcToken.Value)
 	opts[connection.OptionTenantID] = string(tenantId.Value)
 	opts[connection.OptionClientID] = string(clientId.Value)
 	opts[connection.OptionOrganization] = string(organization.Value)

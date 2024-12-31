@@ -91,6 +91,13 @@ var Config = plugin.Provider{
 					Default: "",
 					Desc:    "Comma-separated list of Azure subscriptions to exclude",
 				},
+				{
+					Long:    "oidc-token",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "JWT token to use for OIDC exchange with MS365",
+					Option:  plugin.FlagOption_Hidden,
+				},
 			},
 		},
 	},

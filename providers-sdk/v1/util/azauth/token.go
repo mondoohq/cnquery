@@ -4,8 +4,12 @@
 package azauth
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"strings"
 	"time"
 
@@ -107,9 +111,13 @@ func (t *retryableManagedIdentityCredential) tryGetToken(ctx context.Context, op
 	return
 }
 
-func GetTokenFromCredential(credential *vault.Credential, tenantId, clientId string) (azcore.TokenCredential, error) {
+func GetTokenFromCredential(credential *vault.Credential, tenantId, clientId, oToken string) (azcore.TokenCredential, error) {
 	var azCred azcore.TokenCredential
 	var err error
+	if oToken != "" {
+		return OidcToken{tenantId: tenantId, clientId: clientId, jwtToken: oToken}, nil
+	}
+
 	// fallback to default authorizer if no credentials are specified
 	if credential == nil {
 		log.Debug().Msg("using default azure token chain resolver")
@@ -138,4 +146,38 @@ func GetTokenFromCredential(credential *vault.Credential, tenantId, clientId str
 		}
 	}
 	return azCred, nil
+}
+
+type OidcToken struct {
+	tenantId string
+	clientId string
+	jwtToken string
+}
+
+func (o OidcToken) GetToken(ctx context.Context, options policy.TokenRequestOptions) (azcore.AccessToken, error) {
+	requestUrl := fmt.Sprintf("https://login.microsoftonline.com/%s/oauth2/v2.0/token", o.tenantId)
+	tokenRequestBody := fmt.Sprintf("client_id=%s&client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer&client_assertion=%s&grant_type=client_credentials&scope=https://graph.microsoft.com/.default", o.clientId, o.jwtToken)
+
+	req, err := http.NewRequest(http.MethodPost, requestUrl, bytes.NewReader([]byte(tokenRequestBody)))
+	if err != nil {
+		return azcore.AccessToken{}, err
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return azcore.AccessToken{}, err
+	}
+	b, err := io.ReadAll(res.Body)
+	if err != nil {
+		return azcore.AccessToken{}, err
+	}
+	type accessToken struct {
+		AccessToken string `json:"access_token"`
+	}
+	var tok accessToken
+	err = json.Unmarshal(b, &tok)
+	if err != nil {
+		return azcore.AccessToken{}, err
+	}
+	return azcore.AccessToken{Token: tok.AccessToken}, nil
 }

@@ -38,6 +38,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 
 	tenantId := flags["tenant-id"]
 	clientId := flags["client-id"]
+	oidcToken := flags["oidc-token"]
 	clientSecret := flags["client-secret"]
 	subscriptionId := flags["subscription"]
 	subscriptions := flags["subscriptions"]
@@ -49,6 +50,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 
 	opts["tenant-id"] = string(tenantId.Value)
 	opts["client-id"] = string(clientId.Value)
+	opts["oidc-token"] = string(oidcToken.Value)
 	if len(subscriptionId.Value) > 0 {
 		opts["subscriptions"] = string(subscriptionId.Value)
 	}
