@@ -100,6 +100,8 @@ func (d *LinuxDeviceManager) IdentifyMountTargets(opts map[string]string) ([]*sn
 }
 
 func (d *LinuxDeviceManager) attemptExpandPartitions(partitions []*snapshot.PartitionInfo) ([]*snapshot.PartitionInfo, error) {
+	log.Debug().Msg("attempting to expand partitions infos")
+
 	fstabEntries, err := d.hintFSTypes(partitions)
 	if err != nil {
 		log.Warn().Err(err).Msg("could not find fstab")
