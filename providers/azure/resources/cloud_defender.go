@@ -7,12 +7,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
+
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v11/providers/azure/connection"
 	"go.mondoo.com/cnquery/v11/types"
-	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity"
@@ -373,11 +374,16 @@ func (a *mqlAzureSubscriptionCloudDefenderService) defenderForContainers() (inte
 	if err != nil {
 		return nil, err
 	}
+	type extension struct {
+		Name      string `json:"name"`
+		IsEnabled bool   `json:"isEnabled"`
+	}
 
 	type defenderForContainers struct {
-		DefenderDaemonSet        bool `json:"defenderDaemonSet"`
-		AzurePolicyForKubernetes bool `json:"azurePolicyForKubernetes"`
-		Enabled                  bool `json:"enabled"`
+		DefenderDaemonSet        bool        `json:"defenderDaemonSet"`
+		AzurePolicyForKubernetes bool        `json:"azurePolicyForKubernetes"`
+		Enabled                  bool        `json:"enabled"`
+		Extensions               []extension `json:"extensions"`
 	}
 
 	kubernetesDefender := false
@@ -418,11 +424,23 @@ func (a *mqlAzureSubscriptionCloudDefenderService) defenderForContainers() (inte
 	if containersPricing.Properties.PricingTier != nil {
 		enabled = *containersPricing.Properties.PricingTier == security.PricingTierStandard
 	}
+	extensions := []extension{}
+	for _, ext := range containersPricing.Properties.Extensions {
+		if ext.IsEnabled == nil || ext.Name == nil {
+			continue
+		}
+		e := false
+		if *ext.IsEnabled == security.IsEnabledTrue {
+			e = true
+		}
+		extensions = append(extensions, extension{Name: *ext.Name, IsEnabled: e})
+	}
 
 	def := defenderForContainers{
 		DefenderDaemonSet:        arcDefender && kubernetesDefender,
 		AzurePolicyForKubernetes: arcPolicyExt && kubernetesPolicyExt,
 		Enabled:                  enabled,
+		Extensions:               extensions,
 	}
 
 	return convert.JsonToDict(def)
