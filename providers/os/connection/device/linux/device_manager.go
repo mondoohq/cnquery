@@ -6,6 +6,7 @@ package linux
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"path/filepath"
@@ -154,8 +155,8 @@ func (d *LinuxDeviceManager) attemptFindFstab(dir string) ([]resources.FstabEntr
 		log.Error().Err(err).Msg("error searching for fstab")
 		return nil, nil
 	}
-	var out []byte
-	_, err = cmd.Stdout.Read(out)
+
+	out, err := io.ReadAll(cmd.Stdout)
 	if err != nil {
 		log.Error().Err(err).Msg("error reading find output")
 		return nil, nil
