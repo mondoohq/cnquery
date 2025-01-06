@@ -95,10 +95,10 @@ require (
 	golang.org/x/term v0.27.0
 	golang.org/x/text v0.21.0
 	golang.org/x/tools v0.28.0
-	google.golang.org/genproto v0.0.0-20241206012308-a4fef0638583
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20241219192143-6b3ec007d9bb
-	google.golang.org/grpc v1.68.1
-	google.golang.org/protobuf v1.36.0
+	google.golang.org/genproto v0.0.0-20250102185135-69823020774d
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250102185135-69823020774d
+	google.golang.org/grpc v1.69.2
+	google.golang.org/protobuf v1.36.1
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/yaml.v3 v3.0.1
 	howett.net/plist v1.0.1
@@ -327,6 +327,5 @@ require (
 	go.opentelemetry.io/contrib/detectors/gcp v1.32.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.32.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v1.32.0 // indirect
-	google.golang.org/grpc/stats/opentelemetry v0.0.0-20241028142157-ada6787961b3 // indirect
 	gotest.tools/v3 v3.5.1 // indirect
 )
