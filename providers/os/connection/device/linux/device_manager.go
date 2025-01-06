@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
 	"sort"
@@ -159,48 +158,6 @@ func (d *LinuxDeviceManager) attemptFindFstab(dir string) ([]resources.FstabEntr
 		log.Error().Err(err).Msg("error searching for fstab")
 		return nil, nil
 	}
-
-	debug := func() {
-		stderr, err := io.ReadAll(cmd.Stderr)
-		if err != nil {
-			log.Error().Err(err).
-				Int("exit-status", cmd.ExitStatus).
-				Msg("error reading find stderr")
-		} else {
-			log.Warn().Bytes("find-stderr", stderr).
-				Int("exit-status", cmd.ExitStatus).
-				Msg("!!! find stderr !!!")
-		}
-
-		cmd2 := exec.Command("find", dir, "-type", "f", "-wholename", `*/etc/fstab`)
-		out2, err := cmd2.CombinedOutput()
-		if err != nil {
-			log.Error().Err(err).Bytes("find", out2).Msg("error searching for fstab")
-		}
-		log.Warn().Bytes("find", out2).Msg("!!! find2 output !!!")
-
-		ls := exec.Command("ls", "-la", dir)
-		out, err := ls.CombinedOutput()
-		if err != nil {
-			log.Error().Err(err).Bytes("ls", out).Msg("error listing dir")
-		}
-		log.Warn().Bytes("ls", out).Msg("!!! ls output !!!")
-
-		ls = exec.Command("ls", "-la", path.Join(dir, "etc"))
-		out, err = ls.CombinedOutput()
-		if err != nil {
-			log.Error().Err(err).Bytes("ls", out).Msg("error listing dir")
-		}
-		log.Warn().Bytes("ls", out).Msg("!!! ls output !!!")
-
-		ls = exec.Command("ls", "-la", path.Join(dir, "root", "etc"))
-		out, err = ls.CombinedOutput()
-		if err != nil {
-			log.Error().Err(err).Bytes("ls", out).Msg("error listing dir")
-		}
-		log.Warn().Bytes("ls", out).Msg("!!! ls output !!!")
-	}
-	defer debug()
 
 	out, err := io.ReadAll(cmd.Stdout)
 	if err != nil {
