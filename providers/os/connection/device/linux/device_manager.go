@@ -6,6 +6,7 @@ package linux
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"path/filepath"
@@ -99,6 +100,8 @@ func (d *LinuxDeviceManager) IdentifyMountTargets(opts map[string]string) ([]*sn
 }
 
 func (d *LinuxDeviceManager) attemptExpandPartitions(partitions []*snapshot.PartitionInfo) ([]*snapshot.PartitionInfo, error) {
+	log.Debug().Msg("attempting to expand partitions infos")
+
 	fstabEntries, err := d.hintFSTypes(partitions)
 	if err != nil {
 		log.Warn().Err(err).Msg("could not find fstab")
@@ -140,6 +143,7 @@ func (d *LinuxDeviceManager) hintFSTypes(partitions []*snapshot.PartitionInfo) (
 		}
 
 		if ok := d.attemptFindOSTree(dir, partition); ok {
+			log.Debug().Str("device", partition.Name).Msg("ostree found")
 			return nil, nil
 		}
 
@@ -154,8 +158,8 @@ func (d *LinuxDeviceManager) attemptFindFstab(dir string) ([]resources.FstabEntr
 		log.Error().Err(err).Msg("error searching for fstab")
 		return nil, nil
 	}
-	var out []byte
-	_, err = cmd.Stdout.Read(out)
+
+	out, err := io.ReadAll(cmd.Stdout)
 	if err != nil {
 		log.Error().Err(err).Msg("error reading find output")
 		return nil, nil
@@ -182,6 +186,8 @@ func (d *LinuxDeviceManager) attemptFindFstab(dir string) ([]resources.FstabEntr
 }
 
 func (d *LinuxDeviceManager) attemptFindOSTree(dir string, partition *snapshot.PartitionInfo) bool {
+	log.Debug().Str("device", partition.Name).Msg("attempting to find ostree")
+
 	info, err := os.Stat(path.Join(dir, "ostree"))
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -193,6 +199,7 @@ func (d *LinuxDeviceManager) attemptFindOSTree(dir string, partition *snapshot.P
 	}
 
 	if !info.IsDir() {
+		log.Warn().Str("device", partition.Name).Msg("ostree is not a directory")
 		return false
 	}
 
@@ -209,6 +216,7 @@ func (d *LinuxDeviceManager) attemptFindOSTree(dir string, partition *snapshot.P
 	}
 
 	if len(matches) == 0 {
+		log.Debug().Str("device", partition.Name).Msg("no ostree matches")
 		return false
 	} else if len(matches) > 1 {
 		log.Warn().Str("device", partition.Name).Msg("multiple ostree matches")
