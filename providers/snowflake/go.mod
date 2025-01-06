@@ -5,13 +5,14 @@ replace go.mondoo.com/cnquery/v11 => ../..
 go 1.23.0
 
 require (
-	github.com/Snowflake-Labs/terraform-provider-snowflake v1.0.1
+	// pin v0.92.0
+	github.com/Snowflake-Labs/terraform-provider-snowflake v0.92.0
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/snowflakedb/gosnowflake v1.12.1
-	github.com/stretchr/testify v1.10.0
 	go.mondoo.com/cnquery/v11 v11.35.0
 	go.mondoo.com/ranger-rpc v0.6.5
 	golang.org/x/crypto v0.31.0
+	github.com/stretchr/testify v1.10.0
 )
 
 require (
@@ -64,6 +65,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.3 // indirect
 	github.com/aws/smithy-go v1.22.1 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
+	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/census-instrumentation/opencensus-proto v0.4.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -113,10 +115,7 @@ require (
 	github.com/hashicorp/go-secure-stdlib/parseutil v0.1.8 // indirect
 	github.com/hashicorp/go-secure-stdlib/strutil v0.1.2 // indirect
 	github.com/hashicorp/go-sockaddr v1.0.7 // indirect
-	github.com/hashicorp/hc-install v0.9.1 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/hashicorp/terraform-json v0.24.0 // indirect
-	github.com/hashicorp/terraform-plugin-testing v1.11.0 // indirect
 	github.com/hashicorp/vault/api v1.15.0 // indirect
 	github.com/hashicorp/yamux v0.1.2 // indirect
 	github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f // indirect
@@ -158,8 +157,6 @@ require (
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/pflag v1.0.6-0.20201009195203-85dd5c8bc61c // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
-	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
-	github.com/zclconf/go-cty v1.16.0 // indirect
 	github.com/zeebo/xxh3 v1.0.2 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/contrib/detectors/gcp v1.32.0 // indirect
