@@ -59,7 +59,7 @@ func (i PartitionInfo) RootDir() string {
 	return path.Join(i.MountPoint, i.bind)
 }
 
-func (i PartitionInfo) SetBind(bind string) PartitionInfo {
+func (i *PartitionInfo) SetBind(bind string) *PartitionInfo {
 	i.bind = bind
 	return i
 }
