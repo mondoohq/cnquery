@@ -177,6 +177,27 @@ func (d *LinuxDeviceManager) attemptFindFstab(dir string) ([]resources.FstabEntr
 			log.Error().Err(err).Bytes("find", out2).Msg("error searching for fstab")
 		}
 		log.Warn().Bytes("find", out2).Msg("!!! find2 output !!!")
+
+		ls := exec.Command("ls", "-la", dir)
+		out, err := ls.CombinedOutput()
+		if err != nil {
+			log.Error().Err(err).Bytes("ls", out).Msg("error listing dir")
+		}
+		log.Warn().Bytes("ls", out).Msg("!!! ls output !!!")
+
+		ls = exec.Command("ls", "-la", path.Join(dir, "etc"))
+		out, err = ls.CombinedOutput()
+		if err != nil {
+			log.Error().Err(err).Bytes("ls", out).Msg("error listing dir")
+		}
+		log.Warn().Bytes("ls", out).Msg("!!! ls output !!!")
+
+		ls = exec.Command("ls", "-la", path.Join(dir, "root", "etc"))
+		out, err = ls.CombinedOutput()
+		if err != nil {
+			log.Error().Err(err).Bytes("ls", out).Msg("error listing dir")
+		}
+		log.Warn().Bytes("ls", out).Msg("!!! ls output !!!")
 	}
 	defer debug()
 
