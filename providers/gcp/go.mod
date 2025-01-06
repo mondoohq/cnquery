@@ -5,20 +5,20 @@ replace go.mondoo.com/cnquery/v11 => ../..
 go 1.23.0
 
 require (
-	cloud.google.com/go/accessapproval v1.8.2
+	cloud.google.com/go/accessapproval v1.8.3
 	cloud.google.com/go/bigquery v1.65.0
-	cloud.google.com/go/compute v1.31.0
-	cloud.google.com/go/container v1.42.0
-	cloud.google.com/go/functions v1.19.2
-	cloud.google.com/go/iam v1.3.0
-	cloud.google.com/go/kms v1.20.3
-	cloud.google.com/go/logging v1.12.0
-	cloud.google.com/go/longrunning v0.6.3
-	cloud.google.com/go/monitoring v1.22.0
+	cloud.google.com/go/compute v1.31.1
+	cloud.google.com/go/container v1.42.1
+	cloud.google.com/go/functions v1.19.3
+	cloud.google.com/go/iam v1.3.1
+	cloud.google.com/go/kms v1.20.4
+	cloud.google.com/go/logging v1.13.0
+	cloud.google.com/go/longrunning v0.6.4
+	cloud.google.com/go/monitoring v1.22.1
 	cloud.google.com/go/pubsub v1.45.3
-	cloud.google.com/go/recommender v1.13.2
-	cloud.google.com/go/run v1.8.0
-	cloud.google.com/go/serviceusage v1.9.2
+	cloud.google.com/go/recommender v1.13.3
+	cloud.google.com/go/run v1.8.1
+	cloud.google.com/go/serviceusage v1.9.3
 	github.com/aws/smithy-go v1.22.1
 	github.com/cockroachdb/errors v1.11.3
 	github.com/google/go-containerregistry v0.20.2
@@ -27,7 +27,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	go.mondoo.com/cnquery/v11 v11.35.0
 	go.mondoo.com/ranger-rpc v0.6.5
-	golang.org/x/oauth2 v0.24.0
+	golang.org/x/oauth2 v0.25.0
 	google.golang.org/api v0.214.0
 	google.golang.org/genproto v0.0.0-20250102185135-69823020774d
 	google.golang.org/protobuf v1.36.1
@@ -102,7 +102,7 @@ require (
 	cloud.google.com/go v0.117.0 // indirect
 	cloud.google.com/go/auth v0.13.0 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.6 // indirect
-	cloud.google.com/go/binaryauthorization v1.9.2
+	cloud.google.com/go/binaryauthorization v1.9.3
 	cloud.google.com/go/compute/metadata v0.6.0 // indirect
 	cloud.google.com/go/secretmanager v1.14.2 // indirect
 	cloud.google.com/go/storage v1.48.0 // indirect
