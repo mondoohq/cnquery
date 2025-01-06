@@ -144,6 +144,7 @@ func (d *LinuxDeviceManager) hintFSTypes(partitions []*snapshot.PartitionInfo) (
 		}
 
 		if ok := d.attemptFindOSTree(dir, partition); ok {
+			log.Debug().Str("device", partition.Name).Msg("ostree found")
 			return nil, nil
 		}
 
@@ -228,6 +229,8 @@ func (d *LinuxDeviceManager) attemptFindFstab(dir string) ([]resources.FstabEntr
 }
 
 func (d *LinuxDeviceManager) attemptFindOSTree(dir string, partition *snapshot.PartitionInfo) bool {
+	log.Debug().Str("device", partition.Name).Msg("attempting to find ostree")
+
 	info, err := os.Stat(path.Join(dir, "ostree"))
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -239,6 +242,7 @@ func (d *LinuxDeviceManager) attemptFindOSTree(dir string, partition *snapshot.P
 	}
 
 	if !info.IsDir() {
+		log.Warn().Str("device", partition.Name).Msg("ostree is not a directory")
 		return false
 	}
 
@@ -255,6 +259,7 @@ func (d *LinuxDeviceManager) attemptFindOSTree(dir string, partition *snapshot.P
 	}
 
 	if len(matches) == 0 {
+		log.Debug().Str("device", partition.Name).Msg("no ostree matches")
 		return false
 	} else if len(matches) > 1 {
 		log.Warn().Str("device", partition.Name).Msg("multiple ostree matches")
