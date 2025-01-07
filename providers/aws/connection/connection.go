@@ -376,17 +376,12 @@ func (h *AwsConnection) Regions() ([]string, error) {
 	// if no cache, get regions using ec2 client (using the ssm list global regions does not give the same list)
 	log.Debug().Msg("no region cache or region limits found. fetching regions")
 	regions := []string{}
-	svc := h.Ec2("us-east-1")
+	svc := h.Ec2(h.cfg.Region)
 	ctx := context.Background()
 
 	res, err := svc.DescribeRegions(ctx, &ec2.DescribeRegionsInput{})
 	if err != nil {
-		// try with govcloud region
-		svc := h.Ec2("us-gov-west-1")
-		res, err = svc.DescribeRegions(ctx, &ec2.DescribeRegionsInput{})
-		if err != nil {
-			return regions, err
-		}
+		return regions, err
 	}
 	for _, region := range res.Regions {
 		// ensure excluded regions are discarded
