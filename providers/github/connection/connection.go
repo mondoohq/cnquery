@@ -79,7 +79,7 @@ func connectionOptionsFromConfigOptions(conf *inventory.Config) (opts githubConn
 		switch cred.Type {
 
 		case vault.CredentialType_private_key:
-			if opts.AppPrivateKeyFile != "" {
+			if opts.AppPrivateKeyFile == "" {
 				opts.AppPrivateKey = cred.Secret
 			}
 
