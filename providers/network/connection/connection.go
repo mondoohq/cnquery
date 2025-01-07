@@ -13,11 +13,16 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 )
 
+const (
+	OPTION_FOLLOW_REDIRECTS = "follow-redirects"
+)
+
 type HostConnection struct {
 	plugin.Connection
-	Conf       *inventory.Config
-	asset      *inventory.Asset
-	httpClient *http.Client
+	Conf            *inventory.Config
+	FollowRedirects bool
+	asset           *inventory.Asset
+	transport       *http.Transport
 }
 
 func NewHostConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) *HostConnection {
@@ -40,11 +45,17 @@ func NewHostConnection(id uint32, asset *inventory.Asset, conf *inventory.Config
 		}
 	}
 
+	var followRedirects bool
+	if followRedirectsStr, ok := conf.Options[OPTION_FOLLOW_REDIRECTS]; ok {
+		followRedirects = followRedirectsStr == "true"
+	}
+
 	return &HostConnection{
-		Connection: plugin.NewConnection(id, asset),
-		Conf:       conf,
-		asset:      asset,
-		httpClient: &http.Client{Transport: transport},
+		Connection:      plugin.NewConnection(id, asset),
+		Conf:            conf,
+		asset:           asset,
+		transport:       transport,
+		FollowRedirects: followRedirects,
 	}
 }
 
@@ -63,6 +74,15 @@ func (p *HostConnection) FQDN() string {
 	return p.Conf.Host
 }
 
-func (p *HostConnection) Client() *http.Client {
-	return p.httpClient
+func (p *HostConnection) Client(followRedirects bool) *http.Client {
+	c := &http.Client{
+		Transport: p.transport,
+	}
+
+	if !followRedirects {
+		c.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		}
+	}
+	return c
 }
