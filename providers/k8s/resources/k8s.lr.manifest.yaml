@@ -488,12 +488,18 @@ resources:
     fields:
       annotations:
         min_mondoo_version: 5.29.2
+      created:
+        min_mondoo_version: 9.0.0
       id:
         min_mondoo_version: 6.10.0
       kind: {}
+      kubeletPort:
+        min_mondoo_version: 9.0.0
       labels:
         min_mondoo_version: 5.29.2
       name: {}
+      nodeInfo:
+        min_mondoo_version: 9.0.0
       resourceVersion:
         min_mondoo_version: 5.29.2
       uid: {}
