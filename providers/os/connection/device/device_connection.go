@@ -24,7 +24,10 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/id/ids"
 )
 
-const PlatformIdInject = "inject-platform-ids"
+const (
+	PlatformIdInject = "inject-platform-ids"
+	KeepMounted      = "keep-mounted"
+)
 
 type DeviceConnection struct {
 	*fs.FileSystemConnection
@@ -139,7 +142,7 @@ func (c *DeviceConnection) Close() {
 		return
 	}
 
-	if c.deviceManager != nil {
+	if c.deviceManager != nil && c.Conf().Options[KeepMounted] != "true" {
 		c.deviceManager.UnmountAndClose()
 	}
 }

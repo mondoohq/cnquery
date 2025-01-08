@@ -313,6 +313,12 @@ var Config = plugin.Provider{
 					Option: plugin.FlagOption_Hidden,
 				},
 				{
+					Long:   "keep-mounted",
+					Type:   plugin.FlagType_Bool,
+					Desc:   "Keep mounted block devices mounted after the scan",
+					Option: plugin.FlagOption_Hidden,
+				},
+				{
 					Long:   "platform-ids",
 					Type:   plugin.FlagType_List,
 					Desc:   "List of platform IDs to inject to the asset",
