@@ -25,8 +25,9 @@ import (
 )
 
 const (
-	PlatformIdInject = "inject-platform-ids"
-	KeepMounted      = "keep-mounted"
+	PlatformIdInject   = "inject-platform-ids"
+	KeepMounted        = "keep-mounted"
+	SkipAssetDetection = "skip-asset-detection"
 )
 
 type DeviceConnection struct {
@@ -95,6 +96,8 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 
 	res.partitions = make(map[string]*snapshot.PartitionInfo)
 
+	skipAssetDetection := conf.Options[SkipAssetDetection] == "true"
+
 	// we iterate over all the blocks and try to run OS detection on each one of them
 	// we only return one asset, if we find the right block (e.g. the one with the root FS)
 	for _, block := range blocks {
@@ -117,6 +120,11 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 
 		if asset.Platform != nil {
 			log.Debug().Msg("device connection> asset already detected, skipping")
+			continue
+		}
+
+		if skipAssetDetection {
+			log.Debug().Msg("device connection> skipping asset detection as requested")
 			continue
 		}
 
