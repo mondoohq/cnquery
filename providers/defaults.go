@@ -101,6 +101,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"cloudflare": {
+		Provider: &plugin.Provider{
+			Name:            "cloudflare",
+			ID:              "go.mondoo.com/cnquery/v11/providers/cloudflare",
+			ConnectionTypes: []string{"cloudflare"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "cloudflare",
+					Use:   "cloudflare",
+					Short: "Cloudflare provider",
+				},
+			},
+		},
+	},
+
 	"core": {
 		Provider: &plugin.Provider{
 			Name:            "core",
