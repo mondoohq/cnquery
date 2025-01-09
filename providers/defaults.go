@@ -14,7 +14,7 @@ var DefaultProviders Providers = map[string]*Provider{
 	"ansible": {
 		Provider: &plugin.Provider{
 			Name:            "ansible",
-			ID:              "go.mondoo.com/cnquery/v9/providers/ansible",
+			ID:              "go.mondoo.com/cnquery/v11/providers/ansible",
 			ConnectionTypes: []string{"ansible"},
 			Connectors: []plugin.Connector{
 				{
@@ -89,7 +89,7 @@ var DefaultProviders Providers = map[string]*Provider{
 	"cloudformation": {
 		Provider: &plugin.Provider{
 			Name:            "cloudformation",
-			ID:              "go.mondoo.com/cnquery/v9/providers/cloudformation",
+			ID:              "go.mondoo.com/cnquery/v11/providers/cloudformation",
 			ConnectionTypes: []string{"cloudformation"},
 			Connectors: []plugin.Connector{
 				{
@@ -263,7 +263,7 @@ var DefaultProviders Providers = map[string]*Provider{
 	"nmap": {
 		Provider: &plugin.Provider{
 			Name:            "nmap",
-			ID:              "go.mondoo.com/cnquery/v9/providers/nmap",
+			ID:              "go.mondoo.com/cnquery/v11/providers/nmap",
 			ConnectionTypes: []string{"nmap"},
 			Connectors: []plugin.Connector{
 				{
@@ -374,7 +374,7 @@ var DefaultProviders Providers = map[string]*Provider{
 	"shodan": {
 		Provider: &plugin.Provider{
 			Name:            "shodan",
-			ID:              "go.mondoo.com/cnquery/v9/providers/shodan",
+			ID:              "go.mondoo.com/cnquery/v11/providers/shodan",
 			ConnectionTypes: []string{"shodan"},
 			Connectors: []plugin.Connector{
 				{
@@ -404,7 +404,7 @@ var DefaultProviders Providers = map[string]*Provider{
 	"snowflake": {
 		Provider: &plugin.Provider{
 			Name:            "snowflake",
-			ID:              "go.mondoo.com/cnquery/v9/providers/snowflake",
+			ID:              "go.mondoo.com/cnquery/v11/providers/snowflake",
 			ConnectionTypes: []string{"snowflake"},
 			Connectors: []plugin.Connector{
 				{
