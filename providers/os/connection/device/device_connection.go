@@ -140,7 +140,7 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 	}
 
 	// if none of the blocks returned a platform that we could detect, we return an error
-	if asset.Platform == nil {
+	if asset.Platform == nil && !skipAssetDetection {
 		res.Close()
 		return nil, errors.New("device connection> no platform detected")
 	}
