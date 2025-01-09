@@ -24,7 +24,11 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/id/ids"
 )
 
-const PlatformIdInject = "inject-platform-ids"
+const (
+	PlatformIdInject   = "inject-platform-ids"
+	KeepMounted        = "keep-mounted"
+	SkipAssetDetection = "skip-asset-detection"
+)
 
 type DeviceConnection struct {
 	*fs.FileSystemConnection
@@ -35,6 +39,9 @@ type DeviceConnection struct {
 	MountedDirs []string
 	// map of mountpoints to partition infos
 	partitions map[string]*snapshot.PartitionInfo
+
+	// whether to keep the devices mounted after the connection is closed
+	keepMounted bool
 }
 
 func getDeviceManager(conf *inventory.Config) (DeviceManager, error) {
@@ -85,12 +92,15 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 	if conf.Options == nil {
 		conf.Options = make(map[string]string)
 	}
+	res.keepMounted = conf.Options[KeepMounted] == "true"
 
 	if len(asset.IdDetector) == 0 {
 		asset.IdDetector = []string{ids.IdDetector_Hostname, ids.IdDetector_SshHostkey}
 	}
 
 	res.partitions = make(map[string]*snapshot.PartitionInfo)
+
+	skipAssetDetection := conf.Options[SkipAssetDetection] == "true"
 
 	// we iterate over all the blocks and try to run OS detection on each one of them
 	// we only return one asset, if we find the right block (e.g. the one with the root FS)
@@ -117,6 +127,11 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 			continue
 		}
 
+		if skipAssetDetection {
+			log.Debug().Msg("device connection> skipping asset detection as requested")
+			continue
+		}
+
 		if fsConn, err := tryDetectAsset(connId, block, conf, asset); err != nil {
 			log.Error().Err(err).Msg("partition did not return an asset, continuing")
 		} else {
@@ -125,7 +140,7 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 	}
 
 	// if none of the blocks returned a platform that we could detect, we return an error
-	if asset.Platform == nil {
+	if asset.Platform == nil && !skipAssetDetection {
 		res.Close()
 		return nil, errors.New("device connection> no platform detected")
 	}
@@ -139,7 +154,7 @@ func (c *DeviceConnection) Close() {
 		return
 	}
 
-	if c.deviceManager != nil {
+	if c.deviceManager != nil && !c.keepMounted {
 		c.deviceManager.UnmountAndClose()
 	}
 }

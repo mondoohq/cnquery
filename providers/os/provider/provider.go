@@ -252,6 +252,9 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	if includeMounted, ok := flags["include-mounted"]; ok {
 		conf.Options["include-mounted"] = strconv.FormatBool(includeMounted.RawData().Value.(bool))
 	}
+	if keepMounted, ok := flags["keep-mounted"]; ok {
+		conf.Options["keep-mounted"] = strconv.FormatBool(keepMounted.RawData().Value.(bool))
+	}
 
 	if platformIDs, ok := flags["platform-ids"]; ok {
 		platformIDs := platformIDs.Array
