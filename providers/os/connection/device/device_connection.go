@@ -39,6 +39,9 @@ type DeviceConnection struct {
 	MountedDirs []string
 	// map of mountpoints to partition infos
 	partitions map[string]*snapshot.PartitionInfo
+
+	// whether to keep the devices mounted after the connection is closed
+	keepMounted bool
 }
 
 func getDeviceManager(conf *inventory.Config) (DeviceManager, error) {
@@ -89,6 +92,7 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 	if conf.Options == nil {
 		conf.Options = make(map[string]string)
 	}
+	res.keepMounted = conf.Options[KeepMounted] == "true"
 
 	if len(asset.IdDetector) == 0 {
 		asset.IdDetector = []string{ids.IdDetector_Hostname, ids.IdDetector_SshHostkey}
@@ -150,7 +154,7 @@ func (c *DeviceConnection) Close() {
 		return
 	}
 
-	if c.deviceManager != nil && c.Conf().Options[KeepMounted] != "true" {
+	if c.deviceManager != nil && !c.keepMounted {
 		c.deviceManager.UnmountAndClose()
 	}
 }
