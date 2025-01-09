@@ -2035,7 +2035,7 @@ resources:
     fields:
       createdAt: {}
     is_private: true
-    min_mondoo_version: "10"
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - aws
@@ -2109,7 +2109,7 @@ resources:
       groups: {}
       id: {}
       loginProfile:
-        min_mondoo_version: "10"
+        min_mondoo_version: 9.0.0
       name: {}
       passwordLastUsed: {}
       policies: {}
@@ -2185,13 +2185,9 @@ resources:
     fields:
       accountId: {}
       ec2Instance: {}
-      ec2Instances: {}
       ecrImage: {}
-      ecrImages: {}
       ecrRepo: {}
-      ecrRepos: {}
       lambda: {}
-      lambdas: {}
       lastScannedAt: {}
       region: {}
       resourceId: {}
@@ -3851,7 +3847,6 @@ resources:
       - aws
   aws.waf.rule.statement.rulegroupreferencestatement:
     fields:
-      "": {}
       arn: {}
       excludeRules: {}
       ruleName: {}
