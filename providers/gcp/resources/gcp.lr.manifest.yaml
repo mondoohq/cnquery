@@ -2441,6 +2441,8 @@ resources:
   gcp.project.storageService.bucket:
     fields:
       created: {}
+      encryption:
+        min_mondoo_version: 9.0.0
       iamConfiguration: {}
       iamPolicy: {}
       id: {}

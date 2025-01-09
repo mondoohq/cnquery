@@ -1783,6 +1783,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.storageService.bucket.retentionPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectStorageServiceBucket).GetRetentionPolicy()).ToDataRes(types.Dict)
 	},
+	"gcp.project.storageService.bucket.encryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucket).GetEncryption()).ToDataRes(types.Dict)
+	},
 	"gcp.project.sqlService.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlService).GetProjectId()).ToDataRes(types.String)
 	},
@@ -5825,6 +5828,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"gcp.project.storageService.bucket.retentionPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectStorageServiceBucket).RetentionPolicy, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.encryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucket).Encryption, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"gcp.project.sqlService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13217,6 +13224,7 @@ type mqlGcpProjectStorageServiceBucket struct {
 	IamPolicy plugin.TValue[[]interface{}]
 	IamConfiguration plugin.TValue[interface{}]
 	RetentionPolicy plugin.TValue[interface{}]
+	Encryption plugin.TValue[interface{}]
 }
 
 // createGcpProjectStorageServiceBucket creates a new instance of this resource
@@ -13318,6 +13326,10 @@ func (c *mqlGcpProjectStorageServiceBucket) GetIamConfiguration() *plugin.TValue
 
 func (c *mqlGcpProjectStorageServiceBucket) GetRetentionPolicy() *plugin.TValue[interface{}] {
 	return &c.RetentionPolicy
+}
+
+func (c *mqlGcpProjectStorageServiceBucket) GetEncryption() *plugin.TValue[interface{}] {
+	return &c.Encryption
 }
 
 // mqlGcpProjectSqlService for the gcp.project.sqlService resource

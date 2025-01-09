@@ -100,6 +100,10 @@ func (g *mqlGcpProjectStorageService) buckets() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
+		enc, err := convert.JsonToDict(bucket.Encryption)
+		if err != nil {
+			return nil, err
+		}
 
 		mqlInstance, err := CreateResource(g.MqlRuntime, "gcp.project.storageService.bucket", map[string]*llx.RawData{
 			"id":               llx.StringData(bucket.Id),
@@ -114,6 +118,7 @@ func (g *mqlGcpProjectStorageService) buckets() ([]interface{}, error) {
 			"updated":          llx.TimeDataPtr(updated),
 			"iamConfiguration": llx.DictData(iamConfigurationDict),
 			"retentionPolicy":  llx.DictData(retentionPolicy),
+			"encryption":       llx.DictData(enc),
 		})
 		if err != nil {
 			return nil, err
