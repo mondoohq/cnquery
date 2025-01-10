@@ -68,7 +68,11 @@ queries:
     title: Collect uname info
     variants:
       - uid: unix-uname
+        tags:
+          mondoo.com/filter-title: unix
       - uid: windows-uname
+        tags:
+          mondoo.com/filter-title: windows
   - uid: unix-uname
     mql: command("uname -a").stdout
     filters: asset.family.contains("unix")
