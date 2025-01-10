@@ -14,7 +14,6 @@ certificatechains
 cloudflare
 Clusterwide
 cmek
-cnames
 Cooldown
 cpe
 cryptokey
@@ -81,9 +80,9 @@ ratebasedstatement
 regexmatchstatement
 regexpatternsetreferencestatement
 resourcegroup
+rtsp
 rulegroup
 rulegroupreferencestatement
-rtsp
 Sas
 scim
 serviceprincipals
@@ -104,6 +103,7 @@ timestream
 toplevel
 tpu
 vdcs
+virtualmachine
 Vtpm
 vulnerabilityassessmentsettings
 vulnmgmt
