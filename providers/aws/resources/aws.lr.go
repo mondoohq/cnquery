@@ -523,7 +523,7 @@ func init() {
 			Create: createAwsRdsBackupsetting,
 		},
 		"aws.rds.dbcluster": {
-			// to override args, implement: initAwsRdsDbcluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initAwsRdsDbcluster,
 			Create: createAwsRdsDbcluster,
 		},
 		"aws.rds.snapshot": {

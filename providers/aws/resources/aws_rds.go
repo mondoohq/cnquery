@@ -254,6 +254,44 @@ func newMqlAwsRdsInstance(runtime *plugin.Runtime, region string, accountID stri
 	return mqlDBInstance, nil
 }
 
+func initAwsRdsDbcluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
+
+	if args["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch rds db cluster")
+	}
+
+	// load all rds db clusters
+	obj, err := CreateResource(runtime, "aws.rds", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	rds := obj.(*mqlAwsRds)
+
+	rawResources := rds.GetDbClusters()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	arnVal := args["arn"].Value.(string)
+	for i := range rawResources.Data {
+		dbInstance := rawResources.Data[i].(*mqlAwsRdsDbcluster)
+		if dbInstance.Arn.Data == arnVal {
+			return args, dbInstance, nil
+		}
+	}
+	return nil, nil, errors.New("rds db cluster does not exist")
+}
+
 func initAwsRdsDbinstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
