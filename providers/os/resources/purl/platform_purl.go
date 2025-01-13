@@ -32,7 +32,7 @@ func NewPlatformPurl(platform *inventory.Platform) (string, error) {
 	qualifiers[QualifierDistro] = strings.Join(distroQualifiers, "-")
 
 	return packageurl.NewPackageURL(
-		"platform",
+		string(Type_X_Platform),
 		platform.Name,
 		"",
 		platform.Version,

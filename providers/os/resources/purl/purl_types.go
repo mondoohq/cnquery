@@ -17,7 +17,8 @@ var (
 	TypeAppx Type = "appx"
 	// TypeMacos is a pkg:macos purl.
 	TypeMacos Type = "macos"
-
+	// Type_X_Platform is a pkg:platform purl.
+	Type_X_Platform Type = "platform"
 	// Types we use coming from:
 	// https://github.com/package-url/packageurl-go/blob/master/packageurl.go#L54
 	TypeGeneric = Type(packageurl.TypeGeneric)
@@ -27,14 +28,15 @@ var (
 	TypeRPM     = Type(packageurl.TypeRPM)
 
 	KnownTypes = map[Type]struct{}{
-		TypeAppx:    {},
-		TypeWindows: {},
-		TypeMacos:   {},
-		TypeGeneric: {},
-		TypeApk:     {},
-		TypeDebian:  {},
-		TypeAlpm:    {},
-		TypeRPM:     {},
+		TypeAppx:        {},
+		TypeWindows:     {},
+		TypeMacos:       {},
+		Type_X_Platform: {},
+		TypeGeneric:     {},
+		TypeApk:         {},
+		TypeDebian:      {},
+		TypeAlpm:        {},
+		TypeRPM:         {},
 	}
 )
 
