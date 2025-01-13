@@ -5,6 +5,7 @@ package mqlc
 
 import (
 	"errors"
+	"fmt"
 	"regexp"
 	"sort"
 	"strconv"
@@ -2180,6 +2181,12 @@ func compile(input string, props map[string]*llx.Primitive, compilerConf Compile
 func Compile(input string, props map[string]*llx.Primitive, conf CompilerConfig) (*llx.CodeBundle, error) {
 	// Note: we do not check the conf because it will get checked by the
 	// first CompileAST call. Do not use it earlier or add a check.
+	defer func() {
+		if r := recover(); r != nil {
+			errNew := fmt.Errorf("panic compiling %q: %v", input, r)
+			panic(errNew)
+		}
+	}()
 
 	res, err := compile(input, props, conf)
 	if err != nil {
