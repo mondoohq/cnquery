@@ -4,7 +4,6 @@
 resources:
   asset:
     fields:
-      cpe: {}
       cpes: {}
       purl:
         min_mondoo_version: 9.0.0
@@ -140,7 +139,6 @@ resources:
     fields:
       file: {}
       instructions: {}
-      os: {}
       stages: {}
     min_mondoo_version: 9.0.0
     refs:
@@ -234,99 +232,6 @@ resources:
     refs:
     - title: What is an image?
       url: https://docs.docker.com/guides/docker-concepts/the-basics/what-is-an-image/
-  equinix.metal.device:
-    fields:
-      billingCycle: {}
-      createdAt: {}
-      description: {}
-      hostname: {}
-      id: {}
-      locked: {}
-      os: {}
-      shortID: {}
-      spotInstance: {}
-      state: {}
-      updatedAt: {}
-      url: {}
-    maturity: experimental
-    min_mondoo_version: 5.15.0
-    platform:
-      name:
-      - equinix
-  equinix.metal.organization:
-    fields:
-      address: {}
-      billingPhone: {}
-      createdAt: {}
-      creditAmount: {}
-      description: {}
-      id: {}
-      mainPhone: {}
-      name: {}
-      taxId: {}
-      twitter: {}
-      updatedAt: {}
-      url: {}
-      website: {}
-    maturity: experimental
-    min_mondoo_version: 5.15.0
-    platform:
-      name:
-      - equinix
-  equinix.metal.project:
-    fields:
-      createdAt: {}
-      devices: {}
-      id: {}
-      name: {}
-      organization: {}
-      paymentMethod: {}
-      sshKeys: {}
-      updatedAt: {}
-      url: {}
-      users: {}
-    maturity: experimental
-    min_mondoo_version: 5.15.0
-    platform:
-      name:
-      - equinix
-  equinix.metal.sshkey:
-    fields:
-      createdAt: {}
-      fingerPrint: {}
-      id: {}
-      key: {}
-      label: {}
-      updatedAt: {}
-      url: {}
-    maturity: experimental
-    min_mondoo_version: 5.15.0
-    platform:
-      name:
-      - equinix
-  equinix.metal.user:
-    fields:
-      avatarUrl: {}
-      createdAt: {}
-      email: {}
-      facebook: {}
-      firstName: {}
-      fullName: {}
-      id: {}
-      lastName: {}
-      linkedin: {}
-      phoneNumber: {}
-      timezone: {}
-      twitter: {}
-      twoFactorAuth: {}
-      updatedAt: {}
-      url: {}
-      vpn: {}
-    maturity: experimental
-    min_mondoo_version: 5.15.0
-    platform:
-      name:
-      - equinix
   file:
     fields:
       basename: {}
@@ -551,13 +456,11 @@ resources:
   macos.systemExtension:
     fields:
       active: {}
-      bundleID: {}
       bundlePath: {}
       categories: {}
       enabled: {}
       identifier: {}
       mdmManaged: {}
-      name: {}
       state: {}
       teamID: {}
       uuid: {}
@@ -631,7 +534,6 @@ resources:
   npm.package:
     fields:
       cpes: {}
-      dependencies: {}
       files: {}
       id: {}
       name: {}
@@ -640,7 +542,6 @@ resources:
     min_mondoo_version: latest
   npm.packages:
     fields:
-      "": {}
       directDependencies: {}
       files: {}
       list: {}
@@ -898,7 +799,6 @@ resources:
     min_mondoo_version: 5.15.0
   python:
     fields:
-      children: {}
       packages: {}
       path: {}
       toplevel: {}
@@ -907,25 +807,15 @@ resources:
     fields:
       author: {}
       authorEmail: {}
-      cpe: {}
       cpes: {}
       dependencies: {}
       file: {}
       id: {}
-      licences: {}
       license: {}
-      licenses: {}
       name: {}
-      path: {}
       purl: {}
       summary: {}
       version: {}
-    min_mondoo_version: latest
-  python.packages:
-    fields:
-      "": {}
-      children: {}
-      packages: {}
     min_mondoo_version: latest
   registrykey:
     fields:
@@ -1067,22 +957,16 @@ resources:
       title: Search for a specific SID and check for its values
   vuln.advisory:
     fields:
-      cve: {}
-      cvss: {}
-      cvssVector: {}
       description: {}
       id: {}
       modified: {}
       published: {}
-      severity: {}
       title: {}
       worstScore: {}
     is_private: true
     min_mondoo_version: latest
   vuln.cve:
     fields:
-      cvss: {}
-      cvssVector: {}
       id: {}
       modified: {}
       published: {}
@@ -1260,12 +1144,6 @@ resources:
       title: Check that a specific Windows Server feature is installed
     - query: windows.serverFeature('Windows-Defender').installed == false
       title: Check that a specific Windows Server feature is not installed
-  yaml.path:
-    fields:
-      filepath: {}
-      jsonpath: {}
-      result: {}
-    min_mondoo_version: 5.15.0
   yum:
     fields:
       repos: {}

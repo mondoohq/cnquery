@@ -44,7 +44,6 @@ resources:
       isProtected:
         min_mondoo_version: 8.10.0
       name: {}
-      organizationName: {}
       owner: {}
       protected: {}
       protectionRules: {}
@@ -182,7 +181,6 @@ resources:
       id: {}
       labels: {}
       number: {}
-      organizationName: {}
       owner: {}
       repoName: {}
       reviews: {}
@@ -194,13 +192,11 @@ resources:
     fields:
       avatarUrl:
         min_mondoo_version: 7.14.0
-      billing_email: {}
       billingEmail:
         min_mondoo_version: 6.11.0
       blog: {}
       collaborators: {}
       company: {}
-      created_at: {}
       createdAt:
         min_mondoo_version: 6.11.0
       default_repository_permission: {}
