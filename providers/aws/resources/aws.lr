@@ -768,20 +768,24 @@ private aws.iam.usercredentialreportentry @defaults("arn") {
 
   // IAM user
   user() aws.iam.user
-  // Time when user was created
+  // Time when user was created: deprecated, use createdAt
   userCreationTime() time
+  // Time when user was created
+  createdAt() time
 }
 
 // AWS IAM user
-private aws.iam.user @defaults("arn name") {
+private aws.iam.user @defaults("arn name createdAt") {
   // ARN of the IAM user
   arn string
   // ID of the IAM user
   id string
   // Name of the user
   name string
-  // Time when user was created
+  // Time when user was created: deprecated, use createdAt
   createDate time
+  // Time when user was created
+  createdAt time
   // Time when password was last used
   passwordLastUsed time
   // Tags for the IAM user
@@ -802,8 +806,10 @@ private aws.iam.user @defaults("arn name") {
 private aws.iam.instanceProfile @defaults("arn instanceProfileId") {
   // ARN of the instance profile
   arn string
-  // Time when the instance profile was created
+  // Time when the instance profile was created: deprecated, use createdAt
   createDate time
+  // Time when the instance profile was created
+  createdAt time
   // ID of the IAM instance profile
   instanceProfileId string
   // Name of the instance profile
@@ -836,8 +842,10 @@ private aws.iam.policy @defaults("arn name") {
   isAttachable() bool
   // Number of principal entities (users, groups, and roles) that the policy is attached to
   attachmentCount() int
-  // Time when the policy was created
+  // Time when the policy was created: deprecated, use createdAt
   createDate() time
+  // Time when the policy was created
+  createdAt() time
   // Time when the policy was updated
   updateDate() time
   // Scope of the policy
@@ -856,7 +864,7 @@ private aws.iam.policy @defaults("arn name") {
 }
 
 // AWS IAM policy version
-private aws.iam.policyversion @defaults("arn isDefaultVersion") {
+private aws.iam.policyversion @defaults("arn isDefaultVersion createdAt") {
   // ARN of the policy version
   arn string
   // Version ID
@@ -865,8 +873,10 @@ private aws.iam.policyversion @defaults("arn isDefaultVersion") {
   isDefaultVersion bool
   // JSON statements for this policy version
   document() dict
-  // Time when this policy version was created
+  // Time when this policy version was created: deprecated, use createdAt
   createDate time
+  // Time when this policy version was created
+  createdAt time
 }
 
 // AWS IAM role
@@ -881,8 +891,10 @@ private aws.iam.role @defaults("arn name") {
   description string
   // Tags associated with the role
   tags map[string]string
-  // Time when the role was created
+  // Time when the role was created: deprecated, use createdAt
   createDate time
+  // Time when the role was created
+  createdAt time
   // Policy document that grants an entity permission to assume the role
   assumeRolePolicyDocument dict
 }
