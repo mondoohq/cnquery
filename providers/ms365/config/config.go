@@ -16,9 +16,18 @@ var Config = plugin.Provider{
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
 		{
-			Name:      "ms365",
-			Use:       "ms365",
-			Short:     "a Microsoft 365 account",
+			Name:  "ms365",
+			Use:   "ms365",
+			Short: "a Microsoft 365 account",
+			Long: `Use the ms365 provider to query resources within Microsoft 365, including organizations, users, roles, SharePoint sites, and more.
+
+Examples:
+  cnquery shell  ms365 --certificate-path <PATH-TO-YOUR-PEM> --tenant-id <YOUR-TENANT-ID> --client-id <YOUR-CLIENT-ID>
+  cnspec scan ms365 --certificate-path <PATH-TO-YOUR-PEM> --tenant-id <YOUR-TENANT-ID> --client-id <YOUR-CLIENT-ID>
+
+Notes:
+  If you give cnquery access through the Microsoft 365 API, you can omit the certificate-path, tenant-id, and client-id flags. To learn how, read https://mondoo.com/docs/cnquery/saas/ms365/#give-cnquery-access-through-the-microsoft-365-api.
+`,
 			MinArgs:   0,
 			MaxArgs:   5,
 			Discovery: []string{},
@@ -39,19 +48,19 @@ var Config = plugin.Provider{
 					Long:    "organization",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "The organization to be scanned",
+					Desc:    "Organization to scan",
 				},
 				{
 					Long:    "sharepoint-url",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "The sharepoint URL to be scanned",
+					Desc:    "Sharepoint URL to scan",
 				},
 				{
 					Long:    "client-secret",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "Secret for application",
+					Desc:    "Secret for the application",
 				},
 				{
 					Long:    "certificate-path",
