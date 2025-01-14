@@ -16,6 +16,7 @@ func TestValidType(t *testing.T) {
 		validTypes := []purl.Type{
 			purl.TypeWindows, purl.TypeAppx, purl.TypeMacos, purl.TypeGeneric,
 			purl.TypeApk, purl.TypeDebian, purl.TypeAlpm, purl.TypeRPM,
+			purl.Type_X_Platform,
 		}
 
 		for _, validType := range validTypes {
@@ -48,6 +49,7 @@ func TestValidTypeString(t *testing.T) {
 			string(purl.TypeWindows), string(purl.TypeAppx), string(purl.TypeMacos),
 			packageurl.TypeGeneric, packageurl.TypeApk, packageurl.TypeDebian,
 			packageurl.TypeAlpm, packageurl.TypeRPM, "windows", "appx", "macos",
+			"platform", string(purl.Type_X_Platform),
 		}
 
 		for _, validType := range validTypes {
