@@ -10,7 +10,6 @@ import (
 	"os/signal"
 	"path"
 	"regexp"
-	"runtime"
 	"sort"
 	"strings"
 	"sync"
@@ -154,13 +153,6 @@ func (s *Shell) RunInteractive(cmd string) {
 	}
 
 	completer := s.completer.CompletePrompt
-	// NOTE: this is an issue with windows cmd and powershell prompt, since this is not reliable we deactivate the
-	// autocompletion, see https://github.com/c-bata/go-prompt/issues/209
-	if runtime.GOOS == "windows" {
-		completer = func(doc prompt.Document) []prompt.Suggest {
-			return nil
-		}
-	}
 
 	p := prompt.New(
 		s.ExecCmd,
