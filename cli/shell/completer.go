@@ -4,6 +4,8 @@
 package shell
 
 import (
+	"runtime"
+
 	"github.com/c-bata/go-prompt"
 	"go.mondoo.com/cnquery/v11"
 	"go.mondoo.com/cnquery/v11/mqlc"
@@ -14,22 +16,27 @@ var completerSeparator = string([]byte{'.', ' '})
 
 // Completer is an auto-complete helper for the shell
 type Completer struct {
-	schema      resources.ResourcesSchema
-	features    cnquery.Features
-	queryPrefix func() string
+	schema           resources.ResourcesSchema
+	features         cnquery.Features
+	queryPrefix      func() string
+	forceCompletions bool
 }
 
 // NewCompleter creates a new Mondoo completer object
 func NewCompleter(schema resources.ResourcesSchema, features cnquery.Features, queryPrefix func() string) *Completer {
 	return &Completer{
-		schema:      schema,
-		features:    features,
-		queryPrefix: queryPrefix,
+		schema:           schema,
+		features:         features,
+		queryPrefix:      queryPrefix,
+		forceCompletions: features.IsActive(cnquery.ForceShellCompletion),
 	}
 }
 
 // CompletePrompt provides suggestions
 func (c *Completer) CompletePrompt(doc prompt.Document) []prompt.Suggest {
+	if runtime.GOOS == "windows" && !c.forceCompletions {
+		return nil
+	}
 	if doc.TextBeforeCursor() == "" {
 		return []prompt.Suggest{}
 	}

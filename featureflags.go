@@ -94,18 +94,24 @@ const (
 	// start: v11.x
 	// end:   tbd (candidate: v12.0)
 	SerialNumberAsID
+
+	// ForceShellCompletion feature flag
+	// desc:  Forces shell completion to be enabled (for windows)
+	// start: v11.x
+	ForceShellCompletion
 )
 
 // FeaturesValue is a map from feature name to feature flag
 var FeaturesValue = map[string]Feature{
-	MassQueries.String():        MassQueries,
-	PiperCode.String():          PiperCode,
-	BoolAssertions.String():     BoolAssertions,
-	MQLAssetContext.String():    MQLAssetContext,
-	ErrorsAsFailures.String():   ErrorsAsFailures,
-	StoreResourcesData.String(): StoreResourcesData,
-	FineGrainedAssets.String():  FineGrainedAssets,
-	SerialNumberAsID.String():   SerialNumberAsID,
+	MassQueries.String():          MassQueries,
+	PiperCode.String():            PiperCode,
+	BoolAssertions.String():       BoolAssertions,
+	MQLAssetContext.String():      MQLAssetContext,
+	ErrorsAsFailures.String():     ErrorsAsFailures,
+	StoreResourcesData.String():   StoreResourcesData,
+	FineGrainedAssets.String():    FineGrainedAssets,
+	SerialNumberAsID.String():     SerialNumberAsID,
+	ForceShellCompletion.String(): ForceShellCompletion,
 }
 
 // DefaultFeatures are a set of default flags that are active
