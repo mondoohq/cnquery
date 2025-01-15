@@ -176,17 +176,53 @@ func newMqlMicrosoftApplication(runtime *plugin.Runtime, app models.Applicationa
 }
 
 func initMicrosoftApplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	// we only look up the application if we have been supplied by its name and nothing else
-	raw, ok := args["name"]
-	if !ok || len(args) != 1 {
-		return args, nil, nil
+	var appId string
+
+	raw, ok := args["id"]
+	if ok && len(args) < 3 {
+		appId = raw.Value.(string)
 	}
-	name := raw.Value.(string)
+	if appId == "" {
+		// lookup by name
+		raw, ok := args["name"]
+		if ok && len(args) == 1 {
+			name := raw.Value.(string)
+			id, err := fetchApplicationIdByName(runtime, name)
+			if err != nil {
+				return nil, nil, err
+			}
+			appId = *id
+		}
+	}
+	if appId == "" {
+		return nil, nil, errors.New("need name or id to fetch application")
+	}
+
+	ctx := context.Background()
 
 	conn := runtime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
 		return nil, nil, err
+	}
+	// https://graph.microsoft.com/v1.0/applications/{application-id}
+	app, err := graphClient.Applications().ByApplicationId(appId).Get(ctx, &applications.ApplicationItemRequestBuilderGetRequestConfiguration{})
+	if err != nil {
+		return nil, nil, transformError(err)
+	}
+	mqlMsApp, err := newMqlMicrosoftApplication(runtime, app)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return nil, mqlMsApp, nil
+}
+
+func fetchApplicationIdByName(runtime *plugin.Runtime, name string) (*string, error) {
+	conn := runtime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, err
 	}
 
 	// https://graph.microsoft.com/v1.0/servicePrincipals?$count=true&$search="displayName:teams"&$select=id,displayName
@@ -198,30 +234,35 @@ func initMicrosoftApplication(runtime *plugin.Runtime, args map[string]*llx.RawD
 		},
 	})
 	if err != nil {
-		return nil, nil, transformError(err)
+		return nil, transformError(err)
 	}
 
 	val := resp.GetValue()
 	if len(val) == 0 {
-		return nil, nil, errors.New("application not found")
+		return nil, errors.New("application not found")
 	}
 
 	applicationId := val[0].GetId()
 	if applicationId == nil {
-		return nil, nil, errors.New("application id not found")
+		return nil, errors.New("application id not found")
+	}
+	return applicationId, nil
+}
+
+func fetchApplicationById(runtime *plugin.Runtime, id string) (models.Applicationable, error) {
+	conn := runtime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, err
 	}
 
+	ctx := context.Background()
 	// https://graph.microsoft.com/v1.0/applications/{application-id}
-	app, err := graphClient.Applications().ByApplicationId(*applicationId).Get(ctx, &applications.ApplicationItemRequestBuilderGetRequestConfiguration{})
+	app, err := graphClient.Applications().ByApplicationId(id).Get(ctx, &applications.ApplicationItemRequestBuilderGetRequestConfiguration{})
 	if err != nil {
-		return nil, nil, transformError(err)
+		return nil, transformError(err)
 	}
-	mqlMsApp, err := newMqlMicrosoftApplication(runtime, app)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return nil, mqlMsApp, nil
+	return app, nil
 }
 
 // hasExpiredCredentials returns true if any of the credentials of the application are expired
