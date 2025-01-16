@@ -216,6 +216,14 @@ func (g *mqlGcpProjectCloudRunService) services() ([]interface{}, error) {
 		return nil, g.Regions.Error
 	}
 	regions := g.Regions.Data
+	if len(regions) == 0 {
+		// regions data has not been fetched, we need to get it
+		r, err := g.regions()
+		if err != nil {
+			return nil, err
+		}
+		regions = r
+	}
 
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
@@ -252,6 +260,7 @@ func (g *mqlGcpProjectCloudRunService) services() ([]interface{}, error) {
 				}
 				if err != nil {
 					log.Error().Err(err).Send()
+					break
 				}
 
 				var mqlTemplate plugin.Resource
