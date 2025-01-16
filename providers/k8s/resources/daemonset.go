@@ -22,7 +22,7 @@ type mqlK8sDaemonsetInternal struct {
 }
 
 func (k *mqlK8s) daemonsets() ([]interface{}, error) {
-	return k8sResourceToMql(k.MqlRuntime, gvkString(appsv1.SchemeGroupVersion.WithKind("daemonsets")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToMql(k.MqlRuntime, gvkString(appsv1.SchemeGroupVersion.WithKind("daemonsets")), getNamespaceScope(k.MqlRuntime), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		r, err := CreateResource(k.MqlRuntime, "k8s.daemonset", map[string]*llx.RawData{

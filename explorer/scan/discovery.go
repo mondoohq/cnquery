@@ -205,6 +205,7 @@ func discoverAssets(rootAssetWithRuntime *AssetWithRuntime, resolvedRootAsset *i
 			if !discoveredAssets.Add(resolvedAsset, assetWithRuntime.Runtime) {
 				assetWithRuntime.Runtime.Close()
 			}
+			discoverAssets(assetWithRuntime, resolvedRootAsset, discoveredAssets, runtimeLabels, upstream, recording)
 		} else {
 			discoverAssets(assetWithRuntime, resolvedRootAsset, discoveredAssets, runtimeLabels, upstream, recording)
 			assetWithRuntime.Runtime.Close()

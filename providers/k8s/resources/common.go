@@ -32,14 +32,14 @@ func gvkString(gvk schema.GroupVersionKind) string {
 	return gvk.Kind + "." + gvk.Version + "." + gvk.Group
 }
 
-func k8sResourceToMql(r *plugin.Runtime, kind string, fn resourceConvertFn) ([]interface{}, error) {
+func k8sResourceToMql(r *plugin.Runtime, kind, ns string, fn resourceConvertFn) ([]interface{}, error) {
 	kt, err := k8sProvider(r.Connection)
 	if err != nil {
 		return nil, err
 	}
 
 	// TODO: check if we are running in a namespace scope and retrieve the ns from the provider
-	result, err := kt.Resources(kind, "", "")
+	result, err := kt.Resources(kind, "", ns)
 	if err != nil {
 		return nil, err
 	}
@@ -68,6 +68,14 @@ func k8sResourceToMql(r *plugin.Runtime, kind string, fn resourceConvertFn) ([]i
 	}
 
 	return resp, nil
+}
+
+func getNamespaceScope(runtime *plugin.Runtime) string {
+	asset := runtime.Connection.(shared.Connection).Asset()
+	if asset.Platform.Name == "k8s-namespace" {
+		return asset.Name
+	}
+	return ""
 }
 
 func getNameAndNamespace(runtime *plugin.Runtime) (string, string, error) {
