@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"sync"
 
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
@@ -313,7 +314,7 @@ func (g *mqlGcpProjectCloudRunService) services() ([]interface{}, error) {
 					mqlTraffic = append(mqlTraffic, map[string]interface{}{
 						"type":     t.Type.String(),
 						"revision": t.Revision,
-						"percent":  t.Percent,
+						"percent":  strconv.Itoa(int(t.Percent)),
 						"tag":      t.Tag,
 					})
 				}
@@ -337,7 +338,7 @@ func (g *mqlGcpProjectCloudRunService) services() ([]interface{}, error) {
 					mqlTrafficStatuses = append(mqlTrafficStatuses, map[string]interface{}{
 						"type":     t.Type.String(),
 						"revision": t.Revision,
-						"percent":  t.Percent,
+						"percent":  strconv.Itoa(int(t.Percent)),
 						"tag":      t.Tag,
 						"uri":      t.Uri,
 					})
