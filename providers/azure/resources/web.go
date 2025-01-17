@@ -48,6 +48,7 @@ type AzureWebAppStackRuntime struct {
 	Os           string `json:"os,omitempty"`
 	MajorVersion string `json:"majorVersion,omitempty"`
 	MinorVersion string `json:"minorVersion,omitempty"`
+	IsAutoUpdate bool   `json:"isAutoUpdate,omitempty"`
 	IsDeprecated bool   `json:"isDeprecated,omitempty"`
 	IsHidden     bool   `json:"isHidden,omitempty"`
 	IsDefault    bool   `json:"isDefault,omitempty"`
@@ -185,6 +186,7 @@ func (a *mqlAzureSubscriptionWebService) availableRuntimes() ([]interface{}, err
 						ID:           strings.ToUpper(convert.ToString(entry.Name)) + "|" + runtimeVersion,
 						Os:           "windows",
 						MajorVersion: convert.ToString(majorVersion.DisplayVersion),
+						IsAutoUpdate: convert.ToBool(majorVersion.IsAutoUpdate),
 						IsDeprecated: convert.ToBool(majorVersion.IsDeprecated),
 						IsHidden:     convert.ToBool(majorVersion.IsHidden),
 						IsDefault:    convert.ToBool(majorVersion.IsDefault),
@@ -205,6 +207,7 @@ func (a *mqlAzureSubscriptionWebService) availableRuntimes() ([]interface{}, err
 						Os:           "windows",
 						MinorVersion: convert.ToString(minorVersion.DisplayVersion),
 						MajorVersion: convert.ToString(majorVersion.DisplayVersion),
+						IsAutoUpdate: convert.ToBool(majorVersion.IsAutoUpdate),
 						IsDeprecated: convert.ToBool(majorVersion.IsDeprecated) || isPlatformEol(convert.ToString(entry.Name), convert.ToString(minorVersion.RuntimeVersion)),
 						IsHidden:     convert.ToBool(majorVersion.IsHidden),
 						IsDefault:    convert.ToBool(majorVersion.IsDefault),
@@ -243,6 +246,7 @@ func (a *mqlAzureSubscriptionWebService) availableRuntimes() ([]interface{}, err
 						Os:           "linux",
 						MinorVersion: convert.ToString(minorVersion.DisplayVersion),
 						MajorVersion: convert.ToString(majorVersion.DisplayVersion),
+						IsAutoUpdate: convert.ToBool(majorVersion.AutoUpdate),
 						IsDeprecated: convert.ToBool(majorVersion.IsDeprecated),
 						IsHidden:     convert.ToBool(majorVersion.IsHidden),
 						IsDefault:    convert.ToBool(majorVersion.IsDefault),
