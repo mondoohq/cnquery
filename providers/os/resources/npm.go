@@ -4,7 +4,6 @@
 package resources
 
 import (
-	"cmp"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -219,15 +218,8 @@ func (r *mqlNpmPackages) gatherData() error {
 	}
 
 	// sort packages by name
-	sortFn := func(a, b *sbom.Package) int {
-		if n := cmp.Compare(a.Name, b.Name); n != 0 {
-			return n
-		}
-		// if names are equal, order by version
-		return cmp.Compare(a.Version, b.Version)
-	}
-	slices.SortFunc(directDependencies, sortFn)
-	slices.SortFunc(transitiveDependencies, sortFn)
+	slices.SortFunc(directDependencies, sbom.SortFn)
+	slices.SortFunc(transitiveDependencies, sbom.SortFn)
 
 	if root != nil {
 		mqlPkg, err := newNpmPackage(r.MqlRuntime, root)
@@ -240,23 +232,15 @@ func (r *mqlNpmPackages) gatherData() error {
 	}
 
 	// create a resource for each package
-	transitiveResources := []interface{}{}
-	for i := range transitiveDependencies {
-		newNpmPackages, err := newNpmPackage(r.MqlRuntime, transitiveDependencies[i])
-		if err != nil {
-			return err
-		}
-		transitiveResources = append(transitiveResources, newNpmPackages)
+	transitiveResources, err := newNpmPackageList(r.MqlRuntime, transitiveDependencies)
+	if err != nil {
+		return err
 	}
 	r.List = plugin.TValue[[]interface{}]{Data: transitiveResources, State: plugin.StateIsSet}
 
-	directResources := []interface{}{}
-	for i := range directDependencies {
-		newNpmPackages, err := newNpmPackage(r.MqlRuntime, directDependencies[i])
-		if err != nil {
-			return err
-		}
-		directResources = append(directResources, newNpmPackages)
+	directResources, err := newNpmPackageList(r.MqlRuntime, directDependencies)
+	if err != nil {
+		return err
 	}
 	r.DirectDependencies = plugin.TValue[[]interface{}]{Data: directResources, State: plugin.StateIsSet}
 
@@ -291,6 +275,19 @@ func (r *mqlNpmPackages) list() ([]interface{}, error) {
 
 func (r *mqlNpmPackages) files() ([]interface{}, error) {
 	return nil, r.gatherData()
+}
+
+// newNpmPackageList creates a list of npm package resources
+func newNpmPackageList(runtime *plugin.Runtime, packages []*sbom.Package) ([]interface{}, error) {
+	resources := []interface{}{}
+	for i := range packages {
+		pkg, err := newNpmPackage(runtime, packages[i])
+		if err != nil {
+			return nil, err
+		}
+		resources = append(resources, pkg)
+	}
+	return resources, nil
 }
 
 // newNpmPackage creates a new npm package resource
