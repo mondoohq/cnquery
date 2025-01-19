@@ -10,6 +10,20 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/resources/cpe"
 )
 
+type PackageDetails struct {
+	Name         string
+	File         string
+	License      string
+	Author       string
+	AuthorEmail  string
+	Summary      string
+	Version      string
+	Dependencies []string
+	IsLeaf       bool
+	Purl         string
+	Cpes         []string
+}
+
 func NewPackageUrl(name string, version string) string {
 	// ensure the name is according to the PURL spec
 	// see https://github.com/package-url/purl-spec/blob/master/PURL-TYPES.rst#pypi

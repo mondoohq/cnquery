@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package python
+package wheelegg
 
 import (
 	"bufio"
@@ -9,21 +9,9 @@ import (
 	"io"
 	"net/textproto"
 	"strings"
-)
 
-type PackageDetails struct {
-	Name         string
-	File         string
-	License      string
-	Author       string
-	AuthorEmail  string
-	Summary      string
-	Version      string
-	Dependencies []string
-	IsLeaf       bool
-	Purl         string
-	Cpes         []string
-}
+	"go.mondoo.com/cnquery/v11/providers/os/resources/languages/python"
+)
 
 // extractMimeDeps will go through each of the listed dependencies
 // from the "Requires-Dist" values, and strip off everything but
@@ -43,7 +31,7 @@ func extractMimeDeps(deps []string) []string {
 	return parsedDeps
 }
 
-func ParseMIME(r io.Reader, pythonMIMEFilepath string) (*PackageDetails, error) {
+func ParseMIME(r io.Reader, pythonMIMEFilepath string) (*python.PackageDetails, error) {
 	textReader := textproto.NewReader(bufio.NewReader(r))
 	mimeData, err := textReader.ReadMIMEHeader()
 	if err != nil && err != io.EOF {
@@ -52,7 +40,7 @@ func ParseMIME(r io.Reader, pythonMIMEFilepath string) (*PackageDetails, error) 
 
 	deps := extractMimeDeps(mimeData.Values("Requires-Dist"))
 
-	return &PackageDetails{
+	return &python.PackageDetails{
 		Name:         mimeData.Get("Name"),
 		Summary:      mimeData.Get("Summary"),
 		Author:       mimeData.Get("Author"),
@@ -61,7 +49,7 @@ func ParseMIME(r io.Reader, pythonMIMEFilepath string) (*PackageDetails, error) 
 		Version:      mimeData.Get("Version"),
 		Dependencies: deps,
 		File:         pythonMIMEFilepath,
-		Purl:         NewPackageUrl(mimeData.Get("Name"), mimeData.Get("Version")),
-		Cpes:         NewCpes(mimeData.Get("Name"), mimeData.Get("Version")),
+		Purl:         python.NewPackageUrl(mimeData.Get("Name"), mimeData.Get("Version")),
+		Cpes:         python.NewCpes(mimeData.Get("Name"), mimeData.Get("Version")),
 	}, nil
 }

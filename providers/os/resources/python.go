@@ -17,43 +17,47 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/python"
+	"go.mondoo.com/cnquery/v11/providers/os/resources/languages/python"
+	"go.mondoo.com/cnquery/v11/providers/os/resources/languages/python/requirements"
+	"go.mondoo.com/cnquery/v11/providers/os/resources/languages/python/wheelegg"
 	"go.mondoo.com/cnquery/v11/types"
+)
+
+var (
+	pythonDirectories = []pythonDirectory{
+		{
+			path: "/usr/local/lib/python*",
+		},
+		{
+			path: "/usr/local/lib64/python*",
+		},
+		{
+			path: "/usr/lib/python*",
+		},
+		{
+			path: "/usr/lib64/python*",
+		},
+		{
+			path: "/opt/homebrew/lib/python*",
+		},
+		{
+			// surprisingly, this is handled in a case-sensitive way in go (the filepath.Match() glob/pattern matching)
+			path: "C:/Python*",
+			// true because in Windows the 'site-packages' dir lives in a path like:
+			// C:\Python3.11\Lib\site-packages
+			addLib: true,
+		},
+	}
+
+	pythonDirectoriesDarwin = []string{
+		"/System/Library/Frameworks/Python.framework/Versions",
+		"/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions",
+	}
 )
 
 type pythonDirectory struct {
 	path   string
 	addLib bool
-}
-
-var pythonDirectories = []pythonDirectory{
-	{
-		path: "/usr/local/lib/python*",
-	},
-	{
-		path: "/usr/local/lib64/python*",
-	},
-	{
-		path: "/usr/lib/python*",
-	},
-	{
-		path: "/usr/lib64/python*",
-	},
-	{
-		path: "/opt/homebrew/lib/python*",
-	},
-	{
-		// surprisingly, this is handled in a case-sensitive way in go (the filepath.Match() glob/pattern matching)
-		path: "C:/Python*",
-		// true because in Windows the 'site-packages' dir lives in a path like:
-		// C:\Python3.11\Lib\site-packages
-		addLib: true,
-	},
-}
-
-var pythonDirectoriesDarwin = []string{
-	"/System/Library/Frameworks/Python.framework/Versions",
-	"/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions",
 }
 
 func initPython(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -314,7 +318,7 @@ func parseRequiresTxtDependencies(afs *afero.Afero, requiresTxtPath string) ([]s
 	}
 	defer f.Close()
 
-	return python.ParseRequiresTxtDependencies(f)
+	return requirements.ParseRequiresTxtDependencies(f)
 }
 
 func parseMIME(afs *afero.Afero, pythonMIMEFilepath string) (*python.PackageDetails, error) {
@@ -325,7 +329,7 @@ func parseMIME(afs *afero.Afero, pythonMIMEFilepath string) (*python.PackageDeta
 	}
 	defer f.Close()
 
-	return python.ParseMIME(f, pythonMIMEFilepath)
+	return wheelegg.ParseMIME(f, pythonMIMEFilepath)
 }
 
 func genericSearch(afs *afero.Afero) ([]python.PackageDetails, error) {
@@ -581,7 +585,7 @@ func (r *mqlPythonPackage) populateData() error {
 		return fmt.Errorf("file path is empty")
 	}
 
-	pkg, err := python.ParseMIME(strings.NewReader(file.Data.Content.Data), file.Data.Path.Data)
+	pkg, err := wheelegg.ParseMIME(strings.NewReader(file.Data.Content.Data), file.Data.Path.Data)
 	if err != nil {
 		return fmt.Errorf("error parsing python package data: %s", err)
 	}
