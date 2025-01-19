@@ -17,7 +17,10 @@ import (
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/npm"
+	"go.mondoo.com/cnquery/v11/providers/os/resources/languages"
+	"go.mondoo.com/cnquery/v11/providers/os/resources/languages/javascript/packagejson"
+	"go.mondoo.com/cnquery/v11/providers/os/resources/languages/javascript/packagelockjson"
+	"go.mondoo.com/cnquery/v11/sbom"
 	"go.mondoo.com/cnquery/v11/types"
 )
 
@@ -69,9 +72,9 @@ var (
 	}
 )
 
-func (r *mqlNpmPackages) gatherPackagesFromSystemDefaults(conn shared.Connection) ([]*npm.Package, []*npm.Package, []string, error) {
-	var directPackageList []*npm.Package
-	var transitivePackageList []*npm.Package
+func (r *mqlNpmPackages) gatherPackagesFromSystemDefaults(conn shared.Connection) ([]*sbom.Package, []*sbom.Package, []string, error) {
+	var directPackageList []*sbom.Package
+	var transitivePackageList []*sbom.Package
 	evidenceFiles := []string{}
 	log.Debug().Msg("searching for npm packages in default locations")
 	afs := &afero.Afero{Fs: conn.FileSystem()}
@@ -128,7 +131,7 @@ func (r *mqlNpmPackages) gatherPackagesFromSystemDefaults(conn shared.Connection
 						continue
 					}
 
-					p := &npm.PackageLockParser{}
+					p := &packagelockjson.Extractor{}
 					info, err := p.Parse(strings.NewReader(content.Data), packageLockPath)
 					if err != nil {
 						log.Error().Err(err).Str("path", packageLockPath).Msg("could not parse package-lock.json file")
@@ -153,7 +156,7 @@ func (r *mqlNpmPackages) gatherPackagesFromSystemDefaults(conn shared.Connection
 						continue
 					}
 
-					p := &npm.PackageJsonParser{}
+					p := &packagejson.Extractor{}
 					info, err := p.Parse(strings.NewReader(content.Data), packageJsonPath)
 					if err != nil {
 						log.Error().Err(err).Str("path", packageJsonPath).Msg("could not parse package.json file")
@@ -173,7 +176,7 @@ func (r *mqlNpmPackages) gatherPackagesFromSystemDefaults(conn shared.Connection
 	return directPackageList, transitivePackageList, evidenceFiles, nil
 }
 
-func (r *mqlNpmPackages) gatherPackagesFromLocation(conn shared.Connection, path string) (*npm.Package, []*npm.Package, []*npm.Package, []string, error) {
+func (r *mqlNpmPackages) gatherPackagesFromLocation(conn shared.Connection, path string) (*sbom.Package, []*sbom.Package, []*sbom.Package, []string, error) {
 	evidenceFiles := []string{}
 
 	// specific path was provided
@@ -223,7 +226,7 @@ func (r *mqlNpmPackages) gatherPackagesFromLocation(conn shared.Connection, path
 	}
 
 	// parse npm files
-	var info npm.NpmPackageInfo
+	var info languages.Bom
 	if loadPackageLock {
 		// if there is a package-lock.json file, we use it
 		f, err := getFileContent(r.MqlRuntime, packageLockPath)
@@ -235,7 +238,7 @@ func (r *mqlNpmPackages) gatherPackagesFromLocation(conn shared.Connection, path
 			return nil, nil, nil, nil, content.Error
 		}
 
-		p := &npm.PackageLockParser{}
+		p := &packagelockjson.Extractor{}
 		info, err = p.Parse(strings.NewReader(content.Data), packageLockPath)
 		if err != nil {
 			return nil, nil, nil, nil, err
@@ -251,7 +254,7 @@ func (r *mqlNpmPackages) gatherPackagesFromLocation(conn shared.Connection, path
 			return nil, nil, nil, nil, content.Error
 		}
 
-		p := &npm.PackageJsonParser{}
+		p := &packagejson.Extractor{}
 		info, err = p.Parse(strings.NewReader(content.Data), packageJsonPath)
 		if err != nil {
 			return nil, nil, nil, nil, err
@@ -281,9 +284,9 @@ func (r *mqlNpmPackages) gatherData() error {
 	// if it is a directory, we check if there is a package-lock.json or package.json file
 	conn := r.MqlRuntime.Connection.(shared.Connection)
 
-	var root *npm.Package
-	var directDependencies []*npm.Package
-	var transitiveDependencies []*npm.Package
+	var root *sbom.Package
+	var directDependencies []*sbom.Package
+	var transitiveDependencies []*sbom.Package
 	var filePaths []string
 	var err error
 	if path == "" {
@@ -301,7 +304,7 @@ func (r *mqlNpmPackages) gatherData() error {
 	}
 
 	// sort packages by name
-	sortFn := func(a, b *npm.Package) int {
+	sortFn := func(a, b *sbom.Package) int {
 		if n := cmp.Compare(a.Name, b.Name); n != 0 {
 			return n
 		}
@@ -359,7 +362,7 @@ func (r *mqlNpmPackages) gatherData() error {
 	return nil
 }
 
-func newNpmPackages(runtime *plugin.Runtime, pkg *npm.Package) (*mqlNpmPackage, error) {
+func newNpmPackages(runtime *plugin.Runtime, pkg *sbom.Package) (*mqlNpmPackage, error) {
 	cpes := []interface{}{}
 	for i := range pkg.Cpes {
 		cpe, err := runtime.CreateSharedResource("cpe", map[string]*llx.RawData{
@@ -373,10 +376,10 @@ func newNpmPackages(runtime *plugin.Runtime, pkg *npm.Package) (*mqlNpmPackage, 
 
 	// create files for each path
 	mqlFiles := []interface{}{}
-	for i := range pkg.EvidenceLocations {
-		path := pkg.EvidenceLocations[i]
+	for i := range pkg.EvidenceList {
+		evidence := pkg.EvidenceList[i]
 		lf, err := CreateResource(runtime, "pkgFileInfo", map[string]*llx.RawData{
-			"path": llx.StringData(path),
+			"path": llx.StringData(evidence.Value),
 		})
 		if err != nil {
 			return nil, err
