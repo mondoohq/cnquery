@@ -112,8 +112,6 @@ func (r *mqlPython) toplevel() ([]interface{}, error) {
 }
 
 func (r *mqlPython) getAllPackages() ([]python.PackageDetails, error) {
-	allResults := []python.PackageDetails{}
-
 	conn, ok := r.MqlRuntime.Connection.(shared.Connection)
 	if !ok {
 		return nil, fmt.Errorf("provider is not an operating system provider")
@@ -125,7 +123,10 @@ func (r *mqlPython) getAllPackages() ([]python.PackageDetails, error) {
 	pyPath := r.Path.Data
 	if pyPath != "" {
 		// only search the specific path provided (if it was provided)
-		allResults = collectPythonPackages(r.MqlRuntime, fs, pyPath)
+		allResults, err := collectPythonPackages(r.MqlRuntime, fs, pyPath)
+		if err != nil {
+			return nil, err
+		}
 		return allResults, nil
 	} else {
 		return collectPythonPackagesInPaths(r.MqlRuntime, fs, defaultPythonPaths)
@@ -180,27 +181,6 @@ func pythonPackageDetailsWithDependenciesToResource(
 	return r, nil
 }
 
-func parseRequiresTxtDependencies(afs *afero.Afero, requiresTxtPath string) ([]string, error) {
-	f, err := afs.Open(requiresTxtPath)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	return requirements.ParseRequiresTxtDependencies(f)
-}
-
-func parseMIME(afs *afero.Afero, pythonMIMEFilepath string) (*python.PackageDetails, error) {
-	f, err := afs.Open(pythonMIMEFilepath)
-	if err != nil {
-		log.Warn().Err(err).Msg("error opening python metadata file")
-		return nil, err
-	}
-	defer f.Close()
-
-	return wheelegg.ParseMIME(f, pythonMIMEFilepath)
-}
-
 func collectPythonPackagesInPaths(runtime *plugin.Runtime, fs afero.Fs, paths []string) ([]python.PackageDetails, error) {
 	allResults := []python.PackageDetails{}
 
@@ -209,7 +189,9 @@ func collectPythonPackagesInPaths(runtime *plugin.Runtime, fs afero.Fs, paths []
 		packageDirs := []string{"site-packages", "dist-packages"}
 		for _, packageDir := range packageDirs {
 			pythonPackageDir := filepath.Join(walkPath, packageDir)
-			allResults = append(allResults, collectPythonPackages(runtime, fs, pythonPackageDir)...)
+			results, _ := collectPythonPackages(runtime, fs, pythonPackageDir)
+			// TODO: handle error
+			allResults = append(allResults, results...)
 		}
 		return nil
 	})
@@ -219,8 +201,8 @@ func collectPythonPackagesInPaths(runtime *plugin.Runtime, fs afero.Fs, paths []
 	return allResults, nil
 }
 
-func collectPythonPackages(runtime *plugin.Runtime, fs afero.Fs, path string) (allResults []python.PackageDetails) {
-	// specific path was provided
+func collectPythonPackages(runtime *plugin.Runtime, fs afero.Fs, path string) ([]python.PackageDetails, error) {
+	allResults := []python.PackageDetails{}
 	afs := &afero.Afero{Fs: fs}
 
 	fileList, err := afs.ReadDir(path)
@@ -228,7 +210,7 @@ func collectPythonPackages(runtime *plugin.Runtime, fs afero.Fs, path string) (a
 		if !os.IsNotExist(err) {
 			log.Warn().Err(err).Str("dir", path).Msg("unable to open directory")
 		}
-		return
+		return nil, err
 	}
 	for _, dEntry := range fileList {
 		// only process files/directories that might actually contain
@@ -256,7 +238,7 @@ func collectPythonPackages(runtime *plugin.Runtime, fs afero.Fs, path string) (a
 			packageDirFiles, err := afs.ReadDir(pythonPackageDir)
 			if err != nil {
 				log.Warn().Err(err).Str("dir", pythonPackageDir).Msg("error while walking through files in directory")
-				return
+				return nil, err
 			}
 
 			foundMeta := false
@@ -278,11 +260,23 @@ func collectPythonPackages(runtime *plugin.Runtime, fs afero.Fs, path string) (a
 				// containing the actual python source files)
 				continue
 			}
-
 		}
 
 		pythonPackageFilepath := filepath.Join(path, packagePayload)
-		ppd, err := parseMIME(afs, pythonPackageFilepath)
+		exists, _ := afs.Exists(pythonPackageFilepath)
+		if !exists {
+			continue
+		}
+
+		f, err := newFile(runtime, pythonPackageFilepath)
+		if err != nil {
+			return nil, err
+		}
+		content := f.GetContent()
+		if content.Error != nil {
+			return nil, content.Error
+		}
+		ppd, err := wheelegg.ParseMIME(strings.NewReader(content.Data), pythonPackageFilepath)
 		if err != nil {
 			continue
 		}
@@ -291,9 +285,19 @@ func collectPythonPackages(runtime *plugin.Runtime, fs afero.Fs, path string) (a
 		// if the MIME data didn't include dependency information, but there was a requires.txt file available,
 		// then use that for dependency info (as pip appears to do)
 		if len(ppd.Dependencies) == 0 && requiresTxtPath != "" {
-			requiresTxtDeps, err := parseRequiresTxtDependencies(afs, filepath.Join(path, requiresTxtPath))
+			requirementsPath := filepath.Join(path, requiresTxtPath)
+			f, err := newFile(runtime, requirementsPath)
+			if err != nil {
+				return nil, err
+			}
+			content := f.GetContent()
+			if content.Error != nil {
+				return nil, content.Error
+			}
+			requiresTxtDeps, err := requirements.ParseRequiresTxtDependencies(strings.NewReader(content.Data))
 			if err != nil {
 				log.Warn().Err(err).Str("dir", pythonPackageFilepath).Msg("failed to parse requires.txt")
+				return nil, err
 			} else {
 				ppd.Dependencies = requiresTxtDeps
 			}
@@ -302,7 +306,7 @@ func collectPythonPackages(runtime *plugin.Runtime, fs afero.Fs, path string) (a
 		allResults = append(allResults, *ppd)
 	}
 
-	return
+	return allResults, nil
 }
 
 func newMqlPythonPackage(runtime *plugin.Runtime, ppd python.PackageDetails, dependencies []interface{}) (plugin.Resource, error) {
