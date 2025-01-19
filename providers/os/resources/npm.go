@@ -199,7 +199,6 @@ func (r *mqlNpmPackages) gatherData() error {
 	var filePaths []string
 	var err error
 
-	var bom languages.Bom
 	if path == "" {
 		// no specific path was provided, we search through default locations
 		// here we are not going to have a root package, only direct and transitive dependencies
@@ -210,7 +209,7 @@ func (r *mqlNpmPackages) gatherData() error {
 	} else {
 		// specific path was provided and most likely it is a package-lock.json or package.json file or a directory
 		// that contains one of those files. We will have a root package direct and transitive dependencies
-		bom, err = collectNpmPackages(r.MqlRuntime, conn.FileSystem(), path)
+		bom, err := collectNpmPackages(r.MqlRuntime, conn.FileSystem(), path)
 		if err != nil {
 			return err
 		}
