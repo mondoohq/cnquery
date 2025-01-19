@@ -16,6 +16,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v11/providers/os/fsutil"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/languages/python"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/languages/python/requirements"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/languages/python/wheelegg"
@@ -184,13 +185,15 @@ func pythonPackageDetailsWithDependenciesToResource(
 func collectPythonPackagesInPaths(runtime *plugin.Runtime, fs afero.Fs, paths []string) ([]python.PackageDetails, error) {
 	allResults := []python.PackageDetails{}
 
-	err := WalkGlob(fs, paths, func(fs afero.Fs, walkPath string) error {
+	err := fsutil.WalkGlob(fs, paths, func(fs afero.Fs, walkPath string) error {
 		log.Debug().Str("filepath", walkPath).Msg("found matching python path")
 		packageDirs := []string{"site-packages", "dist-packages"}
 		for _, packageDir := range packageDirs {
 			pythonPackageDir := filepath.Join(walkPath, packageDir)
-			results, _ := collectPythonPackages(runtime, fs, pythonPackageDir)
-			// TODO: handle error
+			results, err := collectPythonPackages(runtime, fs, pythonPackageDir)
+			if err != nil {
+				return err
+			}
 			allResults = append(allResults, results...)
 		}
 		return nil

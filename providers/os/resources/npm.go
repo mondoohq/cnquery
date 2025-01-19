@@ -17,6 +17,7 @@ import (
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v11/providers/os/fsutil"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/languages"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/languages/javascript/packagejson"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/languages/javascript/packagelockjson"
@@ -61,27 +62,6 @@ func (r *mqlNpmPackages) id() (string, error) {
 	return "npm.packages/" + path, nil
 }
 
-type WalkDirFunc func(fs afero.Fs, path string) error
-
-func WalkGlob(fs afero.Fs, paths []string, fn WalkDirFunc) error {
-	// we search through default system locations
-	for _, pattern := range paths {
-		log.Debug().Str("path", pattern).Msg("searching for files")
-		m, err := afero.Glob(fs, pattern)
-		if err != nil {
-			log.Debug().Err(err).Str("path", pattern).Msg("could not search for files")
-			return err
-		}
-		for _, walkPath := range m {
-			err = fn(fs, walkPath)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
 // gatherPackagesFromSystemDefaults returns
 // - direct packages
 // - transitive packages
@@ -92,7 +72,7 @@ func collectNpmPackagesInPaths(runtime *plugin.Runtime, fs afero.Fs, paths []str
 	evidenceFiles := []string{}
 
 	log.Debug().Msg("searching for npm packages in default locations")
-	err := WalkGlob(fs, paths, func(fs afero.Fs, walkPath string) error {
+	err := fsutil.WalkGlob(fs, paths, func(fs afero.Fs, walkPath string) error {
 		afs := &afero.Afero{Fs: fs}
 
 		// we walk through the directories and check if there is a node_modules directory
