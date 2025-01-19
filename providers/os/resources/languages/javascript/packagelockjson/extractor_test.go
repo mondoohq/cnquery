@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v11/providers/os/resources/languages"
 	"go.mondoo.com/cnquery/v11/sbom"
 )
 
@@ -21,7 +22,7 @@ func TestPackageJsonLockExtractorWithPackages(t *testing.T) {
 	assert.Nil(t, err)
 
 	root := info.Root()
-	assert.Equal(t, &sbom.Package{
+	assert.Equal(t, &languages.Package{
 		Name:         "npm",
 		Version:      "7.0.0",
 		Purl:         "pkg:npm/npm@7.0.0",
@@ -33,7 +34,7 @@ func TestPackageJsonLockExtractorWithPackages(t *testing.T) {
 	assert.Equal(t, 2, len(list))
 
 	p := list.Find("@babel/code-frame")
-	assert.Equal(t, &sbom.Package{
+	assert.Equal(t, &languages.Package{
 		Name:         "@babel/code-frame",
 		Version:      "7.10.4",
 		Purl:         "pkg:npm/node-modules/%40babel@7.10.4",
@@ -52,7 +53,7 @@ func TestPackageJsonLockExtractorWithDependencies(t *testing.T) {
 	assert.Nil(t, err)
 
 	root := info.Root()
-	assert.Equal(t, &sbom.Package{
+	assert.Equal(t, &languages.Package{
 		Name:         "workbox",
 		Version:      "0.0.0",
 		Purl:         "pkg:npm/workbox@0.0.0",
@@ -64,7 +65,7 @@ func TestPackageJsonLockExtractorWithDependencies(t *testing.T) {
 	assert.Equal(t, 1299, len(list))
 
 	p := list.Find("@babel/generator")
-	assert.Equal(t, &sbom.Package{
+	assert.Equal(t, &languages.Package{
 		Name:         "@babel/generator",
 		Version:      "7.0.0",
 		Purl:         "pkg:npm/%40babel/generator@7.0.0",
@@ -73,7 +74,7 @@ func TestPackageJsonLockExtractorWithDependencies(t *testing.T) {
 	}, p)
 
 	p = list.Find("@lerna/changed")
-	assert.Equal(t, &sbom.Package{
+	assert.Equal(t, &languages.Package{
 		Name:         "@lerna/changed",
 		Version:      "3.3.2",
 		Purl:         "pkg:npm/%40lerna/changed@3.3.2",

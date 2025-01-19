@@ -20,7 +20,6 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/resources/languages"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/languages/javascript/packagejson"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/languages/javascript/packagelockjson"
-	"go.mondoo.com/cnquery/v11/sbom"
 	"go.mondoo.com/cnquery/v11/types"
 )
 
@@ -65,9 +64,9 @@ func (r *mqlNpmPackages) id() (string, error) {
 // - direct packages
 // - transitive packages
 // - evidence files
-func collectNpmPackagesInPaths(runtime *plugin.Runtime, fs afero.Fs, paths []string) ([]*sbom.Package, []*sbom.Package, []string, error) {
-	var directPackageList []*sbom.Package
-	var transitivePackageList []*sbom.Package
+func collectNpmPackagesInPaths(runtime *plugin.Runtime, fs afero.Fs, paths []string) ([]*languages.Package, []*languages.Package, []string, error) {
+	var directPackageList []*languages.Package
+	var transitivePackageList []*languages.Package
 	evidenceFiles := []string{}
 
 	log.Debug().Msg("searching for npm packages in default locations")
@@ -192,9 +191,9 @@ func (r *mqlNpmPackages) gatherData() error {
 	// if it is a directory, we check if there is a package-lock.json or package.json file
 	conn := r.MqlRuntime.Connection.(shared.Connection)
 
-	var root *sbom.Package
-	var directDependencies []*sbom.Package
-	var transitiveDependencies []*sbom.Package
+	var root *languages.Package
+	var directDependencies []*languages.Package
+	var transitiveDependencies []*languages.Package
 	var filePaths []string
 	var err error
 
@@ -218,8 +217,8 @@ func (r *mqlNpmPackages) gatherData() error {
 	}
 
 	// sort packages by name
-	slices.SortFunc(directDependencies, sbom.SortFn)
-	slices.SortFunc(transitiveDependencies, sbom.SortFn)
+	slices.SortFunc(directDependencies, languages.SortFn)
+	slices.SortFunc(transitiveDependencies, languages.SortFn)
 
 	if root != nil {
 		mqlPkg, err := newNpmPackage(r.MqlRuntime, root)
@@ -278,7 +277,7 @@ func (r *mqlNpmPackages) files() ([]interface{}, error) {
 }
 
 // newNpmPackageList creates a list of npm package resources
-func newNpmPackageList(runtime *plugin.Runtime, packages []*sbom.Package) ([]interface{}, error) {
+func newNpmPackageList(runtime *plugin.Runtime, packages []*languages.Package) ([]interface{}, error) {
 	resources := []interface{}{}
 	for i := range packages {
 		pkg, err := newNpmPackage(runtime, packages[i])
@@ -291,7 +290,7 @@ func newNpmPackageList(runtime *plugin.Runtime, packages []*sbom.Package) ([]int
 }
 
 // newNpmPackage creates a new npm package resource
-func newNpmPackage(runtime *plugin.Runtime, pkg *sbom.Package) (*mqlNpmPackage, error) {
+func newNpmPackage(runtime *plugin.Runtime, pkg *languages.Package) (*mqlNpmPackage, error) {
 	// handle cpes
 	cpes := []interface{}{}
 	for i := range pkg.Cpes {

@@ -9,7 +9,6 @@ import (
 
 	"go.mondoo.com/cnquery/v11/providers/os/resources/languages"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/languages/javascript"
-	"go.mondoo.com/cnquery/v11/sbom"
 )
 
 var (
@@ -40,8 +39,8 @@ func (p *Extractor) Parse(r io.Reader, filename string) (languages.Bom, error) {
 	return &packageJsonLock, nil
 }
 
-func (p *packageLock) Root() *sbom.Package {
-	root := &sbom.Package{
+func (p *packageLock) Root() *languages.Package {
+	root := &languages.Package{
 		Name:         p.Name,
 		Version:      p.Version,
 		Purl:         javascript.NewPackageUrl(p.Name, p.Version),
@@ -64,14 +63,14 @@ func (p *packageLock) Direct() languages.Packages {
 		return nil
 	}
 
-	filteredList := []*sbom.Package{}
+	filteredList := []*languages.Package{}
 	for k := range rootPkg.Dependencies {
 		pkg, ok := p.Packages[k]
 		if !ok {
 			continue
 		}
 
-		filteredList = append(filteredList, &sbom.Package{
+		filteredList = append(filteredList, &languages.Package{
 			Name:         packageLockPackageName(k),
 			Version:      pkg.Version,
 			Purl:         javascript.NewPackageUrl(k, pkg.Version),
@@ -93,7 +92,7 @@ func (p *packageLock) Transitive() languages.Packages {
 				name = v.Name
 			}
 
-			transitive = append(transitive, &sbom.Package{
+			transitive = append(transitive, &languages.Package{
 				Name:         packageLockPackageName(name),
 				Version:      v.Version,
 				Purl:         javascript.NewPackageUrl(k, v.Version),
@@ -103,7 +102,7 @@ func (p *packageLock) Transitive() languages.Packages {
 		}
 	} else if p.Dependencies != nil {
 		for k, v := range p.Dependencies {
-			transitive = append(transitive, &sbom.Package{
+			transitive = append(transitive, &languages.Package{
 				Name:         k,
 				Version:      v.Version,
 				Purl:         javascript.NewPackageUrl(k, v.Version),

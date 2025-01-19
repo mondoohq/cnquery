@@ -9,7 +9,6 @@ import (
 
 	"go.mondoo.com/cnquery/v11/providers/os/resources/languages"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/languages/javascript"
-	"go.mondoo.com/cnquery/v11/sbom"
 )
 
 var (
@@ -42,9 +41,9 @@ func (p *Extractor) Parse(r io.Reader, filename string) (languages.Bom, error) {
 	return &packageJson, nil
 }
 
-func (p *packageJson) Root() *sbom.Package {
+func (p *packageJson) Root() *languages.Package {
 	// root package
-	root := &sbom.Package{
+	root := &languages.Package{
 		Name:         p.Name,
 		Version:      p.Version,
 		Purl:         javascript.NewPackageUrl(p.Name, p.Version),
@@ -69,7 +68,7 @@ func (p *packageJson) Transitive() languages.Packages {
 	}
 
 	for k, v := range p.Dependencies {
-		transitive = append(transitive, &sbom.Package{
+		transitive = append(transitive, &languages.Package{
 			Name:         k,
 			Version:      v,
 			Purl:         javascript.NewPackageUrl(k, v),

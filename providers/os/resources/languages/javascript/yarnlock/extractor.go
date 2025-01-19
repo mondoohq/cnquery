@@ -12,7 +12,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/languages"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/languages/javascript"
-	"go.mondoo.com/cnquery/v11/sbom"
 	"sigs.k8s.io/yaml"
 )
 
@@ -56,7 +55,7 @@ func (p *Extractor) Parse(r io.Reader, filename string) (languages.Bom, error) {
 	return &yarnLock, nil
 }
 
-func (p *yarnLock) Root() *sbom.Package {
+func (p *yarnLock) Root() *languages.Package {
 	// we don't have a root package in yarn.lock
 	return nil
 }
@@ -75,7 +74,7 @@ func (p *yarnLock) Transitive() languages.Packages {
 			log.Error().Str("name", name).Msg("cannot parse yarn package name")
 			continue
 		}
-		transitive = append(transitive, &sbom.Package{
+		transitive = append(transitive, &languages.Package{
 			Name:    name,
 			Version: v.Version,
 			Purl:    javascript.NewPackageUrl(name, v.Version),

@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v11/sbom"
+	"go.mondoo.com/cnquery/v11/providers/os/resources/languages"
 )
 
 func TestYarnLockExtractor(t *testing.T) {
@@ -24,7 +24,7 @@ func TestYarnLockExtractor(t *testing.T) {
 	assert.Equal(t, 99, len(list))
 
 	p := list.Find("has")
-	assert.Equal(t, &sbom.Package{
+	assert.Equal(t, &languages.Package{
 		Name:    "has",
 		Version: "1.0.3",
 		Purl:    "pkg:npm/has@1.0.3",
@@ -32,7 +32,7 @@ func TestYarnLockExtractor(t *testing.T) {
 	}, p)
 
 	p = list.Find("iconv-lite")
-	assert.Equal(t, &sbom.Package{
+	assert.Equal(t, &languages.Package{
 		Name:    "iconv-lite",
 		Version: "0.4.24",
 		Purl:    "pkg:npm/iconv-lite@0.4.24",

@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v11/providers/os/resources/languages"
 	"go.mondoo.com/cnquery/v11/sbom"
 )
 
@@ -22,7 +23,7 @@ func TestPackageJsonExtractor(t *testing.T) {
 
 	root := info.Root()
 
-	assert.Equal(t, &sbom.Package{
+	assert.Equal(t, &languages.Package{
 		Name:         "express",
 		Version:      "4.16.4",
 		Purl:         "pkg:npm/express@4.16.4",
@@ -35,7 +36,7 @@ func TestPackageJsonExtractor(t *testing.T) {
 
 	// ensure the package is in the list
 	p := list.Find("express")
-	assert.Equal(t, &sbom.Package{
+	assert.Equal(t, &languages.Package{
 		Name:         "express",
 		Version:      "4.16.4",
 		Purl:         "pkg:npm/express@4.16.4",
@@ -44,7 +45,7 @@ func TestPackageJsonExtractor(t *testing.T) {
 	}, p, "express package is not as expected")
 
 	p = list.Find("path-to-regexp")
-	assert.Equal(t, &sbom.Package{
+	assert.Equal(t, &languages.Package{
 		Name:         "path-to-regexp",
 		Version:      "0.1.7",
 		Purl:         "pkg:npm/path-to-regexp@0.1.7",
@@ -53,7 +54,7 @@ func TestPackageJsonExtractor(t *testing.T) {
 	}, p, "path-to-regexp package is not as expected")
 
 	p = list.Find("range-parser")
-	assert.Equal(t, &sbom.Package{
+	assert.Equal(t, &languages.Package{
 		Name:         "range-parser",
 		Version:      "~1.2.0",
 		Purl:         "pkg:npm/range-parser@1.2.0",
