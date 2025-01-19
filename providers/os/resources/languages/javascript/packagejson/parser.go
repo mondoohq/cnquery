@@ -1,19 +1,14 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package npm
+package packagejson
 
 import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"regexp"
 	"strings"
-)
-
-var (
-	_ Parser = (*PackageJsonParser)(nil)
 )
 
 // packageJson allows parsing the package json file
@@ -159,65 +154,4 @@ func (a *packageJsonLicense) UnmarshalJSON(b []byte) error {
 
 	// we intentionally ignore the structured object
 	return nil
-}
-
-type PackageJsonParser struct{}
-
-func (p *PackageJsonParser) Parse(r io.Reader, filename string) (NpmPackageInfo, error) {
-	data, err := io.ReadAll(r)
-	if err != nil {
-		return nil, err
-	}
-
-	var packageJson packageJson
-	err = json.Unmarshal(data, &packageJson)
-	if err != nil {
-		return nil, err
-	}
-
-	if filename != "" {
-		packageJson.evidence = append(packageJson.evidence, filename)
-	}
-
-	return &packageJson, nil
-}
-
-func (p *packageJson) Root() *Package {
-
-	// root package
-	root := &Package{
-		Name:              p.Name,
-		Version:           p.Version,
-		Purl:              NewPackageUrl(p.Name, p.Version),
-		Cpes:              NewCpes(p.Name, p.Version),
-		EvidenceLocations: p.evidence,
-	}
-
-	return root
-}
-
-func (p *packageJson) Direct() []*Package {
-	return nil
-}
-
-func (p *packageJson) Transitive() []*Package {
-	// transitive dependencies, includes the root package
-	transitive := []*Package{}
-
-	r := p.Root()
-	if r != nil {
-		transitive = append(transitive, r)
-	}
-
-	for k, v := range p.Dependencies {
-		transitive = append(transitive, &Package{
-			Name:              k,
-			Version:           v,
-			Purl:              NewPackageUrl(k, v),
-			Cpes:              NewCpes(k, v),
-			EvidenceLocations: p.evidence,
-		})
-	}
-
-	return transitive
 }

@@ -1,35 +1,33 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package npm
+package yarnlock
 
 import (
 	"bufio"
 	"bytes"
-	"errors"
 	"io"
 	"regexp"
-	"strings"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/v11/providers/os/resources/languages"
+	"go.mondoo.com/cnquery/v11/providers/os/resources/languages/javascript"
+	"go.mondoo.com/cnquery/v11/sbom"
 	"sigs.k8s.io/yaml"
 )
 
 var (
-	_ Parser = (*YarnLockParser)(nil)
+	_ languages.Extractor = (*Extractor)(nil)
+	_ languages.Bom       = (*yarnLock)(nil)
 )
 
-type yarnLock map[string]yarnLockEntry
+type Extractor struct{}
 
-type yarnLockEntry struct {
-	Version      string
-	Resolved     string
-	Dependencies map[string]string
+func (p *Extractor) Name() string {
+	return "yarnlock"
 }
 
-type YarnLockParser struct{}
-
-func (p *YarnLockParser) Parse(r io.Reader, filename string) (NpmPackageInfo, error) {
+func (p *Extractor) Parse(r io.Reader, filename string) (languages.Bom, error) {
 	var b bytes.Buffer
 
 	// iterate and convert the format to yaml on the fly
@@ -58,17 +56,17 @@ func (p *YarnLockParser) Parse(r io.Reader, filename string) (NpmPackageInfo, er
 	return &yarnLock, nil
 }
 
-func (p *yarnLock) Root() *Package {
+func (p *yarnLock) Root() *sbom.Package {
 	// we don't have a root package in yarn.lock
 	return nil
 }
 
-func (p *yarnLock) Direct() []*Package {
+func (p *yarnLock) Direct() languages.Packages {
 	return nil
 }
 
-func (p *yarnLock) Transitive() []*Package {
-	transitive := []*Package{}
+func (p *yarnLock) Transitive() languages.Packages {
+	var transitive languages.Packages
 
 	// add all dependencies
 	for k, v := range *p {
@@ -77,27 +75,13 @@ func (p *yarnLock) Transitive() []*Package {
 			log.Error().Str("name", name).Msg("cannot parse yarn package name")
 			continue
 		}
-		transitive = append(transitive, &Package{
+		transitive = append(transitive, &sbom.Package{
 			Name:    name,
 			Version: v.Version,
-			Purl:    NewPackageUrl(name, v.Version),
-			Cpes:    NewCpes(name, v.Version),
+			Purl:    javascript.NewPackageUrl(name, v.Version),
+			Cpes:    javascript.NewCpes(name, v.Version),
 		})
 	}
 
 	return transitive
-}
-
-func parseYarnPackageName(name string) (string, string, error) {
-	// a yarn package line may include may items
-	pkgNames := strings.Split(name, ",")
-
-	if len(pkgNames) == 0 {
-		// something wrong
-		return "", "", errors.New("cannot parse yarn package name")
-	}
-
-	parse := regexp.MustCompile(`^(.*)@(.*)$`)
-	m := parse.FindStringSubmatch(strings.TrimSpace(pkgNames[0]))
-	return m[1], m[2], nil
 }

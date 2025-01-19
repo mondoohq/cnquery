@@ -1,43 +1,13 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package npm
+package yarnlock
 
 import (
-	"github.com/stretchr/testify/require"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
-
-func TestYarnParser(t *testing.T) {
-	f, err := os.Open("./testdata/yarn-lock/d3-yarn.lock")
-	require.NoError(t, err)
-	defer f.Close()
-
-	info, err := (&YarnLockParser{}).Parse(f, "/path/to/yarn.lock")
-	assert.Nil(t, err)
-
-	transitive := info.Transitive()
-	assert.Equal(t, 99, len(transitive))
-
-	p := findPkg(transitive, "has")
-	assert.Equal(t, &Package{
-		Name:    "has",
-		Version: "1.0.3",
-		Purl:    "pkg:npm/has@1.0.3",
-		Cpes:    []string{"cpe:2.3:a:has:has:1.0.3:*:*:*:*:*:*:*"},
-	}, p)
-
-	p = findPkg(transitive, "iconv-lite")
-	assert.Equal(t, &Package{
-		Name:    "iconv-lite",
-		Version: "0.4.24",
-		Purl:    "pkg:npm/iconv-lite@0.4.24",
-		Cpes:    []string{"cpe:2.3:a:iconv-lite:iconv-lite:0.4.24:*:*:*:*:*:*:*"},
-	}, p)
-}
 
 func TestParsePackagename(t *testing.T) {
 	var name string

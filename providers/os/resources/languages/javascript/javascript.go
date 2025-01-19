@@ -1,37 +1,16 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package npm
+package javascript
 
 import (
-	"io"
 	"strings"
 
 	"github.com/package-url/packageurl-go"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/cpe"
+	"go.mondoo.com/cnquery/v11/sbom"
 )
-
-type Parser interface {
-	Parse(r io.Reader, filename string) (NpmPackageInfo, error)
-}
-
-type NpmPackageInfo interface {
-	Root() *Package
-	Direct() []*Package
-	Transitive() []*Package
-}
-
-type Package struct {
-	Name              string
-	File              string
-	License           string
-	Description       string
-	Version           string
-	Purl              string
-	Cpes              []string
-	EvidenceLocations []string
-}
 
 // NewPackageUrl creates a npm package url for a given package name and version
 // see https://github.com/package-url/purl-spec/blob/master/PURL-TYPES.rst#npm
@@ -76,4 +55,19 @@ func cleanVersion(version string) string {
 	v = strings.ReplaceAll(v, "=", "")
 	v = strings.ReplaceAll(v, " ", "")
 	return v
+}
+
+func NewEvidenceList(evidence []string) []*sbom.Evidence {
+	evidenceList := make([]*sbom.Evidence, len(evidence))
+	for i, e := range evidence {
+		evidenceList[i] = NewEvidence(e)
+	}
+	return evidenceList
+}
+
+func NewEvidence(filepath string) *sbom.Evidence {
+	return &sbom.Evidence{
+		Type:  sbom.EvidenceType_EVIDENCE_TYPE_FILE,
+		Value: filepath,
+	}
 }
