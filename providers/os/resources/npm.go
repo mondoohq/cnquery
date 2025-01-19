@@ -65,7 +65,7 @@ func (r *mqlNpmPackages) id() (string, error) {
 // - direct packages
 // - transitive packages
 // - evidence files
-func (r *mqlNpmPackages) collectPackagesInPaths(fs afero.Fs, paths []string) ([]*sbom.Package, []*sbom.Package, []string, error) {
+func collectPackagesInPaths(runtime *plugin.Runtime, fs afero.Fs, paths []string) ([]*sbom.Package, []*sbom.Package, []string, error) {
 	var directPackageList []*sbom.Package
 	var transitivePackageList []*sbom.Package
 	evidenceFiles := []string{}
@@ -99,7 +99,7 @@ func (r *mqlNpmPackages) collectPackagesInPaths(fs afero.Fs, paths []string) ([]
 				log.Debug().Str("path", p).Msg("checking for package-lock.json or package.json file")
 
 				// Not found is an expected error and we handle that properly
-				bom, err := r.collectPackages(fs, filepath.Join(nodeModulesPath, p))
+				bom, err := collectPackages(runtime, fs, filepath.Join(nodeModulesPath, p))
 				if err != nil {
 					continue
 				}
@@ -118,7 +118,7 @@ func (r *mqlNpmPackages) collectPackagesInPaths(fs afero.Fs, paths []string) ([]
 	return directPackageList, transitivePackageList, evidenceFiles, nil
 }
 
-func (r *mqlNpmPackages) collectPackages(fs afero.Fs, path string) (languages.Bom, error) {
+func collectPackages(runtime *plugin.Runtime, fs afero.Fs, path string) (languages.Bom, error) {
 	// specific path was provided
 	afs := &afero.Afero{Fs: fs}
 	isDir, err := afs.IsDir(path)
@@ -152,7 +152,7 @@ func (r *mqlNpmPackages) collectPackages(fs afero.Fs, path string) (languages.Bo
 	// technically we should only have one file, this logic will always pick the first one
 	for _, searchPath := range filteredSearchPath {
 		// if there is a package-lock.json file, we use it
-		f, err := newFile(r.MqlRuntime, searchPath)
+		f, err := newFile(runtime, searchPath)
 		if err != nil {
 			return nil, err
 		}
@@ -205,14 +205,14 @@ func (r *mqlNpmPackages) gatherData() error {
 	if path == "" {
 		// no specific path was provided, we search through default locations
 		// here we are not going to have a root package, only direct and transitive dependencies
-		directDependencies, transitiveDependencies, filePaths, err = r.collectPackagesInPaths(conn.FileSystem(), linuxDefaultNpmPaths)
+		directDependencies, transitiveDependencies, filePaths, err = collectPackagesInPaths(r.MqlRuntime, conn.FileSystem(), linuxDefaultNpmPaths)
 		if err != nil {
 			return err
 		}
 	} else {
 		// specific path was provided and most likely it is a package-lock.json or package.json file or a directory
 		// that contains one of those files. We will have a root package direct and transitive dependencies
-		bom, err = r.collectPackages(conn.FileSystem(), path)
+		bom, err = collectPackages(r.MqlRuntime, conn.FileSystem(), path)
 		if err != nil {
 			return err
 		}
