@@ -5,6 +5,8 @@ package resources
 
 import (
 	"context"
+	"log"
+
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 
 	"github.com/microsoftgraph/msgraph-sdk-go/rolemanagement"
@@ -116,4 +118,75 @@ func (a *mqlMicrosoftRolemanagementRoledefinition) assignments() ([]interface{},
 		res = append(res, mqlResource)
 	}
 	return res, nil
+}
+
+// Related to Delegated Admin Portal under Roles & admin in Entra ID
+func (a *mqlMicrosoftAdminPortal) delegatedAdminPartners() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+
+	partnersResp, err := graphClient.TenantRelationships().DelegatedAdminRelationships().Get(ctx, nil)
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	var partnerDetails []interface{}
+
+	for _, partner := range partnersResp.GetValue() {
+		partnerId := partner.GetId()
+		displayName := partner.GetDisplayName()
+		accessDetails := partner.GetAccessDetails()
+		status := partner.GetStatus() // Fetch the status property
+
+		if partnerId != nil && displayName != nil {
+			unifiedRoles := []interface{}{}
+			if accessDetails != nil && accessDetails.GetUnifiedRoles() != nil {
+				for _, role := range accessDetails.GetUnifiedRoles() {
+					roleDefinitionId := role.GetRoleDefinitionId()
+					if roleDefinitionId != nil {
+						unifiedRoles = append(unifiedRoles, *roleDefinitionId)
+					}
+				}
+			}
+
+			unifiedRolesData, err := convert.JsonToDictSlice(unifiedRoles)
+			if err != nil {
+				return nil, err
+			}
+
+			var statusStr *string
+			if status != nil {
+				s := status.String()
+				statusStr = &s
+			}
+
+			partnerInfo, err := CreateResource(a.MqlRuntime, "microsoft.adminPortal.delegatedAdminPartner",
+				map[string]*llx.RawData{
+					"id":           llx.StringDataPtr(partnerId),
+					"displayName":  llx.StringDataPtr(displayName),
+					"unifiedRoles": llx.ArrayData(unifiedRolesData, types.String),
+					"status":       llx.StringDataPtr(statusStr),
+				})
+			if err != nil {
+				return nil, err
+			}
+
+			partnerDetails = append(partnerDetails, partnerInfo)
+		} else {
+			log.Printf("Skipped a partner with missing ID or Display Name")
+		}
+	}
+
+	// If no partners are found
+	if len(partnerDetails) == 0 {
+		log.Println("No delegated admin partners are defined.")
+		return nil, nil
+	}
+
+	return partnerDetails, nil
 }
