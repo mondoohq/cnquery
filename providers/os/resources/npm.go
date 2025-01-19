@@ -33,8 +33,8 @@ var (
 		"/usr/local/lib",
 		"/opt/homebrew/lib",
 		"/usr/lib",
-		"/home/%/.npm-global/lib",
-		"/Users/%/.npm-global/lib",
+		"/home/*/.npm-global/lib",
+		"/Users/*/.npm-global/lib",
 	}
 )
 
@@ -65,7 +65,7 @@ func (r *mqlNpmPackages) id() (string, error) {
 // - direct packages
 // - transitive packages
 // - evidence files
-func collectPackagesInPaths(runtime *plugin.Runtime, fs afero.Fs, paths []string) ([]*sbom.Package, []*sbom.Package, []string, error) {
+func collectNpmPackagesInPaths(runtime *plugin.Runtime, fs afero.Fs, paths []string) ([]*sbom.Package, []*sbom.Package, []string, error) {
 	var directPackageList []*sbom.Package
 	var transitivePackageList []*sbom.Package
 	evidenceFiles := []string{}
@@ -99,7 +99,7 @@ func collectPackagesInPaths(runtime *plugin.Runtime, fs afero.Fs, paths []string
 				log.Debug().Str("path", p).Msg("checking for package-lock.json or package.json file")
 
 				// Not found is an expected error and we handle that properly
-				bom, err := collectPackages(runtime, fs, filepath.Join(nodeModulesPath, p))
+				bom, err := collectNpmPackages(runtime, fs, filepath.Join(nodeModulesPath, p))
 				if err != nil {
 					continue
 				}
@@ -118,7 +118,7 @@ func collectPackagesInPaths(runtime *plugin.Runtime, fs afero.Fs, paths []string
 	return directPackageList, transitivePackageList, evidenceFiles, nil
 }
 
-func collectPackages(runtime *plugin.Runtime, fs afero.Fs, path string) (languages.Bom, error) {
+func collectNpmPackages(runtime *plugin.Runtime, fs afero.Fs, path string) (languages.Bom, error) {
 	// specific path was provided
 	afs := &afero.Afero{Fs: fs}
 	isDir, err := afs.IsDir(path)
@@ -205,14 +205,14 @@ func (r *mqlNpmPackages) gatherData() error {
 	if path == "" {
 		// no specific path was provided, we search through default locations
 		// here we are not going to have a root package, only direct and transitive dependencies
-		directDependencies, transitiveDependencies, filePaths, err = collectPackagesInPaths(r.MqlRuntime, conn.FileSystem(), linuxDefaultNpmPaths)
+		directDependencies, transitiveDependencies, filePaths, err = collectNpmPackagesInPaths(r.MqlRuntime, conn.FileSystem(), linuxDefaultNpmPaths)
 		if err != nil {
 			return err
 		}
 	} else {
 		// specific path was provided and most likely it is a package-lock.json or package.json file or a directory
 		// that contains one of those files. We will have a root package direct and transitive dependencies
-		bom, err = collectPackages(r.MqlRuntime, conn.FileSystem(), path)
+		bom, err = collectNpmPackages(r.MqlRuntime, conn.FileSystem(), path)
 		if err != nil {
 			return err
 		}
