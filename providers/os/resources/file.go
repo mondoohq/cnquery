@@ -15,6 +15,18 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 )
 
+// newFile creates a new file resource
+func newFile(runtime *plugin.Runtime, path string) (*mqlFile, error) {
+	f, err := CreateResource(runtime, "file", map[string]*llx.RawData{
+		"path": llx.StringData(path),
+	})
+	if err != nil {
+		return nil, err
+	}
+	file := f.(*mqlFile)
+	return file, nil
+}
+
 func (s *mqlFile) id() (string, error) {
 	return s.Path.Data, nil
 }

@@ -24,6 +24,20 @@ import (
 	"go.mondoo.com/cnquery/v11/types"
 )
 
+var (
+	// we need to add extra testing for windows paths
+	//windowsDefaultNpmPaths = []string{
+	//	"C:\\Users\\%\\AppData\\Roaming\\npm",
+	//}
+	linuxDefaultNpmPaths = []string{
+		"/usr/local/lib",
+		"/opt/homebrew/lib",
+		"/usr/lib",
+		"/home/%/.npm-global/lib",
+		"/Users/%/.npm-global/lib",
+	}
+)
+
 func initNpmPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if x, ok := args["path"]; ok {
 		_, ok := x.Value.(string)
@@ -46,31 +60,6 @@ func (r *mqlNpmPackages) id() (string, error) {
 
 	return "npm.packages/" + path, nil
 }
-
-func getFileContent(runtime *plugin.Runtime, path string) (*mqlFile, error) {
-	f, err := CreateResource(runtime, "file", map[string]*llx.RawData{
-		"path": llx.StringData(path),
-	})
-	if err != nil {
-		return nil, err
-	}
-	file := f.(*mqlFile)
-	return file, nil
-}
-
-var (
-	// we need to add extra testing for windows paths
-	//windowsDefaultNpmPaths = []string{
-	//	"C:\\Users\\%\\AppData\\Roaming\\npm",
-	//}
-	linuxDefaultNpmPaths = []string{
-		"/usr/local/lib",
-		"/opt/homebrew/lib",
-		"/usr/lib",
-		"/home/%/.npm-global/lib",
-		"/Users/%/.npm-global/lib",
-	}
-)
 
 func (r *mqlNpmPackages) gatherPackagesFromSystemDefaults(conn shared.Connection) ([]*sbom.Package, []*sbom.Package, []string, error) {
 	var directPackageList []*sbom.Package
@@ -122,7 +111,7 @@ func (r *mqlNpmPackages) gatherPackagesFromSystemDefaults(conn shared.Connection
 				// parse npm files
 				if packageLockExists {
 					log.Debug().Str("path", packageLockPath).Msg("found package-lock.json file")
-					f, err := getFileContent(r.MqlRuntime, packageLockPath)
+					f, err := newFile(r.MqlRuntime, packageLockPath)
 					if err != nil {
 						continue
 					}
@@ -147,7 +136,7 @@ func (r *mqlNpmPackages) gatherPackagesFromSystemDefaults(conn shared.Connection
 
 				} else if packageJsonExists {
 					log.Debug().Str("path", packageJsonPath).Msg("found package.json file")
-					f, err := getFileContent(r.MqlRuntime, packageJsonPath)
+					f, err := newFile(r.MqlRuntime, packageJsonPath)
 					if err != nil {
 						continue
 					}
@@ -229,7 +218,7 @@ func (r *mqlNpmPackages) gatherPackagesFromLocation(conn shared.Connection, path
 	var info languages.Bom
 	if loadPackageLock {
 		// if there is a package-lock.json file, we use it
-		f, err := getFileContent(r.MqlRuntime, packageLockPath)
+		f, err := newFile(r.MqlRuntime, packageLockPath)
 		if err != nil {
 			return nil, nil, nil, nil, err
 		}
@@ -245,7 +234,7 @@ func (r *mqlNpmPackages) gatherPackagesFromLocation(conn shared.Connection, path
 		}
 	} else if loadPackageJson {
 		// if there is a package.json file, we use it
-		f, err := getFileContent(r.MqlRuntime, packageJsonPath)
+		f, err := newFile(r.MqlRuntime, packageJsonPath)
 		if err != nil {
 			return nil, nil, nil, nil, err
 		}
