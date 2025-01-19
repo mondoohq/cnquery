@@ -23,18 +23,18 @@ import (
 )
 
 var (
-	pythonDirectories = []string{
+	defaultPythonPaths = []string{
 		// Linux
 		"/usr/local/lib/python*",
 		"/usr/local/lib64/python*",
 		"/usr/lib/python*",
 		"/usr/lib64/python*",
-		// Windows: surprisingly, this is handled in a case-sensitive way in go (the filepath.Match() glob/pattern matching)
+		// Windows
 		"C:\\Python*\\Lib",
 		// macOS
 		"/opt/homebrew/lib/python*",
 		"/System/Library/Frameworks/Python.framework/Versions/*/lib/python*",
-		// we use 3.x to exclude the macOS Current symlink
+		// we use 3.x to exclude the macOS 'Current' symlink
 		"/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.*/lib/python*",
 	}
 )
@@ -119,18 +119,16 @@ func (r *mqlPython) getAllPackages() ([]python.PackageDetails, error) {
 		return nil, fmt.Errorf("provider is not an operating system provider")
 	}
 	fs := conn.FileSystem()
-	afs := &afero.Afero{Fs: conn.FileSystem()}
-
 	if r.Path.Error != nil {
 		return nil, r.Path.Error
 	}
 	pyPath := r.Path.Data
 	if pyPath != "" {
 		// only search the specific path provided (if it was provided)
-		allResults = gatherPackages(afs, pyPath)
+		allResults = collectPythonPackages(r.MqlRuntime, fs, pyPath)
 		return allResults, nil
 	} else {
-		return collectPythonPackagesInPaths(r.MqlRuntime, fs, pythonDirectories)
+		return collectPythonPackagesInPaths(r.MqlRuntime, fs, defaultPythonPaths)
 	}
 }
 
@@ -182,11 +180,53 @@ func pythonPackageDetailsWithDependenciesToResource(
 	return r, nil
 }
 
-func gatherPackages(afs *afero.Afero, pythonPackagePath string) (allResults []python.PackageDetails) {
-	fileList, err := afs.ReadDir(pythonPackagePath)
+func parseRequiresTxtDependencies(afs *afero.Afero, requiresTxtPath string) ([]string, error) {
+	f, err := afs.Open(requiresTxtPath)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	return requirements.ParseRequiresTxtDependencies(f)
+}
+
+func parseMIME(afs *afero.Afero, pythonMIMEFilepath string) (*python.PackageDetails, error) {
+	f, err := afs.Open(pythonMIMEFilepath)
+	if err != nil {
+		log.Warn().Err(err).Msg("error opening python metadata file")
+		return nil, err
+	}
+	defer f.Close()
+
+	return wheelegg.ParseMIME(f, pythonMIMEFilepath)
+}
+
+func collectPythonPackagesInPaths(runtime *plugin.Runtime, fs afero.Fs, paths []string) ([]python.PackageDetails, error) {
+	allResults := []python.PackageDetails{}
+
+	err := WalkGlob(fs, paths, func(fs afero.Fs, walkPath string) error {
+		log.Debug().Str("filepath", walkPath).Msg("found matching python path")
+		packageDirs := []string{"site-packages", "dist-packages"}
+		for _, packageDir := range packageDirs {
+			pythonPackageDir := filepath.Join(walkPath, packageDir)
+			allResults = append(allResults, collectPythonPackages(runtime, fs, pythonPackageDir)...)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return allResults, nil
+}
+
+func collectPythonPackages(runtime *plugin.Runtime, fs afero.Fs, path string) (allResults []python.PackageDetails) {
+	// specific path was provided
+	afs := &afero.Afero{Fs: fs}
+
+	fileList, err := afs.ReadDir(path)
 	if err != nil {
 		if !os.IsNotExist(err) {
-			log.Warn().Err(err).Str("dir", pythonPackagePath).Msg("unable to open directory")
+			log.Warn().Err(err).Str("dir", path).Msg("unable to open directory")
 		}
 		return
 	}
@@ -212,7 +252,7 @@ func gatherPackages(afs *afero.Afero, pythonPackagePath string) (allResults []py
 		// go into each directory looking for our parsable payload
 		// (ie. METADATA and PKG-INFO files)
 		if dEntry.IsDir() {
-			pythonPackageDir := filepath.Join(pythonPackagePath, packagePayload)
+			pythonPackageDir := filepath.Join(path, packagePayload)
 			packageDirFiles, err := afs.ReadDir(pythonPackageDir)
 			if err != nil {
 				log.Warn().Err(err).Str("dir", pythonPackageDir).Msg("error while walking through files in directory")
@@ -241,7 +281,7 @@ func gatherPackages(afs *afero.Afero, pythonPackagePath string) (allResults []py
 
 		}
 
-		pythonPackageFilepath := filepath.Join(pythonPackagePath, packagePayload)
+		pythonPackageFilepath := filepath.Join(path, packagePayload)
 		ppd, err := parseMIME(afs, pythonPackageFilepath)
 		if err != nil {
 			continue
@@ -251,7 +291,7 @@ func gatherPackages(afs *afero.Afero, pythonPackagePath string) (allResults []py
 		// if the MIME data didn't include dependency information, but there was a requires.txt file available,
 		// then use that for dependency info (as pip appears to do)
 		if len(ppd.Dependencies) == 0 && requiresTxtPath != "" {
-			requiresTxtDeps, err := parseRequiresTxtDependencies(afs, filepath.Join(pythonPackagePath, requiresTxtPath))
+			requiresTxtDeps, err := parseRequiresTxtDependencies(afs, filepath.Join(path, requiresTxtPath))
 			if err != nil {
 				log.Warn().Err(err).Str("dir", pythonPackageFilepath).Msg("failed to parse requires.txt")
 			} else {
@@ -263,50 +303,6 @@ func gatherPackages(afs *afero.Afero, pythonPackagePath string) (allResults []py
 	}
 
 	return
-}
-
-func parseRequiresTxtDependencies(afs *afero.Afero, requiresTxtPath string) ([]string, error) {
-	f, err := afs.Open(requiresTxtPath)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	return requirements.ParseRequiresTxtDependencies(f)
-}
-
-func parseMIME(afs *afero.Afero, pythonMIMEFilepath string) (*python.PackageDetails, error) {
-	f, err := afs.Open(pythonMIMEFilepath)
-	if err != nil {
-		log.Warn().Err(err).Msg("error opening python metadata file")
-		return nil, err
-	}
-	defer f.Close()
-
-	return wheelegg.ParseMIME(f, pythonMIMEFilepath)
-}
-
-func collectPythonPackagesInPaths(runtime *plugin.Runtime, fs afero.Fs, paths []string) ([]python.PackageDetails, error) {
-	allResults := []python.PackageDetails{}
-	afs := &afero.Afero{Fs: fs}
-
-	for _, pattern := range paths {
-		log.Debug().Str("path", pattern).Msg("searching for npm packages")
-		m, err := afero.Glob(fs, pattern)
-		if err != nil {
-			log.Debug().Err(err).Str("path", pattern).Msg("could not search for npm packages")
-			// nothing to do, we just ignore it
-		}
-		for _, walkPath := range m {
-			log.Debug().Str("filepath", walkPath).Msg("found matching python path")
-			packageDirs := []string{"site-packages", "dist-packages"}
-			for _, packageDir := range packageDirs {
-				pythonPackageDir := filepath.Join(walkPath, packageDir)
-				allResults = append(allResults, gatherPackages(afs, pythonPackageDir)...)
-			}
-		}
-	}
-	return allResults, nil
 }
 
 func newMqlPythonPackage(runtime *plugin.Runtime, ppd python.PackageDetails, dependencies []interface{}) (plugin.Resource, error) {

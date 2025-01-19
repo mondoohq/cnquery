@@ -25,15 +25,15 @@ import (
 )
 
 var (
-	// we need to add extra testing for windows paths
-	//windowsDefaultNpmPaths = []string{
-	//	"C:\\Users\\%\\AppData\\Roaming\\npm",
-	//}
-	linuxDefaultNpmPaths = []string{
+	defaultNpmPaths = []string{
+		// Linux
 		"/usr/local/lib",
 		"/opt/homebrew/lib",
 		"/usr/lib",
 		"/home/*/.npm-global/lib",
+		// Windows
+		"C:\\Users\\*\\AppData\\Roaming\\npm",
+		// macOS
 		"/Users/*/.npm-global/lib",
 	}
 )
@@ -61,6 +61,27 @@ func (r *mqlNpmPackages) id() (string, error) {
 	return "npm.packages/" + path, nil
 }
 
+type WalkDirFunc func(fs afero.Fs, path string) error
+
+func WalkGlob(fs afero.Fs, paths []string, fn WalkDirFunc) error {
+	// we search through default system locations
+	for _, pattern := range paths {
+		log.Debug().Str("path", pattern).Msg("searching for files")
+		m, err := afero.Glob(fs, pattern)
+		if err != nil {
+			log.Debug().Err(err).Str("path", pattern).Msg("could not search for files")
+			return err
+		}
+		for _, walkPath := range m {
+			err = fn(fs, walkPath)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 // gatherPackagesFromSystemDefaults returns
 // - direct packages
 // - transitive packages
@@ -71,49 +92,46 @@ func collectNpmPackagesInPaths(runtime *plugin.Runtime, fs afero.Fs, paths []str
 	evidenceFiles := []string{}
 
 	log.Debug().Msg("searching for npm packages in default locations")
-	afs := &afero.Afero{Fs: fs}
-	// we search through default system locations
-	for _, pattern := range paths {
-		log.Debug().Str("path", pattern).Msg("searching for npm packages")
-		m, err := afero.Glob(fs, pattern)
+	err := WalkGlob(fs, paths, func(fs afero.Fs, walkPath string) error {
+		afs := &afero.Afero{Fs: fs}
+
+		// we walk through the directories and check if there is a node_modules directory
+		log.Debug().Str("path", walkPath).Msg("found npm package")
+		nodeModulesPath := filepath.Join(walkPath, "node_modules")
+		var files, err = afs.ReadDir(nodeModulesPath)
 		if err != nil {
-			log.Debug().Err(err).Str("path", pattern).Msg("could not search for npm packages")
-			// nothing to do, we just ignore it
+			// we ignore the error, it is expected that there is no node_modules directory
+			return nil
 		}
-		for _, walkPath := range m {
-			// we walk through the directories and check if there is a node_modules directory
-			log.Debug().Str("path", walkPath).Msg("found npm package")
-			nodeModulesPath := filepath.Join(walkPath, "node_modules")
-			var files, err = afs.ReadDir(nodeModulesPath)
+		for i := range files {
+			f := files[i]
+			p := f.Name()
+
+			if !f.IsDir() {
+				continue
+			}
+
+			log.Debug().Str("path", p).Msg("checking for package-lock.json or package.json file")
+
+			// Not found is an expected error and we handle that properly
+			bom, err := collectNpmPackages(runtime, fs, filepath.Join(nodeModulesPath, p))
 			if err != nil {
 				continue
 			}
-			for i := range files {
-				f := files[i]
-				p := f.Name()
 
-				if !f.IsDir() {
-					continue
-				}
-
-				log.Debug().Str("path", p).Msg("checking for package-lock.json or package.json file")
-
-				// Not found is an expected error and we handle that properly
-				bom, err := collectNpmPackages(runtime, fs, filepath.Join(nodeModulesPath, p))
-				if err != nil {
-					continue
-				}
-
-				root := bom.Root()
-				if root != nil {
-					directPackageList = append(directPackageList, root)
-				}
-				transitive := bom.Transitive()
-				if transitive != nil {
-					transitivePackageList = append(transitivePackageList, transitive...)
-				}
+			root := bom.Root()
+			if root != nil {
+				directPackageList = append(directPackageList, root)
+			}
+			transitive := bom.Transitive()
+			if transitive != nil {
+				transitivePackageList = append(transitivePackageList, transitive...)
 			}
 		}
+		return nil
+	})
+	if err != nil {
+		return nil, nil, nil, err
 	}
 	return directPackageList, transitivePackageList, evidenceFiles, nil
 }
@@ -205,7 +223,7 @@ func (r *mqlNpmPackages) gatherData() error {
 	if path == "" {
 		// no specific path was provided, we search through default locations
 		// here we are not going to have a root package, only direct and transitive dependencies
-		directDependencies, transitiveDependencies, filePaths, err = collectNpmPackagesInPaths(r.MqlRuntime, conn.FileSystem(), linuxDefaultNpmPaths)
+		directDependencies, transitiveDependencies, filePaths, err = collectNpmPackagesInPaths(r.MqlRuntime, conn.FileSystem(), defaultNpmPaths)
 		if err != nil {
 			return err
 		}
