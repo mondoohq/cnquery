@@ -310,9 +310,7 @@ func collectPythonPackagesInPaths(runtime *plugin.Runtime, fs afero.Fs, paths []
 }
 
 func newMqlPythonPackage(runtime *plugin.Runtime, ppd python.PackageDetails, dependencies []interface{}) (plugin.Resource, error) {
-	f, err := CreateResource(runtime, "file", map[string]*llx.RawData{
-		"path": llx.StringData(ppd.File),
-	})
+	f, err := newFile(runtime, ppd.File)
 	if err != nil {
 		log.Error().Err(err).Msg("error while creating file resource for python package resource")
 		return nil, err
@@ -363,9 +361,7 @@ func initPythonPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 			return nil, nil, errors.New("Wrong type for 'path' in python.package initialization, it must be a string")
 		}
 
-		file, err := CreateResource(runtime, "file", map[string]*llx.RawData{
-			"path": llx.StringData(path),
-		})
+		file, err := newFile(runtime, path)
 		if err != nil {
 			return nil, nil, err
 		}
