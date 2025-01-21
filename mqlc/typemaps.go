@@ -52,6 +52,6 @@ func compileTypeConversion(llxID string, typ types.Type) fieldCompiler {
 			},
 		})
 
-		return types.String, nil
+		return typ, nil
 	}
 }

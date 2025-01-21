@@ -864,27 +864,138 @@ func TestTime(t *testing.T) {
 }
 
 func TestSemver(t *testing.T) {
-	x.TestSimple(t, []testutils.SimpleTest{
-		{
-			Code:        "semver('1.2.3') == semver('1.2.3')",
-			ResultIndex: 2, Expectation: true,
-		},
-		{
-			Code:        "semver('1.2.3') == semver('1.2')",
-			ResultIndex: 2, Expectation: false,
-		},
-		{
-			Code:        "semver('1.2') < semver('1.10.2')",
-			ResultIndex: 2, Expectation: true,
-		},
-		{
-			Code:        "semver('1.10') >= semver('1.2.3')",
-			ResultIndex: 2, Expectation: true,
-		},
-		{
-			Code:        "semver('1.10') >= '1.2'",
-			ResultIndex: 2, Expectation: true,
-		},
+	t.Run("regular semver", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{
+				Code:        "semver('1.2.3') == semver('1.2.3')",
+				ResultIndex: 2, Expectation: true,
+			},
+			{
+				Code:        "semver('1.2.3') == semver('1.2')",
+				ResultIndex: 2, Expectation: false,
+			},
+			{
+				Code:        "semver('1.2') < semver('1.10.2')",
+				ResultIndex: 2, Expectation: true,
+			},
+			{
+				Code:        "semver('1.10') >= semver('1.2.3')",
+				ResultIndex: 2, Expectation: true,
+			},
+			{
+				Code:        "semver('1.10') >= '1.2'",
+				ResultIndex: 2, Expectation: true,
+			},
+		})
+	})
+
+	t.Run("one-sided epoch", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{
+				Code:        "semver('1.2.3') == semver('1:1.2.3')",
+				ResultIndex: 2, Expectation: false,
+			},
+			{
+				Code:        "semver('2:1.2.3') == semver('1.2.3')",
+				ResultIndex: 2, Expectation: false,
+			},
+			{
+				Code:        "semver('3:1.2') < semver('1.10.2')",
+				ResultIndex: 2, Expectation: false,
+			},
+			{
+				Code:        "semver('1.10') >= semver('4:1.2.3')",
+				ResultIndex: 2, Expectation: false,
+			},
+			{
+				Code:        "semver('1.2') <= semver('3:1.10.2')",
+				ResultIndex: 2, Expectation: true,
+			},
+			{
+				Code:        "semver('4:1.10') > semver('1.2.3')",
+				ResultIndex: 2, Expectation: true,
+			},
+		})
+	})
+
+	t.Run("deb/rpm epochs", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{
+				Code:        "semver('1.2.3').epoch",
+				ResultIndex: 0, Expectation: int64(0),
+			},
+			{
+				Code:        "semver('7:1.2.3').epoch",
+				ResultIndex: 0, Expectation: int64(7),
+			},
+		})
+	})
+
+	t.Run("python epochs", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{
+				Code:        "semver('1.2.3').epoch",
+				ResultIndex: 0, Expectation: int64(0),
+			},
+			{
+				Code:        "semver('5!1.2.3').epoch",
+				ResultIndex: 0, Expectation: int64(5),
+			},
+		})
+	})
+
+	t.Run("different epochs", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{
+				Code:        "semver('2:1.2.3') == semver('1:1.2.3')",
+				ResultIndex: 2, Expectation: false,
+			},
+			{
+				Code:        "semver('2:1.2.3') == semver('3:1.2.3')",
+				ResultIndex: 2, Expectation: false,
+			},
+			{
+				Code:        "semver('3:1.2') < semver('1:1.10.2')",
+				ResultIndex: 2, Expectation: false,
+			},
+			{
+				Code:        "semver('2:1.10') >= semver('4:1.2.3')",
+				ResultIndex: 2, Expectation: false,
+			},
+			{
+				Code:        "semver('2:1.2') <= semver('3:1.0.2')",
+				ResultIndex: 2, Expectation: true,
+			},
+			{
+				Code:        "semver('4:1.1') > semver('1:1.2.3')",
+				ResultIndex: 2, Expectation: true,
+			},
+		})
+	})
+
+	t.Run("semver with equal epochs", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{
+				Code:        "semver('1:1.2.3') == semver('1:1.2.3')",
+				ResultIndex: 2, Expectation: true,
+			},
+			{
+				Code:        "semver('2:1.2.3') == semver('2:1.2')",
+				ResultIndex: 2, Expectation: false,
+			},
+			{
+				Code:        "semver('3:1.2') < semver('3:1.10.2')",
+				ResultIndex: 2, Expectation: true,
+			},
+			{
+				Code:        "semver('4:1.10') >= semver('4:1.2.3')",
+				ResultIndex: 2, Expectation: true,
+			},
+			{
+				Code:        "semver('5:1.10') >= '5:1.2'",
+				ResultIndex: 2, Expectation: true,
+			},
+		})
 	})
 }
 
