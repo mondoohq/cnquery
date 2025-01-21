@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"runtime/debug"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/cli/config"
@@ -65,6 +66,63 @@ func sendPanic(product, version, build string, r any, stacktrace []byte) {
 	}
 
 	// 3. send error to mondoo platform
+	sendErrorToMondooPlatform(serviceAccount, event)
+
+	log.Info().Msg("reported panic to Mondoo Platform")
+}
+
+type SlowQueryInfo struct {
+	CodeID   string
+	Query    string
+	Duration time.Duration
+}
+
+func ReportSlowQuery(product, version, build string, q SlowQueryInfo) {
+	sendSlowQuery(product, version, build, q)
+}
+
+// sendSlowQuery sends queries that have been deemed excessively slow to
+// the platform for futher analysis.
+func sendSlowQuery(product, version, build string, q SlowQueryInfo) {
+	// 1. read config
+	opts, err := config.Read()
+	if err != nil {
+		log.Error().Err(err).Msg("failed to read config")
+		return
+	}
+
+	serviceAccount := opts.GetServiceCredential()
+	if serviceAccount == nil {
+		log.Error().Msg("no service account configured")
+		return
+	}
+
+	msg := "slow query: " + fmt.Sprintf("%s took %d", q.CodeID, q.Duration)
+	if q.Query != "" {
+		msg = "slow query: " + fmt.Sprintf("%s (%s) took %d", q.Query, q.CodeID, q.Duration)
+	}
+	// 2. create local support bundle
+	event := &SendErrorReq{
+		ServiceAccountMrn: opts.ServiceAccountMrn,
+		AgentMrn:          opts.AgentMrn,
+		Product: &ProductInfo{
+			Name:    product,
+			Version: version,
+			Build:   build,
+		},
+		Error: &ErrorInfo{
+			Message: msg,
+		},
+	}
+
+	// 3. send error to mondoo platform
+	sendErrorToMondooPlatform(serviceAccount, event)
+
+	log.Debug().Msg("reported slow query to Mondoo Platform")
+}
+
+func sendErrorToMondooPlatform(serviceAccount *upstream.ServiceAccountCredentials, event *SendErrorReq) {
+	// 3. send error to mondoo platform
 	proxy, err := config.GetAPIProxy()
 	if err != nil {
 		log.Error().Err(err).Msg("failed to parse proxy setting")
@@ -90,6 +148,4 @@ func sendPanic(product, version, build string, r any, stacktrace []byte) {
 		log.Error().Err(err).Msg("failed to send error to mondoo platform")
 		return
 	}
-
-	log.Info().Msg("reported panic to Mondoo Platform")
 }
