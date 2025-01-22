@@ -87,9 +87,15 @@ resources:
       title: Display all loaded Terraform modules
   terraform.plan:
     fields:
+      applyable:
+        min_mondoo_version: 9.0.0
+      errored:
+        min_mondoo_version: 9.0.0
       formatVersion: {}
       resourceChanges: {}
       terraformVersion: {}
+      variables:
+        min_mondoo_version: 9.0.0
     min_mondoo_version: latest
     platform:
       name:
@@ -129,6 +135,14 @@ resources:
       providerName: {}
       type: {}
     min_mondoo_version: latest
+    platform:
+      name:
+      - terraform-plan
+  terraform.plan.variable:
+    fields:
+      name: {}
+      value: {}
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - terraform-plan

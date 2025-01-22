@@ -167,6 +167,12 @@ terraform.plan {
   terraformVersion string
   // Resource changes
   resourceChanges() []terraform.plan.resourceChange
+  // Variables used to generate the Terraform plan
+  variables []terraform.plan.variable
+  // Indicates if the plan is applyable or not
+  applyable bool
+  // Indicates if the plan errored or not
+  errored bool
 }
 
 // Terraform plan configuration
@@ -175,6 +181,14 @@ terraform.plan.configuration {
   providerConfig() []dict
   // Root module resource configuration
   resources() []dict
+}
+
+// Terraform plan variable
+terraform.plan.variable @defaults("name value") {
+  // Variable name
+  name string
+  // Variable value
+  value dict
 }
 
 // Terraform plan resource change

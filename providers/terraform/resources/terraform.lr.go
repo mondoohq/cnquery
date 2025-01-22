@@ -65,6 +65,10 @@ func init() {
 			// to override args, implement: initTerraformPlanConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createTerraformPlanConfiguration,
 		},
+		"terraform.plan.variable": {
+			// to override args, implement: initTerraformPlanVariable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createTerraformPlanVariable,
+		},
 		"terraform.plan.resourceChange": {
 			// to override args, implement: initTerraformPlanResourceChange(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createTerraformPlanResourceChange,
@@ -318,11 +322,26 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"terraform.plan.resourceChanges": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTerraformPlan).GetResourceChanges()).ToDataRes(types.Array(types.Resource("terraform.plan.resourceChange")))
 	},
+	"terraform.plan.variables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformPlan).GetVariables()).ToDataRes(types.Array(types.Resource("terraform.plan.variable")))
+	},
+	"terraform.plan.applyable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformPlan).GetApplyable()).ToDataRes(types.Bool)
+	},
+	"terraform.plan.errored": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformPlan).GetErrored()).ToDataRes(types.Bool)
+	},
 	"terraform.plan.configuration.providerConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTerraformPlanConfiguration).GetProviderConfig()).ToDataRes(types.Array(types.Dict))
 	},
 	"terraform.plan.configuration.resources": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTerraformPlanConfiguration).GetResources()).ToDataRes(types.Array(types.Dict))
+	},
+	"terraform.plan.variable.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformPlanVariable).GetName()).ToDataRes(types.String)
+	},
+	"terraform.plan.variable.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformPlanVariable).GetValue()).ToDataRes(types.Dict)
 	},
 	"terraform.plan.resourceChange.address": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTerraformPlanResourceChange).GetAddress()).ToDataRes(types.String)
@@ -670,6 +689,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlTerraformPlan).ResourceChanges, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"terraform.plan.variables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformPlan).Variables, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"terraform.plan.applyable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformPlan).Applyable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"terraform.plan.errored": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformPlan).Errored, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"terraform.plan.configuration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlTerraformPlanConfiguration).__id, ok = v.Value.(string)
 			return
@@ -680,6 +711,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"terraform.plan.configuration.resources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTerraformPlanConfiguration).Resources, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"terraform.plan.variable.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlTerraformPlanVariable).__id, ok = v.Value.(string)
+			return
+		},
+	"terraform.plan.variable.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformPlanVariable).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"terraform.plan.variable.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformPlanVariable).Value, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"terraform.plan.resourceChange.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1732,6 +1775,9 @@ type mqlTerraformPlan struct {
 	FormatVersion plugin.TValue[string]
 	TerraformVersion plugin.TValue[string]
 	ResourceChanges plugin.TValue[[]interface{}]
+	Variables plugin.TValue[[]interface{}]
+	Applyable plugin.TValue[bool]
+	Errored plugin.TValue[bool]
 }
 
 // createTerraformPlan creates a new instance of this resource
@@ -1795,6 +1841,18 @@ func (c *mqlTerraformPlan) GetResourceChanges() *plugin.TValue[[]interface{}] {
 	})
 }
 
+func (c *mqlTerraformPlan) GetVariables() *plugin.TValue[[]interface{}] {
+	return &c.Variables
+}
+
+func (c *mqlTerraformPlan) GetApplyable() *plugin.TValue[bool] {
+	return &c.Applyable
+}
+
+func (c *mqlTerraformPlan) GetErrored() *plugin.TValue[bool] {
+	return &c.Errored
+}
+
 // mqlTerraformPlanConfiguration for the terraform.plan.configuration resource
 type mqlTerraformPlanConfiguration struct {
 	MqlRuntime *plugin.Runtime
@@ -1851,6 +1909,60 @@ func (c *mqlTerraformPlanConfiguration) GetResources() *plugin.TValue[[]interfac
 	return plugin.GetOrCompute[[]interface{}](&c.Resources, func() ([]interface{}, error) {
 		return c.resources()
 	})
+}
+
+// mqlTerraformPlanVariable for the terraform.plan.variable resource
+type mqlTerraformPlanVariable struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlTerraformPlanVariableInternal it will be used here
+	Name plugin.TValue[string]
+	Value plugin.TValue[interface{}]
+}
+
+// createTerraformPlanVariable creates a new instance of this resource
+func createTerraformPlanVariable(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTerraformPlanVariable{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("terraform.plan.variable", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTerraformPlanVariable) MqlName() string {
+	return "terraform.plan.variable"
+}
+
+func (c *mqlTerraformPlanVariable) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTerraformPlanVariable) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlTerraformPlanVariable) GetValue() *plugin.TValue[interface{}] {
+	return &c.Value
 }
 
 // mqlTerraformPlanResourceChange for the terraform.plan.resourceChange resource
