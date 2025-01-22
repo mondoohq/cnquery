@@ -21,9 +21,20 @@ var Config = plugin.Provider{
 	},
 	Connectors: []plugin.Connector{
 		{
-			Name:    "azure",
-			Use:     "azure",
-			Short:   "an Azure subscription",
+			Name:  "azure",
+			Use:   "azure",
+			Short: "an Azure subscription",
+			Long: `Use the azure provider to query resources within Microsoft Azure, including storage, compute, databases, and more.
+
+Examples in your shell:
+  cnspec scan azure compute instance <name> --client-id <your-client-id> --tenant-id <your=tenant-id> --client-secret <your-client-secret-value>
+  cnspec scan azure compute snapshot <name> --client-id <your-client-id> --tenant-id <your=tenant-id> --client-secret <your-client-secret-value>
+	cnquery shell azure <name> --client-id <your-client-id> --tenant-id <your=tenant-id> --client-secret <your-client-secret-value>
+
+Examples in the Azure CLI:	
+  cnquery shell azure
+  cnspec scan azure --subscription <specific-subscription-id>
+`,
 			MinArgs: 0,
 			MaxArgs: 8,
 			Discovery: []string{
