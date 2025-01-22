@@ -1532,6 +1532,7 @@ resources:
       privateClusterConfig: {}
       projectId: {}
       resourceLabels: {}
+      releaseChannel: {}
       shieldedNodesConfig: {}
       status: {}
       subnetwork: {}

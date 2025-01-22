@@ -2473,6 +2473,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.gkeService.cluster.shieldedNodesConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceCluster).GetShieldedNodesConfig()).ToDataRes(types.Dict)
 	},
+	"gcp.project.gkeService.cluster.releaseChannel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetReleaseChannel()).ToDataRes(types.Dict)
+	},
 	"gcp.project.gkeService.cluster.costManagementConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceCluster).GetCostManagementConfig()).ToDataRes(types.Dict)
 	},
@@ -6834,8 +6837,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlGcpProjectGkeServiceCluster).DatabaseEncryption, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
-	"gcp.project.gkeService.cluster.shieldedNodesConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectGkeServiceCluster).ShieldedNodesConfig, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+	"gcp.project.gkeService.cluster.releaseChannel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).ReleaseChannel, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"gcp.project.gkeService.cluster.costManagementConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15579,6 +15582,10 @@ func (c *mqlGcpProjectGkeServiceCluster) GetDatabaseEncryption() *plugin.TValue[
 
 func (c *mqlGcpProjectGkeServiceCluster) GetShieldedNodesConfig() *plugin.TValue[interface{}] {
 	return &c.ShieldedNodesConfig
+}
+
+func (c *mqlGcpProjectGkeServiceCluster) GetReleaseChannel() *plugin.TValue[interface{}] {
+	return &c.ReleaseChannel
 }
 
 func (c *mqlGcpProjectGkeServiceCluster) GetCostManagementConfig() *plugin.TValue[interface{}] {
