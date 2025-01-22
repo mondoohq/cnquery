@@ -169,9 +169,9 @@ terraform.plan {
   resourceChanges() []terraform.plan.resourceChange
   // Variables used to generate the Terraform plan
   variables []terraform.plan.variable
-  // Indicates if the plan is applyable or not
+  // Whether `apply` is valid for the plan
   applyable bool
-  // Indicates if the plan errored or not
+  // Whether the plan errored
   errored bool
 }
 
