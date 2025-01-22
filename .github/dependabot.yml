@@ -273,3 +273,14 @@ updates:
         update-types:
           - minor
           - patch
+  - package-ecosystem: gomod
+    directory: /providers/tailscale/
+    schedule:
+      interval: weekly
+    groups:
+      gomodupdates:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch

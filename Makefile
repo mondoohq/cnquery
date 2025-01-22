@@ -218,7 +218,8 @@ providers/build: \
 	providers/build/snowflake \
 	providers/build/mondoo \
 	providers/build/cloudflare \
-	providers/build/nmap
+	providers/build/nmap \
+	providers/build/tailscale
 
 .PHONY: providers/install
 # Note we need \ to escape the target line into multiple lines
@@ -250,7 +251,8 @@ providers/install: \
 	providers/install/snowflake \
 	providers/install/mondoo \
 	providers/install/cloudflare \
-	providers/install/nmap
+	providers/install/nmap \
+	providers/install/tailscale
 
 providers/build/mock: providers/lr
 	./lr go providers-sdk/v1/testutils/mockprovider/resources/mockprovider.lr
@@ -398,6 +400,11 @@ providers/build/nmap: providers/lr
 providers/install/nmap:
 	@$(call installProvider, providers/nmap)
 
+providers/build/tailscale: providers/lr
+	@$(call buildProvider, providers/tailscale)
+providers/install/tailscale:
+	@$(call installProvider, providers/tailscale)
+
 providers/dist:
 	@$(call buildProviderDist, providers/network)
 	@$(call buildProviderDist, providers/os)
@@ -426,6 +433,7 @@ providers/dist:
 	@$(call buildProviderDist, providers/snowflake)
 	@$(call buildProviderDist, providers/mondoo)
 	@$(call buildProviderDist, providers/nmap)
+	@$(call buildProviderDist, providers/tailscale)
 
 providers/bundle:
 	@$(call bundleProvider, providers/network)
@@ -455,6 +463,7 @@ providers/bundle:
 	@$(call bundleProvider, providers/snowflake)
 	@$(call bundleProvider, providers/mondoo)
 	@$(call bundleProvider, providers/nmap)
+	@$(call bundleProvider, providers/tailscale)
 
 providers/test:
 	@$(call testProvider, providers/core)
@@ -485,6 +494,7 @@ providers/test:
 	@$(call testGoModProvider, providers/snowflake)
 	@$(call testGoModProvider, providers/mondoo)
 	@$(call testGoModProvider, providers/nmap)
+	@$(call testGoModProvider, providers/tailscale)
 
 lr/test:
 	go test ./providers-sdk/v1/lr/...
@@ -648,6 +658,11 @@ lr/docs/markdown: providers/lr
 		--description "The Nmap resource pack lets you use MQL to query and assess the network devices with Nmap." \
 		--docs-file providers/nmap/resources/nmap.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/nmap-pack
+	./lr markdown providers/tailscale/resources/tailscale.lr \
+		--pack-name "Tailscale" \
+		--description "The Tailscale resource pack lets you use MQL to query devices, DNS namespaces, and more information about a Tailscale network." \
+		--docs-file providers/tailscale/resources/tailscale.lr.manifest.yaml \
+		--output ../docs/docs/mql/resources/tailscale-pack
 
 
 lr/docs/stats:

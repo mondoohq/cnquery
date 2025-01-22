@@ -1,0 +1,32 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+resources:
+  tailscale:
+    fields:
+      devices: {}
+    min_mondoo_version: 9.0.0
+  tailscale.device:
+    fields:
+      addresses: {}
+      authorized: {}
+      blocksIncomingConnections: {}
+      clientVersion: {}
+      created: {}
+      expires: {}
+      hostname: {}
+      id: {}
+      isExternal: {}
+      keyExpiryDisabled: {}
+      lastSeen: {}
+      machineKey: {}
+      name: {}
+      nodeId: {}
+      nodeKey: {}
+      os: {}
+      tags: {}
+      tailnetLockError: {}
+      tailnetLockKey: {}
+      updateAvailable: {}
+      user: {}
+    min_mondoo_version: 9.0.0
