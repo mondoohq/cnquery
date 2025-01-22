@@ -19,11 +19,13 @@ type Plan struct {
 	PriorState         json.RawMessage    `json:"prior_state,omitempty"`
 	Configuration      json.RawMessage    `json:"configuration,omitempty"`
 	PlannedValues      plannedStateValues `json:"planned_values,omitempty"`
-	Variables          variables          `json:"variables,omitempty"`
+	Variables          Variables          `json:"variables,omitempty"`
 	ResourceChanges    []ResourceChange   `json:"resource_changes,omitempty"`
 	ResourceDrift      []ResourceChange   `json:"resource_drift,omitempty"`
 	RelevantAttributes []resourceAttr     `json:"relevant_attributes,omitempty"`
 	OutputChanges      map[string]change  `json:"output_changes,omitempty"`
+	Applyable          bool               `json:"applyable,omitempty"`
+	Errored            bool               `json:"errored,omitempty"`
 }
 
 type plannedStateValues struct {
@@ -83,9 +85,9 @@ type resource struct {
 	SensitiveValues json.RawMessage `json:"sensitive_values,omitempty"`
 }
 
-type variables map[string]*variable
+type Variables map[string]*Variable
 
-type variable struct {
+type Variable struct {
 	Value json.RawMessage `json:"value,omitempty"`
 }
 

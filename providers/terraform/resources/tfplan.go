@@ -40,6 +40,12 @@ func initTerraformPlan(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 
 	args["formatVersion"] = llx.StringData(plan.FormatVersion)
 	args["terraformVersion"] = llx.StringData(plan.TerraformVersion)
+	args["applyable"] = llx.BoolData(plan.Applyable)
+	args["errored"] = llx.BoolData(plan.Errored)
+	args["variables"] = llx.ArrayData(
+		variablesToArrayInterface(runtime, plan.Variables),
+		types.Resource("terraform.plan.variables"),
+	)
 
 	return args, nil, nil
 }
@@ -153,6 +159,11 @@ func (t *mqlTerraformPlanConfiguration) id() (string, error) {
 	return "terraform.plan.configuration", nil
 }
 
+func (t *mqlTerraformPlanVariable) id() (string, error) {
+	id := t.Name
+	return "terraform.plan.variable/name/" + id.Data, nil
+}
+
 type PlanConfiguration struct {
 	ProviderConfig map[string]json.RawMessage `json:"provider_config"`
 	RootModule     struct {
@@ -222,4 +233,26 @@ func (t *mqlTerraformPlanConfiguration) resources() ([]interface{}, error) {
 		res = append(res, entry)
 	}
 	return res, nil
+}
+
+func variablesToArrayInterface(runtime *plugin.Runtime, variables connection.Variables) []interface{} {
+	var list []interface{}
+	for k, v := range variables {
+		var value interface{}
+		err := json.Unmarshal(v.Value, &value)
+		if err != nil {
+			continue
+		}
+		variable, err := CreateResource(runtime, "terraform.plan.variable", map[string]*llx.RawData{
+			"name":  llx.StringData(k),
+			"value": llx.AnyData(value),
+		})
+		if err != nil {
+			continue
+		}
+
+		list = append(list, variable)
+	}
+
+	return list
 }
