@@ -4,6 +4,7 @@ auditlog
 Auths
 autoaccept
 autoscaler
+applyable
 backupconfiguration
 backupsetting
 bigquery
