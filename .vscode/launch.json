@@ -159,14 +159,10 @@
       "program": "${workspaceRoot}/apps/cnquery/cnquery.go",
       "cwd": "${workspaceRoot}/",
       "args": [
-        "run",
+        "scan",
         "k8s",
-        "--namespaces",
-        "default",
-        "-c",
-        "k8s.pods",
-        "--log-level",
-        "debug"
+        "--discover", "namespaces,pods",
+        "--namespaces", "default"
       ],
     },
     {
@@ -195,7 +191,7 @@
       "program": "${workspaceRoot}/apps/cnquery/cnquery.go",
       "console": "integratedTerminal",
       "args": [
-        "shell", "ssh", "user@18.215.249.49",
+        "shell", "cloudflare"
       ],
     },
     {

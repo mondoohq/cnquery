@@ -10,10 +10,15 @@ import (
 	_ "embed"
 	// osconf "go.mondoo.com/cnquery/v11/providers/os/config"
 	// os "go.mondoo.com/cnquery/v11/providers/os/provider"
+	k8sconf "go.mondoo.com/cnquery/v11/providers/k8s/config"
+	k8s "go.mondoo.com/cnquery/v11/providers/k8s/provider"
 )
 
 // //go:embed os/resources/os.resources.json
 // var osInfo []byte
+
+//go:embed k8s.resources.json
+var k8sInfo []byte
 
 func init() {
 	// builtinProviders[osconf.Config.ID] = &builtinProvider{
@@ -26,5 +31,16 @@ func init() {
 	// 	},
 	// 	Config: &osconf.Config,
 	// }
+
+	builtinProviders[k8sconf.Config.ID] = &builtinProvider{
+		Runtime: &RunningProvider{
+			Name:     k8sconf.Config.Name,
+			ID:       k8sconf.Config.ID,
+			Plugin:   k8s.Init(),
+			Schema:   MustLoadSchema("k8s", k8sInfo),
+			isClosed: false,
+		},
+		Config: &k8sconf.Config,
+	}
 
 }

@@ -208,23 +208,6 @@ func CreateProgressBar(discoveredAssets *DiscoveredAssets, disableProgressBar bo
 func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *upstream.UpstreamConfig) (*explorer.ReportCollection, error) {
 	log.Info().Msgf("discover related assets for %d asset(s)", len(job.Inventory.Spec.Assets))
 
-	discoveredAssets, err := DiscoverAssets(ctx, job.Inventory, upstream, s.recording)
-	if err != nil {
-		return nil, err
-	}
-
-	// For each discovered asset, we initialize a new runtime and connect to it.
-	// Within this process, we set up a catch-all deferred function, that shuts
-	// down all runtimes, in case we exit early.
-	defer func() {
-		for _, asset := range discoveredAssets.Assets {
-			// we can call close multiple times and it will only execute once
-			if asset.Runtime != nil {
-				asset.Runtime.Close()
-			}
-		}
-	}()
-
 	// plan scan jobs
 	reporter := NewAggregateReporter()
 	if job.Bundle == nil && upstream != nil && upstream.Creds != nil {
@@ -246,18 +229,79 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 		reporter.AddBundle(bundle)
 	}
 
+	processedAssets := map[string]struct{}{}
+	if err := s.loopyLoop(ctx, job, processedAssets, reporter, upstream); err != nil {
+		return nil, err
+	}
+
+	return reporter.Reports(), nil
+}
+
+func (s *LocalScanner) loopyLoop(ctx context.Context, job *Job, processedAssets map[string]struct{}, reporter *AggregateReporter, upstream *upstream.UpstreamConfig) error {
+	discoveryReq := &AssetDiscoveryRequest{
+		Inv:       job.Inventory,
+		Upstream:  upstream,
+		Recording: s.recording,
+	}
+	discoveredAssets, err := DiscoverAssets(ctx, discoveryReq)
+	if err != nil {
+		return err
+	}
+
+	newAssets := &DiscoveredAssets{platformIds: processedAssets}
+	for _, asset := range discoveredAssets.Assets {
+		newAssets.Add(asset.Asset, asset.Runtime)
+	}
+
+	if len(newAssets.Assets) == 0 {
+		return nil
+	}
+
+	if err := s.scanAssets(ctx, newAssets, job, reporter, upstream); err != nil {
+		return err
+	}
+	for pid := range discoveredAssets.platformIds {
+		processedAssets[pid] = struct{}{}
+	}
+
+	for _, asset := range newAssets.Assets {
+		err := s.loopyLoop(ctx, &Job{
+			Inventory: &inventory.Inventory{
+				Spec: &inventory.InventorySpec{
+					Assets: []*inventory.Asset{asset.Asset},
+				},
+			},
+			Bundle:           job.Bundle,
+			DoRecord:         job.DoRecord,
+			QueryPackFilters: job.QueryPackFilters,
+			Props:            job.Props,
+		}, processedAssets, reporter, upstream)
+
+		// Close the runtime for the asset once we are done with it
+		if asset.Runtime != nil {
+			asset.Runtime.Close()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *LocalScanner) scanAssets(ctx context.Context, discoveredAssets *DiscoveredAssets, job *Job, reporter *AggregateReporter, upstream *upstream.UpstreamConfig) error {
 	// if we had asset errors we want to place them into the reporter
 	for i := range discoveredAssets.Errors {
 		reporter.AddScanError(discoveredAssets.Errors[i].Asset, discoveredAssets.Errors[i].Err)
 	}
 
 	if len(discoveredAssets.Assets) == 0 {
-		return reporter.Reports(), nil
+		return nil
 	}
 
 	multiprogress, err := CreateProgressBar(discoveredAssets, s.disableProgressBar)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	// start the progress bar
 	scanGroups := sync.WaitGroup{}
@@ -274,13 +318,13 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 	if upstream != nil && upstream.ApiEndpoint != "" && !upstream.Incognito {
 		client, err := upstream.InitClient(ctx)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		spaceMrn = client.SpaceMrn
 
 		services, err = explorer.NewRemoteServices(client.ApiEndpoint, client.Plugins, client.HttpClient)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
@@ -305,7 +349,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 				List:     assetsToSync,
 			})
 			if err != nil {
-				return nil, err
+				return err
 			}
 			log.Debug().Int("assets", len(resp.Details)).Msg("got assets details")
 			platformAssetMapping := make(map[string]*explorer.SynchronizeAssetsRespAssetDetail)
@@ -332,7 +376,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 					randID := "//" + explorer.SERVICE_NAME + "/" + explorer.MRN_RESOURCE_ASSET + "/" + ksuid.New().String()
 					x, err := mrn.NewMRN(randID)
 					if err != nil {
-						return nil, multierr.Wrap(err, "failed to generate a random asset MRN")
+						return multierr.Wrap(err, "failed to generate a random asset MRN")
 					}
 					asset.Mrn = x.String()
 				}
@@ -342,7 +386,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 		// if a bundle was provided check that it matches the filter, bundles can also be downloaded
 		// later therefore we do not want to stop execution here
 		if job.Bundle != nil && job.Bundle.FilterQueryPacks(job.QueryPackFilters) {
-			return nil, errors.New("all available packs filtered out. nothing to do")
+			return errors.New("all available packs filtered out. nothing to do")
 		}
 
 		wg := sync.WaitGroup{}
@@ -395,7 +439,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 		wg.Wait()
 	}
 	scanGroups.Wait()
-	return reporter.Reports(), nil
+	return nil
 }
 
 func HandleDelayedDiscovery(ctx context.Context, asset *inventory.Asset, runtime *providers.Runtime, services *explorer.Services, spaceMrn string) (*inventory.Asset, error) {

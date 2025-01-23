@@ -111,6 +111,7 @@ func Discover(runtime *plugin.Runtime, features cnquery.Features) (*inventory.In
 		return nil, err
 	}
 
+	// If the asset is a namespace, we only want to discover the assets in that namespace
 	if asset := conn.Asset(); asset.Platform.Name == "k8s-namespace" {
 		nsFilter = NamespaceFilterOpts{include: []string{asset.Name}}
 
