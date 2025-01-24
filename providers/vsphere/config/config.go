@@ -49,7 +49,7 @@ var Config = plugin.Provider{
 	},
 	AssetUrlTrees: []*inventory.AssetUrlBranch{
 		{
-			PathSegments: []string{"technology=vsphere"},
+			PathSegments: []string{"technology=vmware"},
 			Key:          "platform",
 			Title:        "Platform",
 			Values: map[string]*inventory.AssetUrlBranch{
