@@ -53,7 +53,7 @@ func initK8sNode(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 
 func (k *mqlK8s) nodes() ([]interface{}, error) {
 	k.mqlK8sInternal.nodesByName = make(map[string]*mqlK8sNode)
-	return k8sResourceToMql(k.MqlRuntime, gvkString(corev1.SchemeGroupVersion.WithKind("nodes")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToMql(k.MqlRuntime, gvkString(corev1.SchemeGroupVersion.WithKind("nodes")), "", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		n, ok := obj.(*corev1.Node)

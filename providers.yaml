@@ -19,4 +19,4 @@
 # - name: my-awesome-provider
 #   remote: ~/path/to/my-awesome-provider
 #   goPackage: github.com/me/my-awesome-provider
-builtin: []
+builtin: [k8s]

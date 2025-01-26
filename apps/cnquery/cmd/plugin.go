@@ -114,7 +114,11 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 	}
 
 	ctx := context.Background()
-	discoveredAssets, err := scan.DiscoverAssets(ctx, conf.Inventory, upstreamConfig, runtime.Recording())
+	discoveredAssets, err := scan.DiscoverAssets(ctx, &scan.AssetDiscoveryRequest{
+		Inv:       conf.Inventory,
+		Upstream:  upstreamConfig,
+		Recording: runtime.Recording(),
+	})
 	if err != nil {
 		return err
 	}

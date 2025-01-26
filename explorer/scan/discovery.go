@@ -79,9 +79,18 @@ func (d *DiscoveredAssets) GetAssetsByPlatformID(platformID string) []*AssetWith
 	return assets
 }
 
+type AssetDiscoveryRequest struct {
+	Inv       *inventory.Inventory
+	Upstream  *upstream.UpstreamConfig
+	Recording llx.Recording
+	// DiscoveredAssets *DiscoveredAssets
+	SkipRoot bool
+	Depth    uint
+}
+
 // DiscoverAssets discovers assets from the given inventory and upstream configuration. Returns only unique assets
-func DiscoverAssets(ctx context.Context, inv *inventory.Inventory, upstream *upstream.UpstreamConfig, recording llx.Recording) (*DiscoveredAssets, error) {
-	im, err := manager.NewManager(manager.WithInventory(inv, providers.DefaultRuntime()))
+func DiscoverAssets(ctx context.Context, req *AssetDiscoveryRequest) (*DiscoveredAssets, error) {
+	im, err := manager.NewManager(manager.WithInventory(req.Inv, providers.DefaultRuntime()))
 	if err != nil {
 		return nil, errors.New("failed to resolve inventory for connection: " + err.Error())
 	}
@@ -96,7 +105,7 @@ func DiscoverAssets(ctx context.Context, inv *inventory.Inventory, upstream *ups
 	// CI/CD scan and we need to apply the runtime labels to the assets
 	if runtimeEnv != nil &&
 		runtimeEnv.IsAutomatedEnv() &&
-		inv.Spec.Assets[0].Category == inventory.AssetCategory_CATEGORY_CICD {
+		req.Inv.Spec.Assets[0].Category == inventory.AssetCategory_CATEGORY_CICD {
 		runtimeLabels = runtimeEnv.Labels()
 	}
 
@@ -110,10 +119,15 @@ func DiscoverAssets(ctx context.Context, inv *inventory.Inventory, upstream *ups
 		}
 
 		// create runtime for root asset
-		rootAssetWithRuntime, err := createRuntimeForAsset(resolvedRootAsset, upstream, recording)
+		rootAssetWithRuntime, err := createRuntimeForAsset(resolvedRootAsset, req.Upstream, req.Recording)
 		if err != nil {
 			log.Error().Err(err).Str("asset", resolvedRootAsset.Name).Msg("unable to create runtime for asset")
 			discoveredAssets.AddError(resolvedRootAsset, err)
+			continue
+		}
+
+		// If the root asset is nil, then we observed an asset we have already discovered
+		if rootAssetWithRuntime == nil {
 			continue
 		}
 
@@ -145,7 +159,7 @@ func DiscoverAssets(ctx context.Context, inv *inventory.Inventory, upstream *ups
 		}
 
 		// for all discovered assets, we apply mondoo-specific labels and annotations that come from the root asset
-		discoverAssets(rootAssetWithRuntime, resolvedRootAsset, discoveredAssets, runtimeLabels, upstream, recording)
+		discoverAssets(rootAssetWithRuntime, resolvedRootAsset, discoveredAssets, runtimeLabels, req.Upstream, req.Recording)
 	}
 
 	// if there is exactly one asset, assure that the --asset-name is used
@@ -204,7 +218,10 @@ func discoverAssets(rootAssetWithRuntime *AssetWithRuntime, resolvedRootAsset *i
 			// If the asset has been already added, we should close its runtime
 			if !discoveredAssets.Add(resolvedAsset, assetWithRuntime.Runtime) {
 				assetWithRuntime.Runtime.Close()
+				continue
 			}
+
+			discoverAssets(assetWithRuntime, resolvedRootAsset, discoveredAssets, runtimeLabels, upstream, recording)
 		} else {
 			discoverAssets(assetWithRuntime, resolvedRootAsset, discoveredAssets, runtimeLabels, upstream, recording)
 			assetWithRuntime.Runtime.Close()

@@ -22,7 +22,8 @@ type mqlK8sPodInternal struct {
 }
 
 func (k *mqlK8s) pods() ([]interface{}, error) {
-	return k8sResourceToMql(k.MqlRuntime, gvkString(corev1.SchemeGroupVersion.WithKind("pods")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	// TODO: make sure the function below retrieves scoped down resources when the current asset is a namespace
+	return k8sResourceToMql(k.MqlRuntime, gvkString(corev1.SchemeGroupVersion.WithKind("pods")), getNamespaceScope(k.MqlRuntime), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		r, err := CreateResource(k.MqlRuntime, "k8s.pod", map[string]*llx.RawData{

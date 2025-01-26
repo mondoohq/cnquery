@@ -104,9 +104,11 @@ func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 	// we go through inventory resolution to resolve credentials properly for the passed-in asset
 	ctx := context.Background()
 	discoveredAssets, err := scan.DiscoverAssets(ctx,
-		inventory.New(inventory.WithAssets(conf.Asset)),
-		conf.UpstreamConfig,
-		runtime.Recording())
+		&scan.AssetDiscoveryRequest{
+			Inv:       inventory.New(inventory.WithAssets(conf.Asset)),
+			Upstream:  conf.UpstreamConfig,
+			Recording: runtime.Recording(),
+		})
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not process assets")
 	}

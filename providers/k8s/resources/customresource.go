@@ -41,7 +41,7 @@ func (k *mqlK8s) customresources() ([]interface{}, error) {
 			return nil, err
 		}
 
-		mqlResources, err := k8sResourceToMql(k.MqlRuntime, crd.GetName(), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+		mqlResources, err := k8sResourceToMql(k.MqlRuntime, crd.GetName(), getNamespaceScope(k.MqlRuntime), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 			ts := obj.GetCreationTimestamp()
 
 			r, err := CreateResource(k.MqlRuntime, "k8s.customresource", map[string]*llx.RawData{

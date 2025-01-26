@@ -22,7 +22,7 @@ type mqlK8sRbacClusterrolebindingInternal struct {
 }
 
 func (k *mqlK8s) clusterrolebindings() ([]interface{}, error) {
-	return k8sResourceToMql(k.MqlRuntime, gvkString(rbacv1.SchemeGroupVersion.WithKind("clusterrolebindings")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToMql(k.MqlRuntime, gvkString(rbacv1.SchemeGroupVersion.WithKind("clusterrolebindings")), getNamespaceScope(k.MqlRuntime), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		clusterRoleBinding, ok := resource.(*rbacv1.ClusterRoleBinding)

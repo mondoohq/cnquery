@@ -1,5 +1,15 @@
 module go.mondoo.com/cnquery/v11
 
+replace go.mondoo.com/cnquery/v11/providers/k8s => ./providers/k8s
+
+replace k8s.io/api => k8s.io/api v0.28.9
+
+replace k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.28.9
+
+replace k8s.io/apimachinery => k8s.io/apimachinery v0.28.9
+
+replace k8s.io/client-go => k8s.io/client-go v0.28.9
+
 go 1.23.0
 
 // Later versions break the build of the os provider for Windows
@@ -81,11 +91,12 @@ require (
 	github.com/spdx/tools-golang v0.5.5
 	github.com/spf13/afero v1.12.0
 	github.com/spf13/cobra v1.8.1
-	github.com/spf13/pflag v1.0.5
+	github.com/spf13/pflag v1.0.6-0.20201009195203-85dd5c8bc61c
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.10.0
 	github.com/toravir/csd v0.0.0-20200911003203-13ae77ad849c
 	github.com/ulikunitz/xz v0.5.12
+	go.mondoo.com/cnquery/v11/providers/k8s v0.0.0
 	go.mondoo.com/ranger-rpc v0.6.5
 	go.opentelemetry.io/otel v1.34.0 // indirect
 	golang.org/x/crypto v0.32.0
@@ -275,7 +286,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	k8s.io/api v0.28.9 // indirect
-	k8s.io/klog/v2 v2.120.1 // indirect
+	k8s.io/klog/v2 v2.130.1 // indirect
 	modernc.org/libc v1.61.9 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.8.2 // indirect
@@ -307,18 +318,30 @@ require (
 	github.com/cncf/xds/go v0.0.0-20241223141626-cff3c89139a3 // indirect
 	github.com/containerd/typeurl/v2 v2.2.3 // indirect
 	github.com/creack/pty v1.1.18 // indirect
+	github.com/emicklei/go-restful/v3 v3.11.2 // indirect
 	github.com/envoyproxy/go-control-plane/envoy v1.32.3 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.1.0 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
 	github.com/go-errors/errors v1.5.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.0.4 // indirect
+	github.com/go-openapi/jsonpointer v0.21.0 // indirect
+	github.com/go-openapi/jsonreference v0.21.0 // indirect
+	github.com/go-openapi/swag v0.23.0 // indirect
+	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	github.com/go-test/deep v1.1.0 // indirect
+	github.com/google/btree v1.1.2 // indirect
+	github.com/google/gnostic-models v0.6.8 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
+	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
+	github.com/imdario/mergo v0.3.16 // indirect
+	github.com/josharian/intern v1.0.0 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
+	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mmcloughlin/avo v0.6.0 // indirect
 	github.com/moby/sys/mountinfo v0.7.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
+	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/smarty/assertions v1.15.1 // indirect
 	github.com/tonistiigi/go-csvvalue v0.0.0-20240710180619-ddb21b71c0b4 // indirect
@@ -327,4 +350,6 @@ require (
 	go.opentelemetry.io/otel/sdk v1.34.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v1.34.0 // indirect
 	gotest.tools/v3 v3.5.1 // indirect
+	k8s.io/apiextensions-apiserver v0.28.9 // indirect
+	k8s.io/kube-openapi v0.0.0-20240220201932-37d671a357a5 // indirect
 )

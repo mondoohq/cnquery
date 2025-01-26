@@ -6,6 +6,7 @@ package resources
 import (
 	"bytes"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/gobwas/glob"
@@ -110,6 +111,20 @@ func Discover(runtime *plugin.Runtime, features cnquery.Features) (*inventory.In
 		return nil, err
 	}
 
+	// If the asset is a namespace, we only want to discover the assets in that namespace
+	if asset := conn.Asset(); asset.Platform.Name == "k8s-namespace" {
+		nsFilter = NamespaceFilterOpts{include: []string{asset.Name}}
+
+		od := NewPlatformIdOwnershipIndex(asset.PlatformIds[0])
+		assets, err := discoverNamespaceAssets(runtime, conn, invConfig, asset.PlatformIds[0], k8s, nsFilter, resFilters, od)
+		if err != nil {
+			return nil, err
+		}
+		setRelatedAssets(conn, asset, assets, od, features)
+		in.Spec.Assets = append(in.Spec.Assets, assets...)
+		return in, nil
+	}
+
 	// If we can discover the cluster asset, then we use that as root and build all
 	// platform IDs for the assets based on it. If we cannot discover the cluster, we
 	// discover the individual namespaces according to the ns filter and then build
@@ -132,14 +147,14 @@ func Discover(runtime *plugin.Runtime, features cnquery.Features) (*inventory.In
 
 		od := NewPlatformIdOwnershipIndex(assetId)
 
-		assets, err := discoverAssets(runtime, conn, invConfig, assetId, k8s, nsFilter, resFilters, od, false)
+		assets, err := discoverNamespaces(conn, invConfig, "", nsFilter, nil)
 		if err != nil {
 			return nil, err
 		}
 		setRelatedAssets(conn, root, assets, od, features)
 		in.Spec.Assets = append(in.Spec.Assets, assets...)
 	} else {
-		nss, err := discoverNamespaces(conn, invConfig, "", nil, nsFilter)
+		nss, err := discoverNamespaces(conn, invConfig, "", nsFilter, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -149,25 +164,83 @@ func Discover(runtime *plugin.Runtime, features cnquery.Features) (*inventory.In
 		}
 
 		// Discover the assets for each namespace and use the namespace platform ID as root
-		for _, ns := range nss {
-			nsFilter = NamespaceFilterOpts{include: []string{ns.Name}}
+		// for _, ns := range nss {
+		// 	nsFilter = NamespaceFilterOpts{include: []string{ns.Name}}
 
-			od := NewPlatformIdOwnershipIndex(ns.PlatformIds[0])
-
-			// We don't want to discover the namespaces again since we have already done this above
-			assets, err := discoverAssets(runtime, conn, invConfig, ns.PlatformIds[0], k8s, nsFilter, resFilters, od, true)
-			if err != nil {
-				return nil, err
-			}
-			setRelatedAssets(conn, ns, assets, od, features)
-			in.Spec.Assets = append(in.Spec.Assets, assets...)
-		}
+		// 	od := NewPlatformIdOwnershipIndex(ns.PlatformIds[0])
+		// 	assets, err := discoverNamespaceAssets(runtime, conn, invConfig, ns.PlatformIds[0], k8s, nsFilter, resFilters, od)
+		// 	if err != nil {
+		// 		return nil, err
+		// 	}
+		// 	setRelatedAssets(conn, ns, assets, od, features)
+		// 	in.Spec.Assets = append(in.Spec.Assets, assets...)
+		// }
 	}
 
 	return in, nil
 }
 
-func discoverAssets(
+func discoverNamespaces(
+	conn shared.Connection,
+	invConfig *inventory.Config,
+	clusterId string,
+	nsFilter NamespaceFilterOpts,
+	od *PlatformIdOwnershipIndex,
+) ([]*inventory.Asset, error) {
+	if slices.Contains(invConfig.Discover.Targets, DiscoveryNamespaces) || slices.Contains(invConfig.Discover.Targets, DiscoveryAuto) {
+		// We don't use MQL here since we need to handle k8s permission errors
+		nss, err := conn.Namespaces()
+		if err != nil {
+			if k8sErrors.IsForbidden(err) && len(nsFilter.include) > 0 {
+				for _, ns := range nsFilter.include {
+					n, err := conn.Namespace(ns)
+					if err != nil {
+						return nil, err
+					}
+					nss = append(nss, *n)
+				}
+			} else {
+				return nil, errors.Wrap(err, "failed to list namespaces")
+			}
+		}
+
+		assetList := make([]*inventory.Asset, 0, len(nss))
+		for _, ns := range nss {
+			if skip := nsFilter.skipNamespace(ns.Name); skip {
+				continue
+			}
+
+			labels := map[string]string{}
+			for k, v := range ns.Labels {
+				labels[k] = v
+			}
+			addMondooAssetLabels(labels, &ns.ObjectMeta, clusterId)
+			platform, err := createPlatformData(ns.Kind, conn.Runtime())
+			if err != nil {
+				return nil, err
+			}
+			assetList = append(assetList, &inventory.Asset{
+				PlatformIds: []string{
+					shared.NewNamespacePlatformId(clusterId, ns.Name, string(ns.UID)),
+				},
+				Name:     ns.Name,
+				Platform: platform,
+				Labels:   labels,
+				// We don't want a parent connection so there is no central cache for the resources
+				// for the complete cluster. We only cache resources for a single namespace
+				Connections: []*inventory.Config{invConfig.Clone()},
+				Category:    conn.Asset().Category,
+			})
+			if od != nil {
+				od.Add(&ns)
+			}
+		}
+		return assetList, nil
+	}
+	return nil, nil
+}
+
+func discoverNamespaceAssets(
 	runtime *plugin.Runtime,
 	conn shared.Connection,
 	invConfig *inventory.Config,
@@ -176,7 +249,6 @@ func discoverAssets(
 	nsFilter NamespaceFilterOpts,
 	resFilters *ResourceFilters,
 	od *PlatformIdOwnershipIndex,
-	skipNsDiscovery bool,
 ) ([]*inventory.Asset, error) {
 	var assets []*inventory.Asset
 	var err error
@@ -247,13 +319,6 @@ func discoverAssets(
 		}
 		if target == DiscoveryAdmissionReviews {
 			list, err = discoverAdmissionReviews(conn, invConfig, clusterId, k8s, od, nsFilter)
-			if err != nil {
-				return nil, err
-			}
-			assets = append(assets, list...)
-		}
-		if target == DiscoveryNamespaces && !skipNsDiscovery {
-			list, err = discoverNamespaces(conn, invConfig, clusterId, od, nsFilter)
 			if err != nil {
 				return nil, err
 			}
@@ -803,61 +868,6 @@ func discoverIngresses(
 			Category:    conn.Asset().Category,
 		})
 		od.Add(ingress.obj)
-	}
-	return assetList, nil
-}
-
-func discoverNamespaces(
-	conn shared.Connection,
-	invConfig *inventory.Config,
-	clusterId string,
-	od *PlatformIdOwnershipIndex,
-	nsFilter NamespaceFilterOpts,
-) ([]*inventory.Asset, error) {
-	// We don't use MQL here since we need to handle k8s permission errors
-	nss, err := conn.Namespaces()
-	if err != nil {
-		if k8sErrors.IsForbidden(err) && len(nsFilter.include) > 0 {
-			for _, ns := range nsFilter.include {
-				n, err := conn.Namespace(ns)
-				if err != nil {
-					return nil, err
-				}
-				nss = append(nss, *n)
-			}
-		} else {
-			return nil, errors.Wrap(err, "failed to list namespaces")
-		}
-	}
-
-	assetList := make([]*inventory.Asset, 0, len(nss))
-	for _, ns := range nss {
-		if skip := nsFilter.skipNamespace(ns.Name); skip {
-			continue
-		}
-
-		labels := map[string]string{}
-		for k, v := range ns.Labels {
-			labels[k] = v
-		}
-		addMondooAssetLabels(labels, &ns.ObjectMeta, clusterId)
-		platform, err := createPlatformData(ns.Kind, conn.Runtime())
-		if err != nil {
-			return nil, err
-		}
-		assetList = append(assetList, &inventory.Asset{
-			PlatformIds: []string{
-				shared.NewNamespacePlatformId(clusterId, ns.Name, string(ns.UID)),
-			},
-			Name:        ns.Name,
-			Platform:    platform,
-			Labels:      labels,
-			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(invConfig.Id))}, // pass-in the parent connection config
-			Category:    conn.Asset().Category,
-		})
-		if od != nil {
-			od.Add(&ns)
-		}
 	}
 	return assetList, nil
 }

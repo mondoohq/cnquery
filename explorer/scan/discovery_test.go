@@ -142,7 +142,11 @@ func TestDiscoverAssets(t *testing.T) {
 
 	t.Run("normal", func(t *testing.T) {
 		inv := getInventory()
-		discoveredAssets, err := DiscoverAssets(context.Background(), inv, nil, recording.Null{})
+		discoveredAssets, err := DiscoverAssets(context.Background(), &AssetDiscoveryRequest{
+			Inv:              inv,
+			DiscoveredAssets: &DiscoveredAssets{platformIds: map[string]struct{}{}},
+			Recording:        recording.Null{},
+		})
 		require.NoError(t, err)
 		assert.Len(t, discoveredAssets.Assets, 3)
 		assert.Len(t, discoveredAssets.Errors, 0)
@@ -158,7 +162,11 @@ func TestDiscoverAssets(t *testing.T) {
 	t.Run("with duplicate root assets", func(t *testing.T) {
 		inv := getInventory()
 		inv.Spec.Assets = append(inv.Spec.Assets, inv.Spec.Assets[0])
-		discoveredAssets, err := DiscoverAssets(context.Background(), inv, nil, recording.Null{})
+		discoveredAssets, err := DiscoverAssets(context.Background(), &AssetDiscoveryRequest{
+			Inv:              inv,
+			DiscoveredAssets: &DiscoveredAssets{platformIds: map[string]struct{}{}},
+			Recording:        recording.Null{},
+		})
 		require.NoError(t, err)
 
 		// Make sure no duplicates are returned
@@ -173,7 +181,11 @@ func TestDiscoverAssets(t *testing.T) {
 	t.Run("with duplicate discovered assets", func(t *testing.T) {
 		inv := getInventory()
 		inv.Spec.Assets[0].Connections[0].Options["path"] = "./testdata/3pods_with_duplicate.yaml"
-		discoveredAssets, err := DiscoverAssets(context.Background(), inv, nil, recording.Null{})
+		discoveredAssets, err := DiscoverAssets(context.Background(), &AssetDiscoveryRequest{
+			Inv:              inv,
+			DiscoveredAssets: &DiscoveredAssets{platformIds: map[string]struct{}{}},
+			Recording:        recording.Null{},
+		})
 		require.NoError(t, err)
 
 		// Make sure no duplicates are returned
@@ -191,7 +203,11 @@ func TestDiscoverAssets(t *testing.T) {
 			"key1": "value1",
 			"key2": "value2",
 		}
-		discoveredAssets, err := DiscoverAssets(context.Background(), inv, nil, recording.Null{})
+		discoveredAssets, err := DiscoverAssets(context.Background(), &AssetDiscoveryRequest{
+			Inv:              inv,
+			DiscoveredAssets: &DiscoveredAssets{platformIds: map[string]struct{}{}},
+			Recording:        recording.Null{},
+		})
 		require.NoError(t, err)
 
 		for _, asset := range discoveredAssets.Assets {
@@ -209,7 +225,11 @@ func TestDiscoverAssets(t *testing.T) {
 	t.Run("copy root asset managedBy", func(t *testing.T) {
 		inv := getInventory()
 		inv.Spec.Assets[0].ManagedBy = "managed-by-test"
-		discoveredAssets, err := DiscoverAssets(context.Background(), inv, nil, recording.Null{})
+		discoveredAssets, err := DiscoverAssets(context.Background(), &AssetDiscoveryRequest{
+			Inv:              inv,
+			DiscoveredAssets: &DiscoveredAssets{platformIds: map[string]struct{}{}},
+			Recording:        recording.Null{},
+		})
 		require.NoError(t, err)
 
 		for _, asset := range discoveredAssets.Assets {
@@ -234,7 +254,11 @@ func TestDiscoverAssets(t *testing.T) {
 		}()
 		inv.Spec.Assets[0].Category = inventory.AssetCategory_CATEGORY_CICD
 		require.NoError(t, os.Setenv("GITHUB_ACTION", "go-test"))
-		discoveredAssets, err := DiscoverAssets(context.Background(), inv, nil, recording.Null{})
+		discoveredAssets, err := DiscoverAssets(context.Background(), &AssetDiscoveryRequest{
+			Inv:              inv,
+			DiscoveredAssets: &DiscoveredAssets{platformIds: map[string]struct{}{}},
+			Recording:        recording.Null{},
+		})
 		require.NoError(t, err)
 
 		for _, asset := range discoveredAssets.Assets {
@@ -261,7 +285,11 @@ func TestDiscoverAssets(t *testing.T) {
 		}()
 		inv.Spec.Assets[0].Category = inventory.AssetCategory_CATEGORY_CICD
 		require.NoError(t, os.Setenv("GITHUB_ACTION", "go-test"))
-		discoveredAssets, err := DiscoverAssets(context.Background(), inv, nil, recording.Null{})
+		discoveredAssets, err := DiscoverAssets(context.Background(), &AssetDiscoveryRequest{
+			Inv:              inv,
+			DiscoveredAssets: &DiscoveredAssets{platformIds: map[string]struct{}{}},
+			Recording:        recording.Null{},
+		})
 		require.NoError(t, err)
 
 		for _, asset := range discoveredAssets.Assets {
@@ -278,7 +306,11 @@ func TestDiscoverAssets(t *testing.T) {
 		inv := getInventory()
 		inv.Spec.Assets[0].Connections[0].Type = "local"
 
-		discoveredAssets, err := DiscoverAssets(context.Background(), inv, nil, recording.Null{})
+		discoveredAssets, err := DiscoverAssets(context.Background(), &AssetDiscoveryRequest{
+			Inv:              inv,
+			DiscoveredAssets: &DiscoveredAssets{platformIds: map[string]struct{}{}},
+			Recording:        recording.Null{},
+		})
 		require.NoError(t, err)
 		assert.Len(t, discoveredAssets.Assets, 1)
 
