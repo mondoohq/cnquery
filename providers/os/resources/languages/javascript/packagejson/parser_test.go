@@ -253,6 +253,17 @@ func TestPackageJson(t *testing.T) {
 				// we do not parse workspaces so it should be empty
 			},
 		},
+		{
+			Fixture: "./testdata/private-string.json",
+			Expected: packageJson{
+				Name:    "example",
+				Version: "0.0.1",
+				Private: true,
+				Dependencies: map[string]string{
+					"express": "*",
+				},
+			},
+		},
 	}
 
 	for i := range tests {

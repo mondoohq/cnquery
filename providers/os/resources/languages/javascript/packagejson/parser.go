@@ -16,7 +16,7 @@ type packageJson struct {
 	Name            string                `json:"name"`
 	Description     string                `json:"description"`
 	Version         string                `json:"version"`
-	Private         bool                  `json:"private"`
+	Private         booleanField          `json:"private"`
 	Homepage        string                `json:"homepage"`
 	License         *packageJsonLicense   `json:"license"`
 	Author          *packageJsonPeople    `json:"author"`
@@ -30,6 +30,25 @@ type packageJson struct {
 
 	// evidence is a list of file paths where the package.json was found
 	evidence []string `json:"-"`
+}
+
+type booleanField bool
+
+func (p *booleanField) UnmarshalJSON(data []byte) error {
+	var raw interface{}
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+
+	switch v := raw.(type) {
+	case bool:
+		*p = booleanField(v)
+	case string:
+		*p = strings.ToLower(v) == "true"
+	default:
+		return fmt.Errorf("invalid private field type: %T", v)
+	}
+	return nil
 }
 
 // packageJsonPeople represents the author of the package
