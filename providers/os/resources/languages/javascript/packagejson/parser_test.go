@@ -51,9 +51,8 @@ func TestPackageJson(t *testing.T) {
 		},
 		{
 			Fixture: "./testdata/bugs.json",
-			Expected: packageJson{
-				// we do not parse bugs, so it should be empty
-			},
+			// we do not parse bugs, so it should be empty
+			Expected: packageJson{},
 		},
 		{
 			Fixture: "./testdata/bundle_dependencies.json",

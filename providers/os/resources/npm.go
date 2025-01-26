@@ -163,11 +163,11 @@ func collectNpmPackages(runtime *plugin.Runtime, fs afero.Fs, path string) (lang
 			extractor = &packagelockjson.Extractor{}
 		} else if strings.HasSuffix(searchPath, "package.json") {
 			extractor = &packagejson.Extractor{}
-		} else {
-			return nil, errors.New("could not find suitable extractor for file: " + searchPath)
 		}
 
-		return extractor.Parse(strings.NewReader(content.Data), searchPath)
+		if extractor != nil {
+			return extractor.Parse(strings.NewReader(content.Data), searchPath)
+		}
 	}
 
 	return nil, errors.New("could not parse package-lock.json or package.json file")
