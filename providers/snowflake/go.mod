@@ -7,7 +7,7 @@ go 1.23.0
 require (
 	// pin v0.92.0
 	github.com/Snowflake-Labs/terraform-provider-snowflake v0.92.0
-	github.com/jmoiron/sqlx v1.4.0 // indirect
+	github.com/jmoiron/sqlx v1.4.0
 	github.com/snowflakedb/gosnowflake v1.12.1
 	github.com/stretchr/testify v1.10.0 // indirect
 	go.mondoo.com/cnquery/v11 v11.38.0
