@@ -18,9 +18,11 @@ var Config = plugin.Provider{
 			Name:  "vcd",
 			Use:   "vcd [--user <user>] [--host <host>] [--organization <organization>] [--ask-pass] [--password <password>]",
 			Short: "a VMware Cloud Director installation",
-			Long: `vcd is designed for querying resources within for a VMware Cloud Director environment. VMware's 
-vCloud Director (vCD), a platform that facilitates the operation and management of virtual resources within
-a multi-tenant cloud environment.
+			Long: `Use the vcd provider to query resources in a VMware Cloud Director environment. The VMware Cloud Director platform facilitates the operation and management of virtual resources within a multi-tenant cloud environment.
+
+			Examples:
+			  cnquery shell vcd --user <USER-NAME> --host <HOST-NAME> --ask-pass
+				cnspec scan vcd --user <USER-NAME> --host <HOST-NAME> --password <PASSWORD>
 `,
 			Discovery: []string{},
 			Flags: []plugin.Flag{
@@ -28,21 +30,21 @@ a multi-tenant cloud environment.
 					Long:    "user",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "vCloud Director user",
+					Desc:    "Cloud Director user",
 					Option:  plugin.FlagOption_Required,
 				},
 				{
 					Long:    "host",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "vCloud Director host",
+					Desc:    "Cloud Director host",
 					Option:  plugin.FlagOption_Required,
 				},
 				{
 					Long:    "organization",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "vCloud Director Organization (optional)",
+					Desc:    "Cloud Director Organization (optional)",
 				},
 				{
 					Long:        "ask-pass",
