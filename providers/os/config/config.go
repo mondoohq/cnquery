@@ -295,8 +295,8 @@ Examples:
 			Long: `Use the filesystem provider to query mounted file systems. 
 
 Examples:
-  cnspec scan filesystem --path <MOUNT-PATH-TO-FILE-SYSTEM>
-	cnquery shell fs --path <MOUNT-PATH-TO-FILE-SYSTEM>
+  cnspec scan filesystem <MOUNT-PATH-TO-FILE-SYSTEM>
+	cnquery shell fs <MOUNT-PATH-TO-FILE-SYSTEM>
 `,
 			MinArgs: 0,
 			MaxArgs: 1,
