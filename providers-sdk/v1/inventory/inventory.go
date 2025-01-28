@@ -389,11 +389,21 @@ func (p *Platform) PrettyTitle() string {
 type cloneSettings struct {
 	noDiscovery        bool
 	parentConnectionId *uint32
+	withFilters        bool
 }
 
 type CloneOption interface {
 	Apply(*cloneSettings)
 }
+
+// WithFilters ensures the discovery filters still get copied over
+func WithFilters() CloneOption {
+	return withFilters{}
+}
+
+type withFilters struct{}
+
+func (w withFilters) Apply(o *cloneSettings) { o.withFilters = true }
 
 // WithoutDiscovery removes the discovery flags in the opts to ensure the same discovery does not run again
 func WithoutDiscovery() CloneOption {
@@ -432,6 +442,15 @@ func (cfg *Config) Clone(opts ...CloneOption) *Config {
 	}
 	if cloneSettings.parentConnectionId != nil {
 		clonedObject.ParentConnectionId = *cloneSettings.parentConnectionId
+	}
+	if cloneSettings.withFilters {
+		if clonedObject.Discover == nil {
+			clonedObject.Discover = &Discovery{}
+		}
+		clonedObject.Discover.Filter = make(map[string]string)
+		for k, v := range cfg.Discover.Filter {
+			clonedObject.Discover.Filter[k] = v
+		}
 	}
 
 	return clonedObject
