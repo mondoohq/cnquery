@@ -30,9 +30,18 @@ var Config = plugin.Provider{
 	},
 	Connectors: []plugin.Connector{
 		{
-			Name:      "host",
-			Use:       "host HOST",
-			Short:     "a remote host",
+			Name:  "host",
+			Use:   "host HOST",
+			Short: "a remote HTTP or HTTPS host",
+			Long: `Use the host provider to query remote HTTP or HTTPS hosts. 
+
+Examples:
+  cnquery shell host <YOUR-DOMAIN-OR-IP>
+  cnspec scan host <YOUR-DOMAIN-OR-IP>
+
+Note:
+  If you don't provide a protocol, Mondoo assumes HTTPS.
+`,
 			MinArgs:   1,
 			MaxArgs:   1,
 			Discovery: []string{},

@@ -21,10 +21,16 @@ var Config = plugin.Provider{
 	},
 	Connectors: []plugin.Connector{
 		{
-			Name:      "terraform",
-			Aliases:   []string{},
-			Use:       "terraform PATH",
-			Short:     "a Terraform HCL file or directory",
+			Name:    "terraform",
+			Aliases: []string{},
+			Use:     "terraform PATH",
+			Short:   "a Terraform HCL file or directory",
+			Long: `Use the terraform provider to query Terraform HCL files and directories. 
+
+Examples:
+  cnspec scan terraform <PATH-TO-HCL-FILE>
+	cnquery shell terraform <PATH-TO-DIRECTORY>
+`,
 			MinArgs:   1,
 			MaxArgs:   2,
 			Discovery: []string{},

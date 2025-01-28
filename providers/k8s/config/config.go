@@ -21,6 +21,16 @@ var Config = plugin.Provider{
 			Aliases: []string{"kubernetes"},
 			Use:     "k8s (optional MANIFEST path)",
 			Short:   "a Kubernetes cluster or local manifest file(s)",
+			Long: `Use the k8s provider to query Kubernetes resources, including clusters, pods, services, containers, manifests, and more.
+
+Requirement:
+  To query or scan a Kubernetes cluster, you must install kubectl on your workstation. To learn how, read https://kubernetes.io/docs/tasks/tools/. 
+
+Examples:
+  cnquery shell k8s
+  cnspec scan k8s
+  cnspec <MANIFEST-FILE>
+`,
 			MinArgs: 0,
 			MaxArgs: 1,
 			Discovery: []string{

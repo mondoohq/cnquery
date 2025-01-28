@@ -20,6 +20,12 @@ var Config = plugin.Provider{
 			Name:  "vsphere",
 			Use:   "vsphere user@host",
 			Short: "a VMware vSphere installation",
+			Long: `Use the vsphere provider to query VMware vSphere installations. 
+
+Examples:
+  cnspec scan vsphere <USER>@<HOST> --askpass
+	cnquery shell vsphere <USER>@<HOST> --password <YOUR-PASSWORD>
+`,
 			Discovery: []string{
 				resources.DiscoveryApi,
 				resources.DiscoveryInstances,
