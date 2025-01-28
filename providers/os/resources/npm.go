@@ -4,7 +4,6 @@
 package resources
 
 import (
-	"cmp"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -17,11 +16,28 @@ import (
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/npm"
+	"go.mondoo.com/cnquery/v11/providers/os/fsutil"
+	"go.mondoo.com/cnquery/v11/providers/os/resources/languages"
+	"go.mondoo.com/cnquery/v11/providers/os/resources/languages/javascript/packagejson"
+	"go.mondoo.com/cnquery/v11/providers/os/resources/languages/javascript/packagelockjson"
 	"go.mondoo.com/cnquery/v11/types"
 )
 
-func initNpmPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+var (
+	defaultNpmPaths = []string{
+		// Linux
+		"/usr/local/lib",
+		"/opt/homebrew/lib",
+		"/usr/lib",
+		"/home/*/.npm-global/lib",
+		// Windows
+		"C:\\Users\\*\\AppData\\Roaming\\npm",
+		// macOS
+		"/Users/*/.npm-global/lib",
+	}
+)
+
+func initNpmPackages(_ *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if x, ok := args["path"]; ok {
 		_, ok := x.Value.(string)
 		if !ok {
@@ -44,223 +60,117 @@ func (r *mqlNpmPackages) id() (string, error) {
 	return "npm.packages/" + path, nil
 }
 
-func getFileContent(runtime *plugin.Runtime, path string) (*mqlFile, error) {
-	f, err := CreateResource(runtime, "file", map[string]*llx.RawData{
-		"path": llx.StringData(path),
-	})
-	if err != nil {
-		return nil, err
-	}
-	file := f.(*mqlFile)
-	return file, nil
-}
-
-var (
-	// we need to add extra testing for windows paths
-	//windowsDefaultNpmPaths = []string{
-	//	"C:\\Users\\%\\AppData\\Roaming\\npm",
-	//}
-	linuxDefaultNpmPaths = []string{
-		"/usr/local/lib",
-		"/opt/homebrew/lib",
-		"/usr/lib",
-		"/home/%/.npm-global/lib",
-		"/Users/%/.npm-global/lib",
-	}
-)
-
-func (r *mqlNpmPackages) gatherPackagesFromSystemDefaults(conn shared.Connection) ([]*npm.Package, []*npm.Package, []string, error) {
-	var directPackageList []*npm.Package
-	var transitivePackageList []*npm.Package
+// gatherPackagesFromSystemDefaults returns
+// - direct packages
+// - transitive packages
+// - evidence files
+func collectNpmPackagesInPaths(runtime *plugin.Runtime, fs afero.Fs, paths []string) ([]*languages.Package, []*languages.Package, []string, error) {
+	var directPackageList []*languages.Package
+	var transitivePackageList []*languages.Package
 	evidenceFiles := []string{}
+
 	log.Debug().Msg("searching for npm packages in default locations")
-	afs := &afero.Afero{Fs: conn.FileSystem()}
-	// we search through default system locations
-	for _, pattern := range linuxDefaultNpmPaths {
-		log.Debug().Str("path", pattern).Msg("searching for npm packages")
-		m, err := afero.Glob(conn.FileSystem(), pattern)
+	err := fsutil.WalkGlob(fs, paths, func(fs afero.Fs, walkPath string) error {
+		afs := &afero.Afero{Fs: fs}
+
+		// we walk through the directories and check if there is a node_modules directory
+		log.Debug().Str("path", walkPath).Msg("found npm package")
+		nodeModulesPath := filepath.Join(walkPath, "node_modules")
+		var files, err = afs.ReadDir(nodeModulesPath)
 		if err != nil {
-			log.Debug().Err(err).Str("path", pattern).Msg("could not search for npm packages")
-			// nothing to do, we just ignore it
+			// we ignore the error, it is expected that there is no node_modules directory
+			return nil
 		}
-		for _, walkPath := range m {
-			// we walk through the directories and check if there is a node_modules directory
-			log.Debug().Str("path", walkPath).Msg("found npm package")
-			nodeModulesPath := filepath.Join(walkPath, "node_modules")
-			var files, err = afs.ReadDir(nodeModulesPath)
+		for i := range files {
+			f := files[i]
+			p := f.Name()
+
+			if !f.IsDir() {
+				continue
+			}
+
+			log.Debug().Str("path", p).Msg("checking for package-lock.json or package.json file")
+
+			// Not found is an expected error and we handle that properly
+			bom, err := collectNpmPackages(runtime, fs, filepath.Join(nodeModulesPath, p))
 			if err != nil {
 				continue
 			}
-			for i := range files {
-				f := files[i]
-				p := f.Name()
 
-				if !f.IsDir() {
-					continue
-				}
-
-				log.Debug().Str("path", p).Msg("checking for package-lock.json or package.json file")
-
-				// check if there is a package-lock.json or package.json file
-				packageLockPath := filepath.Join(nodeModulesPath, p, "/package-lock.json")
-				packageJsonPath := filepath.Join(nodeModulesPath, p, "/package.json")
-
-				packageLockExists, _ := afs.Exists(packageLockPath)
-				packageJsonExists, _ := afs.Exists(packageJsonPath)
-
-				// add files to evidence
-				if packageLockExists {
-					evidenceFiles = append(evidenceFiles, packageLockPath)
-				}
-				if packageJsonExists {
-					evidenceFiles = append(evidenceFiles, packageJsonPath)
-				}
-
-				// parse npm files
-				if packageLockExists {
-					log.Debug().Str("path", packageLockPath).Msg("found package-lock.json file")
-					f, err := getFileContent(r.MqlRuntime, packageLockPath)
-					if err != nil {
-						continue
-					}
-					content := f.GetContent()
-					if content.Error != nil {
-						continue
-					}
-
-					p := &npm.PackageLockParser{}
-					info, err := p.Parse(strings.NewReader(content.Data), packageLockPath)
-					if err != nil {
-						log.Error().Err(err).Str("path", packageLockPath).Msg("could not parse package-lock.json file")
-					}
-					root := info.Root()
-					if root != nil {
-						directPackageList = append(directPackageList, root)
-					}
-					transitive := info.Transitive()
-					if transitive != nil {
-						transitivePackageList = append(transitivePackageList, transitive...)
-					}
-
-				} else if packageJsonExists {
-					log.Debug().Str("path", packageJsonPath).Msg("found package.json file")
-					f, err := getFileContent(r.MqlRuntime, packageJsonPath)
-					if err != nil {
-						continue
-					}
-					content := f.GetContent()
-					if content.Error != nil {
-						continue
-					}
-
-					p := &npm.PackageJsonParser{}
-					info, err := p.Parse(strings.NewReader(content.Data), packageJsonPath)
-					if err != nil {
-						log.Error().Err(err).Str("path", packageJsonPath).Msg("could not parse package.json file")
-					}
-					root := info.Root()
-					if root != nil {
-						directPackageList = append(directPackageList, root)
-					}
-					transitive := info.Transitive()
-					if transitive != nil {
-						transitivePackageList = append(transitivePackageList, transitive...)
-					}
-				}
+			root := bom.Root()
+			if root != nil {
+				directPackageList = append(directPackageList, root)
+			}
+			transitive := bom.Transitive()
+			if transitive != nil {
+				transitivePackageList = append(transitivePackageList, transitive...)
 			}
 		}
+		return nil
+	})
+	if err != nil {
+		return nil, nil, nil, err
 	}
 	return directPackageList, transitivePackageList, evidenceFiles, nil
 }
 
-func (r *mqlNpmPackages) gatherPackagesFromLocation(conn shared.Connection, path string) (*npm.Package, []*npm.Package, []*npm.Package, []string, error) {
-	evidenceFiles := []string{}
-
+func collectNpmPackages(runtime *plugin.Runtime, fs afero.Fs, path string) (languages.Bom, error) {
 	// specific path was provided
-	afs := &afero.Afero{Fs: conn.FileSystem()}
+	afs := &afero.Afero{Fs: fs}
 	isDir, err := afs.IsDir(path)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return nil, err
 	}
 
-	loadPackageLock := false
-	packageLockPath := ""
-	loadPackageJson := false
-	packageJsonPath := ""
-
+	searchPaths := []string{}
 	if isDir {
 		// check if there is a package-lock.json or package.json file
-		packageLockPath = filepath.Join(path, "/package-lock.json")
-		packageJsonPath = filepath.Join(path, "/package.json")
-	} else {
-		loadPackageJson = strings.HasSuffix(path, "package-lock.json")
-		if loadPackageJson {
-			packageLockPath = path
+		searchPaths = append(searchPaths, filepath.Join(path, "/package-lock.json"), filepath.Join(path, "/package.json"))
+	} else if strings.HasSuffix(path, "package-lock.json") {
+		searchPaths = append(searchPaths, path)
+	} else if strings.HasSuffix(path, "package.json") {
+		searchPaths = append(searchPaths, path)
+	}
+
+	// filter out non-existing files using the new slice package
+	filteredSearchPath := []string{}
+	for i := range searchPaths {
+		exists, _ := afs.Exists(searchPaths[i])
+		if exists {
+			filteredSearchPath = append(filteredSearchPath, searchPaths[i])
 		}
-		loadPackageLock = strings.HasSuffix(path, "package.json")
-		if loadPackageLock {
-			packageJsonPath = path
-		}
-
-		if !loadPackageJson && !loadPackageLock {
-			return nil, nil, nil, nil, fmt.Errorf("path %s is not a package.json or package-lock.json file", path)
-		}
 	}
 
-	loadPackageLock, _ = afs.Exists(packageLockPath)
-	loadPackageJson, _ = afs.Exists(packageJsonPath)
-
-	if !loadPackageLock && !loadPackageJson {
-		return nil, nil, nil, nil, fmt.Errorf("path %s does not contain a package-lock.json or package.json file", path)
+	if len(filteredSearchPath) == 0 {
+		return nil, fmt.Errorf("path %s is not a package.json or package-lock.json file", path)
 	}
 
-	// add source files as evidence to files list
-	if loadPackageLock {
-		evidenceFiles = append(evidenceFiles, packageLockPath)
-	}
-	if loadPackageJson {
-		evidenceFiles = append(evidenceFiles, packageJsonPath)
-	}
-
-	// parse npm files
-	var info npm.NpmPackageInfo
-	if loadPackageLock {
+	// technically we should only have one file, this logic will always pick the first one
+	for _, searchPath := range filteredSearchPath {
 		// if there is a package-lock.json file, we use it
-		f, err := getFileContent(r.MqlRuntime, packageLockPath)
+		f, err := newFile(runtime, searchPath)
 		if err != nil {
-			return nil, nil, nil, nil, err
+			return nil, err
 		}
 		content := f.GetContent()
 		if content.Error != nil {
-			return nil, nil, nil, nil, content.Error
+			return nil, content.Error
 		}
 
-		p := &npm.PackageLockParser{}
-		info, err = p.Parse(strings.NewReader(content.Data), packageLockPath)
-		if err != nil {
-			return nil, nil, nil, nil, err
-		}
-	} else if loadPackageJson {
-		// if there is a package.json file, we use it
-		f, err := getFileContent(r.MqlRuntime, packageJsonPath)
-		if err != nil {
-			return nil, nil, nil, nil, err
-		}
-		content := f.GetContent()
-		if content.Error != nil {
-			return nil, nil, nil, nil, content.Error
+		var extractor languages.Extractor
+
+		if strings.HasSuffix(searchPath, "package-lock.json") {
+			extractor = &packagelockjson.Extractor{}
+		} else if strings.HasSuffix(searchPath, "package.json") {
+			extractor = &packagejson.Extractor{}
 		}
 
-		p := &npm.PackageJsonParser{}
-		info, err = p.Parse(strings.NewReader(content.Data), packageJsonPath)
-		if err != nil {
-			return nil, nil, nil, nil, err
+		if extractor != nil {
+			return extractor.Parse(strings.NewReader(content.Data), searchPath)
 		}
-	} else {
-		return nil, nil, nil, nil, errors.New("could not parse package-lock.json or package.json file")
 	}
 
-	return info.Root(), info.Direct(), info.Transitive(), evidenceFiles, nil
+	return nil, errors.New("could not parse package-lock.json or package.json file")
 }
 
 type mqlNpmPackagesInternal struct {
@@ -281,38 +191,37 @@ func (r *mqlNpmPackages) gatherData() error {
 	// if it is a directory, we check if there is a package-lock.json or package.json file
 	conn := r.MqlRuntime.Connection.(shared.Connection)
 
-	var root *npm.Package
-	var directDependencies []*npm.Package
-	var transitiveDependencies []*npm.Package
+	var root *languages.Package
+	var directDependencies []*languages.Package
+	var transitiveDependencies []*languages.Package
 	var filePaths []string
 	var err error
+
 	if path == "" {
 		// no specific path was provided, we search through default locations
 		// here we are not going to have a root package, only direct and transitive dependencies
-		directDependencies, transitiveDependencies, filePaths, err = r.gatherPackagesFromSystemDefaults(conn)
+		directDependencies, transitiveDependencies, filePaths, err = collectNpmPackagesInPaths(r.MqlRuntime, conn.FileSystem(), defaultNpmPaths)
+		if err != nil {
+			return err
+		}
 	} else {
 		// specific path was provided and most likely it is a package-lock.json or package.json file or a directory
 		// that contains one of those files. We will have a root package direct and transitive dependencies
-		root, directDependencies, transitiveDependencies, filePaths, err = r.gatherPackagesFromLocation(conn, path)
-	}
-
-	if err != nil {
-		return err
+		bom, err := collectNpmPackages(r.MqlRuntime, conn.FileSystem(), path)
+		if err != nil {
+			return err
+		}
+		root = bom.Root()
+		directDependencies = bom.Direct()
+		transitiveDependencies = bom.Transitive()
 	}
 
 	// sort packages by name
-	sortFn := func(a, b *npm.Package) int {
-		if n := cmp.Compare(a.Name, b.Name); n != 0 {
-			return n
-		}
-		// if names are equal, order by version
-		return cmp.Compare(a.Version, b.Version)
-	}
-	slices.SortFunc(directDependencies, sortFn)
-	slices.SortFunc(transitiveDependencies, sortFn)
+	slices.SortFunc(directDependencies, languages.SortFn)
+	slices.SortFunc(transitiveDependencies, languages.SortFn)
 
 	if root != nil {
-		mqlPkg, err := newNpmPackages(r.MqlRuntime, root)
+		mqlPkg, err := newNpmPackage(r.MqlRuntime, root)
 		if err != nil {
 			return err
 		}
@@ -322,23 +231,15 @@ func (r *mqlNpmPackages) gatherData() error {
 	}
 
 	// create a resource for each package
-	transitiveResources := []interface{}{}
-	for i := range transitiveDependencies {
-		newNpmPackages, err := newNpmPackages(r.MqlRuntime, transitiveDependencies[i])
-		if err != nil {
-			return err
-		}
-		transitiveResources = append(transitiveResources, newNpmPackages)
+	transitiveResources, err := newNpmPackageList(r.MqlRuntime, transitiveDependencies)
+	if err != nil {
+		return err
 	}
 	r.List = plugin.TValue[[]interface{}]{Data: transitiveResources, State: plugin.StateIsSet}
 
-	directResources := []interface{}{}
-	for i := range directDependencies {
-		newNpmPackages, err := newNpmPackages(r.MqlRuntime, directDependencies[i])
-		if err != nil {
-			return err
-		}
-		directResources = append(directResources, newNpmPackages)
+	directResources, err := newNpmPackageList(r.MqlRuntime, directDependencies)
+	if err != nil {
+		return err
 	}
 	r.DirectDependencies = plugin.TValue[[]interface{}]{Data: directResources, State: plugin.StateIsSet}
 
@@ -359,7 +260,38 @@ func (r *mqlNpmPackages) gatherData() error {
 	return nil
 }
 
-func newNpmPackages(runtime *plugin.Runtime, pkg *npm.Package) (*mqlNpmPackage, error) {
+func (r *mqlNpmPackages) root() (*mqlNpmPackage, error) {
+	return nil, r.gatherData()
+}
+
+func (r *mqlNpmPackages) directDependencies() ([]interface{}, error) {
+	return nil, r.gatherData()
+}
+
+func (r *mqlNpmPackages) list() ([]interface{}, error) {
+	return nil, r.gatherData()
+}
+
+func (r *mqlNpmPackages) files() ([]interface{}, error) {
+	return nil, r.gatherData()
+}
+
+// newNpmPackageList creates a list of npm package resources
+func newNpmPackageList(runtime *plugin.Runtime, packages []*languages.Package) ([]interface{}, error) {
+	resources := []interface{}{}
+	for i := range packages {
+		pkg, err := newNpmPackage(runtime, packages[i])
+		if err != nil {
+			return nil, err
+		}
+		resources = append(resources, pkg)
+	}
+	return resources, nil
+}
+
+// newNpmPackage creates a new npm package resource
+func newNpmPackage(runtime *plugin.Runtime, pkg *languages.Package) (*mqlNpmPackage, error) {
+	// handle cpes
 	cpes := []interface{}{}
 	for i := range pkg.Cpes {
 		cpe, err := runtime.CreateSharedResource("cpe", map[string]*llx.RawData{
@@ -373,10 +305,10 @@ func newNpmPackages(runtime *plugin.Runtime, pkg *npm.Package) (*mqlNpmPackage, 
 
 	// create files for each path
 	mqlFiles := []interface{}{}
-	for i := range pkg.EvidenceLocations {
-		path := pkg.EvidenceLocations[i]
+	for i := range pkg.EvidenceList {
+		evidence := pkg.EvidenceList[i]
 		lf, err := CreateResource(runtime, "pkgFileInfo", map[string]*llx.RawData{
-			"path": llx.StringData(path),
+			"path": llx.StringData(evidence.Value),
 		})
 		if err != nil {
 			return nil, err
@@ -396,22 +328,6 @@ func newNpmPackages(runtime *plugin.Runtime, pkg *npm.Package) (*mqlNpmPackage, 
 		return nil, err
 	}
 	return mqlPkg.(*mqlNpmPackage), nil
-}
-
-func (r *mqlNpmPackages) root() (*mqlNpmPackage, error) {
-	return nil, r.gatherData()
-}
-
-func (r *mqlNpmPackages) directDependencies() ([]interface{}, error) {
-	return nil, r.gatherData()
-}
-
-func (r *mqlNpmPackages) list() ([]interface{}, error) {
-	return nil, r.gatherData()
-}
-
-func (r *mqlNpmPackages) files() ([]interface{}, error) {
-	return nil, r.gatherData()
 }
 
 func (k *mqlNpmPackage) id() (string, error) {
@@ -439,7 +355,7 @@ func (r *mqlNpmPackage) files() ([]interface{}, error) {
 }
 
 func (r *mqlNpmPackage) populateData() error {
-	// future iterations will read an npm package.json file and populate the data
+	// future iterations will read a npm package.json file and populate the data
 	// all data is already available in the package object
 	r.Name = plugin.TValue[string]{State: plugin.StateIsSet | plugin.StateIsNull}
 	r.Version = plugin.TValue[string]{State: plugin.StateIsSet | plugin.StateIsNull}

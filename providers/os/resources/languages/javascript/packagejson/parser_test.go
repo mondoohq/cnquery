@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package npm
+package packagejson
 
 import (
 	"encoding/json"
@@ -18,7 +18,7 @@ func TestPackageJson(t *testing.T) {
 		Expected packageJson
 	}{
 		{
-			Fixture: "./testdata/package-json/author.json",
+			Fixture: "./testdata/author.json",
 			Expected: packageJson{
 				Name: "author.js",
 				Author: &packageJsonPeople{
@@ -29,7 +29,7 @@ func TestPackageJson(t *testing.T) {
 			},
 		},
 		{
-			Fixture: "./testdata/package-json/author_shorten.json",
+			Fixture: "./testdata/author_shorten.json",
 			Expected: packageJson{
 				Name: "author-shorten.js",
 				Author: &packageJsonPeople{
@@ -39,7 +39,7 @@ func TestPackageJson(t *testing.T) {
 			},
 		},
 		{
-			Fixture: "./testdata/package-json/author_shorten_url.json",
+			Fixture: "./testdata/author_shorten_url.json",
 			Expected: packageJson{
 				Name: "author-shorten.js",
 				Author: &packageJsonPeople{
@@ -50,13 +50,12 @@ func TestPackageJson(t *testing.T) {
 			},
 		},
 		{
-			Fixture:  "./testdata/package-json/bugs.json",
-			Expected: packageJson{
-				// we do not parse bugs, so it should be empty
-			},
+			Fixture: "./testdata/bugs.json",
+			// we do not parse bugs, so it should be empty
+			Expected: packageJson{},
 		},
 		{
-			Fixture: "./testdata/package-json/bundle_dependencies.json",
+			Fixture: "./testdata/bundle_dependencies.json",
 			Expected: packageJson{
 				Name:    "awesome-web-framework",
 				Version: "1.0.0",
@@ -64,7 +63,7 @@ func TestPackageJson(t *testing.T) {
 			},
 		},
 		{
-			Fixture: "./testdata/package-json/contributors.json",
+			Fixture: "./testdata/contributors.json",
 			Expected: packageJson{
 				Contributors: []packageJsonPeople{
 					{
@@ -76,7 +75,7 @@ func TestPackageJson(t *testing.T) {
 			},
 		},
 		{
-			Fixture: "./testdata/package-json/contributors_shorten.json",
+			Fixture: "./testdata/contributors_shorten.json",
 			Expected: packageJson{
 				Contributors: []packageJsonPeople{
 					{
@@ -88,19 +87,19 @@ func TestPackageJson(t *testing.T) {
 			},
 		},
 		{
-			Fixture: "./testdata/package-json/cpu_exclude.json",
+			Fixture: "./testdata/cpu_exclude.json",
 			Expected: packageJson{
 				CPU: []string{"!arm", "!mips"},
 			},
 		},
 		{
-			Fixture: "./testdata/package-json/cpu_include.json",
+			Fixture: "./testdata/cpu_include.json",
 			Expected: packageJson{
 				CPU: []string{"x64", "ia32"},
 			},
 		},
 		{
-			Fixture: "./testdata/package-json/dependencies.json",
+			Fixture: "./testdata/dependencies.json",
 			Expected: packageJson{
 				Dependencies: map[string]string{
 					"foo": "1.0.0 - 2.9999.9999",
@@ -119,7 +118,7 @@ func TestPackageJson(t *testing.T) {
 			},
 		},
 		{
-			Fixture: "./testdata/package-json/dev_dependencies.json",
+			Fixture: "./testdata/dev_dependencies.json",
 			Expected: packageJson{
 				Name:        "ethopia-waza",
 				Description: "a delightfully fruity coffee varietal",
@@ -130,7 +129,7 @@ func TestPackageJson(t *testing.T) {
 			},
 		},
 		{
-			Fixture: "./testdata/package-json/engines.json",
+			Fixture: "./testdata/engines.json",
 			Expected: packageJson{
 				Engines: map[string]string{
 					"node": ">=0.10.3 <15",
@@ -138,13 +137,13 @@ func TestPackageJson(t *testing.T) {
 			},
 		},
 		{
-			Fixture: "./testdata/package-json/homepage.json",
+			Fixture: "./testdata/homepage.json",
 			Expected: packageJson{
 				Homepage: "https://github.com/owner/project#readme",
 			},
 		},
 		{
-			Fixture: "./testdata/package-json/license_deprecated_01.json",
+			Fixture: "./testdata/license_deprecated_01.json",
 			Expected: packageJson{
 				// we ignore those licenses for now
 				License: &packageJsonLicense{
@@ -153,14 +152,14 @@ func TestPackageJson(t *testing.T) {
 			},
 		},
 		{
-			Fixture: "./testdata/package-json/license_deprecated_02.json",
+			Fixture: "./testdata/license_deprecated_02.json",
 			Expected: packageJson{
 				// we ignore those licenses for now
 				License: nil,
 			},
 		},
 		{
-			Fixture: "./testdata/package-json/license_spdx.json",
+			Fixture: "./testdata/license_spdx.json",
 			Expected: packageJson{
 				License: &packageJsonLicense{
 					Value: "BSD-3-Clause",
@@ -168,7 +167,7 @@ func TestPackageJson(t *testing.T) {
 			},
 		},
 		{
-			Fixture: "./testdata/package-json/license_spdx_expression.json",
+			Fixture: "./testdata/license_spdx_expression.json",
 			Expected: packageJson{
 				License: &packageJsonLicense{
 					Value: "(MIT OR Apache-2.0)",
@@ -176,19 +175,19 @@ func TestPackageJson(t *testing.T) {
 			},
 		},
 		{
-			Fixture: "./testdata/package-json/os_exclude.json",
+			Fixture: "./testdata/os_exclude.json",
 			Expected: packageJson{
 				OS: []string{"!win32"},
 			},
 		},
 		{
-			Fixture: "./testdata/package-json/os_include.json",
+			Fixture: "./testdata/os_include.json",
 			Expected: packageJson{
 				OS: []string{"darwin", "linux"},
 			},
 		},
 		{
-			Fixture: "./testdata/package-json/peer_dependencies.json",
+			Fixture: "./testdata/peer_dependencies.json",
 			Expected: packageJson{
 				Name:    "tea-latte",
 				Version: "1.3.5",
@@ -196,7 +195,7 @@ func TestPackageJson(t *testing.T) {
 			},
 		},
 		{
-			Fixture: "./testdata/package-json/peer_dependencies_meta.json",
+			Fixture: "./testdata/peer_dependencies_meta.json",
 			Expected: packageJson{
 				Name:    "tea-latte",
 				Version: "1.3.5",
@@ -204,13 +203,13 @@ func TestPackageJson(t *testing.T) {
 			},
 		},
 		{
-			Fixture: "./testdata/package-json/private.json",
+			Fixture: "./testdata/private.json",
 			Expected: packageJson{
 				Private: true,
 			},
 		},
 		{
-			Fixture: "./testdata/package-json/repository.json",
+			Fixture: "./testdata/repository.json",
 			Expected: packageJson{
 				Repository: packageJsonRepository{
 					Type: "git",
@@ -219,7 +218,7 @@ func TestPackageJson(t *testing.T) {
 			},
 		},
 		{
-			Fixture: "./testdata/package-json/repository_bitbucket.json",
+			Fixture: "./testdata/repository_bitbucket.json",
 			Expected: packageJson{
 				Repository: packageJsonRepository{
 					Type: "bitbucket",
@@ -228,7 +227,7 @@ func TestPackageJson(t *testing.T) {
 			},
 		},
 		{
-			Fixture: "./testdata/package-json/repository_directory.json",
+			Fixture: "./testdata/repository_directory.json",
 			Expected: packageJson{
 				Repository: packageJsonRepository{
 					Type:      "git",
@@ -238,7 +237,7 @@ func TestPackageJson(t *testing.T) {
 			},
 		},
 		{
-			Fixture: "./testdata/package-json/repository_gh.json",
+			Fixture: "./testdata/repository_gh.json",
 			Expected: packageJson{
 				Repository: packageJsonRepository{
 					Type: "github",
@@ -247,10 +246,21 @@ func TestPackageJson(t *testing.T) {
 			},
 		},
 		{
-			Fixture: "./testdata/package-json/workspaces.json",
+			Fixture: "./testdata/workspaces.json",
 			Expected: packageJson{
 				Name: "workspace-example",
 				// we do not parse workspaces so it should be empty
+			},
+		},
+		{
+			Fixture: "./testdata/private-string.json",
+			Expected: packageJson{
+				Name:    "example",
+				Version: "0.0.1",
+				Private: true,
+				Dependencies: map[string]string{
+					"express": "*",
+				},
 			},
 		},
 	}
@@ -267,53 +277,4 @@ func TestPackageJson(t *testing.T) {
 			assert.Equal(t, tests[i].Expected, pkg)
 		})
 	}
-}
-
-func TestPackageJsonParser(t *testing.T) {
-	f, err := os.Open("./testdata/package-json/express-package.json")
-	require.NoError(t, err)
-	defer f.Close()
-
-	info, err := (&PackageJsonParser{}).Parse(f, "path/package.json")
-	assert.Nil(t, err)
-
-	root := info.Root()
-	assert.Equal(t, &Package{
-		Name:              "express",
-		Version:           "4.16.4",
-		Purl:              "pkg:npm/express@4.16.4",
-		Cpes:              []string{"cpe:2.3:a:express:express:4.16.4:*:*:*:*:*:*:*"},
-		EvidenceLocations: []string{"path/package.json"},
-	}, root)
-
-	transitive := info.Transitive()
-	assert.Equal(t, 31, len(transitive))
-
-	// ensure the package is in the transitive list
-	p := findPkg(transitive, "express")
-	assert.Equal(t, &Package{
-		Name:              "express",
-		Version:           "4.16.4",
-		Purl:              "pkg:npm/express@4.16.4",
-		Cpes:              []string{"cpe:2.3:a:express:express:4.16.4:*:*:*:*:*:*:*"},
-		EvidenceLocations: []string{"path/package.json"},
-	}, p)
-
-	p = findPkg(transitive, "path-to-regexp")
-	assert.Equal(t, &Package{
-		Name:              "path-to-regexp",
-		Version:           "0.1.7",
-		Purl:              "pkg:npm/path-to-regexp@0.1.7",
-		Cpes:              []string{"cpe:2.3:a:path-to-regexp:path-to-regexp:0.1.7:*:*:*:*:*:*:*"},
-		EvidenceLocations: []string{"path/package.json"},
-	}, p)
-
-	p = findPkg(transitive, "range-parser")
-	assert.Equal(t, &Package{
-		Name:              "range-parser",
-		Version:           "~1.2.0",
-		Purl:              "pkg:npm/range-parser@1.2.0",
-		Cpes:              []string{"cpe:2.3:a:range-parser:range-parser:1.2.0:*:*:*:*:*:*:*"},
-		EvidenceLocations: []string{"path/package.json"},
-	}, p)
 }

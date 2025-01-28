@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package npm
+package packagelockjson
 
 import (
 	"encoding/json"
@@ -18,7 +18,7 @@ func TestPackageLock(t *testing.T) {
 		Expected packageLock
 	}{
 		{
-			Fixture: "testdata/package-lock/lockfile-v0.json",
+			Fixture: "testdata/lockfile-v0.json",
 			Expected: packageLock{
 				Name:            "react-build",
 				Version:         "15.1.0",
@@ -38,7 +38,7 @@ func TestPackageLock(t *testing.T) {
 			},
 		},
 		{
-			Fixture: "testdata/package-lock/lockfile-v1.json",
+			Fixture: "testdata/lockfile-v1.json",
 			Expected: packageLock{
 				Name:            "npm",
 				Version:         "6.0.0",
@@ -54,7 +54,7 @@ func TestPackageLock(t *testing.T) {
 			},
 		},
 		{
-			Fixture: "testdata/package-lock/lockfile-v2.json",
+			Fixture: "testdata/lockfile-v2.json",
 			Expected: packageLock{
 				Name:            "npm",
 				Version:         "7.0.0",
@@ -92,7 +92,7 @@ func TestPackageLock(t *testing.T) {
 			},
 		},
 		{
-			Fixture: "testdata/package-lock/lockfile-v2-licenses.json",
+			Fixture: "testdata/lockfile-v2-licenses.json",
 			Expected: packageLock{
 				Name:            "my-package",
 				Version:         "1.0.0",
@@ -110,7 +110,7 @@ func TestPackageLock(t *testing.T) {
 			},
 		},
 		{
-			Fixture: "testdata/package-lock/lockfile-v3.json",
+			Fixture: "testdata/lockfile-v3.json",
 			Expected: packageLock{
 				Name:            "npm",
 				Version:         "10.4.0",
@@ -136,7 +136,7 @@ func TestPackageLock(t *testing.T) {
 			},
 		},
 		{
-			Fixture: "testdata/package-lock/simple-lock.json",
+			Fixture: "testdata/simple-lock.json",
 			Expected: packageLock{
 				Name:            "simple",
 				Version:         "1.0.0",
@@ -158,74 +158,4 @@ func TestPackageLock(t *testing.T) {
 			assert.Equal(t, tests[i].Expected, pkg)
 		})
 	}
-}
-
-func TestPackageJsonLockWithPackages(t *testing.T) {
-	f, err := os.Open("./testdata/package-lock/lockfile-v2.json")
-	require.NoError(t, err)
-	defer f.Close()
-
-	info, err := (&PackageLockParser{}).Parse(f, "path/to/package-lock.json")
-	assert.Nil(t, err)
-
-	root := info.Root()
-	assert.Equal(t, &Package{
-		Name:              "npm",
-		Version:           "7.0.0",
-		Purl:              "pkg:npm/npm@7.0.0",
-		Cpes:              []string{"cpe:2.3:a:npm:npm:7.0.0:*:*:*:*:*:*:*"},
-		EvidenceLocations: []string{"path/to/package-lock.json"},
-	}, root)
-
-	transitive := info.Transitive()
-	assert.Equal(t, 2, len(transitive))
-
-	p := findPkg(transitive, "@babel/code-frame")
-	assert.Equal(t, &Package{
-		Name:              "@babel/code-frame",
-		Version:           "7.10.4",
-		Purl:              "pkg:npm/node-modules/%40babel@7.10.4",
-		Cpes:              []string{"cpe:2.3:a:node_modules\\/\\@babel\\/code-frame:node_modules\\/\\@babel\\/code-frame:7.10.4:*:*:*:*:*:*:*"},
-		EvidenceLocations: []string{"path/to/package-lock.json"},
-	}, p)
-
-}
-
-func TestPackageJsonLockWithDependencies(t *testing.T) {
-	f, err := os.Open("./testdata/package-lock/workbox-package-lock.json")
-	require.NoError(t, err)
-	defer f.Close()
-
-	info, err := (&PackageLockParser{}).Parse(f, "path/to/package-lock.json")
-	assert.Nil(t, err)
-
-	root := info.Root()
-	assert.Equal(t, &Package{
-		Name:              "workbox",
-		Version:           "0.0.0",
-		Purl:              "pkg:npm/workbox@0.0.0",
-		Cpes:              []string{"cpe:2.3:a:workbox:workbox:0.0.0:*:*:*:*:*:*:*"},
-		EvidenceLocations: []string{"path/to/package-lock.json"},
-	}, root)
-
-	transitive := info.Transitive()
-	assert.Equal(t, 1299, len(transitive))
-
-	p := findPkg(transitive, "@babel/generator")
-	assert.Equal(t, &Package{
-		Name:              "@babel/generator",
-		Version:           "7.0.0",
-		Purl:              "pkg:npm/%40babel/generator@7.0.0",
-		Cpes:              []string{"cpe:2.3:a:\\@babel\\/generator:\\@babel\\/generator:7.0.0:*:*:*:*:*:*:*"},
-		EvidenceLocations: []string{"path/to/package-lock.json"},
-	}, p)
-
-	p = findPkg(transitive, "@lerna/changed")
-	assert.Equal(t, &Package{
-		Name:              "@lerna/changed",
-		Version:           "3.3.2",
-		Purl:              "pkg:npm/%40lerna/changed@3.3.2",
-		Cpes:              []string{"cpe:2.3:a:\\@lerna\\/changed:\\@lerna\\/changed:3.3.2:*:*:*:*:*:*:*"},
-		EvidenceLocations: []string{"path/to/package-lock.json"},
-	}, p)
 }
