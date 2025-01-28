@@ -29,7 +29,7 @@ Requirement:
 Examples:
   cnquery shell k8s
   cnspec scan k8s
-	cnspec <MANIFEST-FILE>
+  cnspec <MANIFEST-FILE>
 `,
 			MinArgs: 0,
 			MaxArgs: 1,

@@ -197,7 +197,7 @@ Examples:
 			Name:  "container",
 			Use:   "container",
 			Short: "a running container or container image",
-			Long: `Use the vagrant provider to query running containers or container images.  
+			Long: `Use the container provider to query running containers or container images.  
 
 Examples:
   cnspec scan container ubuntu:latest
@@ -242,7 +242,7 @@ Examples:
 			Name:  "docker",
 			Use:   "docker",
 			Short: "a running Docker container, Docker image, or Dockerfile",
-			Long: `Use the docker provider to query running docker containers or container images in public or private container registries using their registry name. Or scan a Dockerfile by specifying its path. 
+			Long: `Use the docker provider to query running Docker containers or container images in public or private container registries using their registry name. Or scan a Dockerfile by specifying its path. 
 
 Examples:
   cnspec scan docker <DOCKER-CONTAINER-ID>
