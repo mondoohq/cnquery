@@ -159,7 +159,7 @@ func DiscoverAssets(ctx context.Context, req *AssetDiscoveryRequest) (*Discovere
 		}
 
 		// for all discovered assets, we apply mondoo-specific labels and annotations that come from the root asset
-		discoverAssets(rootAssetWithRuntime, resolvedRootAsset, discoveredAssets, runtimeLabels, req.Upstream, req.Recording)
+		discoverAssets(rootAssetWithRuntime, resolvedRootAsset, discoveredAssets, runtimeLabels, req.Upstream, req.Recording, req.Depth, 0)
 	}
 
 	// if there is exactly one asset, assure that the --asset-name is used
@@ -173,19 +173,19 @@ func DiscoverAssets(ctx context.Context, req *AssetDiscoveryRequest) (*Discovere
 	return discoveredAssets, nil
 }
 
-func discoverAssets(rootAssetWithRuntime *AssetWithRuntime, resolvedRootAsset *inventory.Asset, discoveredAssets *DiscoveredAssets, runtimeLabels map[string]string, upstream *upstream.UpstreamConfig, recording llx.Recording) {
+func discoverAssets(rootAssetWithRuntime *AssetWithRuntime, resolvedRootAsset *inventory.Asset, discoveredAssets *DiscoveredAssets, runtimeLabels map[string]string, upstream *upstream.UpstreamConfig, recording llx.Recording, depth uint, maxDepth uint) {
 	defer logger.FuncDur(time.Now(), "explorer.discoverAssets")
 
 	// It is possible that we did not discover any assets under the root asset. In that case the inventory
 	// would be nil and we can return
-	if rootAssetWithRuntime.Runtime.Provider.Connection.Inventory == nil {
+	if rootAssetWithRuntime.Runtime.Provider.Connection.Inventory == nil || maxDepth == depth {
 		return
 	}
 
 	pool := workerpool.New[*AssetWithRuntime](workers)
 	pool.Start()
 	defer pool.Close()
-
+	depth++
 	// for all discovered assets, we apply mondoo-specific labels and annotations that come from the root asset
 	for _, asset := range rootAssetWithRuntime.Runtime.Provider.Connection.Inventory.Spec.Assets {
 		pool.Submit(func() (*AssetWithRuntime, error) {
@@ -220,10 +220,9 @@ func discoverAssets(rootAssetWithRuntime *AssetWithRuntime, resolvedRootAsset *i
 				assetWithRuntime.Runtime.Close()
 				continue
 			}
-
-			discoverAssets(assetWithRuntime, resolvedRootAsset, discoveredAssets, runtimeLabels, upstream, recording)
+			discoverAssets(assetWithRuntime, resolvedRootAsset, discoveredAssets, runtimeLabels, upstream, recording, depth, maxDepth)
 		} else {
-			discoverAssets(assetWithRuntime, resolvedRootAsset, discoveredAssets, runtimeLabels, upstream, recording)
+			discoverAssets(assetWithRuntime, resolvedRootAsset, discoveredAssets, runtimeLabels, upstream, recording, depth, maxDepth)
 			assetWithRuntime.Runtime.Close()
 		}
 	}

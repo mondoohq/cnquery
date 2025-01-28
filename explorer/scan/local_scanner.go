@@ -242,7 +242,14 @@ func (s *LocalScanner) loopyLoop(ctx context.Context, job *Job, processedAssets 
 		Inv:       job.Inventory,
 		Upstream:  upstream,
 		Recording: s.recording,
+		Depth:     1,
 	}
+
+	assetNames := []string{}
+	for _, a := range job.Inventory.GetSpec().GetAssets() {
+		assetNames = append(assetNames, a.Name)
+	}
+	log.Warn().Msgf("discovering assets for %s...", strings.Join(assetNames, ", "))
 	discoveredAssets, err := DiscoverAssets(ctx, discoveryReq)
 	if err != nil {
 		return err
@@ -253,43 +260,27 @@ func (s *LocalScanner) loopyLoop(ctx context.Context, job *Job, processedAssets 
 		newAssets.Add(asset.Asset, asset.Runtime)
 	}
 
+	log.Warn().Msgf("discovered %d assets", len(newAssets.Assets))
+
 	if len(newAssets.Assets) == 0 {
 		return nil
 	}
 
-	if err := s.scanAssets(ctx, newAssets, job, reporter, upstream); err != nil {
+	if err := s.scanAssets(ctx, newAssets, processedAssets, job, reporter, upstream); err != nil {
 		return err
 	}
 	for pid := range discoveredAssets.platformIds {
 		processedAssets[pid] = struct{}{}
 	}
 
-	for _, asset := range newAssets.Assets {
-		err := s.loopyLoop(ctx, &Job{
-			Inventory: &inventory.Inventory{
-				Spec: &inventory.InventorySpec{
-					Assets: []*inventory.Asset{asset.Asset},
-				},
-			},
-			Bundle:           job.Bundle,
-			DoRecord:         job.DoRecord,
-			QueryPackFilters: job.QueryPackFilters,
-			Props:            job.Props,
-		}, processedAssets, reporter, upstream)
+	// for _, asset := range newAssets.Assets {
 
-		// Close the runtime for the asset once we are done with it
-		if asset.Runtime != nil {
-			asset.Runtime.Close()
-		}
-		if err != nil {
-			return err
-		}
-	}
+	// }
 
 	return nil
 }
 
-func (s *LocalScanner) scanAssets(ctx context.Context, discoveredAssets *DiscoveredAssets, job *Job, reporter *AggregateReporter, upstream *upstream.UpstreamConfig) error {
+func (s *LocalScanner) scanAssets(ctx context.Context, discoveredAssets *DiscoveredAssets, processedAssets map[string]struct{}, job *Job, reporter *AggregateReporter, upstream *upstream.UpstreamConfig) error {
 	// if we had asset errors we want to place them into the reporter
 	for i := range discoveredAssets.Errors {
 		reporter.AddScanError(discoveredAssets.Errors[i].Asset, discoveredAssets.Errors[i].Err)
@@ -418,6 +409,7 @@ func (s *LocalScanner) scanAssets(ctx context.Context, discoveredAssets *Discove
 					asset = discoveredAsset
 				}
 
+				log.Warn().Msgf("scanning asset %s", asset.Name)
 				p := &progress.MultiProgressAdapter{Key: asset.PlatformIds[0], Multi: multiprogress}
 				s.RunAssetJob(&AssetJob{
 					DoRecord:         job.DoRecord,
@@ -432,8 +424,24 @@ func (s *LocalScanner) scanAssets(ctx context.Context, discoveredAssets *Discove
 					runtime:          runtime,
 				})
 
+				// TODO: discover sub-assets here instead
+				err := s.loopyLoop(ctx, &Job{
+					Inventory: &inventory.Inventory{
+						Spec: &inventory.InventorySpec{
+							Assets: []*inventory.Asset{asset},
+						},
+					},
+					Bundle:           job.Bundle,
+					DoRecord:         job.DoRecord,
+					QueryPackFilters: job.QueryPackFilters,
+					Props:            job.Props,
+				}, processedAssets, reporter, upstream)
 				// runtimes are single-use only. Close them once they are done.
 				runtime.Close()
+				if err != nil {
+					reporter.AddScanError(asset, err)
+				}
+
 			}
 		}()
 		wg.Wait()

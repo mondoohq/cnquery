@@ -109,7 +109,7 @@ func (d *Discovery) GetAllResources(ctx context.Context, resTypes *ApiResourceIn
 
 	log.Debug().Msg("waiting for all queries to return")
 	wg.Wait()
-	log.Debug().Msgf("query api resources completed: objects=%d, error=%v", len(out), collectErr)
+	log.Warn().Msgf("query api resources completed: objects=%d, error=%v", len(out), collectErr)
 	return out, collectErr
 }
 

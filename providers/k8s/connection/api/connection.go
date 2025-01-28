@@ -266,7 +266,7 @@ func (c *Connection) resources(kind string, name string, namespace string) (*sha
 	if err != nil {
 		return nil, err
 	}
-	log.Debug().Msgf("found %d resource objects", len(objs))
+	log.Warn().Str("kind", kind).Str("name", name).Str("namespace", namespace).Msgf("found %d resource objects", len(objs))
 
 	objs, err = resources.FilterResource(resType, objs, name, namespace)
 	if err != nil {

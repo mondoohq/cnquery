@@ -98,6 +98,10 @@ func Discover(runtime *plugin.Runtime, features cnquery.Features) (*inventory.In
 
 	invConfig := conn.InventoryConfig()
 
+	if invConfig.DelayDiscovery {
+		return in, nil
+	}
+
 	res, err := runtime.CreateResource(runtime, "k8s", nil)
 	if err != nil {
 		return nil, err
@@ -219,6 +223,8 @@ func discoverNamespaces(
 			if err != nil {
 				return nil, err
 			}
+			inv := invConfig.Clone()
+			inv.DelayDiscovery = true
 			assetList = append(assetList, &inventory.Asset{
 				PlatformIds: []string{
 					shared.NewNamespacePlatformId(clusterId, ns.Name, string(ns.UID)),
@@ -228,7 +234,7 @@ func discoverNamespaces(
 				Labels:   labels,
 				// We don't want a parent connection so there is no central cache for the resources
 				// for the complete cluster. We only cache resources for a single namespace
-				Connections: []*inventory.Config{invConfig.Clone()},
+				Connections: []*inventory.Config{inv},
 				Category:    conn.Asset().Category,
 			})
 			if od != nil {
