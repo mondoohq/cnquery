@@ -81,7 +81,7 @@ archives:
   - id: releases
     format_overrides:
       - goos: windows
-        formats: [ 'zip' ]
+        format: zip
     files:
       - none*
 checksum:
