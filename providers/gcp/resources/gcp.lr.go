@@ -15417,6 +15417,7 @@ type mqlGcpProjectGkeServiceCluster struct {
 	ConfidentialNodesConfig plugin.TValue[interface{}]
 	IdentityServiceConfig plugin.TValue[interface{}]
 	NetworkPolicyConfig plugin.TValue[interface{}]
+	ReleaseChannel plugin.TValue[interface{}]
 }
 
 // createGcpProjectGkeServiceCluster creates a new instance of this resource
