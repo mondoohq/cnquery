@@ -6837,6 +6837,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlGcpProjectGkeServiceCluster).DatabaseEncryption, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
+	"gcp.project.gkeService.cluster.shieldedNodesConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).ShieldedNodesConfig, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
 	"gcp.project.gkeService.cluster.releaseChannel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceCluster).ReleaseChannel, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
