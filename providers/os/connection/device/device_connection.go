@@ -119,7 +119,10 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 			}
 			block.MountPoint = scanDir
 		}
-		res.MountedDirs = append(res.MountedDirs, block.MountPoint)
+		if !stringx.Contains(res.MountedDirs, block.MountPoint) {
+			res.MountedDirs = append(res.MountedDirs, block.MountPoint)
+		}
+
 		res.partitions[block.MountPoint] = block
 
 		if asset.Platform != nil {
@@ -236,14 +239,12 @@ func tryDetectAsset(connId uint32, partition *snapshot.PartitionInfo, conf *inve
 	fingerprint, p, err := id.IdentifyPlatform(fsConn, &plugin.ConnectReq{}, p, asset.IdDetector)
 	if err != nil {
 		if len(asset.PlatformIds) == 0 {
-			log.Debug().Err(err).
-				Msg("device connection> failed to identify platform from device")
+			log.Debug().Err(err).Msg("device connection> failed to identify platform from device")
 			return nil, err
 		}
-
-		log.Warn().Err(err).
-			Msg("device connection> failed to identify platform from device, using existing platform ids")
+		log.Warn().Err(err).Msg("device connection> cannot detect platform ids, using existing ones")
 	}
+
 	if p == nil {
 		log.Debug().Msg("device connection> no platform detected")
 		return nil, errors.New("device connection> no platform detected")
