@@ -1531,8 +1531,8 @@ resources:
       nodePools: {}
       privateClusterConfig: {}
       projectId: {}
-      resourceLabels: {}
       releaseChannel: {}
+      resourceLabels: {}
       shieldedNodesConfig: {}
       status: {}
       subnetwork: {}
