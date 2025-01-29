@@ -315,8 +315,18 @@ func TestDictMethods(t *testing.T) {
 	x.TestSimple(t, []testutils.SimpleTest{
 		{
 			Code:        "muser.dict.nonexisting.contains('abc')",
-			ResultIndex: 1,
+			ResultIndex: 3,
 			Expectation: false,
+		},
+		{
+			Code:        "muser.dict.string.contains(muser.dict.string2)",
+			ResultIndex: 3,
+			Expectation: false,
+		},
+		{
+			Code:        "muser.dict.string.contains(muser.dict.string)",
+			ResultIndex: 3,
+			Expectation: true,
 		},
 	})
 }

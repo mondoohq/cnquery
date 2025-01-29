@@ -2078,26 +2078,49 @@ func mapOrTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Ra
 
 // string methods
 
-func stringContainsStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	if bind.Value == nil {
-		return BoolFalse, 0, nil
+func opStringContainsDict(left string, right any) (bool, error) {
+	switch x := right.(type) {
+	case string:
+		return strings.Contains(left, x), nil
+	case int64:
+		val := strconv.FormatInt(x, 10)
+		return strings.Contains(left, val), nil
+	case float64:
+		val := strconv.FormatFloat(x, 'f', -1, 64)
+		return strings.Contains(left, val), nil
+	default:
+		return false, nil
 	}
-
-	argRef := chunk.Function.Args[0]
-	arg, rref, err := e.resolveValue(argRef, ref)
-	if err != nil || rref > 0 {
-		return nil, rref, err
-	}
-
-	if arg.Value == nil {
-		return BoolFalse, 0, nil
-	}
-
-	ok := strings.Contains(bind.Value.(string), arg.Value.(string))
-	return BoolData(ok), 0, nil
 }
 
-func stringContainsIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+func opStringContainsString(left string, right any) (bool, error) {
+	v, ok := right.(string)
+	if !ok {
+		return false, nil
+	}
+	return strings.Contains(left, v), nil
+}
+
+func opStringContainsInt(left string, right any) (bool, error) {
+	val := strconv.FormatInt(right.(int64), 10)
+	return strings.Contains(left, val), nil
+}
+
+func opStringContainsRegex(left string, right any) (bool, error) {
+	reContent, ok := right.(string)
+	if !ok {
+		return false, nil
+	}
+
+	re, err := regexp.Compile(right.(string))
+	if err != nil {
+		return false, errors.New("Failed to compile regular expression: " + reContent)
+	}
+
+	return re.MatchString(left), nil
+}
+
+func stringContainsOther(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, cmp func(left string, right any) (bool, error)) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return BoolFalse, 0, nil
 	}
@@ -2112,119 +2135,73 @@ func stringContainsIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint
 		return BoolFalse, 0, nil
 	}
 
-	val := strconv.FormatInt(arg.Value.(int64), 10)
+	left := bind.Value.(string)
+	res, err := cmp(left, arg.Value)
+	if err != nil {
+		return nil, 0, err
+	}
+	return BoolData(res), 0, nil
+}
 
-	ok := strings.Contains(bind.Value.(string), val)
-	return BoolData(ok), 0, nil
+func stringContainsArrayOther(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, cmp func(left string, right any) (bool, error)) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return BoolFalse, 0, nil
+	}
+
+	argRef := chunk.Function.Args[0]
+	arg, rref, err := e.resolveValue(argRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+
+	if arg.Value == nil {
+		return BoolFalse, 0, nil
+	}
+
+	arr := arg.Value.([]any)
+	for i := range arr {
+		found, err := cmp(bind.Value.(string), arr[i])
+		if err != nil {
+			return nil, 0, err
+		}
+		if found {
+			return BoolData(true), 0, nil
+		}
+	}
+
+	return BoolData(false), 0, nil
+}
+
+func stringContainsString(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return stringContainsOther(e, bind, chunk, ref, opStringContainsString)
+}
+
+func stringContainsDict(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return stringContainsOther(e, bind, chunk, ref, opStringContainsDict)
+}
+
+func stringContainsInt(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return stringContainsOther(e, bind, chunk, ref, opStringContainsInt)
 }
 
 func stringContainsRegex(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	if bind.Value == nil {
-		return BoolFalse, 0, nil
-	}
-
-	argRef := chunk.Function.Args[0]
-	arg, rref, err := e.resolveValue(argRef, ref)
-	if err != nil || rref > 0 {
-		return nil, rref, err
-	}
-
-	if arg.Value == nil {
-		return BoolFalse, 0, nil
-	}
-
-	reContent := arg.Value.(string)
-	re, err := regexp.Compile(reContent)
-	if err != nil {
-		return nil, 0, errors.New("Failed to compile regular expression: " + reContent)
-	}
-
-	ok := re.MatchString(bind.Value.(string))
-	return BoolData(ok), 0, nil
+	return stringContainsOther(e, bind, chunk, ref, opStringContainsRegex)
 }
 
-func stringContainsArrayStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	if bind.Value == nil {
-		return BoolFalse, 0, nil
-	}
-
-	argRef := chunk.Function.Args[0]
-	arg, rref, err := e.resolveValue(argRef, ref)
-	if err != nil || rref > 0 {
-		return nil, rref, err
-	}
-
-	if arg.Value == nil {
-		return BoolFalse, 0, nil
-	}
-
-	arr := arg.Value.([]interface{})
-	for i := range arr {
-		v := arr[i].(string)
-		if strings.Contains(bind.Value.(string), v) {
-			return BoolData(true), 0, nil
-		}
-	}
-
-	return BoolData(false), 0, nil
+func stringContainsArrayString(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return stringContainsArrayOther(e, bind, chunk, ref, opStringContainsString)
 }
 
-func stringContainsArrayIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	if bind.Value == nil {
-		return BoolFalse, 0, nil
-	}
+func stringContainsArrayDict(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return stringContainsArrayOther(e, bind, chunk, ref, opStringContainsDict)
+}
 
-	argRef := chunk.Function.Args[0]
-	arg, rref, err := e.resolveValue(argRef, ref)
-	if err != nil || rref > 0 {
-		return nil, rref, err
-	}
-
-	if arg.Value == nil {
-		return BoolFalse, 0, nil
-	}
-
-	arr := arg.Value.([]interface{})
-	for i := range arr {
-		v := arr[i].(int64)
-		val := strconv.FormatInt(v, 10)
-		if strings.Contains(bind.Value.(string), val) {
-			return BoolData(true), 0, nil
-		}
-	}
-
-	return BoolData(false), 0, nil
+func stringContainsArrayInt(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return stringContainsArrayOther(e, bind, chunk, ref, opStringContainsInt)
 }
 
 func stringContainsArrayRegex(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	if bind.Value == nil {
-		return BoolFalse, 0, nil
-	}
-
-	argRef := chunk.Function.Args[0]
-	arg, rref, err := e.resolveValue(argRef, ref)
-	if err != nil || rref > 0 {
-		return nil, rref, err
-	}
-
-	if arg.Value == nil {
-		return BoolFalse, 0, nil
-	}
-
-	arr := arg.Value.([]interface{})
-	for i := range arr {
-		v := arr[i].(string)
-		re, err := regexp.Compile(v)
-		if err != nil {
-			return nil, 0, errors.New("Failed to compile regular expression: " + v)
-		}
-
-		if re.MatchString(bind.Value.(string)) {
-			return BoolTrue, 0, nil
-		}
-	}
-
-	return BoolFalse, 0, nil
+	return stringContainsArrayOther(e, bind, chunk, ref, opStringContainsRegex)
 }
 
 func stringInArray(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
@@ -2552,6 +2529,20 @@ func stringsliceEqString(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint
 			return StringData("")
 		}
 		return StringData(r)
+	})
+}
+
+func stringsliceEqDict(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return dataOpV2(e, bind, chunk, ref, types.Int, func(left interface{}, right interface{}) *RawData {
+		l := left.(string)
+		ok, err := opStringContainsDict(l, right)
+		if err != nil {
+			return &RawData{Error: err, Type: types.String}
+		}
+		if !ok {
+			return StringData("")
+		}
+		return StringData(l)
 	})
 }
 
