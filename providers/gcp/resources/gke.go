@@ -730,7 +730,7 @@ func createMqlNodePoolConfig(runtime *plugin.Runtime, np *containerpb.NodePool, 
 	if cfg.AdvancedMachineFeatures != nil {
 		mqlAdvancedMachineFeatures, err = CreateResource(runtime, "gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures", map[string]*llx.RawData{
 			"id":             llx.StringData(fmt.Sprintf("%s/advancedMachineFeatures", nodePoolId)),
-			"threadsPerCore": llx.BoolData(cfg.Gvnic.Enabled),
+			"threadsPerCore": llx.IntDataPtr(cfg.AdvancedMachineFeatures.ThreadsPerCore),
 		})
 		if err != nil {
 			return nil, err
