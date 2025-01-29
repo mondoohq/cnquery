@@ -500,13 +500,6 @@ func (g *mqlGcpProjectGkeService) clusters() ([]interface{}, error) {
 			}
 		}
 
-		var releaseChannel map[string]interface{}
-		if c.ReleaseChannel != nil {
-			releaseChannel = map[string]interface{}{
-				"channel": c.ReleaseChannel.Channel.String(),
-			}
-		}
-
 		var costManagementConfig map[string]interface{}
 		if c.CostManagementConfig != nil {
 			costManagementConfig = map[string]interface{}{
@@ -574,7 +567,7 @@ func (g *mqlGcpProjectGkeService) clusters() ([]interface{}, error) {
 			"confidentialNodesConfig":        llx.DictData(confidentialNodesConfig),
 			"identityServiceConfig":          llx.DictData(identityServiceConfig),
 			"networkPolicyConfig":            llx.DictData(networkPolicyConfig),
-			"releaseChannel":                 llx.DictData(releaseChannel),
+			"releaseChannel":                 llx.StringData(strings.ToLower(c.ReleaseChannel.GetChannel().String())),
 		})
 		if err != nil {
 			return nil, err
