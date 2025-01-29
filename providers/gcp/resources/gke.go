@@ -503,7 +503,7 @@ func (g *mqlGcpProjectGkeService) clusters() ([]interface{}, error) {
 		var releaseChannel map[string]interface{}
 		if c.ReleaseChannel != nil {
 			releaseChannel = map[string]interface{}{
-				"channel": c.ReleaseChannel.Channel,
+				"channel": c.ReleaseChannel.Channel.Enum(),
 			}
 		}
 
