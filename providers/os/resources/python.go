@@ -23,22 +23,20 @@ import (
 	"go.mondoo.com/cnquery/v11/types"
 )
 
-var (
-	defaultPythonPaths = []string{
-		// Linux
-		"/usr/local/lib/python*",
-		"/usr/local/lib64/python*",
-		"/usr/lib/python*",
-		"/usr/lib64/python*",
-		// Windows
-		"C:\\Python*\\Lib",
-		// macOS
-		"/opt/homebrew/lib/python*",
-		"/System/Library/Frameworks/Python.framework/Versions/*/lib/python*",
-		// we use 3.x to exclude the macOS 'Current' symlink
-		"/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.*/lib/python*",
-	}
-)
+var defaultPythonPaths = []string{
+	// Linux
+	"/usr/local/lib/python*",
+	"/usr/local/lib64/python*",
+	"/usr/lib/python*",
+	"/usr/lib64/python*",
+	// Windows
+	"C:\\Python*\\Lib",
+	// macOS
+	"/opt/homebrew/lib/python*",
+	"/System/Library/Frameworks/Python.framework/Versions/*/lib/python*",
+	// we use 3.x to exclude the macOS 'Current' symlink
+	"/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.*/lib/python*",
+}
 
 func initPython(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if x, ok := args["path"]; ok {
@@ -210,8 +208,9 @@ func collectPythonPackages(runtime *plugin.Runtime, fs afero.Fs, path string) ([
 
 	fileList, err := afs.ReadDir(path)
 	if err != nil {
-		if !os.IsNotExist(err) {
+		if os.IsNotExist(err) {
 			log.Warn().Err(err).Str("dir", path).Msg("unable to open directory")
+			return []python.PackageDetails{}, nil
 		}
 		return nil, err
 	}
