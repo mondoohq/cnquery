@@ -1531,6 +1531,7 @@ resources:
       nodePools: {}
       privateClusterConfig: {}
       projectId: {}
+      releaseChannel: {}
       resourceLabels: {}
       shieldedNodesConfig: {}
       status: {}

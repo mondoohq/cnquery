@@ -567,6 +567,7 @@ func (g *mqlGcpProjectGkeService) clusters() ([]interface{}, error) {
 			"confidentialNodesConfig":        llx.DictData(confidentialNodesConfig),
 			"identityServiceConfig":          llx.DictData(identityServiceConfig),
 			"networkPolicyConfig":            llx.DictData(networkPolicyConfig),
+			"releaseChannel":                 llx.StringData(strings.ToLower(c.ReleaseChannel.GetChannel().String())),
 		})
 		if err != nil {
 			return nil, err

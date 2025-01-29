@@ -1490,6 +1490,8 @@ private gcp.project.gkeService.cluster @defaults("name description zone status c
   identityServiceConfig dict
   // Configuration options for the NetworkPolicy feature
   networkPolicyConfig dict
+  // The release channel that the cluster is subscribed to
+  releaseChannel string
 }
 
 // Google Kubernetes Engine (GKE) cluster addons config

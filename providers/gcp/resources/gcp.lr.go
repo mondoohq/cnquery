@@ -2485,6 +2485,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.gkeService.cluster.networkPolicyConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceCluster).GetNetworkPolicyConfig()).ToDataRes(types.Dict)
 	},
+	"gcp.project.gkeService.cluster.releaseChannel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetReleaseChannel()).ToDataRes(types.String)
+	},
 	"gcp.project.gkeService.cluster.addonsConfig.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GetId()).ToDataRes(types.String)
 	},
@@ -6852,6 +6855,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"gcp.project.gkeService.cluster.networkPolicyConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceCluster).NetworkPolicyConfig, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.releaseChannel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).ReleaseChannel, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.gkeService.cluster.addonsConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15410,6 +15417,7 @@ type mqlGcpProjectGkeServiceCluster struct {
 	ConfidentialNodesConfig plugin.TValue[interface{}]
 	IdentityServiceConfig plugin.TValue[interface{}]
 	NetworkPolicyConfig plugin.TValue[interface{}]
+	ReleaseChannel plugin.TValue[string]
 }
 
 // createGcpProjectGkeServiceCluster creates a new instance of this resource
@@ -15595,6 +15603,10 @@ func (c *mqlGcpProjectGkeServiceCluster) GetIdentityServiceConfig() *plugin.TVal
 
 func (c *mqlGcpProjectGkeServiceCluster) GetNetworkPolicyConfig() *plugin.TValue[interface{}] {
 	return &c.NetworkPolicyConfig
+}
+
+func (c *mqlGcpProjectGkeServiceCluster) GetReleaseChannel() *plugin.TValue[string] {
+	return &c.ReleaseChannel
 }
 
 // mqlGcpProjectGkeServiceClusterAddonsConfig for the gcp.project.gkeService.cluster.addonsConfig resource
