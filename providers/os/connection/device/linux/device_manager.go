@@ -25,6 +25,7 @@ import (
 
 const (
 	LunOption                   = "lun"
+	LunsOption                  = "luns"
 	DeviceName                  = "device-name"
 	DeviceNames                 = "device-names"
 	MountAllPartitions          = "mount-all-partitions"
@@ -56,20 +57,22 @@ func (d *LinuxDeviceManager) IdentifyMountTargets(opts map[string]string) ([]*sn
 	if err := validateOpts(opts); err != nil {
 		return nil, err
 	}
-	if opts[LunOption] != "" {
-		lun, err := strconv.Atoi(opts[LunOption])
-		if err != nil {
-			return nil, err
-		}
-		pi, err := d.identifyViaLun(lun)
-		if err != nil {
-			return nil, err
-		}
 
-		return d.attemptExpandPartitions(pi)
+	deviceNames := []string{}
+	luns, err := getLunsFromOpts(opts)
+	if err != nil {
+		return nil, err
+	}
+	for _, l := range luns {
+		devices, err := d.identifyDeviceViaLun(l)
+		if err != nil {
+			return nil, err
+		}
+		for _, device := range devices {
+			deviceNames = append(deviceNames, device.Name)
+		}
 	}
 
-	var deviceNames []string
 	if opts[DeviceNames] != "" {
 		deviceNames = strings.Split(opts[DeviceNames], ",")
 	}
@@ -338,28 +341,49 @@ func (d *LinuxDeviceManager) UnmountAndClose() {
 // validates the options provided to the device manager
 // we cannot have both LUN and device name provided, those are mutually exclusive
 func validateOpts(opts map[string]string) error {
-	lun := opts[LunOption]
-
 	// this is needed only for the validation purposes
-	deviceNames := opts[DeviceNames] + opts[DeviceName]
-
+	deviceNamesPresent := opts[DeviceName] != "" || opts[DeviceNames] != ""
+	lunsPresent := opts[LunOption] != "" || opts[LunsOption] != ""
 	mountAll := opts[MountAllPartitions] == "true"
-	if lun != "" && deviceNames != "" {
+
+	if deviceNamesPresent && lunsPresent {
 		return errors.New("both lun and device names provided")
 	}
 
-	if lun == "" && deviceNames == "" {
+	if !deviceNamesPresent && !lunsPresent {
 		return errors.New("either lun or device names must be provided")
 	}
 
-	if deviceNames == "" && mountAll {
+	if !deviceNamesPresent && mountAll {
 		return errors.New("mount-all-partitions requires device names")
 	}
 
 	return nil
 }
 
-func (c *LinuxDeviceManager) identifyViaLun(lun int) ([]*snapshot.PartitionInfo, error) {
+func getLunsFromOpts(opts map[string]string) ([]int, error) {
+	luns := []int{}
+	if opts[LunOption] != "" {
+		lun, err := strconv.Atoi(opts[LunOption])
+		if err != nil {
+			return nil, err
+		}
+		luns = append(luns, lun)
+	}
+	if opts[LunsOption] != "" {
+		vals := strings.Split(opts[LunsOption], ",")
+		for _, l := range vals {
+			lun, err := strconv.Atoi(l)
+			if err != nil {
+				return nil, err
+			}
+			luns = append(luns, lun)
+		}
+	}
+	return luns, nil
+}
+
+func (c *LinuxDeviceManager) identifyDeviceViaLun(lun int) ([]snapshot.BlockDevice, error) {
 	scsiDevices, err := c.listScsiDevices()
 	if err != nil {
 		return nil, err
@@ -370,23 +394,14 @@ func (c *LinuxDeviceManager) identifyViaLun(lun int) ([]*snapshot.PartitionInfo,
 	if len(filteredScsiDevices) == 0 {
 		return nil, errors.New("no matching scsi devices found")
 	}
-	blockDevices, err := c.volumeMounter.CmdRunner.GetBlockDevices()
-	if err != nil {
-		return nil, err
+	devices := []snapshot.BlockDevice{}
+	for _, device := range filteredScsiDevices {
+		d := snapshot.BlockDevice{
+			Name: device.VolumePath,
+		}
+		devices = append(devices, d)
 	}
-	var device snapshot.BlockDevice
-	var deviceErr error
-	// if we have exactly one device present at the LUN we can directly search for it
-	if len(filteredScsiDevices) == 1 {
-		devicePath := filteredScsiDevices[0].VolumePath
-		device, deviceErr = blockDevices.FindDevice(devicePath)
-	} else {
-		device, deviceErr = findMatchingDeviceByBlock(filteredScsiDevices, blockDevices)
-	}
-	if deviceErr != nil {
-		return nil, deviceErr
-	}
-	return device.GetPartitions(false, false)
+	return devices, nil
 }
 
 func (c *LinuxDeviceManager) identifyViaDeviceName(deviceName string, mountAll bool, includeMounted bool) ([]*snapshot.PartitionInfo, error) {
