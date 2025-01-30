@@ -338,5 +338,15 @@ func TestDictMethods(t *testing.T) {
 			ResultIndex: 1,
 			Expectation: false,
 		},
+		{
+			Code:        "'<< hello world >>'.contains([muser.dict.string])",
+			ResultIndex: 1,
+			Expectation: true,
+		},
+		{
+			Code:        "'<< hello + world >>'.contains([muser.dict.string])",
+			ResultIndex: 1,
+			Expectation: false,
+		},
 	})
 }
