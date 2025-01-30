@@ -97,6 +97,9 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 	if len(asset.IdDetector) == 0 {
 		asset.IdDetector = []string{ids.IdDetector_Hostname, ids.IdDetector_SshHostkey}
 	}
+	if !stringx.Contains(asset.IdDetector, ids.IdDetector_MachineID) {
+		asset.IdDetector = append(asset.IdDetector, ids.IdDetector_MachineID)
+	}
 
 	res.partitions = make(map[string]*snapshot.PartitionInfo)
 
@@ -232,10 +235,8 @@ func tryDetectAsset(connId uint32, partition *snapshot.PartitionInfo, conf *inve
 		return nil, errors.New("cannot detect os")
 	}
 
-	log.Debug().Err(err).
-		Msg("device connection> detecting platform from device")
+	log.Debug().Err(err).Msg("device connection> detecting platform from device")
 
-	asset.IdDetector = append(asset.IdDetector, ids.IdDetector_MachineID)
 	fingerprint, p, err := id.IdentifyPlatform(fsConn, &plugin.ConnectReq{}, p, asset.IdDetector)
 	if err != nil {
 		if len(asset.PlatformIds) == 0 {
