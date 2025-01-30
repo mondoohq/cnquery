@@ -99,6 +99,17 @@ func compileStringContains(c *compiler, typ types.Type, ref uint64, id string, c
 			},
 		})
 		return types.Bool, nil
+	case types.Dict:
+		c.addChunk(&llx.Chunk{
+			Call: llx.Chunk_FUNCTION,
+			Id:   "contains" + string(types.Dict),
+			Function: &llx.Function{
+				Type:    string(types.Bool),
+				Binding: ref,
+				Args:    []*llx.Primitive{val},
+			},
+		})
+		return types.Bool, nil
 	case types.Array(types.String):
 		c.addChunk(&llx.Chunk{
 			Call: llx.Chunk_FUNCTION,
