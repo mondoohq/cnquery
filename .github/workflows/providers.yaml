@@ -196,6 +196,7 @@ jobs:
           private-key: ${{ secrets.MONDOO_CHECKOUT_APP_PRIVATE_KEY }}
           owner: mondoohq
           repositories: |
+            releasr
       - name: Trigger Reindex of releases.mondoo.com
         uses: peter-evans/repository-dispatch@v3
         with:
