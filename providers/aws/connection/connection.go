@@ -5,7 +5,10 @@ package connection
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"io"
+	"net/http"
 	"slices"
 	"strconv"
 	"strings"
@@ -381,8 +384,15 @@ func (h *AwsConnection) Regions() ([]string, error) {
 
 	res, err := svc.DescribeRegions(ctx, &ec2.DescribeRegionsInput{})
 	if err != nil {
-		return regions, err
+		log.Error().Err(err).Msg("unable to describe regions")
+		regionsFromTable, regionalErr := getRegionsFromRegionalTable()
+		if regionalErr != nil {
+			log.Error().Err(err).Msg("unable to list regions from regional table")
+			return regions, err
+		}
+		regions = regionsFromTable
 	}
+
 	for _, region := range res.Regions {
 		// ensure excluded regions are discarded
 		if !slices.Contains(h.Filters.DiscoveryFilters.ExcludeRegions, *region.RegionName) {
@@ -392,4 +402,55 @@ func (h *AwsConnection) Regions() ([]string, error) {
 	// cache the regions as part of the provider instance
 	h.clientcache.Store("_regions", &CacheEntry{Data: regions})
 	return regions, nil
+}
+
+type regionalTable struct {
+	Metadata struct {
+		Copyright     string `json:"copyright"`
+		Disclaimer    string `json:"disclaimer"`
+		FormatVersion string `json:"format:version"`
+		SourceVersion string `json:"source:version"`
+	} `json:"metadata"`
+	Prices []struct {
+		Attributes struct {
+			AwsRegion      string `json:"aws:region"`
+			AwsServiceName string `json:"aws:serviceName"`
+			AwsServiceURL  string `json:"aws:serviceUrl"`
+		} `json:"attributes"`
+		ID string `json:"id"`
+	} `json:"prices"`
+}
+
+// getRegionsFromRegionalTable is a workaround for cases where the DescribeRegions API
+// is blocked. This function returns all possible AWS regions using a well known regional
+// table provided by AWS.
+//
+// https://api.regional-table.region-services.aws.a2z.com/index.json
+//
+// NOTE: if we need to validate that we have access to that region or, that the region is
+// enabled, we can improve this function to do STS identity calls for all regions.
+func getRegionsFromRegionalTable() (regions []string, err error) {
+	resp, err := http.Get("https://api.regional-table.region-services.aws.a2z.com/index.json")
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+	var regionalTableJSON regionalTable
+	err = json.Unmarshal(body, &regionalTableJSON)
+	if err != nil {
+		return
+	}
+
+	for _, p := range regionalTableJSON.Prices {
+		if p.Attributes.AwsRegion != "" {
+			regions = append(regions, p.Attributes.AwsRegion)
+		}
+	}
+	slices.Sort(regions)
+	regions = slices.Compact(regions)
+	return
 }
