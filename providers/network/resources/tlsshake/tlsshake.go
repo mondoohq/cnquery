@@ -231,6 +231,9 @@ func (s *Tester) testTLS(proto string, target string, conf *ScanConfig) (int, er
 	if err != nil {
 		return 0, multierr.Wrap(err, "failed to connect to target")
 	}
+	if err := conn.SetReadDeadline(time.Now().Add(5 * time.Second)); err != nil {
+		return 0, err
+	}
 	defer conn.Close()
 
 	msg, cipherCount, err := s.helloTLSMsg(conf)
