@@ -53,5 +53,6 @@ func (c *mqlMuser) dict() (any, error) {
 	return map[string]any{
 		"listInt": []any{int64(1), int64(2), int64(3)},
 		"string":  "hello world",
+		"string2": "👋",
 	}, nil
 }
