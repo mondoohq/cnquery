@@ -57,6 +57,9 @@ func (s *Schema) Add(other ResourcesSchema) ResourcesSchema {
 			if v.Defaults != "" {
 				existing.Defaults = v.Defaults
 			}
+			if v.Context != "" {
+				existing.Context = v.Context
+			}
 
 			if existing.Fields == nil {
 				existing.Fields = map[string]*Field{}
@@ -83,6 +86,7 @@ func (s *Schema) Add(other ResourcesSchema) ResourcesSchema {
 				IsExtension:      v.IsExtension,
 				MinMondooVersion: v.MinMondooVersion,
 				Defaults:         v.Defaults,
+				Context:          v.Context,
 				Provider:         v.Provider,
 			}
 			for k, v := range v.Fields {

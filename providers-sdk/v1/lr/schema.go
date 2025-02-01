@@ -11,6 +11,8 @@ import (
 	"go.mondoo.com/cnquery/v11/types"
 )
 
+var CONTEXT_FIELD = "context"
+
 func Schema(ast *LR) (*resources.Schema, error) {
 	provider, ok := ast.Options["provider"]
 	if !ok {
@@ -150,7 +152,7 @@ func resourceInit(r *Resource, fields map[string]*resources.Field, ast *LR) (*re
 	return &resources.Init{Args: args}, nil
 }
 
-func resourceFields(r *Resource, ast *LR) map[string]*resources.Field {
+func resourceFields(r *Resource, ast *LR) (map[string]*resources.Field, error) {
 	fields := make(map[string]*resources.Field)
 
 	for _, f := range r.Body.Fields {
@@ -178,11 +180,29 @@ func resourceFields(r *Resource, ast *LR) map[string]*resources.Field {
 		}
 	}
 
-	return fields
+	if r.Context != "" {
+		if _, ok := fields[CONTEXT_FIELD]; ok {
+			return nil, errors.New("'" + CONTEXT_FIELD + "' field already exists on resource " + r.ID)
+		}
+		fields[CONTEXT_FIELD] = &resources.Field{
+			Name:        CONTEXT_FIELD,
+			Type:        r.Context,
+			IsMandatory: true,
+			Title:       "Context",
+			Desc:        "Contextual info, where this resource is located and defined",
+			IsEmbedded:  false,
+		}
+	}
+
+	return fields, nil
 }
 
 func resourceSchema(r *Resource, ast *LR) (*resources.ResourceInfo, error) {
-	fields := resourceFields(r, ast)
+	fields, err := resourceFields(r, ast)
+	if err != nil {
+		return nil, err
+	}
+
 	init, err := resourceInit(r, fields, ast)
 	if err != nil {
 		return nil, err
@@ -202,6 +222,7 @@ func resourceSchema(r *Resource, ast *LR) (*resources.ResourceInfo, error) {
 		IsExtension: r.IsExtension,
 		Fields:      fields,
 		Defaults:    r.Defaults,
+		Context:     r.Context,
 	}
 
 	if r.ListType != nil {
