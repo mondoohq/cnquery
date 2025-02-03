@@ -13,7 +13,7 @@ microsoft {
   // List of users
   users() microsoft.users
   // List of groups
-  groups() []microsoft.group
+  groups() microsoft.groups
   // List of domains
   domains() []microsoft.domain
   // List of applications
@@ -28,6 +28,13 @@ microsoft {
   settings() dict
   // The connected tenant's default domain name
   tenantDomainName() string
+}
+
+// Microsoft groups
+microsoft.groups {
+  []microsoft.group
+  // Total number of Microsoft groups
+  length() int
 }
 
 //  Microsoft Entra tenant
