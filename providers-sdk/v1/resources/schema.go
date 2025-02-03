@@ -3,9 +3,14 @@
 
 package resources
 
+import (
+	"go.mondoo.com/cnquery/v11/types"
+)
+
 type ResourcesSchema interface {
 	Lookup(resource string) *ResourceInfo
 	LookupField(resource string, field string) (*ResourceInfo, *Field)
+	FindField(resource *ResourceInfo, field string) (FieldPath, []*Field, bool)
 	AllResources() map[string]*ResourceInfo
 }
 
@@ -115,6 +120,40 @@ func (s *Schema) LookupField(resource string, field string) (*ResourceInfo, *Fie
 		}
 	}
 	return res, res.Fields[field]
+}
+
+type FieldPath []string
+
+func (s *Schema) FindField(resource *ResourceInfo, field string) (FieldPath, []*Field, bool) {
+	fieldInfo, ok := resource.Fields[field]
+	if ok {
+		return FieldPath{field}, []*Field{fieldInfo}, true
+	}
+
+	for _, f := range resource.Fields {
+		if f.IsEmbedded {
+			typ := types.Type(f.Type)
+			nextResource := s.Lookup(typ.ResourceName())
+			if nextResource == nil {
+				continue
+			}
+			childFieldPath, childFieldInfos, ok := s.FindField(nextResource, field)
+			if ok {
+				fp := make(FieldPath, len(childFieldPath)+1)
+				fieldInfos := make([]*Field, len(childFieldPath)+1)
+				fp[0] = f.Name
+				fieldInfos[0] = f
+				for i, n := range childFieldPath {
+					fp[i+1] = n
+				}
+				for i, f := range childFieldInfos {
+					fieldInfos[i+1] = f
+				}
+				return fp, fieldInfos, true
+			}
+		}
+	}
+	return nil, nil, false
 }
 
 func (s *Schema) AllResources() map[string]*ResourceInfo {

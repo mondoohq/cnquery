@@ -16,3 +16,16 @@ muser {
 mgroup {
   name string
 }
+
+mos {
+  // example override builtin func
+  groups() customGroups
+}
+
+// definition of custom list resource
+customGroups {
+  []mgroup
+
+  // overrides builtin function
+  length() int
+}
