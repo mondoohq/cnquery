@@ -582,6 +582,7 @@ func init() {
 			string(">" + types.String):  {f: semverGTsemver, Label: ">"},
 			string("<=" + types.String): {f: semverLTEsemver, Label: "<="},
 			string(">=" + types.String): {f: semverGTEsemver, Label: ">="},
+			"epoch":                     {f: semverEpoch},
 		},
 		types.ArrayLike: {
 			"[]":                       {f: arrayGetIndexV2},
