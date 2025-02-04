@@ -57,4 +57,22 @@ func TestGithubScanFlags(t *testing.T) {
 			"could not read private key", // expected! it means we loaded the flags
 		)
 	})
+	t.Run("github scan with both auth methods, prefer app credentials", func(t *testing.T) {
+		// NOTE this will fail but, it will load the flags and fail with the right message
+		r := test.NewCliTestRunner("./cnquery", "scan", "github", "repo", "foo",
+			// personal access token
+			"--token", "abc",
+			// application credentials
+			"--app-id", "123", "--app-installation-id", "456", "--app-private-key", "private-key.pem",
+		)
+		err := r.Run()
+		require.NoError(t, err)
+		assert.Equal(t, 1, r.ExitCode())
+		assert.NotNil(t, r.Stdout())
+		assert.NotNil(t, r.Stderr())
+
+		assert.Contains(t, string(r.Stderr()),
+			"could not read private key", // expected! it means we use app credentials
+		)
+	})
 }

@@ -7,7 +7,6 @@ import (
 	"context"
 	"net/http"
 	"net/url"
-	"os"
 	"strconv"
 	"time"
 
@@ -70,10 +69,6 @@ func connectionOptionsFromConfigOptions(conf *inventory.Config) (opts githubConn
 	opts.AppPrivateKeyFile = conf.Options[OPTION_APP_PRIVATE_KEY]
 	opts.EnterpriseURL = conf.Options[OPTION_ENTERPRISE_URL]
 	opts.Token = conf.Options[OPTION_TOKEN]
-
-	if opts.Token == "" {
-		opts.Token = os.Getenv("GITHUB_TOKEN")
-	}
 
 	for _, cred := range conf.Credentials {
 		switch cred.Type {

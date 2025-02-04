@@ -62,6 +62,13 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Options[connection.OPTION_ENTERPRISE_URL] = string(x.Value)
 	}
 
+	// Github provide has two authentication methods.
+	//
+	// 1. Application credentials
+	// 2. Personal access token
+	//
+	// We give precedence to the former and, if both auth methods are provided,
+	// we will output a warning.
 	isAppAuth := false
 	appId, ok := flags[connection.OPTION_APP_ID]
 	if ok && len(appId.Value) > 0 {
@@ -73,20 +80,28 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		pk := req.Flags[connection.OPTION_APP_PRIVATE_KEY]
 		conf.Options[connection.OPTION_APP_PRIVATE_KEY] = string(pk.Value)
 		isAppAuth = true
+		log.Debug().Msg("application credentials provided")
 	}
 
 	token := ""
 	if x, ok := flags["token"]; ok && len(x.Value) != 0 {
 		token = string(x.Value)
+		log.Debug().Msg("loaded token from flag")
 	}
-	if token == "" {
+	if token == "" && len(os.Getenv("GITHUB_TOKEN")) != 0 {
 		token = os.Getenv("GITHUB_TOKEN")
+		log.Debug().Msg("loaded token from GITHUB_TOKEN env variable")
 	}
 	if token == "" && !isAppAuth {
-		return nil, errors.New("a valid GitHub authentication is required, pass --token '<yourtoken>', set GITHUB_TOKEN environment variable or provide GitHub App credentials")
+		return nil, errors.New("a valid GitHub authentication is required, pass --token '<yourtoken>', " +
+			"set GITHUB_TOKEN environment variable or provide GitHub App credentials")
 	}
 	if token != "" {
-		conf.Credentials = append(conf.Credentials, vault.NewPasswordCredential("", token))
+		if isAppAuth {
+			log.Warn().Msg("both authentication methods provided, using application credentials")
+		} else {
+			conf.Credentials = append(conf.Credentials, vault.NewPasswordCredential("", token))
+		}
 	}
 
 	// discovery flags
