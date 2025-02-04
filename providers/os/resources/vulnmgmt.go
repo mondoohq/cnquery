@@ -5,6 +5,7 @@ package resources
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -308,4 +309,9 @@ func (c *mqlVulnCve) id() (string, error) {
 func (p *mqlVulnPackage) id() (string, error) {
 	id := p.Name.Data + "-" + p.Version.Data
 	return id, p.Name.Error
+}
+
+func (a *mqlAuditCvss) id() (string, error) {
+	id := fmt.Sprintf("%.1f-%s", a.Score.Data, a.Vector.Data)
+	return id, a.Score.Error
 }
