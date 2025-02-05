@@ -41,8 +41,6 @@ resources:
     min_mondoo_version: 5.15.0
   audit.cvss:
     fields:
-      id:
-        min_mondoo_version: 9.0.0
       score: {}
       vector: {}
     is_private: true

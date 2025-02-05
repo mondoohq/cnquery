@@ -677,9 +677,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"platform.cves.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPlatformCves).GetList()).ToDataRes(types.Array(types.Resource("audit.cve")))
 	},
-	"audit.cvss.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAuditCvss).GetId()).ToDataRes(types.String)
-	},
 	"audit.cvss.score": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAuditCvss).GetScore()).ToDataRes(types.Float)
 	},
@@ -2545,10 +2542,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAuditCvss).__id, ok = v.Value.(string)
 			return
 		},
-	"audit.cvss.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAuditCvss).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"audit.cvss.score": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAuditCvss).Score, ok = plugin.RawToTValue[float64](v.Value, v.Error)
 		return
@@ -5972,7 +5965,6 @@ type mqlAuditCvss struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAuditCvssInternal it will be used here
-	Id plugin.TValue[string]
 	Score plugin.TValue[float64]
 	Vector plugin.TValue[string]
 }
@@ -5988,12 +5980,7 @@ func createAuditCvss(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 		return res, err
 	}
 
-	if res.__id == "" {
-	res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("audit.cvss", res.__id)
@@ -6012,10 +5999,6 @@ func (c *mqlAuditCvss) MqlName() string {
 
 func (c *mqlAuditCvss) MqlID() string {
 	return c.__id
-}
-
-func (c *mqlAuditCvss) GetId() *plugin.TValue[string] {
-	return &c.Id
 }
 
 func (c *mqlAuditCvss) GetScore() *plugin.TValue[float64] {
