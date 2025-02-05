@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -152,7 +153,9 @@ func (a *mqlPlatformAdvisories) cvss() (*mqlAuditCvss, error) {
 		return nil, err
 	}
 
+	id := fmt.Sprintf("%d", report.Stats.Score)
 	obj, err := CreateResource(a.MqlRuntime, "audit.cvss", map[string]*llx.RawData{
+		"__id":   llx.StringData(id),
 		"score":  llx.FloatData(float64(report.Stats.Score) / 10),
 		"vector": llx.StringData(""), // TODO: we need to extend the report to include the vector in the report
 	})
@@ -180,7 +183,9 @@ func (a *mqlPlatformAdvisories) list() ([]interface{}, error) {
 			worstScore = &cvss.Cvss{Score: 0.0, Vector: ""}
 		}
 
+		id := fmt.Sprintf("%.1f-%s", worstScore.Score, worstScore.Vector)
 		cvssScore, err := CreateResource(a.MqlRuntime, "audit.cvss", map[string]*llx.RawData{
+			"__id":   llx.StringData(id),
 			"score":  llx.FloatData(float64(worstScore.Score)),
 			"vector": llx.StringData(worstScore.Vector),
 		})
@@ -256,7 +261,9 @@ func (a *mqlPlatformCves) list() ([]interface{}, error) {
 			worstScore = &cvss.Cvss{Score: 0.0, Vector: ""}
 		}
 
+		id := fmt.Sprintf("%.1f-%s", worstScore.Score, worstScore.Vector)
 		cvssScore, err := CreateResource(a.MqlRuntime, "audit.cvss", map[string]*llx.RawData{
+			"__id":   llx.StringData(id),
 			"score":  llx.FloatData(float64(worstScore.Score)),
 			"vector": llx.StringData(worstScore.Vector),
 		})
@@ -313,7 +320,9 @@ func (a *mqlPlatformCves) cvss() (*mqlAuditCvss, error) {
 		}
 	}
 
+	id := fmt.Sprintf("%.1f-", score)
 	obj, err := CreateResource(a.MqlRuntime, "audit.cvss", map[string]*llx.RawData{
+		"__id":   llx.StringData(id),
 		"score":  llx.FloatData(float64(int(score*10)) / 10),
 		"vector": llx.StringData(""),
 	})

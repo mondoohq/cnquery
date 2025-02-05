@@ -5,6 +5,7 @@ package resources
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -98,7 +99,9 @@ func (v *mqlVulnmgmt) populateData() error {
 		if err != nil {
 			return err
 		}
+		id := fmt.Sprintf("%d-%s", a.CvssScore.Value, a.CvssScore.Vector)
 		cvssScore, err := CreateResource(v.MqlRuntime, "audit.cvss", map[string]*llx.RawData{
+			"__id":   llx.StringData(id),
 			"score":  llx.FloatData(float64(a.CvssScore.Value) / 10),
 			"vector": llx.StringData(a.CvssScore.Vector),
 		})
@@ -129,7 +132,9 @@ func (v *mqlVulnmgmt) populateData() error {
 		if err != nil {
 			return err
 		}
+		id := fmt.Sprintf("%d-%s", c.CvssScore.Value, c.CvssScore.Vector)
 		cvssScore, err := CreateResource(v.MqlRuntime, "audit.cvss", map[string]*llx.RawData{
+			"__id":   llx.StringData(id),
 			"score":  llx.FloatData(float64(c.CvssScore.Value) / 10),
 			"vector": llx.StringData(c.CvssScore.Vector),
 		})
@@ -148,7 +153,9 @@ func (v *mqlVulnmgmt) populateData() error {
 		mqlVulnCves[i] = mqlVulnCve
 	}
 
+	id := fmt.Sprintf("%d-%s", vulnReport.Stats.Score.Value, vulnReport.Stats.Score.Vector)
 	res, err := CreateResource(v.MqlRuntime, "audit.cvss", map[string]*llx.RawData{
+		"__id":   llx.StringData(id),
 		"score":  llx.FloatData(float64(vulnReport.Stats.Score.Value) / 10),
 		"vector": llx.StringData(vulnReport.Stats.Score.Vector),
 	})
