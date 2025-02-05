@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"time"
 
+	abstractions "github.com/microsoft/kiota-abstractions-go"
 	"github.com/rs/zerolog/log"
 
 	"github.com/microsoftgraph/msgraph-sdk-go/applications"
@@ -23,7 +24,12 @@ import (
 	"go.mondoo.com/cnquery/v11/types"
 )
 
-func (a *mqlMicrosoft) applications() ([]interface{}, error) {
+func (a *mqlMicrosoft) applications() (*mqlMicrosoftApplications, error) {
+	mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.applications", map[string]*llx.RawData{})
+	return mqlResource.(*mqlMicrosoftApplications), err
+}
+
+func (a *mqlMicrosoftApplications) list() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -55,6 +61,27 @@ func (a *mqlMicrosoft) applications() ([]interface{}, error) {
 	}
 
 	return res, nil
+}
+
+func (a *mqlMicrosoftApplications) length() (int64, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return 0, err
+	}
+
+	opts := &applications.CountRequestBuilderGetRequestConfiguration{Headers: abstractions.NewRequestHeaders()}
+	opts.Headers.Add("ConsistencyLevel", "eventual")
+	length, err := graphClient.Applications().Count().Get(context.Background(), opts)
+	if err != nil {
+		return 0, err
+	}
+	if length == nil {
+		// This should never happen, but we better check
+		return 0, errors.New("unable to count applications, counter parameter API returned nil")
+	}
+
+	return int64(*length), nil
 }
 
 // newMqlMicrosoftApplication creates a new mqlMicrosoftApplication resource
