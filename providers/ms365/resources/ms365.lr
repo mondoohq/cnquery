@@ -11,7 +11,7 @@ microsoft {
   // Deprecated: use `microsoft.tenant` instead
   organizations() []microsoft.tenant
   // List of users
-  users() []microsoft.user
+  users() microsoft.users
   // List of groups
   groups() []microsoft.group
   // List of domains
@@ -23,7 +23,7 @@ microsoft {
   // List of enterprise applications
   enterpriseApplications() []microsoft.serviceprincipal
   // List of roles
-  roles() []microsoft.rolemanagement.roledefinition
+  roles() microsoft.roles
   // Microsoft 365 settings
   settings() dict
   // The connected tenant's default domain name
@@ -54,6 +54,17 @@ microsoft.tenant @defaults("name") {
   type string
   // Commercial subscription
   subscriptions() []dict
+}
+
+// List of Microsoft Entra users with optional filters
+microsoft.users {
+  []microsoft.user
+
+  init(filter? string, search? string)
+  // Filter users by property values
+  filter string
+  // Search users by search phrases
+  search string
 }
 
 // Microsoft Conditional Access Policies
@@ -571,11 +582,21 @@ microsoft.policies {
   consentPolicySettings() dict
 }
 
+// List of Microsoft Entra role definitions with optional filters
+microsoft.roles {
+  []microsoft.rolemanagement.roledefinition
+
+  init(filter? string, search? string)
+  // Filter roles by property values
+  filter string
+  // Search roles by search phrases
+  search string
+}
 
 // Deprecated: use `microsoft.roles` instead
 microsoft.rolemanagement {
   // Deprecated: use `microsoft.roles` instead
-  roleDefinitions() []microsoft.rolemanagement.roledefinition
+  roleDefinitions() microsoft.roles
 }
 
 // Microsoft role definition
