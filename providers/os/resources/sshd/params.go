@@ -6,6 +6,7 @@ package sshd
 import (
 	"strings"
 
+	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/utils/sortx"
 )
 
@@ -13,7 +14,14 @@ type MatchBlock struct {
 	Criteria string
 	// Note: we set the value type to any, but it must be a string.
 	// This is done due to type limitations in go and MQL's internal processing
-	Params map[string]any
+	Params  map[string]any
+	Context Context
+}
+
+type Context struct {
+	Path    string
+	Range   llx.Range
+	curLine int
 }
 
 func setParam(m map[string]any, key string, value string) {
@@ -112,13 +120,18 @@ func ParseBlocks(rootPath string, globPathContent func(string) (string, error)) 
 	curBlock := &MatchBlock{
 		Criteria: "",
 		Params:   map[string]any{},
+		Context: Context{
+			Path:    rootPath,
+			Range:   llx.NewRange(),
+			curLine: 1,
+		},
 	}
 	matchConditions := map[string]*MatchBlock{
 		"": curBlock,
 	}
 
 	lines := strings.Split(content, "\n")
-	for _, textLine := range lines {
+	for curLineIdx, textLine := range lines {
 		l, err := ParseLine([]rune(textLine))
 		if err != nil {
 			return nil, err
@@ -149,6 +162,10 @@ func ParseBlocks(rootPath string, globPathContent func(string) (string, error)) 
 		}
 
 		if key == "Match" {
+			// wrap up context on the previous block
+			curBlock.Context.Range = curBlock.Context.Range.AddLineRange(uint32(curBlock.Context.curLine), uint32(curLineIdx))
+			curBlock.Context.curLine = curLineIdx + 1
+
 			// This key is the only that we don't add to any params. It is stored
 			// in the condition of each block and can be accessed there.
 			condition := l.args
@@ -158,6 +175,11 @@ func ParseBlocks(rootPath string, globPathContent func(string) (string, error)) 
 				curBlock = &MatchBlock{
 					Criteria: condition,
 					Params:   map[string]any{},
+					Context: Context{
+						curLine: curLineIdx + 1,
+						Path:    rootPath,
+						Range:   llx.NewRange(),
+					},
 				}
 				matchConditions[condition] = curBlock
 			}
@@ -174,6 +196,8 @@ func ParseBlocks(rootPath string, globPathContent func(string) (string, error)) 
 		res[i] = matchConditions[key]
 		i++
 	}
+
+	curBlock.Context.Range = curBlock.Context.Range.AddLineRange(uint32(curBlock.Context.curLine), uint32(len(lines)))
 
 	return res, nil
 }

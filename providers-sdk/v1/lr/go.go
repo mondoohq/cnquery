@@ -628,6 +628,8 @@ func (t *SimpleType) typeItems(ast *LR) types.Type {
 		return types.Time
 	case "dict":
 		return types.Dict
+	case "range":
+		return types.Range
 	default:
 		return resourceType(t.Type, ast)
 	}
@@ -696,6 +698,8 @@ func (t *SimpleType) mondooTypeItems(b *goBuilder) string {
 		return "types.Regex"
 	case "time":
 		return "types.Time"
+	case "range":
+		return "types.Range"
 	case "dict":
 		return "types.Dict"
 	default:
@@ -757,6 +761,7 @@ var primitiveTypes = map[string]string{
 	"int":    "int64",
 	"float":  "float64",
 	"time":   "*time.Time",
+	"range":  "llx.Range",
 	"regex":  "string",
 	"dict":   "interface{}",
 	"any":    "interface{}",
@@ -788,6 +793,7 @@ var primitiveZeros = map[string]string{
 	"int":    "0",
 	"float":  "0.0",
 	"time":   "nil",
+	"range":  "nil",
 	"dict":   "nil",
 	"any":    "nil",
 }

@@ -5,6 +5,7 @@
 package lr
 
 import (
+	"errors"
 	"io"
 	"strings"
 	"text/scanner"
@@ -21,6 +22,8 @@ type Float float64
 
 // Bool for true/false
 type Bool bool
+
+var CONTEXT_FIELD = "context"
 
 // Capture a Bool type for participle
 func (b *Bool) Capture(values []string) error {
@@ -287,6 +290,11 @@ func Parse(input string) (*LR, error) {
 				// this won't work if there're are multiple embedded resources without aliases that share the same package, i.e os.any and os.base
 				name = strings.Split(f.Embeddable.Type, ".")[0]
 			}
+
+			if name == CONTEXT_FIELD {
+				return nil, errors.New("'" + CONTEXT_FIELD + "' field already exists on resource " + resource.ID)
+			}
+
 			newField := &Field{
 				Comments: f.Comments,
 				BasicField: &BasicField{
@@ -299,6 +307,17 @@ func Parse(input string) (*LR, error) {
 			resource.Body.Fields[i] = newField
 		}
 
+		if resource.Context != "" {
+			resource.Body.Fields = append(resource.Body.Fields, &Field{
+				Comments: []string{"Contextual info, where this resource is located and defined"},
+				BasicField: &BasicField{
+					ID:         CONTEXT_FIELD,
+					Args:       &FieldArgs{},
+					Type:       Type{SimpleType: &SimpleType{resource.Context}},
+					isEmbedded: false,
+				},
+			})
+		}
 	}
 
 	return res, err

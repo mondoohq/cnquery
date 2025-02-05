@@ -580,6 +580,14 @@ func FunctionData(v int32, sig string) *RawData {
 	}
 }
 
+// RangeData creates a rawdata struct from a raw range
+func RangeData(r Range) *RawData {
+	return &RawData{
+		Type:  types.Range,
+		Value: r,
+	}
+}
+
 // RawResultByRef is used to sort an array of raw results
 type RawResultByRef []*RawResult
 

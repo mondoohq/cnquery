@@ -130,6 +130,10 @@ func init() {
 			// to override args, implement: initFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createFile,
 		},
+		"file.context": {
+			// to override args, implement: initFileContext(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFileContext,
+		},
 		"file.permissions": {
 			// to override args, implement: initFilePermissions(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createFilePermissions,
@@ -932,6 +936,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"file.empty": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFile).GetEmpty()).ToDataRes(types.Bool)
 	},
+	"file.context.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFileContext).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"file.context.range": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFileContext).GetRange()).ToDataRes(types.Range)
+	},
+	"file.context.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFileContext).GetContent()).ToDataRes(types.String)
+	},
 	"file.permissions.mode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFilePermissions).GetMode()).ToDataRes(types.Int)
 	},
@@ -1279,6 +1292,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"sshd.config.matchBlock.params": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSshdConfigMatchBlock).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"sshd.config.matchBlock.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSshdConfigMatchBlock).GetContext()).ToDataRes(types.Resource("file.context"))
 	},
 	"service.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlService).GetName()).ToDataRes(types.String)
@@ -2946,6 +2962,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlFile).Empty, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"file.context.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlFileContext).__id, ok = v.Value.(string)
+			return
+		},
+	"file.context.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFileContext).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"file.context.range": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFileContext).Range, ok = plugin.RawToTValue[llx.Range](v.Value, v.Error)
+		return
+	},
+	"file.context.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFileContext).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"file.permissions.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlFilePermissions).__id, ok = v.Value.(string)
 			return
@@ -3504,6 +3536,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"sshd.config.matchBlock.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSshdConfigMatchBlock).Params, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"sshd.config.matchBlock.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSshdConfigMatchBlock).Context, ok = plugin.RawToTValue[*mqlFileContext](v.Value, v.Error)
 		return
 	},
 	"service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7383,6 +7419,77 @@ func (c *mqlFile) GetEmpty() *plugin.TValue[bool] {
 	})
 }
 
+// mqlFileContext for the file.context resource
+type mqlFileContext struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlFileContextInternal it will be used here
+	File plugin.TValue[*mqlFile]
+	Range plugin.TValue[llx.Range]
+	Content plugin.TValue[string]
+}
+
+// createFileContext creates a new instance of this resource
+func createFileContext(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFileContext{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("file.context", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFileContext) MqlName() string {
+	return "file.context"
+}
+
+func (c *mqlFileContext) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFileContext) GetFile() *plugin.TValue[*mqlFile] {
+	return &c.File
+}
+
+func (c *mqlFileContext) GetRange() *plugin.TValue[llx.Range] {
+	return &c.Range
+}
+
+func (c *mqlFileContext) GetContent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		vargRange := c.GetRange()
+		if vargRange.Error != nil {
+			return "", vargRange.Error
+		}
+
+		return c.content(vargFile.Data, vargRange.Data)
+	})
+}
+
 // mqlFilePermissions for the file.permissions resource
 type mqlFilePermissions struct {
 	MqlRuntime *plugin.Runtime
@@ -9373,6 +9480,7 @@ type mqlSshdConfigMatchBlock struct {
 	// optional: if you define mqlSshdConfigMatchBlockInternal it will be used here
 	Criteria plugin.TValue[string]
 	Params plugin.TValue[map[string]interface{}]
+	Context plugin.TValue[*mqlFileContext]
 }
 
 // createSshdConfigMatchBlock creates a new instance of this resource
@@ -9413,6 +9521,22 @@ func (c *mqlSshdConfigMatchBlock) GetCriteria() *plugin.TValue[string] {
 
 func (c *mqlSshdConfigMatchBlock) GetParams() *plugin.TValue[map[string]interface{}] {
 	return &c.Params
+}
+
+func (c *mqlSshdConfigMatchBlock) GetContext() *plugin.TValue[*mqlFileContext] {
+	return plugin.GetOrCompute[*mqlFileContext](&c.Context, func() (*mqlFileContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("sshd.config.matchBlock", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFileContext), nil
+			}
+		}
+
+		return c.context()
+	})
 }
 
 // mqlService for the service resource

@@ -69,10 +69,27 @@ func matchBlocks2Resources(m sshd.MatchBlocks, runtime *plugin.Runtime, ownerID 
 	res := make([]any, len(m))
 	for i := range m {
 		cur := m[i]
+
+		fobj, err := CreateResource(runtime, "file", map[string]*llx.RawData{
+			"path": llx.StringData(cur.Context.Path),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		cobj, err := CreateResource(runtime, "file.context", map[string]*llx.RawData{
+			"file":  llx.ResourceData(fobj, "file"),
+			"range": llx.RangeData(cur.Context.Range),
+		})
+		if err != nil {
+			return nil, err
+		}
+
 		obj, err := CreateResource(runtime, "sshd.config.matchBlock", map[string]*llx.RawData{
 			"__id":     llx.StringData(ownerID + "\x00" + cur.Criteria),
 			"criteria": llx.StringData(cur.Criteria),
 			"params":   llx.MapData(cur.Params, types.String),
+			"context":  llx.ResourceData(cobj, "file.context"),
 		})
 		if err != nil {
 			return nil, err
@@ -288,4 +305,8 @@ func (s *mqlSshdConfig) permitRootLogin(params map[string]interface{}) ([]interf
 	}
 
 	return s.parseConfigEntrySlice(rawHostKeys)
+}
+
+func (s *mqlSshdConfigMatchBlock) context() (*mqlFileContext, error) {
+	return nil, errors.New("context was not provided for sshd.config match block")
 }

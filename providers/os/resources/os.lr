@@ -373,6 +373,15 @@ file @defaults("path size permissions.string") {
   empty(path) bool
 }
 
+private file.context @defaults("file.path range") {
+  // File referenced by this file context
+  file file
+  // Range of content in the file
+  range range
+  // Content for this range in the file, shown as an excerpt
+  content(file, range) string
+}
+
 // Access permissions for a given file
 private file.permissions @defaults("string") {
   // Raw POSIX mode for the permissions
@@ -702,7 +711,7 @@ sshd.config {
   permitRootLogin(params) []string
 }
 
-private sshd.config.matchBlock @defaults("criteria") {
+private sshd.config.matchBlock @defaults("criteria") @context("file.context") {
   // The match criteria for this block
   criteria string
   // Configuration values in this block

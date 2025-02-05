@@ -348,6 +348,13 @@ resources:
           permissions.isDirectory
         }
       title: Test if a directory exists
+  file.context:
+    fields:
+      content: {}
+      file: {}
+      range: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   file.permissions:
     fields:
       group_executable: {}
@@ -1028,7 +1035,11 @@ resources:
   sshd.config.matchBlock:
     fields:
       condition: {}
+      context:
+        min_mondoo_version: 9.0.0
       criteria: {}
+      file:
+        min_mondoo_version: 9.0.0
       params: {}
     is_private: true
     min_mondoo_version: latest
