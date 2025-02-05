@@ -589,7 +589,7 @@ func (g *mqlGcpProjectGkeServiceClusterNodepoolConfig) serviceAccount() (*mqlGcp
 	}
 	email := g.ServiceAccountEmail.Data
 
-	res, err := CreateResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount", map[string]*llx.RawData{
+	res, err := NewResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount", map[string]*llx.RawData{
 		"projectId": llx.StringData(projectId),
 		"email":     llx.StringData(email),
 	})
