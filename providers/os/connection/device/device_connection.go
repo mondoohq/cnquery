@@ -77,8 +77,9 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 
 	blocks, err := manager.IdentifyMountTargets(conf.Options)
 	if err != nil {
-		return nil, err
+		log.Warn().Err(err).Msg("device connection> unable to identify some mount targets, proceeding with the rest")
 	}
+
 	if len(blocks) == 0 {
 		return nil, errors.New("device connection> internal: blocks found")
 	}
