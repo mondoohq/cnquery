@@ -2092,7 +2092,7 @@ private aws.rds.backupsetting {
 }
 
 // Amazon RDS database cluster
-private aws.rds.dbcluster @defaults("id region") {
+aws.rds.dbcluster @defaults("id region engine engineVersion") {
   // ARN for the database cluster
   arn string
   // Region where the database cluster exists
@@ -2206,7 +2206,7 @@ private aws.rds.snapshot @defaults("id region type encrypted createdAt") {
 }
 
 // Amazon RDS database instance
-private aws.rds.dbinstance @defaults("id region engine engineVersion") {
+aws.rds.dbinstance @defaults("id region engine engineVersion") {
   // ARN for the database instance
   arn string
   // Identifier for the database instance
