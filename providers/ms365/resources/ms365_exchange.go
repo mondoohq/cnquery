@@ -503,7 +503,7 @@ func (m *mqlMs365ExchangeonlineExoMailbox) user() (*mqlMicrosoftUser, error) {
 	if users.Error != nil {
 		return nil, users.Error
 	}
-	for _, u := range users.Data {
+	for _, u := range users.Data.List.Data {
 		mqlUser := u.(*mqlMicrosoftUser)
 		if mqlUser.Id.Data == externalId {
 			return mqlUser, nil

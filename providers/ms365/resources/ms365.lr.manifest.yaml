@@ -5,102 +5,59 @@ resources:
   microsoft:
     fields:
       applications: {}
-      conditionalAccess:
-        min_mondoo_version: 9.0.0
       domains: {}
-      enterpriseApplications:
-        min_mondoo_version: latest
+      enterpriseApplications: {}
       groups: {}
       organizations: {}
-      roles:
-        min_mondoo_version: 9.0.0
+      roles: {}
       serviceprincipals: {}
       settings: {}
-      tenantDomainName:
-        min_mondoo_version: latest
+      tenantDomainName: {}
       users: {}
-    min_mondoo_version: 5.15.0
+    min_mondoo_version: 9.0.0
   microsoft.application:
     fields:
-      api:
-        min_mondoo_version: 9.0.0
+      api: {}
       appId: {}
-      appRoles:
-        min_mondoo_version: 9.0.0
-      applicationTemplateId:
-        min_mondoo_version: 9.0.0
-      certificates:
-        min_mondoo_version: 9.0.0
-      certification:
-        min_mondoo_version: 9.0.0
-      createdAt:
-        min_mondoo_version: 9.0.0
+      appRoles: {}
+      applicationTemplateId: {}
+      certificates: {}
+      certification: {}
+      createdAt: {}
       createdDateTime: {}
-      defaultRedirectUri:
-        min_mondoo_version: 9.0.0
-      description:
-        min_mondoo_version: 9.0.0
-      dict:
-        min_mondoo_version: 9.0.0
-      disabledByMicrosoftStatus:
-        min_mondoo_version: 9.0.0
+      defaultRedirectUri: {}
+      description: {}
+      disabledByMicrosoftStatus: {}
       displayName: {}
-      groupMembershipClaims:
-        min_mondoo_version: 9.0.0
-      hasExpiredCredentials:
-        min_mondoo_version: 9.0.0
+      groupMembershipClaims: {}
+      hasExpiredCredentials: {}
       id: {}
       identifierUris: {}
-      info:
-        min_mondoo_version: 9.0.0
-      isDeviceOnlyAuthSupported:
-        min_mondoo_version: 9.0.0
-      isFallbackPublicClient:
-        min_mondoo_version: 9.0.0
-      name:
-        min_mondoo_version: 9.0.0
-      nativeAuthenticationApisEnabled:
-        min_mondoo_version: 9.0.0
-      notes:
-        min_mondoo_version: 9.0.0
-      optionalClaims:
-        min_mondoo_version: 9.0.0
-      owners:
-        min_mondoo_version: 9.0.0
-      parentalControlSettings:
-        min_mondoo_version: 9.0.0
-      publicClient:
-        min_mondoo_version: 9.0.0
+      info: {}
+      isDeviceOnlyAuthSupported: {}
+      isFallbackPublicClient: {}
+      name: {}
+      nativeAuthenticationApisEnabled: {}
+      notes: {}
+      optionalClaims: {}
+      owners: {}
+      parentalControlSettings: {}
+      publicClient: {}
       publisherDomain: {}
-      requestSignatureVerification:
-        min_mondoo_version: 9.0.0
-      requiredResourceAccess:
-        min_mondoo_version: 9.0.0
-      samlMetadataUrl:
-        min_mondoo_version: 9.0.0
-      secrets:
-        min_mondoo_version: 9.0.0
-      serviceManagementReference:
-        min_mondoo_version: 9.0.0
-      servicePrincipal:
-        min_mondoo_version: 9.0.0
-      servicePrincipalLockConfiguration:
-        min_mondoo_version: 9.0.0
+      requestSignatureVerification: {}
+      samlMetadataUrl: {}
+      secrets: {}
+      serviceManagementReference: {}
+      servicePrincipal: {}
+      servicePrincipalLockConfiguration: {}
       signInAudience: {}
-      spa:
-        min_mondoo_version: 9.0.0
-      string:
-        min_mondoo_version: 9.0.0
-      tags:
-        min_mondoo_version: 9.0.0
-      tokenEncryptionKeyId:
-        min_mondoo_version: 9.0.0
-      web:
-        min_mondoo_version: 9.0.0
-    min_mondoo_version: 5.15.0
+      spa: {}
+      tags: {}
+      tokenEncryptionKeyId: {}
+      web: {}
+    min_mondoo_version: 9.0.0
   microsoft.application.permission:
     fields:
-      adminConsent: {}
       appId: {}
       appName: {}
       description: {}
@@ -143,7 +100,7 @@ resources:
     fields:
       deviceCompliancePolicies: {}
       deviceConfigurations: {}
-    min_mondoo_version: 5.15.0
+    min_mondoo_version: 9.0.0
   microsoft.devicemanagement.devicecompliancepolicy:
     fields:
       assignments: {}
@@ -155,7 +112,7 @@ resources:
       properties: {}
       version: {}
     is_private: true
-    min_mondoo_version: 5.15.0
+    min_mondoo_version: 9.0.0
   microsoft.devicemanagement.deviceconfiguration:
     fields:
       createdDateTime: {}
@@ -166,7 +123,7 @@ resources:
       properties: {}
       version: {}
     is_private: true
-    min_mondoo_version: 5.15.0
+    min_mondoo_version: 9.0.0
   microsoft.domain:
     fields:
       authenticationType: {}
@@ -182,7 +139,7 @@ resources:
       serviceConfigurationRecords: {}
       supportedServices: {}
     is_private: true
-    min_mondoo_version: 5.15.0
+    min_mondoo_version: 9.0.0
   microsoft.domaindnsrecord:
     fields:
       id: {}
@@ -193,60 +150,36 @@ resources:
       supportedService: {}
       ttl: {}
     is_private: true
-    min_mondoo_version: 5.15.0
-  microsoft.enterpriseApplication:
-    fields:
-      id: {}
-      name: {}
-      tags: {}
-      type: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 9.0.0
   microsoft.group:
     fields:
       displayName: {}
-      groupTypes:
-        min_mondoo_version: 9.0.0
+      groupTypes: {}
       id: {}
       mail: {}
       mailEnabled: {}
       mailNickname: {}
       members: {}
-      membershipRule:
-        min_mondoo_version: 9.0.0
-      membershipRuleProcessingState:
-        min_mondoo_version: 9.0.0
+      membershipRule: {}
+      membershipRuleProcessingState: {}
       securityEnabled: {}
-      visibility:
-        min_mondoo_version: 9.0.0
+      visibility: {}
     is_private: true
-    min_mondoo_version: 5.15.0
+    min_mondoo_version: 9.0.0
   microsoft.keyCredential:
     fields:
       description: {}
-      displayName: {}
       expired: {}
       expires: {}
-      hint: {}
       keyId: {}
       thumbprint: {}
       type: {}
       usage: {}
     is_private: true
     min_mondoo_version: 9.0.0
-  microsoft.organization:
-    fields:
-      assignedPlans: {}
-      createdDateTime: {}
-      displayName: {}
-      id: {}
-      onPremisesSyncEnabled:
-        min_mondoo_version: 9.0.0
-      verifiedDomains: {}
-    min_mondoo_version: 5.15.0
   microsoft.passwordCredential:
     fields:
       description: {}
-      displayName: {}
       expired: {}
       expires: {}
       hint: {}
@@ -255,19 +188,16 @@ resources:
     min_mondoo_version: 9.0.0
   microsoft.policies:
     fields:
-      ConsentPolicySettings:
-        min_mondoo_version: 9.0.0
       adminConsentRequestPolicy: {}
       authorizationPolicy: {}
-      consentPolicySettings:
-        min_mondoo_version: 9.0.0
+      consentPolicySettings: {}
       identitySecurityDefaultsEnforcementPolicy: {}
       permissionGrantPolicies: {}
-    min_mondoo_version: 5.15.0
+    min_mondoo_version: 9.0.0
   microsoft.rolemanagement:
     fields:
       roleDefinitions: {}
-    min_mondoo_version: 5.15.0
+    min_mondoo_version: 9.0.0
   microsoft.rolemanagement.roleassignment:
     fields:
       id: {}
@@ -275,7 +205,7 @@ resources:
       principalId: {}
       roleDefinitionId: {}
     is_private: true
-    min_mondoo_version: 5.15.0
+    min_mondoo_version: 9.0.0
   microsoft.rolemanagement.roledefinition:
     fields:
       assignments: {}
@@ -288,14 +218,24 @@ resources:
       templateId: {}
       version: {}
     is_private: true
-    min_mondoo_version: 5.15.0
+    min_mondoo_version: 9.0.0
+  microsoft.rolemanagement.roledefinitions:
+    fields:
+      filter: {}
+      list: {}
+    min_mondoo_version: 9.0.0
+  microsoft.roles:
+    fields:
+      filter: {}
+      list: {}
+      search: {}
+    min_mondoo_version: 9.0.0
   microsoft.security:
     fields:
       latestSecureScores: {}
-      riskyUsers:
-        min_mondoo_version: 9.0.0
+      riskyUsers: {}
       secureScores: {}
-    min_mondoo_version: 5.15.0
+    min_mondoo_version: 9.0.0
   microsoft.security.riskyUser:
     fields:
       id: {}
@@ -321,86 +261,45 @@ resources:
       maxScore: {}
       vendorInformation: {}
     is_private: true
-    min_mondoo_version: 5.15.0
+    min_mondoo_version: 9.0.0
   microsoft.serviceprincipal:
     fields:
-      accountEnabled:
-        min_mondoo_version: 9.0.0
-      appId:
-        min_mondoo_version: 9.0.0
-      appOwnerOrganizationId:
-        min_mondoo_version: 9.0.0
-      appRoleAssignmentRequired:
-        min_mondoo_version: 9.0.0
-      appRoleAssignments:
-        min_mondoo_version: latest
-      appRoles:
-        min_mondoo_version: 9.0.0
-      applicationTemplateId:
-        min_mondoo_version: 9.0.0
-      assignmentRequired:
-        min_mondoo_version: latest
-      assignments:
-        min_mondoo_version: latest
-      description:
-        min_mondoo_version: 9.0.0
-      enabled:
-        min_mondoo_version: latest
-      homepageUrl:
-        min_mondoo_version: latest
+      accountEnabled: {}
+      appId: {}
+      appOwnerOrganizationId: {}
+      appRoleAssignmentRequired: {}
+      appRoles: {}
+      applicationTemplateId: {}
+      assignmentRequired: {}
+      assignments: {}
+      description: {}
+      enabled: {}
+      homepageUrl: {}
       id: {}
-      isFirstParty:
-        min_mondoo_version: 9.0.0
-      loginUrl:
-        min_mondoo_version: 9.0.0
-      logoutUrl:
-        min_mondoo_version: 9.0.0
-      name:
-        min_mondoo_version: latest
-      notes:
-        min_mondoo_version: latest
-      notificationEmailAddresses:
-        min_mondoo_version: 9.0.0
-      permissions:
-        min_mondoo_version: 9.0.0
-      preferredSingleSignOnMode:
-        min_mondoo_version: 9.0.0
-      properties:
-        min_mondoo_version: latest
-      replyUrls:
-        min_mondoo_version: latest
-      servicePrincipalNames:
-        min_mondoo_version: 9.0.0
-      signInAudience:
-        min_mondoo_version: 9.0.0
-      tags:
-        min_mondoo_version: latest
-      termsOfServiceUrl:
-        min_mondoo_version: latest
-      type:
-        min_mondoo_version: latest
-      userAccessUrl:
-        min_mondoo_version: latest
-      verifiedPublisher:
-        min_mondoo_version: 9.0.0
-      visibleToUsers:
-        min_mondoo_version: latest
-    min_mondoo_version: 5.15.0
-  microsoft.serviceprincipal.appRoleAssignment:
-    fields:
-      displayName: {}
-      id: {}
+      isFirstParty: {}
+      loginUrl: {}
+      logoutUrl: {}
+      name: {}
+      notes: {}
+      notificationEmailAddresses: {}
+      permissions: {}
+      preferredSingleSignOnMode: {}
+      replyUrls: {}
+      servicePrincipalNames: {}
+      signInAudience: {}
+      tags: {}
+      termsOfServiceUrl: {}
       type: {}
-    min_mondoo_version: latest
+      verifiedPublisher: {}
+      visibleToUsers: {}
+    min_mondoo_version: 9.0.0
   microsoft.serviceprincipal.assignment:
     fields:
-      appId: {}
       displayName: {}
       id: {}
-      resourceName: {}
       type: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 9.0.0
   microsoft.tenant:
     fields:
       assignedPlans: {}
@@ -411,7 +310,6 @@ resources:
       name: {}
       onPremisesSyncEnabled: {}
       provisionedPlans: {}
-      subscription: {}
       subscriptions: {}
       type: {}
       verifiedDomains: {}
@@ -419,45 +317,36 @@ resources:
   microsoft.user:
     fields:
       accountEnabled: {}
-      auditlog:
-        min_mondoo_version: 9.0.0
-      authMethods:
-        min_mondoo_version: 9.0.0
+      auditlog: {}
+      authMethods: {}
       city: {}
       companyName: {}
-      contact:
-        min_mondoo_version: 9.0.0
+      contact: {}
       country: {}
       createdDateTime: {}
-      creationType:
-        min_mondoo_version: 9.0.0
+      creationType: {}
       department: {}
       displayName: {}
       employeeId: {}
       givenName: {}
       id: {}
-      identities:
-        min_mondoo_version: 9.0.0
-      job:
-        min_mondoo_version: 9.0.0
+      identities: {}
+      job: {}
       jobTitle: {}
       mail: {}
-      mfaEnabled:
-        min_mondoo_version: 9.0.0
+      mfaEnabled: {}
       mobilePhone: {}
       officeLocation: {}
       otherMails: {}
       postalCode: {}
       settings: {}
-      signins:
-        min_mondoo_version: 9.0.0
       state: {}
       streetAddress: {}
       surname: {}
       userPrincipalName: {}
       userType: {}
     is_private: true
-    min_mondoo_version: 5.15.0
+    min_mondoo_version: 9.0.0
   microsoft.user.auditlog:
     fields:
       lastInteractiveSignIn: {}
@@ -493,11 +382,17 @@ resources:
       createdDateTime: {}
       id: {}
       interactive: {}
-      requestId: {}
       resourceDisplayName: {}
       userDisplayName: {}
       userId: {}
     is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.users:
+    fields:
+      filter: {}
+      list: {}
+      search: {}
+      userPrincipalName: {}
     min_mondoo_version: 9.0.0
   ms365.exchangeonline:
     fields:
@@ -514,20 +409,15 @@ resources:
       owaMailboxPolicy: {}
       phishFilterPolicy: {}
       remoteDomain: {}
-      reportSubmissionPolicies:
-        min_mondoo_version: 9.0.0
+      reportSubmissionPolicies: {}
       roleAssignmentPolicy: {}
       safeAttachmentPolicy: {}
       safeLinksPolicy: {}
-      sharedMailboxes:
-        min_mondoo_version: 9.2.13
+      sharedMailboxes: {}
       sharingPolicy: {}
-      teamsProtectionPolicies:
-        min_mondoo_version: latest
-      teamsProtectionPolicy:
-        min_mondoo_version: latest
+      teamsProtectionPolicies: {}
       transportRule: {}
-    min_mondoo_version: 5.15.0
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - microsoft365
@@ -537,7 +427,7 @@ resources:
       identity: {}
       user: {}
     is_private: true
-    min_mondoo_version: 9.2.13
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - microsoft365
@@ -547,7 +437,7 @@ resources:
       enabled: {}
       identity: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - microsoft365
@@ -562,7 +452,7 @@ resources:
       reportPhishAddresses: {}
       reportPhishToCustomizedAddress: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - microsoft365
@@ -577,11 +467,10 @@ resources:
       - microsoft365
   ms365.sharepointonline:
     fields:
-      spoSites:
-        min_mondoo_version: 9.0.0
+      spoSites: {}
       spoTenant: {}
       spoTenantSyncClientRestriction: {}
-    min_mondoo_version: 5.15.0
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - microsoft365
@@ -597,13 +486,10 @@ resources:
   ms365.teams:
     fields:
       csTeamsClientConfiguration: {}
-      csTeamsMeetingPolicy:
-        min_mondoo_version: 9.0.0
-      csTeamsMessagingPolicy:
-        min_mondoo_version: 9.0.0
-      csTenantFederationConfiguration:
-        min_mondoo_version: 9.0.0
-    min_mondoo_version: 5.15.0
+      csTeamsMeetingPolicy: {}
+      csTeamsMessagingPolicy: {}
+      csTenantFederationConfiguration: {}
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - microsoft365
@@ -619,7 +505,7 @@ resources:
       designatedPresenterRoleMode: {}
       meetingChatEnabledType: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - microsoft365
@@ -637,11 +523,9 @@ resources:
       allowPublicUsers: {}
       allowTeamsConsumer: {}
       allowTeamsConsumerInbound: {}
-      allowedDomains: {}
       blockedDomains: {}
       identity: {}
       restrictTeamsConsumerToExternalUserProfiles: {}
-      sestrictTeamsConsumerToExternalUserProfiles: {}
       sharedSipAddressSpace: {}
       treatDiscoveredPartnersAsUnverified: {}
     is_private: true
