@@ -10,6 +10,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -91,15 +92,19 @@ func (d *LinuxDeviceManager) IdentifyMountTargets(opts map[string]string) ([]*sn
 		partitions = append(partitions, partitionsForDevice...)
 	}
 
-	if err := errors.Join(errs...); err != nil {
-		return partitions, err
+	if len(partitions) == 0 {
+		errs = append(errs, errors.New("no partitions found"))
+		return partitions, errors.Join(errs...)
 	}
 
 	if opts[SkipAttemptExpandPartitions] == "true" {
-		return partitions, nil
+		return partitions, errors.Join(errs...)
 	}
 
-	return d.attemptExpandPartitions(partitions)
+	partitions, err = d.attemptExpandPartitions(partitions)
+	errs = append(errs, err)
+
+	return partitions, errors.Join(errs...)
 }
 
 func (d *LinuxDeviceManager) attemptExpandPartitions(partitions []*snapshot.PartitionInfo) ([]*snapshot.PartitionInfo, error) {
@@ -206,7 +211,40 @@ func (d *LinuxDeviceManager) attemptFindOSTree(dir string, partition *snapshot.P
 		return false
 	}
 
-	boot1, err := os.Readlink(path.Join(dir, "ostree", "boot.1"))
+	entries, err := os.ReadDir(path.Join(dir, "ostree"))
+	if err != nil {
+		log.Error().Err(err).Str("device", partition.Name).Msg("unable to read ostree directory")
+		return false
+	}
+
+	entries = slices.DeleteFunc(entries, func(entry os.DirEntry) bool {
+		if entry.Type().Type() != os.ModeSymlink {
+			return true
+		}
+
+		trimmed := strings.TrimPrefix(entry.Name(), "boot.")
+		if trimmed == entry.Name() {
+			return true
+		}
+
+		_, err := strconv.Atoi(trimmed)
+		return err != nil
+	})
+
+	if len(entries) == 0 {
+		log.Debug().Str("device", partition.Name).Msg("no ostree entries")
+		return false
+	}
+	if len(entries) > 1 {
+		slices.SortFunc(entries, func(a, b os.DirEntry) int {
+			aIndex, _ := strconv.Atoi(strings.TrimPrefix(a.Name(), "boot."))
+			bIndex, _ := strconv.Atoi(strings.TrimPrefix(b.Name(), "boot."))
+			return aIndex - bIndex
+		})
+	}
+
+	log.Debug().Str("device", partition.Name).Str("boot1", entries[0].Name()).Msg("found ostree deployment")
+	boot1, err := os.Readlink(path.Join(dir, "ostree", entries[0].Name()))
 	if err != nil {
 		log.Error().Err(err).Str("device", partition.Name).Msg("unable to readlink boot.1")
 		return false
