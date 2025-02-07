@@ -43,6 +43,12 @@ Line 2, Col 14
 Line 3, Col....17`
 
 func TestExtractRange(t *testing.T) {
+	confAllContent := ExtractConfig{
+		MaxContentLines: 999999,
+		MaxColumns:      999999,
+		ShowLines:       false,
+	}
+
 	t.Run("Lines", func(t *testing.T) {
 		lines := []struct {
 			line int
@@ -58,7 +64,7 @@ func TestExtractRange(t *testing.T) {
 			x := lines[i]
 			t.Run("line "+strconv.Itoa(x.line), func(t *testing.T) {
 				r := NewRange().AddLine(uint32(x.line))
-				assert.Equal(t, x.res, r.ExtractString(test3lines, DefaultExtractConfig))
+				assert.Equal(t, x.res, r.ExtractString(test3lines, confAllContent))
 			})
 		}
 	})
@@ -83,7 +89,7 @@ func TestExtractRange(t *testing.T) {
 			x := lineRanges[i]
 			t.Run(fmt.Sprintf("line %d-%d", x.start, x.end), func(t *testing.T) {
 				r := NewRange().AddLineRange(uint32(x.start), uint32(x.end))
-				assert.Equal(t, x.res, r.ExtractString(test3lines, DefaultExtractConfig))
+				assert.Equal(t, x.res, r.ExtractString(test3lines, confAllContent))
 			})
 		}
 	})
@@ -129,7 +135,7 @@ func TestExtractRange(t *testing.T) {
 			x := lineRanges[i]
 			t.Run(fmt.Sprintf("line %d:%d-%d:%d", x.start, x.col1, x.end, x.col2), func(t *testing.T) {
 				r := NewRange().AddLineColumnRange(uint32(x.start), uint32(x.end), uint32(x.col1), uint32(x.col2))
-				assert.Equal(t, x.res, r.ExtractString(test3lines, DefaultExtractConfig))
+				assert.Equal(t, x.res, r.ExtractString(test3lines, confAllContent))
 			})
 		}
 	})
