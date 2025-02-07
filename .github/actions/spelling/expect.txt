@@ -86,6 +86,7 @@ rulegroup
 rulegroupreferencestatement
 Sas
 scim
+scm
 serviceprincipals
 signin
 singlequeryargument
