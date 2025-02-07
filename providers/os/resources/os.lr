@@ -373,6 +373,7 @@ file @defaults("path size permissions.string") {
   empty(path) bool
 }
 
+// File context is a range of lines/columns in a file
 private file.context @defaults("file.path range") {
   // File referenced by this file context
   file file
@@ -711,6 +712,7 @@ sshd.config {
   permitRootLogin(params) []string
 }
 
+// A a block of SSH server configuration
 private sshd.config.matchBlock @defaults("criteria") @context("file.context") {
   // The match criteria for this block
   criteria string

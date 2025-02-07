@@ -309,7 +309,7 @@ func Parse(input string) (*LR, error) {
 
 		if resource.Context != "" {
 			resource.Body.Fields = append(resource.Body.Fields, &Field{
-				Comments: []string{"Contextual info, where this resource is located and defined"},
+				Comments: []string{"# Contextual info, where this resource is located and defined"},
 				BasicField: &BasicField{
 					ID:         CONTEXT_FIELD,
 					Args:       &FieldArgs{},
