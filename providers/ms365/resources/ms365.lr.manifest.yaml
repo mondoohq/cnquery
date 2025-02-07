@@ -220,6 +220,14 @@ resources:
         min_mondoo_version: 9.0.0
     is_private: true
     min_mondoo_version: 5.15.0
+  microsoft.groups:
+    fields:
+      length: {}
+      list: {}
+    min_mondoo_version: 9.0.0
+  microsoft.groups.length:
+    fields: {}
+    min_mondoo_version: 9.0.0
   microsoft.keyCredential:
     fields:
       description: {}

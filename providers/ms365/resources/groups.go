@@ -5,6 +5,9 @@ package resources
 
 import (
 	"context"
+	"errors"
+
+	abstractions "github.com/microsoft/kiota-abstractions-go"
 	"github.com/microsoftgraph/msgraph-sdk-go/groups"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"go.mondoo.com/cnquery/v11/llx"
@@ -12,8 +15,8 @@ import (
 	"go.mondoo.com/cnquery/v11/types"
 )
 
-func (m *mqlMicrosoftGroup) id() (string, error) {
-	return m.Id.Data, nil
+func (a *mqlMicrosoftGroup) id() (string, error) {
+	return a.Id.Data, nil
 }
 
 func (a *mqlMicrosoftGroup) members() ([]interface{}, error) {
@@ -35,9 +38,12 @@ func (a *mqlMicrosoftGroup) members() ([]interface{}, error) {
 		Top: &top,
 	}
 	ctx := context.Background()
-	resp, err := graphClient.Groups().ByGroupId(groupId).Members().Get(ctx, &groups.ItemMembersRequestBuilderGetRequestConfiguration{
-		QueryParameters: queryParams,
-	})
+	resp, err := graphClient.Groups().
+		ByGroupId(groupId).
+		Members().
+		Get(ctx, &groups.ItemMembersRequestBuilderGetRequestConfiguration{
+			QueryParameters: queryParams,
+		})
 	if err != nil {
 		return nil, transformError(err)
 	}
@@ -60,9 +66,10 @@ func (a *mqlMicrosoftGroup) members() ([]interface{}, error) {
 			continue
 		}
 
-		newUserResource, err := a.MqlRuntime.NewResource(a.MqlRuntime, "microsoft.user", map[string]*llx.RawData{
-			"id": llx.StringDataPtr(memberId),
-		})
+		newUserResource, err := a.MqlRuntime.
+			NewResource(a.MqlRuntime, "microsoft.user", map[string]*llx.RawData{
+				"id": llx.StringDataPtr(memberId),
+			})
 		if err != nil {
 			return nil, err
 		}
@@ -72,7 +79,12 @@ func (a *mqlMicrosoftGroup) members() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlMicrosoft) groups() ([]interface{}, error) {
+func (a *mqlMicrosoft) groups() (*mqlMicrosoftGroups, error) {
+	mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.groups", map[string]*llx.RawData{})
+	return mqlResource.(*mqlMicrosoftGroups), err
+}
+
+func (a *mqlMicrosoftGroups) list() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -116,4 +128,25 @@ func (a *mqlMicrosoft) groups() ([]interface{}, error) {
 	}
 
 	return res, nil
+}
+
+func (a *mqlMicrosoftGroups) length() (int64, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return 0, err
+	}
+
+	opts := &groups.CountRequestBuilderGetRequestConfiguration{Headers: abstractions.NewRequestHeaders()}
+	opts.Headers.Add("ConsistencyLevel", "eventual")
+	length, err := graphClient.Groups().Count().Get(context.Background(), opts)
+	if err != nil {
+		return 0, err
+	}
+	if length == nil {
+		// This should never happen, but we better check
+		return 0, errors.New("unable to count groups, counter parameter API returned nil")
+	}
+
+	return int64(*length), nil
 }
