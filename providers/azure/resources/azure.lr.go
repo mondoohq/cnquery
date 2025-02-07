@@ -230,6 +230,10 @@ func init() {
 			// to override args, implement: initAzureSubscriptionWebServiceAppsite(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionWebServiceAppsite,
 		},
+		"azure.subscription.webService.appsite.basicPublishingCredentialsPolicies": {
+			// to override args, implement: initAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies,
+		},
 		"azure.subscription.webService.appsiteauthsettings": {
 			// to override args, implement: initAzureSubscriptionWebServiceAppsiteauthsettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionWebServiceAppsiteauthsettings,
@@ -1781,6 +1785,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.webService.appsite.functions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetFunctions()).ToDataRes(types.Array(types.Resource("azure.subscription.webService.function")))
+	},
+	"azure.subscription.webService.appsite.ftp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetFtp()).ToDataRes(types.Resource("azure.subscription.webService.appsite.basicPublishingCredentialsPolicies"))
+	},
+	"azure.subscription.webService.appsite.scm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetScm()).ToDataRes(types.Resource("azure.subscription.webService.appsite.basicPublishingCredentialsPolicies"))
+	},
+	"azure.subscription.webService.appsite.basicPublishingCredentialsPolicies.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsite.basicPublishingCredentialsPolicies.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsite.basicPublishingCredentialsPolicies.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsite.basicPublishingCredentialsPolicies.allow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies).GetAllow()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.webService.appsiteauthsettings.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettings).GetId()).ToDataRes(types.String)
@@ -4834,6 +4856,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"azure.subscription.webService.appsite.functions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionWebServiceAppsite).Functions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.ftp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsite).Ftp, ok = plugin.RawToTValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.scm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsite).Scm, ok = plugin.RawToTValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.basicPublishingCredentialsPolicies.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies).__id, ok = v.Value.(string)
+			return
+		},
+	"azure.subscription.webService.appsite.basicPublishingCredentialsPolicies.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.basicPublishingCredentialsPolicies.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.basicPublishingCredentialsPolicies.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.basicPublishingCredentialsPolicies.allow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies).Allow, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.webService.appsiteauthsettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11670,6 +11720,8 @@ type mqlAzureSubscriptionWebServiceAppsite struct {
 	Stack plugin.TValue[interface{}]
 	DiagnosticSettings plugin.TValue[[]interface{}]
 	Functions plugin.TValue[[]interface{}]
+	Ftp plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies]
+	Scm plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies]
 }
 
 // createAzureSubscriptionWebServiceAppsite creates a new instance of this resource
@@ -11827,6 +11879,102 @@ func (c *mqlAzureSubscriptionWebServiceAppsite) GetFunctions() *plugin.TValue[[]
 
 		return c.functions()
 	})
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsite) GetFtp() *plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies](&c.Ftp, func() (*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.webService.appsite", c.__id, "ftp")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies), nil
+			}
+		}
+
+		return c.ftp()
+	})
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsite) GetScm() *plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies](&c.Scm, func() (*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.webService.appsite", c.__id, "scm")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies), nil
+			}
+		}
+
+		return c.scm()
+	})
+}
+
+// mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies for the azure.subscription.webService.appsite.basicPublishingCredentialsPolicies resource
+type mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPoliciesInternal it will be used here
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	Type plugin.TValue[string]
+	Allow plugin.TValue[bool]
+}
+
+// createAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies creates a new instance of this resource
+func createAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.webService.appsite.basicPublishingCredentialsPolicies", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies) MqlName() string {
+	return "azure.subscription.webService.appsite.basicPublishingCredentialsPolicies"
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies) GetAllow() *plugin.TValue[bool] {
+	return &c.Allow
 }
 
 // mqlAzureSubscriptionWebServiceAppsiteauthsettings for the azure.subscription.webService.appsiteauthsettings resource
