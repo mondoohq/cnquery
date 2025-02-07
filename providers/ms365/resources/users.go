@@ -9,11 +9,13 @@ import (
 	"fmt"
 	"time"
 
+	abstractions "github.com/microsoft/kiota-abstractions-go"
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/auditlogs"
 	betamodels "github.com/microsoftgraph/msgraph-beta-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/reports"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/users"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
@@ -22,15 +24,37 @@ import (
 )
 
 var userSelectFields = []string{
-	"id", "accountEnabled", "city", "companyName", "country", "createdDateTime", "department", "displayName", "employeeId", "givenName",
-	"jobTitle", "mail", "mobilePhone", "otherMails", "officeLocation", "postalCode", "state", "streetAddress", "surname", "userPrincipalName", "userType",
-	"creationType", "identities",
+	"id", "accountEnabled", "city", "companyName", "country", "createdDateTime",
+	"department", "displayName", "employeeId", "givenName", "jobTitle", "mail",
+	"mobilePhone", "otherMails", "officeLocation", "postalCode", "state", "identities",
+	"streetAddress", "surname", "userPrincipalName", "userType", "creationType",
 }
 
-// users reads all users from Entra ID
+func (a *mqlMicrosoft) users() (*mqlMicrosoftUsers, error) {
+	resource, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "microsoft.users", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+
+	return resource.(*mqlMicrosoftUsers), nil
+}
+
+func initMicrosoftUsers(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	args["__id"] = newListResourceIdFromArguments("microsoft.users", args)
+	resource, err := runtime.CreateResource(runtime, "microsoft.users", args)
+	if err != nil {
+		return args, nil, err
+	}
+
+	return args, resource.(*mqlMicrosoftUsers), nil
+}
+
+// list fetches users from Entra ID and allows the user provide a filter to retrieve
+// a subset of users
+//
 // Permissions: User.Read.All, Directory.Read.All
 // see https://learn.microsoft.com/en-us/graph/api/user-list?view=graph-rest-1.0&tabs=http
-func (a *mqlMicrosoft) users() ([]interface{}, error) {
+func (a *mqlMicrosoftUsers) list() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -41,40 +65,82 @@ func (a *mqlMicrosoft) users() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// Index of users are stored inside the top level resource `microsoft`, just like
+	// MFA response. Here we create or get the resource to access those internals
+	mainResource, err := CreateResource(a.MqlRuntime, "microsoft", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	microsoft := mainResource.(*mqlMicrosoft)
+
 	// fetch user data
 	ctx := context.Background()
 	top := int32(999)
-	resp, err := graphClient.Users().Get(
-		ctx, &users.UsersRequestBuilderGetRequestConfiguration{
-			QueryParameters: &users.UsersRequestBuilderGetQueryParameters{
-				Select: userSelectFields,
-				Top:    &top,
-			},
+	opts := &users.UsersRequestBuilderGetRequestConfiguration{
+		QueryParameters: &users.UsersRequestBuilderGetQueryParameters{
+			Select: userSelectFields,
+			Top:    &top,
 		},
+	}
+
+	if a.Search.State == plugin.StateIsSet || a.Filter.State == plugin.StateIsSet {
+		// search and filter requires this header
+		headers := abstractions.NewRequestHeaders()
+		headers.Add("ConsistencyLevel", "eventual")
+		opts.Headers = headers
+
+		if a.Search.State == plugin.StateIsSet {
+			log.Debug().
+				Str("search", a.Search.Data).
+				Msg("microsoft.users.list.search set")
+			search, err := parseSearch(a.Search.Data)
+			if err != nil {
+				return nil, err
+			}
+			opts.QueryParameters.Search = &search
+		}
+		if a.Filter.State == plugin.StateIsSet {
+			log.Debug().
+				Str("filter", a.Filter.Data).
+				Msg("microsoft.users.list.filter set")
+			opts.QueryParameters.Filter = &a.Filter.Data
+			count := true
+			opts.QueryParameters.Count = &count
+		}
+	}
+
+	resp, err := graphClient.Users().Get(ctx, opts)
+	if err != nil {
+		return nil, transformError(err)
+	}
+	users, err := iterate[*models.User](ctx,
+		resp,
+		graphClient.GetAdapter(),
+		users.CreateDeltaGetResponseFromDiscriminatorValue,
 	)
 	if err != nil {
 		return nil, transformError(err)
 	}
-	users, err := iterate[*models.User](ctx, resp, graphClient.GetAdapter(), users.CreateDeltaGetResponseFromDiscriminatorValue)
-	if err != nil {
-		return nil, transformError(err)
-	}
 
-	detailsResp, err := betaClient.Reports().AuthenticationMethods().UserRegistrationDetails().Get(
-		ctx,
-		&reports.AuthenticationMethodsUserRegistrationDetailsRequestBuilderGetRequestConfiguration{
-			QueryParameters: &reports.AuthenticationMethodsUserRegistrationDetailsRequestBuilderGetQueryParameters{
-				Top: &top,
-			},
-		})
+	detailsResp, err := betaClient.
+		Reports().
+		AuthenticationMethods().
+		UserRegistrationDetails().
+		Get(ctx,
+			&reports.AuthenticationMethodsUserRegistrationDetailsRequestBuilderGetRequestConfiguration{
+				QueryParameters: &reports.AuthenticationMethodsUserRegistrationDetailsRequestBuilderGetQueryParameters{
+					Top: &top,
+				},
+			})
 	// we do not want to fail the user fetching here, this likely means the tenant does not have the right license
 	if err != nil {
-		a.mfaResp = mfaResp{err: err}
+		microsoft.mfaResp = mfaResp{err: err}
 	} else {
 		userRegistrationDetails, err := iterate[*betamodels.UserRegistrationDetails](ctx, detailsResp, betaClient.GetAdapter(), betamodels.CreateUserRegistrationDetailsCollectionResponseFromDiscriminatorValue)
 		// we do not want to fail the user fetching here, this likely means the tenant does not have the right license
 		if err != nil {
-			a.mfaResp = mfaResp{err: err}
+			microsoft.mfaResp = mfaResp{err: err}
 		} else {
 			mfaMap := map[string]bool{}
 			for _, u := range userRegistrationDetails {
@@ -83,7 +149,7 @@ func (a *mqlMicrosoft) users() ([]interface{}, error) {
 				}
 				mfaMap[*u.GetId()] = *u.GetIsMfaRegistered()
 			}
-			a.mfaResp = mfaResp{mfaMap: mfaMap}
+			microsoft.mfaResp = mfaResp{mfaMap: mfaMap}
 		}
 	}
 
@@ -95,7 +161,7 @@ func (a *mqlMicrosoft) users() ([]interface{}, error) {
 			return nil, err
 		}
 		// index users by id and principal name
-		a.index(graphUser)
+		microsoft.index(graphUser)
 		res = append(res, graphUser)
 	}
 

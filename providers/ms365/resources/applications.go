@@ -30,12 +30,14 @@ func (a *mqlMicrosoft) applications() ([]interface{}, error) {
 		return nil, err
 	}
 	ctx := context.Background()
+
 	top := int32(500)
-	resp, err := graphClient.Applications().Get(ctx, &applications.ApplicationsRequestBuilderGetRequestConfiguration{
+	opts := &applications.ApplicationsRequestBuilderGetRequestConfiguration{
 		QueryParameters: &applications.ApplicationsRequestBuilderGetQueryParameters{
 			Top: &top,
 		},
-	})
+	}
+	resp, err := graphClient.Applications().Get(ctx, opts)
 	if err != nil {
 		return nil, transformError(err)
 	}
