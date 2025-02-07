@@ -244,5 +244,5 @@ func (r *mqlFileContext) content(file *mqlFile, rnge llx.Range) (string, error) 
 		return "", fileContent.Error
 	}
 
-	return rnge.ExtractString(fileContent.Data), nil
+	return rnge.ExtractString(fileContent.Data, llx.DefaultExtractConfig), nil
 }

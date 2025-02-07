@@ -67,32 +67,32 @@ func (r Range) AddLineRange(line1 uint32, line2 uint32) Range {
 
 func (r Range) AddColumnRange(line uint32, column1 uint32, column2 uint32) Range {
 	r = append(r, rangeVersion1|0x03)
-	bytes := int2bytes(int64(line))
-	bytes1 := int2bytes(int64(column1))
-	bytes2 := int2bytes(int64(column2))
+	bLine := int2bytes(int64(line))
+	bCol1 := int2bytes(int64(column1))
+	bCol2 := int2bytes(int64(column2))
 
-	r = append(r, byte(len(bytes)<<4))
-	r = append(r, bytes...)
+	r = append(r, byte(len(bLine)<<4))
+	r = append(r, bLine...)
 
-	r = append(r, byte(len(bytes1)<<4)|byte(len(bytes2)&0xf))
-	r = append(r, bytes1...)
-	r = append(r, bytes2...)
+	r = append(r, byte(len(bCol1)<<4)|byte(len(bCol2)&0xf))
+	r = append(r, bCol1...)
+	r = append(r, bCol2...)
 	return r
 }
 
 func (r Range) AddLineColumnRange(line1 uint32, line2 uint32, column1 uint32, column2 uint32) Range {
 	r = append(r, rangeVersion1|0x04)
-	bytes1 := int2bytes(int64(line1))
-	bytes2 := int2bytes(int64(line2))
-	r = append(r, byte(len(bytes1)<<4)|byte(len(bytes2)&0xf))
-	r = append(r, bytes1...)
-	r = append(r, bytes2...)
+	b1 := int2bytes(int64(line1))
+	b2 := int2bytes(int64(line2))
+	r = append(r, byte(len(b1)<<4)|byte(len(b2)&0xf))
+	r = append(r, b1...)
+	r = append(r, b2...)
 
-	bytes1 = int2bytes(int64(column1))
-	bytes2 = int2bytes(int64(column2))
-	r = append(r, byte(len(bytes1)<<4)|byte(len(bytes2)&0xf))
-	r = append(r, bytes1...)
-	r = append(r, bytes2...)
+	b1 = int2bytes(int64(column1))
+	b2 = int2bytes(int64(column2))
+	r = append(r, byte(len(b1)<<4)|byte(len(b2)&0xf))
+	r = append(r, b1...)
+	r = append(r, b2...)
 
 	return r
 }
@@ -192,9 +192,9 @@ func (r Range) String() string {
 		case 4:
 			res.WriteString(strconv.Itoa(int(x[0])))
 			res.WriteString(":")
-			res.WriteString(strconv.Itoa(int(x[2])))
-			res.WriteString("-")
 			res.WriteString(strconv.Itoa(int(x[1])))
+			res.WriteString("-")
+			res.WriteString(strconv.Itoa(int(x[2])))
 			res.WriteString(":")
 			res.WriteString(strconv.Itoa(int(x[3])))
 		}
@@ -211,77 +211,122 @@ func (r Range) String() string {
 	return ret
 }
 
-func (r Range) ExtractString(src string) string {
+type ExtractConfig struct {
+	MaxContentLines int
+	MaxColumns      int
+	ShowLines       bool
+	LinePadding     int
+}
+
+var DefaultExtractConfig = ExtractConfig{
+	MaxContentLines: 7,
+	MaxColumns:      100,
+	ShowLines:       true,
+	LinePadding:     2,
+}
+
+func (r Range) ExtractString(src string, cfg ExtractConfig) string {
 	lines := strings.Split(src, "\n")
 	maxLines := uint32(len(lines))
 	items := r.ExtractAll()
 	var res strings.Builder
 	for i := range items {
 		x := items[i]
+
+		// turn the start line into an IDX (starts from 0)
+		lineIdx := x[0]
+		if lineIdx > 0 {
+			lineIdx--
+		}
+
 		switch len(x) {
 		case 1:
-			idx := x[0]
-			if idx < uint32(len(lines)) {
-				res.WriteString(lines[idx])
+			// since we aren't dealing with ranges, if someone says line 0 we don't have it!
+			if x[0] == 0 {
+				continue
+			}
+			if lineIdx >= maxLines {
+				continue
+			}
+			res.WriteString(lines[lineIdx])
+			if lineIdx+1 != maxLines {
 				res.WriteByte('\n')
 			}
 
 		case 2:
-			end := uint32(len(lines) - 1)
-			if x[1] < end {
-				end = x[1]
+			end := maxLines - 1
+			if x[1]-1 < end {
+				end = x[1] - 1
 			}
-			for line := x[0]; line <= end; line++ {
-				res.WriteString(lines[line])
-				res.WriteByte('\n')
+			for ; lineIdx <= end; lineIdx++ {
+				res.WriteString(lines[lineIdx])
+				if lineIdx+1 != maxLines {
+					res.WriteByte('\n')
+				}
 			}
 
 		case 3:
-			idx := x[0]
-			if idx > maxLines {
-				break
+			// since we aren't dealing with ranges, if someone says line 0 we don't have it!
+			if x[0] == 0 {
+				continue
 			}
-			line := lines[idx]
-
-			end := uint32(len(lines) - 1)
-			if x[2] < end {
-				end = x[2]
+			if lineIdx >= maxLines {
+				continue
 			}
 
-			if x[1] < uint32(len(line)) {
-				res.WriteString(line[x[1]:])
-				res.WriteByte('\n')
+			line := lines[lineIdx]
+			var col1idx uint32
+			if x[1] != 0 {
+				col1idx = x[1] - 1
 			}
-			idx++
+			colMax := uint32(len(line))
+			col2idx := colMax
+			if x[2] < col2idx {
+				col2idx = x[2]
+			}
 
-			for ; idx <= end; idx++ {
-				res.WriteString(lines[idx])
+			res.WriteString(line[col1idx:col2idx])
+			if col2idx >= colMax && lineIdx+1 < maxLines {
 				res.WriteByte('\n')
 			}
 
 		case 4:
-			idx := x[0]
-			if idx > maxLines {
-				break
-			}
-			line := lines[idx]
-
-			end := uint32(len(lines) - 1)
-			if x[2] < end {
-				end = x[2]
+			if lineIdx >= maxLines {
+				continue
 			}
 
-			c1 := x[1]
-			c2 := x[3] + 1
-			if idx == end {
+			// Remember: line 0 ==> outside of line index
+			// because lines start at 1
+			// We set it to empty string because if we are at line idx 0
+			// then the empty string won't create extraction content
+			line := ""
+			if x[0] != 0 {
+				line = lines[lineIdx]
+			}
+
+			if x[1] == 0 {
+				continue
+			}
+			end := maxLines - 1
+			if x[1]-1 < end {
+				end = x[1] - 1
+			}
+
+			var col1idx uint32
+			if x[2] != 0 {
+				col1idx = x[2] - 1
+			}
+			c2 := x[3]
+
+			if x[0] == x[1] {
 				cMax := uint32(len(line))
 				addNewline := false
 				if c2 > cMax {
 					c2 = cMax
-					addNewline = idx < maxLines
+					addNewline = lineIdx < maxLines
 				}
-				if c1 < cMax {
-					res.WriteString(line[c1:c2])
+				if col1idx < cMax {
+					res.WriteString(line[col1idx:c2])
 				}
 				if addNewline {
 					res.WriteByte('\n')
@@ -289,22 +334,36 @@ func (r Range) ExtractString(src string) string {
 				continue
 			}
 
-			if c1 < uint32(len(line)) {
-				res.WriteString(line[c1:])
-				res.WriteByte('\n')
+			if col1idx < uint32(len(line)) {
+				res.WriteString(line[col1idx:])
+				if x[0] != 0 && x[0]+1 != maxLines {
+					res.WriteByte('\n')
+				}
 			}
-			idx++
-
-			for ; idx < end; idx++ {
-				res.WriteString(lines[idx])
-				res.WriteByte('\n')
+			if x[0] != 0 {
+				lineIdx++
 			}
 
+			for ; lineIdx < end; lineIdx++ {
+				res.WriteString(lines[lineIdx])
+				if lineIdx+1 != maxLines {
+					res.WriteByte('\n')
+				}
+			}
+
+			// if the specified end is over the maximum number of lines we have
+			// just write the last line and be done here
+			if x[1] > maxLines {
+				res.WriteString(lines[maxLines-1])
+				continue
+			}
+
+			// otherwise this is the last line with some column range we need to respect
 			line = lines[end]
 			addNewline := false
 			if c2 > uint32(len(line)) {
 				c2 = uint32(len(line))
-				addNewline = end < maxLines
+				addNewline = end+1 < maxLines
 			}
 			res.WriteString(line[:c2])
 			if addNewline {

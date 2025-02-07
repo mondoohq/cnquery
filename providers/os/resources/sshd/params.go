@@ -164,7 +164,7 @@ func ParseBlocks(rootPath string, globPathContent func(string) (string, error)) 
 		if key == "Match" {
 			// wrap up context on the previous block
 			curBlock.Context.Range = curBlock.Context.Range.AddLineRange(uint32(curBlock.Context.curLine), uint32(curLineIdx))
-			curBlock.Context.curLine = curLineIdx + 1
+			curBlock.Context.curLine = curLineIdx
 
 			// This key is the only that we don't add to any params. It is stored
 			// in the condition of each block and can be accessed there.
