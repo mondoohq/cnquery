@@ -93,7 +93,6 @@ func (d *LinuxDeviceManager) IdentifyMountTargets(opts map[string]string) ([]*sn
 	}
 
 	if opts[SkipAttemptExpandPartitions] == "true" {
-		log.Warn().Msg("!!! skipping attempt to expand partitions")
 		return partitions, nil
 	}
 
