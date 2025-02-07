@@ -16,7 +16,8 @@
           "os"
         ],
         "build": "rolling",
-        "version": "rolling"
+        "version": "rolling",
+        "labels":{"distro-id":"arch"}
       },
       "connections": [
         {
