@@ -17,6 +17,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/credentials/stscreds"
+	"github.com/aws/aws-sdk-go-v2/service/account"
+	"github.com/aws/aws-sdk-go-v2/service/account/types"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/hashicorp/go-retryablehttp"
@@ -384,24 +386,85 @@ func (h *AwsConnection) Regions() ([]string, error) {
 
 	res, err := svc.DescribeRegions(ctx, &ec2.DescribeRegionsInput{})
 	if err != nil {
-		log.Error().Err(err).Msg("unable to describe regions")
-		regionsFromTable, regionalErr := getRegionsFromRegionalTable()
-		if regionalErr != nil {
-			log.Error().Err(err).Msg("unable to list regions from regional table")
+		log.Warn().Err(err).Msg("unable to describe regions")
+		// when we can't use `DescribeRegions` we will fallback to:
+		// 1. Account list-regions
+		// 2. Public regional table + region access verification
+		enabledRegions, fallbackErr := h.fallbackGetEnabledRegions(ctx)
+		if fallbackErr != nil {
+			log.Warn().Err(fallbackErr).Msg("unable to list regions from fallback options")
 			return regions, err
 		}
-		regions = regionsFromTable
-	}
-
-	for _, region := range res.Regions {
-		// ensure excluded regions are discarded
-		if !slices.Contains(h.Filters.DiscoveryFilters.ExcludeRegions, *region.RegionName) {
+		regions = enabledRegions
+	} else {
+		for _, region := range res.Regions {
 			regions = append(regions, *region.RegionName)
 		}
 	}
+
+	// ensure excluded regions are discarded
+	filteredRegions := []string{}
+	for _, region := range regions {
+		if !slices.Contains(h.Filters.DiscoveryFilters.ExcludeRegions, region) {
+			filteredRegions = append(filteredRegions, region)
+		}
+	}
+
+	if len(filteredRegions) != len(regions) {
+		log.Debug().
+			Strs("filtered_regions", filteredRegions).
+			Msg("list of regions changed based of applied filters")
+	}
+
 	// cache the regions as part of the provider instance
-	h.clientcache.Store("_regions", &CacheEntry{Data: regions})
-	return regions, nil
+	h.clientcache.Store("_regions", &CacheEntry{Data: filteredRegions})
+	return filteredRegions, nil
+}
+
+// fallbackGetEnabledRegions tries multiple ways to return the list of enabled regions.
+//
+// NOTE use this only if `DescribeRegions` doesn't work
+func (h *AwsConnection) fallbackGetEnabledRegions(ctx context.Context) (regions []string, err error) {
+	// 1. Account list-regions
+	response, err := h.Account("").ListRegions(ctx, &account.ListRegionsInput{
+		RegionOptStatusContains: []types.RegionOptStatus{
+			types.RegionOptStatusEnabled,
+			types.RegionOptStatusEnabling,
+			types.RegionOptStatusEnabledByDefault,
+		},
+	})
+	if err == nil {
+		for _, region := range response.Regions {
+			regions = append(regions, *region.RegionName)
+		}
+		log.Debug().Strs("regions", regions).Msg("regions>fallback> using account list-regions")
+		return
+	}
+
+	log.Warn().Err(err).Msg("unable to list account regions")
+
+	// 2. Public regional table + region access verification
+	regionsFromTable, err := getRegionsFromRegionalTable()
+	if err != nil {
+		return
+	}
+
+	// verify which regions are enabled
+	for _, region := range regionsFromTable {
+		if h.isRegionEnabled(ctx, region) {
+			regions = append(regions, region)
+		}
+	}
+
+	log.Debug().Strs("regions", regions).Msg("using public regional table")
+	return
+}
+
+// isRegionEnabled returns true if the provided region is enabled. We verify if a region is
+// enabled by doing a simple request to that region.
+func (h *AwsConnection) isRegionEnabled(ctx context.Context, region string) bool {
+	_, err := h.STS(region).GetCallerIdentity(ctx, nil)
+	return err == nil
 }
 
 type regionalTable struct {

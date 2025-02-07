@@ -10,6 +10,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.55
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.25
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.36.9
+	github.com/aws/aws-sdk-go-v2/service/account v1.22.5
 	github.com/aws/aws-sdk-go-v2/service/acm v1.30.14
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.28.8
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.34.9
