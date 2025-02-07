@@ -10,6 +10,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -206,7 +207,40 @@ func (d *LinuxDeviceManager) attemptFindOSTree(dir string, partition *snapshot.P
 		return false
 	}
 
-	boot1, err := os.Readlink(path.Join(dir, "ostree", "boot.1"))
+	entries, err := os.ReadDir(path.Join(dir, "ostree"))
+	if err != nil {
+		log.Error().Err(err).Str("device", partition.Name).Msg("unable to read ostree directory")
+		return false
+	}
+
+	entries = slices.DeleteFunc(entries, func(entry os.DirEntry) bool {
+		if entry.Type().Type() != os.ModeSymlink {
+			return true
+		}
+
+		trimmed := strings.TrimPrefix(entry.Name(), "boot.")
+		if trimmed == entry.Name() {
+			return true
+		}
+
+		_, err := strconv.Atoi(trimmed)
+		return err != nil
+	})
+
+	if len(entries) == 0 {
+		log.Debug().Str("device", partition.Name).Msg("no ostree entries")
+		return false
+	}
+	if len(entries) > 1 {
+		slices.SortFunc(entries, func(a, b os.DirEntry) int {
+			aIndex, _ := strconv.Atoi(strings.TrimPrefix(a.Name(), "boot."))
+			bIndex, _ := strconv.Atoi(strings.TrimPrefix(b.Name(), "boot."))
+			return aIndex - bIndex
+		})
+	}
+
+	log.Debug().Str("device", partition.Name).Str("boot1", entries[0].Name()).Msg("found ostree deployment")
+	boot1, err := os.Readlink(path.Join(dir, "ostree", entries[0].Name()))
 	if err != nil {
 		log.Error().Err(err).Str("device", partition.Name).Msg("unable to readlink boot.1")
 		return false
