@@ -47,6 +47,16 @@ func TestParse(t *testing.T) {
 		}, res.Resources)
 	})
 
+	t.Run("context", func(t *testing.T) {
+		res := parse(t, "name @context(\"file.context\")")
+		assert.Equal(t, []*Resource{
+			{
+				ID:      "name",
+				Context: "file.context",
+			},
+		}, res.Resources)
+	})
+
 	t.Run("resource with a static field", func(t *testing.T) {
 		res := parse(t, `
 		// resource-docs
@@ -228,6 +238,24 @@ func TestParse(t *testing.T) {
 
 		assert.Equal(t, "name.no", res.Resources[0].ID)
 		assert.Equal(t, true, res.Resources[0].IsPrivate)
+		assert.Equal(t, fields, res.Resources[0].Body.Fields)
+	})
+
+	t.Run("file context", func(t *testing.T) {
+		res := parse(t, `
+	sth @context("file.context") {
+		field map[string]int
+	}`)
+
+		fields := []*Field{{
+			BasicField: &BasicField{
+				ID:   "field",
+				Type: Type{MapType: &MapType{Key: SimpleType{"string"}, Value: Type{SimpleType: &SimpleType{"int"}}}},
+			},
+		}}
+		require.NotEmpty(t, res.Resources)
+		assert.Equal(t, "sth", res.Resources[0].ID)
+		assert.Equal(t, "file.context", res.Resources[0].Context)
 		assert.Equal(t, fields, res.Resources[0].Body.Fields)
 	})
 }

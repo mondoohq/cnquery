@@ -39,6 +39,7 @@ message ResourceInfo {
   bool is_extension = 28;
   string min_mondoo_version = 25;
   string defaults = 26;
+  string context = 30;
   string provider = 27;
   // This field contains references to other providers with the same 
   // resource/field.
