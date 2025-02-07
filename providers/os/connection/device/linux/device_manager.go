@@ -92,8 +92,13 @@ func (d *LinuxDeviceManager) IdentifyMountTargets(opts map[string]string) ([]*sn
 		partitions = append(partitions, partitionsForDevice...)
 	}
 
+	if len(partitions) == 0 {
+		errs = append(errs, errors.New("no partitions found"))
+		return partitions, errors.Join(errs...)
+	}
+
 	if opts[SkipAttemptExpandPartitions] == "true" {
-		return partitions, nil
+		return partitions, errors.Join(errs...)
 	}
 
 	partitions, err = d.attemptExpandPartitions(partitions)
