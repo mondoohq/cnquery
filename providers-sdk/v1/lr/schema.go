@@ -11,8 +11,6 @@ import (
 	"go.mondoo.com/cnquery/v11/types"
 )
 
-var CONTEXT_FIELD = "context"
-
 func Schema(ast *LR) (*resources.Schema, error) {
 	provider, ok := ast.Options["provider"]
 	if !ok {
@@ -177,20 +175,6 @@ func resourceFields(r *Resource, ast *LR) (map[string]*resources.Field, error) {
 			Desc:        desc,
 			Refs:        refs,
 			IsEmbedded:  f.BasicField.isEmbedded,
-		}
-	}
-
-	if r.Context != "" {
-		if _, ok := fields[CONTEXT_FIELD]; ok {
-			return nil, errors.New("'" + CONTEXT_FIELD + "' field already exists on resource " + r.ID)
-		}
-		fields[CONTEXT_FIELD] = &resources.Field{
-			Name:        CONTEXT_FIELD,
-			Type:        r.Context,
-			IsMandatory: true,
-			Title:       "Context",
-			Desc:        "Contextual info, where this resource is located and defined",
-			IsEmbedded:  false,
 		}
 	}
 

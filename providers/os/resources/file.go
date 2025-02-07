@@ -219,3 +219,30 @@ func (l *mqlFilePermissions) id() (string, error) {
 func (l *mqlFilePermissions) string() (string, error) {
 	return l.__id, nil
 }
+
+func (r *mqlFileContext) id() (string, error) {
+	if r.File.Data == nil {
+		return "", errors.New("need file to exist for file.context ID")
+	}
+
+	fileID, err := r.File.Data.id()
+	if err != nil {
+		return "", err
+	}
+
+	rng := r.Range.Data.String()
+	return fileID + ":" + rng, nil
+}
+
+func (r *mqlFileContext) content(file *mqlFile, rnge llx.Range) (string, error) {
+	if file == nil {
+		return "", errors.New("no file information for file.context")
+	}
+
+	fileContent := file.GetContent()
+	if fileContent.Error != nil {
+		return "", fileContent.Error
+	}
+
+	return rnge.ExtractString(fileContent.Data), nil
+}

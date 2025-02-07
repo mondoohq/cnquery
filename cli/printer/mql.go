@@ -731,12 +731,21 @@ func (print *Printer) Data(typ types.Type, data interface{}, codeID string, bund
 		}
 
 		return idline
+
 	case types.FunctionLike:
 		if d, ok := data.(uint64); ok {
 			return indent + fmt.Sprintf("=> <%d,0>", d>>32)
 		} else {
 			return indent + fmt.Sprintf("=> %#v", data)
 		}
+
+	case types.Range:
+		if d, ok := data.(llx.Range); ok {
+			return indent + d.String()
+		} else {
+			return indent + "<bad range>"
+		}
+
 	default:
 		return indent + fmt.Sprintf("🤷 %#v", data)
 	}

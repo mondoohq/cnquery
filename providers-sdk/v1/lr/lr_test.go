@@ -247,12 +247,22 @@ func TestParse(t *testing.T) {
 		field map[string]int
 	}`)
 
-		fields := []*Field{{
-			BasicField: &BasicField{
-				ID:   "field",
-				Type: Type{MapType: &MapType{Key: SimpleType{"string"}, Value: Type{SimpleType: &SimpleType{"int"}}}},
+		fields := []*Field{
+			{
+				BasicField: &BasicField{
+					ID:   "field",
+					Type: Type{MapType: &MapType{Key: SimpleType{"string"}, Value: Type{SimpleType: &SimpleType{"int"}}}},
+				},
 			},
-		}}
+			{
+				BasicField: &BasicField{
+					ID:   "context",
+					Type: Type{SimpleType: &SimpleType{"file.context"}},
+					Args: &FieldArgs{},
+				},
+				Comments: []string{"Contextual info, where this resource is located and defined"},
+			},
+		}
 		require.NotEmpty(t, res.Resources)
 		assert.Equal(t, "sth", res.Resources[0].ID)
 		assert.Equal(t, "file.context", res.Resources[0].Context)

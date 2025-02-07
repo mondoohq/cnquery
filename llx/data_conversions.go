@@ -44,6 +44,7 @@ func init() {
 		types.MapLike:      map2result,
 		types.ResourceLike: resource2result,
 		types.FunctionLike: function2result,
+		types.Range:        range2result,
 	}
 
 	primitiveConverters = map[types.Type]primitiveConverter{
@@ -65,6 +66,7 @@ func init() {
 		types.ResourceLike: presource2raw,
 		types.FunctionLike: pfunction2raw,
 		types.Ref:          pref2raw,
+		types.Range:        prange2raw,
 	}
 }
 
@@ -330,6 +332,14 @@ func function2result(value interface{}, typ types.Type) (*Primitive, error) {
 		return FunctionPrimitive(v), nil
 	}
 	return nil, errInvalidConversion(value, typ)
+}
+
+func range2result(value any, typ types.Type) (*Primitive, error) {
+	v, ok := value.(Range)
+	if !ok {
+		return nil, errInvalidConversion(value, typ)
+	}
+	return RangePrimitive(v), nil
 }
 
 func raw2primitive(value interface{}, typ types.Type) (*Primitive, error) {
@@ -626,6 +636,10 @@ func pref2raw(p *Primitive) *RawData {
 	} else {
 		return &RawData{Value: int32(bytes2int(p.Value)), Type: types.Type(p.Type)}
 	}
+}
+
+func prange2raw(p *Primitive) *RawData {
+	return RangeData(p.Value)
 }
 
 // Tries to resolve primitives; returns refs if they don't exist yet.

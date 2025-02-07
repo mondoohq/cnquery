@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/testutils"
 )
 
@@ -79,7 +80,9 @@ func TestResource_SSHD(t *testing.T) {
 	})
 
 	t.Run("parse blocks", func(t *testing.T) {
-		res := x.TestQuery(t, "sshd.config.blocks.map(criteria)")
+		var res []*llx.RawResult
+
+		res = x.TestQuery(t, "sshd.config.blocks.map(criteria)")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, []any{"", "Group sftp-users", "User myservice"}, res[0].Data.Value)
@@ -88,7 +91,28 @@ func TestResource_SSHD(t *testing.T) {
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, []any{"no", "yes", nil}, res[0].Data.Value)
+
+		ranges := []any{
+			llx.NewRange().AddLineRange(1, 172),
+			llx.NewRange().AddLineRange(173, 177),
+			llx.NewRange().AddLineRange(178, 180),
+		}
+		res = x.TestQuery(t, "sshd.config.blocks.map(context.range)")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, ranges, res[0].Data.Value)
+
+		paths := []any{
+			"/etc/ssh/sshd_config",
+			"/etc/ssh/sshd_config",
+			"/etc/ssh/sshd_config",
+		}
+		res = x.TestQuery(t, "sshd.config.blocks.map(context.file.path)")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, paths, res[0].Data.Value)
 	})
+
 	t.Run("expose block match criteria in params.Match", func(t *testing.T) {
 		res := x.TestQuery(t, "sshd.config.params.Match")
 		assert.NotEmpty(t, res)

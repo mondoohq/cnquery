@@ -14,14 +14,14 @@ import (
 // RangePrimitive creates a range primitive from the given
 // range data. Use the helper functions to initialize and
 // combine multiple sets of range data.
-func RangePrimitive(data RangeData) *Primitive {
+func RangePrimitive(data Range) *Primitive {
 	return &Primitive{
 		Type:  string(types.Range),
 		Value: data,
 	}
 }
 
-type RangeData []byte
+type Range []byte
 
 const (
 	// Byte indicators for ranges work like this:
@@ -43,11 +43,11 @@ const (
 	rangeVersion1 byte = 0x10
 )
 
-func NewRange() RangeData {
+func NewRange() Range {
 	return []byte{}
 }
 
-func (r RangeData) AddLine(line uint32) RangeData {
+func (r Range) AddLine(line uint32) Range {
 	r = append(r, rangeVersion1|0x01)
 	bytes := int2bytes(int64(line))
 	r = append(r, byte(len(bytes)<<4))
@@ -55,7 +55,7 @@ func (r RangeData) AddLine(line uint32) RangeData {
 	return r
 }
 
-func (r RangeData) AddLineRange(line1 uint32, line2 uint32) RangeData {
+func (r Range) AddLineRange(line1 uint32, line2 uint32) Range {
 	r = append(r, rangeVersion1|0x02)
 	bytes1 := int2bytes(int64(line1))
 	bytes2 := int2bytes(int64(line2))
@@ -65,7 +65,7 @@ func (r RangeData) AddLineRange(line1 uint32, line2 uint32) RangeData {
 	return r
 }
 
-func (r RangeData) AddColumnRange(line uint32, column1 uint32, column2 uint32) RangeData {
+func (r Range) AddColumnRange(line uint32, column1 uint32, column2 uint32) Range {
 	r = append(r, rangeVersion1|0x03)
 	bytes := int2bytes(int64(line))
 	bytes1 := int2bytes(int64(column1))
@@ -80,7 +80,7 @@ func (r RangeData) AddColumnRange(line uint32, column1 uint32, column2 uint32) R
 	return r
 }
 
-func (r RangeData) AddLineColumnRange(line1 uint32, line2 uint32, column1 uint32, column2 uint32) RangeData {
+func (r Range) AddLineColumnRange(line1 uint32, line2 uint32, column1 uint32, column2 uint32) Range {
 	r = append(r, rangeVersion1|0x04)
 	bytes1 := int2bytes(int64(line1))
 	bytes2 := int2bytes(int64(line2))
@@ -97,7 +97,7 @@ func (r RangeData) AddLineColumnRange(line1 uint32, line2 uint32, column1 uint32
 	return r
 }
 
-func (r RangeData) ExtractNext() ([]uint32, RangeData) {
+func (r Range) ExtractNext() ([]uint32, Range) {
 	if len(r) == 0 {
 		return nil, nil
 	}
@@ -123,7 +123,7 @@ func (r RangeData) ExtractNext() ([]uint32, RangeData) {
 			res = append(res, uint32(n))
 		}
 		if l2 != 0 {
-			n := bytes2int(r[idx : idx+l1])
+			n := bytes2int(r[idx : idx+l2])
 			idx += l2
 			res = append(res, uint32(n))
 		}
@@ -141,7 +141,7 @@ func (r RangeData) ExtractNext() ([]uint32, RangeData) {
 			res = append(res, uint32(n))
 		}
 		if l2 != 0 {
-			n := bytes2int(r[idx : idx+l1])
+			n := bytes2int(r[idx : idx+l2])
 			idx += l2
 			res = append(res, uint32(n))
 		}
@@ -154,7 +154,7 @@ func (r RangeData) ExtractNext() ([]uint32, RangeData) {
 	return res, r[idx:]
 }
 
-func (r RangeData) ExtractAll() [][]uint32 {
+func (r Range) ExtractAll() [][]uint32 {
 	res := [][]uint32{}
 	for {
 		cur, rest := r.ExtractNext()
@@ -170,7 +170,7 @@ func (r RangeData) ExtractAll() [][]uint32 {
 	return res
 }
 
-func (r RangeData) String() string {
+func (r Range) String() string {
 	var res strings.Builder
 
 	items := r.ExtractAll()
@@ -201,6 +201,115 @@ func (r RangeData) String() string {
 
 		if i != len(items)-1 {
 			res.WriteString(",")
+		}
+	}
+
+	ret := res.String()
+	if ret == "" {
+		return "undefined"
+	}
+	return ret
+}
+
+func (r Range) ExtractString(src string) string {
+	lines := strings.Split(src, "\n")
+	maxLines := uint32(len(lines))
+	items := r.ExtractAll()
+	var res strings.Builder
+	for i := range items {
+		x := items[i]
+		switch len(x) {
+		case 1:
+			idx := x[0]
+			if idx < uint32(len(lines)) {
+				res.WriteString(lines[idx])
+				res.WriteByte('\n')
+			}
+
+		case 2:
+			end := uint32(len(lines) - 1)
+			if x[1] < end {
+				end = x[1]
+			}
+			for line := x[0]; line <= end; line++ {
+				res.WriteString(lines[line])
+				res.WriteByte('\n')
+			}
+
+		case 3:
+			idx := x[0]
+			if idx > maxLines {
+				break
+			}
+			line := lines[idx]
+
+			end := uint32(len(lines) - 1)
+			if x[2] < end {
+				end = x[2]
+			}
+
+			if x[1] < uint32(len(line)) {
+				res.WriteString(line[x[1]:])
+				res.WriteByte('\n')
+			}
+			idx++
+
+			for ; idx <= end; idx++ {
+				res.WriteString(lines[idx])
+				res.WriteByte('\n')
+			}
+
+		case 4:
+			idx := x[0]
+			if idx > maxLines {
+				break
+			}
+			line := lines[idx]
+
+			end := uint32(len(lines) - 1)
+			if x[2] < end {
+				end = x[2]
+			}
+
+			c1 := x[1]
+			c2 := x[3] + 1
+			if idx == end {
+				cMax := uint32(len(line))
+				addNewline := false
+				if c2 > cMax {
+					c2 = cMax
+					addNewline = idx < maxLines
+				}
+				if c1 < cMax {
+					res.WriteString(line[c1:c2])
+				}
+				if addNewline {
+					res.WriteByte('\n')
+				}
+				continue
+			}
+
+			if c1 < uint32(len(line)) {
+				res.WriteString(line[c1:])
+				res.WriteByte('\n')
+			}
+			idx++
+
+			for ; idx < end; idx++ {
+				res.WriteString(lines[idx])
+				res.WriteByte('\n')
+			}
+
+			line = lines[end]
+			addNewline := false
+			if c2 > uint32(len(line)) {
+				c2 = uint32(len(line))
+				addNewline = end < maxLines
+			}
+			res.WriteString(line[:c2])
+			if addNewline {
+				res.WriteByte('\n')
+			}
 		}
 	}
 

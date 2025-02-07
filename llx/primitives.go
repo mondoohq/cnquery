@@ -359,7 +359,7 @@ func (p *Primitive) LabelV2(code *CodeV2) string {
 		return ""
 
 	case types.Range:
-		return RangeData(p.Value).String()
+		return Range(p.Value).String()
 
 	default:
 		return ""
