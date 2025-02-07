@@ -91,15 +91,15 @@ func (d *LinuxDeviceManager) IdentifyMountTargets(opts map[string]string) ([]*sn
 		partitions = append(partitions, partitionsForDevice...)
 	}
 
-	if err := errors.Join(errs...); err != nil {
-		return partitions, err
-	}
-
 	if opts[SkipAttemptExpandPartitions] == "true" {
+		log.Warn().Msg("!!! skipping attempt to expand partitions")
 		return partitions, nil
 	}
 
-	return d.attemptExpandPartitions(partitions)
+	partitions, err = d.attemptExpandPartitions(partitions)
+	errs = append(errs, err)
+
+	return partitions, errors.Join(errs...)
 }
 
 func (d *LinuxDeviceManager) attemptExpandPartitions(partitions []*snapshot.PartitionInfo) ([]*snapshot.PartitionInfo, error) {
