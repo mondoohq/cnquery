@@ -8,7 +8,7 @@ require (
 	github.com/bradleyfalzon/ghinstallation/v2 v2.13.0
 	github.com/cockroachdb/errors v1.11.3
 	github.com/gobwas/glob v0.2.3
-	github.com/google/go-github/v67 v67.0.0
+	github.com/google/go-github/v69 v69.0.0
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/mitchellh/hashstructure/v2 v2.0.2
 	github.com/rs/zerolog v1.33.0

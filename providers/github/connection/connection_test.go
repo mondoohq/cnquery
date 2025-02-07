@@ -12,7 +12,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/google/go-github/v67/github"
+	"github.com/google/go-github/v69/github"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
@@ -36,17 +36,19 @@ func TestGithubValidConnection_Private_Key(t *testing.T) {
 	pemData := pem.EncodeToMemory(privateKeyPEM)
 
 	_, err = NewGithubConnection(0, &inventory.Asset{
-		Connections: []*inventory.Config{{
-			Options: map[string]string{
-				OPTION_APP_ID:              "123",
-				OPTION_APP_INSTALLATION_ID: "890",
+		Connections: []*inventory.Config{
+			{
+				Options: map[string]string{
+					OPTION_APP_ID:              "123",
+					OPTION_APP_INSTALLATION_ID: "890",
+				},
+				Credentials: []*vault.Credential{
+					{
+						Type:   vault.CredentialType_private_key,
+						Secret: pemData,
+					},
+				},
 			},
-			Credentials: []*vault.Credential{{
-				Type:   vault.CredentialType_private_key,
-				Secret: pemData,
-			},
-			},
-		},
 		},
 	})
 	require.NoError(t, err)
@@ -54,13 +56,15 @@ func TestGithubValidConnection_Private_Key(t *testing.T) {
 
 func TestGithubValidConnection_Password(t *testing.T) {
 	_, err := NewGithubConnection(0, &inventory.Asset{
-		Connections: []*inventory.Config{{
-			Credentials: []*vault.Credential{{
-				Type:   vault.CredentialType_password,
-				Secret: []byte("super_secret"),
+		Connections: []*inventory.Config{
+			{
+				Credentials: []*vault.Credential{
+					{
+						Type:   vault.CredentialType_password,
+						Secret: []byte("super_secret"),
+					},
+				},
 			},
-			},
-		},
 		},
 	})
 	require.NoError(t, err)

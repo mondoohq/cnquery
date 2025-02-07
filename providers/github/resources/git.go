@@ -4,7 +4,7 @@
 package resources
 
 import (
-	"github.com/google/go-github/v67/github"
+	"github.com/google/go-github/v69/github"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 )
