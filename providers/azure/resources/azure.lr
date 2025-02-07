@@ -1077,7 +1077,7 @@ private azure.subscription.webService.appsite.basicPublishingCredentialsPolicies
   name string
   // Resource type
   type string
-  // Publishing method policy
+  // Whether to allow access to a publishing method
   allow bool
 }
 
