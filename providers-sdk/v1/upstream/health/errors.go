@@ -82,7 +82,7 @@ func ReportSlowQuery(product, version, build string, q SlowQueryInfo) {
 }
 
 // sendSlowQuery sends queries that have been deemed excessively slow to
-// the platform for futher analysis.
+// the platform for further analysis.
 func sendSlowQuery(product, version, build string, q SlowQueryInfo) {
 	// 1. read config
 	opts, err := config.Read()

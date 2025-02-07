@@ -68,6 +68,7 @@ type Resource struct {
 	IsExtension bool           `@"extend"?`
 	ID          string         `@Ident { @'.' @Ident }`
 	Defaults    string         ` ( '@' "defaults" '(' @String ')' )? `
+	Context     string         ` ( '@' "context" '(' @String ')' )? `
 	ListType    *SimplListType `[ '{' [ @@ ]`
 	Body        *ResourceDef   `@@ '}' ]`
 	title       string

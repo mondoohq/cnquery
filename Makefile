@@ -487,7 +487,7 @@ providers/test:
 	@$(call testGoModProvider, providers/nmap)
 
 lr/test:
-	go test ./resources/lr/...
+	go test ./providers-sdk/v1/lr/...
 
 # TODO: migrate
 .PHONY: lr/docs/serve

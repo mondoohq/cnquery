@@ -7,13 +7,12 @@ import (
 	"context"
 	"net/http"
 	"net/url"
-	"os"
 	"strconv"
 	"time"
 
 	"github.com/bradleyfalzon/ghinstallation/v2"
 	"github.com/cockroachdb/errors"
-	"github.com/google/go-github/v67/github"
+	"github.com/google/go-github/v69/github"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/mitchellh/hashstructure/v2"
 	"github.com/rs/zerolog"
@@ -70,10 +69,6 @@ func connectionOptionsFromConfigOptions(conf *inventory.Config) (opts githubConn
 	opts.AppPrivateKeyFile = conf.Options[OPTION_APP_PRIVATE_KEY]
 	opts.EnterpriseURL = conf.Options[OPTION_ENTERPRISE_URL]
 	opts.Token = conf.Options[OPTION_TOKEN]
-
-	if opts.Token == "" {
-		opts.Token = os.Getenv("GITHUB_TOKEN")
-	}
 
 	for _, cred := range conf.Credentials {
 		switch cred.Type {

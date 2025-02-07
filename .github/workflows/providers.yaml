@@ -188,10 +188,19 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ ! inputs.skip_publish }}
     steps:
+      - name: Generate token
+        id: generate-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.MONDOO_MERGEBOT_APP_ID }}
+          private-key: ${{ secrets.MONDOO_MERGEBOT_APP_PRIVATE_KEY }}
+          owner: mondoohq
+          repositories: |
+            releasr
       - name: Trigger Reindex of releases.mondoo.com
         uses: peter-evans/repository-dispatch@v3
         with:
-          token: ${{ secrets.RELEASR_ACTION_TOKEN }}
+          token: ${{ steps.generate-token.outputs.token }}
           repository: "mondoohq/releasr"
           event-type: reindex
           client-payload: '{ }'

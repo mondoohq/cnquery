@@ -1373,6 +1373,30 @@ func anyContainsString(an interface{}, s string) bool {
 	}
 }
 
+func anyContainsAny(an any, s any) (bool, error) {
+	if an == nil {
+		return false, nil
+	}
+
+	switch x := an.(type) {
+	case string:
+		return opStringContainsDict(x, s)
+	case []interface{}:
+		for i := range x {
+			ok, err := anyContainsAny(x[i], s)
+			if err != nil {
+				return false, err
+			}
+			if ok {
+				return true, nil
+			}
+		}
+		return false, nil
+	default:
+		return false, nil
+	}
+}
+
 func anyContainsRegex(an interface{}, re *regexp.Regexp) bool {
 	if an == nil {
 		return false
@@ -1405,6 +1429,24 @@ func dictContainsStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uin
 	}
 
 	ok := anyContainsString(bind.Value, arg.Value.(string))
+	return BoolData(ok), 0, nil
+}
+
+func dictContainsDict(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	argRef := chunk.Function.Args[0]
+	arg, rref, err := e.resolveValue(argRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+
+	if arg.Value == nil {
+		return BoolFalse, 0, nil
+	}
+
+	ok, err := anyContainsAny(bind.Value, arg.Value)
+	if err != nil {
+		return BoolData(false), 0, err
+	}
 	return BoolData(ok), 0, nil
 }
 
@@ -1449,7 +1491,16 @@ func dictContainsRegex(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64
 func dictContainsArrayStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	switch bind.Value.(type) {
 	case string:
-		return stringContainsArrayStringV2(e, bind, chunk, ref)
+		return stringContainsArrayString(e, bind, chunk, ref)
+	default:
+		return nil, 0, errors.New("dict value does not support field `contains`")
+	}
+}
+
+func dictContainsArrayDict(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	switch bind.Value.(type) {
+	case string:
+		return stringContainsArrayString(e, bind, chunk, ref)
 	default:
 		return nil, 0, errors.New("dict value does not support field `contains`")
 	}
@@ -1458,7 +1509,7 @@ func dictContainsArrayStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, re
 func dictContainsArrayIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	switch bind.Value.(type) {
 	case string:
-		return stringContainsArrayIntV2(e, bind, chunk, ref)
+		return stringContainsArrayInt(e, bind, chunk, ref)
 	default:
 		return nil, 0, errors.New("dict value does not support field `contains`")
 	}
