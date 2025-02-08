@@ -18,6 +18,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity"
 	security "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity"
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -449,42 +450,58 @@ func (a *mqlAzureSubscriptionCloudDefenderService) defenderForContainers() (inte
 func (a *mqlAzureSubscriptionCloudDefenderService) securityContacts() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
+	token := conn.Token()
 	subId := a.SubscriptionId.Data
-	armConn, err := getArmSecurityConnection(ctx, conn, subId)
+	clientFactory, err := armsecurity.NewClientFactory(subId, token, nil)
 	if err != nil {
 		return nil, err
 	}
-	list, err := getSecurityContacts(ctx, armConn)
-	if err != nil {
-		return nil, err
-	}
+	pager := clientFactory.NewContactsClient().NewListPager(nil)
 	res := []interface{}{}
-	for _, contact := range list {
-		alertNotifications, err := convert.JsonToDict(contact.Properties.AlertNotifications)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
-		notificationsByRole, err := convert.JsonToDict(contact.Properties.NotificationsByRole)
-		if err != nil {
-			return nil, err
+		for _, contact := range page.ContactList.Value {
+			sources := map[string]interface{}{}
+			for _, source := range contact.Properties.NotificationsSources {
+				notificationSource := source.GetNotificationsSource()
+				if notificationSource == nil || notificationSource.SourceType == nil {
+					continue
+				}
+
+				sourceDict, err := convert.JsonToDict(source)
+				if err != nil {
+					log.Debug().Err(err).Msg("unable to convert armsecurity.contact.Properties.NotificationsSources to dict")
+					continue
+				}
+				sources[string(*notificationSource.SourceType)] = sourceDict
+			}
+
+			notificationsByRole, err := convert.JsonToDict(contact.Properties.NotificationsByRole)
+			if err != nil {
+				log.Debug().Err(err).Msg("unable to convert armsecurity.Contact.Properties.NotificationsByRole to dict")
+			}
+			mails := ""
+			if contact.Properties.Emails != nil {
+				mails = *contact.Properties.Emails
+			}
+			mailsArr := strings.Split(mails, ";")
+			mqlSecurityContact, err := CreateResource(a.MqlRuntime, "azure.subscription.cloudDefenderService.securityContact",
+				map[string]*llx.RawData{
+					"id":                  llx.StringDataPtr(contact.ID),
+					"name":                llx.StringDataPtr(contact.Name),
+					"emails":              llx.ArrayData(convert.SliceAnyToInterface(mailsArr), types.String),
+					"notificationsByRole": llx.DictData(notificationsByRole),
+					"alertNotifications":  llx.DictData(nil),
+					"notificationSources": llx.DictData(sources),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlSecurityContact)
 		}
-		mails := ""
-		if contact.Properties.Emails != nil {
-			mails = *contact.Properties.Emails
-		}
-		mailsArr := strings.Split(mails, ";")
-		mqlSecurityContact, err := CreateResource(a.MqlRuntime, "azure.subscription.cloudDefenderService.securityContact",
-			map[string]*llx.RawData{
-				"id":                  llx.StringDataPtr(contact.ID),
-				"name":                llx.StringDataPtr(contact.Name),
-				"emails":              llx.ArrayData(convert.SliceAnyToInterface(mailsArr), types.String),
-				"notificationsByRole": llx.DictData(notificationsByRole),
-				"alertNotifications":  llx.DictData(alertNotifications),
-			})
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, mqlSecurityContact)
 	}
 	return res, nil
 }

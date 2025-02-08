@@ -18,7 +18,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
-	security "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity"
 	"go.mondoo.com/cnquery/v11/providers/azure/connection"
 )
 
@@ -76,60 +75,6 @@ func getPolicyAssignments(ctx context.Context, conn armSecurityConn) (PolicyAssi
 	}
 	result := PolicyAssignments{}
 	err = json.Unmarshal(raw, &result)
-	return result, err
-}
-
-// the armsecurity.NewListPager is broken, see https://github.com/Azure/azure-sdk-for-go/issues/19740.
-// until it's fixed, we can fetch them manually
-func getSecurityContacts(ctx context.Context, conn armSecurityConn) ([]security.Contact, error) {
-	token, err := conn.GetToken()
-	if err != nil {
-		return []security.Contact{}, err
-	}
-	urlPath := "/subscriptions/{subscriptionId}/providers/Microsoft.Security/securityContacts"
-	urlPath = strings.ReplaceAll(urlPath, "{subscriptionId}", url.PathEscape(conn.subscriptionId))
-	urlPath = runtime.JoinPaths(conn.host, urlPath)
-	client := http.Client{}
-	req, err := http.NewRequest("GET", urlPath, nil)
-	if err != nil {
-		return []security.Contact{}, err
-	}
-	q := req.URL.Query()
-	q.Set("api-version", "2020-01-01-preview")
-	req.URL.RawQuery = q.Encode()
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token.Token))
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return []security.Contact{}, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		return []security.Contact{}, errors.New("failed to fetch security contacts from " + urlPath + ": " + resp.Status)
-	}
-
-	raw, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return []security.Contact{}, err
-	}
-	result := []security.Contact{}
-	err = json.Unmarshal(raw, &result)
-	if err != nil {
-		// fallback, try to unmarshal to ContactList
-		contactList := &security.ContactList{}
-		err = json.Unmarshal(raw, contactList)
-		if err != nil {
-			return nil, err
-		}
-		for _, c := range contactList.Value {
-			if c != nil {
-				result = append(result, *c)
-			}
-		}
-	}
-
 	return result, err
 }
 

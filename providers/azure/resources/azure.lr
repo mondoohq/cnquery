@@ -1771,15 +1771,17 @@ private azure.subscription.cloudDefenderService @defaults("defenderForServers.en
 }
 
 // Microsoft Defender for Cloud security contact
-private azure.subscription.cloudDefenderService.securityContact @defaults("name alertNotifications.state"){
+private azure.subscription.cloudDefenderService.securityContact @defaults("id name"){
   // ID of the security contact
   id string
   // Name of the security contact
   name string
   // Emails that receive security alerts
   emails []string
-  // Alerts notification settings
+  // Deprecated: use `notificationSources` instead
   alertNotifications dict
+  // A collection of sources which evaluate the email notification
+  notificationSources dict
   // Notifications by role settings
   notificationsByRole dict
 }
