@@ -42,11 +42,37 @@ var test3lines = `Line 1
 Line 2, Col 14
 Line 3, Col....17`
 
+var (
+	longLine  = `1        10        20        30        40        50        60        70        80        90        100`
+	shortLine = `0        A         B         C`
+)
+
+var test20lines = `Line 1
+
+
+
+Line 5
+
+` + longLine + `
+
+
+Line 10
+` + shortLine + `
+
+
+
+Line 15
+
+
+
+
+Line 20, done.`
+
 func TestExtractRange(t *testing.T) {
 	confAllContent := ExtractConfig{
-		MaxContentLines: 999999,
-		MaxColumns:      999999,
-		ShowLines:       false,
+		MaxLines:   999999,
+		MaxColumns: 999999,
+		ShowLines:  false,
 	}
 
 	t.Run("Lines", func(t *testing.T) {
@@ -103,6 +129,7 @@ func TestExtractRange(t *testing.T) {
 			res   string
 		}{
 			// first line only
+			{0, 99, 0, 0, "Line 1\nLine 2, Col 14\nLine 3, Col....17"},
 			{1, 1, 1, 4, "Line"},
 			{1, 1, 1, 6, "Line 1"},
 			{1, 1, 1, 7, "Line 1\n"},
@@ -117,7 +144,6 @@ func TestExtractRange(t *testing.T) {
 			{0, 1, 1, 6, "Line 1"},
 			{0, 1, 99, 6, "Line 1"},
 			{0, 2, 1, 0, "Line 1\n"},
-			{0, 99, 0, 0, "Line 1\nLine 2, Col 14\nLine 3, Col....17"},
 			// multiple normal ranges
 			{1, 2, 1, 0, "Line 1\n"},
 			{1, 2, 1, 1, "Line 1\nL"},
@@ -131,6 +157,7 @@ func TestExtractRange(t *testing.T) {
 			{1, 99, 0, 0, "Line 1\nLine 2, Col 14\nLine 3, Col....17"},
 			{1, 99, 1, 99, "Line 1\nLine 2, Col 14\nLine 3, Col....17"},
 		}
+
 		for i := range lineRanges {
 			x := lineRanges[i]
 			t.Run(fmt.Sprintf("line %d:%d-%d:%d", x.start, x.col1, x.end, x.col2), func(t *testing.T) {
@@ -138,5 +165,111 @@ func TestExtractRange(t *testing.T) {
 				assert.Equal(t, x.res, r.ExtractString(test3lines, confAllContent))
 			})
 		}
+	})
+
+	t.Run("Limited columns", func(t *testing.T) {
+		maxCol := func(maxCol int) ExtractConfig {
+			res := confAllContent
+			res.MaxColumns = maxCol
+			return res
+		}
+
+		t.Run("1 line, max 150 cols", func(t *testing.T) {
+			r := NewRange().AddLine(uint32(7))
+			assert.Equal(t, longLine+"\n", r.ExtractString(test20lines, maxCol(150)))
+		})
+
+		t.Run("1 line, max 103 cols", func(t *testing.T) {
+			r := NewRange().AddLine(uint32(7))
+			assert.Equal(t, longLine+"\n", r.ExtractString(test20lines, maxCol(103)))
+		})
+
+		t.Run("1 line max 102 cols", func(t *testing.T) {
+			r := NewRange().AddLine(uint32(7))
+			assert.Equal(t, longLine[0:98]+"...\n", r.ExtractString(test20lines, maxCol(102)))
+		})
+
+		t.Run("1 line max 5 cols", func(t *testing.T) {
+			r := NewRange().AddLine(uint32(7))
+			assert.Equal(t, longLine[0:1]+"...\n", r.ExtractString(test20lines, maxCol(5)))
+		})
+
+		t.Run("1 line max 1 cols", func(t *testing.T) {
+			r := NewRange().AddLine(uint32(7))
+			assert.Equal(t, "...\n", r.ExtractString(test20lines, maxCol(1)))
+		})
+
+		t.Run("1 linerange max 150 cols", func(t *testing.T) {
+			r := NewRange().AddLineRange(uint32(7), uint32(8))
+			assert.Equal(t, longLine+"\n\n", r.ExtractString(test20lines, maxCol(150)))
+		})
+
+		t.Run("1 linerange max 103 cols", func(t *testing.T) {
+			r := NewRange().AddLineRange(uint32(7), uint32(8))
+			assert.Equal(t, longLine+"\n\n", r.ExtractString(test20lines, maxCol(103)))
+		})
+
+		t.Run("1 linerange max 102 cols", func(t *testing.T) {
+			r := NewRange().AddLineRange(uint32(7), uint32(8))
+			assert.Equal(t, longLine[0:98]+"...\n\n", r.ExtractString(test20lines, maxCol(102)))
+		})
+
+		t.Run("1 linerange max 5 cols", func(t *testing.T) {
+			r := NewRange().AddLineRange(uint32(7), uint32(8))
+			assert.Equal(t, longLine[0:1]+"...\n\n", r.ExtractString(test20lines, maxCol(5)))
+		})
+
+		t.Run("1 linerange max 1 cols", func(t *testing.T) {
+			r := NewRange().AddLineRange(uint32(7), uint32(8))
+			assert.Equal(t, "...\n\n", r.ExtractString(test20lines, maxCol(1)))
+		})
+
+		t.Run("1 linerange max 150 cols", func(t *testing.T) {
+			r := NewRange().AddLineColumnRange(uint32(7), uint32(8), 10, 1)
+			assert.Equal(t, longLine[9:]+"\n\n", r.ExtractString(test20lines, maxCol(150)))
+		})
+
+		t.Run("1 linerange max 90 cols", func(t *testing.T) {
+			r := NewRange().AddLineColumnRange(uint32(7), uint32(8), 10, 1)
+			assert.Equal(t, longLine[9:95]+"...\n\n", r.ExtractString(test20lines, maxCol(90)))
+		})
+
+		t.Run("1 linerange max 50 cols", func(t *testing.T) {
+			r := NewRange().AddLineColumnRange(uint32(6), uint32(7), 10, 1)
+			assert.Equal(t, "1", r.ExtractString(test20lines, maxCol(50)))
+		})
+
+		t.Run("1 linerange max 50 cols", func(t *testing.T) {
+			r := NewRange().AddLineColumnRange(uint32(6), uint32(7), 1, 150)
+			assert.Equal(t, "\n"+longLine[:46]+"...\n", r.ExtractString(test20lines, maxCol(50)))
+		})
+
+		t.Run("1 linerange max 50 cols with offset", func(t *testing.T) {
+			r := NewRange().AddLineColumnRange(uint32(7), uint32(8), 20, 100)
+			assert.Equal(t, longLine[19:65]+"...\n\n", r.ExtractString(test20lines, maxCol(50)))
+		})
+	})
+
+	t.Run("Limited lines", func(t *testing.T) {
+		maxLines := func(maxLines int) ExtractConfig {
+			res := confAllContent
+			res.MaxLines = maxLines
+			return res
+		}
+
+		t.Run("30 max lines", func(t *testing.T) {
+			r := NewRange().AddLineRange(1, 5)
+			assert.Equal(t, "Line 1\n\n\n\nLine 5\n", r.ExtractString(test20lines, maxLines(30)))
+		})
+
+		t.Run("7 max lines (line range)", func(t *testing.T) {
+			r := NewRange().AddLineRange(1, 20)
+			assert.Equal(t, "Line 1\n\n\n...\n\n\nLine 20, done.", r.ExtractString(test20lines, maxLines(7)))
+		})
+
+		t.Run("7 max lines (line column range)", func(t *testing.T) {
+			r := NewRange().AddLineColumnRange(1, 20, 1, 99)
+			assert.Equal(t, "Line 1\n\n\n...\n\n\nLine 20, done.", r.ExtractString(test20lines, maxLines(7)))
+		})
 	})
 }
