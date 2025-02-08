@@ -260,7 +260,7 @@ func TestParse(t *testing.T) {
 					Type: Type{SimpleType: &SimpleType{"file.context"}},
 					Args: &FieldArgs{},
 				},
-				Comments: []string{"Contextual info, where this resource is located and defined"},
+				Comments: []string{"# Contextual info, where this resource is located and defined"},
 			},
 		}
 		require.NotEmpty(t, res.Resources)
