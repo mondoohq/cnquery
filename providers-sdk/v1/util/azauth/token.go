@@ -28,7 +28,9 @@ func GetChainedToken(options *azidentity.DefaultAzureCredentialOptions) (*aziden
 
 	chain := []azcore.TokenCredential{}
 
-	cli, err := azidentity.NewAzureCLICredential(&azidentity.AzureCLICredentialOptions{})
+	cli, err := azidentity.NewAzureCLICredential(&azidentity.AzureCLICredentialOptions{
+		AdditionallyAllowedTenants: []string{"*"},
+	})
 	if err == nil {
 		chain = append(chain, cli)
 	}
