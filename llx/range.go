@@ -4,6 +4,7 @@
 package llx
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -212,23 +213,37 @@ func (r Range) String() string {
 }
 
 type ExtractConfig struct {
-	MaxLines    int
-	MaxColumns  int
-	ShowLines   bool
-	LinePadding int
+	MaxLines          int
+	MaxColumns        int
+	ShowLineNumbers   bool
+	LineNumberPadding int
+	maxLineDigits     int
 }
 
 var DefaultExtractConfig = ExtractConfig{
-	MaxLines:    8,
-	MaxColumns:  100,
-	ShowLines:   true,
-	LinePadding: 2,
+	MaxLines:          8,
+	MaxColumns:        100,
+	ShowLineNumbers:   true,
+	LineNumberPadding: 2,
 }
 
-func writeLine(line string, max int, res *strings.Builder, hasNewline bool) {
+func writeLine(lineNum int, line string, cfg *ExtractConfig, res *strings.Builder, hasNewline bool) {
+	max := cfg.MaxColumns
 	if hasNewline {
 		max--
 	}
+
+	if cfg.ShowLineNumbers && lineNum >= 0 {
+		if cfg.maxLineDigits > 0 {
+			res.WriteString(fmt.Sprintf("%"+strconv.Itoa(cfg.maxLineDigits)+"d:", lineNum))
+		} else {
+			res.WriteString(strconv.Itoa(int(lineNum)) + ":")
+		}
+		for i := 0; i < cfg.LineNumberPadding; i++ {
+			res.WriteByte(' ')
+		}
+	}
+
 	if len(line) <= max {
 		res.WriteString(line)
 	} else {
@@ -242,7 +257,7 @@ func writeLine(line string, max int, res *strings.Builder, hasNewline bool) {
 	}
 }
 
-func extractLineRange(lines []string, lineIdx uint32, end uint32, maxLines int, cfg ExtractConfig, res *strings.Builder) {
+func extractLineRange(lines []string, lineIdx uint32, end uint32, maxLines int, cfg *ExtractConfig, res *strings.Builder) {
 	maxAllLines := uint32(len(lines))
 
 	if end < lineIdx {
@@ -252,13 +267,13 @@ func extractLineRange(lines []string, lineIdx uint32, end uint32, maxLines int, 
 
 	if uint32(maxLines) >= lineCnt {
 		for ; lineIdx <= end; lineIdx++ {
-			writeLine(lines[lineIdx], cfg.MaxColumns, res, lineIdx+1 != maxAllLines)
+			writeLine(int(lineIdx+1), lines[lineIdx], cfg, res, lineIdx+1 != maxAllLines)
 		}
 		return
 	}
 
 	if maxLines < 1 {
-		writeLine("...", cfg.MaxColumns, res, true)
+		writeLine(-1, "...", cfg, res, true)
 		return
 	}
 
@@ -266,11 +281,11 @@ func extractLineRange(lines []string, lineIdx uint32, end uint32, maxLines int, 
 	scrapS := lineIdx + uint32(half)
 	scrapE := end - uint32(maxLines-half-1) + 1
 	for ; lineIdx < scrapS; lineIdx++ {
-		writeLine(lines[lineIdx], cfg.MaxColumns, res, lineIdx+1 != maxAllLines)
+		writeLine(int(lineIdx+1), lines[lineIdx], cfg, res, lineIdx+1 != maxAllLines)
 	}
 	res.WriteString("...\n")
 	for lineIdx = scrapE; lineIdx <= end; lineIdx++ {
-		writeLine(lines[lineIdx], cfg.MaxColumns, res, lineIdx+1 != maxAllLines)
+		writeLine(int(lineIdx+1), lines[lineIdx], cfg, res, lineIdx+1 != maxAllLines)
 	}
 }
 
@@ -297,14 +312,15 @@ func (r Range) ExtractString(src string, cfg ExtractConfig) string {
 			if lineIdx >= maxLines {
 				continue
 			}
-			writeLine(lines[lineIdx], cfg.MaxColumns, &res, lineIdx+1 != maxLines)
+			writeLine(int(lineIdx+1), lines[lineIdx], &cfg, &res, lineIdx+1 != maxLines)
 
 		case 2:
 			end := maxLines - 1
 			if x[1]-1 < end {
 				end = x[1] - 1
 			}
-			extractLineRange(lines, lineIdx, end, cfg.MaxLines, cfg, &res)
+			cfg.maxLineDigits = len(strconv.Itoa(int(end)))
+			extractLineRange(lines, lineIdx, end, cfg.MaxLines, &cfg, &res)
 
 		case 3:
 			// since we aren't dealing with ranges, if someone says line 0 we don't have it!
@@ -367,12 +383,14 @@ func (r Range) ExtractString(src string, cfg ExtractConfig) string {
 					addNewline = lineIdx < maxLines
 				}
 				if col1idx < cMax {
-					writeLine(line[col1idx:c2], cfg.MaxColumns, &res, addNewline)
+					writeLine(int(lineIdx+1), line[col1idx:c2], &cfg, &res, addNewline)
 				} else if addNewline {
 					res.WriteByte('\n')
 				}
 				continue
 			}
+
+			cfg.maxLineDigits = len(strconv.Itoa(int(end)))
 
 			if col1idx <= uint32(len(line)) {
 				addNewline := x[0] != 0 && x[0]+1 != maxLines
@@ -380,7 +398,7 @@ func (r Range) ExtractString(src string, cfg ExtractConfig) string {
 				if col1idx < uint32(len(line)) {
 					txt = line[col1idx:]
 				}
-				writeLine(txt, cfg.MaxColumns, &res, addNewline)
+				writeLine(int(lineIdx+1), txt, &cfg, &res, addNewline)
 			}
 			if x[0] != 0 {
 				lineIdx++
@@ -388,13 +406,13 @@ func (r Range) ExtractString(src string, cfg ExtractConfig) string {
 
 			// we remove 2 from max content lines because we will always print the first and last line
 			if end > 0 {
-				extractLineRange(lines, lineIdx, end-1, cfg.MaxLines-2, cfg, &res)
+				extractLineRange(lines, lineIdx, end-1, cfg.MaxLines-2, &cfg, &res)
 			}
 
 			// if the specified end is over the maximum number of lines we have
 			// just write the last line and be done here
 			if x[1] > maxLines {
-				writeLine(lines[maxLines-1], cfg.MaxColumns, &res, false)
+				writeLine(int(maxLines), lines[maxLines-1], &cfg, &res, false)
 				continue
 			}
 
@@ -405,7 +423,7 @@ func (r Range) ExtractString(src string, cfg ExtractConfig) string {
 				c2 = uint32(len(line))
 				addNewline = end+1 < maxLines
 			}
-			writeLine(line[:c2], cfg.MaxColumns, &res, addNewline)
+			writeLine(int(end+1), line[:c2], &cfg, &res, addNewline)
 		}
 	}
 
