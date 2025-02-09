@@ -99,6 +99,11 @@ const (
 	// desc:  Forces shell completion to be enabled (for windows)
 	// start: v11.x
 	ForceShellCompletion
+
+	// ResourceContext feature flag
+	// desc:  Automatically add resource context to results and prints it
+	// start: v11.x
+	ResourceContext
 )
 
 // FeaturesValue is a map from feature name to feature flag
@@ -112,6 +117,7 @@ var FeaturesValue = map[string]Feature{
 	FineGrainedAssets.String():    FineGrainedAssets,
 	SerialNumberAsID.String():     SerialNumberAsID,
 	ForceShellCompletion.String(): ForceShellCompletion,
+	ResourceContext.String():      ResourceContext,
 }
 
 // DefaultFeatures are a set of default flags that are active
