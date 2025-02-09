@@ -80,7 +80,6 @@ resources:
       sameSiteCookieAttribute: {}
       serviceAuth401Redirect: {}
       sessionDuration: {}
-      skip_interstitial: {}
       skipInterstitial: {}
       type: {}
       updatedAt: {}
