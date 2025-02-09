@@ -712,7 +712,7 @@ sshd.config {
   permitRootLogin(params) []string
 }
 
-// A a block of SSH server configuration
+// A block of SSH server configuration
 private sshd.config.matchBlock @defaults("criteria") @context("file.context") {
   // The match criteria for this block
   criteria string
