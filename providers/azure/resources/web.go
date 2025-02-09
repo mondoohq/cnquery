@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -392,6 +393,92 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) metadata() (interface{}, error) 
 	}
 
 	return res, nil
+}
+
+func (a *mqlAzureSubscriptionWebServiceAppsite) ftp() (*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	id := a.Id.Data
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+	client, err := web.NewWebAppsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	site, err := resourceID.Component("sites")
+	if err != nil {
+		return nil, err
+	}
+
+	response, err := client.GetFtpAllowed(ctx, resourceID.ResourceGroup, site, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	args := map[string]*llx.RawData{
+		"id":   llx.StringDataPtr(response.ID),
+		"name": llx.StringDataPtr(response.Name),
+		"type": llx.StringDataPtr(response.Type),
+	}
+	if response.Properties != nil {
+		args["allow"] = llx.BoolDataPtr(response.Properties.Allow)
+	}
+	mqlResource, err := CreateResource(a.MqlRuntime, "azure.subscription.webService.appsite.basicPublishingCredentialsPolicies", args)
+	if err != nil {
+		return nil, err
+	}
+	return mqlResource.(*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies), nil
+}
+
+func (a *mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies) id() (string, error) {
+	return fmt.Sprintf("%s/%s", a.Id.Data, a.Name.Data), nil
+}
+
+func (a *mqlAzureSubscriptionWebServiceAppsite) scm() (*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	id := a.Id.Data
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+	client, err := web.NewWebAppsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	site, err := resourceID.Component("sites")
+	if err != nil {
+		return nil, err
+	}
+
+	response, err := client.GetScmAllowed(ctx, resourceID.ResourceGroup, site, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	args := map[string]*llx.RawData{
+		"id":   llx.StringDataPtr(response.ID),
+		"name": llx.StringDataPtr(response.Name),
+		"type": llx.StringDataPtr(response.Type),
+	}
+	if response.Properties != nil {
+		args["allow"] = llx.BoolDataPtr(response.Properties.Allow)
+	}
+	mqlResource, err := CreateResource(a.MqlRuntime, "azure.subscription.webService.appsite.basicPublishingCredentialsPolicies", args)
+	if err != nil {
+		return nil, err
+	}
+	return mqlResource.(*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies), nil
 }
 
 func (a *mqlAzureSubscriptionWebServiceAppsite) functions() ([]interface{}, error) {

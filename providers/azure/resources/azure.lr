@@ -1063,6 +1063,22 @@ private azure.subscription.webService.appsite @defaults("id name location") {
   diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
   // List of functions for the web app site
   functions() []azure.subscription.webService.function
+  // FTP publishing method policies
+  ftp() azure.subscription.webService.appsite.basicPublishingCredentialsPolicies
+  // SCM publishing method policies
+  scm() azure.subscription.webService.appsite.basicPublishingCredentialsPolicies
+}
+
+// Azure AppSite basic publishing credentials policies
+private azure.subscription.webService.appsite.basicPublishingCredentialsPolicies @defaults("id allow") {
+  // Resource ID
+  id string
+  // Resource name
+  name string
+  // Resource type
+  type string
+  // Whether to allow access to a publishing method
+  allow bool
 }
 
 // Azure AppSite authentication settings

@@ -2880,6 +2880,8 @@ resources:
       connectionSettings: {}
       diagnosticSettings:
         min_mondoo_version: 9.0.0
+      ftp:
+        min_mondoo_version: 9.0.0
       functions:
         min_mondoo_version: 9.0.0
       id: {}
@@ -2889,6 +2891,8 @@ resources:
       metadata: {}
       name: {}
       properties: {}
+      scm:
+        min_mondoo_version: 9.0.0
       stack: {}
       tags: {}
       type: {}
@@ -2900,6 +2904,17 @@ resources:
     refs:
     - title: Azure Web documentation
       url: https://learn.microsoft.com/en-us/azure/?product=web
+  azure.subscription.webService.appsite.basicPublishingCredentialsPolicies:
+    fields:
+      allow: {}
+      id: {}
+      name: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
   azure.subscription.webService.appsiteauthsettings:
     fields:
       id: {}
