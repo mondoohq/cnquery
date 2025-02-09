@@ -2,11 +2,6 @@
 # SPDX-License-Identifier: BUSL-1.1
 
 resources:
-  cloudformation:
-    fields:
-      field: {}
-      types: {}
-    min_mondoo_version: latest
   cloudformation.output:
     fields:
       name: {}
