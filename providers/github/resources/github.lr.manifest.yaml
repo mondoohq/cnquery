@@ -44,9 +44,7 @@ resources:
       isProtected:
         min_mondoo_version: 8.10.0
       name: {}
-      organizationName: {}
       owner: {}
-      protected: {}
       protectionRules: {}
       repoName: {}
     is_private: true
@@ -80,21 +78,15 @@ resources:
         min_mondoo_version: 9.0.0
       commit:
         min_mondoo_version: 6.11.0
-      commitedDate:
-        min_mondoo_version: 9.0.0
       committedDate:
         min_mondoo_version: 9.0.0
       committer: {}
-      message: {}
-      organizationName: {}
       owner:
         min_mondoo_version: 6.11.0
-      repoName: {}
       repository:
         min_mondoo_version: 6.11.0
       sha:
         min_mondoo_version: 6.11.0
-      signatureVerification: {}
       stats:
         min_mondoo_version: 6.11.0
       url: {}
@@ -111,7 +103,6 @@ resources:
       isBinary: {}
       name:
         min_mondoo_version: 6.11.0
-      organizationName: {}
       ownerName:
         min_mondoo_version: 6.11.0
       path: {}
@@ -182,7 +173,6 @@ resources:
       id: {}
       labels: {}
       number: {}
-      organizationName: {}
       owner: {}
       repoName: {}
       reviews: {}
@@ -194,20 +184,16 @@ resources:
     fields:
       avatarUrl:
         min_mondoo_version: 7.14.0
-      billing_email: {}
       billingEmail:
         min_mondoo_version: 6.11.0
       blog: {}
       collaborators: {}
       company: {}
-      created_at: {}
       createdAt:
         min_mondoo_version: 6.11.0
-      default_repository_permission: {}
       defaultRepositoryPermission:
         min_mondoo_version: 6.11.0
       description: {}
-      disk_usage: {}
       diskUsage:
         min_mondoo_version: 6.11.0
       email: {}
@@ -222,20 +208,12 @@ resources:
       id: {}
       installations:
         min_mondoo_version: 5.31.0
-      is_verified: {}
       isVerified:
         min_mondoo_version: 6.11.0
       location: {}
       login: {}
       members:
         min_mondoo_version: 5.31.0
-      members_can_create_internal_repositories: {}
-      members_can_create_pages: {}
-      members_can_create_private_pages: {}
-      members_can_create_private_repositories: {}
-      members_can_create_public_pages: {}
-      members_can_create_public_repositories: {}
-      members_can_create_repositories: {}
       membersCanCreateInternalRepositories:
         min_mondoo_version: 6.11.0
       membersCanCreatePages:
@@ -253,7 +231,6 @@ resources:
       membersCanForkPrivateRepos:
         min_mondoo_version: 9.0.0
       name: {}
-      node_id: {}
       nodeId:
         min_mondoo_version: 6.11.0
       owned_private_repos: {}
@@ -264,25 +241,20 @@ resources:
       packages:
         min_mondoo_version: 6.11.0
       plan: {}
-      private_gists: {}
       privateGists:
         min_mondoo_version: 6.11.0
       repositories:
         min_mondoo_version: 5.31.0
       teams:
         min_mondoo_version: 6.11.0
-      total_private_repos: {}
       totalPrivateRepos:
         min_mondoo_version: 6.11.0
       totalPublicRepos:
         min_mondoo_version: 9.0.0
-      twitter_username: {}
       twitterUsername:
         min_mondoo_version: 6.11.0
-      two_factor_requirement_enabled: {}
       twoFactorRequirementEnabled:
         min_mondoo_version: 6.11.0
-      updated_at: {}
       updatedAt:
         min_mondoo_version: 6.11.0
       webhooks:
@@ -318,8 +290,6 @@ resources:
     min_mondoo_version: 6.4.0
   github.repository:
     fields:
-      MergeRequests:
-        min_mondoo_version: 9.0.0
       adminCollaborators:
         min_mondoo_version: 9.0.0
       allMergeRequests:
