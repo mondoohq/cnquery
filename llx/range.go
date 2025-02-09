@@ -212,17 +212,66 @@ func (r Range) String() string {
 }
 
 type ExtractConfig struct {
-	MaxContentLines int
-	MaxColumns      int
-	ShowLines       bool
-	LinePadding     int
+	MaxLines    int
+	MaxColumns  int
+	ShowLines   bool
+	LinePadding int
 }
 
 var DefaultExtractConfig = ExtractConfig{
-	MaxContentLines: 7,
-	MaxColumns:      100,
-	ShowLines:       true,
-	LinePadding:     2,
+	MaxLines:    8,
+	MaxColumns:  100,
+	ShowLines:   true,
+	LinePadding: 2,
+}
+
+func writeLine(line string, max int, res *strings.Builder, hasNewline bool) {
+	if hasNewline {
+		max--
+	}
+	if len(line) <= max {
+		res.WriteString(line)
+	} else {
+		if max > 3 {
+			res.WriteString(line[:max-3])
+		}
+		res.WriteString("...")
+	}
+	if hasNewline {
+		res.WriteByte('\n')
+	}
+}
+
+func extractLineRange(lines []string, lineIdx uint32, end uint32, maxLines int, cfg ExtractConfig, res *strings.Builder) {
+	maxAllLines := uint32(len(lines))
+
+	if end < lineIdx {
+		return
+	}
+	lineCnt := end - lineIdx
+
+	if uint32(maxLines) >= lineCnt {
+		for ; lineIdx <= end; lineIdx++ {
+			writeLine(lines[lineIdx], cfg.MaxColumns, res, lineIdx+1 != maxAllLines)
+		}
+		return
+	}
+
+	if maxLines < 1 {
+		writeLine("...", cfg.MaxColumns, res, true)
+		return
+	}
+
+	half := maxLines >> 1
+	scrapS := lineIdx + uint32(half)
+	scrapE := end - uint32(maxLines-half-1) + 1
+	for ; lineIdx < scrapS; lineIdx++ {
+		writeLine(lines[lineIdx], cfg.MaxColumns, res, lineIdx+1 != maxAllLines)
+	}
+	res.WriteString("...\n")
+	for lineIdx = scrapE; lineIdx <= end; lineIdx++ {
+		writeLine(lines[lineIdx], cfg.MaxColumns, res, lineIdx+1 != maxAllLines)
+	}
 }
 
 func (r Range) ExtractString(src string, cfg ExtractConfig) string {
@@ -248,22 +297,14 @@ func (r Range) ExtractString(src string, cfg ExtractConfig) string {
 			if lineIdx >= maxLines {
 				continue
 			}
-			res.WriteString(lines[lineIdx])
-			if lineIdx+1 != maxLines {
-				res.WriteByte('\n')
-			}
+			writeLine(lines[lineIdx], cfg.MaxColumns, &res, lineIdx+1 != maxLines)
 
 		case 2:
 			end := maxLines - 1
 			if x[1]-1 < end {
 				end = x[1] - 1
 			}
-			for ; lineIdx <= end; lineIdx++ {
-				res.WriteString(lines[lineIdx])
-				if lineIdx+1 != maxLines {
-					res.WriteByte('\n')
-				}
-			}
+			extractLineRange(lines, lineIdx, end, cfg.MaxLines, cfg, &res)
 
 		case 3:
 			// since we aren't dealing with ranges, if someone says line 0 we don't have it!
@@ -326,35 +367,34 @@ func (r Range) ExtractString(src string, cfg ExtractConfig) string {
 					addNewline = lineIdx < maxLines
 				}
 				if col1idx < cMax {
-					res.WriteString(line[col1idx:c2])
-				}
-				if addNewline {
+					writeLine(line[col1idx:c2], cfg.MaxColumns, &res, addNewline)
+				} else if addNewline {
 					res.WriteByte('\n')
 				}
 				continue
 			}
 
-			if col1idx < uint32(len(line)) {
-				res.WriteString(line[col1idx:])
-				if x[0] != 0 && x[0]+1 != maxLines {
-					res.WriteByte('\n')
+			if col1idx <= uint32(len(line)) {
+				addNewline := x[0] != 0 && x[0]+1 != maxLines
+				var txt string
+				if col1idx < uint32(len(line)) {
+					txt = line[col1idx:]
 				}
+				writeLine(txt, cfg.MaxColumns, &res, addNewline)
 			}
 			if x[0] != 0 {
 				lineIdx++
 			}
 
-			for ; lineIdx < end; lineIdx++ {
-				res.WriteString(lines[lineIdx])
-				if lineIdx+1 != maxLines {
-					res.WriteByte('\n')
-				}
+			// we remove 2 from max content lines because we will always print the first and last line
+			if end > 0 {
+				extractLineRange(lines, lineIdx, end-1, cfg.MaxLines-2, cfg, &res)
 			}
 
 			// if the specified end is over the maximum number of lines we have
 			// just write the last line and be done here
 			if x[1] > maxLines {
-				res.WriteString(lines[maxLines-1])
+				writeLine(lines[maxLines-1], cfg.MaxColumns, &res, false)
 				continue
 			}
 
@@ -365,10 +405,7 @@ func (r Range) ExtractString(src string, cfg ExtractConfig) string {
 				c2 = uint32(len(line))
 				addNewline = end+1 < maxLines
 			}
-			res.WriteString(line[:c2])
-			if addNewline {
-				res.WriteByte('\n')
-			}
+			writeLine(line[:c2], cfg.MaxColumns, &res, addNewline)
 		}
 	}
 
