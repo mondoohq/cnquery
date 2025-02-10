@@ -10,6 +10,7 @@ import (
 	"io"
 	"slices"
 	"strconv"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 
@@ -177,18 +178,47 @@ func (d *WindowsDeviceManager) identifyPartitions(diskNumber int) ([]*diskPartit
 	return partitions, nil
 }
 
+func getLunsFromOpts(opts map[string]string) ([]int, error) {
+	lunOpt := opts[LunOption]
+	lunsOpt := opts[LunsOption]
+	luns := []int{}
+	if lunOpt != "" {
+		lun, err := strconv.Atoi(lunOpt)
+		if err != nil {
+			return nil, err
+		}
+		luns = append(luns, lun)
+	}
+	if lunsOpt != "" {
+		lunsVals := strings.Split(lunsOpt, ",")
+		for _, l := range lunsVals {
+			lun, err := strconv.Atoi(l)
+			if err != nil {
+				return nil, err
+			}
+			luns = append(luns, lun)
+		}
+	}
+	return luns, nil
+}
+
 func filterDiskDrives(drives []*diskDrive, opts map[string]string) (*diskDrive, error) {
 	serialNumber := opts[SerialNumberOption]
-	lun := opts[LunOption]
 	if serialNumber != "" {
 		return filterDiskDrivesBySerialNumber(drives, serialNumber)
 	}
 
-	lunInt, err := strconv.Atoi(lun)
+	luns, err := getLunsFromOpts(opts)
 	if err != nil {
 		return nil, err
 	}
-	return filterDiskDrivesByLun(drives, lunInt)
+
+	if len(luns) == 0 {
+		return nil, errors.New("no LUNs provided")
+	}
+
+	// FIXME: add support for multiple LUNs on windows
+	return filterDiskDrivesByLun(drives, luns[0])
 }
 
 func filterDiskDrivesBySerialNumber(drives []*diskDrive, serialNumber string) (*diskDrive, error) {

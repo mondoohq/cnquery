@@ -9,9 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/snapshot"
 )
 
 type scsiDeviceInfo struct {
@@ -52,43 +50,6 @@ func filterScsiDevices(scsiDevices scsiDevices, lun int) []scsiDeviceInfo {
 	}
 
 	return matching
-}
-
-// there can be multiple devices mounted at the same LUN.
-// the LUN so we need to find all the blocks, mounted at that LUN. then we find the first one
-// that has no mounted partitions and use that as the target device. this is a best-effort approach
-func findMatchingDeviceByBlock(scsiDevices scsiDevices, blockDevices *snapshot.BlockDevices) (snapshot.BlockDevice, error) {
-	matchingBlocks := []snapshot.BlockDevice{}
-	for _, device := range scsiDevices {
-		for _, block := range blockDevices.BlockDevices {
-			devName := "/dev/" + block.Name
-			if devName == device.VolumePath {
-				matchingBlocks = append(matchingBlocks, block)
-			}
-		}
-	}
-
-	if len(matchingBlocks) == 0 {
-		return snapshot.BlockDevice{}, errors.New("no matching blocks found")
-	}
-
-	var matching *snapshot.BlockDevice
-	for _, b := range matchingBlocks {
-		log.Debug().Str("name", b.Name).Msg("device connection> checking block")
-		for _, ch := range b.Children {
-			if len(ch.MountPoint) > 0 && ch.MountPoint != "" {
-				log.Debug().Str("name", ch.Name).Str("mountpoint", ch.MountPoint).Str("parent", b.Name).Msg("device connection> has mounted partitions, skipping parent block")
-				break
-			}
-			matching = &b
-		}
-	}
-
-	if matching != nil {
-		return *matching, nil
-	}
-
-	return snapshot.BlockDevice{}, errors.New("no matching block found")
 }
 
 // parses the output from running 'lsscsi --brief' and gets the device info, the output looks like this:

@@ -10,6 +10,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -25,6 +26,7 @@ import (
 
 const (
 	LunOption                   = "lun"
+	LunsOption                  = "luns"
 	DeviceName                  = "device-name"
 	DeviceNames                 = "device-names"
 	MountAllPartitions          = "mount-all-partitions"
@@ -56,20 +58,22 @@ func (d *LinuxDeviceManager) IdentifyMountTargets(opts map[string]string) ([]*sn
 	if err := validateOpts(opts); err != nil {
 		return nil, err
 	}
-	if opts[LunOption] != "" {
-		lun, err := strconv.Atoi(opts[LunOption])
-		if err != nil {
-			return nil, err
-		}
-		pi, err := d.identifyViaLun(lun)
-		if err != nil {
-			return nil, err
-		}
 
-		return d.attemptExpandPartitions(pi)
+	deviceNames := []string{}
+	luns, err := getLunsFromOpts(opts)
+	if err != nil {
+		return nil, err
+	}
+	for _, l := range luns {
+		devices, err := d.identifyDeviceViaLun(l)
+		if err != nil {
+			return nil, err
+		}
+		for _, device := range devices {
+			deviceNames = append(deviceNames, device.Name)
+		}
 	}
 
-	var deviceNames []string
 	if opts[DeviceNames] != "" {
 		deviceNames = strings.Split(opts[DeviceNames], ",")
 	}
@@ -88,15 +92,19 @@ func (d *LinuxDeviceManager) IdentifyMountTargets(opts map[string]string) ([]*sn
 		partitions = append(partitions, partitionsForDevice...)
 	}
 
-	if err := errors.Join(errs...); err != nil {
-		return partitions, err
+	if len(partitions) == 0 {
+		errs = append(errs, errors.New("no partitions found"))
+		return partitions, errors.Join(errs...)
 	}
 
 	if opts[SkipAttemptExpandPartitions] == "true" {
-		return partitions, nil
+		return partitions, errors.Join(errs...)
 	}
 
-	return d.attemptExpandPartitions(partitions)
+	partitions, err = d.attemptExpandPartitions(partitions)
+	errs = append(errs, err)
+
+	return partitions, errors.Join(errs...)
 }
 
 func (d *LinuxDeviceManager) attemptExpandPartitions(partitions []*snapshot.PartitionInfo) ([]*snapshot.PartitionInfo, error) {
@@ -203,7 +211,40 @@ func (d *LinuxDeviceManager) attemptFindOSTree(dir string, partition *snapshot.P
 		return false
 	}
 
-	boot1, err := os.Readlink(path.Join(dir, "ostree", "boot.1"))
+	entries, err := os.ReadDir(path.Join(dir, "ostree"))
+	if err != nil {
+		log.Error().Err(err).Str("device", partition.Name).Msg("unable to read ostree directory")
+		return false
+	}
+
+	entries = slices.DeleteFunc(entries, func(entry os.DirEntry) bool {
+		if entry.Type().Type() != os.ModeSymlink {
+			return true
+		}
+
+		trimmed := strings.TrimPrefix(entry.Name(), "boot.")
+		if trimmed == entry.Name() {
+			return true
+		}
+
+		_, err := strconv.Atoi(trimmed)
+		return err != nil
+	})
+
+	if len(entries) == 0 {
+		log.Debug().Str("device", partition.Name).Msg("no ostree entries")
+		return false
+	}
+	if len(entries) > 1 {
+		slices.SortFunc(entries, func(a, b os.DirEntry) int {
+			aIndex, _ := strconv.Atoi(strings.TrimPrefix(a.Name(), "boot."))
+			bIndex, _ := strconv.Atoi(strings.TrimPrefix(b.Name(), "boot."))
+			return aIndex - bIndex
+		})
+	}
+
+	log.Debug().Str("device", partition.Name).Str("boot1", entries[0].Name()).Msg("found ostree deployment")
+	boot1, err := os.Readlink(path.Join(dir, "ostree", entries[0].Name()))
 	if err != nil {
 		log.Error().Err(err).Str("device", partition.Name).Msg("unable to readlink boot.1")
 		return false
@@ -338,28 +379,49 @@ func (d *LinuxDeviceManager) UnmountAndClose() {
 // validates the options provided to the device manager
 // we cannot have both LUN and device name provided, those are mutually exclusive
 func validateOpts(opts map[string]string) error {
-	lun := opts[LunOption]
-
 	// this is needed only for the validation purposes
-	deviceNames := opts[DeviceNames] + opts[DeviceName]
-
+	deviceNamesPresent := opts[DeviceName] != "" || opts[DeviceNames] != ""
+	lunsPresent := opts[LunOption] != "" || opts[LunsOption] != ""
 	mountAll := opts[MountAllPartitions] == "true"
-	if lun != "" && deviceNames != "" {
+
+	if deviceNamesPresent && lunsPresent {
 		return errors.New("both lun and device names provided")
 	}
 
-	if lun == "" && deviceNames == "" {
+	if !deviceNamesPresent && !lunsPresent {
 		return errors.New("either lun or device names must be provided")
 	}
 
-	if deviceNames == "" && mountAll {
+	if !deviceNamesPresent && mountAll {
 		return errors.New("mount-all-partitions requires device names")
 	}
 
 	return nil
 }
 
-func (c *LinuxDeviceManager) identifyViaLun(lun int) ([]*snapshot.PartitionInfo, error) {
+func getLunsFromOpts(opts map[string]string) ([]int, error) {
+	luns := []int{}
+	if opts[LunOption] != "" {
+		lun, err := strconv.Atoi(opts[LunOption])
+		if err != nil {
+			return nil, err
+		}
+		luns = append(luns, lun)
+	}
+	if opts[LunsOption] != "" {
+		vals := strings.Split(opts[LunsOption], ",")
+		for _, l := range vals {
+			lun, err := strconv.Atoi(l)
+			if err != nil {
+				return nil, err
+			}
+			luns = append(luns, lun)
+		}
+	}
+	return luns, nil
+}
+
+func (c *LinuxDeviceManager) identifyDeviceViaLun(lun int) ([]snapshot.BlockDevice, error) {
 	scsiDevices, err := c.listScsiDevices()
 	if err != nil {
 		return nil, err
@@ -370,23 +432,14 @@ func (c *LinuxDeviceManager) identifyViaLun(lun int) ([]*snapshot.PartitionInfo,
 	if len(filteredScsiDevices) == 0 {
 		return nil, errors.New("no matching scsi devices found")
 	}
-	blockDevices, err := c.volumeMounter.CmdRunner.GetBlockDevices()
-	if err != nil {
-		return nil, err
+	devices := []snapshot.BlockDevice{}
+	for _, device := range filteredScsiDevices {
+		d := snapshot.BlockDevice{
+			Name: device.VolumePath,
+		}
+		devices = append(devices, d)
 	}
-	var device snapshot.BlockDevice
-	var deviceErr error
-	// if we have exactly one device present at the LUN we can directly search for it
-	if len(filteredScsiDevices) == 1 {
-		devicePath := filteredScsiDevices[0].VolumePath
-		device, deviceErr = blockDevices.FindDevice(devicePath)
-	} else {
-		device, deviceErr = findMatchingDeviceByBlock(filteredScsiDevices, blockDevices)
-	}
-	if deviceErr != nil {
-		return nil, deviceErr
-	}
-	return device.GetPartitions(false, false)
+	return devices, nil
 }
 
 func (c *LinuxDeviceManager) identifyViaDeviceName(deviceName string, mountAll bool, includeMounted bool) ([]*snapshot.PartitionInfo, error) {

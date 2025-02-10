@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/snapshot"
 )
 
 func TestParseLsscsiOutput(t *testing.T) {
@@ -32,113 +31,40 @@ func TestParseLsscsiOutput(t *testing.T) {
 }
 
 func TestFilterScsiDevices(t *testing.T) {
-	devices := scsiDevices{
-		{Lun: 0, VolumePath: "/dev/sda"},
-		{Lun: 1, VolumePath: "/dev/sdb"},
-		{Lun: 2, VolumePath: "/dev/sdc"},
-		{Lun: 3, VolumePath: "/dev/sdd"},
-	}
-
-	filtered := filterScsiDevices(devices, 1)
-	expected := scsiDevices{
-		{Lun: 1, VolumePath: "/dev/sdb"},
-	}
-	assert.ElementsMatch(t, expected, filtered)
-
-	filtered = filterScsiDevices(devices, 4)
-	assert.Len(t, filtered, 0)
-}
-
-func TestFindDeviceByBlock(t *testing.T) {
-	devices := scsiDevices{
-		{Lun: 0, VolumePath: "/dev/sda"},
-		{Lun: 0, VolumePath: "/dev/sdb"},
-	}
-	t.Run("find device by block", func(t *testing.T) {
-		blockDevices := &snapshot.BlockDevices{
-			BlockDevices: []snapshot.BlockDevice{
-				{
-					Name: "sda",
-					Children: []snapshot.BlockDevice{
-						{
-							Name:       "sda1",
-							MountPoint: "/",
-						},
-						{
-							Name: "sda2",
-						},
-					},
-				},
-				{
-					Name: "sdb",
-					Children: []snapshot.BlockDevice{
-						{
-							Name:       "sdb1",
-							MountPoint: "",
-						},
-					},
-				},
-			},
+	t.Run("single device", func(t *testing.T) {
+		devices := scsiDevices{
+			{Lun: 0, VolumePath: "/dev/sda"},
+			{Lun: 1, VolumePath: "/dev/sdb"},
+			{Lun: 2, VolumePath: "/dev/sdc"},
+			{Lun: 3, VolumePath: "/dev/sdd"},
 		}
-		target, err := findMatchingDeviceByBlock(devices, blockDevices)
-		assert.NoError(t, err)
-		expected := blockDevices.BlockDevices[1]
-		assert.Equal(t, expected, target)
+
+		filtered := filterScsiDevices(devices, 1)
+		expected := scsiDevices{
+			{Lun: 1, VolumePath: "/dev/sdb"},
+		}
+		assert.ElementsMatch(t, expected, filtered)
+
+		filtered = filterScsiDevices(devices, 4)
+		assert.Len(t, filtered, 0)
 	})
 
-	t.Run("no matches", func(t *testing.T) {
-		blockDevices := &snapshot.BlockDevices{
-			BlockDevices: []snapshot.BlockDevice{
-				{
-					Name: "sdc",
-					Children: []snapshot.BlockDevice{
-						{
-							Name:       "sdc1",
-							MountPoint: "/",
-						},
-					},
-				},
-				{
-					Name: "sdc",
-					Children: []snapshot.BlockDevice{
-						{
-							Name:       "sdc1",
-							MountPoint: "/tmp",
-						},
-					},
-				},
-			},
+	t.Run("multiple devices", func(t *testing.T) {
+		devices := scsiDevices{
+			{Lun: 0, VolumePath: "/dev/sda"},
+			{Lun: 1, VolumePath: "/dev/sdb"},
+			{Lun: 1, VolumePath: "/dev/sdc"},
+			{Lun: 3, VolumePath: "/dev/sdd"},
 		}
-		_, err := findMatchingDeviceByBlock(devices, blockDevices)
-		assert.Error(t, err)
-	})
-	t.Run("empty target as all blocks are mounted", func(t *testing.T) {
-		blockDevices := &snapshot.BlockDevices{
-			BlockDevices: []snapshot.BlockDevice{
-				{
-					Name: "sda",
-					Children: []snapshot.BlockDevice{
-						{
-							Name:       "sda1",
-							MountPoint: "/",
-						},
-						{
-							Name: "sda2",
-						},
-					},
-				},
-				{
-					Name: "sdb",
-					Children: []snapshot.BlockDevice{
-						{
-							Name:       "sdb1",
-							MountPoint: "/tmp",
-						},
-					},
-				},
-			},
+
+		filtered := filterScsiDevices(devices, 1)
+		expected := scsiDevices{
+			{Lun: 1, VolumePath: "/dev/sdb"},
+			{Lun: 1, VolumePath: "/dev/sdc"},
 		}
-		_, err := findMatchingDeviceByBlock(devices, blockDevices)
-		assert.Error(t, err)
+		assert.ElementsMatch(t, expected, filtered)
+
+		filtered = filterScsiDevices(devices, 4)
+		assert.Len(t, filtered, 0)
 	})
 }
