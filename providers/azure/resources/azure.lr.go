@@ -2653,6 +2653,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cloudDefenderService.securityContact.alertNotifications": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityContact).GetAlertNotifications()).ToDataRes(types.Dict)
 	},
+	"azure.subscription.cloudDefenderService.securityContact.notificationSources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityContact).GetNotificationSources()).ToDataRes(types.Dict)
+	},
 	"azure.subscription.cloudDefenderService.securityContact.notificationsByRole": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityContact).GetNotificationsByRole()).ToDataRes(types.Dict)
 	},
@@ -6168,6 +6171,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"azure.subscription.cloudDefenderService.securityContact.alertNotifications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityContact).AlertNotifications, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.securityContact.notificationSources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityContact).NotificationSources, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cloudDefenderService.securityContact.notificationsByRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15604,6 +15611,7 @@ type mqlAzureSubscriptionCloudDefenderServiceSecurityContact struct {
 	Name plugin.TValue[string]
 	Emails plugin.TValue[[]interface{}]
 	AlertNotifications plugin.TValue[interface{}]
+	NotificationSources plugin.TValue[interface{}]
 	NotificationsByRole plugin.TValue[interface{}]
 }
 
@@ -15658,6 +15666,10 @@ func (c *mqlAzureSubscriptionCloudDefenderServiceSecurityContact) GetEmails() *p
 
 func (c *mqlAzureSubscriptionCloudDefenderServiceSecurityContact) GetAlertNotifications() *plugin.TValue[interface{}] {
 	return &c.AlertNotifications
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecurityContact) GetNotificationSources() *plugin.TValue[interface{}] {
+	return &c.NotificationSources
 }
 
 func (c *mqlAzureSubscriptionCloudDefenderServiceSecurityContact) GetNotificationsByRole() *plugin.TValue[interface{}] {
