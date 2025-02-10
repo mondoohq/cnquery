@@ -382,6 +382,10 @@ func init() {
 			Init: initAzureSubscriptionCloudDefenderService,
 			Create: createAzureSubscriptionCloudDefenderService,
 		},
+		"azure.subscription.cloudDefenderService.settings": {
+			// to override args, implement: initAzureSubscriptionCloudDefenderServiceSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCloudDefenderServiceSettings,
+		},
 		"azure.subscription.cloudDefenderService.securityContact": {
 			// to override args, implement: initAzureSubscriptionCloudDefenderServiceSecurityContact(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionCloudDefenderServiceSecurityContact,
@@ -2640,6 +2644,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.cloudDefenderService.securityContacts": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetSecurityContacts()).ToDataRes(types.Array(types.Resource("azure.subscription.cloudDefenderService.securityContact")))
+	},
+	"azure.subscription.cloudDefenderService.settingsMCAS": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetSettingsMCAS()).ToDataRes(types.Resource("azure.subscription.cloudDefenderService.settings"))
+	},
+	"azure.subscription.cloudDefenderService.settingsWDATP": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetSettingsWDATP()).ToDataRes(types.Resource("azure.subscription.cloudDefenderService.settings"))
+	},
+	"azure.subscription.cloudDefenderService.settingsSentinel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetSettingsSentinel()).ToDataRes(types.Resource("azure.subscription.cloudDefenderService.settings"))
+	},
+	"azure.subscription.cloudDefenderService.settings.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSettings).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.settings.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSettings).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.settings.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSettings).GetKind()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.settings.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSettings).GetType()).ToDataRes(types.String)
 	},
 	"azure.subscription.cloudDefenderService.securityContact.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityContact).GetId()).ToDataRes(types.String)
@@ -6151,6 +6176,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"azure.subscription.cloudDefenderService.securityContacts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCloudDefenderService).SecurityContacts, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.settingsMCAS": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderService).SettingsMCAS, ok = plugin.RawToTValue[*mqlAzureSubscriptionCloudDefenderServiceSettings](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.settingsWDATP": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderService).SettingsWDATP, ok = plugin.RawToTValue[*mqlAzureSubscriptionCloudDefenderServiceSettings](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.settingsSentinel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderService).SettingsSentinel, ok = plugin.RawToTValue[*mqlAzureSubscriptionCloudDefenderServiceSettings](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.settings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAzureSubscriptionCloudDefenderServiceSettings).__id, ok = v.Value.(string)
+			return
+		},
+	"azure.subscription.cloudDefenderService.settings.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSettings).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.settings.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSettings).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.settings.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSettings).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.settings.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSettings).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cloudDefenderService.securityContact.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15477,6 +15534,9 @@ type mqlAzureSubscriptionCloudDefenderService struct {
 	DefenderForResourceManager plugin.TValue[interface{}]
 	DefenderForContainers plugin.TValue[interface{}]
 	SecurityContacts plugin.TValue[[]interface{}]
+	SettingsMCAS plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceSettings]
+	SettingsWDATP plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceSettings]
+	SettingsSentinel plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceSettings]
 }
 
 // createAzureSubscriptionCloudDefenderService creates a new instance of this resource
@@ -15600,6 +15660,118 @@ func (c *mqlAzureSubscriptionCloudDefenderService) GetSecurityContacts() *plugin
 
 		return c.securityContacts()
 	})
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderService) GetSettingsMCAS() *plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceSettings] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionCloudDefenderServiceSettings](&c.SettingsMCAS, func() (*mqlAzureSubscriptionCloudDefenderServiceSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService", c.__id, "settingsMCAS")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionCloudDefenderServiceSettings), nil
+			}
+		}
+
+		return c.settingsMCAS()
+	})
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderService) GetSettingsWDATP() *plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceSettings] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionCloudDefenderServiceSettings](&c.SettingsWDATP, func() (*mqlAzureSubscriptionCloudDefenderServiceSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService", c.__id, "settingsWDATP")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionCloudDefenderServiceSettings), nil
+			}
+		}
+
+		return c.settingsWDATP()
+	})
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderService) GetSettingsSentinel() *plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceSettings] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionCloudDefenderServiceSettings](&c.SettingsSentinel, func() (*mqlAzureSubscriptionCloudDefenderServiceSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService", c.__id, "settingsSentinel")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionCloudDefenderServiceSettings), nil
+			}
+		}
+
+		return c.settingsSentinel()
+	})
+}
+
+// mqlAzureSubscriptionCloudDefenderServiceSettings for the azure.subscription.cloudDefenderService.settings resource
+type mqlAzureSubscriptionCloudDefenderServiceSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAzureSubscriptionCloudDefenderServiceSettingsInternal it will be used here
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	Kind plugin.TValue[string]
+	Type plugin.TValue[string]
+}
+
+// createAzureSubscriptionCloudDefenderServiceSettings creates a new instance of this resource
+func createAzureSubscriptionCloudDefenderServiceSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCloudDefenderServiceSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cloudDefenderService.settings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSettings) MqlName() string {
+	return "azure.subscription.cloudDefenderService.settings"
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSettings) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSettings) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSettings) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSettings) GetType() *plugin.TValue[string] {
+	return &c.Type
 }
 
 // mqlAzureSubscriptionCloudDefenderServiceSecurityContact for the azure.subscription.cloudDefenderService.securityContact resource
