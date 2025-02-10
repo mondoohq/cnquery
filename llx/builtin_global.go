@@ -38,13 +38,16 @@ func init() {
 		"return":         returnCallV2,
 		"createResource": globalCreateResource,
 		// type-conversions
-		"string": stringCall,
-		"$regex": regexCall, // TODO: support both the regex resource and the internal typemap!
-		"float":  floatCall,
-		"int":    intCall,
-		"bool":   boolCall,
-		"dict":   dictCall,
-		"semver": semverCall,
+		"string":  stringCall,
+		"$regex":  regexCall, // TODO: support both the regex resource and the internal typemap!
+		"float":   floatCall,
+		"int":     intCall,
+		"bool":    boolCall,
+		"dict":    dictCall,
+		"version": versionCall,
+		// FIXME: DEPRECATED, remove in v13.0 vv
+		"semver": versionCall, // deprecated
+		// ^^
 	}
 }
 
@@ -193,9 +196,9 @@ func typeofCallV2(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, 
 	return StringData(res.Type.Label()), 0, nil
 }
 
-func semverCall(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, error) {
+func versionCall(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, error) {
 	if len(f.Args) != 1 {
-		return nil, 0, errors.New("Called `semver` with " + strconv.Itoa(len(f.Args)) + " arguments, expected one")
+		return nil, 0, errors.New("Called `version` with " + strconv.Itoa(len(f.Args)) + " arguments, expected one")
 	}
 
 	res, dref, err := e.resolveValue(f.Args[0], ref)
@@ -203,7 +206,7 @@ func semverCall(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, er
 		return res, dref, err
 	}
 
-	return &RawData{Type: types.Semver, Value: res.Value}, 0, nil
+	return &RawData{Type: types.Version, Value: res.Value}, 0, nil
 }
 
 func stringCall(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, error) {

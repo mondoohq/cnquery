@@ -96,7 +96,7 @@ func init() {
 			"keys":   {typ: stringArrayType, signature: FunctionSignature{}},
 			"values": {typ: dictArrayType, signature: FunctionSignature{}},
 		},
-		types.Semver: {
+		types.Version: {
 			"epoch": {typ: intType, signature: FunctionSignature{}},
 		},
 		types.ArrayLike: {

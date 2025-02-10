@@ -698,7 +698,7 @@ func (print *Printer) Data(typ types.Type, data interface{}, codeID string, bund
 	case types.Block:
 		return print.refMap(typ, data.(map[string]interface{}), codeID, bundle, indent)
 
-	case types.Semver:
+	case types.Version:
 		return print.Secondary(data.(string))
 
 	case types.ArrayLike:

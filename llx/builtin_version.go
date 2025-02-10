@@ -80,59 +80,59 @@ func (v Version) Compare(o Version) int {
 	return v.Version.Compare(o.Version)
 }
 
-func semverLT(left interface{}, right interface{}) *RawData {
+func versionLT(left interface{}, right interface{}) *RawData {
 	l := NewVersion(left.(string))
 	r := NewVersion(right.(string))
 	return BoolData(l.Compare(r) < 0)
 }
 
-func semverGT(left interface{}, right interface{}) *RawData {
+func versionGT(left interface{}, right interface{}) *RawData {
 	l := NewVersion(left.(string))
 	r := NewVersion(right.(string))
 	return BoolData(l.Compare(r) > 0)
 }
 
-func semverLTE(left interface{}, right interface{}) *RawData {
+func versionLTE(left interface{}, right interface{}) *RawData {
 	l := NewVersion(left.(string))
 	r := NewVersion(right.(string))
 	return BoolData(l.Compare(r) <= 0)
 }
 
-func semverGTE(left interface{}, right interface{}) *RawData {
+func versionGTE(left interface{}, right interface{}) *RawData {
 	l := NewVersion(left.(string))
 	r := NewVersion(right.(string))
 	return BoolData(l.Compare(r) >= 0)
 }
 
-func semverCmpSemver(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+func versionCmpVersion(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left, right interface{}) *RawData {
 		return BoolData(left.(string) == right.(string))
 	})
 }
 
-func semverNotSemver(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+func versionNotVersion(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left, right interface{}) *RawData {
 		return BoolData(left.(string) != right.(string))
 	})
 }
 
-func semverLTsemver(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, semverLT)
+func versionLTversion(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, versionLT)
 }
 
-func semverGTsemver(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, semverGT)
+func versionGTversion(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, versionGT)
 }
 
-func semverLTEsemver(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, semverLTE)
+func versionLTEversion(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, versionLTE)
 }
 
-func semverGTEsemver(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, semverGTE)
+func versionGTEversion(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, versionGTE)
 }
 
-func semverEpoch(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+func versionEpoch(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return &RawData{Type: types.Int, Error: bind.Error}, 0, nil
 	}

@@ -39,7 +39,7 @@ func init() {
 		types.Score:        score2result,
 		types.Empty:        empty2result,
 		types.Block:        block2result,
-		types.Semver:       string2result,
+		types.Version:      string2result,
 		types.ArrayLike:    array2result,
 		types.MapLike:      map2result,
 		types.ResourceLike: resource2result,
@@ -60,7 +60,7 @@ func init() {
 		types.Score:        pscore2raw,
 		types.Empty:        pempty2raw,
 		types.Block:        pblock2rawV2,
-		types.Semver:       pstring2raw,
+		types.Version:      pstring2raw,
 		types.ArrayLike:    parray2raw,
 		types.MapLike:      pmap2raw,
 		types.ResourceLike: presource2raw,
@@ -189,7 +189,7 @@ func string2result(value interface{}, typ types.Type) (*Primitive, error) {
 		return nil, errInvalidConversion(value, typ)
 	}
 	p := StringPrimitive(v)
-	// special case for semver
+	// special case for version
 	p.Type = string(typ)
 	return p, nil
 }
