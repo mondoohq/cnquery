@@ -5,8 +5,9 @@ package generator
 
 import (
 	"encoding/json"
-	"go.mondoo.com/cnquery/v11/cli/reporter"
 	"os"
+
+	"go.mondoo.com/cnquery/v11/cli/reporter"
 	"sigs.k8s.io/yaml"
 )
 
@@ -59,7 +60,6 @@ func LoadReport(filename string) (*reporter.Report, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
-
 	}
 	var report *reporter.Report
 	err = yaml.Unmarshal(data, &report)

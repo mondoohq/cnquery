@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
 	"go.mondoo.com/cnquery/v11"
 	"go.mondoo.com/cnquery/v11/cli/reporter"
 	"go.mondoo.com/cnquery/v11/mrn"
@@ -22,7 +23,13 @@ func NewBom(report *reporter.Report) ([]*sbom.Sbom, error) {
 	return GenerateBom(report)
 }
 
+func GenerateBomV2(r *reporter.Report) []*sbom.Sbom {
+	sboms, _ := GenerateBom(r)
+	return sboms
+}
+
 // GenerateBom generates a BOM from a cnquery json report collection
+// depercated: Use GenerateBomV2 instead
 func GenerateBom(r *reporter.Report) ([]*sbom.Sbom, error) {
 	if r == nil {
 		return nil, nil
@@ -39,7 +46,6 @@ func GenerateBom(r *reporter.Report) ([]*sbom.Sbom, error) {
 	boms := []*sbom.Sbom{}
 	for mrn := range r.Assets {
 		asset := r.Assets[mrn]
-
 		bom := &sbom.Sbom{
 			Generator: generator,
 			Timestamp: now,
@@ -65,82 +71,55 @@ func GenerateBom(r *reporter.Report) ([]*sbom.Sbom, error) {
 			boms = append(boms, bom)
 			continue
 		}
-		if dataPoints != nil {
-			for k := range dataPoints.Values {
-				dataValue := dataPoints.Values[k]
-				jsondata, err := reporter.JsonValue(dataValue.Content)
-				if err != nil {
-					return nil, err
-				}
-				rb := BomFields{}
-				err = json.Unmarshal(jsondata, &rb)
-				if err != nil {
-					return nil, err
-				}
-				if rb.Asset != nil {
-					bom.Asset.Name = rb.Asset.Name
-					bom.Asset.Platform.Name = rb.Asset.Platform
-					bom.Asset.Platform.Version = rb.Asset.Version
-					bom.Asset.Platform.Family = rb.Asset.Family
-					bom.Asset.Platform.Arch = rb.Asset.Arch
-					bom.Asset.Platform.Cpes = rb.Asset.CPEs
-					bom.Asset.Platform.Labels = rb.Asset.Labels
-					bom.Asset.PlatformIds = enrichPlatformIds(rb.Asset.IDs)
-				}
+		for _, dataValue := range dataPoints.Values {
+			jsondata, err := reporter.JsonValue(dataValue.Content)
+			if err != nil {
+				bom.Status = sbom.Status_STATUS_FAILED
+				bom.ErrorMessage = errors.Wrap(err, "failed to parse json data").Error()
+				break
+			}
+			rb := BomFields{}
+			err = json.Unmarshal(jsondata, &rb)
+			if err != nil {
+				bom.Status = sbom.Status_STATUS_FAILED
+				bom.ErrorMessage = errors.Wrap(err, "failed to parse bom fields json data").Error()
+				break
+			}
+			if rb.Asset != nil {
+				bom.Asset.Name = rb.Asset.Name
+				bom.Asset.Platform.Name = rb.Asset.Platform
+				bom.Asset.Platform.Version = rb.Asset.Version
+				bom.Asset.Platform.Family = rb.Asset.Family
+				bom.Asset.Platform.Arch = rb.Asset.Arch
+				bom.Asset.Platform.Cpes = rb.Asset.CPEs
+				bom.Asset.Platform.Labels = rb.Asset.Labels
+				bom.Asset.PlatformIds = enrichPlatformIds(rb.Asset.IDs)
+			}
 
-				if bom.Asset == nil {
-					bom.Asset = &sbom.Asset{}
+			if bom.Asset == nil {
+				bom.Asset = &sbom.Asset{}
+			}
+			if bom.Asset.Labels == nil {
+				bom.Asset.Labels = map[string]string{}
+			}
+
+			// store version of running kernel
+			for _, kernel := range rb.KernelInstalled {
+				if kernel.Running {
+					bom.Asset.Labels[LABEL_KERNEL_RUNNING] = kernel.Version
 				}
-				if bom.Asset.Labels == nil {
-					bom.Asset.Labels = map[string]string{}
-				}
+			}
 
-				// store version of running kernel
-				for _, kernel := range rb.KernelInstalled {
-					if kernel.Running {
-						bom.Asset.Labels[LABEL_KERNEL_RUNNING] = kernel.Version
-					}
-				}
-
-				if rb.Packages != nil {
-					for _, pkg := range rb.Packages {
-						bomPkg := &sbom.Package{
-							Name:         pkg.Name,
-							Version:      pkg.Version,
-							Architecture: pkg.Arch,
-							Origin:       pkg.Origin,
-							Purl:         pkg.Purl,
-							Cpes:         pkg.CPEs,
-							Type:         pkg.Format,
-						}
-
-						for _, filepath := range pkg.FilePaths {
-							bomPkg.EvidenceList = append(bomPkg.EvidenceList, &sbom.Evidence{
-								Type:  sbom.EvidenceType_EVIDENCE_TYPE_FILE,
-								Value: filepath,
-							})
-						}
-
-						bom.Packages = append(bom.Packages, bomPkg)
-					}
-				}
-
-				for _, pkg := range rb.PythonPackages {
+			if rb.Packages != nil {
+				for _, pkg := range rb.Packages {
 					bomPkg := &sbom.Package{
-						Name:    pkg.Name,
-						Version: pkg.Version,
-						Purl:    pkg.Purl,
-						Cpes:    pkg.CPEs,
-						Type:    "pypi",
-					}
-
-					// deprecated path, all files are now in the FilePaths field
-					// TODO: update once the python resource returns multiple results
-					if pkg.FilePath != "" {
-						bomPkg.EvidenceList = append(bomPkg.EvidenceList, &sbom.Evidence{
-							Type:  sbom.EvidenceType_EVIDENCE_TYPE_FILE,
-							Value: pkg.FilePath,
-						})
+						Name:         pkg.Name,
+						Version:      pkg.Version,
+						Architecture: pkg.Arch,
+						Origin:       pkg.Origin,
+						Purl:         pkg.Purl,
+						Cpes:         pkg.CPEs,
+						Type:         pkg.Format,
 					}
 
 					for _, filepath := range pkg.FilePaths {
@@ -152,25 +131,53 @@ func GenerateBom(r *reporter.Report) ([]*sbom.Sbom, error) {
 
 					bom.Packages = append(bom.Packages, bomPkg)
 				}
+			}
 
-				for _, pkg := range rb.NpmPackages {
-					bomPkg := &sbom.Package{
-						Name:    pkg.Name,
-						Version: pkg.Version,
-						Purl:    pkg.Purl,
-						Cpes:    pkg.CPEs,
-						Type:    "npm",
-					}
-
-					for _, filepath := range pkg.FilePaths {
-						bomPkg.EvidenceList = append(bomPkg.EvidenceList, &sbom.Evidence{
-							Type:  sbom.EvidenceType_EVIDENCE_TYPE_FILE,
-							Value: filepath,
-						})
-					}
-
-					bom.Packages = append(bom.Packages, bomPkg)
+			for _, pkg := range rb.PythonPackages {
+				bomPkg := &sbom.Package{
+					Name:    pkg.Name,
+					Version: pkg.Version,
+					Purl:    pkg.Purl,
+					Cpes:    pkg.CPEs,
+					Type:    "pypi",
 				}
+
+				// deprecated path, all files are now in the FilePaths field
+				// TODO: update once the python resource returns multiple results
+				if pkg.FilePath != "" {
+					bomPkg.EvidenceList = append(bomPkg.EvidenceList, &sbom.Evidence{
+						Type:  sbom.EvidenceType_EVIDENCE_TYPE_FILE,
+						Value: pkg.FilePath,
+					})
+				}
+
+				for _, filepath := range pkg.FilePaths {
+					bomPkg.EvidenceList = append(bomPkg.EvidenceList, &sbom.Evidence{
+						Type:  sbom.EvidenceType_EVIDENCE_TYPE_FILE,
+						Value: filepath,
+					})
+				}
+
+				bom.Packages = append(bom.Packages, bomPkg)
+			}
+
+			for _, pkg := range rb.NpmPackages {
+				bomPkg := &sbom.Package{
+					Name:    pkg.Name,
+					Version: pkg.Version,
+					Purl:    pkg.Purl,
+					Cpes:    pkg.CPEs,
+					Type:    "npm",
+				}
+
+				for _, filepath := range pkg.FilePaths {
+					bomPkg.EvidenceList = append(bomPkg.EvidenceList, &sbom.Evidence{
+						Type:  sbom.EvidenceType_EVIDENCE_TYPE_FILE,
+						Value: filepath,
+					})
+				}
+
+				bom.Packages = append(bom.Packages, bomPkg)
 			}
 		}
 		boms = append(boms, bom)
