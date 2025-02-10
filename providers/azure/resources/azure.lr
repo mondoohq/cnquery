@@ -1784,6 +1784,24 @@ private azure.subscription.cloudDefenderService @defaults("defenderForServers.en
   defenderForContainers() dict
   // List of configured security contacts
   securityContacts() []azure.subscription.cloudDefenderService.securityContact
+  // Settings for MCAS
+  settingsMCAS() azure.subscription.cloudDefenderService.settings
+  // Settings for WDATP
+  settingsWDATP() azure.subscription.cloudDefenderService.settings
+  // Settings for Sentinel
+  settingsSentinel() azure.subscription.cloudDefenderService.settings
+}
+
+// Microsoft Defender for Cloud security settings
+private azure.subscription.cloudDefenderService.settings @defaults("name kind") {
+  // Resource ID
+  id string
+  // The settings name
+  name string
+  // The settings kind (data export, alert sync, etc.)
+  kind string
+  // The settings type
+  type string
 }
 
 // Microsoft Defender for Cloud security contact
