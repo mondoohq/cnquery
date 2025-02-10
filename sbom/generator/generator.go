@@ -18,21 +18,10 @@ import (
 
 var LABEL_KERNEL_RUNNING = "mondoo.com/os/kernel-running"
 
-// NewBom creates a BOM from a cnquery report
-func NewBom(report *reporter.Report) ([]*sbom.Sbom, error) {
-	return GenerateBom(report)
-}
-
-func GenerateBomV2(r *reporter.Report) []*sbom.Sbom {
-	sboms, _ := GenerateBom(r)
-	return sboms
-}
-
 // GenerateBom generates a BOM from a cnquery json report collection
-// depercated: Use GenerateBomV2 instead
-func GenerateBom(r *reporter.Report) ([]*sbom.Sbom, error) {
+func GenerateBom(r *reporter.Report) []*sbom.Sbom {
 	if r == nil {
-		return nil, nil
+		return nil
 	}
 
 	generator := &sbom.Generator{
@@ -182,7 +171,7 @@ func GenerateBom(r *reporter.Report) ([]*sbom.Sbom, error) {
 		}
 		boms = append(boms, bom)
 	}
-	return boms, nil
+	return boms
 }
 
 // enrichPlatformIds adds the platform id based on cnquery ids

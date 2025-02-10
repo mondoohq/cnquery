@@ -17,8 +17,7 @@ func TestSbomGeneration(t *testing.T) {
 		report, err := LoadReport("../testdata/alpine.json")
 		require.NoError(t, err)
 
-		sboms, err := GenerateBom(report)
-		require.NoError(t, err)
+		sboms := GenerateBom(report)
 
 		// store bom in different formats
 		selectedBom := sboms[0]
@@ -58,8 +57,7 @@ func TestSbomGeneration(t *testing.T) {
 		report, err := LoadReport("testdata/alpine-failed-package.json")
 		require.NoError(t, err)
 
-		sboms, err := GenerateBom(report)
-		require.NoError(t, err)
+		sboms := GenerateBom(report)
 
 		// store bom in different formats
 		selectedBom := sboms[0]
