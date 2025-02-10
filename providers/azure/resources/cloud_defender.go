@@ -464,39 +464,15 @@ func (a *mqlAzureSubscriptionCloudDefenderService) securityContacts() ([]interfa
 			return nil, err
 		}
 		for _, contact := range page.ContactList.Value {
-			sources := map[string]interface{}{}
-			for _, source := range contact.Properties.NotificationsSources {
-				notificationSource := source.GetNotificationsSource()
-				if notificationSource == nil || notificationSource.SourceType == nil {
-					continue
-				}
+			args := argsFromContactProperties(contact.Properties)
+			args["id"] = llx.StringDataPtr(contact.ID)
+			args["name"] = llx.StringDataPtr(contact.Name)
 
-				sourceDict, err := convert.JsonToDict(source)
-				if err != nil {
-					log.Debug().Err(err).Msg("unable to convert armsecurity.contact.Properties.NotificationsSources to dict")
-					continue
-				}
-				sources[string(*notificationSource.SourceType)] = sourceDict
-			}
-
-			notificationsByRole, err := convert.JsonToDict(contact.Properties.NotificationsByRole)
-			if err != nil {
-				log.Debug().Err(err).Msg("unable to convert armsecurity.Contact.Properties.NotificationsByRole to dict")
-			}
-			mails := ""
-			if contact.Properties.Emails != nil {
-				mails = *contact.Properties.Emails
-			}
-			mailsArr := strings.Split(mails, ";")
-			mqlSecurityContact, err := CreateResource(a.MqlRuntime, "azure.subscription.cloudDefenderService.securityContact",
-				map[string]*llx.RawData{
-					"id":                  llx.StringDataPtr(contact.ID),
-					"name":                llx.StringDataPtr(contact.Name),
-					"emails":              llx.ArrayData(convert.SliceAnyToInterface(mailsArr), types.String),
-					"notificationsByRole": llx.DictData(notificationsByRole),
-					"alertNotifications":  llx.DictData(nil),
-					"notificationSources": llx.DictData(sources),
-				})
+			mqlSecurityContact, err := CreateResource(
+				a.MqlRuntime,
+				"azure.subscription.cloudDefenderService.securityContact",
+				args,
+			)
 			if err != nil {
 				return nil, err
 			}
@@ -504,4 +480,59 @@ func (a *mqlAzureSubscriptionCloudDefenderService) securityContacts() ([]interfa
 		}
 	}
 	return res, nil
+}
+func argsFromContactProperties(props *armsecurity.ContactProperties) map[string]*llx.RawData {
+	args := map[string]*llx.RawData{}
+	if props == nil {
+		return args
+	}
+
+	sources := map[string]interface{}{}
+	for _, source := range props.NotificationsSources {
+		notificationSource := source.GetNotificationsSource()
+		if notificationSource == nil || notificationSource.SourceType == nil {
+			continue
+		}
+
+		sourceDict, err := convert.JsonToDict(source)
+		if err != nil {
+			log.Debug().Err(err).Msg("unable to convert armsecurity.props.NotificationsSources to dict")
+			continue
+		}
+
+		if notificationSource.SourceType == nil {
+			continue
+		}
+		sourceType := *notificationSource.SourceType
+		sources[string(sourceType)] = sourceDict
+
+		if sourceType == armsecurity.SourceTypeAlert {
+			// back-fill alert notifications for backwards compatibility
+			//
+			// This field has two properties, `minimalSeverity` and `state`, that the new type is only missing state.
+			//
+			// https://github.com/Azure/azure-sdk-for-go/blob/sdk/resourcemanager/security/armsecurity/v0.13.0/sdk/resourcemanager/security/armsecurity/models.go#L2404
+			//
+			state := "On"
+			sourceDict["state"] = state
+			args["alertNotifications"] = llx.DictData(sourceDict)
+		}
+	}
+	args["notificationSources"] = llx.DictData(sources)
+
+	notificationsByRole, err := convert.JsonToDict(props.NotificationsByRole)
+	if err != nil {
+		log.Debug().Err(err).Msg("unable to convert armsecurity.Contact.Properties.NotificationsByRole to dict")
+	}
+	args["notificationsByRole"] = llx.DictData(notificationsByRole)
+
+	// emails
+	mails := ""
+	if props.Emails != nil {
+		mails = *props.Emails
+	}
+	mailsArr := strings.Split(mails, ";")
+	args["emails"] = llx.ArrayData(convert.SliceAnyToInterface(mailsArr), types.String)
+
+	return args
 }
