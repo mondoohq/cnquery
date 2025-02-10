@@ -19,8 +19,7 @@ func TestCycloneDxOutput(t *testing.T) {
 	report, err := generator.LoadReport("./testdata/alpine.json")
 	require.NoError(t, err)
 
-	sboms, err := generator.GenerateBom(report)
-	require.NoError(t, err)
+	sboms := generator.GenerateBom(report)
 
 	// store bom in different formats
 	selectedBom := sboms[0]

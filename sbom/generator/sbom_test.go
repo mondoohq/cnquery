@@ -4,52 +4,65 @@
 package generator
 
 import (
-	"go.mondoo.com/cnquery/v11/sbom"
 	"testing"
+
+	"go.mondoo.com/cnquery/v11/sbom"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestSbomGeneration(t *testing.T) {
-	report, err := LoadReport("../testdata/alpine.json")
-	require.NoError(t, err)
+	t.Run("generate sbom from a full report", func(t *testing.T) {
+		report, err := LoadReport("../testdata/alpine.json")
+		require.NoError(t, err)
 
-	sboms, err := GenerateBom(report)
-	require.NoError(t, err)
+		sboms := GenerateBom(report)
 
-	// store bom in different formats
-	selectedBom := sboms[0]
+		// store bom in different formats
+		selectedBom := sboms[0]
 
-	assert.Equal(t, "alpine:latest", selectedBom.Asset.Name)
-	assert.Equal(t, "trace-alpine", selectedBom.Asset.TraceId)
-	assert.Equal(t, "aarch64", selectedBom.Asset.Platform.Arch)
-	assert.Equal(t, "alpine", selectedBom.Asset.Platform.Name)
-	assert.Equal(t, "3.19.0", selectedBom.Asset.Platform.Version)
-	assert.Equal(t, []string{"//platformid.api.mondoo.app/runtime/docker/images/1dc785547989b0db1c3cd9949c57574393e69bea98bfe044b0588e24721aa402"}, selectedBom.Asset.PlatformIds)
+		assert.Equal(t, "alpine:latest", selectedBom.Asset.Name)
+		assert.Equal(t, "trace-alpine", selectedBom.Asset.TraceId)
+		assert.Equal(t, "aarch64", selectedBom.Asset.Platform.Arch)
+		assert.Equal(t, "alpine", selectedBom.Asset.Platform.Name)
+		assert.Equal(t, "3.19.0", selectedBom.Asset.Platform.Version)
+		assert.Equal(t, []string{"//platformid.api.mondoo.app/runtime/docker/images/1dc785547989b0db1c3cd9949c57574393e69bea98bfe044b0588e24721aa402"}, selectedBom.Asset.PlatformIds)
 
-	// search os package
-	pkg := findProtoPkg(selectedBom.Packages, "alpine-baselayout")
-	assert.Equal(t, "alpine-baselayout", pkg.Name)
-	assert.Contains(t, pkg.EvidenceList, &sbom.Evidence{
-		Type:  sbom.EvidenceType_EVIDENCE_TYPE_FILE,
-		Value: "etc/profile.d/color_prompt.sh.disabled",
+		// search os package
+		pkg := findProtoPkg(selectedBom.Packages, "alpine-baselayout")
+		assert.Equal(t, "alpine-baselayout", pkg.Name)
+		assert.Contains(t, pkg.EvidenceList, &sbom.Evidence{
+			Type:  sbom.EvidenceType_EVIDENCE_TYPE_FILE,
+			Value: "etc/profile.d/color_prompt.sh.disabled",
+		})
+
+		// search python package
+		pkg = findProtoPkg(selectedBom.Packages, "pip")
+		assert.Equal(t, "pip", pkg.Name)
+		assert.Contains(t, pkg.EvidenceList, &sbom.Evidence{
+			Type:  sbom.EvidenceType_EVIDENCE_TYPE_FILE,
+			Value: "/opt/lib/python3.9/site-packages/pip-21.2.4.dist-info/METADATA",
+		})
+
+		// search npm package
+		pkg = findProtoPkg(selectedBom.Packages, "npm")
+		assert.Equal(t, "npm", pkg.Name)
+		assert.Contains(t, pkg.EvidenceList, &sbom.Evidence{
+			Type:  sbom.EvidenceType_EVIDENCE_TYPE_FILE,
+			Value: "/opt/lib/node_modules/npm/package.json",
+		})
 	})
+	t.Run("generate sbom from a report with a package error", func(t *testing.T) {
+		report, err := LoadReport("testdata/alpine-failed-package.json")
+		require.NoError(t, err)
 
-	// search python package
-	pkg = findProtoPkg(selectedBom.Packages, "pip")
-	assert.Equal(t, "pip", pkg.Name)
-	assert.Contains(t, pkg.EvidenceList, &sbom.Evidence{
-		Type:  sbom.EvidenceType_EVIDENCE_TYPE_FILE,
-		Value: "/opt/lib/python3.9/site-packages/pip-21.2.4.dist-info/METADATA",
-	})
+		sboms := GenerateBom(report)
 
-	// search npm package
-	pkg = findProtoPkg(selectedBom.Packages, "npm")
-	assert.Equal(t, "npm", pkg.Name)
-	assert.Contains(t, pkg.EvidenceList, &sbom.Evidence{
-		Type:  sbom.EvidenceType_EVIDENCE_TYPE_FILE,
-		Value: "/opt/lib/node_modules/npm/package.json",
+		// store bom in different formats
+		selectedBom := sboms[0]
+		assert.Equal(t, sbom.Status_STATUS_FAILED, selectedBom.Status)
+		assert.Contains(t, selectedBom.ErrorMessage, "failed to parse bom fields json data")
 	})
 }
 
