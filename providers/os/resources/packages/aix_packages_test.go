@@ -31,7 +31,7 @@ func TestParseAixPackages(t *testing.T) {
 		Name:        "X11.apps.msmit",
 		Version:     "7.3.0.0",
 		Description: "AIXwindows msmit Application",
-		PUrl:        "pkg:generic/aix/X11.apps.msmit@7.3.0.0?arch=powerpc&distro=aix-7.2",
+		PUrl:        "pkg:generic/aix/X11.apps.msmit@7.3.0.0?arch=powerpc",
 		CPEs: []string{
 			"cpe:2.3:a:x11.apps.msmit:x11.apps.msmit:7.3.0.0:*:*:*:*:*:powerpc:*",
 			"cpe:2.3:a:x11.apps.msmit:x11.apps.msmit:7.3.0:*:*:*:*:*:powerpc:*",

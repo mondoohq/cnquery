@@ -77,9 +77,8 @@ func NewPackageURL(pf *inventory.Platform, t Type, name, version string, modifie
 		// use the platform architecture for the package
 		purl.Arch = pf.Arch
 
-		// and if the distro is set via labels, set it as a namespace
-		if pf.Labels != nil && pf.Labels[detector.LabelDistroID] != "" {
-			purl.Namespace = pf.Labels[detector.LabelDistroID]
+		if pf.Name != "" {
+			purl.Namespace = pf.Name
 		}
 	}
 
@@ -117,12 +116,20 @@ func (purl PackageURL) String() string {
 
 // generate distro qualifier
 func (purl PackageURL) distroQualifiers() (string, bool) {
-	if purl.Namespace == "" {
+	if purl.platform == nil || len(purl.platform.Labels) == 0 {
+		return "", false
+	}
+
+	distroId := ""
+	if val, ok := purl.platform.Labels[detector.LabelDistroID]; ok {
+		distroId = val
+	}
+	if distroId == "" {
 		return "", false
 	}
 
 	distroQualifiers := []string{}
-	distroQualifiers = append(distroQualifiers, purl.Namespace)
+	distroQualifiers = append(distroQualifiers, distroId)
 	if purl.platform.Version != "" {
 		distroQualifiers = append(distroQualifiers, purl.platform.Version)
 	} else if purl.platform.Build != "" {
@@ -139,11 +146,13 @@ func WithArch(arch string) Modifier {
 		purl.Arch = arch
 	}
 }
+
 func WithEpoch(epoch string) Modifier {
 	return func(purl *PackageURL) {
 		purl.Epoch = epoch
 	}
 }
+
 func WithNamespace(namespace string) Modifier {
 	return func(purl *PackageURL) {
 		purl.Namespace = namespace

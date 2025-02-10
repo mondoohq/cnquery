@@ -75,7 +75,7 @@ func TestNewPackageURL(t *testing.T) {
 		assert.Equal(t, "testpkg", p.Name)
 		assert.Equal(t, "1.0.0", p.Version)
 		assert.Equal(t, "x86_64", p.Arch)
-		assert.Equal(t, "ubuntu", p.Namespace)
+		assert.Equal(t, "", p.Namespace)
 	})
 
 	t.Run("Modifiers applied", func(t *testing.T) {
@@ -108,7 +108,7 @@ func TestPackageURLString(t *testing.T) {
 
 	t.Run("Basic PackageURL string", func(t *testing.T) {
 		p := purl.NewPackageURL(platform, purl.TypeDebian, "testpkg", "1.0.0")
-		expected := "pkg:deb/ubuntu/testpkg@1.0.0?arch=x86_64&distro=ubuntu-22.04"
+		expected := "pkg:deb/testpkg@1.0.0?arch=x86_64&distro=ubuntu-22.04"
 		assert.Equal(t, expected, p.String())
 	})
 
@@ -116,14 +116,14 @@ func TestPackageURLString(t *testing.T) {
 		p := purl.NewPackageURL(platform, purl.TypeDebian, "testpkg", "1.0.0",
 			purl.WithEpoch("2"),
 		)
-		expected := "pkg:deb/ubuntu/testpkg@1.0.0?arch=x86_64&distro=ubuntu-22.04&epoch=2"
+		expected := "pkg:deb/testpkg@1.0.0?arch=x86_64&distro=ubuntu-22.04&epoch=2"
 		assert.Equal(t, expected, p.String())
 	})
 
 	t.Run("Without Namespace from platform", func(t *testing.T) {
 		platform := &inventory.Platform{
 			Arch:    "x86_64",
-			Version: "22.04",
+			Version: "11",
 			Labels:  nil,
 		}
 		p := purl.NewPackageURL(platform, purl.TypeDebian, "testpkg", "1.0.0")
@@ -133,13 +133,13 @@ func TestPackageURLString(t *testing.T) {
 		t.Run("But Namespace from modifiers", func(t *testing.T) {
 			platform := &inventory.Platform{
 				Arch:    "x86_64",
-				Version: "22.04",
+				Version: "11",
 				Labels:  nil,
 			}
 			p := purl.NewPackageURL(platform, purl.TypeDebian, "testpkg", "1.0.0",
 				purl.WithNamespace("debian"),
 			)
-			expected := "pkg:deb/debian/testpkg@1.0.0?arch=x86_64&distro=debian-22.04"
+			expected := "pkg:deb/debian/testpkg@1.0.0?arch=x86_64"
 			assert.Equal(t, expected, p.String())
 		})
 	})
@@ -148,7 +148,7 @@ func TestPackageURLString(t *testing.T) {
 		p := purl.NewPackageURL(platform, purl.TypeDebian, "testpkg", "1.0.0",
 			purl.WithArch("arm64"),
 		)
-		expected := "pkg:deb/ubuntu/testpkg@1.0.0?arch=arm64&distro=ubuntu-22.04"
+		expected := "pkg:deb/testpkg@1.0.0?arch=arm64&distro=ubuntu-22.04"
 		assert.Equal(t, expected, p.String())
 	})
 
@@ -182,13 +182,59 @@ func TestPackageURLString(t *testing.T) {
 	t.Run("Both version and build specified, we prefer version", func(t *testing.T) {
 		platform.Build = "20.04" // just for testing
 		p := purl.NewPackageURL(platform, purl.TypeDebian, "testpkg", "1.0.0")
-		expected := "pkg:deb/ubuntu/testpkg@1.0.0?arch=x86_64&distro=ubuntu-22.04"
+		expected := "pkg:deb/testpkg@1.0.0?arch=x86_64&distro=ubuntu-22.04"
 		assert.Equal(t, expected, p.String())
 		t.Run("Only build specified", func(t *testing.T) {
 			platform.Version = ""
 			p := purl.NewPackageURL(platform, purl.TypeDebian, "testpkg", "1.0.0")
-			expected := "pkg:deb/ubuntu/testpkg@1.0.0?arch=x86_64&distro=ubuntu-20.04"
+			expected := "pkg:deb/testpkg@1.0.0?arch=x86_64&distro=ubuntu-20.04"
 			assert.Equal(t, expected, p.String())
 		})
+	})
+
+	t.Run("Set platform name", func(t *testing.T) {
+		platform.Name = "ubuntu"
+		p := purl.NewPackageURL(platform, purl.TypeDebian, "testpkg", "1.0.0")
+		expected := "pkg:deb/ubuntu/testpkg@1.0.0?arch=x86_64&distro=ubuntu-20.04"
+		assert.Equal(t, expected, p.String())
+	})
+
+	t.Run("Red Hat package", func(t *testing.T) {
+		platform := &inventory.Platform{
+			Arch:    "x86_64",
+			Version: "9.2",
+			Labels: map[string]string{
+				"distro-id": "rhel",
+			},
+		}
+		p := purl.NewPackageURL(platform, purl.TypeRPM, "testpkg", "1.0.0")
+		expected := "pkg:rpm/testpkg@1.0.0?arch=x86_64&distro=rhel-9.2"
+		assert.Equal(t, expected, p.String())
+	})
+
+	t.Run("Red Hat package without distro-id", func(t *testing.T) {
+		platform := &inventory.Platform{
+			Name:    "redhat",
+			Arch:    "x86_64",
+			Version: "9.2",
+			Labels:  nil,
+		}
+		p := purl.NewPackageURL(platform, purl.TypeRPM, "testpkg", "1.0.0")
+		expected := "pkg:rpm/redhat/testpkg@1.0.0?arch=x86_64"
+		assert.Equal(t, expected, p.String())
+	})
+
+	t.Run("Red Hat package with distro-id and name", func(t *testing.T) {
+		platform := &inventory.Platform{
+			Name:    "redhat",
+			Arch:    "x86_64",
+			Version: "9.2",
+			Labels: map[string]string{
+				"distro-id": "rhel",
+			},
+		}
+		p := purl.NewPackageURL(platform, purl.TypeRPM, "testpkg", "1.0.0")
+		expected := "pkg:rpm/redhat/testpkg@1.0.0?arch=x86_64&distro=rhel-9.2"
+		assert.Equal(t, expected, p.String())
 	})
 }
