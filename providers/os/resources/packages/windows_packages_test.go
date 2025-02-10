@@ -38,7 +38,7 @@ func TestWindowsAppPackagesParser(t *testing.T) {
 		Version: "14.28.29913.0",
 		Arch:    "",
 		Format:  "windows/app",
-		PUrl:    `pkg:windows/Microsoft%20Visual%20C%2B%2B%202015-2019%20Redistributable%20%28x86%29%20-%2014.28.29913@14.28.29913.0?arch=x86`,
+		PUrl:    `pkg:windows/windows/Microsoft%20Visual%20C%2B%2B%202015-2019%20Redistributable%20%28x86%29%20-%2014.28.29913@14.28.29913.0?arch=x86`,
 		CPEs: []string{
 			"cpe:2.3:a:microsoft_corporation:microsoft_visual_c\\+\\+_2015-2019_redistributable_\\(x86\\)_-_14.28.29913:14.28.29913.0:*:*:*:*:*:*:*",
 			"cpe:2.3:a:microsoft:microsoft_visual_c\\+\\+_2015-2019_redistributable_\\(x86\\)_-_14.28.29913:14.28.29913.0:*:*:*:*:*:*:*",
@@ -85,7 +85,7 @@ func TestWindowsAppxPackagesParser(t *testing.T) {
 		Version: "1.11.5.17763",
 		Arch:    "neutral",
 		Format:  "windows/appx",
-		PUrl:    "pkg:appx/Microsoft.Windows.Cortana@1.11.5.17763?arch=x86",
+		PUrl:    "pkg:appx/windows/Microsoft.Windows.Cortana@1.11.5.17763?arch=x86",
 		// TODO: this is a bug in the CPE generation, we need to extract the publisher from the package
 		CPEs: []string{
 			"cpe:2.3:a:cn\\=microsoft_corporation\\,_o\\=microsoft_corporation\\,_l\\=redmond\\,_s\\=washington\\,_c\\=us:microsoft.windows.cortana:1.11.5.17763:*:*:*:*:*:*:*",
@@ -232,7 +232,7 @@ func TestToPackage(t *testing.T) {
 		Version: "1.11.5.17763",
 		Arch:    "x86",
 		Format:  "windows/appx",
-		PUrl:    "pkg:appx/Microsoft.Windows.Cortana@1.11.5.17763?arch=x86",
+		PUrl:    "pkg:appx/windows/Microsoft.Windows.Cortana@1.11.5.17763?arch=x86",
 		Vendor:  "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US",
 		CPEs: []string{
 			"cpe:2.3:a:cn\\=microsoft_corporation\\,_o\\=microsoft_corporation\\,_l\\=redmond\\,_s\\=washington\\,_c\\=us:microsoft.windows.cortana:1.11.5.17763:*:*:*:*:*:*:*",

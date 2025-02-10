@@ -45,7 +45,7 @@ func TestRedhat8Parser(t *testing.T) {
 		Vendor:      "Red Hat, Inc.",
 		Arch:        "noarch",
 		Description: "Descriptions of common terminals",
-		PUrl:        "pkg:rpm/rhel/ncurses-base@6.1-7.20180224.el8?arch=noarch&distro=rhel-8.4",
+		PUrl:        "pkg:rpm/redhat/ncurses-base@6.1-7.20180224.el8?arch=noarch&distro=rhel-8.4",
 		CPEs: []string{
 			"cpe:2.3:a:red_hat\\,_inc.:ncurses-base:6.1-7.20180224.el8:*:*:*:*:*:noarch:*",
 			"cpe:2.3:a:red_hat\\,_inc.:ncurses-base:6.1-7.20180224:*:*:*:*:*:noarch:*",
@@ -65,7 +65,7 @@ func TestRedhat8Parser(t *testing.T) {
 		Vendor:      "Red Hat, Inc.",
 		Arch:        "x86_64",
 		Description: "GNU Standard C++ Library",
-		PUrl:        "pkg:rpm/rhel/libstdc%2B%2B@8.4.1-1.el8?arch=x86_64&distro=rhel-8.4",
+		PUrl:        "pkg:rpm/redhat/libstdc%2B%2B@8.4.1-1.el8?arch=x86_64&distro=rhel-8.4",
 		CPEs: []string{
 			"cpe:2.3:a:red_hat\\,_inc.:libstdc\\+\\+:8.4.1-1.el8:*:*:*:*:*:x86_64:*",
 			"cpe:2.3:a:red_hat\\,_inc.:libstdc\\+\\+:8.4.1-1:*:*:*:*:*:x86_64:*",
@@ -85,7 +85,7 @@ func TestRedhat8Parser(t *testing.T) {
 		Vendor:      "Red Hat, Inc.",
 		Arch:        "x86_64",
 		Description: "iptables libraries",
-		PUrl:        "pkg:rpm/rhel/iptables-libs@1.8.4-17.el8_4.1?arch=x86_64&distro=rhel-8.4",
+		PUrl:        "pkg:rpm/redhat/iptables-libs@1.8.4-17.el8_4.1?arch=x86_64&distro=rhel-8.4",
 		CPEs: []string{
 			"cpe:2.3:a:red_hat\\,_inc.:iptables-libs:1.8.4-17.el8_4.1:*:*:*:*:*:x86_64:*",
 			"cpe:2.3:a:red_hat\\,_inc.:iptables-libs:1.8.4-17:*:*:*:*:*:x86_64:*",
@@ -106,7 +106,7 @@ func TestRedhat8Parser(t *testing.T) {
 		Epoch:       "1",
 		Arch:        "x86_64",
 		Description: "A general purpose cryptography library with TLS implementation",
-		PUrl:        "pkg:rpm/rhel/openssl-libs@1%3A1.1.1g-15.el8_3?arch=x86_64&distro=rhel-8.4&epoch=1",
+		PUrl:        "pkg:rpm/redhat/openssl-libs@1%3A1.1.1g-15.el8_3?arch=x86_64&distro=rhel-8.4&epoch=1",
 		CPEs: []string{
 			"cpe:2.3:a:red_hat\\,_inc.:openssl-libs:1.1.1g-15.el8_3:1:*:*:*:*:x86_64:*",
 			"cpe:2.3:a:red_hat\\,_inc.:openssl-libs:1.1.1g-15:1:*:*:*:*:x86_64:*",
@@ -130,7 +130,7 @@ func TestRedhat8Parser(t *testing.T) {
 		Epoch:       "1",
 		Arch:        "x86_64",
 		Description: "Libraries for accessing D-BUS",
-		PUrl:        "pkg:rpm/rhel/dbus-libs@1%3A1.12.8-12.el8_4.2?arch=x86_64&distro=rhel-8.4&epoch=1",
+		PUrl:        "pkg:rpm/redhat/dbus-libs@1%3A1.12.8-12.el8_4.2?arch=x86_64&distro=rhel-8.4&epoch=1",
 		CPEs: []string{
 			"cpe:2.3:a:red_hat\\,_inc.:dbus-libs:1.12.8-12.el8_4.2:1:*:*:*:*:x86_64:*",
 			"cpe:2.3:a:red_hat\\,_inc.:dbus-libs:1.12.8-12:1:*:*:*:*:x86_64:*",
@@ -155,7 +155,7 @@ func TestRedhat8Parser(t *testing.T) {
 		Description:    "gpg(Red Hat, Inc. (auxiliary key) <security@redhat.com>)",
 		Format:         RpmPkgFormat,
 		FilesAvailable: PkgFilesAsync,
-		PUrl:           "pkg:rpm/rhel/gpg-pubkey@d4082792-5b32db75?distro=rhel-8.4",
+		PUrl:           "pkg:rpm/redhat/gpg-pubkey@d4082792-5b32db75?distro=rhel-8.4",
 		CPEs: []string{
 			"cpe:2.3:a:\\(none\\):gpg-pubkey:d4082792-5b32db75:*:*:*:*:*:*:*",
 			"cpe:2.3:a:\\(none\\):gpg-pubkey:d4082792:*:*:*:*:*:*:*",
@@ -173,7 +173,7 @@ func TestRedhat8Parser(t *testing.T) {
 		Epoch:       "",
 		Arch:        "x86_64",
 		Description: "Displays where a particular program in your path is located",
-		PUrl:        "pkg:rpm/rhel/which@2.21-12.el8?arch=x86_64&distro=rhel-8.4",
+		PUrl:        "pkg:rpm/redhat/which@2.21-12.el8?arch=x86_64&distro=rhel-8.4",
 		CPEs: []string{
 			"cpe:2.3:a:red_hat\\,_inc.:which:2.21-12.el8:*:*:*:*:*:x86_64:*",
 			"cpe:2.3:a:red_hat\\,_inc.:which:2.21:*:*:*:*:*:x86_64:*",
