@@ -458,19 +458,26 @@ func (a *mqlAzureSubscriptionCloudDefenderService) securityContacts() ([]interfa
 	list, err := getSecurityContacts(ctx, armConn)
 	if err != nil {
 		// https: //github.com/mondoohq/cnquery/issues/4997
-		log.Warn().Err(err).Msg("fail gracefully")
+		log.Debug().Err(err).Msg("fail gracefully")
 		return res, nil
 	}
 	for _, contact := range list {
-		alertNotifications, err := convert.JsonToDict(contact.Properties.AlertNotifications)
-		if err != nil {
-			log.Debug().Err(err).Msg("unable to convert armsecurity.Contact.Properties.AlertNotifications to dict")
+		var (
+			alertNotifications  map[string]interface{}
+			notificationsByRole map[string]interface{}
+			err                 error
+			mails               string
+		)
+		if contact.Properties != nil {
+			alertNotifications, err = convert.JsonToDict(contact.Properties.AlertNotifications)
+			if err != nil {
+				log.Debug().Err(err).Msg("unable to convert armsecurity.Contact.Properties.AlertNotifications to dict")
+			}
+			notificationsByRole, err = convert.JsonToDict(contact.Properties.NotificationsByRole)
+			if err != nil {
+				log.Debug().Err(err).Msg("unable to convert armsecurity.Contact.Properties.NotificationsByRole to dict")
+			}
 		}
-		notificationsByRole, err := convert.JsonToDict(contact.Properties.NotificationsByRole)
-		if err != nil {
-			log.Debug().Err(err).Msg("unable to convert armsecurity.Contact.Properties.NotificationsByRole to dict")
-		}
-		mails := ""
 		if contact.Properties.Emails != nil {
 			mails = *contact.Properties.Emails
 		}
