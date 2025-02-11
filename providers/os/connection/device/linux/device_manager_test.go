@@ -1,6 +1,7 @@
 package linux
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -96,6 +97,84 @@ func TestMountWithFstab(t *testing.T) {
 
 		assert.Equal(t, "/dev/sdg1", result[2].Name)
 		assert.Equal(t, "/tmp/scandir/data", result[2].MountPoint)
+	})
+
+	t.Run("double mounted", func(t *testing.T) {
+		partitions := []*snapshot.PartitionInfo{
+			{
+				Name:   "/dev/sdf1",
+				FsType: "btrfs",
+				Uuid:   "sdf1-uuid",
+			},
+			{
+				Name:     "/dev/sdf3",
+				FsType:   "fat32",
+				PartUuid: "sdf3-uuid",
+			},
+			{
+				Name:   "/dev/sdg1",
+				FsType: "ext4",
+				Label:  "data-label",
+			},
+		}
+		entries := []resources.FstabEntry{
+			{
+				Device:     "UUID=sdf1-uuid",
+				Mountpoint: "/",
+				Fstype:     "btrfs",
+				Options:    []string{"defaults", "subvolume=root"},
+			},
+			{
+				Device:     "UUID=sdf1-uuid",
+				Mountpoint: "/home",
+				Fstype:     "btrfs",
+				Options:    []string{"defaults", "subvolume=home"},
+			},
+			{
+				Device:     "PARTUUID=sdf3-uuid",
+				Mountpoint: "/boot/efi",
+				Fstype:     "fat32",
+				Options:    []string{"defaults"},
+			},
+			{
+				Device:     "LABEL=data-label",
+				Mountpoint: "/data",
+				Fstype:     "ext4",
+				Options:    []string{"defaults"},
+			},
+		}
+
+		f.volumeMounter.EXPECT().MountP(gomock.Eq(&snapshot.MountPartitionDto{
+			PartitionInfo: partitions[0], ScanDir: nil,
+		})).Return("/tmp/scandir", nil).Times(1)
+		f.volumeMounter.EXPECT().MountP(gomock.Eq(&snapshot.MountPartitionDto{
+			PartitionInfo: partitions[1], ScanDir: ptr.To("/tmp/scandir/boot/efi"),
+		})).Return("/tmp/scandir/boot/efi", nil).Times(1)
+		f.volumeMounter.EXPECT().MountP(gomock.Eq(&snapshot.MountPartitionDto{
+			PartitionInfo: partitions[2], ScanDir: ptr.To("/tmp/scandir/data"),
+		})).Return("/tmp/scandir/data", nil).Times(1)
+
+		f.volumeMounter.EXPECT().MountP(gomock.Cond(func(dto *snapshot.MountPartitionDto) bool {
+			return dto.Name == "/dev/sdf1" &&
+				slices.Equal(dto.MountOptions, entries[1].Options) &&
+				dto.ScanDir != nil && *dto.ScanDir == "/tmp/scandir/home"
+		})).Return("/tmp/scandir/home", nil).Times(1)
+
+		result, err := f.dmgr.mountWithFstab(partitions, entries)
+		assert.NoError(t, err)
+		assert.Len(t, result, 4)
+
+		assert.Equal(t, "/dev/sdf1", result[0].Name)
+		assert.Equal(t, "/tmp/scandir", result[0].MountPoint)
+
+		assert.Equal(t, "/dev/sdf3", result[1].Name)
+		assert.Equal(t, "/tmp/scandir/boot/efi", result[1].MountPoint)
+
+		assert.Equal(t, "/dev/sdg1", result[2].Name)
+		assert.Equal(t, "/tmp/scandir/data", result[2].MountPoint)
+
+		assert.Equal(t, "/dev/sdf1", result[3].Name)
+		assert.Equal(t, "/tmp/scandir/home", result[3].MountPoint)
 	})
 
 	t.Run("no entries matched", func(t *testing.T) {
