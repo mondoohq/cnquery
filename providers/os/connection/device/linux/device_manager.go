@@ -443,6 +443,11 @@ func (c *LinuxDeviceManager) identifyDeviceViaLun(lun int) ([]snapshot.BlockDevi
 }
 
 func (c *LinuxDeviceManager) identifyViaDeviceName(deviceName string, mountAll bool, includeMounted bool) ([]*snapshot.PartitionInfo, error) {
+	if deviceName == "" {
+		log.Warn().Msg("can't identify partition via device name, no device name provided")
+		return []*snapshot.PartitionInfo{}, nil
+	}
+
 	blockDevices, err := c.volumeMounter.CmdRunner().GetBlockDevices()
 	if err != nil {
 		return nil, err
