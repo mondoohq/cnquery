@@ -179,7 +179,7 @@ func setDefaultConnector(provider *plugin.Provider, connector *plugin.Connector,
 			os.Exit(1)
 		}
 
-		log.Info().Msg("no provider specified, defaulting to local. Use --help to see all providers.")
+		log.Info().Msg("Connecting to your local system. To learn how to scan other platforms, use the --help flag.")
 	}
 
 	setConnector(provider, connector, cmd.Run, cmd.Command)
