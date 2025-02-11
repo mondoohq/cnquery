@@ -1,0 +1,76 @@
+{
+    "assets": {
+        "//explorer.api.mondoo.com/assets/2cNOBxIv7117UjcqsDBvKUgwkKw": {
+            "mrn": "//explorer.api.mondoo.com/assets/2cNOBxIv7117UjcqsDBvKUgwkKw",
+            "name": "alpine:latest",
+            "trace_id": "trace-alpine"
+        }
+    },
+    "data": {
+        "//explorer.api.mondoo.com/assets/2cNOBxIv7117UjcqsDBvKUgwkKw": {
+            "values": {
+                "//local.cnquery.io/run/local-execution/queries/mondoo-sbom-asset": {
+                    "content": {
+                        "asset": {
+                            "version": "3.19.0",
+                            "arch": "aarch64",
+                            "labels": {
+                                "distro-id": "alpine"
+                            },
+                            "platform": "alpine",
+                            "ids": [
+                                "//platformid.api.mondoo.app/runtime/docker/images/1dc785547989b0db1c3cd9949c57574393e69bea98bfe044b0588e24721aa402"
+                            ],
+                            "name": "alpine:latest",
+                            "cpes.map": [
+                                "cpe:2.3:o:alpinelinux:alpine_linux:3.19.0:*:*:*:*:*:*:*"
+                            ]
+                        }
+                    }
+                },
+                "//local.cnquery.io/run/local-execution/queries/mondoo-sbom-packages": {
+                    "content": {
+                        "packages.list": [
+                            {
+                                "purl": "pkg:apk/alpine/apk-tools@1684120357%3A2.14.0-r5?arch=aarch64\u0026distro=alpine-3.19.0\u0026epoch=1684120357",
+                                "version": "1684120357:2.14.0-r5",
+                                "name": "apk-tools",
+                                "format": "apk",
+                                "cpes.map": [
+                                  "cpe:2.3:a:apk-tools:apk-tools:1684120357:aarch64:*:*:*:*:*:*"
+                                ],
+                                "files.map": [
+                                  "lib/libapk.so.2.14.0",
+                                  "sbin/apk"
+                                ]
+                              }
+                        ]
+                    }
+                },
+                "//local.cnquery.io/run/local-execution/queries/mondoo-sbom-python-packages": {
+                    "content": {
+                        "python.packages": [
+                            {
+                                "name": "pip",
+                                "version": "21.2.4",
+                                "cpes.map": [
+                                    "cpe:2.3:a:pip_project:pip:21.2.4:*:*:*:*:*:*:*"
+                                ],
+                                "purl": "pkg:pypi/pip@21.2.4",
+                                "file.path": "/opt/lib/python3.9/site-packages/pip-21.2.4.dist-info/METADATA"
+                            }
+                        ]
+                    }
+                },
+                "//local.cnquery.io/run/local-execution/queries/mondoo-sbom-npm-packages": {
+                    "content": {
+                        "npm.packages.list": {
+                            "error": "error fetching python packages"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "errors": {}
+}
