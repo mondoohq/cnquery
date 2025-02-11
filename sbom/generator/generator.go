@@ -6,7 +6,6 @@ package generator
 import (
 	"encoding/json"
 	"fmt"
-	"slices"
 	"strings"
 	"time"
 
@@ -15,6 +14,7 @@ import (
 	"go.mondoo.com/cnquery/v11/cli/reporter"
 	"go.mondoo.com/cnquery/v11/mrn"
 	"go.mondoo.com/cnquery/v11/sbom"
+	"go.mondoo.com/cnquery/v11/utils/sortx"
 )
 
 var LABEL_KERNEL_RUNNING = "mondoo.com/os/kernel-running"
@@ -62,7 +62,7 @@ func GenerateBom(r *reporter.Report) []*sbom.Sbom {
 			continue
 		}
 		// ensure deterministic order of enumeration
-		keys := getSortedMapKeys(dataPoints.Values)
+		keys := sortx.Keys(dataPoints.Values)
 		for _, k := range keys {
 			dataValue := dataPoints.Values[k]
 			jsondata, err := reporter.JsonValue(dataValue.Content)
@@ -204,13 +204,4 @@ func enrichPlatformIds(ids []string) []string {
 		}
 	}
 	return platformIds
-}
-
-func getSortedMapKeys[T any](m map[string]T) []string {
-	keys := []string{}
-	for k := range m {
-		keys = append(keys, k)
-	}
-	slices.Sort(keys)
-	return keys
 }
