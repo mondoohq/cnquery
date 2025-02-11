@@ -35,7 +35,7 @@ const (
 )
 
 type LinuxDeviceManager struct {
-	volumeMounter *snapshot.VolumeMounter
+	volumeMounter snapshot.VolumeMounter
 	opts          map[string]string
 }
 
@@ -161,7 +161,7 @@ func (d *LinuxDeviceManager) hintFSTypes(partitions []*snapshot.PartitionInfo) (
 }
 
 func (d *LinuxDeviceManager) attemptFindFstab(dir string) ([]resources.FstabEntry, error) {
-	cmd, err := d.volumeMounter.CmdRunner.RunCommand(fmt.Sprintf("find %s -type f -wholename '*/etc/fstab'", dir))
+	cmd, err := d.volumeMounter.CmdRunner().RunCommand(fmt.Sprintf("find %s -type f -wholename '*/etc/fstab'", dir))
 	if err != nil {
 		log.Error().Err(err).Msg("error searching for fstab")
 		return nil, nil
@@ -443,7 +443,7 @@ func (c *LinuxDeviceManager) identifyDeviceViaLun(lun int) ([]snapshot.BlockDevi
 }
 
 func (c *LinuxDeviceManager) identifyViaDeviceName(deviceName string, mountAll bool, includeMounted bool) ([]*snapshot.PartitionInfo, error) {
-	blockDevices, err := c.volumeMounter.CmdRunner.GetBlockDevices()
+	blockDevices, err := c.volumeMounter.CmdRunner().GetBlockDevices()
 	if err != nil {
 		return nil, err
 	}
