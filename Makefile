@@ -730,7 +730,7 @@ race/go:
 	go test -race go.mondoo.com/cnquery/v11/explorer/scan
 
 test/generate: prep/tools/mockgen
-	go generate ./providers
+	go generate ./providers/...
 
 test/go: cnquery/generate test/generate test/go/plain
 
