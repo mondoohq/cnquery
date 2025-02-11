@@ -348,6 +348,8 @@ func cmpPartition2Fstab(partition *snapshot.PartitionInfo, entry resources.Fstab
 		return partition.Uuid == parts[1]
 	case "LABEL":
 		return partition.Label == parts[1]
+	case "PARTUUID":
+		return partition.PartUuid == parts[1]
 	default:
 		log.Warn().Str("device", entry.Device).Msg("couldn't identify fstab device")
 		return false
