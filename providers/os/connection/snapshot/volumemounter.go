@@ -89,7 +89,7 @@ func (m *volumeMounter) UmountP(partition *PartitionInfo) error {
 	}
 	log.Debug().Str("dir", dir).Str("name", partition.Name).Msg("unmount volume")
 	if err := Unmount(dir); err != nil {
-		log.Error().Err(err).Str("dir", dir).Msg("failed to unmount dir")
+		log.Warn().Err(err).Str("dir", dir).Msg("failed to unmount dir")
 		return err
 	}
 	delete(m.scanDirs, key)
@@ -148,7 +148,7 @@ func (m *volumeMounter) UnmountVolumeFromInstance() error {
 			Str("name", name).
 			Msg("unmount volume")
 		if err := Unmount(dir); err != nil {
-			log.Error().
+			log.Warn().
 				Str("dir", dir).
 				Err(err).Msg("failed to unmount dir")
 			errs = append(errs, err)

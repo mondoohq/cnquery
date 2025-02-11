@@ -281,46 +281,52 @@ func (d *LinuxDeviceManager) mountWithFstab(partitions []*snapshot.PartitionInfo
 		return pathDepth(entries[i].Mountpoint) < pathDepth(entries[j].Mountpoint)
 	})
 
+	rootScanDir := ""
 	for _, entry := range entries {
 		for i := range partitions {
 			if !cmpPartition2Fstab(partitions[i], entry) {
 				continue
 			}
 
-			if partitions[i].MountPoint == "" {
-				partitions[i].MountOptions = entry.Options
-				log.Debug().Str("device", partitions[i].Name).
-					Strs("options", partitions[i].MountOptions).
-					Msg("mounting partition")
-				mnt, err := d.Mount(partitions[i])
-				if err != nil {
-					log.Error().Err(err).Str("device", partitions[i].Name).Msg("unable to mount partition")
-					return partitions, err
-				}
-				partitions[i].MountPoint = mnt
+			log.Debug().
+				Str("device", partitions[i].Name).
+				Str("guest-mountpoint", entry.Mountpoint).
+				Str("host-mountpouint", partitions[i].MountPoint).
+				Msg("partition matches fstab entry")
 
-				break
+			// if the partition is already mounted, unmount it
+			if partitions[i].MountPoint != "" {
+				log.Debug().Str("device", partitions[i].Name).Msg("partition already mounted")
+				if err := d.volumeMounter.UmountP(partitions[i]); err != nil {
+					log.Error().Err(err).Str("device", partitions[i].Name).Msg("unable to unmount partition")
+					continue
+				}
 			}
 
-			// if partitions is already mounted, but there is an entry in fstab, we should register it and mount as subvolume
-			partition := ptr.To(*partitions[i]) // copy the partition
-			partition.MountOptions = entry.Options
-			log.Debug().Str("device", partition.Name).
-				Strs("options", partition.MountOptions).
-				Str("scan-dir", path.Join(partition.MountPoint, entry.Mountpoint)).
+			var scanDir *string
+			if rootScanDir != "" {
+				scanDir = ptr.To(path.Join(rootScanDir, entry.Mountpoint))
+			}
+			partitions[i].MountOptions = entry.Options
+
+			log.Debug().Str("device", partitions[i].Name).
+				Strs("options", partitions[i].MountOptions).
+				Any("scan-dir", scanDir).
 				Msg("mounting partition as subvolume")
 			mnt, err := d.volumeMounter.MountP(&snapshot.MountPartitionDto{
-				PartitionInfo: partition,
-				ScanDir:       ptr.To(path.Join(partition.MountPoint, entry.Mountpoint)),
+				PartitionInfo: partitions[i],
+				ScanDir:       scanDir,
 			})
 			if err != nil {
-				log.Error().Err(err).Str("device", partition.Name).Msg("unable to mount partition")
+				log.Error().Err(err).Str("device", partitions[i].Name).Msg("unable to mount partition")
 				return partitions, err
 			}
-			partition.MountPoint = mnt
-			partitions = append(partitions, partition)
+			partitions[i].MountPoint = mnt
+			if entry.Mountpoint == "/" {
+				rootScanDir = mnt
+			}
 
-			break
+			break // partition matched, no need to check the rest
 		}
 	}
 	return partitions, nil
