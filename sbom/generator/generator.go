@@ -6,6 +6,7 @@ package generator
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -60,19 +61,22 @@ func GenerateBom(r *reporter.Report) []*sbom.Sbom {
 			boms = append(boms, bom)
 			continue
 		}
-		for _, dataValue := range dataPoints.Values {
+		// ensure deterministic order of enumeration
+		keys := getSortedMapKeys(dataPoints.Values)
+		for _, k := range keys {
+			dataValue := dataPoints.Values[k]
 			jsondata, err := reporter.JsonValue(dataValue.Content)
 			if err != nil {
 				bom.Status = sbom.Status_STATUS_FAILED
 				bom.ErrorMessage = errors.Wrap(err, "failed to parse json data").Error()
-				break
+				continue
 			}
 			rb := BomFields{}
 			err = json.Unmarshal(jsondata, &rb)
 			if err != nil {
 				bom.Status = sbom.Status_STATUS_FAILED
 				bom.ErrorMessage = errors.Wrap(err, "failed to parse bom fields json data").Error()
-				break
+				continue
 			}
 			if rb.Asset != nil {
 				bom.Asset.Name = rb.Asset.Name
@@ -200,4 +204,13 @@ func enrichPlatformIds(ids []string) []string {
 		}
 	}
 	return platformIds
+}
+
+func getSortedMapKeys[T any](m map[string]T) []string {
+	keys := []string{}
+	for k := range m {
+		keys = append(keys, k)
+	}
+	slices.Sort(keys)
+	return keys
 }

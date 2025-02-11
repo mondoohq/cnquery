@@ -53,16 +53,151 @@ func TestSbomGeneration(t *testing.T) {
 			Value: "/opt/lib/node_modules/npm/package.json",
 		})
 	})
-	t.Run("generate sbom from a report with a package error", func(t *testing.T) {
-		report, err := LoadReport("testdata/alpine-failed-package.json")
+
+	t.Run("generate sbom from a report with a sbom package error", func(t *testing.T) {
+		report, err := LoadReport("testdata/alpine-failed-sbom-package.json")
 		require.NoError(t, err)
 
 		sboms := GenerateBom(report)
 
-		// store bom in different formats
 		selectedBom := sboms[0]
 		assert.Equal(t, sbom.Status_STATUS_FAILED, selectedBom.Status)
 		assert.Contains(t, selectedBom.ErrorMessage, "failed to parse bom fields json data")
+		assert.Len(t, selectedBom.Packages, 2)
+
+		pkg := findProtoPkg(selectedBom.Packages, "npm")
+		require.Equal(t, &sbom.Package{
+			Name: "npm",
+			Type: "npm",
+			Cpes: []string{
+				"cpe:2.3:a:npm:npm:10.2.4:*:*:*:*:*:*:*",
+			},
+			EvidenceList: []*sbom.Evidence{
+				{
+					Type:  sbom.EvidenceType_EVIDENCE_TYPE_FILE,
+					Value: "/opt/lib/node_modules/npm/package.json",
+				},
+			},
+			Purl:    "pkg:npm/npm@10.2.4",
+			Version: "10.2.4",
+		}, pkg)
+
+		pkg = findProtoPkg(selectedBom.Packages, "pip")
+		require.Equal(t, &sbom.Package{
+			Name: "pip",
+			Type: "pypi",
+			Cpes: []string{
+				"cpe:2.3:a:pip_project:pip:21.2.4:*:*:*:*:*:*:*",
+			},
+			EvidenceList: []*sbom.Evidence{
+				{
+					Type:  sbom.EvidenceType_EVIDENCE_TYPE_FILE,
+					Value: "/opt/lib/python3.9/site-packages/pip-21.2.4.dist-info/METADATA",
+				},
+			},
+			Purl:    "pkg:pypi/pip@21.2.4",
+			Version: "21.2.4",
+		}, pkg)
+	})
+
+	t.Run("generate sbom from a report with a npm package error", func(t *testing.T) {
+		report, err := LoadReport("testdata/alpine-failed-npm-package.json")
+		require.NoError(t, err)
+
+		sboms := GenerateBom(report)
+
+		selectedBom := sboms[0]
+		assert.Equal(t, sbom.Status_STATUS_FAILED, selectedBom.Status)
+		assert.Contains(t, selectedBom.ErrorMessage, "failed to parse bom fields json data")
+		assert.Len(t, selectedBom.Packages, 2)
+
+		pkg := findProtoPkg(selectedBom.Packages, "apk-tools")
+		require.Equal(t, &sbom.Package{
+			Name: "apk-tools",
+			Type: "apk",
+			Cpes: []string{
+				"cpe:2.3:a:apk-tools:apk-tools:1684120357:aarch64:*:*:*:*:*:*",
+			},
+			EvidenceList: []*sbom.Evidence{
+				{
+					Type:  sbom.EvidenceType_EVIDENCE_TYPE_FILE,
+					Value: "lib/libapk.so.2.14.0",
+				},
+				{
+					Type:  sbom.EvidenceType_EVIDENCE_TYPE_FILE,
+					Value: "sbin/apk",
+				},
+			},
+			Purl:    "pkg:apk/alpine/apk-tools@1684120357%3A2.14.0-r5?arch=aarch64\u0026distro=alpine-3.19.0\u0026epoch=1684120357",
+			Version: "1684120357:2.14.0-r5",
+		}, pkg)
+
+		pkg = findProtoPkg(selectedBom.Packages, "pip")
+		require.Equal(t, &sbom.Package{
+			Name: "pip",
+			Type: "pypi",
+			Cpes: []string{
+				"cpe:2.3:a:pip_project:pip:21.2.4:*:*:*:*:*:*:*",
+			},
+			EvidenceList: []*sbom.Evidence{
+				{
+					Type:  sbom.EvidenceType_EVIDENCE_TYPE_FILE,
+					Value: "/opt/lib/python3.9/site-packages/pip-21.2.4.dist-info/METADATA",
+				},
+			},
+			Purl:    "pkg:pypi/pip@21.2.4",
+			Version: "21.2.4",
+		}, pkg)
+	})
+
+	t.Run("generate sbom from a report with a python package error", func(t *testing.T) {
+		report, err := LoadReport("testdata/alpine-failed-python-package.json")
+		require.NoError(t, err)
+
+		sboms := GenerateBom(report)
+
+		selectedBom := sboms[0]
+		assert.Equal(t, sbom.Status_STATUS_FAILED, selectedBom.Status)
+		assert.Contains(t, selectedBom.ErrorMessage, "failed to parse bom fields json data")
+		assert.Len(t, selectedBom.Packages, 2)
+
+		pkg := findProtoPkg(selectedBom.Packages, "apk-tools")
+		require.Equal(t, &sbom.Package{
+			Name: "apk-tools",
+			Type: "apk",
+			Cpes: []string{
+				"cpe:2.3:a:apk-tools:apk-tools:1684120357:aarch64:*:*:*:*:*:*",
+			},
+			EvidenceList: []*sbom.Evidence{
+				{
+					Type:  sbom.EvidenceType_EVIDENCE_TYPE_FILE,
+					Value: "lib/libapk.so.2.14.0",
+				},
+				{
+					Type:  sbom.EvidenceType_EVIDENCE_TYPE_FILE,
+					Value: "sbin/apk",
+				},
+			},
+			Purl:    "pkg:apk/alpine/apk-tools@1684120357%3A2.14.0-r5?arch=aarch64\u0026distro=alpine-3.19.0\u0026epoch=1684120357",
+			Version: "1684120357:2.14.0-r5",
+		}, pkg)
+
+		pkg = findProtoPkg(selectedBom.Packages, "npm")
+		require.Equal(t, &sbom.Package{
+			Name: "npm",
+			Type: "npm",
+			Cpes: []string{
+				"cpe:2.3:a:npm:npm:10.2.4:*:*:*:*:*:*:*",
+			},
+			EvidenceList: []*sbom.Evidence{
+				{
+					Type:  sbom.EvidenceType_EVIDENCE_TYPE_FILE,
+					Value: "/opt/lib/node_modules/npm/package.json",
+				},
+			},
+			Purl:    "pkg:npm/npm@10.2.4",
+			Version: "10.2.4",
+		}, pkg)
 	})
 }
 
