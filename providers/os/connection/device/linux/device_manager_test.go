@@ -355,15 +355,15 @@ func TestMountWithFstab(t *testing.T) {
 	t.Run("test pre-mounted", func(t *testing.T) {
 		partitions := []*snapshot.PartitionInfo{
 			{
-				Name:       "/dev/sdf1",
-				FsType:     "ext4",
-				Uuid:       "sdf1-uuid",
-				MountPoint: "/tmp/prescandir",
+				Name:   "/dev/sdf1",
+				FsType: "ext4",
+				Uuid:   "sdf1-uuid",
 			},
 			{
-				Name:     "/dev/sdf3",
-				FsType:   "fat32",
-				PartUuid: "sdf3-uuid",
+				Name:       "/dev/sdf3",
+				FsType:     "fat32",
+				PartUuid:   "sdf3-uuid",
+				MountPoint: "/tmp/prescandir",
 			},
 			{
 				Name:   "/dev/sdg1",
@@ -402,7 +402,7 @@ func TestMountWithFstab(t *testing.T) {
 			PartitionInfo: partitions[2], ScanDir: ptr.To("/tmp/scandir/data"),
 		})).Return("/tmp/scandir/data", nil).Times(1)
 
-		f.volumeMounter.EXPECT().UmountP(partitions[0]).Return(nil).Times(1)
+		f.volumeMounter.EXPECT().UmountP(partitions[1]).Return(nil).Times(1)
 
 		result, err := f.dmgr.mountWithFstab(partitions, entries)
 		assert.NoError(t, err)
@@ -416,5 +416,66 @@ func TestMountWithFstab(t *testing.T) {
 
 		assert.Equal(t, "/dev/sdg1", result[2].Name)
 		assert.Equal(t, "/tmp/scandir/data", result[2].MountPoint)
+	})
+
+	t.Run("test pre-mounted root", func(t *testing.T) {
+		partitions := []*snapshot.PartitionInfo{
+			{
+				Name:       "/dev/sdf1",
+				FsType:     "ext4",
+				Uuid:       "sdf1-uuid",
+				MountPoint: "/tmp/prescandir",
+			},
+			{
+				Name:     "/dev/sdf3",
+				FsType:   "fat32",
+				PartUuid: "sdf3-uuid",
+			},
+			{
+				Name:   "/dev/sdg1",
+				FsType: "ext4",
+				Label:  "data-label",
+			},
+		}
+		entries := []resources.FstabEntry{
+			{
+				Device:     "UUID=sdf1-uuid",
+				Mountpoint: "/",
+				Fstype:     "ext4",
+				Options:    []string{"defaults"},
+			},
+			{
+				Device:     "PARTUUID=sdf3-uuid",
+				Mountpoint: "/boot/efi",
+				Fstype:     "fat32",
+				Options:    []string{"defaults"},
+			},
+			{
+				Device:     "LABEL=data-label",
+				Mountpoint: "/data",
+				Fstype:     "ext4",
+				Options:    []string{"defaults"},
+			},
+		}
+
+		f.volumeMounter.EXPECT().MountP(gomock.Eq(&snapshot.MountPartitionDto{
+			PartitionInfo: partitions[1], ScanDir: ptr.To("/tmp/prescandir/boot/efi"),
+		})).Return("/tmp/prescandir/boot/efi", nil).Times(1)
+		f.volumeMounter.EXPECT().MountP(gomock.Eq(&snapshot.MountPartitionDto{
+			PartitionInfo: partitions[2], ScanDir: ptr.To("/tmp/prescandir/data"),
+		})).Return("/tmp/prescandir/data", nil).Times(1)
+
+		result, err := f.dmgr.mountWithFstab(partitions, entries)
+		assert.NoError(t, err)
+		assert.Len(t, result, 3)
+
+		assert.Equal(t, "/dev/sdf1", result[0].Name)
+		assert.Equal(t, "/tmp/prescandir", result[0].MountPoint)
+
+		assert.Equal(t, "/dev/sdf3", result[1].Name)
+		assert.Equal(t, "/tmp/prescandir/boot/efi", result[1].MountPoint)
+
+		assert.Equal(t, "/dev/sdg1", result[2].Name)
+		assert.Equal(t, "/tmp/prescandir/data", result[2].MountPoint)
 	})
 }

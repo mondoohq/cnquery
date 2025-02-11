@@ -302,6 +302,11 @@ func (d *LinuxDeviceManager) mountWithFstab(partitions []*snapshot.PartitionInfo
 				// mounted without fstab consideration, unmount it
 				if rootScanDir == "" || !mountedWithFstab {
 					log.Debug().Str("device", partition.Name).Msg("partition already mounted")
+					// if the partition is mounted and is the root, we can keep it mounted
+					if entry.Mountpoint == "/" {
+						rootScanDir = partition.MountPoint
+						continue
+					}
 					if err := d.volumeMounter.UmountP(partition); err != nil {
 						log.Error().Err(err).Str("device", partition.Name).Msg("unable to unmount partition")
 						continue
