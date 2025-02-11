@@ -863,28 +863,139 @@ func TestTime(t *testing.T) {
 	})
 }
 
-func TestSemver(t *testing.T) {
-	x.TestSimple(t, []testutils.SimpleTest{
-		{
-			Code:        "semver('1.2.3') == semver('1.2.3')",
-			ResultIndex: 2, Expectation: true,
-		},
-		{
-			Code:        "semver('1.2.3') == semver('1.2')",
-			ResultIndex: 2, Expectation: false,
-		},
-		{
-			Code:        "semver('1.2') < semver('1.10.2')",
-			ResultIndex: 2, Expectation: true,
-		},
-		{
-			Code:        "semver('1.10') >= semver('1.2.3')",
-			ResultIndex: 2, Expectation: true,
-		},
-		{
-			Code:        "semver('1.10') >= '1.2'",
-			ResultIndex: 2, Expectation: true,
-		},
+func TestVersion(t *testing.T) {
+	t.Run("regular version", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{
+				Code:        "version('1.2.3') == version('1.2.3')",
+				ResultIndex: 2, Expectation: true,
+			},
+			{
+				Code:        "version('1.2.3') == version('1.2')",
+				ResultIndex: 2, Expectation: false,
+			},
+			{
+				Code:        "version('1.2') < version('1.10.2')",
+				ResultIndex: 2, Expectation: true,
+			},
+			{
+				Code:        "version('1.10') >= version('1.2.3')",
+				ResultIndex: 2, Expectation: true,
+			},
+			{
+				Code:        "version('1.10') >= '1.2'",
+				ResultIndex: 2, Expectation: true,
+			},
+		})
+	})
+
+	t.Run("one-sided epoch", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{
+				Code:        "version('1.2.3') == version('1:1.2.3')",
+				ResultIndex: 2, Expectation: false,
+			},
+			{
+				Code:        "version('2:1.2.3') == version('1.2.3')",
+				ResultIndex: 2, Expectation: false,
+			},
+			{
+				Code:        "version('3:1.2') < version('1.10.2')",
+				ResultIndex: 2, Expectation: false,
+			},
+			{
+				Code:        "version('1.10') >= version('4:1.2.3')",
+				ResultIndex: 2, Expectation: false,
+			},
+			{
+				Code:        "version('1.2') <= version('3:1.10.2')",
+				ResultIndex: 2, Expectation: true,
+			},
+			{
+				Code:        "version('4:1.10') > version('1.2.3')",
+				ResultIndex: 2, Expectation: true,
+			},
+		})
+	})
+
+	t.Run("deb/rpm epochs", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{
+				Code:        "version('1.2.3').epoch",
+				ResultIndex: 0, Expectation: int64(0),
+			},
+			{
+				Code:        "version('7:1.2.3').epoch",
+				ResultIndex: 0, Expectation: int64(7),
+			},
+		})
+	})
+
+	t.Run("python epochs", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{
+				Code:        "version('1.2.3').epoch",
+				ResultIndex: 0, Expectation: int64(0),
+			},
+			{
+				Code:        "version('5!1.2.3').epoch",
+				ResultIndex: 0, Expectation: int64(5),
+			},
+		})
+	})
+
+	t.Run("different epochs", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{
+				Code:        "version('2:1.2.3') == version('1:1.2.3')",
+				ResultIndex: 2, Expectation: false,
+			},
+			{
+				Code:        "version('2:1.2.3') == version('3:1.2.3')",
+				ResultIndex: 2, Expectation: false,
+			},
+			{
+				Code:        "version('3:1.2') < version('1:1.10.2')",
+				ResultIndex: 2, Expectation: false,
+			},
+			{
+				Code:        "version('2:1.10') >= version('4:1.2.3')",
+				ResultIndex: 2, Expectation: false,
+			},
+			{
+				Code:        "version('2:1.2') <= version('3:1.0.2')",
+				ResultIndex: 2, Expectation: true,
+			},
+			{
+				Code:        "version('4:1.1') > version('1:1.2.3')",
+				ResultIndex: 2, Expectation: true,
+			},
+		})
+	})
+
+	t.Run("version with equal epochs", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{
+				Code:        "version('1:1.2.3') == version('1:1.2.3')",
+				ResultIndex: 2, Expectation: true,
+			},
+			{
+				Code:        "version('2:1.2.3') == version('2:1.2')",
+				ResultIndex: 2, Expectation: false,
+			},
+			{
+				Code:        "version('3:1.2') < version('3:1.10.2')",
+				ResultIndex: 2, Expectation: true,
+			},
+			{
+				Code:        "version('4:1.10') >= version('4:1.2.3')",
+				ResultIndex: 2, Expectation: true,
+			},
+			{
+				Code:        "version('5:1.10') >= '5:1.2'",
+				ResultIndex: 2, Expectation: true,
+			},
+		})
 	})
 }
 

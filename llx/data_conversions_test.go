@@ -11,10 +11,10 @@ import (
 	"go.mondoo.com/cnquery/v11/types"
 )
 
-func TestSemver_Conversions(t *testing.T) {
+func TestVersion_Conversions(t *testing.T) {
 	sv := llx.StringPrimitive("1.2.3")
-	sv.Type = string(types.Semver)
+	sv.Type = string(types.Version)
 	rd := sv.RawData()
-	require.NoError(t, rd.Error, "no error converting semver to raw data")
-	require.Equal(t, "1.2.3", rd.Value, "semver to raw data is the same")
+	require.NoError(t, rd.Error, "no error converting version to raw data")
+	require.Equal(t, "1.2.3", rd.Value, "version to raw data is the same")
 }

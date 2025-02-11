@@ -212,9 +212,9 @@ func TestRawData_JSON(t *testing.T) {
 	}
 }
 
-func TestRawData_Semver_Result(t *testing.T) {
-	d := &RawData{Type: types.Semver, Value: "1.2.3"}
+func TestRawData_Version_Result(t *testing.T) {
+	d := &RawData{Type: types.Version, Value: "1.2.3"}
 	r := d.Result()
-	assert.Equal(t, string(types.Semver), r.Data.Type)
+	assert.Equal(t, string(types.Version), r.Data.Type)
 	assert.EqualValues(t, "1.2.3", r.Data.Value)
 }

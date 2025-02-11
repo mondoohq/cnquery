@@ -15,13 +15,16 @@ var typeConversions map[string]fieldCompiler
 
 func init() {
 	typeConversions = map[string]fieldCompiler{
-		"bool":   compileTypeConversion("bool", types.Bool),
-		"int":    compileTypeConversion("int", types.Int),
-		"float":  compileTypeConversion("float", types.Float),
-		"string": compileTypeConversion("string", types.String),
-		"regex":  compileTypeConversion("$regex", types.Regex),
-		"dict":   compileTypeConversion("dict", types.Dict),
-		"semver": compileTypeConversion("semver", types.Semver),
+		"bool":    compileTypeConversion("bool", types.Bool),
+		"int":     compileTypeConversion("int", types.Int),
+		"float":   compileTypeConversion("float", types.Float),
+		"string":  compileTypeConversion("string", types.String),
+		"regex":   compileTypeConversion("$regex", types.Regex),
+		"dict":    compileTypeConversion("dict", types.Dict),
+		"version": compileTypeConversion("version", types.Version),
+		// FIXME: DEPRECATED, remove in v13.0 vv
+		"semver": compileTypeConversion("semver", types.Version), // deprecated
+		//
 	}
 }
 
@@ -52,6 +55,6 @@ func compileTypeConversion(llxID string, typ types.Type) fieldCompiler {
 			},
 		})
 
-		return types.String, nil
+		return typ, nil
 	}
 }
