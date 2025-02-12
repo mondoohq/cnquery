@@ -37,6 +37,10 @@ func NewVersion(s string) Version {
 	}
 }
 
+func (v *Version) IsSemver() bool {
+	return v.Version != nil && v.epoch == 0
+}
+
 func parseEpoch(v string) (*semver.Version, int) {
 	prefix := reEpoch.FindString(v)
 	if prefix == "" {

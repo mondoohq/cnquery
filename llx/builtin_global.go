@@ -6,6 +6,7 @@ package llx
 import (
 	"errors"
 	"strconv"
+	"strings"
 
 	"go.mondoo.com/cnquery/v11/types"
 )
@@ -197,13 +198,51 @@ func typeofCallV2(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, 
 }
 
 func versionCall(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, error) {
-	if len(f.Args) != 1 {
-		return nil, 0, errors.New("Called `version` with " + strconv.Itoa(len(f.Args)) + " arguments, expected one")
+	if len(f.Args) == 0 {
+		return nil, 0, errors.New("called `version` with no arguments, expected one")
 	}
 
-	res, dref, err := e.resolveValue(f.Args[0], ref)
+	arg := f.Args[0]
+	if arg.Type != string(types.String) {
+		return nil, 0, errors.New("called `version` with incorrect argument type, expected string")
+	}
+
+	res, dref, err := e.resolveValue(arg, ref)
 	if err != nil || dref != 0 || res == nil {
 		return res, dref, err
+	}
+	raw, ok := res.Value.(string)
+	if !ok {
+		return nil, 0, errors.New("called `version` with unsupported type (expected string)")
+	}
+
+	version := NewVersion(raw)
+
+	for i := 1; i < len(f.Args); i++ {
+		arg := f.Args[i]
+		if !types.Type(arg.Type).IsMap() {
+			return nil, 0, errors.New("called `version` with unknown argument, expected one string")
+		}
+		for k, v := range arg.Map {
+			switch k {
+			case "type":
+				t, ok := v.RawData().Value.(string)
+				if !ok {
+					return nil, 0, errors.New("unsupported `type` value in `version` call")
+				}
+				typ := strings.ToLower(t)
+				switch typ {
+				case "semver":
+					if !version.IsSemver() {
+						return &RawData{Error: errors.New("version '" + raw + "' is not a semantic version"), Value: raw, Type: types.Version}, 0, nil
+					}
+				case "all":
+					break
+				default:
+					return nil, 0, errors.New("unauppoerws `type=" + t + "` in `version` call")
+				}
+			}
+		}
 	}
 
 	return &RawData{Type: types.Version, Value: res.Value}, 0, nil
