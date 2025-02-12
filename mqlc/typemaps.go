@@ -36,14 +36,27 @@ func compileTypeConversion(llxID string, typ types.Type) fieldCompiler {
 			return types.Nil, errNotConversion
 		}
 
-		arg := call.Function[0]
-		if arg == nil || arg.Value == nil || arg.Value.Operand == nil || arg.Value.Operand.Value == nil {
-			return types.Nil, errors.New("failed to get parameter for '" + id + "'")
+		otherMap := map[string]*llx.Primitive{}
+		args := []*llx.Primitive{}
+		for i := range call.Function {
+			arg := call.Function[i]
+			if arg == nil || arg.Value == nil || arg.Value.Operand == nil || arg.Value.Operand.Value == nil {
+				return types.Nil, errors.New("failed to get parameter for '" + id + "'")
+			}
+
+			argValue, err := c.compileExpression(arg.Value)
+			if err != nil {
+				return types.Nil, err
+			}
+			if arg.Name != "" {
+				otherMap[arg.Name] = argValue
+			} else {
+				args = append(args, argValue)
+			}
 		}
 
-		argValue, err := c.compileExpression(arg.Value)
-		if err != nil {
-			return types.Nil, err
+		if len(otherMap) != 0 {
+			args = append(args, llx.MapPrimitive(otherMap, types.Any))
 		}
 
 		c.addChunk(&llx.Chunk{
@@ -51,7 +64,7 @@ func compileTypeConversion(llxID string, typ types.Type) fieldCompiler {
 			Id:   llxID,
 			Function: &llx.Function{
 				Type: string(typ),
-				Args: []*llx.Primitive{argValue},
+				Args: args,
 			},
 		})
 

@@ -997,6 +997,21 @@ func TestVersion(t *testing.T) {
 			},
 		})
 	})
+
+	t.Run("version type set to semver", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{
+				Code:        "version('1.2.3', type: 'semver')",
+				ResultIndex: 0, Expectation: "1.2.3",
+			},
+		})
+		x.TestSimpleErrors(t, []testutils.SimpleTest{
+			{
+				Code:        "version('1:1.2.3', type: 'semver')",
+				ResultIndex: 1, Expectation: "version '1:1.2.3' is not a semantic version",
+			},
+		})
+	})
 }
 
 func TestResource_Default(t *testing.T) {

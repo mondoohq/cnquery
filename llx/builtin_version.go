@@ -11,12 +11,22 @@ import (
 	"go.mondoo.com/cnquery/v11/types"
 )
 
+type VersionType byte
+
+const (
+	UNKNOWN_VERSION VersionType = iota + 1
+	SEMVER
+	DEBIAN_VERSION
+	PYTHON_VERSION
+)
+
 // Version type, an abstract representation of a software version.
 // It is designed to parse and compare version strings.
 // It is built on semver and adds support for epochs (deb, rpm, python).
 type Version struct {
 	*semver.Version
 	src   string
+	typ   VersionType
 	epoch int
 }
 
@@ -25,38 +35,45 @@ var reEpoch = regexp.MustCompile("^[0-9]+[:!]")
 func NewVersion(s string) Version {
 	epoch := 0
 
+	var typ VersionType
 	x, err := semver.NewVersion(s)
-	if err != nil {
-		x, epoch = parseEpoch(s)
+	if err == nil {
+		typ = SEMVER
+	} else {
+		x, epoch, typ = parseEpoch(s)
 	}
 
 	return Version{
 		Version: x,
 		src:     s,
+		typ:     typ,
 		epoch:   epoch,
 	}
 }
 
-func parseEpoch(v string) (*semver.Version, int) {
+func parseEpoch(v string) (*semver.Version, int, VersionType) {
 	prefix := reEpoch.FindString(v)
 	if prefix == "" {
-		return nil, 0
+		return nil, 0, UNKNOWN_VERSION
 	}
 
 	remainder := v[len(prefix):]
 	epochStr := v[:len(prefix)-1]
 	res, err := semver.NewVersion(remainder)
 	if err != nil {
-		return nil, 0
+		return nil, 0, UNKNOWN_VERSION
 	}
 
 	// invalid epoch means we discard the entire version string
 	epoch, err := strconv.Atoi(epochStr)
 	if err != nil {
-		return nil, 0
+		return nil, 0, UNKNOWN_VERSION
 	}
 
-	return res, epoch
+	if prefix[len(prefix)-1] == ':' {
+		return res, epoch, DEBIAN_VERSION
+	}
+	return res, epoch, PYTHON_VERSION
 }
 
 // Compare compares this version to another one. It returns -1, 0, or 1 if
