@@ -6,6 +6,7 @@ package device
 import (
 	"errors"
 	"runtime"
+	"slices"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -129,11 +130,6 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 
 		res.partitions[block.MountPoint] = block
 
-		if asset.Platform != nil {
-			log.Debug().Msg("device connection> asset already detected, skipping")
-			continue
-		}
-
 		if skipAssetDetection {
 			log.Debug().Msg("device connection> skipping asset detection as requested")
 			continue
@@ -252,8 +248,13 @@ func tryDetectAsset(connId uint32, partition *snapshot.PartitionInfo, conf *inve
 		return nil, errors.New("device connection> no platform detected")
 	}
 
-	log.Debug().Str("scan_dir", partition.MountPoint).Msg("device connection> detected platform from device")
-	asset.Platform = p
+	// volumes and partitions without a system on them would return an "unknown" platform
+	// we don't want to overwrite the platform if a "proper" one was detected already
+	// as well as we want to always have some platform to the asset
+	if asset.Platform == nil || !slices.Contains([]string{"", "unknown"}, p.Name) {
+		asset.Platform = p
+	}
+
 	if asset.Name == "" && fingerprint != nil {
 		asset.Name = fingerprint.Name
 	}
