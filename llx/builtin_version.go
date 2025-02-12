@@ -4,8 +4,10 @@
 package llx
 
 import (
+	"errors"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/Masterminds/semver"
 	"go.mondoo.com/cnquery/v11/types"
@@ -156,4 +158,56 @@ func versionEpoch(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 
 	v := NewVersion(bind.Value.(string))
 	return IntData(v.epoch), 0, nil
+}
+
+func versionInRange(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.Int, Error: bind.Error}, 0, nil
+	}
+
+	conditions := []string{}
+	for i := range chunk.Function.Args {
+		argRef := chunk.Function.Args[i]
+
+		arg, rref, err := e.resolveValue(argRef, ref)
+		if err != nil || rref > 0 {
+			return nil, rref, err
+		}
+
+		s, ok := arg.Value.(string)
+		if !ok {
+			return nil, 0, errors.New("incorrect type for argument in `inRange` call (expected string)")
+		}
+		ts := strings.TrimSpace(s)
+		if ts[0] != '>' && ts[0] != '<' {
+			if i == 0 {
+				ts = ">= " + ts
+			} else {
+				ts = "<= " + ts
+			}
+		}
+
+		conditions = append(conditions, ts)
+	}
+
+	base := NewVersion(bind.Value.(string))
+
+	if base.Version == nil {
+		return nil, 0, errors.New("inRange is only supported on comparable versions (semver or similar)")
+	}
+	if base.epoch != 0 {
+		return nil, 0, errors.New("inRange is only supported on comparable versions (epoch doesn't work yet)")
+	}
+
+	for _, condition := range conditions {
+		c, err := semver.NewConstraint(condition)
+		if err != nil {
+			return nil, 0, errors.New("inRange was called with an invalid constraint: '" + condition + "'")
+		}
+		if !c.Check(base.Version) {
+			return BoolFalse, 0, nil
+		}
+	}
+
+	return BoolTrue, 0, nil
 }

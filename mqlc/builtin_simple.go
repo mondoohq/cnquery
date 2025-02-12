@@ -239,3 +239,29 @@ func compileTimeInRange(c *compiler, typ types.Type, ref uint64, id string, call
 	})
 	return types.Bool, nil
 }
+
+func compileVersionInRange(c *compiler, _ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+	if call == nil || len(call.Function) != 2 {
+		return types.Nil, errors.New("function " + id + " needs two arguments")
+	}
+
+	min, err := callArgTypeIs(c, call, id, "min", 0, types.String)
+	if err != nil {
+		return types.Nil, err
+	}
+	max, err := callArgTypeIs(c, call, id, "max", 1, types.String)
+	if err != nil {
+		return types.Nil, err
+	}
+
+	c.addChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   "inRange",
+		Function: &llx.Function{
+			Type:    string(types.Bool),
+			Binding: ref,
+			Args:    []*llx.Primitive{min, max},
+		},
+	})
+	return types.Bool, nil
+}

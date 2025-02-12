@@ -1012,6 +1012,25 @@ func TestVersion(t *testing.T) {
 			},
 		})
 	})
+
+	t.Run("version inRange", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "version('1.2.3').inRange('>= 1.0.0', '< 2.0.0')", ResultIndex: 0, Expectation: true},
+			{Code: "version('1.2.3').inRange('>= 1.0.0', '< 1.2.0')", ResultIndex: 0, Expectation: false},
+			{Code: "version('1.2.3').inRange('>= 1.0.0', '<= 1.2.3')", ResultIndex: 0, Expectation: true},
+			{Code: "version('1.2.3').inRange('>= 1.0.0', '< 1.2.3')", ResultIndex: 0, Expectation: false},
+			{Code: "version('1.2.3').inRange('>= 1.2.3', '< 2.0.0')", ResultIndex: 0, Expectation: true},
+			{Code: "version('1.2.3').inRange('> 1.2.3', '< 2.0.0')", ResultIndex: 0, Expectation: false},
+			{Code: "version('1.2.3').inRange('1.0.0', '1.2.3')", ResultIndex: 0, Expectation: true},
+			{Code: "version('1.2.3').inRange('1.2.3', '2.0.0')", ResultIndex: 0, Expectation: true},
+			{Code: "version('1.2.3').inRange('1.2.3', '1.2.3')", ResultIndex: 0, Expectation: true},
+		})
+
+		x.TestSimpleErrors(t, []testutils.SimpleTest{
+			{Code: "version('1:1.2.3').inRange('>= 1.0.0', '< 2.0.0')", ResultIndex: 0, Expectation: "inRange is only supported on comparable versions (epoch doesn't work yet)"},
+			{Code: "version('1.2.3.4.5').inRange('>= 1.0.0', '< 2.0.0')", ResultIndex: 0, Expectation: "inRange is only supported on comparable versions (semver or similar)"},
+		})
+	})
 }
 
 func TestResource_Default(t *testing.T) {

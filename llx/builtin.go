@@ -583,6 +583,7 @@ func init() {
 			string("<=" + types.String):  {f: versionLTEversion, Label: "<="},
 			string(">=" + types.String):  {f: versionGTEversion, Label: ">="},
 			"epoch":                      {f: versionEpoch},
+			"inRange":                    {f: versionInRange, Label: "inRange"},
 		},
 		types.ArrayLike: {
 			"[]":                       {f: arrayGetIndexV2},
