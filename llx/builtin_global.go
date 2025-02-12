@@ -233,8 +233,16 @@ func versionCall(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, e
 				typ := strings.ToLower(t)
 				switch typ {
 				case "semver":
-					if !version.IsSemver() {
+					if version.typ != SEMVER {
 						return &RawData{Error: errors.New("version '" + raw + "' is not a semantic version"), Value: raw, Type: types.Version}, 0, nil
+					}
+				case "debian":
+					if version.typ != SEMVER && version.typ != DEBIAN_VERSION {
+						return &RawData{Error: errors.New("version '" + raw + "' is not a debian version"), Value: raw, Type: types.Version}, 0, nil
+					}
+				case "python":
+					if version.typ != SEMVER && version.typ != PYTHON_VERSION {
+						return &RawData{Error: errors.New("version '" + raw + "' is not a python version"), Value: raw, Type: types.Version}, 0, nil
 					}
 				case "all":
 					break
