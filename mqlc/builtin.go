@@ -97,7 +97,8 @@ func init() {
 			"values": {typ: dictArrayType, signature: FunctionSignature{}},
 		},
 		types.Version: {
-			"epoch": {typ: intType, signature: FunctionSignature{}},
+			"epoch":   {typ: intType, signature: FunctionSignature{}},
+			"inRange": {typ: intType, compile: compileVersionInRange},
 		},
 		types.ArrayLike: {
 			"[]":           {typ: childType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Int}}},

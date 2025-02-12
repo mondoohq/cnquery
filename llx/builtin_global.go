@@ -247,7 +247,7 @@ func versionCall(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, e
 				case "all":
 					break
 				default:
-					return nil, 0, errors.New("unauppoerws `type=" + t + "` in `version` call")
+					return nil, 0, errors.New("unsupported `type=" + t + "` in `version` call")
 				}
 			}
 		}
