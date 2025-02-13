@@ -77,9 +77,14 @@ func NewPackageURL(pf *inventory.Platform, t Type, name, version string, modifie
 		// use the platform architecture for the package
 		purl.Arch = pf.Arch
 
-		if pf.Name != "" {
-			purl.Namespace = pf.Name
+		purlNamespace := pf.Name
+		if purlNamespace == "photon" {
+			purlNamespace = "photon os"
 		}
+		if purlNamespace != "" {
+			purl.Namespace = purlNamespace
+		}
+
 	}
 
 	// apply modifiers

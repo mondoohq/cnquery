@@ -237,4 +237,30 @@ func TestPackageURLString(t *testing.T) {
 		expected := "pkg:rpm/redhat/testpkg@1.0.0?arch=x86_64&distro=rhel-9.2"
 		assert.Equal(t, expected, p.String())
 	})
+
+	t.Run("Photon package", func(t *testing.T) {
+		platform := &inventory.Platform{
+			Name:    "photon",
+			Arch:    "x86_64",
+			Version: "4.0",
+			Labels:  nil,
+		}
+		p := purl.NewPackageURL(platform, purl.TypeRPM, "testpkg", "1.0.0")
+		expected := "pkg:rpm/photon%20os/testpkg@1.0.0?arch=x86_64"
+		assert.Equal(t, expected, p.String())
+	})
+
+	t.Run("Photon package with distro-id and name", func(t *testing.T) {
+		platform := &inventory.Platform{
+			Name:    "photon",
+			Arch:    "x86_64",
+			Version: "4.0",
+			Labels: map[string]string{
+				"distro-id": "photon",
+			},
+		}
+		p := purl.NewPackageURL(platform, purl.TypeRPM, "testpkg", "1.0.0")
+		expected := "pkg:rpm/photon%20os/testpkg@1.0.0?arch=x86_64&distro=photon-4.0"
+		assert.Equal(t, expected, p.String())
+	})
 }
