@@ -167,13 +167,6 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 				if customProperty.DefaultValue.IsSet() {
 					// if the default value of the org-leve custom property is set, use it as the label value
 					value = customProperty.DefaultValue.Data
-				} else if customProperty.Required.IsSet() {
-					// if not, and if the required field of the org-leve custom property is set, use it as to
-					// indicate if the property is required or not
-					value = "[not-required]"
-					if customProperty.Required.Data {
-						value = "[required]"
-					}
 				}
 				labels[customProperty.Name.Data] = value
 			}
