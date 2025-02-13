@@ -515,6 +515,68 @@ func isCodeBlock(codeID string, bundle *llx.CodeBundle) bool {
 	return ok
 }
 
+func (print *Printer) resourceContext(data any, checksum string, bundle *llx.CodeBundle, indent string) (string, bool) {
+	m, ok := data.(map[string]any)
+	if !ok {
+		return "", false
+	}
+
+	var path string
+	var rnge llx.Range
+	var content string
+
+	for k, v := range m {
+		label, ok := bundle.Labels.Labels[k]
+		if !ok {
+			continue
+		}
+		vv, ok := v.(*llx.RawData)
+		if !ok {
+			continue
+		}
+
+		switch label {
+		case "content":
+			if vv.Type == types.String {
+				content, _ = vv.Value.(string)
+			}
+		case "range":
+			if vv.Type == types.Range {
+				rnge, _ = vv.Value.(llx.Range)
+			}
+		case "path", "file.path":
+			if vv.Type == types.String {
+				path, _ = vv.Value.(string)
+			}
+		}
+	}
+
+	var res strings.Builder
+	if path == "" {
+		if !rnge.IsEmpty() {
+			res.WriteString("<unknown>:")
+			res.WriteString(rnge.String())
+		}
+	} else {
+		res.WriteString(path)
+		if !rnge.IsEmpty() {
+			res.WriteByte(':')
+			res.WriteString(rnge.String())
+		}
+	}
+	if content != "" {
+		res.WriteByte('\n')
+		res.WriteString(indent)
+		res.WriteString(indentBlock(content, indent))
+	}
+
+	r := res.String()
+	if r == "" {
+		return "", false
+	}
+	return r, true
+}
+
 func (print *Printer) autoExpand(blockRef uint64, data interface{}, bundle *llx.CodeBundle, indent string) string {
 	var res strings.Builder
 
@@ -526,9 +588,11 @@ func (print *Printer) autoExpand(blockRef uint64, data interface{}, bundle *llx.
 		prefix := indent + "  "
 		res.WriteString("[\n")
 		for i := range arr {
-			c := print.autoExpand(blockRef, arr[i], bundle, prefix)
+			num := strconv.Itoa(i)
+			autoIndent := prefix + strings.Repeat(" ", len(num)+2)
+			c := print.autoExpand(blockRef, arr[i], bundle, autoIndent)
 			res.WriteString(prefix)
-			res.WriteString(strconv.Itoa(i))
+			res.WriteString(num)
 			res.WriteString(": ")
 			res.WriteString(c)
 			res.WriteByte('\n')
@@ -565,6 +629,12 @@ func (print *Printer) autoExpand(blockRef uint64, data interface{}, bundle *llx.
 
 	res.WriteString(name)
 
+	// hasContext := false
+	// resourceInfo := print.schema.Lookup(name)
+	// if resourceInfo != nil && resourceInfo.Context != "" {
+	// 	hasContext = true
+	// }
+
 	if block != nil {
 		// important to process them in this order
 		for _, ref := range block.Entrypoints {
@@ -579,6 +649,21 @@ func (print *Printer) autoExpand(blockRef uint64, data interface{}, bundle *llx.
 			}
 
 			label := bundle.Labels.Labels[checksum]
+
+			// Note (Dom): We don't have precise matching on the resource context
+			// just yet. Here we handle it via best-effort, i.e. if it's called
+			// context, a block, and it's part of the resource's auto-expand, then we
+			// treat it as a kind of resource context.
+			if label == "context" && types.Type(vv.Type) == types.Block {
+				if data, ok := print.resourceContext(vv.Value, checksum, bundle, indent); ok {
+					res.WriteByte('\n')
+					res.WriteString(indent)
+					res.WriteString("in ")
+					res.WriteString(data)
+					continue
+				}
+			}
+
 			val := print.Data(vv.Type, vv.Value, checksum, bundle, indent)
 			res.WriteByte(' ')
 			res.WriteString(label)

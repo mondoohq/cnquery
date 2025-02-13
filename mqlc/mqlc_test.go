@@ -21,7 +21,7 @@ import (
 )
 
 var (
-	features    = cnquery.Features{}
+	features    = cnquery.Features{byte(cnquery.ResourceContext)}
 	core_schema = testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "core"})
 	os_schema   = testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "os"})
 	conf        = mqlc.NewConfig(
@@ -1110,6 +1110,46 @@ func TestCompiler_ResourceMapLength(t *testing.T) {
 
 func TestCompiler_ResourceExpansion(t *testing.T) {
 	var cmd string
+
+	cmd = "sshd.config.blocks"
+	t.Run(cmd, func(t *testing.T) {
+		compileT(t, cmd, func(res *llx.CodeBundle) {
+			require.Len(t, res.CodeV2.Blocks, 3)
+
+			require.Len(t, res.CodeV2.Blocks[0].Chunks, 3)
+			require.Equal(t, "{}", res.CodeV2.Blocks[0].Chunks[2].Id)
+
+			require.Len(t, res.CodeV2.Blocks[1].Chunks, 4)
+			assertFunction(t, "context", &llx.Function{
+				Type:    string(types.Resource("file.context")),
+				Binding: (2 << 32) | 1,
+				Args:    []*llx.Primitive{},
+			}, res.CodeV2.Blocks[1].Chunks[2])
+			assertFunction(t, "{}", &llx.Function{
+				Type:    string(types.Block),
+				Binding: (2 << 32) | 3,
+				Args:    []*llx.Primitive{llx.FunctionPrimitive(3 << 32)},
+			}, res.CodeV2.Blocks[1].Chunks[3])
+
+			require.Len(t, res.CodeV2.Blocks[2].Chunks, 5)
+			assertFunction(t, "file", &llx.Function{
+				Type:    string(types.Resource("file")),
+				Binding: (3 << 32) | 1,
+			}, res.CodeV2.Blocks[2].Chunks[1])
+			assertFunction(t, "path", &llx.Function{
+				Type:    string(types.String),
+				Binding: (3 << 32) | 2,
+			}, res.CodeV2.Blocks[2].Chunks[2])
+			assertFunction(t, "range", &llx.Function{
+				Type:    string(types.Range),
+				Binding: (3 << 32) | 1,
+			}, res.CodeV2.Blocks[2].Chunks[3])
+			assertFunction(t, "content", &llx.Function{
+				Type:    string(types.String),
+				Binding: (3 << 32) | 1,
+			}, res.CodeV2.Blocks[2].Chunks[4])
+		})
+	})
 
 	cmd = "mondoo"
 	t.Run(cmd, func(t *testing.T) {

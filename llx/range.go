@@ -171,6 +171,10 @@ func (r Range) ExtractAll() [][]uint32 {
 	return res
 }
 
+func (r Range) IsEmpty() bool {
+	return len(r) == 0
+}
+
 func (r Range) String() string {
 	var res strings.Builder
 
@@ -221,7 +225,7 @@ type ExtractConfig struct {
 }
 
 var DefaultExtractConfig = ExtractConfig{
-	MaxLines:          8,
+	MaxLines:          5,
 	MaxColumns:        100,
 	ShowLineNumbers:   true,
 	LineNumberPadding: 2,

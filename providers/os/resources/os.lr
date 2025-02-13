@@ -374,7 +374,7 @@ file @defaults("path size permissions.string") {
 }
 
 // File context is a range of lines/columns in a file
-private file.context @defaults("file.path range") {
+private file.context @defaults("file.path range content") {
   // File referenced by this file context
   file file
   // Range of content in the file
