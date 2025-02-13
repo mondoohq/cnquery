@@ -140,21 +140,21 @@ github.organization @defaults("login name") {
 
 // GitHub organization-level custom property
 private github.organization.customProperty @defaults("name required") {
-  // The name of the property.
+  // The name of the property
   name string
-  // Short description of the property.
+  // Short description of the property
   description string
-  // SourceType is the source type of the property where it has been created.
+  // The source type of the property (where it was created)
   sourceType string
-  // The type of the value for the property.
+  // The type of the value for the property
   valueType string
-  // Whether the property is required.
+  // Whether the property is required
   required bool
-  // Default value of the property.
+  // Default value of the property
   defaultValue string
-  // An ordered list of the allowed values of the property.
+  // An ordered list of the allowed values of the property
   allowedValues []string
-  // Who can edit the values of the property.
+  // Who can edit the values of the property
   valuesEditableBy string
 }
 
