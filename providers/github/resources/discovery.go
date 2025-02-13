@@ -15,6 +15,7 @@ import (
 	"go.mondoo.com/cnquery/v11/logger"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/v11/providers/github/connection"
 	"go.mondoo.com/cnquery/v11/utils/stringx"
@@ -132,7 +133,7 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 				PlatformIds: []string{connection.NewGitHubRepoIdentifier(org.Login.Data, repo.Name.Data)},
 				Name:        org.Login.Data + "/" + repo.Name.Data,
 				Platform:    connection.NewGitHubRepoPlatform(org.Login.Data, repo.Name.Data),
-				Labels:      make(map[string]string),
+				Labels:      convert.DictToTypedMap[string](repo.CustomProperties.Data),
 				Connections: []*inventory.Config{cfg},
 			})
 
@@ -159,13 +160,30 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 			if user.Name.Data == "" {
 				continue
 			}
+			labels := map[string]string{}
+			for j := range org.GetCustomProperties().Data {
+				customProperty := org.GetCustomProperties().Data[j].(*mqlGithubOrganizationCustomProperty)
+				value := ""
+				if customProperty.DefaultValue.IsSet() {
+					// if the default value of the org-leve custom property is set, use it as the label value
+					value = customProperty.DefaultValue.Data
+				} else if customProperty.Required.IsSet() {
+					// if not, and if the required field of the org-leve custom property is set, use it as to
+					// indicate if the property is required or not
+					value = "[not-required]"
+					if customProperty.Required.Data {
+						value = "[required]"
+					}
+				}
+				labels[customProperty.Name.Data] = value
+			}
 			cfg := conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.ID()))
 			cfg.Options["user"] = user.Login.Data
 			assetList = append(assetList, &inventory.Asset{
 				PlatformIds: []string{connection.NewGithubUserIdentifier(user.Login.Data)},
 				Name:        user.Name.Data,
 				Platform:    connection.NewGithubUserPlatform(user.Login.Data),
-				Labels:      make(map[string]string),
+				Labels:      labels,
 				Connections: []*inventory.Config{cfg},
 			})
 		}
