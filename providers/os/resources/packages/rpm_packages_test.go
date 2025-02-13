@@ -255,7 +255,7 @@ func TestPhoton4ImageParser(t *testing.T) {
 		Vendor:      "VMware, Inc.",
 		Arch:        "x86_64",
 		Description: "Ncurses Libraries",
-		PUrl:        "pkg:rpm/photon/ncurses-libs@6.2-6.ph4?arch=x86_64&distro=photon-4.0",
+		PUrl:        "pkg:rpm/photon%20os/ncurses-libs@6.2-6.ph4?arch=x86_64&distro=photon-4.0",
 		CPEs: []string{
 			"cpe:2.3:a:vmware\\,_inc.:ncurses-libs:6.2-6.ph4:*:*:*:*:*:x86_64:*",
 			"cpe:2.3:a:vmware\\,_inc.:ncurses-libs:6.2:*:*:*:*:*:x86_64:*",
@@ -273,7 +273,7 @@ func TestPhoton4ImageParser(t *testing.T) {
 		Vendor:      "VMware, Inc.",
 		Arch:        "x86_64",
 		Description: "Bourne-Again SHell",
-		PUrl:        "pkg:rpm/photon/bash@5.0-4.ph4?arch=x86_64&distro=photon-4.0",
+		PUrl:        "pkg:rpm/photon%20os/bash@5.0-4.ph4?arch=x86_64&distro=photon-4.0",
 		CPEs: []string{
 			"cpe:2.3:a:vmware\\,_inc.:bash:5.0-4.ph4:*:*:*:*:*:x86_64:*",
 			"cpe:2.3:a:vmware\\,_inc.:bash:5.0:*:*:*:*:*:x86_64:*",
@@ -291,7 +291,7 @@ func TestPhoton4ImageParser(t *testing.T) {
 		Vendor:      "VMware, Inc.",
 		Arch:        "x86_64",
 		Description: "sqlite3 library",
-		PUrl:        "pkg:rpm/photon/sqlite-libs@3.38.5-4.ph4?arch=x86_64&distro=photon-4.0",
+		PUrl:        "pkg:rpm/photon%20os/sqlite-libs@3.38.5-4.ph4?arch=x86_64&distro=photon-4.0",
 		CPEs: []string{
 			"cpe:2.3:a:vmware\\,_inc.:sqlite-libs:3.38.5-4.ph4:*:*:*:*:*:x86_64:*",
 			"cpe:2.3:a:vmware\\,_inc.:sqlite-libs:3.38.5-4:*:*:*:*:*:x86_64:*",
