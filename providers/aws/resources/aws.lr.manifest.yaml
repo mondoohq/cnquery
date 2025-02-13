@@ -2477,6 +2477,8 @@ resources:
         min_mondoo_version: 9.0.0
       hostedZoneId:
         min_mondoo_version: 9.0.0
+      httpEndpointEnabled:
+        min_mondoo_version: 9.0.0
       iamDatabaseAuthentication:
         min_mondoo_version: latest
       id: {}
