@@ -33,7 +33,7 @@ func TestRange(t *testing.T) {
 	})
 
 	t.Run("line and column range", func(t *testing.T) {
-		r := RangePrimitive(NewRange().AddLineColumnRange(12, 3, 12345678, 1234567))
+		r := RangePrimitive(NewRange().AddLineColumnRange(12, 12345678, 3, 1234567))
 		assert.Equal(t, "12:3-12345678:1234567", r.LabelV2(nil))
 	})
 }
