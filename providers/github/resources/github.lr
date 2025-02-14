@@ -144,9 +144,9 @@ private github.organization.customProperty @defaults("name required") {
   name string
   // Short description of the property
   description string
-  // The source type of the property (where it was created)
+  // Source type of the property (where it was created)
   sourceType string
-  // The type of the value for the property
+  // Type of the value for the property
   valueType string
   // Whether the property is required
   required bool
