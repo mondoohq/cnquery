@@ -197,9 +197,9 @@ func (r Range) String() string {
 		case 4:
 			res.WriteString(strconv.Itoa(int(x[0])))
 			res.WriteString(":")
-			res.WriteString(strconv.Itoa(int(x[1])))
-			res.WriteString("-")
 			res.WriteString(strconv.Itoa(int(x[2])))
+			res.WriteString("-")
+			res.WriteString(strconv.Itoa(int(x[1])))
 			res.WriteString(":")
 			res.WriteString(strconv.Itoa(int(x[3])))
 		}
