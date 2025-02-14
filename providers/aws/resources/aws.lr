@@ -2173,6 +2173,8 @@ aws.rds.dbcluster @defaults("id region engine engineVersion") {
   preferredMaintenanceWindow string
   // Preferred backup window for the database cluster
   preferredBackupWindow string
+  // Whether the HTTP API endpoint is enabled
+  httpEndpointEnabled bool
 }
 
 // Amazon RDS snapshot
@@ -2231,7 +2233,7 @@ aws.rds.dbinstance @defaults("id region engine engineVersion") {
   region string
   // Availability zone where the instance exists
   availabilityZone string
-  // Whether the instance is publicly accessible
+  // Whether the instance is publicly accessible. Note: This will only return a value for non-Aurora Multi-AZ DB clusters
   publiclyAccessible bool
   // List of log types the instance is configured to export to CloudWatch logs
   enabledCloudwatchLogsExports []string

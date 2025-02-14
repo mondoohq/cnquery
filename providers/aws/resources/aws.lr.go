@@ -3308,6 +3308,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.dbcluster.preferredBackupWindow": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbcluster).GetPreferredBackupWindow()).ToDataRes(types.String)
 	},
+	"aws.rds.dbcluster.httpEndpointEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetHttpEndpointEnabled()).ToDataRes(types.Bool)
+	},
 	"aws.rds.snapshot.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsSnapshot).GetArn()).ToDataRes(types.String)
 	},
@@ -8833,6 +8836,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.rds.dbcluster.preferredBackupWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbcluster).PreferredBackupWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.httpEndpointEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).HttpEndpointEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.rds.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -22329,6 +22336,7 @@ type mqlAwsRdsDbcluster struct {
 	NetworkType plugin.TValue[string]
 	PreferredMaintenanceWindow plugin.TValue[string]
 	PreferredBackupWindow plugin.TValue[string]
+	HttpEndpointEnabled plugin.TValue[bool]
 }
 
 // createAwsRdsDbcluster creates a new instance of this resource
@@ -22558,6 +22566,10 @@ func (c *mqlAwsRdsDbcluster) GetPreferredMaintenanceWindow() *plugin.TValue[stri
 
 func (c *mqlAwsRdsDbcluster) GetPreferredBackupWindow() *plugin.TValue[string] {
 	return &c.PreferredBackupWindow
+}
+
+func (c *mqlAwsRdsDbcluster) GetHttpEndpointEnabled() *plugin.TValue[bool] {
+	return &c.HttpEndpointEnabled
 }
 
 // mqlAwsRdsSnapshot for the aws.rds.snapshot resource
