@@ -112,11 +112,21 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 	// only scan the org if the discover flag is provided, this allows you to scan all repos in an org with simply using
 	// --discover repos. If users provide a repo filter, we also want to skip org scan.
 	if stringx.ContainsAnyOf(targets, connection.DiscoveryOrganization, connection.DiscoveryAll, connection.DiscoveryAuto) && reposFilter.empty() {
+		labels := map[string]string{}
+		for j := range org.GetCustomProperties().Data {
+			customProperty := org.GetCustomProperties().Data[j].(*mqlGithubOrganizationCustomProperty)
+			value := ""
+			if customProperty.DefaultValue.IsSet() {
+				// if the default value of the org-leve custom property is set, use it as the label value
+				value = customProperty.DefaultValue.Data
+			}
+			labels[customProperty.Name.Data] = value
+		}
 		assetList = append(assetList, &inventory.Asset{
 			PlatformIds: []string{connection.NewGithubOrgIdentifier(org.Login.Data)},
 			Name:        org.Name.Data,
 			Platform:    connection.NewGithubOrgPlatform(org.Login.Data),
-			Labels:      map[string]string{},
+			Labels:      labels,
 			Connections: []*inventory.Config{conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.ID()))},
 		})
 	}
@@ -160,23 +170,13 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 			if user.Name.Data == "" {
 				continue
 			}
-			labels := map[string]string{}
-			for j := range org.GetCustomProperties().Data {
-				customProperty := org.GetCustomProperties().Data[j].(*mqlGithubOrganizationCustomProperty)
-				value := ""
-				if customProperty.DefaultValue.IsSet() {
-					// if the default value of the org-leve custom property is set, use it as the label value
-					value = customProperty.DefaultValue.Data
-				}
-				labels[customProperty.Name.Data] = value
-			}
 			cfg := conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.ID()))
 			cfg.Options["user"] = user.Login.Data
 			assetList = append(assetList, &inventory.Asset{
 				PlatformIds: []string{connection.NewGithubUserIdentifier(user.Login.Data)},
 				Name:        user.Name.Data,
 				Platform:    connection.NewGithubUserPlatform(user.Login.Data),
-				Labels:      labels,
+				Labels:      map[string]string{},
 				Connections: []*inventory.Config{cfg},
 			})
 		}
