@@ -206,7 +206,7 @@ func repo(runtime *plugin.Runtime, repoName string, owner string, conn *connecti
 		PlatformIds: []string{connection.NewGitHubRepoIdentifier(owner, repo.Name.Data)},
 		Name:        owner + "/" + repo.Name.Data,
 		Platform:    connection.NewGitHubRepoPlatform(owner, repo.Name.Data),
-		Labels:      make(map[string]string),
+		Labels:      convert.DictToTypedMap[string](repo.CustomProperties.Data),
 		Connections: []*inventory.Config{cfg},
 	})
 
