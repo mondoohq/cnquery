@@ -139,7 +139,9 @@ func TestWindowsHotFixParser(t *testing.T) {
 func TestGetPackageFromRegistryKeyItems(t *testing.T) {
 	t.Run("get package from registry key items that are empty", func(t *testing.T) {
 		items := []registry.RegistryKeyItem{}
-		p := getPackageFromRegistryKeyItems(items)
+		p := getPackageFromRegistryKeyItems(items, &inventory.Platform{
+			Family: []string{"windows"},
+		})
 		assert.Nil(t, p)
 	})
 	t.Run("get package from registry key items with missing required values", func(t *testing.T) {
@@ -152,7 +154,9 @@ func TestGetPackageFromRegistryKeyItems(t *testing.T) {
 				},
 			},
 		}
-		p := getPackageFromRegistryKeyItems(items)
+		p := getPackageFromRegistryKeyItems(items, &inventory.Platform{
+			Family: []string{"windows"},
+		})
 		assert.Nil(t, p)
 	})
 
@@ -187,7 +191,11 @@ func TestGetPackageFromRegistryKeyItems(t *testing.T) {
 				},
 			},
 		}
-		p := getPackageFromRegistryKeyItems(items)
+		p := getPackageFromRegistryKeyItems(items, &inventory.Platform{
+			Name:   "windows",
+			Arch:   "x86",
+			Family: []string{"windows"},
+		})
 		CPEs, err := cpe.NewPackage2Cpe(
 			"Microsoft Corporation",
 			"Microsoft Visual C++ 2015-2019 Redistributable (x86) - 14.28.29913",
@@ -204,6 +212,7 @@ func TestGetPackageFromRegistryKeyItems(t *testing.T) {
 			Format:  "windows/app",
 			CPEs:    CPEs,
 			Vendor:  "Microsoft Corporation",
+			PUrl:    "pkg:windows/windows/Microsoft%20Visual%20C%2B%2B%202015-2019%20Redistributable%20%28x86%29%20-%2014.28.29913@14.28.29913.0?arch=x86",
 		}
 		assert.NotNil(t, p)
 		assert.Equal(t, expected, p)

@@ -250,7 +250,7 @@ func (w *WinPkgManager) getLocalInstalledApps() ([]Package, error) {
 			continue
 		}
 		for _, c := range children {
-			p, err := getPackageFromRegistryKey(c)
+			p, err := getPackageFromRegistryKey(c, w.platform)
 			if err != nil {
 				return nil, err
 			}
@@ -345,7 +345,7 @@ func (w *WinPkgManager) getFsInstalledApps() ([]Package, error) {
 			continue
 		}
 		for _, c := range children {
-			p, err := getPackageFromRegistryKey(c)
+			p, err := getPackageFromRegistryKey(c, w.platform)
 			if err != nil {
 				return nil, err
 			}
@@ -420,16 +420,16 @@ func parseAppxManifest(input []byte) (winAppxPackages, error) {
 	return pkg, nil
 }
 
-func getPackageFromRegistryKey(key registry.RegistryKeyChild) (*Package, error) {
+func getPackageFromRegistryKey(key registry.RegistryKeyChild, platform *inventory.Platform) (*Package, error) {
 	items, err := registry.GetNativeRegistryKeyItems(key.Path + "\\" + key.Name)
 	if err != nil {
 		log.Debug().Err(err).Str("path", key.Path).Msg("could not read registry key children")
 		return nil, err
 	}
-	return getPackageFromRegistryKeyItems(items), nil
+	return getPackageFromRegistryKeyItems(items, platform), nil
 }
 
-func getPackageFromRegistryKeyItems(children []registry.RegistryKeyItem) *Package {
+func getPackageFromRegistryKeyItems(children []registry.RegistryKeyItem, platform *inventory.Platform) *Package {
 	var uninstallString string
 	var displayName string
 	var displayVersion string
@@ -457,6 +457,9 @@ func getPackageFromRegistryKeyItems(children []registry.RegistryKeyItem) *Packag
 		Version: displayVersion,
 		Format:  "windows/app",
 		Vendor:  publisher,
+		PUrl: purl.NewPackageURL(
+			platform, purl.TypeWindows, displayName, displayVersion,
+		).String(),
 	}
 
 	if displayName != "" && displayVersion != "" {
