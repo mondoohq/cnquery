@@ -1844,6 +1844,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.iam.group.createDate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamGroup).GetCreateDate()).ToDataRes(types.Time)
 	},
+	"aws.iam.group.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamGroup).GetCreatedAt()).ToDataRes(types.Time)
+	},
 	"aws.iam.group.usernames": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamGroup).GetUsernames()).ToDataRes(types.Array(types.String))
 	},
@@ -6594,6 +6597,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.iam.group.createDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamGroup).CreateDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.group.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamGroup).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.iam.group.usernames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15963,6 +15970,7 @@ type mqlAwsIamGroup struct {
 	Id plugin.TValue[string]
 	Name plugin.TValue[string]
 	CreateDate plugin.TValue[*time.Time]
+	CreatedAt plugin.TValue[*time.Time]
 	Usernames plugin.TValue[[]interface{}]
 }
 
@@ -16017,6 +16025,10 @@ func (c *mqlAwsIamGroup) GetName() *plugin.TValue[string] {
 
 func (c *mqlAwsIamGroup) GetCreateDate() *plugin.TValue[*time.Time] {
 	return &c.CreateDate
+}
+
+func (c *mqlAwsIamGroup) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 func (c *mqlAwsIamGroup) GetUsernames() *plugin.TValue[[]interface{}] {
