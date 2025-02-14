@@ -12,7 +12,7 @@ import (
 var Config = plugin.Provider{
 	Name:    "gitlab",
 	ID:      "go.mondoo.com/cnquery/v9/providers/gitlab",
-	Version: "11.1.51",
+	Version: "11.1.52",
 	ConnectionTypes: []string{
 		provider.ConnectionType,
 		provider.GitlabGroupConnection,
