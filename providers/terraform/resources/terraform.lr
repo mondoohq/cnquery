@@ -66,8 +66,15 @@ terraform.fileposition {
   byte int
 }
 
+// Terraform context is a range of lines/columns in a Terraform file
+private terraform.context @defaults("path range content") {
+  path string
+  range range
+  content(path, range) string
+}
+
 // Terraform resource block
-private terraform.block @defaults("type labels") {
+private terraform.block @defaults("type labels") @context("terraform.context") {
   // Block type
   type string
   // Labels that identify the block (e.g., resource type and name)

@@ -208,17 +208,6 @@ func (t *mqlTerraform) refreshCache(blocks []any) error {
 	return nil
 }
 
-func (g *mqlTerraformBlock) terraformID() string {
-	labels := g.Labels.Data
-	var namearr []string
-	for i := range labels {
-		if s, ok := labels[i].(string); ok {
-			namearr = append(namearr, s)
-		}
-	}
-	return strings.Join(namearr, "\x00")
-}
-
 func listRelatedBlocks(t *mqlTerraform, rawBody any) ([]*mqlTerraformBlock, error) {
 	var res []*mqlTerraformBlock
 	switch body := rawBody.(type) {
@@ -334,6 +323,73 @@ func (t *mqlTerraformBlock) id() (string, error) {
 	column := fp.Data.Column.Data
 
 	return "terraform.block/" + file + "/" + strconv.FormatInt(line, 10) + "/" + strconv.FormatInt(column, 10), nil
+}
+
+func (r *mqlTerraformContext) id() (string, error) {
+	if r.Path.Data == "" {
+		return "", errors.New("need path to exist for terraform.context ID")
+	}
+
+	rng := r.Range.Data.String()
+	return r.Path.Data + ":" + rng, nil
+}
+
+func (r *mqlTerraformContext) content(path string, rnge llx.Range) (string, error) {
+	// return rnge.ExtractString(content, llx.DefaultExtractConfig), nil
+	return "", errors.New("terraform.context must be initialized with content")
+}
+
+func (g *mqlTerraformBlock) context() (*mqlTerraformContext, error) {
+	block := g.block.Data
+	if block == nil {
+		return nil, errors.New("missing underlying terraform block")
+	}
+
+	runtime := g.MqlRuntime
+
+	conn := runtime.Connection.(*connection.Connection)
+	files := conn.Parser().Files()
+	if files == nil {
+		return nil, errors.New("missing terraform files in cache")
+	}
+	file := files[block.DefRange.Filename]
+	if file == nil {
+		return nil, errors.New("failed to get contents for terraform file '" + block.DefRange.Filename + "'")
+	}
+
+	endLine := block.DefRange.End.Line
+	endColumn := block.DefRange.End.Column
+	if body, ok := block.Body.(*hclsyntax.Body); ok && body != nil {
+		if body.SrcRange.Filename == block.DefRange.Filename {
+			endLine = body.SrcRange.End.Line
+			endColumn = body.SrcRange.End.Column
+		}
+	}
+
+	rnge := llx.NewRange().AddLineColumnRange(uint32(block.DefRange.Start.Line), uint32(endLine), uint32(block.DefRange.Start.Column), uint32(endColumn))
+	content := rnge.ExtractString(string(file.Bytes), llx.DefaultExtractConfig)
+
+	cobj, err := CreateResource(runtime, "terraform.context", map[string]*llx.RawData{
+		"path":    llx.StringData(block.DefRange.Filename),
+		"range":   llx.RangeData(rnge),
+		"content": llx.StringData(string(content)),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return cobj.(*mqlTerraformContext), nil
+}
+
+func (g *mqlTerraformBlock) terraformID() string {
+	labels := g.Labels.Data
+	var namearr []string
+	for i := range labels {
+		if s, ok := labels[i].(string); ok {
+			namearr = append(namearr, s)
+		}
+	}
+	return strings.Join(namearr, "\x00")
 }
 
 func (t *mqlTerraformBlock) nameLabel() (string, error) {

@@ -54,6 +54,10 @@ func init() {
 			// to override args, implement: initTerraformFileposition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createTerraformFileposition,
 		},
+		"terraform.context": {
+			// to override args, implement: initTerraformContext(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createTerraformContext,
+		},
 		"terraform.block": {
 			Init:   initTerraformBlock,
 			Create: createTerraformBlock,
@@ -222,6 +226,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"terraform.fileposition.byte": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTerraformFileposition).GetByte()).ToDataRes(types.Int)
 	},
+	"terraform.context.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformContext).GetPath()).ToDataRes(types.String)
+	},
+	"terraform.context.range": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformContext).GetRange()).ToDataRes(types.Range)
+	},
+	"terraform.context.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformContext).GetContent()).ToDataRes(types.String)
+	},
 	"terraform.block.type": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTerraformBlock).GetType()).ToDataRes(types.String)
 	},
@@ -260,6 +273,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"terraform.block.snippet": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTerraformBlock).GetSnippet()).ToDataRes(types.String)
+	},
+	"terraform.block.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformBlock).GetContext()).ToDataRes(types.Resource("terraform.context"))
 	},
 	"terraform.module.key": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTerraformModule).GetKey()).ToDataRes(types.String)
@@ -535,6 +551,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlTerraformFileposition).Byte, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"terraform.context.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlTerraformContext).__id, ok = v.Value.(string)
+			return
+		},
+	"terraform.context.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformContext).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"terraform.context.range": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformContext).Range, ok = plugin.RawToTValue[llx.Range](v.Value, v.Error)
+		return
+	},
+	"terraform.context.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformContext).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"terraform.block.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTerraformBlock).__id, ok = v.Value.(string)
 		return
@@ -589,6 +621,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"terraform.block.snippet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTerraformBlock).Snippet, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"terraform.block.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformBlock).Context, ok = plugin.RawToTValue[*mqlTerraformContext](v.Value, v.Error)
 		return
 	},
 	"terraform.module.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1262,6 +1298,77 @@ func (c *mqlTerraformFileposition) GetByte() *plugin.TValue[int64] {
 	return &c.Byte
 }
 
+// mqlTerraformContext for the terraform.context resource
+type mqlTerraformContext struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlTerraformContextInternal it will be used here
+	Path plugin.TValue[string]
+	Range plugin.TValue[llx.Range]
+	Content plugin.TValue[string]
+}
+
+// createTerraformContext creates a new instance of this resource
+func createTerraformContext(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTerraformContext{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("terraform.context", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTerraformContext) MqlName() string {
+	return "terraform.context"
+}
+
+func (c *mqlTerraformContext) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTerraformContext) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlTerraformContext) GetRange() *plugin.TValue[llx.Range] {
+	return &c.Range
+}
+
+func (c *mqlTerraformContext) GetContent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		vargPath := c.GetPath()
+		if vargPath.Error != nil {
+			return "", vargPath.Error
+		}
+
+		vargRange := c.GetRange()
+		if vargRange.Error != nil {
+			return "", vargRange.Error
+		}
+
+		return c.content(vargPath.Data, vargRange.Data)
+	})
+}
+
 // mqlTerraformBlock for the terraform.block resource
 type mqlTerraformBlock struct {
 	MqlRuntime *plugin.Runtime
@@ -1280,6 +1387,7 @@ type mqlTerraformBlock struct {
 	Blocks       plugin.TValue[[]any]
 	Related      plugin.TValue[[]any]
 	Snippet      plugin.TValue[string]
+	Context plugin.TValue[*mqlTerraformContext]
 }
 
 // createTerraformBlock creates a new instance of this resource
@@ -1405,6 +1513,22 @@ func (c *mqlTerraformBlock) GetRelated() *plugin.TValue[[]any] {
 
 func (c *mqlTerraformBlock) GetSnippet() *plugin.TValue[string] {
 	return &c.Snippet
+}
+
+func (c *mqlTerraformBlock) GetContext() *plugin.TValue[*mqlTerraformContext] {
+	return plugin.GetOrCompute[*mqlTerraformContext](&c.Context, func() (*mqlTerraformContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("terraform.block", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlTerraformContext), nil
+			}
+		}
+
+		return c.context()
+	})
 }
 
 // mqlTerraformModule for the terraform.module resource
