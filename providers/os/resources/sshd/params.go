@@ -6,6 +6,7 @@ package sshd
 import (
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/utils/sortx"
 )
@@ -154,7 +155,8 @@ func ParseBlocks(rootPath string, globPathContent func(string) (string, error)) 
 			for _, path := range paths {
 				subBlocks, err := ParseBlocks(path, globPathContent)
 				if err != nil {
-					return nil, err
+					log.Warn().Err(err).Msg("unable to parse Include directive")
+					continue
 				}
 				mergeIncludedBlocks(matchConditions, subBlocks, curBlock.Criteria)
 			}
