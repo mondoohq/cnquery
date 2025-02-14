@@ -2006,6 +2006,8 @@ resources:
     fields:
       arn: {}
       createDate: {}
+      createdAt:
+        min_mondoo_version: 9.0.0
       id: {}
       name: {}
       usernames: {}

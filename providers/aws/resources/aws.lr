@@ -907,8 +907,10 @@ private aws.iam.group @defaults("arn name") {
   id string
   // Name of the group
   name string
-  // Time when the group was created
+  // Time when the group was created: deprecated, use createdAt
   createDate time
+  // Time when the group was created
+  createdAt time
   // List of usernames that belong to the group
   usernames []string
 }
