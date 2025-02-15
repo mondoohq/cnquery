@@ -307,7 +307,7 @@ func (l *CodeV2) returnValues(bundle *CodeBundle, lookup func(s string) (*RawRes
 	return res
 }
 
-func (l *CodeV2) entrypoint2assessment(bundle *CodeBundle, ref uint64, lookup func(s string) (*RawResult, bool)) *AssessmentItem {
+func (l *CodeV2) Entrypoint2Assessment(bundle *CodeBundle, ref uint64, lookup func(s string) (*RawResult, bool)) *AssessmentItem {
 	code := bundle.CodeV2
 	checksum := code.Checksums[ref]
 

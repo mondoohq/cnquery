@@ -383,7 +383,7 @@ func (c *compiler) compileIfBlock(expressions []*parser.Expression, chunk *llx.C
 	if err != nil {
 		return types.Nil, err
 	}
-	blockCompiler.updateEntrypoints(false)
+	blockCompiler.updateEntrypoints()
 
 	block := blockCompiler.block
 
@@ -536,7 +536,7 @@ func (c *compiler) compileSwitchBlock(expressions []*parser.Expression, chunk *l
 		if err != nil {
 			return types.Nil, err
 		}
-		blockCompiler.updateEntrypoints(false)
+		blockCompiler.updateEntrypoints()
 
 		// TODO(jaym): Discuss with dom: v1 seems to hardcore this as
 		// single valued
@@ -626,7 +626,7 @@ func (c *compiler) blockcompileOnResource(expressions []*parser.Expression, typ 
 		return &blockCompiler, err
 	}
 
-	blockCompiler.updateEntrypoints(false)
+	blockCompiler.updateEntrypoints()
 	blockCompiler.updateLabels()
 
 	return &blockCompiler, nil
@@ -1989,14 +1989,7 @@ func (c *compiler) updateLabels() {
 	}
 }
 
-func (c *compiler) updateEntrypoints(collectRefDatapoints bool) {
-	// BUG (jaym): collectRefDatapoints prevents us from collecting datapoints.
-	// Collecting datapoints for blocks didn't work correctly until 6.7.0.
-	// See https://gitlab.com/mondoolabs/mondoo/-/merge_requests/2639
-	// We can fix this after some time has passed. If we fix it too soon
-	// people will start having their queries fail if a falsy datapoint
-	// is collected.
-
+func (c *compiler) updateEntrypoints() {
 	code := c.Result.CodeV2
 
 	// 1. efficiently remove variable definitions from entrypoints
@@ -2034,10 +2027,6 @@ func (c *compiler) updateEntrypoints(collectRefDatapoints bool) {
 		if chunk.Function != nil {
 			delete(entrypoints, chunk.Function.Binding)
 		}
-	}
-
-	if !collectRefDatapoints {
-		return
 	}
 
 	datapoints := map[uint64]struct{}{}
@@ -2096,7 +2085,7 @@ func (c *compiler) CompileParsed(ast *parser.AST) error {
 
 	c.postCompile()
 	c.Result.CodeV2.UpdateID()
-	c.updateEntrypoints(true)
+	c.updateEntrypoints()
 	c.updateLabels()
 
 	return nil
