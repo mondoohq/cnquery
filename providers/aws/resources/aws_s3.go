@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -397,6 +398,78 @@ const (
 )
 
 func (a *mqlAwsS3Bucket) public() (bool, error) {
+	var (
+		bucketname = a.Name.Data
+		location   = a.Location.Data
+		conn       = a.MqlRuntime.Connection.(*connection.AwsConnection)
+		svc        = conn.S3(location)
+		ctx        = context.Background()
+	)
+
+	// Check Public Access Block settings first
+	publicAccess, err := svc.GetPublicAccessBlock(ctx, &s3.GetPublicAccessBlockInput{
+		Bucket: &bucketname,
+	})
+	if err != nil && !isNotFoundForS3(err) {
+		return false, err
+	}
+
+	notPublic := false
+	if publicAccess != nil && publicAccess.PublicAccessBlockConfiguration != nil {
+		accessBlock := publicAccess.PublicAccessBlockConfiguration
+		if accessBlock.BlockPublicAcls != nil && *accessBlock.BlockPublicAcls {
+			notPublic = true
+		}
+		if accessBlock.BlockPublicPolicy != nil && *accessBlock.BlockPublicPolicy {
+			notPublic = true
+		}
+		if accessBlock.IgnorePublicAcls != nil && *accessBlock.IgnorePublicAcls {
+			notPublic = true
+		}
+		if accessBlock.RestrictPublicBuckets != nil && *accessBlock.RestrictPublicBuckets {
+			notPublic = true
+		}
+	}
+	if notPublic {
+		return false, nil // Public access is restricted
+	}
+
+	// Then, use GetBucketPolicyStatus to determine public access
+	statusOutput, err := svc.GetBucketPolicyStatus(ctx, &s3.GetBucketPolicyStatusInput{
+		Bucket: &bucketname,
+	})
+	if err != nil {
+		return false, err
+	}
+	if statusOutput != nil &&
+		statusOutput.PolicyStatus != nil &&
+		statusOutput.PolicyStatus.IsPublic != nil {
+		return *statusOutput.PolicyStatus.IsPublic, nil
+	}
+
+	// If that didn't work, fetch the bucket policy manually and parse it
+	bucketPolicyResource, err := a.policy()
+	if err != nil {
+		return false, err
+	}
+
+	bucketPolicy, err := bucketPolicyResource.parsePolicyDocument()
+	if err != nil {
+		return false, err
+	}
+
+	for _, statement := range bucketPolicy.Statements {
+		if statement.Effect != "Allow" {
+			continue
+		}
+		if awsPrincipal, ok := statement.Principal["AWS"]; ok {
+			if slices.Contains(awsPrincipal, "*") {
+				return true, nil
+			}
+		}
+	}
+
+	// Finally check for bucket ACLs
 	acl, err := a.gatherAcl()
 	if err != nil {
 		return false, err
