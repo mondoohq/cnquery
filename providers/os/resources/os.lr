@@ -1304,7 +1304,7 @@ npm.packages {
 
   init(path? string)
 
-  // optional path to search for packages
+  // Optional path to search for packages
   path string
 
   // Root Package (may not exist)
