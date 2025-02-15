@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream/mvd"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
@@ -30,7 +31,7 @@ func (p *mqlAsset) vulnerabilityReport() (interface{}, error) {
 	apiPackages := []*mvd.Package{}
 
 	scanjob := &mvd.AnalyseAssetRequest{
-		Platform: mvd.NewMvdPlatform(conn.Asset().Platform),
+		Platform: mvd.NewMvdPlatform(conn.Asset()),
 		Packages: apiPackages,
 	}
 
@@ -61,7 +62,7 @@ func (p *mqlPlatform) vulnerabilityReport() (interface{}, error) {
 	apiPackages := []*mvd.Package{}
 
 	scanjob := &mvd.AnalyseAssetRequest{
-		Platform: mvd.NewMvdPlatform(conn.Asset().Platform),
+		Platform: mvd.NewMvdPlatform(conn.Asset()),
 		Packages: apiPackages,
 	}
 

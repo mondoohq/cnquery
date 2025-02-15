@@ -6,8 +6,9 @@ package resources
 import (
 	"context"
 	"errors"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream/mvd"
 	"time"
+
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream/mvd"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/llx"
@@ -20,8 +21,7 @@ import (
 // This code moved to the core provider and is replaced by the code there
 func initAssetEol(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	conn := runtime.Connection.(shared.Connection)
-	platform := conn.Asset().Platform
-	eolPlatform := mvd.NewMvdPlatform(platform)
+	eolPlatform := mvd.NewMvdPlatform(conn.Asset())
 
 	mcc := runtime.Upstream
 	if mcc == nil || mcc.ApiEndpoint == "" {
