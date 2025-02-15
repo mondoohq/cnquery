@@ -114,6 +114,17 @@ func (a *mqlAwsS3) buckets() ([]interface{}, error) {
 	return res, nil
 }
 
+func initAwsS3BucketPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// reuse the init func for the bucket
+	_, s3bucketResource, err := initAwsS3Bucket(runtime, args)
+	if err != nil {
+		return args, nil, err
+	}
+	// then use it to get its policy
+	policyResource := s3bucketResource.(*mqlAwsS3Bucket).GetPolicy()
+	return args, policyResource.Data, nil
+}
+
 func initAwsS3Bucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	// NOTE: bucket only initializes with arn and name
 	if len(args) >= 2 {
@@ -180,12 +191,13 @@ func (a *mqlAwsS3Bucket) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func emptyAwsS3BucketPolicy(runtime *plugin.Runtime) (*mqlAwsS3BucketPolicy, error) {
-	res, err := CreateResource(runtime, "aws.s3.bucket.policy", map[string]*llx.RawData{
-		"name":       llx.StringData(""),
+func (a *mqlAwsS3Bucket) emptyAwsS3BucketPolicy() (*mqlAwsS3BucketPolicy, error) {
+	res, err := CreateResource(a.MqlRuntime, "aws.s3.bucket.policy", map[string]*llx.RawData{
+		"bucketName": llx.StringData(a.Name.Data),
 		"document":   llx.StringData("{}"),
 		"version":    llx.StringData(""),
 		"id":         llx.StringData(""),
+		"exists":     llx.BoolData(false),
 		"statements": llx.ArrayData([]interface{}{}, types.Dict),
 	})
 	if err != nil {
@@ -207,26 +219,34 @@ func (a *mqlAwsS3Bucket) policy() (*mqlAwsS3BucketPolicy, error) {
 	})
 	if err != nil {
 		if isNotFoundForS3(err) {
-			return emptyAwsS3BucketPolicy(a.MqlRuntime)
+			return a.emptyAwsS3BucketPolicy()
 		}
 		return nil, err
 	}
 
 	if policy != nil && policy.Policy != nil {
+		parsedPolicy, err := parsePolicy(*policy.Policy)
+		if err != nil {
+			return nil, err
+		}
 		// create the policy resource
 		mqlS3BucketPolicy, err := CreateResource(a.MqlRuntime, "aws.s3.bucket.policy",
 			map[string]*llx.RawData{
-				"name":     llx.StringData(bucketname),
-				"document": llx.StringDataPtr(policy.Policy),
+				"id":         llx.StringData(parsedPolicy.Id),
+				"bucketName": llx.StringData(bucketname),
+				"version":    llx.StringData(parsedPolicy.Version),
+				"document":   llx.StringDataPtr(policy.Policy),
+				"exists":     llx.BoolData(true),
 			})
 		if err != nil {
 			return nil, err
 		}
+
 		return mqlS3BucketPolicy.(*mqlAwsS3BucketPolicy), nil
 	}
 
 	// no bucket policy found, return nil for the policy
-	return emptyAwsS3BucketPolicy(a.MqlRuntime)
+	return a.emptyAwsS3BucketPolicy()
 }
 
 func (a *mqlAwsS3Bucket) tags() (map[string]interface{}, error) {
@@ -438,7 +458,7 @@ func (a *mqlAwsS3Bucket) public() (bool, error) {
 	statusOutput, err := svc.GetBucketPolicyStatus(ctx, &s3.GetBucketPolicyStatusInput{
 		Bucket: &bucketname,
 	})
-	if err != nil {
+	if err != nil && !isNotFoundForS3(err) {
 		return false, err
 	}
 	if statusOutput != nil &&
@@ -698,25 +718,20 @@ func (a *mqlAwsS3BucketCorsrule) id() (string, error) {
 }
 
 func (a *mqlAwsS3BucketPolicy) id() (string, error) {
-	policy, err := a.parsePolicyDocument()
-	if err != nil || policy == nil {
-		return "none", err
-	}
-
-	a.Id = plugin.TValue[string]{Data: policy.Id, State: plugin.StateIsSet}
-	return policy.Id, nil
+	// NOTE that `policy.Id` might or might not exist and,
+	// it is NOT unique for s3 bucket policies. what we need
+	// here is the bucket name, which is unique globally.
+	return fmt.Sprintf("aws.s3.bucket/%s/policy", a.BucketName.Data), nil
 }
 
 func (a *mqlAwsS3BucketPolicy) parsePolicyDocument() (*awspolicy.S3BucketPolicy, error) {
-	data := a.Document.Data
+	return parsePolicy(a.Document.Data)
+}
 
+func parsePolicy(document string) (*awspolicy.S3BucketPolicy, error) {
 	var policy awspolicy.S3BucketPolicy
-	err := json.Unmarshal([]byte(data), &policy)
-	if err != nil {
-		return nil, err
-	}
-
-	return &policy, nil
+	err := json.Unmarshal([]byte(document), &policy)
+	return &policy, err
 }
 
 func (a *mqlAwsS3BucketPolicy) version() (string, error) {

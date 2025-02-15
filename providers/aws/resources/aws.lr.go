@@ -463,7 +463,7 @@ func init() {
 			Create: createAwsS3BucketCorsrule,
 		},
 		"aws.s3.bucket.policy": {
-			// to override args, implement: initAwsS3BucketPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initAwsS3BucketPolicy,
 			Create: createAwsS3BucketPolicy,
 		},
 		"aws.applicationAutoscaling": {
@@ -2879,8 +2879,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.s3.bucket.policy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3BucketPolicy).GetId()).ToDataRes(types.String)
 	},
-	"aws.s3.bucket.policy.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsS3BucketPolicy).GetName()).ToDataRes(types.String)
+	"aws.s3.bucket.policy.bucketName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketPolicy).GetBucketName()).ToDataRes(types.String)
 	},
 	"aws.s3.bucket.policy.document": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3BucketPolicy).GetDocument()).ToDataRes(types.String)
@@ -2890,6 +2890,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.s3.bucket.policy.statements": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3BucketPolicy).GetStatements()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.s3.bucket.policy.exists": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketPolicy).GetExists()).ToDataRes(types.Bool)
 	},
 	"aws.applicationAutoscaling.namespace": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApplicationAutoscaling).GetNamespace()).ToDataRes(types.String)
@@ -8206,8 +8209,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsS3BucketPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.s3.bucket.policy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsS3BucketPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.s3.bucket.policy.bucketName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketPolicy).BucketName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.s3.bucket.policy.document": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8220,6 +8223,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.s3.bucket.policy.statements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsS3BucketPolicy).Statements, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.policy.exists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketPolicy).Exists, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.applicationAutoscaling.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20837,10 +20844,11 @@ type mqlAwsS3BucketPolicy struct {
 	__id string
 	// optional: if you define mqlAwsS3BucketPolicyInternal it will be used here
 	Id plugin.TValue[string]
-	Name plugin.TValue[string]
+	BucketName plugin.TValue[string]
 	Document plugin.TValue[string]
 	Version plugin.TValue[string]
 	Statements plugin.TValue[[]interface{}]
+	Exists plugin.TValue[bool]
 }
 
 // createAwsS3BucketPolicy creates a new instance of this resource
@@ -20884,8 +20892,8 @@ func (c *mqlAwsS3BucketPolicy) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
-func (c *mqlAwsS3BucketPolicy) GetName() *plugin.TValue[string] {
-	return &c.Name
+func (c *mqlAwsS3BucketPolicy) GetBucketName() *plugin.TValue[string] {
+	return &c.BucketName
 }
 
 func (c *mqlAwsS3BucketPolicy) GetDocument() *plugin.TValue[string] {
@@ -20902,6 +20910,10 @@ func (c *mqlAwsS3BucketPolicy) GetStatements() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.Statements, func() ([]interface{}, error) {
 		return c.statements()
 	})
+}
+
+func (c *mqlAwsS3BucketPolicy) GetExists() *plugin.TValue[bool] {
+	return &c.Exists
 }
 
 // mqlAwsApplicationAutoscaling for the aws.applicationAutoscaling resource
