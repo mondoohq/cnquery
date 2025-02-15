@@ -20,7 +20,7 @@ const (
 )
 
 // parse macos system version property list
-func ParseMacOSPackages(platform *inventory.Platform, input io.Reader) ([]Package, error) {
+func ParseMacOSPackages(asset *inventory.Asset, input io.Reader) ([]Package, error) {
 	var r io.ReadSeeker
 	r, ok := input.(io.ReadSeeker)
 
@@ -61,7 +61,7 @@ func ParseMacOSPackages(platform *inventory.Platform, input io.Reader) ([]Packag
 		pkgs[i].Format = MacosPkgFormat
 		pkgs[i].FilesAvailable = PkgFilesIncluded
 		pkgs[i].PUrl = purl.NewPackageURL(
-			platform, purl.TypeMacos, entry.Name, entry.Version,
+			asset, purl.TypeMacos, entry.Name, entry.Version,
 		).String()
 		if entry.Path != "" {
 			pkgs[i].Files = []FileRecord{
@@ -77,8 +77,8 @@ func ParseMacOSPackages(platform *inventory.Platform, input io.Reader) ([]Packag
 
 // MacOS
 type MacOSPkgManager struct {
-	conn     shared.Connection
-	platform *inventory.Platform
+	conn  shared.Connection
+	asset *inventory.Asset
 }
 
 func (mpm *MacOSPkgManager) Name() string {
@@ -95,7 +95,7 @@ func (mpm *MacOSPkgManager) List() ([]Package, error) {
 		return nil, fmt.Errorf("could not read package list")
 	}
 
-	return ParseMacOSPackages(mpm.platform, cmd.Stdout)
+	return ParseMacOSPackages(mpm.asset, cmd.Stdout)
 }
 
 func (mpm *MacOSPkgManager) Available() (map[string]PackageUpdate, error) {

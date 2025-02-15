@@ -22,7 +22,7 @@ const (
 
 var PACMAN_REGEX = regexp.MustCompile(`^([\w-]*)\s([\w\d-+.:]+)$`)
 
-func ParsePacmanPackages(pf *inventory.Platform, input io.Reader) []Package {
+func ParsePacmanPackages(asset *inventory.Asset, input io.Reader) []Package {
 	pkgs := []Package{}
 	scanner := bufio.NewScanner(input)
 	for scanner.Scan() {
@@ -35,7 +35,7 @@ func ParsePacmanPackages(pf *inventory.Platform, input io.Reader) []Package {
 				Name:    name,
 				Version: version,
 				Format:  PacmanPkgFormat,
-				PUrl:    purl.NewPackageURL(pf, purl.TypeAlpm, name, version).String(),
+				PUrl:    purl.NewPackageURL(asset, purl.TypeAlpm, name, version).String(),
 			})
 		}
 	}
@@ -44,8 +44,8 @@ func ParsePacmanPackages(pf *inventory.Platform, input io.Reader) []Package {
 
 // Arch, Manjaro
 type PacmanPkgManager struct {
-	conn     shared.Connection
-	platform *inventory.Platform
+	conn  shared.Connection
+	asset *inventory.Asset
 }
 
 func (ppm *PacmanPkgManager) Name() string {
@@ -62,7 +62,7 @@ func (ppm *PacmanPkgManager) List() ([]Package, error) {
 		return nil, fmt.Errorf("could not read package list")
 	}
 
-	return ParsePacmanPackages(ppm.platform, cmd.Stdout), nil
+	return ParsePacmanPackages(ppm.asset, cmd.Stdout), nil
 }
 
 func (ppm *PacmanPkgManager) Available() (map[string]PackageUpdate, error) {

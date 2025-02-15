@@ -30,7 +30,7 @@ var (
 )
 
 // ParseDpkgPackages parses the dpkg database content located in /var/lib/dpkg/status
-func ParseDpkgPackages(pf *inventory.Platform, input io.Reader) ([]Package, error) {
+func ParseDpkgPackages(asset *inventory.Asset, input io.Reader) ([]Package, error) {
 	const STATE_RESET = 0
 	const STATE_DESC = 1
 	pkgs := []Package{}
@@ -38,7 +38,7 @@ func ParseDpkgPackages(pf *inventory.Platform, input io.Reader) ([]Package, erro
 	add := func(pkg Package) {
 		// do sanitization checks to ensure we have minimal information
 		if pkg.Name != "" && pkg.Version != "" {
-			pkg.PUrl = purl.NewPackageURL(pf, purl.TypeDebian, pkg.Name, pkg.Version,
+			pkg.PUrl = purl.NewPackageURL(asset, purl.TypeDebian, pkg.Name, pkg.Version,
 				purl.WithArch(pkg.Arch),
 				purl.WithEpoch(pkg.Epoch),
 			).String()
@@ -122,8 +122,8 @@ func ParseDpkgUpdates(input io.Reader) (map[string]PackageUpdate, error) {
 
 // Debian, Ubuntu
 type DebPkgManager struct {
-	conn     shared.Connection
-	platform *inventory.Platform
+	conn  shared.Connection
+	asset *inventory.Asset
 }
 
 func (dpm *DebPkgManager) Name() string {
@@ -157,7 +157,7 @@ func (dpm *DebPkgManager) List() ([]Package, error) {
 		}
 		defer fi.Close()
 
-		list, err := ParseDpkgPackages(dpm.platform, fi)
+		list, err := ParseDpkgPackages(dpm.asset, fi)
 		if err != nil {
 			return nil, fmt.Errorf("could not parse dpkg package list")
 		}
@@ -179,7 +179,7 @@ func (dpm *DebPkgManager) List() ([]Package, error) {
 				return fmt.Errorf("could not read dpkg package list")
 			}
 
-			list, err := ParseDpkgPackages(dpm.platform, fi)
+			list, err := ParseDpkgPackages(dpm.asset, fi)
 			fi.Close()
 			if err != nil {
 				log.Debug().Err(err).Str("path", path).Msg("could not parse")

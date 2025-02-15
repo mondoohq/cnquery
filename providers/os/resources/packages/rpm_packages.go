@@ -33,7 +33,7 @@ var RPM_REGEX = regexp.MustCompile(`^([\w-+]*)\s(\d*|\(none\)):([\w\d-+.:]+)\s([
 
 // ParseRpmPackages parses output from:
 // rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}\n'
-func ParseRpmPackages(pf *inventory.Platform, input io.Reader) []Package {
+func ParseRpmPackages(asset *inventory.Asset, input io.Reader) []Package {
 	pkgs := []Package{}
 	scanner := bufio.NewScanner(input)
 	for scanner.Scan() {
@@ -60,7 +60,7 @@ func ParseRpmPackages(pf *inventory.Platform, input io.Reader) []Package {
 
 			vendor := cleanupVendorName(m[5])
 
-			pkg := newRpmPackage(pf, name, version, arch, epoch, vendor, m[6])
+			pkg := newRpmPackage(asset, name, version, arch, epoch, vendor, m[6])
 			pkg.FilesAvailable = PkgFilesAsync // when we use commands we need to fetch the files async
 			pkgs = append(pkgs, pkg)
 
@@ -69,7 +69,7 @@ func ParseRpmPackages(pf *inventory.Platform, input io.Reader) []Package {
 	return pkgs
 }
 
-func newRpmPackage(pf *inventory.Platform, name, version, arch, epoch, vendor, description string) Package {
+func newRpmPackage(asset *inventory.Asset, name, version, arch, epoch, vendor, description string) Package {
 	// NOTE that we do not have the vendor of the package itself, we could try to parse it from the vendor
 	// but that will also not be reliable. We may incorporate the cpe dictionary in the future but that would
 	// increase the binary.
@@ -95,7 +95,7 @@ func newRpmPackage(pf *inventory.Platform, name, version, arch, epoch, vendor, d
 		Format:      RpmPkgFormat,
 		CPEs:        cpes,
 		Vendor:      vendor,
-		PUrl: purl.NewPackageURL(pf, purl.TypeRPM, name, version,
+		PUrl: purl.NewPackageURL(asset, purl.TypeRPM, name, version,
 			purl.WithArch(arch),
 			purl.WithEpoch(epoch),
 		).String(),
@@ -120,7 +120,7 @@ func cleanupVendorName(vendor string) string {
 // one since more data need to copied. Therefore the runtime check should be preferred over the static analysis
 type RpmPkgManager struct {
 	conn          shared.Connection
-	platform      *inventory.Platform
+	asset         *inventory.Asset
 	staticChecked bool
 	static        bool
 }
@@ -188,8 +188,8 @@ func (rpm *RpmPkgManager) queryFormat() string {
 	// ATTENTION: EPOCHNUM is only available since later version of rpm in RedHat 6 and Suse 12
 	// we can only expect if for rhel 7+, therefore we need to run an extra test
 	// be aware that this method is also used for non-redhat systems like suse
-	i, err := strconv.ParseInt(rpm.platform.Version, 0, 32)
-	if err == nil && (rpm.platform.Name == "centos" || rpm.platform.Name == "redhat") && i >= 7 {
+	i, err := strconv.ParseInt(rpm.asset.Platform.Version, 0, 32)
+	if err == nil && (rpm.asset.Platform.Name == "centos" || rpm.asset.Platform.Name == "redhat") && i >= 7 {
 		format = "%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}\\n"
 	}
 
@@ -202,7 +202,7 @@ func (rpm *RpmPkgManager) runtimeList() ([]Package, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "could not read package list")
 	}
-	return ParseRpmPackages(rpm.platform, cmd.Stdout), nil
+	return ParseRpmPackages(rpm.asset, cmd.Stdout), nil
 }
 
 // fetch all available packages, is that working with centos 6?
@@ -253,7 +253,7 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 	}
 
 	if len(detectedPath) == 0 {
-		return nil, errors.Wrap(err, "could not find rpm packages location on : "+rpm.platform.Name)
+		return nil, errors.Wrap(err, "could not find rpm packages location on : "+rpm.asset.Platform.Name)
 	}
 	log.Debug().Str("path", detectedPath).Msg("found rpm packages location")
 
@@ -294,7 +294,7 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 			version = version + "-" + pkg.Release
 		}
 
-		rpmPkg := newRpmPackage(rpm.platform, pkg.Name, version, pkg.Arch, epoch, cleanupVendorName(pkg.Vendor), pkg.Summary)
+		rpmPkg := newRpmPackage(rpm.asset, pkg.Name, version, pkg.Arch, epoch, cleanupVendorName(pkg.Vendor), pkg.Summary)
 
 		// determine all files attached
 		records := []FileRecord{}

@@ -18,8 +18,8 @@ const (
 	QualifierEpoch  = "epoch"
 )
 
-// PackageURL is a helper struct that renters a package url based of an inventory
-// platform, purl type, and modifiers.
+// PackageURL is a helper struct that renders a package url based of an inventory
+// asset, purl type, and modifiers.
 type PackageURL struct {
 	// Required: minimal attributes to render a PURL.
 	Type    Type
@@ -32,7 +32,7 @@ type PackageURL struct {
 	Epoch     string
 
 	// Used as metadata to fetch things like the architecture or linux distribution.
-	platform *inventory.Platform
+	asset *inventory.Asset
 }
 
 // NewQualifiers creates a new Qualifiers slice from a map of key/value pairs.
@@ -60,24 +60,24 @@ func NewQualifiers(qualifier map[string]string) packageurl.Qualifiers {
 	return list
 }
 
-// NewPackageURL creates a new package url for a given platform, name, version, and type.
+// NewPackageURL creates a new package url for a given asset, name, version, and type.
 //
 // For more information, see:
 // https://github.com/package-url/purl-spec/blob/master/PURL-TYPES.rst
-func NewPackageURL(pf *inventory.Platform, t Type, name, version string, modifiers ...Modifier) *PackageURL {
+func NewPackageURL(asset *inventory.Asset, t Type, name, version string, modifiers ...Modifier) *PackageURL {
 	purl := &PackageURL{
-		Type:     t,
-		Name:     name,
-		Version:  version,
-		platform: pf,
+		Type:    t,
+		Name:    name,
+		Version: version,
+		asset:   asset,
 	}
 
 	// if a platform was provided
-	if pf != nil {
+	if asset != nil && asset.GetPlatform() != nil {
 		// use the platform architecture for the package
-		purl.Arch = pf.Arch
+		purl.Arch = asset.Platform.Arch
 
-		purlNamespace := pf.Name
+		purlNamespace := asset.Platform.Name
 		if purlNamespace == "photon" {
 			purlNamespace = "photon os"
 		}
@@ -121,12 +121,12 @@ func (purl PackageURL) String() string {
 
 // generate distro qualifier
 func (purl PackageURL) distroQualifiers() (string, bool) {
-	if purl.platform == nil || len(purl.platform.Labels) == 0 {
+	if purl.asset == nil || len(purl.asset.Labels) == 0 {
 		return "", false
 	}
 
 	distroId := ""
-	if val, ok := purl.platform.Labels[detector.LabelDistroID]; ok {
+	if val, ok := purl.asset.Labels[detector.LabelDistroID]; ok {
 		distroId = val
 	}
 	if distroId == "" {
@@ -135,10 +135,12 @@ func (purl PackageURL) distroQualifiers() (string, bool) {
 
 	distroQualifiers := []string{}
 	distroQualifiers = append(distroQualifiers, distroId)
-	if purl.platform.Version != "" {
-		distroQualifiers = append(distroQualifiers, purl.platform.Version)
-	} else if purl.platform.Build != "" {
-		distroQualifiers = append(distroQualifiers, purl.platform.Build)
+	if purl.asset.GetPlatform() != nil {
+		if purl.asset.Platform.Version != "" {
+			distroQualifiers = append(distroQualifiers, purl.asset.Platform.Version)
+		} else if purl.asset.Platform.Build != "" {
+			distroQualifiers = append(distroQualifiers, purl.asset.Platform.Build)
+		}
 	}
 
 	return strings.Join(distroQualifiers, "-"), true

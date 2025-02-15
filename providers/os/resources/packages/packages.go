@@ -99,21 +99,21 @@ func ResolveSystemPkgManager(conn shared.Connection) (OperatingSystemPkgManager,
 
 	switch {
 	case asset.Platform.IsFamily("arch"): // arch family
-		pm = &PacmanPkgManager{conn: conn, platform: asset.Platform}
+		pm = &PacmanPkgManager{conn: conn, asset: asset}
 	case asset.Platform.IsFamily("debian"): // debian family
-		pm = &DebPkgManager{conn: conn, platform: asset.Platform}
+		pm = &DebPkgManager{conn: conn, asset: asset}
 	case asset.Platform.Name == "amazonlinux" || asset.Platform.Name == "photon" || asset.Platform.Name == "wrlinux":
 		fallthrough
 	case asset.Platform.IsFamily("redhat"): // rhel family
-		pm = &RpmPkgManager{conn: conn, platform: asset.Platform}
+		pm = &RpmPkgManager{conn: conn, asset: asset}
 	case asset.Platform.IsFamily("suse"): // suse handling
-		pm = &SusePkgManager{RpmPkgManager{conn: conn, platform: asset.Platform}}
+		pm = &SusePkgManager{RpmPkgManager{conn: conn, asset: asset}}
 	case asset.Platform.Name == "alpine" || asset.Platform.Name == "wolfi": // alpine & wolfi share apk
-		pm = &AlpinePkgManager{conn: conn, platform: asset.Platform}
+		pm = &AlpinePkgManager{conn: conn, asset: asset}
 	case asset.Platform.Name == "macos": // mac os family
-		pm = &MacOSPkgManager{conn: conn, platform: asset.Platform}
+		pm = &MacOSPkgManager{conn: conn, asset: asset}
 	case asset.Platform.Name == "windows":
-		pm = &WinPkgManager{conn: conn, platform: asset.Platform}
+		pm = &WinPkgManager{conn: conn, asset: asset}
 	case asset.Platform.Name == "scratch" || asset.Platform.Name == "coreos":
 		pm = &ScratchPkgManager{conn: conn}
 	case asset.Platform.Name == "openwrt":
@@ -125,7 +125,7 @@ func ResolveSystemPkgManager(conn shared.Connection) (OperatingSystemPkgManager,
 	case asset.Platform.Name == "freebsd":
 		pm = &FreeBSDPkgManager{conn: conn}
 	case asset.Platform.Name == "aix":
-		pm = &AixPkgManager{conn: conn, platform: asset.Platform}
+		pm = &AixPkgManager{conn: conn, asset: asset}
 	case asset.Platform.IsFamily("linux"):
 		// no clear package manager for linux platform found
 		// most likely we land here if we have a yocto-based system

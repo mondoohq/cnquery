@@ -20,7 +20,7 @@ const (
 	AixPkgFormat = "bff"
 )
 
-func parseAixPackages(pf *inventory.Platform, r io.Reader) ([]Package, error) {
+func parseAixPackages(asset *inventory.Asset, r io.Reader) ([]Package, error) {
 	pkgs := []Package{}
 
 	scanner := bufio.NewScanner(r)
@@ -35,7 +35,7 @@ func parseAixPackages(pf *inventory.Platform, r io.Reader) ([]Package, error) {
 
 		record := strings.Split(line, ":")
 
-		cpes, _ := cpe2.NewPackage2Cpe(record[1], record[1], record[2], "", pf.Arch)
+		cpes, _ := cpe2.NewPackage2Cpe(record[1], record[1], record[2], "", asset.Platform.Arch)
 		// Fileset, Level, PtfID, State, Type, Description, EFIXLocked
 		pkgs = append(pkgs, Package{
 			Name:        record[1],
@@ -43,7 +43,7 @@ func parseAixPackages(pf *inventory.Platform, r io.Reader) ([]Package, error) {
 			Description: strings.TrimSpace(record[6]),
 			Format:      AixPkgFormat,
 			PUrl: purl.NewPackageURL(
-				pf, purl.TypeGeneric, record[1], record[2], purl.WithNamespace(pf.Name),
+				asset, purl.TypeGeneric, record[1], record[2], purl.WithNamespace(asset.Platform.Name),
 			).String(),
 			CPEs: cpes,
 		})
@@ -53,8 +53,8 @@ func parseAixPackages(pf *inventory.Platform, r io.Reader) ([]Package, error) {
 }
 
 type AixPkgManager struct {
-	conn     shared.Connection
-	platform *inventory.Platform
+	conn  shared.Connection
+	asset *inventory.Asset
 }
 
 func (a *AixPkgManager) Name() string {
@@ -71,7 +71,7 @@ func (a *AixPkgManager) List() ([]Package, error) {
 		return nil, fmt.Errorf("could not read freebsd package list")
 	}
 
-	return parseAixPackages(a.platform, cmd.Stdout)
+	return parseAixPackages(a.asset, cmd.Stdout)
 }
 
 func (a *AixPkgManager) Available() (map[string]PackageUpdate, error) {
