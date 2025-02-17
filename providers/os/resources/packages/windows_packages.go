@@ -113,7 +113,7 @@ type winAppxPackages struct {
 	arch string `json:"-"`
 }
 
-func (p winAppxPackages) toPackage(platform *inventory.Platform) Package {
+func (p winAppxPackages) toPackage(asset *inventory.Asset) Package {
 	if p.arch == "" {
 		arch, ok := appxArchitecture[p.Architecture]
 		if !ok {
@@ -129,7 +129,7 @@ func (p winAppxPackages) toPackage(platform *inventory.Platform) Package {
 		Arch:    p.arch,
 		Format:  "windows/appx",
 		Vendor:  p.Publisher,
-		PUrl:    purl.NewPackageURL(platform, purl.TypeAppx, p.Name, p.Version).String(),
+		PUrl:    purl.NewPackageURL(asset, purl.TypeAppx, p.Name, p.Version).String(),
 	}
 
 	if p.Name != "" && p.Version != "" {
@@ -150,7 +150,7 @@ func (p winAppxPackages) toPackage(platform *inventory.Platform) Package {
 }
 
 // Good read: https://www.wintips.org/view-installed-apps-and-packages-in-windows-10-8-1-8-from-powershell/
-func ParseWindowsAppxPackages(platform *inventory.Platform, input io.Reader) ([]Package, error) {
+func ParseWindowsAppxPackages(asset *inventory.Asset, input io.Reader) ([]Package, error) {
 	data, err := io.ReadAll(input)
 	if err != nil {
 		return nil, err
@@ -170,7 +170,7 @@ func ParseWindowsAppxPackages(platform *inventory.Platform, input io.Reader) ([]
 
 	pkgs := make([]Package, len(appxPackages))
 	for i, p := range appxPackages {
-		pkgs[i] = p.toPackage(platform)
+		pkgs[i] = p.toPackage(asset)
 	}
 	return pkgs, nil
 }
@@ -224,8 +224,8 @@ func HotFixesToPackages(hotfixes []PowershellWinHotFix) []Package {
 }
 
 type WinPkgManager struct {
-	conn     shared.Connection
-	platform *inventory.Platform
+	conn  shared.Connection
+	asset *inventory.Asset
 }
 
 func (w *WinPkgManager) Name() string {
@@ -285,7 +285,7 @@ func (w *WinPkgManager) getInstalledApps() ([]Package, error) {
 		return nil, errors.New("failed to retrieve installed apps: " + string(stderr))
 	}
 
-	return ParseWindowsAppPackages(w.platform, cmd.Stdout)
+	return ParseWindowsAppPackages(w.asset, cmd.Stdout)
 }
 
 func (w *WinPkgManager) getAppxPackages() ([]Package, error) {
@@ -295,7 +295,7 @@ func (w *WinPkgManager) getAppxPackages() ([]Package, error) {
 		return w.getFsAppxPackages()
 	}
 
-	b, err := windows.Version(w.platform.Version)
+	b, err := windows.Version(w.asset.Platform.Version)
 	if err != nil {
 		return nil, err
 	}
@@ -313,7 +313,7 @@ func (w *WinPkgManager) getPwshAppxPackages() ([]Package, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not read appx package list")
 	}
-	return ParseWindowsAppxPackages(w.platform, cmd.Stdout)
+	return ParseWindowsAppxPackages(w.asset, cmd.Stdout)
 }
 
 func (w *WinPkgManager) getFsInstalledApps() ([]Package, error) {
@@ -398,7 +398,7 @@ func (w *WinPkgManager) getFsAppxPackages() ([]Package, error) {
 			log.Debug().Err(err).Str("path", p).Msg("could not parse appx manifest")
 			continue
 		}
-		pkg := winAppxPkg.toPackage(w.platform)
+		pkg := winAppxPkg.toPackage(w.asset)
 		pkgs = append(pkgs, pkg)
 
 	}
@@ -511,7 +511,7 @@ func (w *WinPkgManager) List() ([]Package, error) {
 	return pkgs, nil
 }
 
-func ParseWindowsAppPackages(platform *inventory.Platform, input io.Reader) ([]Package, error) {
+func ParseWindowsAppPackages(asset *inventory.Asset, input io.Reader) ([]Package, error) {
 	data, err := io.ReadAll(input)
 	if err != nil {
 		return nil, err
@@ -562,7 +562,7 @@ func ParseWindowsAppPackages(platform *inventory.Platform, input io.Reader) ([]P
 			CPEs:    cpeWfns,
 			Vendor:  entry.Publisher,
 			PUrl: purl.NewPackageURL(
-				platform, purl.TypeWindows, entry.DisplayName, entry.DisplayVersion,
+				asset, purl.TypeWindows, entry.DisplayName, entry.DisplayVersion,
 			).String(),
 		})
 	}

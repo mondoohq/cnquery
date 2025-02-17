@@ -48,7 +48,7 @@ func NewAssetRecording(asset *inventory.Asset) *Asset {
 		ai.Version = asset.Platform.Version
 		ai.Kind = asset.Platform.Kind
 		ai.Runtime = asset.Platform.Runtime
-		ai.Labels = asset.Platform.Labels
+		ai.Labels = asset.Labels
 	}
 	return &Asset{
 		Asset:       ai,
@@ -371,7 +371,7 @@ func (r *recording) EnsureAsset(asset *inventory.Asset, providerID string, conne
 				Version:     asset.Platform.Version,
 				Kind:        asset.Platform.Kind,
 				Runtime:     asset.Platform.Runtime,
-				Labels:      asset.Platform.Labels,
+				Labels:      asset.Labels,
 			},
 			connections: map[string]*connection{},
 			resources:   map[string]*Resource{},

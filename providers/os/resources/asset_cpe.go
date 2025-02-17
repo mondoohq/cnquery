@@ -4,11 +4,12 @@
 package resources
 
 import (
+	"strings"
+
 	"github.com/facebookincubator/nvdtools/wfn"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/cpe"
-	"strings"
 )
 
 func (a *mqlAsset) cpes() ([]interface{}, error) {
@@ -40,7 +41,7 @@ func (a *mqlAsset) cpes() ([]interface{}, error) {
 	if ok && conn.Asset() != nil && conn.Asset().Platform != nil {
 		// on windows, we need to determine if we are on a workstation
 		workstation := false
-		if conn.Asset().Platform.Labels["windows.mondoo.com/product-type"] == "1" {
+		if conn.Asset().Labels["windows.mondoo.com/product-type"] == "1" {
 			workstation = true
 		}
 

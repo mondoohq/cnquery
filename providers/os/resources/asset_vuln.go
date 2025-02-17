@@ -92,7 +92,7 @@ func fetchVulnReport(runtime *plugin.Runtime) (interface{}, error) {
 	}
 
 	scanjob := &mvd.AnalyseAssetRequest{
-		Platform:      mvd.NewMvdPlatform(conn.Asset().Platform),
+		Platform:      mvd.NewMvdPlatform(conn.Asset()),
 		Packages:      apiPackages,
 		KernelVersion: kernelVersion,
 	}

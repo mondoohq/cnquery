@@ -73,7 +73,7 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		"title":       llx.StringData(asset.Platform.PrettyTitle()),
 		"family":      llx.ArrayData(llx.TArr2Raw(asset.Platform.Family), types.String),
 		"build":       llx.StringData(asset.Platform.Build),
-		"labels":      llx.MapData(llx.TMap2Raw(asset.Platform.Labels), types.String),
+		"labels":      llx.MapData(llx.TMap2Raw(asset.Labels), types.String),
 		"annotations": llx.MapData(llx.TMap2Raw(asset.Annotations), types.String),
 		"fqdn":        llx.StringData(asset.Fqdn),
 	})

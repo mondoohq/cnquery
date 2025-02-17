@@ -7,8 +7,6 @@ import (
 	"io"
 	"strings"
 
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-
 	"go.mondoo.com/cnquery/v11/providers/core/resources/versions/rpm"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/packages"
@@ -35,12 +33,7 @@ func (s *RpmNewestKernel) RebootPending() (bool, error) {
 		return false, err
 	}
 
-	var pf *inventory.Platform
-	if s.conn.Asset() != nil {
-		pf = s.conn.Asset().Platform
-	}
-
-	pkgs := packages.ParseRpmPackages(pf, installedKernelCmd.Stdout)
+	pkgs := packages.ParseRpmPackages(s.conn.Asset(), installedKernelCmd.Stdout)
 	// this case is valid in container
 	if len(pkgs) == 0 {
 		return false, nil

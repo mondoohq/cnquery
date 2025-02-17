@@ -26,18 +26,18 @@ func (r *VulnReport) Cves() []*CVE {
 	return cveList
 }
 
-// MvdPlatform converts the inventory.Platform to the
+// MvdPlatform converts the inventory.Asset that contains the platform to the
 // platform object we use for MVD
-func NewMvdPlatform(pf *inventory.Platform) *Platform {
-	if pf == nil {
+func NewMvdPlatform(asset *inventory.Asset) *Platform {
+	if asset == nil || asset.GetPlatform() == nil {
 		return nil
 	}
 	return &Platform{
-		Name:    pf.Name,
-		Release: pf.Version,
-		Build:   pf.Build,
-		Arch:    pf.Arch,
-		Title:   pf.Title,
-		Labels:  pf.Labels,
+		Name:    asset.Platform.Name,
+		Release: asset.Platform.Version,
+		Build:   asset.Platform.Build,
+		Arch:    asset.Platform.Arch,
+		Title:   asset.Platform.Title,
+		Labels:  asset.Labels,
 	}
 }

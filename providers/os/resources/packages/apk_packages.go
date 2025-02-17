@@ -27,7 +27,7 @@ var APK_REGEX = regexp.MustCompile(`^([A-Za-z]):(.*)$`)
 // ParseApkDbPackages parses the database of the apk package manager located in
 // `/lib/apk/db/installed`
 // Apk spec: https://wiki.alpinelinux.org/wiki/Apk_spec
-func ParseApkDbPackages(pf *inventory.Platform, input io.Reader) []Package {
+func ParseApkDbPackages(asset *inventory.Asset, input io.Reader) []Package {
 	pkgs := []Package{}
 
 	var pkgVersion string
@@ -43,12 +43,12 @@ func ParseApkDbPackages(pf *inventory.Platform, input io.Reader) []Package {
 		}
 
 		pkg.Format = AlpinePkgFormat
-		pkg.PUrl = purl.NewPackageURL(pf, purl.TypeApk, pkg.Name, pkg.Version,
+		pkg.PUrl = purl.NewPackageURL(asset, purl.TypeApk, pkg.Name, pkg.Version,
 			purl.WithArch(pkg.Arch),
 			purl.WithEpoch(pkg.Epoch),
 		).String()
 
-		cpes, _ := cpe2.NewPackage2Cpe(pkg.Vendor, pkg.Name, pkg.Version, "", pf.Arch)
+		cpes, _ := cpe2.NewPackage2Cpe(pkg.Vendor, pkg.Name, pkg.Version, "", asset.Platform.Arch)
 		pkg.CPEs = cpes
 
 		// do sanitization checks to ensure we have minimal information
@@ -137,8 +137,8 @@ func ParseApkUpdates(input io.Reader) (map[string]PackageUpdate, error) {
 
 // Arch, Manjaro
 type AlpinePkgManager struct {
-	conn     shared.Connection
-	platform *inventory.Platform
+	conn  shared.Connection
+	asset *inventory.Asset
 }
 
 func (apm *AlpinePkgManager) Name() string {
@@ -156,7 +156,7 @@ func (apm *AlpinePkgManager) List() ([]Package, error) {
 	}
 	defer fr.Close()
 
-	return ParseApkDbPackages(apm.platform, fr), nil
+	return ParseApkDbPackages(apm.asset, fr), nil
 }
 
 func (apm *AlpinePkgManager) Available() (map[string]PackageUpdate, error) {
