@@ -78,8 +78,16 @@ func NewPackageURL(pf *inventory.Platform, t Type, name, version string, modifie
 		purl.Arch = pf.Arch
 
 		purlNamespace := pf.Name
-		if purlNamespace == "photon" {
+		// Some special cases for the namespace
+		switch purlNamespace {
+		case "photon":
 			purlNamespace = "photon os"
+		case "opensuse-leap":
+			purlNamespace = "opensuse"
+		case "opensuse-tumbleweed":
+			purlNamespace = "opensuse"
+		case "sles":
+			purlNamespace = "suse"
 		}
 		if purlNamespace != "" {
 			purl.Namespace = purlNamespace
@@ -140,7 +148,6 @@ func (purl PackageURL) distroQualifiers() (string, bool) {
 	} else if purl.platform.Build != "" {
 		distroQualifiers = append(distroQualifiers, purl.platform.Build)
 	}
-
 	return strings.Join(distroQualifiers, "-"), true
 }
 

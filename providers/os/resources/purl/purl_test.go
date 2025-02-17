@@ -263,4 +263,28 @@ func TestPackageURLString(t *testing.T) {
 		expected := "pkg:rpm/photon%20os/testpkg@1.0.0?arch=x86_64&distro=photon-4.0"
 		assert.Equal(t, expected, p.String())
 	})
+
+	t.Run("openSUSE package", func(t *testing.T) {
+		platform := &inventory.Platform{
+			Name:    "opensuse-leap",
+			Arch:    "x86_64",
+			Version: "15.4",
+			Labels:  nil,
+		}
+		p := purl.NewPackageURL(platform, purl.TypeRPM, "testpkg", "1.0.0")
+		expected := "pkg:rpm/opensuse/testpkg@1.0.0?arch=x86_64"
+		assert.Equal(t, expected, p.String())
+	})
+
+	t.Run("SUSE package", func(t *testing.T) {
+		platform := &inventory.Platform{
+			Name:    "sles",
+			Arch:    "x86_64",
+			Version: "15.4",
+			Labels:  nil,
+		}
+		p := purl.NewPackageURL(platform, purl.TypeRPM, "testpkg", "1.0.0")
+		expected := "pkg:rpm/suse/testpkg@1.0.0?arch=x86_64"
+		assert.Equal(t, expected, p.String())
+	})
 }
