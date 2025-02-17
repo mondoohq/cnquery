@@ -94,7 +94,7 @@ private equinix.metal.user @defaults("email") {
 equinix.metal.sshkey @defaults("label") {
   // ID of the SSH key
   id string
-  // label of the SSH key
+  // Label of the SSH key
   label string
   // Key
   key string

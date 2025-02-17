@@ -432,7 +432,7 @@ private gcp.project.computeService.instance @defaults("name") {
   minCpuPlatform string
   // Network configurations for the instance
   networkInterfaces []dict
-  // private IPv6 google access type for the VM
+  // Private IPv6 google access type for the VM
   privateIpv6GoogleAccess string
   // Reservations from which this instance can consume
   reservationAffinity dict

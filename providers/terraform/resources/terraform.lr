@@ -105,7 +105,7 @@ terraform.state {
   outputs() []terraform.state.output
   // Root module which consists resources defined in .tf files
   rootModule() terraform.state.module
-  // flat list of all modules
+  // Flat list of all modules
   modules() []terraform.state.module
   // A flat list of all resources across all modules
   resources() []terraform.state.resource
