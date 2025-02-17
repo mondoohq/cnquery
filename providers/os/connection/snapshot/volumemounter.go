@@ -24,8 +24,6 @@ type VolumeMounter interface {
 	UmountP(partition *PartitionInfo) error
 	UnmountVolumeFromInstance() error
 	RemoveTempScanDir() error
-
-	CmdRunner() *LocalCommandRunner
 }
 
 type volumeMounter struct {
@@ -173,8 +171,4 @@ func (m *volumeMounter) RemoveTempScanDir() error {
 	}
 
 	return errors.Join(errs...)
-}
-
-func (m *volumeMounter) CmdRunner() *LocalCommandRunner {
-	return m.cmdRunner
 }
