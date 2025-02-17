@@ -35,7 +35,8 @@ const (
 )
 
 type LinuxDeviceManager struct {
-	volumeMounter *snapshot.VolumeMounter
+	volumeMounter snapshot.VolumeMounter
+	cmdRunner     *snapshot.LocalCommandRunner
 	opts          map[string]string
 }
 
@@ -46,6 +47,7 @@ func NewLinuxDeviceManager(shell []string, opts map[string]string) (*LinuxDevice
 
 	return &LinuxDeviceManager{
 		volumeMounter: snapshot.NewVolumeMounter(shell),
+		cmdRunner:     &snapshot.LocalCommandRunner{Shell: shell},
 		opts:          opts,
 	}, nil
 }
@@ -161,7 +163,7 @@ func (d *LinuxDeviceManager) hintFSTypes(partitions []*snapshot.PartitionInfo) (
 }
 
 func (d *LinuxDeviceManager) attemptFindFstab(dir string) ([]resources.FstabEntry, error) {
-	cmd, err := d.volumeMounter.CmdRunner.RunCommand(fmt.Sprintf("find %s -type f -wholename '*/etc/fstab'", dir))
+	cmd, err := d.cmdRunner.RunCommand(fmt.Sprintf("find %s -type f -wholename '*/etc/fstab'", dir))
 	if err != nil {
 		log.Error().Err(err).Msg("error searching for fstab")
 		return nil, nil
@@ -281,46 +283,75 @@ func (d *LinuxDeviceManager) mountWithFstab(partitions []*snapshot.PartitionInfo
 		return pathDepth(entries[i].Mountpoint) < pathDepth(entries[j].Mountpoint)
 	})
 
+	rootScanDir := ""
 	for _, entry := range entries {
 		for i := range partitions {
-			if !cmpPartition2Fstab(partitions[i], entry) {
+			partition := partitions[i]
+			mustAppend := false
+			if !cmpPartition2Fstab(partition, entry) {
 				continue
 			}
 
-			if partitions[i].MountPoint == "" {
-				partitions[i].MountOptions = entry.Options
-				log.Debug().Str("device", partitions[i].Name).
-					Strs("options", partitions[i].MountOptions).
-					Msg("mounting partition")
-				mnt, err := d.Mount(partitions[i])
-				if err != nil {
-					log.Error().Err(err).Str("device", partitions[i].Name).Msg("unable to mount partition")
-					return partitions, err
-				}
-				partitions[i].MountPoint = mnt
+			log.Debug().
+				Str("device", partition.Name).
+				Str("guest-mountpoint", entry.Mountpoint).
+				Str("host-mountpouint", partition.MountPoint).
+				Msg("partition matches fstab entry")
 
-				break
+			// if the partition is already mounted
+			if partition.MountPoint != "" {
+				mountedWithFstab := strings.HasPrefix(partition.MountPoint, rootScanDir)
+				// mounted without fstab consideration, unmount it
+				if rootScanDir == "" || !mountedWithFstab {
+					log.Debug().Str("device", partition.Name).Msg("partition already mounted")
+					// if the partition is mounted and is the root, we can keep it mounted
+					if entry.Mountpoint == "/" {
+						rootScanDir = partition.MountPoint
+						continue
+					}
+					if err := d.volumeMounter.UmountP(partition); err != nil {
+						log.Error().Err(err).Str("device", partition.Name).Msg("unable to unmount partition")
+						continue
+					}
+					partition.MountPoint = ""
+				} else if mountedWithFstab { // mounted with fstab, duplicate the partition (probably a subvolume)
+					partitionCopy := *partition
+					partition = &partitionCopy
+					mustAppend = true
+				}
 			}
 
-			// if partitions is already mounted, but there is an entry in fstab, we should register it and mount as subvolume
-			partition := ptr.To(*partitions[i]) // copy the partition
+			var scanDir *string
+			if rootScanDir != "" {
+				scanDir = ptr.To(path.Join(rootScanDir, entry.Mountpoint))
+			}
 			partition.MountOptions = entry.Options
+
 			log.Debug().Str("device", partition.Name).
 				Strs("options", partition.MountOptions).
-				Str("scan-dir", path.Join(partition.MountPoint, entry.Mountpoint)).
+				Any("scan-dir", scanDir).
 				Msg("mounting partition as subvolume")
 			mnt, err := d.volumeMounter.MountP(&snapshot.MountPartitionDto{
 				PartitionInfo: partition,
-				ScanDir:       ptr.To(path.Join(partition.MountPoint, entry.Mountpoint)),
+				ScanDir:       scanDir,
 			})
 			if err != nil {
 				log.Error().Err(err).Str("device", partition.Name).Msg("unable to mount partition")
 				return partitions, err
 			}
-			partition.MountPoint = mnt
-			partitions = append(partitions, partition)
 
-			break
+			partition.MountPoint = mnt
+			if entry.Mountpoint == "/" {
+				rootScanDir = mnt
+			}
+
+			if mustAppend {
+				partitions = append(partitions, partition)
+			} else {
+				partitions[i] = partition
+			}
+
+			break // partition matched, no need to check the rest
 		}
 	}
 	return partitions, nil
@@ -348,6 +379,8 @@ func cmpPartition2Fstab(partition *snapshot.PartitionInfo, entry resources.Fstab
 		return partition.Uuid == parts[1]
 	case "LABEL":
 		return partition.Label == parts[1]
+	case "PARTUUID":
+		return partition.PartUuid == parts[1]
 	default:
 		log.Warn().Str("device", entry.Device).Msg("couldn't identify fstab device")
 		return false
@@ -443,7 +476,12 @@ func (c *LinuxDeviceManager) identifyDeviceViaLun(lun int) ([]snapshot.BlockDevi
 }
 
 func (c *LinuxDeviceManager) identifyViaDeviceName(deviceName string, mountAll bool, includeMounted bool) ([]*snapshot.PartitionInfo, error) {
-	blockDevices, err := c.volumeMounter.CmdRunner.GetBlockDevices()
+	if deviceName == "" {
+		log.Warn().Msg("can't identify partition via device name, no device name provided")
+		return []*snapshot.PartitionInfo{}, nil
+	}
+
+	blockDevices, err := c.cmdRunner.GetBlockDevices()
 	if err != nil {
 		return nil, err
 	}

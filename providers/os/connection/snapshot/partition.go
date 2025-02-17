@@ -18,10 +18,12 @@ type PartitionInfo struct {
 	Aliases []string
 	// (optional) Label is the partition label
 	Label string
-	// (optional) UUID is the partition UUID
+	// (optional) UUID is the volume UUID
 	Uuid string
 	// (optional) MountPoint is the partition mount point
 	MountPoint string
+	// (optional) PartUuid is the partition UUID
+	PartUuid string
 
 	// (optional) MountOptions are the mount options
 	MountOptions []string

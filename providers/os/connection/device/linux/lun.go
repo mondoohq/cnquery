@@ -22,7 +22,7 @@ type scsiDeviceInfo struct {
 type scsiDevices = []scsiDeviceInfo
 
 func (c *LinuxDeviceManager) listScsiDevices() ([]scsiDeviceInfo, error) {
-	cmd, err := c.volumeMounter.CmdRunner.RunCommand("lsscsi --brief")
+	cmd, err := c.cmdRunner.RunCommand("lsscsi --brief")
 	if err != nil {
 		return nil, err
 	}

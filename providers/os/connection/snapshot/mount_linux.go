@@ -22,7 +22,6 @@ func Mount(attachedFS string, scanDir string, fsType string, opts []string) erro
 
 func Unmount(scanDir string) error {
 	if err := mount.Unmount(scanDir); err != nil && errors.Unwrap(err) != unix.EBUSY {
-		log.Error().Err(err).Msg("failed to unmount dir")
 		return err
 	}
 	return nil

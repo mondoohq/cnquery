@@ -26,6 +26,7 @@ type BlockDevice struct {
 	FsType     string        `json:"fstype,omitempty"`
 	Label      string        `json:"label,omitempty"`
 	Uuid       string        `json:"uuid,omitempty"`
+	PartUuid   string        `json:"partuuid,omitempty"`
 	MountPoint string        `json:"mountpoint,omitempty"`
 	Children   []BlockDevice `json:"children,omitempty"`
 	Size       Size          `json:"size,omitempty"`
@@ -39,6 +40,7 @@ func (b BlockDevice) PartitionInfo(devPath string) *PartitionInfo {
 		FsType:     b.FsType,
 		Label:      b.Label,
 		Uuid:       b.Uuid,
+		PartUuid:   b.PartUuid,
 		MountPoint: b.MountPoint,
 		Aliases:    b.Aliases,
 	}
@@ -63,7 +65,7 @@ func (s *Size) UnmarshalJSON(data []byte) error {
 }
 
 func (cmdRunner *LocalCommandRunner) GetBlockDevices() (*BlockDevices, error) {
-	cmd, err := cmdRunner.RunCommand("lsblk -bo NAME,SIZE,FSTYPE,MOUNTPOINT,LABEL,UUID --json")
+	cmd, err := cmdRunner.RunCommand("lsblk -bo NAME,SIZE,FSTYPE,MOUNTPOINT,LABEL,UUID,PARTUUID --json")
 	if err != nil {
 		return nil, err
 	}
