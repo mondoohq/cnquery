@@ -49,6 +49,7 @@ If you are using an API access token instead of an OAuth client, use the '%s' va
 				connection.DiscoveryAll,
 				connection.DiscoveryAuto,
 				connection.DiscoveryDevices,
+				connection.DiscoveryUsers,
 			},
 			Flags: []plugin.Flag{
 				{

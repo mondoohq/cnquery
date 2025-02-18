@@ -19,11 +19,13 @@ const (
 	DiscoveryAll     = "all"
 	DiscoveryAuto    = "auto"
 	DiscoveryDevices = "devices"
+	DiscoveryUsers   = "users"
 )
 
 var (
 	PlatformIdTailscaleTailnet = "//platformid.api.mondoo.app/runtime/tailscale/tailnet/"
 	PlatformIdTailscaleDevice  = "//platformid.api.mondoo.app/runtime/tailscale/device/"
+	PlatformIdTailscaleUser    = "//platformid.api.mondoo.app/runtime/tailscale/user/"
 )
 
 // Flag Options
@@ -173,13 +175,26 @@ func (t *TailscaleConnection) Identifier() string {
 func NewTailscaleDeviceIdentifier(deviceId string) string {
 	return PlatformIdTailscaleDevice + deviceId
 }
-
 func NewTailscaleDevicePlatform(deviceId string) *inventory.Platform {
 	return &inventory.Platform{
 		Name:                  "tailscale-device",
 		Title:                 "Tailscale Device",
 		Family:                []string{"tailscale"},
 		TechnologyUrlSegments: []string{"network", "tailscale", "device", deviceId},
+		Kind:                  "api",
+		Runtime:               "tailscale",
+	}
+}
+
+func NewTailscaleUserIdentifier(userId string) string {
+	return PlatformIdTailscaleUser + userId
+}
+func NewTailscaleUserPlatform(userId string) *inventory.Platform {
+	return &inventory.Platform{
+		Name:                  "tailscale-user",
+		Title:                 "Tailscale User",
+		Family:                []string{"tailscale"},
+		TechnologyUrlSegments: []string{"network", "tailscale", "user", userId},
 		Kind:                  "api",
 		Runtime:               "tailscale",
 	}

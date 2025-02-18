@@ -32,6 +32,7 @@ func handleTargets(targets []string) []string {
 	if stringx.ContainsAnyOf(targets, connection.DiscoveryAll, connection.DiscoveryAuto) {
 		return []string{
 			connection.DiscoveryDevices,
+			connection.DiscoveryUsers,
 		}
 	}
 	return targets
@@ -49,6 +50,28 @@ func discover(runtime *plugin.Runtime, targets []string) ([]*inventory.Asset, er
 
 	for _, target := range targets {
 		switch target {
+		case connection.DiscoveryUsers:
+			users, err := cf.users()
+			if err != nil {
+				return nil, err
+			}
+			for _, resource := range users {
+				user := resource.(*mqlTailscaleUser)
+				asset := &inventory.Asset{
+					PlatformIds: []string{connection.NewTailscaleUserIdentifier(user.Id.Data)},
+					Name:        user.DisplayName.Data,
+					Platform:    connection.NewTailscaleUserPlatform(user.Id.Data),
+					Labels:      map[string]string{},
+					Connections: []*inventory.Config{
+						conf.Clone(
+							inventory.WithoutDiscovery(),
+							inventory.WithParentConnectionId(conn.ID()),
+						),
+					},
+				}
+				assetList = append(assetList, asset)
+			}
+
 		case connection.DiscoveryDevices:
 			devices, err := cf.devices()
 			if err != nil {
