@@ -153,13 +153,14 @@ func (t *TailscaleConnection) PlatformInfo() (*inventory.Platform, error) {
 }
 
 func (t *TailscaleConnection) Identifier() string {
-	// when a tailnet is not provided, Tailscale uses the default tailnet of the provided creds
-	// TODO can we make an API call to get the default tailnet and set it as identifier?
-	tailnet := "default"
-
-	conf := t.asset.Connections[0]
-	if conf.Options != nil && conf.Options[OPTION_TAILNET] != "" {
-		tailnet = conf.Options[OPTION_TAILNET]
+	tailnet, set := GetTailnet(t.Conf)
+	if !set {
+		// When no tailnet was specified, we will be using the default tailnet of the
+		// authentication method being used to make API calls. Tailscale recommend this
+		// option for most users. (https://tailscale.com/api)
+		//
+		// NOTE that today, we cannot make an API call to get the actual tailnet
+		tailnet = "default"
 	}
 
 	return PlatformIdTailscaleTailnet + tailnet

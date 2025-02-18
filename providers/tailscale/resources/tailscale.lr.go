@@ -19,7 +19,7 @@ var resourceFactories map[string]plugin.ResourceFactory
 func init() {
 	resourceFactories = map[string]plugin.ResourceFactory {
 		"tailscale": {
-			// to override args, implement: initTailscale(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initTailscale,
 			Create: createTailscale,
 		},
 		"tailscale.device": {
@@ -94,6 +94,9 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 }
 
 var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
+	"tailscale.tailnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscale).GetTailnet()).ToDataRes(types.String)
+	},
 	"tailscale.devices": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTailscale).GetDevices()).ToDataRes(types.Array(types.Resource("tailscale.device")))
 	},
@@ -290,6 +293,7 @@ type mqlTailscale struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlTailscaleInternal it will be used here
+	Tailnet plugin.TValue[string]
 	Devices plugin.TValue[[]interface{}]
 }
 
@@ -328,6 +332,10 @@ func (c *mqlTailscale) MqlName() string {
 
 func (c *mqlTailscale) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlTailscale) GetTailnet() *plugin.TValue[string] {
+	return &c.Tailnet
 }
 
 func (c *mqlTailscale) GetDevices() *plugin.TValue[[]interface{}] {

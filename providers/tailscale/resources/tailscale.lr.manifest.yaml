@@ -5,6 +5,8 @@ resources:
   tailscale:
     fields:
       devices: {}
+      tailnet: {}
+      users: {}
     min_mondoo_version: 9.0.0
   tailscale.device:
     fields:
@@ -13,12 +15,15 @@ resources:
       blocksIncomingConnections: {}
       clientVersion: {}
       created: {}
+      createdAt: {}
       expires: {}
+      expiresAt: {}
       hostname: {}
       id: {}
       isExternal: {}
       keyExpiryDisabled: {}
       lastSeen: {}
+      lastSeenAt: {}
       machineKey: {}
       name: {}
       nodeId: {}

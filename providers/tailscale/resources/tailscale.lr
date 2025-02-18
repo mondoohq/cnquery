@@ -4,8 +4,10 @@
 option provider = "go.mondoo.com/cnquery/v11/providers/tailscale"
 option go_package = "go.mondoo.com/cnquery/v11/providers/tailscale/resources"
 
-// The Tailscale provider
+// The Tailscale organization
 tailscale {
+  // The tailnet organization name
+  tailnet string
   // List devices in a tailnet
   devices() []tailscale.device
 }

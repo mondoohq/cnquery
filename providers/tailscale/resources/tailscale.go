@@ -6,12 +6,34 @@ package resources
 import (
 	"context"
 
+	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/tailscale/connection"
 )
 
 func (r *mqlTailscale) id() (string, error) {
-	// TODO need to set the tailnet
-	return "tailscale", nil
+	return r.Tailnet.Data, nil
+}
+
+func initTailscale(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	conn := runtime.Connection.(*connection.TailscaleConnection)
+	tailnet, set := connection.GetTailnet(conn.Conf)
+	if !set {
+		// When no tailnet was specified, we will be using the default tailnet of the
+		// authentication method being used to make API calls. Tailscale recommend this
+		// option for most users. (https://tailscale.com/api)
+		//
+		// NOTE that today, we cannot make an API call to get the actual tailnet
+		tailnet = "default"
+	}
+	mqlResource, err := CreateResource(runtime, "tailscale",
+		map[string]*llx.RawData{
+			"tailnet": llx.StringData(tailnet),
+		})
+	if err != nil {
+		return args, nil, err
+	}
+	return args, mqlResource, nil
 }
 
 func (t *mqlTailscale) devices() ([]any, error) {
