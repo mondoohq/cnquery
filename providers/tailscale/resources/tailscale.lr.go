@@ -26,6 +26,10 @@ func init() {
 			Init: initTailscaleDevice,
 			Create: createTailscaleDevice,
 		},
+		"tailscale.user": {
+			Init: initTailscaleUser,
+			Create: createTailscaleUser,
+		},
 	}
 }
 
@@ -100,6 +104,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"tailscale.devices": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTailscale).GetDevices()).ToDataRes(types.Array(types.Resource("tailscale.device")))
 	},
+	"tailscale.users": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscale).GetUsers()).ToDataRes(types.Array(types.Resource("tailscale.user")))
+	},
 	"tailscale.device.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTailscaleDevice).GetId()).ToDataRes(types.String)
 	},
@@ -151,14 +158,47 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"tailscale.device.updateAvailable": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTailscaleDevice).GetUpdateAvailable()).ToDataRes(types.Bool)
 	},
-	"tailscale.device.created": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlTailscaleDevice).GetCreated()).ToDataRes(types.Time)
+	"tailscale.device.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleDevice).GetCreatedAt()).ToDataRes(types.Time)
 	},
-	"tailscale.device.expires": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlTailscaleDevice).GetExpires()).ToDataRes(types.Time)
+	"tailscale.device.expiresAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleDevice).GetExpiresAt()).ToDataRes(types.Time)
 	},
-	"tailscale.device.lastSeen": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlTailscaleDevice).GetLastSeen()).ToDataRes(types.Time)
+	"tailscale.device.lastSeenAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleDevice).GetLastSeenAt()).ToDataRes(types.Time)
+	},
+	"tailscale.user.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleUser).GetId()).ToDataRes(types.String)
+	},
+	"tailscale.user.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleUser).GetDisplayName()).ToDataRes(types.String)
+	},
+	"tailscale.user.loginName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleUser).GetLoginName()).ToDataRes(types.String)
+	},
+	"tailscale.user.profilePicUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleUser).GetProfilePicUrl()).ToDataRes(types.String)
+	},
+	"tailscale.user.tailnetId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleUser).GetTailnetId()).ToDataRes(types.String)
+	},
+	"tailscale.user.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleUser).GetType()).ToDataRes(types.String)
+	},
+	"tailscale.user.role": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleUser).GetRole()).ToDataRes(types.String)
+	},
+	"tailscale.user.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleUser).GetStatus()).ToDataRes(types.String)
+	},
+	"tailscale.user.deviceCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleUser).GetDeviceCount()).ToDataRes(types.Int)
+	},
+	"tailscale.user.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleUser).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"tailscale.user.lastSeenAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleUser).GetLastSeenAt()).ToDataRes(types.Time)
 	},
 }
 
@@ -176,8 +216,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlTailscale).__id, ok = v.Value.(string)
 			return
 		},
+	"tailscale.tailnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscale).Tailnet, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"tailscale.devices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTailscale).Devices, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"tailscale.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscale).Users, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"tailscale.device.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -252,16 +300,64 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlTailscaleDevice).UpdateAvailable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"tailscale.device.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlTailscaleDevice).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"tailscale.device.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleDevice).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
-	"tailscale.device.expires": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlTailscaleDevice).Expires, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"tailscale.device.expiresAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleDevice).ExpiresAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
-	"tailscale.device.lastSeen": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlTailscaleDevice).LastSeen, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"tailscale.device.lastSeenAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleDevice).LastSeenAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"tailscale.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlTailscaleUser).__id, ok = v.Value.(string)
+			return
+		},
+	"tailscale.user.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleUser).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tailscale.user.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleUser).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tailscale.user.loginName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleUser).LoginName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tailscale.user.profilePicUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleUser).ProfilePicUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tailscale.user.tailnetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleUser).TailnetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tailscale.user.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleUser).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tailscale.user.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleUser).Role, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tailscale.user.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleUser).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tailscale.user.deviceCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleUser).DeviceCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"tailscale.user.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleUser).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"tailscale.user.lastSeenAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleUser).LastSeenAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 }
@@ -295,6 +391,7 @@ type mqlTailscale struct {
 	// optional: if you define mqlTailscaleInternal it will be used here
 	Tailnet plugin.TValue[string]
 	Devices plugin.TValue[[]interface{}]
+	Users plugin.TValue[[]interface{}]
 }
 
 // createTailscale creates a new instance of this resource
@@ -351,6 +448,22 @@ func (c *mqlTailscale) GetDevices() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.devices()
+	})
+}
+
+func (c *mqlTailscale) GetUsers() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Users, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("tailscale", c.__id, "users")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.users()
 	})
 }
 
@@ -486,14 +599,113 @@ func (c *mqlTailscaleDevice) GetUpdateAvailable() *plugin.TValue[bool] {
 	return &c.UpdateAvailable
 }
 
-func (c *mqlTailscaleDevice) GetCreated() *plugin.TValue[*time.Time] {
-	return &c.Created
+func (c *mqlTailscaleDevice) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
-func (c *mqlTailscaleDevice) GetExpires() *plugin.TValue[*time.Time] {
-	return &c.Expires
+func (c *mqlTailscaleDevice) GetExpiresAt() *plugin.TValue[*time.Time] {
+	return &c.ExpiresAt
 }
 
-func (c *mqlTailscaleDevice) GetLastSeen() *plugin.TValue[*time.Time] {
-	return &c.LastSeen
+func (c *mqlTailscaleDevice) GetLastSeenAt() *plugin.TValue[*time.Time] {
+	return &c.LastSeenAt
+}
+
+// mqlTailscaleUser for the tailscale.user resource
+type mqlTailscaleUser struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlTailscaleUserInternal it will be used here
+	Id plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	LoginName plugin.TValue[string]
+	ProfilePicUrl plugin.TValue[string]
+	TailnetId plugin.TValue[string]
+	Type plugin.TValue[string]
+	Role plugin.TValue[string]
+	Status plugin.TValue[string]
+	DeviceCount plugin.TValue[int64]
+	CreatedAt plugin.TValue[*time.Time]
+	LastSeenAt plugin.TValue[*time.Time]
+}
+
+// createTailscaleUser creates a new instance of this resource
+func createTailscaleUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTailscaleUser{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("tailscale.user", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTailscaleUser) MqlName() string {
+	return "tailscale.user"
+}
+
+func (c *mqlTailscaleUser) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTailscaleUser) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlTailscaleUser) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlTailscaleUser) GetLoginName() *plugin.TValue[string] {
+	return &c.LoginName
+}
+
+func (c *mqlTailscaleUser) GetProfilePicUrl() *plugin.TValue[string] {
+	return &c.ProfilePicUrl
+}
+
+func (c *mqlTailscaleUser) GetTailnetId() *plugin.TValue[string] {
+	return &c.TailnetId
+}
+
+func (c *mqlTailscaleUser) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlTailscaleUser) GetRole() *plugin.TValue[string] {
+	return &c.Role
+}
+
+func (c *mqlTailscaleUser) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlTailscaleUser) GetDeviceCount() *plugin.TValue[int64] {
+	return &c.DeviceCount
+}
+
+func (c *mqlTailscaleUser) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlTailscaleUser) GetLastSeenAt() *plugin.TValue[*time.Time] {
+	return &c.LastSeenAt
 }

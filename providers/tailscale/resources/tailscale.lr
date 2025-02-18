@@ -10,6 +10,8 @@ tailscale {
   tailnet string
   // List devices in a tailnet
   devices() []tailscale.device
+  // List users in a tailnet
+  users() []tailscale.user
 }
 
 // A Tailscale device (sometimes referred to as node or machine)
@@ -59,3 +61,36 @@ tailscale.device @defaults("id hostname os") {
   lastSeenAt time
 }
 
+// A Tailscale user
+tailscale.user @defaults("id displayName type") {
+  init(id? string)
+  // The unique identifier for the user
+  id string
+  // The name of the user
+  displayName string
+  // The email-like login name of the user
+  loginName string
+  // The profile picture URL for the user
+  profilePicUrl string
+  // The tailnet taht owns the user
+  tailnetId string
+  // The type of relation this user has to the tailnet (member, shared)
+  type string
+  // The role of the user (owner, member, admin, etc.)
+  role string
+  // The status of the user
+  //   'active' - Last seen within 28 days
+  //   'idle' - Last seen longer than 28 days
+  //   'suspended' - Suspended from accessing the tailnet
+  //   'neds-approval' - Unable to join tailnet until approved
+  //   'over-billing-limit' - Unable to join tailnet until billing count increased
+  status string
+  // Number of devices the user owns
+  deviceCount int
+  // The time the user joined their tailnet
+  createdAt time
+  // This time can be either:
+  // a) The last time any of the user's nodes were connected to the network
+  // b) Or, the last time the user authenticated to any tailscale service, including the admin panel
+  lastSeenAt time
+}

@@ -35,3 +35,18 @@ resources:
       updateAvailable: {}
       user: {}
     min_mondoo_version: 9.0.0
+  tailscale.user:
+    fields:
+      ProfilePicUrl: {}
+      createdAt: {}
+      deviceCount: {}
+      displayName: {}
+      id: {}
+      lastSeenAt: {}
+      loginName: {}
+      profilePicUrl: {}
+      role: {}
+      status: {}
+      tailnetId: {}
+      type: {}
+    min_mondoo_version: 9.0.0

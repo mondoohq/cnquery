@@ -54,3 +54,23 @@ func (t *mqlTailscale) devices() ([]any, error) {
 
 	return resources, nil
 }
+
+func (t *mqlTailscale) users() ([]any, error) {
+	conn := t.MqlRuntime.Connection.(*connection.TailscaleConnection)
+	// TODO we can do filter here for user type and role
+	users, err := conn.Client().Users().List(context.Background(), nil, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var resources []interface{}
+	for _, user := range users {
+		resource, err := createTailscaleUserResource(t.MqlRuntime, &user)
+		if err != nil {
+			return nil, err
+		}
+		resources = append(resources, resource)
+	}
+
+	return resources, nil
+}

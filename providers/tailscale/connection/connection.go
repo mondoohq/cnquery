@@ -86,7 +86,11 @@ func NewTailscaleConnection(id uint32, asset *inventory.Asset, conf *inventory.C
 			ClientSecret: clientSecret,
 			Scopes: []string{
 				// Used in resources/tailscale.go `devices()`
+				// Used in resources/device.go `initTailscaleDevice()`
 				"devices:core:read",
+				// Used in resources/tailscale.go `users()`
+				// Used in resources/user.go `initTailscaleUser()`
+				"users:read",
 			},
 		}.HTTPClient()
 		log.Info().Str("method", "OAuth").Msg("tailscale> authentication configured")
