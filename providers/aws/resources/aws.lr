@@ -3205,7 +3205,7 @@ private aws.ec2.securitygroup @defaults("id name region vpc.id") {
 
 // Amazon EC2 security group IP permission
 private aws.ec2.securitygroup.ippermission @defaults("id toPort fromPort ipProtocol ipRanges ipv6Ranges") {
-  // Unique ID for the IP permission
+  // AWS ID of the security group
   id string
   // Start of port range for TCP/UDP protocols
   fromPort int
@@ -3213,11 +3213,11 @@ private aws.ec2.securitygroup.ippermission @defaults("id toPort fromPort ipProto
   toPort int
   // IP protocol name
   ipProtocol string
-  // IPv4 ranges
+  // IPv4 address ranges
   ipRanges []string
-  // IPv6 ranges
+  // IPv6 address ranges
   ipv6Ranges []string
-  // List of Prefix IDs
+  // List of prefix IDs
   prefixListIds []dict
   // List of user ID group pairs
   userIdGroupPairs []dict
