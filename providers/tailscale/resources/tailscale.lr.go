@@ -376,9 +376,9 @@ type mqlTailscaleDevice struct {
 	IsExternal plugin.TValue[bool]
 	KeyExpiryDisabled plugin.TValue[bool]
 	UpdateAvailable plugin.TValue[bool]
-	Created plugin.TValue[*time.Time]
-	Expires plugin.TValue[*time.Time]
-	LastSeen plugin.TValue[*time.Time]
+	CreatedAt plugin.TValue[*time.Time]
+	ExpiresAt plugin.TValue[*time.Time]
+	LastSeenAt plugin.TValue[*time.Time]
 }
 
 // createTailscaleDevice creates a new instance of this resource

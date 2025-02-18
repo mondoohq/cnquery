@@ -52,10 +52,10 @@ tailscale.device @defaults("id hostname os") {
   // 'true' if a Tailscale client version upgrade is available. This value is empty for external devices
   updateAvailable bool
   // The date on which the device was added to the tailnet; this is empty for external devices
-  created time
+  createdAt time
   // The expiration date of the device's auth key
-  expires time
+  expiresAt time
   // When device was last active on the tailnet
-  lastSeen time
+  lastSeenAt time
 }
 

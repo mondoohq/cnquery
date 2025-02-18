@@ -57,9 +57,9 @@ func createTailscaleDeviceResource(runtime *plugin.Runtime, device *tsclient.Dev
 		"isExternal":                llx.BoolData(device.IsExternal),
 		"keyExpiryDisabled":         llx.BoolData(device.KeyExpiryDisabled),
 		"updateAvailable":           llx.BoolData(device.UpdateAvailable),
-		"created":                   llx.TimeData(device.Created.Time),
-		"expires":                   llx.TimeData(device.Expires.Time),
-		"lastSeen":                  llx.TimeData(device.LastSeen.Time),
+		"createdAt":                 llx.TimeData(device.Created.Time),
+		"expiresAt":                 llx.TimeData(device.Expires.Time),
+		"lastSeenAt":                llx.TimeData(device.LastSeen.Time),
 		"tags":                      llx.ArrayData(convert.SliceAnyToInterface(device.Tags), types.String),
 		"addresses":                 llx.ArrayData(convert.SliceAnyToInterface(device.Addresses), types.String),
 	})
