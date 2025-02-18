@@ -107,10 +107,8 @@ timestream
 toplevel
 tpu
 tailscale
-tailnet
 nodekey
 mkey
-afiune
 vdcs
 virtualmachine
 Vtpm
