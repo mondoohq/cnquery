@@ -74,7 +74,7 @@ tailscale.user @defaults("id displayName type") {
   loginName string
   // The profile picture URL for the user
   profilePicUrl string
-  // The tailnet taht owns the user
+  // The tailnet that owns the user
   tailnetId string
   // The type of relation this user has to the tailnet (member, shared)
   type string
@@ -84,7 +84,7 @@ tailscale.user @defaults("id displayName type") {
   //   'active' - Last seen within 28 days
   //   'idle' - Last seen longer than 28 days
   //   'suspended' - Suspended from accessing the tailnet
-  //   'neds-approval' - Unable to join tailnet until approved
+  //   'needs-approval' - Unable to join tailnet until approved
   //   'over-billing-limit' - Unable to join tailnet until billing count increased
   status string
   // Number of devices the user owns
