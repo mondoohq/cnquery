@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/rs/zerolog/log"
 )
 
 // packageJson allows parsing the package json file
@@ -24,12 +26,41 @@ type packageJson struct {
 	Dependencies    map[string]string     `jsonn:"dependencies"`
 	DevDependencies map[string]string     `jsonn:"devDependencies"`
 	Repository      packageJsonRepository `json:"repository"`
-	Engines         map[string]string     `jsonn:"engines"`
+	Engines         enginesField          `jsonn:"engines"`
 	CPU             []string              `json:"cpu"`
 	OS              []string              `json:"os"`
 
 	// evidence is a list of file paths where the package.json was found
 	evidence []string `json:"-"`
+}
+
+type enginesField map[string]string
+
+func (p *enginesField) UnmarshalJSON(data []byte) error {
+	var raw interface{}
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+
+	// Default to an empty map
+	n := map[string]string{}
+
+	switch v := raw.(type) {
+	case map[string]interface{}:
+		for key, value := range v {
+			if strVal, ok := value.(string); ok {
+				n[key] = strVal
+			} else {
+				log.Warn().Msgf("invalid type for engines[%s]", key)
+			}
+		}
+	default:
+		log.Warn().Msgf("invalid engines field type: %T", v)
+	}
+
+	*p = n
+
+	return nil
 }
 
 type booleanField bool

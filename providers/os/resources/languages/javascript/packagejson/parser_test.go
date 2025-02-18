@@ -136,6 +136,13 @@ func TestPackageJson(t *testing.T) {
 				},
 			},
 		},
+		// https://github.com/mondoohq/cnquery/issues/5235
+		{
+			Fixture: "./testdata/engines-malformed-GH5235.json",
+			Expected: packageJson{
+				Engines: map[string]string{},
+			},
+		},
 		{
 			Fixture: "./testdata/homepage.json",
 			Expected: packageJson{
