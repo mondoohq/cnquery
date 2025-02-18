@@ -4,8 +4,10 @@
 package connection
 
 import (
+	"context"
 	"fmt"
 	"net/url"
+	"strings"
 
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
@@ -132,9 +134,24 @@ func NewTailscaleConnection(id uint32, asset *inventory.Asset, conf *inventory.C
 	// Configure a tailnet if set
 	if value, set := GetTailnet(conf); set {
 		conn.client.Tailnet = value
+		log.Info().Str("tailnet", value).Msg("tailscale> connecting to custom tailnet")
 	}
 
 	return conn, nil
+}
+
+func (t *TailscaleConnection) Verify() error {
+	// @afiune this is the cheapest API call I could find to verify the tailscale connection,
+	// essentially we try to fetch information about a device and expect to have a 401 code.
+	//
+	// API specifications https://tailscale.com/api
+	_, err := t.client.Devices().Get(context.Background(), "m0nd00")
+	if err != nil {
+		if strings.Contains(err.Error(), "401") {
+			return errors.New("invalid authentication provided, verify the provided credentials, use --help for more details")
+		}
+	}
+	return nil
 }
 
 func (t *TailscaleConnection) Asset() *inventory.Asset {

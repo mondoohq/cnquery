@@ -24,7 +24,8 @@ var Config = plugin.Provider{
 			MinArgs: 0,
 			MaxArgs: 1,
 			Long: fmt.Sprintf(`
-Use the tailscale provider to query devices, DNS namespaces, and more information about a Tailscale network, known as a tailnet.
+Use the tailscale provider to query devices, DNS nameservers, and more information about a Tailscale network,
+known as a tailnet.
 
 To authenticate using an API access token:
 

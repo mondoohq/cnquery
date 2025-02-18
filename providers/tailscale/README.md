@@ -1,6 +1,7 @@
 # Tailscale Provider
 
-Use the tailscale provider to query devices, DNS namespaces, and more information about a Tailscale network, known as a `tailnet`.
+Use the tailscale provider to query devices, users, DNS namespaces, and more information about a Tailscale network,
+known as a `tailnet`.
 
 To authenticate using an API access token:
 
@@ -54,6 +55,31 @@ tailscale.device: {
   machineKey: "mkey:abc123"
   tailnetLockKey: ""
   tailnetLockError: ""
+}
+```
+
+**List all users in a tailnet**
+
+```shell
+cnquery> tailscale.users()
+```
+
+**Get information on a single user**
+
+```shell
+cnquery> tailscale.user(id: "uiR4AD141DAA") {*}
+tailscale.user: {
+  id: "uiR4AD141DAA"
+  type: "member"
+  deviceCount: 64
+  createdAt: 2021-06-24 11:17:02.151878675 -0700 PDT
+  loginName: "afiune@mondoo.com"
+  status: "active"
+  lastSeenAt: 2025-02-18 13:56:23.715800061 -0800 PST
+  tailnetId: "12345678900012344"
+  profilePicUrl: "https://lh3.googleusercontent.com/a/ACg8ocKPxpFdO4al-Si9YXhJz_iN9qnZ-8h5UorbQrKWxrS-uPutP6E=s96-c"
+  role: "owner"
+  displayName: "Salim Afiune Maya"
 }
 ```
 

@@ -660,7 +660,7 @@ lr/docs/markdown: providers/lr
 		--output ../docs/docs/mql/resources/nmap-pack
 	./lr markdown providers/tailscale/resources/tailscale.lr \
 		--pack-name "Tailscale" \
-		--description "The Tailscale resource pack lets you use MQL to query devices, DNS namespaces, and more information about a Tailscale network." \
+		--description "The Tailscale resource pack lets you use MQL to query devices, users, DNS nameservers, and more information about a Tailscale network." \
 		--docs-file providers/tailscale/resources/tailscale.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/tailscale-pack
 
