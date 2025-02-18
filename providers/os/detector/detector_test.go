@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	win "go.mondoo.com/cnquery/v11/providers/os/detector/windows"
 )
 
 func TestFamilyParents(t *testing.T) {
@@ -77,4 +78,97 @@ func TestFamilies(t *testing.T) {
 	assert.Equal(t, true, di.IsFamily("unix"), "unix should be a family")
 	assert.Equal(t, true, di.IsFamily("bsd"), "bsd should be a family")
 	assert.Equal(t, true, di.IsFamily("darwin"), "darwin should be a family")
+}
+
+func TestWindowsPlatform(t *testing.T) {
+	tests := []struct {
+		name     string
+		current  win.WindowsCurrentVersion
+		expected *inventory.Platform
+	}{
+		{
+			name: "windows 10",
+			current: win.WindowsCurrentVersion{
+				CurrentBuild:     "19044",
+				EditionID:        "Professional",
+				ReleaseId:        "2009",
+				InstallationType: "Client",
+				ProductName:      "Windows 10 Pro",
+				DisplayVersion:   "21H2",
+				UBR:              2728,
+				Architecture:     "x64",
+				ProductType:      "WinNT",
+			},
+			expected: &inventory.Platform{
+				Name:    "windows",
+				Title:   "Windows 10 Pro",
+				Version: "19044",
+				Build:   "2728",
+				Arch:    "x64",
+				Labels: map[string]string{
+					"windows.mondoo.com/product-type":    "1",
+					"windows.mondoo.com/display-version": "21H2",
+				},
+			},
+		},
+		{
+			name: "windows 11",
+			current: win.WindowsCurrentVersion{
+				CurrentBuild:     "22631",
+				EditionID:        "Professional",
+				ReleaseId:        "23H2",
+				InstallationType: "Client",
+				ProductName:      "Windows 10 Pro",
+				DisplayVersion:   "23H2",
+				UBR:              2506,
+				Architecture:     "x64",
+				ProductType:      "WinNT",
+			},
+			expected: &inventory.Platform{
+				Name:    "windows",
+				Title:   "Windows 11 Pro",
+				Version: "22631",
+				Build:   "2506",
+				Arch:    "x64",
+				Labels: map[string]string{
+					"windows.mondoo.com/product-type":    "1",
+					"windows.mondoo.com/display-version": "23H2",
+				},
+			},
+		},
+		{
+			name: "windows server",
+			current: win.WindowsCurrentVersion{
+				CurrentBuild:     "20348",
+				EditionID:        "ServerStandard",
+				ReleaseId:        "21H2",
+				InstallationType: "Server",
+				ProductName:      "Windows Server 2022 Standard",
+				DisplayVersion:   "21H2",
+				UBR:              1972,
+				Architecture:     "x64",
+				ProductType:      "ServerNT",
+			},
+			expected: &inventory.Platform{
+				Name:    "windows",
+				Title:   "Windows Server 2022 Standard",
+				Version: "20348",
+				Build:   "1972",
+				Arch:    "x64",
+				Labels: map[string]string{
+					"windows.mondoo.com/product-type":    "3",
+					"windows.mondoo.com/display-version": "21H2",
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			pf := &inventory.Platform{}
+			platformFromWinCurrentVersion(pf, &tt.current)
+
+			assert.Equal(t, tt.expected, pf)
+		})
+	}
 }
