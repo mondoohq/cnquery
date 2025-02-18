@@ -209,6 +209,7 @@ use (
    ./cnquery/providers/snowflake
    ./cnquery/providers/slack
    ./cnquery/providers/terraform
+   ./cnquery/providers/tailscale
    ./cnquery/providers/vcd
    ./cnquery/providers/vsphere
    ./cnspec

@@ -280,7 +280,6 @@
 
 # s.b. name server
 \bnameserver\b
-\bnameservers\b
 
 #
 # Kubernetes Terms

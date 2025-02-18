@@ -100,12 +100,16 @@ spo
 sqli
 sqlimatchstatement
 sqlserver
+nameservers
 targetgroup
 tde
 testutils
 timestream
 toplevel
 tpu
+tailscale
+nodekey
+mkey
 vdcs
 virtualmachine
 Vtpm

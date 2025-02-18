@@ -431,6 +431,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"tailscale": {
+		Provider: &plugin.Provider{
+			Name:            "tailscale",
+			ID:              "go.mondoo.com/cnquery/v11/providers/tailscale",
+			ConnectionTypes: []string{"tailscale"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "tailscale",
+					Use:   "tailscale",
+					Short: "a Tailscale network",
+				},
+			},
+		},
+	},
+
 	"vcd": {
 		Provider: &plugin.Provider{
 			Name:            "vcd",

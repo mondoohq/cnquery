@@ -1,0 +1,99 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/cnquery/v11/providers/tailscale"
+option go_package = "go.mondoo.com/cnquery/v11/providers/tailscale/resources"
+
+// Tailscale organization
+tailscale {
+  // Tailnet organization name
+  tailnet string
+  // List devices in a tailnet
+  devices() []tailscale.device
+  // List users of a tailnet
+  users() []tailscale.user
+  // List global DNS nameservers for a tailnet
+  nameservers() []string
+}
+
+// A Tailscale device (sometimes referred to as node or machine)
+tailscale.device @defaults("id hostname os") {
+  init(id? string)
+  // Legacy identifier for a device
+  id string
+  // Preferred identifier for a device (not supported yet)
+  // nodeId string
+  // Machine name in the admin console
+  hostname string
+  // Operating system that the device is running
+  os string
+  // MagicDNS name of the device
+  name string
+  // User who registered the node (For untagged nodes, this user is the device owner.)
+  user string
+  // An identity for the device that is separate from human users (used as part of an ACL to restrict access)
+  tags []string
+  // List of Tailscale IP addresses for the device, including both IPv4 and IPv6 addresses
+  addresses []string
+  // Version of the Tailscale client software (empty for external devices)
+  clientVersion string
+  // Machine key used by Tailscale (empty for external devices)
+  machineKey string
+  // Node key primarily used by Tailscale and required for select operations, such as adding a node to a locked tailnet
+  nodeKey string
+  // Issue with the tailnet lock node-key signature on this device (only populated when tailnet lock is enabled)
+  tailnetLockError string
+  // Node's tailnet lock key
+  tailnetLockKey string
+  // Whether the device is blocked from accepting connections over Tailscale, including pings
+  blocksIncomingConnections bool
+  // Whether the device is authorized to join the tailnet
+  authorized bool
+  // Whether a device is shared into the tailnet (rather than a member of the tailnet)
+  isExternal bool
+  // Whether key expiration is disabled for the device
+  keyExpiryDisabled bool
+  // Whether a Tailscale client version upgrade is available (empty for external devices)
+  updateAvailable bool
+  // Date when the device was added to the tailnet (empty for external devices)
+  createdAt time
+  // Expiration date of the device's auth key
+  expiresAt time
+  // When device was last active on the tailnet
+  lastSeenAt time
+}
+
+// Tailscale user
+tailscale.user @defaults("id displayName type") {
+  init(id? string)
+  // Unique identifier for the user
+  id string
+  // Name of the user
+  displayName string
+  // Email-like login name of the user
+  loginName string
+  // Profile picture URL for the user
+  profilePicUrl string
+  // Tailnet that owns the user
+  tailnetId string
+  // Type of relation this user has to the tailnet (member or shared)
+  type string
+  // Role of the user (owner, member, admin, etc.)
+  role string
+  // Status of the user
+  //   'active' - Last seen within 28 days
+  //   'idle' - Last seen more than 28 days ago
+  //   'suspended' - Suspended from accessing the tailnet
+  //   'needs-approval' - Unable to join tailnet until approved
+  //   'over-billing-limit' - Unable to join tailnet until billing count increased
+  status string
+  // Number of devices the user owns
+  deviceCount int
+  // Time the user joined the tailnet
+  createdAt time
+  // Either:
+  // a) The last time any of the user's nodes were connected to the network
+  // or
+  // b) The last time the user authenticated to any Tailscale service, including the admin panel
+  lastSeenAt time
+}
