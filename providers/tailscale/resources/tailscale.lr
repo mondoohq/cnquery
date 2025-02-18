@@ -10,8 +10,10 @@ tailscale {
   tailnet string
   // List devices in a tailnet
   devices() []tailscale.device
-  // List users in a tailnet
+  // List users of a tailnet
   users() []tailscale.user
+  // List global DNS nameservers for a tailnet
+  nameservers() []string
 }
 
 // A Tailscale device (sometimes referred to as node or machine)

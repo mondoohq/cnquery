@@ -5,6 +5,8 @@ resources:
   tailscale:
     fields:
       devices: {}
+      dns: {}
+      nameservers: {}
       tailnet: {}
       users: {}
     min_mondoo_version: 9.0.0

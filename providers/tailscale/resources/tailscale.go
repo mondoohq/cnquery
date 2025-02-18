@@ -8,6 +8,7 @@ import (
 
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v11/providers/tailscale/connection"
 )
 
@@ -73,4 +74,10 @@ func (t *mqlTailscale) users() ([]any, error) {
 	}
 
 	return resources, nil
+}
+
+func (t *mqlTailscale) nameservers() ([]any, error) {
+	conn := t.MqlRuntime.Connection.(*connection.TailscaleConnection)
+	nameservers, err := conn.Client().DNS().Nameservers(context.Background())
+	return convert.SliceAnyToInterface(nameservers), err
 }

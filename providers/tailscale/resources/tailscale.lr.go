@@ -107,6 +107,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"tailscale.users": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTailscale).GetUsers()).ToDataRes(types.Array(types.Resource("tailscale.user")))
 	},
+	"tailscale.nameservers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscale).GetNameservers()).ToDataRes(types.Array(types.String))
+	},
 	"tailscale.device.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTailscaleDevice).GetId()).ToDataRes(types.String)
 	},
@@ -226,6 +229,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"tailscale.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTailscale).Users, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"tailscale.nameservers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscale).Nameservers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"tailscale.device.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -392,6 +399,7 @@ type mqlTailscale struct {
 	Tailnet plugin.TValue[string]
 	Devices plugin.TValue[[]interface{}]
 	Users plugin.TValue[[]interface{}]
+	Nameservers plugin.TValue[[]interface{}]
 }
 
 // createTailscale creates a new instance of this resource
@@ -464,6 +472,12 @@ func (c *mqlTailscale) GetUsers() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.users()
+	})
+}
+
+func (c *mqlTailscale) GetNameservers() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Nameservers, func() ([]interface{}, error) {
+		return c.nameservers()
 	})
 }
 

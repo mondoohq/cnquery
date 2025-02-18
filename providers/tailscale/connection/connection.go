@@ -179,7 +179,7 @@ func NewTailscaleDevicePlatform(deviceId string) *inventory.Platform {
 		Name:                  "tailscale-device",
 		Title:                 "Tailscale Device",
 		Family:                []string{"tailscale"},
-		TechnologyUrlSegments: []string{"saas", "tailscale", "device", deviceId},
+		TechnologyUrlSegments: []string{"network", "tailscale", "device", deviceId},
 		Kind:                  "api",
 		Runtime:               "tailscale",
 	}
