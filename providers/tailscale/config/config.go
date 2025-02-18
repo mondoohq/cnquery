@@ -24,8 +24,7 @@ var Config = plugin.Provider{
 			MinArgs: 0,
 			MaxArgs: 1,
 			Long: fmt.Sprintf(`
-Use the tailscale provider to query devices, DNS namespaces, and more information about a Tailscale network
-known as tailnet.
+Use the tailscale provider to query devices, DNS namespaces, and more information about a Tailscale network, known as a tailnet.
 
 To authenticate using an API access token:
 
@@ -62,19 +61,19 @@ If you are using an API access token instead of an OAuth client, use the '%s' va
 					Long:    connection.OPTION_BASE_URL,
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "The base URL for the Tailscale API",
+					Desc:    "Base URL for the Tailscale API",
 				},
 				{
 					Long:    connection.OPTION_CLIENT_ID,
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "OAuth Client ID",
+					Desc:    "OAuth client ID",
 				},
 				{
 					Long:    connection.OPTION_CLIENT_SECRET,
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "OAuth Client Secret",
+					Desc:    "OAuth client secret",
 				},
 			},
 		},

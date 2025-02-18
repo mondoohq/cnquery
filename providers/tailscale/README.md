@@ -1,7 +1,6 @@
 # Tailscale Provider
 
-Use the tailscale provider to query devices, DNS namespaces, and more information about a Tailscale network
-known as `tailnet`.
+Use the tailscale provider to query devices, DNS namespaces, and more information about a Tailscale network, known as a `tailnet`.
 
 To authenticate using an API access token:
 
@@ -28,7 +27,7 @@ If you are using an API access token instead of an OAuth client, use the `TAILSC
 cnquery> tailscale.devices()
 ```
 
-**Show a single device information**
+**Get information on a single device**
 
 ```shell
 cnquery> tailscale.device(id: "55161288425123456") {*}
@@ -58,9 +57,9 @@ tailscale.device: {
 }
 ```
 
-# Advanced Usage
+# Advanced usage
 
-Discover all devices (any computer or mobile device) that joins the tailnet `example.com`.
+**Discover all devices (any computer or mobile device) that join the tailnet `example.com`**
 
 ```shell
 cnquery shell tailscale example.com --discover devices
