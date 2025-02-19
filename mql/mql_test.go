@@ -365,7 +365,7 @@ func TestBuiltinFunctionOverride(t *testing.T) {
 			Code:        "mos.groups.list.length",
 			ResultIndex: 0, Expectation: int64(7),
 		},
-		// Same here, builtint `length` function
+		// Same here, builtin `length` function
 		{
 			Code:        "muser.groups.length",
 			ResultIndex: 0, Expectation: int64(2),
