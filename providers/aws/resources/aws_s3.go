@@ -191,21 +191,6 @@ func (a *mqlAwsS3Bucket) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func (a *mqlAwsS3Bucket) emptyAwsS3BucketPolicy() (*mqlAwsS3BucketPolicy, error) {
-	res, err := CreateResource(a.MqlRuntime, "aws.s3.bucket.policy", map[string]*llx.RawData{
-		"bucketName": llx.StringData(a.Name.Data),
-		"document":   llx.StringData("{}"),
-		"version":    llx.StringData(""),
-		"id":         llx.StringData(""),
-		"exists":     llx.BoolData(false),
-		"statements": llx.ArrayData([]interface{}{}, types.Dict),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlAwsS3BucketPolicy), nil
-}
-
 func (a *mqlAwsS3Bucket) policy() (*mqlAwsS3BucketPolicy, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
@@ -217,10 +202,7 @@ func (a *mqlAwsS3Bucket) policy() (*mqlAwsS3BucketPolicy, error) {
 	policy, err := svc.GetBucketPolicy(ctx, &s3.GetBucketPolicyInput{
 		Bucket: &bucketname,
 	})
-	if err != nil {
-		if isNotFoundForS3(err) {
-			return a.emptyAwsS3BucketPolicy()
-		}
+	if err != nil && !isNotFoundForS3(err) {
 		return nil, err
 	}
 
@@ -233,10 +215,10 @@ func (a *mqlAwsS3Bucket) policy() (*mqlAwsS3BucketPolicy, error) {
 		mqlS3BucketPolicy, err := CreateResource(a.MqlRuntime, "aws.s3.bucket.policy",
 			map[string]*llx.RawData{
 				"id":         llx.StringData(parsedPolicy.Id),
+				"name":       llx.StringData(bucketname),
 				"bucketName": llx.StringData(bucketname),
 				"version":    llx.StringData(parsedPolicy.Version),
 				"document":   llx.StringDataPtr(policy.Policy),
-				"exists":     llx.BoolData(true),
 			})
 		if err != nil {
 			return nil, err
@@ -246,7 +228,7 @@ func (a *mqlAwsS3Bucket) policy() (*mqlAwsS3BucketPolicy, error) {
 	}
 
 	// no bucket policy found, return nil for the policy
-	return a.emptyAwsS3BucketPolicy()
+	return nil, nil
 }
 
 func (a *mqlAwsS3Bucket) tags() (map[string]interface{}, error) {

@@ -1822,9 +1822,11 @@ private aws.s3.bucket.corsrule @defaults("name") {
 }
 
 // Amazon S3 bucket policy
-private aws.s3.bucket.policy @defaults("bucketName exists version") {
+private aws.s3.bucket.policy @defaults("bucketName version") {
   // Unique ID for the policy
   id string
+  // Deprecated
+  name string
   // Bucket name that this policy belongs
   bucketName string
   // Document for the policy
@@ -1833,10 +1835,7 @@ private aws.s3.bucket.policy @defaults("bucketName exists version") {
   version() string
   // List of statements for the policy
   statements() []dict
-  // Whether the bucket policy exists
-  exists bool
 }
-
 
 // AWS Application Auto Scaling
 aws.applicationAutoscaling @defaults("namespace") {
