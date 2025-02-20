@@ -55,6 +55,6 @@ func TestExtensibleSchema(t *testing.T) {
 	assert.ElementsMatch(t, []string{"first", "second"}, providers)
 
 	_, finfo = s.LookupField("eternity", "v")
-	require.NotNil(t, info)
+	require.NotNil(t, finfo)
 	assert.Equal(t, "first", finfo.Provider)
 }
