@@ -17,7 +17,7 @@ microsoft {
   // List of domains
   domains() []microsoft.domain
   // List of applications
-  applications() []microsoft.application
+  applications() microsoft.applications
   // List of service principals
   serviceprincipals() []microsoft.serviceprincipal
   // List of enterprise applications
@@ -28,6 +28,13 @@ microsoft {
   settings() dict
   // The connected tenant's default domain name
   tenantDomainName() string
+}
+
+// List of Microsoft Entra ID application registrations
+microsoft.applications {
+  []microsoft.application
+  // Total number of application registrations
+  length() int
 }
 
 //  Microsoft Entra tenant
