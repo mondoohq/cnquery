@@ -202,7 +202,11 @@ func (a *mqlAwsS3Bucket) policy() (*mqlAwsS3BucketPolicy, error) {
 	policy, err := svc.GetBucketPolicy(ctx, &s3.GetBucketPolicyInput{
 		Bucket: &bucketname,
 	})
-	if err != nil && !isNotFoundForS3(err) {
+	if err != nil {
+		if isNotFoundForS3(err) {
+			a.Policy.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
 		return nil, err
 	}
 
