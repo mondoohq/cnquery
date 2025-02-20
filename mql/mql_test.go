@@ -350,3 +350,25 @@ func TestDictMethods(t *testing.T) {
 		},
 	})
 }
+
+func TestBuiltinFunctionOverride(t *testing.T) {
+	x := testutils.InitTester(testutils.LinuxMock())
+	x.TestSimple(t, []testutils.SimpleTest{
+		// This access the resource length property,
+		// which overrides the builtin function `length`
+		{
+			Code:        "mos.groups.length",
+			ResultIndex: 0, Expectation: int64(5),
+		},
+		// This calls the native builtin `length` function
+		{
+			Code:        "mos.groups.list.length",
+			ResultIndex: 0, Expectation: int64(7),
+		},
+		// Same here, builtin `length` function
+		{
+			Code:        "muser.groups.length",
+			ResultIndex: 0, Expectation: int64(2),
+		},
+	})
+}

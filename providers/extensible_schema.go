@@ -115,6 +115,25 @@ func (x *extensibleSchema) LookupField(resource string, field string) (*resource
 	return x.roAggregate.LookupField(resource, field)
 }
 
+func (x *extensibleSchema) FindField(resource *resources.ResourceInfo, field string) (resources.FieldPath, []*resources.Field, bool) {
+	x.sync.Lock()
+	defer x.sync.Unlock()
+
+	filePath, fieldinfos, found := x.roAggregate.FindField(resource, field)
+	if found {
+		return filePath, fieldinfos, found
+	}
+
+	if x.lastRefreshed >= LastProviderInstall {
+		return filePath, fieldinfos, found
+	}
+
+	x.unsafeLoadAll()
+	x.unsafeRefresh()
+
+	return x.roAggregate.FindField(resource, field)
+}
+
 // Prioritize the provider IDs in the order that is provided. Any other
 // provider comes later and in any random order.
 func (x *extensibleSchema) prioritizeIDs(prioritization ...string) {

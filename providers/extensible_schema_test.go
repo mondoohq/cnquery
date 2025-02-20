@@ -54,7 +54,14 @@ func TestExtensibleSchema(t *testing.T) {
 	providers = []string{finfo.Provider, info.Others[0].Fields["iii"].Provider}
 	assert.ElementsMatch(t, []string{"first", "second"}, providers)
 
-	_, finfo = s.LookupField("eternity", "v")
+	info, finfo = s.LookupField("eternity", "v")
 	require.NotNil(t, info)
 	assert.Equal(t, "first", finfo.Provider)
+
+	// Find field from resource
+	filePath, fieldinfos, found := s.FindField(info, "v")
+	require.True(t, found)
+	require.Equal(t, resources.FieldPath{"v"}, filePath)
+	require.Len(t, fieldinfos, 1)
+	require.Equal(t, "first", fieldinfos[0].Provider)
 }

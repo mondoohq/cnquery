@@ -891,41 +891,6 @@ func filterEmptyExpressions(expressions []*parser.Expression) []*parser.Expressi
 	return res
 }
 
-type fieldPath []string
-
-// TODO: embed this into the Schema LookupField call!
-func (c *compiler) findField(resource *resources.ResourceInfo, fieldName string) (fieldPath, []*resources.Field, bool) {
-	fieldInfo, ok := resource.Fields[fieldName]
-	if ok {
-		return fieldPath{fieldName}, []*resources.Field{fieldInfo}, true
-	}
-
-	for _, f := range resource.Fields {
-		if f.IsEmbedded {
-			typ := types.Type(f.Type)
-			nextResource := c.Schema.Lookup(typ.ResourceName())
-			if nextResource == nil {
-				continue
-			}
-			childFieldPath, childFieldInfos, ok := c.findField(nextResource, fieldName)
-			if ok {
-				fp := make(fieldPath, len(childFieldPath)+1)
-				fieldInfos := make([]*resources.Field, len(childFieldPath)+1)
-				fp[0] = f.Name
-				fieldInfos[0] = f
-				for i, n := range childFieldPath {
-					fp[i+1] = n
-				}
-				for i, f := range childFieldInfos {
-					fieldInfos[i+1] = f
-				}
-				return fp, fieldInfos, true
-			}
-		}
-	}
-	return nil, nil, false
-}
-
 // compile a bound identifier to its binding
 // example: user { name } , where name is compiled bound to the user
 // it will return false if it cannot bind the identifier
@@ -942,7 +907,7 @@ func (c *compiler) compileBoundIdentifierWithMqlCtx(id string, binding *variable
 			return true, types.Nil, errors.New("cannot find resource that is called by '" + id + "' of type " + typ.Label())
 		}
 
-		fieldPath, fieldinfos, ok := c.findField(resource, id)
+		fieldPath, fieldinfos, ok := c.Schema.FindField(resource, id)
 		if ok {
 			fieldinfo := fieldinfos[len(fieldinfos)-1]
 			c.CompilerConfig.Stats.CallField(resource.Name, fieldinfo)

@@ -862,6 +862,17 @@ func BuiltinFunctionV2(typ types.Type, name string) (*chunkHandlerV2, error) {
 func (e *blockExecutor) runBoundFunction(bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	log.Trace().Uint64("ref", ref).Str("id", chunk.Id).Msg("exec> run bound function")
 
+	// check if the resource defines the function to allow providers to override
+	// builtin functions like `length` or any other function
+	if bind.Type.IsResource() && bind.Value != nil {
+		rr := bind.Value.(Resource)
+		resource := e.ctx.runtime.Schema().Lookup(rr.MqlName())
+		_, _, override := e.ctx.runtime.Schema().FindField(resource, chunk.Id)
+		if override {
+			return runResourceFunction(e, bind, chunk, ref)
+		}
+	}
+
 	fh, err := BuiltinFunctionV2(bind.Type, chunk.Id)
 	if err == nil {
 		res, dref, err := fh.f(e, bind, chunk, ref)
@@ -879,5 +890,6 @@ func (e *blockExecutor) runBoundFunction(bind *RawData, chunk *Chunk, ref uint64
 	if bind.Type.IsResource() {
 		return runResourceFunction(e, bind, chunk, ref)
 	}
+
 	return nil, 0, err
 }
