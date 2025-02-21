@@ -82,6 +82,8 @@ func NewPackageURL(pf *inventory.Platform, t Type, name, version string, modifie
 		switch purlNamespace {
 		case "photon":
 			purlNamespace = "photon os"
+		case "rockylinux":
+			purlNamespace = "rocky-linux"
 		case "opensuse-leap":
 			purlNamespace = "opensuse"
 		case "opensuse-tumbleweed":
