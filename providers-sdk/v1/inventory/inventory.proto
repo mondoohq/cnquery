@@ -304,7 +304,12 @@ message Platform {
   // ^^
 
   string runtime = 21;
+  // FIXME: DEPRECATED, remove in v12 (or later) vv
   map<string, string> labels = 22;
+  // ^^
+
+  // Additional platform specific/operating system data
+  map<string, string> metadata = 23;
 }
 
 // NOTE: the k8s types are apache 2 licenced and copied from

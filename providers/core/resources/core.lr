@@ -44,6 +44,8 @@ asset @defaults("name platform version") {
   fqdn string
   // Build version of the platform (optional)
   build string
+  // Platform Metadata (e.g. key values from /etc/os/release)
+  platformMetadata map[string]string
   // Optional platform information
   labels map[string]string
   // Custom annotations (tags) on the asset
