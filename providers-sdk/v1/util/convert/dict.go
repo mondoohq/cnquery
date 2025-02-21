@@ -39,3 +39,18 @@ func JsonToDictSlice(v interface{}) ([]interface{}, error) {
 	}
 	return res, nil
 }
+
+// DictToTypedMap converts a `dict` into a `map[string]T` safely.
+// It discards anything that can't be converted to `T`.
+func DictToTypedMap[T any](d interface{}) map[string]T {
+	m := make(map[string]T)
+	dict, ok := d.(map[string]interface{})
+	if ok {
+		for k, v := range dict {
+			if t, ok := v.(T); ok {
+				m[k] = t
+			}
+		}
+	}
+	return m
+}
