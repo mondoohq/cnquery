@@ -122,7 +122,21 @@ func initAwsS3BucketPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData
 	}
 	// then use it to get its policy
 	policyResource := s3bucketResource.(*mqlAwsS3Bucket).GetPolicy()
-	return args, policyResource.Data, nil
+	if policyResource != nil {
+		return args, policyResource.Data, nil
+	}
+
+	// no policy found
+	resource := &mqlAwsS3BucketPolicy{}
+	resource.Id.State = plugin.StateIsNull | plugin.StateIsSet
+	resource.Name.State = plugin.StateIsNull | plugin.StateIsSet
+	resource.Document.State = plugin.StateIsNull | plugin.StateIsSet
+	resource.Version.State = plugin.StateIsNull | plugin.StateIsSet
+	resource.Statements.State = plugin.StateIsNull | plugin.StateIsSet
+	resource.BucketName = plugin.TValue[string]{
+		Data: s3bucketResource.(*mqlAwsS3Bucket).GetName().Data, State: plugin.StateIsSet,
+	}
+	return args, resource, nil
 }
 
 func initAwsS3Bucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -144,6 +158,9 @@ func initAwsS3Bucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	var arn string
 	if args["arn"] != nil {
 		arn = args["arn"].Value.(string)
+		if !strings.HasPrefix(arn, "arn:aws:s3:") {
+			return nil, nil, errors.Newf("not a valid bucket ARN '%s'", arn)
+		}
 	} else {
 		nameVal := args["name"].Value.(string)
 		arn = fmt.Sprintf(s3ArnPattern, nameVal)
@@ -211,7 +228,7 @@ func (a *mqlAwsS3Bucket) policy() (*mqlAwsS3BucketPolicy, error) {
 	}
 
 	if policy != nil && policy.Policy != nil {
-		parsedPolicy, err := parsePolicy(*policy.Policy)
+		parsedPolicy, err := parseS3BucketPolicy(*policy.Policy)
 		if err != nil {
 			return nil, err
 		}
@@ -454,23 +471,21 @@ func (a *mqlAwsS3Bucket) public() (bool, error) {
 	}
 
 	// If that didn't work, fetch the bucket policy manually and parse it
-	bucketPolicyResource, err := a.policy()
-	if err != nil {
-		return false, err
-	}
-
-	bucketPolicy, err := bucketPolicyResource.parsePolicyDocument()
-	if err != nil {
-		return false, err
-	}
-
-	for _, statement := range bucketPolicy.Statements {
-		if statement.Effect != "Allow" {
-			continue
+	bucketPolicyResource := a.GetPolicy()
+	if bucketPolicyResource.State == plugin.StateIsSet {
+		bucketPolicy, err := bucketPolicyResource.Data.parsePolicyDocument()
+		if err != nil {
+			return false, err
 		}
-		if awsPrincipal, ok := statement.Principal["AWS"]; ok {
-			if slices.Contains(awsPrincipal, "*") {
-				return true, nil
+
+		for _, statement := range bucketPolicy.Statements {
+			if statement.Effect != "Allow" {
+				continue
+			}
+			if awsPrincipal, ok := statement.Principal["AWS"]; ok {
+				if slices.Contains(awsPrincipal, "*") {
+					return true, nil
+				}
 			}
 		}
 	}
@@ -711,10 +726,10 @@ func (a *mqlAwsS3BucketPolicy) id() (string, error) {
 }
 
 func (a *mqlAwsS3BucketPolicy) parsePolicyDocument() (*awspolicy.S3BucketPolicy, error) {
-	return parsePolicy(a.Document.Data)
+	return parseS3BucketPolicy(a.Document.Data)
 }
 
-func parsePolicy(document string) (*awspolicy.S3BucketPolicy, error) {
+func parseS3BucketPolicy(document string) (*awspolicy.S3BucketPolicy, error) {
 	var policy awspolicy.S3BucketPolicy
 	err := json.Unmarshal([]byte(document), &policy)
 	return &policy, err
