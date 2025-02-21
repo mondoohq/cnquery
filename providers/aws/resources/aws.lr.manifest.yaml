@@ -2845,7 +2845,11 @@ resources:
       desc: |
         Bucket policies grant permission to your Amazon S3 resources
     fields:
+      bucketName:
+        min_mondoo_version: 9.0.0
       document: {}
+      exists:
+        min_mondoo_version: 9.0.0
       id: {}
       name: {}
       statements: {}
