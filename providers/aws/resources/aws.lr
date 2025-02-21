@@ -1825,7 +1825,7 @@ private aws.s3.bucket.corsrule @defaults("name") {
 private aws.s3.bucket.policy @defaults("bucketName version") {
   // Unique ID for the policy
   id string
-  // Deprecated
+  // Deprecated. Use `bucketName` instead
   name string
   // Bucket name that this policy belongs
   bucketName string
