@@ -73,7 +73,7 @@ func (d *Discovery) SupportedResourceTypes() (*ApiResourceIndex, error) {
 	log.Debug().Msg("query api resource types")
 	resList, err := d.discoveryClient.ServerPreferredResources()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to fetch api resource types from kubernetes")
+		log.Warn().Err(err).Msg("failed to fetch api resource types from kubernetes")
 	}
 	log.Debug().Msgf("found %d api resource types", len(resList))
 
