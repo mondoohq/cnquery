@@ -264,6 +264,18 @@ func TestPackageURLString(t *testing.T) {
 		assert.Equal(t, expected, p.String())
 	})
 
+	t.Run("Rocky Linux package", func(t *testing.T) {
+		platform := &inventory.Platform{
+			Name:    "rockylinux",
+			Arch:    "x86_64",
+			Version: "8.6",
+			Labels:  nil,
+		}
+		p := purl.NewPackageURL(platform, purl.TypeRPM, "testpkg", "1.0.0")
+		expected := "pkg:rpm/rocky-linux/testpkg@1.0.0?arch=x86_64"
+		assert.Equal(t, expected, p.String())
+	})
+
 	t.Run("openSUSE package", func(t *testing.T) {
 		platform := &inventory.Platform{
 			Name:    "opensuse-leap",
