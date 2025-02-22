@@ -28,6 +28,10 @@ func initAzureSubscriptionPolicy(runtime *plugin.Runtime, args map[string]*llx.R
 	return args, nil, nil
 }
 
+func (a *mqlAzureSubscriptionPolicyAssignment) id() (string, error) {
+	return fmt.Sprintf("azure.subscription.policy/%s/%s", a.Scope.Data, a.Id.Data), nil
+}
+
 func (a *mqlAzureSubscriptionPolicy) assignments() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
@@ -51,7 +55,6 @@ func (a *mqlAzureSubscriptionPolicy) assignments() ([]interface{}, error) {
 		}
 
 		assignmentData := map[string]*llx.RawData{
-			"__id":            llx.StringData(fmt.Sprintf("azure.subscription.policy/%s/%s", assignment.Properties.Scope, assignment.Properties.DisplayName)),
 			"id":              llx.StringData(assignment.Properties.PolicyDefinitionID),
 			"name":            llx.StringData(assignment.Properties.DisplayName),
 			"scope":           llx.StringData(assignment.Properties.Scope),
