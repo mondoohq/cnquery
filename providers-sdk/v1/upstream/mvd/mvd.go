@@ -38,6 +38,6 @@ func NewMvdPlatform(pf *inventory.Platform) *Platform {
 		Build:   pf.Build,
 		Arch:    pf.Arch,
 		Title:   pf.Title,
-		Labels:  pf.Labels,
+		Labels:  pf.Metadata,
 	}
 }

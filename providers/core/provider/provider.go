@@ -65,7 +65,7 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	asset := req.Asset
 	// FIXME: remove in v12 (or later) vv
 	// we merge `asset.Labels` and `asset.Platform.Labels` for backwards compatibility
-	assetLabelsMergedV11Compat := mapx.Merge(asset.Labels, asset.Platform.Labels)
+	assetLabelsMergedV11Compat := mapx.Merge(asset.Labels, asset.Platform.Metadata)
 	// ^^
 	_, err = resources.CreateResource(runtime, "asset", map[string]*llx.RawData{
 		"ids":              llx.ArrayData(llx.TArr2Raw(asset.PlatformIds), types.String),

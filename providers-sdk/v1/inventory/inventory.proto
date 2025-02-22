@@ -305,7 +305,7 @@ message Platform {
 
   string runtime = 21;
   // FIXME: DEPRECATED, remove in v12 (or later) vv
-  map<string, string> labels = 22;
+  // map<string, string> labels = 22;
   // ^^
 
   // Additional platform specific/operating system data
