@@ -23,7 +23,7 @@ func init() {
 			Create: createMicrosoft,
 		},
 		"microsoft.groups": {
-			// to override args, implement: initMicrosoftGroups(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initMicrosoftGroups,
 			Create: createMicrosoftGroups,
 		},
 		"microsoft.tenant": {

@@ -11,6 +11,7 @@ import (
 	"github.com/microsoftgraph/msgraph-sdk-go/groups"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
 	"go.mondoo.com/cnquery/v11/types"
 )
@@ -80,8 +81,21 @@ func (a *mqlMicrosoftGroup) members() ([]interface{}, error) {
 }
 
 func (a *mqlMicrosoft) groups() (*mqlMicrosoftGroups, error) {
-	mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.groups", map[string]*llx.RawData{})
+	mqlResource, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "microsoft.groups", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
 	return mqlResource.(*mqlMicrosoftGroups), err
+}
+
+func initMicrosoftGroups(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	args["__id"] = newListResourceIdFromArguments("microsoft.groups", args)
+	resource, err := runtime.CreateResource(runtime, "microsoft.groups", args)
+	if err != nil {
+		return args, nil, err
+	}
+
+	return args, resource.(*mqlMicrosoftGroups), nil
 }
 
 func (a *mqlMicrosoftGroups) list() ([]interface{}, error) {
