@@ -72,6 +72,7 @@ func newMqlGithubRepository(runtime *plugin.Runtime, repo *github.Repository) (*
 		"cloneUrl":          llx.StringData(repo.GetCloneURL()),
 		"sshUrl":            llx.StringData(repo.GetSSHURL()),
 		"owner":             llx.ResourceData(owner, owner.MqlName()),
+		"customProperties":  llx.DictData(repo.CustomProperties),
 	})
 	if err != nil {
 		return nil, err

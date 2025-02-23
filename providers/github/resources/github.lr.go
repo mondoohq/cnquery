@@ -38,6 +38,10 @@ func init() {
 			Init: initGithubOrganization,
 			Create: createGithubOrganization,
 		},
+		"github.organization.customProperty": {
+			// to override args, implement: initGithubOrganizationCustomProperty(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGithubOrganizationCustomProperty,
+		},
 		"github.user": {
 			Init: initGithubUser,
 			Create: createGithubUser,
@@ -357,6 +361,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.organization.hasRepositoryProjects": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubOrganization).GetHasRepositoryProjects()).ToDataRes(types.Bool)
 	},
+	"github.organization.customProperties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganization).GetCustomProperties()).ToDataRes(types.Array(types.Resource("github.organization.customProperty")))
+	},
+	"github.organization.customProperty.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationCustomProperty).GetName()).ToDataRes(types.String)
+	},
+	"github.organization.customProperty.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationCustomProperty).GetDescription()).ToDataRes(types.String)
+	},
+	"github.organization.customProperty.sourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationCustomProperty).GetSourceType()).ToDataRes(types.String)
+	},
+	"github.organization.customProperty.valueType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationCustomProperty).GetValueType()).ToDataRes(types.String)
+	},
+	"github.organization.customProperty.required": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationCustomProperty).GetRequired()).ToDataRes(types.Bool)
+	},
+	"github.organization.customProperty.defaultValue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationCustomProperty).GetDefaultValue()).ToDataRes(types.String)
+	},
+	"github.organization.customProperty.allowedValues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationCustomProperty).GetAllowedValues()).ToDataRes(types.Array(types.String))
+	},
+	"github.organization.customProperty.valuesEditableBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationCustomProperty).GetValuesEditableBy()).ToDataRes(types.String)
+	},
 	"github.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubUser).GetId()).ToDataRes(types.Int)
 	},
@@ -581,6 +612,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"github.repository.isTemplate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetIsTemplate()).ToDataRes(types.Bool)
+	},
+	"github.repository.customProperties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepository).GetCustomProperties()).ToDataRes(types.Dict)
 	},
 	"github.repository.openMergeRequests": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetOpenMergeRequests()).ToDataRes(types.Array(types.Resource("github.mergeRequest")))
@@ -1229,6 +1263,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlGithubOrganization).HasRepositoryProjects, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"github.organization.customProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganization).CustomProperties, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"github.organization.customProperty.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGithubOrganizationCustomProperty).__id, ok = v.Value.(string)
+			return
+		},
+	"github.organization.customProperty.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationCustomProperty).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.organization.customProperty.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationCustomProperty).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.organization.customProperty.sourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationCustomProperty).SourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.organization.customProperty.valueType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationCustomProperty).ValueType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.organization.customProperty.required": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationCustomProperty).Required, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.organization.customProperty.defaultValue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationCustomProperty).DefaultValue, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.organization.customProperty.allowedValues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationCustomProperty).AllowedValues, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"github.organization.customProperty.valuesEditableBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationCustomProperty).ValuesEditableBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"github.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlGithubUser).__id, ok = v.Value.(string)
 			return
@@ -1551,6 +1625,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"github.repository.isTemplate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubRepository).IsTemplate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.repository.customProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepository).CustomProperties, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"github.repository.openMergeRequests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2438,6 +2516,7 @@ type mqlGithubOrganization struct {
 	Packages plugin.TValue[[]interface{}]
 	HasOrganizationProjects plugin.TValue[bool]
 	HasRepositoryProjects plugin.TValue[bool]
+	CustomProperties plugin.TValue[[]interface{}]
 }
 
 // createGithubOrganization creates a new instance of this resource
@@ -2731,6 +2810,106 @@ func (c *mqlGithubOrganization) GetHasOrganizationProjects() *plugin.TValue[bool
 
 func (c *mqlGithubOrganization) GetHasRepositoryProjects() *plugin.TValue[bool] {
 	return &c.HasRepositoryProjects
+}
+
+func (c *mqlGithubOrganization) GetCustomProperties() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.CustomProperties, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.organization", c.__id, "customProperties")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.customProperties()
+	})
+}
+
+// mqlGithubOrganizationCustomProperty for the github.organization.customProperty resource
+type mqlGithubOrganizationCustomProperty struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlGithubOrganizationCustomPropertyInternal it will be used here
+	Name plugin.TValue[string]
+	Description plugin.TValue[string]
+	SourceType plugin.TValue[string]
+	ValueType plugin.TValue[string]
+	Required plugin.TValue[bool]
+	DefaultValue plugin.TValue[string]
+	AllowedValues plugin.TValue[[]interface{}]
+	ValuesEditableBy plugin.TValue[string]
+}
+
+// createGithubOrganizationCustomProperty creates a new instance of this resource
+func createGithubOrganizationCustomProperty(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGithubOrganizationCustomProperty{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("github.organization.customProperty", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGithubOrganizationCustomProperty) MqlName() string {
+	return "github.organization.customProperty"
+}
+
+func (c *mqlGithubOrganizationCustomProperty) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGithubOrganizationCustomProperty) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGithubOrganizationCustomProperty) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGithubOrganizationCustomProperty) GetSourceType() *plugin.TValue[string] {
+	return &c.SourceType
+}
+
+func (c *mqlGithubOrganizationCustomProperty) GetValueType() *plugin.TValue[string] {
+	return &c.ValueType
+}
+
+func (c *mqlGithubOrganizationCustomProperty) GetRequired() *plugin.TValue[bool] {
+	return &c.Required
+}
+
+func (c *mqlGithubOrganizationCustomProperty) GetDefaultValue() *plugin.TValue[string] {
+	return &c.DefaultValue
+}
+
+func (c *mqlGithubOrganizationCustomProperty) GetAllowedValues() *plugin.TValue[[]interface{}] {
+	return &c.AllowedValues
+}
+
+func (c *mqlGithubOrganizationCustomProperty) GetValuesEditableBy() *plugin.TValue[string] {
+	return &c.ValuesEditableBy
 }
 
 // mqlGithubUser for the github.user resource
@@ -3309,6 +3488,7 @@ type mqlGithubRepository struct {
 	HasDownloads plugin.TValue[bool]
 	HasDiscussions plugin.TValue[bool]
 	IsTemplate plugin.TValue[bool]
+	CustomProperties plugin.TValue[interface{}]
 	OpenMergeRequests plugin.TValue[[]interface{}]
 	ClosedMergeRequests plugin.TValue[[]interface{}]
 	AllMergeRequests plugin.TValue[[]interface{}]
@@ -3501,6 +3681,10 @@ func (c *mqlGithubRepository) GetHasDiscussions() *plugin.TValue[bool] {
 
 func (c *mqlGithubRepository) GetIsTemplate() *plugin.TValue[bool] {
 	return &c.IsTemplate
+}
+
+func (c *mqlGithubRepository) GetCustomProperties() *plugin.TValue[interface{}] {
+	return &c.CustomProperties
 }
 
 func (c *mqlGithubRepository) GetOpenMergeRequests() *plugin.TValue[[]interface{}] {
