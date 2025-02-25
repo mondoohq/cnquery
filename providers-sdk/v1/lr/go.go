@@ -628,6 +628,10 @@ func (t *SimpleType) typeItems(ast *LR) types.Type {
 		return types.Time
 	case "dict":
 		return types.Dict
+	case "version":
+		return types.Version
+	case "ip":
+		return types.IP
 	case "range":
 		return types.Range
 	default:
@@ -702,6 +706,10 @@ func (t *SimpleType) mondooTypeItems(b *goBuilder) string {
 		return "types.Range"
 	case "dict":
 		return "types.Dict"
+	case "version":
+		return "types.Version"
+	case "ip":
+		return "types.IP"
 	default:
 		if name, ok := b.importName(t.Type); ok {
 			return "types.Resource(\"" + name + "\")"
@@ -756,15 +764,17 @@ func (t *ListType) goType() string {
 }
 
 var primitiveTypes = map[string]string{
-	"string": "string",
-	"bool":   "bool",
-	"int":    "int64",
-	"float":  "float64",
-	"time":   "*time.Time",
-	"range":  "llx.Range",
-	"regex":  "string",
-	"dict":   "interface{}",
-	"any":    "interface{}",
+	"string":  "string",
+	"bool":    "bool",
+	"int":     "int64",
+	"float":   "float64",
+	"time":    "*time.Time",
+	"range":   "llx.Range",
+	"regex":   "string",
+	"dict":    "interface{}",
+	"version": "string",
+	"ip":      "string",
+	"any":     "interface{}",
 }
 
 func (t *SimpleType) goType(b *goBuilder) string {
@@ -788,14 +798,17 @@ func (t *Type) goZeroValue() string {
 }
 
 var primitiveZeros = map[string]string{
-	"string": "\"\"",
-	"bool":   "false",
-	"int":    "0",
-	"float":  "0.0",
-	"time":   "nil",
-	"range":  "nil",
-	"dict":   "nil",
-	"any":    "nil",
+	"string":  "\"\"",
+	"bool":    "false",
+	"int":     "0",
+	"float":   "0.0",
+	"time":    "nil",
+	"range":   "nil",
+	"regex":   "\"\"",
+	"dict":    "nil",
+	"version": "\"\"",
+	"ip":      "\"\"",
+	"any":     "nil",
 }
 
 func (t *SimpleType) goZeroValue() string {
