@@ -13,7 +13,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "shodan",
 	ID:              "go.mondoo.com/cnquery/v11/providers/shodan",
-	Version:         "11.0.48",
+	Version:         "11.0.49",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{
 		{
