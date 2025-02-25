@@ -122,7 +122,7 @@ func initAwsS3BucketPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData
 	}
 	// then use it to get its policy
 	policyResource := s3bucketResource.(*mqlAwsS3Bucket).GetPolicy()
-	if policyResource != nil {
+	if policyResource != nil && policyResource.State == plugin.StateIsSet {
 		return args, policyResource.Data, nil
 	}
 
@@ -249,6 +249,7 @@ func (a *mqlAwsS3Bucket) policy() (*mqlAwsS3BucketPolicy, error) {
 	}
 
 	// no bucket policy found, return nil for the policy
+	a.Policy.State = plugin.StateIsNull | plugin.StateIsSet
 	return nil, nil
 }
 
