@@ -22,6 +22,7 @@ func init() {
 		"regex":   compileTypeConversion("$regex", types.Regex),
 		"dict":    compileTypeConversion("dict", types.Dict),
 		"version": compileTypeConversion("version", types.Version),
+		"ip":      compileTypeConversion("ip", types.IP),
 		// FIXME: DEPRECATED, remove in v13.0 vv
 		"semver": compileTypeConversion("semver", types.Version), // deprecated
 		//

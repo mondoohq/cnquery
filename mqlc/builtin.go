@@ -100,6 +100,13 @@ func init() {
 			"epoch":   {typ: intType, signature: FunctionSignature{}},
 			"inRange": {typ: intType, compile: compileVersionInRange},
 		},
+		types.IP: {
+			"version":      {typ: stringType, signature: FunctionSignature{}},
+			"subnet":       {typ: stringType, signature: FunctionSignature{}},
+			"prefix":       {typ: stringType, signature: FunctionSignature{}},
+			"prefixLength": {typ: intType, signature: FunctionSignature{}},
+			"suffix":       {typ: stringType, signature: FunctionSignature{}},
+		},
 		types.ArrayLike: {
 			"[]":           {typ: childType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Int}}},
 			"first":        {typ: childType, signature: FunctionSignature{}},
