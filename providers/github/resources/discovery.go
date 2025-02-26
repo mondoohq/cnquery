@@ -117,7 +117,7 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 			customProperty := org.GetCustomProperties().Data[j].(*mqlGithubOrganizationCustomProperty)
 			value := ""
 			if customProperty.DefaultValue.IsSet() {
-				// if the default value of the org-leve custom property is set, use it as the label value
+				// if the default value of the org-level custom property is set, use it as the label value
 				value = customProperty.DefaultValue.Data
 			}
 			labels[customProperty.Name.Data] = value

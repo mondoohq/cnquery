@@ -127,7 +127,7 @@ func (g *mqlGithubOrganization) customProperties() ([]interface{}, error) {
 			"name":             llx.StringDataPtr(property.PropertyName),
 			"description":      llx.StringDataPtr(property.Description),
 			"sourceType":       llx.StringDataPtr(property.SourceType),
-			"valueType":        llx.StringDataPtr(&property.ValueType),
+			"valueType":        llx.StringData(property.ValueType),
 			"required":         llx.BoolDataPtr(property.Required),
 			"defaultValue":     llx.StringDataPtr(property.DefaultValue),
 			"allowedValues":    llx.ArrayData(convert.SliceAnyToInterface[string](property.AllowedValues), types.String),
