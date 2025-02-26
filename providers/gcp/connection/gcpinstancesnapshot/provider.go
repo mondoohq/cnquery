@@ -17,6 +17,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/connection/local"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/snapshot"
 	"go.mondoo.com/cnquery/v11/providers/os/detector"
+	"go.mondoo.com/cnquery/v11/providers/os/id/clouddetect"
 	"go.mondoo.com/cnquery/v11/providers/os/id/gce"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
@@ -285,7 +286,7 @@ func (c *GcpSnapshotConnection) Capabilities() shared.Capabilities {
 }
 
 func (c *GcpSnapshotConnection) Kind() string {
-	return "api"
+	return clouddetect.AssetKind
 }
 
 func (c *GcpSnapshotConnection) Runtime() string {

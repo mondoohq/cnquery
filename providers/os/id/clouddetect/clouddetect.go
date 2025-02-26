@@ -29,16 +29,25 @@ var detectors = []detectorFunc{
 	gcp.Detect,
 }
 
+const AssetKind = "virtualmachine"
+
 type detectResult struct {
 	platformId         string
 	platformName       string
 	relatedPlatformIds []string
 }
 
-func Detect(conn shared.Connection, p *inventory.Platform) (PlatformID, PlatformName, []RelatedPlatformID) {
+type PlatformInfo struct {
+	ID                 string
+	Name               string
+	Kind               string
+	RelatedPlatformIDs []string
+}
+
+func Detect(conn shared.Connection, p *inventory.Platform) PlatformInfo {
 	mgr, err := smbios.ResolveManager(conn, p)
 	if err != nil {
-		return "", "", nil
+		return PlatformInfo{"", "", "", nil}
 	}
 
 	wg := sync.WaitGroup{}
@@ -73,11 +82,11 @@ func Detect(conn shared.Connection, p *inventory.Platform) (PlatformID, Platform
 	}
 
 	if len(platformIds) == 0 {
-		return "", "", nil
+		return PlatformInfo{"", "", "", nil}
 	} else if len(platformIds) > 1 {
 		log.Error().Strs("detected", platformIds).Msg("multiple cloud platform ids detected")
-		return "", "", nil
+		return PlatformInfo{"", "", "", nil}
 	}
 
-	return platformIds[0], name, relatedPlatformIds
+	return PlatformInfo{platformIds[0], name, AssetKind, relatedPlatformIds}
 }

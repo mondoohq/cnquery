@@ -48,13 +48,12 @@ func Detect(conn shared.Connection, pf *inventory.Platform, smbiosMgr smbios.SmB
 			return "", "", nil
 		}
 		id, err := mdsvc.Identify()
-		if err != nil {
-			log.Debug().Err(err).
-				Strs("platform", pf.GetFamily()).
-				Msg("failed to get Azure platform id")
-			return "", "", nil
+		if err == nil {
+			return id.InstanceID, "", []string{id.AccountID}
 		}
-		return id.InstanceID, "", []string{id.AccountID}
+		log.Debug().Err(err).
+			Strs("platform", pf.GetFamily()).
+			Msg("failed to get Azure platform id")
 	}
 
 	return "", "", nil

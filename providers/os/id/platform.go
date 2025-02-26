@@ -32,9 +32,10 @@ type PlatformFingerprint struct {
 	ActiveIdDetectors []string
 }
 
-type PlatformInfo struct {
+type platformInfo struct {
 	IDs                []string
 	Name               string
+	Kind               string
 	RelatedPlatformIDs []string
 }
 
@@ -69,7 +70,7 @@ func IdentifyPlatform(conn shared.Connection, req *plugin.ConnectReq, p *invento
 
 	for i := range idDetectors {
 		idDetector := idDetectors[i]
-		platformInfo, err := GatherPlatformInfo(conn, p, idDetector)
+		platformInfo, err := gatherPlatformInfo(conn, p, idDetector)
 		if err != nil {
 			// we only err if we found zero platform ids, if we try multiple, a fail of an individual one is okay
 			log.Debug().Err(err).Str("detector", string(idDetector)).Msg("could not determine platform info")
@@ -93,6 +94,11 @@ func IdentifyPlatform(conn shared.Connection, req *plugin.ConnectReq, p *invento
 				}
 			}
 		}
+
+		if len(platformInfo.Kind) > 0 {
+			p.Kind = platformInfo.Kind
+		}
+
 		// check whether we can extract runtime and kind information
 		for _, id := range platformInfo.IDs {
 			runtime, kind := ExtractPlatformAndKindFromPlatformId(id)
@@ -132,7 +138,7 @@ func GatherNameForPlatformId(id string) string {
 
 func ExtractPlatformAndKindFromPlatformId(id string) (string, string) {
 	if awsec2.ParseEc2PlatformID(id) != nil {
-		return "aws-ec2", "virtual-machine"
+		return "aws-ec2", "virtualmachine"
 	} else if awsec2.IsValidMondooAccountId(id) {
 		return "aws", "api"
 	} else if awsecs.IsValidMondooECSContainerId(id) {
@@ -141,7 +147,7 @@ func ExtractPlatformAndKindFromPlatformId(id string) (string, string) {
 	return "", ""
 }
 
-func GatherPlatformInfo(conn shared.Connection, pf *inventory.Platform, idDetector string) (*PlatformInfo, error) {
+func gatherPlatformInfo(conn shared.Connection, pf *inventory.Platform, idDetector string) (*platformInfo, error) {
 	var identifier string
 	switch {
 	case idDetector == ids.IdDetector_Hostname:
@@ -149,35 +155,35 @@ func GatherPlatformInfo(conn shared.Connection, pf *inventory.Platform, idDetect
 		hostname, ok := hostname.Hostname(conn, pf)
 		if ok && len(hostname) > 0 {
 			identifier = "//platformid.api.mondoo.app/hostname/" + hostname
-			return &PlatformInfo{
+			return &platformInfo{
 				IDs:                []string{identifier},
 				Name:               hostname,
 				RelatedPlatformIDs: []string{},
 			}, nil
 		}
-		return &PlatformInfo{}, nil
+		return &platformInfo{}, nil
 	case idDetector == ids.IdDetector_MachineID:
 		guid, hostErr := machineid.MachineId(conn, pf)
 		if hostErr == nil && len(guid) > 0 {
 			identifier = "//platformid.api.mondoo.app/machineid/" + guid
-			return &PlatformInfo{
+			return &platformInfo{
 				IDs:                []string{identifier},
 				Name:               "",
 				RelatedPlatformIDs: []string{},
 			}, hostErr
 		}
-		return &PlatformInfo{}, nil
+		return &platformInfo{}, nil
 	case idDetector == ids.IdDetector_SerialNumber:
 		serial, err := serialnumber.SerialNumber(conn, pf)
 		if err == nil && len(serial) > 0 {
 			identifier = "//platformid.api.mondoo.app/serialnumber/" + serial
-			return &PlatformInfo{
+			return &platformInfo{
 				IDs:                []string{identifier},
 				Name:               "",
 				RelatedPlatformIDs: []string{},
 			}, nil
 		}
-		return &PlatformInfo{}, nil
+		return &platformInfo{}, nil
 	case idDetector == ids.IdDetector_AwsEcs:
 		metadata, err := awsecs.Resolve(conn, pf)
 		if err != nil {
@@ -188,29 +194,30 @@ func GatherPlatformInfo(conn shared.Connection, pf *inventory.Platform, idDetect
 			return nil, err
 		}
 		if len(ident.PlatformIds) != 0 {
-			return &PlatformInfo{
+			return &platformInfo{
 				IDs:                ident.PlatformIds,
 				Name:               ident.Name,
 				RelatedPlatformIDs: []string{ident.AccountPlatformID},
 			}, nil
 		}
-		return &PlatformInfo{}, nil
+		return &platformInfo{}, nil
 	case idDetector == ids.IdDetector_CloudDetect:
-		identifier, name, relatedIdentifiers := clouddetect.Detect(conn, pf)
-		if identifier != "" {
-			return &PlatformInfo{
-				IDs:                []string{identifier},
-				Name:               name,
-				RelatedPlatformIDs: relatedIdentifiers,
+		cloudPlatformInfo := clouddetect.Detect(conn, pf)
+		if cloudPlatformInfo.ID != "" {
+			return &platformInfo{
+				IDs:                []string{cloudPlatformInfo.ID},
+				Name:               cloudPlatformInfo.Name,
+				RelatedPlatformIDs: cloudPlatformInfo.RelatedPlatformIDs,
+				Kind:               cloudPlatformInfo.Kind,
 			}, nil
 		}
-		return &PlatformInfo{}, nil
+		return &platformInfo{}, nil
 	case idDetector == ids.IdDetector_SshHostkey:
 		identifier, err := sshhostkey.Detect(conn, pf)
 		if err != nil {
 			return nil, err
 		}
-		return &PlatformInfo{
+		return &platformInfo{
 			IDs:                identifier,
 			Name:               "",
 			RelatedPlatformIDs: []string{},

@@ -12,14 +12,11 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v11/providers/os/detector"
 	"go.mondoo.com/cnquery/v11/providers/os/id"
-	"go.mondoo.com/cnquery/v11/providers/os/id/aws"
-	"go.mondoo.com/cnquery/v11/providers/os/id/azure"
-	"go.mondoo.com/cnquery/v11/providers/os/id/gcp"
+	"go.mondoo.com/cnquery/v11/providers/os/id/clouddetect"
 	"go.mondoo.com/cnquery/v11/providers/os/id/hostname"
 	"go.mondoo.com/cnquery/v11/providers/os/id/ids"
 	"go.mondoo.com/cnquery/v11/providers/os/id/machineid"
 	"go.mondoo.com/cnquery/v11/providers/os/id/sshhostkey"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/smbios"
 )
 
 // default id detectors
@@ -76,29 +73,17 @@ func (s *Service) detect(asset *inventory.Asset, conn shared.Connection) error {
 	}
 
 	if hasDetector(detectors, ids.IdDetector_CloudDetect) {
-		mgr, err := smbios.ResolveManager(conn, asset.Platform)
-		if err != nil {
-			return err
-		}
-
 		log.Debug().Msg("run cloud platform detector")
-		if id, name, related := aws.Detect(conn, asset.Platform, mgr); id != "" {
-			asset.PlatformIds = append(asset.PlatformIds, id)
-			if name != "" {
+		cloudPlatformInfo := clouddetect.Detect(conn, asset.Platform)
+		if cloudPlatformInfo.ID != "" {
+			log.Debug().Interface("info", cloudPlatformInfo).Msg("cloud platform detected")
+			asset.PlatformIds = append(asset.PlatformIds, cloudPlatformInfo.ID)
+			if cloudPlatformInfo.Name != "" {
 				// if we weren't able to detect a name for this asset, don't update to an empty value
-				asset.Name = name
+				asset.Name = cloudPlatformInfo.Name
 			}
-			asset.RelatedAssets = append(asset.RelatedAssets, relatedIds2assets(related)...)
-		}
-
-		if id, _, related := azure.Detect(conn, asset.Platform, mgr); id != "" {
-			asset.PlatformIds = append(asset.PlatformIds, id)
-			asset.RelatedAssets = append(asset.RelatedAssets, relatedIds2assets(related)...)
-		}
-
-		if id, _, related := gcp.Detect(conn, asset.Platform, mgr); id != "" {
-			asset.PlatformIds = append(asset.PlatformIds, id)
-			asset.RelatedAssets = append(asset.RelatedAssets, relatedIds2assets(related)...)
+			asset.Platform.Kind = cloudPlatformInfo.Kind
+			asset.RelatedAssets = append(asset.RelatedAssets, relatedIds2assets(cloudPlatformInfo.RelatedPlatformIDs)...)
 		}
 	}
 
