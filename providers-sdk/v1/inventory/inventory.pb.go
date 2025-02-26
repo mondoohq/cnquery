@@ -1090,7 +1090,7 @@ type Platform struct {
 	// FIXME: DEPRECATED, remove in v10 vv
 	DeprecatedV8Kind DeprecatedV8_Kind `protobuf:"varint,20,opt,name=deprecated_v8_kind,json=deprecatedV8Kind,proto3,enum=cnquery.providers.v1.DeprecatedV8_Kind" json:"deprecated_v8_kind,omitempty"` // ^^
 	Runtime          string            `protobuf:"bytes,21,opt,name=runtime,proto3" json:"runtime,omitempty"`
-	// FIXME: DEPRECATED, remove in v12 (or later) vv
+	// FIXME: DEPRECATED, mark as reserved in v12 (or later) vv
 	Labels map[string]string `protobuf:"bytes,22,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"` // ^^
 	// Additional platform specific/operating system data
 	Metadata map[string]string `protobuf:"bytes,23,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`

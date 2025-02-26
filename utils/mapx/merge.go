@@ -3,7 +3,7 @@
 
 package mapx
 
-// Merge merges two maps of type `map[K]T` giving preference to the first map.
+// Merge merges two maps of type `map[K]T` giving precedence to the first map.
 func Merge[K comparable, V any](m1, m2 map[K]V) map[K]V {
 	merged := make(map[K]V)
 

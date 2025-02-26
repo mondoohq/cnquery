@@ -304,7 +304,7 @@ message Platform {
   // ^^
 
   string runtime = 21;
-  // FIXME: DEPRECATED, remove in v12 (or later) vv
+  // FIXME: DEPRECATED, mark as reserved in v12 (or later) vv
   map<string, string> labels = 22;
   // ^^
 

@@ -65,7 +65,7 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	asset := req.Asset
 	// FIXME: remove in v12 (or later) vv
 	// we merge `asset.Labels` and `asset.Platform.Labels` for backwards compatibility
-	assetLabelsMergedV11Compat := mapx.Merge(asset.Labels, asset.Platform.Labels)
+	assetLabelsMergedV11Compat := mapx.Merge(asset.Platform.Labels, asset.Labels)
 	// ^^
 	_, err = resources.CreateResource(runtime, "asset", map[string]*llx.RawData{
 		"ids":              llx.ArrayData(llx.TArr2Raw(asset.PlatformIds), types.String),
@@ -84,7 +84,7 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		// FIXME: remove in v12 (or later) vv
 		"labels": llx.MapData(llx.TMap2Raw(assetLabelsMergedV11Compat), types.String),
 		// ^^
-		// Instead, we should use only `asset.Labels` like:
+		// Instead, we should only use `asset.Labels` like:
 		// "labels": llx.MapData(llx.TMap2Raw(asset.Labels), types.String),
 	})
 	if err != nil {
