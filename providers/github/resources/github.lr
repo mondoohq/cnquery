@@ -134,6 +134,28 @@ github.organization @defaults("login name") {
   hasOrganizationProjects bool
   // Whether projects in the organization have projects
   hasRepositoryProjects bool
+  // Organization custom properties
+  customProperties() []github.organization.customProperty
+}
+
+// GitHub organization-level custom property
+private github.organization.customProperty @defaults("name required") {
+  // The name of the property
+  name string
+  // Short description of the property
+  description string
+  // Source type of the property (where it was created)
+  sourceType string
+  // Type of the value for the property
+  valueType string
+  // Whether the property is required
+  required bool
+  // Default value of the property
+  defaultValue string
+  // An ordered list of the allowed values of the property
+  allowedValues []string
+  // Who can edit the values of the property
+  valuesEditableBy string
 }
 
 // GitHub user
@@ -308,6 +330,8 @@ private github.repository @defaults("fullName") {
   hasDiscussions bool
   // Whether the repository is an organization repository template
   isTemplate bool
+  // Repository custom properties
+  customProperties dict
   // List of open merge requests for the repository
   openMergeRequests() []github.mergeRequest
   // List of closed merge requests for the repository
