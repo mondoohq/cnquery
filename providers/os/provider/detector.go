@@ -75,7 +75,7 @@ func (s *Service) detect(asset *inventory.Asset, conn shared.Connection) error {
 	if hasDetector(detectors, ids.IdDetector_CloudDetect) {
 		log.Debug().Msg("run cloud platform detector")
 		cloudPlatformInfo := clouddetect.Detect(conn, asset.Platform)
-		if cloudPlatformInfo.ID != "" {
+		if cloudPlatformInfo != nil {
 			log.Debug().Interface("info", cloudPlatformInfo).Msg("cloud platform detected")
 			asset.PlatformIds = append(asset.PlatformIds, cloudPlatformInfo.ID)
 			if cloudPlatformInfo.Name != "" {

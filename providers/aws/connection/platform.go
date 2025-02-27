@@ -5,7 +5,6 @@ package connection
 
 import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers/os/id/clouddetect"
 )
 
 func (a *AwsConnection) PlatformInfo() *inventory.Platform {
@@ -39,7 +38,7 @@ func getPlatformKind(platformName string) string {
 		// "aws-ecs-container",
 		"aws-ec2-instance",
 		"aws-ssm-instance":
-		return clouddetect.AssetKind
+		return inventory.AssetKindCloudVM
 	case "aws":
 		return "api"
 	default:

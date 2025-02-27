@@ -203,7 +203,7 @@ func gatherPlatformInfo(conn shared.Connection, pf *inventory.Platform, idDetect
 		return &platformInfo{}, nil
 	case idDetector == ids.IdDetector_CloudDetect:
 		cloudPlatformInfo := clouddetect.Detect(conn, pf)
-		if cloudPlatformInfo.ID != "" {
+		if cloudPlatformInfo != nil {
 			return &platformInfo{
 				IDs:                []string{cloudPlatformInfo.ID},
 				Name:               cloudPlatformInfo.Name,
