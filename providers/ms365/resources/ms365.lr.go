@@ -22,6 +22,10 @@ func init() {
 			// to override args, implement: initMicrosoft(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoft,
 		},
+		"microsoft.applications": {
+			// to override args, implement: initMicrosoftApplications(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftApplications,
+		},
 		"microsoft.tenant": {
 			Init: initMicrosoftTenant,
 			Create: createMicrosoftTenant,
@@ -275,7 +279,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlMicrosoft).GetDomains()).ToDataRes(types.Array(types.Resource("microsoft.domain")))
 	},
 	"microsoft.applications": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoft).GetApplications()).ToDataRes(types.Array(types.Resource("microsoft.application")))
+		return (r.(*mqlMicrosoft).GetApplications()).ToDataRes(types.Resource("microsoft.applications"))
 	},
 	"microsoft.serviceprincipals": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoft).GetServiceprincipals()).ToDataRes(types.Array(types.Resource("microsoft.serviceprincipal")))
@@ -291,6 +295,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.tenantDomainName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoft).GetTenantDomainName()).ToDataRes(types.String)
+	},
+	"microsoft.applications.length": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplications).GetLength()).ToDataRes(types.Int)
+	},
+	"microsoft.applications.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplications).GetList()).ToDataRes(types.Array(types.Resource("microsoft.application")))
 	},
 	"microsoft.tenant.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenant).GetId()).ToDataRes(types.String)
@@ -1297,7 +1307,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.applications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoft).Applications, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlMicrosoft).Applications, ok = plugin.RawToTValue[*mqlMicrosoftApplications](v.Value, v.Error)
 		return
 	},
 	"microsoft.serviceprincipals": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1318,6 +1328,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.tenantDomainName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoft).TenantDomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.applications.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftApplications).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.applications.length": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplications).Length, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"microsoft.applications.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplications).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"microsoft.tenant.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2821,7 +2843,7 @@ type mqlMicrosoft struct {
 	Users plugin.TValue[*mqlMicrosoftUsers]
 	Groups plugin.TValue[[]interface{}]
 	Domains plugin.TValue[[]interface{}]
-	Applications plugin.TValue[[]interface{}]
+	Applications plugin.TValue[*mqlMicrosoftApplications]
 	Serviceprincipals plugin.TValue[[]interface{}]
 	EnterpriseApplications plugin.TValue[[]interface{}]
 	Roles plugin.TValue[*mqlMicrosoftRoles]
@@ -2925,15 +2947,15 @@ func (c *mqlMicrosoft) GetDomains() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlMicrosoft) GetApplications() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Applications, func() ([]interface{}, error) {
+func (c *mqlMicrosoft) GetApplications() *plugin.TValue[*mqlMicrosoftApplications] {
+	return plugin.GetOrCompute[*mqlMicrosoftApplications](&c.Applications, func() (*mqlMicrosoftApplications, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft", c.__id, "applications")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.(*mqlMicrosoftApplications), nil
 			}
 		}
 
@@ -2998,6 +3020,69 @@ func (c *mqlMicrosoft) GetSettings() *plugin.TValue[interface{}] {
 func (c *mqlMicrosoft) GetTenantDomainName() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.TenantDomainName, func() (string, error) {
 		return c.tenantDomainName()
+	})
+}
+
+// mqlMicrosoftApplications for the microsoft.applications resource
+type mqlMicrosoftApplications struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftApplicationsInternal it will be used here
+	Length plugin.TValue[int64]
+	List plugin.TValue[[]interface{}]
+}
+
+// createMicrosoftApplications creates a new instance of this resource
+func createMicrosoftApplications(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftApplications{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.applications", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftApplications) MqlName() string {
+	return "microsoft.applications"
+}
+
+func (c *mqlMicrosoftApplications) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftApplications) GetLength() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Length, func() (int64, error) {
+		return c.length()
+	})
+}
+
+func (c *mqlMicrosoftApplications) GetList() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.applications", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.list()
 	})
 }
 
