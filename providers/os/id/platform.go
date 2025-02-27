@@ -138,7 +138,7 @@ func GatherNameForPlatformId(id string) string {
 
 func ExtractPlatformAndKindFromPlatformId(id string) (string, string) {
 	if awsec2.ParseEc2PlatformID(id) != nil {
-		return "aws-ec2", "virtualmachine"
+		return "aws-ec2", inventory.AssetKindCloudVM
 	} else if awsec2.IsValidMondooAccountId(id) {
 		return "aws", "api"
 	} else if awsecs.IsValidMondooECSContainerId(id) {
