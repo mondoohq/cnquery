@@ -165,11 +165,19 @@ resources:
       mailEnabled: {}
       mailNickname: {}
       members: {}
-      membershipRule: {}
-      membershipRuleProcessingState: {}
+      membershipRule:
+        min_mondoo_version: 9.0.0
+      membershipRuleProcessingState:
+        min_mondoo_version: 9.0.0
       securityEnabled: {}
-      visibility: {}
+      visibility:
+        min_mondoo_version: 9.0.0
     is_private: true
+    min_mondoo_version: 5.15.0
+  microsoft.groups:
+    fields:
+      length: {}
+      list: {}
     min_mondoo_version: 9.0.0
   microsoft.keyCredential:
     fields:
@@ -223,11 +231,6 @@ resources:
       templateId: {}
       version: {}
     is_private: true
-    min_mondoo_version: 9.0.0
-  microsoft.rolemanagement.roledefinitions:
-    fields:
-      filter: {}
-      list: {}
     min_mondoo_version: 9.0.0
   microsoft.roles:
     fields:
@@ -397,7 +400,6 @@ resources:
       filter: {}
       list: {}
       search: {}
-      userPrincipalName: {}
     min_mondoo_version: 9.0.0
   ms365.exchangeonline:
     fields:
