@@ -174,6 +174,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"asset.build": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAsset).GetBuild()).ToDataRes(types.String)
 	},
+	"asset.platformMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAsset).GetPlatformMetadata()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"asset.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAsset).GetLabels()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -403,6 +406,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"asset.build": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAsset).Build, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"asset.platformMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAsset).PlatformMetadata, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
 		return
 	},
 	"asset.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -747,6 +754,7 @@ type mqlAsset struct {
 	Family plugin.TValue[[]interface{}]
 	Fqdn plugin.TValue[string]
 	Build plugin.TValue[string]
+	PlatformMetadata plugin.TValue[map[string]interface{}]
 	Labels plugin.TValue[map[string]interface{}]
 	Annotations plugin.TValue[map[string]interface{}]
 }
@@ -825,6 +833,10 @@ func (c *mqlAsset) GetFqdn() *plugin.TValue[string] {
 
 func (c *mqlAsset) GetBuild() *plugin.TValue[string] {
 	return &c.Build
+}
+
+func (c *mqlAsset) GetPlatformMetadata() *plugin.TValue[map[string]interface{}] {
+	return &c.PlatformMetadata
 }
 
 func (c *mqlAsset) GetLabels() *plugin.TValue[map[string]interface{}] {

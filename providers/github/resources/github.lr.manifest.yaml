@@ -191,6 +191,8 @@ resources:
       company: {}
       createdAt:
         min_mondoo_version: 6.11.0
+      customProperties:
+        min_mondoo_version: 9.0.0
       defaultRepositoryPermission:
         min_mondoo_version: 6.11.0
       description: {}
@@ -260,6 +262,18 @@ resources:
       webhooks:
         min_mondoo_version: 6.11.0
     min_mondoo_version: 5.15.0
+  github.organization.customProperty:
+    fields:
+      allowedValues: {}
+      defaultValue: {}
+      description: {}
+      name: {}
+      required: {}
+      sourceType: {}
+      valueType: {}
+      valuesEditableBy: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   github.package:
     fields:
       createdAt: {}
@@ -324,6 +338,8 @@ resources:
       contributors:
         min_mondoo_version: 6.4.0
       createdAt: {}
+      customProperties:
+        min_mondoo_version: 9.0.0
       defaultBranch:
         min_mondoo_version: 9.0.0
       defaultBranchName:

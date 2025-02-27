@@ -15,6 +15,7 @@ import (
 	"go.mondoo.com/cnquery/v11/logger"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/v11/providers/github/connection"
 	"go.mondoo.com/cnquery/v11/utils/stringx"
@@ -111,11 +112,21 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 	// only scan the org if the discover flag is provided, this allows you to scan all repos in an org with simply using
 	// --discover repos. If users provide a repo filter, we also want to skip org scan.
 	if stringx.ContainsAnyOf(targets, connection.DiscoveryOrganization, connection.DiscoveryAll, connection.DiscoveryAuto) && reposFilter.empty() {
+		labels := map[string]string{}
+		for j := range org.GetCustomProperties().Data {
+			customProperty := org.GetCustomProperties().Data[j].(*mqlGithubOrganizationCustomProperty)
+			value := ""
+			if customProperty.DefaultValue.IsSet() {
+				// if the default value of the org-level custom property is set, use it as the label value
+				value = customProperty.DefaultValue.Data
+			}
+			labels[customProperty.Name.Data] = value
+		}
 		assetList = append(assetList, &inventory.Asset{
 			PlatformIds: []string{connection.NewGithubOrgIdentifier(org.Login.Data)},
 			Name:        org.Name.Data,
 			Platform:    connection.NewGithubOrgPlatform(org.Login.Data),
-			Labels:      map[string]string{},
+			Labels:      labels,
 			Connections: []*inventory.Config{conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.ID()))},
 		})
 	}
@@ -132,7 +143,7 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 				PlatformIds: []string{connection.NewGitHubRepoIdentifier(org.Login.Data, repo.Name.Data)},
 				Name:        org.Login.Data + "/" + repo.Name.Data,
 				Platform:    connection.NewGitHubRepoPlatform(org.Login.Data, repo.Name.Data),
-				Labels:      make(map[string]string),
+				Labels:      convert.DictToTypedMap[string](repo.CustomProperties.Data),
 				Connections: []*inventory.Config{cfg},
 			})
 
@@ -165,7 +176,7 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 				PlatformIds: []string{connection.NewGithubUserIdentifier(user.Login.Data)},
 				Name:        user.Name.Data,
 				Platform:    connection.NewGithubUserPlatform(user.Login.Data),
-				Labels:      make(map[string]string),
+				Labels:      map[string]string{},
 				Connections: []*inventory.Config{cfg},
 			})
 		}
@@ -195,7 +206,7 @@ func repo(runtime *plugin.Runtime, repoName string, owner string, conn *connecti
 		PlatformIds: []string{connection.NewGitHubRepoIdentifier(owner, repo.Name.Data)},
 		Name:        owner + "/" + repo.Name.Data,
 		Platform:    connection.NewGitHubRepoPlatform(owner, repo.Name.Data),
-		Labels:      make(map[string]string),
+		Labels:      convert.DictToTypedMap[string](repo.CustomProperties.Data),
 		Connections: []*inventory.Config{cfg},
 	})
 

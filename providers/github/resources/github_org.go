@@ -102,6 +102,46 @@ func initGithubOrganization(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	return args, nil, nil
 }
 
+func (g *mqlGithubOrganizationCustomProperty) id() (string, error) {
+	return "github.organization.customProperty/" + g.Name.Data, nil
+}
+
+func (g *mqlGithubOrganization) customProperties() ([]interface{}, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+	if g.Login.Error != nil {
+		return nil, g.Login.Error
+	}
+	orgLogin := g.Login.Data
+
+	// API doesn't have pagination:
+	//
+	// https://docs.github.com/en/rest/orgs/custom-properties?apiVersion=2022-11-28#get-all-custom-properties-for-an-organization--parameters
+	customProperties, _, err := conn.Client().Organizations.GetAllCustomProperties(conn.Context(), orgLogin)
+	if err != nil {
+		return nil, err
+	}
+
+	resources := []interface{}{}
+	for _, property := range customProperties {
+		r, err := CreateResource(g.MqlRuntime, "github.organization.customProperty", map[string]*llx.RawData{
+			"name":             llx.StringDataPtr(property.PropertyName),
+			"description":      llx.StringDataPtr(property.Description),
+			"sourceType":       llx.StringDataPtr(property.SourceType),
+			"valueType":        llx.StringData(property.ValueType),
+			"required":         llx.BoolDataPtr(property.Required),
+			"defaultValue":     llx.StringDataPtr(property.DefaultValue),
+			"allowedValues":    llx.ArrayData(convert.SliceAnyToInterface[string](property.AllowedValues), types.String),
+			"valuesEditableBy": llx.StringDataPtr(property.ValuesEditableBy),
+		})
+		if err != nil {
+			return nil, err
+		}
+		resources = append(resources, r)
+	}
+
+	return resources, nil
+}
+
 func (g *mqlGithubOrganization) members() ([]interface{}, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 	if g.Login.Error != nil {
