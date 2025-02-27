@@ -4,7 +4,7 @@
 packs:
   - uid: mondoo-vmware-asset-inventory
     name: VMware Asset Inventory Pack
-    version: 1.0.0
+    version: 1.1.0
     license: BUSL-1.1
     authors:
       - name: Mondoo, Inc
@@ -47,7 +47,7 @@ packs:
         title: VMware vSphere VMs per Datacenters
         filters: asset.platform == "vmware-vsphere"
         mql: |
-          vsphere.datacenters { vms }
+          vsphere.datacenters { vms { name advancedSettings["guestInfo.detailed.data"] properties["guest"]["guestState"] } }
       - uid: mondoo-vmware-asset-inventory-esxi-kernel-modules
         title: VMware ESXi Kernel modules
         filters: asset.platform == "vmware-esxi"
