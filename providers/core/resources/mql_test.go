@@ -1033,6 +1033,72 @@ func TestVersion(t *testing.T) {
 	})
 }
 
+func TestIP(t *testing.T) {
+	t.Run("mask+prefix", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "ip('1.2.3.4/32').prefix", Expectation: "1.2.3.4"},
+			{Code: "ip('1.2.3.4/24').prefix", Expectation: "1.2.3.0"},
+			{Code: "ip('1.2.3.4/16').prefix", Expectation: "1.2.0.0"},
+			{Code: "ip('1.2.3.4/8').prefix", Expectation: "1.0.0.0"},
+			// edge-cases
+			{Code: "ip('1.2.3.4/0').prefix", Expectation: "0.0.0.0"},
+			{Code: "ip('1.2.3.4/40').prefix", Expectation: "1.2.3.4"},
+			// precision
+			{Code: "ip('255.2.3.4/1').prefix", Expectation: "128.0.0.0"},
+			{Code: "ip('1.255.3.4/9').prefix", Expectation: "1.128.0.0"},
+			{Code: "ip('1.255.3.4/10').prefix", Expectation: "1.192.0.0"},
+			{Code: "ip('1.255.3.4/11').prefix", Expectation: "1.224.0.0"},
+			{Code: "ip('1.255.3.4/12').prefix", Expectation: "1.240.0.0"},
+			{Code: "ip('1.255.3.4/13').prefix", Expectation: "1.248.0.0"},
+			{Code: "ip('1.255.3.4/14').prefix", Expectation: "1.252.0.0"},
+			{Code: "ip('1.255.3.4/15').prefix", Expectation: "1.254.0.0"},
+			{Code: "ip('1.255.3.4/16').prefix", Expectation: "1.255.0.0"},
+		})
+	})
+
+	t.Run("mask+suffix", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "ip('1.2.3.4/32').suffix", Expectation: "0.0.0.0"},
+			{Code: "ip('1.2.3.4/24').suffix", Expectation: "0.0.0.4"},
+			{Code: "ip('1.2.3.4/16').suffix", Expectation: "0.0.3.4"},
+			{Code: "ip('1.2.3.4/8').suffix", Expectation: "0.2.3.4"},
+			// edge-cases
+			{Code: "ip('1.2.3.4/0').suffix", Expectation: "1.2.3.4"},
+			{Code: "ip('1.2.3.4/40').suffix", Expectation: "0.0.0.0"},
+			// precision
+			{Code: "ip('1.2.3.255/31').suffix", Expectation: "0.0.0.1"},
+			{Code: "ip('1.255.3.4/9').suffix", Expectation: "0.127.3.4"},
+			{Code: "ip('1.255.3.4/10').suffix", Expectation: "0.63.3.4"},
+			{Code: "ip('1.255.3.4/11').suffix", Expectation: "0.31.3.4"},
+			{Code: "ip('1.255.3.4/12').suffix", Expectation: "0.15.3.4"},
+			{Code: "ip('1.255.3.4/13').suffix", Expectation: "0.7.3.4"},
+			{Code: "ip('1.255.3.4/14').suffix", Expectation: "0.3.3.4"},
+			{Code: "ip('1.255.3.4/15').suffix", Expectation: "0.1.3.4"},
+			{Code: "ip('1.255.3.4/16').suffix", Expectation: "0.0.3.4"},
+		})
+	})
+
+	t.Run("subnet", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "ip('1.2.3.4/32').subnet", Expectation: "255.255.255.255"},
+			{Code: "ip('1.2.3.4/24').subnet", Expectation: "255.255.255.0"},
+			{Code: "ip('1.2.3.4/16').subnet", Expectation: "255.255.0.0"},
+			{Code: "ip('1.2.3.4/8').subnet", Expectation: "255.0.0.0"},
+			{Code: "ip('1.2.3.4/0').subnet", Expectation: "0.0.0.0"},
+			// edge-cases
+			{Code: "ip('1.2.3.4/40').subnet", Expectation: "255.255.255.255"},
+			// bitwise
+			{Code: "ip('1.2.3.4/9').subnet", Expectation: "255.128.0.0"},
+			{Code: "ip('1.2.3.4/10').subnet", Expectation: "255.192.0.0"},
+			{Code: "ip('1.2.3.4/11').subnet", Expectation: "255.224.0.0"},
+			{Code: "ip('1.2.3.4/12').subnet", Expectation: "255.240.0.0"},
+			{Code: "ip('1.2.3.4/13').subnet", Expectation: "255.248.0.0"},
+			{Code: "ip('1.2.3.4/14').subnet", Expectation: "255.252.0.0"},
+			{Code: "ip('1.2.3.4/15').subnet", Expectation: "255.254.0.0"},
+		})
+	})
+}
+
 func TestResource_Default(t *testing.T) {
 	x := testutils.InitTester(testutils.LinuxMock())
 	res := x.TestQuery(t, "mondoo")

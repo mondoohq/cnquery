@@ -585,6 +585,13 @@ func init() {
 			"epoch":                      {f: versionEpoch},
 			"inRange":                    {f: versionInRange, Label: "inRange"},
 		},
+		types.IP: {
+			"version":      {f: ipVersion},
+			"subnet":       {f: ipSubnet},
+			"prefix":       {f: ipPrefix},
+			"prefixLength": {f: ipPrefixLength},
+			"suffix":       {f: ipSuffix},
+		},
 		types.ArrayLike: {
 			"[]":                       {f: arrayGetIndexV2},
 			"first":                    {f: arrayGetFirstIndexV2},

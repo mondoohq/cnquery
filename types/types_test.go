@@ -39,6 +39,14 @@ func TestTypes(t *testing.T) {
 		}, {
 			T: Score, ExpectedLabel: "score",
 		}, {
+			T: Block, ExpectedLabel: "block",
+		}, {
+			T: Empty, ExpectedLabel: "empty",
+		}, {
+			T: Version, ExpectedLabel: "version",
+		}, {
+			T: IP, ExpectedLabel: "ip",
+		}, {
 			T: Array(String), ExpectedLabel: "[]string",
 		}, {
 			T: Map(String, String), ExpectedLabel: "map[string]string",
