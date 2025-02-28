@@ -97,9 +97,9 @@ func sendSlowQuery(product, version, build string, q SlowQueryInfo) {
 		return
 	}
 
-	msg := "slow query: " + fmt.Sprintf("%s took %d", q.CodeID, q.Duration)
+	msg := "slow query: " + fmt.Sprintf("%s took %s", q.CodeID, q.Duration.String())
 	if q.Query != "" {
-		msg = "slow query: " + fmt.Sprintf("%s (%s) took %d", q.Query, q.CodeID, q.Duration)
+		msg = "slow query: " + fmt.Sprintf("%s (%s) took %s", q.Query, q.CodeID, q.Duration.String())
 	}
 	// 2. create local support bundle
 	event := &SendErrorReq{
