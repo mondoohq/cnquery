@@ -60,6 +60,10 @@ type CommandInstanceMetadata struct {
 	config   *aws.Config
 }
 
+func (m *CommandInstanceMetadata) RawMetadata() (any, error) {
+	return nil, nil
+}
+
 func (m *CommandInstanceMetadata) Identify() (Identity, error) {
 	instanceDocument, err := m.instanceIdentityDocument()
 	if err != nil {

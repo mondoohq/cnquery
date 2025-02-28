@@ -5,11 +5,14 @@ package awsec2
 
 import (
 	"context"
+	"encoding/json"
 	"io"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/rs/zerolog/log"
 
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 )
@@ -23,6 +26,79 @@ func NewLocal(cfg aws.Config) *LocalEc2InstanceMetadata {
 // https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-identity-documents.html
 type LocalEc2InstanceMetadata struct {
 	config aws.Config
+}
+
+func (m *LocalEc2InstanceMetadata) RawMetadata() (any, error) {
+	client := imds.NewFromConfig(m.config)
+	return m.getMetadataRecursively(client, "")
+}
+
+// isJSON checks if a string is valid JSON
+func isJSON(data string) bool {
+	var js json.RawMessage
+	return json.Unmarshal([]byte(data), &js) == nil
+}
+
+// isMultilineString checks if a path should be treated as a raw multiline string
+func isMultilineString(path string) bool {
+	// Add any additional paths that should be treated as multiline strings
+	return path == "managed-ssh-keys/signer-cert"
+}
+
+func (m *LocalEc2InstanceMetadata) getMetadataRecursively(client *imds.Client, path string) (any, error) {
+	log.Trace().
+		Str("path", path).
+		Msg("os.id.awsec2> metadata")
+	data, err := m.getMetadataValue(client, path)
+	if err != nil {
+		return nil, err
+	}
+
+	// If the response is JSON, parse it
+	if isJSON(data) {
+		var jsonData interface{}
+		if err := json.Unmarshal([]byte(data), &jsonData); err != nil {
+			return nil, err
+		}
+		return jsonData, nil
+	}
+
+	// Handle specific paths that return multiline strings (e.g., "managed-ssh-keys/signer-cert")
+	if isMultilineString(path) {
+		return data, nil // Preserve as a raw string
+	}
+
+	lines := strings.Split(data, "\n")
+
+	// If the data contains sub-paths, fetch them recursively
+	if len(lines) > 1 || strings.HasSuffix(data, "/") {
+		result := make(map[string]any)
+
+		for _, line := range lines {
+			line = strings.TrimSpace(line)
+			if line == "" {
+				continue
+			}
+
+			subPath := path + line
+
+			subData, err := m.getMetadataRecursively(client, subPath)
+			if err != nil {
+				log.Trace().Err(err).
+					Str("path", path).
+					Str("line", line).
+					Msg("os.id.awsec2> failed to get sub-path metadata")
+				continue
+			}
+
+			result[strings.TrimSuffix(line, "/")] = subData
+		}
+
+		return result, nil
+	}
+
+	// If it's a single value, return it as a string
+	return data, nil
 }
 
 func (m *LocalEc2InstanceMetadata) Identify() (Identity, error) {
@@ -68,7 +144,7 @@ func (m *LocalEc2InstanceMetadata) Identify() (Identity, error) {
 
 // gets the metadata at the relative specified path. The base path is /latest/meta-data
 // so the path param needs to only specify which metadata path is requested
-func (m *LocalEc2InstanceMetadata) getMetadataValue(client *imds.Client, path string) (value string, err error) {
+func (m *LocalEc2InstanceMetadata) getMetadataValue(client *imds.Client, path string) (string, error) {
 	output, err := client.GetMetadata(context.TODO(), &imds.GetMetadataInput{
 		Path: path,
 	})
@@ -80,6 +156,5 @@ func (m *LocalEc2InstanceMetadata) getMetadataValue(client *imds.Client, path st
 	if err != nil {
 		return "", err
 	}
-	resp := string(bytes)
-	return resp, err
+	return string(bytes), nil
 }

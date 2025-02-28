@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream/mvd"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"

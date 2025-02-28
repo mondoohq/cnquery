@@ -18,8 +18,10 @@ type Identity struct {
 	InstanceName string
 	AccountID    string
 }
+
 type InstanceIdentifier interface {
 	Identify() (Identity, error)
+	RawMetadata() (any, error)
 }
 
 func Resolve(conn shared.Connection, pf *inventory.Platform) (InstanceIdentifier, error) {
