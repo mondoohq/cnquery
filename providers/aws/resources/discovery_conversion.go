@@ -285,7 +285,7 @@ func addConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, 
 	asset.PlatformIds = []string{awsec2.MondooInstanceID(accountId, instance.Region.Data, instance.InstanceId.Data)}
 	asset.IdDetector = []string{ids.IdDetector_Hostname, ids.IdDetector_CloudDetect, ids.IdDetector_SshHostkey}
 	asset.Platform = &inventory.Platform{
-		Kind:    "virtual_machine",
+		Kind:    inventory.AssetKindCloudVM,
 		Runtime: "aws-ec2-instance",
 		Family:  getPlatformFamily(instance.PlatformDetails.Data),
 	}
@@ -432,7 +432,7 @@ func addConnectionInfoToSSMAsset(instance *mqlAwsSsmInstance, accountId string, 
 	asset.Options = conn.ConnectionOptions()
 	asset.PlatformIds = []string{awsec2.MondooInstanceID(accountId, instance.Region.Data, instance.InstanceId.Data)}
 	asset.Platform = &inventory.Platform{
-		Kind:    "virtual_machine",
+		Kind:    inventory.AssetKindCloudVM,
 		Runtime: "aws-ssm-instance",
 		Family:  getPlatformFamily(instance.PlatformName.Data),
 	}

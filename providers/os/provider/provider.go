@@ -539,7 +539,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	}
 
 	if asset.Platform != nil && asset.Platform.Kind == "" {
-		asset.Platform.Kind = "baremetal"
+		asset.Platform.Kind = inventory.AssetKindBaremetal
 	}
 
 	return runtime.Connection.(shared.Connection), nil

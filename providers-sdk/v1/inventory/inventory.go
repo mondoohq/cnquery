@@ -361,13 +361,13 @@ func (p *Platform) PrettyTitle() string {
 	} else {
 		runtimeKind := p.Kind
 		switch runtimeKind {
-		case "baremetal":
+		case AssetKindBaremetal:
 			runtimeNiceName = "bare metal"
 		case "container":
 			runtimeNiceName = "Container"
 		case "container-image":
 			runtimeNiceName = "Container Image"
-		case "virtualmachine":
+		case AssetKindCloudVM:
 			runtimeNiceName = "Virtual Machine"
 		case "virtualmachine-image":
 			runtimeNiceName = "Virtual Machine Image"

@@ -131,7 +131,7 @@ func discoverDatacenter(conn *connection.VsphereConnection, datacenterResource *
 					Name:                  connection.EsxiPlatform,
 					Version:               esxiVersion.Version,
 					Build:                 esxiVersion.Build,
-					Kind:                  "baremetal",
+					Kind:                  inventory.AssetKindBaremetal,
 					Runtime:               "vsphere-host",
 					Family:                []string{connection.Family},
 					TechnologyUrlSegments: []string{"vmware", "esxi", esxiVersion.Version + "-" + esxiVersion.Build},
