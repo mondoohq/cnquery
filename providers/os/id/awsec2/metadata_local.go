@@ -25,6 +25,14 @@ type LocalEc2InstanceMetadata struct {
 	config aws.Config
 }
 
+func (m *LocalEc2InstanceMetadata) RawMetadata() (any, error) {
+	client := imds.NewFromConfig(m.config)
+	getMetadataValue := func(path string) (string, error) {
+		return m.getMetadataValue(client, path)
+	}
+	return recursive{getMetadataValue}.Crawl("")
+}
+
 func (m *LocalEc2InstanceMetadata) Identify() (Identity, error) {
 	metadata := imds.NewFromConfig(m.config)
 	ec2svc := ec2.NewFromConfig(m.config)
@@ -68,7 +76,7 @@ func (m *LocalEc2InstanceMetadata) Identify() (Identity, error) {
 
 // gets the metadata at the relative specified path. The base path is /latest/meta-data
 // so the path param needs to only specify which metadata path is requested
-func (m *LocalEc2InstanceMetadata) getMetadataValue(client *imds.Client, path string) (value string, err error) {
+func (m *LocalEc2InstanceMetadata) getMetadataValue(client *imds.Client, path string) (string, error) {
 	output, err := client.GetMetadata(context.TODO(), &imds.GetMetadataInput{
 		Path: path,
 	})
@@ -80,6 +88,5 @@ func (m *LocalEc2InstanceMetadata) getMetadataValue(client *imds.Client, path st
 	if err != nil {
 		return "", err
 	}
-	resp := string(bytes)
-	return resp, err
+	return string(bytes), nil
 }

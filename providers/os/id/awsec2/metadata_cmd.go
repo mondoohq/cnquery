@@ -5,8 +5,9 @@ package awsec2
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"io"
 	"strings"
 
@@ -15,35 +16,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/cockroachdb/errors"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/powershell"
 )
 
 const (
-	identityUrl = `-H "X-aws-ec2-metadata-token: %s" -v http://169.254.169.254/latest/dynamic/instance-identity/document`
-	tokenUrl    = `-H "X-aws-ec2-metadata-token-ttl-seconds: 21600" -X PUT "http://169.254.169.254/latest/api/token"`
-	tagNameUrl  = `-H "X-aws-ec2-metadata-token: %s" -v http://169.254.169.254/latest/meta-data/tags/instance/Name`
-
-	identityUrlWindows = `
-$Headers = @{
-    "X-aws-ec2-metadata-token" = %s
-}
-Invoke-RestMethod -TimeoutSec 1 -Headers $Headers -URI http://169.254.169.254/latest/dynamic/instance-identity/document -UseBasicParsing | ConvertTo-Json
-`
-
-	tokenUrlWindows = `
-$Headers = @{
-    "X-aws-ec2-metadata-token-ttl-seconds" = "21600"
-}
-Invoke-RestMethod -Method Put -Uri "http://169.254.169.254/latest/api/token" -Headers $Headers -TimeoutSec 1 -UseBasicParsing
-`
-	tagNameUrlWindows = `
-$Headers = @{
-    "X-aws-ec2-metadata-token" = %s
-}
-Invoke-RestMethod -Method Put -Uri "http://169.254.169.254/latest/meta-data/tags/instance/Name" -Headers $Headers -TimeoutSec 1 -UseBasicParsing
-`
+	identityURLPath = "dynamic/instance-identity/document"
+	metadataURLPath = "meta-data/"
+	tagNameURLPath  = "meta-data/tags/instance/Name"
 )
 
 func NewCommandInstanceMetadata(conn shared.Connection, pf *inventory.Platform, config *aws.Config) *CommandInstanceMetadata {
@@ -58,6 +39,13 @@ type CommandInstanceMetadata struct {
 	conn     shared.Connection
 	platform *inventory.Platform
 	config   *aws.Config
+
+	// used internally to avoid fetching a token multiple times
+	token string
+}
+
+func (m *CommandInstanceMetadata) RawMetadata() (any, error) {
+	return recursive{m.curlDocument}.Crawl(metadataURLPath)
 }
 
 func (m *CommandInstanceMetadata) Identify() (Identity, error) {
@@ -65,6 +53,8 @@ func (m *CommandInstanceMetadata) Identify() (Identity, error) {
 	if err != nil {
 		return Identity{}, err
 	}
+	log.Debug().Str("instance_document", instanceDocument).Msg("identity")
+
 	// parse into struct
 	doc := imds.InstanceIdentityDocument{}
 	if err := json.NewDecoder(strings.NewReader(instanceDocument)).Decode(&doc); err != nil {
@@ -102,81 +92,63 @@ func (m *CommandInstanceMetadata) Identify() (Identity, error) {
 	}, nil
 }
 
-type metadataType int
+func (m *CommandInstanceMetadata) curlDocument(metadataPath string) (string, error) {
+	token, err := m.getToken()
+	if err != nil {
+		return "", err
+	}
 
-const (
-	document metadataType = iota
-	instanceNameTag
-)
-
-func (m *CommandInstanceMetadata) curlDocument(metadataType metadataType) (string, error) {
+	var commandString string
 	switch {
 	case m.platform.IsFamily(inventory.FAMILY_UNIX):
-		cmd, err := m.conn.RunCommand("curl " + tokenUrl)
-		if err != nil {
-			return "", err
-		}
-		data, err := io.ReadAll(cmd.Stdout)
-		if err != nil {
-			return "", err
-		}
-		tokenString := strings.TrimSpace(string(data))
-
-		commandScript := ""
-		switch metadataType {
-		case document:
-			commandScript = "curl " + fmt.Sprintf(identityUrl, tokenString)
-		case instanceNameTag:
-			commandScript = "curl " + fmt.Sprintf(tagNameUrl, tokenString)
-		}
-
-		cmd, err = m.conn.RunCommand(commandScript)
-		if err != nil {
-			return "", err
-		}
-		data, err = io.ReadAll(cmd.Stdout)
-		if err != nil {
-			return "", err
-		}
-
-		return strings.TrimSpace(string(data)), nil
+		commandString = unixMetadataCmdString(token, metadataPath)
 	case m.platform.IsFamily(inventory.FAMILY_WINDOWS):
-		tokenPwshEncoded := powershell.Encode(tokenUrlWindows)
-		cmd, err := m.conn.RunCommand(tokenPwshEncoded)
-		if err != nil {
-			return "", err
-		}
-		data, err := io.ReadAll(cmd.Stdout)
-		if err != nil {
-			return "", err
-		}
-		tokenString := strings.TrimSpace(string(data))
-
-		commandScript := ""
-		switch metadataType {
-		case document:
-			commandScript = powershell.Encode(fmt.Sprintf(identityUrlWindows, tokenString))
-		case instanceNameTag:
-			commandScript = powershell.Encode(fmt.Sprintf(tagNameUrlWindows, tokenString))
-		}
-
-		cmd, err = m.conn.RunCommand(commandScript)
-		if err != nil {
-			return "", err
-		}
-		data, err = io.ReadAll(cmd.Stdout)
-		if err != nil {
-			return "", err
-		}
-
-		return strings.TrimSpace(string(data)), nil
+		commandString = windowsMetadataCmdString(token, metadataPath)
 	default:
 		return "", errors.New("your platform is not supported by aws metadata identifier resource")
 	}
+
+	log.Debug().Str("command_string", commandString).Msg("running os command")
+	cmd, err := m.conn.RunCommand(commandString)
+	if err != nil {
+		return "", err
+	}
+	log.Debug().Str("hash", hashCmd(commandString)).Msg("executed")
+	data, err := io.ReadAll(cmd.Stdout)
+	log.Debug().Msg("read")
+	return strings.TrimSpace(string(data)), err
+}
+
+func hashCmd(message string) string {
+	hash := sha256.New()
+	hash.Write([]byte(message))
+	return hex.EncodeToString(hash.Sum(nil))
+}
+func (m *CommandInstanceMetadata) getToken() (string, error) {
+	if m.token != "" {
+		return m.token, nil
+	}
+
+	var commandString string
+	switch {
+	case m.platform.IsFamily(inventory.FAMILY_UNIX):
+		commandString = unixTokenCmdString()
+	case m.platform.IsFamily(inventory.FAMILY_WINDOWS):
+		commandString = windowsTokenCmdString()
+	default:
+		return "", errors.New("your platform is not supported by aws metadata identifier resource")
+	}
+
+	cmd, err := m.conn.RunCommand(commandString)
+	if err != nil {
+		return "", err
+	}
+	data, err := io.ReadAll(cmd.Stdout)
+	return strings.TrimSpace(string(data)), err
 }
 
 func (m *CommandInstanceMetadata) instanceNameTag() (string, error) {
-	res, err := m.curlDocument(instanceNameTag)
+	res, err := m.curlDocument(tagNameURLPath)
 	if err != nil {
 		return "", err
 	}
@@ -187,5 +159,5 @@ func (m *CommandInstanceMetadata) instanceNameTag() (string, error) {
 }
 
 func (m *CommandInstanceMetadata) instanceIdentityDocument() (string, error) {
-	return m.curlDocument(document)
+	return m.curlDocument(identityURLPath)
 }

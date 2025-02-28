@@ -490,6 +490,18 @@ func init() {
 			Init: initWindowsSecurityHealth,
 			Create: createWindowsSecurityHealth,
 		},
+		"cloud": {
+			Init: initCloud,
+			Create: createCloud,
+		},
+		"cloud.instance": {
+			Init: initCloudInstance,
+			Create: createCloudInstance,
+		},
+		"ipv4Address": {
+			// to override args, implement: initIpv4Address(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createIpv4Address,
+		},
 	}
 }
 
@@ -2333,6 +2345,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.security.health.securityCenterService": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsSecurityHealth).GetSecurityCenterService()).ToDataRes(types.Dict)
+	},
+	"cloud.provider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloud).GetProvider()).ToDataRes(types.String)
+	},
+	"cloud.instance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloud).GetInstance()).ToDataRes(types.Resource("cloud.instance"))
+	},
+	"cloud.instance.publicHostname": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudInstance).GetPublicHostname()).ToDataRes(types.String)
+	},
+	"cloud.instance.publicIpv4": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudInstance).GetPublicIpv4()).ToDataRes(types.Array(types.Resource("ipv4Address")))
+	},
+	"cloud.instance.privateHostname": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudInstance).GetPrivateHostname()).ToDataRes(types.String)
+	},
+	"cloud.instance.privateIpv4": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudInstance).GetPrivateIpv4()).ToDataRes(types.Array(types.Resource("ipv4Address")))
+	},
+	"cloud.instance.metadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudInstance).GetMetadata()).ToDataRes(types.Dict)
+	},
+	"ipv4Address.ip": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIpv4Address).GetIp()).ToDataRes(types.IP)
+	},
+	"ipv4Address.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIpv4Address).GetSubnet()).ToDataRes(types.String)
+	},
+	"ipv4Address.cidr": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIpv4Address).GetCidr()).ToDataRes(types.String)
+	},
+	"ipv4Address.broadcast": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIpv4Address).GetBroadcast()).ToDataRes(types.String)
+	},
+	"ipv4Address.gateway": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIpv4Address).GetGateway()).ToDataRes(types.String)
 	},
 }
 
@@ -5184,6 +5232,66 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"windows.security.health.securityCenterService": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsSecurityHealth).SecurityCenterService, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"cloud.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlCloud).__id, ok = v.Value.(string)
+			return
+		},
+	"cloud.provider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloud).Provider, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloud.instance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloud).Instance, ok = plugin.RawToTValue[*mqlCloudInstance](v.Value, v.Error)
+		return
+	},
+	"cloud.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlCloudInstance).__id, ok = v.Value.(string)
+			return
+		},
+	"cloud.instance.publicHostname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudInstance).PublicHostname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloud.instance.publicIpv4": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudInstance).PublicIpv4, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"cloud.instance.privateHostname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudInstance).PrivateHostname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloud.instance.privateIpv4": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudInstance).PrivateIpv4, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"cloud.instance.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudInstance).Metadata, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"ipv4Address.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlIpv4Address).__id, ok = v.Value.(string)
+			return
+		},
+	"ipv4Address.ip": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIpv4Address).Ip, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ipv4Address.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIpv4Address).Subnet, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ipv4Address.cidr": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIpv4Address).Cidr, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ipv4Address.broadcast": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIpv4Address).Broadcast, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ipv4Address.gateway": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIpv4Address).Gateway, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -14754,4 +14862,233 @@ func (c *mqlWindowsSecurityHealth) GetUac() *plugin.TValue[interface{}] {
 
 func (c *mqlWindowsSecurityHealth) GetSecurityCenterService() *plugin.TValue[interface{}] {
 	return &c.SecurityCenterService
+}
+
+// mqlCloud for the cloud resource
+type mqlCloud struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlCloudInternal it will be used here
+	Provider plugin.TValue[string]
+	Instance plugin.TValue[*mqlCloudInstance]
+}
+
+// createCloud creates a new instance of this resource
+func createCloud(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloud{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloud", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloud) MqlName() string {
+	return "cloud"
+}
+
+func (c *mqlCloud) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloud) GetProvider() *plugin.TValue[string] {
+	return &c.Provider
+}
+
+func (c *mqlCloud) GetInstance() *plugin.TValue[*mqlCloudInstance] {
+	return plugin.GetOrCompute[*mqlCloudInstance](&c.Instance, func() (*mqlCloudInstance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloud", c.__id, "instance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlCloudInstance), nil
+			}
+		}
+
+		return c.instance()
+	})
+}
+
+// mqlCloudInstance for the cloud.instance resource
+type mqlCloudInstance struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlCloudInstanceInternal
+	PublicHostname plugin.TValue[string]
+	PublicIpv4 plugin.TValue[[]interface{}]
+	PrivateHostname plugin.TValue[string]
+	PrivateIpv4 plugin.TValue[[]interface{}]
+	Metadata plugin.TValue[interface{}]
+}
+
+// createCloudInstance creates a new instance of this resource
+func createCloudInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloudInstance{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloud.instance", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloudInstance) MqlName() string {
+	return "cloud.instance"
+}
+
+func (c *mqlCloudInstance) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloudInstance) GetPublicHostname() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PublicHostname, func() (string, error) {
+		return c.publicHostname()
+	})
+}
+
+func (c *mqlCloudInstance) GetPublicIpv4() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.PublicIpv4, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloud.instance", c.__id, "publicIpv4")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.publicIpv4()
+	})
+}
+
+func (c *mqlCloudInstance) GetPrivateHostname() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PrivateHostname, func() (string, error) {
+		return c.privateHostname()
+	})
+}
+
+func (c *mqlCloudInstance) GetPrivateIpv4() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.PrivateIpv4, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloud.instance", c.__id, "privateIpv4")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.privateIpv4()
+	})
+}
+
+func (c *mqlCloudInstance) GetMetadata() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.Metadata, func() (interface{}, error) {
+		return c.metadata()
+	})
+}
+
+// mqlIpv4Address for the ipv4Address resource
+type mqlIpv4Address struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlIpv4AddressInternal it will be used here
+	Ip plugin.TValue[string]
+	Subnet plugin.TValue[string]
+	Cidr plugin.TValue[string]
+	Broadcast plugin.TValue[string]
+	Gateway plugin.TValue[string]
+}
+
+// createIpv4Address creates a new instance of this resource
+func createIpv4Address(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlIpv4Address{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ipv4Address", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlIpv4Address) MqlName() string {
+	return "ipv4Address"
+}
+
+func (c *mqlIpv4Address) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlIpv4Address) GetIp() *plugin.TValue[string] {
+	return &c.Ip
+}
+
+func (c *mqlIpv4Address) GetSubnet() *plugin.TValue[string] {
+	return &c.Subnet
+}
+
+func (c *mqlIpv4Address) GetCidr() *plugin.TValue[string] {
+	return &c.Cidr
+}
+
+func (c *mqlIpv4Address) GetBroadcast() *plugin.TValue[string] {
+	return &c.Broadcast
+}
+
+func (c *mqlIpv4Address) GetGateway() *plugin.TValue[string] {
+	return &c.Gateway
 }
