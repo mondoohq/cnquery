@@ -4,6 +4,7 @@
 package llx
 
 import (
+	"errors"
 	"net"
 	"strconv"
 	"strings"
@@ -20,7 +21,6 @@ type IP struct {
 func NewIP(s string) IP {
 	prefix := s
 	suffix := ""
-	mask := 0
 	if idx := strings.IndexByte(s, '/'); idx != -1 {
 		prefix = s[0:idx]
 		if len(s) > idx+1 {
@@ -28,6 +28,7 @@ func NewIP(s string) IP {
 		}
 	}
 
+	mask := -1
 	if suffix != "" {
 		mask64, _ := strconv.ParseInt(suffix, 10, 0)
 		mask = int(mask64)
@@ -38,9 +39,13 @@ func NewIP(s string) IP {
 	version := 0
 	if ip.To4() != nil {
 		version = 4
+		if mask == -1 {
+			m := ip.DefaultMask()
+			mask = countMaskBits(m)
+		}
 	} else if ip.To16() != nil {
 		version = 6
-		if mask == 0 {
+		if mask == -1 {
 			mask = 64
 		}
 	}
@@ -53,6 +58,27 @@ func NewIP(s string) IP {
 }
 
 var bitmasks = []byte{0x00, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, 0xff}
+
+func countMaskBits(b []byte) int {
+	var res int
+	for _, cur := range b {
+		// optimization for speed
+		if cur == 0xff {
+			res += 8
+			continue
+		}
+		if cur == 0 {
+			break
+		}
+		// and the remaining bits
+		for cur&0x80 != 0 {
+			res++
+			cur = cur << 1
+		}
+		break
+	}
+	return res
+}
 
 func makeBits(bits int, on bool) []byte {
 	var res []byte
@@ -117,7 +143,7 @@ func mask2string(b []byte) string {
 	return res.String()
 }
 
-func (i IP) subnet() string {
+func (i IP) Subnet() string {
 	if i.Version == 4 {
 		b := createMask(i.Mask, 0, 4)
 		return mask2string(b)
@@ -150,7 +176,7 @@ func (i IP) subnet() string {
 	return res
 }
 
-func (i IP) prefix() string {
+func (i IP) prefix() net.IP {
 	var b []byte
 	if i.Version == 4 {
 		b = createMask(i.Mask, 0, 4)
@@ -158,11 +184,14 @@ func (i IP) prefix() string {
 		b = createMask(i.Mask, 0, 16)
 	}
 	if len(b) == 0 {
-		return ""
+		return []byte{}
 	}
 	mask := net.IPMask(b)
-	prefix := i.IP.Mask(mask)
-	return prefix.String()
+	return i.IP.Mask(mask)
+}
+
+func (i IP) Prefix() string {
+	return i.prefix().String()
 }
 
 func flipMask(b []byte) []byte {
@@ -172,7 +201,7 @@ func flipMask(b []byte) []byte {
 	return b
 }
 
-func (i IP) suffix() string {
+func (i IP) Suffix() string {
 	var b []byte
 	if i.Version == 4 {
 		b = createMask(i.Mask, 0, 4)
@@ -191,9 +220,46 @@ func (i IP) suffix() string {
 	return suffix.String()
 }
 
+func (i IP) inRange(other IP) bool {
+	prefix := i.prefix()
+	otherPrefix := other.prefix()
+	return prefix.Equal(otherPrefix)
+}
+
+func (i IP) Cmp(other IP) int {
+	for idx, b := range i.IP {
+		if len(other.IP) <= idx {
+			return 1
+		}
+		o := other.IP[idx]
+		if b == o {
+			continue
+		}
+		if b < o {
+			return -1
+		} else {
+			return 1
+		}
+	}
+	if len(other.IP) > len(i.IP) {
+		return -1
+	}
+	return 0
+}
+
 func ipCmpIP(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left, right interface{}) *RawData {
-		return BoolData(left.(string) == right.(string))
+		lip := NewIP(left.(string))
+		rip := NewIP(right.(string))
+		return BoolData(lip.Equal(rip.IP) && lip.Mask == rip.Mask)
+	})
+}
+
+func ipNotIP(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left, right interface{}) *RawData {
+		lip := NewIP(left.(string))
+		rip := NewIP(right.(string))
+		return BoolData(!lip.Equal(rip.IP) || lip.Mask != rip.Mask)
 	})
 }
 
@@ -212,7 +278,7 @@ func ipSubnet(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawDa
 	}
 
 	v := NewIP(bind.Value.(string))
-	return StringData(v.subnet()), 0, nil
+	return StringData(v.Subnet()), 0, nil
 }
 
 func ipPrefix(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
@@ -221,7 +287,7 @@ func ipPrefix(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawDa
 	}
 
 	v := NewIP(bind.Value.(string))
-	return StringData(v.prefix()), 0, nil
+	return StringData(v.Prefix()), 0, nil
 }
 
 func ipPrefixLength(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
@@ -239,7 +305,7 @@ func ipSuffix(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawDa
 	}
 
 	v := NewIP(bind.Value.(string))
-	return StringData(v.suffix()), 0, nil
+	return StringData(v.Suffix()), 0, nil
 }
 
 func ipUnspecified(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
@@ -249,4 +315,46 @@ func ipUnspecified(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 
 	v := NewIP(bind.Value.(string))
 	return BoolData(v.IP.IsUnspecified()), 0, nil
+}
+
+func ipInRange(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.Int, Error: bind.Error}, 0, nil
+	}
+
+	conditions := []string{}
+	for i := range chunk.Function.Args {
+		argRef := chunk.Function.Args[i]
+
+		arg, rref, err := e.resolveValue(argRef, ref)
+		if err != nil || rref > 0 {
+			return nil, rref, err
+		}
+
+		s, ok := arg.Value.(string)
+		if !ok {
+			return nil, 0, errors.New("incorrect type for argument in `inRange` call (expected string)")
+		}
+		conditions = append(conditions, s)
+	}
+
+	v := NewIP(bind.Value.(string))
+	if len(conditions) == 1 {
+		i := NewIP(conditions[0])
+		return BoolData(v.inRange(i)), 0, nil
+	}
+
+	min := NewIP(conditions[0])
+	max := NewIP(conditions[1])
+
+	mincmp := min.Cmp(v)
+	if mincmp == 1 {
+		return BoolFalse, 0, nil
+	}
+	maxcmp := v.Cmp(max)
+	if maxcmp == 1 {
+		return BoolFalse, 0, nil
+	}
+
+	return BoolTrue, 0, nil
 }

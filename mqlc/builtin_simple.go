@@ -245,11 +245,11 @@ func compileVersionInRange(c *compiler, _ types.Type, ref uint64, id string, cal
 		return types.Nil, errors.New("function " + id + " needs two arguments")
 	}
 
-	min, err := callArgTypeIs(c, call, id, "min", 0, types.String)
+	min, err := callArgTypeIs(c, call, id, "min", 0, types.String, types.Dict)
 	if err != nil {
 		return types.Nil, err
 	}
-	max, err := callArgTypeIs(c, call, id, "max", 1, types.String)
+	max, err := callArgTypeIs(c, call, id, "max", 1, types.String, types.Dict)
 	if err != nil {
 		return types.Nil, err
 	}
@@ -261,6 +261,37 @@ func compileVersionInRange(c *compiler, _ types.Type, ref uint64, id string, cal
 			Type:    string(types.Bool),
 			Binding: ref,
 			Args:    []*llx.Primitive{min, max},
+		},
+	})
+	return types.Bool, nil
+}
+
+func compileIpInRange(c *compiler, _ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+	if call == nil || (len(call.Function) != 1 && len(call.Function) != 2) {
+		return types.Nil, errors.New("function " + id + " needs one or two arguments")
+	}
+
+	min, err := callArgTypeIs(c, call, id, "min", 0, types.String, types.IP, types.Dict)
+	if err != nil {
+		return types.Nil, err
+	}
+	args := []*llx.Primitive{min}
+
+	if len(call.Function) == 2 {
+		max, err := callArgTypeIs(c, call, id, "max", 1, types.String, types.IP, types.Dict)
+		if err != nil {
+			return types.Nil, err
+		}
+		args = append(args, max)
+	}
+
+	c.addChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   "inRange",
+		Function: &llx.Function{
+			Type:    string(types.Bool),
+			Binding: ref,
+			Args:    args,
 		},
 	})
 	return types.Bool, nil
