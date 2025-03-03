@@ -5,7 +5,7 @@ replace go.mondoo.com/cnquery/v11 => ../..
 go 1.23.0
 
 require (
-	github.com/gopcua/opcua v0.7.0
+	github.com/gopcua/opcua v0.7.1
 	github.com/mozillazg/go-slugify v0.2.0
 	go.mondoo.com/cnquery/v11 v11.41.0
 )
