@@ -47,8 +47,8 @@ cloud.google.com/go/bigquery v1.66.2 h1:EKOSqjtO7jPpJoEzDmRctGea3c2EOGoexy8VyY9d
 cloud.google.com/go/bigquery v1.66.2/go.mod h1:+Yd6dRyW8D/FYEjUGodIbu0QaoEmgav7Lwhotup6njo=
 cloud.google.com/go/binaryauthorization v1.9.3 h1:X8JRfmk0/vyRqLusEyAPr0nZCK6RKae9omB4lrit0XI=
 cloud.google.com/go/binaryauthorization v1.9.3/go.mod h1:f3xcb/7vWklDoF+q2EaAIS+/A/e1278IgiYxonRX+Jk=
-cloud.google.com/go/compute v1.33.0 h1:abGcwWokP7/bBpvRjUKlgchrZXYgRpwcKZIlNUHWf6Y=
-cloud.google.com/go/compute v1.33.0/go.mod h1:Z8NErRhrWA3RmVWczlAPJjZcRTlqZB1pcpD0MaIc1ug=
+cloud.google.com/go/compute v1.34.0 h1:+k/kmViu4TEi97NGaxAATYtpYBviOWJySPZ+ekA95kk=
+cloud.google.com/go/compute v1.34.0/go.mod h1:zWZwtLwZQyonEvIQBuIa0WvraMYK69J5eDCOw9VZU4g=
 cloud.google.com/go/compute/metadata v0.6.0 h1:A6hENjEsCDtC1k8byVsgwvVcioamEHvZ4j01OwKxG9I=
 cloud.google.com/go/compute/metadata v0.6.0/go.mod h1:FjyFAW1MW0C203CEOMDTu3Dk1FlqW3Rga40jzHL4hfg=
 cloud.google.com/go/container v1.42.2 h1:8ncSEBjkng6ucCICauaUGzBomoM2VyYzleAum1OFcow=
@@ -62,8 +62,8 @@ cloud.google.com/go/functions v1.19.3 h1:V0vCHSgFTUqKn57+PUXp1UfQY0/aMkveAw7wXeM
 cloud.google.com/go/functions v1.19.3/go.mod h1:nOZ34tGWMmwfiSJjoH/16+Ko5106x+1Iji29wzrBeOo=
 cloud.google.com/go/iam v1.4.0 h1:ZNfy/TYfn2uh/ukvhp783WhnbVluqf/tzOaqVUPlIPA=
 cloud.google.com/go/iam v1.4.0/go.mod h1:gMBgqPaERlriaOV0CUl//XUzDhSfXevn4OEUbg6VRs4=
-cloud.google.com/go/kms v1.20.5 h1:aQQ8esAIVZ1atdJRxihhdxGQ64/zEbJoJnCz/ydSmKg=
-cloud.google.com/go/kms v1.20.5/go.mod h1:C5A8M1sv2YWYy1AE6iSrnddSG9lRGdJq5XEdBy28Lmw=
+cloud.google.com/go/kms v1.21.0 h1:x3EeWKuYwdlo2HLse/876ZrKjk2L5r7Uexfm8+p6mSI=
+cloud.google.com/go/kms v1.21.0/go.mod h1:zoFXMhVVK7lQ3JC9xmhHMoQhnjEDZFoLAr5YMwzBLtk=
 cloud.google.com/go/logging v1.13.0 h1:7j0HgAp0B94o1YRDqiqm26w4q1rDMH7XNRU34lJXHYc=
 cloud.google.com/go/logging v1.13.0/go.mod h1:36CoKh6KA/M0PbhPKMq6/qety2DCAErbhXT62TuXALA=
 cloud.google.com/go/longrunning v0.6.4 h1:3tyw9rO3E2XVXzSApn1gyEEnH2K9SynNQjMlBi3uHLg=
@@ -207,8 +207,8 @@ github.com/aws/aws-sdk-go-v2/service/ssooidc v1.28.14 h1:M/zwXiL2iXUrHputuXgmO94
 github.com/aws/aws-sdk-go-v2/service/ssooidc v1.28.14/go.mod h1:RVwIw3y/IqxC2YEXSIkAzRDdEU1iRabDPaYjpGCbCGQ=
 github.com/aws/aws-sdk-go-v2/service/sts v1.33.14 h1:TzeR06UCMUq+KA3bDkujxK1GVGy+G8qQN/QVYzGLkQE=
 github.com/aws/aws-sdk-go-v2/service/sts v1.33.14/go.mod h1:dspXf/oYWGWo6DEvj98wpaTeqt5+DMidZD0A9BYTizc=
-github.com/aws/smithy-go v1.22.2 h1:6D9hW43xKFrRx/tXXfAlIZc4JI+yQe6snnWcQyxSyLQ=
-github.com/aws/smithy-go v1.22.2/go.mod h1:irrKGvNn1InZwb2d7fkIRNucdfwR8R+Ts3wxYa/cJHg=
+github.com/aws/smithy-go v1.22.3 h1:Z//5NuZCSW6R4PhQ93hShNbyBbn8BWCmCVCt+Q8Io5k=
+github.com/aws/smithy-go v1.22.3/go.mod h1:t1ufH5HMublsJYulve2RKmHDC15xu1f26kHCp/HgceI=
 github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.9.1 h1:50sS0RWhGpW/yZx2KcDNEb1u1MANv5BMEkJgcieEDTA=
 github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.9.1/go.mod h1:ErZOtbzuHabipRTDTor0inoRlYwbsV1ovwSxjGs/uJo=
 github.com/aymanbagabas/go-osc52/v2 v2.0.1 h1:HwpRHbFMcZLEVr42D4p7XBqjyuxQH5SMiErDT4WkJ2k=
@@ -1066,8 +1066,8 @@ golang.org/x/oauth2 v0.0.0-20210805134026-6f1e6394065a/go.mod h1:KelEdhl1UZF7XfJ
 golang.org/x/oauth2 v0.0.0-20210819190943-2bc19b11175f/go.mod h1:KelEdhl1UZF7XfJ4dDtk6s++YSgaE7mD/BuKKDLBl4A=
 golang.org/x/oauth2 v0.0.0-20211005180243-6b3c2da341f1/go.mod h1:KelEdhl1UZF7XfJ4dDtk6s++YSgaE7mD/BuKKDLBl4A=
 golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8/go.mod h1:KelEdhl1UZF7XfJ4dDtk6s++YSgaE7mD/BuKKDLBl4A=
-golang.org/x/oauth2 v0.26.0 h1:afQXWNNaeC4nvZ0Ed9XvCCzXM6UHJG7iCg0W4fPqSBE=
-golang.org/x/oauth2 v0.26.0/go.mod h1:XYTD2NtWslqkgxebSiOHnXEap4TF09sJSc7H1sXbhtI=
+golang.org/x/oauth2 v0.27.0 h1:da9Vo7/tDv5RH/7nZDz1eMGS/q1Vv1N/7FCrBhI9I3M=
+golang.org/x/oauth2 v0.27.0/go.mod h1:onh5ek6nERTohokkhCD/y2cV4Do3fxFHFuAejCkRWT8=
 golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20181108010431-42b317875d0f/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
@@ -1290,8 +1290,8 @@ google.golang.org/api v0.57.0/go.mod h1:dVPlbZyBo2/OjBpmvNdpn2GRm6rPy75jyU7bmhdr
 google.golang.org/api v0.59.0/go.mod h1:sT2boj7M9YJxZzgeZqXogmhfmRWDtPzT31xkieUbuZU=
 google.golang.org/api v0.61.0/go.mod h1:xQRti5UdCmoCEqFxcz93fTl338AVqDgyaDRuOZ3hg9I=
 google.golang.org/api v0.62.0/go.mod h1:dKmwPCydfsad4qCH08MSdgWjfHOyfpd4VtDGgRFdavw=
-google.golang.org/api v0.221.0 h1:qzaJfLhDsbMeFee8zBRdt/Nc+xmOuafD/dbdgGfutOU=
-google.golang.org/api v0.221.0/go.mod h1:7sOU2+TL4TxUTdbi0gWgAIg7tH5qBXxoyhtL+9x3biQ=
+google.golang.org/api v0.222.0 h1:Aiewy7BKLCuq6cUCeOUrsAlzjXPqBkEeQ/iwGHVQa/4=
+google.golang.org/api v0.222.0/go.mod h1:efZia3nXpWELrwMlN5vyQrD4GmJN1Vw0x68Et3r+a9c=
 google.golang.org/appengine v1.1.0/go.mod h1:EbEs0AVv82hx2wNQdGPgUI5lhzA/G0D9YwlJXL52JkM=
 google.golang.org/appengine v1.4.0/go.mod h1:xpcJRLb0r/rnEns0DIKYYv+WjYCduHsrkT7/EB5XEv4=
 google.golang.org/appengine v1.5.0/go.mod h1:xpcJRLb0r/rnEns0DIKYYv+WjYCduHsrkT7/EB5XEv4=
@@ -1364,8 +1364,8 @@ google.golang.org/genproto v0.0.0-20211206160659-862468c7d6e0/go.mod h1:5CzLGKJ6
 google.golang.org/genproto v0.0.0-20211208223120-3a66f561d7aa/go.mod h1:5CzLGKJ67TSI2B9POpiiyGha0AjJvZIUgRMt1dSmuhc=
 google.golang.org/genproto v0.0.0-20250212204824-5a70512c5d8b h1:TdBaFxGAABTI8sz9jYHPtjje677pS4XXup9vJMlj8hQ=
 google.golang.org/genproto v0.0.0-20250212204824-5a70512c5d8b/go.mod h1:0TrvLFkilZy+XULmuoWfiTbTRXLWXJ1S44jQTW3lWwE=
-google.golang.org/genproto/googleapis/api v0.0.0-20250212204824-5a70512c5d8b h1:i+d0RZa8Hs2L/MuaOQYI+krthcxdEbEM2N+Tf3kJ4zk=
-google.golang.org/genproto/googleapis/api v0.0.0-20250212204824-5a70512c5d8b/go.mod h1:iYONQfRdizDB8JJBybql13nArx91jcUk7zCXEsOofM4=
+google.golang.org/genproto/googleapis/api v0.0.0-20250219182151-9fdb1cabc7b2 h1:35ZFtrCgaAjF7AFAK0+lRSf+4AyYnWRbH7og13p7rZ4=
+google.golang.org/genproto/googleapis/api v0.0.0-20250219182151-9fdb1cabc7b2/go.mod h1:W9ynFDP/shebLB1Hl/ESTOap2jHd6pmLXPNZC7SVDbA=
 google.golang.org/genproto/googleapis/rpc v0.0.0-20250212204824-5a70512c5d8b h1:FQtJ1MxbXoIIrZHZ33M+w5+dAP9o86rgpjoKr/ZmT7k=
 google.golang.org/genproto/googleapis/rpc v0.0.0-20250212204824-5a70512c5d8b/go.mod h1:8BS3B93F/U1juMFq9+EDk+qOT5CO1R9IzXxG3PTqiRk=
 google.golang.org/grpc v1.19.0/go.mod h1:mqu4LbDTu4XGKhr4mRzUsmM4RtVoemTSY81AxZiDr8c=
