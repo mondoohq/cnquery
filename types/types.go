@@ -48,7 +48,8 @@ const (
 	byteBlock
 	byteEmpty
 	byteVersion
-	byteArray = 1<<4 + iota - 6 // set to 25 to avoid breaking changes
+	byteIP
+	byteArray = 1<<4 + iota - 7 // set to 25 to avoid breaking changes
 	byteMap
 	byteResource
 	byteFunction
@@ -90,6 +91,8 @@ const (
 	Empty = Type(rune(byteEmpty))
 	// Version value
 	Version = Type(rune(byteVersion))
+	// IP address and subnet
+	IP = Type(rune(byteIP))
 	// ArrayLike is the underlying type of all arrays
 	ArrayLike = Type(rune(byteArray))
 	// MapLike is the underlying type of all maps
@@ -259,6 +262,7 @@ var labels = map[byte]string{
 	byteBlock:       "block",
 	byteEmpty:       "empty",
 	byteVersion:     "version",
+	byteIP:          "ip",
 	byteStringSlice: "stringslice",
 	byteRange:       "range",
 }
