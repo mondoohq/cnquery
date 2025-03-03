@@ -1039,6 +1039,9 @@ func TestIP(t *testing.T) {
 			{Code: "ip('1.2.3.4').version", Expectation: int64(4)},
 			{Code: "ip('1.2.3.4').isUnspecified", Expectation: false},
 			{Code: "ip('0.0.0.0').isUnspecified", Expectation: true},
+			{Code: "ip('1.2.3.4').prefixLength", Expectation: int64(8)},
+			{Code: "ip('128.2.3.4').prefixLength", Expectation: int64(16)},
+			{Code: "ip('192.2.3.4').prefixLength", Expectation: int64(24)},
 		})
 	})
 
@@ -1140,6 +1143,33 @@ func TestIP(t *testing.T) {
 			{Code: "ip('2001:db8:3c4d:15::1a2f:1a2b/48').subnet", Expectation: "15"},
 			{Code: "ip('2001:db8:3c4d:15::1a2f:1a2b/40').subnet", Expectation: "4d:15"},
 			{Code: "ip('2001:db8:3c4d:15::1a2f:1a2b/32').subnet", Expectation: "3c4d:15"},
+		})
+	})
+
+	t.Run("ipv4 inRange with subnet", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "ip('192.2.3.4').inRange('192.2.3.0')", Expectation: true},
+			{Code: "ip('192.2.4.4').inRange('192.2.3.0')", Expectation: false},
+			{Code: "ip('192.2.3.4').inRange('192.2.3.0/24')", Expectation: true},
+			{Code: "ip('192.2.3.4').inRange(ip('192.2.3.0/24'))", Expectation: true},
+			{Code: "ip('192.2.3.4').inRange('192.2.3.255/24')", Expectation: true},
+			{Code: "ip('192.2.3.4').inRange('192.2.3.0/16')", Expectation: false},
+		})
+	})
+
+	t.Run("ipv4 inRange with two IPs", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "ip('192.2.3.4').inRange('192.2.3.0', '192.2.3.5')", Expectation: true},
+			{Code: "ip('192.2.3.4').inRange(ip('192.2.3.3'), ip('192.2.3.5'))", Expectation: true},
+			{Code: "ip('192.2.3.4').inRange('192.2.3.4', '192.2.3.4')", Expectation: true},
+			{Code: "ip('192.2.3.4').inRange('192.2.3.5', '192.2.3.255')", Expectation: false},
+		})
+	})
+
+	t.Run("ipv6 inRange with two IPs", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "ip('2001:db8:3c4d:15::1a2f:1a2b').inRange('2001:db8:3c4d::', '2001:db8:3c4e::')", Expectation: true},
+			{Code: "ip('2001:db8:3c4d:15::1a2f:1a2b').inRange('2001:db8:3c4e::', '2001:db8:3c4f::')", Expectation: false},
 		})
 	})
 }

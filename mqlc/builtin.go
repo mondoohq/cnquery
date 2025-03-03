@@ -107,6 +107,7 @@ func init() {
 			"prefixLength":  {typ: intType, signature: FunctionSignature{}},
 			"suffix":        {typ: stringType, signature: FunctionSignature{}},
 			"isUnspecified": {typ: boolType, signature: FunctionSignature{}},
+			"inRange":       {typ: intType, compile: compileIpInRange},
 		},
 		types.ArrayLike: {
 			"[]":           {typ: childType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Int}}},
