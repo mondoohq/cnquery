@@ -55,7 +55,7 @@ jobs:
         run: make test/lint/proto
 
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v6.3.1
+        uses: golangci/golangci-lint-action@v6.5.0
         with:
           version: latest
 
