@@ -47,6 +47,7 @@ func TestRawData_String(t *testing.T) {
 		{DictData(map[string]interface{}{"a": "b"}), "{\"a\":\"b\"}"},
 		{ArrayData([]interface{}{"a", "b"}, types.String), "[\"a\",\"b\"]"},
 		{MapData(map[string]interface{}{"a": "b"}, types.String), "{\"a\":\"b\"}"},
+		{IPData("1.2.3.4"), "1.2.3.4"},
 		// implicit nil:
 		{&RawData{types.String, nil, nil}, "<null>"},
 	}

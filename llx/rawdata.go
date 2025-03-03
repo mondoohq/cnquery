@@ -588,6 +588,21 @@ func RangeData(r Range) *RawData {
 	}
 }
 
+// IPData creates a rawdata struct from a raw ip address
+func IPData(ip string) *RawData {
+	return &RawData{
+		Type:  types.IP,
+		Value: ip,
+	}
+}
+
+func IPDataPtr(ip *string) *RawData {
+	if ip == nil {
+		return NilData
+	}
+	return IPData(*ip)
+}
+
 // RawResultByRef is used to sort an array of raw results
 type RawResultByRef []*RawResult
 
