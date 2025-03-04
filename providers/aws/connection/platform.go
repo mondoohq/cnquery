@@ -3,9 +3,7 @@
 
 package connection
 
-import (
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-)
+import "go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 
 func (a *AwsConnection) PlatformInfo() *inventory.Platform {
 	return GetPlatformForObject(a.PlatformOverride, a.accountId)
@@ -16,7 +14,7 @@ func GetPlatformForObject(platformName string, accountId string) *inventory.Plat
 		return &inventory.Platform{
 			Name:                  platformName,
 			Title:                 getTitleForPlatformName(platformName),
-			Kind:                  getPlatformKind(platformName),
+			Kind:                  "aws-object",
 			Runtime:               "aws",
 			TechnologyUrlSegments: getTechnologyUrlSegments(accountId, platformName),
 		}
@@ -27,22 +25,6 @@ func GetPlatformForObject(platformName string, accountId string) *inventory.Plat
 		Kind:                  "api",
 		Runtime:               "aws",
 		TechnologyUrlSegments: []string{"aws", accountId, "account"},
-	}
-}
-
-func getPlatformKind(platformName string) string {
-	switch platformName {
-	case
-		"aws-ebs-snapshot",
-		// "aws-ecr-image",
-		// "aws-ecs-container",
-		"aws-ec2-instance",
-		"aws-ssm-instance":
-		return inventory.AssetKindCloudVM
-	case "aws":
-		return "api"
-	default:
-		return "aws-object"
 	}
 }
 

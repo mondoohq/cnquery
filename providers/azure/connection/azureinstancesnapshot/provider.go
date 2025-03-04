@@ -16,7 +16,6 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/azure/connection/shared"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/device"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/local"
-	"go.mondoo.com/cnquery/v11/providers/os/id/clouddetect"
 )
 
 const (
@@ -187,7 +186,7 @@ func (c *AzureSnapshotConnection) Close() {
 }
 
 func (c *AzureSnapshotConnection) Kind() string {
-	return clouddetect.AssetKind
+	return "api"
 }
 
 func (c *AzureSnapshotConnection) Runtime() string {
