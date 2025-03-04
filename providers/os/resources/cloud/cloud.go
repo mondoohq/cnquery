@@ -25,10 +25,13 @@ func Resolve(conn shared.Connection) (OSCloud, error) {
 		return &none{}, nil
 	}
 
-	log.Debug().Str("cloud", platformInfo.Name).Msg("os.cloud> detected")
+	log.Debug().Str("cloud", string(platformInfo.CloudProvider)).Msg("os.cloud> detected")
+
 	switch platformInfo.CloudProvider {
 	case clouddetect.AWS:
 		return &aws{conn}, nil
+	case clouddetect.GCP:
+		return &gcp{conn}, nil
 	default:
 		return &none{}, nil
 	}
