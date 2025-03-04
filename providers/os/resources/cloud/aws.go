@@ -131,10 +131,9 @@ func (d MacDetails) PublicIP() (Ipv4Address, bool) {
 // PrivateIP detects if the network interface has a private ip address,
 // if so it initializes an Ipv4Address structure and return true.
 func (d MacDetails) PrivateIP() (Ipv4Address, bool) {
-	return Ipv4Address{
-		IP:        d.LocalIPv4s,
-		Subnet:    d.SubnetIPv4CIDRBlock,
-		CIDR:      d.VPCIPv4CIDRBlock,
-		Broadcast: broadcastAddressFrom(d.VPCIPv4CIDRBlock),
-	}, d.LocalIPv4s != ""
+	// Note that AWS has two IP ranges, the VPC (`VPCIPv4CIDRBlock`) and the
+	// Subnet (`SubnetIPv4CIDRBlock`), we use the logical segment since there
+	// are cases where the subnet might have additional configuration like ACLs,
+	// route tables, etc. that we can't detect from within the os
+	return NewIpv4WithSubnet(d.LocalIPv4s, d.SubnetIPv4CIDRBlock), d.LocalIPv4s != ""
 }

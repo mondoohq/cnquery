@@ -2371,10 +2371,10 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlIpv4Address).GetIp()).ToDataRes(types.IP)
 	},
 	"ipv4Address.subnet": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIpv4Address).GetSubnet()).ToDataRes(types.String)
+		return (r.(*mqlIpv4Address).GetSubnet()).ToDataRes(types.IP)
 	},
 	"ipv4Address.cidr": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIpv4Address).GetCidr()).ToDataRes(types.String)
+		return (r.(*mqlIpv4Address).GetCidr()).ToDataRes(types.IP)
 	},
 	"ipv4Address.broadcast": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIpv4Address).GetBroadcast()).ToDataRes(types.String)

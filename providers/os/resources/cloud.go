@@ -4,8 +4,6 @@
 package resources
 
 import (
-	"fmt"
-
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
@@ -16,8 +14,8 @@ import (
 )
 
 func initCloud(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	conn := runtime.Connection.(shared.Connection)
 	log.Debug().Msg("os.cloud> init")
+	conn := runtime.Connection.(shared.Connection)
 	osCloud, err := cloud.Resolve(conn)
 	if err != nil {
 		return args, nil, err
@@ -37,6 +35,7 @@ func (c *mqlCloud) id() (string, error) {
 }
 
 func (c *mqlCloud) instance() (*mqlCloudInstance, error) {
+	log.Debug().Msg("os.cloud> instance")
 	obj, err := NewResource(c.MqlRuntime, "cloud.instance", nil)
 	if err != nil {
 		return nil, err
@@ -49,24 +48,31 @@ type mqlCloudInstanceInternal struct {
 }
 
 func initCloudInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	log.Debug().Msg("os.cloud.instance> init")
 	conn := runtime.Connection.(shared.Connection)
 	osCloud, err := cloud.Resolve(conn)
 	if err != nil {
 		return args, nil, err
 	}
+	instanceMd, err := osCloud.Instance()
+	if err != nil {
+		return args, nil, err
+	}
 
-	raw, err := CreateResource(runtime, "cloud.instance", nil)
+	raw, err := CreateResource(runtime, "cloud.instance", map[string]*llx.RawData{
+		"__id": llx.StringData(instanceMd.MqlID()),
+	})
 	if err != nil {
 		return args, nil, err
 	}
 	cloudInstance := raw.(*mqlCloudInstance)
-	cloudInstance.instanceMd, err = osCloud.Instance()
-	return args, cloudInstance, err
+	cloudInstance.instanceMd = instanceMd
+	return args, cloudInstance, nil
 }
 
 func (i *mqlCloudInstance) id() (string, error) {
 	if i.instanceMd != nil {
-		return fmt.Sprintf("cloud.instance/%s", i.instanceMd.PublicHostname), nil
+		return i.instanceMd.MqlID(), nil
 	}
 	return "", nil
 }
@@ -92,8 +98,8 @@ func (i *mqlCloudInstance) privateIpv4() (value []interface{}, err error) {
 			resource, err = NewResource(i.MqlRuntime, "ipv4Address", map[string]*llx.RawData{
 				"__id":      llx.StringData(ipaddress.IP),
 				"ip":        {Type: types.IP, Value: ipaddress.IP},
-				"subnet":    llx.StringData(ipaddress.Subnet),
-				"cidr":      llx.StringData(ipaddress.CIDR),
+				"subnet":    {Type: types.IP, Value: ipaddress.Subnet},
+				"cidr":      {Type: types.IP, Value: ipaddress.CIDR},
 				"broadcast": llx.StringData(ipaddress.Broadcast),
 				"gateway":   llx.StringData(ipaddress.Gateway),
 			})
@@ -113,8 +119,8 @@ func (i *mqlCloudInstance) publicIpv4() (value []interface{}, err error) {
 			resource, err = NewResource(i.MqlRuntime, "ipv4Address", map[string]*llx.RawData{
 				"__id":      llx.StringData(ipaddress.IP),
 				"ip":        {Type: types.IP, Value: ipaddress.IP},
-				"subnet":    llx.StringData(ipaddress.Subnet),
-				"cidr":      llx.StringData(ipaddress.CIDR),
+				"subnet":    {Type: types.IP, Value: ipaddress.Subnet},
+				"cidr":      {Type: types.IP, Value: ipaddress.CIDR},
 				"broadcast": llx.StringData(ipaddress.Broadcast),
 				"gateway":   llx.StringData(ipaddress.Gateway),
 			})
