@@ -86,22 +86,16 @@ resources:
   cloud:
     fields:
       instance: {}
-      metadata: {}
       provider: {}
     min_mondoo_version: 9.0.0
   cloud.instance:
     fields:
       metadata: {}
       privateHostname: {}
-      privateIPv4: {}
       privateIpv4: {}
       publicHostname: {}
       publicIpv4: {}
     is_private: true
-    min_mondoo_version: 9.0.0
-  cloud.metadata:
-    fields:
-      publicIp: {}
     min_mondoo_version: 9.0.0
   command:
     fields:
@@ -376,14 +370,6 @@ resources:
       target: {}
     min_mondoo_version: 5.15.0
   ipv4Address:
-    fields:
-      broadcast: {}
-      cidr: {}
-      gateway: {}
-      ip: {}
-      subnet: {}
-    min_mondoo_version: 9.0.0
-  ipv4Addresss:
     fields:
       broadcast: {}
       cidr: {}
