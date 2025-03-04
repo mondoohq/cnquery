@@ -19,6 +19,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v11/providers/os/id/metadata"
 )
 
 const (
@@ -45,7 +46,11 @@ type CommandInstanceMetadata struct {
 }
 
 func (m *CommandInstanceMetadata) RawMetadata() (any, error) {
-	return recursive{m.curlDocument}.Crawl(metadataURLPath)
+	return metadata.Crawl(m, metadataURLPath)
+}
+
+func (m *CommandInstanceMetadata) GetMetadataValue(path string) (string, error) {
+	return m.curlDocument(path)
 }
 
 func (m *CommandInstanceMetadata) Identify() (Identity, error) {

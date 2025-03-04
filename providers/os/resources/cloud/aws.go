@@ -58,7 +58,7 @@ func (a *aws) Instance() (*InstanceMetadata, error) {
 			return &instanceMd, err
 		}
 
-		var network Network
+		var network AWSNetwork
 		if err := json.Unmarshal(byteData, &network); err != nil {
 			return &instanceMd, err
 		}
@@ -92,13 +92,13 @@ func (a *aws) Instance() (*InstanceMetadata, error) {
 	return &instanceMd, nil
 }
 
-// Network structure
-type Network struct {
-	Interfaces Interfaces `json:"interfaces"`
+// AWSNetwork structure for AWS
+type AWSNetwork struct {
+	Interfaces AWSInterfaces `json:"interfaces"`
 }
 
-// Interfaces structure
-type Interfaces struct {
+// AWSInterfaces structure for AWS
+type AWSInterfaces struct {
 	Macs map[string]MacDetails `json:"macs"`
 }
 

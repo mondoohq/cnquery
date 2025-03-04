@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"go.mondoo.com/cnquery/v11/providers/os/id/metadata"
 
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 )
@@ -26,11 +27,12 @@ type LocalEc2InstanceMetadata struct {
 }
 
 func (m *LocalEc2InstanceMetadata) RawMetadata() (any, error) {
+	return metadata.Crawl(m, "")
+}
+
+func (m *LocalEc2InstanceMetadata) GetMetadataValue(path string) (string, error) {
 	client := imds.NewFromConfig(m.config)
-	getMetadataValue := func(path string) (string, error) {
-		return m.getMetadataValue(client, path)
-	}
-	return recursive{getMetadataValue}.Crawl("")
+	return m.getMetadataValue(client, path)
 }
 
 func (m *LocalEc2InstanceMetadata) Identify() (Identity, error) {
