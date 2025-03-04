@@ -177,6 +177,8 @@ func rawDataString(typ types.Type, value interface{}) string {
 		default:
 			return "map[?]?"
 		}
+	case types.IP:
+		return value.(string)
 	default:
 		return "?value? (typ:" + typ.Label() + ")"
 	}
