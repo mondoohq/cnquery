@@ -341,6 +341,16 @@ func (p *Primitive) LabelV2(code *CodeV2) string {
 		return "<...>"
 	case types.Dict:
 		return "<...>"
+	case types.Version:
+		if len(p.Value) == 0 {
+			return "null"
+		}
+		return string(p.Value)
+	case types.IP:
+		if len(p.Value) == 0 {
+			return "null"
+		}
+		return string(p.Value)
 	case types.Score:
 		return ScoreString(p.Value)
 	case types.ArrayLike:

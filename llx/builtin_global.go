@@ -46,6 +46,7 @@ func init() {
 		"bool":    boolCall,
 		"dict":    dictCall,
 		"version": versionCall,
+		"ip":      ipCall,
 		// FIXME: DEPRECATED, remove in v13.0 vv
 		"semver": versionCall, // deprecated
 		// ^^
@@ -254,6 +255,28 @@ func versionCall(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, e
 	}
 
 	return &RawData{Type: types.Version, Value: res.Value}, 0, nil
+}
+
+func ipCall(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, error) {
+	if len(f.Args) == 0 {
+		return nil, 0, errors.New("called `ip` with no arguments, expected one")
+	}
+
+	arg := f.Args[0]
+	if arg.Type != string(types.String) {
+		return nil, 0, errors.New("called `ip` with incorrect argument type, expected string")
+	}
+
+	res, dref, err := e.resolveValue(arg, ref)
+	if err != nil || dref != 0 || res == nil {
+		return res, dref, err
+	}
+	raw, ok := res.Value.(string)
+	if !ok {
+		return nil, 0, errors.New("called `ip` with unsupported type (expected string)")
+	}
+
+	return IPData(raw), 0, nil
 }
 
 func stringCall(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, error) {

@@ -1033,6 +1033,147 @@ func TestVersion(t *testing.T) {
 	})
 }
 
+func TestIP(t *testing.T) {
+	t.Run("ipv4", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "ip('1.2.3.4').version", Expectation: int64(4)},
+			{Code: "ip('1.2.3.4').isUnspecified", Expectation: false},
+			{Code: "ip('0.0.0.0').isUnspecified", Expectation: true},
+			{Code: "ip('1.2.3.4').prefixLength", Expectation: int64(8)},
+			{Code: "ip('128.2.3.4').prefixLength", Expectation: int64(16)},
+			{Code: "ip('192.2.3.4').prefixLength", Expectation: int64(24)},
+		})
+	})
+
+	t.Run("ipv6", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "ip('2001:db8:3c4d:15::1a2f:1a2b').version", Expectation: int64(6)},
+			{Code: "ip('2001:db8:3c4d:15::1a2f:1a2b').isUnspecified", Expectation: false},
+			{Code: "ip('0:0:0:0:0:0:0:0').isUnspecified", Expectation: true},
+			{Code: "ip('::').isUnspecified", Expectation: true},
+			{Code: "ip('::/128').isUnspecified", Expectation: true},
+		})
+	})
+
+	t.Run("ipv4 mask+prefix", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "ip('1.2.3.4/32').prefix", Expectation: "1.2.3.4"},
+			{Code: "ip('1.2.3.4/24').prefix", Expectation: "1.2.3.0"},
+			{Code: "ip('1.2.3.4/16').prefix", Expectation: "1.2.0.0"},
+			{Code: "ip('1.2.3.4/8').prefix", Expectation: "1.0.0.0"},
+			// edge-cases
+			{Code: "ip('1.2.3.4/0').prefix", Expectation: "0.0.0.0"},
+			{Code: "ip('1.2.3.4/40').prefix", Expectation: "1.2.3.4"},
+			// precision
+			{Code: "ip('255.2.3.4/1').prefix", Expectation: "128.0.0.0"},
+			{Code: "ip('1.255.3.4/9').prefix", Expectation: "1.128.0.0"},
+			{Code: "ip('1.255.3.4/10').prefix", Expectation: "1.192.0.0"},
+			{Code: "ip('1.255.3.4/11').prefix", Expectation: "1.224.0.0"},
+			{Code: "ip('1.255.3.4/12').prefix", Expectation: "1.240.0.0"},
+			{Code: "ip('1.255.3.4/13').prefix", Expectation: "1.248.0.0"},
+			{Code: "ip('1.255.3.4/14').prefix", Expectation: "1.252.0.0"},
+			{Code: "ip('1.255.3.4/15').prefix", Expectation: "1.254.0.0"},
+			{Code: "ip('1.255.3.4/16').prefix", Expectation: "1.255.0.0"},
+		})
+	})
+
+	t.Run("ipv6 mask+prefix", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "ip('2001:db8:3c4d:15::1a2f:1a2b').prefix", Expectation: "2001:db8:3c4d:15::"},
+			{Code: "ip('2001:db8:3c4d:15::1a2f:1a2b/48').prefix", Expectation: "2001:db8:3c4d::"},
+			{Code: "ip('::/128').prefix", Expectation: "::"},
+		})
+	})
+
+	t.Run("ipv4 mask+suffix", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "ip('1.2.3.4/32').suffix", Expectation: "0.0.0.0"},
+			{Code: "ip('1.2.3.4/24').suffix", Expectation: "0.0.0.4"},
+			{Code: "ip('1.2.3.4/16').suffix", Expectation: "0.0.3.4"},
+			{Code: "ip('1.2.3.4/8').suffix", Expectation: "0.2.3.4"},
+			// edge-cases
+			{Code: "ip('1.2.3.4/0').suffix", Expectation: "1.2.3.4"},
+			{Code: "ip('1.2.3.4/40').suffix", Expectation: "0.0.0.0"},
+			// precision
+			{Code: "ip('1.2.3.255/31').suffix", Expectation: "0.0.0.1"},
+			{Code: "ip('1.255.3.4/9').suffix", Expectation: "0.127.3.4"},
+			{Code: "ip('1.255.3.4/10').suffix", Expectation: "0.63.3.4"},
+			{Code: "ip('1.255.3.4/11').suffix", Expectation: "0.31.3.4"},
+			{Code: "ip('1.255.3.4/12').suffix", Expectation: "0.15.3.4"},
+			{Code: "ip('1.255.3.4/13').suffix", Expectation: "0.7.3.4"},
+			{Code: "ip('1.255.3.4/14').suffix", Expectation: "0.3.3.4"},
+			{Code: "ip('1.255.3.4/15').suffix", Expectation: "0.1.3.4"},
+			{Code: "ip('1.255.3.4/16').suffix", Expectation: "0.0.3.4"},
+		})
+	})
+
+	t.Run("ipv6 mask+suffix", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "ip('2001:db8:3c4d:15::1a2f:1a2b').suffix", Expectation: "::1a2f:1a2b"},
+			{Code: "ip('2001:db8:3c4d:15::1a2f:1a2b/48').suffix", Expectation: "::1a2f:1a2b"},
+			{Code: "ip('2001:db8:3c4d:15::1a2f:1a2b/112').suffix", Expectation: "::1a2b"},
+			{Code: "ip('2001:db8:3c4d:15::1a2f:1a2b/128').suffix", Expectation: "::"},
+			{Code: "ip('::/128').suffix", Expectation: "::"},
+		})
+	})
+
+	t.Run("ipv4 subnet", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "ip('1.2.3.4/32').subnet", Expectation: "255.255.255.255"},
+			{Code: "ip('1.2.3.4/24').subnet", Expectation: "255.255.255.0"},
+			{Code: "ip('1.2.3.4/16').subnet", Expectation: "255.255.0.0"},
+			{Code: "ip('1.2.3.4/8').subnet", Expectation: "255.0.0.0"},
+			{Code: "ip('1.2.3.4/0').subnet", Expectation: "0.0.0.0"},
+			// edge-cases
+			{Code: "ip('1.2.3.4/40').subnet", Expectation: "255.255.255.255"},
+			// bitwise
+			{Code: "ip('1.2.3.4/9').subnet", Expectation: "255.128.0.0"},
+			{Code: "ip('1.2.3.4/10').subnet", Expectation: "255.192.0.0"},
+			{Code: "ip('1.2.3.4/11').subnet", Expectation: "255.224.0.0"},
+			{Code: "ip('1.2.3.4/12').subnet", Expectation: "255.240.0.0"},
+			{Code: "ip('1.2.3.4/13').subnet", Expectation: "255.248.0.0"},
+			{Code: "ip('1.2.3.4/14').subnet", Expectation: "255.252.0.0"},
+			{Code: "ip('1.2.3.4/15').subnet", Expectation: "255.254.0.0"},
+		})
+	})
+
+	t.Run("ipv6 subnet", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "ip('2001:db8:3c4d:15::1a2f:1a2b/64').subnet", Expectation: ""},
+			{Code: "ip('2001:db8:3c4d:15::1a2f:1a2b/48').subnet", Expectation: "15"},
+			{Code: "ip('2001:db8:3c4d:15::1a2f:1a2b/40').subnet", Expectation: "4d:15"},
+			{Code: "ip('2001:db8:3c4d:15::1a2f:1a2b/32').subnet", Expectation: "3c4d:15"},
+		})
+	})
+
+	t.Run("ipv4 inRange with subnet", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "ip('192.2.3.4').inRange('192.2.3.0')", Expectation: true},
+			{Code: "ip('192.2.4.4').inRange('192.2.3.0')", Expectation: false},
+			{Code: "ip('192.2.3.4').inRange('192.2.3.0/24')", Expectation: true},
+			{Code: "ip('192.2.3.4').inRange(ip('192.2.3.0/24'))", Expectation: true},
+			{Code: "ip('192.2.3.4').inRange('192.2.3.255/24')", Expectation: true},
+			{Code: "ip('192.2.3.4').inRange('192.2.3.0/16')", Expectation: false},
+		})
+	})
+
+	t.Run("ipv4 inRange with two IPs", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "ip('192.2.3.4').inRange('192.2.3.0', '192.2.3.5')", Expectation: true},
+			{Code: "ip('192.2.3.4').inRange(ip('192.2.3.3'), ip('192.2.3.5'))", Expectation: true},
+			{Code: "ip('192.2.3.4').inRange('192.2.3.4', '192.2.3.4')", Expectation: true},
+			{Code: "ip('192.2.3.4').inRange('192.2.3.5', '192.2.3.255')", Expectation: false},
+		})
+	})
+
+	t.Run("ipv6 inRange with two IPs", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "ip('2001:db8:3c4d:15::1a2f:1a2b').inRange('2001:db8:3c4d::', '2001:db8:3c4e::')", Expectation: true},
+			{Code: "ip('2001:db8:3c4d:15::1a2f:1a2b').inRange('2001:db8:3c4e::', '2001:db8:3c4f::')", Expectation: false},
+		})
+	})
+}
+
 func TestResource_Default(t *testing.T) {
 	x := testutils.InitTester(testutils.LinuxMock())
 	res := x.TestQuery(t, "mondoo")
