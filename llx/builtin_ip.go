@@ -59,6 +59,23 @@ func NewIP(s string) IP {
 
 var bitmasks = []byte{0x00, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, 0xff}
 
+func int2ip(i int64) string {
+	cur := i
+
+	d := byte(cur % 256)
+	cur = cur >> 8
+
+	c := byte(cur % 256)
+	cur = cur >> 8
+
+	b := byte(cur % 256)
+	cur = cur >> 8
+
+	a := byte(cur % 256)
+
+	return net.IPv4(a, b, c, d).String()
+}
+
 func countMaskBits(b []byte) int {
 	var res int
 	for _, cur := range b {

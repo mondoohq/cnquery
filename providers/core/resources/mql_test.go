@@ -1042,6 +1042,7 @@ func TestIP(t *testing.T) {
 			{Code: "ip('1.2.3.4').prefixLength", Expectation: int64(8)},
 			{Code: "ip('128.2.3.4').prefixLength", Expectation: int64(16)},
 			{Code: "ip('192.2.3.4').prefixLength", Expectation: int64(24)},
+			{Code: "ip(2885681153) == ip('172.0.0.1')", Expectation: true, ResultIndex: 2},
 		})
 	})
 
