@@ -1,0 +1,98 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "4.9.125-linuxkit"
+
+[commands.429cbd4e7db4b7b794c5fb8f6703f01de2790c2b8425b5d58e53289c4f9e7363]
+  command = "curl --noproxy '*' -H \"Metadata-Flavor: Google\" http://metadata.google.internal/computeMetadata/v1/instance/"
+  stdout = "network-interfaces/\nhostname\nimage\n"
+  exit_status = 0
+  
+[commands.3564aeb2c4414becf5ac6ad339140e5bca80389a15cf7b9af8c704be171243cd]
+  command = "curl --noproxy '*' -H \"Metadata-Flavor: Google\" http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/"
+  stdout = "0/\n"
+  exit_status = 0
+  
+[commands.2753dc79ead12463a520a555a01e5f7716632f0ad84eec72d338ad089b7d5698]
+  command = "curl --noproxy '*' -H \"Metadata-Flavor: Google\" http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/"
+  stdout = "access-configs/\ndns-servers\nforwarded-ips/\ngateway\nip\nmac\nmtu\nnetwork\nsubnetmask\ntarget-instance-ips\n"
+  exit_status = 0
+  
+[commands.013583d3827721cab9653ea09955a5747ec283078c2dec07540349a3480b037e]
+  command = "curl --noproxy '*' -H \"Metadata-Flavor: Google\" http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/access-configs/"
+  stdout = "0/\n"
+  exit_status = 0
+  
+[commands.f1dd8dde98c0ee7d8f8923ae26722e663ef955811910a30568d593a2ae8554d6]
+  command = "curl --noproxy '*' -H \"Metadata-Flavor: Google\" http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/"
+  stdout = "external-ip\ntype\n"
+  exit_status = 0
+  
+[commands.d1f1b25631d02022fa32fc82323973af60c84c6589f0862759e40b63b156fe25]
+  command = "curl --noproxy '*' -H \"Metadata-Flavor: Google\" http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip"
+  stdout = "1.2.3.4"
+  exit_status = 0
+  
+[commands.7f9814e61242854aaf5d5c6050a9e7befd66630dbf9c9a63f47a39c0fc129f1b]
+  command = "curl --noproxy '*' -H \"Metadata-Flavor: Google\" http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/type"
+  stdout = "ONE_TO_ONE_NAT"
+  exit_status = 0
+  
+[commands.ec67dcb1b22fa42ad01a7ccf85aba84d9298da324e524cb4b74d2c80fb2ef0fe]
+  command = "curl --noproxy '*' -H \"Metadata-Flavor: Google\" http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/dns-servers"
+  stdout = "2.2.2.2"
+  exit_status = 0
+  
+[commands.493c33e6a2a9fbb60b3c24a2d476e3b5293f36e2bb707a09a899304273f55b21]
+  command = "curl --noproxy '*' -H \"Metadata-Flavor: Google\" http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/forwarded-ips/"
+  stdout = ""
+  exit_status = 0
+  
+[commands.cc9e860814675829002292a91061b1b4b87415e0c2056dfb16582e498fc1046c]
+  command = "curl --noproxy '*' -H \"Metadata-Flavor: Google\" http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/gateway"
+  stdout = "3.3.3.3"
+  exit_status = 0
+  
+[commands.8092855bb426dcb535ca0648ee3aa12f1d6cd484c677df0f4293dc5ee9f0ecdc]
+  command = "curl --noproxy '*' -H \"Metadata-Flavor: Google\" http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/ip"
+  stdout = "172.1.2.3"
+  exit_status = 0
+  
+[commands.3ea25e512564d3106c28ce4972acd09b9e09ec7e07f9e1b33d93bbff305ccbc8]
+  command = "curl --noproxy '*' -H \"Metadata-Flavor: Google\" http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/mac"
+  stdout = "42:01:0a:80:00:11"
+  exit_status = 0
+  
+[commands.974b9f86d4d74201e94bbe8cab3ccec2fa6c7fbb7fe435f822ddbea09280ba6c]
+  command = "curl --noproxy '*' -H \"Metadata-Flavor: Google\" http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/mtu"
+  stdout = "1460"
+  exit_status = 0
+  
+[commands.e9e7233d8511440d0c59e674b7e3ce1a201de09048fee3036e2d4b16f72f3f1e]
+  command = "curl --noproxy '*' -H \"Metadata-Flavor: Google\" http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/network"
+  stdout = "projects/123456789012/networks/default"
+  exit_status = 0
+  
+[commands.f87c0c5ef9306443b1cae4b24c3a2b708af406d4461522dcf5a3b4183b2f73de]
+  command = "curl --noproxy '*' -H \"Metadata-Flavor: Google\" http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/subnetmask"
+  stdout = "255.255.240.0"
+  exit_status = 0
+  
+[commands.aad56341e325a7a49acc73924aeb21f685916442aa4bbb75f43b6c8b2ea700a4]
+  command = "curl --noproxy '*' -H \"Metadata-Flavor: Google\" http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/target-instance-ips"
+  stdout = ""
+  exit_status = 0
+  
+[commands.860f4f4c231c8f855834e949e04cc1250cb2dc0e450a4afd55bc2a2a6236664c]
+  command = "curl --noproxy '*' -H \"Metadata-Flavor: Google\" http://metadata.google.internal/computeMetadata/v1/instance/hostname"
+  stdout = "instance-afiune-cloud-test.us-central1-f.c.dev-123.internal"
+  exit_status = 0
+  
+[commands.cf7f8186ee5bbb6b29bfa69dab01bad5ef96e7df77dafbd4507cad5f9da30810]
+  command = "curl --noproxy '*' -H \"Metadata-Flavor: Google\" http://metadata.google.internal/computeMetadata/v1/instance/image"
+  stdout = "projects/cloud/global/images/debian-12-v123"
+  exit_status = 0
