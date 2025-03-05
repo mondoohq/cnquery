@@ -155,7 +155,7 @@ func compileResourceWhere(c *compiler, typ types.Type, ref uint64, id string, ca
 		return types.Nil, err
 	}
 	if refs.isStandalone {
-		log.Warn().Msg("Detected a standalone function in a where-clause! Please make sure you use filter the list, as this is most likely unintended")
+		log.Warn().Msg("Detected a standalone function in a WHERE clause! This is probably unintended. Be sure to filter the list.")
 	}
 	if refs.block == 0 {
 		return types.Nil, errors.New("called '" + id + "' clause without a function block")
