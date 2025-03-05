@@ -19,18 +19,15 @@ type OSCloud interface {
 }
 
 func Resolve(conn shared.Connection) (OSCloud, error) {
-	// TODO fix cloud detect to return the type of cloud
-	// Depends on https://github.com/mondoohq/cnquery/pull/5267
-	identifier, _, _ := clouddetect.Detect(conn, conn.Asset().GetPlatform())
-	log.Debug().Str("identified", identifier).Msg("os.cloud> cloud detected")
-	var detectedCloud = ""
-	if identifier != "" {
-		detectedCloud = "aws"
+	platformInfo := clouddetect.Detect(conn, conn.Asset().GetPlatform())
+	if platformInfo == nil {
+		log.Debug().Msg("os.cloud> unable to detect cloud")
+		return &none{}, nil
 	}
-	// TODO fix ^^
 
-	switch detectedCloud {
-	case "aws":
+	log.Debug().Str("cloud", platformInfo.Name).Msg("os.cloud> detected")
+	switch platformInfo.CloudProvider {
+	case clouddetect.AWS:
 		return &aws{conn}, nil
 	default:
 		return &none{}, nil
