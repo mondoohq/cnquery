@@ -54,14 +54,18 @@ func IdentifyPlatform(conn shared.Connection, req *plugin.ConnectReq, p *invento
 
 	if len(idDetectors) == 0 {
 		// fallback to default id detectors
+		//
+		// we want to make sure that we mark assets running in the cloud to `virtualmachine`,
+		// therefore we use the cloud detect detector as our first option.
+
 		switch conn.Type() {
 		case shared.Type_Local:
-			idDetectors = []string{ids.IdDetector_Hostname, ids.IdDetector_CloudDetect}
+			idDetectors = []string{ids.IdDetector_CloudDetect, ids.IdDetector_Hostname}
 			if cnquery.Features(req.Features).IsActive(cnquery.SerialNumberAsID) {
 				idDetectors = append(idDetectors, ids.IdDetector_SerialNumber)
 			}
 		case shared.Type_SSH:
-			idDetectors = []string{ids.IdDetector_Hostname, ids.IdDetector_CloudDetect, ids.IdDetector_SshHostkey}
+			idDetectors = []string{ids.IdDetector_CloudDetect, ids.IdDetector_Hostname, ids.IdDetector_SshHostkey}
 		case shared.Type_Tar, shared.Type_FileSystem, shared.Type_DockerSnapshot:
 			idDetectors = []string{ids.IdDetector_Hostname}
 		}

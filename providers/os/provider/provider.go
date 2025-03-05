@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"net/url"
-	"slices"
 	"strconv"
 	"strings"
 
@@ -30,7 +29,6 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/connection/winrm"
 	"go.mondoo.com/cnquery/v11/providers/os/detector"
 	"go.mondoo.com/cnquery/v11/providers/os/id"
-	"go.mondoo.com/cnquery/v11/providers/os/id/ids"
 	"go.mondoo.com/cnquery/v11/providers/os/resources"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/discovery/docker_engine"
 	"go.mondoo.com/cnquery/v11/utils/stringx"
@@ -209,13 +207,6 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 	if idDetector != "" {
 		asset.IdDetector = []string{idDetector}
-	}
-
-	// We want to make sure that we mark cloud assets running in the cloud to `virtualmachine`,
-	// therefore we use the cloud detect detector by default.
-	if !slices.Contains(asset.IdDetector, ids.IdDetector_CloudDetect) {
-		log.Debug().Str("detector", ids.IdDetector_CloudDetect).Msg("adding default id detector")
-		asset.IdDetector = append(asset.IdDetector, ids.IdDetector_CloudDetect)
 	}
 
 	if conf.Options == nil {
