@@ -177,6 +177,8 @@ func rawDataString(typ types.Type, value interface{}) string {
 		default:
 			return "map[?]?"
 		}
+	case types.IP:
+		return value.(string)
 	default:
 		return "?value? (typ:" + typ.Label() + ")"
 	}
@@ -586,6 +588,21 @@ func RangeData(r Range) *RawData {
 		Type:  types.Range,
 		Value: r,
 	}
+}
+
+// IPData creates a rawdata struct from a raw ip address
+func IPData(ip string) *RawData {
+	return &RawData{
+		Type:  types.IP,
+		Value: ip,
+	}
+}
+
+func IPDataPtr(ip *string) *RawData {
+	if ip == nil {
+		return NilData
+	}
+	return IPData(*ip)
 }
 
 // RawResultByRef is used to sort an array of raw results

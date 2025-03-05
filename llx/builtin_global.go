@@ -276,7 +276,7 @@ func ipCall(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, error)
 		return nil, 0, errors.New("called `ip` with unsupported type (expected string)")
 	}
 
-	return &RawData{Type: types.IP, Value: raw}, 0, nil
+	return IPData(raw), 0, nil
 }
 
 func stringCall(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, error) {

@@ -79,11 +79,10 @@ func Detect(conn shared.Connection, p *inventory.Platform, smbiosMgr smbios.SmBi
 		idEcs, err := mdsvcEcs.Identify()
 		if err == nil {
 			return idEcs.PlatformIds[0], idEcs.Name, []string{idEcs.AccountPlatformID}
-		} else {
-			log.Debug().Err(err).
-				Strs("platform", p.GetFamily()).
-				Msg("failed to get AWS platform id")
 		}
+		log.Debug().Err(err).
+			Strs("platform", p.GetFamily()).
+			Msg("failed to get AWS platform id")
 	}
 
 	return "", "", nil
