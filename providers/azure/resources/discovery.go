@@ -305,7 +305,7 @@ func discoverInstances(runtime *plugin.Runtime, subsWithConfigs []subWithConfig)
 			enrichWithLabels(asset, labels)
 			asset.PlatformIds = []string{MondooAzureInstanceID(vm.Id.Data)}
 			asset.Platform.Runtime = "azure"
-			asset.Platform.Kind = "virtualmachine"
+			asset.Platform.Kind = inventory.AssetKindCloudVM
 			assets = append(assets, asset)
 		}
 	}
