@@ -80,7 +80,7 @@ func NewPlatformId(assetId string) string {
 
 func NewWorkloadPlatformId(clusterIdentifier, workloadType, namespace, name, uid string) string {
 	if workloadType == "namespace" {
-		return NewNamespacePlatformId(clusterIdentifier, name, uid)
+		return NewNamespacePlatformId(name, uid)
 	}
 
 	platformIdentifier := clusterIdentifier
@@ -94,10 +94,6 @@ func NewWorkloadPlatformId(clusterIdentifier, workloadType, namespace, name, uid
 	return platformIdentifier
 }
 
-func NewNamespacePlatformId(clusterIdentifier, name, uid string) string {
-	if clusterIdentifier == "" {
-		return fmt.Sprintf("%snamespace/%s", idPrefix, name)
-	}
-
-	return fmt.Sprintf("%s/namespace/%s/uid/%s", clusterIdentifier, name, uid)
+func NewNamespacePlatformId(name, uid string) string {
+	return fmt.Sprintf("%s%s/namespace/%s", idPrefix, uid, name)
 }
