@@ -30,6 +30,7 @@ func getMetadataRecursively(r recursive, path string) (any, error) {
 
 	// If the response is JSON, parse it
 	if isJSON(data) {
+		log.Trace().Str("path", path).Msg("os.id.metadata> json format")
 		var jsonData interface{}
 		if err := json.Unmarshal([]byte(data), &jsonData); err != nil {
 			return nil, err
@@ -39,6 +40,7 @@ func getMetadataRecursively(r recursive, path string) (any, error) {
 
 	// Handle specific paths that return multiline strings (e.g., "managed-ssh-keys/signer-cert")
 	if isMultilineString(path) {
+		log.Trace().Str("path", path).Msg("os.id.metadata> multiline string")
 		return data, nil // Preserve as a raw string
 	}
 
