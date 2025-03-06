@@ -129,38 +129,29 @@ func Discover(runtime *plugin.Runtime, features cnquery.Features) (*inventory.In
 			in.Spec.Assets = append(in.Spec.Assets, root)
 		}
 
-		od := NewPlatformIdOwnershipIndex(assetId)
+	}
+	nss, err := discoverNamespaces(conn, invConfig, "", nil, nsFilter)
+	if err != nil {
+		return nil, err
+	}
 
-		assets, err := discoverAssets(runtime, conn, invConfig, assetId, k8s, nsFilter, resFilters, od, false)
+	if resFilters.IsEmpty() {
+		in.Spec.Assets = append(in.Spec.Assets, nss...)
+	}
+
+	// Discover the assets for each namespace and use the namespace platform ID as root
+	for _, ns := range nss {
+		nsFilter = NamespaceFilterOpts{include: []string{ns.Name}}
+
+		od := NewPlatformIdOwnershipIndex(ns.PlatformIds[0])
+
+		// We don't want to discover the namespaces again since we have already done this above
+		assets, err := discoverAssets(runtime, conn, invConfig, ns.PlatformIds[0], k8s, nsFilter, resFilters, od, true)
 		if err != nil {
 			return nil, err
 		}
-		setRelatedAssets(conn, root, assets, od, features)
+		setRelatedAssets(conn, ns, assets, od, features)
 		in.Spec.Assets = append(in.Spec.Assets, assets...)
-	} else {
-		nss, err := discoverNamespaces(conn, invConfig, "", nil, nsFilter)
-		if err != nil {
-			return nil, err
-		}
-
-		if resFilters.IsEmpty() {
-			in.Spec.Assets = append(in.Spec.Assets, nss...)
-		}
-
-		// Discover the assets for each namespace and use the namespace platform ID as root
-		for _, ns := range nss {
-			nsFilter = NamespaceFilterOpts{include: []string{ns.Name}}
-
-			od := NewPlatformIdOwnershipIndex(ns.PlatformIds[0])
-
-			// We don't want to discover the namespaces again since we have already done this above
-			assets, err := discoverAssets(runtime, conn, invConfig, ns.PlatformIds[0], k8s, nsFilter, resFilters, od, true)
-			if err != nil {
-				return nil, err
-			}
-			setRelatedAssets(conn, ns, assets, od, features)
-			in.Spec.Assets = append(in.Spec.Assets, assets...)
-		}
 	}
 
 	return in, nil
@@ -846,7 +837,7 @@ func discoverNamespaces(
 		}
 		assetList = append(assetList, &inventory.Asset{
 			PlatformIds: []string{
-				shared.NewNamespacePlatformId(clusterId, ns.Name, string(ns.UID)),
+				shared.NewNamespacePlatformId(ns.Name, string(ns.UID)),
 			},
 			Name:        ns.Name,
 			Platform:    platform,
