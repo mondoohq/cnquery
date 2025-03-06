@@ -39,8 +39,8 @@ func init() {
 		types.Score:        score2result,
 		types.Empty:        empty2result,
 		types.Block:        block2result,
-		types.Version:      string2result,
-		types.IP:           string2result,
+		types.Version:      version2result,
+		types.IP:           ip2result,
 		types.ArrayLike:    array2result,
 		types.MapLike:      map2result,
 		types.ResourceLike: resource2result,
@@ -61,8 +61,8 @@ func init() {
 		types.Score:        pscore2raw,
 		types.Empty:        pempty2raw,
 		types.Block:        pblock2rawV2,
-		types.Version:      pstring2raw,
-		types.IP:           pstring2raw,
+		types.Version:      pversion2raw,
+		types.IP:           pip2raw,
 		types.ArrayLike:    parray2raw,
 		types.MapLike:      pmap2raw,
 		types.ResourceLike: presource2raw,
@@ -256,6 +256,27 @@ func block2result(value interface{}, typ types.Type) (*Primitive, error) {
 		res[k] = raw.Result().Data
 	}
 	return &Primitive{Type: string(typ), Map: res}, nil
+}
+
+func version2result(value interface{}, typ types.Type) (*Primitive, error) {
+	v, ok := value.(string)
+	if !ok {
+		return nil, errInvalidConversion(value, typ)
+	}
+	p := StringPrimitive(v)
+	// special case for version
+	p.Type = string(typ)
+	return p, nil
+}
+
+func ip2result(value any, typ types.Type) (*Primitive, error) {
+	m, ok := value.(IP)
+	if !ok {
+		return nil, errInvalidConversion(value, typ)
+	}
+
+	res, err := m.Marshal()
+	return &Primitive{Type: string(typ), Value: res}, err
 }
 
 func array2result(value interface{}, typ types.Type) (*Primitive, error) {
@@ -592,6 +613,18 @@ func pempty2raw(p *Primitive) *RawData {
 func pblock2rawV2(p *Primitive) *RawData {
 	d, err := primitive2rawdataMapV2(p.Map)
 	return &RawData{Value: d, Error: err, Type: types.Type(p.Type)}
+}
+
+func pversion2raw(p *Primitive) *RawData {
+	return VersionData(string(p.Value))
+}
+
+func pip2raw(p *Primitive) *RawData {
+	ip, err := UnmarshalIP(p.Value)
+	if err != nil || ip == nil {
+		return &RawData{Error: err, Type: types.IP}
+	}
+	return IPData(*ip)
 }
 
 func parray2raw(p *Primitive) *RawData {

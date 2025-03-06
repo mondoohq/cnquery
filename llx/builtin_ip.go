@@ -14,11 +14,11 @@ import (
 
 type IP struct {
 	net.IP
-	Version int
+	Version int8
 	Mask    int
 }
 
-func NewIP(s string) IP {
+func ParseIP(s string) IP {
 	prefix := s
 	suffix := ""
 	if idx := strings.IndexByte(s, '/'); idx != -1 {
@@ -28,15 +28,23 @@ func NewIP(s string) IP {
 		}
 	}
 
-	mask := -1
+	var explicitMask int = -1
 	if suffix != "" {
 		mask64, _ := strconv.ParseInt(suffix, 10, 0)
-		mask = int(mask64)
+		explicitMask = int(mask64)
 	}
 
 	ip := net.ParseIP(prefix)
+	version, mask := ipVersionMask(ip, explicitMask)
+	return IP{
+		IP:      ip,
+		Version: version,
+		Mask:    mask,
+	}
+}
 
-	version := 0
+func ipVersionMask(ip net.IP, mask int) (int8, int) {
+	var version int8
 	if ip.To4() != nil {
 		version = 4
 		if mask == -1 {
@@ -49,17 +57,10 @@ func NewIP(s string) IP {
 			mask = 64
 		}
 	}
-
-	return IP{
-		IP:      ip,
-		Version: version,
-		Mask:    mask,
-	}
+	return version, mask
 }
 
-var bitmasks = []byte{0x00, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, 0xff}
-
-func int2ip(i int64) string {
+func int2ip[T int | int64 | int32](i T) net.IP {
 	cur := i
 
 	d := byte(cur & 0xff)
@@ -73,8 +74,20 @@ func int2ip(i int64) string {
 
 	a := byte(cur & 0xff)
 
-	return net.IPv4(a, b, c, d).String()
+	return net.IPv4(a, b, c, d)
 }
+
+func ParseIntIP[T int | int64](i T) IP {
+	ip := int2ip(i)
+	version, mask := ipVersionMask(ip, -1)
+	return IP{
+		IP:      ip,
+		Version: version,
+		Mask:    mask,
+	}
+}
+
+var bitmasks = []byte{0x00, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, 0xff}
 
 func countMaskBits(b []byte) int {
 	var res int
@@ -264,19 +277,42 @@ func (i IP) Cmp(other IP) int {
 	return 0
 }
 
+func (i IP) CIDR() string {
+	return i.IP.String() + "/" + strconv.Itoa(i.Mask)
+}
+
+func (i IP) Marshal() ([]byte, error) {
+	maskb := int2bytes(int64(i.Mask))
+	if len(maskb) == 1 {
+		maskb = []byte{maskb[0], 0}
+	} else if len(maskb) > 2 {
+		return nil, errors.New("mask is not supported in converting ip to result")
+	}
+
+	res := []byte{byte(i.Version), maskb[0], maskb[1]}
+	return append(res, i.IP...), nil
+}
+
+func UnmarshalIP(data []byte) (*IP, error) {
+	if len(data) < 3 {
+		return nil, errors.New("incorrect storage of IP value, expected at least 3 bytes")
+	}
+	return &IP{
+		Version: int8(data[0]),
+		Mask:    int(bytes2int(data[1:3])),
+		IP:      data[3:],
+	}, nil
+}
+
 func ipCmpIP(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left, right interface{}) *RawData {
-		lip := NewIP(left.(string))
-		rip := NewIP(right.(string))
-		return BoolData(lip.Equal(rip.IP) && lip.Mask == rip.Mask)
+	return nonNilDataOpT(e, bind, chunk, ref, types.Bool, func(left, right IP) *RawData {
+		return BoolData(left.Equal(right.IP) && left.Mask == right.Mask)
 	})
 }
 
 func ipNotIP(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left, right interface{}) *RawData {
-		lip := NewIP(left.(string))
-		rip := NewIP(right.(string))
-		return BoolData(!lip.Equal(rip.IP) || lip.Mask != rip.Mask)
+	return nonNilDataOpT(e, bind, chunk, ref, types.Bool, func(left, right IP) *RawData {
+		return BoolData(!left.Equal(right.IP) || left.Mask != right.Mask)
 	})
 }
 
@@ -284,17 +320,21 @@ func ipVersion(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawD
 	if bind.Value == nil {
 		return &RawData{Type: types.Int, Error: bind.Error}, 0, nil
 	}
-
-	v := NewIP(bind.Value.(string))
-	return IntData(v.Version), 0, nil
+	v, ok := bind.Value.(IP)
+	if !ok {
+		return nil, 0, errors.New("incorrect internal data for IP type")
+	}
+	return IntData(int(v.Version)), 0, nil
 }
 
 func ipSubnet(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return &RawData{Type: types.Int, Error: bind.Error}, 0, nil
 	}
-
-	v := NewIP(bind.Value.(string))
+	v, ok := bind.Value.(IP)
+	if !ok {
+		return nil, 0, errors.New("incorrect internal data for IP type")
+	}
 	return StringData(v.Subnet()), 0, nil
 }
 
@@ -302,8 +342,10 @@ func ipPrefix(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawDa
 	if bind.Value == nil {
 		return &RawData{Type: types.Int, Error: bind.Error}, 0, nil
 	}
-
-	v := NewIP(bind.Value.(string))
+	v, ok := bind.Value.(IP)
+	if !ok {
+		return nil, 0, errors.New("incorrect internal data for IP type")
+	}
 	return StringData(v.Prefix()), 0, nil
 }
 
@@ -311,8 +353,10 @@ func ipPrefixLength(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 	if bind.Value == nil {
 		return &RawData{Type: types.Int, Error: bind.Error}, 0, nil
 	}
-
-	v := NewIP(bind.Value.(string))
+	v, ok := bind.Value.(IP)
+	if !ok {
+		return nil, 0, errors.New("incorrect internal data for IP type")
+	}
 	return IntData(v.Mask), 0, nil
 }
 
@@ -320,8 +364,10 @@ func ipSuffix(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawDa
 	if bind.Value == nil {
 		return &RawData{Type: types.Int, Error: bind.Error}, 0, nil
 	}
-
-	v := NewIP(bind.Value.(string))
+	v, ok := bind.Value.(IP)
+	if !ok {
+		return nil, 0, errors.New("incorrect internal data for IP type")
+	}
 	return StringData(v.Suffix()), 0, nil
 }
 
@@ -329,9 +375,35 @@ func ipUnspecified(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 	if bind.Value == nil {
 		return &RawData{Type: types.Int, Error: bind.Error}, 0, nil
 	}
-
-	v := NewIP(bind.Value.(string))
+	v, ok := bind.Value.(IP)
+	if !ok {
+		return nil, 0, errors.New("incorrect internal data for IP type")
+	}
 	return BoolData(v.IP.IsUnspecified()), 0, nil
+}
+
+func ipCIDR(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.String, Error: bind.Error}, 0, nil
+	}
+	v, ok := bind.Value.(IP)
+	if !ok {
+		return nil, 0, errors.New("incorrect internal data for IP type")
+	}
+	return StringData(v.CIDR()), 0, nil
+}
+
+func any2ip(v any) (IP, bool) {
+	switch t := v.(type) {
+	case IP:
+		return t, true
+	case string:
+		return ParseIP(t), true
+	case int64:
+		return ParseIntIP(t), true
+	default:
+		return IP{}, false
+	}
 }
 
 func ipInRange(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
@@ -339,7 +411,12 @@ func ipInRange(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawD
 		return &RawData{Type: types.Int, Error: bind.Error}, 0, nil
 	}
 
-	conditions := []string{}
+	bindIP, ok := bind.Value.(IP)
+	if !ok {
+		return nil, 0, errors.New("incorrect internal data for IP type")
+	}
+
+	conditions := []IP{}
 	for i := range chunk.Function.Args {
 		argRef := chunk.Function.Args[i]
 
@@ -348,27 +425,25 @@ func ipInRange(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawD
 			return nil, rref, err
 		}
 
-		s, ok := arg.Value.(string)
+		s, ok := any2ip(arg.Value)
 		if !ok {
-			return nil, 0, errors.New("incorrect type for argument in `inRange` call (expected string)")
+			return nil, 0, errors.New("incorrect type for argument in `inRange` call (expected string, int, or IP)")
 		}
 		conditions = append(conditions, s)
 	}
 
-	v := NewIP(bind.Value.(string))
 	if len(conditions) == 1 {
-		i := NewIP(conditions[0])
-		return BoolData(v.inRange(i)), 0, nil
+		return BoolData(bindIP.inRange(conditions[0])), 0, nil
 	}
 
-	min := NewIP(conditions[0])
-	max := NewIP(conditions[1])
+	min := conditions[0]
+	max := conditions[1]
 
-	mincmp := min.Cmp(v)
+	mincmp := min.Cmp(bindIP)
 	if mincmp == 1 {
 		return BoolFalse, 0, nil
 	}
-	maxcmp := v.Cmp(max)
+	maxcmp := bindIP.Cmp(max)
 	if maxcmp == 1 {
 		return BoolFalse, 0, nil
 	}

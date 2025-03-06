@@ -4,6 +4,7 @@
 package llx
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"strconv"
@@ -11,7 +12,10 @@ import (
 	"time"
 
 	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v11/utils/multierr"
 )
+
+const UNKNOWN_VALUE = "?value?"
 
 // RawData is an internal track of raw data that can be cast to the appropriate types
 // It cannot be sent over the wire unless serialized (expensive) or
@@ -33,10 +37,18 @@ func (r *RawData) MarshalJSON() ([]byte, error) {
 		return json.Marshal(errData{Error: r.Error.Error()})
 	}
 
-	if r.Type == types.Time {
+	switch r.Type {
+	case types.Time:
 		tv := r.Value.(*time.Time)
 		ut := tv.Unix()
 		return json.Marshal(RawData{Type: r.Type, Value: ut})
+	case types.IP:
+		ip := r.Value.(IP)
+		data, err := ip.Marshal()
+		if err != nil {
+			return nil, multierr.Wrap(err, "failed to marshal IP address "+ip.CIDR())
+		}
+		return json.Marshal(RawData{Type: r.Type, Value: data})
 	}
 
 	type rd2 RawData
@@ -61,6 +73,16 @@ func (r *RawData) UnmarshalJSON(data []byte) error {
 				v := time.Unix(int64(tv), 0)
 				r.Value = &v
 			}
+		case types.IP:
+			raw, err := base64.StdEncoding.DecodeString(r.Value.(string))
+			if err != nil {
+				return multierr.Wrap(err, "failed to unmarshal IP bytes")
+			}
+			ip, err := UnmarshalIP(raw)
+			if err != nil {
+				return multierr.Wrap(err, "failed to unmarshal IP data")
+			}
+			r.Value = *ip
 		}
 		return nil
 	}
@@ -114,7 +136,7 @@ func dictRawDataString(value interface{}) string {
 		res.WriteString("}")
 		return res.String()
 	default:
-		return "?value? (type:dict)"
+		return UNKNOWN_VALUE + " (type:dict)"
 	}
 }
 
@@ -177,10 +199,12 @@ func rawDataString(typ types.Type, value interface{}) string {
 		default:
 			return "map[?]?"
 		}
-	case types.IP:
+	case types.Version:
 		return value.(string)
+	case types.IP:
+		return value.(IP).CIDR()
 	default:
-		return "?value? (typ:" + typ.Label() + ")"
+		return UNKNOWN_VALUE + " (typ:" + typ.Label() + ")"
 	}
 }
 
@@ -284,6 +308,13 @@ func isTruthy(data interface{}, typ types.Type) (bool, bool) {
 		}
 
 		return res, true
+
+	case types.Version:
+		return data.(string) != "", true
+
+	case types.IP:
+		d := data.(IP)
+		return len(d.IP) != 0, true
 
 	case types.ArrayLike:
 		arr := data.([]interface{})
@@ -590,19 +621,20 @@ func RangeData(r Range) *RawData {
 	}
 }
 
+// VersionData creates a rawdata struct from a raw ip address
+func VersionData(version string) *RawData {
+	return &RawData{
+		Type:  types.Version,
+		Value: version,
+	}
+}
+
 // IPData creates a rawdata struct from a raw ip address
-func IPData(ip string) *RawData {
+func IPData(ip IP) *RawData {
 	return &RawData{
 		Type:  types.IP,
 		Value: ip,
 	}
-}
-
-func IPDataPtr(ip *string) *RawData {
-	if ip == nil {
-		return NilData
-	}
-	return IPData(*ip)
 }
 
 // RawResultByRef is used to sort an array of raw results
