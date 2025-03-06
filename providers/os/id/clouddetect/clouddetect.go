@@ -23,16 +23,20 @@ type (
 
 type detectorFunc func(conn shared.Connection, p *inventory.Platform, smbiosMgr smbios.SmBiosManager) (PlatformID, PlatformName, []RelatedPlatformID)
 
-var detectors = []detectorFunc{
-	aws.Detect,
-	azure.Detect,
-	gcp.Detect,
-}
+// CloudProviderType is the type of cloud provider that the cloud detect detected
+type CloudProviderType string
 
-type detectResult struct {
-	platformId         string
-	platformName       string
-	relatedPlatformIds []string
+var (
+	UNKNOWN CloudProviderType = "UNKNOWN"
+	AWS     CloudProviderType = "AWS"
+	GCP     CloudProviderType = "GCP"
+	AZURE   CloudProviderType = "AZURE"
+)
+
+var detectors = map[CloudProviderType]detectorFunc{
+	AWS:   aws.Detect,
+	AZURE: azure.Detect,
+	GCP:   gcp.Detect,
 }
 
 // PlatformInfo contains platform information gathered from one of our cloud detectors.
@@ -41,6 +45,7 @@ type PlatformInfo struct {
 	Name               string
 	Kind               string
 	RelatedPlatformIDs []string
+	CloudProvider      CloudProviderType
 }
 
 // Detect tried to detect if we are running on a cloud asset, and if so, it returns
@@ -54,20 +59,21 @@ func Detect(conn shared.Connection, p *inventory.Platform) *PlatformInfo {
 	wg := sync.WaitGroup{}
 	wg.Add(len(detectors))
 
-	valChan := make(chan detectResult, len(detectors))
+	valChan := make(chan PlatformInfo, len(detectors))
 	for i := range detectors {
-		go func(f detectorFunc) {
+		go func(provider CloudProviderType, f detectorFunc) {
 			defer wg.Done()
 
-			v, name, related := f(conn, p, mgr)
-			if v != "" {
-				valChan <- detectResult{
-					platformName:       name,
-					platformId:         v,
-					relatedPlatformIds: related,
+			id, name, related := f(conn, p, mgr)
+			if id != "" {
+				valChan <- PlatformInfo{
+					ID:                 id,
+					Name:               name,
+					CloudProvider:      provider,
+					RelatedPlatformIDs: related,
 				}
 			}
-		}(detectors[i])
+		}(i, detectors[i])
 	}
 
 	wg.Wait()
@@ -75,11 +81,13 @@ func Detect(conn shared.Connection, p *inventory.Platform) *PlatformInfo {
 
 	platformIds := []string{}
 	relatedPlatformIds := []string{}
+	cloudProvider := UNKNOWN
 	var name string
 	for v := range valChan {
-		platformIds = append(platformIds, v.platformId)
-		name = v.platformName
-		relatedPlatformIds = append(relatedPlatformIds, v.relatedPlatformIds...)
+		platformIds = append(platformIds, v.ID)
+		name = v.Name
+		cloudProvider = v.CloudProvider
+		relatedPlatformIds = append(relatedPlatformIds, v.RelatedPlatformIDs...)
 	}
 
 	if len(platformIds) == 0 {
@@ -89,5 +97,11 @@ func Detect(conn shared.Connection, p *inventory.Platform) *PlatformInfo {
 		return nil
 	}
 
-	return &PlatformInfo{platformIds[0], name, inventory.AssetKindCloudVM, relatedPlatformIds}
+	return &PlatformInfo{
+		ID:                 platformIds[0],
+		Name:               name,
+		CloudProvider:      cloudProvider,
+		Kind:               inventory.AssetKindCloudVM,
+		RelatedPlatformIDs: relatedPlatformIds,
+	}
 }
