@@ -263,20 +263,26 @@ func ipCall(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, error)
 	}
 
 	arg := f.Args[0]
-	if arg.Type != string(types.String) {
-		return nil, 0, errors.New("called `ip` with incorrect argument type, expected string")
+	if arg.Type != string(types.String) && arg.Type != string(types.Int) && arg.Type != string(types.Dict) {
+		return nil, 0, errors.New("called `ip` with incorrect argument type, expected string or int")
 	}
 
 	res, dref, err := e.resolveValue(arg, ref)
 	if err != nil || dref != 0 || res == nil {
 		return res, dref, err
 	}
+
 	raw, ok := res.Value.(string)
-	if !ok {
-		return nil, 0, errors.New("called `ip` with unsupported type (expected string)")
+	if ok {
+		return IPData(raw), 0, nil
 	}
 
-	return IPData(raw), 0, nil
+	rawInt, ok := res.Value.(int64)
+	if ok {
+		return IPData(int2ip(rawInt)), 0, nil
+	}
+
+	return nil, 0, errors.New("called `ip` with unsupported type (expected string or int)")
 }
 
 func stringCall(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, error) {
