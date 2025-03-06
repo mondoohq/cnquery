@@ -7,6 +7,7 @@ import (
 	"errors"
 	"strconv"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/mqlc/parser"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/resources"
@@ -152,6 +153,9 @@ func compileResourceWhere(c *compiler, typ types.Type, ref uint64, id string, ca
 	refs, err := c.blockExpressions([]*parser.Expression{arg.Value}, types.Array(types.Type(resource.ListType)), ref, bindingName)
 	if err != nil {
 		return types.Nil, err
+	}
+	if refs.isStandalone {
+		log.Warn().Msg("Detected a standalone function in a WHERE clause! This is probably unintended. Be sure to filter the list.")
 	}
 	if refs.block == 0 {
 		return types.Nil, errors.New("called '" + id + "' clause without a function block")
