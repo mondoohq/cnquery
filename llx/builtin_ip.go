@@ -14,8 +14,8 @@ import (
 
 type IP struct {
 	net.IP
-	Version      int8
-	PrefixLength int
+	Version      uint8 // 4 and 6, 0 == unset
+	PrefixLength int   // -1 = unset
 }
 
 func ParseIP(s string) IP {
@@ -43,8 +43,8 @@ func ParseIP(s string) IP {
 	}
 }
 
-func ipVersionMask(ip net.IP, mask int) (int8, int) {
-	var version int8
+func ipVersionMask(ip net.IP, mask int) (uint8, int) {
+	var version uint8
 	if ip.To4() != nil {
 		version = 4
 		if mask == -1 {
@@ -276,7 +276,7 @@ func (i IP) Cmp(other IP) int {
 }
 
 func (i IP) CIDR() string {
-	return i.IP.String() + "/" + strconv.Itoa(i.PrefixLength)
+	return i.IP.String() + "/" + strconv.Itoa(int(i.PrefixLength))
 }
 
 func (i IP) Marshal() ([]byte, error) {
@@ -296,7 +296,7 @@ func UnmarshalIP(data []byte) (*IP, error) {
 		return nil, errors.New("incorrect storage of IP value, expected at least 3 bytes")
 	}
 	return &IP{
-		Version:      int8(data[0]),
+		Version:      uint8(data[0]),
 		PrefixLength: int(bytes2int(data[1:3])),
 		IP:           data[3:],
 	}, nil
