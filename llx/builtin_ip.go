@@ -87,8 +87,6 @@ func ParseIntIP[T int | int64](i T) IP {
 	}
 }
 
-var bitmasks = []byte{0x00, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, 0xff}
-
 func countMaskBits(b []byte) int {
 	var res int
 	for _, cur := range b {
@@ -121,9 +119,9 @@ func makeBits(bits int, on bool) []byte {
 	}
 	if bits > 0 {
 		if on {
-			res = append(res, bitmasks[bits])
+			res = append(res, ^(1<<(8-bits) - 1))
 		} else {
-			res = append(res, ^bitmasks[bits])
+			res = append(res, (1<<(8-bits) - 1))
 		}
 	}
 	return res
