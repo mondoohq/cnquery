@@ -452,6 +452,10 @@ func getPackageFromRegistryKeyItems(children []registry.RegistryKeyItem, platfor
 		return nil
 	}
 
+	if displayName == "" {
+		return nil
+	}
+
 	pkg := &Package{
 		Name:    displayName,
 		Version: displayVersion,
@@ -471,6 +475,7 @@ func getPackageFromRegistryKeyItems(children []registry.RegistryKeyItem, platfor
 		}
 	} else {
 		log.Debug().Msg("ignored package since information is missing")
+		return nil
 	}
 	return pkg
 }
