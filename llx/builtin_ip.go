@@ -60,7 +60,7 @@ func ipVersionMask(ip net.IP, mask int) (int8, int) {
 	return version, mask
 }
 
-func int2ip[T int | int64 | int32](i T) net.IP {
+func int2ip[T int | int64 | int32 | uint | uint64 | uint32](i T) net.IP {
 	cur := i
 
 	d := byte(cur & 0xff)
