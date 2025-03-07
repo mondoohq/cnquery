@@ -14,8 +14,8 @@ import (
 
 type IP struct {
 	net.IP
-	Version int8
-	Mask    int
+	Version      int8
+	PrefixLength int
 }
 
 func ParseIP(s string) IP {
@@ -37,9 +37,9 @@ func ParseIP(s string) IP {
 	ip := net.ParseIP(prefix)
 	version, mask := ipVersionMask(ip, explicitMask)
 	return IP{
-		IP:      ip,
-		Version: version,
-		Mask:    mask,
+		IP:           ip,
+		Version:      version,
+		PrefixLength: mask,
 	}
 }
 
@@ -81,9 +81,9 @@ func ParseIntIP[T int | int64](i T) IP {
 	ip := int2ip(i)
 	version, mask := ipVersionMask(ip, -1)
 	return IP{
-		IP:      ip,
-		Version: version,
-		Mask:    mask,
+		IP:           ip,
+		Version:      version,
+		PrefixLength: mask,
 	}
 }
 
@@ -175,21 +175,21 @@ func mask2string(b []byte) string {
 
 func (i IP) Subnet() string {
 	if i.Version == 4 {
-		b := createMask(i.Mask, 0, 4)
+		b := createMask(i.PrefixLength, 0, 4)
 		return mask2string(b)
 	}
 
 	// For IPv6 this is a bit tricky:
 	// https://www.rfc-editor.org/rfc/rfc3587.txt
 	// If the mask (i.e. prefix) is too large there is no subnet
-	if i.Mask >= 64 {
+	if i.PrefixLength >= 64 {
 		return ""
 	}
 
 	// for everything else we get the subnet from the remainder of
 	// the first 64 bits that are not the prefix
-	subnetBits := 64 - i.Mask
-	b := createMask(subnetBits, i.Mask, 16)
+	subnetBits := 64 - i.PrefixLength
+	b := createMask(subnetBits, i.PrefixLength, 16)
 	if len(b) == 0 {
 		return ""
 	}
@@ -209,9 +209,9 @@ func (i IP) Subnet() string {
 func (i IP) prefix() net.IP {
 	var b []byte
 	if i.Version == 4 {
-		b = createMask(i.Mask, 0, 4)
+		b = createMask(i.PrefixLength, 0, 4)
 	} else if i.Version == 6 {
-		b = createMask(i.Mask, 0, 16)
+		b = createMask(i.PrefixLength, 0, 16)
 	}
 	if len(b) == 0 {
 		return []byte{}
@@ -234,12 +234,12 @@ func flipMask(b []byte) []byte {
 func (i IP) Suffix() string {
 	var b []byte
 	if i.Version == 4 {
-		b = createMask(i.Mask, 0, 4)
+		b = createMask(i.PrefixLength, 0, 4)
 	} else if i.Version == 6 {
-		if i.Mask < 64 {
+		if i.PrefixLength < 64 {
 			b = createMask(65, 0, 16)
 		} else {
-			b = createMask(i.Mask, 0, 16)
+			b = createMask(i.PrefixLength, 0, 16)
 		}
 	}
 	if len(b) == 0 {
@@ -278,11 +278,11 @@ func (i IP) Cmp(other IP) int {
 }
 
 func (i IP) CIDR() string {
-	return i.IP.String() + "/" + strconv.Itoa(i.Mask)
+	return i.IP.String() + "/" + strconv.Itoa(i.PrefixLength)
 }
 
 func (i IP) Marshal() ([]byte, error) {
-	maskb := int2bytes(int64(i.Mask))
+	maskb := int2bytes(int64(i.PrefixLength))
 	if len(maskb) == 1 {
 		maskb = []byte{maskb[0], 0}
 	} else if len(maskb) > 2 {
@@ -298,21 +298,21 @@ func UnmarshalIP(data []byte) (*IP, error) {
 		return nil, errors.New("incorrect storage of IP value, expected at least 3 bytes")
 	}
 	return &IP{
-		Version: int8(data[0]),
-		Mask:    int(bytes2int(data[1:3])),
-		IP:      data[3:],
+		Version:      int8(data[0]),
+		PrefixLength: int(bytes2int(data[1:3])),
+		IP:           data[3:],
 	}, nil
 }
 
 func ipCmpIP(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return nonNilDataOpT(e, bind, chunk, ref, types.Bool, func(left, right IP) *RawData {
-		return BoolData(left.Equal(right.IP) && left.Mask == right.Mask)
+		return BoolData(left.Equal(right.IP) && left.PrefixLength == right.PrefixLength)
 	})
 }
 
 func ipNotIP(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return nonNilDataOpT(e, bind, chunk, ref, types.Bool, func(left, right IP) *RawData {
-		return BoolData(!left.Equal(right.IP) || left.Mask != right.Mask)
+		return BoolData(!left.Equal(right.IP) || left.PrefixLength != right.PrefixLength)
 	})
 }
 
@@ -357,7 +357,7 @@ func ipPrefixLength(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 	if !ok {
 		return nil, 0, errors.New("incorrect internal data for IP type")
 	}
-	return IntData(v.Mask), 0, nil
+	return IntData(v.PrefixLength), 0, nil
 }
 
 func ipSuffix(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
