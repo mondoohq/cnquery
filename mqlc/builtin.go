@@ -101,6 +101,7 @@ func init() {
 			"inRange": {typ: intType, compile: compileVersionInRange},
 		},
 		types.IP: {
+			"address":       {typ: stringType, signature: FunctionSignature{}},
 			"cidr":          {typ: stringType, signature: FunctionSignature{}},
 			"inRange":       {typ: intType, compile: compileIpInRange},
 			"isUnspecified": {typ: boolType, signature: FunctionSignature{}},

@@ -275,6 +275,10 @@ func (i IP) Cmp(other IP) int {
 	return 0
 }
 
+func (i IP) Address() string {
+	return i.IP.String()
+}
+
 func (i IP) CIDR() string {
 	return i.IP.String() + "/" + strconv.Itoa(int(i.PrefixLength))
 }
@@ -378,6 +382,17 @@ func ipUnspecified(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 		return nil, 0, errors.New("incorrect internal data for IP type")
 	}
 	return BoolData(v.IP.IsUnspecified()), 0, nil
+}
+
+func ipAddress(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.String, Error: bind.Error}, 0, nil
+	}
+	v, ok := bind.Value.(IP)
+	if !ok {
+		return nil, 0, errors.New("incorrect internal data for IP type")
+	}
+	return StringData(v.Address()), 0, nil
 }
 
 func ipCIDR(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {

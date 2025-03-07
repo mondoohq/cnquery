@@ -1056,6 +1056,15 @@ func TestIP(t *testing.T) {
 		})
 	})
 
+	t.Run("ip.address", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "ip('1.2.3.4').address", Expectation: "1.2.3.4"},
+			{Code: "ip('1.2.3.4/24').address", Expectation: "1.2.3.4"},
+			{Code: "ip('192.168.0.0').address", Expectation: "192.168.0.0"},
+			{Code: "ip('2001:db8:3c4d:0015:0000:0000:1a2f:1a2b').address", Expectation: "2001:db8:3c4d:15::1a2f:1a2b"},
+		})
+	})
+
 	t.Run("ip.cidr", func(t *testing.T) {
 		x.TestSimple(t, []testutils.SimpleTest{
 			{Code: "ip('1.2.3.4').cidr", Expectation: "1.2.3.4/8"},

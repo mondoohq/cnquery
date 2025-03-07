@@ -596,6 +596,7 @@ func init() {
 			string("!=" + types.Empty): {f: stringNotEmptyV2, Label: "!="},
 			string("==" + types.IP):    {f: ipCmpIP, Label: "=="},
 			string("!=" + types.IP):    {f: ipNotIP, Label: "!="},
+			"address":                  {f: ipAddress},
 			"cidr":                     {f: ipCIDR},
 			"inRange":                  {f: ipInRange},
 			"isUnspecified":            {f: ipUnspecified},
