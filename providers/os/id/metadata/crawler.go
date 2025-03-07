@@ -37,7 +37,7 @@ func getMetadataRecursively(r recursive, path string) (any, error) {
 		return jsonData, nil
 	}
 
-	// Handle specific paths that return multiline strings (e.g., "managed-ssh-keys/signer-cert")
+	// Handle specific paths that return multiline strings (e.g., "meta-data/managed-ssh-keys/signer-cert")
 	if isMultilineString(path) {
 		return data, nil // Preserve as a raw string
 	}
@@ -87,7 +87,7 @@ func isJSON(data string) bool {
 // path is not a regex, it will be considered an exact match.
 var multilineStringFields = []string{
 	// AWS
-	"managed-ssh-keys/signer-cert",
+	"meta-data/managed-ssh-keys/signer-cert",
 	// GCP
 	"instance/service-accounts/*/scopes",
 	"instance/attributes/ssh-keys",

@@ -19,7 +19,7 @@ func TestIsJSON(t *testing.T) {
 }
 
 func TestIsMultilineString(t *testing.T) {
-	assert.True(t, isMultilineString("managed-ssh-keys/signer-cert"))
+	assert.True(t, isMultilineString("meta-data/managed-ssh-keys/signer-cert"))
 	assert.True(t, isMultilineString("instance/service-accounts/default/scopes"))
 	assert.False(t, isMultilineString("some/other/path"))
 	assert.False(t, isMultilineString("other/path"))
