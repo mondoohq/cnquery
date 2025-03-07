@@ -43,7 +43,7 @@ func (r *RawData) MarshalJSON() ([]byte, error) {
 		ut := tv.Unix()
 		return json.Marshal(RawData{Type: r.Type, Value: ut})
 	case types.IP:
-		ip := r.Value.(IP)
+		ip := r.Value.(RawIP)
 		data, err := ip.Marshal()
 		if err != nil {
 			return nil, multierr.Wrap(err, "failed to marshal IP address "+ip.CIDR())
@@ -202,7 +202,7 @@ func rawDataString(typ types.Type, value interface{}) string {
 	case types.Version:
 		return value.(string)
 	case types.IP:
-		return value.(IP).CIDR()
+		return value.(RawIP).CIDR()
 	default:
 		return UNKNOWN_VALUE + " (typ:" + typ.Label() + ")"
 	}
@@ -313,7 +313,7 @@ func isTruthy(data interface{}, typ types.Type) (bool, bool) {
 		return data.(string) != "", true
 
 	case types.IP:
-		d := data.(IP)
+		d := data.(RawIP)
 		return len(d.IP) != 0, true
 
 	case types.ArrayLike:
@@ -630,7 +630,7 @@ func VersionData(version string) *RawData {
 }
 
 // IPData creates a rawdata struct from a raw ip address
-func IPData(ip IP) *RawData {
+func IPData(ip RawIP) *RawData {
 	return &RawData{
 		Type:  types.IP,
 		Value: ip,

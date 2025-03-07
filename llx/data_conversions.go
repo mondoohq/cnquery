@@ -270,7 +270,7 @@ func version2result(value interface{}, typ types.Type) (*Primitive, error) {
 }
 
 func ip2result(value any, typ types.Type) (*Primitive, error) {
-	m, ok := value.(IP)
+	m, ok := value.(RawIP)
 	if !ok {
 		return nil, errInvalidConversion(value, typ)
 	}
