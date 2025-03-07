@@ -452,8 +452,10 @@ func getPackageFromRegistryKeyItems(children []registry.RegistryKeyItem, platfor
 		return nil
 	}
 
-	if displayName == "" {
+	if displayName == "" || displayVersion == "" {
+		log.Debug().Msg("ignored package since information is missing")
 		return nil
+
 	}
 
 	pkg := &Package{
@@ -466,17 +468,13 @@ func getPackageFromRegistryKeyItems(children []registry.RegistryKeyItem, platfor
 		).String(),
 	}
 
-	if displayName != "" && displayVersion != "" {
-		cpeWfns, err := cpe.NewPackage2Cpe(publisher, displayName, displayVersion, "", "")
-		if err != nil {
-			log.Debug().Err(err).Str("name", displayName).Str("version", displayVersion).Msg("could not create cpe for windows app package")
-		} else {
-			pkg.CPEs = cpeWfns
-		}
+	cpeWfns, err := cpe.NewPackage2Cpe(publisher, displayName, displayVersion, "", "")
+	if err != nil {
+		log.Debug().Err(err).Str("name", displayName).Str("version", displayVersion).Msg("could not create cpe for windows app package")
 	} else {
-		log.Debug().Msg("ignored package since information is missing")
-		return nil
+		pkg.CPEs = cpeWfns
 	}
+
 	return pkg
 }
 
