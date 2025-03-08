@@ -1056,6 +1056,24 @@ func TestIP(t *testing.T) {
 		})
 	})
 
+	t.Run("ip.address", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "ip('1.2.3.4').address", Expectation: "1.2.3.4"},
+			{Code: "ip('1.2.3.4/24').address", Expectation: "1.2.3.4"},
+			{Code: "ip('192.168.0.0').address", Expectation: "192.168.0.0"},
+			{Code: "ip('2001:db8:3c4d:0015:0000:0000:1a2f:1a2b').address", Expectation: "2001:db8:3c4d:15::1a2f:1a2b"},
+		})
+	})
+
+	t.Run("ip.cidr", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "ip('1.2.3.4').cidr", Expectation: "1.2.3.4/8"},
+			{Code: "ip('1.2.3.4/24').cidr", Expectation: "1.2.3.4/24"},
+			{Code: "ip('192.168.0.0').cidr", Expectation: "192.168.0.0/24"},
+			{Code: "ip('2001:db8:3c4d:0015:0000:0000:1a2f:1a2b').cidr", Expectation: "2001:db8:3c4d:15::1a2f:1a2b/64"},
+		})
+	})
+
 	t.Run("ipv4 mask+prefix", func(t *testing.T) {
 		x.TestSimple(t, []testutils.SimpleTest{
 			{Code: "ip('1.2.3.4/32').prefix", Expectation: "1.2.3.4"},
@@ -1152,9 +1170,11 @@ func TestIP(t *testing.T) {
 			{Code: "ip('192.2.3.4').inRange('192.2.3.0')", Expectation: true},
 			{Code: "ip('192.2.4.4').inRange('192.2.3.0')", Expectation: false},
 			{Code: "ip('192.2.3.4').inRange('192.2.3.0/24')", Expectation: true},
+			{Code: "ip('192.2.3.4').inRange('192.2.3.128/30')", Expectation: false},
 			{Code: "ip('192.2.3.4').inRange(ip('192.2.3.0/24'))", Expectation: true},
 			{Code: "ip('192.2.3.4').inRange('192.2.3.255/24')", Expectation: true},
 			{Code: "ip('192.2.3.4').inRange('192.2.3.0/16')", Expectation: false},
+			{Code: "ip('10.0.0.5').inRange(167772160)", Expectation: true},
 		})
 	})
 
@@ -1164,6 +1184,8 @@ func TestIP(t *testing.T) {
 			{Code: "ip('192.2.3.4').inRange(ip('192.2.3.3'), ip('192.2.3.5'))", Expectation: true},
 			{Code: "ip('192.2.3.4').inRange('192.2.3.4', '192.2.3.4')", Expectation: true},
 			{Code: "ip('192.2.3.4').inRange('192.2.3.5', '192.2.3.255')", Expectation: false},
+			{Code: "ip('192.2.3.4').inRange(1, 3238002688)", Expectation: true},
+			{Code: "ip('192.2.3.4').inRange(3238001688, 3238002688)", Expectation: false},
 		})
 	})
 

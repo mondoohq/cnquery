@@ -5,6 +5,7 @@ package llx
 
 import (
 	"fmt"
+	"net"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -41,7 +42,7 @@ func TestCreateMask(t *testing.T) {
 }
 
 func TestIntIP(t *testing.T) {
-	assert.Equal(t, "172.0.0.1", int2ip(2885681153))
-	assert.Equal(t, "0.0.0.0", int2ip(0))
-	assert.Equal(t, "255.255.255.255", int2ip(1<<33-1))
+	assert.Equal(t, net.ParseIP("172.0.0.1"), int2ip(2885681153))
+	assert.Equal(t, net.ParseIP("0.0.0.0"), int2ip(0))
+	assert.Equal(t, net.ParseIP("255.255.255.255"), int2ip(1<<33-1))
 }

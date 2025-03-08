@@ -172,6 +172,35 @@ func nonNilDataOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, t
 	return f(bind.Value, v.Value), 0, nil
 }
 
+func nonNilDataOpT[T any](e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, typ types.Type, f func(T, T) *RawData) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return &RawData{Type: typ, Error: errors.New("left side of operation is null")}, 0, nil
+	}
+
+	v, dref, err := e.resolveValue(chunk.Function.Args[0], ref)
+	if err != nil {
+		return nil, 0, err
+	}
+	if dref != 0 {
+		return nil, dref, nil
+	}
+
+	if v == nil || v.Value == nil {
+		return &RawData{Type: typ, Error: errors.New("right side of operation is null")}, 0, nil
+	}
+
+	l, ok := bind.Value.(T)
+	if !ok {
+		return nil, 0, errors.New("incorrect internal data type for left operand, expected " + typ.Label())
+	}
+	r, ok := v.Value.(T)
+	if !ok {
+		return nil, 0, errors.New("incorrect internal data type for right operand, expected " + typ.Label())
+	}
+
+	return f(l, r), 0, nil
+}
+
 // for equality and inequality checks that are pre-determined
 // we need to catch the case where both values end up nil
 

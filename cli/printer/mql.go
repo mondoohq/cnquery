@@ -787,7 +787,7 @@ func (print *Printer) Data(typ types.Type, data interface{}, codeID string, bund
 		return print.Secondary(data.(string))
 
 	case types.IP:
-		return print.Secondary(data.(string))
+		return print.Secondary(data.(llx.RawIP).String())
 
 	case types.ArrayLike:
 		if data == nil {

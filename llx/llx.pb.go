@@ -1240,6 +1240,66 @@ func (x *Assessment) GetResults() []*AssessmentItem {
 	return nil
 }
 
+type IP struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Address       []byte                 `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	HasPrefix     bool                   `protobuf:"varint,2,opt,name=has_prefix,json=hasPrefix,proto3" json:"has_prefix,omitempty"`
+	PrefixLength  int32                  `protobuf:"varint,3,opt,name=prefix_length,json=prefixLength,proto3" json:"prefix_length,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *IP) Reset() {
+	*x = IP{}
+	mi := &file_llx_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *IP) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*IP) ProtoMessage() {}
+
+func (x *IP) ProtoReflect() protoreflect.Message {
+	mi := &file_llx_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use IP.ProtoReflect.Descriptor instead.
+func (*IP) Descriptor() ([]byte, []int) {
+	return file_llx_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *IP) GetAddress() []byte {
+	if x != nil {
+		return x.Address
+	}
+	return nil
+}
+
+func (x *IP) GetHasPrefix() bool {
+	if x != nil {
+		return x.HasPrefix
+	}
+	return false
+}
+
+func (x *IP) GetPrefixLength() int32 {
+	if x != nil {
+		return x.PrefixLength
+	}
+	return 0
+}
+
 var File_llx_proto protoreflect.FileDescriptor
 
 var file_llx_proto_rawDesc = string([]byte{
@@ -1485,9 +1545,15 @@ var file_llx_proto_rawDesc = string([]byte{
 	0x73, 0x75, 0x6c, 0x74, 0x73, 0x18, 0x04, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1b, 0x2e, 0x63, 0x6e,
 	0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x6c, 0x6c, 0x78, 0x2e, 0x41, 0x73, 0x73, 0x65, 0x73, 0x73,
 	0x6d, 0x65, 0x6e, 0x74, 0x49, 0x74, 0x65, 0x6d, 0x52, 0x07, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74,
-	0x73, 0x42, 0x1f, 0x5a, 0x1d, 0x67, 0x6f, 0x2e, 0x6d, 0x6f, 0x6e, 0x64, 0x6f, 0x6f, 0x2e, 0x63,
-	0x6f, 0x6d, 0x2f, 0x63, 0x6e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2f, 0x76, 0x31, 0x31, 0x2f, 0x6c,
-	0x6c, 0x78, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x73, 0x22, 0x62, 0x0a, 0x02, 0x49, 0x50, 0x12, 0x18, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65,
+	0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x12, 0x1d, 0x0a, 0x0a, 0x68, 0x61, 0x73, 0x5f, 0x70, 0x72, 0x65, 0x66, 0x69, 0x78, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x08, 0x52, 0x09, 0x68, 0x61, 0x73, 0x50, 0x72, 0x65, 0x66, 0x69, 0x78,
+	0x12, 0x23, 0x0a, 0x0d, 0x70, 0x72, 0x65, 0x66, 0x69, 0x78, 0x5f, 0x6c, 0x65, 0x6e, 0x67, 0x74,
+	0x68, 0x18, 0x03, 0x20, 0x01, 0x28, 0x05, 0x52, 0x0c, 0x70, 0x72, 0x65, 0x66, 0x69, 0x78, 0x4c,
+	0x65, 0x6e, 0x67, 0x74, 0x68, 0x42, 0x1f, 0x5a, 0x1d, 0x67, 0x6f, 0x2e, 0x6d, 0x6f, 0x6e, 0x64,
+	0x6f, 0x6f, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2f, 0x76,
+	0x31, 0x31, 0x2f, 0x6c, 0x6c, 0x78, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 })
 
 var (
@@ -1503,7 +1569,7 @@ func file_llx_proto_rawDescGZIP() []byte {
 }
 
 var file_llx_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_llx_proto_msgTypes = make([]protoimpl.MessageInfo, 26)
+var file_llx_proto_msgTypes = make([]protoimpl.MessageInfo, 27)
 var file_llx_proto_goTypes = []any{
 	(Chunk_Call)(0),           // 0: cnquery.llx.Chunk.Call
 	(*Primitive)(nil),         // 1: cnquery.llx.Primitive
@@ -1521,43 +1587,44 @@ var file_llx_proto_goTypes = []any{
 	(*Rating)(nil),            // 13: cnquery.llx.Rating
 	(*AssessmentItem)(nil),    // 14: cnquery.llx.AssessmentItem
 	(*Assessment)(nil),        // 15: cnquery.llx.Assessment
-	nil,                       // 16: cnquery.llx.Primitive.MapEntry
-	nil,                       // 17: cnquery.llx.CodeV1.ChecksumsEntry
-	nil,                       // 18: cnquery.llx.CodeV1.AssertionsEntry
-	nil,                       // 19: cnquery.llx.CodeV2.ChecksumsEntry
-	nil,                       // 20: cnquery.llx.CodeV2.AssertionsEntry
-	nil,                       // 21: cnquery.llx.Labels.LabelsEntry
-	nil,                       // 22: cnquery.llx.CodeBundle.PropsEntry
-	nil,                       // 23: cnquery.llx.CodeBundle.AssertionsEntry
-	nil,                       // 24: cnquery.llx.CodeBundle.AutoExpandEntry
-	nil,                       // 25: cnquery.llx.CodeBundle.VarsEntry
-	nil,                       // 26: cnquery.llx.ResourceRecording.FieldsEntry
+	(*IP)(nil),                // 16: cnquery.llx.IP
+	nil,                       // 17: cnquery.llx.Primitive.MapEntry
+	nil,                       // 18: cnquery.llx.CodeV1.ChecksumsEntry
+	nil,                       // 19: cnquery.llx.CodeV1.AssertionsEntry
+	nil,                       // 20: cnquery.llx.CodeV2.ChecksumsEntry
+	nil,                       // 21: cnquery.llx.CodeV2.AssertionsEntry
+	nil,                       // 22: cnquery.llx.Labels.LabelsEntry
+	nil,                       // 23: cnquery.llx.CodeBundle.PropsEntry
+	nil,                       // 24: cnquery.llx.CodeBundle.AssertionsEntry
+	nil,                       // 25: cnquery.llx.CodeBundle.AutoExpandEntry
+	nil,                       // 26: cnquery.llx.CodeBundle.VarsEntry
+	nil,                       // 27: cnquery.llx.ResourceRecording.FieldsEntry
 }
 var file_llx_proto_depIdxs = []int32{
 	1,  // 0: cnquery.llx.Primitive.array:type_name -> cnquery.llx.Primitive
-	16, // 1: cnquery.llx.Primitive.map:type_name -> cnquery.llx.Primitive.MapEntry
+	17, // 1: cnquery.llx.Primitive.map:type_name -> cnquery.llx.Primitive.MapEntry
 	1,  // 2: cnquery.llx.Function.args:type_name -> cnquery.llx.Primitive
 	0,  // 3: cnquery.llx.Chunk.call:type_name -> cnquery.llx.Chunk.Call
 	1,  // 4: cnquery.llx.Chunk.primitive:type_name -> cnquery.llx.Primitive
 	2,  // 5: cnquery.llx.Chunk.function:type_name -> cnquery.llx.Function
 	3,  // 6: cnquery.llx.CodeV1.code:type_name -> cnquery.llx.Chunk
-	17, // 7: cnquery.llx.CodeV1.checksums:type_name -> cnquery.llx.CodeV1.ChecksumsEntry
+	18, // 7: cnquery.llx.CodeV1.checksums:type_name -> cnquery.llx.CodeV1.ChecksumsEntry
 	5,  // 8: cnquery.llx.CodeV1.functions:type_name -> cnquery.llx.CodeV1
-	18, // 9: cnquery.llx.CodeV1.assertions:type_name -> cnquery.llx.CodeV1.AssertionsEntry
+	19, // 9: cnquery.llx.CodeV1.assertions:type_name -> cnquery.llx.CodeV1.AssertionsEntry
 	3,  // 10: cnquery.llx.Block.chunks:type_name -> cnquery.llx.Chunk
 	6,  // 11: cnquery.llx.CodeV2.blocks:type_name -> cnquery.llx.Block
-	19, // 12: cnquery.llx.CodeV2.checksums:type_name -> cnquery.llx.CodeV2.ChecksumsEntry
-	20, // 13: cnquery.llx.CodeV2.assertions:type_name -> cnquery.llx.CodeV2.AssertionsEntry
-	21, // 14: cnquery.llx.Labels.labels:type_name -> cnquery.llx.Labels.LabelsEntry
+	20, // 12: cnquery.llx.CodeV2.checksums:type_name -> cnquery.llx.CodeV2.ChecksumsEntry
+	21, // 13: cnquery.llx.CodeV2.assertions:type_name -> cnquery.llx.CodeV2.AssertionsEntry
+	22, // 14: cnquery.llx.Labels.labels:type_name -> cnquery.llx.Labels.LabelsEntry
 	7,  // 15: cnquery.llx.CodeBundle.code_v2:type_name -> cnquery.llx.CodeV2
 	9,  // 16: cnquery.llx.CodeBundle.suggestions:type_name -> cnquery.llx.Documentation
 	8,  // 17: cnquery.llx.CodeBundle.labels:type_name -> cnquery.llx.Labels
-	22, // 18: cnquery.llx.CodeBundle.props:type_name -> cnquery.llx.CodeBundle.PropsEntry
-	23, // 19: cnquery.llx.CodeBundle.assertions:type_name -> cnquery.llx.CodeBundle.AssertionsEntry
-	24, // 20: cnquery.llx.CodeBundle.auto_expand:type_name -> cnquery.llx.CodeBundle.AutoExpandEntry
-	25, // 21: cnquery.llx.CodeBundle.vars:type_name -> cnquery.llx.CodeBundle.VarsEntry
+	23, // 18: cnquery.llx.CodeBundle.props:type_name -> cnquery.llx.CodeBundle.PropsEntry
+	24, // 19: cnquery.llx.CodeBundle.assertions:type_name -> cnquery.llx.CodeBundle.AssertionsEntry
+	25, // 20: cnquery.llx.CodeBundle.auto_expand:type_name -> cnquery.llx.CodeBundle.AutoExpandEntry
+	26, // 21: cnquery.llx.CodeBundle.vars:type_name -> cnquery.llx.CodeBundle.VarsEntry
 	1,  // 22: cnquery.llx.Result.data:type_name -> cnquery.llx.Primitive
-	26, // 23: cnquery.llx.ResourceRecording.fields:type_name -> cnquery.llx.ResourceRecording.FieldsEntry
+	27, // 23: cnquery.llx.ResourceRecording.fields:type_name -> cnquery.llx.ResourceRecording.FieldsEntry
 	1,  // 24: cnquery.llx.AssessmentItem.expected:type_name -> cnquery.llx.Primitive
 	1,  // 25: cnquery.llx.AssessmentItem.actual:type_name -> cnquery.llx.Primitive
 	1,  // 26: cnquery.llx.AssessmentItem.data:type_name -> cnquery.llx.Primitive
@@ -1585,7 +1652,7 @@ func file_llx_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_llx_proto_rawDesc), len(file_llx_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   26,
+			NumMessages:   27,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

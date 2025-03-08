@@ -271,14 +271,14 @@ func compileIpInRange(c *compiler, _ types.Type, ref uint64, id string, call *pa
 		return types.Nil, errors.New("function " + id + " needs one or two arguments")
 	}
 
-	min, err := callArgTypeIs(c, call, id, "min", 0, types.String, types.IP, types.Dict)
+	min, err := callArgTypeIs(c, call, id, "min", 0, types.String, types.Int, types.IP, types.Dict)
 	if err != nil {
 		return types.Nil, err
 	}
 	args := []*llx.Primitive{min}
 
 	if len(call.Function) == 2 {
-		max, err := callArgTypeIs(c, call, id, "max", 1, types.String, types.IP, types.Dict)
+		max, err := callArgTypeIs(c, call, id, "max", 1, types.String, types.Int, types.IP, types.Dict)
 		if err != nil {
 			return types.Nil, err
 		}
