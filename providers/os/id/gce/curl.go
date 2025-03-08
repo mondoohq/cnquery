@@ -4,14 +4,11 @@
 package gce
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
 	"strings"
 
-	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 )
 
@@ -27,21 +24,12 @@ func (m *CommandInstanceMetadata) curl(metadataPath string) (string, error) {
 		return "", errors.New("your platform is not supported by aws metadata identifier resource")
 	}
 
-	log.Debug().Str("command_string", commandString).Msg("running os command")
 	cmd, err := m.connection.RunCommand(commandString)
 	if err != nil {
 		return "", err
 	}
-	log.Debug().Str("hash", hashCmd(commandString)).Msg("executed")
 	data, err := io.ReadAll(cmd.Stdout)
 	return strings.TrimSpace(string(data)), err
-}
-
-// Delete me
-func hashCmd(message string) string {
-	hash := sha256.New()
-	hash.Write([]byte(message))
-	return hex.EncodeToString(hash.Sum(nil))
 }
 
 func unixMetadataCmdString(metadataPath string) string {

@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
@@ -92,7 +93,7 @@ func (g *gcp) Instance() (*InstanceMetadata, error) {
 		names, err := net.LookupAddr(address.IP)
 		if err == nil && len(names) != 0 {
 			log.Debug().Str("name", names[0]).Msg("os.cloud.gcp> public hostname found")
-			instanceMd.PublicHostname = names[0]
+			instanceMd.PublicHostname = strings.TrimSuffix(names[0], ".")
 		}
 	}
 
