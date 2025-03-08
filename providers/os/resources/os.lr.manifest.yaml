@@ -88,7 +88,7 @@ resources:
       instance: {}
       provider: {}
     min_mondoo_version: 9.0.0
-  cloud.instance:
+  cloudInstance:
     fields:
       metadata: {}
       privateHostname: {}

@@ -13,61 +13,39 @@ import (
 	"go.mondoo.com/cnquery/v11/types"
 )
 
-func initCloud(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	log.Debug().Msg("os.cloud> init")
-	conn := runtime.Connection.(shared.Connection)
+func (c *mqlCloud) provider() (string, error) {
+	conn := c.MqlRuntime.Connection.(shared.Connection)
 	osCloud, err := cloud.Resolve(conn)
 	if err != nil {
-		return args, nil, err
+		return "", err
 	}
-	raw, err := CreateResource(runtime, "cloud", map[string]*llx.RawData{
-		"provider": llx.StringData(string(osCloud.Provider())),
-	})
-	if err != nil {
-		return args, nil, err
-	}
-
-	return args, raw.(*mqlCloud), nil
-}
-
-func (c *mqlCloud) id() (string, error) {
-	return c.GetProvider().Data, nil
+	return string(osCloud.Provider()), nil
 }
 
 func (c *mqlCloud) instance() (*mqlCloudInstance, error) {
 	log.Debug().Msg("os.cloud> instance")
-	obj, err := NewResource(c.MqlRuntime, "cloud.instance", nil)
+	raw, err := NewResource(c.MqlRuntime, "cloudInstance", nil)
 	if err != nil {
 		return nil, err
 	}
-	return obj.(*mqlCloudInstance), nil
+
+	conn := c.MqlRuntime.Connection.(shared.Connection)
+	osCloud, err := cloud.Resolve(conn)
+	if err != nil {
+		return nil, err
+	}
+	instanceMd, err := osCloud.Instance()
+	if err != nil {
+		return nil, err
+	}
+
+	cloudInstance := raw.(*mqlCloudInstance)
+	cloudInstance.instanceMd = instanceMd
+	return cloudInstance, nil
 }
 
 type mqlCloudInstanceInternal struct {
 	instanceMd *cloud.InstanceMetadata
-}
-
-func initCloudInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	log.Debug().Msg("os.cloud.instance> init")
-	conn := runtime.Connection.(shared.Connection)
-	osCloud, err := cloud.Resolve(conn)
-	if err != nil {
-		return args, nil, err
-	}
-	instanceMd, err := osCloud.Instance()
-	if err != nil {
-		return args, nil, err
-	}
-
-	raw, err := CreateResource(runtime, "cloud.instance", map[string]*llx.RawData{
-		"__id": llx.StringData(instanceMd.MqlID()),
-	})
-	if err != nil {
-		return args, nil, err
-	}
-	cloudInstance := raw.(*mqlCloudInstance)
-	cloudInstance.instanceMd = instanceMd
-	return args, cloudInstance, nil
 }
 
 func (i *mqlCloudInstance) id() (string, error) {

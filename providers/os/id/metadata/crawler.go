@@ -87,7 +87,7 @@ func isJSON(data string) bool {
 // path is not a regex, it will be considered an exact match.
 var multilineStringFields = []string{
 	// AWS
-	"meta-data/managed-ssh-keys/signer-cert",
+	"**/signer-cert",
 	// GCP
 	"instance/service-accounts/*/scopes",
 	"instance/attributes/ssh-keys",
@@ -131,5 +131,5 @@ func patternToRegex(pattern string) string {
 	pattern = strings.ReplaceAll(pattern, "*", "[^/]+")
 
 	// Ensure full match
-	return "^" + pattern + "$"
+	return pattern + "$"
 }
