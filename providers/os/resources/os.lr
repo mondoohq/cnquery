@@ -1693,13 +1693,13 @@ windows.security.health {
 // Details about an asset in the cloud
 cloud @defaults("provider") {
   // Cloud provider (e.g. aws, azure, gcp)
-  provider string
+  provider() string
   // Cloud instance metadata
-  instance() cloud.instance
+  instance() cloudInstance
 }
 
-// Cloud asset metadata
-private cloud.instance @defaults("publicHostname privateHostname") {
+// Cloud instance metadata
+private cloudInstance @defaults("publicHostname privateHostname") {
   // Cloud instance public hostname
   publicHostname() string
   // List of public IPv4 addresses

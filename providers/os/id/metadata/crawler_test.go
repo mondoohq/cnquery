@@ -68,12 +68,12 @@ func (m *mockRecursiveMap) GetMetadataValue(path string) (string, error) {
 
 func TestCrawl_Map(t *testing.T) {
 	mockData := map[string]string{
-		"root/":                        "sub1\nsub2\n",
-		"root/sub1":                    "value1",
-		"root/sub2":                    "{\"key\": \"value2\"}",
-		"json":                         "{\"field\": 42}",
-		"managed-ssh-keys/signer-cert": "line1\nline2\n",
-		"not-json":                     "random text",
+		"root/":                                  "sub1\nsub2\n",
+		"root/sub1":                              "value1",
+		"root/sub2":                              "{\"key\": \"value2\"}",
+		"json":                                   "{\"field\": 42}",
+		"meta-data/managed-ssh-keys/signer-cert": "line1\nline2\n",
+		"not-json":                               "random text",
 	}
 	mock := &mockRecursiveMap{data: mockData}
 
@@ -88,7 +88,7 @@ func TestCrawl_Map(t *testing.T) {
 		{"Valid JSON field", "json", map[string]any{"field": float64(42)}, false},
 		{"Invalid path", "invalid", nil, true},
 		{"Non-JSON string", "not-json", "random text", false},
-		{"Multiline string", "managed-ssh-keys/signer-cert", "line1\nline2\n", false},
+		{"Multiline string", "meta-data/managed-ssh-keys/signer-cert", "line1\nline2\n", false},
 		{"Nested structure", "root/", map[string]any{"sub1": "value1", "sub2": map[string]any{"key": "value2"}}, false},
 	}
 
