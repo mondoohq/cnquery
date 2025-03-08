@@ -1689,3 +1689,39 @@ windows.security.health {
   // Security Center service information
   securityCenterService dict
 }
+
+// Details about an asset in the cloud
+cloud @defaults("provider") {
+  // Cloud provider (e.g. aws, azure, gcp)
+  provider() string
+  // Cloud instance metadata
+  instance() cloudInstance
+}
+
+// Cloud instance metadata
+private cloudInstance @defaults("publicHostname privateHostname") {
+  // Cloud instance public hostname
+  publicHostname() string
+  // List of public IPv4 addresses
+  publicIpv4() []ipv4Address
+  // Cloud instance private hostname
+  privateHostname() string
+  // List of private IPv4 addresses
+  privateIpv4() []ipv4Address
+  // Raw access to the cloud instance metadata
+  metadata() dict
+}
+
+// IPv4 address with additional networking details
+ipv4Address @defaults("ip") {
+  // Unique number that identifies a device on a network (e.g. 172.31.24.71)
+  ip ip
+  // Logical subdivision of a network (e.g. 172.31.16.0/20)
+  subnet ip
+  // Classless Inter-Domain Routing notation (e.g. 172.31.24.71/20)
+  cidr ip
+  // Network address used to transmit to all devices connected to a network
+  broadcast string
+  // IP address that acts as the entry point to another, or external, network
+  gateway string
+}

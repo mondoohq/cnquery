@@ -83,6 +83,20 @@ resources:
       options: {}
       type: {}
     min_mondoo_version: latest
+  cloud:
+    fields:
+      instance: {}
+      provider: {}
+    min_mondoo_version: 9.0.0
+  cloudInstance:
+    fields:
+      metadata: {}
+      privateHostname: {}
+      privateIpv4: {}
+      publicHostname: {}
+      publicIpv4: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   command:
     fields:
       command: {}
@@ -355,6 +369,14 @@ resources:
       source: {}
       target: {}
     min_mondoo_version: 5.15.0
+  ipv4Address:
+    fields:
+      broadcast: {}
+      cidr: {}
+      gateway: {}
+      ip: {}
+      subnet: {}
+    min_mondoo_version: 9.0.0
   kernel:
     fields:
       info: {}
