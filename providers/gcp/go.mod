@@ -5,21 +5,21 @@ replace go.mondoo.com/cnquery/v11 => ../..
 go 1.23.0
 
 require (
-	cloud.google.com/go/accessapproval v1.8.3
+	cloud.google.com/go/accessapproval v1.8.4
 	cloud.google.com/go/bigquery v1.66.2
-	cloud.google.com/go/compute v1.33.0
+	cloud.google.com/go/compute v1.34.0
 	cloud.google.com/go/container v1.42.2
 	cloud.google.com/go/functions v1.19.3
-	cloud.google.com/go/iam v1.4.0
-	cloud.google.com/go/kms v1.20.5
+	cloud.google.com/go/iam v1.4.1
+	cloud.google.com/go/kms v1.21.0
 	cloud.google.com/go/logging v1.13.0
-	cloud.google.com/go/longrunning v0.6.4
+	cloud.google.com/go/longrunning v0.6.5
 	cloud.google.com/go/monitoring v1.24.0
 	cloud.google.com/go/pubsub v1.47.0
 	cloud.google.com/go/recommender v1.13.3
-	cloud.google.com/go/run v1.9.0
-	cloud.google.com/go/serviceusage v1.9.3
-	github.com/aws/smithy-go v1.22.2
+	cloud.google.com/go/run v1.9.1
+	cloud.google.com/go/serviceusage v1.9.4
+	github.com/aws/smithy-go v1.22.3
 	github.com/cockroachdb/errors v1.11.3
 	github.com/google/go-containerregistry v0.20.3
 	github.com/hashicorp/go-cleanhttp v0.5.2
@@ -27,8 +27,8 @@ require (
 	github.com/stretchr/testify v1.10.0
 	go.mondoo.com/cnquery/v11 v11.41.0
 	go.mondoo.com/ranger-rpc v0.6.5
-	golang.org/x/oauth2 v0.26.0
-	google.golang.org/api v0.221.0
+	golang.org/x/oauth2 v0.28.0
+	google.golang.org/api v0.222.0
 	google.golang.org/genproto v0.0.0-20250212204824-5a70512c5d8b
 	google.golang.org/protobuf v1.36.5
 )
@@ -103,7 +103,7 @@ require (
 )
 
 require (
-	cloud.google.com/go v0.118.2 // indirect
+	cloud.google.com/go v0.118.3 // indirect
 	cloud.google.com/go/auth v0.14.1 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.7 // indirect
 	cloud.google.com/go/binaryauthorization v1.9.3
@@ -259,8 +259,8 @@ require (
 	golang.org/x/time v0.10.0 // indirect
 	golang.org/x/tools v0.30.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20250212204824-5a70512c5d8b // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250212204824-5a70512c5d8b // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20250219182151-9fdb1cabc7b2 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250219182151-9fdb1cabc7b2 // indirect
 	google.golang.org/grpc v1.70.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
