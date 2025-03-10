@@ -631,6 +631,9 @@ func VersionData(version string) *RawData {
 
 // IPData creates a rawdata struct from a raw ip address
 func IPData(ip RawIP) *RawData {
+	if ip.IP == nil {
+		return NilData
+	}
 	return &RawData{
 		Type:  types.IP,
 		Value: ip,

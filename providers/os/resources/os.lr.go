@@ -5275,15 +5275,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"ipv4Address.ip": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIpv4Address).Ip, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlIpv4Address).Ip, ok = plugin.RawToTValue[llx.RawIP](v.Value, v.Error)
 		return
 	},
 	"ipv4Address.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIpv4Address).Subnet, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlIpv4Address).Subnet, ok = plugin.RawToTValue[llx.RawIP](v.Value, v.Error)
 		return
 	},
 	"ipv4Address.cidr": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIpv4Address).Cidr, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlIpv4Address).Cidr, ok = plugin.RawToTValue[llx.RawIP](v.Value, v.Error)
 		return
 	},
 	"ipv4Address.broadcast": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15031,9 +15031,9 @@ type mqlIpv4Address struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlIpv4AddressInternal it will be used here
-	Ip plugin.TValue[string]
-	Subnet plugin.TValue[string]
-	Cidr plugin.TValue[string]
+	Ip plugin.TValue[llx.RawIP]
+	Subnet plugin.TValue[llx.RawIP]
+	Cidr plugin.TValue[llx.RawIP]
 	Broadcast plugin.TValue[string]
 	Gateway plugin.TValue[string]
 }
@@ -15070,15 +15070,15 @@ func (c *mqlIpv4Address) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlIpv4Address) GetIp() *plugin.TValue[string] {
+func (c *mqlIpv4Address) GetIp() *plugin.TValue[llx.RawIP] {
 	return &c.Ip
 }
 
-func (c *mqlIpv4Address) GetSubnet() *plugin.TValue[string] {
+func (c *mqlIpv4Address) GetSubnet() *plugin.TValue[llx.RawIP] {
 	return &c.Subnet
 }
 
-func (c *mqlIpv4Address) GetCidr() *plugin.TValue[string] {
+func (c *mqlIpv4Address) GetCidr() *plugin.TValue[llx.RawIP] {
 	return &c.Cidr
 }
 

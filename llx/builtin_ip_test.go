@@ -44,5 +44,6 @@ func TestCreateMask(t *testing.T) {
 func TestIntIP(t *testing.T) {
 	assert.Equal(t, net.ParseIP("172.0.0.1"), int2ip(2885681153))
 	assert.Equal(t, net.ParseIP("0.0.0.0"), int2ip(0))
+	assert.Equal(t, net.ParseIP(""), net.IP(nil))
 	assert.Equal(t, net.ParseIP("255.255.255.255"), int2ip(1<<33-1))
 }

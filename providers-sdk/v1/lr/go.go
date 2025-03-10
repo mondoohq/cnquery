@@ -773,7 +773,7 @@ var primitiveTypes = map[string]string{
 	"regex":   "string",
 	"dict":    "interface{}",
 	"version": "string",
-	"ip":      "string",
+	"ip":      "llx.RawIP",
 	"any":     "interface{}",
 }
 
@@ -807,7 +807,7 @@ var primitiveZeros = map[string]string{
 	"regex":   "\"\"",
 	"dict":    "nil",
 	"version": "\"\"",
-	"ip":      "\"\"",
+	"ip":      "nil",
 	"any":     "nil",
 }
 
