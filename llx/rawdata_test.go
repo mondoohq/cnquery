@@ -49,6 +49,7 @@ func TestRawData_String(t *testing.T) {
 		{ArrayData([]interface{}{"a", "b"}, types.String), "[\"a\",\"b\"]"},
 		{MapData(map[string]interface{}{"a": "b"}, types.String), "{\"a\":\"b\"}"},
 		{IPData(ParseIP("1.2.3.4")), "1.2.3.4/8"},
+		{IPData(ParseIP("")), "<null>"},
 		// implicit nil:
 		{&RawData{types.String, nil, nil}, "<null>"},
 	}
@@ -126,6 +127,7 @@ func TestSuccess(t *testing.T) {
 		{TimeData(testTime), false, false},
 		{VersionData("1.2.3"), false, false},
 		{IPData(ParseIP("192.168.0.1")), false, false},
+		{IPData(ParseIP("")), false, false},
 		{ArrayData([]interface{}{}, types.Any), false, false},
 		{ArrayData([]interface{}{true, false, true}, types.Bool), false, true},
 		{ArrayData([]interface{}{true, true}, types.Bool), true, true},
@@ -202,6 +204,7 @@ func TestRawData_JSON(t *testing.T) {
 		// TimeData(now),
 		VersionData("1.2.3"),
 		IPData(ParseIP("192.168.0.1/13")),
+		IPData(ParseIP("")),
 		IPData(ParseIntIP(0)),
 		IPData(ParseIntIP(1<<33 - 1)),
 		IPData(ParseIP("2001:db8:3c4d:15::1a2f:1a2b/64")),
