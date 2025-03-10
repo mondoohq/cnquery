@@ -37,6 +37,8 @@ func Resolve(conn shared.Connection) (OSCloud, error) {
 		return &aws{conn}, nil
 	case clouddetect.GCP:
 		return &gcp{conn}, nil
+	case clouddetect.AZURE:
+		return &azure{conn}, nil
 	default:
 		return &none{}, nil
 	}
