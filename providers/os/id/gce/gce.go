@@ -6,12 +6,14 @@ package gce
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 	"strings"
 
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v11/providers/os/id/metadata"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/powershell"
 )
 
@@ -32,13 +34,17 @@ type Identity struct {
 }
 type InstanceIdentifier interface {
 	Identify() (Identity, error)
+	RawMetadata() (any, error)
 }
 
 func Resolve(conn shared.Connection, pf *inventory.Platform) (InstanceIdentifier, error) {
 	if pf.IsFamily(inventory.FAMILY_UNIX) || pf.IsFamily(inventory.FAMILY_WINDOWS) {
 		return NewCommandInstanceMetadata(conn, pf), nil
 	}
-	return nil, errors.New("gce id detector is not supported for your asset: " + pf.Name + " " + pf.Version)
+	return nil, fmt.Errorf(
+		"gce id detector is not supported for your asset: %s %s",
+		pf.Name, pf.Version,
+	)
 }
 
 const (
@@ -71,7 +77,16 @@ type CommandInstanceMetadata struct {
 	platform   *inventory.Platform
 }
 
-func (m *CommandInstanceMetadata) curl(key string, v interface{}) error {
+func (m *CommandInstanceMetadata) RawMetadata() (any, error) {
+	return metadata.Crawl(m, "instance/")
+}
+
+// GetMetadataValue implements metadata.recursive interface used to crawl the instance metadata service
+func (m *CommandInstanceMetadata) GetMetadataValue(path string) (string, error) {
+	return m.curl(path)
+}
+
+func (m *CommandInstanceMetadata) curlDecode(key string, v interface{}) error {
 	cmd, err := m.connection.RunCommand("curl --noproxy '*' -H Metadata-Flavor:Google " + metadataSvcURL + key + "?alt=json")
 	if err != nil {
 		return err
@@ -88,19 +103,19 @@ func (m *CommandInstanceMetadata) Identify() (Identity, error) {
 		var instanceName string
 		var zoneInfo string
 
-		if err := m.curl("project/project-id", &projectID); err != nil {
+		if err := m.curlDecode("project/project-id", &projectID); err != nil {
 			return Identity{}, err
 		}
 
-		if err := m.curl("instance/id", &instanceID); err != nil {
+		if err := m.curlDecode("instance/id", &instanceID); err != nil {
 			return Identity{}, err
 		}
 
-		if err := m.curl("instance/name", &instanceName); err != nil {
+		if err := m.curlDecode("instance/name", &instanceName); err != nil {
 			return Identity{}, err
 		}
 
-		if err := m.curl("instance/zone", &zoneInfo); err != nil {
+		if err := m.curlDecode("instance/zone", &zoneInfo); err != nil {
 			return Identity{}, err
 		}
 

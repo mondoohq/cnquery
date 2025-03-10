@@ -5,8 +5,6 @@ package awsec2
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"io"
 	"strings"
@@ -118,17 +116,10 @@ func (m *CommandInstanceMetadata) curlDocument(metadataPath string) (string, err
 	if err != nil {
 		return "", err
 	}
-	log.Debug().Str("hash", hashCmd(commandString)).Msg("executed")
 	data, err := io.ReadAll(cmd.Stdout)
-	log.Debug().Msg("read")
 	return strings.TrimSpace(string(data)), err
 }
 
-func hashCmd(message string) string {
-	hash := sha256.New()
-	hash.Write([]byte(message))
-	return hex.EncodeToString(hash.Sum(nil))
-}
 func (m *CommandInstanceMetadata) getToken() (string, error) {
 	if m.token != "" {
 		return m.token, nil
