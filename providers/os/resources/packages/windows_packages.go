@@ -129,7 +129,15 @@ func (p winAppxPackages) toPackage(platform *inventory.Platform) Package {
 		Arch:    p.arch,
 		Format:  "windows/appx",
 		Vendor:  p.Publisher,
-		PUrl:    purl.NewPackageURL(platform, purl.TypeAppx, p.Name, p.Version).String(),
+	}
+
+	// TODO: We need to figure out why we have empty displayNames.
+	// this is common in windows but we need to verify it is a windows
+	// issue and not a cnquery issue.
+	if p.Name != "" {
+		pkg.PUrl = purl.NewPackageURL(platform, purl.TypeAppx, p.Name, p.Version).String()
+	} else {
+		log.Debug().Msg("ignored package since name is missing")
 	}
 
 	if p.Name != "" && p.Version != "" {
@@ -452,6 +460,14 @@ func getPackageFromRegistryKeyItems(children []registry.RegistryKeyItem, platfor
 		return nil
 	}
 
+	// TODO: We need to figure out why we have empty displayNames.
+	// this is common in windows but we need to verify it is a windows
+	// issue and not a cnquery issue.
+	if displayName == "" {
+		log.Debug().Msg("ignored package since display name is missing")
+		return nil
+	}
+
 	pkg := &Package{
 		Name:    displayName,
 		Version: displayVersion,
@@ -462,7 +478,7 @@ func getPackageFromRegistryKeyItems(children []registry.RegistryKeyItem, platfor
 		).String(),
 	}
 
-	if displayName != "" && displayVersion != "" {
+	if displayVersion != "" {
 		cpeWfns, err := cpe.NewPackage2Cpe(publisher, displayName, displayVersion, "", "")
 		if err != nil {
 			log.Debug().Err(err).Str("name", displayName).Str("version", displayVersion).Msg("could not create cpe for windows app package")
@@ -544,7 +560,14 @@ func ParseWindowsAppPackages(platform *inventory.Platform, input io.Reader) ([]P
 			continue
 		}
 		cpeWfns := []string{}
-		if entry.DisplayName != "" && entry.DisplayVersion != "" {
+
+		// TODO: We need to figure out why we have empty displayNames.
+		// this is common in windows but we need to verify it is a windows
+		// issue and not a cnquery issue.
+		if entry.DisplayName == "" {
+			continue
+		}
+		if entry.DisplayVersion != "" {
 			cpeWfns, err = cpe.NewPackage2Cpe(entry.Publisher, entry.DisplayName, entry.DisplayVersion, "", "")
 			if err != nil {
 				log.Debug().Err(err).
