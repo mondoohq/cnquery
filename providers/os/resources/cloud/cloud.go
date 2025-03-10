@@ -13,11 +13,16 @@ import (
 
 type Provider string
 
+// OSCloud is the interface that defines what information does the os `cloud`
+// resource need. We implement this interface for every CSP we support and.
+// The entry point of this interface is the `Resolve()` function.
 type OSCloud interface {
 	Provider() Provider
 	Instance() (*InstanceMetadata, error)
 }
 
+// Resolve runs cloud detection on the provided connection to identify if
+// we are running on the cloud, and if so, in which cloud are we running on.
 func Resolve(conn shared.Connection) (OSCloud, error) {
 	platformInfo := clouddetect.Detect(conn, conn.Asset().GetPlatform())
 	if platformInfo == nil {
@@ -39,6 +44,8 @@ func Resolve(conn shared.Connection) (OSCloud, error) {
 
 const UNKNOWN Provider = "unknown"
 
+// none implements the OSCloud interface for cases where we can't detect
+// the cloud provider we are running on.
 type none struct{}
 
 func (n *none) Provider() Provider {

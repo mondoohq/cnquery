@@ -5,6 +5,8 @@ package cloud
 
 import "fmt"
 
+// InstanceMetadata is the data struct that the `OSCloud` interface uses
+// to retrieve metadata from a cloud instance.
 type InstanceMetadata struct {
 	PublicHostname  string
 	PrivateHostname string
@@ -31,6 +33,7 @@ func (m InstanceMetadata) MqlID() string {
 	}
 }
 
+// PublicIP returns the first public ip address found (used for defaults in `cloud.instance`)
 func (m InstanceMetadata) PublicIP() string {
 	for _, ip := range m.PublicIpv4 {
 		if ip.IP != "" {
@@ -40,6 +43,7 @@ func (m InstanceMetadata) PublicIP() string {
 	return ""
 }
 
+// PrivateIP returns the first private ip address found (used for defaults in `cloud.instance`)
 func (m InstanceMetadata) PrivateIP() string {
 	for _, ip := range m.PrivateIpv4 {
 		if ip.IP != "" {

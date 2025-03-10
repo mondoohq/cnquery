@@ -14,6 +14,7 @@ import (
 
 const AWS Provider = "aws"
 
+// aws implements the OSCloud interface for Amazon Web Services
 type aws struct {
 	conn shared.Connection
 }

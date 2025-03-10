@@ -16,6 +16,7 @@ import (
 
 const GCP Provider = "gcp"
 
+// gcp implements the OSCloud interface for Google Cloud
 type gcp struct {
 	conn shared.Connection
 }
