@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
@@ -16,11 +17,26 @@ import (
 )
 
 const (
-	instanceMetadataScriptUnix    = "curl --retry 5 --retry-delay 1 --connect-timeout 1 --retry-max-time 5 --max-time 10 --noproxy '*' -H Metadata:true http://169.254.169.254/metadata/instance?api-version=2021-02-01"
-	metadataIdentityScriptWindows = `Invoke-RestMethod -TimeoutSec 5 -Headers @{"Metadata"="true"} -Method GET -URI http://169.254.169.254/metadata/instance?api-version=2021-02-01 -UseBasicParsing | ConvertTo-Json`
+	// https://learn.microsoft.com/en-us/azure/virtual-machines/instance-metadata-service?tabs=windows#supported-api-versions
+	//
+	// We are not using version 2023-11-15 since it is still being rolled out and it may not be available in some regions.
+	IMDSApiVersion = "2023-07-01"
 
-	loadbalancerMetadataScriptUnix    = "curl --retry 5 --retry-delay 1 --connect-timeout 1 --retry-max-time 5 --max-time 10 --noproxy '*' -H Metadata:true http://169.254.169.254/metadata/loadbalancer?api-version=2021-02-01"
-	loadbalancerMetadataScriptWindows = `Invoke-RestMethod -TimeoutSec 5 -Headers @{"Metadata"="true"} -Method GET -URI http://169.254.169.254/metadata/loadbalancer?api-version=2021-02-01 -UseBasicParsing | ConvertTo-Json`
+	instanceMetadataScriptUnix    = "curl --retry 5 --retry-delay 1 --connect-timeout 1 --retry-max-time 5 --max-time 10 --noproxy '*' -H Metadata:true http://169.254.169.254/metadata/instance?api-version=%s"
+	metadataIdentityScriptWindows = `
+$Headers = @{
+    "Metadata" = "true"
+}
+Invoke-RestMethod -TimeoutSec 5 -Headers $Headers -URI http://169.254.169.254/metadata/instance?api-version=%s -UseBasicParsing | ConvertTo-Json
+`
+
+	loadbalancerMetadataScriptUnix    = "curl --retry 5 --retry-delay 1 --connect-timeout 1 --retry-max-time 5 --max-time 10 --noproxy '*' -H Metadata:true http://169.254.169.254/metadata/loadbalancer?api-version=%s"
+	loadbalancerMetadataScriptWindows = `
+$Headers = @{
+    "Metadata" = "true"
+}
+Invoke-RestMethod -TimeoutSec 5 -Headers $Headers -URI http://169.254.169.254/metadata/loadbalancer?api-version=%s -UseBasicParsing | ConvertTo-Json
+`
 )
 
 func MondooAzureInstanceID(instanceID string) string {
@@ -29,7 +45,7 @@ func MondooAzureInstanceID(instanceID string) string {
 
 type instanceMetadata struct {
 	Compute struct {
-		ResourceID     string `json:"resourceID"`
+		ResourceID     string `json:"resourceId"`
 		SubscriptionID string `json:"subscriptionId"`
 		Tags           string `json:"tags"`
 	} `json:"compute"`
@@ -110,9 +126,9 @@ func (m *commandInstanceMetadata) instanceDocument() ([]byte, error) {
 
 	switch {
 	case m.platform.IsFamily(inventory.FAMILY_UNIX):
-		cmd, err = m.conn.RunCommand(instanceMetadataScriptUnix)
+		cmd, err = m.conn.RunCommand(fmt.Sprintf(instanceMetadataScriptUnix, IMDSApiVersion))
 	case m.platform.IsFamily(inventory.FAMILY_WINDOWS):
-		cmd, err = m.conn.RunCommand(powershell.Encode(metadataIdentityScriptWindows))
+		cmd, err = m.conn.RunCommand(powershell.Encode(fmt.Sprintf(metadataIdentityScriptWindows, IMDSApiVersion)))
 	default:
 		err = errors.New("your platform is not supported by azure metadata identifier resource")
 	}
@@ -132,9 +148,9 @@ func (m *commandInstanceMetadata) loadbalancerDocument() ([]byte, error) {
 
 	switch {
 	case m.platform.IsFamily(inventory.FAMILY_UNIX):
-		cmd, err = m.conn.RunCommand(loadbalancerMetadataScriptUnix)
+		cmd, err = m.conn.RunCommand(fmt.Sprintf(loadbalancerMetadataScriptUnix, IMDSApiVersion))
 	case m.platform.IsFamily(inventory.FAMILY_WINDOWS):
-		cmd, err = m.conn.RunCommand(powershell.Encode(loadbalancerMetadataScriptWindows))
+		cmd, err = m.conn.RunCommand(powershell.Encode(fmt.Sprintf(loadbalancerMetadataScriptWindows, IMDSApiVersion)))
 	default:
 		err = errors.New("your platform is not supported by azure metadata identifier resource")
 	}

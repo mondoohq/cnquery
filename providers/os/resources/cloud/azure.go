@@ -346,7 +346,7 @@ func (i AzureNetworkInterfaceIpv4) PrivateIPs() ([]Ipv4Address, bool) {
 func (i AzureNetworkInterfaceIpv4) findMatchingSubnet(ip net.IP) (AzureSubnet, bool) {
 	for _, subnet := range i.Subnet {
 		_, netSubnet, err := net.ParseCIDR(subnet.CIDR())
-		if err != nil && netSubnet.Contains(ip) {
+		if err == nil && netSubnet.Contains(ip) {
 			// The ip address belongs to the subnet
 			return subnet, true
 		}

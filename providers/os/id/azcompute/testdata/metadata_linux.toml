@@ -7,9 +7,8 @@ stdout = "x86_64"
 [commands."uname -r"]
 stdout = "4.9.125-linuxkit"
 
-
-[commands.708dc8a78540f57f4c5e6f33f87f9be00cb91400f8d767f9b0d47751ad062a29]
-command = "curl --retry 5 --retry-delay 1 --connect-timeout 1 --retry-max-time 5 --max-time 10 --noproxy '*' -H Metadata:true http://169.254.169.254/metadata/loadbalancer?api-version=2021-02-01"
+[commands.94732503e8d4238eb65a72d57300e45e90051880d16ce9ebb92c42f0db720854]
+command = "curl --retry 5 --retry-delay 1 --connect-timeout 1 --retry-max-time 5 --max-time 10 --noproxy '*' -H Metadata:true http://169.254.169.254/metadata/loadbalancer?api-version=2023-07-01"
 stdout = """
 {
   "loadbalancer": {
@@ -25,142 +24,153 @@ stdout = """
 }
 """
 
-[commands.a419040a7b125c49546d58475ce656422b349fd6cc1e72a57debe0825e707c11]
+[commands.c075c6eca83ffa0b70699117ffef07c71a727b6b7dbd28b8855ec63bb2cb3891]
 command = "curl --retry 5 --retry-delay 1 --connect-timeout 1 --retry-max-time 5 --max-time 10 --noproxy '*' -H Metadata:true http://169.254.169.254/metadata/instance?api-version=2021-02-01"
 stdout = """
 {
-    "compute": {
-        "azEnvironment": "AZUREPUBLICCLOUD",
-        "extendedLocation": {
-            "type": "edgeZone",
-            "name": "microsoftlosangeles"
-        },
-        "evictionPolicy": "",
-        "isHostCompatibilityLayerVm": "true",
-        "licenseType":  "",
-        "location": "westus",
-        "name": "examplevmname",
-        "offer": "UbuntuServer",
-        "osProfile": {
-            "adminUsername": "admin",
-            "computerName": "examplevmname",
-            "disablePasswordAuthentication": "true"
-        },
-        "osType": "Linux",
-        "placementGroupId": "f67c14ab-e92c-408c-ae2d-da15866ec79a",
-        "plan": {
-            "name": "planName",
-            "product": "planProduct",
-            "publisher": "planPublisher"
-        },
-        "platformFaultDomain": "36",
-        "platformUpdateDomain": "42",
-        "priority": "Regular",
-        "publicKeys": [{
-                "keyData": "ssh-rsa 0",
-                "path": "/home/user/.ssh/authorized_keys0"
-            },
-            {
-                "keyData": "ssh-rsa 1",
-                "path": "/home/user/.ssh/authorized_keys1"
-            }
-        ],
-        "publisher": "Canonical",
-        "resourceGroupName": "macikgo-test-may-23",
-        "resourceId": "/subscriptions/xxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx/resourceGroups/macikgo-test-may-23/providers/Microsoft.Compute/virtualMachines/examplevmname",
-        "securityProfile": {
-            "secureBootEnabled": "true",
-            "virtualTpmEnabled": "false"
-        },
-        "sku": "18.04-LTS",
-        "storageProfile": {
-            "dataDisks": [{
-                "bytesPerSecondThrottle": "979202048",
-                "caching": "None",
-                "createOption": "Empty",
-                "diskCapacityBytes": "274877906944",
-                "diskSizeGB": "1024",
-                "image": {
-                  "uri": ""
-                },
-                "isSharedDisk": "false",
-                "isUltraDisk": "true",
-                "lun": "0",
-                "managedDisk": {
-                  "id": "/subscriptions/xxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx/resourceGroups/macikgo-test-may-23/providers/Microsoft.Compute/disks/exampledatadiskname",
-                  "storageAccountType": "Standard_LRS"
-                },
-                "name": "exampledatadiskname",
-                "opsPerSecondThrottle": "65280",
-                "vhd": {
-                  "uri": ""
-                },
-                "writeAcceleratorEnabled": "false"
-            }],
-            "imageReference": {
-                "id": "",
-                "offer": "UbuntuServer",
-                "publisher": "Canonical",
-                "sku": "16.04.0-LTS",
-                "version": "latest"
-            },
-            "osDisk": {
-                "caching": "ReadWrite",
-                "createOption": "FromImage",
-                "diskSizeGB": "30",
-                "diffDiskSettings": {
-                    "option": "Local"
-                },
-                "encryptionSettings": {
-                    "enabled": "false"
-                },
-                "image": {
-                    "uri": ""
-                },
-                "managedDisk": {
-                    "id": "/subscriptions/xxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx/resourceGroups/macikgo-test-may-23/providers/Microsoft.Compute/disks/exampleosdiskname",
-                    "storageAccountType": "Standard_LRS"
-                },
-                "name": "exampleosdiskname",
-                "osType": "Linux",
-                "vhd": {
-                    "uri": ""
-                },
-                "writeAcceleratorEnabled": "false"
-            },
-            "resourceDisk": {
-                "size": "4096"
-            }
-        },
-        "subscriptionId": "xxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx",
-        "tags": "baz:bash;foo:bar",
-        "version": "15.05.22",
-        "virtualMachineScaleSet": {
-            "id": "/subscriptions/xxxxxxxx-xxxxx-xxx-xxx-xxxx/resourceGroups/resource-group-name/providers/Microsoft.Compute/virtualMachineScaleSets/virtual-machine-scale-set-name"
-        },
-        "vmId": "02aab8a4-74ef-476e-8182-f6d2ba4166a6",
-        "vmScaleSetName": "crpteste9vflji9",
-        "vmSize": "Standard_A3",
-        "zone": ""
+  "compute": {
+    "additionalCapabilities": {
+      "hibernationEnabled": "false"
     },
-    "network": {
-        "interface": [{
-            "ipv4": {
-               "ipAddress": [{
-                    "privateIpAddress": "10.144.133.132",
-                    "publicIpAddress": ""
-                }],
-                "subnet": [{
-                    "address": "10.144.133.128",
-                    "prefix": "26"
-                }]
-            },
-            "ipv6": {
-                "ipAddress": [
-                 ]
-            },
-            "macAddress": "0011AAFFBB22"
-        }]
-    }
+    "azEnvironment": "AzurePublicCloud",
+    "customData": "",
+    "evictionPolicy": "",
+    "extendedLocation": {
+      "name": "",
+      "type": ""
+    },
+    "host": {
+      "id": ""
+    },
+    "hostGroup": {
+      "id": ""
+    },
+    "isHostCompatibilityLayerVm": "true",
+    "licenseType": "",
+    "location": "westus",
+    "name": "afiune-metadata-test",
+    "offer": "0001-com-ubuntu-server-focal",
+    "osProfile": {
+      "adminUsername": "azureuser",
+      "computerName": "afiune-metadata-test",
+      "disablePasswordAuthentication": "true"
+    },
+    "osType": "Linux",
+    "placementGroupId": "",
+    "plan": {
+      "name": "",
+      "product": "",
+      "publisher": ""
+    },
+    "platformFaultDomain": "0",
+    "platformSubFaultDomain": "",
+    "platformUpdateDomain": "0",
+    "priority": "",
+    "provider": "Microsoft.Compute",
+    "publicKeys": [
+      {
+        "keyData": "ssh-ed25519 abc afiune@mondoo.com",
+        "path": "/home/azureuser/.ssh/authorized_keys"
+      }
+    ],
+    "publisher": "canonical",
+    "resourceGroupName": "TESTRESOURCES",
+    "resourceId": "/subscriptions/xxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx/resourceGroups/TestResources/providers/Microsoft.Compute/virtualMachines/examplevmname",
+    "securityProfile": {
+      "encryptionAtHost": "false",
+      "secureBootEnabled": "true",
+      "securityType": "TrustedLaunch",
+      "virtualTpmEnabled": "true"
+    },
+    "sku": "20_04-lts-gen2",
+    "storageProfile": {
+      "dataDisks": [],
+      "imageReference": {
+        "communityGalleryImageId": "",
+        "exactVersion": "20.04.202502181",
+        "id": "",
+        "offer": "0001-com-ubuntu-server-focal",
+        "publisher": "canonical",
+        "sharedGalleryImageId": "",
+        "sku": "20_04-lts-gen2",
+        "version": "latest"
+      },
+      "osDisk": {
+        "caching": "ReadWrite",
+        "createOption": "FromImage",
+        "diffDiskSettings": {
+          "option": ""
+        },
+        "diskSizeGB": "30",
+        "encryptionSettings": {
+          "diskEncryptionKey": {
+            "secretUrl": "",
+            "sourceVault": {
+              "id": ""
+            }
+          },
+          "enabled": "false",
+          "keyEncryptionKey": {
+            "keyUrl": "",
+            "sourceVault": {
+              "id": ""
+            }
+          }
+        },
+        "image": {
+          "uri": ""
+        },
+        "managedDisk": {
+          "id": "/subscriptions/3cd8b376-ada6-4c01-afc3-84d4b7d7da99/resourceGroups/TestResources/providers/Microsoft.Compute/disks/afiune-metadata-test_OsDisk_1_e60edeb6707048e88462fade01058529",
+          "storageAccountType": "Premium_LRS"
+        },
+        "name": "afiune-metadata-test_OsDisk_1_e60edeb6707048e88462fade01058529",
+        "osType": "Linux",
+        "vhd": {
+          "uri": ""
+        },
+        "writeAcceleratorEnabled": "false"
+      },
+      "resourceDisk": {
+        "size": "34816"
+      }
+    },
+    "subscriptionId": "xxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx",
+    "tags": "",
+    "tagsList": [],
+    "userData": "",
+    "version": "20.04.202502181",
+    "virtualMachineScaleSet": {
+      "id": ""
+    },
+    "vmId": "02b052e1-ef72-4d31-a135-94f0966cbef6",
+    "vmScaleSetName": "",
+    "vmSize": "Standard_B1s",
+    "zone": ""
+  },
+  "network": {
+    "interface": [
+      {
+        "ipv4": {
+          "ipAddress": [
+            {
+              "privateIpAddress": "10.144.133.132",
+              "publicIpAddress": ""
+            }
+          ],
+          "subnet": [
+            {
+              "address": "10.144.133.128",
+              "prefix": "26"
+            }
+          ]
+        },
+        "ipv6": {
+          "ipAddress": []
+        },
+        "macAddress": "0011AAFFBB22"
+      }
+    ]
+  }
 }
 """

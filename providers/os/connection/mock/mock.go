@@ -142,6 +142,7 @@ func (c *Connection) RunCommand(command string) (*shared.Command, error) {
 	if !ok {
 		// try to fetch command by hash (more reliable for whitespace)
 		hash := hashCmd(command)
+		log.Debug().Str("hash", hash).Msg("fetching command by hash")
 		found, ok = c.data.Commands[hash]
 	}
 	if !ok {
