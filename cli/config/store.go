@@ -13,6 +13,9 @@ import (
 	"github.com/spf13/viper"
 )
 
+// list of field keys to avoid writing to disk
+var fieldKeysToOmit = []string{"force"}
+
 func StoreConfig() error {
 	path := viper.ConfigFileUsed()
 	log.Info().Str("path", path).Msg("saving config")
@@ -34,6 +37,11 @@ func StoreConfig() error {
 		}
 	} else if err != nil {
 		return errors.Wrap(err, "failed to check stats for mondoo config")
+	}
+
+	// omit fields before storing the configuration
+	for _, field := range fieldKeysToOmit {
+		viper.Set(field, nil)
 	}
 
 	return viper.WriteConfig()
