@@ -8,6 +8,23 @@ stdout = "x86_64"
 stdout = "4.9.125-linuxkit"
 
 
+[commands.708dc8a78540f57f4c5e6f33f87f9be00cb91400f8d767f9b0d47751ad062a29]
+command = "curl --retry 5 --retry-delay 1 --connect-timeout 1 --retry-max-time 5 --max-time 10 --noproxy '*' -H Metadata:true http://169.254.169.254/metadata/loadbalancer?api-version=2021-02-01"
+stdout = """
+{
+  "loadbalancer": {
+    "publicIpAddresses": [
+      {
+        "frontendIpAddress": "172.184.192.212",
+        "privateIpAddress":"10.0.0.4"
+      }
+    ],
+    "inboundRules": [],
+    "outboundRules": []
+  }
+}
+"""
+
 [commands.a419040a7b125c49546d58475ce656422b349fd6cc1e72a57debe0825e707c11]
 command = "curl --retry 5 --retry-delay 1 --connect-timeout 1 --retry-max-time 5 --max-time 10 --noproxy '*' -H Metadata:true http://169.254.169.254/metadata/instance?api-version=2021-02-01"
 stdout = """
@@ -147,4 +164,3 @@ stdout = """
     }
 }
 """
-
