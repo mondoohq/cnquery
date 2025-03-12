@@ -660,7 +660,7 @@ func MondooECSContainerID(containerArn string) string {
 	return "//platformid.api.mondoo.app/runtime/aws/ecs/v1/accounts/" + account + "/regions/" + region + "/" + id
 }
 
-func SSMConnectAsset(args []string, opts map[string]string) *inventory.Asset {
+func SSMConnectAsset(args []string, opts map[string]string) (*inventory.Asset, error) {
 	var user, id string
 	if len(args) == 3 {
 		if args[0] == "ec2" && args[1] == "ssm" {
@@ -686,10 +686,10 @@ func SSMConnectAsset(args []string, opts map[string]string) *inventory.Asset {
 		},
 		Options: opts,
 	}}
-	return asset
+	return asset, nil
 }
 
-func InstanceConnectAsset(args []string, opts map[string]string) *inventory.Asset {
+func InstanceConnectAsset(args []string, opts map[string]string) (*inventory.Asset, error) {
 	var user, id string
 	if len(args) == 3 {
 		if args[0] == "ec2" && args[1] == "instance-connect" {
@@ -715,19 +715,25 @@ func InstanceConnectAsset(args []string, opts map[string]string) *inventory.Asse
 		},
 		Options: opts,
 	}}
-	return asset
+	return asset, nil
 }
 
-func EbsConnectAsset(args []string, opts map[string]string) *inventory.Asset {
+func EbsConnectAsset(args []string, opts map[string]string) (*inventory.Asset, error) {
 	var target, targetType string
 	if len(args) >= 3 {
 		if args[0] == "ec2" && args[1] == "ebs" {
 			// parse for target type: instance, volume, snapshot
 			switch args[2] {
 			case awsec2ebstypes.EBSTargetVolume:
+				if len(args) != 4 {
+					return nil, errors.New("missing target volume")
+				}
 				target = args[3]
 				targetType = awsec2ebstypes.EBSTargetVolume
 			case awsec2ebstypes.EBSTargetSnapshot:
+				if len(args) != 4 {
+					return nil, errors.New("missing snapshot-id")
+				}
 				target = args[3]
 				targetType = awsec2ebstypes.EBSTargetSnapshot
 			default:
@@ -749,5 +755,5 @@ func EbsConnectAsset(args []string, opts map[string]string) *inventory.Asset {
 		Runtime:  "aws-ebs",
 		Options:  opts,
 	}}
-	return asset
+	return asset, nil
 }
