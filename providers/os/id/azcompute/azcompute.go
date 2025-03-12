@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/powershell"
@@ -87,17 +88,35 @@ func (m *commandInstanceMetadata) RawMetadata() (any, error) {
 	}
 	metadata["instance"] = instanceMap
 
+	// The public IP address may come from two different endpoints within the IMDS, either
+	// the `instance/` or the `loadbalander/` metadata endpoint.
+	//
+	// Docs: https://learn.microsoft.com/en-us/azure/virtual-machines/instance-metadata-service?tabs=windows#endpoint-categories
+	//
+	// We don't know where will it come from, so we fetch both endpoints and pass it
+	// to the caller to decide what to do with them.
+	//
+	// NOTE that the load balancer information might not exist in some cases, so we do not
+	// error but instead, return the already fetched `instance/` metadata.
 	data, err = m.loadbalancerDocument()
 	if err != nil {
-		return nil, err
+		log.Debug().Err(err).Msg("unable to fetch IMDS endpoint 'loadbalancer/'")
+		return metadata, nil
 	}
 
 	var loadbalancerMap map[string]interface{}
 	if err = json.Unmarshal(data, &loadbalancerMap); err != nil {
-		return nil, err
+		log.Debug().Err(err).Msg("unable to unmarshal data from endpoint 'loadbalancer/'")
+		return metadata, nil
 	}
-	metadata["loadbalancer"] = loadbalancerMap
 
+	if msg, ok := loadbalancerMap["error"]; ok {
+		log.Debug().Interface("error_msg", msg).Msg("unable to fetch loadbalancer information")
+		return metadata, nil
+	}
+
+	// if we got here, we have a valid payload
+	metadata["loadbalancer"] = loadbalancerMap
 	return metadata, nil
 }
 

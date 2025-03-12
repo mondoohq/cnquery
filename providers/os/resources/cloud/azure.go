@@ -50,6 +50,13 @@ func (a *azure) Instance() (*InstanceMetadata, error) {
 		return instanceMd, errors.New("unexpected raw metadata")
 	}
 
+	// The public IP address may come from two different endpoints within the IMDS, either
+	// the `instance/` or the `loadbalander/` metadata endpoint.
+	//
+	// Docs: https://learn.microsoft.com/en-us/azure/virtual-machines/instance-metadata-service?tabs=windows#endpoint-categories
+	//
+	// We don't know where will it come from, so we check both places starting with the
+	// `loadbalancer/` endpoint.
 	if value, ok := m["loadbalancer"]; ok {
 		byteData, err := json.Marshal(value)
 		if err != nil {
@@ -82,6 +89,8 @@ func (a *azure) Instance() (*InstanceMetadata, error) {
 		}
 	}
 
+	// Then we look into the `instance/` endpoint. If we find any IP address, we do an upsert
+	// using the `InstanceMetadata.AddOrUpdate{Public|Private}IP()`.
 	if value, ok := m["instance"]; ok {
 		byteData, err := json.Marshal(value)
 		if err != nil {

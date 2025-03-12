@@ -5,6 +5,7 @@ package azcompute
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -33,7 +34,7 @@ func TestCommandProviderLinux(t *testing.T) {
 		// Convert to JSON for readability
 		jsonData, _ := json.MarshalIndent(raw, "", "  ")
 		// Compare actual vs expected JSON output
-		assert.JSONEq(t, expectedRawMetadata(), string(jsonData))
+		assert.JSONEq(t, expectedRawMetadata(true), string(jsonData))
 	})
 }
 
@@ -56,12 +57,39 @@ func TestCommandProviderWindows(t *testing.T) {
 		// Convert to JSON for readability
 		jsonData, _ := json.MarshalIndent(raw, "", "  ")
 		// Compare actual vs expected JSON output
-		assert.JSONEq(t, expectedRawMetadata(), string(jsonData))
+		assert.JSONEq(t, expectedRawMetadata(true), string(jsonData))
 	})
 }
 
-func expectedRawMetadata() string {
-	return `{
+func TestCommandProviderLinuxNoLoadbalancerInformation(t *testing.T) {
+	conn, err := mock.New(0, "./testdata/metadata_linux_no_loadbalancer_info.toml", &inventory.Asset{})
+	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
+
+	metadata := commandInstanceMetadata{conn, platform}
+	ident, err := metadata.Identify()
+
+	assert.Nil(t, err)
+	assert.Equal(t, "//platformid.api.mondoo.app/runtime/azure/subscriptions/xxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx/resourceGroups/TestResources/providers/Microsoft.Compute/virtualMachines/examplevmname", ident.InstanceID)
+	assert.Equal(t, "//platformid.api.mondoo.app/runtime/azure/subscriptions/xxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx", ident.AccountID)
+
+	t.Run("raw metadata", func(t *testing.T) {
+		raw, err := metadata.RawMetadata()
+		assert.Nil(t, err)
+		// Convert to JSON for readability
+		jsonData, _ := json.MarshalIndent(raw, "", "  ")
+		// Compare actual vs expected JSON output
+		assert.JSONEq(t, expectedRawMetadata(false), string(jsonData))
+	})
+}
+
+func expectedRawMetadata(loadbalancer bool) string {
+	loadbalancerData := ""
+	if loadbalancer {
+		loadbalancerData = expectedRawMetadataLoadbalancer()
+	}
+	return fmt.Sprintf(`{
   "instance": {
     "compute": {
       "additionalCapabilities": {
@@ -207,8 +235,13 @@ func expectedRawMetadata() string {
         }
       ]
     }
-  },
-  "loadbalancer": {
+  }%s
+}`, loadbalancerData)
+}
+
+func expectedRawMetadataLoadbalancer() string {
+	return `,
+ "loadbalancer": {
     "loadbalancer": {
       "publicIpAddresses": [
         {
@@ -220,5 +253,5 @@ func expectedRawMetadata() string {
       "outboundRules": []
     }
   }
-}`
+`
 }
