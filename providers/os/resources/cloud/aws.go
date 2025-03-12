@@ -12,7 +12,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/id/awsec2"
 )
 
-const AWS Provider = "aws"
+const AWS Provider = "AWS"
 
 // aws implements the OSCloud interface for Amazon Web Services
 type aws struct {

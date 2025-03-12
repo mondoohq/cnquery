@@ -44,7 +44,7 @@ func Resolve(conn shared.Connection) (OSCloud, error) {
 	}
 }
 
-const UNKNOWN Provider = "unknown"
+const UNKNOWN Provider = "Unknown"
 
 // none implements the OSCloud interface for cases where we can't detect
 // the cloud provider we are running on.

@@ -16,7 +16,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/id/hostname"
 )
 
-const AZURE Provider = "azure"
+const AZURE Provider = "Azure"
 
 // azure implements the OSCloud interface for Azure Cloud
 type azure struct {

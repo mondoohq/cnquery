@@ -14,7 +14,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/id/gce"
 )
 
-const GCP Provider = "gcp"
+const GCP Provider = "GCP"
 
 // gcp implements the OSCloud interface for Google Cloud
 type gcp struct {
