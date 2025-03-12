@@ -129,18 +129,10 @@ func (p winAppxPackages) toPackage(platform *inventory.Platform) Package {
 		Arch:    p.arch,
 		Format:  "windows/appx",
 		Vendor:  p.Publisher,
+		PUrl:    purl.NewPackageURL(platform, purl.TypeAppx, p.Name, p.Version).String(),
 	}
 
-	// TODO: We need to figure out why we have empty displayNames.
-	// this is common in windows but we need to verify it is a windows
-	// issue and not a cnquery issue.
-	if p.Name != "" {
-		pkg.PUrl = purl.NewPackageURL(platform, purl.TypeAppx, p.Name, p.Version).String()
-	} else {
-		log.Debug().Msg("ignored package since name is missing")
-	}
-
-	if p.Name != "" && p.Version != "" {
+	if p.Version != "" {
 		cpeWfns, err := cpe.NewPackage2Cpe(p.Publisher, p.Name, p.Version, "", "")
 		if err != nil {
 			log.Debug().Err(err).
@@ -178,6 +170,9 @@ func ParseWindowsAppxPackages(platform *inventory.Platform, input io.Reader) ([]
 
 	pkgs := make([]Package, len(appxPackages))
 	for i, p := range appxPackages {
+		if p.Name == "" {
+			continue
+		}
 		pkgs[i] = p.toPackage(platform)
 	}
 	return pkgs, nil
@@ -404,6 +399,9 @@ func (w *WinPkgManager) getFsAppxPackages() ([]Package, error) {
 		winAppxPkg, err := parseAppxManifest(res)
 		if err != nil {
 			log.Debug().Err(err).Str("path", p).Msg("could not parse appx manifest")
+			continue
+		}
+		if winAppxPkg.Name == "" {
 			continue
 		}
 		pkg := winAppxPkg.toPackage(w.platform)
