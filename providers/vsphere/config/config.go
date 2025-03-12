@@ -13,7 +13,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "vsphere",
 	ID:              "go.mondoo.com/cnquery/v9/providers/vsphere",
-	Version:         "11.0.62",
+	Version:         "11.0.63",
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
 		{
