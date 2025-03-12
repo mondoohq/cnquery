@@ -77,8 +77,8 @@ func (i *mqlCloudInstance) privateIpv4() (value []interface{}, err error) {
 				"ip":        llx.IPData(llx.ParseIP(ipaddress.IP)),
 				"subnet":    llx.IPData(llx.ParseIP(ipaddress.Subnet)),
 				"cidr":      llx.IPData(llx.ParseIP(ipaddress.CIDR)),
-				"broadcast": llx.StringData(ipaddress.Broadcast),
-				"gateway":   llx.StringData(ipaddress.Gateway),
+				"broadcast": llx.IPData(llx.ParseIP(ipaddress.Broadcast)),
+				"gateway":   llx.IPData(llx.ParseIP(ipaddress.Gateway)),
 			})
 			if err != nil {
 				return
@@ -98,8 +98,8 @@ func (i *mqlCloudInstance) publicIpv4() (value []interface{}, err error) {
 				"ip":        llx.IPData(llx.ParseIP(ipaddress.IP)),
 				"subnet":    llx.IPData(llx.ParseIP(ipaddress.Subnet)),
 				"cidr":      llx.IPData(llx.ParseIP(ipaddress.CIDR)),
-				"broadcast": llx.StringData(ipaddress.Broadcast),
-				"gateway":   llx.StringData(ipaddress.Gateway),
+				"broadcast": llx.IPData(llx.ParseIP(ipaddress.Broadcast)),
+				"gateway":   llx.IPData(llx.ParseIP(ipaddress.Gateway)),
 			})
 			if err != nil {
 				return
