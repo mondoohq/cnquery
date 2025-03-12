@@ -14,7 +14,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/id/gce"
 )
 
-const GCP Provider = "gcp"
+const GCP Provider = "GCP"
 
 // gcp implements the OSCloud interface for Google Cloud
 type gcp struct {
@@ -89,7 +89,7 @@ func (g *gcp) Instance() (*InstanceMetadata, error) {
 	}
 
 	// GCP does not expose the public hostname (DNS) but we can try to
-	//fetch it doing a lookup on the network if we have a public ip
+	// fetch it doing a lookup on the network if we have a public ip
 	for _, address := range instanceMd.PublicIpv4 {
 		names, err := net.LookupAddr(address.IP)
 		if err == nil && len(names) != 0 {

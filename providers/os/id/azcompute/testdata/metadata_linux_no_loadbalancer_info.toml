@@ -1,25 +1,21 @@
-[commands]
-  [commands.742140886e8b60c2539374b4469e0382b11e5862bd3eb45e4c0ecfdb2554a252]
-    command = "powershell.exe -NoProfile -EncodedCommand JABQAHIAbwBnAHIAZQBzAHMAUAByAGUAZgBlAHIAZQBuAGMAZQA9ACcAUwBpAGwAZQBuAHQAbAB5AEMAbwBuAHQAaQBuAHUAZQAnADsASQBuAHYAbwBrAGUALQBSAGUAcwB0AE0AZQB0AGgAbwBkACAALQBUAGkAbQBlAG8AdQB0AFMAZQBjACAANQAgAC0ASABlAGEAZABlAHIAcwAgAEAAewAiAE0AZQB0AGEAZABhAHQAYQAiAD0AIgB0AHIAdQBlACIAfQAgAC0ATQBlAHQAaABvAGQAIABHAEUAVAAgAC0AVQBSAEkAIABoAHQAdABwADoALwAvADEANgA5AC4AMgA1ADQALgAxADYAOQAuADIANQA0AC8AbQBlAHQAYQBkAGEAdABhAC8AbABvAGEAZABiAGEAbABhAG4AYwBlAHIAPwBhAHAAaQAtAHYAZQByAHMAaQBvAG4APQAyADAAMgAxAC0AMAAyAC0AMAAxACAALQBVAHMAZQBCAGEAcwBpAGMAUABhAHIAcwBpAG4AZwAgAHwAIABDAG8AbgB2AGUAcgB0AFQAbwAtAEoAcwBvAG4A"
-    exit_status = 0
-    stdout = """
-{
-  "loadbalancer": {
-    "publicIpAddresses": [
-      {
-        "frontendIpAddress": "172.184.192.212",
-        "privateIpAddress":"10.0.0.4"
-      }
-    ],
-    "inboundRules": [],
-    "outboundRules": []
-  }
-}
-    """
-  [commands.837e2b224dccb25672e8fcbc5fc25e4241b844fb1283d4d59fa770f7fb791da7]
-    command = "powershell.exe -NoProfile -EncodedCommand JABQAHIAbwBnAHIAZQBzAHMAUAByAGUAZgBlAHIAZQBuAGMAZQA9ACcAUwBpAGwAZQBuAHQAbAB5AEMAbwBuAHQAaQBuAHUAZQAnADsASQBuAHYAbwBrAGUALQBSAGUAcwB0AE0AZQB0AGgAbwBkACAALQBUAGkAbQBlAG8AdQB0AFMAZQBjACAAMQAgAC0ASABlAGEAZABlAHIAcwAgAEAAewAiAE0AZQB0AGEAZABhAHQAYQAiAD0AIgB0AHIAdQBlACIAfQAgAC0ATQBlAHQAaABvAGQAIABHAEUAVAAgAC0AVQBSAEkAIABoAHQAdABwADoALwAvADEANgA5AC4AMgA1ADQALgAxADYAOQAuADIANQA0AC8AbQBlAHQAYQBkAGEAdABhAC8AaQBuAHMAdABhAG4AYwBlAD8AYQBwAGkALQB2AGUAcgBzAGkAbwBuAD0AMgAwADIAMQAtADAAMgAtADAAMQAgAC0AVQBzAGUAQgBhAHMAaQBjAFAAYQByAHMAaQBuAGcAIAB8ACAAQwBvAG4AdgBlAHIAdABUAG8ALQBKAHMAbwBuAA=="
-    exit_status = 0
-    stdout = """
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "4.9.125-linuxkit"
+
+[commands.94732503e8d4238eb65a72d57300e45e90051880d16ce9ebb92c42f0db720854]
+command = "curl --retry 5 --retry-delay 1 --connect-timeout 1 --retry-max-time 5 --max-time 10 --noproxy '*' -H Metadata:true http://169.254.169.254/metadata/loadbalancer?api-version=2023-07-01"
+stdout = """
+{ "error": "No load balancer metadata is found. Please check if your VM is using any non-basic SKU load balancer and retry later." }
+"""
+
+[commands.c075c6eca83ffa0b70699117ffef07c71a727b6b7dbd28b8855ec63bb2cb3891]
+command = "curl --retry 5 --retry-delay 1 --connect-timeout 1 --retry-max-time 5 --max-time 10 --noproxy '*' -H Metadata:true http://169.254.169.254/metadata/instance?api-version=2021-02-01"
+stdout = """
 {
   "compute": {
     "additionalCapabilities": {
@@ -167,14 +163,3 @@
   }
 }
 """
-  [commands.7063dece7cccf374d9fa1ee30ff23300fa42477e064e69be7bb6d01c0cfff682]
-    command = "hostname"
-    stdout = "examplevmname\r\n"
-    stderr = ""
-    exit_status = 0
-
-  [commands.7ce30b85e14a034d16c5c90a783f09e0533e1fdf0369223c97c93913ccf1586a]
-    command = "wmic os get * /format:csv"
-    stdout = "\r\r\nNode,BootDevice,BuildNumber,BuildType,Caption,CodeSet,CountryCode,CreationClassName,CSCreationClassName,CSDVersion,CSName,CurrentTimeZone,DataExecutionPrevention_32BitApplications,DataExecutionPrevention_Available,DataExecutionPrevention_Drivers,DataExecutionPrevention_SupportPolicy,Debug,Description,Distributed,EncryptionLevel,ForegroundApplicationBoost,FreePhysicalMemory,FreeSpaceInPagingFiles,FreeVirtualMemory,InstallDate,LargeSystemCache,LastBootUpTime,LocalDateTime,Locale,Manufacturer,MaxNumberOfProcesses,MaxProcessMemorySize,MUILanguages,Name,NumberOfLicensedUsers,NumberOfProcesses,NumberOfUsers,OperatingSystemSKU,Organization,OSArchitecture,OSLanguage,OSProductSuite,OSType,OtherTypeDescription,PAEEnabled,PlusProductID,PlusVersionNumber,PortableOperatingSystem,Primary,ProductType,RegisteredUser,SerialNumber,ServicePackMajorVersion,ServicePackMinorVersion,SizeStoredInPagingFiles,Status,SuiteMask,SystemDevice,SystemDirectory,SystemDrive,TotalSwapSpaceSize,TotalVirtualMemorySize,TotalVisibleMemorySize,Version,WindowsDirectory\r\r\njay-win1,\\Device\\HarddiskVolume3,17763,Multiprocessor Free,Microsoft Windows Server 2019 Datacenter,1252,1,Win32_OperatingSystem,Win32_ComputerSystem,,jay-win1,0,TRUE,TRUE,TRUE,3,FALSE,,FALSE,256,2,3245476,1048316,4414472,20211122143902.000000+000,,20211122155931.295112+000,20211122160459.536000+000,0409,Microsoft Corporation,4294967295,137438953344,{en-US},Microsoft Windows Server 2019 Datacenter|C:\\Windows|\\Device\\Harddisk0\\Partition4,0,92,3,8,,64-bit,1033,400,18,,,,,FALSE,TRUE,3,,00430-00000-00000-AA288,0,0,1048316,OK,400,\\Device\\HarddiskVolume4,C:\\Windows\\system32,C:,,5241540,4193224,10.0.17763,C:\\Windows\r\r\n"
-    stderr = ""
-    exit_status = 0

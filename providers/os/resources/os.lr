@@ -1721,7 +1721,7 @@ ipv4Address @defaults("ip") {
   // Classless Inter-Domain Routing notation (e.g. 172.31.24.71/20)
   cidr ip
   // Network address used to transmit to all devices connected to a network
-  broadcast string
+  broadcast ip
   // IP address that acts as the entry point to another, or external, network
-  gateway string
+  gateway ip
 }

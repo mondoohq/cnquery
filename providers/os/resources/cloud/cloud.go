@@ -37,12 +37,14 @@ func Resolve(conn shared.Connection) (OSCloud, error) {
 		return &aws{conn}, nil
 	case clouddetect.GCP:
 		return &gcp{conn}, nil
+	case clouddetect.AZURE:
+		return &azure{conn}, nil
 	default:
 		return &none{}, nil
 	}
 }
 
-const UNKNOWN Provider = "unknown"
+const UNKNOWN Provider = "Unknown"
 
 // none implements the OSCloud interface for cases where we can't detect
 // the cloud provider we are running on.

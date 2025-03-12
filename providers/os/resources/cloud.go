@@ -10,7 +10,6 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/cloud"
-	"go.mondoo.com/cnquery/v11/types"
 )
 
 func (c *mqlCloud) provider() (string, error) {
@@ -75,11 +74,11 @@ func (i *mqlCloudInstance) privateIpv4() (value []interface{}, err error) {
 		for _, ipaddress := range i.instanceMd.PrivateIpv4 {
 			resource, err = NewResource(i.MqlRuntime, "ipv4Address", map[string]*llx.RawData{
 				"__id":      llx.StringData(ipaddress.IP),
-				"ip":        {Type: types.IP, Value: ipaddress.IP},
-				"subnet":    {Type: types.IP, Value: ipaddress.Subnet},
-				"cidr":      {Type: types.IP, Value: ipaddress.CIDR},
-				"broadcast": llx.StringData(ipaddress.Broadcast),
-				"gateway":   llx.StringData(ipaddress.Gateway),
+				"ip":        llx.IPData(llx.ParseIP(ipaddress.IP)),
+				"subnet":    llx.IPData(llx.ParseIP(ipaddress.Subnet)),
+				"cidr":      llx.IPData(llx.ParseIP(ipaddress.CIDR)),
+				"broadcast": llx.IPData(llx.ParseIP(ipaddress.Broadcast)),
+				"gateway":   llx.IPData(llx.ParseIP(ipaddress.Gateway)),
 			})
 			if err != nil {
 				return
@@ -96,11 +95,11 @@ func (i *mqlCloudInstance) publicIpv4() (value []interface{}, err error) {
 		for _, ipaddress := range i.instanceMd.PublicIpv4 {
 			resource, err = NewResource(i.MqlRuntime, "ipv4Address", map[string]*llx.RawData{
 				"__id":      llx.StringData(ipaddress.IP),
-				"ip":        {Type: types.IP, Value: ipaddress.IP},
-				"subnet":    {Type: types.IP, Value: ipaddress.Subnet},
-				"cidr":      {Type: types.IP, Value: ipaddress.CIDR},
-				"broadcast": llx.StringData(ipaddress.Broadcast),
-				"gateway":   llx.StringData(ipaddress.Gateway),
+				"ip":        llx.IPData(llx.ParseIP(ipaddress.IP)),
+				"subnet":    llx.IPData(llx.ParseIP(ipaddress.Subnet)),
+				"cidr":      llx.IPData(llx.ParseIP(ipaddress.CIDR)),
+				"broadcast": llx.IPData(llx.ParseIP(ipaddress.Broadcast)),
+				"gateway":   llx.IPData(llx.ParseIP(ipaddress.Gateway)),
 			})
 			if err != nil {
 				return

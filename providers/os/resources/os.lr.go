@@ -2377,10 +2377,10 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlIpv4Address).GetCidr()).ToDataRes(types.IP)
 	},
 	"ipv4Address.broadcast": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIpv4Address).GetBroadcast()).ToDataRes(types.String)
+		return (r.(*mqlIpv4Address).GetBroadcast()).ToDataRes(types.IP)
 	},
 	"ipv4Address.gateway": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIpv4Address).GetGateway()).ToDataRes(types.String)
+		return (r.(*mqlIpv4Address).GetGateway()).ToDataRes(types.IP)
 	},
 }
 
@@ -5287,11 +5287,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"ipv4Address.broadcast": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIpv4Address).Broadcast, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlIpv4Address).Broadcast, ok = plugin.RawToTValue[llx.RawIP](v.Value, v.Error)
 		return
 	},
 	"ipv4Address.gateway": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIpv4Address).Gateway, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlIpv4Address).Gateway, ok = plugin.RawToTValue[llx.RawIP](v.Value, v.Error)
 		return
 	},
 }
@@ -15034,8 +15034,8 @@ type mqlIpv4Address struct {
 	Ip plugin.TValue[llx.RawIP]
 	Subnet plugin.TValue[llx.RawIP]
 	Cidr plugin.TValue[llx.RawIP]
-	Broadcast plugin.TValue[string]
-	Gateway plugin.TValue[string]
+	Broadcast plugin.TValue[llx.RawIP]
+	Gateway plugin.TValue[llx.RawIP]
 }
 
 // createIpv4Address creates a new instance of this resource
@@ -15082,10 +15082,10 @@ func (c *mqlIpv4Address) GetCidr() *plugin.TValue[llx.RawIP] {
 	return &c.Cidr
 }
 
-func (c *mqlIpv4Address) GetBroadcast() *plugin.TValue[string] {
+func (c *mqlIpv4Address) GetBroadcast() *plugin.TValue[llx.RawIP] {
 	return &c.Broadcast
 }
 
-func (c *mqlIpv4Address) GetGateway() *plugin.TValue[string] {
+func (c *mqlIpv4Address) GetGateway() *plugin.TValue[llx.RawIP] {
 	return &c.Gateway
 }
