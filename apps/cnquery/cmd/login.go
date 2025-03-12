@@ -200,9 +200,6 @@ func register(token string, annotations map[string]string, timer int, splay int,
 		}
 
 		log.Debug().Msg("store configuration")
-		// overwrite force, otherwise it will be stored
-		viper.Set("force", false)
-
 		// update configuration file, api-endpoint is set automatically
 		viper.Set("agent_mrn", confirmation.AgentMrn)
 		viper.Set("api_endpoint", confirmation.Credential.ApiEndpoint)
