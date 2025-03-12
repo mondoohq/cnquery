@@ -132,7 +132,7 @@ func (p winAppxPackages) toPackage(platform *inventory.Platform) Package {
 		PUrl:    purl.NewPackageURL(platform, purl.TypeAppx, p.Name, p.Version).String(),
 	}
 
-	if p.Name != "" && p.Version != "" {
+	if p.Version != "" {
 		cpeWfns, err := cpe.NewPackage2Cpe(p.Publisher, p.Name, p.Version, "", "")
 		if err != nil {
 			log.Debug().Err(err).
@@ -170,6 +170,9 @@ func ParseWindowsAppxPackages(platform *inventory.Platform, input io.Reader) ([]
 
 	pkgs := make([]Package, len(appxPackages))
 	for i, p := range appxPackages {
+		if p.Name == "" {
+			continue
+		}
 		pkgs[i] = p.toPackage(platform)
 	}
 	return pkgs, nil
@@ -398,6 +401,9 @@ func (w *WinPkgManager) getFsAppxPackages() ([]Package, error) {
 			log.Debug().Err(err).Str("path", p).Msg("could not parse appx manifest")
 			continue
 		}
+		if winAppxPkg.Name == "" {
+			continue
+		}
 		pkg := winAppxPkg.toPackage(w.platform)
 		pkgs = append(pkgs, pkg)
 
@@ -452,6 +458,14 @@ func getPackageFromRegistryKeyItems(children []registry.RegistryKeyItem, platfor
 		return nil
 	}
 
+	// TODO: We need to figure out why we have empty displayNames.
+	// this is common in windows but we need to verify it is a windows
+	// issue and not a cnquery issue.
+	if displayName == "" {
+		log.Debug().Msg("ignored package since display name is missing")
+		return nil
+	}
+
 	pkg := &Package{
 		Name:    displayName,
 		Version: displayVersion,
@@ -462,7 +476,7 @@ func getPackageFromRegistryKeyItems(children []registry.RegistryKeyItem, platfor
 		).String(),
 	}
 
-	if displayName != "" && displayVersion != "" {
+	if displayVersion != "" {
 		cpeWfns, err := cpe.NewPackage2Cpe(publisher, displayName, displayVersion, "", "")
 		if err != nil {
 			log.Debug().Err(err).Str("name", displayName).Str("version", displayVersion).Msg("could not create cpe for windows app package")
@@ -544,7 +558,14 @@ func ParseWindowsAppPackages(platform *inventory.Platform, input io.Reader) ([]P
 			continue
 		}
 		cpeWfns := []string{}
-		if entry.DisplayName != "" && entry.DisplayVersion != "" {
+
+		// TODO: We need to figure out why we have empty displayNames.
+		// this is common in windows but we need to verify it is a windows
+		// issue and not a cnquery issue.
+		if entry.DisplayName == "" {
+			continue
+		}
+		if entry.DisplayVersion != "" {
 			cpeWfns, err = cpe.NewPackage2Cpe(entry.Publisher, entry.DisplayName, entry.DisplayVersion, "", "")
 			if err != nil {
 				log.Debug().Err(err).
