@@ -73,9 +73,8 @@ func (d *Discovery) SupportedResourceTypes() (*ApiResourceIndex, error) {
 	log.Debug().Msg("query api resource types")
 	resList, err := d.discoveryClient.ServerPreferredResources()
 	if err != nil {
-		var groupDiscoveryErr *discovery.ErrGroupDiscoveryFailed
-		if errors.As(err, groupDiscoveryErr) {
-			log.Warn().Err(err).Msg("one or more kubernetes API groups fail to load")
+		if discovery.IsGroupDiscoveryFailedError(err) {
+			log.Debug().Err(err).Msg("one or more kubernetes API groups fail to load")
 		} else {
 			return nil, errors.Wrap(err, "failed to fetch api resource types from kubernetes")
 		}
