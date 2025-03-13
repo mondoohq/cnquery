@@ -42,7 +42,11 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 
 	// handle aws subcommands
 	if len(req.Args) >= 3 && req.Args[0] == "ec2" {
-		return &plugin.ParseCLIRes{Asset: handleAwsEc2Subcommands(req.Args, opts)}, nil
+		asset, err := handleAwsEc2Subcommands(req.Args, opts)
+		if err != nil {
+			return nil, err
+		}
+		return &plugin.ParseCLIRes{Asset: asset}, nil
 	}
 
 	inventoryConfig := &inventory.Config{
@@ -66,7 +70,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	return &plugin.ParseCLIRes{Asset: &asset}, nil
 }
 
-func handleAwsEc2Subcommands(args []string, opts map[string]string) *inventory.Asset {
+func handleAwsEc2Subcommands(args []string, opts map[string]string) (*inventory.Asset, error) {
 	asset := &inventory.Asset{}
 	switch args[1] {
 	case "instance-connect":
@@ -76,7 +80,7 @@ func handleAwsEc2Subcommands(args []string, opts map[string]string) *inventory.A
 	case "ebs":
 		return resources.EbsConnectAsset(args, opts)
 	}
-	return asset
+	return asset, nil
 }
 
 func parseFlagsToFiltersOpts(m map[string]*llx.Primitive) map[string]string {
