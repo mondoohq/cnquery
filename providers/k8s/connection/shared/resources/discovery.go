@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -73,7 +73,11 @@ func (d *Discovery) SupportedResourceTypes() (*ApiResourceIndex, error) {
 	log.Debug().Msg("query api resource types")
 	resList, err := d.discoveryClient.ServerPreferredResources()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to fetch api resource types from kubernetes")
+		if discovery.IsGroupDiscoveryFailedError(err) {
+			log.Debug().Err(err).Msg("one or more kubernetes API groups fail to load")
+		} else {
+			return nil, errors.Wrap(err, "failed to fetch api resource types from kubernetes")
+		}
 	}
 	log.Debug().Msgf("found %d api resource types", len(resList))
 
