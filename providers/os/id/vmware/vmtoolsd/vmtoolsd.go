@@ -46,7 +46,14 @@ type CommandInstanceMetadata struct {
 }
 
 func (m *CommandInstanceMetadata) RawMetadata() (any, error) {
-	raw := map[string]string{}
+	raw := map[string]any{}
+
+	ovfEnv, err := m.OVFEnv()
+	if err == nil {
+		// not all VMs have this setting enabled
+		raw["ovf"] = ovfEnv
+	}
+
 	ipaddress, err := m.IPv4()
 	if err != nil {
 		return raw, err
