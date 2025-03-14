@@ -159,7 +159,7 @@ func (m *CommandInstanceMetadata) RunCommand(commandString string) (string, erro
 
 // vmtoolsdGuestInfo runs vmtoolsd to fetch guest info with the provided key
 func (m *CommandInstanceMetadata) vmtoolsdGuestInfo(key string) (string, error) {
-	return m.RunCommand(fmt.Sprintf("%s --cmd \"info-get guestinfo.%s", m.vmtoolsd(), key))
+	return m.RunCommand(fmt.Sprintf("%s --cmd \"info-get guestinfo.%s\"", m.vmtoolsd(), key))
 }
 
 func (m *CommandInstanceMetadata) vmtoolsd() string {
