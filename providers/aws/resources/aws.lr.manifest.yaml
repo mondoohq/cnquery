@@ -956,11 +956,15 @@ resources:
         min_mondoo_version: 9.0.0
       deprecatedAt:
         min_mondoo_version: 9.0.0
+      enaSupport:
+        min_mondoo_version: 9.0.0
       id: {}
       name: {}
       ownerAlias:
         min_mondoo_version: 5.22.0
       ownerId: {}
+      tpmSupport:
+        min_mondoo_version: 9.0.0
     is_private: true
     min_mondoo_version: 5.15.0
     platform:
@@ -1198,6 +1202,8 @@ resources:
         The `aws.ec2.snapshot` resource provides fields for assessing the configuration of EBS snapshots within an AWS account. For usage, see `aws.ec2` resource documentation.
     fields:
       arn: {}
+      completionTime:
+        min_mondoo_version: 9.0.0
       createVolumePermission: {}
       description:
         min_mondoo_version: 9.0.0
@@ -1207,6 +1213,8 @@ resources:
       region: {}
       startTime: {}
       state: {}
+      storageTier:
+        min_mondoo_version: 9.0.0
       tags: {}
       volumeId: {}
       volumeSize:
@@ -3106,6 +3114,8 @@ resources:
       id: {}
       instanceTenancy:
         min_mondoo_version: 9.0.0
+      internetGatewayBlockMode:
+        min_mondoo_version: 9.0.0
       isDefault: {}
       name:
         min_mondoo_version: 9.0.0
@@ -3274,9 +3284,11 @@ resources:
       arn: {}
       assignIpv6AddressOnCreation: {}
       availabilityZone: {}
+      availableIpAddressCount: {}
       cidrs: {}
       defaultForAvailabilityZone: {}
       id: {}
+      internetGatewayBlockMode: {}
       mapPublicIpOnLaunch: {}
       region: {}
       state: {}
