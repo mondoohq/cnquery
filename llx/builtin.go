@@ -599,6 +599,7 @@ func init() {
 			"address":                  {f: ipAddress},
 			"cidr":                     {f: ipCIDR},
 			"inRange":                  {f: ipInRange},
+			"inSubnet":                 {f: ipInSubnet},
 			"isUnspecified":            {f: ipUnspecified},
 			"prefix":                   {f: ipPrefix},
 			"prefixLength":             {f: ipPrefixLength},

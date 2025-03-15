@@ -266,7 +266,7 @@ func compileVersionInRange(c *compiler, _ types.Type, ref uint64, id string, cal
 	return types.Bool, nil
 }
 
-func compileIpInRange(c *compiler, _ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+func compileIpInRangeOrSubnet(c *compiler, _ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
 	if call == nil || (len(call.Function) != 1 && len(call.Function) != 2) {
 		return types.Nil, errors.New("function " + id + " needs one or two arguments")
 	}
@@ -287,7 +287,7 @@ func compileIpInRange(c *compiler, _ types.Type, ref uint64, id string, call *pa
 
 	c.addChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
-		Id:   "inRange",
+		Id:   id,
 		Function: &llx.Function{
 			Type:    string(types.Bool),
 			Binding: ref,

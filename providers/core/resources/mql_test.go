@@ -1171,10 +1171,37 @@ func TestIP(t *testing.T) {
 			{Code: "ip('192.2.4.4').inRange('192.2.3.0')", Expectation: false},
 			{Code: "ip('192.2.3.4').inRange('192.2.3.0/24')", Expectation: true},
 			{Code: "ip('192.2.3.4').inRange('192.2.3.128/30')", Expectation: false},
+			{Code: "ip('192.2.3.128').inRange('192.2.3.128/30')", Expectation: true},
 			{Code: "ip('192.2.3.4').inRange(ip('192.2.3.0/24'))", Expectation: true},
 			{Code: "ip('192.2.3.4').inRange('192.2.3.255/24')", Expectation: true},
-			{Code: "ip('192.2.3.4').inRange('192.2.3.0/16')", Expectation: false},
+			{Code: "ip('192.2.3.4').inRange('192.2.3.0/16')", Expectation: true},
+			{Code: "ip('192.2.3.4').inRange('192.1.3.0/16')", Expectation: false},
 			{Code: "ip('10.0.0.5').inRange(167772160)", Expectation: true},
+			// in range supports broadcast and anycast
+			{Code: "ip('192.2.3.128').inRange('192.2.3.128/31')", Expectation: true},
+			{Code: "ip('192.2.3.129').inRange('192.2.3.128/31')", Expectation: true},
+		})
+	})
+
+	t.Run("ipv4 inSubnet with subnet", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "ip('192.2.3.0').inSubnet('192.2.3.0')", Expectation: false},
+			{Code: "ip('192.2.3.4').inSubnet('192.2.3.0')", Expectation: true},
+			{Code: "ip('192.2.3.255').inSubnet('192.2.3.0')", Expectation: false},
+			// messing with the lower bits just to make sure this doesn't have unexpected side-effects,
+			// because subnets are bit-wise so the lower bits don't matter here
+			{Code: "ip('192.2.3.0').inSubnet('192.2.3.0/24')", Expectation: false},
+			{Code: "ip('192.2.3.4').inSubnet('192.2.3.1/24')", Expectation: true},
+			{Code: "ip('192.2.3.255').inSubnet('192.2.3.2/24')", Expectation: false},
+			{Code: "ip('192.2.3.4').inSubnet('192.2.3.128/30')", Expectation: false},
+			// smaller prefix
+			{Code: "ip('192.2.3.128').inSubnet('192.2.3.128/30')", Expectation: false},
+			{Code: "ip('192.2.3.129').inSubnet('192.2.3.128/30')", Expectation: true},
+			{Code: "ip('192.2.3.131').inSubnet('192.2.3.128/30')", Expectation: false},
+			{Code: "ip('192.2.3.132').inSubnet('192.2.3.128/30')", Expectation: false},
+			// no subnet possible here, we only get broadcast and anycast
+			{Code: "ip('192.2.3.128').inSubnet('192.2.3.128/31')", Expectation: false},
+			{Code: "ip('192.2.3.129').inSubnet('192.2.3.128/31')", Expectation: false},
 		})
 	})
 

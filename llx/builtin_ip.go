@@ -20,6 +20,20 @@ type RawIP struct {
 	PrefixLength    int // -1 = unset
 }
 
+type constraintOp byte
+
+const (
+	UnknownOp constraintOp = 0
+	LessThan  constraintOp = 1 << iota
+	Equal
+	MoreThan
+)
+
+type ipConstraint struct {
+	operand constraintOp
+	address RawIP
+}
+
 func ParseIP(s string) RawIP {
 	prefix := s
 	suffix := ""
@@ -253,18 +267,26 @@ func (i RawIP) Suffix() string {
 	return suffix.String()
 }
 
-func (i RawIP) inRange(other RawIP) bool {
-	prefix := i.prefix()
-	otherPrefix := other.prefix()
-	return prefix.Equal(otherPrefix)
+func (i RawIP) Ipv4Broadcast() net.IP {
+	res := i.prefix()
+	m := createMask(i.PrefixLength, 0, 4)
+	for i := range m {
+		res[i] = res[i] | (^m[i])
+	}
+	return res
 }
 
-func (i RawIP) Cmp(other RawIP) int {
+// compare this IP to another IP, byte-wise step by step
+// returns:
+// - -1 if this IP is smaller than the other IP
+// -  0 if this IP is equal to the other IP
+// - +1 if this IP is larger than the other IP
+func (i RawIP) CmpIP(other net.IP) int {
 	for idx, b := range i.IP {
-		if len(other.IP) <= idx {
+		if len(other) <= idx {
 			return 1
 		}
-		o := other.IP[idx]
+		o := other[idx]
 		if b == o {
 			continue
 		}
@@ -274,10 +296,100 @@ func (i RawIP) Cmp(other RawIP) int {
 			return 1
 		}
 	}
-	if len(other.IP) > len(i.IP) {
+	if len(other) > len(i.IP) {
 		return -1
 	}
 	return 0
+}
+
+// similar to IP comparison, but optimizezd for subnets,
+// compares every byte-segment in the IP with the other IP
+// returns:
+// - -1 if this IP is below the subnet
+// -  0 if this IP is inside of the subnet (but not its any or broadcast IP)
+// - +1 if this IP is above the subnet
+// - -2 if this IP is the subnet's any IP (zero bits, eg 192.168.0.0/24)
+// - +2 if this IP is the subnet's broadcast IP (one bits, eg 192.168.0.255)
+// assummptions:
+// - both RawIPs are stored at length 16, as IPv6
+func (ip RawIP) CmpSubnet(subnet RawIP) int {
+	// the number of bits inside of a byte that the subnet is offset by
+	// eg: 20 => 16 + 4 i.e. 4 bits
+	offBits := subnet.PrefixLength % 8
+	// the prefix length is adjusted for IPv6, ie we assume the same IPv6 prefix,
+	// which allows us to compare ipv4 and ipv6
+	prefixLen := subnet.PrefixLength
+	if subnet.Version == 4 {
+		prefixLen += 12 * 8
+	}
+
+	bytePos := 0
+	for ; bytePos*8 < prefixLen && bytePos < len(ip.IP); bytePos++ {
+		// fast comparison for all prefix bits
+		if bytePos*8+8 <= prefixLen {
+			if ip.IP[bytePos] == subnet.IP[bytePos] {
+				continue
+			}
+			if ip.IP[bytePos] < subnet.IP[bytePos] {
+				return -1
+			}
+			return 1
+		}
+
+		// masked comparison for all remaining bits
+		var mask byte = ^(1<<(8-offBits) - 1)
+		ipM := ip.IP[bytePos] & mask
+		subnetM := subnet.IP[bytePos] & mask
+		if ipM == subnetM {
+			break
+		}
+		if ipM < subnetM {
+			return -1
+		}
+		return 1
+	}
+
+	// At this point we know the subnets are the same,
+	// time to test the rest
+
+	// Partial comparison of bits
+	allOnes := true
+	allZeros := true
+	if offBits != 0 {
+		var mask byte = 1<<(8-offBits) - 1
+		rem := ip.IP[bytePos] & mask
+		if rem == 0 {
+			allOnes = false
+		} else if rem == mask {
+			allZeros = false
+		} else {
+			return 0
+		}
+		bytePos++
+	}
+
+	for ; bytePos < len(ip.IP) && (allOnes || allZeros); bytePos++ {
+		cur := ip.IP[bytePos]
+		if cur == 0 {
+			allOnes = false
+		} else if cur == 255 {
+			allZeros = false
+		} else {
+			return 0
+		}
+	}
+
+	if allZeros {
+		return -2
+	}
+	if allOnes {
+		return 2
+	}
+	return 0
+}
+
+func (i RawIP) Cmp(other RawIP) int {
+	return i.CmpIP(other.IP)
 }
 
 func (i RawIP) Address() string {
@@ -440,45 +552,99 @@ func any2ip(v any) (RawIP, bool) {
 	}
 }
 
-func ipInRange(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	if bind.Value == nil {
-		return &RawData{Type: types.Int, Error: bind.Error}, 0, nil
-	}
-
-	bindIP, ok := bind.Value.(RawIP)
-	if !ok {
-		return nil, 0, errors.New("incorrect internal data for IP type")
-	}
-
-	conditions := []RawIP{}
+func parseIpConstraints(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) ([]ipConstraint, uint64, error) {
+	res := []ipConstraint{}
 	for i := range chunk.Function.Args {
 		argRef := chunk.Function.Args[i]
 
 		arg, rref, err := e.resolveValue(argRef, ref)
 		if err != nil || rref > 0 {
-			return nil, rref, err
+			return res, rref, err
 		}
 
-		s, ok := any2ip(arg.Value)
+		ip, ok := any2ip(arg.Value)
 		if !ok {
-			return nil, 0, errors.New("incorrect type for argument in `inRange` call (expected string, int, or IP)")
+			return res, 0, errors.New("incorrect type for argument in `inRange` call (expected string, int, or IP)")
 		}
-		conditions = append(conditions, s)
+		res = append(res, ipConstraint{
+			address: ip,
+		})
+	}
+	return res, 0, nil
+}
+
+func ipInRange(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.Int, Error: bind.Error}, 0, nil
+	}
+	bindIP, ok := bind.Value.(RawIP)
+	if !ok {
+		return nil, 0, errors.New("incorrect internal data for IP type")
 	}
 
-	if len(conditions) == 1 {
-		return BoolData(bindIP.inRange(conditions[0])), 0, nil
+	constraints, ref, err := parseIpConstraints(e, bind, chunk, ref)
+	if err != nil || ref != 0 {
+		return nil, ref, err
 	}
 
-	min := conditions[0]
-	max := conditions[1]
+	if len(constraints) == 1 {
+		c := constraints[0]
+		if c.operand == 0 {
+			res := bindIP.CmpSubnet(c.address)
+			return BoolData(res == 0 || res == -2 || res == 2), 0, nil
+		}
 
-	mincmp := min.Cmp(bindIP)
+		return nil, 0, errors.New("no support for other comparisons on IP address yet")
+	}
+
+	min := constraints[0]
+	max := constraints[1]
+
+	mincmp := min.address.Cmp(bindIP)
 	if mincmp == 1 {
 		return BoolFalse, 0, nil
 	}
-	maxcmp := bindIP.Cmp(max)
+	maxcmp := bindIP.Cmp(max.address)
 	if maxcmp == 1 {
+		return BoolFalse, 0, nil
+	}
+
+	return BoolTrue, 0, nil
+}
+
+func ipInSubnet(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.Int, Error: bind.Error}, 0, nil
+	}
+	bindIP, ok := bind.Value.(RawIP)
+	if !ok {
+		return nil, 0, errors.New("incorrect internal data for IP type")
+	}
+
+	constraints, ref, err := parseIpConstraints(e, bind, chunk, ref)
+	if err != nil || ref != 0 {
+		return nil, ref, err
+	}
+
+	if len(constraints) == 1 {
+		c := constraints[0]
+		if c.operand == 0 {
+			res := bindIP.CmpSubnet(c.address)
+			return BoolData(res == 0), 0, nil
+		}
+
+		return nil, 0, errors.New("no support for other comparisons on IP address yet")
+	}
+
+	min := constraints[0]
+	max := constraints[1]
+
+	mincmp := min.address.Cmp(bindIP)
+	if mincmp != -1 {
+		return BoolFalse, 0, nil
+	}
+	maxcmp := bindIP.Cmp(max.address)
+	if maxcmp != -1 {
 		return BoolFalse, 0, nil
 	}
 

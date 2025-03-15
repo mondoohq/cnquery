@@ -103,7 +103,8 @@ func init() {
 		types.IP: {
 			"address":       {typ: stringType, signature: FunctionSignature{}},
 			"cidr":          {typ: stringType, signature: FunctionSignature{}},
-			"inRange":       {typ: intType, compile: compileIpInRange},
+			"inRange":       {typ: intType, compile: compileIpInRangeOrSubnet},
+			"inSubnet":      {typ: intType, compile: compileIpInRangeOrSubnet},
 			"isUnspecified": {typ: boolType, signature: FunctionSignature{}},
 			"prefix":        {typ: stringType, signature: FunctionSignature{}},
 			"prefixLength":  {typ: intType, signature: FunctionSignature{}},
