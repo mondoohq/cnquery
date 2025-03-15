@@ -4205,6 +4205,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.snapshot.startTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Snapshot).GetStartTime()).ToDataRes(types.Time)
 	},
+	"aws.ec2.snapshot.completionTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Snapshot).GetCompletionTime()).ToDataRes(types.Time)
+	},
 	"aws.ec2.snapshot.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Snapshot).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -4219,6 +4222,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.snapshot.encrypted": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Snapshot).GetEncrypted()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.snapshot.storageTier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Snapshot).GetStorageTier()).ToDataRes(types.String)
 	},
 	"aws.ec2.volume.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Volume).GetArn()).ToDataRes(types.String)
@@ -10177,6 +10183,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsEc2Snapshot).StartTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.snapshot.completionTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Snapshot).CompletionTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.snapshot.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Snapshot).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
 		return
@@ -10195,6 +10205,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.ec2.snapshot.encrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Snapshot).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.snapshot.storageTier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Snapshot).StorageTier, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.volume.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26000,11 +26014,13 @@ type mqlAwsEc2Snapshot struct {
 	CreateVolumePermission plugin.TValue[[]interface{}]
 	VolumeId plugin.TValue[string]
 	StartTime plugin.TValue[*time.Time]
+	CompletionTime plugin.TValue[*time.Time]
 	Tags plugin.TValue[map[string]interface{}]
 	State plugin.TValue[string]
 	VolumeSize plugin.TValue[int64]
 	Description plugin.TValue[string]
 	Encrypted plugin.TValue[bool]
+	StorageTier plugin.TValue[string]
 }
 
 // createAwsEc2Snapshot creates a new instance of this resource
@@ -26070,6 +26086,10 @@ func (c *mqlAwsEc2Snapshot) GetStartTime() *plugin.TValue[*time.Time] {
 	return &c.StartTime
 }
 
+func (c *mqlAwsEc2Snapshot) GetCompletionTime() *plugin.TValue[*time.Time] {
+	return &c.CompletionTime
+}
+
 func (c *mqlAwsEc2Snapshot) GetTags() *plugin.TValue[map[string]interface{}] {
 	return &c.Tags
 }
@@ -26088,6 +26108,10 @@ func (c *mqlAwsEc2Snapshot) GetDescription() *plugin.TValue[string] {
 
 func (c *mqlAwsEc2Snapshot) GetEncrypted() *plugin.TValue[bool] {
 	return &c.Encrypted
+}
+
+func (c *mqlAwsEc2Snapshot) GetStorageTier() *plugin.TValue[string] {
+	return &c.StorageTier
 }
 
 // mqlAwsEc2Volume for the aws.ec2.volume resource

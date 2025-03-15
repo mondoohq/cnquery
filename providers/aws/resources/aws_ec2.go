@@ -1678,16 +1678,18 @@ func (a *mqlAwsEc2) getSnapshots(conn *connection.AwsConnection) []*jobpool.Job 
 				for _, snapshot := range snapshots.Snapshots {
 					mqlSnap, err := CreateResource(a.MqlRuntime, "aws.ec2.snapshot",
 						map[string]*llx.RawData{
-							"arn":         llx.StringData(fmt.Sprintf(snapshotArnPattern, regionVal, conn.AccountId(), convert.ToString(snapshot.SnapshotId))),
-							"description": llx.StringDataPtr(snapshot.Description),
-							"encrypted":   llx.BoolDataPtr(snapshot.Encrypted),
-							"id":          llx.StringDataPtr(snapshot.SnapshotId),
-							"region":      llx.StringData(regionVal),
-							"startTime":   llx.TimeDataPtr(snapshot.StartTime),
-							"state":       llx.StringData(string(snapshot.State)),
-							"tags":        llx.MapData(Ec2TagsToMap(snapshot.Tags), types.String),
-							"volumeId":    llx.StringDataPtr(snapshot.VolumeId),
-							"volumeSize":  llx.IntDataDefault(snapshot.VolumeSize, 0),
+							"arn":            llx.StringData(fmt.Sprintf(snapshotArnPattern, regionVal, conn.AccountId(), convert.ToString(snapshot.SnapshotId))),
+							"description":    llx.StringDataPtr(snapshot.Description),
+							"encrypted":      llx.BoolDataPtr(snapshot.Encrypted),
+							"id":             llx.StringDataPtr(snapshot.SnapshotId),
+							"region":         llx.StringData(regionVal),
+							"startTime":      llx.TimeDataPtr(snapshot.StartTime),
+							"completionTime": llx.TimeDataPtr(snapshot.CompletionTime),
+							"state":          llx.StringData(string(snapshot.State)),
+							"tags":           llx.MapData(Ec2TagsToMap(snapshot.Tags), types.String),
+							"volumeId":       llx.StringDataPtr(snapshot.VolumeId),
+							"volumeSize":     llx.IntDataDefault(snapshot.VolumeSize, 0),
+							"storageTier":    llx.StringData(string(snapshot.StorageTier)),
 						})
 					if err != nil {
 						return nil, err

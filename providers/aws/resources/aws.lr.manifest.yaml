@@ -1198,6 +1198,8 @@ resources:
         The `aws.ec2.snapshot` resource provides fields for assessing the configuration of EBS snapshots within an AWS account. For usage, see `aws.ec2` resource documentation.
     fields:
       arn: {}
+      completionTime:
+        min_mondoo_version: 9.0.0
       createVolumePermission: {}
       description:
         min_mondoo_version: 9.0.0
@@ -1207,6 +1209,8 @@ resources:
       region: {}
       startTime: {}
       state: {}
+      storageTier:
+        min_mondoo_version: 9.0.0
       tags: {}
       volumeId: {}
       volumeSize:
