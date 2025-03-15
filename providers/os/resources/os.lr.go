@@ -822,6 +822,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"os.hostname": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOs).GetHostname()).ToDataRes(types.String)
 	},
+	"os.hypervisor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOs).GetHypervisor()).ToDataRes(types.String)
+	},
 	"os.machineid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOs).GetMachineid()).ToDataRes(types.String)
 	},
@@ -2808,6 +2811,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"os.hostname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOs).Hostname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"os.hypervisor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOs).Hypervisor, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"os.machineid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6608,6 +6615,7 @@ type mqlOs struct {
 	Updates plugin.TValue[[]interface{}]
 	Rebootpending plugin.TValue[bool]
 	Hostname plugin.TValue[string]
+	Hypervisor plugin.TValue[string]
 	Machineid plugin.TValue[string]
 }
 
@@ -6697,6 +6705,12 @@ func (c *mqlOs) GetRebootpending() *plugin.TValue[bool] {
 func (c *mqlOs) GetHostname() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Hostname, func() (string, error) {
 		return c.hostname()
+	})
+}
+
+func (c *mqlOs) GetHypervisor() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Hypervisor, func() (string, error) {
+		return c.hypervisor()
 	})
 }
 

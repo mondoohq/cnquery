@@ -597,6 +597,8 @@ resources:
     fields:
       env: {}
       hostname: {}
+      hypervisor:
+        min_mondoo_version: 9.0.0
       machineid: {}
       name: {}
       path: {}
