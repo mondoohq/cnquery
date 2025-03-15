@@ -1,0 +1,51 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "4.9.125-linuxkit"
+
+[commands."vmtoolsd --cmd \"info-get guestinfo.hostname\""]
+stdout = "linux-123.localdomain"
+
+[commands."vmtoolsd --cmd \"info-get guestinfo.uuid\""]
+stdout = "5c4c1142-a38a-b604-dfde-60730c109bac"
+
+[commands."vmtoolsd --cmd \"info-get guestinfo.ip\""]
+stdout = "192.168.1.5"
+
+[commands."vmtoolsd --cmd \"info-get guestinfo.ovfEnv\""]
+stdout = """
+<?xml version="1.0" encoding="UTF-8"?>
+<Environment
+     xmlns="http://schemas.dmtf.org/ovf/environment/1"
+     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xmlns:oe="http://schemas.dmtf.org/ovf/environment/1"
+     xmlns:ve="http://www.vmware.com/schema/ovfenv"
+     oe:id=""
+     ve:vCenterId="vm-6143">
+   <PlatformSection>
+      <Kind>VMware ESXi</Kind>
+      <Version>8.0.0</Version>
+      <Vendor>VMware, Inc.</Vendor>
+      <Locale>en</Locale>
+   </PlatformSection>
+   <PropertySection>
+         <Property oe:key="dns" oe:value="test-mondoo.com"/>
+         <Property oe:key="foo" oe:value=""/>
+         <Property oe:key="gateway" oe:value="192.168.1.1"/>
+         <Property oe:key="hostname" oe:value="linux-123.localdomain"/>
+         <Property oe:key="ipv4" oe:value="192.168.1.5"/>
+   </PropertySection>
+   <ve:EthernetAdapterSection>
+      <ve:Adapter ve:mac="00:50:56:91:66:5d" ve:network="VM Network" ve:unitNumber="7"/>
+   </ve:EthernetAdapterSection>
+</Environment>
+"""
+
+[files."/sys/devices/virtual/dmi/id/product_name"]
+  path = "/sys/devices/virtual/dmi/id/product_name"
+  enoent = false
+  content = "VMware Virtual Platform"

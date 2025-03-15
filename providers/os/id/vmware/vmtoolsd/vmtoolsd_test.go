@@ -1,0 +1,268 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
+package vmtoolsd_test
+
+import (
+	"encoding/json"
+	"testing"
+
+	subject "go.mondoo.com/cnquery/v11/providers/os/id/vmware/vmtoolsd"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v11/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/v11/providers/os/detector"
+)
+
+func TestDetectLinuxInstance(t *testing.T) {
+	conn, err := mock.New(0, "../testdata/instance_linux.toml", &inventory.Asset{})
+	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
+
+	vmtoolsSvc, err := subject.Resolve(conn, platform)
+	require.NoError(t, err)
+
+	t.Run("identity", func(t *testing.T) {
+		identt, err := vmtoolsSvc.Identify()
+		require.NoError(t, err)
+
+		assert.Equal(t,
+			"//platformid.api.mondoo.app/runtime/vmware/instance/linux-123.localdomain",
+			identt.Hostname,
+		)
+		assert.Equal(t,
+			"//platformid.api.mondoo.app/runtime/vmware/instance/5c4c1142-a38a-b604-dfde-60730c109bac",
+			identt.UUID,
+		)
+	})
+
+	t.Run("raw metadata", func(t *testing.T) {
+		raw, err := vmtoolsSvc.RawMetadata()
+		require.NoError(t, err)
+
+		// Convert to JSON for readability
+		jsonData, _ := json.MarshalIndent(raw, "", "  ")
+		expected := `{
+  "hostname": "linux-123.localdomain",
+	"ipv4": "192.168.1.5",
+  "ovf": {
+    "esxID": "",
+    "id": "",
+    "platformSection": {
+      "kind": "VMware ESXi",
+      "locale": "en",
+      "vendor": "VMware, Inc.",
+      "version": "8.0.0"
+    },
+    "propertySection": {
+      "property": [
+        {
+          "key": "dns",
+          "value": "test-mondoo.com"
+        },
+        {
+          "key": "foo"
+        },
+        {
+          "key": "gateway",
+          "value": "192.168.1.1"
+        },
+        {
+          "key": "hostname",
+          "value": "linux-123.localdomain"
+        },
+        {
+          "key": "ipv4",
+          "value": "192.168.1.5"
+        }
+      ]
+    },
+    "xmlName": {
+      "Local": "Environment",
+      "Space": "http://schemas.dmtf.org/ovf/environment/1"
+    }
+  }
+}`
+
+		// Compare actual vs expected JSON output
+		assert.JSONEq(t, expected, string(jsonData))
+	})
+}
+
+func TestDetectLinuxInstanceWithoutVmtoolsd(t *testing.T) {
+	conn, err := mock.New(0, "../testdata/instance_linux_no_vmtoolsd.toml", &inventory.Asset{})
+	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
+
+	vmtoolsSvc, err := subject.Resolve(conn, platform)
+	require.NoError(t, err)
+
+	t.Run("identity", func(t *testing.T) {
+		identt, err := vmtoolsSvc.Identify()
+		require.NoError(t, err)
+
+		assert.Equal(t,
+			"//platformid.api.mondoo.app/runtime/vmware/instance/linux-123.localdomain",
+			identt.Hostname,
+		)
+		assert.Equal(t,
+			"//platformid.api.mondoo.app/runtime/vmware/instance/5c4c1142-a38a-b604-dfde-60730c109bac",
+			identt.UUID,
+		)
+	})
+
+	t.Run("raw metadata", func(t *testing.T) {
+		raw, err := vmtoolsSvc.RawMetadata()
+		require.NoError(t, err)
+
+		// Convert to JSON for readability
+		jsonData, _ := json.MarshalIndent(raw, "", "  ")
+		expected := `{
+  "hostname": "linux-123.localdomain"
+}`
+
+		// Compare actual vs expected JSON output
+		assert.JSONEq(t, expected, string(jsonData))
+	})
+}
+
+func TestDetectWindowsInstance(t *testing.T) {
+	conn, err := mock.New(0, "../testdata/instance_windows.toml", &inventory.Asset{})
+	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
+
+	vmtoolsSvc, err := subject.Resolve(conn, platform)
+	require.NoError(t, err)
+
+	t.Run("identity", func(t *testing.T) {
+		identt, err := vmtoolsSvc.Identify()
+		require.NoError(t, err)
+
+		assert.Equal(t,
+			"//platformid.api.mondoo.app/runtime/vmware/instance/win-1",
+			identt.Hostname,
+		)
+		assert.Equal(t,
+			"//platformid.api.mondoo.app/runtime/vmware/instance/5c4c1142-a38a-b604-dfde-60730c109bab",
+			identt.UUID,
+		)
+	})
+
+	t.Run("raw metadata", func(t *testing.T) {
+		raw, err := vmtoolsSvc.RawMetadata()
+		require.NoError(t, err)
+
+		// Convert to JSON for readability
+		jsonData, _ := json.MarshalIndent(raw, "", "  ")
+		expected := `{
+  "hostname": "win-1",
+	"ipv4": "192.168.1.6",
+  "ovf": {
+    "esxID": "",
+    "id": "",
+    "platformSection": {
+      "kind": "VMware ESXi",
+      "locale": "en",
+      "vendor": "VMware, Inc.",
+      "version": "8.0.0"
+    },
+    "propertySection": {
+      "property": [
+        {
+          "key": "dns",
+          "value": "test-mondoo.com"
+        },
+        {
+          "key": "foo"
+        },
+        {
+          "key": "gateway",
+          "value": "192.168.1.1"
+        },
+        {
+          "key": "hostname",
+          "value": "win-1"
+        },
+        {
+          "key": "ipv4",
+          "value": "192.168.1.6"
+        }
+      ]
+    },
+    "xmlName": {
+      "Local": "Environment",
+      "Space": "http://schemas.dmtf.org/ovf/environment/1"
+    }
+  }
+
+}`
+
+		// Compare actual vs expected JSON output
+		assert.JSONEq(t, expected, string(jsonData))
+	})
+}
+
+func TestDetectWindowsInstanceWithoutVmtoolsd(t *testing.T) {
+	conn, err := mock.New(0, "../testdata/instance_windows_no_vmtoolsd.toml", &inventory.Asset{})
+	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
+
+	vmtoolsSvc, err := subject.Resolve(conn, platform)
+	require.NoError(t, err)
+
+	t.Run("identity", func(t *testing.T) {
+		identt, err := vmtoolsSvc.Identify()
+		require.NoError(t, err)
+
+		assert.Equal(t,
+			"//platformid.api.mondoo.app/runtime/vmware/instance/win-1",
+			identt.Hostname,
+		)
+		assert.Equal(t,
+			"//platformid.api.mondoo.app/runtime/vmware/instance/5c4c1142-a38a-b604-dfde-60730c109bab",
+			identt.UUID,
+		)
+	})
+
+	t.Run("raw metadata", func(t *testing.T) {
+		raw, err := vmtoolsSvc.RawMetadata()
+		require.NoError(t, err)
+
+		// Convert to JSON for readability
+		jsonData, _ := json.MarshalIndent(raw, "", "  ")
+		expected := `{
+  "hostname": "win-1"
+}`
+
+		// Compare actual vs expected JSON output
+		assert.JSONEq(t, expected, string(jsonData))
+	})
+}
+
+func TestNoMatch(t *testing.T) {
+	conn, err := mock.New(0, "../testdata/no_vmware_instance.toml", &inventory.Asset{})
+	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
+
+	vmtoolsSvc, err := subject.Resolve(conn, platform)
+	require.NoError(t, err)
+
+	t.Run("identity", func(t *testing.T) {
+		identt, err := vmtoolsSvc.Identify()
+		require.Error(t, err)
+		assert.Empty(t, identt.Hostname)
+		assert.Empty(t, identt.UUID)
+	})
+
+	t.Run("raw metadata", func(t *testing.T) {
+		_, err := vmtoolsSvc.RawMetadata()
+		require.Error(t, err)
+	})
+}

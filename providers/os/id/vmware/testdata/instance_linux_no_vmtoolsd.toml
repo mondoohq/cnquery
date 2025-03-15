@@ -1,0 +1,21 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "4.9.125-linuxkit"
+
+[commands."hostname -f"]
+stdout = "linux-123.localdomain"
+
+[files."/sys/class/dmi/id/product_uuid"]
+  path = "/sys/class/dmi/id/product_uuid"
+  enoent = false
+  content = "5c4c1142-a38a-b604-dfde-60730c109bac"
+
+[files."/sys/devices/virtual/dmi/id/product_name"]
+  path = "/sys/devices/virtual/dmi/id/product_name"
+  enoent = false
+  content = "VMware Virtual Platform"
