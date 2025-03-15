@@ -2692,12 +2692,12 @@ aws.ec2 {
 }
 
 // Amazon Elastic IP (EIP)
-private aws.ec2.eip {
+private aws.ec2.eip @defaults("publicIp attached privateIpAddress") {
   // Public IP address of the EIP
   publicIp string
   // Whether the Elastic IP is associated with an instance (false if no allocationId is present)
   attached bool
-  // Ec2 instance associated with the EIP
+  // EC2 instance associated with the EIP
   instance() aws.ec2.instance
   // ID of the network interface
   networkInterfaceId string
@@ -2910,6 +2910,8 @@ private aws.ec2.snapshot @defaults("id region volumeSize state") {
   volumeId string
   // Time when the snapshot was initiated
   startTime time
+  // Time when the snapshot was completed
+  completionTime time
   // Tags for the snapshot
   tags map[string]string
   // State of the snapshot: pending, completed, error, recoverable, or recovering
@@ -2920,6 +2922,8 @@ private aws.ec2.snapshot @defaults("id region volumeSize state") {
   description string
   // Whether the snapshot is encrypted
   encrypted bool
+  // The storage tier in which the snapshot is stored
+  storageTier string
 }
 
 // Amazon EC2 (EBS) volume
