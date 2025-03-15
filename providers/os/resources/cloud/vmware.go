@@ -40,7 +40,7 @@ func (v *vmware) Instance() (*InstanceMetadata, error) {
 
 	instanceMd := &InstanceMetadata{Metadata: metadata}
 
-	m, ok := metadata.(map[string]string)
+	m, ok := metadata.(map[string]any)
 	if !ok {
 		return instanceMd, errors.New("unexpected raw metadata")
 	}
@@ -48,11 +48,11 @@ func (v *vmware) Instance() (*InstanceMetadata, error) {
 	// TODO look into more metadata
 
 	if value, ok := m["hostname"]; ok {
-		instanceMd.PrivateHostname = value
+		instanceMd.PrivateHostname = value.(string)
 	}
 
-	if value, ok := m["ipaddress"]; ok {
-		instanceMd.PrivateIpv4 = []Ipv4Address{{IP: value}}
+	if value, ok := m["ipv4"]; ok {
+		instanceMd.PrivateIpv4 = []Ipv4Address{{IP: value.(string)}}
 	}
 
 	return instanceMd, nil

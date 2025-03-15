@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/cockroachdb/errors"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
@@ -22,8 +23,8 @@ type InstanceIdentifier interface {
 }
 
 type Identity struct {
-	InstanceID string
-	PlatformID string
+	Hostname string
+	UUID     string
 }
 
 func Resolve(conn shared.Connection, pf *inventory.Platform) (InstanceIdentifier, error) {
@@ -54,11 +55,11 @@ func (m *CommandInstanceMetadata) RawMetadata() (any, error) {
 		raw["ovf"] = ovfEnv
 	}
 
-	ipaddress, err := m.IPv4()
-	if err != nil {
-		return raw, err
+	ipv4, err := m.IPv4()
+	if err == nil {
+		// we might not be able to detect the ipv4
+		raw["ipv4"] = ipv4
 	}
-	raw["ipaddress"] = ipaddress
 
 	hostname, err := m.Hostname()
 	if err != nil {
@@ -66,24 +67,29 @@ func (m *CommandInstanceMetadata) RawMetadata() (any, error) {
 	}
 	raw["hostname"] = hostname
 
+	// TODO look into more metadata
+
 	return raw, nil
 }
 
 func (m *CommandInstanceMetadata) Identify() (Identity, error) {
-	uuid, err := m.UUID()
-	if err != nil {
-		return Identity{}, err
-	}
+	identt := Identity{}
 
 	hostname, err := m.Hostname()
 	if err != nil {
-		return Identity{}, err
+		return identt, err
+	}
+	identt.Hostname = "//platformid.api.mondoo.app/runtime/vmware/instance/" + hostname
+
+	// collecting the UUID from the virtual machine may require 'sudo' access,
+	// so we are not making this a requirement but more like extra information
+	// if we can access it
+	uuid, err := m.UUID()
+	if err == nil {
+		identt.UUID = "//platformid.api.mondoo.app/runtime/vmware/instance/" + uuid
 	}
 
-	return Identity{
-		InstanceID: "//platformid.api.mondoo.app/runtime/vmware/instances/" + uuid,
-		PlatformID: "//platformid.api.mondoo.app/runtime/vmware/instances/" + hostname,
-	}, nil
+	return identt, nil
 }
 
 func (m *CommandInstanceMetadata) UUID() (string, error) {
@@ -101,14 +107,10 @@ func (m *CommandInstanceMetadata) UUID() (string, error) {
 	switch {
 	case m.platform.IsFamily(inventory.FAMILY_UNIX):
 		content, err := afero.ReadFile(m.connection.FileSystem(), "/sys/class/dmi/id/product_uuid")
-		if err == nil {
-			return strings.TrimSpace(string(content)), nil
-		}
+		return strings.TrimSpace(string(content)), errors.Wrap(err, "unable to detect vm uuid")
 	case m.platform.IsFamily(inventory.FAMILY_WINDOWS):
 		rawUUID, err := m.RunCommand("(Get-WmiObject Win32_ComputerSystemProduct).UUID")
-		if err == nil {
-			return rawUUID, nil
-		}
+		return strings.TrimSpace(string(rawUUID)), errors.Wrap(err, "unable to detect vm uuid")
 	}
 
 	return "", errors.New("unable to detect vm uuid")
@@ -135,12 +137,23 @@ func (m *CommandInstanceMetadata) Hostname() (string, error) {
 }
 
 func (m *CommandInstanceMetadata) IPv4() (string, error) {
-	ipv4, err := m.vmtoolsdGuestInfo("ip")
+	ip, err := m.vmtoolsdGuestInfo("ip")
+	if err == nil && ip != "" {
+		return ip, nil
+	}
+
+	log.Debug().Err(err).Msg("unable to get vmtoolsd ip data")
+
+	ipv4, err := m.vmtoolsdGuestInfo("ipv4")
 	if err == nil && ipv4 != "" {
 		return ipv4, nil
 	}
 
+	log.Debug().Err(err).Msg("unable to get vmtoolsd ipv4 data")
+
 	// TODO maybe try to get this information from the os directly
+	//
+	// interfaces, err := network.Interfaces()
 
 	return "", errors.New("unable to detect ipv4")
 }

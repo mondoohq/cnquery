@@ -5,12 +5,14 @@ package vmtoolsd
 
 import (
 	"encoding/xml"
-	"fmt"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 )
 
+// OVFEnv tries to fetch the Open Virtualization Format settings using `vmtoolsd`
+//
+// https://www.dmtf.org/sites/default/files/standards/documents/DSP0243_2.1.0.pdf
 func (m *CommandInstanceMetadata) OVFEnv() (*Env, error) {
 	ovfEnvXML, err := m.vmtoolsdGuestInfo("ovfEnv")
 	if err == nil && ovfEnvXML != "" {
@@ -52,14 +54,4 @@ type PropertySection struct {
 type EnvProperty struct {
 	Key   string `xml:"key,attr" json:"key"`
 	Value string `xml:"value,attr" json:"value,omitempty"`
-}
-
-// Marshal marshals Env to xml by using xml.Marshal.
-func (e Env) Marshal() (string, error) {
-	x, err := xml.Marshal(e)
-	if err != nil {
-		return "", err
-	}
-
-	return fmt.Sprintf("%s%s", xml.Header, x), nil
 }
