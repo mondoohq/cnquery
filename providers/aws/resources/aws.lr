@@ -3176,7 +3176,7 @@ private aws.ec2.image @defaults("ownerAlias id name") {
   createdAt time
   // Date the image was deprecated
   deprecatedAt time
-  // Specifies whether enhanced networking with ENA is enabled
+  // Whether enhanced networking with ENA is enabled
   enaSupport bool
   // The supported TPM version. If the image is configured for NitroTPM support, the value is v2.0
   tpmSupport string
