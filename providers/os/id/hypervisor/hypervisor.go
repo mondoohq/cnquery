@@ -15,19 +15,21 @@ import (
 
 // list of known hypervisors
 var knownHypervisors = map[string]string{
-	"vmware":     "VMware",
-	"virtualbox": "VirtualBox",
-	"kvm":        "KVM",
-	"qemu":       "QEMU",
-	"rhev":       "RHEV Hypervisor",
-	"hyper-v":    "Hyper-V",
-	"xen":        "Xen",
-	"parallels":  "Parallels",
-	"bhyve":      "bhyve",
-	"proxmox":    "Proxmox VE",
-	"openvz":     "OpenVZ",
-	"virtuozzo":  "Virtuozzo",
-	"powervm":    "IBM PowerVM",
+	"vmware":        "VMware",
+	"virtualbox":    "VirtualBox",
+	"kvm":           "KVM",
+	"qemu":          "QEMU",
+	"rhev":          "RHEV Hypervisor",
+	"hyper-v":       "Hyper-V",
+	"xen":           "Xen",
+	"parallels":     "Parallels",
+	"bhyve":         "bhyve",
+	"proxmox":       "Proxmox VE",
+	"openvz":        "OpenVZ",
+	"virtuozzo":     "Virtuozzo",
+	"powervm":       "IBM PowerVM",
+	"applevirtual":  "Apple Virtualization",
+	"apple virtual": "Apple Virtualization",
 }
 
 // hyper is a helper struct to avoid passing the connection and platform
