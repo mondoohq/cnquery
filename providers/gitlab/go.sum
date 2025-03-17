@@ -314,8 +314,8 @@ github.com/xanzy/ssh-agent v0.3.3/go.mod h1:6dzNDKs0J9rVPHPhaGCukekBHKqfl+L3KghI
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
-gitlab.com/gitlab-org/api/client-go v0.123.0 h1:W3LZ5QNyiSCJA0Zchkwz8nQIUzOuDoSWMZtRDT5DjPI=
-gitlab.com/gitlab-org/api/client-go v0.123.0/go.mod h1:Jh0qjLILEdbO6z/OY94RD+3NDQRUKiuFSFYozN6cpKM=
+gitlab.com/gitlab-org/api/client-go v0.125.0 h1:T+L13tpjE1s3Hkqyq+ontvYVSwRyMlfOLDd75IiRY5g=
+gitlab.com/gitlab-org/api/client-go v0.125.0/go.mod h1:SEN5CKASOsKoA6rv6Y3cPiM5ikH2HxFaqCUwZOquttI=
 go.mondoo.com/ranger-rpc v0.6.5 h1:KKoeTGPonJI3T6lrT9oxdH9eNlZC6pdqYvsuWZWyB6w=
 go.mondoo.com/ranger-rpc v0.6.5/go.mod h1:kwPJSYj32vZJjWoQSKEao5YoUO/ZRcjVGxBOL4tApf0=
 go.opentelemetry.io/auto/sdk v1.1.0 h1:cH53jehLUN6UFLY71z+NDOiNJqDdPRaXzTel0sJySYA=

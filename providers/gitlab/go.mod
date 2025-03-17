@@ -3,11 +3,12 @@ module go.mondoo.com/cnquery/v11/providers/gitlab
 replace go.mondoo.com/cnquery/v11 => ../..
 
 go 1.23.4
+toolchain go1.24.1
 
 require (
 	github.com/rs/zerolog v1.33.0
 	github.com/stretchr/testify v1.10.0
-	gitlab.com/gitlab-org/api/client-go v0.123.0
+	gitlab.com/gitlab-org/api/client-go v0.125.0
 	go.mondoo.com/cnquery/v11 v11.41.0
 	golang.org/x/exp v0.0.0-20250215185904-eff6e970281f
 	google.golang.org/protobuf v1.36.5
