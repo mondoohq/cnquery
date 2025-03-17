@@ -2914,9 +2914,9 @@ private aws.ec2.snapshot @defaults("id region volumeSize state") {
   createVolumePermission() []dict
   // ID of the volume used to create the snapshot
   volumeId string
-  // Time when the snapshot was initiated
+  // Time when the snapshot began
   startTime time
-  // Time when the snapshot was completed
+  // Time when the snapshot completed
   completionTime time
   // Tags for the snapshot
   tags map[string]string
