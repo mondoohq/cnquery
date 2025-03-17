@@ -28,13 +28,13 @@ func TestDetectLinuxInstance(t *testing.T) {
 	identifier, name, relatedIdentifiers := subject.Detect(conn, platform, mgr)
 
 	assert.Equal(t,
-		"//platformid.api.mondoo.app/runtime/vmware/instance/linux-123.localdomain",
+		"//platformid.api.mondoo.app/runtime/vmware/uuid/5c4c1142-a38a-b604-dfde-60730c109bac",
 		identifier,
 	)
 	assert.Equal(t, "", name)
 	require.Len(t, relatedIdentifiers, 1)
 	assert.Equal(t,
-		"//platformid.api.mondoo.app/runtime/vmware/instance/5c4c1142-a38a-b604-dfde-60730c109bac",
+		"//platformid.api.mondoo.app/runtime/vcenter/moid/vm-6143",
 		relatedIdentifiers[0],
 	)
 }
@@ -50,15 +50,11 @@ func TestDetectLinuxInstanceWithoutVmtoolsd(t *testing.T) {
 	identifier, name, relatedIdentifiers := subject.Detect(conn, platform, mgr)
 
 	assert.Equal(t,
-		"//platformid.api.mondoo.app/runtime/vmware/instance/linux-123.localdomain",
+		"//platformid.api.mondoo.app/runtime/vmware/uuid/5c4c1142-a38a-b604-dfde-60730c109bac",
 		identifier,
 	)
 	assert.Equal(t, "", name)
-	require.Len(t, relatedIdentifiers, 1)
-	assert.Equal(t,
-		"//platformid.api.mondoo.app/runtime/vmware/instance/5c4c1142-a38a-b604-dfde-60730c109bac",
-		relatedIdentifiers[0],
-	)
+	require.Len(t, relatedIdentifiers, 0)
 }
 
 func TestDetectWindowsInstance(t *testing.T) {
@@ -73,13 +69,13 @@ func TestDetectWindowsInstance(t *testing.T) {
 	identifier, name, relatedIdentifiers := subject.Detect(conn, platform, mgr)
 
 	assert.Equal(t,
-		"//platformid.api.mondoo.app/runtime/vmware/instance/win-1",
+		"//platformid.api.mondoo.app/runtime/vmware/uuid/5c4c1142-a38a-b604-dfde-60730c109bab",
 		identifier,
 	)
 	assert.Equal(t, "", name)
 	require.Len(t, relatedIdentifiers, 1)
 	assert.Equal(t,
-		"//platformid.api.mondoo.app/runtime/vmware/instance/5c4c1142-a38a-b604-dfde-60730c109bab",
+		"//platformid.api.mondoo.app/runtime/vcenter/moid/vm-6143",
 		relatedIdentifiers[0],
 	)
 }
@@ -96,15 +92,11 @@ func TestDetectWindowsInstanceWithoutVmtoolsd(t *testing.T) {
 	identifier, name, relatedIdentifiers := subject.Detect(conn, platform, mgr)
 
 	assert.Equal(t,
-		"//platformid.api.mondoo.app/runtime/vmware/instance/win-1",
+		"//platformid.api.mondoo.app/runtime/vmware/uuid/5c4c1142-a38a-b604-dfde-60730c109bab",
 		identifier,
 	)
 	assert.Equal(t, "", name)
-	require.Len(t, relatedIdentifiers, 1)
-	assert.Equal(t,
-		"//platformid.api.mondoo.app/runtime/vmware/instance/5c4c1142-a38a-b604-dfde-60730c109bab",
-		relatedIdentifiers[0],
-	)
+	require.Len(t, relatedIdentifiers, 0)
 }
 
 func TestNoMatch(t *testing.T) {

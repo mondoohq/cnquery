@@ -54,7 +54,14 @@ func Detect(conn shared.Connection, pf *inventory.Platform, smbiosMgr smbios.SmB
 		}
 		id, err := mdsvc.Identify()
 		if err == nil {
-			return id.Hostname, "", []string{id.UUID}
+			relatedIds := []string{}
+			if id.VCenterMOID != "" {
+				relatedIds = append(relatedIds, id.VCenterMOID)
+			}
+			if id.VSphereMOID != "" {
+				relatedIds = append(relatedIds, id.VSphereMOID)
+			}
+			return id.UUID, "", relatedIds
 		}
 		log.Debug().Err(err).
 			Strs("platform", pf.GetFamily()).

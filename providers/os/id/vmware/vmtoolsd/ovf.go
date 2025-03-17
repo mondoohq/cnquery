@@ -32,9 +32,10 @@ func (m *CommandInstanceMetadata) OVFEnv() (*Env, error) {
 // size, though if we don't care about it, we can just import it.
 
 type Env struct {
-	XMLName xml.Name `xml:"http://schemas.dmtf.org/ovf/environment/1 Environment" json:"xmlName"`
-	ID      string   `xml:"id,attr" json:"id"`
-	EsxID   string   `xml:"http://www.vmware.com/schema/ovfenv esxId,attr" json:"esxID"`
+	XMLName   xml.Name `xml:"http://schemas.dmtf.org/ovf/environment/1 Environment" json:"xmlName"`
+	ID        string   `xml:"id,attr" json:"id"`
+	EsxID     string   `xml:"http://www.vmware.com/schema/ovfenv esxId,attr" json:"esxID"`
+	VCenterID string   `xml:"http://www.vmware.com/schema/ovfenv vCenterId,attr" json:"vCenterID"`
 
 	Platform *PlatformSection `xml:"PlatformSection" json:"platformSection,omitempty"`
 	Property *PropertySection `xml:"PropertySection" json:"propertySection,omitempty"`

@@ -23,8 +23,9 @@ type InstanceIdentifier interface {
 }
 
 type Identity struct {
-	Hostname string
-	UUID     string
+	UUID        string
+	VCenterMOID string
+	VSphereMOID string
 }
 
 func Resolve(conn shared.Connection, pf *inventory.Platform) (InstanceIdentifier, error) {
@@ -75,18 +76,23 @@ func (m *CommandInstanceMetadata) RawMetadata() (any, error) {
 func (m *CommandInstanceMetadata) Identify() (Identity, error) {
 	identt := Identity{}
 
-	hostname, err := m.Hostname()
+	// collecting the UUID from the virtual machine may require 'sudo' access
+	uuid, err := m.UUID()
 	if err != nil {
 		return identt, err
 	}
-	identt.Hostname = "//platformid.api.mondoo.app/runtime/vmware/instance/" + hostname
 
-	// collecting the UUID from the virtual machine may require 'sudo' access,
-	// so we are not making this a requirement but more like extra information
-	// if we can access it
-	uuid, err := m.UUID()
+	identt.UUID = "//platformid.api.mondoo.app/runtime/vmware/uuid/" + uuid
+
+	// only if OVF settings are enabled
+	ovfEnv, err := m.OVFEnv()
 	if err == nil {
-		identt.UUID = "//platformid.api.mondoo.app/runtime/vmware/instance/" + uuid
+		if ovfEnv.EsxID != "" {
+			identt.VSphereMOID = "//platformid.api.mondoo.app/runtime/vsphere/moid/" + ovfEnv.EsxID
+		}
+		if ovfEnv.VCenterID != "" {
+			identt.VCenterMOID = "//platformid.api.mondoo.app/runtime/vcenter/moid/" + ovfEnv.VCenterID
+		}
 	}
 
 	return identt, nil

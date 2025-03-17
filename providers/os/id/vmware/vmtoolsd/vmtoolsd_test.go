@@ -30,13 +30,14 @@ func TestDetectLinuxInstance(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t,
-			"//platformid.api.mondoo.app/runtime/vmware/instance/linux-123.localdomain",
-			identt.Hostname,
-		)
-		assert.Equal(t,
-			"//platformid.api.mondoo.app/runtime/vmware/instance/5c4c1142-a38a-b604-dfde-60730c109bac",
+			"//platformid.api.mondoo.app/runtime/vmware/uuid/5c4c1142-a38a-b604-dfde-60730c109bac",
 			identt.UUID,
 		)
+		assert.Equal(t,
+			"//platformid.api.mondoo.app/runtime/vcenter/moid/vm-6143",
+			identt.VCenterMOID,
+		)
+		assert.Empty(t, identt.VSphereMOID)
 	})
 
 	t.Run("raw metadata", func(t *testing.T) {
@@ -50,6 +51,7 @@ func TestDetectLinuxInstance(t *testing.T) {
 	"ipv4": "192.168.1.5",
   "ovf": {
     "esxID": "",
+    "vCenterID": "vm-6143",
     "id": "",
     "platformSection": {
       "kind": "VMware ESXi",
@@ -106,13 +108,10 @@ func TestDetectLinuxInstanceWithoutVmtoolsd(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t,
-			"//platformid.api.mondoo.app/runtime/vmware/instance/linux-123.localdomain",
-			identt.Hostname,
-		)
-		assert.Equal(t,
-			"//platformid.api.mondoo.app/runtime/vmware/instance/5c4c1142-a38a-b604-dfde-60730c109bac",
+			"//platformid.api.mondoo.app/runtime/vmware/uuid/5c4c1142-a38a-b604-dfde-60730c109bac",
 			identt.UUID,
 		)
+		assert.Empty(t, identt.VCenterMOID)
 	})
 
 	t.Run("raw metadata", func(t *testing.T) {
@@ -144,13 +143,14 @@ func TestDetectWindowsInstance(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t,
-			"//platformid.api.mondoo.app/runtime/vmware/instance/win-1",
-			identt.Hostname,
-		)
-		assert.Equal(t,
-			"//platformid.api.mondoo.app/runtime/vmware/instance/5c4c1142-a38a-b604-dfde-60730c109bab",
+			"//platformid.api.mondoo.app/runtime/vmware/uuid/5c4c1142-a38a-b604-dfde-60730c109bab",
 			identt.UUID,
 		)
+		assert.Equal(t,
+			"//platformid.api.mondoo.app/runtime/vcenter/moid/vm-6143",
+			identt.VCenterMOID,
+		)
+		assert.Empty(t, identt.VSphereMOID)
 	})
 
 	t.Run("raw metadata", func(t *testing.T) {
@@ -164,6 +164,7 @@ func TestDetectWindowsInstance(t *testing.T) {
 	"ipv4": "192.168.1.6",
   "ovf": {
     "esxID": "",
+    "vCenterID": "vm-6143",
     "id": "",
     "platformSection": {
       "kind": "VMware ESXi",
@@ -221,13 +222,11 @@ func TestDetectWindowsInstanceWithoutVmtoolsd(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t,
-			"//platformid.api.mondoo.app/runtime/vmware/instance/win-1",
-			identt.Hostname,
-		)
-		assert.Equal(t,
-			"//platformid.api.mondoo.app/runtime/vmware/instance/5c4c1142-a38a-b604-dfde-60730c109bab",
+			"//platformid.api.mondoo.app/runtime/vmware/uuid/5c4c1142-a38a-b604-dfde-60730c109bab",
 			identt.UUID,
 		)
+		assert.Empty(t, identt.VCenterMOID)
+		assert.Empty(t, identt.VSphereMOID)
 	})
 
 	t.Run("raw metadata", func(t *testing.T) {
@@ -257,8 +256,9 @@ func TestNoMatch(t *testing.T) {
 	t.Run("identity", func(t *testing.T) {
 		identt, err := vmtoolsSvc.Identify()
 		require.Error(t, err)
-		assert.Empty(t, identt.Hostname)
 		assert.Empty(t, identt.UUID)
+		assert.Empty(t, identt.VCenterMOID)
+		assert.Empty(t, identt.VSphereMOID)
 	})
 
 	t.Run("raw metadata", func(t *testing.T) {
