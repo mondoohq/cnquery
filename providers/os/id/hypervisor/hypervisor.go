@@ -30,6 +30,7 @@ var knownHypervisors = map[string]string{
 	"powervm":       "IBM PowerVM",
 	"applevirtual":  "Apple Virtualization",
 	"apple virtual": "Apple Virtualization",
+	"nutanix":       "Nutanix Acropolis",
 }
 
 // hyper is a helper struct to avoid passing the connection and platform
