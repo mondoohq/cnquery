@@ -13,6 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/docker"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/tar"
@@ -228,7 +229,8 @@ func (s *mqlOs) hypervisor() (string, error) {
 	if res, ok := hypervisor.Hypervisor(conn, platform); ok {
 		return res, nil
 	}
-	return "", errors.New("cannot determine hypervisor")
+	s.Hypervisor = plugin.TValue[string]{State: plugin.StateIsSet | plugin.StateIsNull}
+	return "", nil
 }
 
 func (p *mqlOs) name() (string, error) {
