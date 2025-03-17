@@ -26,7 +26,6 @@ func (h *hyper) detectLinuxHypervisor() (hypervisor string, ok bool) {
 		h.detectSystemdDetectVirt,
 		h.detectDMIVendor,
 		h.detectDMIDecode,
-		h.detectLXC,
 	}
 	// check for CPU "hypervisor" flag
 	if h.detectLinuxCPUHypervisor() {
@@ -84,13 +83,4 @@ func (h *hyper) detectDMIDecode() (string, bool) {
 		return "", false
 	}
 	return mapHypervisor(productName)
-}
-
-// detectLXC detects LXC/LXD containers.
-func (h *hyper) detectLXC() (string, bool) {
-	content, err := afero.ReadFile(h.connection.FileSystem(), "/proc/1/environ")
-	if err == nil && bytes.Contains(content, []byte("container=lxc")) {
-		return "LXC/LXD", true
-	}
-	return "", false
 }

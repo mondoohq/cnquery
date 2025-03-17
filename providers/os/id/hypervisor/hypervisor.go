@@ -19,6 +19,7 @@ var knownHypervisors = map[string]string{
 	"virtualbox": "VirtualBox",
 	"kvm":        "KVM",
 	"qemu":       "QEMU",
+	"rhev":       "RHEV Hypervisor",
 	"hyper-v":    "Hyper-V",
 	"xen":        "Xen",
 	"parallels":  "Parallels",
@@ -27,7 +28,6 @@ var knownHypervisors = map[string]string{
 	"openvz":     "OpenVZ",
 	"virtuozzo":  "Virtuozzo",
 	"powervm":    "IBM PowerVM",
-	"lxc":        "LXC/LXD",
 }
 
 // hyper is a helper struct to avoid passing the connection and platform
