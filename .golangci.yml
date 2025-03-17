@@ -4,11 +4,13 @@
 # See https://golangci-lint.run/usage/configuration/ for configuration options
 run:
   timeout: 5m
+  modules-download-mode: readonly
+
+issues:
   exclude-dirs:
   exclude-files:
     - ".*\\.pb\\.go$"
     - ".*\\.lr\\.go$"
-  modules-download-mode: readonly
 
 linters:
   disable-all: true
