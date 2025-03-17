@@ -13,10 +13,12 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/docker"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/tar"
 	"go.mondoo.com/cnquery/v11/providers/os/id/hostname"
+	"go.mondoo.com/cnquery/v11/providers/os/id/hypervisor"
 	"go.mondoo.com/cnquery/v11/providers/os/id/platformid"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/reboot"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/systemd"
@@ -218,6 +220,17 @@ func (s *mqlOs) hostname() (string, error) {
 		return res, nil
 	}
 	return "", errors.New("cannot determine hostname")
+}
+
+func (s *mqlOs) hypervisor() (string, error) {
+	conn := s.MqlRuntime.Connection.(shared.Connection)
+	platform := conn.Asset().Platform
+
+	if res, ok := hypervisor.Hypervisor(conn, platform); ok {
+		return res, nil
+	}
+	s.Hypervisor = plugin.TValue[string]{State: plugin.StateIsSet | plugin.StateIsNull}
+	return "", nil
 }
 
 func (p *mqlOs) name() (string, error) {

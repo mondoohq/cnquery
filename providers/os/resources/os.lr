@@ -258,6 +258,8 @@ os {
   rebootpending() bool
   // Hostname for this OS
   hostname() string
+  // Hypervisor for this OS
+  hypervisor() string
   // Machine ID for this OS
   machineid() string
 }
