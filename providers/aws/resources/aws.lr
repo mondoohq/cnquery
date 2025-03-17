@@ -80,7 +80,7 @@ private aws.vpc @defaults("id isDefault cidrBlock region") {
   serviceEndpoints() []aws.vpc.serviceEndpoint
   // List of peering connections associated with the VPC
   peeringConnections() []aws.vpc.peeringConnection
-  // Internet gateway blocking mode or off if VPC Block Public Access (VPC BPA) is not enabled
+  // Internet gateway blocking mode: block-bidirectional, block-ingress, or off
   internetGatewayBlockMode string
 }
 
