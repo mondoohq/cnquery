@@ -36,7 +36,7 @@ func TestWindowsAppPackagesParser(t *testing.T) {
 	assert.Equal(t, Package{
 		Name:    "Microsoft Visual C++ 2015-2019 Redistributable (x86) - 14.28.29913",
 		Version: "14.28.29913.0",
-		Arch:    "",
+		Arch:    "x86",
 		Format:  "windows/app",
 		PUrl:    `pkg:windows/windows/Microsoft%20Visual%20C%2B%2B%202015-2019%20Redistributable%20%28x86%29%20-%2014.28.29913@14.28.29913.0?arch=x86`,
 		CPEs: []string{
@@ -208,7 +208,7 @@ func TestGetPackageFromRegistryKeyItems(t *testing.T) {
 		expected := &Package{
 			Name:    "Microsoft Visual C++ 2015-2019 Redistributable (x86) - 14.28.29913",
 			Version: "14.28.29913.0",
-			Arch:    "",
+			Arch:    "x86",
 			Format:  "windows/app",
 			CPEs:    CPEs,
 			Vendor:  "Microsoft Corporation",

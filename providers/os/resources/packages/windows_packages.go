@@ -470,6 +470,7 @@ func getPackageFromRegistryKeyItems(children []registry.RegistryKeyItem, platfor
 		Name:    displayName,
 		Version: displayVersion,
 		Format:  "windows/app",
+		Arch:    platform.Arch,
 		Vendor:  publisher,
 		PUrl: purl.NewPackageURL(
 			platform, purl.TypeWindows, displayName, displayVersion,
@@ -582,6 +583,7 @@ func ParseWindowsAppPackages(platform *inventory.Platform, input io.Reader) ([]P
 			Format:  "windows/app",
 			CPEs:    cpeWfns,
 			Vendor:  entry.Publisher,
+			Arch:    platform.Arch,
 			PUrl: purl.NewPackageURL(
 				platform, purl.TypeWindows, entry.DisplayName, entry.DisplayVersion,
 			).String(),
