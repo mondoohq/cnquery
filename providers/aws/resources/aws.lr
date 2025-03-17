@@ -134,7 +134,7 @@ private aws.vpc.subnet @defaults("id cidrs region availabilityZone defaultForAva
   region string
   // The number of available IP addresses in the subnet
   availableIpAddressCount int
-  // Internet gateway blocking mode or off if VPC Block Public Access (VPC BPA) is not enabled
+  // Internet gateway blocking mode: block-bidirectional, block-ingress, or off
   internetGatewayBlockMode string
 }
 
