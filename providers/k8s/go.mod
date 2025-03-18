@@ -16,7 +16,7 @@ go 1.23.0
 require (
 	github.com/cockroachdb/errors v1.11.3
 	github.com/gobwas/glob v0.2.3
-	github.com/google/go-containerregistry v0.20.3 // indirect
+	github.com/google/go-containerregistry v0.20.4-0.20250225234217-098045d5e61f // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.33.0
 	github.com/stretchr/testify v1.10.0
