@@ -158,11 +158,12 @@ func TestParseBlockEntries(t *testing.T) {
 		Name:       "xvda",
 		Mountpoint: "",
 		Children: []blockdevice{{
-			Name:       "xvda1",
-			Fstype:     "xfs",
-			Label:      "/",
-			Uuid:       "e6c06bf4-70a3-4524-84fa-35484afc0d19",
-			Mountpoint: "/",
+			Name:        "xvda1",
+			Fstype:      "xfs",
+			Label:       "/",
+			Uuid:        "e6c06bf4-70a3-4524-84fa-35484afc0d19",
+			Mountpoint:  "/",
+			Mountpoints: []interface{}{"/"},
 		}},
 	}})
 }
