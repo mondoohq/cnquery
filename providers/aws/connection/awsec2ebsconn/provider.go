@@ -192,6 +192,15 @@ func (c *AwsEbsConnection) Close() {
 	if c.DeviceProvider != nil {
 		c.DeviceProvider.Close()
 	}
+
+	// close volume: we detach and delete it
+	//
+	// first, check if we have volume information
+	if c.scanVolumeInfo == nil {
+		log.Debug().Msg("skipping 'closing' volume, no volume information")
+		return
+	}
+
 	ctx := context.Background()
 	err := c.DetachVolumeFromInstance(ctx, c.scanVolumeInfo)
 	if err != nil {
