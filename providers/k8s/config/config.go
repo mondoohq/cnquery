@@ -73,6 +73,12 @@ Examples:
 					Default: "",
 					Desc:    "HTTP proxy to use for container pulls",
 				},
+				{
+					Long:    "kubelogin",
+					Type:    plugin.FlagType_Bool,
+					Default: "false",
+					Desc:    "Use kubelogin auth flow to authenticate against an AKS cluster using a managed identity credential.",
+				},
 			},
 		},
 	},

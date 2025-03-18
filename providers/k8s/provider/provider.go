@@ -6,6 +6,7 @@ package provider
 import (
 	"context"
 	"errors"
+	"strconv"
 
 	"go.mondoo.com/cnquery/v11"
 	"go.mondoo.com/cnquery/v11/llx"
@@ -75,6 +76,10 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 
 	if ns, ok := req.Flags[shared.OPTION_NAMESPACE_EXCLUDE]; ok {
 		conf.Options[shared.OPTION_NAMESPACE_EXCLUDE] = string(ns.Value)
+	}
+
+	if val, ok := req.Flags[shared.OPTION_KUBELOGIN]; ok {
+		conf.Options[shared.OPTION_KUBELOGIN] = strconv.FormatBool(val.RawData().Value.(bool))
 	}
 
 	if containerProxy, ok := flags["container-proxy"]; ok {

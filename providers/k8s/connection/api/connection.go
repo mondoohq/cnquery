@@ -67,6 +67,11 @@ func NewConnection(id uint32, asset *inventory.Asset, discoveryCache *resources.
 		return nil, err
 	}
 
+	err = attemptKubeloginAuthFlow(asset, config)
+	if err != nil {
+		return nil, err
+	}
+
 	// enable-client side throttling
 	// avoids the cli warning: Waited for 1.000907542s due to client-side throttling, not priority and fairness
 	config.QPS = 1000
