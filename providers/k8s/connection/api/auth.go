@@ -59,11 +59,12 @@ func attemptKubeloginAuthFlow(asset *inventory.Asset, config *rest.Config) error
 		return err
 	}
 
-	log.Info().Str("bearer_token", token.Token).Msg("got access token")
+	log.Debug().Str("bearer_token", token.Token).Msg("got access token")
 
 	config.BearerToken = token.Token
 
-	// clear the exec provider since the code above bypasses the need to run `kubelogin get-token --server-id 6dae42f8-4368-4678-94ff-3960e28e3630`
+	// clear the exec provider since the code above bypasses the need to run the command
+	// `kubelogin get-token --server-id {serverAppId}` since that would require the kubelogin CLI tool to be present
 	config.ExecProvider = nil
 
 	return nil
