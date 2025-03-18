@@ -77,7 +77,7 @@ Examples:
 					Long:    "kubelogin",
 					Type:    plugin.FlagType_Bool,
 					Default: "false",
-					Desc:    "Use kubelogin auth flow to authenticate against an AKS cluster using a managed identity credential.",
+					Desc:    "Authenticate against a remote Azure AD enabled Kubernetes cluster using a default user or system-assigned Azure identity.",
 				},
 			},
 		},
