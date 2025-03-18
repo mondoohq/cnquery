@@ -11,6 +11,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/azauth"
@@ -33,7 +34,7 @@ func attemptKubeloginAuthFlow(asset *inventory.Asset, config *rest.Config) error
 	if val, ok := asset.Connections[0].Options[shared.OPTION_KUBELOGIN]; ok {
 		kubeloginAuth, err = strconv.ParseBool(val)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "could not parse boolean from the kubelogin option value")
 		}
 	}
 
@@ -48,7 +49,7 @@ func attemptKubeloginAuthFlow(asset *inventory.Asset, config *rest.Config) error
 		ClientOptions: azcore.ClientOptions{Cloud: cloud.AzurePublic},
 	})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to get chained token credential for Azure AKS authentication")
 	}
 
 	scope := serverAppId + defaultScope
@@ -56,7 +57,7 @@ func attemptKubeloginAuthFlow(asset *inventory.Asset, config *rest.Config) error
 		Scopes: []string{scope},
 	})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to get access token for Azure AKS authentication")
 	}
 
 	log.Debug().Str("bearer_token", token.Token).Msg("got access token")
