@@ -17,6 +17,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/id/awsecs"
 	"go.mondoo.com/cnquery/v11/providers/os/id/clouddetect"
 	"go.mondoo.com/cnquery/v11/providers/os/id/hostname"
+	"go.mondoo.com/cnquery/v11/providers/os/id/hypervisor"
 	"go.mondoo.com/cnquery/v11/providers/os/id/ids"
 	"go.mondoo.com/cnquery/v11/providers/os/id/machineid"
 	"go.mondoo.com/cnquery/v11/providers/os/id/serialnumber"
@@ -124,6 +125,15 @@ func IdentifyPlatform(conn shared.Connection, req *plugin.ConnectReq, p *invento
 			PlatformIDs: []string{v},
 			Name:        GatherNameForPlatformId(v),
 		})
+	}
+
+	// If at this point we couldn't detect the platform kind, try to detect a hypervisor,
+	// if we detect one, we will assume this asset is a virtual machine
+	if p.Kind == "" {
+		if hv, ok := hypervisor.Hypervisor(conn, p); ok {
+			log.Debug().Str("hypervisor", hv).Msg("detected hypervisor")
+			p.Kind = inventory.AssetKindCloudVM
+		}
 	}
 
 	log.Debug().Interface("id-detector", idDetectors).Strs("platform-ids", platformIds).Msg("detected platform ids")
