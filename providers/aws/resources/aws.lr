@@ -80,6 +80,8 @@ private aws.vpc @defaults("id isDefault cidrBlock region") {
   serviceEndpoints() []aws.vpc.serviceEndpoint
   // List of peering connections associated with the VPC
   peeringConnections() []aws.vpc.peeringConnection
+  // Internet gateway blocking mode: block-bidirectional, block-ingress, or off
+  internetGatewayBlockMode string
 }
 
 // Amazon Virtual Private Cloud (VPC) route table
@@ -130,6 +132,10 @@ private aws.vpc.subnet @defaults("id cidrs region availabilityZone defaultForAva
   state string
   // Region in which the VPC subnet exists
   region string
+  // The number of available IP addresses in the subnet
+  availableIpAddressCount int
+  // Internet gateway blocking mode: block-bidirectional, block-ingress, or off
+  internetGatewayBlockMode string
 }
 
 // Amazon Virtual Private Cloud (VPC) endpoint
@@ -2692,12 +2698,12 @@ aws.ec2 {
 }
 
 // Amazon Elastic IP (EIP)
-private aws.ec2.eip {
+private aws.ec2.eip @defaults("publicIp attached privateIpAddress") {
   // Public IP address of the EIP
   publicIp string
   // Whether the Elastic IP is associated with an instance (false if no allocationId is present)
   attached bool
-  // Ec2 instance associated with the EIP
+  // EC2 instance associated with the EIP
   instance() aws.ec2.instance
   // ID of the network interface
   networkInterfaceId string
@@ -2908,8 +2914,10 @@ private aws.ec2.snapshot @defaults("id region volumeSize state") {
   createVolumePermission() []dict
   // ID of the volume used to create the snapshot
   volumeId string
-  // Time when the snapshot was initiated
+  // Time when the snapshot began
   startTime time
+  // Time when the snapshot completed
+  completionTime time
   // Tags for the snapshot
   tags map[string]string
   // State of the snapshot: pending, completed, error, recoverable, or recovering
@@ -2920,6 +2928,8 @@ private aws.ec2.snapshot @defaults("id region volumeSize state") {
   description string
   // Whether the snapshot is encrypted
   encrypted bool
+  // The storage tier in which the snapshot is stored
+  storageTier string
 }
 
 // Amazon EC2 (EBS) volume
@@ -3166,6 +3176,10 @@ private aws.ec2.image @defaults("ownerAlias id name") {
   createdAt time
   // Date the image was deprecated
   deprecatedAt time
+  // Whether enhanced networking with ENA is enabled
+  enaSupport bool
+  // The supported TPM version. If the image is configured for NitroTPM support, the value is v2.0
+  tpmSupport string
 }
 
 // Amazon EC2 instance block device

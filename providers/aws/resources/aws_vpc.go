@@ -88,15 +88,16 @@ func (a *mqlAws) getVpcs(conn *connection.AwsConnection) []*jobpool.Job {
 					}
 					mqlVpc, err := CreateResource(a.MqlRuntime, "aws.vpc",
 						map[string]*llx.RawData{
-							"arn":             llx.StringData(fmt.Sprintf(vpcArnPattern, regionVal, conn.AccountId(), convert.ToString(v.VpcId))),
-							"id":              llx.StringDataPtr(v.VpcId),
-							"name":            llx.StringData(name),
-							"state":           llx.StringData(string(v.State)),
-							"isDefault":       llx.BoolData(convert.ToBool(v.IsDefault)),
-							"instanceTenancy": llx.StringData(string(v.InstanceTenancy)),
-							"cidrBlock":       llx.StringDataPtr(v.CidrBlock),
-							"region":          llx.StringData(regionVal),
-							"tags":            llx.MapData(Ec2TagsToMap(v.Tags), types.String),
+							"arn":                      llx.StringData(fmt.Sprintf(vpcArnPattern, regionVal, conn.AccountId(), convert.ToString(v.VpcId))),
+							"cidrBlock":                llx.StringDataPtr(v.CidrBlock),
+							"id":                       llx.StringDataPtr(v.VpcId),
+							"instanceTenancy":          llx.StringData(string(v.InstanceTenancy)),
+							"internetGatewayBlockMode": llx.StringData(string(v.BlockPublicAccessStates.InternetGatewayBlockMode)),
+							"isDefault":                llx.BoolData(convert.ToBool(v.IsDefault)),
+							"name":                     llx.StringData(name),
+							"region":                   llx.StringData(regionVal),
+							"state":                    llx.StringData(string(v.State)),
+							"tags":                     llx.MapData(Ec2TagsToMap(v.Tags), types.String),
 						})
 					if err != nil {
 						log.Error().Msg(err.Error())
@@ -651,9 +652,11 @@ func (a *mqlAwsVpc) subnets() ([]interface{}, error) {
 					"arn":                         llx.StringData(fmt.Sprintf(subnetArnPattern, a.Region.Data, conn.AccountId(), convert.ToString(subnet.SubnetId))),
 					"assignIpv6AddressOnCreation": llx.BoolDataPtr(subnet.AssignIpv6AddressOnCreation),
 					"availabilityZone":            llx.StringDataPtr(subnet.AvailabilityZone),
+					"availableIpAddressCount":     llx.IntDataPtr(subnet.AvailableIpAddressCount),
 					"cidrs":                       llx.StringDataPtr(subnet.CidrBlock),
 					"defaultForAvailabilityZone":  llx.BoolDataPtr(subnet.DefaultForAz),
 					"id":                          llx.StringDataPtr(subnet.SubnetId),
+					"internetGatewayBlockMode":    llx.StringData(string(subnet.BlockPublicAccessStates.InternetGatewayBlockMode)),
 					"mapPublicIpOnLaunch":         llx.BoolDataPtr(subnet.MapPublicIpOnLaunch),
 					"region":                      llx.StringData(a.Region.Data),
 					"state":                       llx.StringData(string(subnet.State)),

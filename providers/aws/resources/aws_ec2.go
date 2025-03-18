@@ -1115,6 +1115,8 @@ func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		args["ownerAlias"] = llx.NilData
 		args["createdAt"] = llx.NilData
 		args["deprecatedAt"] = llx.NilData
+		args["tpmSupport"] = llx.NilData
+		args["enaSupport"] = llx.NilData
 		return args, nil, nil
 	}
 
@@ -1122,10 +1124,12 @@ func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		image := images.Images[0]
 		args["arn"] = llx.StringData(arnVal)
 		args["id"] = llx.StringData(resource[1])
-		args["name"] = llx.StringData(convert.ToString(image.Name))
+		args["name"] = llx.StringDataPtr(image.Name)
 		args["architecture"] = llx.StringData(string(image.Architecture))
-		args["ownerId"] = llx.StringData(convert.ToString(image.OwnerId))
-		args["ownerAlias"] = llx.StringData(convert.ToString(image.ImageOwnerAlias))
+		args["ownerId"] = llx.StringDataPtr(image.OwnerId)
+		args["ownerAlias"] = llx.StringDataPtr(image.ImageOwnerAlias)
+		args["enaSupport"] = llx.BoolDataPtr(image.EnaSupport)
+		args["tpmSupport"] = llx.StringData(string(image.TpmSupport))
 		if image.CreationDate == nil {
 			args["createdAt"] = llx.NilData
 		} else {
@@ -1678,16 +1682,18 @@ func (a *mqlAwsEc2) getSnapshots(conn *connection.AwsConnection) []*jobpool.Job 
 				for _, snapshot := range snapshots.Snapshots {
 					mqlSnap, err := CreateResource(a.MqlRuntime, "aws.ec2.snapshot",
 						map[string]*llx.RawData{
-							"arn":         llx.StringData(fmt.Sprintf(snapshotArnPattern, regionVal, conn.AccountId(), convert.ToString(snapshot.SnapshotId))),
-							"description": llx.StringDataPtr(snapshot.Description),
-							"encrypted":   llx.BoolDataPtr(snapshot.Encrypted),
-							"id":          llx.StringDataPtr(snapshot.SnapshotId),
-							"region":      llx.StringData(regionVal),
-							"startTime":   llx.TimeDataPtr(snapshot.StartTime),
-							"state":       llx.StringData(string(snapshot.State)),
-							"tags":        llx.MapData(Ec2TagsToMap(snapshot.Tags), types.String),
-							"volumeId":    llx.StringDataPtr(snapshot.VolumeId),
-							"volumeSize":  llx.IntDataDefault(snapshot.VolumeSize, 0),
+							"arn":            llx.StringData(fmt.Sprintf(snapshotArnPattern, regionVal, conn.AccountId(), convert.ToString(snapshot.SnapshotId))),
+							"completionTime": llx.TimeDataPtr(snapshot.CompletionTime),
+							"description":    llx.StringDataPtr(snapshot.Description),
+							"encrypted":      llx.BoolDataPtr(snapshot.Encrypted),
+							"id":             llx.StringDataPtr(snapshot.SnapshotId),
+							"region":         llx.StringData(regionVal),
+							"startTime":      llx.TimeDataPtr(snapshot.StartTime),
+							"state":          llx.StringData(string(snapshot.State)),
+							"storageTier":    llx.StringData(string(snapshot.StorageTier)),
+							"tags":           llx.MapData(Ec2TagsToMap(snapshot.Tags), types.String),
+							"volumeId":       llx.StringDataPtr(snapshot.VolumeId),
+							"volumeSize":     llx.IntDataDefault(snapshot.VolumeSize, 0),
 						})
 					if err != nil {
 						return nil, err
