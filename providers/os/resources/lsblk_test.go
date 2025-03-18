@@ -96,8 +96,8 @@ func TestParseBlockEntries(t *testing.T) {
  }`
 	devices, err := parseBlockEntries([]byte(data))
 	assert.Nil(t, err)
-	assert.Equal(t, len(devices.Blockdevices), 5)
-	assert.Equal(t, devices.Blockdevices, []blockdevice{{
+	assert.Equal(t, 5, len(devices.Blockdevices))
+	assert.Equal(t, []blockdevice{{
 		Name:        "loop0",
 		Fstype:      "squashfs",
 		Label:       "",
@@ -140,7 +140,7 @@ func TestParseBlockEntries(t *testing.T) {
 		Label:       "storage01",
 		Uuid:        "6060df9a-7e53-439c-9189-ba9657161fd4",
 		Mountpoints: []interface{}{nil},
-	}})
+	}}, devices.Blockdevices)
 
 	data = `{
 		"blockdevices": [
