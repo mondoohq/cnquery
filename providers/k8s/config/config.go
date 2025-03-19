@@ -77,7 +77,7 @@ Examples:
 					Long:    "kubelogin",
 					Type:    plugin.FlagType_Bool,
 					Default: "false",
-					Desc:    "Authenticate against a remote Azure AD enabled Kubernetes cluster using a default user or system-assigned Azure identity.",
+					Desc:    "Authenticate against a remote Azure AD enabled Kubernetes cluster using an Azure identity.",
 				},
 			},
 		},
