@@ -6,6 +6,9 @@ package linux
 import (
 	"fmt"
 	"io"
+	"os"
+	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -22,6 +25,49 @@ type scsiDeviceInfo struct {
 type scsiDevices = []scsiDeviceInfo
 
 func (c *LinuxDeviceManager) listScsiDevices() ([]scsiDeviceInfo, error) {
+	devices, err := c.listScsiDevicesFromSys()
+	if err == nil {
+		return devices, nil
+	}
+
+	log.Warn().Err(err).Msg("failed to list scsi devices from sys, trying lsscsi")
+	return c.listScsiDevicesFromCLI()
+}
+
+func (c *LinuxDeviceManager) listScsiDevicesFromSys() ([]scsiDeviceInfo, error) {
+	blocks, err := os.ReadDir("/sys/block/")
+	if err != nil {
+		return nil, err
+	}
+	scsiDevices := []scsiDeviceInfo{}
+	for _, block := range blocks {
+		if block.Type() != os.ModeSymlink {
+			continue
+		}
+
+		entry, err := os.Readlink(path.Join("/sys/block/", block.Name()))
+		if err != nil {
+			log.Warn().Err(err).Str("block", block.Name()).Msg("failed to readlink")
+			continue
+		}
+		entry, err = filepath.Abs(path.Join("/sys/block/", entry))
+		if err != nil {
+			log.Warn().Err(err).Str("block", block.Name()).Msg("failed to get absolute path")
+			continue
+		}
+
+		device, err := parseScsiDevicePath(entry)
+		if err != nil {
+			log.Debug().Err(err).Str("block", block.Name()).Msg("failed to parse device path")
+			continue
+		}
+		scsiDevices = append(scsiDevices, device)
+	}
+
+	return scsiDevices, nil
+}
+
+func (c *LinuxDeviceManager) listScsiDevicesFromCLI() ([]scsiDeviceInfo, error) {
 	cmd, err := c.cmdRunner.RunCommand("lsscsi --brief")
 	if err != nil {
 		return nil, err
@@ -82,4 +128,30 @@ func parseLsscsiOutput(output string) (scsiDevices, error) {
 	}
 
 	return mountedDevices, nil
+}
+
+// parses the device path from the sysfs block device path, e.g. /sys/devices/pci0000:00/0000:00:14.0/usb1/1-1/1-1:1.0/host2/target2:0:0/2:0:0:0/block/sdb
+// and returns the LUN and the path to the device, e.g. 0 and /dev/sdb
+func parseScsiDevicePath(entry string) (res scsiDeviceInfo, err error) {
+	chunks := strings.Split(entry, "/")
+	if len(chunks) < 5 {
+		return res, fmt.Errorf("unexpected entry: %s", entry)
+	}
+
+	if chunks[len(chunks)-2] != "block" {
+		return res, fmt.Errorf("unexpected entry, expected block: %s", entry)
+	}
+
+	res.VolumePath = path.Join("/dev", chunks[len(chunks)-1])
+	hbtl := strings.Split(chunks[len(chunks)-3], ":")
+	if len(hbtl) != 4 {
+		return res, fmt.Errorf("unexpected entry, expected 4 fields for H:B:T:L: %s", entry)
+	}
+
+	res.Lun, err = strconv.Atoi(hbtl[3])
+	if err != nil {
+		return res, fmt.Errorf("unexpected entry, expected integer for LUN: %s", entry)
+	}
+
+	return res, nil
 }

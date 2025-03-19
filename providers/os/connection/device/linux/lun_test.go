@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestParseLsscsiOutput(t *testing.T) {
+func TestParseLsscsiCLIOutput(t *testing.T) {
 	// different padding for the device names on purpose + an extra blank line
 	output := `
 	[0:0:0:0]    /dev/sda
@@ -28,6 +28,52 @@ func TestParseLsscsiOutput(t *testing.T) {
 		{Lun: 3, VolumePath: "/dev/sdd"},
 	}
 	assert.ElementsMatch(t, expected, devices)
+}
+
+func TestParseScsiPath(t *testing.T) {
+	tests := []struct {
+		name     string
+		path     string
+		expected scsiDeviceInfo
+		err      bool
+	}{
+		{
+			name: "valid path",
+			path: "/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/VMBUS:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda",
+			expected: scsiDeviceInfo{
+				Lun:        0,
+				VolumePath: "/dev/sda",
+			},
+		},
+		{
+			name: "invalid path (short)",
+			path: "/sys/devices/no-op",
+			err:  true,
+		},
+		{
+			name: "invalid path (not a block)",
+			path: "/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/VMBUS:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0",
+			err:  true,
+		},
+		{
+			name:     "invalid path (invalid H:B:T:L)",
+			path:     "/sys/devices/virtual/block/loop0",
+			err:      true,
+			expected: scsiDeviceInfo{VolumePath: "/dev/loop0"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			res, err := parseScsiDevicePath(tt.path)
+			if tt.err {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+			assert.Equal(t, tt.expected, res)
+		})
+	}
 }
 
 func TestFilterScsiDevices(t *testing.T) {
