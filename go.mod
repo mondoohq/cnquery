@@ -27,8 +27,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.56.12
 	github.com/aws/smithy-go v1.22.2
 	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.9.1
-	// pin v0.2.6
-	github.com/c-bata/go-prompt v0.2.6
 	github.com/charmbracelet/bubbles v0.20.0
 	github.com/charmbracelet/bubbletea v1.3.3
 	github.com/charmbracelet/lipgloss v1.0.0
@@ -286,6 +284,7 @@ require (
 
 require (
 	github.com/GoogleCloudPlatform/berglas/v2 v2.0.7
+	github.com/StepY1aoZz/go-prompt v0.0.0-20240714073756-61a575943cba
 	github.com/moby/buildkit v0.19.0
 	github.com/moby/sys/mount v0.3.4
 )
