@@ -21,11 +21,11 @@
       "debugAdapter": "dlv-dap",
       "remotePath": "${workspaceFolder}",
       "port": 12345,
-      "host": "35.241.232.183",
+      "host": "host",
       "substitutePath":[
         {
           "from": "${workspaceFolder}",
-          "to": "/home/christian/workspace/cnquery"
+          "to": "${workspaceFolder}/cnquery"
         }
       ]
     },
@@ -195,7 +195,7 @@
       "program": "${workspaceRoot}/apps/cnquery/cnquery.go",
       "console": "integratedTerminal",
       "args": [
-        "shell", "ssh", "user@18.215.249.49",
+        "shell", "ssh", "ssh@host",
       ],
     },
     {
