@@ -2754,31 +2754,31 @@ private aws.vpc.natgateway.address {
 // Amazon VPC Service Endpoint
 private aws.vpc.serviceEndpoint {
   // Whether acceptance is required
-  acceptanceRequired bool
+  acceptanceRequired() bool
   // List of availability zones for the service endpoint
-  availabilityZones []string
+  availabilityZones() []string
   // List of base endpoint DNS names for the service endpoint
   dnsNames []string
   // Service ID
   id string
   // Whether the service endpoint manages VPC endpoints
-  managesVpcEndpoints bool
+  managesVpcEndpoints() bool
   // Service name
   name string
   // Service owner
   owner string
   // Service payer responsibility
-  payerResponsibility string
+  payerResponsibility() string
   // Service private DNS name verification state
-  privateDnsNameVerificationState string
+  privateDnsNameVerificationState() string
   // List of service private DNS names
-  privateDnsNames []string
+  privateDnsNames() []string
   // Tags for the service endpoint
   tags map[string]string
   // Service type
   type string
   // Whether the service supports VPC endpoint policy
-  vpcEndpointPolicySupported bool
+  vpcEndpointPolicySupported() bool
 }
 
 // Amazon VPC Peering Connection

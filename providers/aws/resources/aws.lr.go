@@ -25282,7 +25282,7 @@ func (c *mqlAwsVpcNatgatewayAddress) GetIsPrimary() *plugin.TValue[bool] {
 type mqlAwsVpcServiceEndpoint struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlAwsVpcServiceEndpointInternal it will be used here
+	mqlAwsVpcServiceEndpointInternal
 	AcceptanceRequired plugin.TValue[bool]
 	AvailabilityZones plugin.TValue[[]interface{}]
 	DnsNames plugin.TValue[[]interface{}]
@@ -25336,11 +25336,15 @@ func (c *mqlAwsVpcServiceEndpoint) MqlID() string {
 }
 
 func (c *mqlAwsVpcServiceEndpoint) GetAcceptanceRequired() *plugin.TValue[bool] {
-	return &c.AcceptanceRequired
+	return plugin.GetOrCompute[bool](&c.AcceptanceRequired, func() (bool, error) {
+		return c.acceptanceRequired()
+	})
 }
 
 func (c *mqlAwsVpcServiceEndpoint) GetAvailabilityZones() *plugin.TValue[[]interface{}] {
-	return &c.AvailabilityZones
+	return plugin.GetOrCompute[[]interface{}](&c.AvailabilityZones, func() ([]interface{}, error) {
+		return c.availabilityZones()
+	})
 }
 
 func (c *mqlAwsVpcServiceEndpoint) GetDnsNames() *plugin.TValue[[]interface{}] {
@@ -25352,7 +25356,9 @@ func (c *mqlAwsVpcServiceEndpoint) GetId() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsVpcServiceEndpoint) GetManagesVpcEndpoints() *plugin.TValue[bool] {
-	return &c.ManagesVpcEndpoints
+	return plugin.GetOrCompute[bool](&c.ManagesVpcEndpoints, func() (bool, error) {
+		return c.managesVpcEndpoints()
+	})
 }
 
 func (c *mqlAwsVpcServiceEndpoint) GetName() *plugin.TValue[string] {
@@ -25364,15 +25370,21 @@ func (c *mqlAwsVpcServiceEndpoint) GetOwner() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsVpcServiceEndpoint) GetPayerResponsibility() *plugin.TValue[string] {
-	return &c.PayerResponsibility
+	return plugin.GetOrCompute[string](&c.PayerResponsibility, func() (string, error) {
+		return c.payerResponsibility()
+	})
 }
 
 func (c *mqlAwsVpcServiceEndpoint) GetPrivateDnsNameVerificationState() *plugin.TValue[string] {
-	return &c.PrivateDnsNameVerificationState
+	return plugin.GetOrCompute[string](&c.PrivateDnsNameVerificationState, func() (string, error) {
+		return c.privateDnsNameVerificationState()
+	})
 }
 
 func (c *mqlAwsVpcServiceEndpoint) GetPrivateDnsNames() *plugin.TValue[[]interface{}] {
-	return &c.PrivateDnsNames
+	return plugin.GetOrCompute[[]interface{}](&c.PrivateDnsNames, func() ([]interface{}, error) {
+		return c.privateDnsNames()
+	})
 }
 
 func (c *mqlAwsVpcServiceEndpoint) GetTags() *plugin.TValue[map[string]interface{}] {
@@ -25384,7 +25396,9 @@ func (c *mqlAwsVpcServiceEndpoint) GetType() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsVpcServiceEndpoint) GetVpcEndpointPolicySupported() *plugin.TValue[bool] {
-	return &c.VpcEndpointPolicySupported
+	return plugin.GetOrCompute[bool](&c.VpcEndpointPolicySupported, func() (bool, error) {
+		return c.vpcEndpointPolicySupported()
+	})
 }
 
 // mqlAwsVpcPeeringConnection for the aws.vpc.peeringConnection resource
