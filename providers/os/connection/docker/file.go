@@ -13,7 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	dockertypes "github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/ssh/cat"
@@ -132,7 +132,7 @@ func (f *File) WriteString(s string) (ret int, err error) {
 	return 0, errors.New("not implemented")
 }
 
-func (f *File) getFileDockerReader(path string) (io.ReadCloser, dockertypes.ContainerPathStat, error) {
+func (f *File) getFileDockerReader(path string) (io.ReadCloser, container.PathStat, error) {
 	r, stat, err := f.dockerClient.CopyFromContainer(context.Background(), f.container, path)
 
 	// follow symlink if stat.LinkTarget is set
