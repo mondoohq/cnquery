@@ -115,18 +115,18 @@ func Discover(runtime *plugin.Runtime, features cnquery.Features) (*inventory.In
 	// the platform IDs for the assets based on the namespace.
 	if len(nsFilter.include) == 0 && len(nsFilter.exclude) == 0 {
 		assetId, err := conn.AssetId()
-		if err != nil {
-			return nil, err
-		}
-
-		root := &inventory.Asset{
-			PlatformIds: []string{assetId},
-			Name:        conn.Name(),
-			Platform:    conn.Platform(),
-			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
-		}
-		if stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryAuto, DiscoveryAll, DiscoveryClusters) && resFilters.IsEmpty() {
-			in.Spec.Assets = append(in.Spec.Assets, root)
+		if err == nil {
+			root := &inventory.Asset{
+				PlatformIds: []string{assetId},
+				Name:        conn.Name(),
+				Platform:    conn.Platform(),
+				Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
+			}
+			if stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryAuto, DiscoveryAll, DiscoveryClusters) && resFilters.IsEmpty() {
+				in.Spec.Assets = append(in.Spec.Assets, root)
+			}
+		} else {
+			log.Warn().Err(err).Msg("failed to discover cluster asset")
 		}
 	}
 	nss, err := discoverNamespaces(conn, invConfig, "", nil, nsFilter)
@@ -843,13 +843,17 @@ func discoverNamespaces(
 	// We don't use MQL here since we need to handle k8s permission errors
 	nss, err := conn.Namespaces()
 	if err != nil {
-		if k8sErrors.IsForbidden(err) && len(nsFilter.include) > 0 {
-			for _, ns := range nsFilter.include {
-				n, err := conn.Namespace(ns)
-				if err != nil {
-					return nil, err
+		if k8sErrors.IsForbidden(err) {
+			if len(nsFilter.include) > 0 {
+				for _, ns := range nsFilter.include {
+					n, err := conn.Namespace(ns)
+					if err != nil {
+						return nil, err
+					}
+					nss = append(nss, *n)
 				}
-				nss = append(nss, *n)
+			} else {
+				return nil, errors.Wrap(err, "no permissions to list cluster namespaces, try specifying namespaces explicitly")
 			}
 		} else {
 			return nil, errors.Wrap(err, "failed to list namespaces")
