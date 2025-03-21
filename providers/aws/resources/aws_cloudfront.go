@@ -140,7 +140,7 @@ func (a *mqlAwsCloudfront) functions() ([]interface{}, error) {
 				stage = string(metadata.Stage)
 			}
 			if config := funct.FunctionConfig; config != nil {
-				comment = convert.ToString(config.Comment)
+				comment = convert.ToValue(config.Comment)
 				runtime = string(config.Runtime)
 			}
 
@@ -153,7 +153,7 @@ func (a *mqlAwsCloudfront) functions() ([]interface{}, error) {
 				"stage":            llx.StringData(stage),
 				"comment":          llx.StringData(comment),
 				"runtime":          llx.StringData(runtime),
-				"arn":              llx.StringData(fmt.Sprintf(cloudfrontFunctionPattern, "global", conn.AccountId(), convert.ToString(funct.Name))),
+				"arn":              llx.StringData(fmt.Sprintf(cloudfrontFunctionPattern, "global", conn.AccountId(), convert.ToValue(funct.Name))),
 			}
 
 			mqlAwsCloudfrontDist, err := CreateResource(a.MqlRuntime, "aws.cloudfront.function", args)

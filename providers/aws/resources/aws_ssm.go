@@ -118,7 +118,7 @@ func (a *mqlAwsSsmParameter) kmsKey() (*mqlAwsKmsKey, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	mqlKey, err := NewResource(a.MqlRuntime, "aws.kms.key",
 		map[string]*llx.RawData{
-			"arn": llx.StringData(fmt.Sprintf(kmsKeyArnPattern, a.region, conn.AccountId(), convert.ToString(a.parameterCache.KeyId))),
+			"arn": llx.StringData(fmt.Sprintf(kmsKeyArnPattern, a.region, conn.AccountId(), convert.ToValue(a.parameterCache.KeyId))),
 		})
 	if err != nil {
 		return nil, err
@@ -192,7 +192,7 @@ func (a *mqlAwsSsm) getInstances(conn *connection.AwsConnection) []*jobpool.Job 
 						"platformType":    llx.StringData(string(instance.PlatformType)),
 						"platformVersion": llx.StringDataPtr(instance.PlatformVersion),
 						"region":          llx.StringData(region),
-						"arn":             llx.StringData(ssmInstanceArn(conn.AccountId(), region, convert.ToString(instance.InstanceId))),
+						"arn":             llx.StringData(ssmInstanceArn(conn.AccountId(), region, convert.ToValue(instance.InstanceId))),
 					})
 				if err != nil {
 					return nil, err
@@ -285,7 +285,7 @@ func Ec2SSMTagsToMap(tags []ec2types.TagDescription) map[string]interface{} {
 	if len(tags) > 0 {
 		for i := range tags {
 			tag := tags[i]
-			tagsMap[convert.ToString(tag.Key)] = convert.ToString(tag.Value)
+			tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
 		}
 	}
 

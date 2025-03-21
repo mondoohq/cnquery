@@ -217,7 +217,7 @@ func (a *mqlAzureSubscriptionMonitorServiceActivityLog) alerts() ([]interface{},
 
 			for _, act := range entry.Properties.Actions.ActionGroups {
 				mqlAction := mqlAlertAction{
-					ActionGroupId:     convert.ToString(act.ActionGroupID),
+					ActionGroupId:     convert.ToValue(act.ActionGroupID),
 					WebhookProperties: convert.PtrMapStrToStr(act.WebhookProperties),
 				}
 				actions = append(actions, mqlAction)
@@ -226,15 +226,15 @@ func (a *mqlAzureSubscriptionMonitorServiceActivityLog) alerts() ([]interface{},
 				anyOf := []mqlAlertLeafCondition{}
 				for _, leaf := range cond.AnyOf {
 					mqlAnyOfLeaf := mqlAlertLeafCondition{
-						FieldName:   convert.ToString(leaf.Field),
-						Equals:      convert.ToString(leaf.Equals),
+						FieldName:   convert.ToValue(leaf.Field),
+						Equals:      convert.ToValue(leaf.Equals),
 						ContainsAny: convert.SliceStrPtrToStr(leaf.ContainsAny),
 					}
 					anyOf = append(anyOf, mqlAnyOfLeaf)
 				}
 				mqlCondition := mqlAlertCondition{
-					FieldName:   convert.ToString(cond.Field),
-					Equals:      convert.ToString(cond.Equals),
+					FieldName:   convert.ToValue(cond.Field),
+					Equals:      convert.ToValue(cond.Equals),
 					ContainsAny: convert.SliceStrPtrToStr(cond.ContainsAny),
 					AnyOf:       anyOf,
 				}

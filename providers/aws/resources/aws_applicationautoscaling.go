@@ -85,7 +85,7 @@ func (a *mqlAwsApplicationAutoscaling) getTargets(conn *connection.AwsConnection
 					}
 					mqlSTarget, err := CreateResource(a.MqlRuntime, "aws.applicationautoscaling.target",
 						map[string]*llx.RawData{
-							"arn":               llx.StringData(fmt.Sprintf("arn:aws:application-autoscaling:%s:%s:%s/%s", regionVal, conn.AccountId(), namespace, convert.ToString(target.ResourceId))),
+							"arn":               llx.StringData(fmt.Sprintf("arn:aws:application-autoscaling:%s:%s:%s/%s", regionVal, conn.AccountId(), namespace, convert.ToValue(target.ResourceId))),
 							"namespace":         llx.StringData(string(target.ServiceNamespace)),
 							"scalableDimension": llx.StringData(string(target.ScalableDimension)),
 							"minCapacity":       llx.IntDataDefault(target.MinCapacity, 0),

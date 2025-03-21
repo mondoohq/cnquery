@@ -89,12 +89,12 @@ func (a *mqlAws) getVpcs(conn *connection.AwsConnection) []*jobpool.Job {
 					}
 					mqlVpc, err := CreateResource(a.MqlRuntime, "aws.vpc",
 						map[string]*llx.RawData{
-							"arn":                      llx.StringData(fmt.Sprintf(vpcArnPattern, regionVal, conn.AccountId(), convert.ToString(v.VpcId))),
+							"arn":                      llx.StringData(fmt.Sprintf(vpcArnPattern, regionVal, conn.AccountId(), convert.ToValue(v.VpcId))),
 							"cidrBlock":                llx.StringDataPtr(v.CidrBlock),
 							"id":                       llx.StringDataPtr(v.VpcId),
 							"instanceTenancy":          llx.StringData(string(v.InstanceTenancy)),
 							"internetGatewayBlockMode": llx.StringData(string(v.BlockPublicAccessStates.InternetGatewayBlockMode)),
-							"isDefault":                llx.BoolData(convert.ToBool(v.IsDefault)),
+							"isDefault":                llx.BoolData(convert.ToValue(v.IsDefault)),
 							"name":                     llx.StringData(name),
 							"region":                   llx.StringData(regionVal),
 							"state":                    llx.StringData(string(v.State)),
@@ -135,7 +135,7 @@ type mqlAwsVpcNatgatewayAddressInternal struct {
 func (a *mqlAwsVpcNatgateway) vpc() (*mqlAwsVpc, error) {
 	if a.natGatewayCache.VpcId != nil {
 		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-		res, err := NewResource(a.MqlRuntime, "aws.vpc", map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(vpcArnPattern, a.region, conn.AccountId(), convert.ToString(a.natGatewayCache.VpcId)))})
+		res, err := NewResource(a.MqlRuntime, "aws.vpc", map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(vpcArnPattern, a.region, conn.AccountId(), convert.ToValue(a.natGatewayCache.VpcId)))})
 		if err != nil {
 			return nil, err
 		}
@@ -148,7 +148,7 @@ func (a *mqlAwsVpcNatgateway) vpc() (*mqlAwsVpc, error) {
 func (a *mqlAwsVpcNatgateway) subnet() (*mqlAwsVpcSubnet, error) {
 	if a.natGatewayCache.SubnetId != nil {
 		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-		res, err := NewResource(a.MqlRuntime, "aws.vpc.subnet", map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(subnetArnPattern, a.region, conn.AccountId(), convert.ToString(a.natGatewayCache.SubnetId)))})
+		res, err := NewResource(a.MqlRuntime, "aws.vpc.subnet", map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(subnetArnPattern, a.region, conn.AccountId(), convert.ToValue(a.natGatewayCache.SubnetId)))})
 		if err != nil {
 			a.Subnet.State = plugin.StateIsNull | plugin.StateIsSet
 			return nil, err
@@ -316,7 +316,7 @@ func (a *mqlAwsVpc) serviceEndpoints() ([]interface{}, error) {
 
 		for _, endpoint := range resp.VpcEndpoints {
 			dnsNames := convert.Into(endpoint.DnsEntries,
-				func(d vpctypes.DnsEntry) any { return convert.ToString(d.DnsName) },
+				func(d vpctypes.DnsEntry) any { return convert.ToValue(d.DnsName) },
 			)
 			mqlEndpoint, err := CreateResource(a.MqlRuntime, "aws.vpc.serviceEndpoint",
 				map[string]*llx.RawData{
@@ -391,13 +391,13 @@ func (a *mqlAwsVpcServiceEndpoint) gatherVpcServiceEndpointInfo() error {
 
 	dnsNames := convert.Into(service.PrivateDnsNames,
 		func(d vpctypes.PrivateDnsDetails) any {
-			return convert.ToString(d.PrivateDnsName)
+			return convert.ToValue(d.PrivateDnsName)
 		},
 	)
 
-	a.AcceptanceRequired = plugin.TValue[bool]{Data: convert.ToBool(service.AcceptanceRequired), State: plugin.StateIsSet}
-	a.ManagesVpcEndpoints = plugin.TValue[bool]{Data: convert.ToBool(service.ManagesVpcEndpoints), State: plugin.StateIsSet}
-	a.VpcEndpointPolicySupported = plugin.TValue[bool]{Data: convert.ToBool(service.VpcEndpointPolicySupported), State: plugin.StateIsSet}
+	a.AcceptanceRequired = plugin.TValue[bool]{Data: convert.ToValue(service.AcceptanceRequired), State: plugin.StateIsSet}
+	a.ManagesVpcEndpoints = plugin.TValue[bool]{Data: convert.ToValue(service.ManagesVpcEndpoints), State: plugin.StateIsSet}
+	a.VpcEndpointPolicySupported = plugin.TValue[bool]{Data: convert.ToValue(service.VpcEndpointPolicySupported), State: plugin.StateIsSet}
 	a.PayerResponsibility = plugin.TValue[string]{Data: string(service.PayerResponsibility), State: plugin.StateIsSet}
 	a.PrivateDnsNameVerificationState = plugin.TValue[string]{Data: string(service.PrivateDnsNameVerificationState), State: plugin.StateIsSet}
 	a.AvailabilityZones = plugin.TValue[[]interface{}]{Data: convert.SliceAnyToInterface(service.AvailabilityZones), State: plugin.StateIsSet}
@@ -409,21 +409,27 @@ func (a *mqlAwsVpcServiceEndpoint) gatherVpcServiceEndpointInfo() error {
 func (a *mqlAwsVpcServiceEndpoint) acceptanceRequired() (bool, error) {
 	return false, a.gatherVpcServiceEndpointInfo()
 }
+
 func (a *mqlAwsVpcServiceEndpoint) managesVpcEndpoints() (bool, error) {
 	return false, a.gatherVpcServiceEndpointInfo()
 }
+
 func (a *mqlAwsVpcServiceEndpoint) vpcEndpointPolicySupported() (bool, error) {
 	return false, a.gatherVpcServiceEndpointInfo()
 }
+
 func (a *mqlAwsVpcServiceEndpoint) privateDnsNameVerificationState() (string, error) {
 	return "", a.gatherVpcServiceEndpointInfo()
 }
+
 func (a *mqlAwsVpcServiceEndpoint) payerResponsibility() (string, error) {
 	return "", a.gatherVpcServiceEndpointInfo()
 }
+
 func (a *mqlAwsVpcServiceEndpoint) availabilityZones() ([]interface{}, error) {
 	return nil, a.gatherVpcServiceEndpointInfo()
 }
+
 func (a *mqlAwsVpcServiceEndpoint) privateDnsNames() ([]interface{}, error) {
 	return nil, a.gatherVpcServiceEndpointInfo()
 }
@@ -685,7 +691,7 @@ type mqlAwsVpcRoutetableAssociationInternal struct {
 func (a *mqlAwsVpcRoutetableAssociation) subnet() (*mqlAwsVpcSubnet, error) {
 	if a.cacheSubnetId != nil {
 		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-		res, err := NewResource(a.MqlRuntime, "aws.vpc.subnet", map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(subnetArnPattern, a.region, conn.AccountId(), convert.ToString(a.cacheSubnetId)))})
+		res, err := NewResource(a.MqlRuntime, "aws.vpc.subnet", map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(subnetArnPattern, a.region, conn.AccountId(), convert.ToValue(a.cacheSubnetId)))})
 		if err != nil {
 			a.Subnet.State = plugin.StateIsNull | plugin.StateIsSet
 			return nil, err
@@ -724,7 +730,7 @@ func (a *mqlAwsVpc) subnets() ([]interface{}, error) {
 		for _, subnet := range subnets.Subnets {
 			subnetResource, err := CreateResource(a.MqlRuntime, "aws.vpc.subnet",
 				map[string]*llx.RawData{
-					"arn":                         llx.StringData(fmt.Sprintf(subnetArnPattern, a.Region.Data, conn.AccountId(), convert.ToString(subnet.SubnetId))),
+					"arn":                         llx.StringData(fmt.Sprintf(subnetArnPattern, a.Region.Data, conn.AccountId(), convert.ToValue(subnet.SubnetId))),
 					"assignIpv6AddressOnCreation": llx.BoolDataPtr(subnet.AssignIpv6AddressOnCreation),
 					"availabilityZone":            llx.StringDataPtr(subnet.AvailabilityZone),
 					"availableIpAddressCount":     llx.IntDataPtr(subnet.AvailableIpAddressCount),
@@ -789,7 +795,7 @@ func initAwsVpcSubnet(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 		if arnValue != "" {
 			args["arn"] = llx.StringData(arnValue)
 		} else {
-			args["arn"] = llx.StringData(fmt.Sprintf(subnetArnPattern, region, conn.AccountId(), convert.ToString(subnet.SubnetId)))
+			args["arn"] = llx.StringData(fmt.Sprintf(subnetArnPattern, region, conn.AccountId(), convert.ToValue(subnet.SubnetId)))
 		}
 		args["assignIpv6AddressOnCreation"] = llx.BoolDataPtr(subnet.AssignIpv6AddressOnCreation)
 		args["availabilityZone"] = llx.StringDataPtr(subnet.AvailabilityZone)

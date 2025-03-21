@@ -130,7 +130,7 @@ func (a *mqlAwsInspectorCoverage) ec2Instance() (*mqlAwsInspectorCoverageInstanc
 			"region":   llx.StringData(a.Region.Data),
 		}
 		image, err := NewResource(a.MqlRuntime, "aws.ec2.image", map[string]*llx.RawData{
-			"arn": llx.StringData(fmt.Sprintf(imageArnPattern, a.Region.Data, conn.AccountId(), convert.ToString(a.cacheCoverage.ResourceMetadata.Ec2.AmiId))),
+			"arn": llx.StringData(fmt.Sprintf(imageArnPattern, a.Region.Data, conn.AccountId(), convert.ToValue(a.cacheCoverage.ResourceMetadata.Ec2.AmiId))),
 		})
 		if err == nil {
 			args["image"] = llx.ResourceData(image, "aws.ec2.image")

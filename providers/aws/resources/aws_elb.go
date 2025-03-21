@@ -76,7 +76,7 @@ func (a *mqlAwsElb) getClassicLoadBalancers(conn *connection.AwsConnection) []*j
 					}
 					mqlLb, err := CreateResource(a.MqlRuntime, "aws.elb.loadbalancer",
 						map[string]*llx.RawData{
-							"arn":                  llx.StringData(fmt.Sprintf(elbv1LbArnPattern, regionVal, conn.AccountId(), convert.ToString(lb.LoadBalancerName))),
+							"arn":                  llx.StringData(fmt.Sprintf(elbv1LbArnPattern, regionVal, conn.AccountId(), convert.ToValue(lb.LoadBalancerName))),
 							"createdTime":          llx.TimeDataPtr(lb.CreatedTime),
 							"createdAt":            llx.TimeDataPtr(lb.CreatedTime),
 							"dnsName":              llx.StringDataPtr(lb.DNSName),
@@ -154,7 +154,7 @@ func (a *mqlAwsElb) getLoadBalancers(conn *connection.AwsConnection) []*jobpool.
 				for _, lb := range lbs.LoadBalancers {
 					availabilityZones := []interface{}{}
 					for _, zone := range lb.AvailabilityZones {
-						availabilityZones = append(availabilityZones, convert.ToString(zone.ZoneName))
+						availabilityZones = append(availabilityZones, convert.ToValue(zone.ZoneName))
 					}
 
 					sgs := []interface{}{}
@@ -189,7 +189,7 @@ func (a *mqlAwsElb) getLoadBalancers(conn *connection.AwsConnection) []*jobpool.
 					if lb.VpcId != nil {
 						mqlVpc, err := NewResource(a.MqlRuntime, "aws.vpc",
 							map[string]*llx.RawData{
-								"arn": llx.StringData(fmt.Sprintf(vpcArnPattern, regionVal, conn.AccountId(), convert.ToString(lb.VpcId))),
+								"arn": llx.StringData(fmt.Sprintf(vpcArnPattern, regionVal, conn.AccountId(), convert.ToValue(lb.VpcId))),
 							})
 						if err != nil {
 							return nil, err

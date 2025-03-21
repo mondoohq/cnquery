@@ -107,8 +107,8 @@ func initAwsEsDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	if err != nil {
 		return nil, nil, err
 	}
-	args["encryptionAtRestEnabled"] = llx.BoolData(convert.ToBool(domainDetails.DomainStatus.EncryptionAtRestOptions.Enabled))
-	args["nodeToNodeEncryptionEnabled"] = llx.BoolData(convert.ToBool(domainDetails.DomainStatus.NodeToNodeEncryptionOptions.Enabled))
+	args["encryptionAtRestEnabled"] = llx.BoolData(convert.ToValue(domainDetails.DomainStatus.EncryptionAtRestOptions.Enabled))
+	args["nodeToNodeEncryptionEnabled"] = llx.BoolData(convert.ToValue(domainDetails.DomainStatus.NodeToNodeEncryptionOptions.Enabled))
 	args["endpoint"] = llx.StringDataPtr(domainDetails.DomainStatus.Endpoint)
 	args["arn"] = llx.StringDataPtr(domainDetails.DomainStatus.ARN)
 	args["elasticsearchVersion"] = llx.StringDataPtr(domainDetails.DomainStatus.ElasticsearchVersion)

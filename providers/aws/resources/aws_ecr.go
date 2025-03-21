@@ -172,7 +172,7 @@ func (a *mqlAwsEcrRepository) images() ([]interface{}, error) {
 					"registryId": llx.StringDataPtr(image.RegistryId),
 					"repoName":   llx.StringData(name),
 					"region":     llx.StringData(region),
-					"arn":        llx.StringData(ecrImageArn(ImageInfo{Region: region, RegistryId: convert.ToString(image.RegistryId), RepoName: name, Digest: convert.ToString(image.ImageDigest)})),
+					"arn":        llx.StringData(ecrImageArn(ImageInfo{Region: region, RegistryId: convert.ToValue(image.RegistryId), RepoName: name, Digest: convert.ToValue(image.ImageDigest)})),
 					"uri":        llx.StringData(uri),
 				})
 			if err != nil {
@@ -198,7 +198,7 @@ func (a *mqlAwsEcrRepository) images() ([]interface{}, error) {
 			}
 			mqlImage, err := CreateResource(a.MqlRuntime, "aws.ecr.image",
 				map[string]*llx.RawData{
-					"arn":                  llx.StringData(ecrImageArn(ImageInfo{Region: region, RegistryId: convert.ToString(image.RegistryId), RepoName: name, Digest: convert.ToString(image.ImageDigest)})),
+					"arn":                  llx.StringData(ecrImageArn(ImageInfo{Region: region, RegistryId: convert.ToValue(image.RegistryId), RepoName: name, Digest: convert.ToValue(image.ImageDigest)})),
 					"digest":               llx.StringDataPtr(image.ImageDigest),
 					"lastRecordedPullTime": llx.TimeDataPtr(image.LastRecordedPullTime),
 					"mediaType":            llx.StringDataPtr(image.ImageManifestMediaType),

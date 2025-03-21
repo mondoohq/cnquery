@@ -200,7 +200,7 @@ func (a *mqlAwsDynamodbExport) kmsKey() (*mqlAwsKmsKey, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	mqlKey, err := NewResource(a.MqlRuntime, "aws.kms.key",
 		map[string]*llx.RawData{
-			"arn": llx.StringData(fmt.Sprintf(kmsKeyArnPattern, a.region, conn.AccountId(), convert.ToString(exp.S3SseKmsKeyId))),
+			"arn": llx.StringData(fmt.Sprintf(kmsKeyArnPattern, a.region, conn.AccountId(), convert.ToValue(exp.S3SseKmsKeyId))),
 		})
 	if err != nil {
 		return nil, err
@@ -420,7 +420,7 @@ func (a *mqlAwsDynamodb) globalTables() ([]interface{}, error) {
 	for _, table := range listGlobalTablesResp.GlobalTables {
 		mqlTable, err := CreateResource(a.MqlRuntime, "aws.dynamodb.globaltable",
 			map[string]*llx.RawData{
-				"arn":  llx.StringData(fmt.Sprintf(dynamoGlobalTableArnPattern, conn.AccountId(), convert.ToString(table.GlobalTableName))),
+				"arn":  llx.StringData(fmt.Sprintf(dynamoGlobalTableArnPattern, conn.AccountId(), convert.ToValue(table.GlobalTableName))),
 				"name": llx.StringDataPtr(table.GlobalTableName),
 			})
 		if err != nil {
@@ -524,7 +524,7 @@ func dynamoDBTagsToMap(tags []ddtypes.Tag) map[string]interface{} {
 	if len(tags) > 0 {
 		for i := range tags {
 			tag := tags[i]
-			tagsMap[convert.ToString(tag.Key)] = convert.ToString(tag.Value)
+			tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
 		}
 	}
 

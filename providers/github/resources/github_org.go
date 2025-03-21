@@ -83,21 +83,21 @@ func initGithubOrganization(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	plan, _ := convert.JsonToDict(org.Plan)
 	args["plan"] = llx.MapData(plan, types.Any)
 
-	args["twoFactorRequirementEnabled"] = llx.BoolData(convert.ToBool(org.TwoFactorRequirementEnabled))
-	args["isVerified"] = llx.BoolData(convert.ToBool(org.IsVerified))
+	args["twoFactorRequirementEnabled"] = llx.BoolData(convert.ToValue(org.TwoFactorRequirementEnabled))
+	args["isVerified"] = llx.BoolData(convert.ToValue(org.IsVerified))
 
-	args["hasOrganizationProjects"] = llx.BoolData(convert.ToBool(org.HasOrganizationProjects))
-	args["hasRepositoryProjects"] = llx.BoolData(convert.ToBool(org.HasRepositoryProjects))
+	args["hasOrganizationProjects"] = llx.BoolData(convert.ToValue(org.HasOrganizationProjects))
+	args["hasRepositoryProjects"] = llx.BoolData(convert.ToValue(org.HasRepositoryProjects))
 
 	args["defaultRepositoryPermission"] = llx.StringDataPtr(org.DefaultRepoPermission)
-	args["membersCanCreateRepositories"] = llx.BoolData(convert.ToBool(org.MembersCanCreateRepos))
-	args["membersCanCreatePublicRepositories"] = llx.BoolData(convert.ToBool(org.MembersCanCreatePublicRepos))
-	args["membersCanCreatePrivateRepositories"] = llx.BoolData(convert.ToBool(org.MembersCanCreatePrivateRepos))
-	args["membersCanCreateInternalRepositories"] = llx.BoolData(convert.ToBool(org.MembersCanCreateInternalRepos))
-	args["membersCanCreatePages"] = llx.BoolData(convert.ToBool(org.MembersCanCreatePages))
-	args["membersCanCreatePublicPages"] = llx.BoolData(convert.ToBool(org.MembersCanCreatePublicPages))
-	args["membersCanCreatePrivatePages"] = llx.BoolData(convert.ToBool(org.MembersCanCreatePrivateRepos))
-	args["membersCanForkPrivateRepos"] = llx.BoolData(convert.ToBool(org.MembersCanForkPrivateRepos))
+	args["membersCanCreateRepositories"] = llx.BoolData(convert.ToValue(org.MembersCanCreateRepos))
+	args["membersCanCreatePublicRepositories"] = llx.BoolData(convert.ToValue(org.MembersCanCreatePublicRepos))
+	args["membersCanCreatePrivateRepositories"] = llx.BoolData(convert.ToValue(org.MembersCanCreatePrivateRepos))
+	args["membersCanCreateInternalRepositories"] = llx.BoolData(convert.ToValue(org.MembersCanCreateInternalRepos))
+	args["membersCanCreatePages"] = llx.BoolData(convert.ToValue(org.MembersCanCreatePages))
+	args["membersCanCreatePublicPages"] = llx.BoolData(convert.ToValue(org.MembersCanCreatePublicPages))
+	args["membersCanCreatePrivatePages"] = llx.BoolData(convert.ToValue(org.MembersCanCreatePrivateRepos))
+	args["membersCanForkPrivateRepos"] = llx.BoolData(convert.ToValue(org.MembersCanForkPrivateRepos))
 
 	return args, nil, nil
 }
@@ -494,7 +494,7 @@ func (g *mqlGithubOrganization) packages() ([]interface{}, error) {
 			// NOTE: we need to fetch repo separately because the Github repo object is not complete, instead of
 			// call the repo fetching all the time, we make this lazy loading
 			if p.Repository != nil && p.Repository.Name != nil {
-				pkg.packageRepository = convert.ToString(p.Repository.Name)
+				pkg.packageRepository = convert.ToValue(p.Repository.Name)
 			}
 			res = append(res, pkg)
 		}

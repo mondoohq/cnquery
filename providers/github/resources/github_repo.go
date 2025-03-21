@@ -1235,8 +1235,8 @@ func (g *mqlGithubRepository) workflows() ([]interface{}, error) {
 
 func newMqlGithubFile(runtime *plugin.Runtime, ownerName string, repoName string, content *github.RepositoryContent) (*mqlGithubFile, error) {
 	isBinary := false
-	if convert.ToString(content.Type) == "file" {
-		file := strings.Split(convert.ToString(content.Path), ".")
+	if convert.ToValue(content.Type) == "file" {
+		file := strings.Split(convert.ToValue(content.Path), ".")
 		if len(file) == 2 {
 			isBinary = binaryFileTypes[file[1]]
 		}
@@ -1389,8 +1389,8 @@ func (g *mqlGithubFile) files() ([]interface{}, error) {
 	res := []interface{}{}
 	for i := range dirContent {
 		isBinary := false
-		if convert.ToString(dirContent[i].Type) == "file" {
-			file := strings.Split(convert.ToString(dirContent[i].Path), ".")
+		if convert.ToValue(dirContent[i].Type) == "file" {
+			file := strings.Split(convert.ToValue(dirContent[i].Path), ".")
 			if len(file) == 2 {
 				isBinary = binaryFileTypes[file[1]]
 			}

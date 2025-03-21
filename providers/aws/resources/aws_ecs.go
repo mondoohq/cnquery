@@ -225,16 +225,16 @@ func (a *mqlAwsEcsCluster) containerInstances() ([]interface{}, error) {
 			for _, ci := range containerInstancesDetail.ContainerInstances {
 				// container instance assets
 				args := map[string]*llx.RawData{
-					"arn":              llx.StringData(convert.ToString(ci.ContainerInstanceArn)),
+					"arn":              llx.StringData(convert.ToValue(ci.ContainerInstanceArn)),
 					"agentConnected":   llx.BoolData(ci.AgentConnected),
-					"id":               llx.StringData(convert.ToString(ci.Ec2InstanceId)),
-					"capacityProvider": llx.StringData(convert.ToString(ci.CapacityProviderName)),
+					"id":               llx.StringData(convert.ToValue(ci.Ec2InstanceId)),
+					"capacityProvider": llx.StringData(convert.ToValue(ci.CapacityProviderName)),
 					"region":           llx.StringData(region),
 				}
-				if strings.HasPrefix(convert.ToString(ci.Ec2InstanceId), "i-") {
+				if strings.HasPrefix(convert.ToValue(ci.Ec2InstanceId), "i-") {
 					mqlInstanceResource, err := CreateResource(a.MqlRuntime, "aws.ec2.instance",
 						map[string]*llx.RawData{
-							"arn": llx.StringData(fmt.Sprintf(ec2InstanceArnPattern, region, conn.AccountId(), convert.ToString(ci.Ec2InstanceId))),
+							"arn": llx.StringData(fmt.Sprintf(ec2InstanceArnPattern, region, conn.AccountId(), convert.ToValue(ci.Ec2InstanceId))),
 						})
 					if err == nil && mqlInstanceResource != nil {
 						mqlInstance := mqlInstanceResource.(*mqlAwsEc2Instance)
@@ -353,9 +353,9 @@ func initAwsEcsTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	t := taskDetails.Tasks[0]
 	args["clusterName"] = llx.StringData(clusterName)
 	args["connectivity"] = llx.StringData(string(t.Connectivity))
-	args["lastStatus"] = llx.StringData(convert.ToString(t.LastStatus))
-	args["platformFamily"] = llx.StringData(convert.ToString(t.PlatformFamily))
-	args["platformVersion"] = llx.StringData(convert.ToString(t.PlatformVersion))
+	args["lastStatus"] = llx.StringData(convert.ToValue(t.LastStatus))
+	args["platformFamily"] = llx.StringData(convert.ToValue(t.PlatformFamily))
+	args["platformVersion"] = llx.StringData(convert.ToValue(t.PlatformVersion))
 	args["tags"] = llx.MapData(ecsTagsToMap(t.Tags), types.String)
 	res, err := CreateResource(runtime, "aws.ecs.task", args)
 	if err != nil {
@@ -407,11 +407,11 @@ func (t *mqlAwsEcsTask) containers() ([]interface{}, error) {
 		containerLogDriverMap := make(map[string]string)
 		containerCommandMap := make(map[string]string)
 		cmds := []interface{}{}
-		for i := range containerCommandMap[convert.ToString(c.Name)] {
-			cmds = append(cmds, containerCommandMap[convert.ToString(c.Name)][i])
+		for i := range containerCommandMap[convert.ToValue(c.Name)] {
+			cmds = append(cmds, containerCommandMap[convert.ToValue(c.Name)][i])
 		}
 		publicIp := getContainerIP(ctx, conn, t.attachments, c, t.region)
-		name := convert.ToString(c.Name)
+		name := convert.ToValue(c.Name)
 		if publicIp != "" {
 			name = name + "-" + publicIp
 		}
@@ -422,8 +422,8 @@ func (t *mqlAwsEcsTask) containers() ([]interface{}, error) {
 				"name":              llx.StringData(name),
 				"status":            llx.StringDataPtr(c.LastStatus),
 				"publicIp":          llx.StringData(publicIp),
-				"logDriver":         llx.StringData(containerLogDriverMap[convert.ToString(c.Name)]),
-				"image":             llx.StringData(convert.ToString(c.Image)),
+				"logDriver":         llx.StringData(containerLogDriverMap[convert.ToValue(c.Name)]),
+				"image":             llx.StringData(convert.ToValue(c.Image)),
 				"clusterName":       llx.StringData(t.clusterName),
 				"taskDefinitionArn": llx.StringData(t.Arn.Data),
 				"region":            llx.StringData(t.region),
@@ -481,7 +481,7 @@ func ecsTagsToMap(tags []ecstypes.Tag) map[string]interface{} {
 	res := map[string]interface{}{}
 	for _, tag := range tags {
 		if tag.Key != nil && tag.Value != nil {
-			res[convert.ToString(tag.Key)] = convert.ToString(tag.Value)
+			res[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
 		}
 	}
 	return res

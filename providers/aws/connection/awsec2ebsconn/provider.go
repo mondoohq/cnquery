@@ -123,7 +123,7 @@ func NewAwsEbsConnection(id uint32, conf *inventory.Config, asset *inventory.Ass
 		switch c.targetType {
 		case awsec2ebstypes.EBSTargetInstance:
 			ok, volLocation, _, err = c.SetupForTargetInstance(ctx, instanceinfo)
-			conf.PlatformId = awsec2.MondooInstanceID(i.AccountID, targetRegion, convert.ToString(instanceinfo.InstanceId))
+			conf.PlatformId = awsec2.MondooInstanceID(i.AccountID, targetRegion, convert.ToValue(instanceinfo.InstanceId))
 		case awsec2ebstypes.EBSTargetVolume:
 			ok, volLocation, _, err = c.SetupForTargetVolume(ctx, *volumeid)
 			conf.PlatformId = awsec2.MondooVolumeID(volumeid.Account, volumeid.Region, volumeid.Id)
@@ -151,7 +151,7 @@ func NewAwsEbsConnection(id uint32, conf *inventory.Config, asset *inventory.Ass
 	}
 
 	if conf.Options[snapshot.NoSetup] == "true" {
-		conf.PlatformId = awsec2.MondooInstanceID(i.AccountID, targetRegion, convert.ToString(instanceinfo.InstanceId))
+		conf.PlatformId = awsec2.MondooInstanceID(i.AccountID, targetRegion, convert.ToValue(instanceinfo.InstanceId))
 	}
 	asset.PlatformIds = []string{conf.PlatformId}
 	c.deviceLocation = volLocation
