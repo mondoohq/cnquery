@@ -73,6 +73,12 @@ Examples:
 					Default: "",
 					Desc:    "HTTP proxy to use for container pulls",
 				},
+				{
+					Long:    "kubelogin",
+					Type:    plugin.FlagType_Bool,
+					Default: "false",
+					Desc:    "Authenticate against a remote Azure AD enabled Kubernetes cluster using an Azure identity.",
+				},
 			},
 		},
 	},

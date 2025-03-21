@@ -25,6 +25,7 @@ const (
 	OPTION_ADMISSION         = "k8s-admission-review"
 	OPTION_OBJECT_KIND       = "object-kind"
 	OPTION_CONTEXT           = "context"
+	OPTION_KUBELOGIN         = "kubelogin"
 	idPrefix                 = "//platformid.api.mondoo.app/runtime/k8s/uid/"
 )
 
