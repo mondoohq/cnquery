@@ -81,7 +81,7 @@ func (a *mqlAzureSubscriptionAuthorizationService) roles() ([]interface{}, error
 			return nil, err
 		}
 		for _, roleDef := range page.Value {
-			roleType := convert.ToString(roleDef.Properties.RoleType)
+			roleType := convert.ToValue(roleDef.Properties.RoleType)
 			isCustom := roleType == "CustomRole"
 			scopes := []interface{}{}
 			for _, s := range roleDef.Properties.AssignableScopes {
@@ -165,7 +165,7 @@ func (a *mqlAzureSubscriptionAuthorizationService) roleAssignments() ([]interfac
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
 
-	var client, err = authorization.NewRoleAssignmentsClient(subId, token, &arm.ClientOptions{
+	client, err := authorization.NewRoleAssignmentsClient(subId, token, &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
 	if err != nil {
@@ -268,7 +268,7 @@ func (a *mqlAzureSubscriptionAuthorizationService) managedIdentities() ([]interf
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
 
-	var client, err = armmsi.NewUserAssignedIdentitiesClient(subId, token, &arm.ClientOptions{
+	client, err := armmsi.NewUserAssignedIdentitiesClient(subId, token, &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
 	if err != nil {
