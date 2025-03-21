@@ -8,7 +8,7 @@ package theme
 import (
 	"strings"
 
-	prompt "github.com/c-bata/go-prompt"
+	prompt "github.com/StepY1aoZz/go-prompt"
 	"github.com/muesli/termenv"
 	"go.mondoo.com/cnquery/v11/cli/printer"
 	"go.mondoo.com/cnquery/v11/cli/theme/colors"

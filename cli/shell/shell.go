@@ -14,7 +14,7 @@ import (
 	"strings"
 	"sync"
 
-	prompt "github.com/c-bata/go-prompt"
+	prompt "github.com/StepY1aoZz/go-prompt"
 	"github.com/mitchellh/go-homedir"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11"
