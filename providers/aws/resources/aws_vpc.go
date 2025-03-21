@@ -316,7 +316,7 @@ func (a *mqlAwsVpc) serviceEndpoints() ([]interface{}, error) {
 
 		for _, endpoint := range resp.VpcEndpoints {
 			dnsNames := convert.Into(endpoint.DnsEntries,
-				func(d vpctypes.DnsEntry) any { return d.DnsName },
+				func(d vpctypes.DnsEntry) any { return convert.ToString(d.DnsName) },
 			)
 			mqlEndpoint, err := CreateResource(a.MqlRuntime, "aws.vpc.serviceEndpoint",
 				map[string]*llx.RawData{
@@ -373,10 +373,6 @@ func (a *mqlAwsVpcServiceEndpoint) gatherVpcServiceEndpointInfo() error {
 					Name:   aws.String("service-type"),
 					Values: []string{a.Type.Data},
 				},
-				{
-					Name:   aws.String("owner"),
-					Values: []string{a.Owner.Data},
-				},
 			},
 		}
 	)
@@ -395,7 +391,7 @@ func (a *mqlAwsVpcServiceEndpoint) gatherVpcServiceEndpointInfo() error {
 
 	dnsNames := convert.Into(service.PrivateDnsNames,
 		func(d vpctypes.PrivateDnsDetails) any {
-			return d.PrivateDnsName
+			return convert.ToString(d.PrivateDnsName)
 		},
 	)
 
