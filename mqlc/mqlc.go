@@ -1644,6 +1644,10 @@ func (c *compiler) postCompile() {
 				// default fields
 				ref = chunk.Function.Binding
 				chunk := code.Chunk(ref)
+				if chunk.Function == nil {
+					// nothing to expand
+					continue
+				}
 				typ = types.Type(chunk.Function.Type)
 				expanded := c.expandResourceFields(chunk, typ, ref)
 				// when no defaults are defined or query isn't about a resource, no block was added
