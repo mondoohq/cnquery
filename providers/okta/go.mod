@@ -6,7 +6,7 @@ go 1.23.0
 
 require (
 	github.com/okta/okta-sdk-golang/v2 v2.20.0
-	github.com/rs/zerolog v1.33.0
+	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.10.0
 	go.mondoo.com/cnquery/v11 v11.41.0
 	go.mondoo.com/ranger-rpc v0.6.5
