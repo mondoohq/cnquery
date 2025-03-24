@@ -5,7 +5,7 @@ replace go.mondoo.com/cnquery/v11 => ../..
 go 1.23.0
 
 require (
-	github.com/rs/zerolog v1.33.0
+	github.com/rs/zerolog v1.34.0
 	github.com/shadowscatcher/shodan v1.0.8
 	go.mondoo.com/cnquery/v11 v11.41.0
 )
