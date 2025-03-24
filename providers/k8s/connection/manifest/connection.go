@@ -152,6 +152,14 @@ func (c *Connection) Asset() *inventory.Asset {
 	return c.asset
 }
 
+func (c *Connection) BasePlatformId() (string, error) {
+	manifestHash, err := c.manifestHash()
+	if err != nil {
+		return "", err
+	}
+	return shared.IdPrefix + manifestHash, nil
+}
+
 func (c *Connection) AssetId() (string, error) {
 	// If we are doing an admission control scan, we have 1 resource in the manifest and it has a UID.
 	// Instead of using the file path to generate the ID, use the resource UID. We do this because for
@@ -168,6 +176,14 @@ func (c *Connection) AssetId() (string, error) {
 		}
 	}
 
+	manifestHash, err := c.manifestHash()
+	if err != nil {
+		return "", err
+	}
+	return shared.NewPlatformId(manifestHash), nil
+}
+
+func (c *Connection) manifestHash() (string, error) {
 	h := sha256.New()
 
 	// special handling for embedded content (e.g. piped in via stdin)
@@ -187,7 +203,7 @@ func (c *Connection) AssetId() (string, error) {
 	}
 
 	h.Write([]byte(absPath))
-	return shared.NewPlatformId(hex.EncodeToString(h.Sum(nil))), nil
+	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
 func (c *Connection) InventoryConfig() *inventory.Config {
