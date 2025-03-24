@@ -6,7 +6,7 @@ go 1.23.0
 
 require (
 	github.com/cockroachdb/errors v1.11.3
-	github.com/rs/zerolog v1.33.0
+	github.com/rs/zerolog v1.34.0
 	github.com/tailscale/tailscale-client-go/v2 v2.0.0-20250129222324-74c8fc3cb4d7
 	go.mondoo.com/cnquery/v11 v11.0.0-00010101000000-000000000000
 )
