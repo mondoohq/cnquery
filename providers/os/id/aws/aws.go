@@ -26,7 +26,7 @@ func readValue(conn shared.Connection, fPath string) string {
 
 func Detect(conn shared.Connection, p *inventory.Platform, smbiosMgr smbios.SmBiosManager) (string, string, []string) {
 	var values []string
-	if p.IsFamily("linux") {
+	if p.IsFamily(inventory.FAMILY_LINUX) {
 		// Fetching the data from the smbios manager is slow for some transports
 		// because it iterates through files we don't need to check. This
 		// is an optimization for our sshfs. Also, be aware that on linux,
