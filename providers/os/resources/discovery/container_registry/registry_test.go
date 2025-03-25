@@ -34,8 +34,9 @@ func TestDockerRegistry(t *testing.T) {
 
 func TestHarbor(t *testing.T) {
 	urls := []string{
-		"index.docker.io/library/centos:latest",
-		"index.docker.io/library/centos@sha256:5528e8b1b1719d34604c87e11dcd1c0a20bedf46e83b5632cdeac91b8c04efc1",
+		"index.docker.io/library/alpine:latest",
+		// 3.21.3
+		"index.docker.io/library/alpine@sha256:a8560b36e8b8210634f77d9f7f9efd7ffa463e380b75e2e74aff4511df3ef88c",
 	}
 
 	for i := range urls {
@@ -50,7 +51,7 @@ func TestHarbor(t *testing.T) {
 
 		// check that we resolved it correctly and we got a specific shasum
 		assert.Equal(t, "registry-image", a.Connections[0].Type)
-		assert.True(t, strings.HasPrefix(a.Connections[0].Host, "index.docker.io/library/centos"), url)
+		assert.True(t, strings.HasPrefix(a.Connections[0].Host, "index.docker.io/library/alpine"), url)
 		assert.True(t, len(strings.Split(a.Connections[0].Host, "@")) == 2, url)
 	}
 }
