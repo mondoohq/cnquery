@@ -204,14 +204,11 @@ func versionCall(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, e
 	}
 
 	arg := f.Args[0]
-	if arg.Type != string(types.String) {
-		return nil, 0, errors.New("called `version` with incorrect argument type, expected string")
-	}
-
 	res, dref, err := e.resolveValue(arg, ref)
 	if err != nil || dref != 0 || res == nil {
 		return res, dref, err
 	}
+
 	raw, ok := res.Value.(string)
 	if !ok {
 		return nil, 0, errors.New("called `version` with unsupported type (expected string)")
