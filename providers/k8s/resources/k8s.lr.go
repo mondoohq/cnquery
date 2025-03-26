@@ -158,6 +158,10 @@ func init() {
 			// to override args, implement: initK8sUserinfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createK8sUserinfo,
 		},
+		"k8s.admission.validatingwebhookconfiguration": {
+			// to override args, implement: initK8sAdmissionValidatingwebhookconfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sAdmissionValidatingwebhookconfiguration,
+		},
 	}
 }
 
@@ -294,6 +298,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.customresources": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8s).GetCustomresources()).ToDataRes(types.Array(types.Resource("k8s.customresource")))
+	},
+	"k8s.validatingWebhookConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetValidatingWebhookConfigurations()).ToDataRes(types.Array(types.Resource("k8s.admission.validatingwebhookconfiguration")))
 	},
 	"k8s.apiresource.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sApiresource).GetName()).ToDataRes(types.String)
@@ -1297,6 +1304,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.userinfo.uid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sUserinfo).GetUid()).ToDataRes(types.String)
 	},
+	"k8s.admission.validatingwebhookconfiguration.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingwebhookconfiguration).GetId()).ToDataRes(types.String)
+	},
+	"k8s.admission.validatingwebhookconfiguration.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingwebhookconfiguration).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.admission.validatingwebhookconfiguration.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingwebhookconfiguration).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.admission.validatingwebhookconfiguration.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingwebhookconfiguration).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.admission.validatingwebhookconfiguration.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingwebhookconfiguration).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.admission.validatingwebhookconfiguration.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingwebhookconfiguration).GetName()).ToDataRes(types.String)
+	},
+	"k8s.admission.validatingwebhookconfiguration.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingwebhookconfiguration).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.admission.validatingwebhookconfiguration.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingwebhookconfiguration).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.admission.validatingwebhookconfiguration.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingwebhookconfiguration).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.admission.validatingwebhookconfiguration.webhooks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingwebhookconfiguration).GetWebhooks()).ToDataRes(types.Array(types.Dict))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -1403,6 +1440,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"k8s.customresources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8s).Customresources, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.validatingWebhookConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).ValidatingWebhookConfigurations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"k8s.apiresource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2877,6 +2918,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlK8sUserinfo).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"k8s.admission.validatingwebhookconfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlK8sAdmissionValidatingwebhookconfiguration).__id, ok = v.Value.(string)
+			return
+		},
+	"k8s.admission.validatingwebhookconfiguration.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingwebhookconfiguration).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingwebhookconfiguration.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingwebhookconfiguration).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingwebhookconfiguration.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingwebhookconfiguration).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingwebhookconfiguration.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingwebhookconfiguration).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingwebhookconfiguration.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingwebhookconfiguration).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingwebhookconfiguration.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingwebhookconfiguration).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingwebhookconfiguration.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingwebhookconfiguration).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingwebhookconfiguration.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingwebhookconfiguration).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingwebhookconfiguration.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingwebhookconfiguration).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingwebhookconfiguration.webhooks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingwebhookconfiguration).Webhooks, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -2929,6 +3014,7 @@ type mqlK8s struct {
 	PodSecurityPolicies plugin.TValue[[]interface{}]
 	NetworkPolicies plugin.TValue[[]interface{}]
 	Customresources plugin.TValue[[]interface{}]
+	ValidatingWebhookConfigurations plugin.TValue[[]interface{}]
 }
 
 // createK8s creates a new instance of this resource
@@ -3318,6 +3404,22 @@ func (c *mqlK8s) GetCustomresources() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.customresources()
+	})
+}
+
+func (c *mqlK8s) GetValidatingWebhookConfigurations() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.ValidatingWebhookConfigurations, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "validatingWebhookConfigurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.validatingWebhookConfigurations()
 	})
 }
 
@@ -6900,4 +7002,101 @@ func (c *mqlK8sUserinfo) GetUsername() *plugin.TValue[string] {
 
 func (c *mqlK8sUserinfo) GetUid() *plugin.TValue[string] {
 	return &c.Uid
+}
+
+// mqlK8sAdmissionValidatingwebhookconfiguration for the k8s.admission.validatingwebhookconfiguration resource
+type mqlK8sAdmissionValidatingwebhookconfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlK8sAdmissionValidatingwebhookconfigurationInternal
+	Id plugin.TValue[string]
+	Uid plugin.TValue[string]
+	ResourceVersion plugin.TValue[string]
+	Labels plugin.TValue[map[string]interface{}]
+	Annotations plugin.TValue[map[string]interface{}]
+	Name plugin.TValue[string]
+	Kind plugin.TValue[string]
+	Created plugin.TValue[*time.Time]
+	Manifest plugin.TValue[interface{}]
+	Webhooks plugin.TValue[[]interface{}]
+}
+
+// createK8sAdmissionValidatingwebhookconfiguration creates a new instance of this resource
+func createK8sAdmissionValidatingwebhookconfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sAdmissionValidatingwebhookconfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.admission.validatingwebhookconfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sAdmissionValidatingwebhookconfiguration) MqlName() string {
+	return "k8s.admission.validatingwebhookconfiguration"
+}
+
+func (c *mqlK8sAdmissionValidatingwebhookconfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sAdmissionValidatingwebhookconfiguration) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sAdmissionValidatingwebhookconfiguration) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sAdmissionValidatingwebhookconfiguration) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sAdmissionValidatingwebhookconfiguration) GetLabels() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sAdmissionValidatingwebhookconfiguration) GetAnnotations() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sAdmissionValidatingwebhookconfiguration) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sAdmissionValidatingwebhookconfiguration) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sAdmissionValidatingwebhookconfiguration) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sAdmissionValidatingwebhookconfiguration) GetManifest() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+		return c.manifest()
+	})
+}
+
+func (c *mqlK8sAdmissionValidatingwebhookconfiguration) GetWebhooks() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Webhooks, func() ([]interface{}, error) {
+		return c.webhooks()
+	})
 }

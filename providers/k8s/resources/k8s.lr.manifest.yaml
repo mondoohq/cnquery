@@ -41,6 +41,8 @@ resources:
         min_mondoo_version: 5.31.0
       statefulsets:
         min_mondoo_version: 6.7.0
+      validatingWebhookConfigurations:
+        min_mondoo_version: 9.0.0
     min_mondoo_version: 5.15.0
     platform:
       name:
@@ -66,6 +68,23 @@ resources:
       title: Query pod security policies
     - query: k8s.networkPolicies { name manifest }
       title: Query network policies
+  k8s.admission.validatingwebhookconfiguration:
+    fields:
+      annotations: {}
+      created: {}
+      id: {}
+      kind: {}
+      labels: {}
+      manifest: {}
+      name: {}
+      resourceVersion: {}
+      uid: {}
+      webhooks: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - kubernetes
   k8s.admissionrequest:
     fields:
       name: {}

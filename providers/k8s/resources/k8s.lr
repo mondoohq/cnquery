@@ -56,6 +56,8 @@ k8s {
   networkPolicies() []k8s.networkpolicy
   // Kubernetes custom resources
   customresources() []k8s.customresource
+  // Kubernetes admission webhook configurations
+  validatingWebhookConfigurations() []k8s.admission.validatingwebhookconfiguration
 }
 
 // Kubernetes API resources
@@ -861,4 +863,27 @@ private k8s.userinfo @defaults("username") {
   username string
   // The UID of the user
   uid string
+}
+
+private k8s.admission.validatingwebhookconfiguration @defaults("name") {
+  // Mondoo ID for the Kubernetes object
+  id string
+  // Kubernetes object UID
+  uid string
+  // Kubernetes resource version
+  resourceVersion string
+  // Kubernetes labels
+  labels() map[string]string
+  // Kubernetes annotations
+  annotations() map[string]string
+  // Kubernetes object name
+  name string
+  // Kubernetes object type
+  kind string
+  // Kubernetes object creation timestamp
+  created time
+  // Full resource manifest
+  manifest() dict
+  // Webhooks configuration
+  webhooks() []dict
 }
