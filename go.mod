@@ -286,6 +286,7 @@ require (
 
 require (
 	github.com/GoogleCloudPlatform/berglas/v2 v2.0.7
+	github.com/endobit/oui v0.5.0
 	// pin v0.19.0
 	github.com/moby/buildkit v0.19.0
 	github.com/moby/sys/mount v0.3.4
