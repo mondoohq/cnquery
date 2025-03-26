@@ -42,7 +42,7 @@ func AllFormats() string {
 
 func New(fomat string) FormatSpecificationHandler {
 	switch fomat {
-	case FormatJson:
+	case FormatJson, "cnquery-json":
 		return &CnqueryBOM{}
 	case FormatCycloneDxJSON:
 		return &CycloneDX{
