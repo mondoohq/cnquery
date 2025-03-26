@@ -1706,25 +1706,50 @@ private cloudInstance @defaults("publicHostname privateHostname") {
   // Cloud instance public hostname
   publicHostname() string
   // List of public IPv4 addresses
-  publicIpv4() []ipv4Address
+  publicIpv4() []ipAddress
   // Cloud instance private hostname
   privateHostname() string
   // List of private IPv4 addresses
-  privateIpv4() []ipv4Address
+  privateIpv4() []ipAddress
   // Raw access to the cloud instance metadata
   metadata() dict
 }
 
-// IPv4 address with additional networking details
-ipv4Address @defaults("ip") {
-  // Unique number that identifies a device on a network (e.g. 172.31.24.71)
+// IP address (v4 or v6) with additional networking details
+ipAddress @defaults("ip") {
+  // Unique number that identifies a device on a network (e.g. 172.31.24.71 or 2001:0:2851:782c:869:1f7d:a331:f3e1)
   ip ip
-  // Logical subdivision of a network (e.g. 172.31.16.0/20)
+  // Logical subdivision of a network (e.g. 172.31.16.0/20 or 2001:db8::/64)
   subnet ip
-  // Classless Inter-Domain Routing notation (e.g. 172.31.24.71/20)
+  // Classless Inter-Domain Routing notation (e.g. 172.31.24.71/20 or 2001:0:2851:782c:869:1f7d:a331:f3e1/64)
   cidr ip
   // Network address used to transmit to all devices connected to a network
   broadcast ip
   // IP address that acts as the entry point to another, or external, network
   gateway ip
+}
+
+// Network information on this system
+network {
+  // Network interfaces
+  interfaces() []networkInterface
+}
+
+private networkInterface @defaults("name mac active") {
+  // Name of the network interface
+  name string
+  // Unique 12-digit hexadecimal identifier assigned by the manufacturer
+  mac string
+  // Company that manufactures the network interface
+  vendor string
+  // List of IP addresses assigned to the network interface (v4 and v6)
+  ips []ipAddress
+  // Maximum transmission unit
+  mtu int
+  // Information about an interface's status and capabilities
+  flags []string
+  // Status of the network interface
+  active bool
+  // Whether a network interface is virtual of not
+  virtual bool
 }
