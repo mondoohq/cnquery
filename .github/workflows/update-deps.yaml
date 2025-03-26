@@ -16,7 +16,7 @@ jobs:
 # https://github.com/peter-evans/create-pull-request/blob/main/docs/concepts-guidelines.md#push-using-ssh-deploy-keys
 # tl;dr:
 # The GITHUB_TOKEN is limited when creating PRs from a workflow
-# becasue of that we use a ssh key for which the limitations do not apply
+# because of that we use a ssh key for which the limitations do not apply
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -49,7 +49,7 @@ jobs:
           echo "COMMIT_TITLE=${COMMIT_MSG}" >> $GITHUB_OUTPUT
           echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_OUTPUT
 
-# We have to use this extensions, becasuse `gh pr create` does not support the ssh key case
+# We have to use this extensions, because `gh pr create` does not support the ssh key case
       - name: Create pull request
         id: cpr
         uses: peter-evans/create-pull-request@v7
