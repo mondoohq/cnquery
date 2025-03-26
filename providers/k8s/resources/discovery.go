@@ -19,10 +19,9 @@ import (
 	"go.mondoo.com/cnquery/v11/types"
 	"go.mondoo.com/cnquery/v11/utils/stringx"
 	admissionv1 "k8s.io/api/admission/v1"
+	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 const (
