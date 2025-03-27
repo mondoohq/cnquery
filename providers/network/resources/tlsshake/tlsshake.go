@@ -25,7 +25,7 @@ import (
 	"golang.org/x/crypto/ocsp"
 )
 
-var TLS_VERSIONS = []string{"tls1.2"} //[]string{"ssl3", "tls1.0", "tls1.1", "tls1.2", "tls1.3"}
+var TLS_VERSIONS = []string{"ssl3", "tls1.0", "tls1.1", "tls1.2", "tls1.3"}
 
 // ScanConfig allows to tune the TLS scanner
 type ScanConfig struct {

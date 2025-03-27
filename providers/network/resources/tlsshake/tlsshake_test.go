@@ -17,8 +17,10 @@ func TestTlsshake_Tls12_MultipleHandshakes(t *testing.T) {
 
 	server, client := net.Pipe()
 	go func() {
-		server.Write(resp[:4])
-		server.Write(resp[4:])
+		_, err := server.Write(resp[:4])
+		require.NoError(t, err)
+		_, err = server.Write(resp[4:])
+		require.NoError(t, err)
 	}()
 
 	tester := &Tester{
