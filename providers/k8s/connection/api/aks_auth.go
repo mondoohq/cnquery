@@ -60,7 +60,7 @@ func attemptKubeloginAuthFlow(asset *inventory.Asset, config *rest.Config) error
 		return errors.Wrap(err, "failed to get access token for Azure AKS authentication")
 	}
 
-	log.Debug().Str("bearer_token", token.Token).Msg("got access token")
+	log.Debug().Msg("got access token")
 
 	config.BearerToken = token.Token
 
