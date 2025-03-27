@@ -96,7 +96,7 @@ resources:
       publicHostname: {}
       publicIpv4: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.45.0
   command:
     fields:
       command: {}
@@ -376,7 +376,7 @@ resources:
       gateway: {}
       ip: {}
       subnet: {}
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.45.0
   kernel:
     fields:
       info: {}
