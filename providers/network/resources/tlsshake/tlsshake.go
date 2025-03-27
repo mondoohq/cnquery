@@ -25,7 +25,7 @@ import (
 	"golang.org/x/crypto/ocsp"
 )
 
-var TLS_VERSIONS = []string{"ssl3", "tls1.0", "tls1.1", "tls1.2", "tls1.3"}
+var TLS_VERSIONS = []string{"tls1.2"} //[]string{"ssl3", "tls1.0", "tls1.1", "tls1.2", "tls1.3"}
 
 // ScanConfig allows to tune the TLS scanner
 type ScanConfig struct {
@@ -236,6 +236,10 @@ func (s *Tester) testTLS(proto string, target string, conf *ScanConfig) (int, er
 	}
 	defer conn.Close()
 
+	return s.testTLSWithConn(conn, conf)
+}
+
+func (s *Tester) testTLSWithConn(conn net.Conn, conf *ScanConfig) (int, error) {
 	msg, cipherCount, err := s.helloTLSMsg(conf)
 	if err != nil {
 		return 0, err
