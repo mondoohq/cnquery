@@ -587,12 +587,16 @@ func (s *Tester) parseHello(conn net.Conn, conf *ScanConfig) (bool, error) {
 					return false, err
 				}
 				if !handshakeDone {
+					// If we are at the end of the msg, then we break out of the loop
+					if handshakeLen+4 >= len(msg) {
+						break
+					}
 					// this is the handshake type (1) and the length (3)
 					msg = msg[handshakeLen+4:]
 				}
 			}
 			success = true
-			done = true
+			done = handshakeDone
 
 		case CONTENT_TYPE_ChangeCipherSpec:
 			// This also means we are done with this stream, since it signals that we
