@@ -236,6 +236,10 @@ func (s *Tester) testTLS(proto string, target string, conf *ScanConfig) (int, er
 	}
 	defer conn.Close()
 
+	return s.testTLSWithConn(conn, conf)
+}
+
+func (s *Tester) testTLSWithConn(conn net.Conn, conf *ScanConfig) (int, error) {
 	msg, cipherCount, err := s.helloTLSMsg(conf)
 	if err != nil {
 		return 0, err
@@ -490,26 +494,26 @@ func (s *Tester) parseCertificate(data []byte, conf *ScanConfig) error {
 //     If we do, we might as well be done at this stage, no need to read more
 //   - There are a few other responses that also signal that we are done
 //     processing handshake responses, like ServerHelloDone or Finished
-func (s *Tester) parseHandshake(data []byte, version string, conf *ScanConfig) (bool, error) {
+func (s *Tester) parseHandshake(data []byte, version string, conf *ScanConfig) (bool, int, error) {
 	handshakeType := data[0]
 	handshakeLen := bytes3int(data[1:4])
 
 	switch handshakeType {
 	case HANDSHAKE_TYPE_ServerHello:
 		err := s.parseServerHello(data[4:4+handshakeLen], version, conf)
-		return false, err
+		return false, handshakeLen, err
 	case HANDSHAKE_TYPE_Certificate:
-		return true, s.parseCertificate(data[4:4+handshakeLen], conf)
+		return true, handshakeLen, s.parseCertificate(data[4:4+handshakeLen], conf)
 	case HANDSHAKE_TYPE_ServerKeyExchange:
-		return false, nil
+		return false, handshakeLen, nil
 	case HANDSHAKE_TYPE_ServerHelloDone:
-		return true, nil
+		return true, handshakeLen, nil
 	case HANDSHAKE_TYPE_Finished:
-		return true, nil
+		return true, handshakeLen, nil
 	default:
 		typ := "0x" + hex.EncodeToString([]byte{handshakeType})
 		s.addError("Unhandled TLS/SSL handshake: '" + typ + "'")
-		return false, nil
+		return false, handshakeLen, nil
 	}
 }
 
@@ -575,12 +579,20 @@ func (s *Tester) parseHello(conn net.Conn, conf *ScanConfig) (bool, error) {
 			}
 
 		case CONTENT_TYPE_Handshake:
-			handshakeDone, err := s.parseHandshake(msg, headerVersion, conf)
-			if err != nil {
-				return false, err
+			var handshakeDone bool
+			var handshakeLen int
+			for !handshakeDone {
+				handshakeDone, handshakeLen, err = s.parseHandshake(msg, headerVersion, conf)
+				if err != nil {
+					return false, err
+				}
+				if !handshakeDone {
+					// this is the handshake type (1) and the length (3)
+					msg = msg[handshakeLen+4:]
+				}
 			}
 			success = true
-			done = handshakeDone
+			done = true
 
 		case CONTENT_TYPE_ChangeCipherSpec:
 			// This also means we are done with this stream, since it signals that we
