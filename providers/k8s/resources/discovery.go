@@ -6,6 +6,7 @@ package resources
 import (
 	"bytes"
 	"fmt"
+	"maps"
 	"strings"
 
 	"github.com/gobwas/glob"
@@ -124,7 +125,10 @@ func Discover(runtime *plugin.Runtime, features cnquery.Features) (*inventory.In
 			Name:        conn.Name(),
 			Platform:    conn.Platform(),
 			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
+			Labels:      map[string]string{},
 		}
+		addInventoryLabels(root.Labels, conn)
+
 		if stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryAuto, DiscoveryAll, DiscoveryClusters) && resFilters.IsEmpty() {
 			in.Spec.Assets = append(in.Spec.Assets, root)
 		}
@@ -266,6 +270,11 @@ func discoverAssets(
 			assets = append(assets, list...)
 		}
 	}
+
+	for _, discoveredAsset := range assets {
+		addInventoryLabels(discoveredAsset.Labels, conn)
+	}
+
 	return assets, nil
 }
 
@@ -929,6 +938,10 @@ func addMondooAssetLabels(assetLabels map[string]string, objMeta metav1.Object, 
 		assetLabels["k8s.mondoo.com/owner-name"] = owner.Name
 		assetLabels["k8s.mondoo.com/owner-uid"] = string(owner.UID)
 	}
+}
+
+func addInventoryLabels(assetLabels map[string]string, conn shared.Connection) {
+	maps.Copy(assetLabels, conn.Asset().GetLabels())
 }
 
 func assetFromAdmissionReview(conn shared.Connection, a admissionv1.AdmissionReview, runtime string, connection *inventory.Config, clusterIdentifier string) (*inventory.Asset, error) {
