@@ -12,10 +12,14 @@ import (
 
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/mqlc"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v11/utils/multierr"
 	"go.mondoo.com/cnquery/v11/utils/sortx"
 	"golang.org/x/exp/slices"
 )
+
+const MsgUnsupported = "unsupported platform"
 
 func (print *Printer) Datas(bundle *llx.CodeBundle, results map[string]*llx.RawResult) string {
 	var res strings.Builder
@@ -360,6 +364,10 @@ func (print *Printer) refMap(typ types.Type, data map[string]interface{}, codeID
 		label := print.defaultLabel(k, bundle)
 		val := v.(*llx.RawData)
 
+		if val.Error == plugin.ErrUnsupportedProvider {
+			res.WriteString("  " + label + print.Disabled(MsgUnsupported) + "\n")
+			continue
+		}
 		if val.Error != nil {
 			res.WriteString("  " + label + print.Error(val.Error.Error()) + " ")
 			continue
@@ -380,6 +388,10 @@ func (print *Printer) refMap(typ types.Type, data map[string]interface{}, codeID
 			label := print.label(k, bundle, true)
 			val := v.(*llx.RawData)
 
+			if val.Error == plugin.ErrUnsupportedProvider {
+				res.WriteString(indent + "  " + label + print.Disabled(MsgUnsupported) + "\n")
+				continue
+			}
 			if val.Error != nil {
 				res.WriteString(indent + "  " + label + print.Error(val.Error.Error()) + "\n")
 				continue
@@ -842,11 +854,33 @@ func (print *Printer) Data(typ types.Type, data interface{}, codeID string, bund
 	}
 }
 
+// For the printer we want to filter out UnsupportedProvider errors,
+// since they are just reporting ignored bits.
+func filterErrors(e error) error {
+	if e == nil {
+		return nil
+	}
+	if e == plugin.ErrUnsupportedProvider {
+		return nil
+	}
+	merr, ok := e.(*multierr.Errors)
+	if !ok {
+		return e
+	}
+
+	filtered := merr.Filter(func(e error) bool { return e == plugin.ErrUnsupportedProvider })
+	if len(filtered.Errors) == 0 {
+		return nil
+	}
+	return filtered
+}
+
 // DataWithLabel prints RawData into a string
 func (print *Printer) DataWithLabel(r *llx.RawData, codeID string, bundle *llx.CodeBundle, indent string) string {
 	b := strings.Builder{}
-	if r.Error != nil {
-		b.WriteString(print.Error(strings.TrimSpace(r.Error.Error())))
+	errs := filterErrors(r.Error)
+	if errs != nil {
+		b.WriteString(print.Error(strings.TrimSpace(errs.Error())))
 		b.WriteByte('\n')
 	}
 

@@ -47,7 +47,7 @@ func NewVsphereConnection(id uint32, asset *inventory.Asset, conf *inventory.Con
 
 	// initialize vSphere connection
 	if conf.Type != "vsphere" {
-		return nil, errors.New("connection type is not supported for vSphere connection: " + conf.Type)
+		return nil, plugin.ErrUnsupportedProvider
 	}
 
 	// search for password secret
