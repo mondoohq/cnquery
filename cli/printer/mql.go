@@ -364,7 +364,7 @@ func (print *Printer) refMap(typ types.Type, data map[string]interface{}, codeID
 		label := print.defaultLabel(k, bundle)
 		val := v.(*llx.RawData)
 
-		if val.Error == plugin.ErrUnsupportedProvider {
+		if plugin.IsUnsupportedProviderError(val.Error) {
 			res.WriteString("  " + label + print.Disabled(MsgUnsupported) + "\n")
 			continue
 		}
@@ -388,7 +388,7 @@ func (print *Printer) refMap(typ types.Type, data map[string]interface{}, codeID
 			label := print.label(k, bundle, true)
 			val := v.(*llx.RawData)
 
-			if val.Error == plugin.ErrUnsupportedProvider {
+			if plugin.IsUnsupportedProviderError(val.Error) {
 				res.WriteString(indent + "  " + label + print.Disabled(MsgUnsupported) + "\n")
 				continue
 			}
@@ -860,7 +860,7 @@ func filterErrors(e error) error {
 	if e == nil {
 		return nil
 	}
-	if e == plugin.ErrUnsupportedProvider {
+	if plugin.IsUnsupportedProviderError(e) {
 		return nil
 	}
 	merr, ok := e.(*multierr.Errors)
@@ -868,7 +868,9 @@ func filterErrors(e error) error {
 		return e
 	}
 
-	filtered := merr.Filter(func(e error) bool { return e == plugin.ErrUnsupportedProvider })
+	filtered := merr.Filter(func(e error) bool {
+		return plugin.IsUnsupportedProviderError(e)
+	})
 	if len(filtered.Errors) == 0 {
 		return nil
 	}
