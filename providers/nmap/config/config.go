@@ -44,7 +44,9 @@ var Config = plugin.Provider{
 			Key:          "kind",
 			Title:        "Kind",
 			Values: map[string]*inventory.AssetUrlBranch{
-				"host": nil,
+				"host":   nil,
+				"domain": nil,
+				"org":    nil,
 			},
 		},
 	},
