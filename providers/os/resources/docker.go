@@ -6,11 +6,13 @@ package resources
 import (
 	"context"
 	"os"
+	"strings"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/client"
 	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v11/types"
 )
 
@@ -75,7 +77,9 @@ func (p *mqlDocker) containers() ([]interface{}, error) {
 
 		names := []interface{}{}
 		for i := range dContainer.Names {
-			names = append(names, dContainer.Names[i])
+			name := dContainer.Names[i]
+			name = strings.TrimPrefix(name, "/")
+			names = append(names, name)
 		}
 
 		/*
@@ -120,6 +124,20 @@ func (p *mqlDockerImage) id() (string, error) {
 
 func (p *mqlDockerContainer) id() (string, error) {
 	return p.Id.Data, nil
+}
+
+func (p *mqlDockerContainer) hostConfig() (interface{}, error) {
+	cl, err := dockerClient()
+	if err != nil {
+		return nil, err
+	}
+
+	dContainer, err := cl.ContainerInspect(context.Background(), p.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	return convert.JsonToDict(dContainer.HostConfig)
 }
 
 func dockerClient() (*client.Client, error) {
