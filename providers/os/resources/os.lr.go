@@ -1500,6 +1500,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"docker.container.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerContainer).GetLabels()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"docker.container.hostConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerContainer).GetHostConfig()).ToDataRes(types.Dict)
+	},
 	"iptables.input": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIptables).GetInput()).ToDataRes(types.Array(types.Resource("iptables.entry")))
 	},
@@ -3907,6 +3910,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"docker.container.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDockerContainer).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"docker.container.hostConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerContainer).HostConfig, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"iptables.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10601,6 +10608,7 @@ type mqlDockerContainer struct {
 	State plugin.TValue[string]
 	Status plugin.TValue[string]
 	Labels plugin.TValue[map[string]interface{}]
+	HostConfig plugin.TValue[interface{}]
 }
 
 // createDockerContainer creates a new instance of this resource
@@ -10686,6 +10694,12 @@ func (c *mqlDockerContainer) GetStatus() *plugin.TValue[string] {
 
 func (c *mqlDockerContainer) GetLabels() *plugin.TValue[map[string]interface{}] {
 	return &c.Labels
+}
+
+func (c *mqlDockerContainer) GetHostConfig() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.HostConfig, func() (interface{}, error) {
+		return c.hostConfig()
+	})
 }
 
 // mqlIptables for the iptables resource

@@ -134,6 +134,8 @@ resources:
         The `docker.container` resource provides fields for assessing running Docker containers.
     fields:
       command: {}
+      hostConfig:
+        min_mondoo_version: 9.0.0
       id: {}
       image: {}
       imageid: {}

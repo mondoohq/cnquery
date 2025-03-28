@@ -880,9 +880,8 @@ docker.image {
 }
 
 // Docker container
-docker.container {
+docker.container @defaults("names.first status"){
   embed os.linux as os
-
   // Container ID
   id string
   // Container command
@@ -899,6 +898,8 @@ docker.container {
   status string
   // Label key value pairs
   labels map[string]string
+  // Container configuration that depends on the host running the container
+  hostConfig() dict
 }
 
 // IPv4 tables
