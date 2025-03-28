@@ -1728,3 +1728,28 @@ ipv4Address @defaults("ip") {
   // IP address that acts as the entry point to another, or external, network
   gateway ip
 }
+
+// Network information on this system
+network {
+  // Network interfaces
+  interfaces() []networkInterface
+}
+
+private networkInterface @defaults("name mac active") {
+  // Name of the network interface
+  name string
+  // Unique 12-digit hexadecimal identifier assigned by the manufacturer
+  mac string
+  // Company that manufactures the network interface
+  vendor string
+  // List of IP addresses assigned to the network interface (v4 and v6)
+  ips []ipv4Address
+  // Maximum transmission unit
+  mtu int
+  // Information about an interface's status and capabilities
+  flags []string
+  // Status of the network interface
+  active bool
+  // Whether a network interface is virtual of not
+  virtual bool
+}
