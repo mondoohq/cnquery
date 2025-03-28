@@ -124,7 +124,7 @@ func (a *mqlAwsCloudtrail) getTrails(conn *connection.AwsConnection) []*jobpool.
 
 				// only include trail if this region is the home region for the trail
 				// we do this to avoid getting duped results from multiregion trails
-				if regionVal != convert.ToString(trail.HomeRegion) {
+				if regionVal != convert.ToValue(trail.HomeRegion) {
 					continue
 				}
 				args := map[string]*llx.RawData{

@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	elasticache_types "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/rs/zerolog/log"
@@ -162,11 +163,11 @@ type mqlAwsElasticacheClusterInternal struct {
 func newMqlAwsElasticacheCluster(runtime *plugin.Runtime, region string, accountID string, cluster elasticache_types.CacheCluster) (*mqlAwsElasticacheCluster, error) {
 	cacheNodes := []interface{}{}
 	for i := range cluster.CacheNodes {
-		cacheNodes = append(cacheNodes, convert.ToString(cluster.CacheNodes[i].CacheNodeId))
+		cacheNodes = append(cacheNodes, convert.ToValue(cluster.CacheNodes[i].CacheNodeId))
 	}
 	cacheSecurityGroups := []interface{}{}
 	for i := range cluster.CacheSecurityGroups {
-		cacheSecurityGroups = append(cacheSecurityGroups, convert.ToString(cluster.CacheSecurityGroups[i].CacheSecurityGroupName))
+		cacheSecurityGroups = append(cacheSecurityGroups, convert.ToValue(cluster.CacheSecurityGroups[i].CacheSecurityGroupName))
 	}
 	logDeliveryConfigurations, err := convert.JsonToDictSlice(cluster.LogDeliveryConfigurations)
 	if err != nil {
@@ -174,7 +175,7 @@ func newMqlAwsElasticacheCluster(runtime *plugin.Runtime, region string, account
 	}
 	var notificationConfiguration string
 	if cluster.NotificationConfiguration != nil {
-		notificationConfiguration = convert.ToString(cluster.NotificationConfiguration.TopicArn)
+		notificationConfiguration = convert.ToValue(cluster.NotificationConfiguration.TopicArn)
 	}
 
 	sgs := []string{}
@@ -184,7 +185,7 @@ func newMqlAwsElasticacheCluster(runtime *plugin.Runtime, region string, account
 			log.Debug().Msgf("elasticache>newMqlAwsElasticacheCluster>missing security group id for cluster %s", *cluster.CacheClusterId)
 			continue
 		}
-		sgs = append(sgs, NewSecurityGroupArn(region, accountID, convert.ToString(sg.SecurityGroupId)))
+		sgs = append(sgs, NewSecurityGroupArn(region, accountID, convert.ToValue(sg.SecurityGroupId)))
 	}
 
 	resource, err := CreateResource(runtime, "aws.elasticache.cluster",

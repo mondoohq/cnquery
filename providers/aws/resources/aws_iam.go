@@ -196,7 +196,7 @@ func ParsePasswordPolicy(passwordPolicy *iamtypes.PasswordPolicy) map[string]int
 		res["PasswordReusePrevention"] = strconv.FormatInt(prp, 10)
 		res["RequireLowercaseCharacters"] = passwordPolicy.RequireLowercaseCharacters
 		res["MaxPasswordAge"] = strconv.FormatInt(mpa, 10)
-		res["HardExpiry"] = convert.ToBool(passwordPolicy.HardExpiry)
+		res["HardExpiry"] = convert.ToValue(passwordPolicy.HardExpiry)
 		res["RequireNumbers"] = passwordPolicy.RequireNumbers
 		res["MinimumPasswordLength"] = strconv.FormatInt(mpl, 10)
 	}
@@ -261,7 +261,7 @@ func iamTagsToMap(tags []iamtypes.Tag) map[string]interface{} {
 		tagsMap := map[string]interface{}{}
 		for i := range tags {
 			tag := tags[i]
-			tagsMap[convert.ToString(tag.Key)] = convert.ToString(tag.Value)
+			tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
 		}
 	}
 
@@ -1001,7 +1001,7 @@ func (a *mqlAwsIamPolicy) name() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return convert.ToString(policy.PolicyName), nil
+	return convert.ToValue(policy.PolicyName), nil
 }
 
 func (a *mqlAwsIamPolicy) description() (string, error) {
@@ -1011,7 +1011,7 @@ func (a *mqlAwsIamPolicy) description() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return convert.ToString(policy.Description), nil
+	return convert.ToValue(policy.Description), nil
 }
 
 func (a *mqlAwsIamPolicy) policyId() (string, error) {
@@ -1021,7 +1021,7 @@ func (a *mqlAwsIamPolicy) policyId() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return convert.ToString(policy.PolicyId), nil
+	return convert.ToValue(policy.PolicyId), nil
 }
 
 func (a *mqlAwsIamPolicy) isAttachable() (bool, error) {
@@ -1417,7 +1417,7 @@ func initAwsIamGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		}
 		usernames := []interface{}{}
 		for _, user := range resp.Users {
-			usernames = append(usernames, convert.ToString(user.UserName))
+			usernames = append(usernames, convert.ToValue(user.UserName))
 		}
 
 		grp := resp.Group
@@ -1457,7 +1457,7 @@ func (a *mqlAwsIamUser) groups() ([]interface{}, error) {
 		}
 
 		for i := range userGroups.Groups {
-			res = append(res, convert.ToString(userGroups.Groups[i].GroupName))
+			res = append(res, convert.ToValue(userGroups.Groups[i].GroupName))
 		}
 		if !userGroups.IsTruncated {
 			break

@@ -99,7 +99,7 @@ func (a *mqlAwsS3) buckets() ([]interface{}, error) {
 		mqlS3Bucket, err := CreateResource(a.MqlRuntime, "aws.s3.bucket",
 			map[string]*llx.RawData{
 				"name":        llx.StringDataPtr(bucket.Name),
-				"arn":         llx.StringData(fmt.Sprintf(s3ArnPattern, convert.ToString(bucket.Name))),
+				"arn":         llx.StringData(fmt.Sprintf(s3ArnPattern, convert.ToValue(bucket.Name))),
 				"exists":      llx.BoolData(true),
 				"location":    llx.StringData(region),
 				"createdTime": llx.TimeDataPtr(bucket.CreationDate),
@@ -279,7 +279,7 @@ func (a *mqlAwsS3Bucket) tags() (map[string]interface{}, error) {
 	res := map[string]interface{}{}
 	for i := range tags.TagSet {
 		tag := tags.TagSet[i]
-		res[convert.ToString(tag.Key)] = convert.ToString(tag.Value)
+		res[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
 	}
 
 	return res, nil
@@ -348,11 +348,11 @@ func (a *mqlAwsS3Bucket) acl() ([]interface{}, error) {
 		}
 
 		grantee := map[string]interface{}{
-			"id":           convert.ToString(grant.Grantee.ID),
-			"name":         convert.ToString(grant.Grantee.DisplayName),
-			"emailAddress": convert.ToString(grant.Grantee.EmailAddress),
+			"id":           convert.ToValue(grant.Grantee.ID),
+			"name":         convert.ToValue(grant.Grantee.DisplayName),
+			"emailAddress": convert.ToValue(grant.Grantee.EmailAddress),
 			"type":         string(grant.Grantee.Type),
-			"uri":          convert.ToString(grant.Grantee.URI),
+			"uri":          convert.ToValue(grant.Grantee.URI),
 		}
 
 		id := bucketname + "/" + string(grant.Permission)
@@ -409,8 +409,8 @@ func (a *mqlAwsS3Bucket) owner() (map[string]interface{}, error) {
 	}
 
 	res := map[string]interface{}{}
-	res["id"] = convert.ToString(acl.Owner.ID)
-	res["name"] = convert.ToString(acl.Owner.DisplayName)
+	res["id"] = convert.ToValue(acl.Owner.ID)
+	res["name"] = convert.ToValue(acl.Owner.DisplayName)
 
 	return res, nil
 }
@@ -499,7 +499,7 @@ func (a *mqlAwsS3Bucket) public() (bool, error) {
 
 	for i := range acl.Grants {
 		grant := acl.Grants[i]
-		if grant.Grantee.Type == s3types.TypeGroup && (convert.ToString(grant.Grantee.URI) == s3AuthenticatedUsersGroup || convert.ToString(grant.Grantee.URI) == s3AllUsersGroup) {
+		if grant.Grantee.Type == s3types.TypeGroup && (convert.ToValue(grant.Grantee.URI) == s3AuthenticatedUsersGroup || convert.ToValue(grant.Grantee.URI) == s3AllUsersGroup) {
 			return true, nil
 		}
 	}
@@ -566,11 +566,11 @@ func (a *mqlAwsS3Bucket) logging() (map[string]interface{}, error) {
 
 	if logging != nil && logging.LoggingEnabled != nil {
 		if logging.LoggingEnabled.TargetPrefix != nil {
-			res["TargetPrefix"] = convert.ToString(logging.LoggingEnabled.TargetPrefix)
+			res["TargetPrefix"] = convert.ToValue(logging.LoggingEnabled.TargetPrefix)
 		}
 
 		if logging.LoggingEnabled.TargetBucket != nil {
-			res["TargetBucket"] = convert.ToString(logging.LoggingEnabled.TargetBucket)
+			res["TargetBucket"] = convert.ToValue(logging.LoggingEnabled.TargetBucket)
 		}
 
 		// it is becoming a more complex object similar to aws.s3.bucket.grant
@@ -700,11 +700,11 @@ func (a *mqlAwsS3Bucket) staticWebsiteHosting() (map[string]interface{}, error) 
 
 	if website != nil {
 		if website.ErrorDocument != nil {
-			res["ErrorDocument"] = convert.ToString(website.ErrorDocument.Key)
+			res["ErrorDocument"] = convert.ToValue(website.ErrorDocument.Key)
 		}
 
 		if website.IndexDocument != nil {
-			res["IndexDocument"] = convert.ToString(website.IndexDocument.Suffix)
+			res["IndexDocument"] = convert.ToValue(website.IndexDocument.Suffix)
 		}
 	}
 

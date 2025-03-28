@@ -8,8 +8,9 @@ package resources
 
 import (
 	"encoding/json"
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
 
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
@@ -33,8 +34,8 @@ func newAssignedPlans(p []models.AssignedPlanable) []AssignedPlan {
 func newAssignedPlan(p models.AssignedPlanable) AssignedPlan {
 	return AssignedPlan{
 		AssignedDateTime: p.GetAssignedDateTime(),
-		CapabilityStatus: convert.ToString(p.GetCapabilityStatus()),
-		Service:          convert.ToString(p.GetService()),
+		CapabilityStatus: convert.ToValue(p.GetCapabilityStatus()),
+		Service:          convert.ToValue(p.GetService()),
 		ServicePlanId:    p.GetServicePlanId().String(),
 	}
 }
@@ -54,8 +55,8 @@ func newProvisionedPlans(p []models.ProvisionedPlanable) []ProvisionedPlan {
 
 func newProvisionedPlan(p models.ProvisionedPlanable) ProvisionedPlan {
 	return ProvisionedPlan{
-		CapabilityStatus: convert.ToString(p.GetCapabilityStatus()),
-		Service:          convert.ToString(p.GetService()),
+		CapabilityStatus: convert.ToValue(p.GetCapabilityStatus()),
+		Service:          convert.ToValue(p.GetService()),
 	}
 }
 
@@ -101,11 +102,11 @@ func newVerifiedDomains(p []models.VerifiedDomainable) []VerifiedDomain {
 
 func newVerifiedDomain(p models.VerifiedDomainable) VerifiedDomain {
 	return VerifiedDomain{
-		Capabilities: convert.ToString(p.GetCapabilities()),
-		IsDefault:    convert.ToBool(p.GetIsDefault()),
-		IsInitial:    convert.ToBool(p.GetIsInitial()),
-		Name:         convert.ToString(p.GetName()),
-		Type:         convert.ToString(p.GetTypeEscaped()),
+		Capabilities: convert.ToValue(p.GetCapabilities()),
+		IsDefault:    convert.ToValue(p.GetIsDefault()),
+		IsInitial:    convert.ToValue(p.GetIsInitial()),
+		Name:         convert.ToValue(p.GetName()),
+		Type:         convert.ToValue(p.GetTypeEscaped()),
 	}
 }
 
@@ -126,7 +127,7 @@ func newUnifiedRolePermissions(p []models.UnifiedRolePermissionable) []UnifiedRo
 func newUnifiedRolePermission(p models.UnifiedRolePermissionable) UnifiedRolePermission {
 	return UnifiedRolePermission{
 		AllowedResourceActions:  p.GetAllowedResourceActions(),
-		Condition:               convert.ToString(p.GetCondition()),
+		Condition:               convert.ToValue(p.GetCondition()),
 		ExcludedResourceActions: p.GetExcludedResourceActions(),
 	}
 }
@@ -155,14 +156,14 @@ func newSetting(p models.GroupSettingable) GroupSetting {
 	entries := p.GetValues()
 	for i := range entries {
 		values = append(values, SettingValue{
-			Name:  convert.ToString(entries[i].GetName()),
-			Value: convert.ToString(entries[i].GetValue()),
+			Name:  convert.ToValue(entries[i].GetName()),
+			Value: convert.ToValue(entries[i].GetValue()),
 		})
 	}
 
 	return GroupSetting{
-		DisplayName: convert.ToString(p.GetDisplayName()),
-		TemplateId:  convert.ToString(p.GetTemplateId()),
+		DisplayName: convert.ToValue(p.GetDisplayName()),
+		TemplateId:  convert.ToValue(p.GetTemplateId()),
 		Values:      values,
 	}
 }
@@ -468,15 +469,13 @@ func newUserSettings(p models.UserSettingsable) *UserSettings {
 	}
 }
 
-type Authentication struct {
-}
+type Authentication struct{}
 
 func newAuthentication(p models.Authenticationable) *Authentication {
 	if p == nil {
 		return nil
 	}
 	return &Authentication{}
-
 }
 
 type (
@@ -714,7 +713,6 @@ func newPermissionScopable(s models.PermissionScopeable) *PermissionScopeable {
 		UserConsentDisplayName:  s.GetUserConsentDisplayName(),
 		Value:                   s.GetValue(),
 	}
-
 }
 
 func newPermissionScopableList(input []models.PermissionScopeable) []*PermissionScopeable {
@@ -854,7 +852,6 @@ func newParentalControlSettings(s models.ParentalControlSettingsable) *ParentalC
 		CountriesBlockedForMinors: s.GetCountriesBlockedForMinors(),
 		LegalAgeGroupRule:         s.GetLegalAgeGroupRule(),
 	}
-
 }
 
 type PublicClientApplicationable struct {

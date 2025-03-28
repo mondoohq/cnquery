@@ -28,9 +28,11 @@ const (
 )
 
 // index for service principal app roles
-var idxAppRoleMutex = &sync.RWMutex{}
-var idxOauthScopeMutex = &sync.RWMutex{}
-var idxAppNamesMutex = &sync.RWMutex{}
+var (
+	idxAppRoleMutex    = &sync.RWMutex{}
+	idxOauthScopeMutex = &sync.RWMutex{}
+	idxAppNamesMutex   = &sync.RWMutex{}
+)
 
 type roleCache struct {
 	id         string
@@ -107,8 +109,8 @@ func (idx *permissionIndexer) IndexAppRole(spId string, roles ...models.AppRolea
 
 		rCache := &roleCache{
 			id:         roleId.String(),
-			desc:       convert.ToString(r.GetDisplayName()),
-			permission: convert.ToString(r.GetValue()),
+			desc:       convert.ToValue(r.GetDisplayName()),
+			permission: convert.ToValue(r.GetValue()),
 		}
 
 		idx.idxAppRoles[spId+"/"+rCache.id] = rCache
@@ -140,8 +142,8 @@ func (idx *permissionIndexer) IndexOauthScope(spId string, scopes ...models.Perm
 
 		scope := &oauth2PermissionScope{
 			id:         scopeId.String(),
-			desc:       convert.ToString(s.GetAdminConsentDisplayName()),
-			permission: convert.ToString(s.GetValue()),
+			desc:       convert.ToValue(s.GetAdminConsentDisplayName()),
+			permission: convert.ToValue(s.GetValue()),
 		}
 
 		idx.idxOauthPermissionScopes[spId+"/"+scope.permission] = scope
@@ -295,9 +297,9 @@ func fetchServicePrincipals(runtime *plugin.Runtime, conn *connection.Ms365Conne
 
 		// also fill up the index
 		if permissionIndexer != nil {
-			permissionIndexer.IndexAppName(convert.ToString(sp.GetId()), *sp.GetDisplayName())
-			permissionIndexer.IndexAppRole(convert.ToString(sp.GetId()), sp.GetAppRoles()...)
-			permissionIndexer.IndexOauthScope(convert.ToString(sp.GetId()), sp.GetOauth2PermissionScopes()...)
+			permissionIndexer.IndexAppName(convert.ToValue(sp.GetId()), *sp.GetDisplayName())
+			permissionIndexer.IndexAppRole(convert.ToValue(sp.GetId()), sp.GetAppRoles()...)
+			permissionIndexer.IndexOauthScope(convert.ToValue(sp.GetId()), sp.GetOauth2PermissionScopes()...)
 		}
 		res = append(res, mqlResource)
 	}
@@ -480,7 +482,7 @@ func (a *mqlMicrosoftServiceprincipal) permissions() ([]interface{}, error) {
 			if scopeEntry == "" {
 				continue
 			}
-			id := convert.ToString(roleAssignment.GetId())
+			id := convert.ToValue(roleAssignment.GetId())
 			desc := ""
 			role, ok := mqlMicrosoftResource.getOauthPermissionScope(*spId, scopeEntry)
 			if ok {

@@ -68,7 +68,7 @@ func (a *mqlAwsConfig) getRecorders(conn *connection.AwsConnection) []*jobpool.J
 			for _, r := range configRecorders.ConfigurationRecorders {
 				var recording bool
 				var lastStatus string
-				name := getName(convert.ToString(r.Name), regionVal)
+				name := getName(convert.ToValue(r.Name), regionVal)
 				if val, ok := recorderStatusMap[name]; ok {
 					recording = val.recording
 					lastStatus = val.lastStatus
@@ -174,7 +174,7 @@ func (a *mqlAwsConfig) describeConfigRecorderStatus(svc *configservice.Client, r
 		return statusMap, err
 	}
 	for _, r := range configRecorderStatus.ConfigurationRecordersStatus {
-		name := getName(convert.ToString(r.Name), regionVal)
+		name := getName(convert.ToValue(r.Name), regionVal)
 		statusMap[name] = recorder{recording: r.Recording, lastStatus: string(r.LastStatus)}
 	}
 	return statusMap, nil

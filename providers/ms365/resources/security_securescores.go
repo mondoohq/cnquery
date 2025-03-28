@@ -61,10 +61,10 @@ func newMqlMicrosoftSecureScore(runtime *plugin.Runtime, score models.SecureScor
 			"azureTenantId":            llx.StringDataPtr(score.GetAzureTenantId()),
 			"controlScores":            llx.ArrayData(controlScores, types.Any),
 			"createdDateTime":          llx.TimeDataPtr(score.GetCreatedDateTime()),
-			"currentScore":             llx.FloatData(convert.ToFloat64(score.GetCurrentScore())),
+			"currentScore":             llx.FloatData(convert.ToValue(score.GetCurrentScore())),
 			"enabledServices":          llx.ArrayData(enabledServices, types.String),
 			"licensedUserCount":        llx.IntDataDefault(score.GetLicensedUserCount(), 0),
-			"maxScore":                 llx.FloatData(convert.ToFloat64(score.GetMaxScore())),
+			"maxScore":                 llx.FloatData(convert.ToValue(score.GetMaxScore())),
 			"vendorInformation":        llx.DictData(vendorInformation),
 		})
 	if err != nil {
