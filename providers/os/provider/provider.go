@@ -506,7 +506,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			conn, err = mock.New(connId, "", asset)
 
 		default:
-			return nil, errors.New("cannot find connection type " + conf.Type)
+			return nil, plugin.ErrUnsupportedProvider
 		}
 
 		if err != nil {
