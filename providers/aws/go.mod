@@ -6,13 +6,13 @@ go 1.23.0
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.36.3
-	github.com/aws/aws-sdk-go-v2/config v1.29.11
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.64
+	github.com/aws/aws-sdk-go-v2/config v1.29.12
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.65
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.30
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.38.2
 	github.com/aws/aws-sdk-go-v2/service/account v1.23.1
 	github.com/aws/aws-sdk-go-v2/service/acm v1.31.1
-	github.com/aws/aws-sdk-go-v2/service/apigateway v1.29.1
+	github.com/aws/aws-sdk-go-v2/service/apigateway v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.35.1
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.52.1
 	github.com/aws/aws-sdk-go-v2/service/backup v1.41.1
@@ -20,23 +20,23 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.48.2
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.44.1
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.47.1
-	github.com/aws/aws-sdk-go-v2/service/codebuild v1.56.0
+	github.com/aws/aws-sdk-go-v2/service/codebuild v1.57.0
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.52.1
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.51.1
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.42.0
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.210.1
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.32.1
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.54.2
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.54.3
 	github.com/aws/aws-sdk-go-v2/service/efs v1.35.1
-	github.com/aws/aws-sdk-go-v2/service/eks v1.61.0
+	github.com/aws/aws-sdk-go-v2/service/eks v1.62.0
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.45.1
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.29.1
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.45.0
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/emr v1.48.1
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.54.1
-	github.com/aws/aws-sdk-go-v2/service/iam v1.40.2
+	github.com/aws/aws-sdk-go-v2/service/iam v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/kms v1.38.1
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.71.0
@@ -46,11 +46,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.54.1
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.78.2
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.55.0
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.183.0
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.185.0
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.35.2
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.57.0
 	github.com/aws/aws-sdk-go-v2/service/sns v1.34.2
-	github.com/aws/aws-sdk-go-v2/service/sqs v1.38.2
+	github.com/aws/aws-sdk-go-v2/service/sqs v1.38.3
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.58.0
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.17
 	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.10.2
@@ -111,7 +111,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.15 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.18.15 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.25.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.29.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.30.0 // indirect
 	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.9.1 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -258,7 +258,7 @@ require (
 	go.uber.org/mock v0.5.0 // indirect
 	golang.org/x/crypto v0.36.0 // indirect
 	golang.org/x/mod v0.24.0 // indirect
-	golang.org/x/net v0.37.0 // indirect
+	golang.org/x/net v0.38.0 // indirect
 	golang.org/x/oauth2 v0.28.0 // indirect
 	golang.org/x/sync v0.12.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect
@@ -284,10 +284,10 @@ require (
 	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kubelet v0.28.9 // indirect
 	k8s.io/utils v0.0.0-20250321185631-1f6e0b77f77e // indirect
-	modernc.org/libc v1.61.13 // indirect
+	modernc.org/libc v1.62.1 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.9.1 // indirect
-	modernc.org/sqlite v1.36.2 // indirect
+	modernc.org/sqlite v1.37.0 // indirect
 	moul.io/http2curl v1.0.0 // indirect
 	sigs.k8s.io/json v0.0.0-20241010143419-9aa6b5e7a4b3 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.2 // indirect
