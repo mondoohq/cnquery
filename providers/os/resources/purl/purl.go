@@ -33,6 +33,9 @@ type PackageURL struct {
 
 	// Used as metadata to fetch things like the architecture or linux distribution.
 	platform *inventory.Platform
+
+	// Optional: qualifiers
+	Qualifiers map[string]string
 }
 
 // NewQualifiers creates a new Qualifiers slice from a map of key/value pairs.
@@ -106,7 +109,11 @@ func NewPackageURL(pf *inventory.Platform, t Type, name, version string, modifie
 }
 
 func (purl PackageURL) String() string {
-	qualifiers := map[string]string{}
+	qualifiers := purl.Qualifiers
+	if qualifiers == nil {
+		qualifiers = map[string]string{}
+	}
+
 	if purl.Arch != "" {
 		qualifiers[QualifierArch] = purl.Arch
 	}
@@ -170,5 +177,11 @@ func WithEpoch(epoch string) Modifier {
 func WithNamespace(namespace string) Modifier {
 	return func(purl *PackageURL) {
 		purl.Namespace = namespace
+	}
+}
+
+func WithQualifiers(qualifiers map[string]string) Modifier {
+	return func(purl *PackageURL) {
+		purl.Qualifiers = qualifiers
 	}
 }
