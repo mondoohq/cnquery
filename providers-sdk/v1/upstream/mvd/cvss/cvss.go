@@ -15,7 +15,10 @@ import (
 //go:generate protoc --proto_path=. --go_out=. --go_opt=paths=source_relative cvss.proto
 //go:generate go run golang.org/x/tools/cmd/stringer -type=Severity
 
-var Metrics map[string][]string
+var (
+	Metrics   map[string][]string
+	MetricsV4 map[string][]string
+)
 
 // 5.8/AV:N/AC:M/Au:N/C:P/I:P/A:N
 func init() {
@@ -117,6 +120,91 @@ func init() {
 		"TD": {
 			"M", "L", "M", "H", "ND",
 		},
+	}
+	// MetricsV4 defines the valid CVSS 4.0 metrics and their allowed values.
+	// CVSS v4 https://www.first.org/cvss/v4/specification-document
+	// We use a seperate map here because the metrics have diverged from v3 enough to
+	// justify a new map.
+	MetricsV4 = map[string][]string{
+		// Version
+		"CVSS": {"4.0"},
+		// Base Metrics (Mandatory)
+		// Attack Vector (AV): [N, A, L, P]
+		"AV": {"N", "A", "L", "P"},
+		// Attack Complexity (AC): [L, H]
+		"AC": {"L", "H"},
+		// Attack Requirements (AT): [N, P]
+		"AT": {"N", "P"},
+		// Privileges Required (PR): [N, L, H]
+		"PR": {"N", "L", "H"},
+		// User Interaction (UI): [N, P, A]
+		"UI": {"N", "P", "A"},
+
+		// Vulnerable System Impacts (Mandatory)
+		// Vulnerable System Confidentiality Impact (VC): [H, L, N]
+		"VC": {"H", "L", "N"},
+		// Vulnerable System Integrity Impact (VI): [H, L, N]
+		"VI": {"H", "L", "N"},
+		// Vulnerable System Availability Impact (VA): [H, L, N]
+		"VA": {"H", "L", "N"},
+
+		// Subsequent System Impacts (Mandatory)
+		// Subsequent System Confidentiality Impact (SC): [H, L, N]
+		"SC": {"H", "L", "N"},
+		// Subsequent System Integrity Impact (SI): [H, L, N]
+		"SI": {"H", "L", "N"},
+		// Subsequent System Availability Impact (SA): [H, L, N]
+		"SA": {"H", "L", "N"},
+
+		// Threat Metrics (Non-mandatory)
+		// Exploit Maturity (E): [X, A, P, U]
+		"E": {"X", "A", "P", "U"},
+
+		// Environmental Metrics (Non-mandatory)
+		// Confidentiality Requirement (CR): [X, H, M, L]
+		"CR": {"X", "H", "M", "L"},
+		// Integrity Requirement (IR): [X, H, M, L]
+		"IR": {"X", "H", "M", "L"},
+		// Availability Requirement (AR): [X, H, M, L]
+		"AR": {"X", "H", "M", "L"},
+
+		// Modified Base Metrics (Non-mandatory)
+		// Modified Attack Vector (MAV): [X, N, A, L, P]
+		"MAV": {"X", "N", "A", "L", "P"},
+		// Modified Attack Complexity (MAC): [X, L, H]
+		"MAC": {"X", "L", "H"},
+		// Modified Attack Requirements (MAT): [X, N, P]
+		"MAT": {"X", "N", "P"},
+		// Modified Privileges Required (MPR): [X, N, L, H]
+		"MPR": {"X", "N", "L", "H"},
+		// Modified User Interaction (MUI): [X, N, P, A]
+		"MUI": {"X", "N", "P", "A"},
+		// Modified Vulnerable System Confidentiality (MVC): [X, N, L, H]
+		"MVC": {"X", "N", "L", "H"},
+		// Modified Vulnerable System Integrity (MVI): [X, N, L, H]
+		"MVI": {"X", "N", "L", "H"},
+		// Modified Vulnerable System Availability (MVA): [X, N, L, H]
+		"MVA": {"X", "N", "L", "H"},
+		// Modified Subsequent System Confidentiality (MSC): [X, N, L, H]
+		"MSC": {"X", "N", "L", "H"},
+		// Modified Subsequent System Integrity (MSI): [X, N, L, H, S]
+		"MSI": {"X", "N", "L", "H", "S"},
+		// Modified Subsequent System Availability (MSA): [X, N, L, H, S]
+		"MSA": {"X", "N", "L", "H", "S"},
+
+		// Supplemental Metrics (Non-mandatory)
+		// Safety (S): [X, N, P]
+		"S": {"X", "N", "P"},
+		// Automatable (AU): [X, N, Y]
+		"AU": {"X", "N", "Y"},
+		// Recovery (R): [X, A, U, I]
+		"R": {"X", "A", "U", "I"},
+		// Value Density (V): [X, D, C]
+		"V": {"X", "D", "C"},
+		// Vulnerability Response Effort (RE): [X, L, M, H]
+		"RE": {"X", "L", "M", "H"},
+		// Provider Urgency (U): [X, Clear, Green, Amber, Red]
+		"U": {"X", "Clear", "Green", "Amber", "Red"},
 	}
 }
 
@@ -223,8 +311,15 @@ func (c *Cvss) Verify() bool {
 		return false
 	}
 
+	// If the version is 4.0, we need to use the new metrics
+	version := c.Version()
+	metrics := Metrics
+	if version == "4.0" {
+		metrics = MetricsV4
+	}
+
 	for k, v := range values {
-		values, ok := Metrics[k]
+		values, ok := metrics[k]
 		if !ok {
 			return false
 		}
