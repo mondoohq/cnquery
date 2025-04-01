@@ -272,19 +272,19 @@ func (a *mqlAzureSubscriptionNetworkServiceWatcher) flowLogs() ([]interface{}, e
 		}
 		for _, flowLog := range page.Value {
 			retentionPolicy := mqlRetentionPolicy{
-				Enabled:       convert.ToBool(flowLog.Properties.RetentionPolicy.Enabled),
-				RetentionDays: convert.ToIntFrom32(flowLog.Properties.RetentionPolicy.Days),
+				Enabled:       convert.ToValue(flowLog.Properties.RetentionPolicy.Enabled),
+				RetentionDays: int(convert.ToValue(flowLog.Properties.RetentionPolicy.Days)),
 			}
 			retentionPolicyDict, err := convert.JsonToDict(retentionPolicy)
 			if err != nil {
 				return nil, err
 			}
 			flowLogAnalytics := mqlFlowLogAnalytics{
-				Enabled:             convert.ToBool(flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration.Enabled),
-				AnalyticsInterval:   convert.ToIntFrom32(flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration.TrafficAnalyticsInterval),
-				WorkspaceRegion:     convert.ToString(flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration.WorkspaceRegion),
-				WorkspaceResourceId: convert.ToString(flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration.WorkspaceResourceID),
-				WorkspaceId:         convert.ToString(flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration.WorkspaceID),
+				Enabled:             convert.ToValue(flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration.Enabled),
+				AnalyticsInterval:   int(convert.ToValue(flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration.TrafficAnalyticsInterval)),
+				WorkspaceRegion:     convert.ToValue(flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration.WorkspaceRegion),
+				WorkspaceResourceId: convert.ToValue(flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration.WorkspaceResourceID),
+				WorkspaceId:         convert.ToValue(flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration.WorkspaceID),
 			}
 			flowLogAnalyticsDict, err := convert.JsonToDict(flowLogAnalytics)
 			if err != nil {
@@ -811,7 +811,7 @@ func (a *mqlAzureSubscriptionNetworkService) virtualNetworks() ([]interface{}, e
 				"subnets":              llx.ArrayData(subnets, types.ResourceLike),
 			}
 			if vn.Properties.DhcpOptions != nil {
-				id := convert.ToString(vn.ID) + "/dhcpOptions"
+				id := convert.ToValue(vn.ID) + "/dhcpOptions"
 				dhcpOpts, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.virtualNetwork.dhcpOptions",
 					map[string]*llx.RawData{
 						"id":         llx.StringData(id),

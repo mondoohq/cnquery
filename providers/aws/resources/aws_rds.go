@@ -190,7 +190,7 @@ func newMqlAwsRdsInstance(runtime *plugin.Runtime, region string, accountID stri
 	}
 	sgsArn := []string{}
 	for i := range dbInstance.VpcSecurityGroups {
-		sgsArn = append(sgsArn, NewSecurityGroupArn(region, accountID, convert.ToString(dbInstance.VpcSecurityGroups[i].VpcSecurityGroupId)))
+		sgsArn = append(sgsArn, NewSecurityGroupArn(region, accountID, convert.ToValue(dbInstance.VpcSecurityGroups[i].VpcSecurityGroupId)))
 	}
 	var endpointAddress *string
 	if dbInstance.Endpoint != nil {
@@ -336,7 +336,7 @@ func (a *mqlAwsRdsDbinstance) subnets() ([]interface{}, error) {
 		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 		for i := range a.cacheSubnets.Subnets {
 			subnet := a.cacheSubnets.Subnets[i]
-			sub, err := NewResource(a.MqlRuntime, "aws.vpc.subnet", map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(subnetArnPattern, a.region, conn.AccountId(), convert.ToString(subnet.SubnetIdentifier)))})
+			sub, err := NewResource(a.MqlRuntime, "aws.vpc.subnet", map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(subnetArnPattern, a.region, conn.AccountId(), convert.ToValue(subnet.SubnetIdentifier)))})
 			if err != nil {
 				a.Subnets.State = plugin.StateIsNull | plugin.StateIsSet
 				return nil, err
@@ -452,7 +452,7 @@ func rdsTagsToMap(tags []rds_types.Tag) map[string]interface{} {
 	if len(tags) > 0 {
 		for i := range tags {
 			tag := tags[i]
-			tagsMap[convert.ToString(tag.Key)] = convert.ToString(tag.Value)
+			tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
 		}
 	}
 
@@ -548,7 +548,7 @@ func newMqlAwsRdsCluster(runtime *plugin.Runtime, region string, accountID strin
 	for _, instance := range cluster.DBClusterMembers {
 		mqlInstance, err := NewResource(runtime, "aws.rds.dbinstance",
 			map[string]*llx.RawData{
-				"arn": llx.StringData(fmt.Sprintf(rdsInstanceArnPattern, region, accountID, convert.ToString(instance.DBInstanceIdentifier))),
+				"arn": llx.StringData(fmt.Sprintf(rdsInstanceArnPattern, region, accountID, convert.ToValue(instance.DBInstanceIdentifier))),
 			})
 		if err != nil {
 			return nil, err
@@ -557,7 +557,7 @@ func newMqlAwsRdsCluster(runtime *plugin.Runtime, region string, accountID strin
 	}
 	sgsArns := []string{}
 	for i := range cluster.VpcSecurityGroups {
-		sgsArns = append(sgsArns, NewSecurityGroupArn(region, accountID, convert.ToString(cluster.VpcSecurityGroups[i].VpcSecurityGroupId)))
+		sgsArns = append(sgsArns, NewSecurityGroupArn(region, accountID, convert.ToValue(cluster.VpcSecurityGroups[i].VpcSecurityGroupId)))
 	}
 	stringSliceAZs := []interface{}{}
 	for _, zone := range cluster.AvailabilityZones {

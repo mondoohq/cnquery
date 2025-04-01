@@ -174,21 +174,21 @@ func (a *mqlAzureSubscriptionWebService) availableRuntimes() ([]interface{}, err
 
 					// NOTE: for dotnet, it seems the runtime is using the display version to create a stack
 					// BUT: the stack itself reports the runtime version, therefore we need it to match the stacks
-					runtimeVersion := convert.ToString(majorVersion.RuntimeVersion)
+					runtimeVersion := convert.ToValue(majorVersion.RuntimeVersion)
 					// for dotnet, no runtime version is returned, therefore we need to use the display version
 					if len(runtimeVersion) == 0 {
-						runtimeVersion = convert.ToString(majorVersion.DisplayVersion)
+						runtimeVersion = convert.ToValue(majorVersion.DisplayVersion)
 					}
 
 					runtime := AzureWebAppStackRuntime{
-						Name: convert.ToString(entry.Name),
+						Name: convert.ToValue(entry.Name),
 
-						ID:           strings.ToUpper(convert.ToString(entry.Name)) + "|" + runtimeVersion,
+						ID:           strings.ToUpper(convert.ToValue(entry.Name)) + "|" + runtimeVersion,
 						Os:           "windows",
-						MajorVersion: convert.ToString(majorVersion.DisplayVersion),
-						IsDeprecated: convert.ToBool(majorVersion.IsDeprecated),
-						IsHidden:     convert.ToBool(majorVersion.IsHidden),
-						IsDefault:    convert.ToBool(majorVersion.IsDefault),
+						MajorVersion: convert.ToValue(majorVersion.DisplayVersion),
+						IsDeprecated: convert.ToValue(majorVersion.IsDeprecated),
+						IsHidden:     convert.ToValue(majorVersion.IsHidden),
+						IsDefault:    convert.ToValue(majorVersion.IsDefault),
 					}
 					properties, err := convert.JsonToDict(runtime)
 					if err != nil {
@@ -201,14 +201,14 @@ func (a *mqlAzureSubscriptionWebService) availableRuntimes() ([]interface{}, err
 					minorVersion := minorVersions[l]
 
 					runtime := AzureWebAppStackRuntime{
-						Name:         convert.ToString(entry.Name),
-						ID:           strings.ToUpper(convert.ToString(entry.Name)) + "|" + convert.ToString(minorVersion.RuntimeVersion),
+						Name:         convert.ToValue(entry.Name),
+						ID:           strings.ToUpper(convert.ToValue(entry.Name)) + "|" + convert.ToValue(minorVersion.RuntimeVersion),
 						Os:           "windows",
-						MinorVersion: convert.ToString(minorVersion.DisplayVersion),
-						MajorVersion: convert.ToString(majorVersion.DisplayVersion),
-						IsDeprecated: convert.ToBool(majorVersion.IsDeprecated) || isPlatformEol(convert.ToString(entry.Name), convert.ToString(minorVersion.RuntimeVersion)),
-						IsHidden:     convert.ToBool(majorVersion.IsHidden),
-						IsDefault:    convert.ToBool(majorVersion.IsDefault),
+						MinorVersion: convert.ToValue(minorVersion.DisplayVersion),
+						MajorVersion: convert.ToValue(majorVersion.DisplayVersion),
+						IsDeprecated: convert.ToValue(majorVersion.IsDeprecated) || isPlatformEol(convert.ToValue(entry.Name), convert.ToValue(minorVersion.RuntimeVersion)),
+						IsHidden:     convert.ToValue(majorVersion.IsHidden),
+						IsDefault:    convert.ToValue(majorVersion.IsDefault),
 					}
 
 					properties, err := convert.JsonToDict(runtime)
@@ -239,14 +239,14 @@ func (a *mqlAzureSubscriptionWebService) availableRuntimes() ([]interface{}, err
 				for l := range minorVersions {
 					minorVersion := minorVersions[l]
 					runtime := AzureWebAppStackRuntime{
-						Name:         convert.ToString(entry.Name),
-						ID:           convert.ToString(minorVersion.RuntimeVersion),
+						Name:         convert.ToValue(entry.Name),
+						ID:           convert.ToValue(minorVersion.RuntimeVersion),
 						Os:           "linux",
-						MinorVersion: convert.ToString(minorVersion.DisplayVersion),
-						MajorVersion: convert.ToString(majorVersion.DisplayVersion),
-						IsDeprecated: convert.ToBool(majorVersion.IsDeprecated),
-						IsHidden:     convert.ToBool(majorVersion.IsHidden),
-						IsDefault:    convert.ToBool(majorVersion.IsDefault),
+						MinorVersion: convert.ToValue(minorVersion.DisplayVersion),
+						MajorVersion: convert.ToValue(majorVersion.DisplayVersion),
+						IsDeprecated: convert.ToValue(majorVersion.IsDeprecated),
+						IsHidden:     convert.ToValue(majorVersion.IsHidden),
+						IsDefault:    convert.ToValue(majorVersion.IsDefault),
 					}
 
 					properties, err := convert.JsonToDict(runtime)
@@ -389,7 +389,7 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) metadata() (interface{}, error) 
 	res := make(map[string]interface{})
 
 	for k := range metadata.Properties {
-		res[k] = convert.ToString(metadata.Properties[k])
+		res[k] = convert.ToValue(metadata.Properties[k])
 	}
 
 	return res, nil
@@ -641,24 +641,24 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) stack() (interface{}, error) {
 		switch stack {
 		case "dotnet":
 			stack = "aspnet" // needs to be overwritten (do not ask)
-			version = convert.ToString(properties.NetFrameworkVersion)
+			version = convert.ToValue(properties.NetFrameworkVersion)
 		case "dotnetcore":
 			// NOTE: this will always return v4.0 no matter what you set (which is definitely wrong for dotnetcore)
 			// The UI let you select different version, but in configure it does not show the version again
 			// therefore we have no way than to hardcode the value for now
 			version = "3.1"
 		case "php":
-			version = convert.ToString(properties.PhpVersion)
+			version = convert.ToValue(properties.PhpVersion)
 		case "python":
-			version = convert.ToString(properties.PythonVersion)
+			version = convert.ToValue(properties.PythonVersion)
 		case "node":
-			version = convert.ToString(properties.NodeVersion)
+			version = convert.ToValue(properties.NodeVersion)
 		case "powershell":
-			version = convert.ToString(properties.PowerShellVersion)
+			version = convert.ToValue(properties.PowerShellVersion)
 		case "java":
-			version = convert.ToString(properties.JavaVersion)
+			version = convert.ToValue(properties.JavaVersion)
 		case "javaContainer":
-			version = convert.ToString(properties.JavaContainerVersion)
+			version = convert.ToValue(properties.JavaContainerVersion)
 		}
 
 		runtime.Name = strings.ToLower(stack)
@@ -738,7 +738,7 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) applicationSettings() (interface
 	res := make(map[string]interface{})
 
 	for k := range settings.Properties {
-		res[k] = convert.ToString(settings.Properties[k])
+		res[k] = convert.ToValue(settings.Properties[k])
 	}
 
 	return res, nil

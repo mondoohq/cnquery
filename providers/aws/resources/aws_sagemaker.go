@@ -163,8 +163,8 @@ func (a *mqlAwsSagemaker) getNotebookInstances(conn *connection.AwsConnection) [
 					}
 					mqlEndpoint, err := CreateResource(a.MqlRuntime, "aws.sagemaker.notebookinstance",
 						map[string]*llx.RawData{
-							"arn":    llx.StringData(convert.ToString(instance.NotebookInstanceArn)),
-							"name":   llx.StringData(convert.ToString(instance.NotebookInstanceName)),
+							"arn":    llx.StringData(convert.ToValue(instance.NotebookInstanceArn)),
+							"name":   llx.StringData(convert.ToValue(instance.NotebookInstanceName)),
 							"region": llx.StringData(regionVal),
 							"tags":   llx.MapData(tags, types.String),
 						})
@@ -253,7 +253,7 @@ type mqlAwsSagemakerNotebookinstancedetailsInternal struct {
 func (a *mqlAwsSagemakerNotebookinstancedetails) kmsKey() (*mqlAwsKmsKey, error) {
 	if a.cacheKmsKey != nil && *a.cacheKmsKey != "" {
 		mqlKeyResource, err := NewResource(a.MqlRuntime, "aws.kms.key",
-			map[string]*llx.RawData{"arn": llx.StringData(convert.ToString(a.cacheKmsKey))},
+			map[string]*llx.RawData{"arn": llx.StringData(convert.ToValue(a.cacheKmsKey))},
 		)
 		if err != nil {
 			return nil, err

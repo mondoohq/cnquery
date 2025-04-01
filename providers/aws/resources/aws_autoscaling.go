@@ -53,7 +53,7 @@ func (a *mqlAwsAutoscalingGroup) instances() ([]interface{}, error) {
 	for _, instance := range a.groupInstances {
 		mqlInstance, err := NewResource(a.MqlRuntime, "aws.ec2.instance",
 			map[string]*llx.RawData{
-				"arn": llx.StringData(fmt.Sprintf(ec2InstanceArnPattern, a.region, conn.AccountId(), convert.ToString(instance.InstanceId))),
+				"arn": llx.StringData(fmt.Sprintf(ec2InstanceArnPattern, a.region, conn.AccountId(), convert.ToValue(instance.InstanceId))),
 			})
 		if err != nil {
 			return nil, err
@@ -201,7 +201,7 @@ func autoscalingTagsToMap(tags []ec2types.TagDescription) map[string]interface{}
 	if len(tags) > 0 {
 		for i := range tags {
 			tag := tags[i]
-			tagsMap[convert.ToString(tag.Key)] = convert.ToString(tag.Value)
+			tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
 		}
 	}
 

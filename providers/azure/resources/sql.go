@@ -722,8 +722,8 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) usage() ([]interface{}, error) 
 					"name":         llx.StringDataPtr(entry.Name),
 					"resourceName": llx.StringDataPtr(entry.Name),
 					"displayName":  llx.StringDataPtr(entry.Properties.DisplayName),
-					"currentValue": llx.FloatData(convert.ToFloat64(entry.Properties.CurrentValue)),
-					"limit":        llx.FloatData(convert.ToFloat64(entry.Properties.Limit)),
+					"currentValue": llx.FloatData(convert.ToValue(entry.Properties.CurrentValue)),
+					"limit":        llx.FloatData(convert.ToValue(entry.Properties.Limit)),
 					"unit":         llx.StringDataPtr(entry.Properties.Unit),
 				})
 			if err != nil {

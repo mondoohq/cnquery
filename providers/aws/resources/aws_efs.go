@@ -76,7 +76,7 @@ func (a *mqlAwsEfs) getFilesystems(conn *connection.AwsConnection) []*jobpool.Jo
 						"id":               llx.StringDataPtr(fs.FileSystemId),
 						"arn":              llx.StringDataPtr(fs.FileSystemArn),
 						"name":             llx.StringDataPtr(fs.Name),
-						"encrypted":        llx.BoolData(convert.ToBool(fs.Encrypted)),
+						"encrypted":        llx.BoolData(convert.ToValue(fs.Encrypted)),
 						"region":           llx.StringData(regionVal),
 						"availabilityZone": llx.StringDataPtr(fs.AvailabilityZoneName),
 						"createdAt":        llx.TimeDataPtr(fs.CreationTime),
@@ -189,7 +189,7 @@ func efsTagsToMap(tags []efstypes.Tag) map[string]interface{} {
 	if len(tags) > 0 {
 		for i := range tags {
 			tag := tags[i]
-			tagsMap[convert.ToString(tag.Key)] = convert.ToString(tag.Value)
+			tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
 		}
 	}
 

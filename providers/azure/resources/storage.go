@@ -216,13 +216,13 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) dataProtection() (*mqlAzureS
 	var containerSoftDeletionEnabled bool
 	var containerRetentionDays *int32
 	if properties.BlobServiceProperties.BlobServiceProperties.DeleteRetentionPolicy != nil {
-		blobSoftDeletionEnabled = convert.ToBool(properties.BlobServiceProperties.BlobServiceProperties.DeleteRetentionPolicy.Enabled)
+		blobSoftDeletionEnabled = convert.ToValue(properties.BlobServiceProperties.BlobServiceProperties.DeleteRetentionPolicy.Enabled)
 	}
 	if properties.BlobServiceProperties.BlobServiceProperties.DeleteRetentionPolicy != nil {
 		blobRetentionDays = properties.BlobServiceProperties.BlobServiceProperties.DeleteRetentionPolicy.Days
 	}
 	if properties.BlobServiceProperties.BlobServiceProperties.ContainerDeleteRetentionPolicy != nil {
-		containerSoftDeletionEnabled = convert.ToBool(properties.BlobServiceProperties.BlobServiceProperties.ContainerDeleteRetentionPolicy.Enabled)
+		containerSoftDeletionEnabled = convert.ToValue(properties.BlobServiceProperties.BlobServiceProperties.ContainerDeleteRetentionPolicy.Enabled)
 	}
 	if properties.BlobServiceProperties.BlobServiceProperties.ContainerDeleteRetentionPolicy != nil {
 		containerRetentionDays = properties.BlobServiceProperties.BlobServiceProperties.ContainerDeleteRetentionPolicy.Days

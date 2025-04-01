@@ -77,7 +77,7 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 					}
 					var dlqTarget string
 					if function.DeadLetterConfig != nil {
-						dlqTarget = convert.ToString(function.DeadLetterConfig.TargetArn)
+						dlqTarget = convert.ToValue(function.DeadLetterConfig.TargetArn)
 					}
 					tags := make(map[string]interface{})
 					tagsResp, err := svc.ListTags(ctx, &lambda.ListTagsInput{Resource: function.FunctionArn})
