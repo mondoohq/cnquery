@@ -7,10 +7,9 @@ import (
 	"os"
 	"testing"
 
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 )
 
 func TestParseAixPackages(t *testing.T) {
@@ -25,7 +24,7 @@ func TestParseAixPackages(t *testing.T) {
 
 	m, err := parseAixPackages(pf, f)
 	require.Nil(t, err)
-	assert.Equal(t, 16, len(m), "detected the right amount of packages")
+	assert.Equal(t, 17, len(m), "detected the right amount of packages")
 
 	p := Package{
 		Name:        "X11.apps.msmit",
@@ -37,6 +36,21 @@ func TestParseAixPackages(t *testing.T) {
 			"cpe:2.3:a:x11.apps.msmit:x11.apps.msmit:7.3.0:*:*:*:*:*:powerpc:*",
 		},
 		Format: "bff",
+		Status: "COMMITTED",
+	}
+	assert.Contains(t, m, p)
+
+	p = Package{
+		Name:        "bos.sysmgt.nim.client",
+		Version:     "7.3.3.0",
+		Description: "Network Install Manager - Client Tools",
+		PUrl:        "pkg:generic/aix/bos.sysmgt.nim.client@7.3.3.0?arch=powerpc&efix=locked",
+		CPEs: []string{
+			"cpe:2.3:a:bos.sysmgt.nim.client:bos.sysmgt.nim.client:7.3.3.0:*:*:*:*:*:powerpc:*",
+			"cpe:2.3:a:bos.sysmgt.nim.client:bos.sysmgt.nim.client:7.3.3:*:*:*:*:*:powerpc:*",
+		},
+		Format: "bff",
+		Status: "COMMITTED|EFIXLOCKED",
 	}
 	assert.Contains(t, m, p)
 }

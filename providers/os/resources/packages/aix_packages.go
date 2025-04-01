@@ -36,6 +36,15 @@ func parseAixPackages(pf *inventory.Platform, r io.Reader) ([]Package, error) {
 		record := strings.Split(line, ":")
 
 		cpes, _ := cpe2.NewPackage2Cpe(record[1], record[1], record[2], "", pf.Arch)
+
+		state := record[4]
+		qualifiers := map[string]string{}
+
+		if record[7] != "" {
+			state = state + "|" + record[7]
+			qualifiers["efix"] = "locked"
+		}
+
 		// Fileset, Level, PtfID, State, Type, Description, EFIXLocked
 		pkgs = append(pkgs, Package{
 			Name:        record[1],
@@ -43,9 +52,10 @@ func parseAixPackages(pf *inventory.Platform, r io.Reader) ([]Package, error) {
 			Description: strings.TrimSpace(record[6]),
 			Format:      AixPkgFormat,
 			PUrl: purl.NewPackageURL(
-				pf, purl.TypeGeneric, record[1], record[2], purl.WithNamespace(pf.Name),
+				pf, purl.TypeGeneric, record[1], record[2], purl.WithNamespace(pf.Name), purl.WithQualifiers(qualifiers),
 			).String(),
-			CPEs: cpes,
+			CPEs:   cpes,
+			Status: state,
 		})
 
 	}

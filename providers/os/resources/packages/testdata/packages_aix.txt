@@ -15,3 +15,4 @@
 /usr/lib/objrepos:X11.apps.util:7.3.0.0::COMMITTED:I:AIXwindows Utility Applications :
 /usr/lib/objrepos:X11.apps.xdm:7.3.0.0::COMMITTED:I:AIXwindows xdm Application :
 /usr/lib/objrepos:X11.apps.xterm:7.3.0.0::COMMITTED:I:AIXwindows xterm Application :
+/usr/lib/objrepos:bos.sysmgt.nim.client:7.3.3.0::COMMITTED:I:Network Install Manager - Client Tools :EFIXLOCKED
