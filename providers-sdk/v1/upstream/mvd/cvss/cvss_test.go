@@ -121,7 +121,7 @@ func TestCvss31WithoutScoreParsing(t *testing.T) {
 	assert.Equal(t, "3.1", c.Version(), "vector format version")
 
 	// TODO: when the score prefix is missing we need to calculate the score
-	//assert.Equal(t, float32(7.5), c.Score, "score properly detected")
+	// assert.Equal(t, float32(7.5), c.Score, "score properly detected")
 }
 
 func TestCvss3Comparison(t *testing.T) {
@@ -139,6 +139,67 @@ func TestCvss3ParseEmpty(t *testing.T) {
 	c, err := New("")
 	assert.NotNil(t, err, "could not parse the cvss vector")
 	assert.Nil(t, c, "no object returned")
+}
+
+func TestCvss4Parsing(t *testing.T) {
+	c, err := New("9.3/CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H")
+	assert.Nil(t, err, "could parse the cvss vector")
+	assert.True(t, c.Verify(), "valid cvss vector")
+
+	assert.Equal(t, float32(9.3), c.Score, "score properly detected")
+	assert.Equal(t, "Critical", c.Severity().String(), "severity properly extracted")
+	assert.Equal(t, "4.0", c.Version(), "vector format version")
+
+	metrics, err := c.Metrics()
+	assert.Nil(t, err, "metrics could be extracted")
+
+	// Base Metrics
+	assert.Equal(t, "N", metrics["AV"], "AV properly detected")
+	assert.Equal(t, "L", metrics["AC"], "AC properly detected")
+	assert.Equal(t, "N", metrics["AT"], "AT properly detected")
+	assert.Equal(t, "N", metrics["PR"], "PR properly detected")
+	assert.Equal(t, "N", metrics["UI"], "UI properly detected")
+
+	// Vulnerable System Impacts
+	assert.Equal(t, "H", metrics["VC"], "VC properly detected")
+	assert.Equal(t, "H", metrics["VI"], "VI properly detected")
+	assert.Equal(t, "H", metrics["VA"], "VA properly detected")
+
+	// Subsequent System Impacts
+	assert.Equal(t, "H", metrics["SC"], "SC properly detected")
+	assert.Equal(t, "H", metrics["SI"], "SI properly detected")
+	assert.Equal(t, "H", metrics["SA"], "SA properly detected")
+}
+
+func TestCvss4Parsing2(t *testing.T) {
+	c, err := New("5.0/CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N")
+	assert.Nil(t, err, "could parse the cvss vector")
+	assert.True(t, c.Verify(), "valid cvss vector")
+	assert.Equal(t, "4.0", c.Version(), "vector format version")
+
+	assert.Equal(t, float32(5.0), c.Score, "score properly detected")
+	assert.Equal(t, "Medium", c.Severity().String(), "severity properly extracted")
+}
+
+func TestCvss4Parsing3(t *testing.T) {
+	c, err := New("8.0/CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:P/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:A/CR:H/IR:M/AR:L/MAV:A/MAC:L/MAT:N/MPR:N/MUI:A/MVC:H/MVI:L/MVA:H/MSC:N/MSI:S/MSA:L/S:P/AU:Y/R:A/V:C/RE:M/U:Red")
+	assert.Nil(t, err, "could parse the cvss vector")
+	assert.True(t, c.Verify(), "valid cvss vector")
+	assert.Equal(t, "4.0", c.Version(), "vector format version")
+
+	assert.Equal(t, float32(8.0), c.Score, "score properly detected")
+	assert.Equal(t, "High", c.Severity().String(), "severity properly extracted")
+}
+
+func TestCvss4Comparison(t *testing.T) {
+	c, err := New("9.3/CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H")
+	assert.Nil(t, err, "could parse the cvss vector")
+	d, err := New("2.8/CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H")
+	assert.Nil(t, err, "could parse the cvss vector")
+
+	assert.Equal(t, 1, c.Compare(d), "c > d")
+	assert.Equal(t, -1, d.Compare(c), "d > c")
+	assert.Equal(t, 0, c.Compare(c), "c == c")
 }
 
 func TestCvssNone(t *testing.T) {
@@ -190,42 +251,42 @@ func TestMaxCvss(t *testing.T) {
 
 func TestMaxCvss2(t *testing.T) {
 	list := []*Cvss{
-		&Cvss{
+		{
 			Vector: "7.5/CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
 			Source: "cve://nvd/2017",
 			Score:  7.5,
 		},
-		&Cvss{
+		{
 			Vector: "7.7/CVSS:3.0/AV:N/AC:L/PR:L/UI:N/S:C/C:N/I:N/A:H",
 			Source: "cve://nvd/2017",
 			Score:  7.7,
 		},
-		&Cvss{
+		{
 			Vector: "6.5/CVSS:3.0/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H",
 			Source: "cve://nvd/2017",
 			Score:  6.5,
 		},
-		&Cvss{
+		{
 			Vector: "4.9/CVSS:3.0/AV:N/AC:L/PR:H/UI:N/S:U/C:N/I:N/A:H",
 			Source: "cve://nvd/2017",
 			Score:  4.9,
 		},
-		&Cvss{
+		{
 			Vector: "4.3/CVSS:3.0/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:L/A:N",
 			Source: "cve://nvd/2017",
 			Score:  4.3,
 		},
-		&Cvss{
+		{
 			Vector: "6.6/CVSS:3.0/AV:N/AC:H/PR:H/UI:N/S:U/C:H/I:H/A:H",
 			Source: "cve://nvd/2017",
 			Score:  6.6,
 		},
-		&Cvss{
+		{
 			Vector: "5.3/CVSS:3.0/AV:N/AC:H/PR:L/UI:N/S:U/C:H/I:N/A:N",
 			Source: "cve://nvd/2017",
 			Score:  5.3,
 		},
-		&Cvss{
+		{
 			Vector: "7.5/CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
 			Source: "cve://nvd/2017",
 			Score:  7.5,
