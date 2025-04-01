@@ -181,6 +181,16 @@ func TestCvss4Parsing2(t *testing.T) {
 	assert.Equal(t, "Medium", c.Severity().String(), "severity properly extracted")
 }
 
+func TestCvss4Parsing3(t *testing.T) {
+	c, err := New("8.0/CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:P/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:A/CR:H/IR:M/AR:L/MAV:A/MAC:L/MAT:N/MPR:N/MUI:A/MVC:H/MVI:L/MVA:H/MSC:N/MSI:S/MSA:L/S:P/AU:Y/R:A/V:C/RE:M/U:Red")
+	assert.Nil(t, err, "could parse the cvss vector")
+	assert.True(t, c.Verify(), "valid cvss vector")
+	assert.Equal(t, "4.0", c.Version(), "vector format version")
+
+	assert.Equal(t, float32(8.0), c.Score, "score properly detected")
+	assert.Equal(t, "High", c.Severity().String(), "severity properly extracted")
+}
+
 func TestCvss4Comparison(t *testing.T) {
 	c, err := New("9.3/CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H")
 	assert.Nil(t, err, "could parse the cvss vector")

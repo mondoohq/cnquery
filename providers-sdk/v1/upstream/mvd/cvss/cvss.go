@@ -204,7 +204,7 @@ func init() {
 		// Vulnerability Response Effort (RE): [X, L, M, H]
 		"RE": {"X", "L", "M", "H"},
 		// Provider Urgency (U): [X, Clear, Green, Amber, Red]
-		"U": {"X", "Clear", "Green", "Amber", "Red"},
+		"U": {"X", "CLEAR", "GREEN", "AMBER", "RED"},
 	}
 }
 
