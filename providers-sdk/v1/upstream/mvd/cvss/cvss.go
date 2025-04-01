@@ -122,7 +122,7 @@ func init() {
 		},
 	}
 	// MetricsV4 defines the valid CVSS 4.0 metrics and their allowed values.
-	// CVSS v4 https://www.first.org/cvss/v4/specification-document
+	// CVSS v4 https://www.first.org/cvss/v4-0/specification-document
 	// We use a seperate map here because the metrics have diverged from v3 enough to
 	// justify a new map.
 	MetricsV4 = map[string][]string{
