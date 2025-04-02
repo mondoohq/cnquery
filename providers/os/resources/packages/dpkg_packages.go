@@ -215,11 +215,23 @@ func (dpm *DebPkgManager) Available() (map[string]PackageUpdate, error) {
 }
 
 func (dpm *DebPkgManager) Files(name string, version string, arch string) ([]FileRecord, error) {
-	path := "/var/lib/dpkg/info/" + name + ".list"
+	fs := dpm.conn.FileSystem()
 
-	if arch != "" {
-		path = "/var/lib/dpkg/info/" + name + ":" + arch + ".list"
+	dpkgListFiles := []string{
+		"/var/lib/dpkg/info/" + name + ".list",
 	}
 
-	return []FileRecord{{Path: path}}, nil
+	if arch != "" {
+		dpkgListFiles = append(dpkgListFiles, "/var/lib/dpkg/info/"+name+":"+arch+".list")
+	}
+
+	fileRecords := []FileRecord{}
+	for _, file := range dpkgListFiles {
+		if _, err := fs.Stat(file); err != nil {
+			continue
+		}
+		fileRecords = append(fileRecords, FileRecord{Path: file})
+	}
+
+	return fileRecords, nil
 }
