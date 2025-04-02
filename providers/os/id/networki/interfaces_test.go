@@ -107,3 +107,58 @@ func TestInterfacesLinux(t *testing.T) {
 		}
 	}
 }
+
+func TestInterfacesWindows(t *testing.T) {
+	conn, err := mock.New(0, "./testdata/windows.toml", &inventory.Asset{})
+	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
+
+	interfaces, err := subject.Interfaces(conn, platform)
+	require.NoError(t, err)
+	assert.Len(t, interfaces, 4)
+
+	index := subject.FindInterface(interfaces, subject.Interface{Name: "Ethernet0"})
+	if assert.NotEqual(t, -1, index) {
+		ethernet0 := interfaces[index]
+		assert.Equal(t, "Ethernet0", ethernet0.Name)
+		assert.Equal(t, "00-50-56-B0-9A-A5", ethernet0.MACAddress)
+		assert.Equal(t, "", ethernet0.Vendor)
+		assert.Equal(t, 1500, ethernet0.MTU)
+		if assert.NotNil(t, ethernet0.Active) {
+			assert.True(t, *ethernet0.Active)
+		}
+		if assert.NotNil(t, ethernet0.Virtual) {
+			assert.False(t, *ethernet0.Virtual)
+
+		}
+		assert.Empty(t, ethernet0.Flags)
+		if assert.NotEmpty(t, ethernet0.IPAddresses) {
+			i4 := ethernet0.FindIP(net.ParseIP("192.168.5.38"))
+			if assert.NotEqual(t, -1, i4) {
+				ipv4 := ethernet0.IPAddresses[i4]
+				assert.Equal(t, "192.168.5.38", ipv4.IP.String())
+				assert.Equal(t, "192.168.5.38/24", ipv4.CIDR)
+				assert.Equal(t, "192.168.5.0/24", ipv4.Subnet)
+				assert.Equal(t, "192.168.5.255", ipv4.Broadcast)
+				assert.Equal(t, "192.168.5.1", ipv4.Gateway)
+			}
+		}
+	}
+
+	index = subject.FindInterface(interfaces, subject.Interface{Name: "Teredo Tunneling Pseudo-Interface"})
+	if assert.NotEqual(t, -1, index) {
+		teredoTunneling := interfaces[index]
+		if assert.NotEmpty(t, teredoTunneling.IPAddresses) {
+			i6 := teredoTunneling.FindIP(net.ParseIP("2001:0:2851:782c:869:1f7d:a331:f3e1"))
+			if assert.NotEqual(t, -1, i6) {
+				ipv6 := teredoTunneling.IPAddresses[i6]
+				assert.Equal(t, "2001:0:2851:782c:869:1f7d:a331:f3e1", ipv6.IP.String())
+				assert.Equal(t, "2001:0:2851:782c:869:1f7d:a331:f3e1/64", ipv6.CIDR)
+				assert.Equal(t, "2001:0:2851:782c::/64", ipv6.Subnet)
+				assert.Equal(t, "", ipv6.Broadcast)
+				assert.Equal(t, "::", ipv6.Gateway)
+			}
+		}
+	}
+}
