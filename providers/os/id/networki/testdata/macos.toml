@@ -1,0 +1,171 @@
+[commands."uname -s"]
+stdout = "Darwin"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "18.6.0"
+
+[commands."/usr/bin/sw_vers"]
+stdout = """
+ProductName:	macOS
+ProductVersion:	14.6
+BuildVersion:	23G80
+"""
+
+[commands."ifconfig"]
+stdout = """
+lo0: flags=8049<UP,LOOPBACK,RUNNING,MULTICAST> mtu 16384
+	options=1203<RXCSUM,TXCSUM,TXSTATUS,SW_TIMESTAMP>
+	inet 127.0.0.1 netmask 0xff000000
+	inet6 ::1 prefixlen 128
+	inet6 fe80::1%lo0 prefixlen 64 scopeid 0x1
+	nd6 options=201<PERFORMNUD,DAD>
+gif0: flags=8010<POINTOPOINT,MULTICAST> mtu 1280
+stf0: flags=0<> mtu 1280
+anpi1: flags=8863<UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST> mtu 1500
+	options=400<CHANNEL_IO>
+	ether da:c9:78:c4:19:63
+	media: none
+	status: inactive
+anpi0: flags=8863<UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST> mtu 1500
+	options=400<CHANNEL_IO>
+	ether da:c9:78:c4:19:62
+	media: none
+	status: inactive
+en4: flags=8863<UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST> mtu 1500
+	options=400<CHANNEL_IO>
+	ether da:c9:78:c4:19:42
+	nd6 options=201<PERFORMNUD,DAD>
+	media: none
+	status: inactive
+en5: flags=8863<UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST> mtu 1500
+	options=400<CHANNEL_IO>
+	ether da:c9:78:c4:19:43
+	nd6 options=201<PERFORMNUD,DAD>
+	media: none
+	status: inactive
+en1: flags=8963<UP,BROADCAST,SMART,RUNNING,PROMISC,SIMPLEX,MULTICAST> mtu 1500
+	options=460<TSO4,TSO6,CHANNEL_IO>
+	ether 36:01:7a:e7:49:c0
+	media: autoselect <full-duplex>
+	status: inactive
+en2: flags=8963<UP,BROADCAST,SMART,RUNNING,PROMISC,SIMPLEX,MULTICAST> mtu 1500
+	options=460<TSO4,TSO6,CHANNEL_IO>
+	ether 36:01:7a:e7:49:c4
+	media: autoselect <full-duplex>
+	status: inactive
+en3: flags=8963<UP,BROADCAST,SMART,RUNNING,PROMISC,SIMPLEX,MULTICAST> mtu 1500
+	options=460<TSO4,TSO6,CHANNEL_IO>
+	ether 36:01:7a:e7:49:c8
+	media: autoselect <full-duplex>
+	status: inactive
+bridge0: flags=8863<UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST> mtu 1500
+	options=63<RXCSUM,TXCSUM,TSO4,TSO6>
+	ether 36:01:7a:e7:49:c0
+	Configuration:
+		id 0:0:0:0:0:0 priority 0 hellotime 0 fwddelay 0
+		maxage 0 holdcnt 0 proto stp maxaddr 100 timeout 1200
+		root id 0:0:0:0:0:0 priority 0 ifcost 0 port 0
+		ipfilter disabled flags 0x0
+	member: en1 flags=3<LEARNING,DISCOVER>
+	        ifmaxaddr 0 port 8 priority 0 path cost 0
+	member: en2 flags=3<LEARNING,DISCOVER>
+	        ifmaxaddr 0 port 9 priority 0 path cost 0
+	member: en3 flags=3<LEARNING,DISCOVER>
+	        ifmaxaddr 0 port 10 priority 0 path cost 0
+	nd6 options=201<PERFORMNUD,DAD>
+	media: <unknown type>
+	status: inactive
+ap1: flags=8843<UP,BROADCAST,RUNNING,SIMPLEX,MULTICAST> mtu 1500
+	options=6460<TSO4,TSO6,CHANNEL_IO,PARTIAL_CSUM,ZEROINVERT_CSUM>
+	ether a2:a9:97:40:12:53
+	inet6 fe80::a0a9:97ff:fe40:1253%ap1 prefixlen 64 scopeid 0xc
+	nd6 options=201<PERFORMNUD,DAD>
+	media: autoselect (<unknown type>)
+	status: inactive
+en0: flags=8863<UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST> mtu 1500
+	options=6460<TSO4,TSO6,CHANNEL_IO,PARTIAL_CSUM,ZEROINVERT_CSUM>
+	ether 80:a9:97:40:12:53
+	inet6 fe80::183c:c9dd:a7f0:b83d%en0 prefixlen 64 secured scopeid 0xd
+	inet 192.168.86.36 netmask 0xffffff00 broadcast 192.168.86.255
+	inet6 fd19:f27d:7e31:1af4:1cd0:9dc4:e6b0:ab13 prefixlen 64 autoconf secured
+	nd6 options=201<PERFORMNUD,DAD>
+	media: autoselect
+	status: active
+awdl0: flags=8843<UP,BROADCAST,RUNNING,SIMPLEX,MULTICAST> mtu 1500
+	options=6460<TSO4,TSO6,CHANNEL_IO,PARTIAL_CSUM,ZEROINVERT_CSUM>
+	ether 96:4a:be:21:2d:b0
+	inet6 fe80::944a:beff:fe21:2db0%awdl0 prefixlen 64 scopeid 0xe
+	nd6 options=201<PERFORMNUD,DAD>
+	media: autoselect
+	status: active
+llw0: flags=8863<UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST> mtu 1500
+	options=400<CHANNEL_IO>
+	ether 96:4a:be:21:2d:b0
+	inet6 fe80::944a:beff:fe21:2db0%llw0 prefixlen 64 scopeid 0xf
+	nd6 options=201<PERFORMNUD,DAD>
+	media: autoselect
+	status: active
+utun0: flags=8051<UP,POINTOPOINT,RUNNING,MULTICAST> mtu 1500
+	inet6 fe80::7d91:c6ce:adb9:86b7%utun0 prefixlen 64 scopeid 0x10
+	nd6 options=201<PERFORMNUD,DAD>
+utun1: flags=8051<UP,POINTOPOINT,RUNNING,MULTICAST> mtu 1380
+	inet6 fe80::e127:36d7:55a4:4b8a%utun1 prefixlen 64 scopeid 0x11
+	nd6 options=201<PERFORMNUD,DAD>
+utun2: flags=8051<UP,POINTOPOINT,RUNNING,MULTICAST> mtu 2000
+	inet6 fe80::94df:880d:9a6c:9e41%utun2 prefixlen 64 scopeid 0x12
+	nd6 options=201<PERFORMNUD,DAD>
+utun3: flags=8051<UP,POINTOPOINT,RUNNING,MULTICAST> mtu 1000
+	inet6 fe80::ce81:b1c:bd2c:69e%utun3 prefixlen 64 scopeid 0x13
+	nd6 options=201<PERFORMNUD,DAD>
+utun4: flags=8051<UP,POINTOPOINT,RUNNING,MULTICAST> mtu 1380
+	inet6 fe80::4fc6:9f4d:d90d:bbc0%utun4 prefixlen 64 scopeid 0x15
+	nd6 options=201<PERFORMNUD,DAD>
+utun5: flags=8051<UP,POINTOPOINT,RUNNING,MULTICAST> mtu 1380
+	inet6 fe80::9a58:29e1:1584:1073%utun5 prefixlen 64 scopeid 0x16
+	nd6 options=201<PERFORMNUD,DAD>
+utun6: flags=8051<UP,POINTOPOINT,RUNNING,MULTICAST> mtu 1380
+	inet6 fe80::a302:6cfd:7ed8:ffbe%utun6 prefixlen 64 scopeid 0x1b
+	nd6 options=201<PERFORMNUD,DAD>
+utun7: flags=8051<UP,POINTOPOINT,RUNNING,MULTICAST> mtu 1380
+	inet6 fe80::e47c:9e3b:65f6:65ae%utun7 prefixlen 64 scopeid 0x1c
+	nd6 options=201<PERFORMNUD,DAD>
+utun8: flags=8051<UP,POINTOPOINT,RUNNING,MULTICAST> mtu 1420
+	options=6460<TSO4,TSO6,CHANNEL_IO,PARTIAL_CSUM,ZEROINVERT_CSUM>
+	inet 172.31.253.17 --> 172.31.253.17 netmask 0xffffff00
+ipsec0: flags=8051<UP,POINTOPOINT,RUNNING,MULTICAST> mtu 1500
+	options=6460<TSO4,TSO6,CHANNEL_IO,PARTIAL_CSUM,ZEROINVERT_CSUM>
+	inet6 fe80::82a9:97ff:fe40:1253%ipsec0 prefixlen 64 scopeid 0x14
+	inet6 2607:fb91:797d:bdcc:cf2e:18a7:75f8:33f8 prefixlen 64
+	nd6 options=201<PERFORMNUD,DAD>
+"""
+
+[commands."netstat -rn"]
+stdout = """
+Routing tables
+
+Internet:
+Destination        Gateway            Flags               Netif Expire
+default            192.168.86.1       UGScg                 en0
+default            link#29            UCSIg               utun8
+127                127.0.0.1          UCS                   lo0
+127.0.0.1          127.0.0.1          UH                    lo0
+
+Internet6:
+Destination                             Gateway                                 Flags               Netif Expire
+default                                 fe80::%utun0                            UGcIg               utun0
+default                                 fe80::%utun1                            UGcIg               utun1
+default                                 fe80::%utun2                            UGcIg               utun2
+default                                 fe80::%utun3                            UGcIg               utun3
+default                                 2607:fb91:797d:bdcc::                   UGcIg              ipsec0
+default                                 fe80::%utun4                            UGcIg               utun4
+default                                 fe80::%utun5                            UGcIg               utun5
+default                                 fe80::%utun6                            UGcIg               utun6
+default                                 fe80::%utun7                            UGcIg               utun7
+::1                                     ::1                                     UHL                   lo0
+2607:fb91:797d:bdcc::/64                fe80::82a9:97ff:fe40:1253%ipsec0        Uc                 ipsec0
+2607:fb91:797d:bdcc:cf2e:18a7:75f8:33f8 link#20                                 UHL                   lo0
+fd19:f27d:7e31:1af4::/64                link#13                                 UC                    en0
+"""

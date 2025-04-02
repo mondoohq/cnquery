@@ -1,63 +1,62 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package networki
+package networki_test
 
 import (
 	"net"
 	"testing"
 
+	subject "go.mondoo.com/cnquery/v11/providers/os/id/networki"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v11/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/v11/providers/os/detector"
 )
 
-func TestSetMAC(t *testing.T) {
-	iface := &Interface{}
-	iface.SetMAC("00:1A:2B:3C:4D:5E")
-	assert.Equal(t, "00:1A:2B:3C:4D:5E", iface.MACAddress)
-	assert.Equal(t, "Ayecom Technology", iface.Vendor)
-}
+func TestInterfacesDarwin(t *testing.T) {
+	conn, err := mock.New(0, "./testdata/macos.toml", &inventory.Asset{})
+	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
 
-func TestAddOrUpdateInterfaces(t *testing.T) {
-	iface1 := Interface{Name: "eth0", MACAddress: "00:1A:2B:3C:4D:5E"}
-	iface2 := Interface{Name: "eth1", MACAddress: "00:1A:2B:3C:4D:5F"}
-	result := AddOrUpdateInterfaces([]Interface{iface1}, []Interface{iface2})
-	assert.Len(t, result, 2)
+	interfaces, err := subject.Interfaces(conn, platform)
+	require.NoError(t, err)
+	assert.Len(t, interfaces, 26)
 
-	// Test updating an existing interface
-	iface3 := Interface{Name: "eth0", MTU: 1500}
-	result = AddOrUpdateInterfaces(result, []Interface{iface3})
-	assert.Len(t, result, 2)
-	assert.Equal(t, 1500, result[0].MTU)
-}
-
-func TestMergeInterfaces(t *testing.T) {
-	iface1 := Interface{Name: "eth0", MACAddress: ""}
-	iface2 := Interface{Name: "eth0", MACAddress: "00:1A:2B:3C:4D:5E"}
-	merged := mergeInterfaces(iface1, iface2)
-	assert.Equal(t, "00:1A:2B:3C:4D:5E", merged.MACAddress)
-
-	// Test merging flags
-	iface1.Flags = []string{"UP"}
-	iface2.Flags = []string{"BROADCAST"}
-	merged = mergeInterfaces(iface1, iface2)
-	assert.ElementsMatch(t, []string{"UP", "BROADCAST"}, merged.Flags)
-}
-
-func TestAddOrUpdateIP(t *testing.T) {
-	iface := &Interface{Name: "eth0"}
-	ip1 := IPAddress{IP: net.ParseIP("192.168.1.1")}
-	iface.AddOrUpdateIP(ip1)
-	assert.Len(t, iface.IPAddresses, 1)
-	assert.Equal(t, "192.168.1.1", iface.IPAddresses[0].IP.String())
-
-	// Test updating an existing IP
-	ip2 := IPAddress{IP: net.ParseIP("192.168.1.1"), Subnet: "192.168.1.0/24"}
-	iface.AddOrUpdateIP(ip2)
-	assert.Len(t, iface.IPAddresses, 1)
-	assert.Equal(t, "192.168.1.0/24", iface.IPAddresses[0].Subnet)
-
-	// Test adding a new IP
-	ip3 := IPAddress{IP: net.ParseIP("192.168.1.2")}
-	iface.AddOrUpdateIP(ip3)
-	assert.Len(t, iface.IPAddresses, 2)
+	index := subject.FindInterface(interfaces, subject.Interface{Name: "en0"})
+	if assert.NotEqual(t, -1, index) {
+		en0 := interfaces[index]
+		assert.Equal(t, "en0", en0.Name)
+		assert.Equal(t, "80:a9:97:40:12:53", en0.MACAddress)
+		assert.Equal(t, "Apple", en0.Vendor)
+		assert.Equal(t, 1500, en0.MTU)
+		if assert.NotNil(t, en0.Active) {
+			assert.True(t, *en0.Active)
+		}
+		assert.Nil(t, en0.Virtual)
+		assert.Equal(t, []string{"UP", "BROADCAST", "SMART", "RUNNING", "SIMPLEX", "MULTICAST"}, en0.Flags)
+		if assert.NotEmpty(t, en0.IPAddresses) {
+			i4 := en0.FindIP(net.ParseIP("192.168.86.36"))
+			if assert.NotEqual(t, -1, i4) {
+				ipv4 := en0.IPAddresses[i4]
+				assert.Equal(t, "192.168.86.36", ipv4.IP.String())
+				assert.Equal(t, "192.168.86.36/24", ipv4.CIDR)
+				assert.Equal(t, "192.168.86.0/24", ipv4.Subnet)
+				assert.Equal(t, "192.168.86.255", ipv4.Broadcast)
+				assert.Equal(t, "192.168.86.1", ipv4.Gateway)
+			}
+			i6 := en0.FindIP(net.ParseIP("fd19:f27d:7e31:1af4:1cd0:9dc4:e6b0:ab13"))
+			if assert.NotEqual(t, -1, i6) {
+				ipv6 := en0.IPAddresses[i6]
+				assert.Equal(t, "fd19:f27d:7e31:1af4:1cd0:9dc4:e6b0:ab13", ipv6.IP.String())
+				assert.Equal(t, "fd19:f27d:7e31:1af4:1cd0:9dc4:e6b0:ab13/64", ipv6.CIDR)
+				assert.Equal(t, "fd19:f27d:7e31:1af4::/64", ipv6.Subnet)
+				assert.Equal(t, "", ipv6.Broadcast)
+				assert.Equal(t, "", ipv6.Gateway)
+			}
+		}
+	}
 }

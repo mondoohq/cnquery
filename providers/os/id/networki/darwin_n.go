@@ -5,7 +5,6 @@ package networki
 
 import (
 	"bufio"
-	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
@@ -103,8 +102,7 @@ func (n *neti) getMacSystemConfigInterfaces() ([]Interface, error) {
 }
 
 func (n *neti) getMacGatewayDetails() (interfaces []Interface, err error) {
-	cmd := exec.Command("netstat", "-rn")
-	output, err := cmd.Output()
+	output, err := n.RunCommand("netstat -rn")
 	if err != nil {
 		return nil, err
 	}

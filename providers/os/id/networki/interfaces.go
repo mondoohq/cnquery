@@ -90,7 +90,7 @@ func (i *Interface) SetMAC(mac string) {
 func AddOrUpdateInterfaces(interfaces1, interfaces2 []Interface) (interfaces []Interface) {
 	interfaces = interfaces1
 	for _, iinterface := range interfaces2 {
-		index := findInterface(interfaces, iinterface)
+		index := FindInterface(interfaces, iinterface)
 
 		if index < 0 {
 			// not found, add
@@ -150,8 +150,8 @@ func mergeInterfaces(i1, i2 Interface) Interface {
 	return i1
 }
 
-// findInterface finds an interface from a list of interfaces.
-func findInterface(interfaces []Interface, iinterface Interface) int {
+// FindInterface finds an interface from a list of interfaces.
+func FindInterface(interfaces []Interface, iinterface Interface) int {
 	return slices.IndexFunc(interfaces, func(i Interface) bool {
 		return i.Name == iinterface.Name
 	})
@@ -168,7 +168,7 @@ func (i *Interface) AddOrUpdateIP(ips ...IPAddress) {
 			continue
 		}
 
-		index := i.findIP(ip.IP)
+		index := i.FindIP(ip.IP)
 		if index < 0 {
 			// not found, add
 			log.Trace().Str("ip", ip.IP.String()).Msg("os.network.interface> add ip")
@@ -188,8 +188,8 @@ func (i *Interface) mergeIP(index int, ip IPAddress) {
 	i.IPAddresses[index] = merged
 }
 
-// findIP finds an ip address inside a network interface.
-func (i *Interface) findIP(ip net.IP) int {
+// FindIP finds an ip address inside a network interface.
+func (i *Interface) FindIP(ip net.IP) int {
 	return slices.IndexFunc(i.IPAddresses, func(address IPAddress) bool {
 		return address.IP.Equal(ip)
 	})
