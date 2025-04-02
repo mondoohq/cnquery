@@ -153,8 +153,8 @@ func TestInterfacesWindows(t *testing.T) {
 	if assert.NotEqual(t, -1, index) {
 		ethernet0 := interfaces[index]
 		assert.Equal(t, "Ethernet0", ethernet0.Name)
-		assert.Equal(t, "00-50-56-B0-9A-A5", ethernet0.MACAddress)
-		assert.Equal(t, "", ethernet0.Vendor)
+		assert.Equal(t, "00:50:56:B0:9A:A5", ethernet0.MACAddress)
+		assert.Equal(t, "VMware", ethernet0.Vendor)
 		assert.Equal(t, 1500, ethernet0.MTU)
 		if assert.NotNil(t, ethernet0.Active) {
 			assert.True(t, *ethernet0.Active)
@@ -210,8 +210,8 @@ func TestInterfacesWindowsFallbackIpconfigCmd(t *testing.T) {
 	if assert.NotEqual(t, -1, index) {
 		ethernet0 := interfaces[index]
 		assert.Equal(t, "Ethernet0", ethernet0.Name)
-		assert.Equal(t, "00-50-56-B0-9A-A5", ethernet0.MACAddress)
-		assert.Equal(t, "", ethernet0.Vendor)
+		assert.Equal(t, "00:50:56:B0:9A:A5", ethernet0.MACAddress)
+		assert.Equal(t, "VMware", ethernet0.Vendor)
 		// can't get these fields
 		assert.Equal(t, 0, ethernet0.MTU)
 		assert.Nil(t, ethernet0.Active)

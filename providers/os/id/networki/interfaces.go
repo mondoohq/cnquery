@@ -81,8 +81,8 @@ type enrichmentFn func(in *Interface)
 // the interface since it uses it to populate the Vendor field.
 func (i *Interface) SetMAC(mac string) {
 	if mac != "" {
-		i.MACAddress = mac
-		i.Vendor = oui.Vendor(mac)
+		i.MACAddress = strings.ReplaceAll(mac, "-", ":")
+		i.Vendor = oui.Vendor(i.MACAddress)
 	}
 }
 
