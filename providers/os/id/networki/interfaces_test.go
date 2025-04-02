@@ -60,3 +60,50 @@ func TestInterfacesDarwin(t *testing.T) {
 		}
 	}
 }
+
+func TestInterfacesLinux(t *testing.T) {
+	conn, err := mock.New(0, "./testdata/linux.toml", &inventory.Asset{})
+	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
+
+	interfaces, err := subject.Interfaces(conn, platform)
+	require.NoError(t, err)
+	assert.Len(t, interfaces, 2)
+
+	index := subject.FindInterface(interfaces, subject.Interface{Name: "enX0"})
+	if assert.NotEqual(t, -1, index) {
+		enX0 := interfaces[index]
+		assert.Equal(t, "enX0", enX0.Name)
+		assert.Equal(t, "0a:ff:de:6b:e3:19", enX0.MACAddress)
+		assert.Equal(t, "", enX0.Vendor)
+		assert.Equal(t, 9001, enX0.MTU)
+		if assert.NotNil(t, enX0.Active) {
+			assert.True(t, *enX0.Active)
+		}
+		if assert.NotNil(t, enX0.Virtual) {
+			assert.False(t, *enX0.Virtual)
+		}
+		assert.Equal(t, []string{"BROADCAST", "MULTICAST", "UP", "LOWER_UP"}, enX0.Flags)
+		if assert.NotEmpty(t, enX0.IPAddresses) {
+			i4 := enX0.FindIP(net.ParseIP("172.31.24.71"))
+			if assert.NotEqual(t, -1, i4) {
+				ipv4 := enX0.IPAddresses[i4]
+				assert.Equal(t, "172.31.24.71", ipv4.IP.String())
+				assert.Equal(t, "172.31.24.71/20", ipv4.CIDR)
+				assert.Equal(t, "172.31.16.0/20", ipv4.Subnet)
+				assert.Equal(t, "172.31.31.255", ipv4.Broadcast)
+				assert.Equal(t, "172.31.16.1", ipv4.Gateway)
+			}
+			i6 := enX0.FindIP(net.ParseIP("fe80::8ff:deff:fe6b:e319"))
+			if assert.NotEqual(t, -1, i6) {
+				ipv6 := enX0.IPAddresses[i6]
+				assert.Equal(t, "fe80::8ff:deff:fe6b:e319", ipv6.IP.String())
+				assert.Equal(t, "fe80::8ff:deff:fe6b:e319/64", ipv6.CIDR)
+				assert.Equal(t, "fe80::/64", ipv6.Subnet)
+				assert.Equal(t, "", ipv6.Broadcast)
+				assert.Equal(t, "", ipv6.Gateway)
+			}
+		}
+	}
+}

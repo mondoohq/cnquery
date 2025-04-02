@@ -10,10 +10,11 @@ import (
 	"strconv"
 	"strings"
 
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
+
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 )
 
 // detectLinuxInterfaces detects network interfaces on Linux.
