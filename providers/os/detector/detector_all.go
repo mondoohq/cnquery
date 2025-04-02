@@ -888,6 +888,9 @@ var linuxFamily = &PlatformResolver{
 		if pf.Labels == nil {
 			pf.Labels = map[string]string{}
 		}
+		if pf.Metadata == nil {
+			pf.Metadata = map[string]string{}
+		}
 
 		lsb, err := osrd.lsbconfig()
 		// ignore lsb config if we got an error
@@ -916,7 +919,9 @@ var linuxFamily = &PlatformResolver{
 		} else {
 			if len(osr["ID"]) > 0 {
 				pf.Name = osr["ID"]
+				// Deprecated: remove in 12.0
 				pf.Labels[LabelDistroID] = osr["ID"]
+				pf.Metadata[LabelDistroID] = osr["ID"]
 			}
 			if len(osr["PRETTY_NAME"]) > 0 {
 				pf.Title = osr["PRETTY_NAME"]
@@ -927,6 +932,12 @@ var linuxFamily = &PlatformResolver{
 
 			if len(osr["BUILD_ID"]) > 0 {
 				pf.Build = osr["BUILD_ID"]
+			}
+
+			if len(osr["VARIANT_ID"]) > 0 {
+				// Deprecated: remove in 12.0
+				pf.Labels["variant-id"] = osr["VARIANT_ID"]
+				pf.Metadata["variant-id"] = osr["VARIANT_ID"]
 			}
 
 			detected = true
