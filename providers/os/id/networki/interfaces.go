@@ -224,6 +224,8 @@ func isDefaultRoute(field string) bool {
 	return field == "default" ||
 		// IPv4
 		field == "0.0.0.0" ||
+		field == "0.0.0.0/0" ||
 		// IPv6
-		field == "::/0"
+		field == "::/0" ||
+		field == "::"
 }

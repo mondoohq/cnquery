@@ -15,22 +15,25 @@ import (
 
 // detectWindowsInterfaces detects network interfaces on Windows.
 func (n *neti) detectWindowsInterfaces() ([]Interface, error) {
-	detectors := []func() ([]Interface, error){
-		n.getWindowsIpconfigCmdInterfaces,
-		n.getWindowsGetNetIPInterfaceCmdInterfaces,
-	}
-
 	var errs []error
 	interfaces := []Interface{}
+
+	// List of detectors that collect network interfaces, we stop executing them as
+	// soon as one of them succeeds collecting all the information
+	detectors := []func() ([]Interface, error){
+		n.getWindowsGetNetIPInterfaceCmdInterfaces,
+		n.getWindowsIpconfigCmdInterfaces,
+	}
+
 	for _, detectFn := range detectors {
 		detectedInterfaces, err := detectFn()
-		if err != nil {
-			log.Debug().Err(err).
-				Msg("os.network.interface> unable to detect network interfaces")
-			errs = append(errs, err)
-			continue
+		if err == nil && len(detectedInterfaces) != 0 {
+			interfaces = AddOrUpdateInterfaces(interfaces, detectedInterfaces)
+			break
 		}
-		interfaces = AddOrUpdateInterfaces(interfaces, detectedInterfaces)
+		log.Debug().Err(err).
+			Msg("os.network.interface> unable to detect network interfaces")
+		errs = append(errs, err)
 	}
 
 	if len(interfaces) == 0 {
@@ -49,6 +52,10 @@ func (n *neti) getWindowsGetNetIPInterfaceCmdInterfaces() (interfaces []Interfac
       (Get-NetIPAddress -InterfaceIndex $_.InterfaceIndex) |
       Select-Object InterfaceAlias, AddressFamily, IPAddress, PrefixLength |
       ConvertTo-Json
+    } },
+    @{ Name='DefaultGateway'; Expression={
+      (Get-NetRoute -InterfaceIndex $_.InterfaceIndex | Where-Object { $_.DestinationPrefix -eq '0.0.0.0/0' -or $_.DestinationPrefix -eq '::/0' }) |
+      Select-Object -ExpandProperty NextHop -ErrorAction SilentlyContinue
     } },
     @{ Name='Virtual'; Expression={ (Get-NetAdapter -InterfaceIndex $_.InterfaceIndex).Virtual } } |
     ConvertTo-Json
@@ -75,6 +82,7 @@ func (n *neti) getWindowsGetNetIPInterfaceCmdInterfaces() (interfaces []Interfac
 		if value, ok := adapter["MacAddress"].(string); ok {
 			iinterface.SetMAC(value)
 		}
+
 		// Get MTU
 		if value, ok := adapter["NlMtu"].(float64); ok {
 			iinterface.MTU = int(value)
@@ -92,6 +100,23 @@ func (n *neti) getWindowsGetNetIPInterfaceCmdInterfaces() (interfaces []Interfac
 		// Detect virtual interface
 		if virtual, ok := adapter["Virtual"].(bool); ok {
 			iinterface.Virtual = &virtual
+		}
+
+		// Get default gateway
+		if value, ok := adapter["DefaultGateway"].(string); ok {
+			iinterface.enrichments = func(in *Interface) {
+				// IPv4 (default)
+				gatewayVersion := IPv4
+				if strings.Contains(value, ":") {
+					// IPv6
+					gatewayVersion = IPv6
+				}
+				for i := range in.IPAddresses {
+					if version, ok := in.IPAddresses[i].Version(); ok && version == gatewayVersion {
+						in.IPAddresses[i].Gateway = value
+					}
+				}
+			}
 		}
 
 		// Get IP Addresses (v4 or v6) in JSON format
