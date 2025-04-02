@@ -217,36 +217,20 @@ func (dpm *DebPkgManager) Available() (map[string]PackageUpdate, error) {
 func (dpm *DebPkgManager) Files(name string, version string, arch string) ([]FileRecord, error) {
 	fs := dpm.conn.FileSystem()
 
-	files := []string{
+	dpkgListFiles := []string{
 		"/var/lib/dpkg/info/" + name + ".list",
 	}
+
 	if arch != "" {
-		files = append(files, "/var/lib/dpkg/info/"+name+":"+arch+".list")
+		dpkgListFiles = append(dpkgListFiles, "/var/lib/dpkg/info/"+name+":"+arch+".list")
 	}
 
 	fileRecords := []FileRecord{}
-	for i := range files {
-		file := files[i]
-		_, err := fs.Stat(file)
-		if err != nil {
+	for _, file := range dpkgListFiles {
+		if _, err := fs.Stat(file); err != nil {
 			continue
 		}
-
-		fi, err := fs.Open(file)
-		if err != nil {
-			return nil, err
-		}
-		defer fi.Close()
-
-		scanner := bufio.NewScanner(fi)
-		for scanner.Scan() {
-			line := scanner.Text()
-			fileRecords = append(fileRecords, FileRecord{
-				Path: line,
-			})
-		}
-		// we only need the first file that exists
-		break
+		fileRecords = append(fileRecords, FileRecord{Path: file})
 	}
 
 	return fileRecords, nil
