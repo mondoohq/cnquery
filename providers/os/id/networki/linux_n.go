@@ -19,16 +19,34 @@ import (
 
 // detectLinuxInterfaces detects network interfaces on Linux.
 func (n *neti) detectLinuxInterfaces() ([]Interface, error) {
+	var errs []error
+	interfaces := []Interface{}
+
+	// List of detectors that collect network interfaces, we stop executing them as
+	// soon as one of them succeeds collecting all the information
 	detectors := []func() ([]Interface, error){
 		n.getLinuxCmdInterfaces,
 		n.getLinuxSysfsInterfaces,
+	}
+	for _, detectFn := range detectors {
+		detectedInterfaces, err := detectFn()
+		if err == nil && len(detectedInterfaces) != 0 {
+			interfaces = AddOrUpdateInterfaces(interfaces, detectedInterfaces)
+			break
+		}
+		log.Debug().Err(err).
+			Msg("os.network.interface> unable to detect network interfaces")
+		errs = append(errs, err)
+	}
+
+	// List of enrichment functions that collect additional information that we
+	// couldn't gather in the detectors.
+	enrichments := []func() ([]Interface, error){
 		n.getLinuxIPv4GatewayDetails,
 		n.getLinuxIPv6GatewayDetails,
 	}
 
-	var errs []error
-	interfaces := []Interface{}
-	for _, detectFn := range detectors {
+	for _, detectFn := range enrichments {
 		detectedInterfaces, err := detectFn()
 		if err != nil {
 			log.Debug().Err(err).
@@ -103,10 +121,12 @@ func (n *neti) getLinuxIPv6GatewayDetails() (interfaces []Interface, err error) 
 }
 
 func (n *neti) getLinuxSysfsInterfaces() (interfaces []Interface, err error) {
-	dirEntries, err := afero.ReadDir(n.connection.FileSystem(), "/sys/class/net/")
+	dirEntries, err := afero.ReadDir(n.connection.FileSystem(), "/sys/class/net")
 	if err != nil {
 		return nil, err
 	}
+
+	log.Debug().Int("dir_entries", len(dirEntries)).Msg("os.network.interface> read /sys/class/net")
 
 	for _, entry := range dirEntries {
 		if !entry.IsDir() {
@@ -125,7 +145,7 @@ func (n *neti) getLinuxSysfsInterfaces() (interfaces []Interface, err error) {
 			filepath.Join("/sys/class/net/", ifaceName, "address"),
 		)
 		if err == nil {
-			iinterface.MACAddress = strings.TrimSpace(string(macAddress))
+			iinterface.SetMAC(strings.TrimSpace(string(macAddress)))
 		}
 
 		// Read MTU
@@ -137,13 +157,22 @@ func (n *neti) getLinuxSysfsInterfaces() (interfaces []Interface, err error) {
 			iinterface.MTU = parseInt(strings.TrimSpace(string(mtu)))
 		}
 
+		// Read device type
+		deviceType, err := afero.ReadFile(
+			n.connection.FileSystem(),
+			filepath.Join("/sys/class/net/", ifaceName, "device/devtype"),
+		)
+		if err == nil {
+			iinterface.Virtual = isVirtualDevice(string(deviceType))
+		}
+
 		// Read Flags
 		flags, err := afero.ReadFile(
 			n.connection.FileSystem(),
 			filepath.Join("/sys/class/net/", ifaceName, "flags"),
 		)
 		if err == nil {
-			iinterface.Flags = parseHexFlags(strings.TrimSpace(string(flags)))
+			iinterface.Flags = parseHexFlags(strings.TrimPrefix(string(flags), "0x"))
 		}
 
 		// Read Status
@@ -165,6 +194,11 @@ func (n *neti) getLinuxSysfsInterfaces() (interfaces []Interface, err error) {
 
 		interfaces = append(interfaces, iinterface)
 	}
+
+	log.Debug().
+		Interface("interfaces", interfaces).
+		Str("detector", "cmd.sys_class_net_fs").
+		Msg("os.network.interfaces> discovered")
 
 	return
 }
@@ -248,18 +282,10 @@ func (n *neti) getLinuxCmdInterfaces() ([]Interface, error) {
 				currentInterface.SetMAC(matches[1])
 			} else if matches := ipRegex.FindStringSubmatch(line); matches != nil {
 				// Match IPv4 address
-				ip := NewIPv4WithPrefixLength(
+				currentInterface.AddOrUpdateIP(NewIPv4WithPrefixLength(
 					matches[1],
 					parseInt(matches[2]),
-				)
-				// if ip.Broadcast != matches[3] {
-				// log.Debug().
-				// Str("gen_broadcast", ip.Broadcast).
-				// Str("cmd_broadcast", matches[3]).
-				// Msg("getLinuxCmdInterfaces> broadcast mismatch")
-				// ip.Broadcast = matches[3]
-				// }
-				currentInterface.AddOrUpdateIP(ip)
+				))
 			} else if matches := ip6Regex.FindStringSubmatch(line); matches != nil {
 				// Match IPv6 address
 				ip := NewIPv6WithPrefixLength(matches[1], parseInt(matches[2]))
@@ -277,4 +303,82 @@ func (n *neti) getLinuxCmdInterfaces() ([]Interface, error) {
 		Str("detector", "cmd.ip_addr_show").
 		Msg("os.network.interfaces> discovered")
 	return interfaces, nil
+}
+
+func isVirtualDevice(deviceType string) *bool {
+	switch deviceType {
+	// The device is a VIF (Xen virtual interface).
+	case "vif":
+		return convert.ToPtr(true)
+
+	// The device is a TUN (network layer) virtual network interface.
+	case "tun":
+		return convert.ToPtr(true)
+
+	// The device is a TAP (data link layer) virtual network interface.
+	case "tap":
+		return convert.ToPtr(true)
+
+	// The device is a MACVLAN virtual network interface.
+	case "macvlan":
+		return convert.ToPtr(true)
+
+	// The device is an IPVLan virtual network interface.
+	case "ipvlan":
+		return convert.ToPtr(true)
+
+	// The device is a Virtual Ethernet (veth) interface.
+	case "veth":
+		return convert.ToPtr(true)
+
+	// The device is a network bridge.
+	case "bridge":
+		return convert.ToPtr(true)
+
+	// The device is a bonded network interface (multiple NICs bonded together).
+	case "bond":
+		return convert.ToPtr(true)
+
+	// The device is a VXLAN virtual network tunnel interface.
+	case "vxlan":
+		return convert.ToPtr(true)
+
+	// The device is a GRE (Generic Routing Encapsulation) tunnel interface.
+	case "gre":
+		return convert.ToPtr(false)
+
+	// The device is a GRE TAP (Layer 2 GRE) tunnel interface.
+	case "gretap":
+		return convert.ToPtr(true)
+
+	// The device is an IPv6 GRE tunnel interface.
+	case "ip6gre":
+		return convert.ToPtr(false)
+
+	// The device is an IPv6 GRE TAP tunnel interface.
+	case "ip6gretap":
+		return convert.ToPtr(true)
+
+	// The device is an IPv6-in-IPv4 tunnel.
+	case "sit":
+		return convert.ToPtr(false)
+
+	// The device is an IPv4-in-IPv4 tunnel.
+	case "ipip":
+		return convert.ToPtr(false)
+
+	// The device is a WireGuard VPN interface.
+	case "wireguard":
+		return convert.ToPtr(true)
+
+	// The device is a Point-to-Point Protocol (PPP) interface.
+	case "ppp":
+		return convert.ToPtr(false)
+
+	// The device is an XFRM (IPsec transform) interface.
+	case "xfrm":
+		return convert.ToPtr(false)
+
+	}
+	return nil
 }

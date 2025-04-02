@@ -7,12 +7,6 @@ stdout = "x86_64"
 [commands."uname -r"]
 stdout = "4.9.125-linuxkit"
 
-[files."/sys/class/net/enX0/address"]
-content = "0a:ff:de:6b:e3:19"
-
-[files."/sys/class/net/enX0/operstate"]
-content = "up"
-
 [commands."ip addr show"]
 stdout = """
 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000

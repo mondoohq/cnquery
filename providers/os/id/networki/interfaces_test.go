@@ -37,7 +37,7 @@ func TestInterfacesDarwin(t *testing.T) {
 			assert.True(t, *en0.Active)
 		}
 		assert.Nil(t, en0.Virtual)
-		assert.Equal(t, []string{"UP", "BROADCAST", "SMART", "RUNNING", "SIMPLEX", "MULTICAST"}, en0.Flags)
+		assert.ElementsMatch(t, []string{"UP", "BROADCAST", "SMART", "RUNNING", "SIMPLEX", "MULTICAST"}, en0.Flags)
 		if assert.NotEmpty(t, en0.IPAddresses) {
 			i4 := en0.FindIP(net.ParseIP("192.168.86.36"))
 			if assert.NotEqual(t, -1, i4) {
@@ -62,7 +62,7 @@ func TestInterfacesDarwin(t *testing.T) {
 }
 
 func TestInterfacesLinux(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/linux.toml", &inventory.Asset{})
+	conn, err := mock.New(0, "./testdata/linux_ip_addr_show_cmd.toml", &inventory.Asset{})
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -84,7 +84,7 @@ func TestInterfacesLinux(t *testing.T) {
 		if assert.NotNil(t, enX0.Virtual) {
 			assert.False(t, *enX0.Virtual)
 		}
-		assert.Equal(t, []string{"BROADCAST", "MULTICAST", "UP", "LOWER_UP"}, enX0.Flags)
+		assert.ElementsMatch(t, []string{"BROADCAST", "MULTICAST", "UP", "LOWER_UP"}, enX0.Flags)
 		if assert.NotEmpty(t, enX0.IPAddresses) {
 			i4 := enX0.FindIP(net.ParseIP("172.31.24.71"))
 			if assert.NotEqual(t, -1, i4) {
@@ -105,6 +105,37 @@ func TestInterfacesLinux(t *testing.T) {
 				assert.Equal(t, "", ipv6.Gateway)
 			}
 		}
+	}
+}
+
+func TestInterfacesLinuxFallbackSysNetFilesystem(t *testing.T) {
+	conn, err := mock.New(0, "./testdata/linux_sys_class_net_fs.toml", &inventory.Asset{})
+	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
+
+	interfaces, err := subject.Interfaces(conn, platform)
+	require.NoError(t, err)
+	assert.Len(t, interfaces, 2)
+
+	index := subject.FindInterface(interfaces, subject.Interface{Name: "enX0"})
+	if assert.NotEqual(t, -1, index) {
+		enX0 := interfaces[index]
+		assert.Equal(t, "enX0", enX0.Name)
+		assert.Equal(t, "0a:ff:de:6b:e3:19", enX0.MACAddress)
+		assert.Equal(t, "", enX0.Vendor)
+		assert.Equal(t, 9001, enX0.MTU)
+		if assert.NotNil(t, enX0.Active) {
+			assert.True(t, *enX0.Active)
+		}
+		if assert.NotNil(t, enX0.Virtual) {
+			assert.True(t, *enX0.Virtual)
+		}
+		assert.ElementsMatch(t, []string{"MULTICAST", "BROADCAST", "UP"}, enX0.Flags)
+		// Note that this method lacks implementation for gathering ip addresses
+		// configured in the network interfaces, maybe we can look at two files to
+		// get them `/proc/net/fib_trie` and `/proc/net/if_inet6`
+		assert.Empty(t, enX0.IPAddresses)
 	}
 }
 
