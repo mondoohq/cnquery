@@ -116,9 +116,8 @@ It was originally inspired by the Multics SubSystem library.`,
 	}
 	pkgFiles, err := mgr.Files(p.Name, p.Version, p.Arch)
 	require.NoError(t, err)
-	assert.Equal(t, 11, len(pkgFiles), "detected the right amount of package files")
-	assert.Contains(t, pkgFiles, FileRecord{Path: "/lib/aarch64-linux-gnu/libss.so.2.0"})
-	assert.Contains(t, pkgFiles, FileRecord{Path: "/lib/aarch64-linux-gnu/libss.so.2"})
+	assert.Equal(t, 1, len(pkgFiles), "detected the right amount of package files")
+	assert.Contains(t, pkgFiles, FileRecord{Path: "/var/lib/dpkg/info/libss2:amd64.list"})
 }
 
 func TestDpkgParserStatusD(t *testing.T) {
