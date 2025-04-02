@@ -28,11 +28,11 @@ const (
 // implemented according to https://github.com/Azure/acr/blob/main/docs/AAD-OAuth.md
 type acrAuthHelper struct {
 	httpClient *http.Client
-	tokenFn    func() (azcore.TokenCredential, error)
+	tokenFn    azauth.TokenResolverFn
 	cache      map[string]string
 }
 
-func NewAcrAuthHelperFromToken(tokenFn func() (azcore.TokenCredential, error)) *acrAuthHelper {
+func NewAcrAuthHelperFromToken(tokenFn azauth.TokenResolverFn) *acrAuthHelper {
 	return &acrAuthHelper{
 		httpClient: http.DefaultClient,
 		tokenFn:    tokenFn,

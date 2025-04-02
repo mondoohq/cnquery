@@ -17,42 +17,61 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
 )
 
+type TokenResolverFn (func() (azcore.TokenCredential, error))
+
+func WithCliCredentials(opts *azidentity.AzureCLICredentialOptions) TokenResolverFn {
+	return func() (azcore.TokenCredential, error) {
+		return azidentity.NewAzureCLICredential(opts)
+	}
+}
+
+func WithEnvCredentials(opts *azidentity.EnvironmentCredentialOptions) TokenResolverFn {
+	return func() (azcore.TokenCredential, error) {
+		return azidentity.NewEnvironmentCredential(opts)
+	}
+}
+
 // sometimes we run into a 'managed identity timed out' error when using a managed identity.
-// according to https://github.com/Azure/azure-sdk-for-go/blob/main/sdk/azidentity/TROUBLESHOOTING.md#troubleshoot-defaultazurecredential-authentication-issues
-// we should instead use the NewManagedIdentityCredential directly.
-// This function mimics the behavior of the DefaultAzureCredential, but with a higher timeout on the managed identity
-func GetChainedToken(options *azidentity.DefaultAzureCredentialOptions) (*azidentity.ChainedTokenCredential, error) {
-	if options == nil {
-		options = &azidentity.DefaultAzureCredentialOptions{}
+// This function mimics the behavior of the NewManagedIdentityCredential, but with a higher timeout and retries
+func WithRetryableManagedIdentityCredentials(timeout time.Duration, attempts int, opts *azidentity.ManagedIdentityCredentialOptions) TokenResolverFn {
+	return func() (azcore.TokenCredential, error) {
+		mic, err := azidentity.NewManagedIdentityCredential(opts)
+		if err != nil {
+			return nil, err
+		}
+		return &retryableManagedIdentityCredential{mic: *mic, timeout: timeout, attempts: attempts}, nil
 	}
+}
 
+func WithWorkloadIdentityCredentials(opts *azidentity.WorkloadIdentityCredentialOptions) TokenResolverFn {
+	return func() (azcore.TokenCredential, error) {
+		return azidentity.NewWorkloadIdentityCredential(opts)
+	}
+}
+
+func BuildChainedToken(opts ...TokenResolverFn) (*azidentity.ChainedTokenCredential, error) {
 	chain := []azcore.TokenCredential{}
-
-	cli, err := azidentity.NewAzureCLICredential(&azidentity.AzureCLICredentialOptions{
-		AdditionallyAllowedTenants: []string{"*"},
-	})
-	if err == nil {
-		chain = append(chain, cli)
+	for _, fn := range opts {
+		cred, err := fn()
+		if err == nil {
+			chain = append(chain, cred)
+		}
 	}
-	envCred, err := azidentity.NewEnvironmentCredential(&azidentity.EnvironmentCredentialOptions{ClientOptions: options.ClientOptions})
-	if err == nil {
-		chain = append(chain, envCred)
-	}
-	mic, err := azidentity.NewManagedIdentityCredential(&azidentity.ManagedIdentityCredentialOptions{ClientOptions: options.ClientOptions})
-	if err == nil {
-		retryableMic := &retryableManagedIdentityCredential{mic: *mic, timeout: 5 * time.Second, attempts: 3}
-		chain = append(chain, retryableMic)
-	}
-	wic, err := azidentity.NewWorkloadIdentityCredential(&azidentity.WorkloadIdentityCredentialOptions{
-		ClientOptions:            options.ClientOptions,
-		DisableInstanceDiscovery: options.DisableInstanceDiscovery,
-		TenantID:                 options.TenantID,
-	})
-	if err == nil {
-		chain = append(chain, wic)
-	}
-
 	return azidentity.NewChainedTokenCredential(chain, nil)
+}
+
+func GetChainedToken(options *azidentity.DefaultAzureCredentialOptions) (*azidentity.ChainedTokenCredential, error) {
+	opts := []TokenResolverFn{
+		WithCliCredentials(&azidentity.AzureCLICredentialOptions{AdditionallyAllowedTenants: []string{"*"}}),
+		WithEnvCredentials(&azidentity.EnvironmentCredentialOptions{ClientOptions: options.ClientOptions}),
+		WithRetryableManagedIdentityCredentials(5*time.Second, 3, &azidentity.ManagedIdentityCredentialOptions{ClientOptions: options.ClientOptions}),
+		WithWorkloadIdentityCredentials(&azidentity.WorkloadIdentityCredentialOptions{
+			ClientOptions:            options.ClientOptions,
+			DisableInstanceDiscovery: options.DisableInstanceDiscovery,
+			TenantID:                 options.TenantID,
+		}),
+	}
+	return BuildChainedToken(opts...)
 }
 
 type retryableManagedIdentityCredential struct {
