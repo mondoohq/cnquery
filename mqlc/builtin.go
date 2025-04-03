@@ -13,22 +13,43 @@ import (
 )
 
 type compileHandler struct {
-	typ       func(types.Type) types.Type
-	signature FunctionSignature
-	compile   func(*compiler, types.Type, uint64, string, *parser.Call) (types.Type, error)
+	typ        types.Type
+	typHandler *typeHandler
+	signature  FunctionSignature
+	compile    func(*compiler, types.Type, uint64, string, *parser.Call) (types.Type, error)
+	desc       string
+}
+
+func (c compileHandler) returnType(t types.Type) types.Type {
+	if c.typHandler != nil {
+		return c.typHandler.f(t)
+	}
+	return c.typ
+}
+
+type typeHandler struct {
+	name string
+	f    func(t types.Type) types.Type
 }
 
 var (
-	childType       = func(t types.Type) types.Type { return t.Child() }
-	arrayBlockType  = func(t types.Type) types.Type { return types.Array(types.Map(types.Int, types.Block)) }
-	boolType        = func(t types.Type) types.Type { return types.Bool }
-	intType         = func(t types.Type) types.Type { return types.Int }
-	stringType      = func(t types.Type) types.Type { return types.String }
-	stringArrayType = func(t types.Type) types.Type { return types.Array(types.String) }
-	dictType        = func(t types.Type) types.Type { return types.Dict }
-	blockType       = func(t types.Type) types.Type { return types.Block }
-	dictArrayType   = func(t types.Type) types.Type { return types.Array(types.Dict) }
-	sameType        = func(t types.Type) types.Type { return t }
+	arrayBlockType  = types.Array(types.Map(types.Int, types.Block))
+	boolType        = types.Bool
+	intType         = types.Int
+	stringType      = types.String
+	stringArrayType = types.Array(types.String)
+	dictType        = types.Dict
+	blockType       = types.Block
+	dictArrayType   = types.Array(types.Dict)
+	// conditional types:
+	childType = typeHandler{
+		name: "ChildType",
+		f:    func(t types.Type) types.Type { return t.Child() },
+	}
+	sameType = typeHandler{
+		name: "SameType",
+		f:    func(t types.Type) types.Type { return t },
+	}
 )
 
 var builtinFunctions map[types.Type]map[string]compileHandler
@@ -42,16 +63,46 @@ func init() {
 			"inRange": {typ: boolType, compile: compileNumberInRange},
 		},
 		types.String: {
-			"contains":  {compile: compileStringContains, typ: boolType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
-			"in":        {typ: boolType, compile: compileStringIn},
-			"find":      {typ: stringArrayType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Regex}}},
-			"length":    {typ: intType, signature: FunctionSignature{}},
-			"camelcase": {typ: stringType, signature: FunctionSignature{}},
-			"downcase":  {typ: stringType, signature: FunctionSignature{}},
-			"upcase":    {typ: stringType, signature: FunctionSignature{}},
-			"lines":     {typ: stringArrayType, signature: FunctionSignature{}},
-			"split":     {typ: stringArrayType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
-			"trim":      {typ: stringType, signature: FunctionSignature{Required: 0, Args: []types.Type{types.String}}},
+			"contains": {
+				typ: boolType, compile: compileStringContains, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}},
+				desc: "Checks if this string contains another string",
+			},
+			"in": {
+				typ: boolType, compile: compileStringIn,
+				desc: "Checks if this string is contained in an array of strings",
+			},
+			"find": {
+				typ: stringArrayType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Regex}},
+				desc: "Find a regular expression in a string and return all matches as an array",
+			},
+			"length": {
+				typ: intType, signature: FunctionSignature{},
+				desc: "Get the length of this string in bytes",
+			},
+			"camelcase": {
+				typ: stringType, signature: FunctionSignature{},
+				desc: "Turns the string into a camelCaseString",
+			},
+			"downcase": {
+				typ: stringType, signature: FunctionSignature{},
+				desc: "Turns all characters in this string into lowercase",
+			},
+			"upcase": {
+				typ: stringType, signature: FunctionSignature{},
+				desc: "Turns all characters in this string into uppercase",
+			},
+			"lines": {
+				typ: stringArrayType, signature: FunctionSignature{},
+				desc: "Split the string into lines and return them in an array",
+			},
+			"split": {
+				typ: stringArrayType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}},
+				desc: "Split a string into an array of substrings separated by the given character",
+			},
+			"trim": {
+				typ: stringType, signature: FunctionSignature{Required: 0, Args: []types.Type{types.String}},
+				desc: "Remove all surrounding whitespaces (including newlines and tabs)",
+			},
 		},
 		types.Time: {
 			"seconds": {typ: intType, signature: FunctionSignature{}},
@@ -76,22 +127,37 @@ func init() {
 			"split":     {typ: stringArrayType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
 			"trim":      {typ: stringType, signature: FunctionSignature{Required: 0, Args: []types.Type{types.String}}},
 			// array- or map-ish
-			"first":        {typ: dictType, signature: FunctionSignature{}},
-			"last":         {typ: dictType, signature: FunctionSignature{}},
-			"where":        {compile: compileDictWhere, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
-			"sample":       {typ: sameType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Int}}},
-			"recurse":      {compile: compileDictRecurse, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
-			"contains":     {compile: compileDictContains, typ: boolType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"first":   {typ: dictType, signature: FunctionSignature{}},
+			"last":    {typ: dictType, signature: FunctionSignature{}},
+			"where":   {compile: compileDictWhere, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"sample":  {typHandler: &sameType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Int}}},
+			"recurse": {compile: compileDictRecurse, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"contains": {
+				compile: compileDictContains, typ: boolType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}},
+				desc: "When dealing with strings, check if it contains another string. When dealing with maps or arrays, check if any entry matches the given condition.",
+			},
 			"in":           {typ: boolType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Array(types.String)}}},
 			"containsOnly": {compile: compileDictContainsOnly, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"containsAll":  {compile: compileDictContainsAll, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"containsNone": {compile: compileDictContainsNone, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
-			"all":          {compile: compileDictAll, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
-			"any":          {compile: compileDictAny, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
-			"one":          {compile: compileDictOne, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
-			"none":         {compile: compileDictNone, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
-			"map":          {compile: compileArrayMap, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
-			"flat":         {compile: compileDictFlat, signature: FunctionSignature{}},
+			"all": {
+				compile: compileDictAll, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}},
+				desc: "Check if all entries in this array or map satisfy a given condition",
+			},
+			"any": {
+				compile: compileDictAny, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}},
+				desc: "Check if any entry in this array or map satisfies a given condition",
+			},
+			"one": {
+				compile: compileDictOne, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}},
+				desc: "Check if exactly one entry in this array or map satisfies a given condition",
+			},
+			"none": {
+				compile: compileDictNone, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}},
+				desc: "Check if no entry in this array or map satisfies a given condition",
+			},
+			"map":  {compile: compileArrayMap, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"flat": {compile: compileDictFlat, signature: FunctionSignature{}},
 			// map-ish
 			"keys":   {typ: stringArrayType, signature: FunctionSignature{}},
 			"values": {typ: dictArrayType, signature: FunctionSignature{}},
@@ -112,13 +178,13 @@ func init() {
 			"version":       {typ: stringType, signature: FunctionSignature{}},
 		},
 		types.ArrayLike: {
-			"[]":           {typ: childType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Int}}},
-			"first":        {typ: childType, signature: FunctionSignature{}},
-			"last":         {typ: childType, signature: FunctionSignature{}},
+			"[]":           {typHandler: &childType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Int}}},
+			"first":        {typHandler: &childType, signature: FunctionSignature{}},
+			"last":         {typHandler: &childType, signature: FunctionSignature{}},
 			"{}":           {typ: arrayBlockType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"length":       {typ: intType, signature: FunctionSignature{}},
 			"where":        {compile: compileArrayWhere, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
-			"sample":       {typ: sameType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Int}}},
+			"sample":       {typHandler: &sameType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Int}}},
 			"duplicates":   {compile: compileArrayDuplicates, signature: FunctionSignature{Required: 0, Args: []types.Type{types.String}}},
 			"unique":       {compile: compileArrayUnique, signature: FunctionSignature{Required: 0}},
 			"in":           {typ: boolType, compile: compileStringIn, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Array(types.String)}}},
@@ -134,13 +200,13 @@ func init() {
 			"flat":         {compile: compileArrayFlat, signature: FunctionSignature{}},
 		},
 		types.MapLike: {
-			"[]":       {typ: childType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
+			"[]":       {typHandler: &childType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
 			"{}":       {typ: blockType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"length":   {typ: intType, signature: FunctionSignature{}},
 			"keys":     {typ: stringArrayType, signature: FunctionSignature{}},
 			"values":   {compile: compileMapValues, signature: FunctionSignature{}},
 			"where":    {compile: compileMapWhere, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
-			"sample":   {typ: sameType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Int}}},
+			"sample":   {typHandler: &sameType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Int}}},
 			"contains": {compile: compileMapContains, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"all":      {compile: compileMapAll, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"one":      {compile: compileMapOne, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
@@ -343,4 +409,40 @@ func availableFields(c *compiler, typ types.Type) map[string]llx.Documentation {
 	}
 
 	return res
+}
+
+// We could have just as well used the `resources.Schema` here.
+// However, semantically t
+type BuiltinSchema struct {
+	Types map[string]*resources.ResourceInfo
+}
+
+func BuiltinDocs() *BuiltinSchema {
+	var res BuiltinSchema
+	res.Types = make(map[string]*resources.ResourceInfo, len(builtinFunctions))
+	for typ, fields := range builtinFunctions {
+		label := typ.Label()
+		resource := &resources.ResourceInfo{
+			Id:     label,
+			Fields: make(map[string]*resources.Field, len(fields)),
+		}
+		res.Types[label] = resource
+
+		for field, v := range fields {
+			res := &resources.Field{
+				Name: field,
+				Desc: v.desc,
+			}
+
+			if v.typHandler != nil {
+				res.Type = v.typHandler.name
+			} else {
+				res.Type = string(v.typ)
+			}
+
+			resource.Fields[field] = res
+		}
+	}
+
+	return &res
 }

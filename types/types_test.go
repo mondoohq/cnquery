@@ -33,7 +33,7 @@ func TestTypes(t *testing.T) {
 		{T: Array(String), ExpectedLabel: "[]string"},
 		{T: Map(String, String), ExpectedLabel: "map[string]string"},
 		{T: Resource("mockresource"), ExpectedLabel: "mockresource"},
-		{T: Function('f', []Type{String, Int}), ExpectedLabel: "function(..??..)"},
+		{T: Function('f', []Type{String, Int}), ExpectedLabel: "func()"},
 	}
 
 	for i := range list {

@@ -29,17 +29,18 @@ var (
 
 var tokenNames map[rune]string
 
+const LexerRegex = `(\s+)` +
+	`|(?P<Ident>[a-zA-Z$_][a-zA-Z0-9_]*)` +
+	`|(?P<Float>[-+]?\d*\.\d+([eE][-+]?\d+)?)` +
+	`|(?P<Int>[-+]?\d+([eE][-+]?\d+)?)` +
+	`|(?P<String>'[^']*'|"[^"]*")` +
+	`|(?P<Comment>(//|#)[^\n]*(\n|\z))` +
+	`|(?P<Regex>/([^\\/]+|\\.)+/[msi]*)` +
+	`|(?P<Op>[-+*/%,:.=<>!|&~;])` +
+	`|(?P<Call>[(){}\[\]])`
+
 func init() {
-	mqlLexer = lexer.Must(lexer.Regexp(`(\s+)` +
-		`|(?P<Ident>[a-zA-Z$_][a-zA-Z0-9_]*)` +
-		`|(?P<Float>[-+]?\d*\.\d+([eE][-+]?\d+)?)` +
-		`|(?P<Int>[-+]?\d+([eE][-+]?\d+)?)` +
-		`|(?P<String>'[^']*'|"[^"]*")` +
-		`|(?P<Comment>(//|#)[^\n]*(\n|\z))` +
-		`|(?P<Regex>/([^\\/]+|\\.)+/[msi]*)` +
-		`|(?P<Op>[-+*/%,:.=<>!|&~;])` +
-		`|(?P<Call>[(){}\[\]])`,
-	))
+	mqlLexer = lexer.Must(lexer.Regexp(LexerRegex))
 
 	syms := mqlLexer.Symbols()
 

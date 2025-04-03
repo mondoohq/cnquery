@@ -839,7 +839,7 @@ func (c *compiler) compileBuiltinFunction(h *compileHandler, id string, binding 
 		return types.Nil, err
 	}
 
-	resType := h.typ(binding.typ)
+	resType := h.returnType(binding.typ)
 	c.addChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   id,
