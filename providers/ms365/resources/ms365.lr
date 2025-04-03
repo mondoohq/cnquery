@@ -263,6 +263,25 @@ private microsoft.group @defaults("id displayName") {
   membershipRuleProcessingState string
 }
 
+// List of Microsoft Entra devices
+microsoft.devices {
+  []microsoft.device
+
+  init(filter? string, search? string)
+  // Filter devices by property values
+  filter string
+  // Search devices by search phrases
+  search string
+}
+
+// Microsoft device
+private microsoft.device @defaults("id displayName") {
+  // Device ID
+  id string
+  // Device display name
+  displayName string
+}
+
 // Microsoft domain
 private microsoft.domain @defaults("id") {
   // Domain ID

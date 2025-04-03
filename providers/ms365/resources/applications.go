@@ -387,7 +387,7 @@ func (a *mqlMicrosoftApplication) owners() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		mqlMicrsoftResource.index(newUserResource.(*mqlMicrosoftUser))
+		mqlMicrsoftResource.indexUser(newUserResource.(*mqlMicrosoftUser))
 		res = append(res, newUserResource)
 	}
 	return res, nil
