@@ -1735,6 +1735,7 @@ network {
   interfaces() []networkInterface
 }
 
+// Detailed information of a network interface
 private networkInterface @defaults("name mac active") {
   // Name of the network interface
   name string
