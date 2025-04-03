@@ -351,6 +351,14 @@ resources:
       input: {}
       output: {}
     min_mondoo_version: 5.15.0
+  ipAddress:
+    fields:
+      broadcast: {}
+      cidr: {}
+      gateway: {}
+      ip: {}
+      subnet: {}
+    min_mondoo_version: 11.45.0
   iptables:
     fields:
       input: {}
@@ -371,14 +379,6 @@ resources:
       source: {}
       target: {}
     min_mondoo_version: 5.15.0
-  ipv4Address:
-    fields:
-      broadcast: {}
-      cidr: {}
-      gateway: {}
-      ip: {}
-      subnet: {}
-    min_mondoo_version: 11.45.0
   kernel:
     fields:
       info: {}
@@ -566,6 +566,27 @@ resources:
       options: {}
       path: {}
     min_mondoo_version: 5.15.0
+  network:
+    fields:
+      interfaces: {}
+    min_mondoo_version: 9.0.0
+  networkInterface:
+    fields:
+      active: {}
+      driver: {}
+      firmware: {}
+      flags: {}
+      ips: {}
+      mac: {}
+      manufacturer: {}
+      model: {}
+      mtu: {}
+      name: {}
+      status: {}
+      vendor: {}
+      virtual: {}
+    is_private: true
+    min_mondoo_version: 11.45.0
   npm.package:
     fields:
       cpes: {}

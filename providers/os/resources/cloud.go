@@ -72,7 +72,7 @@ func (i *mqlCloudInstance) privateIpv4() (value []interface{}, err error) {
 	if i.instanceMd != nil {
 		var resource plugin.Resource
 		for _, ipaddress := range i.instanceMd.PrivateIpv4 {
-			resource, err = NewResource(i.MqlRuntime, "ipv4Address", map[string]*llx.RawData{
+			resource, err = NewResource(i.MqlRuntime, "ipAddress", map[string]*llx.RawData{
 				"__id":      llx.StringData(ipaddress.IP),
 				"ip":        llx.IPData(llx.ParseIP(ipaddress.IP)),
 				"subnet":    llx.IPData(llx.ParseIP(ipaddress.Subnet)),
@@ -93,7 +93,7 @@ func (i *mqlCloudInstance) publicIpv4() (value []interface{}, err error) {
 	if i.instanceMd != nil {
 		var resource plugin.Resource
 		for _, ipaddress := range i.instanceMd.PublicIpv4 {
-			resource, err = NewResource(i.MqlRuntime, "ipv4Address", map[string]*llx.RawData{
+			resource, err = NewResource(i.MqlRuntime, "ipAddress", map[string]*llx.RawData{
 				"__id":      llx.StringData(ipaddress.IP),
 				"ip":        llx.IPData(llx.ParseIP(ipaddress.IP)),
 				"subnet":    llx.IPData(llx.ParseIP(ipaddress.Subnet)),
