@@ -52,21 +52,31 @@ func attemptKubeloginAuthFlow(asset *inventory.Asset, config *rest.Config) error
 		return errors.Wrap(err, "failed to get chained token credential for Azure AKS authentication")
 	}
 
-	scope := serverAppId + defaultScope
-	token, err := chainedToken.GetToken(context.Background(), policy.TokenRequestOptions{
-		Scopes: []string{scope},
-	})
+	rawToken, err := GetKubeloginBearerToken(chainedToken)
 	if err != nil {
 		return errors.Wrap(err, "failed to get access token for Azure AKS authentication")
 	}
 
-	log.Debug().Msg("got access token")
-
-	config.BearerToken = token.Token
+	config.BearerToken = rawToken
 
 	// clear the exec provider since the code above bypasses the need to run the command
 	// `kubelogin get-token --server-id {serverAppId}` since that would require the kubelogin CLI tool to be present
 	config.ExecProvider = nil
 
 	return nil
+}
+
+// attempt to get a bearer token using the kubelogin flow and attach it to the rest config
+func GetKubeloginBearerToken(token azcore.TokenCredential) (string, error) {
+	log.Debug().Msg("aks kubelogin> attempting to get a bearer token using the kubelogin flow")
+	scope := serverAppId + defaultScope
+	rawToken, err := token.GetToken(context.Background(), policy.TokenRequestOptions{
+		Scopes: []string{scope},
+	})
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get access token for Azure AKS authentication")
+	}
+
+	log.Debug().Msg("aks kubelogin> got access token")
+	return rawToken.Token, nil
 }
