@@ -1802,7 +1802,7 @@ private azure.subscription.cloudDefenderService.settings @defaults("name kind") 
   kind string
   // The settings type
   type string
-  // Wether it is enabled or not
+  // The properties dict (enabled)
   properties dict
 }
 
