@@ -1754,3 +1754,37 @@ private networkInterface @defaults("name mac active") {
   // Whether a network interface is virtual of not
   virtual bool
 }
+
+// Experimental: USB resource
+usb {
+  // List of USB devices
+  devices() []usb.device
+}
+
+// Experimental: USB device
+private usb.device @defaults("manufacturer name") {
+  // USB device vendor id
+  vendorId string
+  // USB manufacturer
+  manufacturer string
+  // USB device product id
+  productId string
+  // USB device serial number
+  serial string
+  // USB device name
+  name string
+  // USB device version
+  version string
+  // USB speed
+  speed string
+  // USB device class
+  class string
+  // USB device class name
+  className string
+  // USB device subclass
+  subclass string
+  // Protocol
+  protocol string
+  // Removable device
+  isRemovable bool
+}
