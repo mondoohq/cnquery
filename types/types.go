@@ -118,6 +118,32 @@ const (
 	Range = Type(rune(byteRange))
 )
 
+// All returns a list of all types available
+func All() []Type {
+	return []Type{
+		Unset,
+		Any,
+		Nil,
+		Ref,
+		Bool,
+		Int,
+		Float,
+		String,
+		Regex,
+		Time,
+		Dict,
+		Score,
+		Block,
+		Empty,
+		Version,
+		IP,
+		ArrayLike,
+		MapLike,
+		ResourceLike,
+		FunctionLike,
+	}
+}
+
 // NotSet returns true if the type has no information
 func (typ Type) NotSet() bool {
 	return typ == ""
@@ -271,10 +297,25 @@ var labelfun map[byte]func(Type) string
 
 func init() {
 	labelfun = map[byte]func(Type) string{
-		byteArray:    func(s Type) string { return "[]" + s.Label() },
-		byteMap:      func(s Type) string { return "map[" + Type(s[0]).Label() + "]" + s[1:].Label() },
-		byteResource: func(s Type) string { return string(s) },
-		byteFunction: func(f Type) string { return "function(..??..)" },
+		byteArray: func(s Type) string {
+			if s == "" {
+				return "[]"
+			}
+			return "[]" + s.Label()
+		},
+		byteMap: func(s Type) string {
+			if s == "" {
+				return "map"
+			}
+			return "map[" + Type(s[0]).Label() + "]" + s[1:].Label()
+		},
+		byteResource: func(s Type) string {
+			if s == "" {
+				return "resource"
+			}
+			return string(s)
+		},
+		byteFunction: func(f Type) string { return "func()" },
 	}
 }
 
