@@ -2666,6 +2666,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cloudDefenderService.settings.type": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSettings).GetType()).ToDataRes(types.String)
 	},
+	"azure.subscription.cloudDefenderService.settings.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSettings).GetProperties()).ToDataRes(types.Dict)
+	},
 	"azure.subscription.cloudDefenderService.securityContact.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityContact).GetId()).ToDataRes(types.String)
 	},
@@ -6208,6 +6211,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"azure.subscription.cloudDefenderService.settings.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCloudDefenderServiceSettings).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.settings.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSettings).Properties, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cloudDefenderService.securityContact.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15719,6 +15726,7 @@ type mqlAzureSubscriptionCloudDefenderServiceSettings struct {
 	Name plugin.TValue[string]
 	Kind plugin.TValue[string]
 	Type plugin.TValue[string]
+	Properties plugin.TValue[interface{}]
 }
 
 // createAzureSubscriptionCloudDefenderServiceSettings creates a new instance of this resource
@@ -15772,6 +15780,10 @@ func (c *mqlAzureSubscriptionCloudDefenderServiceSettings) GetKind() *plugin.TVa
 
 func (c *mqlAzureSubscriptionCloudDefenderServiceSettings) GetType() *plugin.TValue[string] {
 	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSettings) GetProperties() *plugin.TValue[interface{}] {
+	return &c.Properties
 }
 
 // mqlAzureSubscriptionCloudDefenderServiceSecurityContact for the azure.subscription.cloudDefenderService.securityContact resource
