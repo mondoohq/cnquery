@@ -280,6 +280,38 @@ private microsoft.device @defaults("id displayName") {
   id string
   // Device display name
   displayName string
+
+  deviceId string
+
+  deviceCategory string
+
+  enrollmentProfileName string
+
+  enrollmentType string
+
+  isCompliant bool
+
+  isManaged bool
+
+  manufacturer string
+
+  isRooted bool
+
+  mdmAppId string
+
+  model string
+
+  operatingSystem string
+
+  operatingSystemVersion string
+
+  physicalIds []string
+
+  registrationDateTime time
+
+  systemLabels []string
+
+  trustType string
 }
 
 // Microsoft domain

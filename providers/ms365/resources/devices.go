@@ -11,16 +11,21 @@ import (
 	abstractions "github.com/microsoft/kiota-abstractions-go"
 	betamodels "github.com/microsoftgraph/msgraph-beta-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/reports"
-	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/devices"
+	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
+	"go.mondoo.com/cnquery/v11/types"
 )
 
+// see https://learn.microsoft.com/en-us/graph/api/resources/device?view=graph-rest-1.0
 var deviceSelectFields = []string{
-	"id", "displayName",
+	"id", "displayName", "deviceId", "deviceCategory", "enrollmentProfileName", "enrollmentType",
+	"isCompliant", "isManaged", "manufacturer", "isRooted", "mdmAppId", "model", "operatingSystem",
+	"operatingSystemVersion", "physicalIds", "registrationDateTime", "systemLabels", "trustType",
 }
 
 func initMicrosoftDevices(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -219,9 +224,25 @@ func initMicrosoftDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 func newMqlMicrosoftDevice(runtime *plugin.Runtime, u models.Deviceable) (*mqlMicrosoftDevice, error) {
 	graphDevice, err := CreateResource(runtime, "microsoft.device",
 		map[string]*llx.RawData{
-			"__id":        llx.StringDataPtr(u.GetId()),
-			"id":          llx.StringDataPtr(u.GetId()),
-			"displayName": llx.StringDataPtr(u.GetDisplayName()),
+			"__id":                   llx.StringDataPtr(u.GetId()),
+			"id":                     llx.StringDataPtr(u.GetId()),
+			"displayName":            llx.StringDataPtr(u.GetDisplayName()),
+			"deviceId":               llx.StringDataPtr(u.GetDeviceId()),
+			"deviceCategory":         llx.StringDataPtr(u.GetDeviceCategory()),
+			"enrollmentProfileName":  llx.StringDataPtr(u.GetEnrollmentProfileName()),
+			"enrollmentType":         llx.StringDataPtr(u.GetEnrollmentType()),
+			"isCompliant":            llx.BoolDataPtr(u.GetIsCompliant()),
+			"isManaged":              llx.BoolDataPtr(u.GetIsManaged()),
+			"manufacturer":           llx.StringDataPtr(u.GetManufacturer()),
+			"isRooted":               llx.BoolDataPtr(u.GetIsRooted()),
+			"mdmAppId":               llx.StringDataPtr(u.GetMdmAppId()),
+			"model":                  llx.StringDataPtr(u.GetModel()),
+			"operatingSystem":        llx.StringDataPtr(u.GetOperatingSystem()),
+			"operatingSystemVersion": llx.StringDataPtr(u.GetOperatingSystemVersion()),
+			"physicalIds":            llx.ArrayData(convert.SliceAnyToInterface(u.GetPhysicalIds()), types.String),
+			"registrationDateTime":   llx.TimeDataPtr(u.GetRegistrationDateTime()),
+			"systemLabels":           llx.ArrayData(convert.SliceAnyToInterface(u.GetSystemLabels()), types.String),
+			"trustType":              llx.StringDataPtr(u.GetTrustType()),
 		})
 	if err != nil {
 		return nil, err

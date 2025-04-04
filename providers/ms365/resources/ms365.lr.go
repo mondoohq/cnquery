@@ -590,6 +590,54 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.device.displayName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevice).GetDisplayName()).ToDataRes(types.String)
 	},
+	"microsoft.device.deviceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetDeviceId()).ToDataRes(types.String)
+	},
+	"microsoft.device.deviceCategory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetDeviceCategory()).ToDataRes(types.String)
+	},
+	"microsoft.device.enrollmentProfileName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetEnrollmentProfileName()).ToDataRes(types.String)
+	},
+	"microsoft.device.enrollmentType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetEnrollmentType()).ToDataRes(types.String)
+	},
+	"microsoft.device.isCompliant": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetIsCompliant()).ToDataRes(types.Bool)
+	},
+	"microsoft.device.isManaged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetIsManaged()).ToDataRes(types.Bool)
+	},
+	"microsoft.device.manufacturer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetManufacturer()).ToDataRes(types.String)
+	},
+	"microsoft.device.isRooted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetIsRooted()).ToDataRes(types.Bool)
+	},
+	"microsoft.device.mdmAppId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetMdmAppId()).ToDataRes(types.String)
+	},
+	"microsoft.device.model": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetModel()).ToDataRes(types.String)
+	},
+	"microsoft.device.operatingSystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetOperatingSystem()).ToDataRes(types.String)
+	},
+	"microsoft.device.operatingSystemVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetOperatingSystemVersion()).ToDataRes(types.String)
+	},
+	"microsoft.device.physicalIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetPhysicalIds()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.device.registrationDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetRegistrationDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.device.systemLabels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetSystemLabels()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.device.trustType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetTrustType()).ToDataRes(types.String)
+	},
 	"microsoft.domain.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDomain).GetId()).ToDataRes(types.String)
 	},
@@ -1801,6 +1849,70 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.device.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDevice).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.deviceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).DeviceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.deviceCategory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).DeviceCategory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.enrollmentProfileName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).EnrollmentProfileName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.enrollmentType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).EnrollmentType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.isCompliant": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).IsCompliant, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.isManaged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).IsManaged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.manufacturer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).Manufacturer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.isRooted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).IsRooted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.mdmAppId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).MdmAppId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.model": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).Model, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.operatingSystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).OperatingSystem, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.operatingSystemVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).OperatingSystemVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.physicalIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).PhysicalIds, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.registrationDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).RegistrationDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.systemLabels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).SystemLabels, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.trustType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).TrustType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.domain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4326,6 +4438,22 @@ type mqlMicrosoftDevice struct {
 	// optional: if you define mqlMicrosoftDeviceInternal it will be used here
 	Id plugin.TValue[string]
 	DisplayName plugin.TValue[string]
+	DeviceId plugin.TValue[string]
+	DeviceCategory plugin.TValue[string]
+	EnrollmentProfileName plugin.TValue[string]
+	EnrollmentType plugin.TValue[string]
+	IsCompliant plugin.TValue[bool]
+	IsManaged plugin.TValue[bool]
+	Manufacturer plugin.TValue[string]
+	IsRooted plugin.TValue[bool]
+	MdmAppId plugin.TValue[string]
+	Model plugin.TValue[string]
+	OperatingSystem plugin.TValue[string]
+	OperatingSystemVersion plugin.TValue[string]
+	PhysicalIds plugin.TValue[[]interface{}]
+	RegistrationDateTime plugin.TValue[*time.Time]
+	SystemLabels plugin.TValue[[]interface{}]
+	TrustType plugin.TValue[string]
 }
 
 // createMicrosoftDevice creates a new instance of this resource
@@ -4366,6 +4494,70 @@ func (c *mqlMicrosoftDevice) GetId() *plugin.TValue[string] {
 
 func (c *mqlMicrosoftDevice) GetDisplayName() *plugin.TValue[string] {
 	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftDevice) GetDeviceId() *plugin.TValue[string] {
+	return &c.DeviceId
+}
+
+func (c *mqlMicrosoftDevice) GetDeviceCategory() *plugin.TValue[string] {
+	return &c.DeviceCategory
+}
+
+func (c *mqlMicrosoftDevice) GetEnrollmentProfileName() *plugin.TValue[string] {
+	return &c.EnrollmentProfileName
+}
+
+func (c *mqlMicrosoftDevice) GetEnrollmentType() *plugin.TValue[string] {
+	return &c.EnrollmentType
+}
+
+func (c *mqlMicrosoftDevice) GetIsCompliant() *plugin.TValue[bool] {
+	return &c.IsCompliant
+}
+
+func (c *mqlMicrosoftDevice) GetIsManaged() *plugin.TValue[bool] {
+	return &c.IsManaged
+}
+
+func (c *mqlMicrosoftDevice) GetManufacturer() *plugin.TValue[string] {
+	return &c.Manufacturer
+}
+
+func (c *mqlMicrosoftDevice) GetIsRooted() *plugin.TValue[bool] {
+	return &c.IsRooted
+}
+
+func (c *mqlMicrosoftDevice) GetMdmAppId() *plugin.TValue[string] {
+	return &c.MdmAppId
+}
+
+func (c *mqlMicrosoftDevice) GetModel() *plugin.TValue[string] {
+	return &c.Model
+}
+
+func (c *mqlMicrosoftDevice) GetOperatingSystem() *plugin.TValue[string] {
+	return &c.OperatingSystem
+}
+
+func (c *mqlMicrosoftDevice) GetOperatingSystemVersion() *plugin.TValue[string] {
+	return &c.OperatingSystemVersion
+}
+
+func (c *mqlMicrosoftDevice) GetPhysicalIds() *plugin.TValue[[]interface{}] {
+	return &c.PhysicalIds
+}
+
+func (c *mqlMicrosoftDevice) GetRegistrationDateTime() *plugin.TValue[*time.Time] {
+	return &c.RegistrationDateTime
+}
+
+func (c *mqlMicrosoftDevice) GetSystemLabels() *plugin.TValue[[]interface{}] {
+	return &c.SystemLabels
+}
+
+func (c *mqlMicrosoftDevice) GetTrustType() *plugin.TValue[string] {
+	return &c.TrustType
 }
 
 // mqlMicrosoftDomain for the microsoft.domain resource

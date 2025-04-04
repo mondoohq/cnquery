@@ -101,6 +101,28 @@ resources:
       countryLocations: {}
       ipLocations: {}
     min_mondoo_version: 9.0.0
+  microsoft.device:
+    fields:
+      deviceCategory: {}
+      deviceId: {}
+      displayName: {}
+      enrollmentProfileName: {}
+      enrollmentType: {}
+      id: {}
+      isCompliant: {}
+      isManaged: {}
+      isRooted: {}
+      manufacturer: {}
+      mdmAppId: {}
+      model: {}
+      operatingSystem: {}
+      operatingSystemVersion: {}
+      physicalIds: {}
+      registrationDateTime: {}
+      systemLabels: {}
+      trustType: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   microsoft.devicemanagement:
     fields:
       deviceCompliancePolicies: {}
@@ -128,6 +150,12 @@ resources:
       properties: {}
       version: {}
     is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.devices:
+    fields:
+      filter: {}
+      list: {}
+      search: {}
     min_mondoo_version: 9.0.0
   microsoft.domain:
     fields:
