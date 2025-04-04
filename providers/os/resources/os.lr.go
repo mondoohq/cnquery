@@ -510,6 +510,14 @@ func init() {
 			// to override args, implement: initNetworkInterface(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createNetworkInterface,
 		},
+		"usb": {
+			// to override args, implement: initUsb(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createUsb,
+		},
+		"usb.device": {
+			// to override args, implement: initUsbDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createUsbDevice,
+		},
 	}
 }
 
@@ -2422,6 +2430,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"networkInterface.virtual": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetworkInterface).GetVirtual()).ToDataRes(types.Bool)
+	},
+	"usb.devices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUsb).GetDevices()).ToDataRes(types.Array(types.Resource("usb.device")))
+	},
+	"usb.device.vendorId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUsbDevice).GetVendorId()).ToDataRes(types.String)
+	},
+	"usb.device.manufacturer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUsbDevice).GetManufacturer()).ToDataRes(types.String)
+	},
+	"usb.device.productId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUsbDevice).GetProductId()).ToDataRes(types.String)
+	},
+	"usb.device.serial": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUsbDevice).GetSerial()).ToDataRes(types.String)
+	},
+	"usb.device.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUsbDevice).GetName()).ToDataRes(types.String)
+	},
+	"usb.device.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUsbDevice).GetVersion()).ToDataRes(types.String)
+	},
+	"usb.device.speed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUsbDevice).GetSpeed()).ToDataRes(types.String)
+	},
+	"usb.device.class": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUsbDevice).GetClass()).ToDataRes(types.String)
+	},
+	"usb.device.className": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUsbDevice).GetClassName()).ToDataRes(types.String)
+	},
+	"usb.device.subclass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUsbDevice).GetSubclass()).ToDataRes(types.String)
+	},
+	"usb.device.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUsbDevice).GetProtocol()).ToDataRes(types.String)
+	},
+	"usb.device.isRemovable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUsbDevice).GetIsRemovable()).ToDataRes(types.Bool)
 	},
 }
 
@@ -5385,6 +5432,66 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"networkInterface.virtual": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNetworkInterface).Virtual, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"usb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlUsb).__id, ok = v.Value.(string)
+			return
+		},
+	"usb.devices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUsb).Devices, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"usb.device.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlUsbDevice).__id, ok = v.Value.(string)
+			return
+		},
+	"usb.device.vendorId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUsbDevice).VendorId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"usb.device.manufacturer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUsbDevice).Manufacturer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"usb.device.productId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUsbDevice).ProductId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"usb.device.serial": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUsbDevice).Serial, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"usb.device.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUsbDevice).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"usb.device.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUsbDevice).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"usb.device.speed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUsbDevice).Speed, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"usb.device.class": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUsbDevice).Class, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"usb.device.className": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUsbDevice).ClassName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"usb.device.subclass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUsbDevice).Subclass, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"usb.device.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUsbDevice).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"usb.device.isRemovable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUsbDevice).IsRemovable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 }
@@ -15330,4 +15437,159 @@ func (c *mqlNetworkInterface) GetActive() *plugin.TValue[bool] {
 
 func (c *mqlNetworkInterface) GetVirtual() *plugin.TValue[bool] {
 	return &c.Virtual
+}
+
+// mqlUsb for the usb resource
+type mqlUsb struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlUsbInternal it will be used here
+	Devices plugin.TValue[[]interface{}]
+}
+
+// createUsb creates a new instance of this resource
+func createUsb(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlUsb{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("usb", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlUsb) MqlName() string {
+	return "usb"
+}
+
+func (c *mqlUsb) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlUsb) GetDevices() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Devices, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("usb", c.__id, "devices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.devices()
+	})
+}
+
+// mqlUsbDevice for the usb.device resource
+type mqlUsbDevice struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlUsbDeviceInternal it will be used here
+	VendorId plugin.TValue[string]
+	Manufacturer plugin.TValue[string]
+	ProductId plugin.TValue[string]
+	Serial plugin.TValue[string]
+	Name plugin.TValue[string]
+	Version plugin.TValue[string]
+	Speed plugin.TValue[string]
+	Class plugin.TValue[string]
+	ClassName plugin.TValue[string]
+	Subclass plugin.TValue[string]
+	Protocol plugin.TValue[string]
+	IsRemovable plugin.TValue[bool]
+}
+
+// createUsbDevice creates a new instance of this resource
+func createUsbDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlUsbDevice{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("usb.device", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlUsbDevice) MqlName() string {
+	return "usb.device"
+}
+
+func (c *mqlUsbDevice) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlUsbDevice) GetVendorId() *plugin.TValue[string] {
+	return &c.VendorId
+}
+
+func (c *mqlUsbDevice) GetManufacturer() *plugin.TValue[string] {
+	return &c.Manufacturer
+}
+
+func (c *mqlUsbDevice) GetProductId() *plugin.TValue[string] {
+	return &c.ProductId
+}
+
+func (c *mqlUsbDevice) GetSerial() *plugin.TValue[string] {
+	return &c.Serial
+}
+
+func (c *mqlUsbDevice) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlUsbDevice) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlUsbDevice) GetSpeed() *plugin.TValue[string] {
+	return &c.Speed
+}
+
+func (c *mqlUsbDevice) GetClass() *plugin.TValue[string] {
+	return &c.Class
+}
+
+func (c *mqlUsbDevice) GetClassName() *plugin.TValue[string] {
+	return &c.ClassName
+}
+
+func (c *mqlUsbDevice) GetSubclass() *plugin.TValue[string] {
+	return &c.Subclass
+}
+
+func (c *mqlUsbDevice) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlUsbDevice) GetIsRemovable() *plugin.TValue[bool] {
+	return &c.IsRemovable
 }

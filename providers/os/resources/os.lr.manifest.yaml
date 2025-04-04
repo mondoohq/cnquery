@@ -997,6 +997,29 @@ resources:
       params: {}
     is_private: true
     min_mondoo_version: latest
+  usb:
+    fields:
+      devices: {}
+    min_mondoo_version: 9.0.0
+  usb.device:
+    fields:
+      class: {}
+      className: {}
+      isRemovable: {}
+      manufacturer: {}
+      name: {}
+      product: {}
+      productId: {}
+      protocol: {}
+      removable: {}
+      serial: {}
+      speed: {}
+      subclass: {}
+      vendor: {}
+      vendorId: {}
+      version: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   user:
     fields:
       authorizedkeys: {}
