@@ -1802,6 +1802,8 @@ private azure.subscription.cloudDefenderService.settings @defaults("name kind") 
   kind string
   // The settings type
   type string
+  // Wether it is enabled or not
+  properties dict
 }
 
 // Microsoft Defender for Cloud security contact
