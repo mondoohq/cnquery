@@ -47,11 +47,11 @@ func mapDetectors(raw []string) map[string]struct{} {
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn shared.Connection) error {
-	var ok bool
-	asset.Platform, ok = detector.DetectOS(conn)
+	pf, ok := detector.DetectOS(conn)
 	if !ok {
 		return errors.New("failed to detect OS")
 	}
+	asset.SetPlatform(pf)
 	if asset.Platform.Kind == "" {
 		asset.Platform.Kind = inventory.AssetKindBaremetal
 	}

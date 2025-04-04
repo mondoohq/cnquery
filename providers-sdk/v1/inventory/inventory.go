@@ -7,8 +7,10 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"slices"
 	"strings"
 
+	"dario.cat/mergo"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/segmentio/ksuid"
@@ -318,13 +320,20 @@ var (
 	FAMILY_WINDOWS = "windows"
 )
 
-func (p *Platform) IsFamily(family string) bool {
-	for i := range p.Family {
-		if p.Family[i] == family {
-			return true
+// Merge performs a deep merge of the provided platform.
+func (p *Platform) Merge(pf *Platform) {
+	if pf != nil {
+		if err := mergo.Merge(p, pf, mergo.WithOverride); err != nil {
+			log.Error().Err(err).
+				Interface("target", p).
+				Interface("source", pf).
+				Msg("unable to merge platform details")
 		}
 	}
-	return false
+}
+
+func (p *Platform) IsFamily(family string) bool {
+	return slices.Contains(p.Family, family)
 }
 
 func (p *Platform) PrettyTitle() string {

@@ -178,3 +178,12 @@ func (a *Asset) AddMondooLabels(root *Asset) {
 		}
 	}
 }
+
+// SetPlatform is an accessor to correctly set the platform of the asset.
+func (a *Asset) SetPlatform(pf *Platform) {
+	if a.Platform == nil {
+		a.Platform = pf
+	} else {
+		a.Platform.Merge(pf)
+	}
+}
