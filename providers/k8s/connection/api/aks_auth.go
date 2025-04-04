@@ -4,16 +4,15 @@
 package api
 
 import (
-	"context"
 	"strconv"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/aksauth"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/azauth"
 	"go.mondoo.com/cnquery/v11/providers/k8s/connection/shared"
 	"k8s.io/client-go/rest"
@@ -52,7 +51,7 @@ func attemptKubeloginAuthFlow(asset *inventory.Asset, config *rest.Config) error
 		return errors.Wrap(err, "failed to get chained token credential for Azure AKS authentication")
 	}
 
-	rawToken, err := GetKubeloginBearerToken(chainedToken)
+	rawToken, err := aksauth.GetKubeloginBearerToken(chainedToken)
 	if err != nil {
 		return errors.Wrap(err, "failed to get access token for Azure AKS authentication")
 	}
@@ -64,19 +63,4 @@ func attemptKubeloginAuthFlow(asset *inventory.Asset, config *rest.Config) error
 	config.ExecProvider = nil
 
 	return nil
-}
-
-// attempt to get a bearer token using the kubelogin flow and attach it to the rest config
-func GetKubeloginBearerToken(token azcore.TokenCredential) (string, error) {
-	log.Debug().Msg("aks kubelogin> attempting to get a bearer token using the kubelogin flow")
-	scope := serverAppId + defaultScope
-	rawToken, err := token.GetToken(context.Background(), policy.TokenRequestOptions{
-		Scopes: []string{scope},
-	})
-	if err != nil {
-		return "", errors.Wrap(err, "failed to get access token for Azure AKS authentication")
-	}
-
-	log.Debug().Msg("aks kubelogin> got access token")
-	return rawToken.Token, nil
 }
