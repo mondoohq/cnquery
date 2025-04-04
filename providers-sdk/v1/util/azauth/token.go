@@ -19,6 +19,12 @@ import (
 
 type TokenResolverFn (func() (azcore.TokenCredential, error))
 
+func WithStaticToken(t azcore.TokenCredential) TokenResolverFn {
+	return func() (azcore.TokenCredential, error) {
+		return t, nil
+	}
+}
+
 func WithCliCredentials(opts *azidentity.AzureCLICredentialOptions) TokenResolverFn {
 	return func() (azcore.TokenCredential, error) {
 		return azidentity.NewAzureCLICredential(opts)
