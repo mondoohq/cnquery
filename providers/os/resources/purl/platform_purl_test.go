@@ -23,7 +23,7 @@ func TestNewPlatformPurl(t *testing.T) {
 				Name:    "ubuntu",
 				Version: "22.04",
 			},
-			want:    "pkg:platform/ubuntu/@22.04?distro=ubuntu-22.04",
+			want:    "pkg:platform/ubuntu@22.04?distro=ubuntu-22.04",
 			wantErr: "",
 		},
 		{
@@ -32,7 +32,7 @@ func TestNewPlatformPurl(t *testing.T) {
 				Name:    "windows",
 				Version: "19045",
 			},
-			want:    "pkg:platform/windows/@19045?distro=windows-19045",
+			want:    "pkg:platform/windows@19045?distro=windows-19045",
 			wantErr: "",
 		},
 		{
@@ -42,7 +42,7 @@ func TestNewPlatformPurl(t *testing.T) {
 				Version: "22.04",
 				Arch:    "amd64",
 			},
-			want:    "pkg:platform/ubuntu/@22.04?arch=amd64&distro=ubuntu-22.04",
+			want:    "pkg:platform/ubuntu@22.04?arch=amd64&distro=ubuntu-22.04",
 			wantErr: "",
 		},
 		{
@@ -52,7 +52,7 @@ func TestNewPlatformPurl(t *testing.T) {
 				Version: "22.04",
 				Arch:    "x86_64",
 			},
-			want:    "pkg:platform/ubuntu/@22.04?arch=x86_64&distro=ubuntu-22.04",
+			want:    "pkg:platform/ubuntu@22.04?arch=x86_64&distro=ubuntu-22.04",
 			wantErr: "",
 		},
 		{
@@ -62,17 +62,17 @@ func TestNewPlatformPurl(t *testing.T) {
 				Version: "22.04",
 				Arch:    "arm64",
 			},
-			want:    "pkg:platform/ubuntu/@22.04?arch=arm64&distro=ubuntu-22.04",
+			want:    "pkg:platform/ubuntu@22.04?arch=arm64&distro=ubuntu-22.04",
 			wantErr: "",
 		},
 		{
-			name: "macplatform with apple silicon",
+			name: "macOS with apple silicon",
 			platform: &inventory.Platform{
-				Name:    "macplatform",
+				Name:    "macos",
 				Version: "14.5.1",
 				Arch:    "arm64",
 			},
-			want:    "pkg:platform/macplatform/@14.5.1?arch=arm64&distro=macplatform-14.5.1",
+			want:    "pkg:platform/macos@14.5.1?arch=arm64&distro=macos-14.5.1",
 			wantErr: "",
 		},
 		{
@@ -82,7 +82,7 @@ func TestNewPlatformPurl(t *testing.T) {
 				Version: "19045",
 				Arch:    "x86",
 			},
-			want:    "pkg:platform/windows/@19045?arch=x86&distro=windows-19045",
+			want:    "pkg:platform/windows@19045?arch=x86&distro=windows-19045",
 			wantErr: "",
 		},
 		{
@@ -91,7 +91,7 @@ func TestNewPlatformPurl(t *testing.T) {
 				Name:    "vsphere",
 				Version: "7.0.3",
 			},
-			want:    "pkg:platform/vsphere/@7.0.3?distro=vsphere-7.0.3",
+			want:    "pkg:platform/vsphere@7.0.3?distro=vsphere-7.0.3",
 			wantErr: "",
 		},
 		{
@@ -101,7 +101,7 @@ func TestNewPlatformPurl(t *testing.T) {
 				Version: "7.0.3",
 				Arch:    "x86_64",
 			},
-			want:    "pkg:platform/esxi/@7.0.3?arch=x86_64&distro=esxi-7.0.3",
+			want:    "pkg:platform/esxi@7.0.3?arch=x86_64&distro=esxi-7.0.3",
 			wantErr: "",
 		},
 		{
@@ -110,7 +110,7 @@ func TestNewPlatformPurl(t *testing.T) {
 				Name:    "k8s-deployment",
 				Version: "1.27",
 			},
-			want:    "pkg:platform/k8s-deployment/@1.27?distro=k8s-deployment-1.27",
+			want:    "pkg:platform/k8s-deployment@1.27?distro=k8s-deployment-1.27",
 			wantErr: "",
 		},
 		{
@@ -118,7 +118,7 @@ func TestNewPlatformPurl(t *testing.T) {
 			platform: &inventory.Platform{
 				Name: "aws",
 			},
-			want:    "pkg:platform/aws/?distro=aws",
+			want:    "pkg:platform/aws?distro=aws",
 			wantErr: "",
 		},
 		{
@@ -126,7 +126,7 @@ func TestNewPlatformPurl(t *testing.T) {
 			platform: &inventory.Platform{
 				Name: "gcp",
 			},
-			want:    "pkg:platform/gcp/?distro=gcp",
+			want:    "pkg:platform/gcp?distro=gcp",
 			wantErr: "",
 		},
 		{
@@ -134,7 +134,7 @@ func TestNewPlatformPurl(t *testing.T) {
 			platform: &inventory.Platform{
 				Name: "azure",
 			},
-			want:    "pkg:platform/azure/?distro=azure",
+			want:    "pkg:platform/azure?distro=azure",
 			wantErr: "",
 		},
 		{
@@ -143,7 +143,7 @@ func TestNewPlatformPurl(t *testing.T) {
 				Name:  "centplatform",
 				Build: "8.5",
 			},
-			want:    "pkg:platform/centplatform/?distro=centplatform-8.5",
+			want:    "pkg:platform/centplatform?build=8.5&distro=centplatform-8.5",
 			wantErr: "",
 		},
 		{
@@ -159,7 +159,7 @@ func TestNewPlatformPurl(t *testing.T) {
 				Version: "12",
 				Title:   "Debian GNU/Linux 12 (bookworm)",
 			},
-			want:    "pkg:platform/debian/@12?distro=debian-12",
+			want:    "pkg:platform/debian@12?distro=debian-12",
 			wantErr: "",
 		},
 	}
