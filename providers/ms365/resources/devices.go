@@ -167,6 +167,7 @@ func initMicrosoftDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	rawDisplayName, okDisplayName := args["displayName"]
 
 	if !okId && !okDisplayName {
+		// required parameters are not set, we just pass-through the initialization arguments
 		return args, nil, nil
 	}
 

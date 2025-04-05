@@ -280,37 +280,37 @@ private microsoft.device @defaults("id displayName") {
   id string
   // Device display name
   displayName string
-
+  // Unique identifier set
   deviceId string
-
+  // User-defined property set by Intune
   deviceCategory string
-
+  // Enrollment profile applied to the device
   enrollmentProfileName string
-
+  // Enrollment type of the device
   enrollmentType string
-
+  // Whether the device complies with Mobile Device Management (MDM) policies
   isCompliant bool
-
+  // Whether the device is managed by a Mobile Device Management (MDM) app
   isManaged bool
-
+  // Manufacturer
   manufacturer string
-
+  // Whether the device is rooted or jail-broken
   isRooted bool
-
+  // Application identifier used to register device into MDM
   mdmAppId string
-
+  // Model of the device
   model string
-
+  // The type of operating system on the device
   operatingSystem string
-
+  // The version of the operating system on the device
   operatingSystemVersion string
-
+  // Physical IDs
   physicalIds []string
-
+  // Date and time of when the device was registered
   registrationDateTime time
-
+  // List of labels applied to the device by the system
   systemLabels []string
-
+  // Type of trust for the joined device
   trustType string
 }
 
