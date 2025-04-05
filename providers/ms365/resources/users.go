@@ -161,7 +161,7 @@ func (a *mqlMicrosoftUsers) list() ([]interface{}, error) {
 			return nil, err
 		}
 		// index users by id and principal name
-		microsoft.index(graphUser)
+		microsoft.indexUser(graphUser)
 		res = append(res, graphUser)
 	}
 

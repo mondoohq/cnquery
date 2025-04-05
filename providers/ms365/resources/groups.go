@@ -74,7 +74,7 @@ func (a *mqlMicrosoftGroup) members() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		mqlMicrosoftResource.index(newUserResource.(*mqlMicrosoftUser))
+		mqlMicrosoftResource.indexUser(newUserResource.(*mqlMicrosoftUser))
 		res = append(res, newUserResource)
 	}
 	return res, nil
