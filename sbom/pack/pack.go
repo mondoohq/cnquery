@@ -5,6 +5,7 @@ package pack
 
 import (
 	_ "embed"
+
 	"go.mondoo.com/cnquery/v11/explorer"
 )
 

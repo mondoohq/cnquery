@@ -16,6 +16,7 @@ type BomAsset struct {
 	Name     string            `json:"name,omitempty"`
 	Platform string            `json:"platform,omitempty"`
 	Version  string            `json:"version,omitempty"`
+	Build    string            `json:"build,omitempty"`
 	Family   []string          `json:"family,omitempty"`
 	Arch     string            `json:"arch,omitempty"`
 	CPEs     []string          `json:"cpes.map,omitempty"`
