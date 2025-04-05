@@ -209,7 +209,7 @@ func collectPythonPackages(runtime *plugin.Runtime, fs afero.Fs, path string) ([
 	fileList, err := afs.ReadDir(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			log.Warn().Err(err).Str("dir", path).Msg("unable to open directory")
+			log.Debug().Err(err).Str("dir", path).Msg("unable to open directory")
 			return []python.PackageDetails{}, nil
 		}
 		return nil, err
