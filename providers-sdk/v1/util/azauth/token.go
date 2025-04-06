@@ -66,7 +66,10 @@ func BuildChainedToken(opts ...TokenResolverFn) (*azidentity.ChainedTokenCredent
 	return azidentity.NewChainedTokenCredential(chain, nil)
 }
 
-func GetChainedToken(options *azidentity.DefaultAzureCredentialOptions) (*azidentity.ChainedTokenCredential, error) {
+func GetDefaultChainedToken(options *azidentity.DefaultAzureCredentialOptions) (*azidentity.ChainedTokenCredential, error) {
+	if options == nil {
+		options = &azidentity.DefaultAzureCredentialOptions{}
+	}
 	opts := []TokenResolverFn{
 		WithCliCredentials(&azidentity.AzureCLICredentialOptions{AdditionallyAllowedTenants: []string{"*"}}),
 		WithEnvCredentials(&azidentity.EnvironmentCredentialOptions{ClientOptions: options.ClientOptions}),
@@ -140,7 +143,7 @@ func GetTokenFromCredential(credential *vault.Credential, tenantId, clientId str
 	// fallback to default authorizer if no credentials are specified
 	if credential == nil {
 		log.Debug().Msg("using default azure token chain resolver")
-		azCred, err = GetChainedToken(&azidentity.DefaultAzureCredentialOptions{})
+		azCred, err = GetDefaultChainedToken(&azidentity.DefaultAzureCredentialOptions{})
 		if err != nil {
 			return nil, errors.Wrap(err, "error creating CLI credentials")
 		}
