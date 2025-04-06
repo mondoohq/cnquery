@@ -100,8 +100,8 @@ func TestMap(t *testing.T) {
 			Expectation: int64(1),
 		},
 		{
-			Code:        "parse.xml('/dummy.xml').params.root.length",
-			Expectation: int64(2),
+			Code:        "parse.xml('/dummy.xml').params.root.box.length",
+			Expectation: int64(3),
 		},
 		{
 			Code:        "parse.json('/dummy.json').params.length",
