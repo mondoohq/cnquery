@@ -43,9 +43,19 @@ func TestParseXML(t *testing.T) {
 			Expectation: map[string]any{"root": map[string]any{}},
 		},
 		{
-			Code:        "parse.xml(content: '<root>world</root>').params",
+			Code:        "parse.xml(content: '<root>\n\t\t\n</root>').params",
+			ResultIndex: 0,
+			Expectation: map[string]any{"root": map[string]any{}},
+		},
+		{
+			Code:        "parse.xml(content: '<root>\n\tworld\n</root>').params",
 			ResultIndex: 0,
 			Expectation: map[string]any{"root": "world"},
+		},
+		{
+			Code:        "parse.xml(content: '<root>\n\tworld\n\twide\n</root>').params",
+			ResultIndex: 0,
+			Expectation: map[string]any{"root": "world\n\twide"},
 		},
 		{
 			Code:        "parse.xml(content: '<root><box /></root>').params",
@@ -66,14 +76,14 @@ func TestParseXML(t *testing.T) {
 			}}},
 		},
 		{
-			Code:        "parse.xml(content: '<root><box><hello a=\"1\"/></box><box><world b=\"2\"><c>3</c>4</world></box><box>🌎</box></root>').params",
+			Code:        "parse.xml(content: '<root><box><hello a=\"1\"/></box><box><world b=\"2\">1<c>3</c>4</world></box><box>🌎</box></root>').params",
 			ResultIndex: 0,
 			Expectation: map[string]any{"root": map[string]any{"box": []any{
 				map[string]any{"hello": map[string]any{"@a": "1"}},
 				map[string]any{"world": map[string]any{
 					"@b":     "2",
 					"c":      "3",
-					"__text": "4",
+					"__text": "1\n4",
 				}},
 				"🌎",
 			}}},

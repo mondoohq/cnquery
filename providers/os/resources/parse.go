@@ -204,10 +204,12 @@ func (x *xmlElem) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) err
 		case xml.CharData:
 			cur := path[len(path)-1]
 			v := strings.TrimSpace(string(elem))
-			cur.children = append(cur.children, &xmlElem{
-				data:      v,
-				isElement: false,
-			})
+			if v != "" {
+				cur.children = append(cur.children, &xmlElem{
+					data:      v,
+					isElement: false,
+				})
+			}
 		}
 	}
 }
@@ -229,7 +231,11 @@ func (x *xmlElem) _params() (string, bool, map[string]any) {
 		if !isElem {
 			field := "__text"
 			if cur, ok := res[field]; ok {
-				res[field] = cur.(string) + data
+				if cur.(string) != "" {
+					res[field] = cur.(string) + "\n" + data
+				} else {
+					res[field] = data
+				}
 			} else {
 				res[field] = data
 			}
