@@ -411,8 +411,11 @@ func availableFields(c *compiler, typ types.Type) map[string]llx.Documentation {
 	return res
 }
 
+// BuiltinSchema captures all internal types and their metadata.
 // We could have just as well used the `resources.Schema` here.
-// However, semantically t
+// However, semantically we are documenting types and not resources here.
+// The difference may not matter to an end-user (everything looks like types),
+// but it matters internally since they are handled differently.
 type BuiltinSchema struct {
 	Types map[string]*resources.ResourceInfo
 }
