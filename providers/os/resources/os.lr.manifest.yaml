@@ -767,6 +767,12 @@ resources:
       file: {}
       params: {}
     min_mondoo_version: 5.15.0
+  parse.xml:
+    fields:
+      content: {}
+      file: {}
+      params: {}
+    min_mondoo_version: 9.0.0
   parse.yaml:
     fields:
       content: {}

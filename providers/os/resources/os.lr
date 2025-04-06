@@ -470,6 +470,17 @@ parse.json {
   params(content) dict
 }
 
+// Parse XML files
+parse.xml {
+  init(path string)
+  // File that is parsed
+  file file
+  // Raw content of the file that is parsed
+  content(file) string
+  // The parsed parameters defined in this file
+  params(content) dict
+}
+
 // Parse plist files
 parse.plist {
   init(path string)

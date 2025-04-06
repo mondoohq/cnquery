@@ -96,6 +96,14 @@ func TestMap(t *testing.T) {
 			Expectation: map[string]interface{}{"a": int64(1), "b": int64(2)},
 		},
 		{
+			Code:        "parse.xml('/dummy.xml').params.length",
+			Expectation: int64(1),
+		},
+		{
+			Code:        "parse.xml('/dummy.xml').params.root.length",
+			Expectation: int64(2),
+		},
+		{
 			Code:        "parse.json('/dummy.json').params.length",
 			Expectation: int64(13),
 		},
