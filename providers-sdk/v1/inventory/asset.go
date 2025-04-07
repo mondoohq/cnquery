@@ -178,3 +178,13 @@ func (a *Asset) AddMondooLabels(root *Asset) {
 		}
 	}
 }
+
+// MergePlatform merges the provided platform into the asset's platform.
+// If the asset's platform is `nil`, the provided platform is set.
+func (a *Asset) MergePlatform(pf *Platform) {
+	if a.Platform == nil {
+		a.Platform = pf
+	} else {
+		a.Platform.Merge(pf)
+	}
+}
