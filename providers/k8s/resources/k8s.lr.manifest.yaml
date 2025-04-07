@@ -5,6 +5,8 @@ resources:
   k8s:
     fields:
       apiResources: {}
+      apps:
+        min_mondoo_version: 9.0.0
       clusterrolebindings:
         min_mondoo_version: 5.31.0
       clusterroles:
@@ -117,6 +119,19 @@ resources:
       version: {}
     is_private: true
     min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - kubernetes
+  k8s.app:
+    fields:
+      components: {}
+      instance: {}
+      managedBy: {}
+      name: {}
+      partOf: {}
+      version: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - kubernetes

@@ -162,6 +162,10 @@ func init() {
 			// to override args, implement: initK8sAdmissionValidatingwebhookconfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createK8sAdmissionValidatingwebhookconfiguration,
 		},
+		"k8s.app": {
+			// to override args, implement: initK8sApp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sApp,
+		},
 	}
 }
 
@@ -301,6 +305,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.validatingWebhookConfigurations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8s).GetValidatingWebhookConfigurations()).ToDataRes(types.Array(types.Resource("k8s.admission.validatingwebhookconfiguration")))
+	},
+	"k8s.apps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetApps()).ToDataRes(types.Array(types.Resource("k8s.app")))
 	},
 	"k8s.apiresource.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sApiresource).GetName()).ToDataRes(types.String)
@@ -1334,6 +1341,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.admission.validatingwebhookconfiguration.webhooks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sAdmissionValidatingwebhookconfiguration).GetWebhooks()).ToDataRes(types.Array(types.Dict))
 	},
+	"k8s.app.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApp).GetName()).ToDataRes(types.String)
+	},
+	"k8s.app.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApp).GetVersion()).ToDataRes(types.String)
+	},
+	"k8s.app.instance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApp).GetInstance()).ToDataRes(types.String)
+	},
+	"k8s.app.managedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApp).GetManagedBy()).ToDataRes(types.String)
+	},
+	"k8s.app.partOf": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApp).GetPartOf()).ToDataRes(types.String)
+	},
+	"k8s.app.components": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApp).GetComponents()).ToDataRes(types.Array(types.String))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -1444,6 +1469,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"k8s.validatingWebhookConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8s).ValidatingWebhookConfigurations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.apps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).Apps, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"k8s.apiresource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2962,6 +2991,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlK8sAdmissionValidatingwebhookconfiguration).Webhooks, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"k8s.app.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlK8sApp).__id, ok = v.Value.(string)
+			return
+		},
+	"k8s.app.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApp).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.app.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApp).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.app.instance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApp).Instance, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.app.managedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApp).ManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.app.partOf": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApp).PartOf, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.app.components": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApp).Components, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -3015,6 +3072,7 @@ type mqlK8s struct {
 	NetworkPolicies plugin.TValue[[]interface{}]
 	Customresources plugin.TValue[[]interface{}]
 	ValidatingWebhookConfigurations plugin.TValue[[]interface{}]
+	Apps plugin.TValue[[]interface{}]
 }
 
 // createK8s creates a new instance of this resource
@@ -3420,6 +3478,22 @@ func (c *mqlK8s) GetValidatingWebhookConfigurations() *plugin.TValue[[]interface
 		}
 
 		return c.validatingWebhookConfigurations()
+	})
+}
+
+func (c *mqlK8s) GetApps() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Apps, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "apps")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.apps()
 	})
 }
 
@@ -7099,4 +7173,73 @@ func (c *mqlK8sAdmissionValidatingwebhookconfiguration) GetWebhooks() *plugin.TV
 	return plugin.GetOrCompute[[]interface{}](&c.Webhooks, func() ([]interface{}, error) {
 		return c.webhooks()
 	})
+}
+
+// mqlK8sApp for the k8s.app resource
+type mqlK8sApp struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlK8sAppInternal it will be used here
+	Name plugin.TValue[string]
+	Version plugin.TValue[string]
+	Instance plugin.TValue[string]
+	ManagedBy plugin.TValue[string]
+	PartOf plugin.TValue[string]
+	Components plugin.TValue[[]interface{}]
+}
+
+// createK8sApp creates a new instance of this resource
+func createK8sApp(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sApp{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.app", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sApp) MqlName() string {
+	return "k8s.app"
+}
+
+func (c *mqlK8sApp) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sApp) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sApp) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlK8sApp) GetInstance() *plugin.TValue[string] {
+	return &c.Instance
+}
+
+func (c *mqlK8sApp) GetManagedBy() *plugin.TValue[string] {
+	return &c.ManagedBy
+}
+
+func (c *mqlK8sApp) GetPartOf() *plugin.TValue[string] {
+	return &c.PartOf
+}
+
+func (c *mqlK8sApp) GetComponents() *plugin.TValue[[]interface{}] {
+	return &c.Components
 }
