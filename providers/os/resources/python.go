@@ -14,7 +14,6 @@ import (
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v11/providers/os/fsutil"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/languages/python"
@@ -69,7 +68,7 @@ func (r *mqlPython) packages() ([]interface{}, error) {
 	resp := []interface{}{}
 
 	for _, pyPkgDetails := range allPyPkgDetails {
-		res, err := pythonPackageDetailsWithDependenciesToResource(r.MqlRuntime, pyPkgDetails, allPyPkgDetails, pythonPackageResourceMap)
+		res, err := pythonPackageDetailsWithDependenciesToResource(r.MqlRuntime, pyPkgDetails, pythonPackageResourceMap)
 		if err != nil {
 			log.Error().Err(err).Msg("error while creating resource(s) for python package")
 			// we will keep trying to make resources even if a single one failed
@@ -98,7 +97,7 @@ func (r *mqlPython) toplevel() ([]interface{}, error) {
 			continue
 		}
 
-		res, err := pythonPackageDetailsWithDependenciesToResource(r.MqlRuntime, pyPkgDetails, allPyPkgDetails, pythonPackageResourceMap)
+		res, err := pythonPackageDetailsWithDependenciesToResource(r.MqlRuntime, pyPkgDetails, pythonPackageResourceMap)
 		if err != nil {
 			log.Error().Err(err).Msg("error while creating resource(s) for python package")
 			// we will keep trying to make resources even if a single one failed
@@ -135,7 +134,6 @@ func (r *mqlPython) getAllPackages() ([]python.PackageDetails, error) {
 func pythonPackageDetailsWithDependenciesToResource(
 	runtime *plugin.Runtime,
 	newPyPkgDetails python.PackageDetails,
-	pythonPgkDetailsList []python.PackageDetails,
 	pythonPackageResourceMap map[string]plugin.Resource,
 ) (interface{}, error) {
 	res := pythonPackageResourceMap[newPyPkgDetails.Name]
@@ -144,31 +142,8 @@ func pythonPackageDetailsWithDependenciesToResource(
 		return res, nil
 	}
 
-	dependencies := []interface{}{}
-	for _, dep := range newPyPkgDetails.Dependencies {
-		found := false
-		var depPyPkgDetails python.PackageDetails
-		for i, pyPkgDetails := range pythonPgkDetailsList {
-			if pyPkgDetails.Name == dep {
-				depPyPkgDetails = pythonPgkDetailsList[i]
-				found = true
-				break
-			}
-		}
-		if !found {
-			// can't create a resource for something we didn't discover ¯\_(ツ)_/¯
-			continue
-		}
-		res, err := pythonPackageDetailsWithDependenciesToResource(runtime, depPyPkgDetails, pythonPgkDetailsList, pythonPackageResourceMap)
-		if err != nil {
-			log.Warn().Err(err).Msg("failed to create python package resource")
-			continue
-		}
-		dependencies = append(dependencies, res)
-	}
-
 	// finally create the resource
-	r, err := newMqlPythonPackage(runtime, newPyPkgDetails, dependencies)
+	r, err := newMqlPythonPackage(runtime, newPyPkgDetails)
 	if err != nil {
 		log.Error().Err(err).Str("resource", newPyPkgDetails.File).Msg("error while creating MQL resource")
 		return nil, err
@@ -311,7 +286,7 @@ func collectPythonPackages(runtime *plugin.Runtime, fs afero.Fs, path string) ([
 	return allResults, nil
 }
 
-func newMqlPythonPackage(runtime *plugin.Runtime, ppd python.PackageDetails, dependencies []interface{}) (plugin.Resource, error) {
+func newMqlPythonPackage(runtime *plugin.Runtime, ppd python.PackageDetails) (plugin.Resource, error) {
 	f, err := newFile(runtime, ppd.File)
 	if err != nil {
 		log.Error().Err(err).Msg("error while creating file resource for python package resource")
@@ -330,22 +305,22 @@ func newMqlPythonPackage(runtime *plugin.Runtime, ppd python.PackageDetails, dep
 	}
 
 	r, err := CreateResource(runtime, "python.package", map[string]*llx.RawData{
-		"id":           llx.StringData(ppd.File),
-		"name":         llx.StringData(ppd.Name),
-		"version":      llx.StringData(ppd.Version),
-		"author":       llx.StringData(ppd.Author),
-		"authorEmail":  llx.StringData(ppd.AuthorEmail),
-		"summary":      llx.StringData(ppd.Summary),
-		"license":      llx.StringData(ppd.License),
-		"file":         llx.ResourceData(f, f.MqlName()),
-		"dependencies": llx.ArrayData(dependencies, types.Any),
-		"purl":         llx.StringData(ppd.Purl),
-		"cpes":         llx.ArrayData(cpes, types.Resource("cpe")),
+		"id":          llx.StringData(ppd.File),
+		"name":        llx.StringData(ppd.Name),
+		"version":     llx.StringData(ppd.Version),
+		"author":      llx.StringData(ppd.Author),
+		"authorEmail": llx.StringData(ppd.AuthorEmail),
+		"summary":     llx.StringData(ppd.Summary),
+		"license":     llx.StringData(ppd.License),
+		"file":        llx.ResourceData(f, f.MqlName()),
+		"purl":        llx.StringData(ppd.Purl),
+		"cpes":        llx.ArrayData(cpes, types.Resource("cpe")),
 	})
 	if err != nil {
 		log.Error().AnErr("err", err).Msg("error while creating MQL resource")
 		return nil, err
 	}
+	r.(*mqlPythonPackage).deps = ppd.Dependencies
 	return r, nil
 }
 
@@ -439,12 +414,31 @@ func (r *mqlPythonPackage) cpes() ([]interface{}, error) {
 	return r.Cpes.Data, nil
 }
 
+type mqlPythonPackageInternal struct {
+	deps []string
+}
+
 func (r *mqlPythonPackage) dependencies() ([]interface{}, error) {
-	err := r.populateData()
+	obj, err := CreateResource(r.MqlRuntime, "python", nil)
 	if err != nil {
 		return nil, err
 	}
-	return r.Dependencies.Data, nil
+	py := obj.(*mqlPython)
+	pkgs := py.GetPackages()
+	if pkgs.Error != nil {
+		return nil, pkgs.Error
+	}
+
+	deps := []interface{}{}
+	for _, dep := range r.deps {
+		for i, pyPkgDetails := range pkgs.Data {
+			if pyPkgDetails.(*mqlPythonPackage).Name.Data == dep {
+				depRes := pkgs.Data[i]
+				deps = append(deps, depRes)
+			}
+		}
+	}
+	return deps, nil
 }
 
 func (r *mqlPythonPackage) populateData() error {
@@ -468,7 +462,16 @@ func (r *mqlPythonPackage) populateData() error {
 	r.AuthorEmail = plugin.TValue[string]{Data: pkg.AuthorEmail, State: plugin.StateIsSet}
 	r.Summary = plugin.TValue[string]{Data: pkg.Summary, State: plugin.StateIsSet}
 	r.License = plugin.TValue[string]{Data: pkg.License, State: plugin.StateIsSet}
-	r.Dependencies = plugin.TValue[[]interface{}]{Data: convert.SliceAnyToInterface(pkg.Dependencies), State: plugin.StateIsSet}
+
+	obj, err := CreateResource(r.MqlRuntime, "python", nil)
+	if err != nil {
+		return err
+	}
+	py := obj.(*mqlPython)
+	pkgs := py.GetPackages()
+	if pkgs.Error != nil {
+		return pkgs.Error
+	}
 
 	cpes := []interface{}{}
 	for i := range pkg.Cpes {
