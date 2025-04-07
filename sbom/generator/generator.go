@@ -82,6 +82,7 @@ func GenerateBom(r *reporter.Report) []*sbom.Sbom {
 				bom.Asset.Name = rb.Asset.Name
 				bom.Asset.Platform.Name = rb.Asset.Platform
 				bom.Asset.Platform.Version = rb.Asset.Version
+				bom.Asset.Platform.Build = rb.Asset.Build
 				bom.Asset.Platform.Family = rb.Asset.Family
 				bom.Asset.Platform.Arch = rb.Asset.Arch
 				bom.Asset.Platform.Cpes = rb.Asset.CPEs

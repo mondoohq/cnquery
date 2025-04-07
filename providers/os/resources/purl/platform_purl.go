@@ -29,7 +29,12 @@ func NewPlatformPurl(platform *inventory.Platform) (string, error) {
 	} else if platform.Build != "" {
 		distroQualifiers = append(distroQualifiers, platform.Build)
 	}
+
 	qualifiers[QualifierDistro] = strings.Join(distroQualifiers, "-")
+
+	if platform.Build != "" {
+		qualifiers["build"] = platform.Build
+	}
 
 	// e.g. used on suse linux
 	variantID, ok := platform.Labels["variant-id"]
@@ -39,8 +44,8 @@ func NewPlatformPurl(platform *inventory.Platform) (string, error) {
 
 	return packageurl.NewPackageURL(
 		string(Type_X_Platform),
-		platform.Name,
 		"",
+		platform.Name,
 		platform.Version,
 		NewQualifiers(qualifiers),
 		"",
