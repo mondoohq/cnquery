@@ -13148,7 +13148,7 @@ func (c *mqlPython) GetToplevel() *plugin.TValue[[]interface{}] {
 type mqlPythonPackage struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlPythonPackageInternal it will be used here
+	mqlPythonPackageInternal
 	Id plugin.TValue[string]
 	Name plugin.TValue[string]
 	File plugin.TValue[*mqlFile]
