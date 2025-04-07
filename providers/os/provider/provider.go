@@ -379,7 +379,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 				}
 				asset.PlatformIds = fingerprint.PlatformIDs
 				asset.IdDetector = fingerprint.ActiveIdDetectors
-				asset.SetPlatform(p)
+				asset.MergePlatform(p)
 				appendRelatedAssetsFromFingerprint(fingerprint, asset)
 			}
 		case shared.Type_Device.String():
@@ -397,7 +397,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 				}
 				asset.PlatformIds = fingerprint.PlatformIDs
 				asset.IdDetector = fingerprint.ActiveIdDetectors
-				asset.SetPlatform(p)
+				asset.MergePlatform(p)
 				appendRelatedAssetsFromFingerprint(fingerprint, asset)
 			}
 
@@ -412,7 +412,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 				asset.Name = fingerprint.Name
 				asset.PlatformIds = fingerprint.PlatformIDs
 				asset.IdDetector = fingerprint.ActiveIdDetectors
-				asset.SetPlatform(p)
+				asset.MergePlatform(p)
 				appendRelatedAssetsFromFingerprint(fingerprint, asset)
 			}
 
@@ -427,7 +427,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 				asset.Name = fingerprint.Name
 				asset.PlatformIds = fingerprint.PlatformIDs
 				asset.IdDetector = fingerprint.ActiveIdDetectors
-				asset.SetPlatform(p)
+				asset.MergePlatform(p)
 				appendRelatedAssetsFromFingerprint(fingerprint, asset)
 			}
 
@@ -442,7 +442,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 				asset.Name = fingerprint.Name
 				asset.PlatformIds = fingerprint.PlatformIDs
 				asset.IdDetector = fingerprint.ActiveIdDetectors
-				asset.SetPlatform(p)
+				asset.MergePlatform(p)
 				appendRelatedAssetsFromFingerprint(fingerprint, asset)
 			}
 
@@ -494,7 +494,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 					asset.Name = fingerprint.Name
 					asset.PlatformIds = fingerprint.PlatformIDs
 					asset.IdDetector = fingerprint.ActiveIdDetectors
-					asset.SetPlatform(p)
+					asset.MergePlatform(p)
 				}
 			} else {
 				// In this case asset.Name should already be set via the inventory

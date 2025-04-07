@@ -51,7 +51,7 @@ func (s *Service) detect(asset *inventory.Asset, conn shared.Connection) error {
 	if !ok {
 		return errors.New("failed to detect OS")
 	}
-	asset.SetPlatform(pf)
+	asset.MergePlatform(pf)
 	if asset.Platform.Kind == "" {
 		asset.Platform.Kind = inventory.AssetKindBaremetal
 	}

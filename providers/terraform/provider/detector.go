@@ -51,7 +51,7 @@ func (s *Service) detect(asset *inventory.Asset, _ *connection.Connection) error
 			TechnologyUrlSegments: []string{"iac", "terraform", "hcl"},
 		}
 	}
-	asset.SetPlatform(p)
+	asset.MergePlatform(p)
 
 	// we always prefer the git url since it is more reliable
 	url, ok := asset.Connections[0].Options["ssh-url"]
