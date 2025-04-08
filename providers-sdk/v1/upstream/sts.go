@@ -7,7 +7,9 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"net/url"
 	"time"
 
@@ -51,6 +53,36 @@ func ExchangeSSHKey(apiEndpoint string, identityMrn string, resourceMrn string) 
 		Certificate: resp.Certificate,
 		ApiEndpoint: resp.ApiEndpoint,
 	}, nil
+}
+
+func ExchangeExternalToken(apiEndpoint string, audience string, issuerUri string, jsonToken string) (*ServiceAccountCredentials, error) {
+	stsClient, err := NewSecureTokenServiceClient(apiEndpoint, ranger.DefaultHttpClient())
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := stsClient.ExchangeExternalToken(context.Background(), &ExchangeExternalTokenRequest{
+		Audience:  audience,
+		IssuerUri: issuerUri,
+		JwtToken:  jsonToken,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Decode the base64 credential string
+	credBytes, err := base64.StdEncoding.DecodeString(resp.Base64Credential)
+	if err != nil {
+		return nil, err
+	}
+
+	// Unmarshal the JSON into ServiceAccountCredentials
+	var creds ServiceAccountCredentials
+	if err := json.Unmarshal(credBytes, &creds); err != nil {
+		return nil, err
+	}
+
+	return &creds, nil
 }
 
 // signClaims implements claims signing with ssh.Signer
