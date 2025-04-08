@@ -899,7 +899,7 @@ private k8s.app {
   version string
   // Application instance
   instance string
-  // Managed By
+  // Managed by
   managedBy string
   // Name of the higher-level application
   partOf string
