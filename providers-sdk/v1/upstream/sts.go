@@ -10,6 +10,9 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
 	"net/url"
 	"time"
 
@@ -55,7 +58,14 @@ func ExchangeSSHKey(apiEndpoint string, identityMrn string, resourceMrn string) 
 	}, nil
 }
 
-func ExchangeExternalToken(apiEndpoint string, audience string, issuerUri string, jsonToken string) (*ServiceAccountCredentials, error) {
+func ExchangeExternalToken(apiEndpoint string, audience string, issuerURI string) (*ServiceAccountCredentials, error) {
+	// TODO: This is just a testing function to fetch a GCP identity token
+	// it should change to be a generic function.
+	jsonToken, err := fetchGCPIdentityToken(audience)
+	if err != nil {
+		return nil, err
+	}
+
 	stsClient, err := NewSecureTokenServiceClient(apiEndpoint, ranger.DefaultHttpClient())
 	if err != nil {
 		return nil, err
@@ -63,7 +73,7 @@ func ExchangeExternalToken(apiEndpoint string, audience string, issuerUri string
 
 	resp, err := stsClient.ExchangeExternalToken(context.Background(), &ExchangeExternalTokenRequest{
 		Audience:  audience,
-		IssuerUri: issuerUri,
+		IssuerUri: issuerURI,
 		JwtToken:  jsonToken,
 	})
 	if err != nil {
@@ -83,6 +93,30 @@ func ExchangeExternalToken(apiEndpoint string, audience string, issuerUri string
 	}
 
 	return &creds, nil
+}
+
+// TODO: This is just a testing function to fetch a GCP identity token
+// it should change to be a generic function that checks the provider and fetches the token accordingly.
+func fetchGCPIdentityToken(audience string) (string, error) {
+	url := fmt.Sprintf("http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity?audience=%s", audience)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return "", err
+	}
+	req.Header.Add("Metadata-Flavor", "Google")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	tokenBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	return string(tokenBytes), nil
 }
 
 // signClaims implements claims signing with ssh.Signer

@@ -199,6 +199,10 @@ type CommonOpts struct {
 	// authentication
 	Authentication *CliConfigAuthentication `json:"auth,omitempty" mapstructure:"auth"`
 
+	// Workload Identity Federation fields
+	Audience  string `json:"audience,omitempty" mapstructure:"audience"`
+	IssuerURI string `json:"issuer_uri,omitempty" mapstructure:"issuer_uri"`
+
 	// client features
 	Features []string `json:"features,omitempty" mapstructure:"features"`
 
@@ -245,14 +249,26 @@ func (c *CommonOpts) GetFeatures() cnquery.Features {
 // GetServiceCredential returns the service credential that is defined in the config.
 // If no service credential is defined, it will return nil.
 func (c *CommonOpts) GetServiceCredential() *upstream.ServiceAccountCredentials {
-	if c.Authentication != nil && c.Authentication.Method == "ssh" {
-		log.Info().Msg("using ssh authentication method, generate temporary credentials")
-		serviceAccount, err := upstream.ExchangeSSHKey(c.UpstreamApiEndpoint(), c.ServiceAccountMrn, c.GetParentMrn())
-		if err != nil {
-			log.Error().Err(err).Msg("could not exchange ssh key")
-			return nil
+	if c.Authentication != nil {
+		switch c.Authentication.Method {
+		case "ssh":
+			log.Info().Msg("using ssh authentication method, generate temporary credentials")
+			serviceAccount, err := upstream.ExchangeSSHKey(c.UpstreamApiEndpoint(), c.ServiceAccountMrn, c.GetParentMrn())
+			if err != nil {
+				log.Error().Err(err).Msg("could not exchange ssh key")
+				return nil
+			}
+			return serviceAccount
+		case "wif":
+			log.Info().Msg("using wif authentication method, generate temporary credentials")
+			serviceAccount, err := upstream.ExchangeExternalToken(c.UpstreamApiEndpoint(), c.Audience, c.IssuerURI)
+			if err != nil {
+				log.Error().Err(err).Msg("could not exchange external (wif) token")
+				return nil
+			}
+
+			return serviceAccount
 		}
-		return serviceAccount
 	}
 
 	// return nil when no service account is defined
