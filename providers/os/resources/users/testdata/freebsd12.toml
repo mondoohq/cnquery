@@ -30,7 +30,6 @@ nobody:*:65534:65534:Unprivileged user:/nonexistent:/usr/sbin/nologin
 messagebus:*:556:556:D-BUS Daemon User:/nonexistent:/usr/sbin/nologin
 vagrant:*:1001:1001:Vagrant User:/home/vagrant:/bin/csh"""
 
-
 [commands."uname -s"]
 stdout = "FreeBSD"
 
