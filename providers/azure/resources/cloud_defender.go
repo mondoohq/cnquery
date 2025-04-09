@@ -476,8 +476,7 @@ func (a *mqlAzureSubscriptionCloudDefenderService) getSecuritySettingsFor(name s
 
 	baseSetting := settingResp.SettingClassification.GetSetting()
 	if baseSetting == nil || baseSetting.Kind == nil {
-		err := fmt.Errorf("retrieved setting or its Kind is nil for '%s'", name)
-		return nil, err
+		return nil, fmt.Errorf("retrieved setting or its kind is nil for '%s'", name)
 	}
 
 	switch *baseSetting.Kind {
@@ -485,8 +484,7 @@ func (a *mqlAzureSubscriptionCloudDefenderService) getSecuritySettingsFor(name s
 		// Handles MCAS and Sentinel
 		settings, ok := settingResp.SettingClassification.(*armsecurity.DataExportSettings)
 		if !ok {
-			err := fmt.Errorf("failed assertion to *DataExportSettings for Kind '%s', setting '%s'. Actual type: %T", *baseSetting.Kind, name, settingResp.SettingClassification)
-			return nil, err
+			return nil, fmt.Errorf("failed assertion to DataExportSettings for kind '%s', setting '%s'. Actual type: %T", *baseSetting.Kind, name, settingResp.SettingClassification)
 		}
 		properties, err := convert.JsonToDict(settings.Properties)
 		if err != nil {
@@ -510,8 +508,7 @@ func (a *mqlAzureSubscriptionCloudDefenderService) getSecuritySettingsFor(name s
 		// Handles WDATP
 		settings, ok := settingResp.SettingClassification.(*armsecurity.AlertSyncSettings)
 		if !ok {
-			err := fmt.Errorf("failed assertion to *AlertSyncSettings for Kind '%s', setting '%s'. Actual type: %T", *baseSetting.Kind, name, settingResp.SettingClassification)
-			return nil, err
+			return nil, fmt.Errorf("failed assertion to AlertSyncSettings for kind '%s', setting '%s'. Actual type: %T", *baseSetting.Kind, name, settingResp.SettingClassification)
 		}
 		properties, err := convert.JsonToDict(settings.Properties)
 		if err != nil {
@@ -532,8 +529,7 @@ func (a *mqlAzureSubscriptionCloudDefenderService) getSecuritySettingsFor(name s
 		}
 		return resource.(*mqlAzureSubscriptionCloudDefenderServiceSettings), nil
 	default:
-		err := fmt.Errorf("failed assertion for Kind %s, setting %s", *baseSetting.Kind, name)
-		return nil, err
+		return nil, fmt.Errorf("unsupported settings '%s' of kind '%s'", name, *baseSetting.Kind)
 	}
 }
 
