@@ -658,7 +658,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.redisService.instance.displayName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectRedisServiceInstance).GetDisplayName()).ToDataRes(types.String)
 	},
-	"gcp.project.redisService.instance.Labels": func(r plugin.Resource) *plugin.DataRes {
+	"gcp.project.redisService.instance.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectRedisServiceInstance).GetLabels()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"gcp.project.redisService.instance.locationId": func(r plugin.Resource) *plugin.DataRes {
@@ -4371,7 +4371,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlGcpProjectRedisServiceInstance).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"gcp.project.redisService.instance.Labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+	"gcp.project.redisService.instance.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectRedisServiceInstance).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
 		return
 	},
@@ -10063,7 +10063,12 @@ func createGcpProjectRedisServiceInstance(runtime *plugin.Runtime, args map[stri
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("gcp.project.redisService.instance", res.__id)

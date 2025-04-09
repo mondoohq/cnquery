@@ -66,7 +66,7 @@ private gcp.project.redisService.instance @defaults("name") {
   // An arbitrary and optional user-provided name for the instance
   displayName string
   // Resource labels to represent user provided metadata
-  Labels map[string]string
+  labels map[string]string
   // The zone where the instance will be provisioned
   locationId string
   // The version of Redis software
