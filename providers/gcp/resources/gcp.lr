@@ -936,6 +936,80 @@ private gcp.project.storageService.bucket @defaults("id") {
   retentionPolicy dict
   // Encryption
   encryption dict
+  // Lifecycle configuration
+  lifecycle []gcp.project.storageService.bucket.lifecycleRule
+}
+
+// Google Cloud bucket's lifecycle configuration
+private gcp.project.storageService.bucket.lifecycleRule {
+  // The action to take
+  action gcp.project.storageService.bucket.lifecycleRuleAction
+  // The condition(s) under which the action will be taken
+  condition gcp.project.storageService.bucket.lifecycleRuleCondition
+}
+
+// A lifecycle management rule, which is made of an action to take and
+// the condition(s) under which the action will be taken
+private gcp.project.storageService.bucket.lifecycleRuleAction @defaults("type storageClass") {
+  // Target storage class. Required iff the type of the action is SetStorageClass
+  storageClass string
+  // Type of the action. Currently, only Delete, SetStorageClass, and
+  // AbortIncompleteMultipartUpload are supported
+  type string
+}
+
+// The condition(s) under which the action will be taken
+private gcp.project.storageService.bucket.lifecycleRuleCondition @defaults("age numNewerVersions") {
+  // Age of an object (in days). This condition is satisfied when an object
+  // reaches the specified age
+  age int
+  // CreatedBefore: A date in RFC 3339 format with only the date part (for
+  // instance, "2013-01-15"). This condition is satisfied when an object is
+  // created before midnight of the specified date in UTC
+  createdBefore string
+  // CustomTimeBefore: A date in RFC 3339 format with only the date part (for
+  // instance, "2013-01-15"). This condition is satisfied when the custom time on
+  // an object is before this date in UTC
+  customTimeBefore string
+  // DaysSinceCustomTime: Number of days elapsed since the user-specified
+  // timestamp set on an object. The condition is satisfied if the days elapsed
+  // is at least this number. If no custom timestamp is specified on an object,
+  // the condition does not apply
+  daysSinceCustomTime int
+  // DaysSinceNoncurrentTime: Number of days elapsed since the noncurrent
+  // timestamp of an object. The condition is satisfied if the days elapsed is at
+  // least this number. This condition is relevant only for versioned objects.
+  // The value of the field must be a nonnegative integer. If it's zero, the
+  // object version will become eligible for Lifecycle action as soon as it
+  // becomes noncurrent
+  daysSinceNoncurrentTime int
+  // IsLive: Relevant only for versioned objects. If the value is true, this
+  // condition matches live objects; if the value is false, it matches archived
+  // objects
+  isLive bool
+  // MatchesPattern: A regular expression that satisfies the RE2 syntax. This
+  // condition is satisfied when the name of the object matches the RE2 pattern
+  matchesPattern string
+  // MatchesPrefix: List of object name prefixes. This condition will be
+  // satisfied when at least one of the prefixes exactly matches the beginning of
+  // the object name
+  matchesPrefix []string
+  // MatchesStorageClass: Objects having any of the storage classes specified by
+  // this condition will be matched
+  matchesStorageClass []string
+  // MatchesSuffix: List of object name suffixes. This condition will be
+  // satisfied when at least one of the suffixes exactly matches the end of the
+  // object name
+  matchesSuffix []string
+  // NoncurrentTimeBefore: A date in RFC 3339 format with only the date part (for
+  // instance, "2013-01-15"). This condition is satisfied when the noncurrent
+  // time on an object is before this date in UTC. This condition is relevant
+  // only for versioned objects
+  noncurrentTimeBefore string
+  // NumNewerVersions: Relevant only for versioned objects. If the value is N,
+  // this condition is satisfied when there are at least N versions (including
+  // the live version) newer than this version of the object
+  numNewerVersions int
 }
 
 // Google Cloud (GCP) SQL resources
@@ -2627,6 +2701,7 @@ private gcp.project.cloudRunService.container @defaults("name image") {
   // Compute resource requirements by the container
   resources dict
   // List of ports to expose from the container
+  // @afiune Fix issue int32 not parse as dict
   ports []dict
   // Volumes to mount into the container's file system
   volumeMounts []dict

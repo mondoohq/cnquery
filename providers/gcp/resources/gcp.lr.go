@@ -138,6 +138,18 @@ func init() {
 			Init: initGcpProjectStorageServiceBucket,
 			Create: createGcpProjectStorageServiceBucket,
 		},
+		"gcp.project.storageService.bucket.lifecycleRule": {
+			// to override args, implement: initGcpProjectStorageServiceBucketLifecycleRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectStorageServiceBucketLifecycleRule,
+		},
+		"gcp.project.storageService.bucket.lifecycleRuleAction": {
+			// to override args, implement: initGcpProjectStorageServiceBucketLifecycleRuleAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectStorageServiceBucketLifecycleRuleAction,
+		},
+		"gcp.project.storageService.bucket.lifecycleRuleCondition": {
+			// to override args, implement: initGcpProjectStorageServiceBucketLifecycleRuleCondition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectStorageServiceBucketLifecycleRuleCondition,
+		},
 		"gcp.project.sqlService": {
 			// to override args, implement: initGcpProjectSqlService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectSqlService,
@@ -1785,6 +1797,57 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.storageService.bucket.encryption": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectStorageServiceBucket).GetEncryption()).ToDataRes(types.Dict)
+	},
+	"gcp.project.storageService.bucket.lifecycle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucket).GetLifecycle()).ToDataRes(types.Array(types.Resource("gcp.project.storageService.bucket.lifecycleRule")))
+	},
+	"gcp.project.storageService.bucket.lifecycleRule.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRule).GetAction()).ToDataRes(types.Resource("gcp.project.storageService.bucket.lifecycleRuleAction"))
+	},
+	"gcp.project.storageService.bucket.lifecycleRule.condition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRule).GetCondition()).ToDataRes(types.Resource("gcp.project.storageService.bucket.lifecycleRuleCondition"))
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleAction.storageClass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleAction).GetStorageClass()).ToDataRes(types.String)
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleAction.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleAction).GetType()).ToDataRes(types.String)
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.age": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).GetAge()).ToDataRes(types.Int)
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.createdBefore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).GetCreatedBefore()).ToDataRes(types.String)
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.customTimeBefore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).GetCustomTimeBefore()).ToDataRes(types.String)
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.daysSinceCustomTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).GetDaysSinceCustomTime()).ToDataRes(types.Int)
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.daysSinceNoncurrentTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).GetDaysSinceNoncurrentTime()).ToDataRes(types.Int)
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.isLive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).GetIsLive()).ToDataRes(types.Bool)
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.matchesPattern": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).GetMatchesPattern()).ToDataRes(types.String)
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.matchesPrefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).GetMatchesPrefix()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.matchesStorageClass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).GetMatchesStorageClass()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.matchesSuffix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).GetMatchesSuffix()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.noncurrentTimeBefore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).GetNoncurrentTimeBefore()).ToDataRes(types.String)
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.numNewerVersions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).GetNumNewerVersions()).ToDataRes(types.Int)
 	},
 	"gcp.project.sqlService.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlService).GetProjectId()).ToDataRes(types.String)
@@ -5835,6 +5898,86 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"gcp.project.storageService.bucket.encryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectStorageServiceBucket).Encryption, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.lifecycle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucket).Lifecycle, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.lifecycleRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGcpProjectStorageServiceBucketLifecycleRule).__id, ok = v.Value.(string)
+			return
+		},
+	"gcp.project.storageService.bucket.lifecycleRule.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketLifecycleRule).Action, ok = plugin.RawToTValue[*mqlGcpProjectStorageServiceBucketLifecycleRuleAction](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.lifecycleRule.condition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketLifecycleRule).Condition, ok = plugin.RawToTValue[*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleAction.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleAction).__id, ok = v.Value.(string)
+			return
+		},
+	"gcp.project.storageService.bucket.lifecycleRuleAction.storageClass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleAction).StorageClass, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleAction.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleAction).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).__id, ok = v.Value.(string)
+			return
+		},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.age": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).Age, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.createdBefore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).CreatedBefore, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.customTimeBefore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).CustomTimeBefore, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.daysSinceCustomTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).DaysSinceCustomTime, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.daysSinceNoncurrentTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).DaysSinceNoncurrentTime, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.isLive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).IsLive, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.matchesPattern": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).MatchesPattern, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.matchesPrefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).MatchesPrefix, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.matchesStorageClass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).MatchesStorageClass, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.matchesSuffix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).MatchesSuffix, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.noncurrentTimeBefore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).NoncurrentTimeBefore, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.numNewerVersions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).NumNewerVersions, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"gcp.project.sqlService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13232,6 +13375,7 @@ type mqlGcpProjectStorageServiceBucket struct {
 	IamConfiguration plugin.TValue[interface{}]
 	RetentionPolicy plugin.TValue[interface{}]
 	Encryption plugin.TValue[interface{}]
+	Lifecycle plugin.TValue[[]interface{}]
 }
 
 // createGcpProjectStorageServiceBucket creates a new instance of this resource
@@ -13337,6 +13481,207 @@ func (c *mqlGcpProjectStorageServiceBucket) GetRetentionPolicy() *plugin.TValue[
 
 func (c *mqlGcpProjectStorageServiceBucket) GetEncryption() *plugin.TValue[interface{}] {
 	return &c.Encryption
+}
+
+func (c *mqlGcpProjectStorageServiceBucket) GetLifecycle() *plugin.TValue[[]interface{}] {
+	return &c.Lifecycle
+}
+
+// mqlGcpProjectStorageServiceBucketLifecycleRule for the gcp.project.storageService.bucket.lifecycleRule resource
+type mqlGcpProjectStorageServiceBucketLifecycleRule struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlGcpProjectStorageServiceBucketLifecycleRuleInternal it will be used here
+	Action plugin.TValue[*mqlGcpProjectStorageServiceBucketLifecycleRuleAction]
+	Condition plugin.TValue[*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition]
+}
+
+// createGcpProjectStorageServiceBucketLifecycleRule creates a new instance of this resource
+func createGcpProjectStorageServiceBucketLifecycleRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectStorageServiceBucketLifecycleRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.storageService.bucket.lifecycleRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRule) MqlName() string {
+	return "gcp.project.storageService.bucket.lifecycleRule"
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRule) GetAction() *plugin.TValue[*mqlGcpProjectStorageServiceBucketLifecycleRuleAction] {
+	return &c.Action
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRule) GetCondition() *plugin.TValue[*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition] {
+	return &c.Condition
+}
+
+// mqlGcpProjectStorageServiceBucketLifecycleRuleAction for the gcp.project.storageService.bucket.lifecycleRuleAction resource
+type mqlGcpProjectStorageServiceBucketLifecycleRuleAction struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlGcpProjectStorageServiceBucketLifecycleRuleActionInternal it will be used here
+	StorageClass plugin.TValue[string]
+	Type plugin.TValue[string]
+}
+
+// createGcpProjectStorageServiceBucketLifecycleRuleAction creates a new instance of this resource
+func createGcpProjectStorageServiceBucketLifecycleRuleAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectStorageServiceBucketLifecycleRuleAction{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.storageService.bucket.lifecycleRuleAction", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleAction) MqlName() string {
+	return "gcp.project.storageService.bucket.lifecycleRuleAction"
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleAction) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleAction) GetStorageClass() *plugin.TValue[string] {
+	return &c.StorageClass
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleAction) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+// mqlGcpProjectStorageServiceBucketLifecycleRuleCondition for the gcp.project.storageService.bucket.lifecycleRuleCondition resource
+type mqlGcpProjectStorageServiceBucketLifecycleRuleCondition struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlGcpProjectStorageServiceBucketLifecycleRuleConditionInternal it will be used here
+	Age plugin.TValue[int64]
+	CreatedBefore plugin.TValue[string]
+	CustomTimeBefore plugin.TValue[string]
+	DaysSinceCustomTime plugin.TValue[int64]
+	DaysSinceNoncurrentTime plugin.TValue[int64]
+	IsLive plugin.TValue[bool]
+	MatchesPattern plugin.TValue[string]
+	MatchesPrefix plugin.TValue[[]interface{}]
+	MatchesStorageClass plugin.TValue[[]interface{}]
+	MatchesSuffix plugin.TValue[[]interface{}]
+	NoncurrentTimeBefore plugin.TValue[string]
+	NumNewerVersions plugin.TValue[int64]
+}
+
+// createGcpProjectStorageServiceBucketLifecycleRuleCondition creates a new instance of this resource
+func createGcpProjectStorageServiceBucketLifecycleRuleCondition(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectStorageServiceBucketLifecycleRuleCondition{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.storageService.bucket.lifecycleRuleCondition", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleCondition) MqlName() string {
+	return "gcp.project.storageService.bucket.lifecycleRuleCondition"
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleCondition) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleCondition) GetAge() *plugin.TValue[int64] {
+	return &c.Age
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleCondition) GetCreatedBefore() *plugin.TValue[string] {
+	return &c.CreatedBefore
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleCondition) GetCustomTimeBefore() *plugin.TValue[string] {
+	return &c.CustomTimeBefore
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleCondition) GetDaysSinceCustomTime() *plugin.TValue[int64] {
+	return &c.DaysSinceCustomTime
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleCondition) GetDaysSinceNoncurrentTime() *plugin.TValue[int64] {
+	return &c.DaysSinceNoncurrentTime
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleCondition) GetIsLive() *plugin.TValue[bool] {
+	return &c.IsLive
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleCondition) GetMatchesPattern() *plugin.TValue[string] {
+	return &c.MatchesPattern
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleCondition) GetMatchesPrefix() *plugin.TValue[[]interface{}] {
+	return &c.MatchesPrefix
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleCondition) GetMatchesStorageClass() *plugin.TValue[[]interface{}] {
+	return &c.MatchesStorageClass
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleCondition) GetMatchesSuffix() *plugin.TValue[[]interface{}] {
+	return &c.MatchesSuffix
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleCondition) GetNoncurrentTimeBefore() *plugin.TValue[string] {
+	return &c.NoncurrentTimeBefore
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleCondition) GetNumNewerVersions() *plugin.TValue[int64] {
+	return &c.NumNewerVersions
 }
 
 // mqlGcpProjectSqlService for the gcp.project.sqlService resource
