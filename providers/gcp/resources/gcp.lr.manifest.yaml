@@ -2361,6 +2361,8 @@ resources:
       iamPolicy: {}
       id: {}
       labels: {}
+      lifecycle:
+        min_mondoo_version: 9.0.0
       location: {}
       locationType: {}
       name: {}
@@ -2377,6 +2379,55 @@ resources:
     refs:
     - title: About Cloud Storage buckets
       url: https://cloud.google.com/storage/docs/buckets
+  gcp.project.storageService.bucket.lifecycleRule:
+    fields:
+      action: {}
+      condition: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - gcp
+  gcp.project.storageService.bucket.lifecycleRuleAction:
+    fields:
+      storageClass: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - gcp
+  gcp.project.storageService.bucket.lifecycleRuleCondition:
+    fields:
+      Age: {}
+      CreatedBefore: {}
+      CustomTimeBefore: {}
+      DaysSinceCustomTime: {}
+      DaysSinceNoncurrentTime: {}
+      IsLive: {}
+      MatchesPattern: {}
+      MatchesPrefix: {}
+      MatchesStorageClass: {}
+      MatchesSuffix: {}
+      NoncurrentTimeBefore: {}
+      NumNewerVersions: {}
+      age: {}
+      createdBefore: {}
+      customTimeBefore: {}
+      daysSinceCustomTime: {}
+      daysSinceNoncurrentTime: {}
+      isLive: {}
+      matchesPattern: {}
+      matchesPrefix: {}
+      matchesStorageClass: {}
+      matchesSuffix: {}
+      noncurrentTimeBefore: {}
+      numNewerVersions: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - gcp
   gcp.projects:
     fields:
       children: {}
