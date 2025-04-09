@@ -78,6 +78,8 @@ cloud.google.com/go/pubsub v1.48.0 h1:ntFpQVrr10Wj/GXSOpxGmexGynldv/bFp25H0jy8aO
 cloud.google.com/go/pubsub v1.48.0/go.mod h1:AAtyjyIT/+zaY1ERKFJbefOvkUxRDNp3nD6TdfdqUZk=
 cloud.google.com/go/recommender v1.13.4 h1:asqK5+A4yAhkpU7bC2MikNyxSACoi+Mt+zrkc+3OKB8=
 cloud.google.com/go/recommender v1.13.4/go.mod h1:2xpcTYCOy2JlePWcMcVqS+dNiiMNCNGT/PtsjGP1BTQ=
+cloud.google.com/go/redis v1.18.1 h1:0KQR82vHH2nEy+7H7lj3SB19USNnvARMct/RUqqOYwk=
+cloud.google.com/go/redis v1.18.1/go.mod h1:lZQIhkqbhlmqGlFws6yzxSt2qNrAsPDHozWYGvXywqM=
 cloud.google.com/go/run v1.9.2 h1:IdgRA467y1EPOsVKZA9702lCCXb58WLcV+wAhCmEzkk=
 cloud.google.com/go/run v1.9.2/go.mod h1:QD5H5hNuz900FYLQGtbMlA0dqZogy/Wj0xpLwTzK2+Q=
 cloud.google.com/go/secretmanager v1.14.6 h1:/ooktIMSORaWk9gm3vf8+Mg+zSrUplJFKBztP993oL0=

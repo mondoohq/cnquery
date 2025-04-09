@@ -111,6 +111,8 @@ resources:
       parentId: {}
       pubsub: {}
       recommendations: {}
+      redis:
+        min_mondoo_version: 9.0.0
       services: {}
       sql: {}
       state: {}
@@ -2146,6 +2148,59 @@ resources:
     refs:
     - title: Monitor topics within Pub/Sub
       url: https://cloud.google.com/pubsub/docs/monitor-topic
+  gcp.project.redisService:
+    fields:
+      instances: {}
+      projectId: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - gcp
+  gcp.project.redisService.instance:
+    fields:
+      AuthorizedNetwork: {}
+      Labels: {}
+      authEnabled: {}
+      availableMaintenanceVersions: {}
+      connectMode: {}
+      createTime: {}
+      currentLocationId: {}
+      customerManagedKey: {}
+      displayName: {}
+      host: {}
+      locationId: {}
+      maintenanceVersion: {}
+      memorySizeGb: {}
+      name: {}
+      nodes: {}
+      persistenceIamIdentity: {}
+      port: {}
+      projectId: {}
+      readEndpoint: {}
+      readEndpointPort: {}
+      redisConfigs: {}
+      redisVersion: {}
+      replicaCount: {}
+      reservedIpRange: {}
+      secondaryIpRange: {}
+      state: {}
+      statusMessage: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - gcp
+  gcp.project.redisService.instance.nodeInfo:
+    fields:
+      id: {}
+      projectId: {}
+      zone: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - gcp
   gcp.project.sqlService:
     fields:
       instances: {}
@@ -2411,6 +2466,12 @@ resources:
     refs:
     - title: Recommendations
       url: https://cloud.google.com/recommender/docs/key-concepts
+  gcp.redis:
+    fields: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - gcp
   gcp.resourcemanager.binding:
     fields:
       id: {}
