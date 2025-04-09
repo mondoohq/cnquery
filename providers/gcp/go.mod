@@ -17,6 +17,7 @@ require (
 	cloud.google.com/go/monitoring v1.24.1
 	cloud.google.com/go/pubsub v1.48.0
 	cloud.google.com/go/recommender v1.13.4
+	cloud.google.com/go/redis v1.18.1
 	cloud.google.com/go/run v1.9.2
 	cloud.google.com/go/serviceusage v1.9.5
 	github.com/aws/smithy-go v1.22.3

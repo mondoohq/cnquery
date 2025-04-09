@@ -49,6 +49,85 @@ private gcp.folders {
   children() []gcp.folder
 }
 
+// Google Cloud (GCP) Redis
+private gcp.project.redisService {
+  // Project ID
+  projectId string
+  // List all redis instances
+  instances() []gcp.project.redisService.instance
+}
+
+// Google Cloud (GCP) Redis instance
+private gcp.project.redisService.instance @defaults("name") {
+  // Unique name of the resource in this scope including project and location
+  name string
+  // Project ID
+  projectId string
+  // An arbitrary and optional user-provided name for the instance
+  displayName string
+  // Resource labels to represent user provided metadata
+  Labels map[string]string
+  // The zone where the instance will be provisioned
+  locationId string
+  // The version of Redis software
+  redisVersion string
+  // The CIDR range of internal addresses that are reserved for this instance
+  reservedIpRange string
+  // Additional IP range for node placement
+  secondaryIpRange string
+  // Hostname or IP address of the exposed Redis endpoint used by clients to connect to the service
+  host string
+  // The port number of the exposed Redis endpoint
+  port int
+  // The current zone where the Redis primary node is located
+  currentLocationId string
+  // The time the instance was created
+  createTime time
+  // The current state of this instance
+  state string
+  // Additional information about the current status of this instance, if available
+  statusMessage string
+  // Redis configuration parameters, according to http://redis.io/topics/config
+  redisConfigs map[string]string
+  // Redis memory size in GiB
+  memorySizeGb int
+  // The full name of the Google Compute Engine
+  // [network](https://cloud.google.com/vpc/docs/vpc) to which the
+  // instance is connected. If left unspecified, the `default` network
+  // will be used
+  AuthorizedNetwork string
+  // Cloud IAM identity used by import / export operations to transfer data to/from Cloud Storage
+  persistenceIamIdentity string
+  // The network connect mode of the Redis instance
+  connectMode string
+  // Redis AUTH is enabled or not for the instance. If set to "true" AUTH is enabled on the instance
+  authEnabled bool
+  // The number of replica nodes
+  replicaCount int
+  // Info per node
+  nodes []gcp.project.redisService.instance.nodeInfo
+  // Hostname or IP address of the exposed readonly Redis endpoint
+  readEndpoint string
+  // The port number of the exposed readonly redis endpoint
+  readEndpointPort int
+  // The KMS key reference that the customer provides when trying to create the instance
+  customerManagedKey string
+  // The self service update maintenance version
+  maintenanceVersion string
+  // The available maintenance versions that an instance could update to
+  availableMaintenanceVersions []string
+}
+
+// Google Cloud (GCP) Redis instance node information
+private gcp.project.redisService.instance.nodeInfo @defaults("id zone") {
+  // Project ID
+  projectId string
+  // Node identifying string (e.g. `node-0`, `node-1`)
+  id string
+  // Location of the node
+  zone string
+}
+
 // Google Cloud (GCP) folder
 private gcp.folder @defaults("name") {
   // Folder ID
@@ -140,6 +219,8 @@ gcp.project @defaults("name") {
   monitoring() gcp.project.monitoringService
   // Binary Authorization resources
   binaryAuthorization() gcp.project.binaryAuthorizationControl
+  // GCP Redis resources
+  redis() gcp.project.redisService
 }
 
 // Google Cloud (GCP) service
