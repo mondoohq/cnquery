@@ -6,35 +6,43 @@ package provider
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
+	"time"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 
 	"go.mondoo.com/cnquery/v11"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
-
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/memoize"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/v11/providers/gcp/connection"
 	"go.mondoo.com/cnquery/v11/providers/gcp/connection/gcpinstancesnapshot"
 	"go.mondoo.com/cnquery/v11/providers/gcp/connection/shared"
 	"go.mondoo.com/cnquery/v11/providers/gcp/resources"
 )
 
-const (
-	ConnectionType = "gcp"
+const ConnectionType = "gcp"
+
+var (
+	cacheExpirationTime = 3 * time.Hour
+	cacheCleanupTime    = 6 * time.Hour
 )
 
 type Service struct {
 	*plugin.Service
+	*memoize.Memoizer
 }
 
 func Init() *Service {
 	return &Service{
-		Service: plugin.NewService(),
+		plugin.NewService(),
+		memoize.NewMemoizer(cacheExpirationTime, cacheCleanupTime),
 	}
 }
 
@@ -233,6 +241,15 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			conn, err = connection.NewGcpConnection(connId, asset, conf)
 		}
 
+		if err != nil {
+			return nil, err
+		}
+
+		// verify the connection only once
+		_, err, _ = s.Memoize(fmt.Sprintf("conn_%d", conn.Hash()), func() (interface{}, error) {
+			log.Trace().Str("type", string(conn.Type())).Msg("verifying connection client")
+			return nil, conn.Verify()
+		})
 		if err != nil {
 			return nil, err
 		}

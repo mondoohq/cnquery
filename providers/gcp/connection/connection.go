@@ -6,6 +6,7 @@ package connection
 import (
 	"errors"
 
+	"github.com/mitchellh/hashstructure/v2"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
@@ -95,23 +96,40 @@ func NewGcpConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 	conn.cred = cred
 	conn.platformOverride = override
 
+	return conn, nil
+}
+
+func (c *GcpConnection) Hash() uint64 {
+	// generate hash of the config options used to generate this connection
+	// used to avoid verifying a client with the same options more than once
+	hash, err := hashstructure.Hash(c, hashstructure.FormatV2, nil)
+	if err != nil {
+		log.Error().Err(err).Msg("unable to hash connection")
+	}
+	return hash
+}
+
+func (c *GcpConnection) Verify() error {
 	// verify that we have access to the organization or project
-	switch resourceType {
+	switch c.resourceType {
 	case Organization:
-		_, err := conn.GetOrganization(resourceID)
+		_, err := c.GetOrganization(c.resourceID)
 		if err != nil {
-			log.Error().Err(err).Msgf("could not find or have no access to organization %s", resourceID)
-			return nil, err
+			log.Error().Err(err).
+				Str("organization", c.resourceID).
+				Msg("could not find, or have no access to organization")
+			return err
 		}
 	case Project, Gcr:
-		_, err := conn.GetProject(resourceID)
+		_, err := c.GetProject(c.resourceID)
 		if err != nil {
-			log.Error().Err(err).Msgf("could not find or have no access to project %s", resourceID)
-			return nil, err
+			log.Error().Err(err).
+				Str("project", c.resourceID).
+				Msg("could not find, or have no access to project")
+			return err
 		}
 	}
-
-	return conn, nil
+	return nil
 }
 
 func (c *GcpConnection) Name() string {
