@@ -35,8 +35,16 @@ func (g *mqlGcpProjectRedisService) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error
 	}
-	projectId := g.ProjectId.Data
-	return fmt.Sprintf("gcp.project.storageService/%s", projectId), nil
+	return fmt.Sprintf("gcp.project/%s/redisService", g.ProjectId.Data), nil
+}
+
+func (g *mqlGcpProjectRedisServiceInstance) id() (string, error) {
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
+	}
+	return fmt.Sprintf(
+		"gcp.project/%s/redisService.instance/%s", g.ProjectId.Data, g.Name.Data,
+	), nil
 }
 
 // Requires the following OAuth scope:
@@ -66,10 +74,6 @@ func (g *mqlGcpProjectRedisService) instances() ([]any, error) {
 	it := redisSvc.ListInstances(ctx, &redispb.ListInstancesRequest{
 		Parent: fmt.Sprintf("projects/%s/locations/-", projectID),
 	})
-	if err != nil {
-		return nil, err
-	}
-
 	res := []any{}
 	for {
 		instance, err := it.Next()
@@ -104,7 +108,7 @@ func (g *mqlGcpProjectRedisService) instances() ([]any, error) {
 			"readEndpointPort":       llx.IntData(instance.ReadEndpointPort),
 			"authEnabled":            llx.BoolData(instance.AuthEnabled),
 			"createTime":             llx.TimeData(instance.CreateTime.AsTime()),
-			"Labels":                 llx.MapData(convert.MapToInterfaceMap(instance.Labels), types.String),
+			"labels":                 llx.MapData(convert.MapToInterfaceMap(instance.Labels), types.String),
 			"redisConfigs":           llx.MapData(convert.MapToInterfaceMap(instance.RedisConfigs), types.String),
 			"availableMaintenanceVersions": llx.ArrayData(
 				convert.SliceAnyToInterface(instance.AvailableMaintenanceVersions), types.String,
