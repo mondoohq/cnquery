@@ -24,6 +24,7 @@ require (
 	github.com/cockroachdb/errors v1.11.3
 	github.com/google/go-containerregistry v0.20.3
 	github.com/hashicorp/go-cleanhttp v0.5.2
+	github.com/mitchellh/hashstructure/v2 v2.0.2
 	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.10.0
 	go.mondoo.com/cnquery/v11 v11.47.1
@@ -60,7 +61,6 @@ require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/knqyf263/go-rpmdb v0.1.1 // indirect
-	github.com/mitchellh/hashstructure/v2 v2.0.2 // indirect
 	github.com/moby/buildkit v0.19.0 // indirect
 	github.com/moby/sys/mount v0.3.4 // indirect
 	github.com/moby/sys/mountinfo v0.7.2 // indirect
@@ -69,6 +69,7 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/ncruces/go-strftime v0.1.9 // indirect
 	github.com/package-url/packageurl-go v0.1.3 // indirect
+	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/prometheus/client_golang v1.20.5 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect

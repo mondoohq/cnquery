@@ -16,6 +16,10 @@ type GcpConnection interface {
 	Type() ConnectionType
 	Config() *inventory.Config
 	Asset() *inventory.Asset
+
+	// Used to avoid verifying a client with the same options more than once
+	Verify() error
+	Hash() uint64
 }
 
 type Capabilities byte

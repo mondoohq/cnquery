@@ -250,6 +250,16 @@ type GcpSnapshotConnection struct {
 	identifier      string
 }
 
+// no-op
+func (c *GcpSnapshotConnection) Hash() uint64 {
+	return 0
+}
+
+// no-op
+func (c *GcpSnapshotConnection) Verify() error {
+	return nil
+}
+
 func (c *GcpSnapshotConnection) Close() {
 	log.Debug().Msg("closing gcp snapshot connection")
 	if c == nil {
