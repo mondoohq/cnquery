@@ -34,6 +34,11 @@ type GcpConnection struct {
 	plugin.Connection
 	Conf  *inventory.Config
 	asset *inventory.Asset
+
+	opts gcpConnectionOptions
+}
+
+type gcpConnectionOptions struct {
 	// custom connection fields
 	resourceType ResourceType
 	resourceID   string
@@ -48,6 +53,7 @@ func NewGcpConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 		Connection: plugin.NewConnection(id, asset),
 		Conf:       conf,
 		asset:      asset,
+		opts:       gcpConnectionOptions{},
 	}
 
 	// initialize connection
@@ -57,8 +63,11 @@ func NewGcpConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 		cred = conf.Credentials[0]
 	}
 	if conf.Type == "gcp" {
-		if conf.Options == nil || (conf.Options["project-id"] == "" && conf.Options["organization-id"] == "" && conf.Options["folder-id"] == "") {
-			return nil, errors.New("google provider requires a gcp organization id, gcp project id or google workspace customer id. please set option `project-id` or `organization-id` or `customer-id` or `folder-id`")
+		if conf.Options == nil ||
+			(conf.Options["project-id"] == "" && conf.Options["organization-id"] == "" && conf.Options["folder-id"] == "") {
+			return nil, errors.New(
+				"google provider requires a gcp organization id, gcp project id or google workspace customer id. " +
+					"Please set option `project-id` or `organization-id` or `customer-id` or `folder-id`")
 		}
 	} else {
 		return nil, plugin.ErrProviderTypeDoesNotMatch
@@ -91,10 +100,10 @@ func NewGcpConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 		override = conf.Options["platform-override"]
 	}
 
-	conn.resourceID = resourceID
-	conn.resourceType = resourceType
-	conn.cred = cred
-	conn.platformOverride = override
+	conn.opts.resourceID = resourceID
+	conn.opts.resourceType = resourceType
+	conn.opts.cred = cred
+	conn.opts.platformOverride = override
 
 	return conn, nil
 }
@@ -102,7 +111,7 @@ func NewGcpConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 func (c *GcpConnection) Hash() uint64 {
 	// generate hash of the config options used to generate this connection
 	// used to avoid verifying a client with the same options more than once
-	hash, err := hashstructure.Hash(c, hashstructure.FormatV2, nil)
+	hash, err := hashstructure.Hash(c.opts, hashstructure.FormatV2, nil)
 	if err != nil {
 		log.Error().Err(err).Msg("unable to hash connection")
 	}
@@ -111,20 +120,20 @@ func (c *GcpConnection) Hash() uint64 {
 
 func (c *GcpConnection) Verify() error {
 	// verify that we have access to the organization or project
-	switch c.resourceType {
+	switch c.ResourceType() {
 	case Organization:
-		_, err := c.GetOrganization(c.resourceID)
+		_, err := c.GetOrganization(c.ResourceID())
 		if err != nil {
 			log.Error().Err(err).
-				Str("organization", c.resourceID).
+				Str("organization", c.ResourceID()).
 				Msg("could not find, or have no access to organization")
 			return err
 		}
 	case Project, Gcr:
-		_, err := c.GetProject(c.resourceID)
+		_, err := c.GetProject(c.ResourceID())
 		if err != nil {
 			log.Error().Err(err).
-				Str("project", c.resourceID).
+				Str("project", c.ResourceID()).
 				Msg("could not find, or have no access to project")
 			return err
 		}

@@ -29,37 +29,37 @@ func NewResourcePlatformID(service, project, region, objectType, name string) st
 func (c *GcpConnection) Identifier() (string, error) {
 	switch c.ResourceType() {
 	case Organization:
-		return NewOrganizationPlatformID(c.resourceID), nil
+		return NewOrganizationPlatformID(c.ResourceID()), nil
 	case Project:
-		return NewProjectPlatformID(c.resourceID), nil
+		return NewProjectPlatformID(c.ResourceID()), nil
 	case Folder:
-		return NewFolderPlatformID(c.resourceID), nil
+		return NewFolderPlatformID(c.ResourceID()), nil
 	default:
 		return "", fmt.Errorf("unsupported resource type %d", c.ResourceType())
 	}
 }
 
 func (c *GcpConnection) ResourceType() ResourceType {
-	return c.resourceType
+	return c.opts.resourceType
 }
 
 func (c *GcpConnection) ResourceID() string {
-	return c.resourceID
+	return c.opts.resourceID
 }
 
 func (c *GcpConnection) PlatformInfo() (*inventory.Platform, error) {
 	// TODO: this is a hack and we need to find a better way to do this
-	if c.platformOverride != "" && c.platformOverride != "gcp" {
+	if c.opts.platformOverride != "" && c.opts.platformOverride != "gcp" {
 		return &inventory.Platform{
-			Name:    c.platformOverride,
-			Title:   getTitleForPlatformName(c.platformOverride),
+			Name:    c.opts.platformOverride,
+			Title:   getTitleForPlatformName(c.opts.platformOverride),
 			Family:  []string{"google"},
 			Kind:    "gcp-object",
 			Runtime: "gcp",
 		}, nil
 	}
 
-	switch c.resourceType {
+	switch c.ResourceType() {
 	case Organization:
 		return &inventory.Platform{
 			Name:    "gcp-org",
