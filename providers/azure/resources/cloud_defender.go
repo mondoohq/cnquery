@@ -31,6 +31,17 @@ const (
 	kubernetesClusterPolicyExtensionDefinitionId string = "/providers/Microsoft.Authorization/policyDefinitions/0adc5395-9169-4b9b-8687-af838d69410a"
 )
 
+func (a *mqlAzureSubscription) cloudDefender() (*mqlAzureSubscriptionCloudDefenderService, error) {
+	svc, err := NewResource(a.MqlRuntime, "azure.subscription.cloudDefenderService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	cdSvc := svc.(*mqlAzureSubscriptionCloudDefenderService)
+	return cdSvc, nil
+}
+
 func (a *mqlAzureSubscriptionCloudDefenderService) id() (string, error) {
 	return "azure.subscription.cloudDefender/" + a.SubscriptionId.Data, nil
 }

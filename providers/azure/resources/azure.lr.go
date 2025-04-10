@@ -378,6 +378,18 @@ func init() {
 			// to override args, implement: initAzureSubscriptionMonitorServiceDiagnosticsetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionMonitorServiceDiagnosticsetting,
 		},
+		"azure.subscription.easmDefenderService": {
+			Init: initAzureSubscriptionEasmDefenderService,
+			Create: createAzureSubscriptionEasmDefenderService,
+		},
+		"azure.subscription.easmDefenderService.workspace": {
+			// to override args, implement: initAzureSubscriptionEasmDefenderServiceWorkspace(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionEasmDefenderServiceWorkspace,
+		},
+		"azure.subscription.easmDefenderService.workspaceSystemData": {
+			// to override args, implement: initAzureSubscriptionEasmDefenderServiceWorkspaceSystemData(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionEasmDefenderServiceWorkspaceSystemData,
+		},
 		"azure.subscription.cloudDefenderService": {
 			Init: initAzureSubscriptionCloudDefenderService,
 			Create: createAzureSubscriptionCloudDefenderService,
@@ -592,6 +604,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.cloudDefender": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscription).GetCloudDefender()).ToDataRes(types.Resource("azure.subscription.cloudDefenderService"))
+	},
+	"azure.subscription.easmDefender": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscription).GetEasmDefender()).ToDataRes(types.Resource("azure.subscription.easmDefenderService"))
 	},
 	"azure.subscription.aks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscription).GetAks()).ToDataRes(types.Resource("azure.subscription.aksService"))
@@ -2606,6 +2621,54 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.monitorService.diagnosticsetting.storageAccount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMonitorServiceDiagnosticsetting).GetStorageAccount()).ToDataRes(types.Resource("azure.subscription.storageService.account"))
 	},
+	"azure.subscription.easmDefenderService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEasmDefenderService).GetSubscriptionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.easmDefenderService.workspaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEasmDefenderService).GetWorkspaces()).ToDataRes(types.Array(types.Resource("azure.subscription.easmDefenderService.workspace")))
+	},
+	"azure.subscription.easmDefenderService.workspace.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEasmDefenderServiceWorkspace).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.easmDefenderService.workspace.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEasmDefenderServiceWorkspace).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.easmDefenderService.workspace.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEasmDefenderServiceWorkspace).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.easmDefenderService.workspace.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEasmDefenderServiceWorkspace).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.easmDefenderService.workspace.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEasmDefenderServiceWorkspace).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.easmDefenderService.workspace.dataPlaneEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEasmDefenderServiceWorkspace).GetDataPlaneEndpoint()).ToDataRes(types.String)
+	},
+	"azure.subscription.easmDefenderService.workspace.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEasmDefenderServiceWorkspace).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.easmDefenderService.workspace.systemData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEasmDefenderServiceWorkspace).GetSystemData()).ToDataRes(types.Resource("azure.subscription.easmDefenderService.workspaceSystemData"))
+	},
+	"azure.subscription.easmDefenderService.workspaceSystemData.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEasmDefenderServiceWorkspaceSystemData).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"azure.subscription.easmDefenderService.workspaceSystemData.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEasmDefenderServiceWorkspaceSystemData).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"azure.subscription.easmDefenderService.workspaceSystemData.createdByType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEasmDefenderServiceWorkspaceSystemData).GetCreatedByType()).ToDataRes(types.String)
+	},
+	"azure.subscription.easmDefenderService.workspaceSystemData.lastModifiedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEasmDefenderServiceWorkspaceSystemData).GetLastModifiedAt()).ToDataRes(types.Time)
+	},
+	"azure.subscription.easmDefenderService.workspaceSystemData.lastModifiedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEasmDefenderServiceWorkspaceSystemData).GetLastModifiedBy()).ToDataRes(types.String)
+	},
+	"azure.subscription.easmDefenderService.workspaceSystemData.lastModifiedByType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEasmDefenderServiceWorkspaceSystemData).GetLastModifiedByType()).ToDataRes(types.String)
+	},
 	"azure.subscription.cloudDefenderService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetSubscriptionId()).ToDataRes(types.String)
 	},
@@ -3087,6 +3150,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"azure.subscription.cloudDefender": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscription).CloudDefender, ok = plugin.RawToTValue[*mqlAzureSubscriptionCloudDefenderService](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.easmDefender": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscription).EasmDefender, ok = plugin.RawToTValue[*mqlAzureSubscriptionEasmDefenderService](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.aks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6125,6 +6192,82 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAzureSubscriptionMonitorServiceDiagnosticsetting).StorageAccount, ok = plugin.RawToTValue[*mqlAzureSubscriptionStorageServiceAccount](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.easmDefenderService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAzureSubscriptionEasmDefenderService).__id, ok = v.Value.(string)
+			return
+		},
+	"azure.subscription.easmDefenderService.subscriptionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEasmDefenderService).SubscriptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.easmDefenderService.workspaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEasmDefenderService).Workspaces, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.easmDefenderService.workspace.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAzureSubscriptionEasmDefenderServiceWorkspace).__id, ok = v.Value.(string)
+			return
+		},
+	"azure.subscription.easmDefenderService.workspace.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEasmDefenderServiceWorkspace).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.easmDefenderService.workspace.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEasmDefenderServiceWorkspace).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.easmDefenderService.workspace.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEasmDefenderServiceWorkspace).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.easmDefenderService.workspace.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEasmDefenderServiceWorkspace).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.easmDefenderService.workspace.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEasmDefenderServiceWorkspace).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.easmDefenderService.workspace.dataPlaneEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEasmDefenderServiceWorkspace).DataPlaneEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.easmDefenderService.workspace.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEasmDefenderServiceWorkspace).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.easmDefenderService.workspace.systemData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEasmDefenderServiceWorkspace).SystemData, ok = plugin.RawToTValue[*mqlAzureSubscriptionEasmDefenderServiceWorkspaceSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.easmDefenderService.workspaceSystemData.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAzureSubscriptionEasmDefenderServiceWorkspaceSystemData).__id, ok = v.Value.(string)
+			return
+		},
+	"azure.subscription.easmDefenderService.workspaceSystemData.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEasmDefenderServiceWorkspaceSystemData).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.easmDefenderService.workspaceSystemData.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEasmDefenderServiceWorkspaceSystemData).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.easmDefenderService.workspaceSystemData.createdByType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEasmDefenderServiceWorkspaceSystemData).CreatedByType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.easmDefenderService.workspaceSystemData.lastModifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEasmDefenderServiceWorkspaceSystemData).LastModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.easmDefenderService.workspaceSystemData.lastModifiedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEasmDefenderServiceWorkspaceSystemData).LastModifiedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.easmDefenderService.workspaceSystemData.lastModifiedByType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEasmDefenderServiceWorkspaceSystemData).LastModifiedByType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.cloudDefenderService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAzureSubscriptionCloudDefenderService).__id, ok = v.Value.(string)
 			return
@@ -6774,6 +6917,7 @@ type mqlAzureSubscription struct {
 	Authorization plugin.TValue[*mqlAzureSubscriptionAuthorizationService]
 	Monitor plugin.TValue[*mqlAzureSubscriptionMonitorService]
 	CloudDefender plugin.TValue[*mqlAzureSubscriptionCloudDefenderService]
+	EasmDefender plugin.TValue[*mqlAzureSubscriptionEasmDefenderService]
 	Aks plugin.TValue[*mqlAzureSubscriptionAksService]
 	Advisor plugin.TValue[*mqlAzureSubscriptionAdvisorService]
 	Policy plugin.TValue[*mqlAzureSubscriptionPolicy]
@@ -7106,6 +7250,22 @@ func (c *mqlAzureSubscription) GetCloudDefender() *plugin.TValue[*mqlAzureSubscr
 		}
 
 		return c.cloudDefender()
+	})
+}
+
+func (c *mqlAzureSubscription) GetEasmDefender() *plugin.TValue[*mqlAzureSubscriptionEasmDefenderService] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionEasmDefenderService](&c.EasmDefender, func() (*mqlAzureSubscriptionEasmDefenderService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription", c.__id, "easmDefender")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionEasmDefenderService), nil
+			}
+		}
+
+		return c.easmDefender()
 	})
 }
 
@@ -15521,6 +15681,225 @@ func (c *mqlAzureSubscriptionMonitorServiceDiagnosticsetting) GetStorageAccount(
 
 		return c.storageAccount()
 	})
+}
+
+// mqlAzureSubscriptionEasmDefenderService for the azure.subscription.easmDefenderService resource
+type mqlAzureSubscriptionEasmDefenderService struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAzureSubscriptionEasmDefenderServiceInternal it will be used here
+	SubscriptionId plugin.TValue[string]
+	Workspaces plugin.TValue[[]interface{}]
+}
+
+// createAzureSubscriptionEasmDefenderService creates a new instance of this resource
+func createAzureSubscriptionEasmDefenderService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionEasmDefenderService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.easmDefenderService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionEasmDefenderService) MqlName() string {
+	return "azure.subscription.easmDefenderService"
+}
+
+func (c *mqlAzureSubscriptionEasmDefenderService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionEasmDefenderService) GetSubscriptionId() *plugin.TValue[string] {
+	return &c.SubscriptionId
+}
+
+func (c *mqlAzureSubscriptionEasmDefenderService) GetWorkspaces() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Workspaces, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.easmDefenderService", c.__id, "workspaces")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.workspaces()
+	})
+}
+
+// mqlAzureSubscriptionEasmDefenderServiceWorkspace for the azure.subscription.easmDefenderService.workspace resource
+type mqlAzureSubscriptionEasmDefenderServiceWorkspace struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAzureSubscriptionEasmDefenderServiceWorkspaceInternal it will be used here
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	Location plugin.TValue[string]
+	Tags plugin.TValue[map[string]interface{}]
+	Type plugin.TValue[string]
+	DataPlaneEndpoint plugin.TValue[string]
+	ProvisioningState plugin.TValue[string]
+	SystemData plugin.TValue[*mqlAzureSubscriptionEasmDefenderServiceWorkspaceSystemData]
+}
+
+// createAzureSubscriptionEasmDefenderServiceWorkspace creates a new instance of this resource
+func createAzureSubscriptionEasmDefenderServiceWorkspace(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionEasmDefenderServiceWorkspace{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.easmDefenderService.workspace", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionEasmDefenderServiceWorkspace) MqlName() string {
+	return "azure.subscription.easmDefenderService.workspace"
+}
+
+func (c *mqlAzureSubscriptionEasmDefenderServiceWorkspace) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionEasmDefenderServiceWorkspace) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionEasmDefenderServiceWorkspace) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionEasmDefenderServiceWorkspace) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionEasmDefenderServiceWorkspace) GetTags() *plugin.TValue[map[string]interface{}] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionEasmDefenderServiceWorkspace) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionEasmDefenderServiceWorkspace) GetDataPlaneEndpoint() *plugin.TValue[string] {
+	return &c.DataPlaneEndpoint
+}
+
+func (c *mqlAzureSubscriptionEasmDefenderServiceWorkspace) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionEasmDefenderServiceWorkspace) GetSystemData() *plugin.TValue[*mqlAzureSubscriptionEasmDefenderServiceWorkspaceSystemData] {
+	return &c.SystemData
+}
+
+// mqlAzureSubscriptionEasmDefenderServiceWorkspaceSystemData for the azure.subscription.easmDefenderService.workspaceSystemData resource
+type mqlAzureSubscriptionEasmDefenderServiceWorkspaceSystemData struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAzureSubscriptionEasmDefenderServiceWorkspaceSystemDataInternal it will be used here
+	CreatedAt plugin.TValue[*time.Time]
+	CreatedBy plugin.TValue[string]
+	CreatedByType plugin.TValue[string]
+	LastModifiedAt plugin.TValue[*time.Time]
+	LastModifiedBy plugin.TValue[string]
+	LastModifiedByType plugin.TValue[string]
+}
+
+// createAzureSubscriptionEasmDefenderServiceWorkspaceSystemData creates a new instance of this resource
+func createAzureSubscriptionEasmDefenderServiceWorkspaceSystemData(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionEasmDefenderServiceWorkspaceSystemData{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.easmDefenderService.workspaceSystemData", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionEasmDefenderServiceWorkspaceSystemData) MqlName() string {
+	return "azure.subscription.easmDefenderService.workspaceSystemData"
+}
+
+func (c *mqlAzureSubscriptionEasmDefenderServiceWorkspaceSystemData) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionEasmDefenderServiceWorkspaceSystemData) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAzureSubscriptionEasmDefenderServiceWorkspaceSystemData) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+func (c *mqlAzureSubscriptionEasmDefenderServiceWorkspaceSystemData) GetCreatedByType() *plugin.TValue[string] {
+	return &c.CreatedByType
+}
+
+func (c *mqlAzureSubscriptionEasmDefenderServiceWorkspaceSystemData) GetLastModifiedAt() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedAt
+}
+
+func (c *mqlAzureSubscriptionEasmDefenderServiceWorkspaceSystemData) GetLastModifiedBy() *plugin.TValue[string] {
+	return &c.LastModifiedBy
+}
+
+func (c *mqlAzureSubscriptionEasmDefenderServiceWorkspaceSystemData) GetLastModifiedByType() *plugin.TValue[string] {
+	return &c.LastModifiedByType
 }
 
 // mqlAzureSubscriptionCloudDefenderService for the azure.subscription.cloudDefenderService resource

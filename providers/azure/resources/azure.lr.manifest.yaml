@@ -20,6 +20,8 @@ resources:
       cloudDefender: {}
       compute: {}
       cosmosDb: {}
+      easmDefender:
+        min_mondoo_version: 9.0.0
       functions:
         min_mondoo_version: 9.0.0
       iam:
@@ -626,6 +628,43 @@ resources:
     refs:
     - title: Azure Cosmos DB documentation
       url: https://learn.microsoft.com/en-us/azure/cosmos-db/
+  azure.subscription.easmDefenderService:
+    fields:
+      subscriptionId: {}
+      workspaces: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.easmDefenderService.workspace:
+    fields:
+      dataPlaneEndpoint: {}
+      id: {}
+      location: {}
+      name: {}
+      provisioningState: {}
+      systemData: {}
+      tags: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.easmDefenderService.workspaceSystemData:
+    fields:
+      createdAt: {}
+      createdBy: {}
+      createdByType: {}
+      lastModifiedAt: {}
+      lastModifiedBy: {}
+      lastModifiedByType: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
   azure.subscription.function:
     fields:
       id: {}

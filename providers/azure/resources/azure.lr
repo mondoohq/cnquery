@@ -60,6 +60,8 @@ azure.subscription @defaults ("name") {
   monitor() azure.subscription.monitorService
   // Cloud defender resources in the subscription
   cloudDefender() azure.subscription.cloudDefenderService
+  // External Attack Surface Management (EASM) defender resources in the subscription
+  easmDefender() azure.subscription.easmDefenderService
   // AKS resources in the subscription
   aks() azure.subscription.aksService
   // Advisor resources in the subscription
@@ -1754,6 +1756,50 @@ private azure.subscription.monitorService.diagnosticsetting @defaults("id name")
   storageAccountId string
   // Diagnostic setting storage account
   storageAccount() azure.subscription.storageService.account
+}
+
+// Microsoft Defender External Attack Surface Management (Defender EASM)
+private azure.subscription.easmDefenderService {
+  // Subscription identifier
+  subscriptionId string
+  // List of workspaces under the given subscription
+  workspaces() []azure.subscription.easmDefenderService.workspace
+}
+
+// Microsoft Defender EASM Workspace
+private azure.subscription.easmDefenderService.workspace @defaults("id name") {
+  // Resource ID
+  id string
+  // The workspace name
+  name string
+  // Location of the workspace
+  location string
+  // Workspace tags
+  tags map[string]string
+  // The type of the resource
+  type string
+  // Data plane endpoint
+  dataPlaneEndpoint string
+  // Resource provisioning state
+  provisioningState string
+  // Azure Resource Manager metadata
+  systemData azure.subscription.easmDefenderService.workspaceSystemData
+}
+
+// Microsoft Defender EASM Workspace System Metadata
+private azure.subscription.easmDefenderService.workspaceSystemData @defaults("createdAt createdBy") {
+  // The timestamp of resource creation (UTC)
+  createdAt time
+  // The identity that created the resource
+  createdBy string
+  // The type of identity that created the resource
+  createdByType string
+  // The timestamp of resource last modification (UTC)
+  lastModifiedAt time
+  // The identity that last modified the resource
+  lastModifiedBy string
+  // The type of identity that last modified the resource
+  lastModifiedByType string
 }
 
 // Microsoft Defender for Cloud
