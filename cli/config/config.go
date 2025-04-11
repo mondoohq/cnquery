@@ -311,6 +311,11 @@ func (c *CommonOpts) GetParentMrn() string {
 }
 
 func (c *CommonOpts) UpstreamApiEndpoint() string {
+	// First check for environment variable override
+	if envEndpoint := os.Getenv("MONDOO_API_ENDPOINT"); envEndpoint != "" {
+		return envEndpoint
+	}
+
 	apiEndpoint := c.APIEndpoint
 
 	// fallback to default api if nothing was set
