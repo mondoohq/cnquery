@@ -209,6 +209,7 @@ func (p *AgentManagerServer) HealthCheck(ctx context.Context, reqBytes *[]byte) 
 
 type SecureTokenService interface {
 	ExchangeSSH(context.Context, *ExchangeSSHKeyRequest) (*ExchangeSSHKeyResponse, error)
+	ExchangeExternalToken(context.Context, *ExchangeExternalTokenRequest) (*ExchangeExternalTokenResponse, error)
 }
 
 // client implementation
@@ -242,6 +243,11 @@ func (c *SecureTokenServiceClient) ExchangeSSH(ctx context.Context, in *Exchange
 	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/ExchangeSSH"}, ""), in, out)
 	return out, err
 }
+func (c *SecureTokenServiceClient) ExchangeExternalToken(ctx context.Context, in *ExchangeExternalTokenRequest) (*ExchangeExternalTokenResponse, error) {
+	out := new(ExchangeExternalTokenResponse)
+	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/ExchangeExternalToken"}, ""), in, out)
+	return out, err
+}
 
 // server implementation
 
@@ -265,7 +271,8 @@ func NewSecureTokenServiceServer(handler SecureTokenService, opts ...SecureToken
 	service := ranger.Service{
 		Name: "SecureTokenService",
 		Methods: map[string]ranger.Method{
-			"ExchangeSSH": srv.ExchangeSSH,
+			"ExchangeSSH":           srv.ExchangeSSH,
+			"ExchangeExternalToken": srv.ExchangeExternalToken,
 		},
 	}
 	return ranger.NewRPCServer(&service)
@@ -299,4 +306,28 @@ func (p *SecureTokenServiceServer) ExchangeSSH(ctx context.Context, reqBytes *[]
 		return nil, err
 	}
 	return p.handler.ExchangeSSH(ctx, &req)
+}
+func (p *SecureTokenServiceServer) ExchangeExternalToken(ctx context.Context, reqBytes *[]byte) (pb.Message, error) {
+	var req ExchangeExternalTokenRequest
+	var err error
+
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, errors.New("could not access header")
+	}
+
+	switch md.First("Content-Type") {
+	case "application/protobuf", "application/octet-stream", "application/grpc+proto":
+		err = pb.Unmarshal(*reqBytes, &req)
+	default:
+		// handle case of empty object
+		if len(*reqBytes) > 0 {
+			err = jsonpb.UnmarshalOptions{DiscardUnknown: true}.Unmarshal(*reqBytes, &req)
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	return p.handler.ExchangeExternalToken(ctx, &req)
 }
