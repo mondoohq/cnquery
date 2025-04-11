@@ -14,6 +14,8 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
+	"strings"
 	"time"
 
 	"go.mondoo.com/cnquery/v11/providers/os/connection/ssh/signers"
@@ -59,9 +61,8 @@ func ExchangeSSHKey(apiEndpoint string, identityMrn string, resourceMrn string) 
 }
 
 func ExchangeExternalToken(apiEndpoint string, audience string, issuerURI string) (*ServiceAccountCredentials, error) {
-	// TODO: This is just a testing function to fetch a GCP identity token
-	// it should change to be a generic function.
-	jsonToken, err := fetchGCPIdentityToken(audience)
+	// Fetch the identity token from the cloud provider
+	jsonToken, provider, err := fetchIdentityToken(audience)
 	if err != nil {
 		return nil, err
 	}
@@ -71,11 +72,26 @@ func ExchangeExternalToken(apiEndpoint string, audience string, issuerURI string
 		return nil, err
 	}
 
-	resp, err := stsClient.ExchangeExternalToken(context.Background(), &ExchangeExternalTokenRequest{
+	// If issuerURI is not provided, default based on the provider
+	if issuerURI == "" {
+		switch provider {
+		case "gcp":
+			issuerURI = "https://accounts.google.com"
+		case "azure":
+			issuerURI = "https://sts.windows.net/"
+		case "github":
+			issuerURI = "https://token.actions.githubusercontent.com"
+		default:
+			issuerURI = "https://accounts.google.com"
+		}
+	}
+
+	request := &ExchangeExternalTokenRequest{
 		Audience:  audience,
 		IssuerUri: issuerURI,
 		JwtToken:  jsonToken,
-	})
+	}
+	resp, err := stsClient.ExchangeExternalToken(context.Background(), request)
 	if err != nil {
 		return nil, err
 	}
@@ -86,17 +102,55 @@ func ExchangeExternalToken(apiEndpoint string, audience string, issuerURI string
 		return nil, err
 	}
 
-	// Unmarshal the JSON into ServiceAccountCredentials
-	var creds ServiceAccountCredentials
-	if err := json.Unmarshal(credBytes, &creds); err != nil {
+	// First unmarshal to a temporary structure to handle the field name mismatch
+	var tempCreds struct {
+		Mrn         string `json:"mrn"`
+		ParentMrn   string `json:"parent_mrn"`
+		SpaceMrn    string `json:"space_mrn"`
+		PrivateKey  string `json:"private_key"`
+		Certificate string `json:"certificate"`
+		ApiEndpoint string `json:"api_endpoint"`
+	}
+
+	if err := json.Unmarshal(credBytes, &tempCreds); err != nil {
 		return nil, err
+	}
+
+	// Create the ServiceAccountCredentials with the correct field mapping
+	creds := ServiceAccountCredentials{
+		Mrn:         tempCreds.Mrn,
+		ParentMrn:   tempCreds.SpaceMrn,
+		ScopeMrn:    tempCreds.SpaceMrn, // Map SpaceMrn to ScopeMrn
+		PrivateKey:  tempCreds.PrivateKey,
+		Certificate: tempCreds.Certificate,
+		ApiEndpoint: tempCreds.ApiEndpoint,
 	}
 
 	return &creds, nil
 }
 
-// TODO: This is just a testing function to fetch a GCP identity token
-// it should change to be a generic function that checks the provider and fetches the token accordingly.
+// fetchIdentityToken fetches an identity token from the current cloud environment
+// It supports GCP, Azure, and GitHub Actions
+func fetchIdentityToken(audience string) (string, string, error) {
+	// Try GCP
+	if token, err := fetchGCPIdentityToken(audience); err == nil {
+		return token, "gcp", nil
+	}
+
+	// Try Azure
+	if token, err := fetchAzureIdentityToken(audience); err == nil {
+		return token, "azure", nil
+	}
+
+	// Try GitHub Actions
+	if token, err := fetchGitHubActionsIdentityToken(audience); err == nil {
+		return token, "github", nil
+	}
+
+	return "", "", fmt.Errorf("failed to fetch identity token from any supported cloud provider")
+}
+
+// fetchGCPIdentityToken fetches an identity token from GCP metadata service
 func fetchGCPIdentityToken(audience string) (string, error) {
 	url := fmt.Sprintf("http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity?audience=%s", audience)
 	req, err := http.NewRequest("GET", url, nil)
@@ -105,18 +159,93 @@ func fetchGCPIdentityToken(audience string) (string, error) {
 	}
 	req.Header.Add("Metadata-Flavor", "Google")
 
-	client := &http.Client{}
+	client := &http.Client{Timeout: 2 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("gcp metadata service returned non-OK status: %d", resp.StatusCode)
+	}
+
 	tokenBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
 	return string(tokenBytes), nil
+}
+
+// fetchAzureIdentityToken fetches an identity token from Azure IMDS
+func fetchAzureIdentityToken(audience string) (string, error) {
+	reqUrl := "http://localhost:50342/oauth2/token"
+	data := make(url.Values)
+	data.Set("resource", audience)
+
+	req, err := http.NewRequest("POST", reqUrl, strings.NewReader(data.Encode()))
+	if err != nil {
+		return "", err
+	}
+	req.Header.Add("Metadata", "true")
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	client := &http.Client{Timeout: 2 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("azure IMDS returned non-OK status: %d", resp.StatusCode)
+	}
+
+	var result struct {
+		AccessToken string `json:"access_token"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", err
+	}
+
+	return result.AccessToken, nil
+}
+
+// fetchGitHubActionsIdentityToken fetches an identity token from GitHub Actions
+func fetchGitHubActionsIdentityToken(audience string) (string, error) {
+	tokenRequestToken := os.Getenv("ACTIONS_ID_TOKEN_REQUEST_TOKEN")
+	tokenRequestURL := os.Getenv("ACTIONS_ID_TOKEN_REQUEST_URL")
+
+	if tokenRequestToken == "" || tokenRequestURL == "" {
+		return "", fmt.Errorf("github Actions environment variables not set")
+	}
+
+	url := fmt.Sprintf("%s&audience=%s", tokenRequestURL, audience)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return "", err
+	}
+	req.Header.Add("Authorization", "bearer "+tokenRequestToken)
+
+	client := &http.Client{Timeout: 2 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("github Actions token service returned non-OK status: %d", resp.StatusCode)
+	}
+
+	var result struct {
+		Value string `json:"value"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", err
+	}
+
+	return result.Value, nil
 }
 
 // signClaims implements claims signing with ssh.Signer
