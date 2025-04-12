@@ -18,12 +18,16 @@ terraform {
   providers() []terraform.block
   // Data sources blocks
   datasources() []terraform.block
-  // All blocks with the type resource
-  resources() []terraform.block
   // Variable blocks
   variables() []terraform.block
   // Output blocks
   outputs() []terraform.block
+}
+
+// All blocks with the type resource
+terraform.resources {
+  []terraform.block
+  init(resource? string, name? string)
 }
 
 // Terraform configuration file (.tf or .tf.json file)
