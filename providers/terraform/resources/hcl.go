@@ -30,6 +30,7 @@ type mqlTerraformInternal struct {
 	// these are blocks with the type set to "terraform", used for settings
 	terraformBlocks []*mqlTerraformBlock
 	lock            sync.Mutex
+	resources       []*mqlTerraformBlock
 }
 
 func (t *mqlTerraform) files() ([]interface{}, error) {
@@ -122,8 +123,7 @@ func (t *mqlTerraform) refreshCache(blocks []interface{}) error {
 	t.Providers.Data = []interface{}{}
 	t.Datasources.State = plugin.StateIsSet
 	t.Datasources.Data = []interface{}{}
-	t.Resources.State = plugin.StateIsSet
-	t.Resources.Data = []interface{}{}
+	t.mqlTerraformInternal.resources = []*mqlTerraformBlock{}
 	t.Variables.State = plugin.StateIsSet
 	t.Variables.Data = []interface{}{}
 	t.Outputs.State = plugin.StateIsSet
@@ -142,7 +142,7 @@ func (t *mqlTerraform) refreshCache(blocks []interface{}) error {
 		case "data":
 			t.Datasources.Data = append(t.Providers.Data, block)
 		case "resource":
-			t.Resources.Data = append(t.Resources.Data, block)
+			t.mqlTerraformInternal.resources = append(t.mqlTerraformInternal.resources, block)
 		case "variable":
 			t.Variables.Data = append(t.Variables.Data, block)
 		case "output":
@@ -338,6 +338,51 @@ func (t *mqlTerraformBlock) nameLabel() (string, error) {
 	}
 
 	return labels[0].(string), nil
+}
+
+func initTerraformResources(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	tfraw, err := CreateResource(runtime, "terraform", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	tf := tfraw.(*mqlTerraform)
+	if err := tf.refreshCache(nil); err != nil {
+		return nil, nil, err
+	}
+	resources := tf.mqlTerraformInternal.resources
+
+	var resource string
+	rn := args["resource"]
+	if rn != nil {
+		resource = rn.Value.(string)
+	}
+
+	var name string
+	rn = args["name"]
+	if rn != nil {
+		name = rn.Value.(string)
+	}
+
+	var res []any
+	for i := range resources {
+		r := resources[i]
+		if resource != "" && r.Labels.Data[0].(string) != resource {
+			continue
+		}
+		if name != "" && r.Labels.Data[1].(string) != name {
+			continue
+		}
+		res = append(res, r)
+	}
+
+	return map[string]*llx.RawData{
+		"list": llx.ArrayData(res, types.Resource("terraform.block")),
+	}, nil, nil
+}
+
+func (t *mqlTerraformResources) list() ([]any, error) {
+	return nil, errors.New("resource was not initializeed")
 }
 
 func (t *mqlTerraformBlock) attributes() (map[string]interface{}, error) {
