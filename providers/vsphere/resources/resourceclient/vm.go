@@ -24,17 +24,17 @@ func VmInfo(vm *object.VirtualMachine) (*mo.VirtualMachine, error) {
 	return &props, nil
 }
 
-func VmProperties(vm *mo.VirtualMachine) (map[string]interface{}, error) {
+func VmProperties(vm *mo.VirtualMachine) (map[string]any, error) {
 	return PropertiesToDict(vm)
 }
 
-func AdvancedSettings(vm *object.VirtualMachine) (map[string]interface{}, error) {
+func AdvancedSettings(vm *object.VirtualMachine) (map[string]any, error) {
 	vmInfo, err := VmInfo(vm)
 	if err != nil {
 		return nil, err
 	}
 
-	advancedProps := map[string]interface{}{}
+	advancedProps := map[string]any{}
 	for i := range vmInfo.Config.ExtraConfig {
 		prop := vmInfo.Config.ExtraConfig[i]
 		key := prop.GetOptionValue().Key

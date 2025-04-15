@@ -18,7 +18,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
-	"go.mondoo.com/cnquery/v11/providers/azure/connection"
+	"go.mondoo.com/cnquery/v12/providers/azure/connection"
 )
 
 type armSecurityConn struct {
@@ -148,7 +148,7 @@ type PolicyAssignment struct {
 			} `json:"approvedExtensions"`
 		} `json:"parameters"`
 		Scope     string        `json:"scope"`
-		NotScopes []interface{} `json:"notScopes"`
+		NotScopes []any `json:"notScopes"`
 	} `json:"properties"`
 }
 

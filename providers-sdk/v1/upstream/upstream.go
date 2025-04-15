@@ -11,9 +11,9 @@ import (
 
 	"github.com/mitchellh/hashstructure/v2"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11"
-	"go.mondoo.com/cnquery/v11/utils/multierr"
-	rangerUtils "go.mondoo.com/cnquery/v11/utils/ranger"
+	"go.mondoo.com/cnquery/v12"
+	"go.mondoo.com/cnquery/v12/utils/multierr"
+	rangerUtils "go.mondoo.com/cnquery/v12/utils/ranger"
 	"go.mondoo.com/ranger-rpc"
 	guard_cert_auth "go.mondoo.com/ranger-rpc/plugins/authentication/cert"
 	"go.mondoo.com/ranger-rpc/plugins/rangerguard/crypto"

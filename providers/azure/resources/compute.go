@@ -11,11 +11,11 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	compute "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
 	network "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/azure/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/azure/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (a *mqlAzureSubscriptionComputeService) id() (string, error) {
@@ -52,7 +52,7 @@ func initAzureSubscriptionComputeService(runtime *plugin.Runtime, args map[strin
 	return args, nil, nil
 }
 
-func (a *mqlAzureSubscriptionComputeService) vms() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionComputeService) vms() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 
 	ctx := context.Background()
@@ -67,7 +67,7 @@ func (a *mqlAzureSubscriptionComputeService) vms() ([]interface{}, error) {
 		return nil, err
 	}
 	pager := vmClient.NewListAllPager(&compute.VirtualMachinesClientListAllOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		vms, err := pager.NextPage(ctx)
 		if err != nil {
@@ -141,7 +141,7 @@ func (a *mqlAzureSubscriptionComputeServiceVm) isRunning() (bool, error) {
 	return state.Data == "running", nil
 }
 
-func (a *mqlAzureSubscriptionComputeServiceVm) extensions() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionComputeServiceVm) extensions() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	// id is a Azure resource ID
 	id := a.Id.Data
@@ -172,7 +172,7 @@ func (a *mqlAzureSubscriptionComputeServiceVm) extensions() ([]interface{}, erro
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 
 	if extensions.Value == nil {
 		return res, nil
@@ -194,7 +194,7 @@ func (a *mqlAzureSubscriptionComputeServiceVm) extensions() ([]interface{}, erro
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionComputeService) disks() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionComputeService) disks() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 
 	ctx := context.Background()
@@ -213,7 +213,7 @@ func (a *mqlAzureSubscriptionComputeService) disks() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		disks, err := pager.NextPage(ctx)
 		if err != nil {
@@ -242,13 +242,13 @@ func diskToMql(runtime *plugin.Runtime, disk compute.Disk) (*mqlAzureSubscriptio
 		return nil, err
 	}
 
-	managedByExtended := []interface{}{}
+	managedByExtended := []any{}
 	for _, mbe := range disk.ManagedByExtended {
 		if mbe != nil {
 			managedByExtended = append(managedByExtended, *mbe)
 		}
 	}
-	zones := []interface{}{}
+	zones := []any{}
 	for _, z := range disk.Zones {
 		if z != nil {
 			zones = append(zones, *z)
@@ -319,7 +319,7 @@ func (a *mqlAzureSubscriptionComputeServiceVm) osDisk() (*mqlAzureSubscriptionCo
 	return diskToMql(a.MqlRuntime, disk.Disk)
 }
 
-func (a *mqlAzureSubscriptionComputeServiceVm) dataDisks() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionComputeServiceVm) dataDisks() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	propertiesDict := a.Properties.Data
 	data, err := json.Marshal(propertiesDict)
@@ -341,7 +341,7 @@ func (a *mqlAzureSubscriptionComputeServiceVm) dataDisks() ([]interface{}, error
 
 	dataDisks := properties.StorageProfile.DataDisks
 
-	res := []interface{}{}
+	res := []any{}
 	for _, dd := range dataDisks {
 		resourceID, err := ParseResourceID(*dd.ManagedDisk.ID)
 		if err != nil {
@@ -388,7 +388,7 @@ func (a *mqlAzureSubscriptionComputeServiceDisk) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionComputeServiceVm) publicIpAddresses() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionComputeServiceVm) publicIpAddresses() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	token := conn.Token()
 	resourceId, err := ParseResourceID(a.Id.Data)
@@ -401,7 +401,7 @@ func (a *mqlAzureSubscriptionComputeServiceVm) publicIpAddresses() ([]interface{
 		return nil, props.Error
 	}
 
-	propsDict := (props.Data).(map[string]interface{})
+	propsDict := (props.Data).(map[string]any)
 	networkInterface, ok := propsDict["networkProfile"]
 	if !ok {
 		return nil, errors.New("cannot find network profile on vm, not retrieving ip addresses")
@@ -416,7 +416,7 @@ func (a *mqlAzureSubscriptionComputeServiceVm) publicIpAddresses() ([]interface{
 	if err != nil {
 		return nil, err
 	}
-	res := []interface{}{}
+	res := []any{}
 
 	ctx := context.Background()
 	nicClient, err := network.NewInterfacesClient(subId, token, &arm.ClientOptions{

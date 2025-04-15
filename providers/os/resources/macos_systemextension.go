@@ -6,14 +6,14 @@ package resources
 import (
 	"strings"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
-func (m *mqlMacos) systemExtensions() ([]interface{}, error) {
+func (m *mqlMacos) systemExtensions() ([]any, error) {
 	conn := m.MqlRuntime.Connection.(shared.Connection)
 
 	f, err := conn.FileSystem().Open("/Library/SystemExtensions/db.plist")
@@ -27,12 +27,12 @@ func (m *mqlMacos) systemExtensions() ([]interface{}, error) {
 		return nil, err
 	}
 
-	extensions := systemExtensionDb["extensions"].([]interface{})
-	extensionPolicies := systemExtensionDb["extensionPolicies"].([]interface{})
+	extensions := systemExtensionDb["extensions"].([]any)
+	extensionPolicies := systemExtensionDb["extensionPolicies"].([]any)
 
-	list := []interface{}{}
+	list := []any{}
 	for i := range extensions {
-		ex, err := newMacosSystemExtension(m.MqlRuntime, extensions[i].(map[string]interface{}), extensionPolicies)
+		ex, err := newMacosSystemExtension(m.MqlRuntime, extensions[i].(map[string]any), extensionPolicies)
 		if err != nil {
 			return nil, err
 		}
@@ -42,13 +42,13 @@ func (m *mqlMacos) systemExtensions() ([]interface{}, error) {
 	return list, nil
 }
 
-func newMacosSystemExtension(runtime *plugin.Runtime, extension plistData, extensionPolicies []interface{}) (*mqlMacosSystemExtension, error) {
+func newMacosSystemExtension(runtime *plugin.Runtime, extension plistData, extensionPolicies []any) (*mqlMacosSystemExtension, error) {
 	uuid := extension.GetString("uniqueID")
 	identifier := extension.GetString("identifier")
 	teamID := extension.GetString("teamID")
 	isMdmManaged := false
 	for i := range extensionPolicies {
-		policy, ok := extensionPolicies[i].(map[string]interface{})
+		policy, ok := extensionPolicies[i].(map[string]any)
 		if !ok {
 			continue
 		}
@@ -57,7 +57,7 @@ func newMacosSystemExtension(runtime *plugin.Runtime, extension plistData, exten
 		// check if the team id is in allowedTeamIDs list
 		allowedTeams := plistPolicy.GetPlistData("allowedTeamIDs")
 		for k := range allowedTeams {
-			list := allowedTeams[k].([]interface{})
+			list := allowedTeams[k].([]any)
 			for j := range list {
 				if list[j].(string) == teamID {
 					isMdmManaged = true
@@ -69,7 +69,7 @@ func newMacosSystemExtension(runtime *plugin.Runtime, extension plistData, exten
 		// if it is not in the team id list, check allowedExtensions list
 		allowedExtensions := plistPolicy.GetPlistData("allowedExtensions")
 		for k := range allowedExtensions {
-			list := allowedExtensions[k].([]interface{})
+			list := allowedExtensions[k].([]any)
 			for j := range list {
 				if list[j].(string) == identifier {
 					isMdmManaged = true

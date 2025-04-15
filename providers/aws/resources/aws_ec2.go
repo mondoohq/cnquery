@@ -20,20 +20,20 @@ import (
 	"github.com/aws/smithy-go"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (e *mqlAwsEc2) id() (string, error) {
 	return "aws.ec2", nil
 }
 
-func Ec2TagsToMap(tags []ec2types.Tag) map[string]interface{} {
-	tagsMap := make(map[string]interface{})
+func Ec2TagsToMap(tags []ec2types.Tag) map[string]any {
+	tagsMap := make(map[string]any)
 
 	if len(tags) > 0 {
 		for i := range tags {
@@ -110,9 +110,9 @@ func (a *mqlAwsEc2Eip) instance() (*mqlAwsEc2Instance, error) {
 	return nil, nil
 }
 
-func (a *mqlAwsEc2) eips() ([]interface{}, error) {
+func (a *mqlAwsEc2) eips() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getEIPs(conn), 5)
 	poolOfJobs.Run()
 
@@ -122,7 +122,7 @@ func (a *mqlAwsEc2) eips() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
@@ -141,7 +141,7 @@ func (a *mqlAwsEc2) getEIPs(conn *connection.AwsConnection) []*jobpool.Job {
 
 			svc := conn.Ec2(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 
 			params := &ec2.DescribeAddressesInput{} // no pagination
 			addresses, err := svc.DescribeAddresses(ctx, params)
@@ -187,9 +187,9 @@ func (a *mqlAwsEc2Networkacl) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func (a *mqlAwsEc2) networkAcls() ([]interface{}, error) {
+func (a *mqlAwsEc2) networkAcls() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getNetworkACLs(conn), 5)
 	poolOfJobs.Run()
 
@@ -199,7 +199,7 @@ func (a *mqlAwsEc2) networkAcls() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
@@ -218,7 +218,7 @@ func (a *mqlAwsEc2) getNetworkACLs(conn *connection.AwsConnection) []*jobpool.Jo
 
 			svc := conn.Ec2(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 
 			params := &ec2.DescribeNetworkAclsInput{}
 			paginator := ec2.NewDescribeNetworkAclsPaginator(svc, params)
@@ -233,7 +233,7 @@ func (a *mqlAwsEc2) getNetworkACLs(conn *connection.AwsConnection) []*jobpool.Jo
 				}
 
 				for _, acl := range networkAcls.NetworkAcls {
-					assoc := []interface{}{}
+					assoc := []any{}
 					for _, association := range acl.Associations {
 						mqlNetworkAclAssoc, err := CreateResource(a.MqlRuntime, "aws.ec2.networkacl.association",
 							map[string]*llx.RawData{
@@ -277,7 +277,7 @@ func (a *mqlAwsEc2NetworkaclEntryPortrange) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAwsEc2Networkacl) entries() ([]interface{}, error) {
+func (a *mqlAwsEc2Networkacl) entries() ([]any, error) {
 	id := a.Id.Data
 	region := a.Region.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
@@ -292,7 +292,7 @@ func (a *mqlAwsEc2Networkacl) entries() ([]interface{}, error) {
 		return nil, errors.New("aws network acl not found")
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for _, entry := range networkacls.NetworkAcls[0].Entries {
 		egress := convert.ToValue(entry.Egress)
 		entryId := fmt.Sprintf("%s-%d", id, convert.ToValue(entry.RuleNumber))
@@ -379,7 +379,7 @@ func (a *mqlAwsEc2) getSecurityGroups(conn *connection.AwsConnection) []*jobpool
 
 			svc := conn.Ec2(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 
 			params := &ec2.DescribeSecurityGroupsInput{}
 			paginator := ec2.NewDescribeSecurityGroupsPaginator(svc, params)
@@ -438,12 +438,12 @@ func (a *mqlAwsEc2Securitygroup) vpc() (*mqlAwsVpc, error) {
 	return nil, nil
 }
 
-func (a *mqlAwsEc2Securitygroup) ipPermissions() ([]interface{}, error) {
-	mqlIpPermissions := []interface{}{}
+func (a *mqlAwsEc2Securitygroup) ipPermissions() ([]any, error) {
+	mqlIpPermissions := []any{}
 	for p := range a.cacheIpPerms {
 		permission := a.cacheIpPerms[p]
 
-		ipRanges := []interface{}{}
+		ipRanges := []any{}
 		for r := range permission.IpRanges {
 			iprange := permission.IpRanges[r]
 			if iprange.CidrIp != nil {
@@ -451,7 +451,7 @@ func (a *mqlAwsEc2Securitygroup) ipPermissions() ([]interface{}, error) {
 			}
 		}
 
-		ipv6Ranges := []interface{}{}
+		ipv6Ranges := []any{}
 		for r := range permission.Ipv6Ranges {
 			iprange := permission.Ipv6Ranges[r]
 			if iprange.CidrIpv6 != nil {
@@ -486,12 +486,12 @@ func (a *mqlAwsEc2Securitygroup) ipPermissions() ([]interface{}, error) {
 	return mqlIpPermissions, nil
 }
 
-func (a *mqlAwsEc2Securitygroup) ipPermissionsEgress() ([]interface{}, error) {
-	mqlIpPermissionsEgress := []interface{}{}
+func (a *mqlAwsEc2Securitygroup) ipPermissionsEgress() ([]any, error) {
+	mqlIpPermissionsEgress := []any{}
 	for p := range a.cacheIpPermsEgress {
 		permission := a.cacheIpPermsEgress[p]
 
-		ipRanges := []interface{}{}
+		ipRanges := []any{}
 		for r := range permission.IpRanges {
 			iprange := permission.IpRanges[r]
 			if iprange.CidrIp != nil {
@@ -499,7 +499,7 @@ func (a *mqlAwsEc2Securitygroup) ipPermissionsEgress() ([]interface{}, error) {
 			}
 		}
 
-		ipv6Ranges := []interface{}{}
+		ipv6Ranges := []any{}
 		for r := range permission.Ipv6Ranges {
 			iprange := permission.Ipv6Ranges[r]
 			if iprange.CidrIpv6 != nil {
@@ -534,9 +534,9 @@ func (a *mqlAwsEc2Securitygroup) ipPermissionsEgress() ([]interface{}, error) {
 	return mqlIpPermissionsEgress, nil
 }
 
-func (a *mqlAwsEc2) keypairs() ([]interface{}, error) {
+func (a *mqlAwsEc2) keypairs() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getKeypairs(conn), 5)
 	poolOfJobs.Run()
 
@@ -546,7 +546,7 @@ func (a *mqlAwsEc2) keypairs() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
@@ -569,7 +569,7 @@ func (a *mqlAwsEc2) getKeypairs(conn *connection.AwsConnection) []*jobpool.Job {
 
 			svc := conn.Ec2(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 
 			params := &ec2.DescribeKeyPairsInput{}
 			keyPairs, err := svc.DescribeKeyPairs(ctx, params)
@@ -654,9 +654,9 @@ func initAwsEc2Keypair(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	return args, nil, nil
 }
 
-func (a *mqlAwsEc2) securityGroups() ([]interface{}, error) {
+func (a *mqlAwsEc2) securityGroups() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getSecurityGroups(conn), 5)
 	poolOfJobs.Run()
 
@@ -666,7 +666,7 @@ func (a *mqlAwsEc2) securityGroups() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
@@ -677,9 +677,9 @@ type ebsEncryption struct {
 	ebsEncryptionByDefault bool
 }
 
-func (a *mqlAwsEc2) ebsEncryptionByDefault() (map[string]interface{}, error) {
+func (a *mqlAwsEc2) ebsEncryptionByDefault() (map[string]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := make(map[string]interface{})
+	res := make(map[string]any)
 	poolOfJobs := jobpool.CreatePool(a.getEbsEncryptionPerRegion(conn), 5)
 	poolOfJobs.Run()
 
@@ -730,9 +730,9 @@ func (a *mqlAwsEc2) getEbsEncryptionPerRegion(conn *connection.AwsConnection) []
 	return tasks
 }
 
-func (a *mqlAwsEc2) instances() ([]interface{}, error) {
+func (a *mqlAwsEc2) instances() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getInstances(conn), 5)
 	poolOfJobs.Run()
 
@@ -742,7 +742,7 @@ func (a *mqlAwsEc2) instances() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
@@ -786,7 +786,7 @@ func (a *mqlAwsEc2) getInstances(conn *connection.AwsConnection) []*jobpool.Job 
 
 			svc := conn.Ec2(region)
 			ctx := context.Background()
-			var res []interface{}
+			var res []any
 
 			instances, err := a.getEc2Instances(ctx, svc, conn.Filters)
 			if err != nil {
@@ -815,15 +815,15 @@ func (a *mqlAwsEc2) getInstances(conn *connection.AwsConnection) []*jobpool.Job 
 	return tasks
 }
 
-func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, regionVal string) ([]interface{}, error) {
+func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, regionVal string) ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	for _, reservation := range instances {
 		for _, instance := range reservation.Instances {
 			if shouldExcludeInstance(instance, conn.Filters.Ec2DiscoveryFilters) {
 				continue
 			}
-			mqlDevices := []interface{}{}
+			mqlDevices := []any{}
 			for i := range instance.BlockDeviceMappings {
 				device := instance.BlockDeviceMappings[i]
 
@@ -914,12 +914,12 @@ type mqlAwsEc2InstanceInternal struct {
 	instanceCache ec2types.Instance
 }
 
-func (i *mqlAwsEc2Instance) networkInterfaces() ([]interface{}, error) {
+func (i *mqlAwsEc2Instance) networkInterfaces() ([]any, error) {
 	conn := i.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.Ec2(i.Region.Data)
 	ctx := context.Background()
 	params := &ec2.DescribeNetworkInterfacesInput{Filters: []ec2types.Filter{{Name: aws.String("attachment.instance-id"), Values: []string{i.InstanceId.Data}}}}
-	res := []interface{}{}
+	res := []any{}
 	paginator := ec2.NewDescribeNetworkInterfacesPaginator(svc, params)
 	for paginator.HasMorePages() {
 		nis, err := paginator.NextPage(ctx)
@@ -957,9 +957,9 @@ type mqlAwsEc2NetworkinterfaceInternal struct {
 	region                string
 }
 
-func (i *mqlAwsEc2Networkinterface) securityGroups() ([]interface{}, error) {
+func (i *mqlAwsEc2Networkinterface) securityGroups() ([]any, error) {
 	if i.networkInterfaceCache.Groups != nil {
-		sgs := []interface{}{}
+		sgs := []any{}
 		conn := i.MqlRuntime.Connection.(*connection.AwsConnection)
 
 		for _, group := range i.networkInterfaceCache.Groups {
@@ -1006,9 +1006,9 @@ func (i *mqlAwsEc2Networkinterface) vpc() (*mqlAwsVpc, error) {
 	return nil, nil
 }
 
-func (i *mqlAwsEc2Instance) securityGroups() ([]interface{}, error) {
+func (i *mqlAwsEc2Instance) securityGroups() ([]any, error) {
 	if i.instanceCache.SecurityGroups != nil {
-		sgs := []interface{}{}
+		sgs := []any{}
 		conn := i.MqlRuntime.Connection.(*connection.AwsConnection)
 
 		for _, sg := range i.instanceCache.SecurityGroups {
@@ -1210,7 +1210,7 @@ func (a *mqlAwsEc2Instance) vpc() (*mqlAwsVpc, error) {
 	}
 }
 
-func (a *mqlAwsEc2Instance) ssm() (interface{}, error) {
+func (a *mqlAwsEc2Instance) ssm() (any, error) {
 	instanceId := a.InstanceId.Data
 	region := a.Region.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
@@ -1233,8 +1233,8 @@ func (a *mqlAwsEc2Instance) ssm() (interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsEc2Instance) patchState() (interface{}, error) {
-	var res interface{}
+func (a *mqlAwsEc2Instance) patchState() (any, error) {
+	var res any
 	instanceId := a.InstanceId.Data
 	region := a.Region.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
@@ -1256,8 +1256,8 @@ func (a *mqlAwsEc2Instance) patchState() (interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsEc2Instance) instanceStatus() (interface{}, error) {
-	var res interface{}
+func (a *mqlAwsEc2Instance) instanceStatus() (any, error) {
+	var res any
 	instanceId := a.InstanceId.Data
 	region := a.Region.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
@@ -1285,7 +1285,7 @@ func (a *mqlAwsEc2Instance) instanceStatus() (interface{}, error) {
 	return res, nil
 }
 
-// # go.mondoo.com/cnquery/v11/providers/aws/resources
+// # go.mondoo.com/cnquery/v12/providers/aws/resources
 // resources/aws.lr.go:15420:12: c.iamRole undefined (type *mqlAwsIamInstanceProfile has no field or method iamRole, but does have field IamRole)
 // make[1]: *** [providers/build/aws] Error 1
 
@@ -1309,9 +1309,9 @@ func (a *mqlAwsEc2Instance) iamInstanceProfile() (*mqlAwsIamInstanceProfile, err
 	return res.(*mqlAwsIamInstanceProfile), nil
 }
 
-func (a *mqlAwsEc2) volumes() ([]interface{}, error) {
+func (a *mqlAwsEc2) volumes() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getVolumes(conn), 5)
 	poolOfJobs.Run()
 
@@ -1321,7 +1321,7 @@ func (a *mqlAwsEc2) volumes() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
@@ -1339,7 +1339,7 @@ func (a *mqlAwsEc2) getVolumes(conn *connection.AwsConnection) []*jobpool.Job {
 		f := func() (jobpool.JobResult, error) {
 			svc := conn.Ec2(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 
 			params := &ec2.DescribeVolumesInput{}
 			paginator := ec2.NewDescribeVolumesPaginator(svc, params)
@@ -1531,9 +1531,9 @@ func (a *mqlAwsEc2Snapshot) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func (a *mqlAwsEc2) vpnConnections() ([]interface{}, error) {
+func (a *mqlAwsEc2) vpnConnections() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getVpnConnections(conn), 5)
 	poolOfJobs.Run()
 
@@ -1543,7 +1543,7 @@ func (a *mqlAwsEc2) vpnConnections() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
@@ -1560,7 +1560,7 @@ func (a *mqlAwsEc2) getVpnConnections(conn *connection.AwsConnection) []*jobpool
 		f := func() (jobpool.JobResult, error) {
 			svc := conn.Ec2(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 
 			vpnConnections, err := svc.DescribeVpnConnections(ctx, &ec2.DescribeVpnConnectionsInput{})
 			if err != nil {
@@ -1571,7 +1571,7 @@ func (a *mqlAwsEc2) getVpnConnections(conn *connection.AwsConnection) []*jobpool
 				return nil, err
 			}
 			for _, vpnConn := range vpnConnections.VpnConnections {
-				mqlVgwT := []interface{}{}
+				mqlVgwT := []any{}
 				for _, vgwT := range vpnConn.VgwTelemetry {
 					mqlVgwTelemetry, err := CreateResource(a.MqlRuntime, "aws.ec2.vgwtelemetry",
 						map[string]*llx.RawData{
@@ -1601,9 +1601,9 @@ func (a *mqlAwsEc2) getVpnConnections(conn *connection.AwsConnection) []*jobpool
 	return tasks
 }
 
-func (a *mqlAwsEc2) snapshots() ([]interface{}, error) {
+func (a *mqlAwsEc2) snapshots() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getSnapshots(conn), 5)
 	poolOfJobs.Run()
 
@@ -1613,7 +1613,7 @@ func (a *mqlAwsEc2) snapshots() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
@@ -1630,7 +1630,7 @@ func (a *mqlAwsEc2) getSnapshots(conn *connection.AwsConnection) []*jobpool.Job 
 		f := func() (jobpool.JobResult, error) {
 			svc := conn.Ec2(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 
 			params := &ec2.DescribeSnapshotsInput{Filters: []ec2types.Filter{{Name: aws.String("owner-id"), Values: []string{conn.AccountId()}}}}
 			paginator := ec2.NewDescribeSnapshotsPaginator(svc, params)
@@ -1672,7 +1672,7 @@ func (a *mqlAwsEc2) getSnapshots(conn *connection.AwsConnection) []*jobpool.Job 
 	return tasks
 }
 
-func (a *mqlAwsEc2Snapshot) createVolumePermission() ([]interface{}, error) {
+func (a *mqlAwsEc2Snapshot) createVolumePermission() ([]any, error) {
 	id := a.Id.Data
 	region := a.Region.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
@@ -1688,9 +1688,9 @@ func (a *mqlAwsEc2Snapshot) createVolumePermission() ([]interface{}, error) {
 	return convert.JsonToDictSlice(attribute.CreateVolumePermissions)
 }
 
-func (a *mqlAwsEc2) internetGateways() ([]interface{}, error) {
+func (a *mqlAwsEc2) internetGateways() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getInternetGateways(conn), 5)
 	poolOfJobs.Run()
 
@@ -1700,7 +1700,7 @@ func (a *mqlAwsEc2) internetGateways() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 	return res, nil
 }
@@ -1716,7 +1716,7 @@ func (a *mqlAwsEc2) getInternetGateways(conn *connection.AwsConnection) []*jobpo
 			svc := conn.Ec2(region)
 			ctx := context.Background()
 			params := &ec2.DescribeInternetGatewaysInput{}
-			res := []interface{}{}
+			res := []any{}
 			paginator := ec2.NewDescribeInternetGatewaysPaginator(svc, params)
 			for paginator.HasMorePages() {
 				internetGws, err := paginator.NextPage(ctx)

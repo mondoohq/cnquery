@@ -12,11 +12,11 @@ import (
 	"sync"
 
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/users"
-	"go.mondoo.com/cnquery/v11/utils/multierr"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/users"
+	"go.mondoo.com/cnquery/v12/utils/multierr"
 )
 
 func (x *mqlUser) id() (string, error) {
@@ -106,7 +106,7 @@ type mqlUsersInternal struct {
 	usersByName map[string]*mqlUser
 }
 
-func (x *mqlUsers) list() ([]interface{}, error) {
+func (x *mqlUsers) list() ([]any, error) {
 	x.lock.Lock()
 	defer x.lock.Unlock()
 
@@ -131,7 +131,7 @@ func (x *mqlUsers) list() ([]interface{}, error) {
 		return nil, multierr.Wrap(err, "could not retrieve users list")
 	}
 
-	var res []interface{}
+	var res []any
 	for i := range users {
 		user := users[i]
 		nu, err := CreateResource(x.MqlRuntime, "user", map[string]*llx.RawData{
@@ -153,7 +153,7 @@ func (x *mqlUsers) list() ([]interface{}, error) {
 	return res, x.refreshCache(res)
 }
 
-func (x *mqlUsers) refreshCache(all []interface{}) error {
+func (x *mqlUsers) refreshCache(all []any) error {
 	if all == nil {
 		raw := x.GetList()
 		if raw.Error != nil {
@@ -186,8 +186,8 @@ func (x *mqlUsers) findID(id int64) (*mqlUser, error) {
 	return res, nil
 }
 
-func (u *mqlUser) sshkeys() ([]interface{}, error) {
-	res := []interface{}{}
+func (u *mqlUser) sshkeys() ([]any, error) {
+	res := []any{}
 
 	userSshPath := path.Join(u.Home.Data, ".ssh")
 

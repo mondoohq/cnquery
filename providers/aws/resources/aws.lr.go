@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -5298,11 +5298,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.vpcs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAws).Vpcs, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAws).Vpcs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.regions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAws).Regions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAws).Regions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.account.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5314,7 +5314,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.account.aliases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsAccount).Aliases, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsAccount).Aliases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.account.organization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5322,7 +5322,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.account.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsAccount).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsAccount).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.organization.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5346,7 +5346,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.organization.accounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsOrganization).Accounts, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsOrganization).Accounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5386,35 +5386,35 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.vpc.endpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVpc).Endpoints, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsVpc).Endpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.flowLogs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVpc).FlowLogs, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsVpc).FlowLogs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.routeTables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVpc).RouteTables, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsVpc).RouteTables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVpc).Subnets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsVpc).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVpc).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsVpc).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.natGateways": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVpc).NatGateways, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsVpc).NatGateways, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.serviceEndpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVpc).ServiceEndpoints, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsVpc).ServiceEndpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.peeringConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVpc).PeeringConnections, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsVpc).PeeringConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.internetGatewayBlockMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5426,7 +5426,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.vpc.routetable.associations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVpcRoutetable).Associations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsVpcRoutetable).Associations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.routetable.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5434,11 +5434,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.vpc.routetable.routes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVpcRoutetable).Routes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsVpcRoutetable).Routes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.routetable.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVpcRoutetable).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsVpcRoutetable).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.routetable.association.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5450,7 +5450,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.vpc.routetable.association.associationsState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVpcRoutetableAssociation).AssociationsState, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsVpcRoutetableAssociation).AssociationsState, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.routetable.association.gatewayId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5546,7 +5546,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.vpc.endpoint.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVpcEndpoint).Subnets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsVpcEndpoint).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.endpoint.privateDnsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5582,7 +5582,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.vpc.flowlog.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVpcFlowlog).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsVpcFlowlog).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.flowlog.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5614,15 +5614,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.waf.acls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsWaf).Acls, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsWaf).Acls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.waf.ruleGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsWaf).RuleGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsWaf).RuleGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.waf.ipSets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsWaf).IpSets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsWaf).IpSets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.waf.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5654,7 +5654,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.waf.acl.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsWafAcl).Rules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsWafAcl).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.waf.acl.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5682,7 +5682,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.waf.rulegroup.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsWafRulegroup).Rules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsWafRulegroup).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.waf.rulegroup.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5746,7 +5746,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.waf.rule.statement.json": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsWafRuleStatement).Json, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsWafRuleStatement).Json, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.waf.rule.statement.sqliMatchStatement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5822,7 +5822,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.waf.rule.statement.geomatchstatement.countryCodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsWafRuleStatementGeomatchstatement).CountryCodes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsWafRuleStatementGeomatchstatement).CountryCodes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.waf.rule.statement.ipsetreferencestatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5922,7 +5922,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.waf.rule.statement.andstatement.statements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsWafRuleStatementAndstatement).Statements, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsWafRuleStatementAndstatement).Statements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.waf.rule.statement.notstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5954,7 +5954,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.waf.rule.statement.orstatement.statements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsWafRuleStatementOrstatement).Statements, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsWafRuleStatementOrstatement).Statements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.waf.rule.statement.ratebasedstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5998,7 +5998,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.waf.rule.statement.rulegroupreferencestatement.excludeRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsWafRuleStatementRulegroupreferencestatement).ExcludeRules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsWafRuleStatementRulegroupreferencestatement).ExcludeRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.waf.rule.statement.sizeconstraintstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6270,7 +6270,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.waf.rule.fieldtomatch.jsonbody.matchpattern.includePaths": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsWafRuleFieldtomatchJsonbodyMatchpattern).IncludePaths, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsWafRuleFieldtomatchJsonbodyMatchpattern).IncludePaths, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.waf.rule.fieldtomatch.headers.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6314,11 +6314,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.waf.rule.fieldtomatch.headers.matchpattern.includeHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsWafRuleFieldtomatchHeadersMatchpattern).IncludeHeaders, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsWafRuleFieldtomatchHeadersMatchpattern).IncludeHeaders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.waf.rule.fieldtomatch.headers.matchpattern.excludeHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsWafRuleFieldtomatchHeadersMatchpattern).ExcludeHeaders, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsWafRuleFieldtomatchHeadersMatchpattern).ExcludeHeaders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.waf.rule.statement.xssmatchstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6386,7 +6386,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.waf.ipset.addresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsWafIpset).Addresses, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsWafIpset).Addresses, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.efs.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6394,7 +6394,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.efs.filesystems": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEfs).Filesystems, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEfs).Filesystems, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.efs.filesystem.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6422,7 +6422,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.efs.filesystem.backupPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEfsFilesystem).BackupPolicy, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsEfsFilesystem).BackupPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.efs.filesystem.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6434,7 +6434,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.efs.filesystem.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEfsFilesystem).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEfsFilesystem).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.efs.filesystem.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6446,7 +6446,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.kms.keys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsKms).Keys, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsKms).Keys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.kms.key.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6470,7 +6470,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.kms.key.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsKmsKey).Metadata, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsKmsKey).Metadata, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6478,47 +6478,47 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.iam.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIam).Users, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsIam).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIam).Roles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsIam).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIam).Groups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsIam).Groups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIam).Policies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsIam).Policies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.attachedPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIam).AttachedPolicies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsIam).AttachedPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.credentialReport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIam).CredentialReport, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsIam).CredentialReport, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.accountPasswordPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIam).AccountPasswordPolicy, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsIam).AccountPasswordPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.accountSummary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIam).AccountSummary, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsIam).AccountSummary, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.virtualMfaDevices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIam).VirtualMfaDevices, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsIam).VirtualMfaDevices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.serverCertificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIam).ServerCertificates, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsIam).ServerCertificates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.instanceProfiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIam).InstanceProfiles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsIam).InstanceProfiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.usercredentialreportentry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6526,7 +6526,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.iam.usercredentialreportentry.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamUsercredentialreportentry).Properties, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsIamUsercredentialreportentry).Properties, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.usercredentialreportentry.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6642,23 +6642,23 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.iam.user.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamUser).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsIamUser).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.user.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamUser).Policies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsIamUser).Policies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.user.attachedPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamUser).AttachedPolicies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsIamUser).AttachedPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.user.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamUser).Groups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsIamUser).Groups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.user.accessKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamUser).AccessKeys, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsIamUser).AccessKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.user.loginProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6686,11 +6686,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.iam.instanceProfile.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamInstanceProfile).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsIamInstanceProfile).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.instanceProfile.iamRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamInstanceProfile).IamRoles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsIamInstanceProfile).IamRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.loginProfile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6742,7 +6742,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.iam.policy.versions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamPolicy).Versions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsIamPolicy).Versions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.policy.defaultVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6750,15 +6750,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.iam.policy.attachedUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamPolicy).AttachedUsers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsIamPolicy).AttachedUsers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.policy.attachedRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamPolicy).AttachedRoles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsIamPolicy).AttachedRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.policy.attachedGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamPolicy).AttachedGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsIamPolicy).AttachedGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.policyversion.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6778,7 +6778,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.iam.policyversion.document": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamPolicyversion).Document, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsIamPolicyversion).Document, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.policyversion.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6806,7 +6806,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.iam.role.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamRole).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsIamRole).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.role.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6814,7 +6814,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.iam.role.assumeRolePolicyDocument": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamRole).AssumeRolePolicyDocument, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsIamRole).AssumeRolePolicyDocument, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6838,7 +6838,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.iam.group.usernames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamGroup).Usernames, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsIamGroup).Usernames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.virtualmfadevice.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6862,11 +6862,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.iam.accessAnalyzer.analyzers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamAccessAnalyzer).Analyzers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsIamAccessAnalyzer).Analyzers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.accessAnalyzer.findings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamAccessAnalyzer).Findings, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsIamAccessAnalyzer).Findings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.accessanalyzer.analyzer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6894,7 +6894,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.iam.accessanalyzer.analyzer.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamAccessanalyzerAnalyzer).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsIamAccessanalyzerAnalyzer).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.accessanalyzer.analyzer.lastResourceAnalyzed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6966,11 +6966,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.sagemaker.endpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsSagemaker).Endpoints, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsSagemaker).Endpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.notebookInstances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsSagemaker).NotebookInstances, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsSagemaker).NotebookInstances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.notebookinstance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6994,7 +6994,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.sagemaker.notebookinstance.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsSagemakerNotebookinstance).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsSagemakerNotebookinstance).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.notebookinstancedetails.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7026,7 +7026,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.sagemaker.endpoint.config": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsSagemakerEndpoint).Config, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsSagemakerEndpoint).Config, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.endpoint.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7034,7 +7034,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.sagemaker.endpoint.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsSagemakerEndpoint).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsSagemakerEndpoint).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.sns.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7042,7 +7042,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.sns.topics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsSns).Topics, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsSns).Topics, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.sns.topic.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7058,15 +7058,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.sns.topic.subscriptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsSnsTopic).Subscriptions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsSnsTopic).Subscriptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.sns.topic.attributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsSnsTopic).Attributes, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsSnsTopic).Attributes, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.sns.topic.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsSnsTopic).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsSnsTopic).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.sns.subscription.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7086,7 +7086,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.es.domains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEs).Domains, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEs).Domains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.es.domain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7118,7 +7118,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.es.domain.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEsDomain).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEsDomain).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.es.domain.elasticsearchVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7138,7 +7138,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.acm.certificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsAcm).Certificates, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsAcm).Certificates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.acm.certificate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7178,7 +7178,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.acm.certificate.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsAcmCertificate).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsAcmCertificate).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.acm.certificate.keyAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7210,7 +7210,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.autoscaling.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsAutoscaling).Groups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsAutoscaling).Groups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.autoscaling.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7226,7 +7226,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.autoscaling.group.loadBalancerNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsAutoscalingGroup).LoadBalancerNames, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsAutoscalingGroup).LoadBalancerNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.autoscaling.group.healthCheckType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7234,7 +7234,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.autoscaling.group.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsAutoscalingGroup).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsAutoscalingGroup).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.autoscaling.group.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7274,7 +7274,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.autoscaling.group.availabilityZones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsAutoscalingGroup).AvailabilityZones, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsAutoscalingGroup).AvailabilityZones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.autoscaling.group.capacityRebalance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7286,7 +7286,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.autoscaling.group.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsAutoscalingGroup).Instances, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsAutoscalingGroup).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.elb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7294,11 +7294,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.elb.classicLoadBalancers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsElb).ClassicLoadBalancers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsElb).ClassicLoadBalancers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.elb.loadBalancers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsElb).LoadBalancers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsElb).LoadBalancers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.elb.targetgroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7366,11 +7366,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.elb.targetgroup.ec2Targets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsElbTargetgroup).Ec2Targets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsElbTargetgroup).Ec2Targets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.elb.targetgroup.lambdaTargets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsElbTargetgroup).LambdaTargets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsElbTargetgroup).LambdaTargets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.elb.loadbalancer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7386,7 +7386,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.elb.loadbalancer.listenerDescriptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsElbLoadbalancer).ListenerDescriptions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsElbLoadbalancer).ListenerDescriptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.elb.loadbalancer.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7398,7 +7398,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.elb.loadbalancer.attributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsElbLoadbalancer).Attributes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsElbLoadbalancer).Attributes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.elb.loadbalancer.vpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7414,11 +7414,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.elb.loadbalancer.availabilityZones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsElbLoadbalancer).AvailabilityZones, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsElbLoadbalancer).AvailabilityZones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.elb.loadbalancer.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsElbLoadbalancer).SecurityGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsElbLoadbalancer).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.elb.loadbalancer.hostedZoneId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7438,7 +7438,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.elb.loadbalancer.targetGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsElbLoadbalancer).TargetGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsElbLoadbalancer).TargetGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.codebuild.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7446,7 +7446,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.codebuild.projects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCodebuild).Projects, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsCodebuild).Projects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.codebuild.project.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7466,7 +7466,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.codebuild.project.environment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCodebuildProject).Environment, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsCodebuildProject).Environment, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.codebuild.project.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7474,11 +7474,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.codebuild.project.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCodebuildProject).Source, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsCodebuildProject).Source, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.codebuild.project.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCodebuildProject).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsCodebuildProject).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.guardduty.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7486,11 +7486,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.guardduty.findings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsGuardduty).Findings, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsGuardduty).Findings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.guardduty.detectors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsGuardduty).Detectors, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsGuardduty).Detectors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.guardduty.detector.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7510,11 +7510,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.guardduty.detector.features": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsGuarddutyDetector).Features, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsGuarddutyDetector).Features, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.guardduty.detector.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsGuarddutyDetector).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsGuarddutyDetector).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.guardduty.detector.findingPublishingFrequency": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7522,7 +7522,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.guardduty.detector.findings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsGuarddutyDetector).Findings, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsGuarddutyDetector).Findings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.guardduty.finding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7574,7 +7574,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.securityhub.hubs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsSecurityhub).Hubs, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsSecurityhub).Hubs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.securityhub.hub.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7594,7 +7594,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.secretsmanager.secrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsSecretsmanager).Secrets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsSecretsmanager).Secrets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.secretsmanager.secret.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7638,7 +7638,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.secretsmanager.secret.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsSecretsmanagerSecret).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsSecretsmanagerSecret).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7646,15 +7646,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.ecs.clusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEcs).Clusters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEcs).Clusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.containers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEcs).Containers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEcs).Containers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.containerInstances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEcs).ContainerInstances, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEcs).ContainerInstances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7670,7 +7670,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.ecs.cluster.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEcsCluster).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEcsCluster).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.cluster.runningTasksCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7686,7 +7686,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.ecs.cluster.configuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEcsCluster).Configuration, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsEcsCluster).Configuration, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.cluster.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7694,11 +7694,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.ecs.cluster.tasks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEcsCluster).Tasks, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEcsCluster).Tasks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.cluster.containerInstances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEcsCluster).ContainerInstances, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEcsCluster).ContainerInstances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.cluster.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7746,7 +7746,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.ecs.task.connectivity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEcsTask).Connectivity, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsEcsTask).Connectivity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.task.lastStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7762,11 +7762,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.ecs.task.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEcsTask).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEcsTask).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.task.containers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEcsTask).Containers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEcsTask).Containers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.container.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7818,7 +7818,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.ecs.container.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEcsContainer).Command, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEcsContainer).Command, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.container.taskArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7838,7 +7838,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.emr.clusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEmr).Clusters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEmr).Clusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.emr.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7862,11 +7862,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.emr.cluster.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEmrCluster).Status, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsEmrCluster).Status, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.emr.cluster.masterInstances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEmrCluster).MasterInstances, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEmrCluster).MasterInstances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.emr.cluster.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7874,7 +7874,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.emr.cluster.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEmrCluster).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEmrCluster).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.cloudwatch.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7882,15 +7882,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.cloudwatch.logGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCloudwatch).LogGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsCloudwatch).LogGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.cloudwatch.alarms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCloudwatch).Alarms, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsCloudwatch).Alarms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.cloudwatch.metrics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCloudwatch).Metrics, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsCloudwatch).Metrics, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.cloudwatch.metricsalarm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7914,7 +7914,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.cloudwatch.metricsalarm.actions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCloudwatchMetricsalarm).Actions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsCloudwatchMetricsalarm).Actions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.cloudwatch.metricsalarm.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7926,11 +7926,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.cloudwatch.metricsalarm.insufficientDataActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCloudwatchMetricsalarm).InsufficientDataActions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsCloudwatchMetricsalarm).InsufficientDataActions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.cloudwatch.metricsalarm.okActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCloudwatchMetricsalarm).OkActions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsCloudwatchMetricsalarm).OkActions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.cloudwatch.metricsalarm.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7954,11 +7954,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.cloudwatch.metric.alarms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCloudwatchMetric).Alarms, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsCloudwatchMetric).Alarms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.cloudwatch.metric.dimensions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCloudwatchMetric).Dimensions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsCloudwatchMetric).Dimensions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.cloudwatch.metric.statistics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7998,7 +7998,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.cloudwatch.metricstatistics.datapoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCloudwatchMetricstatistics).Datapoints, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsCloudwatchMetricstatistics).Datapoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.cloudwatch.metric.datapoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8046,7 +8046,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.cloudwatch.loggroup.metricsFilters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCloudwatchLoggroup).MetricsFilters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsCloudwatchLoggroup).MetricsFilters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.cloudwatch.loggroup.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8078,7 +8078,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.cloudwatch.loggroup.metricsfilter.metrics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCloudwatchLoggroupMetricsfilter).Metrics, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsCloudwatchLoggroupMetricsfilter).Metrics, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.cloudfront.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8086,11 +8086,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.cloudfront.distributions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCloudfront).Distributions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsCloudfront).Distributions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.cloudfront.functions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCloudfront).Functions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsCloudfront).Functions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.cloudfront.distribution.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8110,15 +8110,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.cloudfront.distribution.origins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCloudfrontDistribution).Origins, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsCloudfrontDistribution).Origins, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.cloudfront.distribution.defaultCacheBehavior": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCloudfrontDistribution).DefaultCacheBehavior, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsCloudfrontDistribution).DefaultCacheBehavior, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.cloudfront.distribution.cacheBehaviors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCloudfrontDistribution).CacheBehaviors, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsCloudfrontDistribution).CacheBehaviors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.cloudfront.distribution.httpVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8138,7 +8138,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.cloudfront.distribution.cnames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCloudfrontDistribution).Cnames, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsCloudfrontDistribution).Cnames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.cloudfront.distribution.origin.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8214,7 +8214,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.cloudtrail.trails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCloudtrail).Trails, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsCloudtrail).Trails, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.cloudtrail.trail.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8258,7 +8258,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.cloudtrail.trail.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCloudtrailTrail).Status, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsCloudtrailTrail).Status, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.cloudtrail.trail.logGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8274,7 +8274,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.cloudtrail.trail.eventSelectors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCloudtrailTrail).EventSelectors, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsCloudtrailTrail).EventSelectors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.cloudtrail.trail.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8286,7 +8286,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.s3control.accountPublicAccessBlock": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsS3control).AccountPublicAccessBlock, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsS3control).AccountPublicAccessBlock, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.s3.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8294,7 +8294,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.s3.buckets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsS3).Buckets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsS3).Buckets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.s3.bucket.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8314,15 +8314,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.s3.bucket.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsS3Bucket).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsS3Bucket).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.s3.bucket.acl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsS3Bucket).Acl, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsS3Bucket).Acl, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.s3.bucket.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsS3Bucket).Owner, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsS3Bucket).Owner, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.s3.bucket.public": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8330,7 +8330,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.s3.bucket.cors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsS3Bucket).Cors, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsS3Bucket).Cors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.s3.bucket.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8338,15 +8338,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.s3.bucket.versioning": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsS3Bucket).Versioning, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsS3Bucket).Versioning, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.s3.bucket.logging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsS3Bucket).Logging, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsS3Bucket).Logging, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.s3.bucket.staticWebsiteHosting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsS3Bucket).StaticWebsiteHosting, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsS3Bucket).StaticWebsiteHosting, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.s3.bucket.defaultLock": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8354,15 +8354,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.s3.bucket.replication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsS3Bucket).Replication, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsS3Bucket).Replication, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.s3.bucket.encryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsS3Bucket).Encryption, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsS3Bucket).Encryption, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.s3.bucket.publicAccessBlock": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsS3Bucket).PublicAccessBlock, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsS3Bucket).PublicAccessBlock, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.s3.bucket.exists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8394,7 +8394,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.s3.bucket.grant.grantee": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsS3BucketGrant).Grantee, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsS3BucketGrant).Grantee, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.s3.bucket.corsrule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8406,19 +8406,19 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.s3.bucket.corsrule.allowedHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsS3BucketCorsrule).AllowedHeaders, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsS3BucketCorsrule).AllowedHeaders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.s3.bucket.corsrule.allowedMethods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsS3BucketCorsrule).AllowedMethods, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsS3BucketCorsrule).AllowedMethods, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.s3.bucket.corsrule.allowedOrigins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsS3BucketCorsrule).AllowedOrigins, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsS3BucketCorsrule).AllowedOrigins, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.s3.bucket.corsrule.exposeHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsS3BucketCorsrule).ExposeHeaders, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsS3BucketCorsrule).ExposeHeaders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.s3.bucket.corsrule.maxAgeSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8450,7 +8450,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.s3.bucket.policy.statements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsS3BucketPolicy).Statements, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsS3BucketPolicy).Statements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.applicationAutoscaling.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8462,7 +8462,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.applicationAutoscaling.scalableTargets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsApplicationAutoscaling).ScalableTargets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsApplicationAutoscaling).ScalableTargets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.applicationAutoscaling.target.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8490,7 +8490,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.applicationAutoscaling.target.suspendedState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsApplicationAutoscalingTarget).SuspendedState, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsApplicationAutoscalingTarget).SuspendedState, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.applicationAutoscaling.target.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8502,7 +8502,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.backup.vaults": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsBackup).Vaults, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsBackup).Vaults, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.backup.vault.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8518,7 +8518,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.backup.vault.recoveryPoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsBackupVault).RecoveryPoints, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsBackupVault).RecoveryPoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.backup.vault.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8550,7 +8550,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.backup.vaultRecoveryPoint.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsBackupVaultRecoveryPoint).CreatedBy, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsBackupVaultRecoveryPoint).CreatedBy, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.backup.vaultRecoveryPoint.iamRoleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8582,23 +8582,23 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.dynamodb.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsDynamodb).Backups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsDynamodb).Backups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.dynamodb.globalTables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsDynamodb).GlobalTables, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsDynamodb).GlobalTables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.dynamodb.tables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsDynamodb).Tables, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsDynamodb).Tables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.dynamodb.limits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsDynamodb).Limits, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsDynamodb).Limits, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.dynamodb.exports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsDynamodb).Exports, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsDynamodb).Exports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.dynamodb.export.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8694,7 +8694,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.dynamodb.globaltable.replicaSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsDynamodbGlobaltable).ReplicaSettings, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsDynamodbGlobaltable).ReplicaSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.dynamodb.table.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8718,23 +8718,23 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.dynamodb.table.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsDynamodbTable).Backups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsDynamodbTable).Backups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.dynamodb.table.sseDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsDynamodbTable).SseDescription, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsDynamodbTable).SseDescription, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.dynamodb.table.provisionedThroughput": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsDynamodbTable).ProvisionedThroughput, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsDynamodbTable).ProvisionedThroughput, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.dynamodb.table.continuousBackups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsDynamodbTable).ContinuousBackups, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsDynamodbTable).ContinuousBackups, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.dynamodb.table.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsDynamodbTable).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsDynamodbTable).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.dynamodb.table.createdTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8774,7 +8774,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.sqs.queues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsSqs).Queues, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsSqs).Queues, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.sqs.queue.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8846,23 +8846,23 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.rds.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRds).Instances, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsRds).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.rds.clusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRds).Clusters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsRds).Clusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.rds.allPendingMaintenanceActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRds).AllPendingMaintenanceActions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsRds).AllPendingMaintenanceActions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.rds.parameterGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRds).ParameterGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsRds).ParameterGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.rds.clusterParameterGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRds).ClusterParameterGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsRds).ClusterParameterGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.rds.backupsetting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8926,15 +8926,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.rds.dbcluster.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRdsDbcluster).Members, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsRdsDbcluster).Members, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.rds.dbcluster.snapshots": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRdsDbcluster).Snapshots, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsRdsDbcluster).Snapshots, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.rds.dbcluster.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRdsDbcluster).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsRdsDbcluster).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.rds.dbcluster.storageEncrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8998,11 +8998,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.rds.dbcluster.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRdsDbcluster).SecurityGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsRdsDbcluster).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.rds.dbcluster.availabilityZones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRdsDbcluster).AvailabilityZones, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsRdsDbcluster).AvailabilityZones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.rds.dbcluster.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9026,7 +9026,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.rds.dbcluster.backupSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRdsDbcluster).BackupSettings, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsRdsDbcluster).BackupSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.rds.dbcluster.engineLifecycleSupport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9098,7 +9098,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.rds.snapshot.attributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRdsSnapshot).Attributes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsRdsSnapshot).Attributes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.rds.snapshot.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9118,7 +9118,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.rds.snapshot.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRdsSnapshot).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsRdsSnapshot).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.rds.snapshot.engine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9166,7 +9166,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.rds.dbinstance.snapshots": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRdsDbinstance).Snapshots, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsRdsDbinstance).Snapshots, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.rds.dbinstance.storageEncrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9198,7 +9198,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.rds.dbinstance.enabledCloudwatchLogsExports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRdsDbinstance).EnabledCloudwatchLogsExports, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsRdsDbinstance).EnabledCloudwatchLogsExports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.rds.dbinstance.deletionProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9218,7 +9218,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.rds.dbinstance.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRdsDbinstance).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsRdsDbinstance).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.rds.dbinstance.dbInstanceClass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9238,7 +9238,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.rds.dbinstance.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRdsDbinstance).SecurityGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsRdsDbinstance).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.rds.dbinstance.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9274,11 +9274,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.rds.dbinstance.backupSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRdsDbinstance).BackupSettings, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsRdsDbinstance).BackupSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.rds.dbinstance.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRdsDbinstance).Subnets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsRdsDbinstance).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.rds.dbinstance.engineLifecycleSupport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9310,7 +9310,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.rds.dbinstance.pendingMaintenanceActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRdsDbinstance).PendingMaintenanceActions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsRdsDbinstance).PendingMaintenanceActions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.rds.dbinstance.networkType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9382,7 +9382,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.rds.clusterParameterGroup.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRdsClusterParameterGroup).Parameters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsRdsClusterParameterGroup).Parameters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.rds.parameterGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9410,7 +9410,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.rds.parameterGroup.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRdsParameterGroup).Parameters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsRdsParameterGroup).Parameters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.rds.parameterGroup.parameter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9458,7 +9458,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.rds.parameterGroup.parameter.supportedEngineModes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRdsParameterGroupParameter).SupportedEngineModes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsRdsParameterGroupParameter).SupportedEngineModes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.elasticache.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9466,11 +9466,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.elasticache.cacheClusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsElasticache).CacheClusters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsElasticache).CacheClusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.elasticache.serverlessCaches": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsElasticache).ServerlessCaches, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsElasticache).ServerlessCaches, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.elasticache.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9514,11 +9514,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.elasticache.cluster.cacheNodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsElasticacheCluster).CacheNodes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsElasticacheCluster).CacheNodes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.elasticache.cluster.cacheSecurityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsElasticacheCluster).CacheSecurityGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsElasticacheCluster).CacheSecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.elasticache.cluster.cacheSubnetGroupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9546,7 +9546,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.elasticache.cluster.logDeliveryConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsElasticacheCluster).LogDeliveryConfigurations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsElasticacheCluster).LogDeliveryConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.elasticache.cluster.networkType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9570,7 +9570,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.elasticache.cluster.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsElasticacheCluster).SecurityGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsElasticacheCluster).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.elasticache.cluster.snapshotRetentionLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9618,7 +9618,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.elasticache.serverlessCache.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsElasticacheServerlessCache).SecurityGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsElasticacheServerlessCache).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.elasticache.serverlessCache.snapshotRetentionLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9646,7 +9646,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.redshift.clusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRedshift).Clusters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsRedshift).Clusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.redshift.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9670,7 +9670,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.redshift.cluster.clusterParameterGroupNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRedshiftCluster).ClusterParameterGroupNames, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsRedshiftCluster).ClusterParameterGroupNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.redshift.cluster.clusterRevisionNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9706,7 +9706,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.redshift.cluster.logging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRedshiftCluster).Logging, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsRedshiftCluster).Logging, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.redshift.cluster.masterUsername": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9730,7 +9730,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.redshift.cluster.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRedshiftCluster).Parameters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsRedshiftCluster).Parameters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.redshift.cluster.preferredMaintenanceWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9746,7 +9746,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.redshift.cluster.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRedshiftCluster).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsRedshiftCluster).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.redshift.cluster.vpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9758,15 +9758,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.ecr.privateRepositories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEcr).PrivateRepositories, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEcr).PrivateRepositories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ecr.publicRepositories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEcr).PublicRepositories, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEcr).PublicRepositories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ecr.images": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEcr).Images, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEcr).Images, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ecr.repository.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9794,7 +9794,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.ecr.repository.images": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEcrRepository).Images, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEcrRepository).Images, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ecr.repository.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9818,7 +9818,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.ecr.image.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEcrImage).Tags, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEcrImage).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ecr.image.registryId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9858,7 +9858,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.dms.replicationInstances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsDms).ReplicationInstances, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsDms).ReplicationInstances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.apigateway.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9866,7 +9866,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.apigateway.restApis": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsApigateway).RestApis, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsApigateway).RestApis, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.apigateway.restapi.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9894,7 +9894,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.apigateway.restapi.stages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsApigatewayRestapi).Stages, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsApigatewayRestapi).Stages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.apigateway.restapi.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9902,7 +9902,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.apigateway.restapi.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsApigatewayRestapi).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsApigatewayRestapi).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.apigateway.stage.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9930,7 +9930,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.apigateway.stage.methodSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsApigatewayStage).MethodSettings, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsApigatewayStage).MethodSettings, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.lambda.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9938,7 +9938,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.lambda.functions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsLambda).Functions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsLambda).Functions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.lambda.function.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9966,11 +9966,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.lambda.function.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsLambdaFunction).Policy, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsLambdaFunction).Policy, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.lambda.function.vpcConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsLambdaFunction).VpcConfig, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsLambdaFunction).VpcConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.lambda.function.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9978,7 +9978,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.lambda.function.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsLambdaFunction).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsLambdaFunction).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.ssm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9986,11 +9986,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.ssm.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsSsm).Instances, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsSsm).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ssm.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsSsm).Parameters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsSsm).Parameters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ssm.parameter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10078,7 +10078,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.ssm.instance.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsSsmInstance).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsSsmInstance).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10086,43 +10086,43 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.ec2.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2).SecurityGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2).Instances, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.ebsEncryptionByDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2).EbsEncryptionByDefault, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2).EbsEncryptionByDefault, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.volumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2).Volumes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2).Volumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.snapshots": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2).Snapshots, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2).Snapshots, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.internetGateways": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2).InternetGateways, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2).InternetGateways, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.vpnConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2).VpnConnections, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2).VpnConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.networkAcls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2).NetworkAcls, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2).NetworkAcls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.keypairs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2).Keypairs, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2).Keypairs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.eips": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2).Eips, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2).Eips, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.eip.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10158,7 +10158,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.ec2.eip.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Eip).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2Eip).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.eip.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10182,7 +10182,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.vpc.natgateway.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVpcNatgateway).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsVpcNatgateway).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.natgateway.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10190,7 +10190,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.vpc.natgateway.addresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVpcNatgateway).Addresses, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsVpcNatgateway).Addresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.natgateway.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10230,11 +10230,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.vpc.serviceEndpoint.availabilityZones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVpcServiceEndpoint).AvailabilityZones, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsVpcServiceEndpoint).AvailabilityZones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.serviceEndpoint.dnsNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVpcServiceEndpoint).DnsNames, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsVpcServiceEndpoint).DnsNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.serviceEndpoint.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10262,11 +10262,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.vpc.serviceEndpoint.privateDnsNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVpcServiceEndpoint).PrivateDnsNames, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsVpcServiceEndpoint).PrivateDnsNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.serviceEndpoint.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVpcServiceEndpoint).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsVpcServiceEndpoint).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.serviceEndpoint.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10302,7 +10302,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.vpc.peeringConnection.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVpcPeeringConnection).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsVpcPeeringConnection).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.peeringConnection.peeringVpc.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10314,11 +10314,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.vpc.peeringConnection.peeringVpc.ipv4CiderBlocks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVpcPeeringConnectionPeeringVpc).Ipv4CiderBlocks, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsVpcPeeringConnectionPeeringVpc).Ipv4CiderBlocks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.peeringConnection.peeringVpc.ipv6CiderBlocks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVpcPeeringConnectionPeeringVpc).Ipv6CiderBlocks, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsVpcPeeringConnectionPeeringVpc).Ipv6CiderBlocks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.peeringConnection.peeringVpc.ownerID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10354,7 +10354,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.ec2.networkacl.entries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Networkacl).Entries, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2Networkacl).Entries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.networkacl.isDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10362,11 +10362,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.ec2.networkacl.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Networkacl).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2Networkacl).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.networkacl.associations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Networkacl).Associations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2Networkacl).Associations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.networkacl.association.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10442,7 +10442,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.ec2.vpnconnection.vgwTelemetry": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Vpnconnection).VgwTelemetry, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2Vpnconnection).VgwTelemetry, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.vgwtelemetry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10474,7 +10474,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.ec2.internetgateway.attachments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Internetgateway).Attachments, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2Internetgateway).Attachments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10494,7 +10494,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.ec2.snapshot.createVolumePermission": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Snapshot).CreateVolumePermission, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2Snapshot).CreateVolumePermission, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.snapshot.volumeId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10510,7 +10510,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.ec2.snapshot.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Snapshot).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2Snapshot).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.snapshot.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10546,7 +10546,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.ec2.volume.attachments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Volume).Attachments, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2Volume).Attachments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.volume.encrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10558,7 +10558,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.ec2.volume.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Volume).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2Volume).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.volume.availabilityZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10598,7 +10598,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.inspector.coverages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsInspector).Coverages, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsInspector).Coverages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.inspector.coverage.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10662,7 +10662,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.inspector.coverage.instance.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsInspectorCoverageInstance).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsInspectorCoverageInstance).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.inspector.coverage.instance.image": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10682,7 +10682,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.inspector.coverage.image.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsInspectorCoverageImage).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsInspectorCoverageImage).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.inspector.coverage.image.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10730,7 +10730,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.ec2.instance.ssm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Instance).Ssm, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2Instance).Ssm, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.instance.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10746,7 +10746,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.ec2.instance.patchState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Instance).PatchState, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2Instance).PatchState, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.instance.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10754,11 +10754,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.ec2.instance.deviceMappings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Instance).DeviceMappings, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2Instance).DeviceMappings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.instance.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Instance).SecurityGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2Instance).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.instance.platformDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10770,11 +10770,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.ec2.instance.instanceStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Instance).InstanceStatus, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2Instance).InstanceStatus, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.instance.stateReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Instance).StateReason, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2Instance).StateReason, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.instance.stateTransitionReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10794,7 +10794,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.ec2.instance.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Instance).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2Instance).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.instance.iamInstanceProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10854,7 +10854,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.ec2.instance.networkInterfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Instance).NetworkInterfaces, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2Instance).NetworkInterfaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.networkinterface.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10890,7 +10890,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.ec2.networkinterface.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Networkinterface).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2Networkinterface).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.networkinterface.availabilityZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10898,7 +10898,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.ec2.networkinterface.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Networkinterface).SecurityGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2Networkinterface).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.networkinterface.ipv6Native": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10938,7 +10938,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.ec2.keypair.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Keypair).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2Keypair).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.keypair.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11034,7 +11034,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.ec2.securitygroup.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Securitygroup).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2Securitygroup).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.securitygroup.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11042,11 +11042,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.ec2.securitygroup.ipPermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Securitygroup).IpPermissions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2Securitygroup).IpPermissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.securitygroup.ipPermissionsEgress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Securitygroup).IpPermissionsEgress, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2Securitygroup).IpPermissionsEgress, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.securitygroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11078,19 +11078,19 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.ec2.securitygroup.ippermission.ipRanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2SecuritygroupIppermission).IpRanges, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2SecuritygroupIppermission).IpRanges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.securitygroup.ippermission.ipv6Ranges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2SecuritygroupIppermission).Ipv6Ranges, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2SecuritygroupIppermission).Ipv6Ranges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.securitygroup.ippermission.prefixListIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2SecuritygroupIppermission).PrefixListIds, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2SecuritygroupIppermission).PrefixListIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.securitygroup.ippermission.userIdGroupPairs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2SecuritygroupIppermission).UserIdGroupPairs, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEc2SecuritygroupIppermission).UserIdGroupPairs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11098,15 +11098,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.config.recorders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsConfig).Recorders, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsConfig).Recorders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.config.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsConfig).Rules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsConfig).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.config.deliveryChannels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsConfig).DeliveryChannels, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsConfig).DeliveryChannels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.config.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11122,7 +11122,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.config.rule.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsConfigRule).Source, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsConfigRule).Source, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.config.rule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11174,7 +11174,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.config.recorder.resourceTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsConfigRecorder).ResourceTypes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsConfigRecorder).ResourceTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.config.deliverychannel.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11206,7 +11206,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.eks.clusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEks).Clusters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEks).Clusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.eks.nodegroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11242,11 +11242,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.eks.nodegroup.scalingConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEksNodegroup).ScalingConfig, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsEksNodegroup).ScalingConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.eks.nodegroup.instanceTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEksNodegroup).InstanceTypes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEksNodegroup).InstanceTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.eks.nodegroup.amiType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11262,15 +11262,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.eks.nodegroup.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEksNodegroup).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEksNodegroup).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.eks.nodegroup.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEksNodegroup).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEksNodegroup).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.eks.nodegroup.autoscalingGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEksNodegroup).AutoscalingGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEksNodegroup).AutoscalingGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.eks.addon.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11302,7 +11302,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.eks.addon.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEksAddon).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEksAddon).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.eks.addon.publisher": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11334,7 +11334,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.eks.cluster.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEksCluster).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEksCluster).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.eks.cluster.endpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11354,19 +11354,19 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.eks.cluster.encryptionConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEksCluster).EncryptionConfig, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEksCluster).EncryptionConfig, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.eks.cluster.logging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEksCluster).Logging, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsEksCluster).Logging, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.eks.cluster.networkConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEksCluster).NetworkConfig, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsEksCluster).NetworkConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.eks.cluster.resourcesVpcConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEksCluster).ResourcesVpcConfig, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsEksCluster).ResourcesVpcConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.eks.cluster.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11374,11 +11374,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.eks.cluster.nodeGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEksCluster).NodeGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEksCluster).NodeGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.eks.cluster.addons": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEksCluster).Addons, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsEksCluster).Addons, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.eks.cluster.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11402,11 +11402,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.neptune.clusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsNeptune).Clusters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsNeptune).Clusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.neptune.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsNeptune).Instances, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsNeptune).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.neptune.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11450,7 +11450,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.neptune.cluster.availabilityZones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsNeptuneCluster).AvailabilityZones, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsNeptuneCluster).AvailabilityZones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.neptune.cluster.backupRetentionPeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11486,7 +11486,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.neptune.cluster.enabledCloudwatchLogsExports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsNeptuneCluster).EnabledCloudwatchLogsExports, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsNeptuneCluster).EnabledCloudwatchLogsExports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.neptune.cluster.endpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11578,11 +11578,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.neptune.instance.enabledCloudwatchLogsExports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsNeptuneInstance).EnabledCloudwatchLogsExports, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsNeptuneInstance).EnabledCloudwatchLogsExports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.neptune.instance.endpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsNeptuneInstance).Endpoint, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsNeptuneInstance).Endpoint, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.neptune.instance.engine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11662,11 +11662,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.timestream.liveanalytics.databases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsTimestreamLiveanalytics).Databases, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsTimestreamLiveanalytics).Databases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.timestream.liveanalytics.tables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsTimestreamLiveanalytics).Tables, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsTimestreamLiveanalytics).Tables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.timestream.liveanalytics.database.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11730,11 +11730,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.timestream.liveanalytics.table.magneticStoreWriteProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsTimestreamLiveanalyticsTable).MagneticStoreWriteProperties, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsTimestreamLiveanalyticsTable).MagneticStoreWriteProperties, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.timestream.liveanalytics.table.retentionProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsTimestreamLiveanalyticsTable).RetentionProperties, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsTimestreamLiveanalyticsTable).RetentionProperties, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.codedeploy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11742,7 +11742,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"aws.codedeploy.applications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCodedeploy).Applications, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsCodedeploy).Applications, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.codedeploy.application.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11774,15 +11774,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.codedeploy.application.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCodedeployApplication).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsCodedeployApplication).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.codedeploy.application.deploymentGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCodedeployApplication).DeploymentGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsCodedeployApplication).DeploymentGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.codedeploy.application.deployments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCodedeployApplication).Deployments, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsCodedeployApplication).Deployments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.codedeploy.application.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11818,11 +11818,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.codedeploy.deploymentGroup.targetRevision": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCodedeployDeploymentGroup).TargetRevision, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsCodedeployDeploymentGroup).TargetRevision, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.codedeploy.deploymentGroup.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCodedeployDeploymentGroup).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAwsCodedeployDeploymentGroup).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.codedeploy.deploymentGroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11830,19 +11830,19 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.codedeploy.deploymentGroup.deployments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCodedeployDeploymentGroup).Deployments, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsCodedeployDeploymentGroup).Deployments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.codedeploy.deploymentGroup.autoScalingGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCodedeployDeploymentGroup).AutoScalingGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsCodedeployDeploymentGroup).AutoScalingGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.codedeploy.deploymentGroup.ec2TagFilters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCodedeployDeploymentGroup).Ec2TagFilters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsCodedeployDeploymentGroup).Ec2TagFilters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.codedeploy.deploymentGroup.onPremisesInstanceTagFilters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCodedeployDeploymentGroup).OnPremisesInstanceTagFilters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsCodedeployDeploymentGroup).OnPremisesInstanceTagFilters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.codedeploy.deploymentGroup.lastSuccessfulDeployment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11854,15 +11854,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.codedeploy.deploymentGroup.deploymentStyle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCodedeployDeploymentGroup).DeploymentStyle, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsCodedeployDeploymentGroup).DeploymentStyle, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.codedeploy.deploymentGroup.blueGreenDeploymentConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCodedeployDeploymentGroup).BlueGreenDeploymentConfiguration, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsCodedeployDeploymentGroup).BlueGreenDeploymentConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.codedeploy.deploymentGroup.loadBalancerInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCodedeployDeploymentGroup).LoadBalancerInfo, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsCodedeployDeploymentGroup).LoadBalancerInfo, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.codedeploy.deployment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11914,11 +11914,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.codedeploy.deployment.targetInstances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCodedeployDeployment).TargetInstances, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsCodedeployDeployment).TargetInstances, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.codedeploy.deployment.revision": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCodedeployDeployment).Revision, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsCodedeployDeployment).Revision, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.codedeploy.deployment.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11926,11 +11926,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.codedeploy.deployment.errorInformation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCodedeployDeployment).ErrorInformation, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsCodedeployDeployment).ErrorInformation, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.codedeploy.deployment.deploymentOverview": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCodedeployDeployment).DeploymentOverview, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsCodedeployDeployment).DeploymentOverview, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.codedeploy.deployment.isRollback": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11938,7 +11938,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.codedeploy.deployment.rollbackInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCodedeployDeployment).RollbackInfo, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsCodedeployDeployment).RollbackInfo, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 }
@@ -11970,8 +11970,8 @@ type mqlAws struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsInternal it will be used here
-	Vpcs plugin.TValue[[]interface{}]
-	Regions plugin.TValue[[]interface{}]
+	Vpcs plugin.TValue[[]any]
+	Regions plugin.TValue[[]any]
 }
 
 // createAws creates a new instance of this resource
@@ -12006,15 +12006,15 @@ func (c *mqlAws) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAws) GetVpcs() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Vpcs, func() ([]interface{}, error) {
+func (c *mqlAws) GetVpcs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Vpcs, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws", c.__id, "vpcs")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -12022,8 +12022,8 @@ func (c *mqlAws) GetVpcs() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAws) GetRegions() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Regions, func() ([]interface{}, error) {
+func (c *mqlAws) GetRegions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Regions, func() ([]any, error) {
 		return c.regions()
 	})
 }
@@ -12034,9 +12034,9 @@ type mqlAwsAccount struct {
 	__id string
 	// optional: if you define mqlAwsAccountInternal it will be used here
 	Id plugin.TValue[string]
-	Aliases plugin.TValue[[]interface{}]
+	Aliases plugin.TValue[[]any]
 	Organization plugin.TValue[*mqlAwsOrganization]
-	Tags plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[map[string]any]
 }
 
 // createAwsAccount creates a new instance of this resource
@@ -12080,8 +12080,8 @@ func (c *mqlAwsAccount) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
-func (c *mqlAwsAccount) GetAliases() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Aliases, func() ([]interface{}, error) {
+func (c *mqlAwsAccount) GetAliases() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Aliases, func() ([]any, error) {
 		return c.aliases()
 	})
 }
@@ -12102,8 +12102,8 @@ func (c *mqlAwsAccount) GetOrganization() *plugin.TValue[*mqlAwsOrganization] {
 	})
 }
 
-func (c *mqlAwsAccount) GetTags() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Tags, func() (map[string]interface{}, error) {
+func (c *mqlAwsAccount) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
 	})
 }
@@ -12117,7 +12117,7 @@ type mqlAwsOrganization struct {
 	FeatureSet plugin.TValue[string]
 	MasterAccountId plugin.TValue[string]
 	MasterAccountEmail plugin.TValue[string]
-	Accounts plugin.TValue[[]interface{}]
+	Accounts plugin.TValue[[]any]
 }
 
 // createAwsOrganization creates a new instance of this resource
@@ -12168,15 +12168,15 @@ func (c *mqlAwsOrganization) GetMasterAccountEmail() *plugin.TValue[string] {
 	return &c.MasterAccountEmail
 }
 
-func (c *mqlAwsOrganization) GetAccounts() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Accounts, func() ([]interface{}, error) {
+func (c *mqlAwsOrganization) GetAccounts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Accounts, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.organization", c.__id, "accounts")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -12197,14 +12197,14 @@ type mqlAwsVpc struct {
 	IsDefault plugin.TValue[bool]
 	InstanceTenancy plugin.TValue[string]
 	Region plugin.TValue[string]
-	Endpoints plugin.TValue[[]interface{}]
-	FlowLogs plugin.TValue[[]interface{}]
-	RouteTables plugin.TValue[[]interface{}]
-	Subnets plugin.TValue[[]interface{}]
-	Tags plugin.TValue[map[string]interface{}]
-	NatGateways plugin.TValue[[]interface{}]
-	ServiceEndpoints plugin.TValue[[]interface{}]
-	PeeringConnections plugin.TValue[[]interface{}]
+	Endpoints plugin.TValue[[]any]
+	FlowLogs plugin.TValue[[]any]
+	RouteTables plugin.TValue[[]any]
+	Subnets plugin.TValue[[]any]
+	Tags plugin.TValue[map[string]any]
+	NatGateways plugin.TValue[[]any]
+	ServiceEndpoints plugin.TValue[[]any]
+	PeeringConnections plugin.TValue[[]any]
 	InternetGatewayBlockMode plugin.TValue[string]
 }
 
@@ -12277,15 +12277,15 @@ func (c *mqlAwsVpc) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
-func (c *mqlAwsVpc) GetEndpoints() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Endpoints, func() ([]interface{}, error) {
+func (c *mqlAwsVpc) GetEndpoints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Endpoints, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc", c.__id, "endpoints")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -12293,15 +12293,15 @@ func (c *mqlAwsVpc) GetEndpoints() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsVpc) GetFlowLogs() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.FlowLogs, func() ([]interface{}, error) {
+func (c *mqlAwsVpc) GetFlowLogs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FlowLogs, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc", c.__id, "flowLogs")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -12309,15 +12309,15 @@ func (c *mqlAwsVpc) GetFlowLogs() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsVpc) GetRouteTables() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.RouteTables, func() ([]interface{}, error) {
+func (c *mqlAwsVpc) GetRouteTables() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RouteTables, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc", c.__id, "routeTables")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -12325,15 +12325,15 @@ func (c *mqlAwsVpc) GetRouteTables() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsVpc) GetSubnets() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Subnets, func() ([]interface{}, error) {
+func (c *mqlAwsVpc) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc", c.__id, "subnets")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -12341,19 +12341,19 @@ func (c *mqlAwsVpc) GetSubnets() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsVpc) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsVpc) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
-func (c *mqlAwsVpc) GetNatGateways() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.NatGateways, func() ([]interface{}, error) {
+func (c *mqlAwsVpc) GetNatGateways() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NatGateways, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc", c.__id, "natGateways")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -12361,15 +12361,15 @@ func (c *mqlAwsVpc) GetNatGateways() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsVpc) GetServiceEndpoints() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.ServiceEndpoints, func() ([]interface{}, error) {
+func (c *mqlAwsVpc) GetServiceEndpoints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ServiceEndpoints, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc", c.__id, "serviceEndpoints")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -12377,15 +12377,15 @@ func (c *mqlAwsVpc) GetServiceEndpoints() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsVpc) GetPeeringConnections() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.PeeringConnections, func() ([]interface{}, error) {
+func (c *mqlAwsVpc) GetPeeringConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PeeringConnections, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc", c.__id, "peeringConnections")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -12402,10 +12402,10 @@ type mqlAwsVpcRoutetable struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	mqlAwsVpcRoutetableInternal
-	Associations plugin.TValue[[]interface{}]
+	Associations plugin.TValue[[]any]
 	Id plugin.TValue[string]
-	Routes plugin.TValue[[]interface{}]
-	Tags plugin.TValue[map[string]interface{}]
+	Routes plugin.TValue[[]any]
+	Tags plugin.TValue[map[string]any]
 }
 
 // createAwsVpcRoutetable creates a new instance of this resource
@@ -12445,15 +12445,15 @@ func (c *mqlAwsVpcRoutetable) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsVpcRoutetable) GetAssociations() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Associations, func() ([]interface{}, error) {
+func (c *mqlAwsVpcRoutetable) GetAssociations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Associations, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc.routetable", c.__id, "associations")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -12465,11 +12465,11 @@ func (c *mqlAwsVpcRoutetable) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
-func (c *mqlAwsVpcRoutetable) GetRoutes() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsVpcRoutetable) GetRoutes() *plugin.TValue[[]any] {
 	return &c.Routes
 }
 
-func (c *mqlAwsVpcRoutetable) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsVpcRoutetable) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
@@ -12479,7 +12479,7 @@ type mqlAwsVpcRoutetableAssociation struct {
 	__id string
 	mqlAwsVpcRoutetableAssociationInternal
 	RouteTableAssociationId plugin.TValue[string]
-	AssociationsState plugin.TValue[interface{}]
+	AssociationsState plugin.TValue[any]
 	GatewayId plugin.TValue[string]
 	Main plugin.TValue[bool]
 	RouteTableId plugin.TValue[string]
@@ -12522,7 +12522,7 @@ func (c *mqlAwsVpcRoutetableAssociation) GetRouteTableAssociationId() *plugin.TV
 	return &c.RouteTableAssociationId
 }
 
-func (c *mqlAwsVpcRoutetableAssociation) GetAssociationsState() *plugin.TValue[interface{}] {
+func (c *mqlAwsVpcRoutetableAssociation) GetAssociationsState() *plugin.TValue[any] {
 	return &c.AssociationsState
 }
 
@@ -12664,7 +12664,7 @@ type mqlAwsVpcEndpoint struct {
 	Region plugin.TValue[string]
 	ServiceName plugin.TValue[string]
 	PolicyDocument plugin.TValue[string]
-	Subnets plugin.TValue[[]interface{}]
+	Subnets plugin.TValue[[]any]
 	PrivateDnsEnabled plugin.TValue[bool]
 	State plugin.TValue[string]
 	CreatedAt plugin.TValue[*time.Time]
@@ -12731,7 +12731,7 @@ func (c *mqlAwsVpcEndpoint) GetPolicyDocument() *plugin.TValue[string] {
 	return &c.PolicyDocument
 }
 
-func (c *mqlAwsVpcEndpoint) GetSubnets() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsVpcEndpoint) GetSubnets() *plugin.TValue[[]any] {
 	return &c.Subnets
 }
 
@@ -12756,7 +12756,7 @@ type mqlAwsVpcFlowlog struct {
 	Vpc plugin.TValue[string]
 	Region plugin.TValue[string]
 	Status plugin.TValue[string]
-	Tags plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[map[string]any]
 	CreatedAt plugin.TValue[*time.Time]
 	Destination plugin.TValue[string]
 	DestinationType plugin.TValue[string]
@@ -12813,7 +12813,7 @@ func (c *mqlAwsVpcFlowlog) GetStatus() *plugin.TValue[string] {
 	return &c.Status
 }
 
-func (c *mqlAwsVpcFlowlog) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsVpcFlowlog) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
@@ -12846,9 +12846,9 @@ type mqlAwsWaf struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsWafInternal it will be used here
-	Acls plugin.TValue[[]interface{}]
-	RuleGroups plugin.TValue[[]interface{}]
-	IpSets plugin.TValue[[]interface{}]
+	Acls plugin.TValue[[]any]
+	RuleGroups plugin.TValue[[]any]
+	IpSets plugin.TValue[[]any]
 	Scope plugin.TValue[string]
 }
 
@@ -12889,15 +12889,15 @@ func (c *mqlAwsWaf) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsWaf) GetAcls() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Acls, func() ([]interface{}, error) {
+func (c *mqlAwsWaf) GetAcls() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Acls, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.waf", c.__id, "acls")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -12905,15 +12905,15 @@ func (c *mqlAwsWaf) GetAcls() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsWaf) GetRuleGroups() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.RuleGroups, func() ([]interface{}, error) {
+func (c *mqlAwsWaf) GetRuleGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RuleGroups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.waf", c.__id, "ruleGroups")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -12921,15 +12921,15 @@ func (c *mqlAwsWaf) GetRuleGroups() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsWaf) GetIpSets() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.IpSets, func() ([]interface{}, error) {
+func (c *mqlAwsWaf) GetIpSets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IpSets, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.waf", c.__id, "ipSets")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -12951,7 +12951,7 @@ type mqlAwsWafAcl struct {
 	Name plugin.TValue[string]
 	Description plugin.TValue[string]
 	ManagedByFirewallManager plugin.TValue[bool]
-	Rules plugin.TValue[[]interface{}]
+	Rules plugin.TValue[[]any]
 	Scope plugin.TValue[string]
 }
 
@@ -13012,15 +13012,15 @@ func (c *mqlAwsWafAcl) GetManagedByFirewallManager() *plugin.TValue[bool] {
 	return &c.ManagedByFirewallManager
 }
 
-func (c *mqlAwsWafAcl) GetRules() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Rules, func() ([]interface{}, error) {
+func (c *mqlAwsWafAcl) GetRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rules, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.waf.acl", c.__id, "rules")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -13041,7 +13041,7 @@ type mqlAwsWafRulegroup struct {
 	Id plugin.TValue[string]
 	Name plugin.TValue[string]
 	Description plugin.TValue[string]
-	Rules plugin.TValue[[]interface{}]
+	Rules plugin.TValue[[]any]
 	Scope plugin.TValue[string]
 }
 
@@ -13098,15 +13098,15 @@ func (c *mqlAwsWafRulegroup) GetDescription() *plugin.TValue[string] {
 	return &c.Description
 }
 
-func (c *mqlAwsWafRulegroup) GetRules() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Rules, func() ([]interface{}, error) {
+func (c *mqlAwsWafRulegroup) GetRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rules, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.waf.rulegroup", c.__id, "rules")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -13253,7 +13253,7 @@ type mqlAwsWafRuleStatement struct {
 	// optional: if you define mqlAwsWafRuleStatementInternal it will be used here
 	Id plugin.TValue[string]
 	Kind plugin.TValue[string]
-	Json plugin.TValue[interface{}]
+	Json plugin.TValue[any]
 	SqliMatchStatement plugin.TValue[*mqlAwsWafRuleStatementSqlimatchstatement]
 	XssMatchStatement plugin.TValue[*mqlAwsWafRuleStatementXssmatchstatement]
 	ByteMatchStatement plugin.TValue[*mqlAwsWafRuleStatementBytematchstatement]
@@ -13316,7 +13316,7 @@ func (c *mqlAwsWafRuleStatement) GetKind() *plugin.TValue[string] {
 	return &c.Kind
 }
 
-func (c *mqlAwsWafRuleStatement) GetJson() *plugin.TValue[interface{}] {
+func (c *mqlAwsWafRuleStatement) GetJson() *plugin.TValue[any] {
 	return &c.Json
 }
 
@@ -13387,7 +13387,7 @@ type mqlAwsWafRuleStatementGeomatchstatement struct {
 	// optional: if you define mqlAwsWafRuleStatementGeomatchstatementInternal it will be used here
 	RuleName plugin.TValue[string]
 	StatementID plugin.TValue[string]
-	CountryCodes plugin.TValue[[]interface{}]
+	CountryCodes plugin.TValue[[]any]
 }
 
 // createAwsWafRuleStatementGeomatchstatement creates a new instance of this resource
@@ -13435,7 +13435,7 @@ func (c *mqlAwsWafRuleStatementGeomatchstatement) GetStatementID() *plugin.TValu
 	return &c.StatementID
 }
 
-func (c *mqlAwsWafRuleStatementGeomatchstatement) GetCountryCodes() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsWafRuleStatementGeomatchstatement) GetCountryCodes() *plugin.TValue[[]any] {
 	return &c.CountryCodes
 }
 
@@ -13702,7 +13702,7 @@ type mqlAwsWafRuleStatementAndstatement struct {
 	// optional: if you define mqlAwsWafRuleStatementAndstatementInternal it will be used here
 	RuleName plugin.TValue[string]
 	StatementID plugin.TValue[string]
-	Statements plugin.TValue[[]interface{}]
+	Statements plugin.TValue[[]any]
 }
 
 // createAwsWafRuleStatementAndstatement creates a new instance of this resource
@@ -13750,7 +13750,7 @@ func (c *mqlAwsWafRuleStatementAndstatement) GetStatementID() *plugin.TValue[str
 	return &c.StatementID
 }
 
-func (c *mqlAwsWafRuleStatementAndstatement) GetStatements() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsWafRuleStatementAndstatement) GetStatements() *plugin.TValue[[]any] {
 	return &c.Statements
 }
 
@@ -13820,7 +13820,7 @@ type mqlAwsWafRuleStatementOrstatement struct {
 	// optional: if you define mqlAwsWafRuleStatementOrstatementInternal it will be used here
 	RuleName plugin.TValue[string]
 	StatementID plugin.TValue[string]
-	Statements plugin.TValue[[]interface{}]
+	Statements plugin.TValue[[]any]
 }
 
 // createAwsWafRuleStatementOrstatement creates a new instance of this resource
@@ -13868,7 +13868,7 @@ func (c *mqlAwsWafRuleStatementOrstatement) GetStatementID() *plugin.TValue[stri
 	return &c.StatementID
 }
 
-func (c *mqlAwsWafRuleStatementOrstatement) GetStatements() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsWafRuleStatementOrstatement) GetStatements() *plugin.TValue[[]any] {
 	return &c.Statements
 }
 
@@ -13988,7 +13988,7 @@ type mqlAwsWafRuleStatementRulegroupreferencestatement struct {
 	RuleName plugin.TValue[string]
 	StatementID plugin.TValue[string]
 	Arn plugin.TValue[string]
-	ExcludeRules plugin.TValue[[]interface{}]
+	ExcludeRules plugin.TValue[[]any]
 }
 
 // createAwsWafRuleStatementRulegroupreferencestatement creates a new instance of this resource
@@ -14040,7 +14040,7 @@ func (c *mqlAwsWafRuleStatementRulegroupreferencestatement) GetArn() *plugin.TVa
 	return &c.Arn
 }
 
-func (c *mqlAwsWafRuleStatementRulegroupreferencestatement) GetExcludeRules() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsWafRuleStatementRulegroupreferencestatement) GetExcludeRules() *plugin.TValue[[]any] {
 	return &c.ExcludeRules
 }
 
@@ -14796,7 +14796,7 @@ type mqlAwsWafRuleFieldtomatchJsonbodyMatchpattern struct {
 	RuleName plugin.TValue[string]
 	StatementID plugin.TValue[string]
 	All plugin.TValue[bool]
-	IncludePaths plugin.TValue[[]interface{}]
+	IncludePaths plugin.TValue[[]any]
 }
 
 // createAwsWafRuleFieldtomatchJsonbodyMatchpattern creates a new instance of this resource
@@ -14848,7 +14848,7 @@ func (c *mqlAwsWafRuleFieldtomatchJsonbodyMatchpattern) GetAll() *plugin.TValue[
 	return &c.All
 }
 
-func (c *mqlAwsWafRuleFieldtomatchJsonbodyMatchpattern) GetIncludePaths() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsWafRuleFieldtomatchJsonbodyMatchpattern) GetIncludePaths() *plugin.TValue[[]any] {
 	return &c.IncludePaths
 }
 
@@ -14929,8 +14929,8 @@ type mqlAwsWafRuleFieldtomatchHeadersMatchpattern struct {
 	RuleName plugin.TValue[string]
 	StatementID plugin.TValue[string]
 	All plugin.TValue[bool]
-	IncludeHeaders plugin.TValue[[]interface{}]
-	ExcludeHeaders plugin.TValue[[]interface{}]
+	IncludeHeaders plugin.TValue[[]any]
+	ExcludeHeaders plugin.TValue[[]any]
 }
 
 // createAwsWafRuleFieldtomatchHeadersMatchpattern creates a new instance of this resource
@@ -14982,11 +14982,11 @@ func (c *mqlAwsWafRuleFieldtomatchHeadersMatchpattern) GetAll() *plugin.TValue[b
 	return &c.All
 }
 
-func (c *mqlAwsWafRuleFieldtomatchHeadersMatchpattern) GetIncludeHeaders() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsWafRuleFieldtomatchHeadersMatchpattern) GetIncludeHeaders() *plugin.TValue[[]any] {
 	return &c.IncludeHeaders
 }
 
-func (c *mqlAwsWafRuleFieldtomatchHeadersMatchpattern) GetExcludeHeaders() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsWafRuleFieldtomatchHeadersMatchpattern) GetExcludeHeaders() *plugin.TValue[[]any] {
 	return &c.ExcludeHeaders
 }
 
@@ -15124,7 +15124,7 @@ type mqlAwsWafIpset struct {
 	Name plugin.TValue[string]
 	Description plugin.TValue[string]
 	AddressType plugin.TValue[string]
-	Addresses plugin.TValue[interface{}]
+	Addresses plugin.TValue[any]
 }
 
 // createAwsWafIpset creates a new instance of this resource
@@ -15188,7 +15188,7 @@ func (c *mqlAwsWafIpset) GetAddressType() *plugin.TValue[string] {
 	return &c.AddressType
 }
 
-func (c *mqlAwsWafIpset) GetAddresses() *plugin.TValue[interface{}] {
+func (c *mqlAwsWafIpset) GetAddresses() *plugin.TValue[any] {
 	return &c.Addresses
 }
 
@@ -15197,7 +15197,7 @@ type mqlAwsEfs struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsEfsInternal it will be used here
-	Filesystems plugin.TValue[[]interface{}]
+	Filesystems plugin.TValue[[]any]
 }
 
 // createAwsEfs creates a new instance of this resource
@@ -15232,15 +15232,15 @@ func (c *mqlAwsEfs) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsEfs) GetFilesystems() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Filesystems, func() ([]interface{}, error) {
+func (c *mqlAwsEfs) GetFilesystems() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Filesystems, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.efs", c.__id, "filesystems")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -15258,10 +15258,10 @@ type mqlAwsEfsFilesystem struct {
 	Arn plugin.TValue[string]
 	Encrypted plugin.TValue[bool]
 	KmsKey plugin.TValue[*mqlAwsKmsKey]
-	BackupPolicy plugin.TValue[interface{}]
+	BackupPolicy plugin.TValue[any]
 	Region plugin.TValue[string]
 	AvailabilityZone plugin.TValue[string]
-	Tags plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[map[string]any]
 	CreatedAt plugin.TValue[*time.Time]
 }
 
@@ -15334,8 +15334,8 @@ func (c *mqlAwsEfsFilesystem) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
 	})
 }
 
-func (c *mqlAwsEfsFilesystem) GetBackupPolicy() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.BackupPolicy, func() (interface{}, error) {
+func (c *mqlAwsEfsFilesystem) GetBackupPolicy() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.BackupPolicy, func() (any, error) {
 		return c.backupPolicy()
 	})
 }
@@ -15348,7 +15348,7 @@ func (c *mqlAwsEfsFilesystem) GetAvailabilityZone() *plugin.TValue[string] {
 	return &c.AvailabilityZone
 }
 
-func (c *mqlAwsEfsFilesystem) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsEfsFilesystem) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
@@ -15361,7 +15361,7 @@ type mqlAwsKms struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsKmsInternal it will be used here
-	Keys plugin.TValue[[]interface{}]
+	Keys plugin.TValue[[]any]
 }
 
 // createAwsKms creates a new instance of this resource
@@ -15401,15 +15401,15 @@ func (c *mqlAwsKms) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsKms) GetKeys() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Keys, func() ([]interface{}, error) {
+func (c *mqlAwsKms) GetKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Keys, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.kms", c.__id, "keys")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -15426,7 +15426,7 @@ type mqlAwsKmsKey struct {
 	Arn plugin.TValue[string]
 	Region plugin.TValue[string]
 	KeyRotationEnabled plugin.TValue[bool]
-	Metadata plugin.TValue[interface{}]
+	Metadata plugin.TValue[any]
 }
 
 // createAwsKmsKey creates a new instance of this resource
@@ -15484,8 +15484,8 @@ func (c *mqlAwsKmsKey) GetKeyRotationEnabled() *plugin.TValue[bool] {
 	})
 }
 
-func (c *mqlAwsKmsKey) GetMetadata() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Metadata, func() (interface{}, error) {
+func (c *mqlAwsKmsKey) GetMetadata() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Metadata, func() (any, error) {
 		return c.metadata()
 	})
 }
@@ -15495,17 +15495,17 @@ type mqlAwsIam struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsIamInternal it will be used here
-	Users plugin.TValue[[]interface{}]
-	Roles plugin.TValue[[]interface{}]
-	Groups plugin.TValue[[]interface{}]
-	Policies plugin.TValue[[]interface{}]
-	AttachedPolicies plugin.TValue[[]interface{}]
-	CredentialReport plugin.TValue[[]interface{}]
-	AccountPasswordPolicy plugin.TValue[interface{}]
-	AccountSummary plugin.TValue[map[string]interface{}]
-	VirtualMfaDevices plugin.TValue[[]interface{}]
-	ServerCertificates plugin.TValue[[]interface{}]
-	InstanceProfiles plugin.TValue[[]interface{}]
+	Users plugin.TValue[[]any]
+	Roles plugin.TValue[[]any]
+	Groups plugin.TValue[[]any]
+	Policies plugin.TValue[[]any]
+	AttachedPolicies plugin.TValue[[]any]
+	CredentialReport plugin.TValue[[]any]
+	AccountPasswordPolicy plugin.TValue[any]
+	AccountSummary plugin.TValue[map[string]any]
+	VirtualMfaDevices plugin.TValue[[]any]
+	ServerCertificates plugin.TValue[[]any]
+	InstanceProfiles plugin.TValue[[]any]
 }
 
 // createAwsIam creates a new instance of this resource
@@ -15545,15 +15545,15 @@ func (c *mqlAwsIam) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsIam) GetUsers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Users, func() ([]interface{}, error) {
+func (c *mqlAwsIam) GetUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Users, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam", c.__id, "users")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -15561,15 +15561,15 @@ func (c *mqlAwsIam) GetUsers() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsIam) GetRoles() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Roles, func() ([]interface{}, error) {
+func (c *mqlAwsIam) GetRoles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Roles, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam", c.__id, "roles")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -15577,15 +15577,15 @@ func (c *mqlAwsIam) GetRoles() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsIam) GetGroups() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Groups, func() ([]interface{}, error) {
+func (c *mqlAwsIam) GetGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Groups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam", c.__id, "groups")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -15593,15 +15593,15 @@ func (c *mqlAwsIam) GetGroups() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsIam) GetPolicies() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Policies, func() ([]interface{}, error) {
+func (c *mqlAwsIam) GetPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Policies, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam", c.__id, "policies")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -15609,15 +15609,15 @@ func (c *mqlAwsIam) GetPolicies() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsIam) GetAttachedPolicies() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.AttachedPolicies, func() ([]interface{}, error) {
+func (c *mqlAwsIam) GetAttachedPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AttachedPolicies, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam", c.__id, "attachedPolicies")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -15625,15 +15625,15 @@ func (c *mqlAwsIam) GetAttachedPolicies() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsIam) GetCredentialReport() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.CredentialReport, func() ([]interface{}, error) {
+func (c *mqlAwsIam) GetCredentialReport() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CredentialReport, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam", c.__id, "credentialReport")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -15641,27 +15641,27 @@ func (c *mqlAwsIam) GetCredentialReport() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsIam) GetAccountPasswordPolicy() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.AccountPasswordPolicy, func() (interface{}, error) {
+func (c *mqlAwsIam) GetAccountPasswordPolicy() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.AccountPasswordPolicy, func() (any, error) {
 		return c.accountPasswordPolicy()
 	})
 }
 
-func (c *mqlAwsIam) GetAccountSummary() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.AccountSummary, func() (map[string]interface{}, error) {
+func (c *mqlAwsIam) GetAccountSummary() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.AccountSummary, func() (map[string]any, error) {
 		return c.accountSummary()
 	})
 }
 
-func (c *mqlAwsIam) GetVirtualMfaDevices() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.VirtualMfaDevices, func() ([]interface{}, error) {
+func (c *mqlAwsIam) GetVirtualMfaDevices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VirtualMfaDevices, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam", c.__id, "virtualMfaDevices")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -15669,21 +15669,21 @@ func (c *mqlAwsIam) GetVirtualMfaDevices() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsIam) GetServerCertificates() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.ServerCertificates, func() ([]interface{}, error) {
+func (c *mqlAwsIam) GetServerCertificates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ServerCertificates, func() ([]any, error) {
 		return c.serverCertificates()
 	})
 }
 
-func (c *mqlAwsIam) GetInstanceProfiles() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.InstanceProfiles, func() ([]interface{}, error) {
+func (c *mqlAwsIam) GetInstanceProfiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InstanceProfiles, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam", c.__id, "instanceProfiles")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -15696,7 +15696,7 @@ type mqlAwsIamUsercredentialreportentry struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsIamUsercredentialreportentryInternal it will be used here
-	Properties plugin.TValue[map[string]interface{}]
+	Properties plugin.TValue[map[string]any]
 	Arn plugin.TValue[string]
 	AccessKey1Active plugin.TValue[bool]
 	AccessKey1LastRotated plugin.TValue[*time.Time]
@@ -15758,7 +15758,7 @@ func (c *mqlAwsIamUsercredentialreportentry) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsIamUsercredentialreportentry) GetProperties() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsIamUsercredentialreportentry) GetProperties() *plugin.TValue[map[string]any] {
 	return &c.Properties
 }
 
@@ -15914,11 +15914,11 @@ type mqlAwsIamUser struct {
 	Name plugin.TValue[string]
 	CreatedAt plugin.TValue[*time.Time]
 	PasswordLastUsed plugin.TValue[*time.Time]
-	Tags plugin.TValue[map[string]interface{}]
-	Policies plugin.TValue[[]interface{}]
-	AttachedPolicies plugin.TValue[[]interface{}]
-	Groups plugin.TValue[[]interface{}]
-	AccessKeys plugin.TValue[[]interface{}]
+	Tags plugin.TValue[map[string]any]
+	Policies plugin.TValue[[]any]
+	AttachedPolicies plugin.TValue[[]any]
+	Groups plugin.TValue[[]any]
+	AccessKeys plugin.TValue[[]any]
 	LoginProfile plugin.TValue[*mqlAwsIamLoginProfile]
 }
 
@@ -15979,25 +15979,25 @@ func (c *mqlAwsIamUser) GetPasswordLastUsed() *plugin.TValue[*time.Time] {
 	return &c.PasswordLastUsed
 }
 
-func (c *mqlAwsIamUser) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsIamUser) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
-func (c *mqlAwsIamUser) GetPolicies() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Policies, func() ([]interface{}, error) {
+func (c *mqlAwsIamUser) GetPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Policies, func() ([]any, error) {
 		return c.policies()
 	})
 }
 
-func (c *mqlAwsIamUser) GetAttachedPolicies() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.AttachedPolicies, func() ([]interface{}, error) {
+func (c *mqlAwsIamUser) GetAttachedPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AttachedPolicies, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.user", c.__id, "attachedPolicies")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -16005,14 +16005,14 @@ func (c *mqlAwsIamUser) GetAttachedPolicies() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsIamUser) GetGroups() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Groups, func() ([]interface{}, error) {
+func (c *mqlAwsIamUser) GetGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Groups, func() ([]any, error) {
 		return c.groups()
 	})
 }
 
-func (c *mqlAwsIamUser) GetAccessKeys() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.AccessKeys, func() ([]interface{}, error) {
+func (c *mqlAwsIamUser) GetAccessKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AccessKeys, func() ([]any, error) {
 		return c.accessKeys()
 	})
 }
@@ -16042,8 +16042,8 @@ type mqlAwsIamInstanceProfile struct {
 	CreatedAt plugin.TValue[*time.Time]
 	InstanceProfileId plugin.TValue[string]
 	InstanceProfileName plugin.TValue[string]
-	Tags plugin.TValue[map[string]interface{}]
-	IamRoles plugin.TValue[[]interface{}]
+	Tags plugin.TValue[map[string]any]
+	IamRoles plugin.TValue[[]any]
 }
 
 // createAwsIamInstanceProfile creates a new instance of this resource
@@ -16099,19 +16099,19 @@ func (c *mqlAwsIamInstanceProfile) GetInstanceProfileName() *plugin.TValue[strin
 	return &c.InstanceProfileName
 }
 
-func (c *mqlAwsIamInstanceProfile) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsIamInstanceProfile) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
-func (c *mqlAwsIamInstanceProfile) GetIamRoles() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.IamRoles, func() ([]interface{}, error) {
+func (c *mqlAwsIamInstanceProfile) GetIamRoles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IamRoles, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.instanceProfile", c.__id, "iamRoles")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -16177,11 +16177,11 @@ type mqlAwsIamPolicy struct {
 	CreatedAt plugin.TValue[*time.Time]
 	UpdateDate plugin.TValue[*time.Time]
 	Scope plugin.TValue[string]
-	Versions plugin.TValue[[]interface{}]
+	Versions plugin.TValue[[]any]
 	DefaultVersion plugin.TValue[*mqlAwsIamPolicyversion]
-	AttachedUsers plugin.TValue[[]interface{}]
-	AttachedRoles plugin.TValue[[]interface{}]
-	AttachedGroups plugin.TValue[[]interface{}]
+	AttachedUsers plugin.TValue[[]any]
+	AttachedRoles plugin.TValue[[]any]
+	AttachedGroups plugin.TValue[[]any]
 }
 
 // createAwsIamPolicy creates a new instance of this resource
@@ -16273,15 +16273,15 @@ func (c *mqlAwsIamPolicy) GetScope() *plugin.TValue[string] {
 	})
 }
 
-func (c *mqlAwsIamPolicy) GetVersions() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Versions, func() ([]interface{}, error) {
+func (c *mqlAwsIamPolicy) GetVersions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Versions, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.policy", c.__id, "versions")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -16305,15 +16305,15 @@ func (c *mqlAwsIamPolicy) GetDefaultVersion() *plugin.TValue[*mqlAwsIamPolicyver
 	})
 }
 
-func (c *mqlAwsIamPolicy) GetAttachedUsers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.AttachedUsers, func() ([]interface{}, error) {
+func (c *mqlAwsIamPolicy) GetAttachedUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AttachedUsers, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.policy", c.__id, "attachedUsers")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -16321,15 +16321,15 @@ func (c *mqlAwsIamPolicy) GetAttachedUsers() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsIamPolicy) GetAttachedRoles() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.AttachedRoles, func() ([]interface{}, error) {
+func (c *mqlAwsIamPolicy) GetAttachedRoles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AttachedRoles, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.policy", c.__id, "attachedRoles")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -16337,15 +16337,15 @@ func (c *mqlAwsIamPolicy) GetAttachedRoles() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsIamPolicy) GetAttachedGroups() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.AttachedGroups, func() ([]interface{}, error) {
+func (c *mqlAwsIamPolicy) GetAttachedGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AttachedGroups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.policy", c.__id, "attachedGroups")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -16361,7 +16361,7 @@ type mqlAwsIamPolicyversion struct {
 	Arn plugin.TValue[string]
 	VersionId plugin.TValue[string]
 	IsDefaultVersion plugin.TValue[bool]
-	Document plugin.TValue[interface{}]
+	Document plugin.TValue[any]
 	CreatedAt plugin.TValue[*time.Time]
 }
 
@@ -16414,8 +16414,8 @@ func (c *mqlAwsIamPolicyversion) GetIsDefaultVersion() *plugin.TValue[bool] {
 	return &c.IsDefaultVersion
 }
 
-func (c *mqlAwsIamPolicyversion) GetDocument() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Document, func() (interface{}, error) {
+func (c *mqlAwsIamPolicyversion) GetDocument() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Document, func() (any, error) {
 		return c.document()
 	})
 }
@@ -16433,9 +16433,9 @@ type mqlAwsIamRole struct {
 	Id plugin.TValue[string]
 	Name plugin.TValue[string]
 	Description plugin.TValue[string]
-	Tags plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[map[string]any]
 	CreatedAt plugin.TValue[*time.Time]
-	AssumeRolePolicyDocument plugin.TValue[interface{}]
+	AssumeRolePolicyDocument plugin.TValue[any]
 }
 
 // createAwsIamRole creates a new instance of this resource
@@ -16491,7 +16491,7 @@ func (c *mqlAwsIamRole) GetDescription() *plugin.TValue[string] {
 	return &c.Description
 }
 
-func (c *mqlAwsIamRole) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsIamRole) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
@@ -16499,7 +16499,7 @@ func (c *mqlAwsIamRole) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
 
-func (c *mqlAwsIamRole) GetAssumeRolePolicyDocument() *plugin.TValue[interface{}] {
+func (c *mqlAwsIamRole) GetAssumeRolePolicyDocument() *plugin.TValue[any] {
 	return &c.AssumeRolePolicyDocument
 }
 
@@ -16512,7 +16512,7 @@ type mqlAwsIamGroup struct {
 	Id plugin.TValue[string]
 	Name plugin.TValue[string]
 	CreatedAt plugin.TValue[*time.Time]
-	Usernames plugin.TValue[[]interface{}]
+	Usernames plugin.TValue[[]any]
 }
 
 // createAwsIamGroup creates a new instance of this resource
@@ -16568,7 +16568,7 @@ func (c *mqlAwsIamGroup) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
 
-func (c *mqlAwsIamGroup) GetUsernames() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsIamGroup) GetUsernames() *plugin.TValue[[]any] {
 	return &c.Usernames
 }
 
@@ -16648,8 +16648,8 @@ type mqlAwsIamAccessAnalyzer struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsIamAccessAnalyzerInternal it will be used here
-	Analyzers plugin.TValue[[]interface{}]
-	Findings plugin.TValue[[]interface{}]
+	Analyzers plugin.TValue[[]any]
+	Findings plugin.TValue[[]any]
 }
 
 // createAwsIamAccessAnalyzer creates a new instance of this resource
@@ -16684,15 +16684,15 @@ func (c *mqlAwsIamAccessAnalyzer) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsIamAccessAnalyzer) GetAnalyzers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Analyzers, func() ([]interface{}, error) {
+func (c *mqlAwsIamAccessAnalyzer) GetAnalyzers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Analyzers, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.accessAnalyzer", c.__id, "analyzers")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -16700,15 +16700,15 @@ func (c *mqlAwsIamAccessAnalyzer) GetAnalyzers() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsIamAccessAnalyzer) GetFindings() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Findings, func() ([]interface{}, error) {
+func (c *mqlAwsIamAccessAnalyzer) GetFindings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Findings, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.accessAnalyzer", c.__id, "findings")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -16726,7 +16726,7 @@ type mqlAwsIamAccessanalyzerAnalyzer struct {
 	Status plugin.TValue[string]
 	Type plugin.TValue[string]
 	Region plugin.TValue[string]
-	Tags plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[map[string]any]
 	LastResourceAnalyzed plugin.TValue[string]
 	LastResourceAnalyzedAt plugin.TValue[*time.Time]
 	CreatedAt plugin.TValue[*time.Time]
@@ -16789,7 +16789,7 @@ func (c *mqlAwsIamAccessanalyzerAnalyzer) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
-func (c *mqlAwsIamAccessanalyzerAnalyzer) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsIamAccessanalyzerAnalyzer) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
@@ -16909,8 +16909,8 @@ type mqlAwsSagemaker struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsSagemakerInternal it will be used here
-	Endpoints plugin.TValue[[]interface{}]
-	NotebookInstances plugin.TValue[[]interface{}]
+	Endpoints plugin.TValue[[]any]
+	NotebookInstances plugin.TValue[[]any]
 }
 
 // createAwsSagemaker creates a new instance of this resource
@@ -16950,15 +16950,15 @@ func (c *mqlAwsSagemaker) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsSagemaker) GetEndpoints() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Endpoints, func() ([]interface{}, error) {
+func (c *mqlAwsSagemaker) GetEndpoints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Endpoints, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker", c.__id, "endpoints")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -16966,15 +16966,15 @@ func (c *mqlAwsSagemaker) GetEndpoints() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsSagemaker) GetNotebookInstances() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.NotebookInstances, func() ([]interface{}, error) {
+func (c *mqlAwsSagemaker) GetNotebookInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NotebookInstances, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker", c.__id, "notebookInstances")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -16991,7 +16991,7 @@ type mqlAwsSagemakerNotebookinstance struct {
 	Name plugin.TValue[string]
 	Details plugin.TValue[*mqlAwsSagemakerNotebookinstancedetails]
 	Region plugin.TValue[string]
-	Tags plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[map[string]any]
 }
 
 // createAwsSagemakerNotebookinstance creates a new instance of this resource
@@ -17059,7 +17059,7 @@ func (c *mqlAwsSagemakerNotebookinstance) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
-func (c *mqlAwsSagemakerNotebookinstance) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsSagemakerNotebookinstance) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
@@ -17141,9 +17141,9 @@ type mqlAwsSagemakerEndpoint struct {
 	// optional: if you define mqlAwsSagemakerEndpointInternal it will be used here
 	Arn plugin.TValue[string]
 	Name plugin.TValue[string]
-	Config plugin.TValue[interface{}]
+	Config plugin.TValue[any]
 	Region plugin.TValue[string]
-	Tags plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[map[string]any]
 }
 
 // createAwsSagemakerEndpoint creates a new instance of this resource
@@ -17191,8 +17191,8 @@ func (c *mqlAwsSagemakerEndpoint) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlAwsSagemakerEndpoint) GetConfig() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Config, func() (interface{}, error) {
+func (c *mqlAwsSagemakerEndpoint) GetConfig() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Config, func() (any, error) {
 		return c.config()
 	})
 }
@@ -17201,7 +17201,7 @@ func (c *mqlAwsSagemakerEndpoint) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
-func (c *mqlAwsSagemakerEndpoint) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsSagemakerEndpoint) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
@@ -17210,7 +17210,7 @@ type mqlAwsSns struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsSnsInternal it will be used here
-	Topics plugin.TValue[[]interface{}]
+	Topics plugin.TValue[[]any]
 }
 
 // createAwsSns creates a new instance of this resource
@@ -17250,15 +17250,15 @@ func (c *mqlAwsSns) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsSns) GetTopics() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Topics, func() ([]interface{}, error) {
+func (c *mqlAwsSns) GetTopics() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Topics, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sns", c.__id, "topics")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -17273,9 +17273,9 @@ type mqlAwsSnsTopic struct {
 	// optional: if you define mqlAwsSnsTopicInternal it will be used here
 	Arn plugin.TValue[string]
 	Region plugin.TValue[string]
-	Subscriptions plugin.TValue[[]interface{}]
-	Attributes plugin.TValue[interface{}]
-	Tags plugin.TValue[map[string]interface{}]
+	Subscriptions plugin.TValue[[]any]
+	Attributes plugin.TValue[any]
+	Tags plugin.TValue[map[string]any]
 }
 
 // createAwsSnsTopic creates a new instance of this resource
@@ -17323,15 +17323,15 @@ func (c *mqlAwsSnsTopic) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
-func (c *mqlAwsSnsTopic) GetSubscriptions() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Subscriptions, func() ([]interface{}, error) {
+func (c *mqlAwsSnsTopic) GetSubscriptions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subscriptions, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sns.topic", c.__id, "subscriptions")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -17339,14 +17339,14 @@ func (c *mqlAwsSnsTopic) GetSubscriptions() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsSnsTopic) GetAttributes() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Attributes, func() (interface{}, error) {
+func (c *mqlAwsSnsTopic) GetAttributes() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Attributes, func() (any, error) {
 		return c.attributes()
 	})
 }
 
-func (c *mqlAwsSnsTopic) GetTags() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Tags, func() (map[string]interface{}, error) {
+func (c *mqlAwsSnsTopic) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
 	})
 }
@@ -17410,7 +17410,7 @@ type mqlAwsEs struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsEsInternal it will be used here
-	Domains plugin.TValue[[]interface{}]
+	Domains plugin.TValue[[]any]
 }
 
 // createAwsEs creates a new instance of this resource
@@ -17450,15 +17450,15 @@ func (c *mqlAwsEs) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsEs) GetDomains() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Domains, func() ([]interface{}, error) {
+func (c *mqlAwsEs) GetDomains() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Domains, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.es", c.__id, "domains")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -17477,7 +17477,7 @@ type mqlAwsEsDomain struct {
 	Name plugin.TValue[string]
 	Endpoint plugin.TValue[string]
 	Region plugin.TValue[string]
-	Tags plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[map[string]any]
 	ElasticsearchVersion plugin.TValue[string]
 	DomainId plugin.TValue[string]
 	DomainName plugin.TValue[string]
@@ -17544,7 +17544,7 @@ func (c *mqlAwsEsDomain) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
-func (c *mqlAwsEsDomain) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsEsDomain) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
@@ -17565,7 +17565,7 @@ type mqlAwsAcm struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsAcmInternal it will be used here
-	Certificates plugin.TValue[[]interface{}]
+	Certificates plugin.TValue[[]any]
 }
 
 // createAwsAcm creates a new instance of this resource
@@ -17605,15 +17605,15 @@ func (c *mqlAwsAcm) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsAcm) GetCertificates() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Certificates, func() ([]interface{}, error) {
+func (c *mqlAwsAcm) GetCertificates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Certificates, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.acm", c.__id, "certificates")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -17634,7 +17634,7 @@ type mqlAwsAcmCertificate struct {
 	Status plugin.TValue[string]
 	Subject plugin.TValue[string]
 	Certificate plugin.TValue[plugin.Resource]
-	Tags plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[map[string]any]
 	KeyAlgorithm plugin.TValue[string]
 	Serial plugin.TValue[string]
 	Source plugin.TValue[string]
@@ -17724,7 +17724,7 @@ func (c *mqlAwsAcmCertificate) GetCertificate() *plugin.TValue[plugin.Resource] 
 	})
 }
 
-func (c *mqlAwsAcmCertificate) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsAcmCertificate) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
@@ -17757,7 +17757,7 @@ type mqlAwsAutoscaling struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsAutoscalingInternal it will be used here
-	Groups plugin.TValue[[]interface{}]
+	Groups plugin.TValue[[]any]
 }
 
 // createAwsAutoscaling creates a new instance of this resource
@@ -17797,15 +17797,15 @@ func (c *mqlAwsAutoscaling) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsAutoscaling) GetGroups() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Groups, func() ([]interface{}, error) {
+func (c *mqlAwsAutoscaling) GetGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Groups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.autoscaling", c.__id, "groups")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -17820,9 +17820,9 @@ type mqlAwsAutoscalingGroup struct {
 	mqlAwsAutoscalingGroupInternal
 	Arn plugin.TValue[string]
 	Name plugin.TValue[string]
-	LoadBalancerNames plugin.TValue[[]interface{}]
+	LoadBalancerNames plugin.TValue[[]any]
 	HealthCheckType plugin.TValue[string]
-	Tags plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[map[string]any]
 	Region plugin.TValue[string]
 	MinSize plugin.TValue[int64]
 	MaxSize plugin.TValue[int64]
@@ -17832,10 +17832,10 @@ type mqlAwsAutoscalingGroup struct {
 	CreatedAt plugin.TValue[*time.Time]
 	MaxInstanceLifetime plugin.TValue[int64]
 	DesiredCapacity plugin.TValue[int64]
-	AvailabilityZones plugin.TValue[[]interface{}]
+	AvailabilityZones plugin.TValue[[]any]
 	CapacityRebalance plugin.TValue[bool]
 	DefaultInstanceWarmup plugin.TValue[int64]
-	Instances plugin.TValue[[]interface{}]
+	Instances plugin.TValue[[]any]
 }
 
 // createAwsAutoscalingGroup creates a new instance of this resource
@@ -17883,7 +17883,7 @@ func (c *mqlAwsAutoscalingGroup) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlAwsAutoscalingGroup) GetLoadBalancerNames() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsAutoscalingGroup) GetLoadBalancerNames() *plugin.TValue[[]any] {
 	return &c.LoadBalancerNames
 }
 
@@ -17891,7 +17891,7 @@ func (c *mqlAwsAutoscalingGroup) GetHealthCheckType() *plugin.TValue[string] {
 	return &c.HealthCheckType
 }
 
-func (c *mqlAwsAutoscalingGroup) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsAutoscalingGroup) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
@@ -17931,7 +17931,7 @@ func (c *mqlAwsAutoscalingGroup) GetDesiredCapacity() *plugin.TValue[int64] {
 	return &c.DesiredCapacity
 }
 
-func (c *mqlAwsAutoscalingGroup) GetAvailabilityZones() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsAutoscalingGroup) GetAvailabilityZones() *plugin.TValue[[]any] {
 	return &c.AvailabilityZones
 }
 
@@ -17943,15 +17943,15 @@ func (c *mqlAwsAutoscalingGroup) GetDefaultInstanceWarmup() *plugin.TValue[int64
 	return &c.DefaultInstanceWarmup
 }
 
-func (c *mqlAwsAutoscalingGroup) GetInstances() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Instances, func() ([]interface{}, error) {
+func (c *mqlAwsAutoscalingGroup) GetInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Instances, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.autoscaling.group", c.__id, "instances")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -17964,8 +17964,8 @@ type mqlAwsElb struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsElbInternal it will be used here
-	ClassicLoadBalancers plugin.TValue[[]interface{}]
-	LoadBalancers plugin.TValue[[]interface{}]
+	ClassicLoadBalancers plugin.TValue[[]any]
+	LoadBalancers plugin.TValue[[]any]
 }
 
 // createAwsElb creates a new instance of this resource
@@ -18005,15 +18005,15 @@ func (c *mqlAwsElb) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsElb) GetClassicLoadBalancers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.ClassicLoadBalancers, func() ([]interface{}, error) {
+func (c *mqlAwsElb) GetClassicLoadBalancers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ClassicLoadBalancers, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elb", c.__id, "classicLoadBalancers")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -18021,15 +18021,15 @@ func (c *mqlAwsElb) GetClassicLoadBalancers() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsElb) GetLoadBalancers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.LoadBalancers, func() ([]interface{}, error) {
+func (c *mqlAwsElb) GetLoadBalancers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LoadBalancers, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elb", c.__id, "loadBalancers")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -18057,8 +18057,8 @@ type mqlAwsElbTargetgroup struct {
 	TargetType plugin.TValue[string]
 	UnhealthyThresholdCount plugin.TValue[int64]
 	Vpc plugin.TValue[*mqlAwsVpc]
-	Ec2Targets plugin.TValue[[]interface{}]
-	LambdaTargets plugin.TValue[[]interface{}]
+	Ec2Targets plugin.TValue[[]any]
+	LambdaTargets plugin.TValue[[]any]
 }
 
 // createAwsElbTargetgroup creates a new instance of this resource
@@ -18170,15 +18170,15 @@ func (c *mqlAwsElbTargetgroup) GetVpc() *plugin.TValue[*mqlAwsVpc] {
 	})
 }
 
-func (c *mqlAwsElbTargetgroup) GetEc2Targets() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Ec2Targets, func() ([]interface{}, error) {
+func (c *mqlAwsElbTargetgroup) GetEc2Targets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Ec2Targets, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elb.targetgroup", c.__id, "ec2Targets")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -18186,15 +18186,15 @@ func (c *mqlAwsElbTargetgroup) GetEc2Targets() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsElbTargetgroup) GetLambdaTargets() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.LambdaTargets, func() ([]interface{}, error) {
+func (c *mqlAwsElbTargetgroup) GetLambdaTargets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LambdaTargets, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elb.targetgroup", c.__id, "lambdaTargets")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -18209,20 +18209,20 @@ type mqlAwsElbLoadbalancer struct {
 	// optional: if you define mqlAwsElbLoadbalancerInternal it will be used here
 	Arn plugin.TValue[string]
 	DnsName plugin.TValue[string]
-	ListenerDescriptions plugin.TValue[[]interface{}]
+	ListenerDescriptions plugin.TValue[[]any]
 	Name plugin.TValue[string]
 	Scheme plugin.TValue[string]
-	Attributes plugin.TValue[[]interface{}]
+	Attributes plugin.TValue[[]any]
 	VpcId plugin.TValue[string]
 	CreatedTime plugin.TValue[*time.Time]
 	CreatedAt plugin.TValue[*time.Time]
-	AvailabilityZones plugin.TValue[[]interface{}]
-	SecurityGroups plugin.TValue[[]interface{}]
+	AvailabilityZones plugin.TValue[[]any]
+	SecurityGroups plugin.TValue[[]any]
 	HostedZoneId plugin.TValue[string]
 	Region plugin.TValue[string]
 	ElbType plugin.TValue[string]
 	Vpc plugin.TValue[*mqlAwsVpc]
-	TargetGroups plugin.TValue[[]interface{}]
+	TargetGroups plugin.TValue[[]any]
 }
 
 // createAwsElbLoadbalancer creates a new instance of this resource
@@ -18270,8 +18270,8 @@ func (c *mqlAwsElbLoadbalancer) GetDnsName() *plugin.TValue[string] {
 	return &c.DnsName
 }
 
-func (c *mqlAwsElbLoadbalancer) GetListenerDescriptions() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.ListenerDescriptions, func() ([]interface{}, error) {
+func (c *mqlAwsElbLoadbalancer) GetListenerDescriptions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ListenerDescriptions, func() ([]any, error) {
 		return c.listenerDescriptions()
 	})
 }
@@ -18284,8 +18284,8 @@ func (c *mqlAwsElbLoadbalancer) GetScheme() *plugin.TValue[string] {
 	return &c.Scheme
 }
 
-func (c *mqlAwsElbLoadbalancer) GetAttributes() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Attributes, func() ([]interface{}, error) {
+func (c *mqlAwsElbLoadbalancer) GetAttributes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Attributes, func() ([]any, error) {
 		return c.attributes()
 	})
 }
@@ -18302,11 +18302,11 @@ func (c *mqlAwsElbLoadbalancer) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
 
-func (c *mqlAwsElbLoadbalancer) GetAvailabilityZones() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsElbLoadbalancer) GetAvailabilityZones() *plugin.TValue[[]any] {
 	return &c.AvailabilityZones
 }
 
-func (c *mqlAwsElbLoadbalancer) GetSecurityGroups() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsElbLoadbalancer) GetSecurityGroups() *plugin.TValue[[]any] {
 	return &c.SecurityGroups
 }
 
@@ -18326,15 +18326,15 @@ func (c *mqlAwsElbLoadbalancer) GetVpc() *plugin.TValue[*mqlAwsVpc] {
 	return &c.Vpc
 }
 
-func (c *mqlAwsElbLoadbalancer) GetTargetGroups() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.TargetGroups, func() ([]interface{}, error) {
+func (c *mqlAwsElbLoadbalancer) GetTargetGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TargetGroups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elb.loadbalancer", c.__id, "targetGroups")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -18347,7 +18347,7 @@ type mqlAwsCodebuild struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsCodebuildInternal it will be used here
-	Projects plugin.TValue[[]interface{}]
+	Projects plugin.TValue[[]any]
 }
 
 // createAwsCodebuild creates a new instance of this resource
@@ -18387,15 +18387,15 @@ func (c *mqlAwsCodebuild) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsCodebuild) GetProjects() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Projects, func() ([]interface{}, error) {
+func (c *mqlAwsCodebuild) GetProjects() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Projects, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.codebuild", c.__id, "projects")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -18411,10 +18411,10 @@ type mqlAwsCodebuildProject struct {
 	Arn plugin.TValue[string]
 	Description plugin.TValue[string]
 	Name plugin.TValue[string]
-	Environment plugin.TValue[interface{}]
+	Environment plugin.TValue[any]
 	Region plugin.TValue[string]
-	Source plugin.TValue[interface{}]
-	Tags plugin.TValue[map[string]interface{}]
+	Source plugin.TValue[any]
+	Tags plugin.TValue[map[string]any]
 }
 
 // createAwsCodebuildProject creates a new instance of this resource
@@ -18466,7 +18466,7 @@ func (c *mqlAwsCodebuildProject) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlAwsCodebuildProject) GetEnvironment() *plugin.TValue[interface{}] {
+func (c *mqlAwsCodebuildProject) GetEnvironment() *plugin.TValue[any] {
 	return &c.Environment
 }
 
@@ -18474,11 +18474,11 @@ func (c *mqlAwsCodebuildProject) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
-func (c *mqlAwsCodebuildProject) GetSource() *plugin.TValue[interface{}] {
+func (c *mqlAwsCodebuildProject) GetSource() *plugin.TValue[any] {
 	return &c.Source
 }
 
-func (c *mqlAwsCodebuildProject) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsCodebuildProject) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
@@ -18487,8 +18487,8 @@ type mqlAwsGuardduty struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsGuarddutyInternal it will be used here
-	Findings plugin.TValue[[]interface{}]
-	Detectors plugin.TValue[[]interface{}]
+	Findings plugin.TValue[[]any]
+	Detectors plugin.TValue[[]any]
 }
 
 // createAwsGuardduty creates a new instance of this resource
@@ -18528,15 +18528,15 @@ func (c *mqlAwsGuardduty) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsGuardduty) GetFindings() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Findings, func() ([]interface{}, error) {
+func (c *mqlAwsGuardduty) GetFindings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Findings, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.guardduty", c.__id, "findings")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -18544,15 +18544,15 @@ func (c *mqlAwsGuardduty) GetFindings() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsGuardduty) GetDetectors() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Detectors, func() ([]interface{}, error) {
+func (c *mqlAwsGuardduty) GetDetectors() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Detectors, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.guardduty", c.__id, "detectors")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -18568,10 +18568,10 @@ type mqlAwsGuarddutyDetector struct {
 	Id plugin.TValue[string]
 	Region plugin.TValue[string]
 	Status plugin.TValue[string]
-	Features plugin.TValue[[]interface{}]
-	Tags plugin.TValue[map[string]interface{}]
+	Features plugin.TValue[[]any]
+	Tags plugin.TValue[map[string]any]
 	FindingPublishingFrequency plugin.TValue[string]
-	Findings plugin.TValue[[]interface{}]
+	Findings plugin.TValue[[]any]
 }
 
 // createAwsGuarddutyDetector creates a new instance of this resource
@@ -18625,14 +18625,14 @@ func (c *mqlAwsGuarddutyDetector) GetStatus() *plugin.TValue[string] {
 	})
 }
 
-func (c *mqlAwsGuarddutyDetector) GetFeatures() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Features, func() ([]interface{}, error) {
+func (c *mqlAwsGuarddutyDetector) GetFeatures() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Features, func() ([]any, error) {
 		return c.features()
 	})
 }
 
-func (c *mqlAwsGuarddutyDetector) GetTags() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Tags, func() (map[string]interface{}, error) {
+func (c *mqlAwsGuarddutyDetector) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
 	})
 }
@@ -18643,15 +18643,15 @@ func (c *mqlAwsGuarddutyDetector) GetFindingPublishingFrequency() *plugin.TValue
 	})
 }
 
-func (c *mqlAwsGuarddutyDetector) GetFindings() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Findings, func() ([]interface{}, error) {
+func (c *mqlAwsGuarddutyDetector) GetFindings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Findings, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.guardduty.detector", c.__id, "findings")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -18753,7 +18753,7 @@ type mqlAwsSecurityhub struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsSecurityhubInternal it will be used here
-	Hubs plugin.TValue[[]interface{}]
+	Hubs plugin.TValue[[]any]
 }
 
 // createAwsSecurityhub creates a new instance of this resource
@@ -18793,15 +18793,15 @@ func (c *mqlAwsSecurityhub) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsSecurityhub) GetHubs() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Hubs, func() ([]interface{}, error) {
+func (c *mqlAwsSecurityhub) GetHubs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Hubs, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.securityhub", c.__id, "hubs")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -18868,7 +18868,7 @@ type mqlAwsSecretsmanager struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsSecretsmanagerInternal it will be used here
-	Secrets plugin.TValue[[]interface{}]
+	Secrets plugin.TValue[[]any]
 }
 
 // createAwsSecretsmanager creates a new instance of this resource
@@ -18908,15 +18908,15 @@ func (c *mqlAwsSecretsmanager) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsSecretsmanager) GetSecrets() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Secrets, func() ([]interface{}, error) {
+func (c *mqlAwsSecretsmanager) GetSecrets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Secrets, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.secretsmanager", c.__id, "secrets")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -18938,7 +18938,7 @@ type mqlAwsSecretsmanagerSecret struct {
 	NextRotationDate plugin.TValue[*time.Time]
 	PrimaryRegion plugin.TValue[string]
 	RotationEnabled plugin.TValue[bool]
-	Tags plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[map[string]any]
 }
 
 // createAwsSecretsmanagerSecret creates a new instance of this resource
@@ -19014,7 +19014,7 @@ func (c *mqlAwsSecretsmanagerSecret) GetRotationEnabled() *plugin.TValue[bool] {
 	return &c.RotationEnabled
 }
 
-func (c *mqlAwsSecretsmanagerSecret) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsSecretsmanagerSecret) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
@@ -19023,9 +19023,9 @@ type mqlAwsEcs struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsEcsInternal it will be used here
-	Clusters plugin.TValue[[]interface{}]
-	Containers plugin.TValue[[]interface{}]
-	ContainerInstances plugin.TValue[[]interface{}]
+	Clusters plugin.TValue[[]any]
+	Containers plugin.TValue[[]any]
+	ContainerInstances plugin.TValue[[]any]
 }
 
 // createAwsEcs creates a new instance of this resource
@@ -19065,15 +19065,15 @@ func (c *mqlAwsEcs) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsEcs) GetClusters() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Clusters, func() ([]interface{}, error) {
+func (c *mqlAwsEcs) GetClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Clusters, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs", c.__id, "clusters")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -19081,15 +19081,15 @@ func (c *mqlAwsEcs) GetClusters() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsEcs) GetContainers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Containers, func() ([]interface{}, error) {
+func (c *mqlAwsEcs) GetContainers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Containers, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs", c.__id, "containers")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -19097,15 +19097,15 @@ func (c *mqlAwsEcs) GetContainers() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsEcs) GetContainerInstances() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.ContainerInstances, func() ([]interface{}, error) {
+func (c *mqlAwsEcs) GetContainerInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ContainerInstances, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs", c.__id, "containerInstances")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -19120,14 +19120,14 @@ type mqlAwsEcsCluster struct {
 	// optional: if you define mqlAwsEcsClusterInternal it will be used here
 	Arn plugin.TValue[string]
 	Name plugin.TValue[string]
-	Tags plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[map[string]any]
 	RunningTasksCount plugin.TValue[int64]
 	PendingTasksCount plugin.TValue[int64]
 	RegisteredContainerInstancesCount plugin.TValue[int64]
-	Configuration plugin.TValue[interface{}]
+	Configuration plugin.TValue[any]
 	Status plugin.TValue[string]
-	Tasks plugin.TValue[[]interface{}]
-	ContainerInstances plugin.TValue[[]interface{}]
+	Tasks plugin.TValue[[]any]
+	ContainerInstances plugin.TValue[[]any]
 	Region plugin.TValue[string]
 }
 
@@ -19176,7 +19176,7 @@ func (c *mqlAwsEcsCluster) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlAwsEcsCluster) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsEcsCluster) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
@@ -19192,7 +19192,7 @@ func (c *mqlAwsEcsCluster) GetRegisteredContainerInstancesCount() *plugin.TValue
 	return &c.RegisteredContainerInstancesCount
 }
 
-func (c *mqlAwsEcsCluster) GetConfiguration() *plugin.TValue[interface{}] {
+func (c *mqlAwsEcsCluster) GetConfiguration() *plugin.TValue[any] {
 	return &c.Configuration
 }
 
@@ -19200,15 +19200,15 @@ func (c *mqlAwsEcsCluster) GetStatus() *plugin.TValue[string] {
 	return &c.Status
 }
 
-func (c *mqlAwsEcsCluster) GetTasks() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Tasks, func() ([]interface{}, error) {
+func (c *mqlAwsEcsCluster) GetTasks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tasks, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.cluster", c.__id, "tasks")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -19216,15 +19216,15 @@ func (c *mqlAwsEcsCluster) GetTasks() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsEcsCluster) GetContainerInstances() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.ContainerInstances, func() ([]interface{}, error) {
+func (c *mqlAwsEcsCluster) GetContainerInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ContainerInstances, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.cluster", c.__id, "containerInstances")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -19329,12 +19329,12 @@ type mqlAwsEcsTask struct {
 	mqlAwsEcsTaskInternal
 	Arn plugin.TValue[string]
 	ClusterName plugin.TValue[string]
-	Connectivity plugin.TValue[interface{}]
+	Connectivity plugin.TValue[any]
 	LastStatus plugin.TValue[string]
 	PlatformFamily plugin.TValue[string]
 	PlatformVersion plugin.TValue[string]
-	Tags plugin.TValue[map[string]interface{}]
-	Containers plugin.TValue[[]interface{}]
+	Tags plugin.TValue[map[string]any]
+	Containers plugin.TValue[[]any]
 }
 
 // createAwsEcsTask creates a new instance of this resource
@@ -19382,7 +19382,7 @@ func (c *mqlAwsEcsTask) GetClusterName() *plugin.TValue[string] {
 	return &c.ClusterName
 }
 
-func (c *mqlAwsEcsTask) GetConnectivity() *plugin.TValue[interface{}] {
+func (c *mqlAwsEcsTask) GetConnectivity() *plugin.TValue[any] {
 	return &c.Connectivity
 }
 
@@ -19398,19 +19398,19 @@ func (c *mqlAwsEcsTask) GetPlatformVersion() *plugin.TValue[string] {
 	return &c.PlatformVersion
 }
 
-func (c *mqlAwsEcsTask) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsEcsTask) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
-func (c *mqlAwsEcsTask) GetContainers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Containers, func() ([]interface{}, error) {
+func (c *mqlAwsEcsTask) GetContainers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Containers, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.task", c.__id, "containers")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -19434,7 +19434,7 @@ type mqlAwsEcsContainer struct {
 	PlatformVersion plugin.TValue[string]
 	Status plugin.TValue[string]
 	Region plugin.TValue[string]
-	Command plugin.TValue[[]interface{}]
+	Command plugin.TValue[[]any]
 	TaskArn plugin.TValue[string]
 	RuntimeId plugin.TValue[string]
 	ContainerName plugin.TValue[string]
@@ -19521,7 +19521,7 @@ func (c *mqlAwsEcsContainer) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
-func (c *mqlAwsEcsContainer) GetCommand() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsEcsContainer) GetCommand() *plugin.TValue[[]any] {
 	return &c.Command
 }
 
@@ -19542,7 +19542,7 @@ type mqlAwsEmr struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsEmrInternal it will be used here
-	Clusters plugin.TValue[[]interface{}]
+	Clusters plugin.TValue[[]any]
 }
 
 // createAwsEmr creates a new instance of this resource
@@ -19582,15 +19582,15 @@ func (c *mqlAwsEmr) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsEmr) GetClusters() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Clusters, func() ([]interface{}, error) {
+func (c *mqlAwsEmr) GetClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Clusters, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.emr", c.__id, "clusters")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -19607,10 +19607,10 @@ type mqlAwsEmrCluster struct {
 	Name plugin.TValue[string]
 	NormalizedInstanceHours plugin.TValue[int64]
 	OutpostArn plugin.TValue[string]
-	Status plugin.TValue[interface{}]
-	MasterInstances plugin.TValue[[]interface{}]
+	Status plugin.TValue[any]
+	MasterInstances plugin.TValue[[]any]
 	Id plugin.TValue[string]
-	Tags plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[map[string]any]
 }
 
 // createAwsEmrCluster creates a new instance of this resource
@@ -19666,12 +19666,12 @@ func (c *mqlAwsEmrCluster) GetOutpostArn() *plugin.TValue[string] {
 	return &c.OutpostArn
 }
 
-func (c *mqlAwsEmrCluster) GetStatus() *plugin.TValue[interface{}] {
+func (c *mqlAwsEmrCluster) GetStatus() *plugin.TValue[any] {
 	return &c.Status
 }
 
-func (c *mqlAwsEmrCluster) GetMasterInstances() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.MasterInstances, func() ([]interface{}, error) {
+func (c *mqlAwsEmrCluster) GetMasterInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MasterInstances, func() ([]any, error) {
 		return c.masterInstances()
 	})
 }
@@ -19680,7 +19680,7 @@ func (c *mqlAwsEmrCluster) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
-func (c *mqlAwsEmrCluster) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsEmrCluster) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
@@ -19689,9 +19689,9 @@ type mqlAwsCloudwatch struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsCloudwatchInternal it will be used here
-	LogGroups plugin.TValue[[]interface{}]
-	Alarms plugin.TValue[[]interface{}]
-	Metrics plugin.TValue[[]interface{}]
+	LogGroups plugin.TValue[[]any]
+	Alarms plugin.TValue[[]any]
+	Metrics plugin.TValue[[]any]
 }
 
 // createAwsCloudwatch creates a new instance of this resource
@@ -19731,15 +19731,15 @@ func (c *mqlAwsCloudwatch) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsCloudwatch) GetLogGroups() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.LogGroups, func() ([]interface{}, error) {
+func (c *mqlAwsCloudwatch) GetLogGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LogGroups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudwatch", c.__id, "logGroups")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -19747,15 +19747,15 @@ func (c *mqlAwsCloudwatch) GetLogGroups() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsCloudwatch) GetAlarms() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Alarms, func() ([]interface{}, error) {
+func (c *mqlAwsCloudwatch) GetAlarms() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Alarms, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudwatch", c.__id, "alarms")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -19763,15 +19763,15 @@ func (c *mqlAwsCloudwatch) GetAlarms() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsCloudwatch) GetMetrics() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Metrics, func() ([]interface{}, error) {
+func (c *mqlAwsCloudwatch) GetMetrics() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Metrics, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudwatch", c.__id, "metrics")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -19788,11 +19788,11 @@ type mqlAwsCloudwatchMetricsalarm struct {
 	MetricName plugin.TValue[string]
 	MetricNamespace plugin.TValue[string]
 	Region plugin.TValue[string]
-	Actions plugin.TValue[[]interface{}]
+	Actions plugin.TValue[[]any]
 	State plugin.TValue[string]
 	StateReason plugin.TValue[string]
-	InsufficientDataActions plugin.TValue[[]interface{}]
-	OkActions plugin.TValue[[]interface{}]
+	InsufficientDataActions plugin.TValue[[]any]
+	OkActions plugin.TValue[[]any]
 	Name plugin.TValue[string]
 }
 
@@ -19849,7 +19849,7 @@ func (c *mqlAwsCloudwatchMetricsalarm) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
-func (c *mqlAwsCloudwatchMetricsalarm) GetActions() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsCloudwatchMetricsalarm) GetActions() *plugin.TValue[[]any] {
 	return &c.Actions
 }
 
@@ -19861,11 +19861,11 @@ func (c *mqlAwsCloudwatchMetricsalarm) GetStateReason() *plugin.TValue[string] {
 	return &c.StateReason
 }
 
-func (c *mqlAwsCloudwatchMetricsalarm) GetInsufficientDataActions() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsCloudwatchMetricsalarm) GetInsufficientDataActions() *plugin.TValue[[]any] {
 	return &c.InsufficientDataActions
 }
 
-func (c *mqlAwsCloudwatchMetricsalarm) GetOkActions() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsCloudwatchMetricsalarm) GetOkActions() *plugin.TValue[[]any] {
 	return &c.OkActions
 }
 
@@ -19881,8 +19881,8 @@ type mqlAwsCloudwatchMetric struct {
 	Name plugin.TValue[string]
 	Namespace plugin.TValue[string]
 	Region plugin.TValue[string]
-	Alarms plugin.TValue[[]interface{}]
-	Dimensions plugin.TValue[[]interface{}]
+	Alarms plugin.TValue[[]any]
+	Dimensions plugin.TValue[[]any]
 	Statistics plugin.TValue[*mqlAwsCloudwatchMetricstatistics]
 }
 
@@ -19935,15 +19935,15 @@ func (c *mqlAwsCloudwatchMetric) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
-func (c *mqlAwsCloudwatchMetric) GetAlarms() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Alarms, func() ([]interface{}, error) {
+func (c *mqlAwsCloudwatchMetric) GetAlarms() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Alarms, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudwatch.metric", c.__id, "alarms")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -19951,15 +19951,15 @@ func (c *mqlAwsCloudwatchMetric) GetAlarms() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsCloudwatchMetric) GetDimensions() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Dimensions, func() ([]interface{}, error) {
+func (c *mqlAwsCloudwatchMetric) GetDimensions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Dimensions, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudwatch.metric", c.__id, "dimensions")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -20046,7 +20046,7 @@ type mqlAwsCloudwatchMetricstatistics struct {
 	Name plugin.TValue[string]
 	Region plugin.TValue[string]
 	Label plugin.TValue[string]
-	Datapoints plugin.TValue[[]interface{}]
+	Datapoints plugin.TValue[[]any]
 }
 
 // createAwsCloudwatchMetricstatistics creates a new instance of this resource
@@ -20102,7 +20102,7 @@ func (c *mqlAwsCloudwatchMetricstatistics) GetLabel() *plugin.TValue[string] {
 	return &c.Label
 }
 
-func (c *mqlAwsCloudwatchMetricstatistics) GetDatapoints() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsCloudwatchMetricstatistics) GetDatapoints() *plugin.TValue[[]any] {
 	return &c.Datapoints
 }
 
@@ -20192,7 +20192,7 @@ type mqlAwsCloudwatchLoggroup struct {
 	// optional: if you define mqlAwsCloudwatchLoggroupInternal it will be used here
 	Arn plugin.TValue[string]
 	Name plugin.TValue[string]
-	MetricsFilters plugin.TValue[[]interface{}]
+	MetricsFilters plugin.TValue[[]any]
 	KmsKey plugin.TValue[*mqlAwsKmsKey]
 	Region plugin.TValue[string]
 	RetentionInDays plugin.TValue[int64]
@@ -20243,15 +20243,15 @@ func (c *mqlAwsCloudwatchLoggroup) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlAwsCloudwatchLoggroup) GetMetricsFilters() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.MetricsFilters, func() ([]interface{}, error) {
+func (c *mqlAwsCloudwatchLoggroup) GetMetricsFilters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MetricsFilters, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudwatch.loggroup", c.__id, "metricsFilters")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -20291,7 +20291,7 @@ type mqlAwsCloudwatchLoggroupMetricsfilter struct {
 	Id plugin.TValue[string]
 	FilterName plugin.TValue[string]
 	FilterPattern plugin.TValue[string]
-	Metrics plugin.TValue[[]interface{}]
+	Metrics plugin.TValue[[]any]
 }
 
 // createAwsCloudwatchLoggroupMetricsfilter creates a new instance of this resource
@@ -20343,7 +20343,7 @@ func (c *mqlAwsCloudwatchLoggroupMetricsfilter) GetFilterPattern() *plugin.TValu
 	return &c.FilterPattern
 }
 
-func (c *mqlAwsCloudwatchLoggroupMetricsfilter) GetMetrics() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsCloudwatchLoggroupMetricsfilter) GetMetrics() *plugin.TValue[[]any] {
 	return &c.Metrics
 }
 
@@ -20352,8 +20352,8 @@ type mqlAwsCloudfront struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsCloudfrontInternal it will be used here
-	Distributions plugin.TValue[[]interface{}]
-	Functions plugin.TValue[[]interface{}]
+	Distributions plugin.TValue[[]any]
+	Functions plugin.TValue[[]any]
 }
 
 // createAwsCloudfront creates a new instance of this resource
@@ -20393,15 +20393,15 @@ func (c *mqlAwsCloudfront) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsCloudfront) GetDistributions() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Distributions, func() ([]interface{}, error) {
+func (c *mqlAwsCloudfront) GetDistributions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Distributions, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudfront", c.__id, "distributions")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -20409,15 +20409,15 @@ func (c *mqlAwsCloudfront) GetDistributions() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsCloudfront) GetFunctions() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Functions, func() ([]interface{}, error) {
+func (c *mqlAwsCloudfront) GetFunctions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Functions, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudfront", c.__id, "functions")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -20433,14 +20433,14 @@ type mqlAwsCloudfrontDistribution struct {
 	Arn plugin.TValue[string]
 	Status plugin.TValue[string]
 	DomainName plugin.TValue[string]
-	Origins plugin.TValue[[]interface{}]
-	DefaultCacheBehavior plugin.TValue[interface{}]
-	CacheBehaviors plugin.TValue[[]interface{}]
+	Origins plugin.TValue[[]any]
+	DefaultCacheBehavior plugin.TValue[any]
+	CacheBehaviors plugin.TValue[[]any]
 	HttpVersion plugin.TValue[string]
 	IsIPV6Enabled plugin.TValue[bool]
 	Enabled plugin.TValue[bool]
 	PriceClass plugin.TValue[string]
-	Cnames plugin.TValue[[]interface{}]
+	Cnames plugin.TValue[[]any]
 }
 
 // createAwsCloudfrontDistribution creates a new instance of this resource
@@ -20492,15 +20492,15 @@ func (c *mqlAwsCloudfrontDistribution) GetDomainName() *plugin.TValue[string] {
 	return &c.DomainName
 }
 
-func (c *mqlAwsCloudfrontDistribution) GetOrigins() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsCloudfrontDistribution) GetOrigins() *plugin.TValue[[]any] {
 	return &c.Origins
 }
 
-func (c *mqlAwsCloudfrontDistribution) GetDefaultCacheBehavior() *plugin.TValue[interface{}] {
+func (c *mqlAwsCloudfrontDistribution) GetDefaultCacheBehavior() *plugin.TValue[any] {
 	return &c.DefaultCacheBehavior
 }
 
-func (c *mqlAwsCloudfrontDistribution) GetCacheBehaviors() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsCloudfrontDistribution) GetCacheBehaviors() *plugin.TValue[[]any] {
 	return &c.CacheBehaviors
 }
 
@@ -20520,7 +20520,7 @@ func (c *mqlAwsCloudfrontDistribution) GetPriceClass() *plugin.TValue[string] {
 	return &c.PriceClass
 }
 
-func (c *mqlAwsCloudfrontDistribution) GetCnames() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsCloudfrontDistribution) GetCnames() *plugin.TValue[[]any] {
 	return &c.Cnames
 }
 
@@ -20692,7 +20692,7 @@ type mqlAwsCloudtrail struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsCloudtrailInternal it will be used here
-	Trails plugin.TValue[[]interface{}]
+	Trails plugin.TValue[[]any]
 }
 
 // createAwsCloudtrail creates a new instance of this resource
@@ -20732,15 +20732,15 @@ func (c *mqlAwsCloudtrail) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsCloudtrail) GetTrails() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Trails, func() ([]interface{}, error) {
+func (c *mqlAwsCloudtrail) GetTrails() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Trails, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudtrail", c.__id, "trails")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -20762,11 +20762,11 @@ type mqlAwsCloudtrailTrail struct {
 	IncludeGlobalServiceEvents plugin.TValue[bool]
 	S3bucket plugin.TValue[*mqlAwsS3Bucket]
 	SnsTopicARN plugin.TValue[string]
-	Status plugin.TValue[interface{}]
+	Status plugin.TValue[any]
 	LogGroup plugin.TValue[*mqlAwsCloudwatchLoggroup]
 	CloudWatchLogsRoleArn plugin.TValue[string]
 	CloudWatchLogsLogGroupArn plugin.TValue[string]
-	EventSelectors plugin.TValue[[]interface{}]
+	EventSelectors plugin.TValue[[]any]
 	Region plugin.TValue[string]
 }
 
@@ -20867,8 +20867,8 @@ func (c *mqlAwsCloudtrailTrail) GetSnsTopicARN() *plugin.TValue[string] {
 	return &c.SnsTopicARN
 }
 
-func (c *mqlAwsCloudtrailTrail) GetStatus() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Status, func() (interface{}, error) {
+func (c *mqlAwsCloudtrailTrail) GetStatus() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Status, func() (any, error) {
 		return c.status()
 	})
 }
@@ -20897,8 +20897,8 @@ func (c *mqlAwsCloudtrailTrail) GetCloudWatchLogsLogGroupArn() *plugin.TValue[st
 	return &c.CloudWatchLogsLogGroupArn
 }
 
-func (c *mqlAwsCloudtrailTrail) GetEventSelectors() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.EventSelectors, func() ([]interface{}, error) {
+func (c *mqlAwsCloudtrailTrail) GetEventSelectors() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EventSelectors, func() ([]any, error) {
 		return c.eventSelectors()
 	})
 }
@@ -20912,7 +20912,7 @@ type mqlAwsS3control struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsS3controlInternal it will be used here
-	AccountPublicAccessBlock plugin.TValue[interface{}]
+	AccountPublicAccessBlock plugin.TValue[any]
 }
 
 // createAwsS3control creates a new instance of this resource
@@ -20952,8 +20952,8 @@ func (c *mqlAwsS3control) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsS3control) GetAccountPublicAccessBlock() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.AccountPublicAccessBlock, func() (interface{}, error) {
+func (c *mqlAwsS3control) GetAccountPublicAccessBlock() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.AccountPublicAccessBlock, func() (any, error) {
 		return c.accountPublicAccessBlock()
 	})
 }
@@ -20963,7 +20963,7 @@ type mqlAwsS3 struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsS3Internal it will be used here
-	Buckets plugin.TValue[[]interface{}]
+	Buckets plugin.TValue[[]any]
 }
 
 // createAwsS3 creates a new instance of this resource
@@ -21003,15 +21003,15 @@ func (c *mqlAwsS3) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsS3) GetBuckets() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Buckets, func() ([]interface{}, error) {
+func (c *mqlAwsS3) GetBuckets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Buckets, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.s3", c.__id, "buckets")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -21027,19 +21027,19 @@ type mqlAwsS3Bucket struct {
 	Arn plugin.TValue[string]
 	Name plugin.TValue[string]
 	Policy plugin.TValue[*mqlAwsS3BucketPolicy]
-	Tags plugin.TValue[map[string]interface{}]
-	Acl plugin.TValue[[]interface{}]
-	Owner plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[map[string]any]
+	Acl plugin.TValue[[]any]
+	Owner plugin.TValue[map[string]any]
 	Public plugin.TValue[bool]
-	Cors plugin.TValue[[]interface{}]
+	Cors plugin.TValue[[]any]
 	Location plugin.TValue[string]
-	Versioning plugin.TValue[map[string]interface{}]
-	Logging plugin.TValue[map[string]interface{}]
-	StaticWebsiteHosting plugin.TValue[map[string]interface{}]
+	Versioning plugin.TValue[map[string]any]
+	Logging plugin.TValue[map[string]any]
+	StaticWebsiteHosting plugin.TValue[map[string]any]
 	DefaultLock plugin.TValue[string]
-	Replication plugin.TValue[interface{}]
-	Encryption plugin.TValue[interface{}]
-	PublicAccessBlock plugin.TValue[interface{}]
+	Replication plugin.TValue[any]
+	Encryption plugin.TValue[any]
+	PublicAccessBlock plugin.TValue[any]
 	Exists plugin.TValue[bool]
 	CreatedTime plugin.TValue[*time.Time]
 	CreatedAt plugin.TValue[*time.Time]
@@ -21106,21 +21106,21 @@ func (c *mqlAwsS3Bucket) GetPolicy() *plugin.TValue[*mqlAwsS3BucketPolicy] {
 	})
 }
 
-func (c *mqlAwsS3Bucket) GetTags() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Tags, func() (map[string]interface{}, error) {
+func (c *mqlAwsS3Bucket) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
 	})
 }
 
-func (c *mqlAwsS3Bucket) GetAcl() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Acl, func() ([]interface{}, error) {
+func (c *mqlAwsS3Bucket) GetAcl() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Acl, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.s3.bucket", c.__id, "acl")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -21128,8 +21128,8 @@ func (c *mqlAwsS3Bucket) GetAcl() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsS3Bucket) GetOwner() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Owner, func() (map[string]interface{}, error) {
+func (c *mqlAwsS3Bucket) GetOwner() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Owner, func() (map[string]any, error) {
 		return c.owner()
 	})
 }
@@ -21140,15 +21140,15 @@ func (c *mqlAwsS3Bucket) GetPublic() *plugin.TValue[bool] {
 	})
 }
 
-func (c *mqlAwsS3Bucket) GetCors() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Cors, func() ([]interface{}, error) {
+func (c *mqlAwsS3Bucket) GetCors() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Cors, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.s3.bucket", c.__id, "cors")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -21162,20 +21162,20 @@ func (c *mqlAwsS3Bucket) GetLocation() *plugin.TValue[string] {
 	})
 }
 
-func (c *mqlAwsS3Bucket) GetVersioning() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Versioning, func() (map[string]interface{}, error) {
+func (c *mqlAwsS3Bucket) GetVersioning() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Versioning, func() (map[string]any, error) {
 		return c.versioning()
 	})
 }
 
-func (c *mqlAwsS3Bucket) GetLogging() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Logging, func() (map[string]interface{}, error) {
+func (c *mqlAwsS3Bucket) GetLogging() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Logging, func() (map[string]any, error) {
 		return c.logging()
 	})
 }
 
-func (c *mqlAwsS3Bucket) GetStaticWebsiteHosting() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.StaticWebsiteHosting, func() (map[string]interface{}, error) {
+func (c *mqlAwsS3Bucket) GetStaticWebsiteHosting() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.StaticWebsiteHosting, func() (map[string]any, error) {
 		return c.staticWebsiteHosting()
 	})
 }
@@ -21186,20 +21186,20 @@ func (c *mqlAwsS3Bucket) GetDefaultLock() *plugin.TValue[string] {
 	})
 }
 
-func (c *mqlAwsS3Bucket) GetReplication() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Replication, func() (interface{}, error) {
+func (c *mqlAwsS3Bucket) GetReplication() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Replication, func() (any, error) {
 		return c.replication()
 	})
 }
 
-func (c *mqlAwsS3Bucket) GetEncryption() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Encryption, func() (interface{}, error) {
+func (c *mqlAwsS3Bucket) GetEncryption() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Encryption, func() (any, error) {
 		return c.encryption()
 	})
 }
 
-func (c *mqlAwsS3Bucket) GetPublicAccessBlock() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.PublicAccessBlock, func() (interface{}, error) {
+func (c *mqlAwsS3Bucket) GetPublicAccessBlock() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.PublicAccessBlock, func() (any, error) {
 		return c.publicAccessBlock()
 	})
 }
@@ -21224,7 +21224,7 @@ type mqlAwsS3BucketGrant struct {
 	Id plugin.TValue[string]
 	Name plugin.TValue[string]
 	Permission plugin.TValue[string]
-	Grantee plugin.TValue[map[string]interface{}]
+	Grantee plugin.TValue[map[string]any]
 }
 
 // createAwsS3BucketGrant creates a new instance of this resource
@@ -21276,7 +21276,7 @@ func (c *mqlAwsS3BucketGrant) GetPermission() *plugin.TValue[string] {
 	return &c.Permission
 }
 
-func (c *mqlAwsS3BucketGrant) GetGrantee() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsS3BucketGrant) GetGrantee() *plugin.TValue[map[string]any] {
 	return &c.Grantee
 }
 
@@ -21286,10 +21286,10 @@ type mqlAwsS3BucketCorsrule struct {
 	__id string
 	// optional: if you define mqlAwsS3BucketCorsruleInternal it will be used here
 	Name plugin.TValue[string]
-	AllowedHeaders plugin.TValue[[]interface{}]
-	AllowedMethods plugin.TValue[[]interface{}]
-	AllowedOrigins plugin.TValue[[]interface{}]
-	ExposeHeaders plugin.TValue[[]interface{}]
+	AllowedHeaders plugin.TValue[[]any]
+	AllowedMethods plugin.TValue[[]any]
+	AllowedOrigins plugin.TValue[[]any]
+	ExposeHeaders plugin.TValue[[]any]
 	MaxAgeSeconds plugin.TValue[int64]
 }
 
@@ -21334,19 +21334,19 @@ func (c *mqlAwsS3BucketCorsrule) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlAwsS3BucketCorsrule) GetAllowedHeaders() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsS3BucketCorsrule) GetAllowedHeaders() *plugin.TValue[[]any] {
 	return &c.AllowedHeaders
 }
 
-func (c *mqlAwsS3BucketCorsrule) GetAllowedMethods() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsS3BucketCorsrule) GetAllowedMethods() *plugin.TValue[[]any] {
 	return &c.AllowedMethods
 }
 
-func (c *mqlAwsS3BucketCorsrule) GetAllowedOrigins() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsS3BucketCorsrule) GetAllowedOrigins() *plugin.TValue[[]any] {
 	return &c.AllowedOrigins
 }
 
-func (c *mqlAwsS3BucketCorsrule) GetExposeHeaders() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsS3BucketCorsrule) GetExposeHeaders() *plugin.TValue[[]any] {
 	return &c.ExposeHeaders
 }
 
@@ -21364,7 +21364,7 @@ type mqlAwsS3BucketPolicy struct {
 	BucketName plugin.TValue[string]
 	Document plugin.TValue[string]
 	Version plugin.TValue[string]
-	Statements plugin.TValue[[]interface{}]
+	Statements plugin.TValue[[]any]
 }
 
 // createAwsS3BucketPolicy creates a new instance of this resource
@@ -21426,8 +21426,8 @@ func (c *mqlAwsS3BucketPolicy) GetVersion() *plugin.TValue[string] {
 	})
 }
 
-func (c *mqlAwsS3BucketPolicy) GetStatements() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Statements, func() ([]interface{}, error) {
+func (c *mqlAwsS3BucketPolicy) GetStatements() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Statements, func() ([]any, error) {
 		return c.statements()
 	})
 }
@@ -21438,7 +21438,7 @@ type mqlAwsApplicationAutoscaling struct {
 	__id string
 	// optional: if you define mqlAwsApplicationAutoscalingInternal it will be used here
 	Namespace plugin.TValue[string]
-	ScalableTargets plugin.TValue[[]interface{}]
+	ScalableTargets plugin.TValue[[]any]
 }
 
 // createAwsApplicationAutoscaling creates a new instance of this resource
@@ -21482,15 +21482,15 @@ func (c *mqlAwsApplicationAutoscaling) GetNamespace() *plugin.TValue[string] {
 	return &c.Namespace
 }
 
-func (c *mqlAwsApplicationAutoscaling) GetScalableTargets() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.ScalableTargets, func() ([]interface{}, error) {
+func (c *mqlAwsApplicationAutoscaling) GetScalableTargets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ScalableTargets, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.applicationAutoscaling", c.__id, "scalableTargets")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -21508,7 +21508,7 @@ type mqlAwsApplicationAutoscalingTarget struct {
 	ScalableDimension plugin.TValue[string]
 	MinCapacity plugin.TValue[int64]
 	MaxCapacity plugin.TValue[int64]
-	SuspendedState plugin.TValue[interface{}]
+	SuspendedState plugin.TValue[any]
 	CreatedAt plugin.TValue[*time.Time]
 }
 
@@ -21569,7 +21569,7 @@ func (c *mqlAwsApplicationAutoscalingTarget) GetMaxCapacity() *plugin.TValue[int
 	return &c.MaxCapacity
 }
 
-func (c *mqlAwsApplicationAutoscalingTarget) GetSuspendedState() *plugin.TValue[interface{}] {
+func (c *mqlAwsApplicationAutoscalingTarget) GetSuspendedState() *plugin.TValue[any] {
 	return &c.SuspendedState
 }
 
@@ -21582,7 +21582,7 @@ type mqlAwsBackup struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsBackupInternal it will be used here
-	Vaults plugin.TValue[[]interface{}]
+	Vaults plugin.TValue[[]any]
 }
 
 // createAwsBackup creates a new instance of this resource
@@ -21622,15 +21622,15 @@ func (c *mqlAwsBackup) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsBackup) GetVaults() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Vaults, func() ([]interface{}, error) {
+func (c *mqlAwsBackup) GetVaults() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Vaults, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.backup", c.__id, "vaults")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -21645,7 +21645,7 @@ type mqlAwsBackupVault struct {
 	// optional: if you define mqlAwsBackupVaultInternal it will be used here
 	Arn plugin.TValue[string]
 	Name plugin.TValue[string]
-	RecoveryPoints plugin.TValue[[]interface{}]
+	RecoveryPoints plugin.TValue[[]any]
 	Region plugin.TValue[string]
 	CreatedAt plugin.TValue[*time.Time]
 	Locked plugin.TValue[bool]
@@ -21697,15 +21697,15 @@ func (c *mqlAwsBackupVault) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlAwsBackupVault) GetRecoveryPoints() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.RecoveryPoints, func() ([]interface{}, error) {
+func (c *mqlAwsBackupVault) GetRecoveryPoints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RecoveryPoints, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.backup.vault", c.__id, "recoveryPoints")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -21736,7 +21736,7 @@ type mqlAwsBackupVaultRecoveryPoint struct {
 	// optional: if you define mqlAwsBackupVaultRecoveryPointInternal it will be used here
 	Arn plugin.TValue[string]
 	ResourceType plugin.TValue[string]
-	CreatedBy plugin.TValue[interface{}]
+	CreatedBy plugin.TValue[any]
 	IamRoleArn plugin.TValue[string]
 	Status plugin.TValue[string]
 	CreationDate plugin.TValue[*time.Time]
@@ -21790,7 +21790,7 @@ func (c *mqlAwsBackupVaultRecoveryPoint) GetResourceType() *plugin.TValue[string
 	return &c.ResourceType
 }
 
-func (c *mqlAwsBackupVaultRecoveryPoint) GetCreatedBy() *plugin.TValue[interface{}] {
+func (c *mqlAwsBackupVaultRecoveryPoint) GetCreatedBy() *plugin.TValue[any] {
 	return &c.CreatedBy
 }
 
@@ -21823,11 +21823,11 @@ type mqlAwsDynamodb struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsDynamodbInternal it will be used here
-	Backups plugin.TValue[[]interface{}]
-	GlobalTables plugin.TValue[[]interface{}]
-	Tables plugin.TValue[[]interface{}]
-	Limits plugin.TValue[[]interface{}]
-	Exports plugin.TValue[[]interface{}]
+	Backups plugin.TValue[[]any]
+	GlobalTables plugin.TValue[[]any]
+	Tables plugin.TValue[[]any]
+	Limits plugin.TValue[[]any]
+	Exports plugin.TValue[[]any]
 }
 
 // createAwsDynamodb creates a new instance of this resource
@@ -21867,21 +21867,21 @@ func (c *mqlAwsDynamodb) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsDynamodb) GetBackups() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Backups, func() ([]interface{}, error) {
+func (c *mqlAwsDynamodb) GetBackups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Backups, func() ([]any, error) {
 		return c.backups()
 	})
 }
 
-func (c *mqlAwsDynamodb) GetGlobalTables() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.GlobalTables, func() ([]interface{}, error) {
+func (c *mqlAwsDynamodb) GetGlobalTables() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.GlobalTables, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.dynamodb", c.__id, "globalTables")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -21889,15 +21889,15 @@ func (c *mqlAwsDynamodb) GetGlobalTables() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsDynamodb) GetTables() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Tables, func() ([]interface{}, error) {
+func (c *mqlAwsDynamodb) GetTables() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tables, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.dynamodb", c.__id, "tables")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -21905,15 +21905,15 @@ func (c *mqlAwsDynamodb) GetTables() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsDynamodb) GetLimits() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Limits, func() ([]interface{}, error) {
+func (c *mqlAwsDynamodb) GetLimits() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Limits, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.dynamodb", c.__id, "limits")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -21921,15 +21921,15 @@ func (c *mqlAwsDynamodb) GetLimits() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsDynamodb) GetExports() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Exports, func() ([]interface{}, error) {
+func (c *mqlAwsDynamodb) GetExports() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Exports, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.dynamodb", c.__id, "exports")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -22170,7 +22170,7 @@ type mqlAwsDynamodbGlobaltable struct {
 	// optional: if you define mqlAwsDynamodbGlobaltableInternal it will be used here
 	Arn plugin.TValue[string]
 	Name plugin.TValue[string]
-	ReplicaSettings plugin.TValue[[]interface{}]
+	ReplicaSettings plugin.TValue[[]any]
 }
 
 // createAwsDynamodbGlobaltable creates a new instance of this resource
@@ -22218,8 +22218,8 @@ func (c *mqlAwsDynamodbGlobaltable) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlAwsDynamodbGlobaltable) GetReplicaSettings() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.ReplicaSettings, func() ([]interface{}, error) {
+func (c *mqlAwsDynamodbGlobaltable) GetReplicaSettings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ReplicaSettings, func() ([]any, error) {
 		return c.replicaSettings()
 	})
 }
@@ -22233,11 +22233,11 @@ type mqlAwsDynamodbTable struct {
 	Id plugin.TValue[string]
 	Name plugin.TValue[string]
 	Region plugin.TValue[string]
-	Backups plugin.TValue[[]interface{}]
-	SseDescription plugin.TValue[interface{}]
-	ProvisionedThroughput plugin.TValue[interface{}]
-	ContinuousBackups plugin.TValue[interface{}]
-	Tags plugin.TValue[map[string]interface{}]
+	Backups plugin.TValue[[]any]
+	SseDescription plugin.TValue[any]
+	ProvisionedThroughput plugin.TValue[any]
+	ContinuousBackups plugin.TValue[any]
+	Tags plugin.TValue[map[string]any]
 	CreatedTime plugin.TValue[*time.Time]
 	CreatedAt plugin.TValue[*time.Time]
 	DeletionProtectionEnabled plugin.TValue[bool]
@@ -22301,28 +22301,28 @@ func (c *mqlAwsDynamodbTable) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
-func (c *mqlAwsDynamodbTable) GetBackups() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Backups, func() ([]interface{}, error) {
+func (c *mqlAwsDynamodbTable) GetBackups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Backups, func() ([]any, error) {
 		return c.backups()
 	})
 }
 
-func (c *mqlAwsDynamodbTable) GetSseDescription() *plugin.TValue[interface{}] {
+func (c *mqlAwsDynamodbTable) GetSseDescription() *plugin.TValue[any] {
 	return &c.SseDescription
 }
 
-func (c *mqlAwsDynamodbTable) GetProvisionedThroughput() *plugin.TValue[interface{}] {
+func (c *mqlAwsDynamodbTable) GetProvisionedThroughput() *plugin.TValue[any] {
 	return &c.ProvisionedThroughput
 }
 
-func (c *mqlAwsDynamodbTable) GetContinuousBackups() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.ContinuousBackups, func() (interface{}, error) {
+func (c *mqlAwsDynamodbTable) GetContinuousBackups() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.ContinuousBackups, func() (any, error) {
 		return c.continuousBackups()
 	})
 }
 
-func (c *mqlAwsDynamodbTable) GetTags() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Tags, func() (map[string]interface{}, error) {
+func (c *mqlAwsDynamodbTable) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
 	})
 }
@@ -22364,7 +22364,7 @@ type mqlAwsSqs struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsSqsInternal it will be used here
-	Queues plugin.TValue[[]interface{}]
+	Queues plugin.TValue[[]any]
 }
 
 // createAwsSqs creates a new instance of this resource
@@ -22404,15 +22404,15 @@ func (c *mqlAwsSqs) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsSqs) GetQueues() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Queues, func() ([]interface{}, error) {
+func (c *mqlAwsSqs) GetQueues() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Queues, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sqs", c.__id, "queues")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -22590,11 +22590,11 @@ type mqlAwsRds struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsRdsInternal it will be used here
-	Instances plugin.TValue[[]interface{}]
-	Clusters plugin.TValue[[]interface{}]
-	AllPendingMaintenanceActions plugin.TValue[[]interface{}]
-	ParameterGroups plugin.TValue[[]interface{}]
-	ClusterParameterGroups plugin.TValue[[]interface{}]
+	Instances plugin.TValue[[]any]
+	Clusters plugin.TValue[[]any]
+	AllPendingMaintenanceActions plugin.TValue[[]any]
+	ParameterGroups plugin.TValue[[]any]
+	ClusterParameterGroups plugin.TValue[[]any]
 }
 
 // createAwsRds creates a new instance of this resource
@@ -22634,15 +22634,15 @@ func (c *mqlAwsRds) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsRds) GetInstances() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Instances, func() ([]interface{}, error) {
+func (c *mqlAwsRds) GetInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Instances, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds", c.__id, "instances")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -22650,15 +22650,15 @@ func (c *mqlAwsRds) GetInstances() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsRds) GetClusters() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Clusters, func() ([]interface{}, error) {
+func (c *mqlAwsRds) GetClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Clusters, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds", c.__id, "clusters")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -22666,15 +22666,15 @@ func (c *mqlAwsRds) GetClusters() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsRds) GetAllPendingMaintenanceActions() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.AllPendingMaintenanceActions, func() ([]interface{}, error) {
+func (c *mqlAwsRds) GetAllPendingMaintenanceActions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AllPendingMaintenanceActions, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds", c.__id, "allPendingMaintenanceActions")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -22682,15 +22682,15 @@ func (c *mqlAwsRds) GetAllPendingMaintenanceActions() *plugin.TValue[[]interface
 	})
 }
 
-func (c *mqlAwsRds) GetParameterGroups() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.ParameterGroups, func() ([]interface{}, error) {
+func (c *mqlAwsRds) GetParameterGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ParameterGroups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds", c.__id, "parameterGroups")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -22698,15 +22698,15 @@ func (c *mqlAwsRds) GetParameterGroups() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsRds) GetClusterParameterGroups() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.ClusterParameterGroups, func() ([]interface{}, error) {
+func (c *mqlAwsRds) GetClusterParameterGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ClusterParameterGroups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds", c.__id, "clusterParameterGroups")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -22828,9 +22828,9 @@ type mqlAwsRdsDbcluster struct {
 	Arn plugin.TValue[string]
 	Region plugin.TValue[string]
 	Id plugin.TValue[string]
-	Members plugin.TValue[[]interface{}]
-	Snapshots plugin.TValue[[]interface{}]
-	Tags plugin.TValue[map[string]interface{}]
+	Members plugin.TValue[[]any]
+	Snapshots plugin.TValue[[]any]
+	Tags plugin.TValue[map[string]any]
 	StorageEncrypted plugin.TValue[bool]
 	StorageAllocated plugin.TValue[int64]
 	StorageIops plugin.TValue[int64]
@@ -22846,14 +22846,14 @@ type mqlAwsRdsDbcluster struct {
 	PubliclyAccessible plugin.TValue[bool]
 	MultiAZ plugin.TValue[bool]
 	DeletionProtection plugin.TValue[bool]
-	SecurityGroups plugin.TValue[[]interface{}]
-	AvailabilityZones plugin.TValue[[]interface{}]
+	SecurityGroups plugin.TValue[[]any]
+	AvailabilityZones plugin.TValue[[]any]
 	Port plugin.TValue[int64]
 	Endpoint plugin.TValue[string]
 	HostedZoneId plugin.TValue[string]
 	MasterUsername plugin.TValue[string]
 	LatestRestorableTime plugin.TValue[*time.Time]
-	BackupSettings plugin.TValue[[]interface{}]
+	BackupSettings plugin.TValue[[]any]
 	EngineLifecycleSupport plugin.TValue[string]
 	CertificateExpiresAt plugin.TValue[*time.Time]
 	CertificateAuthority plugin.TValue[string]
@@ -22919,19 +22919,19 @@ func (c *mqlAwsRdsDbcluster) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
-func (c *mqlAwsRdsDbcluster) GetMembers() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsRdsDbcluster) GetMembers() *plugin.TValue[[]any] {
 	return &c.Members
 }
 
-func (c *mqlAwsRdsDbcluster) GetSnapshots() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Snapshots, func() ([]interface{}, error) {
+func (c *mqlAwsRdsDbcluster) GetSnapshots() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Snapshots, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.dbcluster", c.__id, "snapshots")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -22939,7 +22939,7 @@ func (c *mqlAwsRdsDbcluster) GetSnapshots() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsRdsDbcluster) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsRdsDbcluster) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
@@ -23003,15 +23003,15 @@ func (c *mqlAwsRdsDbcluster) GetDeletionProtection() *plugin.TValue[bool] {
 	return &c.DeletionProtection
 }
 
-func (c *mqlAwsRdsDbcluster) GetSecurityGroups() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.SecurityGroups, func() ([]interface{}, error) {
+func (c *mqlAwsRdsDbcluster) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.dbcluster", c.__id, "securityGroups")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -23019,7 +23019,7 @@ func (c *mqlAwsRdsDbcluster) GetSecurityGroups() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsRdsDbcluster) GetAvailabilityZones() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsRdsDbcluster) GetAvailabilityZones() *plugin.TValue[[]any] {
 	return &c.AvailabilityZones
 }
 
@@ -23043,15 +23043,15 @@ func (c *mqlAwsRdsDbcluster) GetLatestRestorableTime() *plugin.TValue[*time.Time
 	return &c.LatestRestorableTime
 }
 
-func (c *mqlAwsRdsDbcluster) GetBackupSettings() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.BackupSettings, func() ([]interface{}, error) {
+func (c *mqlAwsRdsDbcluster) GetBackupSettings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.BackupSettings, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.dbcluster", c.__id, "backupSettings")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -23122,12 +23122,12 @@ type mqlAwsRdsSnapshot struct {
 	// optional: if you define mqlAwsRdsSnapshotInternal it will be used here
 	Arn plugin.TValue[string]
 	Id plugin.TValue[string]
-	Attributes plugin.TValue[[]interface{}]
+	Attributes plugin.TValue[[]any]
 	Type plugin.TValue[string]
 	Encrypted plugin.TValue[bool]
 	Region plugin.TValue[string]
 	IsClusterSnapshot plugin.TValue[bool]
-	Tags plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[map[string]any]
 	Engine plugin.TValue[string]
 	EngineVersion plugin.TValue[string]
 	Status plugin.TValue[string]
@@ -23181,8 +23181,8 @@ func (c *mqlAwsRdsSnapshot) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
-func (c *mqlAwsRdsSnapshot) GetAttributes() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Attributes, func() ([]interface{}, error) {
+func (c *mqlAwsRdsSnapshot) GetAttributes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Attributes, func() ([]any, error) {
 		return c.attributes()
 	})
 }
@@ -23203,7 +23203,7 @@ func (c *mqlAwsRdsSnapshot) GetIsClusterSnapshot() *plugin.TValue[bool] {
 	return &c.IsClusterSnapshot
 }
 
-func (c *mqlAwsRdsSnapshot) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsRdsSnapshot) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
@@ -23240,7 +23240,7 @@ type mqlAwsRdsDbinstance struct {
 	Id plugin.TValue[string]
 	Name plugin.TValue[string]
 	BackupRetentionPeriod plugin.TValue[int64]
-	Snapshots plugin.TValue[[]interface{}]
+	Snapshots plugin.TValue[[]any]
 	StorageEncrypted plugin.TValue[bool]
 	StorageAllocated plugin.TValue[int64]
 	StorageIops plugin.TValue[int64]
@@ -23248,17 +23248,17 @@ type mqlAwsRdsDbinstance struct {
 	Region plugin.TValue[string]
 	AvailabilityZone plugin.TValue[string]
 	PubliclyAccessible plugin.TValue[bool]
-	EnabledCloudwatchLogsExports plugin.TValue[[]interface{}]
+	EnabledCloudwatchLogsExports plugin.TValue[[]any]
 	DeletionProtection plugin.TValue[bool]
 	MultiAZ plugin.TValue[bool]
 	MonitoringInterval plugin.TValue[int64]
 	EnhancedMonitoringResourceArn plugin.TValue[string]
-	Tags plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[map[string]any]
 	DbInstanceClass plugin.TValue[string]
 	DbInstanceIdentifier plugin.TValue[string]
 	Engine plugin.TValue[string]
 	EngineVersion plugin.TValue[string]
-	SecurityGroups plugin.TValue[[]interface{}]
+	SecurityGroups plugin.TValue[[]any]
 	Status plugin.TValue[string]
 	AutoMinorVersionUpgrade plugin.TValue[bool]
 	CreatedTime plugin.TValue[*time.Time]
@@ -23267,8 +23267,8 @@ type mqlAwsRdsDbinstance struct {
 	Endpoint plugin.TValue[string]
 	MasterUsername plugin.TValue[string]
 	LatestRestorableTime plugin.TValue[*time.Time]
-	BackupSettings plugin.TValue[[]interface{}]
-	Subnets plugin.TValue[[]interface{}]
+	BackupSettings plugin.TValue[[]any]
+	Subnets plugin.TValue[[]any]
 	EngineLifecycleSupport plugin.TValue[string]
 	CertificateExpiresAt plugin.TValue[*time.Time]
 	CertificateAuthority plugin.TValue[string]
@@ -23276,7 +23276,7 @@ type mqlAwsRdsDbinstance struct {
 	CustomIamInstanceProfile plugin.TValue[string]
 	ActivityStreamMode plugin.TValue[string]
 	ActivityStreamStatus plugin.TValue[string]
-	PendingMaintenanceActions plugin.TValue[[]interface{}]
+	PendingMaintenanceActions plugin.TValue[[]any]
 	NetworkType plugin.TValue[string]
 	PreferredMaintenanceWindow plugin.TValue[string]
 	PreferredBackupWindow plugin.TValue[string]
@@ -23335,15 +23335,15 @@ func (c *mqlAwsRdsDbinstance) GetBackupRetentionPeriod() *plugin.TValue[int64] {
 	return &c.BackupRetentionPeriod
 }
 
-func (c *mqlAwsRdsDbinstance) GetSnapshots() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Snapshots, func() ([]interface{}, error) {
+func (c *mqlAwsRdsDbinstance) GetSnapshots() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Snapshots, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.dbinstance", c.__id, "snapshots")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -23379,7 +23379,7 @@ func (c *mqlAwsRdsDbinstance) GetPubliclyAccessible() *plugin.TValue[bool] {
 	return &c.PubliclyAccessible
 }
 
-func (c *mqlAwsRdsDbinstance) GetEnabledCloudwatchLogsExports() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsRdsDbinstance) GetEnabledCloudwatchLogsExports() *plugin.TValue[[]any] {
 	return &c.EnabledCloudwatchLogsExports
 }
 
@@ -23399,7 +23399,7 @@ func (c *mqlAwsRdsDbinstance) GetEnhancedMonitoringResourceArn() *plugin.TValue[
 	return &c.EnhancedMonitoringResourceArn
 }
 
-func (c *mqlAwsRdsDbinstance) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsRdsDbinstance) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
@@ -23419,15 +23419,15 @@ func (c *mqlAwsRdsDbinstance) GetEngineVersion() *plugin.TValue[string] {
 	return &c.EngineVersion
 }
 
-func (c *mqlAwsRdsDbinstance) GetSecurityGroups() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.SecurityGroups, func() ([]interface{}, error) {
+func (c *mqlAwsRdsDbinstance) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.dbinstance", c.__id, "securityGroups")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -23467,15 +23467,15 @@ func (c *mqlAwsRdsDbinstance) GetLatestRestorableTime() *plugin.TValue[*time.Tim
 	return &c.LatestRestorableTime
 }
 
-func (c *mqlAwsRdsDbinstance) GetBackupSettings() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.BackupSettings, func() ([]interface{}, error) {
+func (c *mqlAwsRdsDbinstance) GetBackupSettings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.BackupSettings, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.dbinstance", c.__id, "backupSettings")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -23483,15 +23483,15 @@ func (c *mqlAwsRdsDbinstance) GetBackupSettings() *plugin.TValue[[]interface{}] 
 	})
 }
 
-func (c *mqlAwsRdsDbinstance) GetSubnets() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Subnets, func() ([]interface{}, error) {
+func (c *mqlAwsRdsDbinstance) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.dbinstance", c.__id, "subnets")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -23527,15 +23527,15 @@ func (c *mqlAwsRdsDbinstance) GetActivityStreamStatus() *plugin.TValue[string] {
 	return &c.ActivityStreamStatus
 }
 
-func (c *mqlAwsRdsDbinstance) GetPendingMaintenanceActions() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.PendingMaintenanceActions, func() ([]interface{}, error) {
+func (c *mqlAwsRdsDbinstance) GetPendingMaintenanceActions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PendingMaintenanceActions, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.dbinstance", c.__id, "pendingMaintenanceActions")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -23639,7 +23639,7 @@ type mqlAwsRdsClusterParameterGroup struct {
 	Name plugin.TValue[string]
 	Description plugin.TValue[string]
 	Region plugin.TValue[string]
-	Parameters plugin.TValue[[]interface{}]
+	Parameters plugin.TValue[[]any]
 }
 
 // createAwsRdsClusterParameterGroup creates a new instance of this resource
@@ -23694,15 +23694,15 @@ func (c *mqlAwsRdsClusterParameterGroup) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
-func (c *mqlAwsRdsClusterParameterGroup) GetParameters() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Parameters, func() ([]interface{}, error) {
+func (c *mqlAwsRdsClusterParameterGroup) GetParameters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Parameters, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.clusterParameterGroup", c.__id, "parameters")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -23720,7 +23720,7 @@ type mqlAwsRdsParameterGroup struct {
 	Name plugin.TValue[string]
 	Description plugin.TValue[string]
 	Region plugin.TValue[string]
-	Parameters plugin.TValue[[]interface{}]
+	Parameters plugin.TValue[[]any]
 }
 
 // createAwsRdsParameterGroup creates a new instance of this resource
@@ -23775,15 +23775,15 @@ func (c *mqlAwsRdsParameterGroup) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
-func (c *mqlAwsRdsParameterGroup) GetParameters() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Parameters, func() ([]interface{}, error) {
+func (c *mqlAwsRdsParameterGroup) GetParameters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Parameters, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.parameterGroup", c.__id, "parameters")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -23806,7 +23806,7 @@ type mqlAwsRdsParameterGroupParameter struct {
 	Name plugin.TValue[string]
 	Value plugin.TValue[string]
 	Source plugin.TValue[string]
-	SupportedEngineModes plugin.TValue[[]interface{}]
+	SupportedEngineModes plugin.TValue[[]any]
 }
 
 // createAwsRdsParameterGroupParameter creates a new instance of this resource
@@ -23881,7 +23881,7 @@ func (c *mqlAwsRdsParameterGroupParameter) GetSource() *plugin.TValue[string] {
 	return &c.Source
 }
 
-func (c *mqlAwsRdsParameterGroupParameter) GetSupportedEngineModes() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsRdsParameterGroupParameter) GetSupportedEngineModes() *plugin.TValue[[]any] {
 	return &c.SupportedEngineModes
 }
 
@@ -23890,8 +23890,8 @@ type mqlAwsElasticache struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsElasticacheInternal it will be used here
-	CacheClusters plugin.TValue[[]interface{}]
-	ServerlessCaches plugin.TValue[[]interface{}]
+	CacheClusters plugin.TValue[[]any]
+	ServerlessCaches plugin.TValue[[]any]
 }
 
 // createAwsElasticache creates a new instance of this resource
@@ -23931,15 +23931,15 @@ func (c *mqlAwsElasticache) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsElasticache) GetCacheClusters() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.CacheClusters, func() ([]interface{}, error) {
+func (c *mqlAwsElasticache) GetCacheClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CacheClusters, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elasticache", c.__id, "cacheClusters")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -23947,15 +23947,15 @@ func (c *mqlAwsElasticache) GetCacheClusters() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsElasticache) GetServerlessCaches() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.ServerlessCaches, func() ([]interface{}, error) {
+func (c *mqlAwsElasticache) GetServerlessCaches() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ServerlessCaches, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elasticache", c.__id, "serverlessCaches")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -23977,21 +23977,21 @@ type mqlAwsElasticacheCluster struct {
 	CacheClusterId plugin.TValue[string]
 	CacheClusterStatus plugin.TValue[string]
 	CacheNodeType plugin.TValue[string]
-	CacheNodes plugin.TValue[[]interface{}]
-	CacheSecurityGroups plugin.TValue[[]interface{}]
+	CacheNodes plugin.TValue[[]any]
+	CacheSecurityGroups plugin.TValue[[]any]
 	CacheSubnetGroupName plugin.TValue[string]
 	ClientDownloadLandingPage plugin.TValue[string]
 	NodeType plugin.TValue[string]
 	Engine plugin.TValue[string]
 	EngineVersion plugin.TValue[string]
 	IpDiscovery plugin.TValue[string]
-	LogDeliveryConfigurations plugin.TValue[[]interface{}]
+	LogDeliveryConfigurations plugin.TValue[[]any]
 	NetworkType plugin.TValue[string]
 	NotificationConfiguration plugin.TValue[string]
 	NumCacheNodes plugin.TValue[int64]
 	PreferredAvailabilityZone plugin.TValue[string]
 	Region plugin.TValue[string]
-	SecurityGroups plugin.TValue[[]interface{}]
+	SecurityGroups plugin.TValue[[]any]
 	SnapshotRetentionLimit plugin.TValue[int64]
 	TransitEncryptionEnabled plugin.TValue[bool]
 	TransitEncryptionMode plugin.TValue[string]
@@ -24065,11 +24065,11 @@ func (c *mqlAwsElasticacheCluster) GetCacheNodeType() *plugin.TValue[string] {
 	return &c.CacheNodeType
 }
 
-func (c *mqlAwsElasticacheCluster) GetCacheNodes() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsElasticacheCluster) GetCacheNodes() *plugin.TValue[[]any] {
 	return &c.CacheNodes
 }
 
-func (c *mqlAwsElasticacheCluster) GetCacheSecurityGroups() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsElasticacheCluster) GetCacheSecurityGroups() *plugin.TValue[[]any] {
 	return &c.CacheSecurityGroups
 }
 
@@ -24097,7 +24097,7 @@ func (c *mqlAwsElasticacheCluster) GetIpDiscovery() *plugin.TValue[string] {
 	return &c.IpDiscovery
 }
 
-func (c *mqlAwsElasticacheCluster) GetLogDeliveryConfigurations() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsElasticacheCluster) GetLogDeliveryConfigurations() *plugin.TValue[[]any] {
 	return &c.LogDeliveryConfigurations
 }
 
@@ -24121,15 +24121,15 @@ func (c *mqlAwsElasticacheCluster) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
-func (c *mqlAwsElasticacheCluster) GetSecurityGroups() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.SecurityGroups, func() ([]interface{}, error) {
+func (c *mqlAwsElasticacheCluster) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elasticache.cluster", c.__id, "securityGroups")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -24161,7 +24161,7 @@ type mqlAwsElasticacheServerlessCache struct {
 	EngineVersion plugin.TValue[string]
 	MajorEngineVersion plugin.TValue[string]
 	KmsKeyId plugin.TValue[string]
-	SecurityGroups plugin.TValue[[]interface{}]
+	SecurityGroups plugin.TValue[[]any]
 	SnapshotRetentionLimit plugin.TValue[int64]
 	DailySnapshotTime plugin.TValue[string]
 	Status plugin.TValue[string]
@@ -24229,15 +24229,15 @@ func (c *mqlAwsElasticacheServerlessCache) GetKmsKeyId() *plugin.TValue[string] 
 	return &c.KmsKeyId
 }
 
-func (c *mqlAwsElasticacheServerlessCache) GetSecurityGroups() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.SecurityGroups, func() ([]interface{}, error) {
+func (c *mqlAwsElasticacheServerlessCache) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elasticache.serverlessCache", c.__id, "securityGroups")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -24270,7 +24270,7 @@ type mqlAwsRedshift struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsRedshiftInternal it will be used here
-	Clusters plugin.TValue[[]interface{}]
+	Clusters plugin.TValue[[]any]
 }
 
 // createAwsRedshift creates a new instance of this resource
@@ -24310,15 +24310,15 @@ func (c *mqlAwsRedshift) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsRedshift) GetClusters() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Clusters, func() ([]interface{}, error) {
+func (c *mqlAwsRedshift) GetClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Clusters, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.redshift", c.__id, "clusters")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -24335,7 +24335,7 @@ type mqlAwsRedshiftCluster struct {
 	Arn plugin.TValue[string]
 	AutomatedSnapshotRetentionPeriod plugin.TValue[int64]
 	AvailabilityZone plugin.TValue[string]
-	ClusterParameterGroupNames plugin.TValue[[]interface{}]
+	ClusterParameterGroupNames plugin.TValue[[]any]
 	ClusterRevisionNumber plugin.TValue[string]
 	ClusterStatus plugin.TValue[string]
 	ClusterSubnetGroupName plugin.TValue[string]
@@ -24344,17 +24344,17 @@ type mqlAwsRedshiftCluster struct {
 	DbName plugin.TValue[string]
 	Encrypted plugin.TValue[bool]
 	EnhancedVpcRouting plugin.TValue[bool]
-	Logging plugin.TValue[interface{}]
+	Logging plugin.TValue[any]
 	MasterUsername plugin.TValue[string]
 	Name plugin.TValue[string]
 	NextMaintenanceWindowStartTime plugin.TValue[*time.Time]
 	NodeType plugin.TValue[string]
 	NumberOfNodes plugin.TValue[int64]
-	Parameters plugin.TValue[[]interface{}]
+	Parameters plugin.TValue[[]any]
 	PreferredMaintenanceWindow plugin.TValue[string]
 	PubliclyAccessible plugin.TValue[bool]
 	Region plugin.TValue[string]
-	Tags plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[map[string]any]
 	VpcId plugin.TValue[string]
 }
 
@@ -24411,7 +24411,7 @@ func (c *mqlAwsRedshiftCluster) GetAvailabilityZone() *plugin.TValue[string] {
 	return &c.AvailabilityZone
 }
 
-func (c *mqlAwsRedshiftCluster) GetClusterParameterGroupNames() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsRedshiftCluster) GetClusterParameterGroupNames() *plugin.TValue[[]any] {
 	return &c.ClusterParameterGroupNames
 }
 
@@ -24447,8 +24447,8 @@ func (c *mqlAwsRedshiftCluster) GetEnhancedVpcRouting() *plugin.TValue[bool] {
 	return &c.EnhancedVpcRouting
 }
 
-func (c *mqlAwsRedshiftCluster) GetLogging() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Logging, func() (interface{}, error) {
+func (c *mqlAwsRedshiftCluster) GetLogging() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Logging, func() (any, error) {
 		return c.logging()
 	})
 }
@@ -24473,8 +24473,8 @@ func (c *mqlAwsRedshiftCluster) GetNumberOfNodes() *plugin.TValue[int64] {
 	return &c.NumberOfNodes
 }
 
-func (c *mqlAwsRedshiftCluster) GetParameters() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Parameters, func() ([]interface{}, error) {
+func (c *mqlAwsRedshiftCluster) GetParameters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Parameters, func() ([]any, error) {
 		return c.parameters()
 	})
 }
@@ -24491,7 +24491,7 @@ func (c *mqlAwsRedshiftCluster) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
-func (c *mqlAwsRedshiftCluster) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsRedshiftCluster) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
@@ -24504,9 +24504,9 @@ type mqlAwsEcr struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsEcrInternal it will be used here
-	PrivateRepositories plugin.TValue[[]interface{}]
-	PublicRepositories plugin.TValue[[]interface{}]
-	Images plugin.TValue[[]interface{}]
+	PrivateRepositories plugin.TValue[[]any]
+	PublicRepositories plugin.TValue[[]any]
+	Images plugin.TValue[[]any]
 }
 
 // createAwsEcr creates a new instance of this resource
@@ -24546,15 +24546,15 @@ func (c *mqlAwsEcr) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsEcr) GetPrivateRepositories() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.PrivateRepositories, func() ([]interface{}, error) {
+func (c *mqlAwsEcr) GetPrivateRepositories() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PrivateRepositories, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecr", c.__id, "privateRepositories")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -24562,15 +24562,15 @@ func (c *mqlAwsEcr) GetPrivateRepositories() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsEcr) GetPublicRepositories() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.PublicRepositories, func() ([]interface{}, error) {
+func (c *mqlAwsEcr) GetPublicRepositories() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PublicRepositories, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecr", c.__id, "publicRepositories")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -24578,15 +24578,15 @@ func (c *mqlAwsEcr) GetPublicRepositories() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsEcr) GetImages() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Images, func() ([]interface{}, error) {
+func (c *mqlAwsEcr) GetImages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Images, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecr", c.__id, "images")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -24604,7 +24604,7 @@ type mqlAwsEcrRepository struct {
 	Uri plugin.TValue[string]
 	RegistryId plugin.TValue[string]
 	Public plugin.TValue[bool]
-	Images plugin.TValue[[]interface{}]
+	Images plugin.TValue[[]any]
 	Region plugin.TValue[string]
 	ImageScanOnPush plugin.TValue[bool]
 }
@@ -24666,15 +24666,15 @@ func (c *mqlAwsEcrRepository) GetPublic() *plugin.TValue[bool] {
 	return &c.Public
 }
 
-func (c *mqlAwsEcrRepository) GetImages() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Images, func() ([]interface{}, error) {
+func (c *mqlAwsEcrRepository) GetImages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Images, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecr.repository", c.__id, "images")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -24697,7 +24697,7 @@ type mqlAwsEcrImage struct {
 	// optional: if you define mqlAwsEcrImageInternal it will be used here
 	Digest plugin.TValue[string]
 	MediaType plugin.TValue[string]
-	Tags plugin.TValue[[]interface{}]
+	Tags plugin.TValue[[]any]
 	RegistryId plugin.TValue[string]
 	RepoName plugin.TValue[string]
 	Region plugin.TValue[string]
@@ -24753,7 +24753,7 @@ func (c *mqlAwsEcrImage) GetMediaType() *plugin.TValue[string] {
 	return &c.MediaType
 }
 
-func (c *mqlAwsEcrImage) GetTags() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsEcrImage) GetTags() *plugin.TValue[[]any] {
 	return &c.Tags
 }
 
@@ -24794,7 +24794,7 @@ type mqlAwsDms struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsDmsInternal it will be used here
-	ReplicationInstances plugin.TValue[[]interface{}]
+	ReplicationInstances plugin.TValue[[]any]
 }
 
 // createAwsDms creates a new instance of this resource
@@ -24834,8 +24834,8 @@ func (c *mqlAwsDms) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsDms) GetReplicationInstances() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.ReplicationInstances, func() ([]interface{}, error) {
+func (c *mqlAwsDms) GetReplicationInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ReplicationInstances, func() ([]any, error) {
 		return c.replicationInstances()
 	})
 }
@@ -24845,7 +24845,7 @@ type mqlAwsApigateway struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsApigatewayInternal it will be used here
-	RestApis plugin.TValue[[]interface{}]
+	RestApis plugin.TValue[[]any]
 }
 
 // createAwsApigateway creates a new instance of this resource
@@ -24885,15 +24885,15 @@ func (c *mqlAwsApigateway) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsApigateway) GetRestApis() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.RestApis, func() ([]interface{}, error) {
+func (c *mqlAwsApigateway) GetRestApis() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RestApis, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.apigateway", c.__id, "restApis")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -24911,9 +24911,9 @@ type mqlAwsApigatewayRestapi struct {
 	Name plugin.TValue[string]
 	CreatedDate plugin.TValue[*time.Time]
 	Description plugin.TValue[string]
-	Stages plugin.TValue[[]interface{}]
+	Stages plugin.TValue[[]any]
 	Region plugin.TValue[string]
-	Tags plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[map[string]any]
 }
 
 // createAwsApigatewayRestapi creates a new instance of this resource
@@ -24973,15 +24973,15 @@ func (c *mqlAwsApigatewayRestapi) GetDescription() *plugin.TValue[string] {
 	return &c.Description
 }
 
-func (c *mqlAwsApigatewayRestapi) GetStages() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Stages, func() ([]interface{}, error) {
+func (c *mqlAwsApigatewayRestapi) GetStages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Stages, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.apigateway.restapi", c.__id, "stages")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -24993,7 +24993,7 @@ func (c *mqlAwsApigatewayRestapi) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
-func (c *mqlAwsApigatewayRestapi) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsApigatewayRestapi) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
@@ -25007,7 +25007,7 @@ type mqlAwsApigatewayStage struct {
 	TracingEnabled plugin.TValue[bool]
 	Description plugin.TValue[string]
 	DeploymentId plugin.TValue[string]
-	MethodSettings plugin.TValue[interface{}]
+	MethodSettings plugin.TValue[any]
 }
 
 // createAwsApigatewayStage creates a new instance of this resource
@@ -25067,7 +25067,7 @@ func (c *mqlAwsApigatewayStage) GetDeploymentId() *plugin.TValue[string] {
 	return &c.DeploymentId
 }
 
-func (c *mqlAwsApigatewayStage) GetMethodSettings() *plugin.TValue[interface{}] {
+func (c *mqlAwsApigatewayStage) GetMethodSettings() *plugin.TValue[any] {
 	return &c.MethodSettings
 }
 
@@ -25076,7 +25076,7 @@ type mqlAwsLambda struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsLambdaInternal it will be used here
-	Functions plugin.TValue[[]interface{}]
+	Functions plugin.TValue[[]any]
 }
 
 // createAwsLambda creates a new instance of this resource
@@ -25116,15 +25116,15 @@ func (c *mqlAwsLambda) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsLambda) GetFunctions() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Functions, func() ([]interface{}, error) {
+func (c *mqlAwsLambda) GetFunctions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Functions, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.lambda", c.__id, "functions")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -25142,10 +25142,10 @@ type mqlAwsLambdaFunction struct {
 	Runtime plugin.TValue[string]
 	Concurrency plugin.TValue[int64]
 	DlqTargetArn plugin.TValue[string]
-	Policy plugin.TValue[interface{}]
-	VpcConfig plugin.TValue[interface{}]
+	Policy plugin.TValue[any]
+	VpcConfig plugin.TValue[any]
 	Region plugin.TValue[string]
-	Tags plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[map[string]any]
 }
 
 // createAwsLambdaFunction creates a new instance of this resource
@@ -25207,13 +25207,13 @@ func (c *mqlAwsLambdaFunction) GetDlqTargetArn() *plugin.TValue[string] {
 	return &c.DlqTargetArn
 }
 
-func (c *mqlAwsLambdaFunction) GetPolicy() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Policy, func() (interface{}, error) {
+func (c *mqlAwsLambdaFunction) GetPolicy() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Policy, func() (any, error) {
 		return c.policy()
 	})
 }
 
-func (c *mqlAwsLambdaFunction) GetVpcConfig() *plugin.TValue[interface{}] {
+func (c *mqlAwsLambdaFunction) GetVpcConfig() *plugin.TValue[any] {
 	return &c.VpcConfig
 }
 
@@ -25221,7 +25221,7 @@ func (c *mqlAwsLambdaFunction) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
-func (c *mqlAwsLambdaFunction) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsLambdaFunction) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
@@ -25230,8 +25230,8 @@ type mqlAwsSsm struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsSsmInternal it will be used here
-	Instances plugin.TValue[[]interface{}]
-	Parameters plugin.TValue[[]interface{}]
+	Instances plugin.TValue[[]any]
+	Parameters plugin.TValue[[]any]
 }
 
 // createAwsSsm creates a new instance of this resource
@@ -25271,15 +25271,15 @@ func (c *mqlAwsSsm) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsSsm) GetInstances() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Instances, func() ([]interface{}, error) {
+func (c *mqlAwsSsm) GetInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Instances, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ssm", c.__id, "instances")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -25287,15 +25287,15 @@ func (c *mqlAwsSsm) GetInstances() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsSsm) GetParameters() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Parameters, func() ([]interface{}, error) {
+func (c *mqlAwsSsm) GetParameters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Parameters, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ssm", c.__id, "parameters")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -25427,7 +25427,7 @@ type mqlAwsSsmInstance struct {
 	PlatformVersion plugin.TValue[string]
 	Region plugin.TValue[string]
 	Arn plugin.TValue[string]
-	Tags plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[map[string]any]
 }
 
 // createAwsSsmInstance creates a new instance of this resource
@@ -25499,8 +25499,8 @@ func (c *mqlAwsSsmInstance) GetArn() *plugin.TValue[string] {
 	return &c.Arn
 }
 
-func (c *mqlAwsSsmInstance) GetTags() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Tags, func() (map[string]interface{}, error) {
+func (c *mqlAwsSsmInstance) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
 	})
 }
@@ -25510,16 +25510,16 @@ type mqlAwsEc2 struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsEc2Internal it will be used here
-	SecurityGroups plugin.TValue[[]interface{}]
-	Instances plugin.TValue[[]interface{}]
-	EbsEncryptionByDefault plugin.TValue[map[string]interface{}]
-	Volumes plugin.TValue[[]interface{}]
-	Snapshots plugin.TValue[[]interface{}]
-	InternetGateways plugin.TValue[[]interface{}]
-	VpnConnections plugin.TValue[[]interface{}]
-	NetworkAcls plugin.TValue[[]interface{}]
-	Keypairs plugin.TValue[[]interface{}]
-	Eips plugin.TValue[[]interface{}]
+	SecurityGroups plugin.TValue[[]any]
+	Instances plugin.TValue[[]any]
+	EbsEncryptionByDefault plugin.TValue[map[string]any]
+	Volumes plugin.TValue[[]any]
+	Snapshots plugin.TValue[[]any]
+	InternetGateways plugin.TValue[[]any]
+	VpnConnections plugin.TValue[[]any]
+	NetworkAcls plugin.TValue[[]any]
+	Keypairs plugin.TValue[[]any]
+	Eips plugin.TValue[[]any]
 }
 
 // createAwsEc2 creates a new instance of this resource
@@ -25559,15 +25559,15 @@ func (c *mqlAwsEc2) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsEc2) GetSecurityGroups() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.SecurityGroups, func() ([]interface{}, error) {
+func (c *mqlAwsEc2) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2", c.__id, "securityGroups")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -25575,15 +25575,15 @@ func (c *mqlAwsEc2) GetSecurityGroups() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsEc2) GetInstances() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Instances, func() ([]interface{}, error) {
+func (c *mqlAwsEc2) GetInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Instances, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2", c.__id, "instances")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -25591,21 +25591,21 @@ func (c *mqlAwsEc2) GetInstances() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsEc2) GetEbsEncryptionByDefault() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.EbsEncryptionByDefault, func() (map[string]interface{}, error) {
+func (c *mqlAwsEc2) GetEbsEncryptionByDefault() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.EbsEncryptionByDefault, func() (map[string]any, error) {
 		return c.ebsEncryptionByDefault()
 	})
 }
 
-func (c *mqlAwsEc2) GetVolumes() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Volumes, func() ([]interface{}, error) {
+func (c *mqlAwsEc2) GetVolumes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Volumes, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2", c.__id, "volumes")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -25613,15 +25613,15 @@ func (c *mqlAwsEc2) GetVolumes() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsEc2) GetSnapshots() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Snapshots, func() ([]interface{}, error) {
+func (c *mqlAwsEc2) GetSnapshots() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Snapshots, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2", c.__id, "snapshots")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -25629,15 +25629,15 @@ func (c *mqlAwsEc2) GetSnapshots() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsEc2) GetInternetGateways() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.InternetGateways, func() ([]interface{}, error) {
+func (c *mqlAwsEc2) GetInternetGateways() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InternetGateways, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2", c.__id, "internetGateways")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -25645,15 +25645,15 @@ func (c *mqlAwsEc2) GetInternetGateways() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsEc2) GetVpnConnections() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.VpnConnections, func() ([]interface{}, error) {
+func (c *mqlAwsEc2) GetVpnConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VpnConnections, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2", c.__id, "vpnConnections")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -25661,15 +25661,15 @@ func (c *mqlAwsEc2) GetVpnConnections() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsEc2) GetNetworkAcls() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.NetworkAcls, func() ([]interface{}, error) {
+func (c *mqlAwsEc2) GetNetworkAcls() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NetworkAcls, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2", c.__id, "networkAcls")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -25677,15 +25677,15 @@ func (c *mqlAwsEc2) GetNetworkAcls() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsEc2) GetKeypairs() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Keypairs, func() ([]interface{}, error) {
+func (c *mqlAwsEc2) GetKeypairs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Keypairs, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2", c.__id, "keypairs")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -25693,15 +25693,15 @@ func (c *mqlAwsEc2) GetKeypairs() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsEc2) GetEips() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Eips, func() ([]interface{}, error) {
+func (c *mqlAwsEc2) GetEips() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Eips, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2", c.__id, "eips")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -25721,7 +25721,7 @@ type mqlAwsEc2Eip struct {
 	NetworkInterfaceOwnerId plugin.TValue[string]
 	PrivateIpAddress plugin.TValue[string]
 	PublicIpv4Pool plugin.TValue[string]
-	Tags plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[map[string]any]
 	Region plugin.TValue[string]
 }
 
@@ -25802,7 +25802,7 @@ func (c *mqlAwsEc2Eip) GetPublicIpv4Pool() *plugin.TValue[string] {
 	return &c.PublicIpv4Pool
 }
 
-func (c *mqlAwsEc2Eip) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsEc2Eip) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
@@ -25818,9 +25818,9 @@ type mqlAwsVpcNatgateway struct {
 	CreatedAt plugin.TValue[*time.Time]
 	NatGatewayId plugin.TValue[string]
 	State plugin.TValue[string]
-	Tags plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[map[string]any]
 	Vpc plugin.TValue[*mqlAwsVpc]
-	Addresses plugin.TValue[[]interface{}]
+	Addresses plugin.TValue[[]any]
 	Subnet plugin.TValue[*mqlAwsVpcSubnet]
 }
 
@@ -25873,7 +25873,7 @@ func (c *mqlAwsVpcNatgateway) GetState() *plugin.TValue[string] {
 	return &c.State
 }
 
-func (c *mqlAwsVpcNatgateway) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsVpcNatgateway) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
@@ -25893,7 +25893,7 @@ func (c *mqlAwsVpcNatgateway) GetVpc() *plugin.TValue[*mqlAwsVpc] {
 	})
 }
 
-func (c *mqlAwsVpcNatgateway) GetAddresses() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsVpcNatgateway) GetAddresses() *plugin.TValue[[]any] {
 	return &c.Addresses
 }
 
@@ -26000,16 +26000,16 @@ type mqlAwsVpcServiceEndpoint struct {
 	__id string
 	mqlAwsVpcServiceEndpointInternal
 	AcceptanceRequired plugin.TValue[bool]
-	AvailabilityZones plugin.TValue[[]interface{}]
-	DnsNames plugin.TValue[[]interface{}]
+	AvailabilityZones plugin.TValue[[]any]
+	DnsNames plugin.TValue[[]any]
 	Id plugin.TValue[string]
 	ManagesVpcEndpoints plugin.TValue[bool]
 	Name plugin.TValue[string]
 	Owner plugin.TValue[string]
 	PayerResponsibility plugin.TValue[string]
 	PrivateDnsNameVerificationState plugin.TValue[string]
-	PrivateDnsNames plugin.TValue[[]interface{}]
-	Tags plugin.TValue[map[string]interface{}]
+	PrivateDnsNames plugin.TValue[[]any]
+	Tags plugin.TValue[map[string]any]
 	Type plugin.TValue[string]
 	VpcEndpointPolicySupported plugin.TValue[bool]
 }
@@ -26057,13 +26057,13 @@ func (c *mqlAwsVpcServiceEndpoint) GetAcceptanceRequired() *plugin.TValue[bool] 
 	})
 }
 
-func (c *mqlAwsVpcServiceEndpoint) GetAvailabilityZones() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.AvailabilityZones, func() ([]interface{}, error) {
+func (c *mqlAwsVpcServiceEndpoint) GetAvailabilityZones() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AvailabilityZones, func() ([]any, error) {
 		return c.availabilityZones()
 	})
 }
 
-func (c *mqlAwsVpcServiceEndpoint) GetDnsNames() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsVpcServiceEndpoint) GetDnsNames() *plugin.TValue[[]any] {
 	return &c.DnsNames
 }
 
@@ -26097,13 +26097,13 @@ func (c *mqlAwsVpcServiceEndpoint) GetPrivateDnsNameVerificationState() *plugin.
 	})
 }
 
-func (c *mqlAwsVpcServiceEndpoint) GetPrivateDnsNames() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.PrivateDnsNames, func() ([]interface{}, error) {
+func (c *mqlAwsVpcServiceEndpoint) GetPrivateDnsNames() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PrivateDnsNames, func() ([]any, error) {
 		return c.privateDnsNames()
 	})
 }
 
-func (c *mqlAwsVpcServiceEndpoint) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsVpcServiceEndpoint) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
@@ -26127,7 +26127,7 @@ type mqlAwsVpcPeeringConnection struct {
 	Id plugin.TValue[string]
 	RequestorVpc plugin.TValue[*mqlAwsVpcPeeringConnectionPeeringVpc]
 	Status plugin.TValue[string]
-	Tags plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[map[string]any]
 }
 
 // createAwsVpcPeeringConnection creates a new instance of this resource
@@ -26211,7 +26211,7 @@ func (c *mqlAwsVpcPeeringConnection) GetStatus() *plugin.TValue[string] {
 	return &c.Status
 }
 
-func (c *mqlAwsVpcPeeringConnection) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsVpcPeeringConnection) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
@@ -26221,8 +26221,8 @@ type mqlAwsVpcPeeringConnectionPeeringVpc struct {
 	__id string
 	// optional: if you define mqlAwsVpcPeeringConnectionPeeringVpcInternal it will be used here
 	AllowDnsResolutionFromRemoteVpc plugin.TValue[bool]
-	Ipv4CiderBlocks plugin.TValue[[]interface{}]
-	Ipv6CiderBlocks plugin.TValue[[]interface{}]
+	Ipv4CiderBlocks plugin.TValue[[]any]
+	Ipv6CiderBlocks plugin.TValue[[]any]
 	OwnerID plugin.TValue[string]
 	Region plugin.TValue[string]
 	Vpc plugin.TValue[*mqlAwsVpc]
@@ -26270,11 +26270,11 @@ func (c *mqlAwsVpcPeeringConnectionPeeringVpc) GetAllowDnsResolutionFromRemoteVp
 	return &c.AllowDnsResolutionFromRemoteVpc
 }
 
-func (c *mqlAwsVpcPeeringConnectionPeeringVpc) GetIpv4CiderBlocks() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsVpcPeeringConnectionPeeringVpc) GetIpv4CiderBlocks() *plugin.TValue[[]any] {
 	return &c.Ipv4CiderBlocks
 }
 
-func (c *mqlAwsVpcPeeringConnectionPeeringVpc) GetIpv6CiderBlocks() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsVpcPeeringConnectionPeeringVpc) GetIpv6CiderBlocks() *plugin.TValue[[]any] {
 	return &c.Ipv6CiderBlocks
 }
 
@@ -26314,10 +26314,10 @@ type mqlAwsEc2Networkacl struct {
 	Arn plugin.TValue[string]
 	Id plugin.TValue[string]
 	Region plugin.TValue[string]
-	Entries plugin.TValue[[]interface{}]
+	Entries plugin.TValue[[]any]
 	IsDefault plugin.TValue[bool]
-	Tags plugin.TValue[map[string]interface{}]
-	Associations plugin.TValue[[]interface{}]
+	Tags plugin.TValue[map[string]any]
+	Associations plugin.TValue[[]any]
 }
 
 // createAwsEc2Networkacl creates a new instance of this resource
@@ -26369,15 +26369,15 @@ func (c *mqlAwsEc2Networkacl) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
-func (c *mqlAwsEc2Networkacl) GetEntries() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Entries, func() ([]interface{}, error) {
+func (c *mqlAwsEc2Networkacl) GetEntries() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Entries, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.networkacl", c.__id, "entries")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -26389,11 +26389,11 @@ func (c *mqlAwsEc2Networkacl) GetIsDefault() *plugin.TValue[bool] {
 	return &c.IsDefault
 }
 
-func (c *mqlAwsEc2Networkacl) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsEc2Networkacl) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
-func (c *mqlAwsEc2Networkacl) GetAssociations() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsEc2Networkacl) GetAssociations() *plugin.TValue[[]any] {
 	return &c.Associations
 }
 
@@ -26607,7 +26607,7 @@ type mqlAwsEc2Vpnconnection struct {
 	__id string
 	// optional: if you define mqlAwsEc2VpnconnectionInternal it will be used here
 	Arn plugin.TValue[string]
-	VgwTelemetry plugin.TValue[[]interface{}]
+	VgwTelemetry plugin.TValue[[]any]
 }
 
 // createAwsEc2Vpnconnection creates a new instance of this resource
@@ -26651,7 +26651,7 @@ func (c *mqlAwsEc2Vpnconnection) GetArn() *plugin.TValue[string] {
 	return &c.Arn
 }
 
-func (c *mqlAwsEc2Vpnconnection) GetVgwTelemetry() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsEc2Vpnconnection) GetVgwTelemetry() *plugin.TValue[[]any] {
 	return &c.VgwTelemetry
 }
 
@@ -26721,7 +26721,7 @@ type mqlAwsEc2Internetgateway struct {
 	// optional: if you define mqlAwsEc2InternetgatewayInternal it will be used here
 	Arn plugin.TValue[string]
 	Id plugin.TValue[string]
-	Attachments plugin.TValue[[]interface{}]
+	Attachments plugin.TValue[[]any]
 }
 
 // createAwsEc2Internetgateway creates a new instance of this resource
@@ -26769,7 +26769,7 @@ func (c *mqlAwsEc2Internetgateway) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
-func (c *mqlAwsEc2Internetgateway) GetAttachments() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsEc2Internetgateway) GetAttachments() *plugin.TValue[[]any] {
 	return &c.Attachments
 }
 
@@ -26781,11 +26781,11 @@ type mqlAwsEc2Snapshot struct {
 	Arn plugin.TValue[string]
 	Id plugin.TValue[string]
 	Region plugin.TValue[string]
-	CreateVolumePermission plugin.TValue[[]interface{}]
+	CreateVolumePermission plugin.TValue[[]any]
 	VolumeId plugin.TValue[string]
 	StartTime plugin.TValue[*time.Time]
 	CompletionTime plugin.TValue[*time.Time]
-	Tags plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[map[string]any]
 	State plugin.TValue[string]
 	VolumeSize plugin.TValue[int64]
 	Description plugin.TValue[string]
@@ -26842,8 +26842,8 @@ func (c *mqlAwsEc2Snapshot) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
-func (c *mqlAwsEc2Snapshot) GetCreateVolumePermission() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.CreateVolumePermission, func() ([]interface{}, error) {
+func (c *mqlAwsEc2Snapshot) GetCreateVolumePermission() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CreateVolumePermission, func() ([]any, error) {
 		return c.createVolumePermission()
 	})
 }
@@ -26860,7 +26860,7 @@ func (c *mqlAwsEc2Snapshot) GetCompletionTime() *plugin.TValue[*time.Time] {
 	return &c.CompletionTime
 }
 
-func (c *mqlAwsEc2Snapshot) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsEc2Snapshot) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
@@ -26891,10 +26891,10 @@ type mqlAwsEc2Volume struct {
 	// optional: if you define mqlAwsEc2VolumeInternal it will be used here
 	Arn plugin.TValue[string]
 	Id plugin.TValue[string]
-	Attachments plugin.TValue[[]interface{}]
+	Attachments plugin.TValue[[]any]
 	Encrypted plugin.TValue[bool]
 	State plugin.TValue[string]
-	Tags plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[map[string]any]
 	AvailabilityZone plugin.TValue[string]
 	VolumeType plugin.TValue[string]
 	CreateTime plugin.TValue[*time.Time]
@@ -26950,7 +26950,7 @@ func (c *mqlAwsEc2Volume) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
-func (c *mqlAwsEc2Volume) GetAttachments() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsEc2Volume) GetAttachments() *plugin.TValue[[]any] {
 	return &c.Attachments
 }
 
@@ -26962,7 +26962,7 @@ func (c *mqlAwsEc2Volume) GetState() *plugin.TValue[string] {
 	return &c.State
 }
 
-func (c *mqlAwsEc2Volume) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsEc2Volume) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
@@ -27003,7 +27003,7 @@ type mqlAwsInspector struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsInspectorInternal it will be used here
-	Coverages plugin.TValue[[]interface{}]
+	Coverages plugin.TValue[[]any]
 }
 
 // createAwsInspector creates a new instance of this resource
@@ -27043,15 +27043,15 @@ func (c *mqlAwsInspector) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsInspector) GetCoverages() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Coverages, func() ([]interface{}, error) {
+func (c *mqlAwsInspector) GetCoverages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Coverages, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.inspector", c.__id, "coverages")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -27217,7 +27217,7 @@ type mqlAwsInspectorCoverageInstance struct {
 	__id string
 	mqlAwsInspectorCoverageInstanceInternal
 	Platform plugin.TValue[string]
-	Tags plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[map[string]any]
 	Image plugin.TValue[*mqlAwsEc2Image]
 	Region plugin.TValue[string]
 }
@@ -27263,7 +27263,7 @@ func (c *mqlAwsInspectorCoverageInstance) GetPlatform() *plugin.TValue[string] {
 	return &c.Platform
 }
 
-func (c *mqlAwsInspectorCoverageInstance) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsInspectorCoverageInstance) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
@@ -27281,7 +27281,7 @@ type mqlAwsInspectorCoverageImage struct {
 	__id string
 	// optional: if you define mqlAwsInspectorCoverageImageInternal it will be used here
 	ImagePulledAt plugin.TValue[*time.Time]
-	Tags plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[map[string]any]
 	Region plugin.TValue[string]
 }
 
@@ -27326,7 +27326,7 @@ func (c *mqlAwsInspectorCoverageImage) GetImagePulledAt() *plugin.TValue[*time.T
 	return &c.ImagePulledAt
 }
 
-func (c *mqlAwsInspectorCoverageImage) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsInspectorCoverageImage) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
@@ -27403,23 +27403,23 @@ type mqlAwsEc2Instance struct {
 	DetailedMonitoring plugin.TValue[string]
 	Region plugin.TValue[string]
 	PublicIp plugin.TValue[string]
-	Ssm plugin.TValue[interface{}]
+	Ssm plugin.TValue[any]
 	Vpc plugin.TValue[*mqlAwsVpc]
 	HttpTokens plugin.TValue[string]
 	HttpEndpoint plugin.TValue[string]
-	PatchState plugin.TValue[interface{}]
+	PatchState plugin.TValue[any]
 	State plugin.TValue[string]
-	DeviceMappings plugin.TValue[[]interface{}]
-	SecurityGroups plugin.TValue[[]interface{}]
+	DeviceMappings plugin.TValue[[]any]
+	SecurityGroups plugin.TValue[[]any]
 	PlatformDetails plugin.TValue[string]
 	PublicDnsName plugin.TValue[string]
-	InstanceStatus plugin.TValue[interface{}]
-	StateReason plugin.TValue[interface{}]
+	InstanceStatus plugin.TValue[any]
+	StateReason plugin.TValue[any]
 	StateTransitionReason plugin.TValue[string]
 	EbsOptimized plugin.TValue[bool]
 	EnaSupported plugin.TValue[bool]
 	InstanceType plugin.TValue[string]
-	Tags plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[map[string]any]
 	IamInstanceProfile plugin.TValue[*mqlAwsIamInstanceProfile]
 	Image plugin.TValue[*mqlAwsEc2Image]
 	LaunchTime plugin.TValue[*time.Time]
@@ -27434,7 +27434,7 @@ type mqlAwsEc2Instance struct {
 	RootDeviceName plugin.TValue[string]
 	Architecture plugin.TValue[string]
 	TpmSupport plugin.TValue[string]
-	NetworkInterfaces plugin.TValue[[]interface{}]
+	NetworkInterfaces plugin.TValue[[]any]
 }
 
 // createAwsEc2Instance creates a new instance of this resource
@@ -27494,8 +27494,8 @@ func (c *mqlAwsEc2Instance) GetPublicIp() *plugin.TValue[string] {
 	return &c.PublicIp
 }
 
-func (c *mqlAwsEc2Instance) GetSsm() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Ssm, func() (interface{}, error) {
+func (c *mqlAwsEc2Instance) GetSsm() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Ssm, func() (any, error) {
 		return c.ssm()
 	})
 }
@@ -27524,8 +27524,8 @@ func (c *mqlAwsEc2Instance) GetHttpEndpoint() *plugin.TValue[string] {
 	return &c.HttpEndpoint
 }
 
-func (c *mqlAwsEc2Instance) GetPatchState() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.PatchState, func() (interface{}, error) {
+func (c *mqlAwsEc2Instance) GetPatchState() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.PatchState, func() (any, error) {
 		return c.patchState()
 	})
 }
@@ -27534,19 +27534,19 @@ func (c *mqlAwsEc2Instance) GetState() *plugin.TValue[string] {
 	return &c.State
 }
 
-func (c *mqlAwsEc2Instance) GetDeviceMappings() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsEc2Instance) GetDeviceMappings() *plugin.TValue[[]any] {
 	return &c.DeviceMappings
 }
 
-func (c *mqlAwsEc2Instance) GetSecurityGroups() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.SecurityGroups, func() ([]interface{}, error) {
+func (c *mqlAwsEc2Instance) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.instance", c.__id, "securityGroups")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -27562,13 +27562,13 @@ func (c *mqlAwsEc2Instance) GetPublicDnsName() *plugin.TValue[string] {
 	return &c.PublicDnsName
 }
 
-func (c *mqlAwsEc2Instance) GetInstanceStatus() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.InstanceStatus, func() (interface{}, error) {
+func (c *mqlAwsEc2Instance) GetInstanceStatus() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.InstanceStatus, func() (any, error) {
 		return c.instanceStatus()
 	})
 }
 
-func (c *mqlAwsEc2Instance) GetStateReason() *plugin.TValue[interface{}] {
+func (c *mqlAwsEc2Instance) GetStateReason() *plugin.TValue[any] {
 	return &c.StateReason
 }
 
@@ -27588,7 +27588,7 @@ func (c *mqlAwsEc2Instance) GetInstanceType() *plugin.TValue[string] {
 	return &c.InstanceType
 }
 
-func (c *mqlAwsEc2Instance) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsEc2Instance) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
@@ -27684,15 +27684,15 @@ func (c *mqlAwsEc2Instance) GetTpmSupport() *plugin.TValue[string] {
 	return &c.TpmSupport
 }
 
-func (c *mqlAwsEc2Instance) GetNetworkInterfaces() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.NetworkInterfaces, func() ([]interface{}, error) {
+func (c *mqlAwsEc2Instance) GetNetworkInterfaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NetworkInterfaces, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.instance", c.__id, "networkInterfaces")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -27712,9 +27712,9 @@ type mqlAwsEc2Networkinterface struct {
 	Status plugin.TValue[string]
 	SourceDestCheck plugin.TValue[bool]
 	RequesterManaged plugin.TValue[bool]
-	Tags plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[map[string]any]
 	AvailabilityZone plugin.TValue[string]
-	SecurityGroups plugin.TValue[[]interface{}]
+	SecurityGroups plugin.TValue[[]any]
 	Ipv6Native plugin.TValue[bool]
 	MacAddress plugin.TValue[string]
 	PrivateDnsName plugin.TValue[string]
@@ -27805,7 +27805,7 @@ func (c *mqlAwsEc2Networkinterface) GetRequesterManaged() *plugin.TValue[bool] {
 	return &c.RequesterManaged
 }
 
-func (c *mqlAwsEc2Networkinterface) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsEc2Networkinterface) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
@@ -27813,15 +27813,15 @@ func (c *mqlAwsEc2Networkinterface) GetAvailabilityZone() *plugin.TValue[string]
 	return &c.AvailabilityZone
 }
 
-func (c *mqlAwsEc2Networkinterface) GetSecurityGroups() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.SecurityGroups, func() ([]interface{}, error) {
+func (c *mqlAwsEc2Networkinterface) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.networkinterface", c.__id, "securityGroups")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -27854,7 +27854,7 @@ type mqlAwsEc2Keypair struct {
 	Fingerprint plugin.TValue[string]
 	Name plugin.TValue[string]
 	Type plugin.TValue[string]
-	Tags plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[map[string]any]
 	Region plugin.TValue[string]
 	CreatedAt plugin.TValue[*time.Time]
 }
@@ -27912,7 +27912,7 @@ func (c *mqlAwsEc2Keypair) GetType() *plugin.TValue[string] {
 	return &c.Type
 }
 
-func (c *mqlAwsEc2Keypair) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsEc2Keypair) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
@@ -28091,10 +28091,10 @@ type mqlAwsEc2Securitygroup struct {
 	Id plugin.TValue[string]
 	Name plugin.TValue[string]
 	Description plugin.TValue[string]
-	Tags plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[map[string]any]
 	Vpc plugin.TValue[*mqlAwsVpc]
-	IpPermissions plugin.TValue[[]interface{}]
-	IpPermissionsEgress plugin.TValue[[]interface{}]
+	IpPermissions plugin.TValue[[]any]
+	IpPermissionsEgress plugin.TValue[[]any]
 	Region plugin.TValue[string]
 	IsAttachedToNetworkInterface plugin.TValue[bool]
 }
@@ -28152,7 +28152,7 @@ func (c *mqlAwsEc2Securitygroup) GetDescription() *plugin.TValue[string] {
 	return &c.Description
 }
 
-func (c *mqlAwsEc2Securitygroup) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsEc2Securitygroup) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
@@ -28172,15 +28172,15 @@ func (c *mqlAwsEc2Securitygroup) GetVpc() *plugin.TValue[*mqlAwsVpc] {
 	})
 }
 
-func (c *mqlAwsEc2Securitygroup) GetIpPermissions() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.IpPermissions, func() ([]interface{}, error) {
+func (c *mqlAwsEc2Securitygroup) GetIpPermissions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IpPermissions, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.securitygroup", c.__id, "ipPermissions")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -28188,15 +28188,15 @@ func (c *mqlAwsEc2Securitygroup) GetIpPermissions() *plugin.TValue[[]interface{}
 	})
 }
 
-func (c *mqlAwsEc2Securitygroup) GetIpPermissionsEgress() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.IpPermissionsEgress, func() ([]interface{}, error) {
+func (c *mqlAwsEc2Securitygroup) GetIpPermissionsEgress() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IpPermissionsEgress, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.securitygroup", c.__id, "ipPermissionsEgress")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -28223,10 +28223,10 @@ type mqlAwsEc2SecuritygroupIppermission struct {
 	FromPort plugin.TValue[int64]
 	ToPort plugin.TValue[int64]
 	IpProtocol plugin.TValue[string]
-	IpRanges plugin.TValue[[]interface{}]
-	Ipv6Ranges plugin.TValue[[]interface{}]
-	PrefixListIds plugin.TValue[[]interface{}]
-	UserIdGroupPairs plugin.TValue[[]interface{}]
+	IpRanges plugin.TValue[[]any]
+	Ipv6Ranges plugin.TValue[[]any]
+	PrefixListIds plugin.TValue[[]any]
+	UserIdGroupPairs plugin.TValue[[]any]
 }
 
 // createAwsEc2SecuritygroupIppermission creates a new instance of this resource
@@ -28282,19 +28282,19 @@ func (c *mqlAwsEc2SecuritygroupIppermission) GetIpProtocol() *plugin.TValue[stri
 	return &c.IpProtocol
 }
 
-func (c *mqlAwsEc2SecuritygroupIppermission) GetIpRanges() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsEc2SecuritygroupIppermission) GetIpRanges() *plugin.TValue[[]any] {
 	return &c.IpRanges
 }
 
-func (c *mqlAwsEc2SecuritygroupIppermission) GetIpv6Ranges() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsEc2SecuritygroupIppermission) GetIpv6Ranges() *plugin.TValue[[]any] {
 	return &c.Ipv6Ranges
 }
 
-func (c *mqlAwsEc2SecuritygroupIppermission) GetPrefixListIds() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsEc2SecuritygroupIppermission) GetPrefixListIds() *plugin.TValue[[]any] {
 	return &c.PrefixListIds
 }
 
-func (c *mqlAwsEc2SecuritygroupIppermission) GetUserIdGroupPairs() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsEc2SecuritygroupIppermission) GetUserIdGroupPairs() *plugin.TValue[[]any] {
 	return &c.UserIdGroupPairs
 }
 
@@ -28303,9 +28303,9 @@ type mqlAwsConfig struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsConfigInternal it will be used here
-	Recorders plugin.TValue[[]interface{}]
-	Rules plugin.TValue[[]interface{}]
-	DeliveryChannels plugin.TValue[[]interface{}]
+	Recorders plugin.TValue[[]any]
+	Rules plugin.TValue[[]any]
+	DeliveryChannels plugin.TValue[[]any]
 }
 
 // createAwsConfig creates a new instance of this resource
@@ -28345,15 +28345,15 @@ func (c *mqlAwsConfig) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsConfig) GetRecorders() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Recorders, func() ([]interface{}, error) {
+func (c *mqlAwsConfig) GetRecorders() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Recorders, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.config", c.__id, "recorders")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -28361,15 +28361,15 @@ func (c *mqlAwsConfig) GetRecorders() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsConfig) GetRules() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Rules, func() ([]interface{}, error) {
+func (c *mqlAwsConfig) GetRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rules, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.config", c.__id, "rules")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -28377,15 +28377,15 @@ func (c *mqlAwsConfig) GetRules() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsConfig) GetDeliveryChannels() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.DeliveryChannels, func() ([]interface{}, error) {
+func (c *mqlAwsConfig) GetDeliveryChannels() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DeliveryChannels, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.config", c.__id, "deliveryChannels")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -28400,7 +28400,7 @@ type mqlAwsConfigRule struct {
 	// optional: if you define mqlAwsConfigRuleInternal it will be used here
 	Arn plugin.TValue[string]
 	State plugin.TValue[string]
-	Source plugin.TValue[interface{}]
+	Source plugin.TValue[any]
 	Id plugin.TValue[string]
 	Name plugin.TValue[string]
 	Description plugin.TValue[string]
@@ -28452,7 +28452,7 @@ func (c *mqlAwsConfigRule) GetState() *plugin.TValue[string] {
 	return &c.State
 }
 
-func (c *mqlAwsConfigRule) GetSource() *plugin.TValue[interface{}] {
+func (c *mqlAwsConfigRule) GetSource() *plugin.TValue[any] {
 	return &c.Source
 }
 
@@ -28484,7 +28484,7 @@ type mqlAwsConfigRecorder struct {
 	Recording plugin.TValue[bool]
 	LastStatus plugin.TValue[string]
 	Region plugin.TValue[string]
-	ResourceTypes plugin.TValue[[]interface{}]
+	ResourceTypes plugin.TValue[[]any]
 }
 
 // createAwsConfigRecorder creates a new instance of this resource
@@ -28552,7 +28552,7 @@ func (c *mqlAwsConfigRecorder) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
-func (c *mqlAwsConfigRecorder) GetResourceTypes() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsConfigRecorder) GetResourceTypes() *plugin.TValue[[]any] {
 	return &c.ResourceTypes
 }
 
@@ -28625,7 +28625,7 @@ type mqlAwsEks struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsEksInternal it will be used here
-	Clusters plugin.TValue[[]interface{}]
+	Clusters plugin.TValue[[]any]
 }
 
 // createAwsEks creates a new instance of this resource
@@ -28665,15 +28665,15 @@ func (c *mqlAwsEks) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsEks) GetClusters() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Clusters, func() ([]interface{}, error) {
+func (c *mqlAwsEks) GetClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Clusters, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eks", c.__id, "clusters")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -28693,14 +28693,14 @@ type mqlAwsEksNodegroup struct {
 	ModifiedAt plugin.TValue[*time.Time]
 	Status plugin.TValue[string]
 	CapacityType plugin.TValue[string]
-	ScalingConfig plugin.TValue[interface{}]
-	InstanceTypes plugin.TValue[[]interface{}]
+	ScalingConfig plugin.TValue[any]
+	InstanceTypes plugin.TValue[[]any]
 	AmiType plugin.TValue[string]
 	NodeRole plugin.TValue[*mqlAwsIamRole]
 	DiskSize plugin.TValue[int64]
-	Labels plugin.TValue[map[string]interface{}]
-	Tags plugin.TValue[map[string]interface{}]
-	AutoscalingGroups plugin.TValue[[]interface{}]
+	Labels plugin.TValue[map[string]any]
+	Tags plugin.TValue[map[string]any]
+	AutoscalingGroups plugin.TValue[[]any]
 }
 
 // createAwsEksNodegroup creates a new instance of this resource
@@ -28778,14 +28778,14 @@ func (c *mqlAwsEksNodegroup) GetCapacityType() *plugin.TValue[string] {
 	})
 }
 
-func (c *mqlAwsEksNodegroup) GetScalingConfig() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.ScalingConfig, func() (interface{}, error) {
+func (c *mqlAwsEksNodegroup) GetScalingConfig() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.ScalingConfig, func() (any, error) {
 		return c.scalingConfig()
 	})
 }
 
-func (c *mqlAwsEksNodegroup) GetInstanceTypes() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.InstanceTypes, func() ([]interface{}, error) {
+func (c *mqlAwsEksNodegroup) GetInstanceTypes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InstanceTypes, func() ([]any, error) {
 		return c.instanceTypes()
 	})
 }
@@ -28818,27 +28818,27 @@ func (c *mqlAwsEksNodegroup) GetDiskSize() *plugin.TValue[int64] {
 	})
 }
 
-func (c *mqlAwsEksNodegroup) GetLabels() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+func (c *mqlAwsEksNodegroup) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
 		return c.labels()
 	})
 }
 
-func (c *mqlAwsEksNodegroup) GetTags() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Tags, func() (map[string]interface{}, error) {
+func (c *mqlAwsEksNodegroup) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
 	})
 }
 
-func (c *mqlAwsEksNodegroup) GetAutoscalingGroups() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.AutoscalingGroups, func() ([]interface{}, error) {
+func (c *mqlAwsEksNodegroup) GetAutoscalingGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AutoscalingGroups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eks.nodegroup", c.__id, "autoscalingGroups")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -28857,7 +28857,7 @@ type mqlAwsEksAddon struct {
 	AddonVersion plugin.TValue[string]
 	CreatedAt plugin.TValue[*time.Time]
 	ModifiedAt plugin.TValue[*time.Time]
-	Tags plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[map[string]any]
 	Publisher plugin.TValue[string]
 	Owner plugin.TValue[string]
 	ConfigurationValues plugin.TValue[string]
@@ -28929,8 +28929,8 @@ func (c *mqlAwsEksAddon) GetModifiedAt() *plugin.TValue[*time.Time] {
 	})
 }
 
-func (c *mqlAwsEksAddon) GetTags() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Tags, func() (map[string]interface{}, error) {
+func (c *mqlAwsEksAddon) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
 	})
 }
@@ -28961,18 +28961,18 @@ type mqlAwsEksCluster struct {
 	Name plugin.TValue[string]
 	Arn plugin.TValue[string]
 	Region plugin.TValue[string]
-	Tags plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[map[string]any]
 	Endpoint plugin.TValue[string]
 	Version plugin.TValue[string]
 	PlatformVersion plugin.TValue[string]
 	Status plugin.TValue[string]
-	EncryptionConfig plugin.TValue[[]interface{}]
-	Logging plugin.TValue[interface{}]
-	NetworkConfig plugin.TValue[interface{}]
-	ResourcesVpcConfig plugin.TValue[interface{}]
+	EncryptionConfig plugin.TValue[[]any]
+	Logging plugin.TValue[any]
+	NetworkConfig plugin.TValue[any]
+	ResourcesVpcConfig plugin.TValue[any]
 	CreatedAt plugin.TValue[*time.Time]
-	NodeGroups plugin.TValue[[]interface{}]
-	Addons plugin.TValue[[]interface{}]
+	NodeGroups plugin.TValue[[]any]
+	Addons plugin.TValue[[]any]
 	IamRole plugin.TValue[*mqlAwsIamRole]
 	SupportType plugin.TValue[string]
 	AuthenticationMode plugin.TValue[string]
@@ -29028,7 +29028,7 @@ func (c *mqlAwsEksCluster) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
-func (c *mqlAwsEksCluster) GetTags() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAwsEksCluster) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
@@ -29048,19 +29048,19 @@ func (c *mqlAwsEksCluster) GetStatus() *plugin.TValue[string] {
 	return &c.Status
 }
 
-func (c *mqlAwsEksCluster) GetEncryptionConfig() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsEksCluster) GetEncryptionConfig() *plugin.TValue[[]any] {
 	return &c.EncryptionConfig
 }
 
-func (c *mqlAwsEksCluster) GetLogging() *plugin.TValue[interface{}] {
+func (c *mqlAwsEksCluster) GetLogging() *plugin.TValue[any] {
 	return &c.Logging
 }
 
-func (c *mqlAwsEksCluster) GetNetworkConfig() *plugin.TValue[interface{}] {
+func (c *mqlAwsEksCluster) GetNetworkConfig() *plugin.TValue[any] {
 	return &c.NetworkConfig
 }
 
-func (c *mqlAwsEksCluster) GetResourcesVpcConfig() *plugin.TValue[interface{}] {
+func (c *mqlAwsEksCluster) GetResourcesVpcConfig() *plugin.TValue[any] {
 	return &c.ResourcesVpcConfig
 }
 
@@ -29068,15 +29068,15 @@ func (c *mqlAwsEksCluster) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
 
-func (c *mqlAwsEksCluster) GetNodeGroups() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.NodeGroups, func() ([]interface{}, error) {
+func (c *mqlAwsEksCluster) GetNodeGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NodeGroups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eks.cluster", c.__id, "nodeGroups")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -29084,15 +29084,15 @@ func (c *mqlAwsEksCluster) GetNodeGroups() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsEksCluster) GetAddons() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Addons, func() ([]interface{}, error) {
+func (c *mqlAwsEksCluster) GetAddons() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Addons, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eks.cluster", c.__id, "addons")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -29121,8 +29121,8 @@ type mqlAwsNeptune struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsNeptuneInternal it will be used here
-	Clusters plugin.TValue[[]interface{}]
-	Instances plugin.TValue[[]interface{}]
+	Clusters plugin.TValue[[]any]
+	Instances plugin.TValue[[]any]
 }
 
 // createAwsNeptune creates a new instance of this resource
@@ -29162,15 +29162,15 @@ func (c *mqlAwsNeptune) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsNeptune) GetClusters() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Clusters, func() ([]interface{}, error) {
+func (c *mqlAwsNeptune) GetClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Clusters, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.neptune", c.__id, "clusters")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -29178,15 +29178,15 @@ func (c *mqlAwsNeptune) GetClusters() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsNeptune) GetInstances() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Instances, func() ([]interface{}, error) {
+func (c *mqlAwsNeptune) GetInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Instances, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.neptune", c.__id, "instances")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -29208,7 +29208,7 @@ type mqlAwsNeptuneCluster struct {
 	KmsKeyId plugin.TValue[string]
 	Region plugin.TValue[string]
 	AutomaticRestartTime plugin.TValue[*time.Time]
-	AvailabilityZones plugin.TValue[[]interface{}]
+	AvailabilityZones plugin.TValue[[]any]
 	BackupRetentionPeriod plugin.TValue[int64]
 	CreatedAt plugin.TValue[*time.Time]
 	CrossAccountClone plugin.TValue[bool]
@@ -29217,7 +29217,7 @@ type mqlAwsNeptuneCluster struct {
 	ClusterResourceId plugin.TValue[string]
 	DeletionProtection plugin.TValue[bool]
 	EarliestRestorableTime plugin.TValue[*time.Time]
-	EnabledCloudwatchLogsExports plugin.TValue[[]interface{}]
+	EnabledCloudwatchLogsExports plugin.TValue[[]any]
 	Endpoint plugin.TValue[string]
 	IamDatabaseAuthenticationEnabled plugin.TValue[bool]
 	LatestRestorableTime plugin.TValue[*time.Time]
@@ -29299,7 +29299,7 @@ func (c *mqlAwsNeptuneCluster) GetAutomaticRestartTime() *plugin.TValue[*time.Ti
 	return &c.AutomaticRestartTime
 }
 
-func (c *mqlAwsNeptuneCluster) GetAvailabilityZones() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsNeptuneCluster) GetAvailabilityZones() *plugin.TValue[[]any] {
 	return &c.AvailabilityZones
 }
 
@@ -29335,7 +29335,7 @@ func (c *mqlAwsNeptuneCluster) GetEarliestRestorableTime() *plugin.TValue[*time.
 	return &c.EarliestRestorableTime
 }
 
-func (c *mqlAwsNeptuneCluster) GetEnabledCloudwatchLogsExports() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsNeptuneCluster) GetEnabledCloudwatchLogsExports() *plugin.TValue[[]any] {
 	return &c.EnabledCloudwatchLogsExports
 }
 
@@ -29398,8 +29398,8 @@ type mqlAwsNeptuneInstance struct {
 	Status plugin.TValue[string]
 	Port plugin.TValue[int64]
 	DeletionProtection plugin.TValue[bool]
-	EnabledCloudwatchLogsExports plugin.TValue[[]interface{}]
-	Endpoint plugin.TValue[interface{}]
+	EnabledCloudwatchLogsExports plugin.TValue[[]any]
+	Endpoint plugin.TValue[any]
 	Engine plugin.TValue[string]
 	EngineVersion plugin.TValue[string]
 	EnhancedMonitoringResourceArn plugin.TValue[string]
@@ -29492,11 +29492,11 @@ func (c *mqlAwsNeptuneInstance) GetDeletionProtection() *plugin.TValue[bool] {
 	return &c.DeletionProtection
 }
 
-func (c *mqlAwsNeptuneInstance) GetEnabledCloudwatchLogsExports() *plugin.TValue[[]interface{}] {
+func (c *mqlAwsNeptuneInstance) GetEnabledCloudwatchLogsExports() *plugin.TValue[[]any] {
 	return &c.EnabledCloudwatchLogsExports
 }
 
-func (c *mqlAwsNeptuneInstance) GetEndpoint() *plugin.TValue[interface{}] {
+func (c *mqlAwsNeptuneInstance) GetEndpoint() *plugin.TValue[any] {
 	return &c.Endpoint
 }
 
@@ -29577,8 +29577,8 @@ type mqlAwsTimestreamLiveanalytics struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsTimestreamLiveanalyticsInternal it will be used here
-	Databases plugin.TValue[[]interface{}]
-	Tables plugin.TValue[[]interface{}]
+	Databases plugin.TValue[[]any]
+	Tables plugin.TValue[[]any]
 }
 
 // createAwsTimestreamLiveanalytics creates a new instance of this resource
@@ -29618,15 +29618,15 @@ func (c *mqlAwsTimestreamLiveanalytics) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsTimestreamLiveanalytics) GetDatabases() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Databases, func() ([]interface{}, error) {
+func (c *mqlAwsTimestreamLiveanalytics) GetDatabases() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Databases, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.timestream.liveanalytics", c.__id, "databases")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -29634,15 +29634,15 @@ func (c *mqlAwsTimestreamLiveanalytics) GetDatabases() *plugin.TValue[[]interfac
 	})
 }
 
-func (c *mqlAwsTimestreamLiveanalytics) GetTables() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Tables, func() ([]interface{}, error) {
+func (c *mqlAwsTimestreamLiveanalytics) GetTables() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tables, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.timestream.liveanalytics", c.__id, "tables")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -29735,8 +29735,8 @@ type mqlAwsTimestreamLiveanalyticsTable struct {
 	Region plugin.TValue[string]
 	CreatedAt plugin.TValue[*time.Time]
 	UpdatedAt plugin.TValue[*time.Time]
-	MagneticStoreWriteProperties plugin.TValue[interface{}]
-	RetentionProperties plugin.TValue[interface{}]
+	MagneticStoreWriteProperties plugin.TValue[any]
+	RetentionProperties plugin.TValue[any]
 }
 
 // createAwsTimestreamLiveanalyticsTable creates a new instance of this resource
@@ -29795,11 +29795,11 @@ func (c *mqlAwsTimestreamLiveanalyticsTable) GetUpdatedAt() *plugin.TValue[*time
 	return &c.UpdatedAt
 }
 
-func (c *mqlAwsTimestreamLiveanalyticsTable) GetMagneticStoreWriteProperties() *plugin.TValue[interface{}] {
+func (c *mqlAwsTimestreamLiveanalyticsTable) GetMagneticStoreWriteProperties() *plugin.TValue[any] {
 	return &c.MagneticStoreWriteProperties
 }
 
-func (c *mqlAwsTimestreamLiveanalyticsTable) GetRetentionProperties() *plugin.TValue[interface{}] {
+func (c *mqlAwsTimestreamLiveanalyticsTable) GetRetentionProperties() *plugin.TValue[any] {
 	return &c.RetentionProperties
 }
 
@@ -29808,7 +29808,7 @@ type mqlAwsCodedeploy struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsCodedeployInternal it will be used here
-	Applications plugin.TValue[[]interface{}]
+	Applications plugin.TValue[[]any]
 }
 
 // createAwsCodedeploy creates a new instance of this resource
@@ -29848,15 +29848,15 @@ func (c *mqlAwsCodedeploy) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsCodedeploy) GetApplications() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Applications, func() ([]interface{}, error) {
+func (c *mqlAwsCodedeploy) GetApplications() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Applications, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.codedeploy", c.__id, "applications")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -29875,9 +29875,9 @@ type mqlAwsCodedeployApplication struct {
 	ComputePlatform plugin.TValue[string]
 	CreatedAt plugin.TValue[*time.Time]
 	LinkedToGitHub plugin.TValue[bool]
-	Tags plugin.TValue[map[string]interface{}]
-	DeploymentGroups plugin.TValue[[]interface{}]
-	Deployments plugin.TValue[[]interface{}]
+	Tags plugin.TValue[map[string]any]
+	DeploymentGroups plugin.TValue[[]any]
+	Deployments plugin.TValue[[]any]
 	Region plugin.TValue[string]
 }
 
@@ -29942,21 +29942,21 @@ func (c *mqlAwsCodedeployApplication) GetLinkedToGitHub() *plugin.TValue[bool] {
 	return &c.LinkedToGitHub
 }
 
-func (c *mqlAwsCodedeployApplication) GetTags() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Tags, func() (map[string]interface{}, error) {
+func (c *mqlAwsCodedeployApplication) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
 	})
 }
 
-func (c *mqlAwsCodedeployApplication) GetDeploymentGroups() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.DeploymentGroups, func() ([]interface{}, error) {
+func (c *mqlAwsCodedeployApplication) GetDeploymentGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DeploymentGroups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.codedeploy.application", c.__id, "deploymentGroups")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -29964,15 +29964,15 @@ func (c *mqlAwsCodedeployApplication) GetDeploymentGroups() *plugin.TValue[[]int
 	})
 }
 
-func (c *mqlAwsCodedeployApplication) GetDeployments() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Deployments, func() ([]interface{}, error) {
+func (c *mqlAwsCodedeployApplication) GetDeployments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Deployments, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.codedeploy.application", c.__id, "deployments")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -29995,18 +29995,18 @@ type mqlAwsCodedeployDeploymentGroup struct {
 	DeploymentGroupName plugin.TValue[string]
 	ComputePlatform plugin.TValue[string]
 	ServiceRoleArn plugin.TValue[string]
-	TargetRevision plugin.TValue[interface{}]
-	Tags plugin.TValue[map[string]interface{}]
+	TargetRevision plugin.TValue[any]
+	Tags plugin.TValue[map[string]any]
 	Region plugin.TValue[string]
-	Deployments plugin.TValue[[]interface{}]
-	AutoScalingGroups plugin.TValue[[]interface{}]
-	Ec2TagFilters plugin.TValue[[]interface{}]
-	OnPremisesInstanceTagFilters plugin.TValue[[]interface{}]
+	Deployments plugin.TValue[[]any]
+	AutoScalingGroups plugin.TValue[[]any]
+	Ec2TagFilters plugin.TValue[[]any]
+	OnPremisesInstanceTagFilters plugin.TValue[[]any]
 	LastSuccessfulDeployment plugin.TValue[*mqlAwsCodedeployDeployment]
 	LastAttemptedDeployment plugin.TValue[*mqlAwsCodedeployDeployment]
-	DeploymentStyle plugin.TValue[interface{}]
-	BlueGreenDeploymentConfiguration plugin.TValue[interface{}]
-	LoadBalancerInfo plugin.TValue[interface{}]
+	DeploymentStyle plugin.TValue[any]
+	BlueGreenDeploymentConfiguration plugin.TValue[any]
+	LoadBalancerInfo plugin.TValue[any]
 }
 
 // createAwsCodedeployDeploymentGroup creates a new instance of this resource
@@ -30070,14 +30070,14 @@ func (c *mqlAwsCodedeployDeploymentGroup) GetServiceRoleArn() *plugin.TValue[str
 	return &c.ServiceRoleArn
 }
 
-func (c *mqlAwsCodedeployDeploymentGroup) GetTargetRevision() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.TargetRevision, func() (interface{}, error) {
+func (c *mqlAwsCodedeployDeploymentGroup) GetTargetRevision() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.TargetRevision, func() (any, error) {
 		return c.targetRevision()
 	})
 }
 
-func (c *mqlAwsCodedeployDeploymentGroup) GetTags() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Tags, func() (map[string]interface{}, error) {
+func (c *mqlAwsCodedeployDeploymentGroup) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
 	})
 }
@@ -30086,15 +30086,15 @@ func (c *mqlAwsCodedeployDeploymentGroup) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
-func (c *mqlAwsCodedeployDeploymentGroup) GetDeployments() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Deployments, func() ([]interface{}, error) {
+func (c *mqlAwsCodedeployDeploymentGroup) GetDeployments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Deployments, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.codedeploy.deploymentGroup", c.__id, "deployments")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -30102,15 +30102,15 @@ func (c *mqlAwsCodedeployDeploymentGroup) GetDeployments() *plugin.TValue[[]inte
 	})
 }
 
-func (c *mqlAwsCodedeployDeploymentGroup) GetAutoScalingGroups() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.AutoScalingGroups, func() ([]interface{}, error) {
+func (c *mqlAwsCodedeployDeploymentGroup) GetAutoScalingGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AutoScalingGroups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.codedeploy.deploymentGroup", c.__id, "autoScalingGroups")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -30118,14 +30118,14 @@ func (c *mqlAwsCodedeployDeploymentGroup) GetAutoScalingGroups() *plugin.TValue[
 	})
 }
 
-func (c *mqlAwsCodedeployDeploymentGroup) GetEc2TagFilters() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Ec2TagFilters, func() ([]interface{}, error) {
+func (c *mqlAwsCodedeployDeploymentGroup) GetEc2TagFilters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Ec2TagFilters, func() ([]any, error) {
 		return c.ec2TagFilters()
 	})
 }
 
-func (c *mqlAwsCodedeployDeploymentGroup) GetOnPremisesInstanceTagFilters() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.OnPremisesInstanceTagFilters, func() ([]interface{}, error) {
+func (c *mqlAwsCodedeployDeploymentGroup) GetOnPremisesInstanceTagFilters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OnPremisesInstanceTagFilters, func() ([]any, error) {
 		return c.onPremisesInstanceTagFilters()
 	})
 }
@@ -30162,20 +30162,20 @@ func (c *mqlAwsCodedeployDeploymentGroup) GetLastAttemptedDeployment() *plugin.T
 	})
 }
 
-func (c *mqlAwsCodedeployDeploymentGroup) GetDeploymentStyle() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.DeploymentStyle, func() (interface{}, error) {
+func (c *mqlAwsCodedeployDeploymentGroup) GetDeploymentStyle() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.DeploymentStyle, func() (any, error) {
 		return c.deploymentStyle()
 	})
 }
 
-func (c *mqlAwsCodedeployDeploymentGroup) GetBlueGreenDeploymentConfiguration() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.BlueGreenDeploymentConfiguration, func() (interface{}, error) {
+func (c *mqlAwsCodedeployDeploymentGroup) GetBlueGreenDeploymentConfiguration() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.BlueGreenDeploymentConfiguration, func() (any, error) {
 		return c.blueGreenDeploymentConfiguration()
 	})
 }
 
-func (c *mqlAwsCodedeployDeploymentGroup) GetLoadBalancerInfo() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.LoadBalancerInfo, func() (interface{}, error) {
+func (c *mqlAwsCodedeployDeploymentGroup) GetLoadBalancerInfo() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.LoadBalancerInfo, func() (any, error) {
 		return c.loadBalancerInfo()
 	})
 }
@@ -30196,13 +30196,13 @@ type mqlAwsCodedeployDeployment struct {
 	Description plugin.TValue[string]
 	Creator plugin.TValue[string]
 	IgnoreApplicationStopFailures plugin.TValue[bool]
-	TargetInstances plugin.TValue[interface{}]
-	Revision plugin.TValue[interface{}]
+	TargetInstances plugin.TValue[any]
+	Revision plugin.TValue[any]
 	Region plugin.TValue[string]
-	ErrorInformation plugin.TValue[interface{}]
-	DeploymentOverview plugin.TValue[interface{}]
+	ErrorInformation plugin.TValue[any]
+	DeploymentOverview plugin.TValue[any]
 	IsRollback plugin.TValue[bool]
-	RollbackInfo plugin.TValue[interface{}]
+	RollbackInfo plugin.TValue[any]
 }
 
 // createAwsCodedeployDeployment creates a new instance of this resource
@@ -30286,14 +30286,14 @@ func (c *mqlAwsCodedeployDeployment) GetIgnoreApplicationStopFailures() *plugin.
 	return &c.IgnoreApplicationStopFailures
 }
 
-func (c *mqlAwsCodedeployDeployment) GetTargetInstances() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.TargetInstances, func() (interface{}, error) {
+func (c *mqlAwsCodedeployDeployment) GetTargetInstances() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.TargetInstances, func() (any, error) {
 		return c.targetInstances()
 	})
 }
 
-func (c *mqlAwsCodedeployDeployment) GetRevision() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Revision, func() (interface{}, error) {
+func (c *mqlAwsCodedeployDeployment) GetRevision() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Revision, func() (any, error) {
 		return c.revision()
 	})
 }
@@ -30302,14 +30302,14 @@ func (c *mqlAwsCodedeployDeployment) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
-func (c *mqlAwsCodedeployDeployment) GetErrorInformation() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.ErrorInformation, func() (interface{}, error) {
+func (c *mqlAwsCodedeployDeployment) GetErrorInformation() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.ErrorInformation, func() (any, error) {
 		return c.errorInformation()
 	})
 }
 
-func (c *mqlAwsCodedeployDeployment) GetDeploymentOverview() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.DeploymentOverview, func() (interface{}, error) {
+func (c *mqlAwsCodedeployDeployment) GetDeploymentOverview() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.DeploymentOverview, func() (any, error) {
 		return c.deploymentOverview()
 	})
 }
@@ -30320,8 +30320,8 @@ func (c *mqlAwsCodedeployDeployment) GetIsRollback() *plugin.TValue[bool] {
 	})
 }
 
-func (c *mqlAwsCodedeployDeployment) GetRollbackInfo() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.RollbackInfo, func() (interface{}, error) {
+func (c *mqlAwsCodedeployDeployment) GetRollbackInfo() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.RollbackInfo, func() (any, error) {
 		return c.rollbackInfo()
 	})
 }

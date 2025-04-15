@@ -7,10 +7,10 @@ import (
 	"errors"
 	"sync"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/utils/multierr"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/utils/multierr"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -51,9 +51,9 @@ func initK8sNode(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 	return nil, x, nil
 }
 
-func (k *mqlK8s) nodes() ([]interface{}, error) {
+func (k *mqlK8s) nodes() ([]any, error) {
 	k.mqlK8sInternal.nodesByName = make(map[string]*mqlK8sNode)
-	return k8sResourceToMql(k.MqlRuntime, gvkString(corev1.SchemeGroupVersion.WithKind("nodes")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToMql(k.MqlRuntime, gvkString(corev1.SchemeGroupVersion.WithKind("nodes")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (any, error) {
 		ts := obj.GetCreationTimestamp()
 
 		n, ok := obj.(*corev1.Node)
@@ -91,10 +91,10 @@ func (k *mqlK8sNode) id() (string, error) {
 	return k.Id.Data, nil
 }
 
-func (k *mqlK8sNode) annotations() (map[string]interface{}, error) {
+func (k *mqlK8sNode) annotations() (map[string]any, error) {
 	return convert.MapToInterfaceMap(k.obj.GetAnnotations()), nil
 }
 
-func (k *mqlK8sNode) labels() (map[string]interface{}, error) {
+func (k *mqlK8sNode) labels() (map[string]any, error) {
 	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
 }

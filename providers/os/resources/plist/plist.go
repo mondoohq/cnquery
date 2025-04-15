@@ -13,7 +13,7 @@ import (
 
 func ToXml(r io.ReadSeeker) ([]byte, error) {
 	// convert file format to xml
-	var val interface{}
+	var val any
 	dec := plist.NewDecoder(r)
 	err := dec.Decode(&val)
 	if err != nil {
@@ -26,8 +26,8 @@ func ToXml(r io.ReadSeeker) ([]byte, error) {
 	return out.Bytes(), err
 }
 
-func Decode(r io.ReadSeeker) (map[string]interface{}, error) {
-	var data map[string]interface{}
+func Decode(r io.ReadSeeker) (map[string]any, error) {
+	var data map[string]any
 	decoder := plist.NewDecoder(r)
 	err := decoder.Decode(&data)
 	if err != nil {
@@ -43,7 +43,7 @@ func Decode(r io.ReadSeeker) (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	var dataJson map[string]interface{}
+	var dataJson map[string]any
 	err = json.Unmarshal(jsondata, &dataJson)
 	if err != nil {
 		return nil, err

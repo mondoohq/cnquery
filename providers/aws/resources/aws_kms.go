@@ -11,11 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/kms/types"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
 )
 
 const (
@@ -26,10 +26,10 @@ func (a *mqlAwsKms) id() (string, error) {
 	return "aws.kms", nil
 }
 
-func (a *mqlAwsKms) keys() ([]interface{}, error) {
+func (a *mqlAwsKms) keys() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getKeys(conn), 5)
 	poolOfJobs.Run()
 
@@ -39,7 +39,7 @@ func (a *mqlAwsKms) keys() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 	return res, nil
 }
@@ -56,7 +56,7 @@ func (a *mqlAwsKms) getKeys(conn *connection.AwsConnection) []*jobpool.Job {
 			log.Debug().Msgf("kms>getKeys>calling aws with region %s", region)
 
 			svc := conn.Kms(region)
-			res := []interface{}{}
+			res := []any{}
 
 			keys := make([]types.KeyListEntry, 0)
 			params := &kms.ListKeysInput{}
@@ -91,7 +91,7 @@ func (a *mqlAwsKms) getKeys(conn *connection.AwsConnection) []*jobpool.Job {
 	return tasks
 }
 
-func (a *mqlAwsKmsKey) metadata() (interface{}, error) {
+func (a *mqlAwsKmsKey) metadata() (any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	key := a.Arn.Data
 

@@ -23,7 +23,7 @@ func (c *StringSet) Exist(k string) bool {
 // Range walks the list of keys in the set and executes the function
 // as long as it returns true
 func (c *StringSet) Range(f func(string) bool) {
-	c.Map.Range(func(key, value interface{}) bool {
+	c.Map.Range(func(key, value any) bool {
 		return f(key.(string))
 	})
 }
@@ -31,7 +31,7 @@ func (c *StringSet) Range(f func(string) bool) {
 // List all keys
 func (c *StringSet) List() []string {
 	res := []string{}
-	c.Map.Range(func(key, value interface{}) bool {
+	c.Map.Range(func(key, value any) bool {
 		res = append(res, key.(string))
 		return true
 	})
@@ -66,7 +66,7 @@ func (s *StringToStrings) Exist(key string, value string) bool {
 // List all keys and their associations
 func (s *StringToStrings) List() map[string][]string {
 	res := make(map[string][]string)
-	s.Map.Range(func(key, value interface{}) bool {
+	s.Map.Range(func(key, value any) bool {
 		res[key.(string)] = value.(*StringSet).List()
 		return true
 	})

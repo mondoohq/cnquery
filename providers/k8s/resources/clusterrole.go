@@ -7,10 +7,10 @@ import (
 	"errors"
 	"sync"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/types"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -21,8 +21,8 @@ type mqlK8sRbacClusterroleInternal struct {
 	obj  *rbacv1.ClusterRole
 }
 
-func (k *mqlK8s) clusterroles() ([]interface{}, error) {
-	return k8sResourceToMql(k.MqlRuntime, gvkString(rbacv1.SchemeGroupVersion.WithKind("clusterroles")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+func (k *mqlK8s) clusterroles() ([]any, error) {
+	return k8sResourceToMql(k.MqlRuntime, gvkString(rbacv1.SchemeGroupVersion.WithKind("clusterroles")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (any, error) {
 		ts := obj.GetCreationTimestamp()
 		clusterRole, ok := resource.(*rbacv1.ClusterRole)
 		if !ok {
@@ -57,7 +57,7 @@ func (k *mqlK8s) clusterroles() ([]interface{}, error) {
 	})
 }
 
-func (k *mqlK8sRbacClusterrole) manifest() (map[string]interface{}, error) {
+func (k *mqlK8sRbacClusterrole) manifest() (map[string]any, error) {
 	manifest, err := convert.JsonToDict(k.obj)
 	if err != nil {
 		return nil, err
@@ -70,13 +70,13 @@ func (k *mqlK8sRbacClusterrole) id() (string, error) {
 }
 
 func initK8sRbacClusterrole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	return initResource[*mqlK8sRbacClusterrole](runtime, args, func(k *mqlK8s) *plugin.TValue[[]interface{}] { return k.GetClusterroles() })
+	return initResource[*mqlK8sRbacClusterrole](runtime, args, func(k *mqlK8s) *plugin.TValue[[]any] { return k.GetClusterroles() })
 }
 
-func (k *mqlK8sRbacClusterrole) annotations() (map[string]interface{}, error) {
+func (k *mqlK8sRbacClusterrole) annotations() (map[string]any, error) {
 	return convert.MapToInterfaceMap(k.obj.GetAnnotations()), nil
 }
 
-func (k *mqlK8sRbacClusterrole) labels() (map[string]interface{}, error) {
+func (k *mqlK8sRbacClusterrole) labels() (map[string]any, error) {
 	return convert.MapToInterfaceMap(k.obj.GetAnnotations()), nil
 }

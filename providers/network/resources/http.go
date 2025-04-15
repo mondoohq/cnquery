@@ -13,12 +13,12 @@ import (
 	"sync"
 	"time"
 
-	"go.mondoo.com/cnquery/v11/checksums"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/network/connection"
-	"go.mondoo.com/cnquery/v11/types"
-	"go.mondoo.com/cnquery/v11/utils/sortx"
+	"go.mondoo.com/cnquery/v12/checksums"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/network/connection"
+	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/cnquery/v12/utils/sortx"
 )
 
 type mqlHttpGetInternal struct {
@@ -124,11 +124,11 @@ func (x *mqlHttpGet) header() (*mqlHttpHeader, error) {
 	}
 
 	header := x.resp.Data.Header
-	params := make(map[string]interface{}, len(header))
+	params := make(map[string]any, len(header))
 	for key := range header {
 		mkey := textproto.CanonicalMIMEHeaderKey(key)
 		vals := header[mkey]
-		ivals := make([]interface{}, len(vals))
+		ivals := make([]any, len(vals))
 		for j := range vals {
 			ivals[j] = vals[j]
 		}
@@ -173,11 +173,11 @@ func (x *mqlHttpGet) body() (string, error) {
 	return string(raw), err
 }
 
-func parseHeaderFields(raw []interface{}, f func(key string, value string)) {
+func parseHeaderFields(raw []any, f func(key string, value string)) {
 	parseHeaderFieldsD(raw, f, ";", "=")
 }
 
-func parseHeaderFieldsD(raw []interface{}, f func(key string, value string), delimFields string, delimKV string) {
+func parseHeaderFieldsD(raw []any, f func(key string, value string), delimFields string, delimKV string) {
 	for i := range raw {
 		h := raw[i].(string)
 		fields := strings.Split(h, delimFields)
@@ -193,13 +193,13 @@ func parseHeaderFieldsD(raw []interface{}, f func(key string, value string), del
 	}
 }
 
-func parseSingleHeaderValue[T any](raw interface{}, found bool, field *plugin.TValue[T]) (string, error) {
+func parseSingleHeaderValue[T any](raw any, found bool, field *plugin.TValue[T]) (string, error) {
 	if !found {
 		field.State = plugin.StateIsSet | plugin.StateIsNull
 		return "", nil
 	}
 
-	arr := raw.([]interface{})
+	arr := raw.([]any)
 	var res strings.Builder
 	for i := range arr {
 		if i != 0 {
@@ -225,7 +225,7 @@ func (x *mqlHttpHeader) sts() (*mqlHttpHeaderSts, error) {
 	includeSubDomains := false
 	maxAge := llx.NilData
 
-	parseHeaderFields(raw.([]interface{}), func(key string, value string) {
+	parseHeaderFields(raw.([]any), func(key string, value string) {
 		switch key {
 		case "preload":
 			preload = true
@@ -282,7 +282,7 @@ func (x *mqlHttpHeader) xXssProtection() (*mqlHttpHeaderXssProtection, error) {
 	enabled := llx.NilData
 	mode := llx.NilData
 	report := llx.NilData
-	parseHeaderFields(raw.([]interface{}), func(key string, value string) {
+	parseHeaderFields(raw.([]any), func(key string, value string) {
 		switch key {
 		case "0":
 			enabled = llx.BoolFalse
@@ -341,15 +341,15 @@ func (x *mqlHttpHeader) contentType() (*mqlHttpHeaderContentType, error) {
 
 	typ := llx.NilData
 	params := llx.NilData
-	parseHeaderFields(raw.([]interface{}), func(key string, value string) {
+	parseHeaderFields(raw.([]any), func(key string, value string) {
 		if typ.Value == nil && value == "" {
 			typ = llx.StringData(key)
 			return
 		}
 		if params.Value == nil {
-			params = llx.MapData(map[string]interface{}{}, types.String)
+			params = llx.MapData(map[string]any{}, types.String)
 		}
-		params.Value.(map[string]interface{})[key] = value
+		params.Value.(map[string]any)[key] = value
 	})
 
 	o, err := CreateResource(x.MqlRuntime, "http.header.contentType", map[string]*llx.RawData{
@@ -383,16 +383,16 @@ func (x *mqlHttpHeader) setCookie() (*mqlHttpHeaderSetCookie, error) {
 	cname := llx.NilData
 	cval := llx.NilData
 	params := llx.NilData
-	parseHeaderFields(raw.([]interface{}), func(key string, value string) {
+	parseHeaderFields(raw.([]any), func(key string, value string) {
 		if cname.Value == nil && value != "" {
 			cname = llx.StringData(key)
 			cval = llx.StringData(value)
 			return
 		}
 		if params.Value == nil {
-			params = llx.MapData(map[string]interface{}{}, types.String)
+			params = llx.MapData(map[string]any{}, types.String)
 		}
-		params.Value.(map[string]interface{})[key] = value
+		params.Value.(map[string]any)[key] = value
 	})
 
 	o, err := CreateResource(x.MqlRuntime, "http.header.setCookie", map[string]*llx.RawData{
@@ -406,15 +406,15 @@ func (x *mqlHttpHeader) setCookie() (*mqlHttpHeaderSetCookie, error) {
 	return o.(*mqlHttpHeaderSetCookie), nil
 }
 
-func (x *mqlHttpHeader) csp() (map[string]interface{}, error) {
+func (x *mqlHttpHeader) csp() (map[string]any, error) {
 	raw, ok := x.Params.Data["Content-Security-Policy"]
 	if !ok {
 		x.Csp.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 
-	m := map[string]interface{}{}
-	parseHeaderFieldsD(raw.([]interface{}), func(key string, value string) {
+	m := map[string]any{}
+	parseHeaderFieldsD(raw.([]any), func(key string, value string) {
 		m[key] = value
 	}, ";", " ")
 

@@ -7,8 +7,8 @@ import (
 	"errors"
 	"strings"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 )
 
 func initNtpConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -59,10 +59,10 @@ func (s *mqlNtpConf) content(file *mqlFile) (string, error) {
 	return content.Data, content.Error
 }
 
-func (s *mqlNtpConf) settings(content string) ([]interface{}, error) {
+func (s *mqlNtpConf) settings(content string) ([]any, error) {
 	lines := strings.Split(content, "\n")
 
-	settings := []interface{}{}
+	settings := []any{}
 	var line string
 	for i := range lines {
 		line = lines[i]
@@ -79,8 +79,8 @@ func (s *mqlNtpConf) settings(content string) ([]interface{}, error) {
 	return settings, nil
 }
 
-func (s *mqlNtpConf) servers(settings []interface{}) ([]interface{}, error) {
-	res := []interface{}{}
+func (s *mqlNtpConf) servers(settings []any) ([]any, error) {
+	res := []any{}
 	var line string
 	for i := range settings {
 		line = settings[i].(string)
@@ -92,8 +92,8 @@ func (s *mqlNtpConf) servers(settings []interface{}) ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *mqlNtpConf) restrict(settings []interface{}) ([]interface{}, error) {
-	res := []interface{}{}
+func (s *mqlNtpConf) restrict(settings []any) ([]any, error) {
+	res := []any{}
 	var line string
 	for i := range settings {
 		line = settings[i].(string)
@@ -105,8 +105,8 @@ func (s *mqlNtpConf) restrict(settings []interface{}) ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *mqlNtpConf) fudge(settings []interface{}) ([]interface{}, error) {
-	res := []interface{}{}
+func (s *mqlNtpConf) fudge(settings []any) ([]any, error) {
+	res := []any{}
 	var line string
 	for i := range settings {
 		line = settings[i].(string)

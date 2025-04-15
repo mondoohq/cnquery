@@ -11,15 +11,15 @@ import (
 	"sync"
 	"time"
 
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/gcp/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v12/types"
 
 	kms "cloud.google.com/go/kms/apiv1"
 	"cloud.google.com/go/kms/apiv1/kmspb"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v12/llx"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	"google.golang.org/genproto/googleapis/cloud/location"
@@ -156,7 +156,7 @@ func (g *mqlGcpProjectKmsServiceKeyringCryptokeyVersionAttestationCertificatecha
 	return fmt.Sprintf("%s/attestation/certchains", name), nil
 }
 
-func (g *mqlGcpProjectKmsService) locations() ([]interface{}, error) {
+func (g *mqlGcpProjectKmsService) locations() ([]any, error) {
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -177,7 +177,7 @@ func (g *mqlGcpProjectKmsService) locations() ([]interface{}, error) {
 	}
 	defer kmsSvc.Close()
 
-	var locations []interface{}
+	var locations []any
 	it := kmsSvc.ListLocations(ctx, &location.ListLocationsRequest{Name: fmt.Sprintf("projects/%s", projectId)})
 	for {
 		l, err := it.Next()
@@ -193,7 +193,7 @@ func (g *mqlGcpProjectKmsService) locations() ([]interface{}, error) {
 	return locations, nil
 }
 
-func (g *mqlGcpProjectKmsService) keyrings() ([]interface{}, error) {
+func (g *mqlGcpProjectKmsService) keyrings() ([]any, error) {
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -219,7 +219,7 @@ func (g *mqlGcpProjectKmsService) keyrings() ([]interface{}, error) {
 	}
 	defer kmsSvc.Close()
 
-	var keyrings []interface{}
+	var keyrings []any
 	var wg sync.WaitGroup
 	wg.Add(len(locations.Data))
 	mux := &sync.Mutex{}
@@ -261,7 +261,7 @@ func (g *mqlGcpProjectKmsService) keyrings() ([]interface{}, error) {
 	return keyrings, nil
 }
 
-func (g *mqlGcpProjectKmsServiceKeyring) cryptokeys() ([]interface{}, error) {
+func (g *mqlGcpProjectKmsServiceKeyring) cryptokeys() ([]any, error) {
 	if g.ResourcePath.Error != nil {
 		return nil, g.ResourcePath.Error
 	}
@@ -282,7 +282,7 @@ func (g *mqlGcpProjectKmsServiceKeyring) cryptokeys() ([]interface{}, error) {
 	}
 	defer kmsSvc.Close()
 
-	var keys []interface{}
+	var keys []any
 
 	it := kmsSvc.ListCryptoKeys(ctx, &kmspb.ListCryptoKeysRequest{
 		Parent: keyring,
@@ -309,7 +309,7 @@ func (g *mqlGcpProjectKmsServiceKeyring) cryptokeys() ([]interface{}, error) {
 			}
 		}
 
-		var versionTemplate map[string]interface{}
+		var versionTemplate map[string]any
 		if k.VersionTemplate != nil {
 			versionTemplate, err = convert.JsonToDict(mqlVersionTemplate{
 				ProtectionLevel: k.VersionTemplate.ProtectionLevel.String(),
@@ -353,7 +353,7 @@ func (g *mqlGcpProjectKmsServiceKeyring) cryptokeys() ([]interface{}, error) {
 	return keys, nil
 }
 
-func (g *mqlGcpProjectKmsServiceKeyringCryptokey) versions() ([]interface{}, error) {
+func (g *mqlGcpProjectKmsServiceKeyringCryptokey) versions() ([]any, error) {
 	if g.ResourcePath.Error != nil {
 		return nil, g.ResourcePath.Error
 	}
@@ -374,7 +374,7 @@ func (g *mqlGcpProjectKmsServiceKeyringCryptokey) versions() ([]interface{}, err
 	}
 	defer kmsSvc.Close()
 
-	var versions []interface{}
+	var versions []any
 
 	it := kmsSvc.ListCryptoKeyVersions(ctx, &kmspb.ListCryptoKeyVersionsRequest{
 		Parent: cryptokey,
@@ -395,7 +395,7 @@ func (g *mqlGcpProjectKmsServiceKeyringCryptokey) versions() ([]interface{}, err
 	return versions, nil
 }
 
-func (g *mqlGcpProjectKmsServiceKeyringCryptokey) iamPolicy() ([]interface{}, error) {
+func (g *mqlGcpProjectKmsServiceKeyringCryptokey) iamPolicy() ([]any, error) {
 	if g.ResourcePath.Error != nil {
 		return nil, g.ResourcePath.Error
 	}
@@ -420,7 +420,7 @@ func (g *mqlGcpProjectKmsServiceKeyringCryptokey) iamPolicy() ([]interface{}, er
 	if err != nil {
 		return nil, err
 	}
-	res := make([]interface{}, 0, len(policy.Bindings))
+	res := make([]any, 0, len(policy.Bindings))
 	for i, b := range policy.Bindings {
 		mqlBinding, err := CreateResource(g.MqlRuntime, "gcp.resourcemanager.binding", map[string]*llx.RawData{
 			"id":      llx.StringData(cryptokey + "-" + strconv.Itoa(i)),

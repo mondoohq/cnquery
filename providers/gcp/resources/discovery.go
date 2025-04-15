@@ -14,10 +14,10 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/google"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/gcp/connection"
-	"go.mondoo.com/cnquery/v11/utils/stringx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v12/utils/stringx"
 	"google.golang.org/api/cloudresourcemanager/v3"
 )
 
@@ -844,7 +844,7 @@ func (a *GcrImages) List() ([]*inventory.Asset, error) {
 	return assets, nil
 }
 
-func mapStrInterfaceToMapStrStr(m map[string]interface{}) map[string]string {
+func mapStrInterfaceToMapStrStr(m map[string]any) map[string]string {
 	strMap := make(map[string]string)
 	for k, v := range m {
 		if v != nil {

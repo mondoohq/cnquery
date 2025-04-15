@@ -8,12 +8,12 @@ import (
 	"runtime"
 	"strings"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/mock"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/registry"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/powershell"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/registry"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/powershell"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 )
@@ -113,7 +113,7 @@ func (k *mqlRegistrykey) getEntries() ([]registry.RegistryKeyItem, error) {
 
 // Deprecated: properties returns the properties of a registry key
 // This function is deprecated and will be removed in a future release
-func (k *mqlRegistrykey) properties() (map[string]interface{}, error) {
+func (k *mqlRegistrykey) properties() (map[string]any, error) {
 	entries, err := k.getEntries()
 	if err != nil {
 		return nil, err
@@ -123,7 +123,7 @@ func (k *mqlRegistrykey) properties() (map[string]interface{}, error) {
 		return nil, nil
 	}
 
-	res := map[string]interface{}{}
+	res := map[string]any{}
 	for i := range entries {
 		rkey := entries[i]
 		res[rkey.Key] = rkey.String()
@@ -133,7 +133,7 @@ func (k *mqlRegistrykey) properties() (map[string]interface{}, error) {
 }
 
 // items returns a list of registry key property resources
-func (k *mqlRegistrykey) items() ([]interface{}, error) {
+func (k *mqlRegistrykey) items() ([]any, error) {
 	entries, err := k.getEntries()
 	if err != nil {
 		return nil, err
@@ -144,7 +144,7 @@ func (k *mqlRegistrykey) items() ([]interface{}, error) {
 	}
 
 	// create MQL mount entry resources for each mount
-	items := make([]interface{}, len(entries))
+	items := make([]any, len(entries))
 	for i, entry := range entries {
 		o, err := CreateResource(k.MqlRuntime, "registrykey.property", map[string]*llx.RawData{
 			"path":   llx.StringData(k.Path.Data),
@@ -164,9 +164,9 @@ func (k *mqlRegistrykey) items() ([]interface{}, error) {
 	return items, nil
 }
 
-func (k *mqlRegistrykey) children() ([]interface{}, error) {
+func (k *mqlRegistrykey) children() ([]any, error) {
 	conn := k.MqlRuntime.Connection.(shared.Connection)
-	res := []interface{}{}
+	res := []any{}
 	var children []registry.RegistryKeyChild
 	if conn.Type() == shared.Type_Local && runtime.GOOS == "windows" {
 		var err error
@@ -283,7 +283,7 @@ func (p *mqlRegistrykeyProperty) compute_type() (string, error) {
 	return "", errors.New("requested property does not exist")
 }
 
-func (p *mqlRegistrykeyProperty) data() (interface{}, error) {
+func (p *mqlRegistrykeyProperty) data() (any, error) {
 	// NOTE: if we reach here the value has not been set in init, therefore we return an error
 	return "", errors.New("requested property does not exist")
 }

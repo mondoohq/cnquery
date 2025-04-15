@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	pp "go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	pp "go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 	gomock "go.uber.org/mock/gomock"
 )
 

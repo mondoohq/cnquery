@@ -9,12 +9,12 @@ import (
 	"regexp"
 	"strings"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/yum"
-	"go.mondoo.com/cnquery/v11/types"
-	"go.mondoo.com/cnquery/v11/utils/stringx"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/yum"
+	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/cnquery/v12/utils/stringx"
 )
 
 var supportedPlatforms = []string{"amazonlinux"}
@@ -23,7 +23,7 @@ func (y *mqlYum) id() (string, error) {
 	return "yum", nil
 }
 
-func (y *mqlYum) repos() ([]interface{}, error) {
+func (y *mqlYum) repos() ([]any, error) {
 	conn := y.MqlRuntime.Connection.(shared.Connection)
 	platform := conn.Asset().Platform
 
@@ -44,7 +44,7 @@ func (y *mqlYum) repos() ([]interface{}, error) {
 		return nil, err
 	}
 
-	mqlRepos := make([]interface{}, len(repos))
+	mqlRepos := make([]any, len(repos))
 	for i, repo := range repos {
 		f, err := CreateResource(y.MqlRuntime, "file", map[string]*llx.RawData{
 			"path": llx.StringData(repo.Filename),
@@ -77,7 +77,7 @@ func (y *mqlYum) repos() ([]interface{}, error) {
 
 var rhel67release = regexp.MustCompile(`^[6|7].*$`)
 
-func (y *mqlYum) vars() (map[string]interface{}, error) {
+func (y *mqlYum) vars() (map[string]any, error) {
 	conn := y.MqlRuntime.Connection.(shared.Connection)
 	platform := conn.Asset().Platform
 
@@ -110,7 +110,7 @@ func (y *mqlYum) vars() (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	res := map[string]interface{}{}
+	res := map[string]any{}
 	for k := range vars {
 		res[k] = vars[k]
 	}

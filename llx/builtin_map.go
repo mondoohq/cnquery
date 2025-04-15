@@ -11,7 +11,7 @@ import (
 	"strings"
 	"sync"
 
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 // mapFunctions are all the handlers for builtin array methods
@@ -47,7 +47,7 @@ func mapGetIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 		}, 0, nil
 	}
 
-	m, ok := bind.Value.(map[string]interface{})
+	m, ok := bind.Value.(map[string]any)
 	if !ok {
 		return nil, 0, errors.New("failed to typecast " + bind.Type.Label() + " into map")
 	}
@@ -61,7 +61,7 @@ func mapCmpNil(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawD
 	if bind.Value == nil {
 		return BoolTrue, 0, nil
 	}
-	v, ok := bind.Value.(map[string]interface{})
+	v, ok := bind.Value.(map[string]any)
 	if !ok || v == nil {
 		return BoolTrue, 0, nil
 	}
@@ -72,7 +72,7 @@ func mapNotNil(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawD
 	if bind.Value == nil {
 		return BoolFalse, 0, nil
 	}
-	v, ok := bind.Value.(map[string]interface{})
+	v, ok := bind.Value.(map[string]any)
 	if !ok || v == nil {
 		return BoolFalse, 0, nil
 	}
@@ -83,7 +83,7 @@ func mapCmpEmpty(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Ra
 	if bind.Value == nil {
 		return BoolTrue, 0, nil
 	}
-	v, ok := bind.Value.(map[string]interface{})
+	v, ok := bind.Value.(map[string]any)
 	if !ok || v == nil {
 		return BoolTrue, 0, nil
 	}
@@ -94,7 +94,7 @@ func mapNotEmpty(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Ra
 	if bind.Value == nil {
 		return BoolFalse, 0, nil
 	}
-	v, ok := bind.Value.(map[string]interface{})
+	v, ok := bind.Value.(map[string]any)
 	if !ok || v == nil {
 		return BoolFalse, 0, nil
 	}
@@ -106,7 +106,7 @@ func mapLengthV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Ra
 		return &RawData{Type: types.Int}, 0, nil
 	}
 
-	arr, ok := bind.Value.(map[string]interface{})
+	arr, ok := bind.Value.(map[string]any)
 	if !ok {
 		return nil, 0, errors.New("failed to typecast " + bind.Type.Label() + " into map")
 	}
@@ -125,7 +125,7 @@ func _mapWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, inve
 		return &RawData{Type: items.Type}, 0, nil
 	}
 
-	list := items.Value.(map[string]interface{})
+	list := items.Value.(map[string]any)
 	if len(list) == 0 {
 		return items, 0, nil
 	}
@@ -164,7 +164,7 @@ func _mapWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, inve
 	}
 
 	err = e.runFunctionBlocks(argsList, fref, func(results []arrayBlockCallResult, errs []error) {
-		resMap := map[string]interface{}{}
+		resMap := map[string]any{}
 		for i, res := range results {
 			if res.isTruthy() == !invert {
 				key := argsList[i][0].Value.(string)
@@ -245,7 +245,7 @@ func mapAll(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData
 		return &RawData{Type: types.Bool, Error: errors.New("failed to validate all entries (map is null)")}, 0, nil
 	}
 
-	filteredList := bind.Value.(map[string]interface{})
+	filteredList := bind.Value.(map[string]any)
 
 	if len(filteredList) != 0 {
 		return BoolFalse, 0, nil
@@ -258,7 +258,7 @@ func mapNone(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawDat
 		return &RawData{Type: types.Bool, Error: errors.New("failed to validate all entries (map is null)")}, 0, nil
 	}
 
-	filteredList := bind.Value.(map[string]interface{})
+	filteredList := bind.Value.(map[string]any)
 
 	if len(filteredList) != 0 {
 		return BoolFalse, 0, nil
@@ -271,7 +271,7 @@ func mapAny(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData
 		return &RawData{Type: types.Bool, Error: errors.New("failed to validate all entries (map is null)")}, 0, nil
 	}
 
-	filteredList := bind.Value.(map[string]interface{})
+	filteredList := bind.Value.(map[string]any)
 
 	if len(filteredList) == 0 {
 		return BoolFalse, 0, nil
@@ -284,7 +284,7 @@ func mapOne(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData
 		return &RawData{Type: types.Bool, Error: errors.New("failed to validate all entries (map is null)")}, 0, nil
 	}
 
-	filteredList := bind.Value.(map[string]interface{})
+	filteredList := bind.Value.(map[string]any)
 
 	if len(filteredList) != 1 {
 		return BoolFalse, 0, nil
@@ -304,12 +304,12 @@ func mapKeysV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawD
 		}, 0, nil
 	}
 
-	m, ok := bind.Value.(map[string]interface{})
+	m, ok := bind.Value.(map[string]any)
 	if !ok {
 		return nil, 0, errors.New("failed to typecast " + bind.Type.Label() + " into map")
 	}
 
-	res := make([]interface{}, len(m))
+	res := make([]any, len(m))
 	var i int
 	for key := range m {
 		res[i] = key
@@ -329,12 +329,12 @@ func mapValuesV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Ra
 		}, 0, nil
 	}
 
-	m, ok := bind.Value.(map[string]interface{})
+	m, ok := bind.Value.(map[string]any)
 	if !ok {
 		return nil, 0, errors.New("failed to typecast " + bind.Type.Label() + " into map")
 	}
 
-	res := make([]interface{}, len(m))
+	res := make([]any, len(m))
 	var i int
 	for _, value := range m {
 		res[i] = value
@@ -350,7 +350,7 @@ func dictGetIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 	}
 
 	switch x := bind.Value.(type) {
-	case []interface{}:
+	case []any:
 		args := chunk.Function.Args
 
 		// TODO: all this needs to go into the compile phase
@@ -380,7 +380,7 @@ func dictGetIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 			Type:  bind.Type,
 		}, 0, nil
 
-	case map[string]interface{}:
+	case map[string]any:
 		args := chunk.Function.Args
 
 		// TODO: all this needs to go into the compile phase
@@ -412,7 +412,7 @@ func dictGetFirstIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint
 	}
 
 	switch x := bind.Value.(type) {
-	case []interface{}:
+	case []any:
 		if len(x) == 0 {
 			return &RawData{Type: bind.Type}, 0, nil
 		}
@@ -422,7 +422,7 @@ func dictGetFirstIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint
 			Type:  bind.Type,
 		}, 0, nil
 
-	case map[string]interface{}:
+	case map[string]any:
 		if len(x) == 0 {
 			return &RawData{Type: bind.Type}, 0, nil
 		}
@@ -453,7 +453,7 @@ func dictGetLastIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint6
 	}
 
 	switch x := bind.Value.(type) {
-	case []interface{}:
+	case []any:
 		if len(x) == 0 {
 			return &RawData{Type: bind.Type}, 0, nil
 		}
@@ -463,7 +463,7 @@ func dictGetLastIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint6
 			Type:  bind.Type,
 		}, 0, nil
 
-	case map[string]interface{}:
+	case map[string]any:
 		if len(x) == 0 {
 			return &RawData{Type: bind.Type}, 0, nil
 		}
@@ -496,9 +496,9 @@ func dictLengthV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 	switch x := bind.Value.(type) {
 	case string:
 		return IntData(int64(len(x))), 0, nil
-	case []interface{}:
+	case []any:
 		return IntData(int64(len(x))), 0, nil
-	case map[string]interface{}:
+	case map[string]any:
 		return IntData(int64(len(x))), 0, nil
 	default:
 		return nil, 0, errors.New("dict value does not support `length`")
@@ -530,9 +530,9 @@ func dictCmpEmpty(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 	switch x := bind.Value.(type) {
 	case string:
 		return BoolData(len(x) == 0), 0, nil
-	case []interface{}:
+	case []any:
 		return BoolData(len(x) == 0), 0, nil
-	case map[string]interface{}:
+	case map[string]any:
 		return BoolData(len(x) == 0), 0, nil
 	default:
 		return BoolFalse, 0, nil
@@ -547,9 +547,9 @@ func dictNotEmpty(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 	switch x := bind.Value.(type) {
 	case string:
 		return BoolData(len(x) != 0), 0, nil
-	case []interface{}:
+	case []any:
 		return BoolData(len(x) != 0), 0, nil
-	case map[string]interface{}:
+	case map[string]any:
 		return BoolData(len(x) != 0), 0, nil
 	default:
 		return BoolTrue, 0, nil
@@ -565,9 +565,9 @@ func dictNotEmptyV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 	switch x := bind.Value.(type) {
 	case string:
 		return BoolData(len(x) != 0), 0, nil
-	case []interface{}:
+	case []any:
 		return BoolData(len(x) != 0), 0, nil
-	case map[string]interface{}:
+	case map[string]any:
 		return BoolData(len(x) != 0), 0, nil
 	default:
 		return nil, 0, errors.New("dict value does not support field `notEmpty`")
@@ -576,7 +576,7 @@ func dictNotEmptyV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 
 func dictBlockCallV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	switch bind.Value.(type) {
-	case []interface{}:
+	case []any:
 		return arrayBlockListV2(e, bind, chunk, ref)
 	default:
 		return e.runBlock(bind, chunk.Function.Args[0], chunk.Function.Args[1:], ref)
@@ -645,12 +645,12 @@ func dictKeysV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Raw
 		}, 0, nil
 	}
 
-	m, ok := bind.Value.(map[string]interface{})
+	m, ok := bind.Value.(map[string]any)
 	if !ok {
 		return nil, 0, errors.New("dict value does not support field `keys`")
 	}
 
-	res := make([]interface{}, len(m))
+	res := make([]any, len(m))
 	var i int
 	for key := range m {
 		res[i] = key
@@ -668,12 +668,12 @@ func dictValuesV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 		}, 0, nil
 	}
 
-	m, ok := bind.Value.(map[string]interface{})
+	m, ok := bind.Value.(map[string]any)
 	if !ok {
 		return nil, 0, errors.New("dict value does not support field `values`")
 	}
 
-	res := make([]interface{}, len(m))
+	res := make([]any, len(m))
 	var i int
 	for _, value := range m {
 		res[i] = value
@@ -723,7 +723,7 @@ func _stringWhere(e *blockExecutor, src string, chunk *Chunk, ref uint64, invert
 }
 
 // requires at least 1 entry in the list!
-func _dictArrayWhere(e *blockExecutor, list []interface{}, chunk *Chunk, ref uint64, invert bool) (*RawData, uint64, error) {
+func _dictArrayWhere(e *blockExecutor, list []any, chunk *Chunk, ref uint64, invert bool) (*RawData, uint64, error) {
 	arg1 := chunk.Function.Args[1]
 	fref, ok := arg1.RefV2()
 	if !ok {
@@ -750,7 +750,7 @@ func _dictArrayWhere(e *blockExecutor, list []interface{}, chunk *Chunk, ref uin
 	}
 
 	err = e.runFunctionBlocks(argsList, fref, func(results []arrayBlockCallResult, errs []error) {
-		resList := []interface{}{}
+		resList := []any{}
 		for i, res := range results {
 			if res.isTruthy() == !invert {
 				key := argsList[i][0].Value.(int)
@@ -796,14 +796,14 @@ func _dictWhere(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, inver
 		return _stringWhere(e, s, chunk, ref, invert)
 	}
 
-	if list, ok := items.Value.([]interface{}); ok {
+	if list, ok := items.Value.([]any); ok {
 		if len(list) == 0 {
 			return items, 0, nil
 		}
 		return _dictArrayWhere(e, list, chunk, ref, invert)
 	}
 
-	list, ok := items.Value.(map[string]interface{})
+	list, ok := items.Value.(map[string]any)
 	if !ok {
 		return nil, 0, errors.New("failed to call dict.where on this value")
 	}
@@ -845,7 +845,7 @@ func _dictWhere(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, inver
 	}
 
 	err = e.runFunctionBlocks(argsList, fref, func(results []arrayBlockCallResult, errs []error) {
-		resMap := map[string]interface{}{}
+		resMap := map[string]any{}
 		for i, res := range results {
 			if res.isTruthy() == !invert {
 				key := argsList[i][0].Value.(string)
@@ -1028,14 +1028,14 @@ func dictAllV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawD
 		return &RawData{Type: types.Bool}, 0, nil
 	}
 
-	if filteredList, ok := bind.Value.([]interface{}); ok {
+	if filteredList, ok := bind.Value.([]any); ok {
 		if len(filteredList) == 0 {
 			return BoolTrue, 0, nil
 		}
 		return BoolFalse, 0, nil
 	}
 
-	if filteredList, ok := bind.Value.(map[string]interface{}); ok {
+	if filteredList, ok := bind.Value.(map[string]any); ok {
 		if len(filteredList) == 0 {
 			return BoolTrue, 0, nil
 		}
@@ -1050,14 +1050,14 @@ func dictNoneV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Raw
 		return &RawData{Type: types.Bool}, 0, nil
 	}
 
-	if filteredList, ok := bind.Value.([]interface{}); ok {
+	if filteredList, ok := bind.Value.([]any); ok {
 		if len(filteredList) == 0 {
 			return BoolTrue, 0, nil
 		}
 		return BoolFalse, 0, nil
 	}
 
-	if filteredList, ok := bind.Value.(map[string]interface{}); ok {
+	if filteredList, ok := bind.Value.(map[string]any); ok {
 		if len(filteredList) == 0 {
 			return BoolTrue, 0, nil
 		}
@@ -1072,14 +1072,14 @@ func dictAnyV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawD
 		return &RawData{Type: types.Bool}, 0, nil
 	}
 
-	if filteredList, ok := bind.Value.([]interface{}); ok {
+	if filteredList, ok := bind.Value.([]any); ok {
 		if len(filteredList) != 0 {
 			return BoolTrue, 0, nil
 		}
 		return BoolFalse, 0, nil
 	}
 
-	if filteredList, ok := bind.Value.(map[string]interface{}); ok {
+	if filteredList, ok := bind.Value.(map[string]any); ok {
 		if len(filteredList) != 0 {
 			return BoolTrue, 0, nil
 		}
@@ -1094,14 +1094,14 @@ func dictOneV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawD
 		return &RawData{Type: types.Bool}, 0, nil
 	}
 
-	if filteredList, ok := bind.Value.([]interface{}); ok {
+	if filteredList, ok := bind.Value.([]any); ok {
 		if len(filteredList) == 1 {
 			return BoolTrue, 0, nil
 		}
 		return BoolFalse, 0, nil
 	}
 
-	if filteredList, ok := bind.Value.(map[string]interface{}); ok {
+	if filteredList, ok := bind.Value.(map[string]any); ok {
 		if len(filteredList) == 1 {
 			return BoolTrue, 0, nil
 		}
@@ -1123,7 +1123,7 @@ func dictMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawD
 		return &RawData{Type: items.Type}, 0, nil
 	}
 
-	list, ok := items.Value.([]interface{})
+	list, ok := items.Value.([]any)
 	if !ok {
 		return nil, 0, errors.New("failed to call dict.map on a non-list value")
 	}
@@ -1145,13 +1145,13 @@ func dictMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawD
 
 	ct := items.Type.Child()
 	mappedType := types.Unset
-	resMap := map[int]interface{}{}
+	resMap := map[int]any{}
 	finishedResults := 0
 	l := sync.Mutex{}
 	for it := range list {
 		i := it
 		err := e.runFunctionBlock([]*RawData{{Type: ct, Value: list[i]}}, fref, func(res *RawResult) {
-			resList := func() []interface{} {
+			resList := func() []any {
 				l.Lock()
 				defer l.Unlock()
 
@@ -1163,7 +1163,7 @@ func dictMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawD
 				}
 
 				if finishedResults == len(list) {
-					resList := []interface{}{}
+					resList := []any{}
 					for j := 0; j < len(resMap); j++ {
 						k := resMap[j]
 						if k != nil {
@@ -1200,13 +1200,13 @@ func dictFlat(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawDa
 		return &RawData{Type: bind.Type, Error: bind.Error}, 0, nil
 	}
 
-	list, ok := bind.Value.([]interface{})
+	list, ok := bind.Value.([]any)
 	// this should not happen at this point
 	if !ok {
 		return &RawData{Type: bind.Type, Error: errors.New("incorrect type, no array data found")}, 0, nil
 	}
 
-	var res []interface{}
+	var res []any
 	for i := range list {
 		res = append(res, flatten(list[i])...)
 	}
@@ -1235,17 +1235,17 @@ func dictDifferenceV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 		return nil, rref, err
 	}
 
-	org, ok := bind.Value.([]interface{})
+	org, ok := bind.Value.([]any)
 	if !ok {
 		return &RawData{Type: bind.Type, Error: errors.New("cannot compute difference of lists, argument is not a list")}, 0, nil
 	}
 
-	filters, ok := arg.Value.([]interface{})
+	filters, ok := arg.Value.([]any)
 	if !ok {
 		return &RawData{Type: bind.Type, Error: errors.New("tried to call function with a non-array, please make sure the argument is an array")}, 0, nil
 	}
 
-	var res []interface{}
+	var res []any
 	var skip bool
 	for i := range org {
 		skip = false
@@ -1285,15 +1285,15 @@ func dictContainsAll(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) 
 		return nil, rref, err
 	}
 
-	org, ok := bind.Value.([]interface{})
+	org, ok := bind.Value.([]any)
 	if !ok {
 		return &RawData{Type: bind.Type, Error: errors.New("cannot compute difference of lists, argument is not a list")}, 0, nil
 	}
 
-	filters, ok := arg.Value.([]interface{})
+	filters, ok := arg.Value.([]any)
 	if !ok {
 		return &RawData{Type: bind.Type, Error: errors.New("tried to call function with a non-array, please make sure the argument is an array")}, 0, nil
-		// filters = []interface{}{arg.Value}
+		// filters = []any{arg.Value}
 	}
 
 	for i := range org {
@@ -1333,18 +1333,18 @@ func dictContainsNone(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 		return nil, rref, err
 	}
 
-	org, ok := bind.Value.([]interface{})
+	org, ok := bind.Value.([]any)
 	if !ok {
 		return &RawData{Type: bind.Type, Error: errors.New("cannot compute difference of lists, argument is not a list")}, 0, nil
 	}
 
-	filters, ok := arg.Value.([]interface{})
+	filters, ok := arg.Value.([]any)
 	if !ok {
 		return &RawData{Type: bind.Type, Error: errors.New("tried to call function with a non-array, please make sure the argument is an array")}, 0, nil
-		// filters = []interface{}{arg.Value}
+		// filters = []any{arg.Value}
 	}
 
-	var res []interface{}
+	var res []any
 	var skip bool
 	for i := range org {
 		skip = true
@@ -1363,7 +1363,7 @@ func dictContainsNone(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 	return &RawData{Type: bind.Type, Value: res}, 0, nil
 }
 
-func anyContainsString(an interface{}, s string) bool {
+func anyContainsString(an any, s string) bool {
 	if an == nil {
 		return false
 	}
@@ -1371,7 +1371,7 @@ func anyContainsString(an interface{}, s string) bool {
 	switch x := an.(type) {
 	case string:
 		return strings.Contains(x, s)
-	case []interface{}:
+	case []any:
 		for i := range x {
 			if anyContainsString(x[i], s) {
 				return true
@@ -1391,7 +1391,7 @@ func anyContainsAny(an any, s any) (bool, error) {
 	switch x := an.(type) {
 	case string:
 		return opStringContainsDict(x, s)
-	case []interface{}:
+	case []any:
 		for i := range x {
 			ok, err := anyContainsAny(x[i], s)
 			if err != nil {
@@ -1407,7 +1407,7 @@ func anyContainsAny(an any, s any) (bool, error) {
 	}
 }
 
-func anyContainsRegex(an interface{}, re *regexp.Regexp) bool {
+func anyContainsRegex(an any, re *regexp.Regexp) bool {
 	if an == nil {
 		return false
 	}
@@ -1415,7 +1415,7 @@ func anyContainsRegex(an interface{}, re *regexp.Regexp) bool {
 	switch x := an.(type) {
 	case string:
 		return re.MatchString(x)
-	case []interface{}:
+	case []any:
 		for i := range x {
 			if anyContainsRegex(x[i], re) {
 				return true
@@ -1567,20 +1567,20 @@ func dictFindV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Raw
 
 // map &&/||
 
-func opArrayAndMap(left interface{}, right interface{}) bool {
-	return (len(left.([]interface{})) != 0) && (len(right.(map[string]interface{})) != 0)
+func opArrayAndMap(left any, right any) bool {
+	return (len(left.([]any)) != 0) && (len(right.(map[string]any)) != 0)
 }
 
-func opArrayOrMap(left interface{}, right interface{}) bool {
-	return (len(left.([]interface{})) != 0) || (len(right.(map[string]interface{})) != 0)
+func opArrayOrMap(left any, right any) bool {
+	return (len(left.([]any)) != 0) || (len(right.(map[string]any)) != 0)
 }
 
-func opMapAndArray(left interface{}, right interface{}) bool {
-	return (len(right.(map[string]interface{})) != 0) && (len(left.([]interface{})) != 0)
+func opMapAndArray(left any, right any) bool {
+	return (len(right.(map[string]any)) != 0) && (len(left.([]any)) != 0)
 }
 
-func opMapOrArray(left interface{}, right interface{}) bool {
-	return (len(right.(map[string]interface{})) != 0) || (len(left.([]interface{})) != 0)
+func opMapOrArray(left any, right any) bool {
+	return (len(right.(map[string]any)) != 0) || (len(left.([]any)) != 0)
 }
 
 func arrayAndMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
@@ -1599,12 +1599,12 @@ func mapOrArrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 	return boolOpV2(e, bind, chunk, ref, opMapOrArray)
 }
 
-func opMapAndMap(left interface{}, right interface{}) bool {
-	return (len(left.(map[string]interface{})) != 0) && (len(right.(map[string]interface{})) != 0)
+func opMapAndMap(left any, right any) bool {
+	return (len(left.(map[string]any)) != 0) && (len(right.(map[string]any)) != 0)
 }
 
-func opMapOrMap(left interface{}, right interface{}) bool {
-	return (len(left.(map[string]interface{})) != 0) || (len(right.(map[string]interface{})) != 0)
+func opMapOrMap(left any, right any) bool {
+	return (len(left.(map[string]any)) != 0) || (len(right.(map[string]any)) != 0)
 }
 
 func mapAndMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
@@ -1617,11 +1617,11 @@ func mapOrMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Raw
 
 // dict ==/!= nil
 
-func opDictCmpNil(left interface{}, right interface{}) bool {
+func opDictCmpNil(left any, right any) bool {
 	return left == nil
 }
 
-func opNilCmpDict(left interface{}, right interface{}) bool {
+func opNilCmpDict(left any, right any) bool {
 	return right == nil
 }
 
@@ -1643,7 +1643,7 @@ func nilNotDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 
 // dict ==/!= bool
 
-func opDictCmpBool(left interface{}, right interface{}) bool {
+func opDictCmpBool(left any, right any) bool {
 	switch x := left.(type) {
 	case bool:
 		return x == right.(bool)
@@ -1654,7 +1654,7 @@ func opDictCmpBool(left interface{}, right interface{}) bool {
 	}
 }
 
-func opBoolCmpDict(left interface{}, right interface{}) bool {
+func opBoolCmpDict(left any, right any) bool {
 	switch x := right.(type) {
 	case bool:
 		return left.(bool) == x
@@ -1683,7 +1683,7 @@ func boolNotDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 
 // dict ==/!= int   (embedded: string + float)
 
-func opDictCmpInt(left interface{}, right interface{}) bool {
+func opDictCmpInt(left any, right any) bool {
 	if _, ok := left.(int32); ok {
 		left = int64(left.(int32))
 	}
@@ -1699,7 +1699,7 @@ func opDictCmpInt(left interface{}, right interface{}) bool {
 	}
 }
 
-func opIntCmpDict(left interface{}, right interface{}) bool {
+func opIntCmpDict(left any, right any) bool {
 	if _, ok := right.(int32); ok {
 		right = int64(right.(int32))
 	}
@@ -1733,7 +1733,7 @@ func intNotDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 
 // dict ==/!= float
 
-func opDictCmpFloat(left interface{}, right interface{}) bool {
+func opDictCmpFloat(left any, right any) bool {
 	switch x := left.(type) {
 	case int64:
 		return float64(x) == right.(float64)
@@ -1746,7 +1746,7 @@ func opDictCmpFloat(left interface{}, right interface{}) bool {
 	}
 }
 
-func opFloatCmpDict(left interface{}, right interface{}) bool {
+func opFloatCmpDict(left any, right any) bool {
 	switch x := right.(type) {
 	case int64:
 		return left.(float64) == float64(x)
@@ -1777,7 +1777,7 @@ func floatNotDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 
 // dict ==/!= string
 
-func opDictCmpString(left interface{}, right interface{}) bool {
+func opDictCmpString(left any, right any) bool {
 	switch x := left.(type) {
 	case string:
 		return x == right.(string)
@@ -1792,7 +1792,7 @@ func opDictCmpString(left interface{}, right interface{}) bool {
 	}
 }
 
-func opStringCmpDict(left interface{}, right interface{}) bool {
+func opStringCmpDict(left any, right any) bool {
 	switch x := right.(type) {
 	case string:
 		return left.(string) == x
@@ -1825,7 +1825,7 @@ func stringNotDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) 
 
 // dict ==/!= regex
 
-func opDictCmpRegex(left interface{}, right interface{}) bool {
+func opDictCmpRegex(left any, right any) bool {
 	switch x := left.(type) {
 	case string:
 		return opStringCmpRegex(x, right)
@@ -1838,7 +1838,7 @@ func opDictCmpRegex(left interface{}, right interface{}) bool {
 	}
 }
 
-func opRegexCmpDict(left interface{}, right interface{}) bool {
+func opRegexCmpDict(left any, right any) bool {
 	switch x := right.(type) {
 	case string:
 		return opRegexCmpString(left, x)
@@ -1869,7 +1869,7 @@ func regexNotDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 
 // dict ==/!= arrays
 
-func opDictCmpArray(left interface{}, right interface{}) bool {
+func opDictCmpArray(left any, right any) bool {
 	switch left.(type) {
 	case string:
 		return false
@@ -1890,7 +1890,7 @@ func opDictCmpStringarray(left *RawData, right *RawData) bool {
 	switch left.Value.(type) {
 	case string:
 		return cmpArrayOne(right, left, opStringCmpString)
-	case []interface{}:
+	case []any:
 		return cmpArrays(left, right, opDictCmpString)
 	default:
 		return false
@@ -1909,7 +1909,7 @@ func opDictCmpRegexarray(left *RawData, right *RawData) bool {
 	switch left.Value.(type) {
 	case string:
 		return cmpArrayOne(right, left, opStringCmpRegex)
-	case []interface{}:
+	case []any:
 		return cmpArrays(left, right, opDictCmpRegex)
 	default:
 		return false
@@ -1977,7 +1977,7 @@ func dictNotFloatarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint
 
 // dict ==/!= dict
 
-func opDictCmpDict(left interface{}, right interface{}) bool {
+func opDictCmpDict(left any, right any) bool {
 	switch x := left.(type) {
 	case bool:
 		return opBoolCmpDict(x, right)
@@ -2002,7 +2002,7 @@ func dictNotDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 
 // dict </>/<=/>= int
 
-func opDictLTInt(left interface{}, right interface{}) *RawData {
+func opDictLTInt(left any, right any) *RawData {
 	switch x := left.(type) {
 	case int64:
 		return BoolData(x < right.(int64))
@@ -2019,7 +2019,7 @@ func opDictLTInt(left interface{}, right interface{}) *RawData {
 	}
 }
 
-func opDictLTEInt(left interface{}, right interface{}) *RawData {
+func opDictLTEInt(left any, right any) *RawData {
 	switch x := left.(type) {
 	case int64:
 		return BoolData(x <= right.(int64))
@@ -2036,7 +2036,7 @@ func opDictLTEInt(left interface{}, right interface{}) *RawData {
 	}
 }
 
-func opDictGTInt(left interface{}, right interface{}) *RawData {
+func opDictGTInt(left any, right any) *RawData {
 	switch x := left.(type) {
 	case int64:
 		return BoolData(x > right.(int64))
@@ -2053,7 +2053,7 @@ func opDictGTInt(left interface{}, right interface{}) *RawData {
 	}
 }
 
-func opDictGTEInt(left interface{}, right interface{}) *RawData {
+func opDictGTEInt(left any, right any) *RawData {
 	switch x := left.(type) {
 	case int64:
 		return BoolData(x >= right.(int64))
@@ -2086,7 +2086,7 @@ func dictGTEIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, opDictGTEInt)
 }
 
-func opIntLTDict(left interface{}, right interface{}) *RawData {
+func opIntLTDict(left any, right any) *RawData {
 	switch x := right.(type) {
 	case int64:
 		return BoolData(left.(int64) < x)
@@ -2103,7 +2103,7 @@ func opIntLTDict(left interface{}, right interface{}) *RawData {
 	}
 }
 
-func opIntLTEDict(left interface{}, right interface{}) *RawData {
+func opIntLTEDict(left any, right any) *RawData {
 	switch x := right.(type) {
 	case int64:
 		return BoolData(left.(int64) <= x)
@@ -2120,7 +2120,7 @@ func opIntLTEDict(left interface{}, right interface{}) *RawData {
 	}
 }
 
-func opIntGTDict(left interface{}, right interface{}) *RawData {
+func opIntGTDict(left any, right any) *RawData {
 	switch x := right.(type) {
 	case int64:
 		return BoolData(left.(int64) > x)
@@ -2137,7 +2137,7 @@ func opIntGTDict(left interface{}, right interface{}) *RawData {
 	}
 }
 
-func opIntGTEDict(left interface{}, right interface{}) *RawData {
+func opIntGTEDict(left any, right any) *RawData {
 	switch x := right.(type) {
 	case int64:
 		return BoolData(left.(int64) >= x)
@@ -2172,7 +2172,7 @@ func intGTEDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 
 // dict </>/<=/>= float
 
-func opDictLTFloat(left interface{}, right interface{}) *RawData {
+func opDictLTFloat(left any, right any) *RawData {
 	switch x := left.(type) {
 	case int64:
 		return BoolData(float64(x) < right.(float64))
@@ -2189,7 +2189,7 @@ func opDictLTFloat(left interface{}, right interface{}) *RawData {
 	}
 }
 
-func opDictLTEFloat(left interface{}, right interface{}) *RawData {
+func opDictLTEFloat(left any, right any) *RawData {
 	switch x := left.(type) {
 	case int64:
 		return BoolData(float64(x) <= right.(float64))
@@ -2206,7 +2206,7 @@ func opDictLTEFloat(left interface{}, right interface{}) *RawData {
 	}
 }
 
-func opDictGTFloat(left interface{}, right interface{}) *RawData {
+func opDictGTFloat(left any, right any) *RawData {
 	switch x := left.(type) {
 	case int64:
 		return BoolData(float64(x) > right.(float64))
@@ -2223,7 +2223,7 @@ func opDictGTFloat(left interface{}, right interface{}) *RawData {
 	}
 }
 
-func opDictGTEFloat(left interface{}, right interface{}) *RawData {
+func opDictGTEFloat(left any, right any) *RawData {
 	switch x := left.(type) {
 	case int64:
 		return BoolData(float64(x) >= right.(float64))
@@ -2256,7 +2256,7 @@ func dictGTEFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, opDictGTEFloat)
 }
 
-func opFloatLTDict(left interface{}, right interface{}) *RawData {
+func opFloatLTDict(left any, right any) *RawData {
 	switch x := right.(type) {
 	case int64:
 		return BoolData(left.(float64) < float64(x))
@@ -2273,7 +2273,7 @@ func opFloatLTDict(left interface{}, right interface{}) *RawData {
 	}
 }
 
-func opFloatLTEDict(left interface{}, right interface{}) *RawData {
+func opFloatLTEDict(left any, right any) *RawData {
 	switch x := right.(type) {
 	case int64:
 		return BoolData(left.(float64) <= float64(x))
@@ -2290,7 +2290,7 @@ func opFloatLTEDict(left interface{}, right interface{}) *RawData {
 	}
 }
 
-func opFloatGTDict(left interface{}, right interface{}) *RawData {
+func opFloatGTDict(left any, right any) *RawData {
 	switch x := right.(type) {
 	case int64:
 		return BoolData(left.(float64) > float64(x))
@@ -2307,7 +2307,7 @@ func opFloatGTDict(left interface{}, right interface{}) *RawData {
 	}
 }
 
-func opFloatGTEDict(left interface{}, right interface{}) *RawData {
+func opFloatGTEDict(left any, right any) *RawData {
 	switch x := right.(type) {
 	case int64:
 		return BoolData(left.(float64) >= float64(x))
@@ -2342,7 +2342,7 @@ func floatGTEDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 
 // dict </>/<=/>= string
 
-func opDictLTString(left interface{}, right interface{}) *RawData {
+func opDictLTString(left any, right any) *RawData {
 	switch x := left.(type) {
 	case int64:
 		f, err := strconv.ParseInt(right.(string), 10, 64)
@@ -2363,7 +2363,7 @@ func opDictLTString(left interface{}, right interface{}) *RawData {
 	}
 }
 
-func opDictLTEString(left interface{}, right interface{}) *RawData {
+func opDictLTEString(left any, right any) *RawData {
 	switch x := left.(type) {
 	case int64:
 		f, err := strconv.ParseInt(right.(string), 10, 64)
@@ -2384,7 +2384,7 @@ func opDictLTEString(left interface{}, right interface{}) *RawData {
 	}
 }
 
-func opDictGTString(left interface{}, right interface{}) *RawData {
+func opDictGTString(left any, right any) *RawData {
 	switch x := left.(type) {
 	case int64:
 		f, err := strconv.ParseInt(right.(string), 10, 64)
@@ -2405,7 +2405,7 @@ func opDictGTString(left interface{}, right interface{}) *RawData {
 	}
 }
 
-func opDictGTEString(left interface{}, right interface{}) *RawData {
+func opDictGTEString(left any, right any) *RawData {
 	switch x := left.(type) {
 	case int64:
 		f, err := strconv.ParseInt(right.(string), 10, 64)
@@ -2442,7 +2442,7 @@ func dictGTEStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) 
 	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, opDictGTEString)
 }
 
-func opStringLTDict(left interface{}, right interface{}) *RawData {
+func opStringLTDict(left any, right any) *RawData {
 	switch x := right.(type) {
 	case int64:
 		f, err := strconv.ParseInt(left.(string), 10, 64)
@@ -2463,7 +2463,7 @@ func opStringLTDict(left interface{}, right interface{}) *RawData {
 	}
 }
 
-func opStringLTEDict(left interface{}, right interface{}) *RawData {
+func opStringLTEDict(left any, right any) *RawData {
 	switch x := right.(type) {
 	case int64:
 		f, err := strconv.ParseInt(left.(string), 10, 64)
@@ -2484,7 +2484,7 @@ func opStringLTEDict(left interface{}, right interface{}) *RawData {
 	}
 }
 
-func opStringGTDict(left interface{}, right interface{}) *RawData {
+func opStringGTDict(left any, right any) *RawData {
 	switch x := right.(type) {
 	case int64:
 		f, err := strconv.ParseInt(left.(string), 10, 64)
@@ -2505,7 +2505,7 @@ func opStringGTDict(left interface{}, right interface{}) *RawData {
 	}
 }
 
-func opStringGTEDict(left interface{}, right interface{}) *RawData {
+func opStringGTEDict(left any, right any) *RawData {
 	switch x := right.(type) {
 	case int64:
 		f, err := strconv.ParseInt(left.(string), 10, 64)
@@ -2545,7 +2545,7 @@ func stringGTEDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) 
 // dict </>/<=/>= dict
 
 func dictLTDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		switch x := right.(type) {
 		case int64:
 			return opDictLTInt(left, x)
@@ -2560,7 +2560,7 @@ func dictLTDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 }
 
 func dictLTEDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		switch x := right.(type) {
 		case int64:
 			return opDictLTEInt(left, x)
@@ -2575,7 +2575,7 @@ func dictLTEDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 }
 
 func dictGTDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		switch x := right.(type) {
 		case int64:
 			return opDictLTEInt(left, x)
@@ -2590,7 +2590,7 @@ func dictGTDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 }
 
 func dictGTEDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		switch x := right.(type) {
 		case int64:
 			return opDictLTInt(left, x)
@@ -2606,7 +2606,7 @@ func dictGTEDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 
 // dict && / || ...
 
-func truthyDict(value interface{}) bool {
+func truthyDict(value any) bool {
 	switch x := value.(type) {
 	case bool:
 		return x
@@ -2616,9 +2616,9 @@ func truthyDict(value interface{}) bool {
 		return x != 0
 	case string:
 		return x != ""
-	case []interface{}:
+	case []any:
 		return len(x) != 0
-	case map[string]interface{}:
+	case map[string]any:
 		return len(x) != 0
 	default:
 		return false
@@ -2627,19 +2627,19 @@ func truthyDict(value interface{}) bool {
 
 // ... bool
 
-func opBoolAndDict(left interface{}, right interface{}) bool {
+func opBoolAndDict(left any, right any) bool {
 	return left.(bool) && truthyDict(right)
 }
 
-func opBoolOrDict(left interface{}, right interface{}) bool {
+func opBoolOrDict(left any, right any) bool {
 	return left.(bool) || truthyDict(right)
 }
 
-func opDictAndBool(left interface{}, right interface{}) bool {
+func opDictAndBool(left any, right any) bool {
 	return truthyDict(left) && right.(bool)
 }
 
-func opDictOrBool(left interface{}, right interface{}) bool {
+func opDictOrBool(left any, right any) bool {
 	return truthyDict(left) || right.(bool)
 }
 
@@ -2661,19 +2661,19 @@ func dictOrBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 
 // ... int
 
-func opIntAndDict(left interface{}, right interface{}) bool {
+func opIntAndDict(left any, right any) bool {
 	return left.(int64) != 0 && truthyDict(right)
 }
 
-func opIntOrDict(left interface{}, right interface{}) bool {
+func opIntOrDict(left any, right any) bool {
 	return left.(int64) != 0 || truthyDict(right)
 }
 
-func opDictAndInt(left interface{}, right interface{}) bool {
+func opDictAndInt(left any, right any) bool {
 	return truthyDict(left) && right.(int64) != 0
 }
 
-func opDictOrInt(left interface{}, right interface{}) bool {
+func opDictOrInt(left any, right any) bool {
 	return truthyDict(left) || right.(int64) != 0
 }
 
@@ -2695,19 +2695,19 @@ func dictOrIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Ra
 
 // ... float
 
-func opFloatAndDict(left interface{}, right interface{}) bool {
+func opFloatAndDict(left any, right any) bool {
 	return left.(float64) != 0 && truthyDict(right)
 }
 
-func opFloatOrDict(left interface{}, right interface{}) bool {
+func opFloatOrDict(left any, right any) bool {
 	return left.(float64) != 0 || truthyDict(right)
 }
 
-func opDictAndFloat(left interface{}, right interface{}) bool {
+func opDictAndFloat(left any, right any) bool {
 	return truthyDict(left) && right.(float64) != 0
 }
 
-func opDictOrFloat(left interface{}, right interface{}) bool {
+func opDictOrFloat(left any, right any) bool {
 	return truthyDict(left) || right.(float64) != 0
 }
 
@@ -2729,19 +2729,19 @@ func dictOrFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 
 // ... string
 
-func opStringAndDict(left interface{}, right interface{}) bool {
+func opStringAndDict(left any, right any) bool {
 	return left.(string) != "" && truthyDict(right)
 }
 
-func opStringOrDict(left interface{}, right interface{}) bool {
+func opStringOrDict(left any, right any) bool {
 	return left.(string) != "" || truthyDict(right)
 }
 
-func opDictAndString(left interface{}, right interface{}) bool {
+func opDictAndString(left any, right any) bool {
 	return truthyDict(left) && right.(string) != ""
 }
 
-func opDictOrString(left interface{}, right interface{}) bool {
+func opDictOrString(left any, right any) bool {
 	return truthyDict(left) || right.(string) != ""
 }
 
@@ -2763,19 +2763,19 @@ func dictOrStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 
 // ... regex
 
-func opRegexAndDict(left interface{}, right interface{}) bool {
+func opRegexAndDict(left any, right any) bool {
 	return left.(string) != "" && truthyDict(right)
 }
 
-func opRegexOrDict(left interface{}, right interface{}) bool {
+func opRegexOrDict(left any, right any) bool {
 	return left.(string) != "" || truthyDict(right)
 }
 
-func opDictAndRegex(left interface{}, right interface{}) bool {
+func opDictAndRegex(left any, right any) bool {
 	return truthyDict(left) && right.(string) != ""
 }
 
-func opDictOrRegex(left interface{}, right interface{}) bool {
+func opDictOrRegex(left any, right any) bool {
 	return truthyDict(left) || right.(string) != ""
 }
 
@@ -2798,19 +2798,19 @@ func dictOrRegexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 // ... time
 // note: time cannot be falsy
 
-func opTimeAndDict(left interface{}, right interface{}) bool {
+func opTimeAndDict(left any, right any) bool {
 	return truthyDict(right)
 }
 
-func opTimeOrDict(left interface{}, right interface{}) bool {
+func opTimeOrDict(left any, right any) bool {
 	return true
 }
 
-func opDictAndTime(left interface{}, right interface{}) bool {
+func opDictAndTime(left any, right any) bool {
 	return truthyDict(left)
 }
 
-func opDictOrTime(left interface{}, right interface{}) bool {
+func opDictOrTime(left any, right any) bool {
 	return true
 }
 
@@ -2832,11 +2832,11 @@ func dictOrTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 
 // ... dict
 
-func opDictAndDict(left interface{}, right interface{}) bool {
+func opDictAndDict(left any, right any) bool {
 	return truthyDict(left) && truthyDict(right)
 }
 
-func opDictOrDict(left interface{}, right interface{}) bool {
+func opDictOrDict(left any, right any) bool {
 	return truthyDict(left) || truthyDict(right)
 }
 
@@ -2850,20 +2850,20 @@ func dictOrDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 
 // ... array
 
-func opDictAndArray(left interface{}, right interface{}) bool {
-	return truthyDict(left) && (len(right.([]interface{})) != 0)
+func opDictAndArray(left any, right any) bool {
+	return truthyDict(left) && (len(right.([]any)) != 0)
 }
 
-func opArrayAndDict(left interface{}, right interface{}) bool {
-	return truthyDict(right) && (len(left.([]interface{})) != 0)
+func opArrayAndDict(left any, right any) bool {
+	return truthyDict(right) && (len(left.([]any)) != 0)
 }
 
-func opDictOrArray(left interface{}, right interface{}) bool {
-	return truthyDict(left) || (len(right.([]interface{})) != 0)
+func opDictOrArray(left any, right any) bool {
+	return truthyDict(left) || (len(right.([]any)) != 0)
 }
 
-func opArrayOrDict(left interface{}, right interface{}) bool {
-	return truthyDict(right) || (len(left.([]interface{})) != 0)
+func opArrayOrDict(left any, right any) bool {
+	return truthyDict(right) || (len(left.([]any)) != 0)
 }
 
 func dictAndArrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
@@ -2884,20 +2884,20 @@ func arrayOrDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 
 // ... map
 
-func opDictAndMap(left interface{}, right interface{}) bool {
-	return truthyDict(left) && (len(right.(map[string]interface{})) != 0)
+func opDictAndMap(left any, right any) bool {
+	return truthyDict(left) && (len(right.(map[string]any)) != 0)
 }
 
-func opMapAndDict(left interface{}, right interface{}) bool {
-	return truthyDict(right) && (len(left.(map[string]interface{})) != 0)
+func opMapAndDict(left any, right any) bool {
+	return truthyDict(right) && (len(left.(map[string]any)) != 0)
 }
 
-func opDictOrMap(left interface{}, right interface{}) bool {
-	return truthyDict(left) || (len(right.(map[string]interface{})) != 0)
+func opDictOrMap(left any, right any) bool {
+	return truthyDict(left) || (len(right.(map[string]any)) != 0)
 }
 
-func opMapOrDict(left interface{}, right interface{}) bool {
-	return truthyDict(right) || (len(left.(map[string]interface{})) != 0)
+func opMapOrDict(left any, right any) bool {
+	return truthyDict(right) || (len(left.(map[string]any)) != 0)
 }
 
 func dictAndMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
@@ -2919,7 +2919,7 @@ func mapOrDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Ra
 // dict + - * /
 
 func dictPlusStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Time, func(left any, right any) *RawData {
 		r := right.(string)
 
 		switch l := left.(type) {
@@ -2936,7 +2936,7 @@ func dictPlusStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 }
 
 func stringPlusDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Time, func(left any, right any) *RawData {
 		l := left.(string)
 
 		switch r := right.(type) {
@@ -2953,7 +2953,7 @@ func stringPlusDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 }
 
 func intPlusDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Time, func(left any, right any) *RawData {
 		l := left.(int64)
 
 		switch r := right.(type) {
@@ -2972,7 +2972,7 @@ func intPlusDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 }
 
 func dictPlusIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Time, func(left any, right any) *RawData {
 		r := right.(int64)
 
 		switch l := left.(type) {
@@ -2991,7 +2991,7 @@ func dictPlusIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 }
 
 func floatPlusDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Time, func(left any, right any) *RawData {
 		l := left.(float64)
 
 		switch r := right.(type) {
@@ -3010,7 +3010,7 @@ func floatPlusDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) 
 }
 
 func dictPlusFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Time, func(left any, right any) *RawData {
 		r := right.(float64)
 
 		switch l := left.(type) {
@@ -3029,7 +3029,7 @@ func dictPlusFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) 
 }
 
 func intMinusDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Time, func(left any, right any) *RawData {
 		l := left.(int64)
 
 		switch r := right.(type) {
@@ -3048,7 +3048,7 @@ func intMinusDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 }
 
 func dictMinusIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Time, func(left any, right any) *RawData {
 		r := right.(int64)
 
 		switch l := left.(type) {
@@ -3067,7 +3067,7 @@ func dictMinusIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 }
 
 func floatMinusDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Time, func(left any, right any) *RawData {
 		l := left.(float64)
 
 		switch r := right.(type) {
@@ -3086,7 +3086,7 @@ func floatMinusDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 }
 
 func dictMinusFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Time, func(left any, right any) *RawData {
 		r := right.(float64)
 
 		switch l := left.(type) {
@@ -3105,7 +3105,7 @@ func dictMinusFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 }
 
 func intTimesDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Time, func(left any, right any) *RawData {
 		l := left.(int64)
 
 		switch r := right.(type) {
@@ -3124,7 +3124,7 @@ func intTimesDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 }
 
 func dictTimesIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Time, func(left any, right any) *RawData {
 		r := right.(int64)
 
 		switch l := left.(type) {
@@ -3143,7 +3143,7 @@ func dictTimesIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 }
 
 func floatTimesDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Time, func(left any, right any) *RawData {
 		l := left.(float64)
 
 		switch r := right.(type) {
@@ -3162,7 +3162,7 @@ func floatTimesDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 }
 
 func dictTimesFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Time, func(left any, right any) *RawData {
 		r := right.(float64)
 
 		switch l := left.(type) {
@@ -3181,7 +3181,7 @@ func dictTimesFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 }
 
 func intDividedDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Time, func(left any, right any) *RawData {
 		l := left.(int64)
 
 		switch r := right.(type) {
@@ -3200,7 +3200,7 @@ func intDividedDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 }
 
 func dictDividedIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Time, func(left any, right any) *RawData {
 		r := right.(int64)
 
 		switch l := left.(type) {
@@ -3219,7 +3219,7 @@ func dictDividedIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 }
 
 func floatDividedDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Time, func(left any, right any) *RawData {
 		l := left.(float64)
 
 		switch r := right.(type) {
@@ -3238,7 +3238,7 @@ func floatDividedDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint6
 }
 
 func dictDividedFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Time, func(left any, right any) *RawData {
 		r := right.(float64)
 
 		switch l := left.(type) {
@@ -3257,7 +3257,7 @@ func dictDividedFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint6
 }
 
 func dictTimesTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Time, func(left any, right any) *RawData {
 		switch l := left.(type) {
 		case int64:
 			return opTimeTimesInt(right, l)
@@ -3274,7 +3274,7 @@ func dictTimesTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) 
 }
 
 func timeTimesDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Time, func(left any, right any) *RawData {
 		switch r := right.(type) {
 		case int64:
 			return opTimeTimesInt(left, r)

@@ -9,8 +9,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/testutils"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/mqlc"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/testutils"
 )
 
 // Core Language constructs
@@ -21,19 +22,19 @@ import (
 func TestCore_Props(t *testing.T) {
 	tests := []struct {
 		code        string
-		props       map[string]*llx.Primitive
+		props       mqlc.SimpleProps
 		resultIndex int
-		expectation interface{}
+		expectation any
 		err         error
 	}{
 		{
 			`props.name`,
-			map[string]*llx.Primitive{"name": llx.StringPrimitive("bob")},
+			mqlc.SimpleProps{"name": llx.StringPrimitive("bob")},
 			0, "bob", nil,
 		},
 		{
 			`props.name == 'bob'`,
-			map[string]*llx.Primitive{"name": llx.StringPrimitive("bob")},
+			mqlc.SimpleProps{"name": llx.StringPrimitive("bob")},
 			1, true, nil,
 		},
 	}
@@ -70,7 +71,7 @@ func TestCore_If(t *testing.T) {
 		},
 		{
 			Code:        "if (true) { return [1] } return [2,3]",
-			Expectation: []interface{}{int64(1)},
+			Expectation: []any{int64(1)},
 		},
 		{
 			Code:        "if (false) { return 123 } return 456",
@@ -103,7 +104,7 @@ func TestCore_If(t *testing.T) {
 		{
 			Code:        "if ( mondoo.version != null ) { 123 }",
 			ResultIndex: 1,
-			Expectation: map[string]interface{}{
+			Expectation: map[string]any{
 				"__t": llx.BoolData(true),
 				"__s": llx.NilData,
 				"NmGComMxT/GJkwpf/IcA+qceUmwZCEzHKGt+8GEh+f8Y0579FxuDO+4FJf0/q2vWRE4dN2STPMZ+3xG3Mdm1fA==": llx.IntData(123),
@@ -112,7 +113,7 @@ func TestCore_If(t *testing.T) {
 		{
 			Code:        "if ( mondoo.version != null ) { 123 } else { 456 }",
 			ResultIndex: 1,
-			Expectation: map[string]interface{}{
+			Expectation: map[string]any{
 				"__t": llx.BoolData(true),
 				"__s": llx.NilData,
 				"NmGComMxT/GJkwpf/IcA+qceUmwZCEzHKGt+8GEh+f8Y0579FxuDO+4FJf0/q2vWRE4dN2STPMZ+3xG3Mdm1fA==": llx.IntData(123),
@@ -121,7 +122,7 @@ func TestCore_If(t *testing.T) {
 		{
 			Code:        "if ( mondoo.version == null ) { 123 } else { 456 }",
 			ResultIndex: 1,
-			Expectation: map[string]interface{}{
+			Expectation: map[string]any{
 				"__t": llx.BoolData(true),
 				"__s": llx.NilData,
 				"3ZDJLpfu1OBftQi3eANcQSCltQum8mPyR9+fI7XAY9ZUMRpyERirCqag9CFMforO/u0zJolHNyg+2gE9hSTyGQ==": llx.IntData(456),
@@ -129,7 +130,7 @@ func TestCore_If(t *testing.T) {
 		},
 		{
 			Code: "if (false) { 123 } else if (true) { 456 } else { 789 }",
-			Expectation: map[string]interface{}{
+			Expectation: map[string]any{
 				"__t": llx.BoolData(true),
 				"__s": llx.NilData,
 				"3ZDJLpfu1OBftQi3eANcQSCltQum8mPyR9+fI7XAY9ZUMRpyERirCqag9CFMforO/u0zJolHNyg+2gE9hSTyGQ==": llx.IntData(456),
@@ -137,7 +138,7 @@ func TestCore_If(t *testing.T) {
 		},
 		{
 			Code: "if (false) { 123 } else if (false) { 456 } else { 789 }",
-			Expectation: map[string]interface{}{
+			Expectation: map[string]any{
 				"__t": llx.BoolData(true),
 				"__s": llx.NilData,
 				"Oy5SF8NbUtxaBwvZPpsnd0K21CY+fvC44FSd2QpgvIL689658Na52udy7qF2+hHjczk35TAstDtFZq7JIHNCmg==": llx.IntData(789),
@@ -187,11 +188,11 @@ func TestCore_Vars(t *testing.T) {
 	x.TestSimple(t, []testutils.SimpleTest{
 		{
 			Code:        "a = [1,2,3]; return a",
-			Expectation: []interface{}{int64(1), int64(2), int64(3)},
+			Expectation: []any{int64(1), int64(2), int64(3)},
 		},
 		{
 			Code:        "a = 1; b = [a]; return b",
-			Expectation: []interface{}{int64(1)},
+			Expectation: []any{int64(1)},
 		},
 		{
 			Code:        "a = 1; b = a + 2; return b",
@@ -199,7 +200,7 @@ func TestCore_Vars(t *testing.T) {
 		},
 		{
 			Code:        "a = 1; b = [a + 2]; return b",
-			Expectation: []interface{}{int64(3)},
+			Expectation: []any{int64(3)},
 		},
 	})
 }
@@ -468,11 +469,11 @@ func TestString_Methods(t *testing.T) {
 		},
 		{
 			Code:        "'hello world'.split(' ')",
-			Expectation: []interface{}{"hello", "world"},
+			Expectation: []any{"hello", "world"},
 		},
 		{
 			Code:        "'he\nll\no'.lines",
-			Expectation: []interface{}{"he", "ll", "o"},
+			Expectation: []any{"he", "ll", "o"},
 		},
 		{
 			Code:        "' \n\t yo \t \n   '.trim",
@@ -571,55 +572,55 @@ func TestArray(t *testing.T) {
 	x.TestSimple(t, []testutils.SimpleTest{
 		{
 			Code:        "[1,2,3]",
-			Expectation: []interface{}{int64(1), int64(2), int64(3)},
+			Expectation: []any{int64(1), int64(2), int64(3)},
 		},
 		{
 			Code:        "return [1,2,3]",
-			Expectation: []interface{}{int64(1), int64(2), int64(3)},
+			Expectation: []any{int64(1), int64(2), int64(3)},
 		},
 		{
 			Code: "[1,2,3] { _ == 2 }",
-			Expectation: []interface{}{
-				map[string]interface{}{"__t": llx.BoolFalse, "__s": llx.BoolFalse, "OPhfwvbw0iVuMErS9tKL5qNj1lqTg3PEE1LITWEwW7a70nH8z8eZLi4x/aZqZQlyrQK13GAlUMY1w8g131EPog==": llx.BoolFalse},
-				map[string]interface{}{"__t": llx.BoolTrue, "__s": llx.BoolTrue, "OPhfwvbw0iVuMErS9tKL5qNj1lqTg3PEE1LITWEwW7a70nH8z8eZLi4x/aZqZQlyrQK13GAlUMY1w8g131EPog==": llx.BoolTrue},
-				map[string]interface{}{"__t": llx.BoolFalse, "__s": llx.BoolFalse, "OPhfwvbw0iVuMErS9tKL5qNj1lqTg3PEE1LITWEwW7a70nH8z8eZLi4x/aZqZQlyrQK13GAlUMY1w8g131EPog==": llx.BoolFalse},
+			Expectation: []any{
+				map[string]any{"__t": llx.BoolFalse, "__s": llx.BoolFalse, "OPhfwvbw0iVuMErS9tKL5qNj1lqTg3PEE1LITWEwW7a70nH8z8eZLi4x/aZqZQlyrQK13GAlUMY1w8g131EPog==": llx.BoolFalse},
+				map[string]any{"__t": llx.BoolTrue, "__s": llx.BoolTrue, "OPhfwvbw0iVuMErS9tKL5qNj1lqTg3PEE1LITWEwW7a70nH8z8eZLi4x/aZqZQlyrQK13GAlUMY1w8g131EPog==": llx.BoolTrue},
+				map[string]any{"__t": llx.BoolFalse, "__s": llx.BoolFalse, "OPhfwvbw0iVuMErS9tKL5qNj1lqTg3PEE1LITWEwW7a70nH8z8eZLi4x/aZqZQlyrQK13GAlUMY1w8g131EPog==": llx.BoolFalse},
 			},
 		},
 		{
 			Code: "[1,2,3] { a = _ }",
-			Expectation: []interface{}{
-				map[string]interface{}{"__t": llx.BoolTrue, "__s": llx.NilData},
-				map[string]interface{}{"__t": llx.BoolTrue, "__s": llx.NilData},
-				map[string]interface{}{"__t": llx.BoolTrue, "__s": llx.NilData},
+			Expectation: []any{
+				map[string]any{"__t": llx.BoolTrue, "__s": llx.NilData},
+				map[string]any{"__t": llx.BoolTrue, "__s": llx.NilData},
+				map[string]any{"__t": llx.BoolTrue, "__s": llx.NilData},
 			},
 		},
 		{
 			Code:        "[1,2,3].where()",
-			Expectation: []interface{}{int64(1), int64(2), int64(3)},
+			Expectation: []any{int64(1), int64(2), int64(3)},
 		},
 		{
 			Code:        "[true, true, false].where(true)",
-			Expectation: []interface{}{true, true},
+			Expectation: []any{true, true},
 		},
 		{
 			Code:        "[false, true, false].where(false)",
-			Expectation: []interface{}{false, false},
+			Expectation: []any{false, false},
 		},
 		{
 			Code:        "[1,2,3].where(2)",
-			Expectation: []interface{}{int64(2)},
+			Expectation: []any{int64(2)},
 		},
 		{
 			Code:        "[1,2,3].where(_ > 2)",
-			Expectation: []interface{}{int64(3)},
+			Expectation: []any{int64(3)},
 		},
 		{
 			Code:        "[1,2,3].where(_ >= 2)",
-			Expectation: []interface{}{int64(2), int64(3)},
+			Expectation: []any{int64(2), int64(3)},
 		},
 		{
 			Code:        "['yo','ho','ho'].where( /y.$/ )",
-			Expectation: []interface{}{"yo"},
+			Expectation: []any{"yo"},
 		},
 		{
 			Code:        "x = ['a','b']; y = 'c'; x.contains(y)",
@@ -661,59 +662,59 @@ func TestArray(t *testing.T) {
 		},
 		{
 			Code:        "[[0,1],[1,2]].map(_[1])",
-			Expectation: []interface{}{int64(1), int64(2)},
+			Expectation: []any{int64(1), int64(2)},
 		},
 		{
 			Code:        "[[0],[[1, 2]], 3].flat",
-			Expectation: []interface{}{int64(0), int64(1), int64(2), int64(3)},
+			Expectation: []any{int64(0), int64(1), int64(2), int64(3)},
 		},
 		{
 			Code:        "[0].where(_ > 0).where(_ > 0)",
-			Expectation: []interface{}{},
+			Expectation: []any{},
 		},
 		{
 			Code:        "[1,2,2,2,3].unique()",
-			Expectation: []interface{}{int64(1), int64(2), int64(3)},
+			Expectation: []any{int64(1), int64(2), int64(3)},
 		},
 		{
 			Code:        "[1,1,2,2,2,3].duplicates()",
-			Expectation: []interface{}{int64(1), int64(2)},
+			Expectation: []any{int64(1), int64(2)},
 		},
 		{
 			Code:        "[2,1,2,2].containsOnly([2])",
-			Expectation: []interface{}{int64(1)},
+			Expectation: []any{int64(1)},
 		},
 		{
 			Code:        "[2,1,2,1].containsOnly([1,2])",
-			ResultIndex: 0, Expectation: []interface{}(nil),
+			ResultIndex: 0, Expectation: []any(nil),
 		},
 		{
 			Code:        "a = [1]; [2,1,2,1].containsOnly(a)",
-			Expectation: []interface{}{int64(2), int64(2)},
+			Expectation: []any{int64(2), int64(2)},
 		},
 		{
 			Code:        "[3,3,2,2].containsAll([1,2])",
-			Expectation: []interface{}{int64(1)},
+			Expectation: []any{int64(1)},
 		},
 		{
 			Code:        "[2,1,2,1].containsAll([1,2])",
-			ResultIndex: 0, Expectation: []interface{}(nil),
+			ResultIndex: 0, Expectation: []any(nil),
 		},
 		{
 			Code:        "a = [1,3]; [2,1,2,1].containsAll(a)",
-			Expectation: []interface{}{int64(3)},
+			Expectation: []any{int64(3)},
 		},
 		{
 			Code:        "[2,1,2,2].containsNone([1])",
-			Expectation: []interface{}{int64(1)},
+			Expectation: []any{int64(1)},
 		},
 		{
 			Code:        "[2,1,2,1].containsNone([3,4])",
-			ResultIndex: 0, Expectation: []interface{}(nil),
+			ResultIndex: 0, Expectation: []any(nil),
 		},
 		{
 			Code:        "a = [1]; [2,1,2,1].containsNone(a)",
-			Expectation: []interface{}{int64(1), int64(1)},
+			Expectation: []any{int64(1), int64(1)},
 		},
 		{
 			Code:        "['a','b'] != /c/",
@@ -721,11 +722,11 @@ func TestArray(t *testing.T) {
 		},
 		{
 			Code:        "[1,2] + [3]",
-			Expectation: []interface{}{int64(1), int64(2), int64(3)},
+			Expectation: []any{int64(1), int64(2), int64(3)},
 		},
 		{
 			Code:        "[3,1,3,4,2] - [3,4,5]",
-			Expectation: []interface{}{int64(1), int64(2)},
+			Expectation: []any{int64(1), int64(2)},
 		},
 	})
 }
@@ -1232,7 +1233,7 @@ func TestResource_Default(t *testing.T) {
 	x := testutils.InitTester(testutils.LinuxMock())
 	res := x.TestQuery(t, "mondoo")
 	require.NotEmpty(t, res)
-	vals := res[0].Data.Value.(map[string]interface{})
+	vals := res[0].Data.Value.(map[string]any)
 	require.NotNil(t, vals)
 	require.Equal(t, llx.StringData("unstable"), vals["J4anmJ+mXJX380Qslh563U7Bs5d6fiD2ghVxV9knAU0iy/P+IVNZsDhBbCmbpJch3Tm0NliAMiaY47lmw887Jw=="])
 }

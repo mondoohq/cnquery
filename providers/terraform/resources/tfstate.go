@@ -7,11 +7,11 @@ import (
 	"encoding/json"
 	"errors"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/terraform/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/terraform/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (t *mqlTerraformState) id() (string, error) {
@@ -35,7 +35,7 @@ func initTerraformState(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	return args, nil, nil
 }
 
-func (t *mqlTerraformState) outputs() ([]interface{}, error) {
+func (t *mqlTerraformState) outputs() ([]any, error) {
 	conn := t.MqlRuntime.Connection.(*connection.Connection)
 	state, err := conn.State()
 	if err != nil {
@@ -46,7 +46,7 @@ func (t *mqlTerraformState) outputs() ([]interface{}, error) {
 		return nil, nil
 	}
 
-	var list []interface{}
+	var list []any
 	for k := range state.Values.Outputs {
 		output := state.Values.Outputs[k]
 
@@ -83,7 +83,7 @@ func (t *mqlTerraformState) rootModule() (*mqlTerraformStateModule, error) {
 	return r, nil
 }
 
-func (t *mqlTerraformState) modules() ([]interface{}, error) {
+func (t *mqlTerraformState) modules() ([]any, error) {
 	conn := t.MqlRuntime.Connection.(*connection.Connection)
 	state, err := conn.State()
 	if err != nil {
@@ -102,7 +102,7 @@ func (t *mqlTerraformState) modules() ([]interface{}, error) {
 	})
 
 	// convert module list to mql resources
-	list := []interface{}{}
+	list := []any{}
 	for i := range moduleList {
 		r, err := newMqlModule(t.MqlRuntime, moduleList[i])
 		if err != nil {
@@ -114,7 +114,7 @@ func (t *mqlTerraformState) modules() ([]interface{}, error) {
 	return list, nil
 }
 
-func (t *mqlTerraformState) resources() ([]interface{}, error) {
+func (t *mqlTerraformState) resources() ([]any, error) {
 	conn := t.MqlRuntime.Connection.(*connection.Connection)
 	providerState, err := conn.State()
 	if err != nil {
@@ -134,7 +134,7 @@ func (t *mqlTerraformState) resources() ([]interface{}, error) {
 	})
 
 	// convert module list to mql resources
-	list := []interface{}{}
+	list := []any{}
 	for i := range resourceList {
 		r, err := newMqlResource(t.MqlRuntime, resourceList[i])
 		if err != nil {
@@ -183,24 +183,24 @@ func (t *mqlTerraformStateOutput) id() (string, error) {
 	return "terraform.state.output/identifier/" + id.Data, nil
 }
 
-func (t *mqlTerraformStateOutput) value() (interface{}, error) {
+func (t *mqlTerraformStateOutput) value() (any, error) {
 	if t.output == nil {
 		return nil, nil
 	}
 
-	var value interface{}
+	var value any
 	if err := json.Unmarshal(t.output.Value, &value); err != nil {
 		return nil, err
 	}
 	return value, nil
 }
 
-func (t mqlTerraformStateOutput) compute_type() (interface{}, error) {
+func (t mqlTerraformStateOutput) compute_type() (any, error) {
 	if t.output == nil {
 		return nil, nil
 	}
 
-	var typ interface{}
+	var typ any
 	if err := json.Unmarshal([]byte(t.output.Type), &typ); err != nil {
 		return nil, err
 	}
@@ -256,12 +256,12 @@ type mqlTerraformStateModuleInternal struct {
 	module *connection.Module
 }
 
-func (t *mqlTerraformStateModule) resources() ([]interface{}, error) {
+func (t *mqlTerraformStateModule) resources() ([]any, error) {
 	if t.module == nil {
 		return nil, nil
 	}
 
-	var list []interface{}
+	var list []any
 	for i := range t.module.Resources {
 		resource := t.module.Resources[i]
 		r, err := newMqlResource(t.MqlRuntime, resource)
@@ -307,12 +307,12 @@ func newMqlResource(runtime *plugin.Runtime, resource *connection.Resource) (plu
 	return r, nil
 }
 
-func (t *mqlTerraformStateModule) childModules() ([]interface{}, error) {
+func (t *mqlTerraformStateModule) childModules() ([]any, error) {
 	if t.module == nil {
 		return nil, nil
 	}
 
-	var list []interface{}
+	var list []any
 	for i := range t.module.ChildModules {
 		r, err := newMqlModule(t.MqlRuntime, t.module.ChildModules[i])
 		if err != nil {

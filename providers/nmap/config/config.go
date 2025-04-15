@@ -4,15 +4,15 @@
 package config
 
 import (
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/nmap/connection"
-	"go.mondoo.com/cnquery/v11/providers/nmap/provider"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/nmap/connection"
+	"go.mondoo.com/cnquery/v12/providers/nmap/provider"
 )
 
 var Config = plugin.Provider{
 	Name:            "nmap",
-	ID:              "go.mondoo.com/cnquery/v11/providers/nmap",
+	ID:              "go.mondoo.com/cnquery/v12/providers/nmap",
 	Version:         "11.0.57",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{

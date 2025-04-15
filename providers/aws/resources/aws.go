@@ -14,12 +14,12 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/smithy-go/transport/http"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
-	"go.mondoo.com/cnquery/v11/providers/network/resources/certificates"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/providers/network/resources/certificates"
+	"go.mondoo.com/cnquery/v12/types"
 	"k8s.io/client-go/util/cert"
 )
 
@@ -50,9 +50,9 @@ func NewSecurityGroupArn(region, accountID, sgID string) string {
 	return fmt.Sprintf(securityGroupArnPattern, region, accountID, sgID)
 }
 
-func (a *mqlAws) regions() ([]interface{}, error) {
+func (a *mqlAws) regions() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	regions, err := conn.Regions()
 	for i := range regions {
 		res = append(res, regions[i])
@@ -80,16 +80,16 @@ func Is400InstanceNotFoundError(err error) bool {
 	return false
 }
 
-func strMapToInterface(m map[string]string) map[string]interface{} {
-	res := map[string]interface{}{}
+func strMapToInterface(m map[string]string) map[string]any {
+	res := map[string]any{}
 	for k, v := range m {
 		res[k] = v
 	}
 	return res
 }
 
-func toInterfaceArr(a []string) []interface{} {
-	res := []interface{}{}
+func toInterfaceArr(a []string) []any {
+	res := []any{}
 	for i := range a {
 		res = append(res, a[i])
 	}
@@ -104,8 +104,8 @@ func GetRegionFromArn(arnVal string) (string, error) {
 	return parsedArn.Region, nil
 }
 
-func CertificatesToMqlCertificates(runtime *plugin.Runtime, certs []*x509.Certificate) ([]interface{}, error) {
-	res := []interface{}{}
+func CertificatesToMqlCertificates(runtime *plugin.Runtime, certs []*x509.Certificate) ([]any, error) {
+	res := []any{}
 	// to create certificate resources
 	for i := range certs {
 		cert := certs[i]
@@ -190,7 +190,7 @@ func getAssetIdentifier(runtime *plugin.Runtime) *assetIdentifier {
 	return &assetIdentifier{name: a.Name, arn: arn}
 }
 
-func mapStringInterfaceToStringString(m map[string]interface{}) map[string]string {
+func mapStringInterfaceToStringString(m map[string]any) map[string]string {
 	newM := make(map[string]string)
 	for k, v := range m {
 		newM[k] = v.(string)
@@ -219,8 +219,8 @@ func (sgh *securityGroupIdHandler) setSecurityGroupArns(ids []string) {
 }
 
 // newSecurityGroupResources creates new security group resources based on the security group arns
-func (sgh *securityGroupIdHandler) newSecurityGroupResources(runtime *plugin.Runtime) ([]interface{}, error) {
-	sgs := []interface{}{}
+func (sgh *securityGroupIdHandler) newSecurityGroupResources(runtime *plugin.Runtime) ([]any, error) {
+	sgs := []any{}
 	for i := range sgh.securityGroupArns {
 		sgArn := sgh.securityGroupArns[i]
 		mqlSg, err := NewResource(runtime, "aws.ec2.securitygroup",

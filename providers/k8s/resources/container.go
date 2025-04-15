@@ -6,11 +6,11 @@ package resources
 import (
 	"fmt"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/k8s/connection/shared/resources"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/k8s/connection/shared/resources"
+	"go.mondoo.com/cnquery/v12/types"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -26,7 +26,7 @@ var (
 
 func getContainers(
 	obj runtime.Object, meta metav1.Object, pluginRuntime *plugin.Runtime, containerType ContainerType,
-) ([]interface{}, error) {
+) ([]any, error) {
 	var containersFunc func(runtime.Object) ([]corev1.Container, error)
 	resourceType := ""
 	switch containerType {
@@ -48,7 +48,7 @@ func getContainers(
 		return nil, err
 	}
 
-	resp := []interface{}{}
+	resp := []any{}
 	containers, err := containersFunc(obj)
 	if err != nil {
 		return nil, err

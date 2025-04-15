@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/testutils"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/testutils"
 )
 
 func TestResource_Python(t *testing.T) {
@@ -18,7 +18,7 @@ func TestResource_Python(t *testing.T) {
 		res := x.TestQuery(t, "python.packages")
 		assert.NotEmpty(t, res)
 		require.Empty(t, res[0].Result().Error)
-		values, ok := res[0].Data.Value.([]interface{})
+		values, ok := res[0].Data.Value.([]any)
 		require.True(t, ok, "type assertion failed")
 		assert.Equal(t, 136, len(values), "expected two parsed packages")
 	})
@@ -27,7 +27,7 @@ func TestResource_Python(t *testing.T) {
 		res := x.TestQuery(t, "python.toplevel")
 		assert.NotEmpty(t, res)
 		require.Empty(t, res[0].Result().Error)
-		values, ok := res[0].Data.Value.([]interface{})
+		values, ok := res[0].Data.Value.([]any)
 		require.True(t, ok, "type assertion failed")
 		assert.Equal(t, 3, len(values), "expected a single child/leaf package")
 	})

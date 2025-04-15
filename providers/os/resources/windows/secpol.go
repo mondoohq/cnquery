@@ -13,18 +13,18 @@ import (
 )
 
 type Secpol struct {
-	SystemAccess    map[string]interface{}
-	EventAudit      map[string]interface{}
-	RegistryValues  map[string]interface{}
-	PrivilegeRights map[string]interface{}
+	SystemAccess    map[string]any
+	EventAudit      map[string]any
+	RegistryValues  map[string]any
+	PrivilegeRights map[string]any
 }
 
 func ParseSecpol(r io.Reader) (*Secpol, error) {
 	res := &Secpol{
-		SystemAccess:    map[string]interface{}{}, // except for NewAdministratorName & NewGuestName, parse everything as int64
-		EventAudit:      map[string]interface{}{}, // parse to int
-		RegistryValues:  map[string]interface{}{}, // keep strings
-		PrivilegeRights: map[string]interface{}{}, // split entries with ,
+		SystemAccess:    map[string]any{}, // except for NewAdministratorName & NewGuestName, parse everything as int64
+		EventAudit:      map[string]any{}, // parse to int
+		RegistryValues:  map[string]any{}, // keep strings
+		PrivilegeRights: map[string]any{}, // split entries with ,
 	}
 
 	cfg, err := ini.Load(r)
@@ -84,7 +84,7 @@ func ParseSecpol(r io.Reader) (*Secpol, error) {
 		valuesT := strings.Split(rawValue, ",")
 		sort.Sort(sort.StringSlice(valuesT))
 
-		values := make([]interface{}, len(valuesT))
+		values := make([]any, len(valuesT))
 		for i := range valuesT {
 			val := valuesT[i]
 			val = strings.Replace(val, "*S", "S", 1)

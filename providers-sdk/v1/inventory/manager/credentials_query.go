@@ -9,12 +9,13 @@ import (
 	"github.com/cockroachdb/errors"
 	mapstructure "github.com/go-viper/mapstructure/v2"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/mql"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/mql"
+	"go.mondoo.com/cnquery/v12/mqlc"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 type CredentialQueryResponse struct {
@@ -28,11 +29,11 @@ func NewCredentialQueryRunner(credentialQuery string, runtime llx.Runtime) (*Cre
 	mqlExecutor := mql.New(runtime, cnquery.DefaultFeatures)
 
 	// just empty props to ensure we can compile
-	props := map[string]*llx.Primitive{
+	props := mqlc.SimpleProps{
 		"mrn":      llx.StringPrimitive(""),
 		"name":     llx.StringPrimitive(""),
-		"labels":   llx.MapData(map[string]interface{}{}, types.String).Result().Data,
-		"platform": llx.MapData(map[string]interface{}{}, types.String).Result().Data,
+		"labels":   llx.MapData(map[string]any{}, types.String).Result().Data,
+		"platform": llx.MapData(map[string]any{}, types.String).Result().Data,
 	}
 
 	// test query to see if it compiles well
@@ -53,25 +54,25 @@ type CredentialQueryRunner struct {
 
 func (sq *CredentialQueryRunner) Run(a *inventory.Asset) (*vault.Credential, error) {
 	// map labels to props
-	labelProps := map[string]interface{}{}
+	labelProps := map[string]any{}
 	labels := a.GetLabels()
 	for k, v := range labels {
 		labelProps[k] = v
 	}
 
 	// map platform to props
-	var platformProps map[string]interface{}
+	var platformProps map[string]any
 	if a.Platform != nil {
-		platformProps = map[string]interface{}{
+		platformProps = map[string]any{
 			"name":    a.Platform.Name,
 			"release": a.Platform.Version,
 			"arch":    a.Platform.Arch,
 		}
 	} else {
-		platformProps = map[string]interface{}{}
+		platformProps = map[string]any{}
 	}
 
-	props := map[string]*llx.Primitive{
+	props := mqlc.SimpleProps{
 		"mrn":      llx.StringPrimitive(a.Mrn),
 		"name":     llx.StringPrimitive(a.Name),
 		"labels":   llx.MapData(labelProps, types.String).Result().Data,

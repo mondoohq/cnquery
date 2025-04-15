@@ -8,11 +8,11 @@ import (
 	"encoding/json"
 	"errors"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/azure/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/azure/connection"
+	"go.mondoo.com/cnquery/v12/types"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	postgresql "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresql"
@@ -45,7 +45,7 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceServer) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionPostgreSqlService) servers() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionPostgreSqlService) servers() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -58,7 +58,7 @@ func (a *mqlAzureSubscriptionPostgreSqlService) servers() ([]interface{}, error)
 		return nil, err
 	}
 	pager := dbClient.NewListPager(&postgresql.ServersClientListOptions{})
-	res := []interface{}{}
+	res := []any{}
 
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
@@ -66,7 +66,7 @@ func (a *mqlAzureSubscriptionPostgreSqlService) servers() ([]interface{}, error)
 			return nil, err
 		}
 		for _, dbServer := range page.Value {
-			properties := make(map[string](interface{}))
+			properties := make(map[string](any))
 
 			data, err := json.Marshal(dbServer.Properties)
 			if err != nil {
@@ -101,7 +101,7 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) id() (string, erro
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionPostgreSqlService) flexibleServers() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionPostgreSqlService) flexibleServers() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -114,7 +114,7 @@ func (a *mqlAzureSubscriptionPostgreSqlService) flexibleServers() ([]interface{}
 		return nil, err
 	}
 	pager := dbClient.NewListPager(&flexible.ServersClientListOptions{})
-	res := []interface{}{}
+	res := []any{}
 
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
@@ -122,7 +122,7 @@ func (a *mqlAzureSubscriptionPostgreSqlService) flexibleServers() ([]interface{}
 			return nil, err
 		}
 		for _, dbServer := range page.Value {
-			properties := make(map[string](interface{}))
+			properties := make(map[string](any))
 
 			data, err := json.Marshal(dbServer.Properties)
 			if err != nil {
@@ -153,7 +153,7 @@ func (a *mqlAzureSubscriptionPostgreSqlService) flexibleServers() ([]interface{}
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionPostgreSqlServiceServer) databases() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionPostgreSqlServiceServer) databases() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -175,7 +175,7 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceServer) databases() ([]interface{}
 		return nil, &json.MarshalerError{}
 	}
 	pager := dbDatabaseClient.NewListByServerPager(resourceID.ResourceGroup, server, &postgresql.DatabasesClientListByServerOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -200,7 +200,7 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceServer) databases() ([]interface{}
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) databases() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) databases() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -222,7 +222,7 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) databases() ([]int
 		return nil, &json.MarshalerError{}
 	}
 	pager := dbDatabaseClient.NewListByServerPager(resourceID.ResourceGroup, server, &flexible.DatabasesClientListByServerOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -247,7 +247,7 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) databases() ([]int
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionPostgreSqlServiceServer) firewallRules() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionPostgreSqlServiceServer) firewallRules() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -269,7 +269,7 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceServer) firewallRules() ([]interfa
 	}
 
 	pager := dbFirewallClient.NewListByServerPager(resourceID.ResourceGroup, server, &postgresql.FirewallRulesClientListByServerOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -293,7 +293,7 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceServer) firewallRules() ([]interfa
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) firewallRules() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) firewallRules() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -315,7 +315,7 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) firewallRules() ([
 	}
 
 	pager := dbFirewallClient.NewListByServerPager(resourceID.ResourceGroup, server, &flexible.FirewallRulesClientListByServerOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -339,7 +339,7 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) firewallRules() ([
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionPostgreSqlServiceServer) configuration() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionPostgreSqlServiceServer) configuration() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -361,7 +361,7 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceServer) configuration() ([]interfa
 	}
 
 	pager := dbConfClient.NewListByServerPager(resourceID.ResourceGroup, server, &postgresql.ConfigurationsClientListByServerOptions{})
-	res := []interface{}{}
+	res := []any{}
 
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
@@ -391,7 +391,7 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceServer) configuration() ([]interfa
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) configuration() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) configuration() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -413,7 +413,7 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) configuration() ([
 	}
 
 	pager := dbConfClient.NewListByServerPager(resourceID.ResourceGroup, server, &flexible.ConfigurationsClientListByServerOptions{})
-	res := []interface{}{}
+	res := []any{}
 
 	for pager.More() {
 		page, err := pager.NextPage(ctx)

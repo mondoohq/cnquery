@@ -8,13 +8,13 @@ import (
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	"github.com/okta/okta-sdk-golang/v2/okta/query"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/okta/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/okta/connection"
 )
 
-func (o *mqlOkta) users() ([]interface{}, error) {
+func (o *mqlOkta) users() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
 	client := conn.Client()
 
@@ -33,7 +33,7 @@ func (o *mqlOkta) users() ([]interface{}, error) {
 		return nil, nil
 	}
 
-	list := []interface{}{}
+	list := []any{}
 	appendEntry := func(datalist []*okta.User) error {
 		for i := range datalist {
 			user := datalist[i]
@@ -80,7 +80,7 @@ func newMqlOktaUser(runtime *plugin.Runtime, user *okta.User) (*mqlOktaUser, err
 		return nil, err
 	}
 
-	profileDict := map[string]interface{}{}
+	profileDict := map[string]any{}
 	if user.Profile != nil {
 		for k, v := range *user.Profile {
 			profileDict[k] = v
@@ -111,7 +111,7 @@ func (o *mqlOktaUser) id() (string, error) {
 	return "okta.user/" + o.Id.Data, o.Id.Error
 }
 
-func (o *mqlOktaUser) roles() ([]interface{}, error) {
+func (o *mqlOktaUser) roles() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
 	client := conn.Client()
 
@@ -123,7 +123,7 @@ func (o *mqlOktaUser) roles() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	res := []interface{}{}
+	res := []any{}
 
 	appendEntry := func(datalist []*okta.Role) error {
 		for _, r := range datalist {

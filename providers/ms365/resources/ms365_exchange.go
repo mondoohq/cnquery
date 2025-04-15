@@ -14,12 +14,12 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/logger"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/logger"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/ms365/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 const (
@@ -107,22 +107,22 @@ ConvertTo-Json -Depth 4 $exchangeOnline
 `
 
 type ExchangeOnlineReport struct {
-	MalwareFilterPolicy            []interface{}     `json:"MalwareFilterPolicy"`
-	HostedOutboundSpamFilterPolicy []interface{}     `json:"HostedOutboundSpamFilterPolicy"`
-	TransportRule                  []interface{}     `json:"TransportRule"`
-	RemoteDomain                   []interface{}     `json:"RemoteDomain"`
-	SafeLinksPolicy                []interface{}     `json:"SafeLinksPolicy"`
-	SafeAttachmentPolicy           []interface{}     `json:"SafeAttachmentPolicy"`
-	OrganizationConfig             interface{}       `json:"OrganizationConfig"`
-	AuthenticationPolicy           interface{}       `json:"AuthenticationPolicy"`
-	AntiPhishPolicy                []interface{}     `json:"AntiPhishPolicy"`
-	DkimSigningConfig              interface{}       `json:"DkimSigningConfig"`
-	OwaMailboxPolicy               interface{}       `json:"OwaMailboxPolicy"`
-	AdminAuditLogConfig            interface{}       `json:"AdminAuditLogConfig"`
-	PhishFilterPolicy              []interface{}     `json:"PhishFilterPolicy"`
-	AtpPolicyForO365               []interface{}     `json:"AtpPolicyForO365"`
-	SharingPolicy                  []interface{}     `json:"SharingPolicy"`
-	RoleAssignmentPolicy           []interface{}     `json:"RoleAssignmentPolicy"`
+	MalwareFilterPolicy            []any     `json:"MalwareFilterPolicy"`
+	HostedOutboundSpamFilterPolicy []any     `json:"HostedOutboundSpamFilterPolicy"`
+	TransportRule                  []any     `json:"TransportRule"`
+	RemoteDomain                   []any     `json:"RemoteDomain"`
+	SafeLinksPolicy                []any     `json:"SafeLinksPolicy"`
+	SafeAttachmentPolicy           []any     `json:"SafeAttachmentPolicy"`
+	OrganizationConfig             any       `json:"OrganizationConfig"`
+	AuthenticationPolicy           any       `json:"AuthenticationPolicy"`
+	AntiPhishPolicy                []any     `json:"AntiPhishPolicy"`
+	DkimSigningConfig              any       `json:"DkimSigningConfig"`
+	OwaMailboxPolicy               any       `json:"OwaMailboxPolicy"`
+	AdminAuditLogConfig            any       `json:"AdminAuditLogConfig"`
+	PhishFilterPolicy              []any     `json:"PhishFilterPolicy"`
+	AtpPolicyForO365               []any     `json:"AtpPolicyForO365"`
+	SharingPolicy                  []any     `json:"SharingPolicy"`
+	RoleAssignmentPolicy           []any     `json:"RoleAssignmentPolicy"`
 	ExternalInOutlook              []*ExternalSender `json:"ExternalInOutlook"`
 	// note: this only contains shared mailboxes
 	ExoMailbox             []*ExoMailbox             `json:"ExoMailbox"`
@@ -140,7 +140,7 @@ type MailboxAuditBypassAssociation struct {
 }
 
 type SecurityAndComplianceReport struct {
-	DlpCompliancePolicy []interface{} `json:"DlpCompliancePolicy"`
+	DlpCompliancePolicy []any `json:"DlpCompliancePolicy"`
 }
 
 type MailboxWithAudit struct {
@@ -229,8 +229,8 @@ func (r *mqlMs365Exchangeonline) getOrg() (string, error) {
 }
 
 // Related to TeamsProtectionPolicy as a separate function
-func convertTeamsProtectionPolicy(r *mqlMs365Exchangeonline, data []*TeamsProtectionPolicy) ([]interface{}, error) {
-	var result []interface{}
+func convertTeamsProtectionPolicy(r *mqlMs365Exchangeonline, data []*TeamsProtectionPolicy) ([]any, error) {
+	var result []any
 	for _, t := range data {
 		if t == nil {
 			continue
@@ -249,8 +249,8 @@ func convertTeamsProtectionPolicy(r *mqlMs365Exchangeonline, data []*TeamsProtec
 }
 
 // Related to ReportSubmissionPolicy as a separate function
-func convertReportSubmissionPolicy(r *mqlMs365Exchangeonline, data []*ReportSubmissionPolicy) ([]interface{}, error) {
-	var result []interface{}
+func convertReportSubmissionPolicy(r *mqlMs365Exchangeonline, data []*ReportSubmissionPolicy) ([]any, error) {
+	var result []any
 	for _, t := range data {
 		if t == nil {
 			continue
@@ -338,7 +338,7 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 	}
 
 	// Process enhanced mailbox data
-	mailboxesWithAudit := []interface{}{}
+	mailboxesWithAudit := []any{}
 	var mailboxesWithAuditErr error
 	for _, m := range report.Mailbox {
 		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.mailbox",
@@ -360,60 +360,60 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 		}
 		mailboxesWithAudit = append(mailboxesWithAudit, mql)
 	}
-	r.MailboxesWithAudit = plugin.TValue[[]interface{}]{Data: mailboxesWithAudit, State: plugin.StateIsSet, Error: mailboxesWithAuditErr}
+	r.MailboxesWithAudit = plugin.TValue[[]any]{Data: mailboxesWithAudit, State: plugin.StateIsSet, Error: mailboxesWithAuditErr}
 
 	malwareFilterPolicy, malwareFilterPolicyErr := convert.JsonToDictSlice(report.MalwareFilterPolicy)
-	r.MalwareFilterPolicy = plugin.TValue[[]interface{}]{Data: malwareFilterPolicy, State: plugin.StateIsSet, Error: malwareFilterPolicyErr}
+	r.MalwareFilterPolicy = plugin.TValue[[]any]{Data: malwareFilterPolicy, State: plugin.StateIsSet, Error: malwareFilterPolicyErr}
 
 	hostedOutboundSpamFilterPolicy, hostedOutboundSpamFilterPolicyErr := convert.JsonToDictSlice(report.HostedOutboundSpamFilterPolicy)
-	r.HostedOutboundSpamFilterPolicy = plugin.TValue[[]interface{}]{Data: hostedOutboundSpamFilterPolicy, State: plugin.StateIsSet, Error: hostedOutboundSpamFilterPolicyErr}
+	r.HostedOutboundSpamFilterPolicy = plugin.TValue[[]any]{Data: hostedOutboundSpamFilterPolicy, State: plugin.StateIsSet, Error: hostedOutboundSpamFilterPolicyErr}
 
 	transportRule, transportRuleErr := convert.JsonToDictSlice(report.TransportRule)
-	r.TransportRule = plugin.TValue[[]interface{}]{Data: transportRule, State: plugin.StateIsSet, Error: transportRuleErr}
+	r.TransportRule = plugin.TValue[[]any]{Data: transportRule, State: plugin.StateIsSet, Error: transportRuleErr}
 
 	remoteDomain, remoteDomainErr := convert.JsonToDictSlice(report.RemoteDomain)
-	r.RemoteDomain = plugin.TValue[[]interface{}]{Data: remoteDomain, State: plugin.StateIsSet, Error: remoteDomainErr}
+	r.RemoteDomain = plugin.TValue[[]any]{Data: remoteDomain, State: plugin.StateIsSet, Error: remoteDomainErr}
 
 	safeLinksPolicy, safeLinksPolicyErr := convert.JsonToDictSlice(report.SafeLinksPolicy)
-	r.SafeLinksPolicy = plugin.TValue[[]interface{}]{Data: safeLinksPolicy, State: plugin.StateIsSet, Error: safeLinksPolicyErr}
+	r.SafeLinksPolicy = plugin.TValue[[]any]{Data: safeLinksPolicy, State: plugin.StateIsSet, Error: safeLinksPolicyErr}
 
 	safeAttachmentPolicy, safeAttachmentPolicyErr := convert.JsonToDictSlice(report.SafeAttachmentPolicy)
-	r.SafeAttachmentPolicy = plugin.TValue[[]interface{}]{Data: safeAttachmentPolicy, State: plugin.StateIsSet, Error: safeAttachmentPolicyErr}
+	r.SafeAttachmentPolicy = plugin.TValue[[]any]{Data: safeAttachmentPolicy, State: plugin.StateIsSet, Error: safeAttachmentPolicyErr}
 
 	organizationConfig, organizationConfigErr := convert.JsonToDict(report.OrganizationConfig)
-	r.OrganizationConfig = plugin.TValue[interface{}]{Data: organizationConfig, State: plugin.StateIsSet, Error: organizationConfigErr}
+	r.OrganizationConfig = plugin.TValue[any]{Data: organizationConfig, State: plugin.StateIsSet, Error: organizationConfigErr}
 
 	authenticationPolicy, authenticationPolicyErr := convert.JsonToDictSlice(report.AuthenticationPolicy)
-	r.AuthenticationPolicy = plugin.TValue[[]interface{}]{Data: authenticationPolicy, State: plugin.StateIsSet, Error: authenticationPolicyErr}
+	r.AuthenticationPolicy = plugin.TValue[[]any]{Data: authenticationPolicy, State: plugin.StateIsSet, Error: authenticationPolicyErr}
 
 	antiPhishPolicy, antiPhishPolicyErr := convert.JsonToDictSlice(report.AntiPhishPolicy)
-	r.AntiPhishPolicy = plugin.TValue[[]interface{}]{Data: antiPhishPolicy, State: plugin.StateIsSet, Error: antiPhishPolicyErr}
+	r.AntiPhishPolicy = plugin.TValue[[]any]{Data: antiPhishPolicy, State: plugin.StateIsSet, Error: antiPhishPolicyErr}
 
 	dkimSigningConfig, dkimSigningConfigErr := convert.JsonToDictSlice(report.DkimSigningConfig)
-	r.DkimSigningConfig = plugin.TValue[[]interface{}]{Data: dkimSigningConfig, State: plugin.StateIsSet, Error: dkimSigningConfigErr}
+	r.DkimSigningConfig = plugin.TValue[[]any]{Data: dkimSigningConfig, State: plugin.StateIsSet, Error: dkimSigningConfigErr}
 
 	owaMailboxPolicy, owaMailboxPolicyErr := convert.JsonToDictSlice(report.OwaMailboxPolicy)
-	r.OwaMailboxPolicy = plugin.TValue[[]interface{}]{Data: owaMailboxPolicy, State: plugin.StateIsSet, Error: owaMailboxPolicyErr}
+	r.OwaMailboxPolicy = plugin.TValue[[]any]{Data: owaMailboxPolicy, State: plugin.StateIsSet, Error: owaMailboxPolicyErr}
 
 	adminAuditLogConfig, adminAuditLogConfigErr := convert.JsonToDict(report.AdminAuditLogConfig)
-	r.AdminAuditLogConfig = plugin.TValue[interface{}]{Data: adminAuditLogConfig, State: plugin.StateIsSet, Error: adminAuditLogConfigErr}
+	r.AdminAuditLogConfig = plugin.TValue[any]{Data: adminAuditLogConfig, State: plugin.StateIsSet, Error: adminAuditLogConfigErr}
 
 	phishFilterPolicy, phishFilterPolicyErr := convert.JsonToDictSlice(report.PhishFilterPolicy)
-	r.PhishFilterPolicy = plugin.TValue[[]interface{}]{Data: phishFilterPolicy, State: plugin.StateIsSet, Error: phishFilterPolicyErr}
+	r.PhishFilterPolicy = plugin.TValue[[]any]{Data: phishFilterPolicy, State: plugin.StateIsSet, Error: phishFilterPolicyErr}
 
 	mailbox, mailboxErr := convert.JsonToDictSlice(report.Mailbox)
-	r.Mailbox = plugin.TValue[[]interface{}]{Data: mailbox, State: plugin.StateIsSet, Error: mailboxErr}
+	r.Mailbox = plugin.TValue[[]any]{Data: mailbox, State: plugin.StateIsSet, Error: mailboxErr}
 
 	atpPolicyForO365, atpPolicyForO365Err := convert.JsonToDictSlice(report.AtpPolicyForO365)
-	r.AtpPolicyForO365 = plugin.TValue[[]interface{}]{Data: atpPolicyForO365, State: plugin.StateIsSet, Error: atpPolicyForO365Err}
+	r.AtpPolicyForO365 = plugin.TValue[[]any]{Data: atpPolicyForO365, State: plugin.StateIsSet, Error: atpPolicyForO365Err}
 
 	sharingPolicy, sharingPolicyErr := convert.JsonToDictSlice(report.SharingPolicy)
-	r.SharingPolicy = plugin.TValue[[]interface{}]{Data: sharingPolicy, State: plugin.StateIsSet, Error: sharingPolicyErr}
+	r.SharingPolicy = plugin.TValue[[]any]{Data: sharingPolicy, State: plugin.StateIsSet, Error: sharingPolicyErr}
 
 	roleAssignmentPolicy, roleAssignmentPolicyErr := convert.JsonToDictSlice(report.RoleAssignmentPolicy)
-	r.RoleAssignmentPolicy = plugin.TValue[[]interface{}]{Data: roleAssignmentPolicy, State: plugin.StateIsSet, Error: roleAssignmentPolicyErr}
+	r.RoleAssignmentPolicy = plugin.TValue[[]any]{Data: roleAssignmentPolicy, State: plugin.StateIsSet, Error: roleAssignmentPolicyErr}
 
-	externalInOutlook := []interface{}{}
+	externalInOutlook := []any{}
 	var externalInOutlookErr error
 	for _, e := range report.ExternalInOutlook {
 		if e == nil {
@@ -432,9 +432,9 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 
 		externalInOutlook = append(externalInOutlook, mql)
 	}
-	r.ExternalInOutlook = plugin.TValue[[]interface{}]{Data: externalInOutlook, State: plugin.StateIsSet, Error: externalInOutlookErr}
+	r.ExternalInOutlook = plugin.TValue[[]any]{Data: externalInOutlook, State: plugin.StateIsSet, Error: externalInOutlookErr}
 
-	sharedMailboxes := []interface{}{}
+	sharedMailboxes := []any{}
 	var sharedMailboxesErr error
 	for _, m := range report.ExoMailbox {
 		if m == nil {
@@ -452,28 +452,28 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 
 		sharedMailboxes = append(sharedMailboxes, mql)
 	}
-	r.SharedMailboxes = plugin.TValue[[]interface{}]{Data: sharedMailboxes, State: plugin.StateIsSet, Error: sharedMailboxesErr}
+	r.SharedMailboxes = plugin.TValue[[]any]{Data: sharedMailboxes, State: plugin.StateIsSet, Error: sharedMailboxesErr}
 
 	// Related to TeamsProtectionPolicy
 	if report.TeamsProtectionPolicy != nil {
 		teamsProtectionPolicies, teamsProtectionPolicyErr := convertTeamsProtectionPolicy(r, report.TeamsProtectionPolicy)
-		r.TeamsProtectionPolicies = plugin.TValue[[]interface{}]{Data: teamsProtectionPolicies, State: plugin.StateIsSet, Error: teamsProtectionPolicyErr}
+		r.TeamsProtectionPolicies = plugin.TValue[[]any]{Data: teamsProtectionPolicies, State: plugin.StateIsSet, Error: teamsProtectionPolicyErr}
 	} else {
-		r.TeamsProtectionPolicies = plugin.TValue[[]interface{}]{State: plugin.StateIsSet | plugin.StateIsNull}
+		r.TeamsProtectionPolicies = plugin.TValue[[]any]{State: plugin.StateIsSet | plugin.StateIsNull}
 	}
 
 	// Related to ReportSubmissionPolicy
 	if report.ReportSubmissionPolicy != nil {
 		reportSubmissionPolicies, reportSubmissionPolicyErr := convertReportSubmissionPolicy(r, report.ReportSubmissionPolicy)
-		r.ReportSubmissionPolicies = plugin.TValue[[]interface{}]{Data: reportSubmissionPolicies, State: plugin.StateIsSet, Error: reportSubmissionPolicyErr}
+		r.ReportSubmissionPolicies = plugin.TValue[[]any]{Data: reportSubmissionPolicies, State: plugin.StateIsSet, Error: reportSubmissionPolicyErr}
 	} else {
-		r.ReportSubmissionPolicies = plugin.TValue[[]interface{}]{State: plugin.StateIsSet | plugin.StateIsNull}
+		r.ReportSubmissionPolicies = plugin.TValue[[]any]{State: plugin.StateIsSet | plugin.StateIsNull}
 	}
 
 	transportConfig, transportConfigErr := convert.JsonToDict(report.TransportConfig)
-	r.TransportConfig = plugin.TValue[interface{}]{Data: transportConfig, State: plugin.StateIsSet, Error: transportConfigErr}
+	r.TransportConfig = plugin.TValue[any]{Data: transportConfig, State: plugin.StateIsSet, Error: transportConfigErr}
 
-	mailboxAuditBypassAssociations := []interface{}{}
+	mailboxAuditBypassAssociations := []any{}
 	var mailboxAuditBypassAssociationErr error
 	for _, assoc := range report.MailboxAuditBypassAssociation {
 		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonlineMailboxAuditBypassAssociation",
@@ -487,80 +487,80 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 		}
 		mailboxAuditBypassAssociations = append(mailboxAuditBypassAssociations, mql)
 	}
-	r.MailboxAuditBypassAssociation = plugin.TValue[[]interface{}]{Data: mailboxAuditBypassAssociations, State: plugin.StateIsSet, Error: mailboxAuditBypassAssociationErr}
+	r.MailboxAuditBypassAssociation = plugin.TValue[[]any]{Data: mailboxAuditBypassAssociations, State: plugin.StateIsSet, Error: mailboxAuditBypassAssociationErr}
 
 	return nil
 }
 
-func (r *mqlMs365Exchangeonline) malwareFilterPolicy() ([]interface{}, error) {
+func (r *mqlMs365Exchangeonline) malwareFilterPolicy() ([]any, error) {
 	return nil, r.getExchangeReport()
 }
 
-func (r *mqlMs365Exchangeonline) hostedOutboundSpamFilterPolicy() ([]interface{}, error) {
+func (r *mqlMs365Exchangeonline) hostedOutboundSpamFilterPolicy() ([]any, error) {
 	return nil, r.getExchangeReport()
 }
 
-func (r *mqlMs365Exchangeonline) transportRule() ([]interface{}, error) {
+func (r *mqlMs365Exchangeonline) transportRule() ([]any, error) {
 	return nil, r.getExchangeReport()
 }
 
-func (r *mqlMs365Exchangeonline) remoteDomain() ([]interface{}, error) {
+func (r *mqlMs365Exchangeonline) remoteDomain() ([]any, error) {
 	return nil, r.getExchangeReport()
 }
 
-func (r *mqlMs365Exchangeonline) safeLinksPolicy() ([]interface{}, error) {
+func (r *mqlMs365Exchangeonline) safeLinksPolicy() ([]any, error) {
 	return nil, r.getExchangeReport()
 }
 
-func (r *mqlMs365Exchangeonline) safeAttachmentPolicy() ([]interface{}, error) {
+func (r *mqlMs365Exchangeonline) safeAttachmentPolicy() ([]any, error) {
 	return nil, r.getExchangeReport()
 }
 
-func (r *mqlMs365Exchangeonline) organizationConfig() (interface{}, error) {
+func (r *mqlMs365Exchangeonline) organizationConfig() (any, error) {
 	return nil, r.getExchangeReport()
 }
 
-func (r *mqlMs365Exchangeonline) authenticationPolicy() ([]interface{}, error) {
+func (r *mqlMs365Exchangeonline) authenticationPolicy() ([]any, error) {
 	return nil, r.getExchangeReport()
 }
 
-func (r *mqlMs365Exchangeonline) antiPhishPolicy() ([]interface{}, error) {
+func (r *mqlMs365Exchangeonline) antiPhishPolicy() ([]any, error) {
 	return nil, r.getExchangeReport()
 }
 
-func (r *mqlMs365Exchangeonline) dkimSigningConfig() ([]interface{}, error) {
+func (r *mqlMs365Exchangeonline) dkimSigningConfig() ([]any, error) {
 	return nil, r.getExchangeReport()
 }
 
-func (r *mqlMs365Exchangeonline) owaMailboxPolicy() ([]interface{}, error) {
+func (r *mqlMs365Exchangeonline) owaMailboxPolicy() ([]any, error) {
 	return nil, r.getExchangeReport()
 }
 
-func (r *mqlMs365Exchangeonline) adminAuditLogConfig() (interface{}, error) {
+func (r *mqlMs365Exchangeonline) adminAuditLogConfig() (any, error) {
 	return nil, r.getExchangeReport()
 }
 
-func (r *mqlMs365Exchangeonline) phishFilterPolicy() ([]interface{}, error) {
+func (r *mqlMs365Exchangeonline) phishFilterPolicy() ([]any, error) {
 	return nil, r.getExchangeReport()
 }
 
-func (r *mqlMs365Exchangeonline) mailbox() ([]interface{}, error) {
+func (r *mqlMs365Exchangeonline) mailbox() ([]any, error) {
 	return nil, r.getExchangeReport()
 }
 
-func (r *mqlMs365Exchangeonline) atpPolicyForO365() ([]interface{}, error) {
+func (r *mqlMs365Exchangeonline) atpPolicyForO365() ([]any, error) {
 	return nil, r.getExchangeReport()
 }
 
-func (r *mqlMs365Exchangeonline) sharingPolicy() ([]interface{}, error) {
+func (r *mqlMs365Exchangeonline) sharingPolicy() ([]any, error) {
 	return nil, r.getExchangeReport()
 }
 
-func (r *mqlMs365Exchangeonline) roleAssignmentPolicy() ([]interface{}, error) {
+func (r *mqlMs365Exchangeonline) roleAssignmentPolicy() ([]any, error) {
 	return nil, r.getExchangeReport()
 }
 
-func (r *mqlMs365Exchangeonline) externalInOutlook() ([]interface{}, error) {
+func (r *mqlMs365Exchangeonline) externalInOutlook() ([]any, error) {
 	return nil, r.getExchangeReport()
 }
 
@@ -568,7 +568,7 @@ func (r *mqlMs365ExchangeonlineExternalSender) id() (string, error) {
 	return r.Identity.Data, nil
 }
 
-func (r *mqlMs365Exchangeonline) sharedMailboxes() ([]interface{}, error) {
+func (r *mqlMs365Exchangeonline) sharedMailboxes() ([]any, error) {
 	return nil, r.getExchangeReport()
 }
 
@@ -576,11 +576,11 @@ func (m *mqlMs365ExchangeonlineExoMailbox) id() (string, error) {
 	return m.Identity.Data, nil
 }
 
-func (r *mqlMs365Exchangeonline) teamsProtectionPolicies() ([]interface{}, error) {
+func (r *mqlMs365Exchangeonline) teamsProtectionPolicies() ([]any, error) {
 	return nil, r.getExchangeReport()
 }
 
-func (r *mqlMs365Exchangeonline) reportSubmissionPolicies() ([]interface{}, error) {
+func (r *mqlMs365Exchangeonline) reportSubmissionPolicies() ([]any, error) {
 	return nil, r.getExchangeReport()
 }
 
@@ -607,11 +607,11 @@ func (m *mqlMs365ExchangeonlineExoMailbox) user() (*mqlMicrosoftUser, error) {
 	return nil, errors.New("cannot find user for exchange mailbox")
 }
 
-func (r *mqlMs365Exchangeonline) mailboxesWithAudit() ([]interface{}, error) {
+func (r *mqlMs365Exchangeonline) mailboxesWithAudit() ([]any, error) {
 	return nil, r.getExchangeReport()
 }
 
-func (r *mqlMs365Exchangeonline) transportConfig() (interface{}, error) {
+func (r *mqlMs365Exchangeonline) transportConfig() (any, error) {
 	return nil, r.getExchangeReport()
 }
 
@@ -692,7 +692,7 @@ func (r *mqlMs365Exchangeonline) securityAndCompliance() (*mqlMs365Exchangeonlin
 	return resource.(*mqlMs365ExchangeonlineSecurityAndCompliance), nil
 }
 
-func (r *mqlMs365ExchangeonlineSecurityAndCompliance) dlpCompliancePolicies() ([]interface{}, error) {
+func (r *mqlMs365ExchangeonlineSecurityAndCompliance) dlpCompliancePolicies() ([]any, error) {
 	report, err := r.getSecurityAndComplianceReport()
 	if err != nil {
 		return nil, err
@@ -700,6 +700,6 @@ func (r *mqlMs365ExchangeonlineSecurityAndCompliance) dlpCompliancePolicies() ([
 	return convert.JsonToDictSlice(report.DlpCompliancePolicy)
 }
 
-func (r *mqlMs365Exchangeonline) mailboxAuditBypassAssociation() ([]interface{}, error) {
+func (r *mqlMs365Exchangeonline) mailboxAuditBypassAssociation() ([]any, error) {
 	return nil, r.getExchangeReport()
 }

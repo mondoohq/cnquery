@@ -7,11 +7,11 @@ import (
 	"context"
 
 	"github.com/microsoftgraph/msgraph-sdk-go/groupsettings"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/ms365/connection"
 )
 
-func (a *mqlMicrosoft) settings() ([]interface{}, error) {
+func (a *mqlMicrosoft) settings() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {

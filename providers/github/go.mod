@@ -1,6 +1,6 @@
-module go.mondoo.com/cnquery/v11/providers/github
+module go.mondoo.com/cnquery/v12/providers/github
 
-replace go.mondoo.com/cnquery/v11 => ../..
+replace go.mondoo.com/cnquery/v12 => ../..
 
 go 1.24.0
 
@@ -15,7 +15,7 @@ require (
 	github.com/mitchellh/hashstructure/v2 v2.0.2
 	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.10.0
-	go.mondoo.com/cnquery/v11 v11.61.0
+	go.mondoo.com/cnquery/v12 v12.0.0
 	go.mondoo.com/ranger-rpc v0.7.0
 	golang.org/x/oauth2 v0.30.0
 	google.golang.org/protobuf v1.36.6

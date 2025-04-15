@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -328,11 +328,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"equinix.metal.project.sshKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlEquinixMetalProject).SshKeys, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlEquinixMetalProject).SshKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"equinix.metal.project.devices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlEquinixMetalProject).Devices, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlEquinixMetalProject).Devices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"equinix.metal.organization.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -368,7 +368,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"equinix.metal.organization.address": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlEquinixMetalOrganization).Address, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlEquinixMetalOrganization).Address, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"equinix.metal.organization.taxId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -392,7 +392,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"equinix.metal.organization.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlEquinixMetalOrganization).Users, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlEquinixMetalOrganization).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"equinix.metal.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -540,7 +540,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"equinix.metal.device.os": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlEquinixMetalDevice).Os, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlEquinixMetalDevice).Os, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 }
@@ -578,8 +578,8 @@ type mqlEquinixMetalProject struct {
 	CreatedAt plugin.TValue[*time.Time]
 	UpdatedAt plugin.TValue[*time.Time]
 	Url plugin.TValue[string]
-	SshKeys plugin.TValue[[]interface{}]
-	Devices plugin.TValue[[]interface{}]
+	SshKeys plugin.TValue[[]any]
+	Devices plugin.TValue[[]any]
 }
 
 // createEquinixMetalProject creates a new instance of this resource
@@ -655,15 +655,15 @@ func (c *mqlEquinixMetalProject) GetUrl() *plugin.TValue[string] {
 	return &c.Url
 }
 
-func (c *mqlEquinixMetalProject) GetSshKeys() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.SshKeys, func() ([]interface{}, error) {
+func (c *mqlEquinixMetalProject) GetSshKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SshKeys, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("equinix.metal.project", c.__id, "sshKeys")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -671,15 +671,15 @@ func (c *mqlEquinixMetalProject) GetSshKeys() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlEquinixMetalProject) GetDevices() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Devices, func() ([]interface{}, error) {
+func (c *mqlEquinixMetalProject) GetDevices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Devices, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("equinix.metal.project", c.__id, "devices")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -699,13 +699,13 @@ type mqlEquinixMetalOrganization struct {
 	Twitter plugin.TValue[string]
 	CreatedAt plugin.TValue[*time.Time]
 	UpdatedAt plugin.TValue[*time.Time]
-	Address plugin.TValue[interface{}]
+	Address plugin.TValue[any]
 	TaxId plugin.TValue[string]
 	MainPhone plugin.TValue[string]
 	BillingPhone plugin.TValue[string]
 	CreditAmount plugin.TValue[float64]
 	Url plugin.TValue[string]
-	Users plugin.TValue[[]interface{}]
+	Users plugin.TValue[[]any]
 }
 
 // createEquinixMetalOrganization creates a new instance of this resource
@@ -773,7 +773,7 @@ func (c *mqlEquinixMetalOrganization) GetUpdatedAt() *plugin.TValue[*time.Time] 
 	return &c.UpdatedAt
 }
 
-func (c *mqlEquinixMetalOrganization) GetAddress() *plugin.TValue[interface{}] {
+func (c *mqlEquinixMetalOrganization) GetAddress() *plugin.TValue[any] {
 	return &c.Address
 }
 
@@ -797,15 +797,15 @@ func (c *mqlEquinixMetalOrganization) GetUrl() *plugin.TValue[string] {
 	return &c.Url
 }
 
-func (c *mqlEquinixMetalOrganization) GetUsers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Users, func() ([]interface{}, error) {
+func (c *mqlEquinixMetalOrganization) GetUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Users, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("equinix.metal.organization", c.__id, "users")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1027,7 +1027,7 @@ type mqlEquinixMetalDevice struct {
 	Locked plugin.TValue[bool]
 	BillingCycle plugin.TValue[string]
 	SpotInstance plugin.TValue[bool]
-	Os plugin.TValue[interface{}]
+	Os plugin.TValue[any]
 }
 
 // createEquinixMetalDevice creates a new instance of this resource
@@ -1111,6 +1111,6 @@ func (c *mqlEquinixMetalDevice) GetSpotInstance() *plugin.TValue[bool] {
 	return &c.SpotInstance
 }
 
-func (c *mqlEquinixMetalDevice) GetOs() *plugin.TValue[interface{}] {
+func (c *mqlEquinixMetalDevice) GetOs() *plugin.TValue[any] {
 	return &c.Os
 }

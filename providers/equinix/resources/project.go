@@ -6,10 +6,10 @@ package resources
 import (
 	"errors"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/equinix/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/equinix/connection"
 )
 
 func (r *mqlEquinixMetalProject) id() (string, error) {
@@ -56,7 +56,7 @@ func (r *mqlEquinixMetalProject) organization() (*mqlEquinixMetalOrganization, e
 	return newMqlOrganization(r.MqlRuntime, org)
 }
 
-func (r *mqlEquinixMetalProject) sshKeys() ([]interface{}, error) {
+func (r *mqlEquinixMetalProject) sshKeys() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.EquinixConnection)
 	c := conn.Client()
 
@@ -68,7 +68,7 @@ func (r *mqlEquinixMetalProject) sshKeys() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range keys {
 		key := keys[i]
 
@@ -93,7 +93,7 @@ func (r *mqlEquinixMetalProject) sshKeys() ([]interface{}, error) {
 	return res, nil
 }
 
-func (r *mqlEquinixMetalProject) devices() ([]interface{}, error) {
+func (r *mqlEquinixMetalProject) devices() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.EquinixConnection)
 	c := conn.Client()
 
@@ -105,7 +105,7 @@ func (r *mqlEquinixMetalProject) devices() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range devices {
 		device := devices[i]
 

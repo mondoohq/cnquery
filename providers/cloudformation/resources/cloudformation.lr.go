@@ -9,9 +9,9 @@ import (
 	"errors"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -188,7 +188,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"cloudformation.template.transform": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudformationTemplate).Transform, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlCloudformationTemplate).Transform, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"cloudformation.template.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -196,35 +196,35 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"cloudformation.template.mappings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudformationTemplate).Mappings, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlCloudformationTemplate).Mappings, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"cloudformation.template.globals": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudformationTemplate).Globals, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlCloudformationTemplate).Globals, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"cloudformation.template.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudformationTemplate).Parameters, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlCloudformationTemplate).Parameters, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"cloudformation.template.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudformationTemplate).Metadata, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlCloudformationTemplate).Metadata, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"cloudformation.template.conditions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudformationTemplate).Conditions, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlCloudformationTemplate).Conditions, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"cloudformation.template.resources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudformationTemplate).Resources, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlCloudformationTemplate).Resources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"cloudformation.template.outputs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudformationTemplate).Outputs, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlCloudformationTemplate).Outputs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"cloudformation.template.types": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudformationTemplate).Types, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlCloudformationTemplate).Types, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"cloudformation.resource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -248,11 +248,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"cloudformation.resource.attributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudformationResource).Attributes, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlCloudformationResource).Attributes, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"cloudformation.resource.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudformationResource).Properties, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlCloudformationResource).Properties, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"cloudformation.output.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -264,7 +264,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"cloudformation.output.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudformationOutput).Properties, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlCloudformationOutput).Properties, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 }
@@ -297,16 +297,16 @@ type mqlCloudformationTemplate struct {
 	__id string
 	// optional: if you define mqlCloudformationTemplateInternal it will be used here
 	Version plugin.TValue[string]
-	Transform plugin.TValue[[]interface{}]
+	Transform plugin.TValue[[]any]
 	Description plugin.TValue[string]
-	Mappings plugin.TValue[map[string]interface{}]
-	Globals plugin.TValue[map[string]interface{}]
-	Parameters plugin.TValue[map[string]interface{}]
-	Metadata plugin.TValue[map[string]interface{}]
-	Conditions plugin.TValue[map[string]interface{}]
-	Resources plugin.TValue[[]interface{}]
-	Outputs plugin.TValue[[]interface{}]
-	Types plugin.TValue[[]interface{}]
+	Mappings plugin.TValue[map[string]any]
+	Globals plugin.TValue[map[string]any]
+	Parameters plugin.TValue[map[string]any]
+	Metadata plugin.TValue[map[string]any]
+	Conditions plugin.TValue[map[string]any]
+	Resources plugin.TValue[[]any]
+	Outputs plugin.TValue[[]any]
+	Types plugin.TValue[[]any]
 }
 
 // createCloudformationTemplate creates a new instance of this resource
@@ -350,7 +350,7 @@ func (c *mqlCloudformationTemplate) GetVersion() *plugin.TValue[string] {
 	return &c.Version
 }
 
-func (c *mqlCloudformationTemplate) GetTransform() *plugin.TValue[[]interface{}] {
+func (c *mqlCloudformationTemplate) GetTransform() *plugin.TValue[[]any] {
 	return &c.Transform
 }
 
@@ -358,45 +358,45 @@ func (c *mqlCloudformationTemplate) GetDescription() *plugin.TValue[string] {
 	return &c.Description
 }
 
-func (c *mqlCloudformationTemplate) GetMappings() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Mappings, func() (map[string]interface{}, error) {
+func (c *mqlCloudformationTemplate) GetMappings() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Mappings, func() (map[string]any, error) {
 		return c.mappings()
 	})
 }
 
-func (c *mqlCloudformationTemplate) GetGlobals() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Globals, func() (map[string]interface{}, error) {
+func (c *mqlCloudformationTemplate) GetGlobals() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Globals, func() (map[string]any, error) {
 		return c.globals()
 	})
 }
 
-func (c *mqlCloudformationTemplate) GetParameters() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Parameters, func() (map[string]interface{}, error) {
+func (c *mqlCloudformationTemplate) GetParameters() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Parameters, func() (map[string]any, error) {
 		return c.parameters()
 	})
 }
 
-func (c *mqlCloudformationTemplate) GetMetadata() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Metadata, func() (map[string]interface{}, error) {
+func (c *mqlCloudformationTemplate) GetMetadata() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Metadata, func() (map[string]any, error) {
 		return c.metadata()
 	})
 }
 
-func (c *mqlCloudformationTemplate) GetConditions() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Conditions, func() (map[string]interface{}, error) {
+func (c *mqlCloudformationTemplate) GetConditions() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Conditions, func() (map[string]any, error) {
 		return c.conditions()
 	})
 }
 
-func (c *mqlCloudformationTemplate) GetResources() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Resources, func() ([]interface{}, error) {
+func (c *mqlCloudformationTemplate) GetResources() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Resources, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudformation.template", c.__id, "resources")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -404,15 +404,15 @@ func (c *mqlCloudformationTemplate) GetResources() *plugin.TValue[[]interface{}]
 	})
 }
 
-func (c *mqlCloudformationTemplate) GetOutputs() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Outputs, func() ([]interface{}, error) {
+func (c *mqlCloudformationTemplate) GetOutputs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Outputs, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudformation.template", c.__id, "outputs")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -420,8 +420,8 @@ func (c *mqlCloudformationTemplate) GetOutputs() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlCloudformationTemplate) GetTypes() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Types, func() ([]interface{}, error) {
+func (c *mqlCloudformationTemplate) GetTypes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Types, func() ([]any, error) {
 		return c.types()
 	})
 }
@@ -435,8 +435,8 @@ type mqlCloudformationResource struct {
 	Type plugin.TValue[string]
 	Condition plugin.TValue[string]
 	Documentation plugin.TValue[string]
-	Attributes plugin.TValue[map[string]interface{}]
-	Properties plugin.TValue[map[string]interface{}]
+	Attributes plugin.TValue[map[string]any]
+	Properties plugin.TValue[map[string]any]
 }
 
 // createCloudformationResource creates a new instance of this resource
@@ -492,11 +492,11 @@ func (c *mqlCloudformationResource) GetDocumentation() *plugin.TValue[string] {
 	return &c.Documentation
 }
 
-func (c *mqlCloudformationResource) GetAttributes() *plugin.TValue[map[string]interface{}] {
+func (c *mqlCloudformationResource) GetAttributes() *plugin.TValue[map[string]any] {
 	return &c.Attributes
 }
 
-func (c *mqlCloudformationResource) GetProperties() *plugin.TValue[map[string]interface{}] {
+func (c *mqlCloudformationResource) GetProperties() *plugin.TValue[map[string]any] {
 	return &c.Properties
 }
 
@@ -506,7 +506,7 @@ type mqlCloudformationOutput struct {
 	__id string
 	// optional: if you define mqlCloudformationOutputInternal it will be used here
 	Name plugin.TValue[string]
-	Properties plugin.TValue[map[string]interface{}]
+	Properties plugin.TValue[map[string]any]
 }
 
 // createCloudformationOutput creates a new instance of this resource
@@ -550,6 +550,6 @@ func (c *mqlCloudformationOutput) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlCloudformationOutput) GetProperties() *plugin.TValue[map[string]interface{}] {
+func (c *mqlCloudformationOutput) GetProperties() *plugin.TValue[map[string]any] {
 	return &c.Properties
 }

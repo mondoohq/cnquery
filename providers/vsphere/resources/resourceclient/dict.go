@@ -18,7 +18,7 @@ var (
 )
 
 type camelCaseMarshaller struct {
-	Value interface{}
+	Value any
 }
 
 func (c camelCaseMarshaller) MarshalJSON() ([]byte, error) {
@@ -42,9 +42,9 @@ func (c camelCaseMarshaller) MarshalJSON() ([]byte, error) {
 
 // PropertiesToDict converts an interface to a lowerCase json
 // This enables us to avoid reencoding the xml and mo tag for vmware structs
-func PropertiesToDict(value interface{}) (map[string]interface{}, error) {
+func PropertiesToDict(value any) (map[string]any, error) {
 	// config to dict
-	configDict := map[string]interface{}{}
+	configDict := map[string]any{}
 	configData, err := json.Marshal(camelCaseMarshaller{value})
 	if err != nil {
 		return nil, err

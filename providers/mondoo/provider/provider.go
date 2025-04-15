@@ -8,10 +8,10 @@ import (
 	"errors"
 	"fmt"
 
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/mondoo/connection"
-	"go.mondoo.com/cnquery/v11/providers/mondoo/resources"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/mondoo/connection"
+	"go.mondoo.com/cnquery/v12/providers/mondoo/resources"
 )
 
 const (

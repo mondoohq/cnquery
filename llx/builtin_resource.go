@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"go.mondoo.com/cnquery/v11/types"
-	"go.mondoo.com/cnquery/v11/utils/timex"
+	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/cnquery/v12/utils/timex"
 )
 
 type Resource interface {
@@ -44,7 +44,7 @@ func _resourceWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64,
 	if err != nil || rref > 0 {
 		return nil, rref, err
 	}
-	list := items.Value.([]interface{})
+	list := items.Value.([]any)
 	if len(list) == 0 {
 		return bind, 0, nil
 	}
@@ -169,7 +169,7 @@ func resourceMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 	if err != nil || rref > 0 {
 		return nil, rref, err
 	}
-	list := items.Value.([]interface{})
+	list := items.Value.([]any)
 	if len(list) == 0 {
 		return bind, 0, nil
 	}
@@ -199,7 +199,7 @@ func resourceMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 
 	err = e.runFunctionBlocks(argsList, fref, func(results []arrayBlockCallResult, errs []error) {
 		mappedType := types.Unset
-		resList := []interface{}{}
+		resList := []any{}
 		f := e.ctx.code.Block(fref)
 		epChecksum := e.ctx.code.Checksums[f.Entrypoints[0]]
 
@@ -237,7 +237,7 @@ func resourceLengthV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 		return nil, rref, err
 	}
 
-	list := items.Value.([]interface{})
+	list := items.Value.([]any)
 	return IntData(int64(len(list))), 0, nil
 }
 

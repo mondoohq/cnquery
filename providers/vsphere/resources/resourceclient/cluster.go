@@ -39,7 +39,7 @@ func clusterProperties(cluster *object.ClusterComputeResource) (*mo.ClusterCompu
 	return &props, nil
 }
 
-func (c *Client) ClusterProperties(cluster *object.ClusterComputeResource) (map[string]interface{}, error) {
+func (c *Client) ClusterProperties(cluster *object.ClusterComputeResource) (map[string]any, error) {
 	props, err := clusterProperties(cluster)
 	if err != nil {
 		return nil, err

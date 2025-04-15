@@ -9,9 +9,9 @@ import (
 	"fmt"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/gcp/connection"
 
 	admin "cloud.google.com/go/iam/admin/apiv1"
 	"google.golang.org/api/iterator"
@@ -86,7 +86,7 @@ func initGcpProjectIamServiceServiceAccount(runtime *plugin.Runtime, args map[st
 	return args, nil, nil
 }
 
-func (g *mqlGcpProjectIamService) serviceAccounts() ([]interface{}, error) {
+func (g *mqlGcpProjectIamService) serviceAccounts() ([]any, error) {
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -107,7 +107,7 @@ func (g *mqlGcpProjectIamService) serviceAccounts() ([]interface{}, error) {
 	}
 	defer adminSvc.Close()
 
-	var serviceAccounts []interface{}
+	var serviceAccounts []any
 	it := adminSvc.ListServiceAccounts(ctx, &adminpb.ListServiceAccountsRequest{Name: fmt.Sprintf("projects/%s", projectId)})
 	for {
 		s, err := it.Next()
@@ -135,7 +135,7 @@ func (g *mqlGcpProjectIamService) serviceAccounts() ([]interface{}, error) {
 	return serviceAccounts, nil
 }
 
-func (g *mqlGcpProjectIamServiceServiceAccount) keys() ([]interface{}, error) {
+func (g *mqlGcpProjectIamServiceServiceAccount) keys() ([]any, error) {
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -172,7 +172,7 @@ func (g *mqlGcpProjectIamServiceServiceAccount) keys() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	mqlKeys := make([]interface{}, 0, len(resp.Keys))
+	mqlKeys := make([]any, 0, len(resp.Keys))
 	for _, k := range resp.Keys {
 		mqlKey, err := CreateResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount.key", map[string]*llx.RawData{
 			"name":            llx.StringData(k.Name),

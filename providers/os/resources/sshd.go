@@ -12,11 +12,11 @@ import (
 	"sync"
 
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/sshd"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/sshd"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 type mqlSshdConfigInternal struct {
@@ -246,13 +246,13 @@ func (s *mqlSshdConfig) blocks(file *mqlFile) ([]any, error) {
 	return nil, s.parse(file)
 }
 
-func parseConfigEntrySlice(raw interface{}) ([]interface{}, error) {
+func parseConfigEntrySlice(raw any) ([]any, error) {
 	str, ok := raw.(string)
 	if !ok {
 		return nil, errors.New("value is not a valid string")
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	entries := strings.Split(str, ",")
 	for i := range entries {
 		val := strings.TrimSpace(entries[i])
@@ -262,7 +262,7 @@ func parseConfigEntrySlice(raw interface{}) ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *mqlSshdConfig) ciphers(params map[string]interface{}) ([]interface{}, error) {
+func (s *mqlSshdConfig) ciphers(params map[string]any) ([]any, error) {
 	rawCiphers, ok := params["Ciphers"]
 	if !ok {
 		return nil, nil
@@ -271,7 +271,7 @@ func (s *mqlSshdConfig) ciphers(params map[string]interface{}) ([]interface{}, e
 	return parseConfigEntrySlice(rawCiphers)
 }
 
-func (s *mqlSshdConfig) macs(params map[string]interface{}) ([]interface{}, error) {
+func (s *mqlSshdConfig) macs(params map[string]any) ([]any, error) {
 	rawMacs, ok := params["MACs"]
 	if !ok {
 		return nil, nil
@@ -280,7 +280,7 @@ func (s *mqlSshdConfig) macs(params map[string]interface{}) ([]interface{}, erro
 	return parseConfigEntrySlice(rawMacs)
 }
 
-func (s *mqlSshdConfig) kexs(params map[string]interface{}) ([]interface{}, error) {
+func (s *mqlSshdConfig) kexs(params map[string]any) ([]any, error) {
 	rawkexs, ok := params["KexAlgorithms"]
 	if !ok {
 		return nil, nil
@@ -289,7 +289,7 @@ func (s *mqlSshdConfig) kexs(params map[string]interface{}) ([]interface{}, erro
 	return parseConfigEntrySlice(rawkexs)
 }
 
-func (s *mqlSshdConfig) hostkeys(params map[string]interface{}) ([]interface{}, error) {
+func (s *mqlSshdConfig) hostkeys(params map[string]any) ([]any, error) {
 	rawHostKeys, ok := params["HostKey"]
 	if !ok {
 		return nil, nil
@@ -298,7 +298,7 @@ func (s *mqlSshdConfig) hostkeys(params map[string]interface{}) ([]interface{}, 
 	return parseConfigEntrySlice(rawHostKeys)
 }
 
-func (s *mqlSshdConfig) permitRootLogin(params map[string]interface{}) ([]interface{}, error) {
+func (s *mqlSshdConfig) permitRootLogin(params map[string]any) ([]any, error) {
 	rawHostKeys, ok := params["PermitRootLogin"]
 	if !ok {
 		return nil, nil
@@ -311,7 +311,7 @@ func (s *mqlSshdConfigMatchBlock) context() (*mqlFileContext, error) {
 	return nil, errors.New("context was not provided for sshd.config match block")
 }
 
-func (s *mqlSshdConfigMatchBlock) ciphers(params map[string]interface{}) ([]interface{}, error) {
+func (s *mqlSshdConfigMatchBlock) ciphers(params map[string]any) ([]any, error) {
 	rawCiphers, ok := params["Ciphers"]
 	if !ok {
 		return nil, nil
@@ -320,7 +320,7 @@ func (s *mqlSshdConfigMatchBlock) ciphers(params map[string]interface{}) ([]inte
 	return parseConfigEntrySlice(rawCiphers)
 }
 
-func (s *mqlSshdConfigMatchBlock) macs(params map[string]interface{}) ([]interface{}, error) {
+func (s *mqlSshdConfigMatchBlock) macs(params map[string]any) ([]any, error) {
 	rawMacs, ok := params["MACs"]
 	if !ok {
 		return nil, nil
@@ -329,7 +329,7 @@ func (s *mqlSshdConfigMatchBlock) macs(params map[string]interface{}) ([]interfa
 	return parseConfigEntrySlice(rawMacs)
 }
 
-func (s *mqlSshdConfigMatchBlock) kexs(params map[string]interface{}) ([]interface{}, error) {
+func (s *mqlSshdConfigMatchBlock) kexs(params map[string]any) ([]any, error) {
 	rawkexs, ok := params["KexAlgorithms"]
 	if !ok {
 		return nil, nil
@@ -338,7 +338,7 @@ func (s *mqlSshdConfigMatchBlock) kexs(params map[string]interface{}) ([]interfa
 	return parseConfigEntrySlice(rawkexs)
 }
 
-func (s *mqlSshdConfigMatchBlock) hostkeys(params map[string]interface{}) ([]interface{}, error) {
+func (s *mqlSshdConfigMatchBlock) hostkeys(params map[string]any) ([]any, error) {
 	rawHostKeys, ok := params["HostKey"]
 	if !ok {
 		return nil, nil
@@ -347,7 +347,7 @@ func (s *mqlSshdConfigMatchBlock) hostkeys(params map[string]interface{}) ([]int
 	return parseConfigEntrySlice(rawHostKeys)
 }
 
-func (s *mqlSshdConfigMatchBlock) permitRootLogin(params map[string]interface{}) ([]interface{}, error) {
+func (s *mqlSshdConfigMatchBlock) permitRootLogin(params map[string]any) ([]any, error) {
 	rawHostKeys, ok := params["PermitRootLogin"]
 	if !ok {
 		return nil, nil

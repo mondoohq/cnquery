@@ -34,7 +34,7 @@ func TestBasic(t *testing.T) {
 	expensiveCalls := 0
 
 	// Function tracks how many times its been called
-	expensive := func() (interface{}, error) {
+	expensive := func() (any, error) {
 		expensiveCalls++
 		return expensiveCalls, nil
 	}
@@ -83,7 +83,7 @@ func TestFailure(t *testing.T) {
 	calls := 0
 
 	// This function will fail IFF it has not been called before.
-	twoForTheMoney := func() (interface{}, error) {
+	twoForTheMoney := func() (any, error) {
 		calls++
 
 		if calls == 1 {

@@ -12,8 +12,8 @@ import (
 
 	"github.com/hashicorp/go-plugin"
 	"github.com/rs/zerolog/log"
-	pp "go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/resources"
+	pp "go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
 	"google.golang.org/grpc/status"
 )
 

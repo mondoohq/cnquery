@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -459,31 +459,31 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"googleworkspace.orgUnits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGoogleworkspace).OrgUnits, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGoogleworkspace).OrgUnits, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGoogleworkspace).Users, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGoogleworkspace).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.domains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGoogleworkspace).Domains, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGoogleworkspace).Domains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGoogleworkspace).Groups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGoogleworkspace).Groups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGoogleworkspace).Roles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGoogleworkspace).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.connectedApps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGoogleworkspace).ConnectedApps, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGoogleworkspace).ConnectedApps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.calendars": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGoogleworkspace).Calendars, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGoogleworkspace).Calendars, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.calendar.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -503,7 +503,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"googleworkspace.calendar.acl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGoogleworkspaceCalendar).Acl, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGoogleworkspaceCalendar).Acl, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.calendar.aclRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -603,7 +603,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"googleworkspace.user.aliases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGoogleworkspaceUser).Aliases, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGoogleworkspaceUser).Aliases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.user.suspended": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -651,7 +651,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"googleworkspace.user.tokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGoogleworkspaceUser).Tokens, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGoogleworkspaceUser).Tokens, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.token.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -675,7 +675,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"googleworkspace.token.scopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGoogleworkspaceToken).Scopes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGoogleworkspaceToken).Scopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.token.userKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -695,15 +695,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"googleworkspace.connectedApp.scopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGoogleworkspaceConnectedApp).Scopes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGoogleworkspaceConnectedApp).Scopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.connectedApp.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGoogleworkspaceConnectedApp).Users, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGoogleworkspaceConnectedApp).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.connectedApp.tokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGoogleworkspaceConnectedApp).Tokens, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGoogleworkspaceConnectedApp).Tokens, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -727,7 +727,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"googleworkspace.group.aliases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGoogleworkspaceGroup).Aliases, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGoogleworkspaceGroup).Aliases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.group.directMembersCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -739,15 +739,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"googleworkspace.group.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGoogleworkspaceGroup).Members, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGoogleworkspaceGroup).Members, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.group.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGoogleworkspaceGroup).Settings, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlGoogleworkspaceGroup).Settings, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.group.securitySettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGoogleworkspaceGroup).SecuritySettings, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlGoogleworkspaceGroup).SecuritySettings, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.member.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -799,7 +799,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"googleworkspace.role.privileges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGoogleworkspaceRole).Privileges, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGoogleworkspaceRole).Privileges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.report.apps.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -807,11 +807,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"googleworkspace.report.apps.drive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGoogleworkspaceReportApps).Drive, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGoogleworkspaceReportApps).Drive, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.report.apps.admin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGoogleworkspaceReportApps).Admin, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGoogleworkspaceReportApps).Admin, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.report.activity.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -831,11 +831,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"googleworkspace.report.activity.actor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGoogleworkspaceReportActivity).Actor, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlGoogleworkspaceReportActivity).Actor, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.report.activity.events": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGoogleworkspaceReportActivity).Events, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGoogleworkspaceReportActivity).Events, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.report.users.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -843,7 +843,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"googleworkspace.report.users.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGoogleworkspaceReportUsers).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGoogleworkspaceReportUsers).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.report.usage.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -875,19 +875,19 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"googleworkspace.report.usage.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGoogleworkspaceReportUsage).Parameters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGoogleworkspaceReportUsage).Parameters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.report.usage.account": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGoogleworkspaceReportUsage).Account, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlGoogleworkspaceReportUsage).Account, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.report.usage.security": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGoogleworkspaceReportUsage).Security, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlGoogleworkspaceReportUsage).Security, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.report.usage.appUsage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGoogleworkspaceReportUsage).AppUsage, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlGoogleworkspaceReportUsage).AppUsage, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 }
@@ -919,13 +919,13 @@ type mqlGoogleworkspace struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlGoogleworkspaceInternal it will be used here
-	OrgUnits plugin.TValue[[]interface{}]
-	Users plugin.TValue[[]interface{}]
-	Domains plugin.TValue[[]interface{}]
-	Groups plugin.TValue[[]interface{}]
-	Roles plugin.TValue[[]interface{}]
-	ConnectedApps plugin.TValue[[]interface{}]
-	Calendars plugin.TValue[[]interface{}]
+	OrgUnits plugin.TValue[[]any]
+	Users plugin.TValue[[]any]
+	Domains plugin.TValue[[]any]
+	Groups plugin.TValue[[]any]
+	Roles plugin.TValue[[]any]
+	ConnectedApps plugin.TValue[[]any]
+	Calendars plugin.TValue[[]any]
 }
 
 // createGoogleworkspace creates a new instance of this resource
@@ -965,15 +965,15 @@ func (c *mqlGoogleworkspace) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlGoogleworkspace) GetOrgUnits() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.OrgUnits, func() ([]interface{}, error) {
+func (c *mqlGoogleworkspace) GetOrgUnits() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OrgUnits, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("googleworkspace", c.__id, "orgUnits")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -981,15 +981,15 @@ func (c *mqlGoogleworkspace) GetOrgUnits() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlGoogleworkspace) GetUsers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Users, func() ([]interface{}, error) {
+func (c *mqlGoogleworkspace) GetUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Users, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("googleworkspace", c.__id, "users")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -997,15 +997,15 @@ func (c *mqlGoogleworkspace) GetUsers() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlGoogleworkspace) GetDomains() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Domains, func() ([]interface{}, error) {
+func (c *mqlGoogleworkspace) GetDomains() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Domains, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("googleworkspace", c.__id, "domains")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1013,15 +1013,15 @@ func (c *mqlGoogleworkspace) GetDomains() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlGoogleworkspace) GetGroups() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Groups, func() ([]interface{}, error) {
+func (c *mqlGoogleworkspace) GetGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Groups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("googleworkspace", c.__id, "groups")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1029,15 +1029,15 @@ func (c *mqlGoogleworkspace) GetGroups() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlGoogleworkspace) GetRoles() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Roles, func() ([]interface{}, error) {
+func (c *mqlGoogleworkspace) GetRoles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Roles, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("googleworkspace", c.__id, "roles")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1045,15 +1045,15 @@ func (c *mqlGoogleworkspace) GetRoles() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlGoogleworkspace) GetConnectedApps() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.ConnectedApps, func() ([]interface{}, error) {
+func (c *mqlGoogleworkspace) GetConnectedApps() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ConnectedApps, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("googleworkspace", c.__id, "connectedApps")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1061,15 +1061,15 @@ func (c *mqlGoogleworkspace) GetConnectedApps() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlGoogleworkspace) GetCalendars() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Calendars, func() ([]interface{}, error) {
+func (c *mqlGoogleworkspace) GetCalendars() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Calendars, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("googleworkspace", c.__id, "calendars")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1085,7 +1085,7 @@ type mqlGoogleworkspaceCalendar struct {
 	Summary plugin.TValue[string]
 	SummaryOverride plugin.TValue[string]
 	Primary plugin.TValue[bool]
-	Acl plugin.TValue[[]interface{}]
+	Acl plugin.TValue[[]any]
 }
 
 // createGoogleworkspaceCalendar creates a new instance of this resource
@@ -1132,15 +1132,15 @@ func (c *mqlGoogleworkspaceCalendar) GetPrimary() *plugin.TValue[bool] {
 	return &c.Primary
 }
 
-func (c *mqlGoogleworkspaceCalendar) GetAcl() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Acl, func() ([]interface{}, error) {
+func (c *mqlGoogleworkspaceCalendar) GetAcl() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Acl, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("googleworkspace.calendar", c.__id, "acl")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1382,7 +1382,7 @@ type mqlGoogleworkspaceUser struct {
 	RecoveryEmail plugin.TValue[string]
 	RecoveryPhone plugin.TValue[string]
 	AgreedToTerms plugin.TValue[bool]
-	Aliases plugin.TValue[[]interface{}]
+	Aliases plugin.TValue[[]any]
 	Suspended plugin.TValue[bool]
 	SuspensionReason plugin.TValue[string]
 	Archived plugin.TValue[bool]
@@ -1394,7 +1394,7 @@ type mqlGoogleworkspaceUser struct {
 	LastLoginTime plugin.TValue[*time.Time]
 	CreationTime plugin.TValue[*time.Time]
 	UsageReport plugin.TValue[*mqlGoogleworkspaceReportUsage]
-	Tokens plugin.TValue[[]interface{}]
+	Tokens plugin.TValue[[]any]
 }
 
 // createGoogleworkspaceUser creates a new instance of this resource
@@ -1466,7 +1466,7 @@ func (c *mqlGoogleworkspaceUser) GetAgreedToTerms() *plugin.TValue[bool] {
 	return &c.AgreedToTerms
 }
 
-func (c *mqlGoogleworkspaceUser) GetAliases() *plugin.TValue[[]interface{}] {
+func (c *mqlGoogleworkspaceUser) GetAliases() *plugin.TValue[[]any] {
 	return &c.Aliases
 }
 
@@ -1526,15 +1526,15 @@ func (c *mqlGoogleworkspaceUser) GetUsageReport() *plugin.TValue[*mqlGoogleworks
 	})
 }
 
-func (c *mqlGoogleworkspaceUser) GetTokens() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Tokens, func() ([]interface{}, error) {
+func (c *mqlGoogleworkspaceUser) GetTokens() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tokens, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("googleworkspace.user", c.__id, "tokens")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1551,7 +1551,7 @@ type mqlGoogleworkspaceToken struct {
 	ClientId plugin.TValue[string]
 	DisplayText plugin.TValue[string]
 	NativeApp plugin.TValue[bool]
-	Scopes plugin.TValue[[]interface{}]
+	Scopes plugin.TValue[[]any]
 	UserKey plugin.TValue[string]
 }
 
@@ -1608,7 +1608,7 @@ func (c *mqlGoogleworkspaceToken) GetNativeApp() *plugin.TValue[bool] {
 	return &c.NativeApp
 }
 
-func (c *mqlGoogleworkspaceToken) GetScopes() *plugin.TValue[[]interface{}] {
+func (c *mqlGoogleworkspaceToken) GetScopes() *plugin.TValue[[]any] {
 	return &c.Scopes
 }
 
@@ -1623,9 +1623,9 @@ type mqlGoogleworkspaceConnectedApp struct {
 	// optional: if you define mqlGoogleworkspaceConnectedAppInternal it will be used here
 	ClientId plugin.TValue[string]
 	Name plugin.TValue[string]
-	Scopes plugin.TValue[[]interface{}]
-	Users plugin.TValue[[]interface{}]
-	Tokens plugin.TValue[[]interface{}]
+	Scopes plugin.TValue[[]any]
+	Users plugin.TValue[[]any]
+	Tokens plugin.TValue[[]any]
 }
 
 // createGoogleworkspaceConnectedApp creates a new instance of this resource
@@ -1673,15 +1673,15 @@ func (c *mqlGoogleworkspaceConnectedApp) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlGoogleworkspaceConnectedApp) GetScopes() *plugin.TValue[[]interface{}] {
+func (c *mqlGoogleworkspaceConnectedApp) GetScopes() *plugin.TValue[[]any] {
 	return &c.Scopes
 }
 
-func (c *mqlGoogleworkspaceConnectedApp) GetUsers() *plugin.TValue[[]interface{}] {
+func (c *mqlGoogleworkspaceConnectedApp) GetUsers() *plugin.TValue[[]any] {
 	return &c.Users
 }
 
-func (c *mqlGoogleworkspaceConnectedApp) GetTokens() *plugin.TValue[[]interface{}] {
+func (c *mqlGoogleworkspaceConnectedApp) GetTokens() *plugin.TValue[[]any] {
 	return &c.Tokens
 }
 
@@ -1694,12 +1694,12 @@ type mqlGoogleworkspaceGroup struct {
 	Name plugin.TValue[string]
 	Email plugin.TValue[string]
 	Description plugin.TValue[string]
-	Aliases plugin.TValue[[]interface{}]
+	Aliases plugin.TValue[[]any]
 	DirectMembersCount plugin.TValue[int64]
 	AdminCreated plugin.TValue[bool]
-	Members plugin.TValue[[]interface{}]
-	Settings plugin.TValue[interface{}]
-	SecuritySettings plugin.TValue[interface{}]
+	Members plugin.TValue[[]any]
+	Settings plugin.TValue[any]
+	SecuritySettings plugin.TValue[any]
 }
 
 // createGoogleworkspaceGroup creates a new instance of this resource
@@ -1755,7 +1755,7 @@ func (c *mqlGoogleworkspaceGroup) GetDescription() *plugin.TValue[string] {
 	return &c.Description
 }
 
-func (c *mqlGoogleworkspaceGroup) GetAliases() *plugin.TValue[[]interface{}] {
+func (c *mqlGoogleworkspaceGroup) GetAliases() *plugin.TValue[[]any] {
 	return &c.Aliases
 }
 
@@ -1767,15 +1767,15 @@ func (c *mqlGoogleworkspaceGroup) GetAdminCreated() *plugin.TValue[bool] {
 	return &c.AdminCreated
 }
 
-func (c *mqlGoogleworkspaceGroup) GetMembers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Members, func() ([]interface{}, error) {
+func (c *mqlGoogleworkspaceGroup) GetMembers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Members, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("googleworkspace.group", c.__id, "members")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1783,14 +1783,14 @@ func (c *mqlGoogleworkspaceGroup) GetMembers() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlGoogleworkspaceGroup) GetSettings() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Settings, func() (interface{}, error) {
+func (c *mqlGoogleworkspaceGroup) GetSettings() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Settings, func() (any, error) {
 		return c.settings()
 	})
 }
 
-func (c *mqlGoogleworkspaceGroup) GetSecuritySettings() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.SecuritySettings, func() (interface{}, error) {
+func (c *mqlGoogleworkspaceGroup) GetSecuritySettings() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.SecuritySettings, func() (any, error) {
 		return c.securitySettings()
 	})
 }
@@ -1886,7 +1886,7 @@ type mqlGoogleworkspaceRole struct {
 	Description plugin.TValue[string]
 	IsSystemRole plugin.TValue[bool]
 	IsSuperAdminRole plugin.TValue[bool]
-	Privileges plugin.TValue[[]interface{}]
+	Privileges plugin.TValue[[]any]
 }
 
 // createGoogleworkspaceRole creates a new instance of this resource
@@ -1946,7 +1946,7 @@ func (c *mqlGoogleworkspaceRole) GetIsSuperAdminRole() *plugin.TValue[bool] {
 	return &c.IsSuperAdminRole
 }
 
-func (c *mqlGoogleworkspaceRole) GetPrivileges() *plugin.TValue[[]interface{}] {
+func (c *mqlGoogleworkspaceRole) GetPrivileges() *plugin.TValue[[]any] {
 	return &c.Privileges
 }
 
@@ -1955,8 +1955,8 @@ type mqlGoogleworkspaceReportApps struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlGoogleworkspaceReportAppsInternal it will be used here
-	Drive plugin.TValue[[]interface{}]
-	Admin plugin.TValue[[]interface{}]
+	Drive plugin.TValue[[]any]
+	Admin plugin.TValue[[]any]
 }
 
 // createGoogleworkspaceReportApps creates a new instance of this resource
@@ -1996,15 +1996,15 @@ func (c *mqlGoogleworkspaceReportApps) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlGoogleworkspaceReportApps) GetDrive() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Drive, func() ([]interface{}, error) {
+func (c *mqlGoogleworkspaceReportApps) GetDrive() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Drive, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("googleworkspace.report.apps", c.__id, "drive")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -2012,15 +2012,15 @@ func (c *mqlGoogleworkspaceReportApps) GetDrive() *plugin.TValue[[]interface{}] 
 	})
 }
 
-func (c *mqlGoogleworkspaceReportApps) GetAdmin() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Admin, func() ([]interface{}, error) {
+func (c *mqlGoogleworkspaceReportApps) GetAdmin() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Admin, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("googleworkspace.report.apps", c.__id, "admin")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -2036,8 +2036,8 @@ type mqlGoogleworkspaceReportActivity struct {
 	Id plugin.TValue[int64]
 	IpAddress plugin.TValue[string]
 	OwnerDomain plugin.TValue[string]
-	Actor plugin.TValue[interface{}]
-	Events plugin.TValue[[]interface{}]
+	Actor plugin.TValue[any]
+	Events plugin.TValue[[]any]
 }
 
 // createGoogleworkspaceReportActivity creates a new instance of this resource
@@ -2089,11 +2089,11 @@ func (c *mqlGoogleworkspaceReportActivity) GetOwnerDomain() *plugin.TValue[strin
 	return &c.OwnerDomain
 }
 
-func (c *mqlGoogleworkspaceReportActivity) GetActor() *plugin.TValue[interface{}] {
+func (c *mqlGoogleworkspaceReportActivity) GetActor() *plugin.TValue[any] {
 	return &c.Actor
 }
 
-func (c *mqlGoogleworkspaceReportActivity) GetEvents() *plugin.TValue[[]interface{}] {
+func (c *mqlGoogleworkspaceReportActivity) GetEvents() *plugin.TValue[[]any] {
 	return &c.Events
 }
 
@@ -2102,7 +2102,7 @@ type mqlGoogleworkspaceReportUsers struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlGoogleworkspaceReportUsersInternal it will be used here
-	List plugin.TValue[[]interface{}]
+	List plugin.TValue[[]any]
 }
 
 // createGoogleworkspaceReportUsers creates a new instance of this resource
@@ -2142,15 +2142,15 @@ func (c *mqlGoogleworkspaceReportUsers) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlGoogleworkspaceReportUsers) GetList() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+func (c *mqlGoogleworkspaceReportUsers) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("googleworkspace.report.users", c.__id, "list")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -2169,10 +2169,10 @@ type mqlGoogleworkspaceReportUsage struct {
 	Type plugin.TValue[string]
 	UserEmail plugin.TValue[string]
 	Date plugin.TValue[*time.Time]
-	Parameters plugin.TValue[[]interface{}]
-	Account plugin.TValue[interface{}]
-	Security plugin.TValue[interface{}]
-	AppUsage plugin.TValue[interface{}]
+	Parameters plugin.TValue[[]any]
+	Account plugin.TValue[any]
+	Security plugin.TValue[any]
+	AppUsage plugin.TValue[any]
 }
 
 // createGoogleworkspaceReportUsage creates a new instance of this resource
@@ -2236,24 +2236,24 @@ func (c *mqlGoogleworkspaceReportUsage) GetDate() *plugin.TValue[*time.Time] {
 	return &c.Date
 }
 
-func (c *mqlGoogleworkspaceReportUsage) GetParameters() *plugin.TValue[[]interface{}] {
+func (c *mqlGoogleworkspaceReportUsage) GetParameters() *plugin.TValue[[]any] {
 	return &c.Parameters
 }
 
-func (c *mqlGoogleworkspaceReportUsage) GetAccount() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Account, func() (interface{}, error) {
+func (c *mqlGoogleworkspaceReportUsage) GetAccount() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Account, func() (any, error) {
 		return c.account()
 	})
 }
 
-func (c *mqlGoogleworkspaceReportUsage) GetSecurity() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Security, func() (interface{}, error) {
+func (c *mqlGoogleworkspaceReportUsage) GetSecurity() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Security, func() (any, error) {
 		return c.security()
 	})
 }
 
-func (c *mqlGoogleworkspaceReportUsage) GetAppUsage() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.AppUsage, func() (interface{}, error) {
+func (c *mqlGoogleworkspaceReportUsage) GetAppUsage() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.AppUsage, func() (any, error) {
 		return c.appUsage()
 	})
 }

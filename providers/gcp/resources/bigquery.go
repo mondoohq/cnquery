@@ -9,11 +9,11 @@ import (
 	"fmt"
 	"time"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/gcp/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v12/types"
 
 	"cloud.google.com/go/bigquery"
 	"google.golang.org/api/iterator"
@@ -71,7 +71,7 @@ func (g *mqlGcpProject) bigquery() (*mqlGcpProjectBigqueryService, error) {
 	return bqService, nil
 }
 
-func (g *mqlGcpProjectBigqueryService) datasets() ([]interface{}, error) {
+func (g *mqlGcpProjectBigqueryService) datasets() ([]any, error) {
 	// when the service is not enabled, we return nil
 	if !g.serviceEnabled {
 		return nil, nil
@@ -96,7 +96,7 @@ func (g *mqlGcpProjectBigqueryService) datasets() ([]interface{}, error) {
 	}
 
 	it := bigquerySvc.Datasets(ctx)
-	res := []interface{}{}
+	res := []any{}
 	for {
 		dataset, err := it.Next()
 		if err == iterator.Done {
@@ -122,27 +122,27 @@ func (g *mqlGcpProjectBigqueryService) datasets() ([]interface{}, error) {
 			kmsName = metadata.DefaultEncryptionConfig.KMSKeyName
 		}
 
-		access := make([]interface{}, 0, len(metadata.Access))
+		access := make([]any, 0, len(metadata.Access))
 		for i, a := range metadata.Access {
-			var viewRef interface{}
+			var viewRef any
 			if a.View != nil {
-				viewRef = map[string]interface{}{
+				viewRef = map[string]any{
 					"projectId": a.View.ProjectID,
 					"datasetId": a.View.DatasetID,
 					"tableId":   a.View.TableID,
 				}
 			}
-			var routineRef interface{}
+			var routineRef any
 			if a.Routine != nil {
-				routineRef = map[string]interface{}{
+				routineRef = map[string]any{
 					"projectId": a.Routine.ProjectID,
 					"datasetId": a.Routine.DatasetID,
 					"tableId":   a.Routine.RoutineID,
 				}
 			}
-			var datasetRef interface{}
+			var datasetRef any
 			if a.Dataset != nil {
-				datasetRef = map[string]interface{}{
+				datasetRef = map[string]any{
 					"projectId":   a.Dataset.Dataset.ProjectID,
 					"datasetId":   a.Dataset.Dataset.DatasetID,
 					"targetTypes": a.Dataset.TargetTypes,
@@ -253,7 +253,7 @@ func (g *mqlGcpProjectBigqueryServiceDatasetAccessEntry) id() (string, error) {
 	return g.Id.Data, g.Id.Error
 }
 
-func (g *mqlGcpProjectBigqueryServiceDataset) tables() ([]interface{}, error) {
+func (g *mqlGcpProjectBigqueryServiceDataset) tables() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
 	client, err := conn.Client("https://www.googleapis.com/auth/bigquery")
@@ -279,7 +279,7 @@ func (g *mqlGcpProjectBigqueryServiceDataset) tables() ([]interface{}, error) {
 	}
 
 	it := dataset.Tables(ctx)
-	res := []interface{}{}
+	res := []any{}
 	for {
 		table, err := it.Next()
 		if err == iterator.Done {
@@ -299,7 +299,7 @@ func (g *mqlGcpProjectBigqueryServiceDataset) tables() ([]interface{}, error) {
 			kmsName = metadata.EncryptionConfig.KMSKeyName
 		}
 
-		var clusteringFields []interface{}
+		var clusteringFields []any
 		if metadata.Clustering != nil {
 			clusteringFields = convert.SliceAnyToInterface(metadata.Clustering.Fields)
 		}
@@ -388,7 +388,7 @@ func (g *mqlGcpProjectBigqueryServiceTable) id() (string, error) {
 	return fmt.Sprintf("gcp.project.bigqueryService.table/%s/%s/%s", projectId, datasetId, id), nil
 }
 
-func (g *mqlGcpProjectBigqueryServiceDataset) models() ([]interface{}, error) {
+func (g *mqlGcpProjectBigqueryServiceDataset) models() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
 	client, err := conn.Client("https://www.googleapis.com/auth/bigquery")
@@ -414,7 +414,7 @@ func (g *mqlGcpProjectBigqueryServiceDataset) models() ([]interface{}, error) {
 	}
 
 	it := dataset.Models(ctx)
-	res := []interface{}{}
+	res := []any{}
 	for {
 		model, err := it.Next()
 		if err == iterator.Done {
@@ -474,7 +474,7 @@ func (g *mqlGcpProjectBigqueryServiceModel) id() (string, error) {
 	return fmt.Sprintf("gcp.project.bigqueryService.model/%s/%s/%s", projectId, datasetId, id), nil
 }
 
-func (g *mqlGcpProjectBigqueryServiceDataset) routines() ([]interface{}, error) {
+func (g *mqlGcpProjectBigqueryServiceDataset) routines() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
 	client, err := conn.Client("https://www.googleapis.com/auth/bigquery")
@@ -500,7 +500,7 @@ func (g *mqlGcpProjectBigqueryServiceDataset) routines() ([]interface{}, error) 
 	}
 
 	it := dataset.Routines(ctx)
-	res := []interface{}{}
+	res := []any{}
 	for {
 		routine, err := it.Next()
 		if err == iterator.Done {

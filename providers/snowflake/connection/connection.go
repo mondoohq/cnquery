@@ -10,9 +10,9 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/snowflakedb/gosnowflake"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/vault"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 	"golang.org/x/crypto/ssh"
@@ -84,7 +84,7 @@ func parsePrivateKey(privateKeyBytes []byte, passphrase []byte) (*rsa.PrivateKey
 		return nil, errors.New("could not decode private key")
 	}
 
-	var privateKey interface{}
+	var privateKey any
 	var err error
 	if privateKeyBlock.Type == "ENCRYPTED PRIVATE KEY" {
 		if len(passphrase) == 0 {

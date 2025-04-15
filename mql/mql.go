@@ -7,10 +7,10 @@ import (
 	"errors"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/mql/internal"
-	"go.mondoo.com/cnquery/v11/mqlc"
+	"go.mondoo.com/cnquery/v12"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/mql/internal"
+	"go.mondoo.com/cnquery/v12/mqlc"
 )
 
 // New creates a new MQL executor instance. It allows you to easily run multiple queries against the
@@ -33,6 +33,10 @@ func (e *Executor) Exec(query string, props mqlc.PropsHandler) (*llx.RawData, er
 }
 
 func Exec(query string, runtime llx.Runtime, features cnquery.Features, props mqlc.PropsHandler) (*llx.RawData, error) {
+	if props == nil {
+		props = mqlc.EmptyPropsHandler
+	}
+
 	bundle, err := mqlc.Compile(query, props, mqlc.NewConfig(runtime.Schema(), features))
 	if err != nil {
 		return nil, errors.New("failed to compile: " + err.Error())

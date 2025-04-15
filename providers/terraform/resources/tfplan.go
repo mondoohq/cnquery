@@ -6,11 +6,11 @@ package resources
 import (
 	"encoding/json"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/terraform/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/terraform/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (t *mqlTerraformPlan) id() (string, error) {
@@ -34,7 +34,7 @@ func initTerraformPlan(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 		return map[string]*llx.RawData{
 			"formatVersion":    llx.StringData(""),
 			"terraformVersion": llx.StringData(""),
-			"resourceChanges":  llx.ArrayData([]interface{}{}, types.Resource("terraform.plan.resourceChange")),
+			"resourceChanges":  llx.ArrayData([]any{}, types.Resource("terraform.plan.resourceChange")),
 		}, nil, nil
 	}
 
@@ -50,7 +50,7 @@ func initTerraformPlan(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	return args, nil, nil
 }
 
-func (t *mqlTerraformPlan) resourceChanges() ([]interface{}, error) {
+func (t *mqlTerraformPlan) resourceChanges() ([]any, error) {
 	conn := t.MqlRuntime.Connection.(*connection.Connection)
 
 	plan, err := conn.Plan()
@@ -62,48 +62,48 @@ func (t *mqlTerraformPlan) resourceChanges() ([]interface{}, error) {
 		return nil, nil
 	}
 
-	var list []interface{}
+	var list []any
 	for i := range plan.ResourceChanges {
 
 		rc := plan.ResourceChanges[i]
 
-		// TODO: temporarily ignore errors until dicts can be of type interface{}
-		var before map[string]interface{}
+		// TODO: temporarily ignore errors until dicts can be of type any
+		var before map[string]any
 		if rc.Change.Before != nil {
 			if err := json.Unmarshal(rc.Change.Before, &before); err != nil {
 				// return nil, err
 			}
 		}
 
-		var after map[string]interface{}
+		var after map[string]any
 		if rc.Change.After != nil {
 			if err := json.Unmarshal(rc.Change.After, &after); err != nil {
 				// return nil, err
 			}
 		}
 
-		var afterUnknown map[string]interface{}
+		var afterUnknown map[string]any
 		if rc.Change.AfterUnknown != nil {
 			if err := json.Unmarshal(rc.Change.AfterUnknown, &afterUnknown); err != nil {
 				// return nil, err
 			}
 		}
 
-		var beforeSensitive map[string]interface{}
+		var beforeSensitive map[string]any
 		if rc.Change.BeforeSensitive != nil {
 			if err := json.Unmarshal(rc.Change.BeforeSensitive, &beforeSensitive); err != nil {
 				// return nil, err
 			}
 		}
 
-		var afterSensitive map[string]interface{}
+		var afterSensitive map[string]any
 		if rc.Change.AfterSensitive != nil {
 			if err := json.Unmarshal(rc.Change.AfterSensitive, &afterSensitive); err != nil {
 				// return nil, err
 			}
 		}
 
-		var replacePaths []interface{}
+		var replacePaths []any
 		if rc.Change.ReplacePaths != nil {
 			if err := json.Unmarshal(rc.Change.ReplacePaths, &replacePaths); err != nil {
 				return nil, err
@@ -171,7 +171,7 @@ type PlanConfiguration struct {
 	} `json:"root_module"`
 }
 
-func (t *mqlTerraformPlanConfiguration) providerConfig() ([]interface{}, error) {
+func (t *mqlTerraformPlanConfiguration) providerConfig() ([]any, error) {
 	conn := t.MqlRuntime.Connection.(*connection.Connection)
 	plan, err := conn.Plan()
 	if err != nil {
@@ -181,7 +181,7 @@ func (t *mqlTerraformPlanConfiguration) providerConfig() ([]interface{}, error) 
 	// TODO: This only creates compatibility with v8. Please revisit this section
 	// after https://github.com/mondoohq/cnquery/issues/1943 is clarified.
 	if plan == nil {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 
 	if plan.Configuration == nil {
@@ -191,10 +191,10 @@ func (t *mqlTerraformPlanConfiguration) providerConfig() ([]interface{}, error) 
 	pc := PlanConfiguration{}
 	err = json.Unmarshal(plan.Configuration, &pc)
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range pc.ProviderConfig {
 		config := pc.ProviderConfig[i]
-		var entry interface{}
+		var entry any
 		if err := json.Unmarshal([]byte(config), &entry); err != nil {
 			return nil, err
 		}
@@ -203,7 +203,7 @@ func (t *mqlTerraformPlanConfiguration) providerConfig() ([]interface{}, error) 
 	return res, nil
 }
 
-func (t *mqlTerraformPlanConfiguration) resources() ([]interface{}, error) {
+func (t *mqlTerraformPlanConfiguration) resources() ([]any, error) {
 	conn := t.MqlRuntime.Connection.(*connection.Connection)
 	plan, err := conn.Plan()
 	if err != nil {
@@ -213,7 +213,7 @@ func (t *mqlTerraformPlanConfiguration) resources() ([]interface{}, error) {
 	// TODO: This only creates compatibility with v8. Please revisit this section
 	// after https://github.com/mondoohq/cnquery/issues/1943 is clarified.
 	if plan == nil {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 
 	if plan.Configuration == nil {
@@ -223,10 +223,10 @@ func (t *mqlTerraformPlanConfiguration) resources() ([]interface{}, error) {
 	pc := PlanConfiguration{}
 	err = json.Unmarshal(plan.Configuration, &pc)
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range pc.RootModule.Resources {
 		config := pc.RootModule.Resources[i]
-		var entry interface{}
+		var entry any
 		if err := json.Unmarshal([]byte(config), &entry); err != nil {
 			return nil, err
 		}
@@ -235,10 +235,10 @@ func (t *mqlTerraformPlanConfiguration) resources() ([]interface{}, error) {
 	return res, nil
 }
 
-func variablesToArrayInterface(runtime *plugin.Runtime, variables connection.Variables) []interface{} {
-	var list []interface{}
+func variablesToArrayInterface(runtime *plugin.Runtime, variables connection.Variables) []any {
+	var list []any
 	for k, v := range variables {
-		var value interface{}
+		var value any
 		err := json.Unmarshal(v.Value, &value)
 		if err != nil {
 			continue

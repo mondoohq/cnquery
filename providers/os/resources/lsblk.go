@@ -8,15 +8,15 @@ import (
 	"errors"
 	"slices"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (l *mqlLsblk) id() (string, error) {
 	return "lsblk", nil
 }
 
-func (l *mqlLsblk) list() ([]interface{}, error) {
+func (l *mqlLsblk) list() ([]any, error) {
 	o, err := CreateResource(l.MqlRuntime, "command", map[string]*llx.RawData{
 		"command": llx.StringData("lsblk --json --fs"),
 	})
@@ -30,7 +30,7 @@ func (l *mqlLsblk) list() ([]interface{}, error) {
 		return nil, err
 	}
 
-	mqlBlockEntries := []interface{}{}
+	mqlBlockEntries := []any{}
 	for i := range blockEntries.Blockdevices {
 		d := blockEntries.Blockdevices[i]
 		for i := range d.Children {
@@ -62,7 +62,7 @@ func parseBlockEntries(data []byte) (blockdevices, error) {
 		for j := range d.Children {
 			entry := d.Children[j]
 			// Some versions of the lsblk return [null] instead of empty array
-			entry.Mountpoints = slices.Collect(func(yield func(interface{}) bool) {
+			entry.Mountpoints = slices.Collect(func(yield func(any) bool) {
 				for _, m := range entry.Mountpoints {
 					if m != nil && !yield(m) {
 						return
@@ -93,7 +93,7 @@ type blockdevice struct {
 	Fstype      string        `json:"fstype,omitempty"`
 	Label       string        `json:"label,omitempty"`
 	Uuid        string        `json:"uuid,omitempty"`
-	Mountpoints []interface{} `json:"mountpoints,omitempty"`
+	Mountpoints []any         `json:"mountpoints,omitempty"`
 	Mountpoint  string        `json:"mountpoint,omitempty"`
 	Children    []blockdevice `json:"children,omitempty"`
 }

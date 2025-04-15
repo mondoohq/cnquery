@@ -5,11 +5,11 @@ package resources
 
 import (
 	"github.com/facebookincubator/nvdtools/wfn"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers/vsphere/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers/vsphere/connection"
 )
 
-func (a *mqlAsset) cpes() ([]interface{}, error) {
+func (a *mqlAsset) cpes() ([]any, error) {
 	conn, ok := a.MqlRuntime.Connection.(*connection.VsphereConnection)
 	if ok && conn.Asset() != nil && conn.Asset().Platform != nil {
 		switch conn.Asset().Platform.Name {
@@ -28,7 +28,7 @@ func (a *mqlAsset) cpes() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			return []interface{}{cpe}, nil
+			return []any{cpe}, nil
 
 		case connection.EsxiPlatform:
 			// follow the following format // cpe:2.3:o:vmware:esxi:7.0:update_3c:*:*:*:*:*:*
@@ -45,7 +45,7 @@ func (a *mqlAsset) cpes() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			return []interface{}{cpe}, nil
+			return []any{cpe}, nil
 		}
 	}
 	return nil, nil

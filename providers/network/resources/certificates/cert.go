@@ -143,8 +143,8 @@ func Md5Hash(cert *x509.Certificate) []byte {
 	return h.Sum(nil)
 }
 
-func Fingerprints(cert *x509.Certificate) map[string]interface{} {
-	return map[string]interface{}{
+func Fingerprints(cert *x509.Certificate) map[string]any {
+	return map[string]any{
 		"sha1":   hex.EncodeToString(Sha1Hash(cert)),
 		"sha256": hex.EncodeToString(Sha256Hash(cert)),
 		"md5":    hex.EncodeToString(Md5Hash(cert)),

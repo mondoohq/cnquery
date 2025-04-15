@@ -4,15 +4,15 @@
 package config
 
 import (
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/shodan/connection"
-	"go.mondoo.com/cnquery/v11/providers/shodan/provider"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/shodan/connection"
+	"go.mondoo.com/cnquery/v12/providers/shodan/provider"
 )
 
 var Config = plugin.Provider{
 	Name:            "shodan",
-	ID:              "go.mondoo.com/cnquery/v11/providers/shodan",
+	ID:              "go.mondoo.com/cnquery/v12/providers/shodan",
 	Version:         "11.0.91",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{

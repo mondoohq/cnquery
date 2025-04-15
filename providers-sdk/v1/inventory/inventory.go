@@ -14,8 +14,8 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/segmentio/ksuid"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault/config"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/vault/config"
 	"sigs.k8s.io/yaml"
 )
 

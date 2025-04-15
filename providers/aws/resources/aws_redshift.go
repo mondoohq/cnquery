@@ -12,13 +12,13 @@ import (
 	redshifttypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
 
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (a *mqlAwsRedshift) id() (string, error) {
@@ -29,9 +29,9 @@ const (
 	redshiftClusterArnPattern = "arn:aws:redshift:%s:%s:cluster/%s"
 )
 
-func (a *mqlAwsRedshift) clusters() ([]interface{}, error) {
+func (a *mqlAwsRedshift) clusters() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getClusters(conn), 5)
 	poolOfJobs.Run()
 
@@ -41,7 +41,7 @@ func (a *mqlAwsRedshift) clusters() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
@@ -61,7 +61,7 @@ func (a *mqlAwsRedshift) getClusters(conn *connection.AwsConnection) []*jobpool.
 
 			svc := conn.Redshift(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 
 			params := &redshift.DescribeClustersInput{}
 			paginator := redshift.NewDescribeClustersPaginator(svc, params)
@@ -75,7 +75,7 @@ func (a *mqlAwsRedshift) getClusters(conn *connection.AwsConnection) []*jobpool.
 					return nil, err
 				}
 				for _, cluster := range clusters.Clusters {
-					var names []interface{}
+					var names []any
 					for _, group := range cluster.ClusterParameterGroups {
 						names = append(names, convert.ToValue(group.ParameterGroupName))
 					}
@@ -118,8 +118,8 @@ func (a *mqlAwsRedshift) getClusters(conn *connection.AwsConnection) []*jobpool.
 	return tasks
 }
 
-func redshiftTagsToMap(tags []redshifttypes.Tag) map[string]interface{} {
-	tagsMap := make(map[string]interface{})
+func redshiftTagsToMap(tags []redshifttypes.Tag) map[string]any {
+	tagsMap := make(map[string]any)
 
 	if len(tags) > 0 {
 		for i := range tags {
@@ -173,7 +173,7 @@ func initAwsRedshiftCluster(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	return nil, nil, errors.New("redshift cluster does not exist")
 }
 
-func (a *mqlAwsRedshiftCluster) parameters() ([]interface{}, error) {
+func (a *mqlAwsRedshiftCluster) parameters() ([]any, error) {
 	clusterGroupNames := a.ClusterParameterGroupNames.Data
 	region := a.Region.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
@@ -192,7 +192,7 @@ func (a *mqlAwsRedshiftCluster) parameters() ([]interface{}, error) {
 	return convert.JsonToDictSlice(res)
 }
 
-func (a *mqlAwsRedshiftCluster) logging() (interface{}, error) {
+func (a *mqlAwsRedshiftCluster) logging() (any, error) {
 	name := a.Name.Data
 	region := a.Region.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)

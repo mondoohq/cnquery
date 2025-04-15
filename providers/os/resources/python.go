@@ -12,14 +12,14 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/fsutil"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/languages/python"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/languages/python/requirements"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/languages/python/wheelegg"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/fsutil"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/languages/python"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/languages/python/requirements"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/languages/python/wheelegg"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 var defaultPythonPaths = []string{
@@ -55,7 +55,7 @@ func (r *mqlPython) id() (string, error) {
 	return "python", nil
 }
 
-func (r *mqlPython) packages() ([]interface{}, error) {
+func (r *mqlPython) packages() ([]any, error) {
 	allPyPkgDetails, err := r.getAllPackages()
 	if err != nil {
 		return nil, err
@@ -65,7 +65,7 @@ func (r *mqlPython) packages() ([]interface{}, error) {
 	// resources already created
 	pythonPackageResourceMap := map[string]plugin.Resource{}
 
-	resp := []interface{}{}
+	resp := []any{}
 
 	for _, pyPkgDetails := range allPyPkgDetails {
 		res, err := pythonPackageDetailsWithDependenciesToResource(r.MqlRuntime, pyPkgDetails, pythonPackageResourceMap)
@@ -80,7 +80,7 @@ func (r *mqlPython) packages() ([]interface{}, error) {
 	return resp, nil
 }
 
-func (r *mqlPython) toplevel() ([]interface{}, error) {
+func (r *mqlPython) toplevel() ([]any, error) {
 	allPyPkgDetails, err := r.getAllPackages()
 	if err != nil {
 		return nil, err
@@ -90,7 +90,7 @@ func (r *mqlPython) toplevel() ([]interface{}, error) {
 	// resources already created
 	pythonPackageResourceMap := map[string]plugin.Resource{}
 
-	resp := []interface{}{}
+	resp := []any{}
 
 	for _, pyPkgDetails := range allPyPkgDetails {
 		if !pyPkgDetails.IsLeaf {
@@ -135,7 +135,7 @@ func pythonPackageDetailsWithDependenciesToResource(
 	runtime *plugin.Runtime,
 	newPyPkgDetails python.PackageDetails,
 	pythonPackageResourceMap map[string]plugin.Resource,
-) (interface{}, error) {
+) (any, error) {
 	res := pythonPackageResourceMap[newPyPkgDetails.Name]
 	if res != nil {
 		// already created the pythonPackage resource
@@ -293,7 +293,7 @@ func newMqlPythonPackage(runtime *plugin.Runtime, ppd python.PackageDetails) (pl
 		return nil, err
 	}
 
-	cpes := []interface{}{}
+	cpes := []any{}
 	for i := range ppd.Cpes {
 		cpe, err := runtime.CreateSharedResource("cpe", map[string]*llx.RawData{
 			"uri": llx.StringData(ppd.Cpes[i]),
@@ -406,7 +406,7 @@ func (r *mqlPythonPackage) purl() (string, error) {
 	return r.Purl.Data, nil
 }
 
-func (r *mqlPythonPackage) cpes() ([]interface{}, error) {
+func (r *mqlPythonPackage) cpes() ([]any, error) {
 	err := r.populateData()
 	if err != nil {
 		return nil, err
@@ -418,7 +418,7 @@ type mqlPythonPackageInternal struct {
 	deps []string
 }
 
-func (r *mqlPythonPackage) dependencies() ([]interface{}, error) {
+func (r *mqlPythonPackage) dependencies() ([]any, error) {
 	obj, err := CreateResource(r.MqlRuntime, "python", nil)
 	if err != nil {
 		return nil, err
@@ -429,7 +429,7 @@ func (r *mqlPythonPackage) dependencies() ([]interface{}, error) {
 		return nil, pkgs.Error
 	}
 
-	deps := []interface{}{}
+	deps := []any{}
 	for _, dep := range r.deps {
 		for i, pyPkgDetails := range pkgs.Data {
 			if pyPkgDetails.(*mqlPythonPackage).Name.Data == dep {
@@ -473,7 +473,7 @@ func (r *mqlPythonPackage) populateData() error {
 		return pkgs.Error
 	}
 
-	cpes := []interface{}{}
+	cpes := []any{}
 	for i := range pkg.Cpes {
 		cpe, err := r.MqlRuntime.CreateSharedResource("cpe", map[string]*llx.RawData{
 			"uri": llx.StringData(pkg.Cpes[i]),
@@ -484,7 +484,7 @@ func (r *mqlPythonPackage) populateData() error {
 		cpes = append(cpes, cpe)
 	}
 
-	r.Cpes = plugin.TValue[[]interface{}]{Data: cpes, State: plugin.StateIsSet}
+	r.Cpes = plugin.TValue[[]any]{Data: cpes, State: plugin.StateIsSet}
 	r.Purl = plugin.TValue[string]{Data: pkg.Purl, State: plugin.StateIsSet}
 	return nil
 }

@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/google/go-github/v72/github"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/github/connection"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/github/connection"
 	"sigs.k8s.io/yaml"
 )
 
@@ -22,7 +22,7 @@ func (g *mqlGithubWorkflow) id() (string, error) {
 	return "github.workflow/" + strconv.FormatInt(id, 10), nil
 }
 
-func (g *mqlGithubWorkflow) configuration() (interface{}, error) {
+func (g *mqlGithubWorkflow) configuration() (any, error) {
 	// TODO: to leverage the runtime, get the file resource, how to define the dependency
 	if g.File.Error != nil {
 		return nil, g.File.Error
@@ -33,7 +33,7 @@ func (g *mqlGithubWorkflow) configuration() (interface{}, error) {
 	}
 	content := file.Content.Data
 
-	data := map[string]interface{}{}
+	data := map[string]any{}
 	err := yaml.Unmarshal([]byte(content), &data)
 	if err != nil {
 		return nil, err

@@ -10,10 +10,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	"github.com/cockroachdb/errors"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (a *mqlAwsCloudfront) id() (string, error) {
@@ -30,12 +30,12 @@ func (a *mqlAwsCloudfrontDistributionOrigin) id() (string, error) {
 	return account + "/" + id, nil
 }
 
-func (a *mqlAwsCloudfront) distributions() ([]interface{}, error) {
+func (a *mqlAwsCloudfront) distributions() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Cloudfront("") // global service
 	ctx := context.Background()
-	res := []interface{}{}
+	res := []any{}
 
 	params := &cloudfront.ListDistributionsInput{}
 	paginator := cloudfront.NewListDistributionsPaginator(svc, params)
@@ -46,7 +46,7 @@ func (a *mqlAwsCloudfront) distributions() ([]interface{}, error) {
 		}
 
 		for _, distribution := range distributions.DistributionList.Items {
-			origins := []interface{}{}
+			origins := []any{}
 			if or := distribution.Origins; or != nil {
 				for _, origin := range distribution.Origins.Items {
 					mqlAwsCloudfrontOrigin, err := CreateResource(a.MqlRuntime, "aws.cloudfront.distribution.origin",
@@ -64,7 +64,7 @@ func (a *mqlAwsCloudfront) distributions() ([]interface{}, error) {
 					origins = append(origins, mqlAwsCloudfrontOrigin)
 				}
 			}
-			cacheBehaviors := []interface{}{}
+			cacheBehaviors := []any{}
 			if cb := distribution.CacheBehaviors; cb != nil {
 				cacheBehaviors, err = convert.JsonToDictSlice(distribution.CacheBehaviors.Items)
 				if err != nil {
@@ -76,7 +76,7 @@ func (a *mqlAwsCloudfront) distributions() ([]interface{}, error) {
 				return nil, err
 			}
 
-			cnames := []interface{}{}
+			cnames := []any{}
 			for _, alias := range distribution.Aliases.Items {
 				cnames = append(cnames, alias)
 			}
@@ -111,12 +111,12 @@ func (a *mqlAwsCloudfrontFunction) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func (a *mqlAwsCloudfront) functions() ([]interface{}, error) {
+func (a *mqlAwsCloudfront) functions() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Cloudfront("") // global service
 	ctx := context.Background()
-	res := []interface{}{}
+	res := []any{}
 
 	// the AWS SDK does not have a paginator for this function
 	var marker *string

@@ -7,9 +7,9 @@ import (
 	"context"
 	"errors"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/mondoo/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/mondoo/connection"
 	mondoogql "go.mondoo.com/mondoo-go"
 )
 
@@ -28,7 +28,7 @@ func (m *mqlMondooOrganization) id() (string, error) {
 	return m.Mrn.Data, nil
 }
 
-func (m *mqlMondooOrganization) spaces() ([]interface{}, error) {
+func (m *mqlMondooOrganization) spaces() ([]any, error) {
 	conn := m.MqlRuntime.Connection.(*connection.Connection)
 
 	var q struct {

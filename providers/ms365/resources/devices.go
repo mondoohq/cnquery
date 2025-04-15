@@ -14,11 +14,11 @@ import (
 	"github.com/microsoftgraph/msgraph-sdk-go/devices"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/ms365/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 // see https://learn.microsoft.com/en-us/graph/api/resources/device?view=graph-rest-1.0
@@ -43,7 +43,7 @@ func initMicrosoftDevices(runtime *plugin.Runtime, args map[string]*llx.RawData)
 //
 // Permissions: Device.Read.All
 // see https://learn.microsoft.com/en-us/graph/api/device-list?view=graph-rest-1.0&tabs=http
-func (a *mqlMicrosoftDevices) list() ([]interface{}, error) {
+func (a *mqlMicrosoftDevices) list() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -143,7 +143,7 @@ func (a *mqlMicrosoftDevices) list() ([]interface{}, error) {
 	}
 
 	// construct the result
-	res := []interface{}{}
+	res := []any{}
 	for _, u := range devices {
 		graphDevice, err := newMqlMicrosoftDevice(a.MqlRuntime, u)
 		if err != nil {

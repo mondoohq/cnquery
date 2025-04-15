@@ -5,11 +5,11 @@ package resources
 
 import (
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/cloud"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/cloud"
 )
 
 func (c *mqlCloud) provider() (string, error) {
@@ -68,7 +68,7 @@ func (i *mqlCloudInstance) privateHostname() (value string, err error) {
 	return
 }
 
-func (i *mqlCloudInstance) privateIpv4() (value []interface{}, err error) {
+func (i *mqlCloudInstance) privateIpv4() (value []any, err error) {
 	if i.instanceMd != nil {
 		var resource plugin.Resource
 		for _, ipaddress := range i.instanceMd.PrivateIpv4 {
@@ -89,7 +89,7 @@ func (i *mqlCloudInstance) privateIpv4() (value []interface{}, err error) {
 	return
 }
 
-func (i *mqlCloudInstance) publicIpv4() (value []interface{}, err error) {
+func (i *mqlCloudInstance) publicIpv4() (value []any, err error) {
 	if i.instanceMd != nil {
 		var resource plugin.Resource
 		for _, ipaddress := range i.instanceMd.PublicIpv4 {
@@ -110,7 +110,7 @@ func (i *mqlCloudInstance) publicIpv4() (value []interface{}, err error) {
 	return
 }
 
-func (i *mqlCloudInstance) metadata() (value interface{}, err error) {
+func (i *mqlCloudInstance) metadata() (value any, err error) {
 	if i.instanceMd != nil {
 		value, err = convert.JsonToDict(i.instanceMd.Metadata)
 	}

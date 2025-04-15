@@ -8,7 +8,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"go.mondoo.com/cnquery/v11/cli/theme"
+	"go.mondoo.com/cnquery/v12/cli/theme"
 )
 
 // ListableItem is the interface that a list need to implement so we can display its items.

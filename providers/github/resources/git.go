@@ -5,15 +5,15 @@ package resources
 
 import (
 	"github.com/google/go-github/v72/github"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 )
 
 func (g *mqlGitGpgSignature) id() (string, error) {
 	return "git.gpgSignature/" + g.Sha.Data, nil
 }
 
-func newMqlGitGpgSignature(runtime *plugin.Runtime, sha string, a *github.SignatureVerification) (interface{}, error) {
+func newMqlGitGpgSignature(runtime *plugin.Runtime, sha string, a *github.SignatureVerification) (any, error) {
 	return CreateResource(runtime, "git.gpgSignature", map[string]*llx.RawData{
 		"sha":       llx.StringData(sha),
 		"reason":    llx.StringData(a.GetReason()),
@@ -27,7 +27,7 @@ func (g *mqlGitCommitAuthor) id() (string, error) {
 	return "git.commitAuthor/" + g.Sha.Data, nil
 }
 
-func newMqlGitAuthor(runtime *plugin.Runtime, sha string, a *github.CommitAuthor) (interface{}, error) {
+func newMqlGitAuthor(runtime *plugin.Runtime, sha string, a *github.CommitAuthor) (any, error) {
 	date := a.GetDate()
 	return CreateResource(runtime, "git.commitAuthor", map[string]*llx.RawData{
 		"sha":   llx.StringData(sha),
@@ -41,7 +41,7 @@ func (g *mqlGitCommit) id() (string, error) {
 	return "git.commit/" + g.Sha.Data, nil
 }
 
-func newMqlGitCommit(runtime *plugin.Runtime, sha string, c *github.Commit) (interface{}, error) {
+func newMqlGitCommit(runtime *plugin.Runtime, sha string, c *github.Commit) (any, error) {
 	// we have to pass-in the sha because the sha is often not set c.GetSHA()
 	author, err := newMqlGitAuthor(runtime, sha, c.GetAuthor())
 	if err != nil {

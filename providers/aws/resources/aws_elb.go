@@ -15,22 +15,22 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	elbtypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (a *mqlAwsElb) id() (string, error) {
 	return "aws.elb", nil
 }
 
-func (a *mqlAwsElb) classicLoadBalancers() ([]interface{}, error) {
+func (a *mqlAwsElb) classicLoadBalancers() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getClassicLoadBalancers(conn), 5)
 	poolOfJobs.Run()
 
@@ -40,7 +40,7 @@ func (a *mqlAwsElb) classicLoadBalancers() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
@@ -56,7 +56,7 @@ func (a *mqlAwsElb) getClassicLoadBalancers(conn *connection.AwsConnection) []*j
 		f := func() (jobpool.JobResult, error) {
 			svc := conn.Elb(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 
 			params := &elasticloadbalancing.DescribeLoadBalancersInput{}
 			paginator := elasticloadbalancing.NewDescribeLoadBalancersPaginator(svc, params)
@@ -104,10 +104,10 @@ func (a *mqlAwsElbLoadbalancer) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func (a *mqlAwsElb) loadBalancers() ([]interface{}, error) {
+func (a *mqlAwsElb) loadBalancers() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getLoadBalancers(conn), 5)
 	poolOfJobs.Run()
 
@@ -117,7 +117,7 @@ func (a *mqlAwsElb) loadBalancers() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
@@ -134,7 +134,7 @@ func (a *mqlAwsElb) getLoadBalancers(conn *connection.AwsConnection) []*jobpool.
 		f := func() (jobpool.JobResult, error) {
 			svc := conn.Elbv2(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 
 			params := &elasticloadbalancingv2.DescribeLoadBalancersInput{}
 			paginator := elasticloadbalancingv2.NewDescribeLoadBalancersPaginator(svc, params)
@@ -148,12 +148,12 @@ func (a *mqlAwsElb) getLoadBalancers(conn *connection.AwsConnection) []*jobpool.
 					return nil, err
 				}
 				for _, lb := range lbs.LoadBalancers {
-					availabilityZones := []interface{}{}
+					availabilityZones := []any{}
 					for _, zone := range lb.AvailabilityZones {
 						availabilityZones = append(availabilityZones, convert.ToValue(zone.ZoneName))
 					}
 
-					sgs := []interface{}{}
+					sgs := []any{}
 					for _, sg := range lb.SecurityGroups {
 						mqlSg, err := NewResource(a.MqlRuntime, "aws.ec2.securitygroup",
 							map[string]*llx.RawData{
@@ -244,7 +244,7 @@ func initAwsElbLoadbalancer(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	return nil, nil, errors.New("elb load balancer does not exist")
 }
 
-func (a *mqlAwsElbLoadbalancer) listenerDescriptions() ([]interface{}, error) {
+func (a *mqlAwsElbLoadbalancer) listenerDescriptions() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	arn := a.Arn.Data
 
@@ -265,7 +265,7 @@ func (a *mqlAwsElbLoadbalancer) listenerDescriptions() ([]interface{}, error) {
 	return convert.JsonToDictSlice(listeners.Listeners)
 }
 
-func (a *mqlAwsElbLoadbalancer) attributes() ([]interface{}, error) {
+func (a *mqlAwsElbLoadbalancer) attributes() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	arn := a.Arn.Data
 	name := a.Name.Data
@@ -286,7 +286,7 @@ func (a *mqlAwsElbLoadbalancer) attributes() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		return []interface{}{j}, nil
+		return []any{j}, nil
 	}
 	svc := conn.Elbv2(region)
 	attributes, err := svc.DescribeLoadBalancerAttributes(ctx, &elasticloadbalancingv2.DescribeLoadBalancerAttributesInput{LoadBalancerArn: &arn})
@@ -311,13 +311,13 @@ func (a *mqlAwsElbTargetgroup) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func (a *mqlAwsElbLoadbalancer) targetGroups() ([]interface{}, error) {
+func (a *mqlAwsElbLoadbalancer) targetGroups() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	regionVal := a.Region.Data
 	svc := conn.Elbv2(regionVal)
 	ctx := context.Background()
-	res := []interface{}{}
+	res := []any{}
 
 	params := &elasticloadbalancingv2.DescribeTargetGroupsInput{LoadBalancerArn: aws.String(a.Arn.Data)}
 	paginator := elasticloadbalancingv2.NewDescribeTargetGroupsPaginator(svc, params)
@@ -381,12 +381,12 @@ func (a *mqlAwsElbTargetgroup) vpc() (*mqlAwsVpc, error) {
 	return mqlVpc.(*mqlAwsVpc), nil
 }
 
-func (a *mqlAwsElbTargetgroup) ec2Targets() ([]interface{}, error) {
+func (a *mqlAwsElbTargetgroup) ec2Targets() ([]any, error) {
 	// TODO
 	return nil, nil
 }
 
-func (a *mqlAwsElbTargetgroup) lambdaTargets() ([]interface{}, error) {
+func (a *mqlAwsElbTargetgroup) lambdaTargets() ([]any, error) {
 	// TODO
 	return nil, nil
 }

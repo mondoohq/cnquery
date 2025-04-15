@@ -11,7 +11,7 @@ import (
 	"math/rand"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/v11/internal/workerpool"
+	"go.mondoo.com/cnquery/v12/internal/workerpool"
 )
 
 func TestPoolSubmitAndRetrieveResult(t *testing.T) {

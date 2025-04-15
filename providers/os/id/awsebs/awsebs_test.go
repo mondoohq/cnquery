@@ -7,10 +7,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/fs"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/local"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/fs"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/local"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
 )
 
 func TestExtractInjectedPlatformId(t *testing.T) {

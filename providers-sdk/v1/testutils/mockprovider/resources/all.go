@@ -6,8 +6,8 @@ package resources
 import (
 	"fmt"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 )
 
 func (c *mqlMuser) id() (string, error) {
@@ -34,7 +34,7 @@ func (c *mqlMuser) nullstring() (string, error) {
 	return "", nil
 }
 
-func (c *mqlMuser) groups() ([]interface{}, error) {
+func (c *mqlMuser) groups() ([]any, error) {
 	one, err := CreateResource(c.MqlRuntime, "mgroup", map[string]*llx.RawData{
 		"name": llx.StringData("group one"),
 	})
@@ -42,7 +42,7 @@ func (c *mqlMuser) groups() ([]interface{}, error) {
 		return nil, err
 	}
 
-	return []interface{}{
+	return []any{
 		one, nil,
 	}, nil
 }
@@ -77,8 +77,8 @@ func (c *mqlMos) groups() (*mqlCustomGroups, error) {
 }
 
 // list() is where we actually load the real resources, which could be slow in big environments
-func (c *mqlCustomGroups) list() ([]interface{}, error) {
-	res := []interface{}{}
+func (c *mqlCustomGroups) list() ([]any, error) {
+	res := []any{}
 	for i := 0; i < 7; i++ {
 		group, err := CreateResource(c.MqlRuntime, "mgroup", map[string]*llx.RawData{
 			"name": llx.StringData(fmt.Sprintf("group%d", i+1)),
