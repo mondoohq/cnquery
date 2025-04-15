@@ -121,13 +121,23 @@ message Property {
 
 // protolint:disable ENUM_FIELD_NAMES_PREFIX
 // protolint:disable ENUM_FIELD_NAMES_ZERO_VALUE_END_WITH
+// Currently used for multiple scopes - policies and exceptions groups
 enum Action {
   UNSPECIFIED = 0;
   MODIFY = 1;
   DEACTIVATE = 2;
+  // Used for policies only
   ACTIVATE = 3;
+  // Used for policies only
   IGNORE = 4;
+  // Used for exception groups only
   OUT_OF_SCOPE = 5;
+  // Used for exception groups only
+  FALSE_POSITIVE = 6;
+  // Used for exception groups only
+  WORKAROUND = 7;
+  // Used for exception groups only
+  RISK_ACCEPTED = 8;
 }
 
 // Mquery represents the MQL and metadata that form a query
