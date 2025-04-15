@@ -30,7 +30,7 @@ func TestManagerDebian(t *testing.T) {
 	assert.Equal(t, "0", grp.ID)
 	assert.Equal(t, int64(0), grp.Gid)
 	assert.Equal(t, "root", grp.Name)
-	assert.Equal(t, []string{}, grp.Members)
+	assert.Equal(t, []string{"root", "sync", "shutdown", "halt", "operator"}, grp.Members)
 
 	assert.Equal(t, 23, len(groupList))
 }
