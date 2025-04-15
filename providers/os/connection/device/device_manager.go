@@ -4,7 +4,7 @@
 package device
 
 import (
-	"go.mondoo.com/cnquery/v11/providers/os/connection/snapshot"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/snapshot"
 )
 
 type DeviceManager interface {

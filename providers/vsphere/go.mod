@@ -1,8 +1,8 @@
-module go.mondoo.com/cnquery/v11/providers/vsphere
+module go.mondoo.com/cnquery/v12/providers/vsphere
 
-replace go.mondoo.com/cnquery/v11 => ../..
+replace go.mondoo.com/cnquery/v12 => ../..
 
-go 1.23.0
+go 1.24.0
 
 require (
 	github.com/facebookincubator/nvdtools v0.1.5
@@ -10,7 +10,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	// pin v0.46.3
 	github.com/vmware/govmomi v0.46.3
-	go.mondoo.com/cnquery/v11 v11.47.1
+	go.mondoo.com/cnquery/v12 v12.0.0-00010101000000-000000000000
 	go.mondoo.com/mondoo-go v0.0.0-20250326000352-c1087ab878cb
 )
 

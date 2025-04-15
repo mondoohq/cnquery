@@ -7,9 +7,9 @@ import (
 	"errors"
 	"strconv"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/mqlc/parser"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/mqlc/parser"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func callArgTypeIs(c *compiler, call *parser.Call, id string, argName string, idx int, types ...types.Type) (*llx.Primitive, error) {
