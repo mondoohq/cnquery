@@ -346,8 +346,6 @@ func (c *CommonOpts) GetServiceCredential() *upstream.ServiceAccountCredentials 
 			// Provide default issuer if not set
 			issuerURI := c.IssuerURI
 			if issuerURI == "" {
-				// Default to Google accounts as issuer if none provided
-				issuerURI = "https://accounts.google.com"
 				log.Debug().Str("issuerURI", issuerURI).Msg("using default issuer URI for WIF authentication")
 			}
 
