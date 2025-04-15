@@ -12,6 +12,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery/v11"
@@ -452,7 +453,7 @@ func (c *CommonOpts) UpstreamApiEndpoint() string {
 // IsWifConfigFormat determines if a file is in the WIF config format
 func IsWifConfigFormat(filePath string) (bool, error) {
 	// Read the file
-	data, err := os.ReadFile(filePath)
+	data, err := afero.ReadFile(AppFs, filePath)
 	if err != nil {
 		return false, err
 	}
@@ -484,7 +485,7 @@ func IsWifConfigFormat(filePath string) (bool, error) {
 // ConvertWifConfig reads a WIF config file and converts it to a Viper-compatible format
 func ConvertWifConfig(filePath string, v *viper.Viper) error {
 	// Read the file
-	data, err := os.ReadFile(filePath)
+	data, err := afero.ReadFile(AppFs, filePath)
 	if err != nil {
 		return err
 	}
