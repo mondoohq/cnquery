@@ -11,12 +11,12 @@ import (
 	"sync"
 	"time"
 
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 	"github.com/Ullaakut/nmap/v3"
 	"github.com/cockroachdb/errors"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/nmap/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/nmap/connection"
 )
 
 type mqlNmapHostInternal struct {
@@ -68,26 +68,26 @@ func (r *mqlNmapHost) scan() error {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 
-	r.Distance = plugin.TValue[interface{}]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
-	r.Os = plugin.TValue[interface{}]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
+	r.Distance = plugin.TValue[any]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
+	r.Os = plugin.TValue[any]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
 	r.EndTime = plugin.TValue[*time.Time]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
 	r.Comment = plugin.TValue[string]{Data: "", Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
-	r.Trace = plugin.TValue[interface{}]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
-	r.Addresses = plugin.TValue[[]interface{}]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
-	r.Hostnames = plugin.TValue[[]interface{}]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
+	r.Trace = plugin.TValue[any]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
+	r.Addresses = plugin.TValue[[]any]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
+	r.Hostnames = plugin.TValue[[]any]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
 	r.State = plugin.TValue[string]{Data: "", Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
-	r.Ports = plugin.TValue[[]interface{}]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
+	r.Ports = plugin.TValue[[]any]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
 
 	setError := func(err error) {
-		r.Distance = plugin.TValue[interface{}]{Data: nil, Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
-		r.Os = plugin.TValue[interface{}]{Data: nil, Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
+		r.Distance = plugin.TValue[any]{Data: nil, Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
+		r.Os = plugin.TValue[any]{Data: nil, Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
 		r.EndTime = plugin.TValue[*time.Time]{Data: nil, Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
 		r.Comment = plugin.TValue[string]{Data: "", Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
-		r.Trace = plugin.TValue[interface{}]{Data: nil, Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
-		r.Addresses = plugin.TValue[[]interface{}]{Data: nil, Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
-		r.Hostnames = plugin.TValue[[]interface{}]{Data: nil, Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
+		r.Trace = plugin.TValue[any]{Data: nil, Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
+		r.Addresses = plugin.TValue[[]any]{Data: nil, Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
+		r.Hostnames = plugin.TValue[[]any]{Data: nil, Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
 		r.State = plugin.TValue[string]{Data: "", Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
-		r.Ports = plugin.TValue[[]interface{}]{Data: nil, Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
+		r.Ports = plugin.TValue[[]any]{Data: nil, Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
 
 	}
 
@@ -130,12 +130,12 @@ func (r *mqlNmapHost) scan() error {
 
 	distance, err := convert.JsonToDict(host.Distance)
 	if err == nil {
-		r.Distance = plugin.TValue[interface{}]{Data: distance, Error: nil, State: plugin.StateIsSet}
+		r.Distance = plugin.TValue[any]{Data: distance, Error: nil, State: plugin.StateIsSet}
 	}
 
 	os, err := convert.JsonToDict(host.OS)
 	if err == nil {
-		r.Os = plugin.TValue[interface{}]{Data: os, Error: nil, State: plugin.StateIsSet}
+		r.Os = plugin.TValue[any]{Data: os, Error: nil, State: plugin.StateIsSet}
 	}
 
 	r.EndTime = plugin.TValue[*time.Time]{Data: &t, Error: nil, State: plugin.StateIsSet}
@@ -143,20 +143,20 @@ func (r *mqlNmapHost) scan() error {
 
 	trace, err := convert.JsonToDict(host.Trace)
 	if err == nil {
-		r.Trace = plugin.TValue[interface{}]{Data: trace, Error: nil, State: plugin.StateIsSet}
+		r.Trace = plugin.TValue[any]{Data: trace, Error: nil, State: plugin.StateIsSet}
 	}
 
 	addresses, err := convert.JsonToDictSlice(host.Addresses)
 	if err == nil {
-		r.Addresses = plugin.TValue[[]interface{}]{Data: addresses, Error: nil, State: plugin.StateIsSet}
+		r.Addresses = plugin.TValue[[]any]{Data: addresses, Error: nil, State: plugin.StateIsSet}
 	}
 
 	hostnames, err := convert.JsonToDictSlice(host.Hostnames)
 	if err == nil {
-		r.Hostnames = plugin.TValue[[]interface{}]{Data: hostnames, Error: nil, State: plugin.StateIsSet}
+		r.Hostnames = plugin.TValue[[]any]{Data: hostnames, Error: nil, State: plugin.StateIsSet}
 	}
 
-	ports := make([]interface{}, 0)
+	ports := make([]any, 0)
 	for _, port := range host.Ports {
 		r, err := newMqlNmapPort(r.MqlRuntime, id, port)
 		if err != nil {
@@ -166,7 +166,7 @@ func (r *mqlNmapHost) scan() error {
 	}
 
 	if len(ports) > 0 {
-		r.Ports = plugin.TValue[[]interface{}]{Data: ports, Error: nil, State: plugin.StateIsSet}
+		r.Ports = plugin.TValue[[]any]{Data: ports, Error: nil, State: plugin.StateIsSet}
 	}
 
 	r.State = plugin.TValue[string]{Data: host.Status.State, Error: nil, State: plugin.StateIsSet}
@@ -174,11 +174,11 @@ func (r *mqlNmapHost) scan() error {
 	return nil
 }
 
-func (r *mqlNmapHost) distance() (interface{}, error) {
+func (r *mqlNmapHost) distance() (any, error) {
 	return nil, r.scan()
 }
 
-func (r *mqlNmapHost) os() (interface{}, error) {
+func (r *mqlNmapHost) os() (any, error) {
 	return nil, r.scan()
 }
 
@@ -190,19 +190,19 @@ func (r *mqlNmapHost) comment() (string, error) {
 	return "", r.scan()
 }
 
-func (r *mqlNmapHost) trace() (interface{}, error) {
+func (r *mqlNmapHost) trace() (any, error) {
 	return nil, r.scan()
 }
 
-func (r *mqlNmapHost) addresses() ([]interface{}, error) {
+func (r *mqlNmapHost) addresses() ([]any, error) {
 	return nil, r.scan()
 }
 
-func (r *mqlNmapHost) hostnames() ([]interface{}, error) {
+func (r *mqlNmapHost) hostnames() ([]any, error) {
 	return nil, r.scan()
 }
 
-func (r *mqlNmapHost) ports() ([]interface{}, error) {
+func (r *mqlNmapHost) ports() ([]any, error) {
 	return nil, r.scan()
 }
 

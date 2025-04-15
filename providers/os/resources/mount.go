@@ -7,18 +7,18 @@ import (
 	"fmt"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/mount"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/mount"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (m *mqlMount) id() (string, error) {
 	return "mount", nil
 }
 
-func (m *mqlMount) list() ([]interface{}, error) {
+func (m *mqlMount) list() ([]any, error) {
 	// find suitable mount manager
 	conn := m.MqlRuntime.Connection.(shared.Connection)
 	mm, err := mount.ResolveManager(conn)
@@ -34,10 +34,10 @@ func (m *mqlMount) list() ([]interface{}, error) {
 	log.Debug().Int("mounts", len(osMounts)).Msg("mql[mount]> mounted volumes")
 
 	// create MQL mount entry resources for each mount
-	mountEntries := make([]interface{}, len(osMounts))
+	mountEntries := make([]any, len(osMounts))
 	for i, osMount := range osMounts {
 		// convert options
-		opts := map[string]interface{}{}
+		opts := map[string]any{}
 		for k := range osMount.Options {
 			opts[k] = osMount.Options[k]
 		}

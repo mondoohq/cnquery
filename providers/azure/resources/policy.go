@@ -8,10 +8,10 @@ import (
 	"errors"
 	"fmt"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/azure/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/azure/connection"
 )
 
 func initAzureSubscriptionPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -32,7 +32,7 @@ func (a *mqlAzureSubscriptionPolicyAssignment) id() (string, error) {
 	return fmt.Sprintf("azure.subscription.policy/%s/%s", a.Scope.Data, a.Id.Data), nil
 }
 
-func (a *mqlAzureSubscriptionPolicy) assignments() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionPolicy) assignments() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	subId := a.SubscriptionId.Data
@@ -47,7 +47,7 @@ func (a *mqlAzureSubscriptionPolicy) assignments() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for _, assignment := range pas.PolicyAssignments {
 		parameters, err := convert.JsonToDict(assignment.Properties.Parameters)
 		if err != nil {

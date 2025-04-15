@@ -11,12 +11,12 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/client"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
-func (p *mqlDocker) images() ([]interface{}, error) {
+func (p *mqlDocker) images() ([]any, error) {
 	cl, err := dockerClient()
 	if err != nil {
 		return nil, err
@@ -27,14 +27,14 @@ func (p *mqlDocker) images() ([]interface{}, error) {
 		return nil, err
 	}
 
-	imgs := make([]interface{}, len(dImages))
+	imgs := make([]any, len(dImages))
 	for i, dImg := range dImages {
-		labels := make(map[string]interface{})
+		labels := make(map[string]any)
 		for key := range dImg.Labels {
 			labels[key] = dImg.Labels[key]
 		}
 
-		tags := []interface{}{}
+		tags := []any{}
 		for i := range dImg.RepoTags {
 			tags = append(tags, dImg.RepoTags[i])
 		}
@@ -56,7 +56,7 @@ func (p *mqlDocker) images() ([]interface{}, error) {
 	return imgs, nil
 }
 
-func (p *mqlDocker) containers() ([]interface{}, error) {
+func (p *mqlDocker) containers() ([]any, error) {
 	cl, err := dockerClient()
 	if err != nil {
 		return nil, err
@@ -67,15 +67,15 @@ func (p *mqlDocker) containers() ([]interface{}, error) {
 		return nil, err
 	}
 
-	container := make([]interface{}, len(dContainers))
+	container := make([]any, len(dContainers))
 
 	for i, dContainer := range dContainers {
-		labels := make(map[string]interface{})
+		labels := make(map[string]any)
 		for key := range dContainer.Labels {
 			labels[key] = dContainer.Labels[key]
 		}
 
-		names := []interface{}{}
+		names := []any{}
 		for i := range dContainer.Names {
 			name := dContainer.Names[i]
 			name = strings.TrimPrefix(name, "/")
@@ -126,7 +126,7 @@ func (p *mqlDockerContainer) id() (string, error) {
 	return p.Id.Data, nil
 }
 
-func (p *mqlDockerContainer) hostConfig() (interface{}, error) {
+func (p *mqlDockerContainer) hostConfig() (any, error) {
 	cl, err := dockerClient()
 	if err != nil {
 		return nil, err

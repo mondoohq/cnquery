@@ -11,11 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/smithy-go/transport/http"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
 )
 
 func (a *mqlAwsSns) id() (string, error) {
@@ -30,9 +30,9 @@ func (a *mqlAwsSnsSubscription) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func (a *mqlAwsSns) topics() ([]interface{}, error) {
+func (a *mqlAwsSns) topics() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getTopics(conn), 5)
 	poolOfJobs.Run()
 
@@ -42,7 +42,7 @@ func (a *mqlAwsSns) topics() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
@@ -78,7 +78,7 @@ func (a *mqlAwsSns) getTopics(conn *connection.AwsConnection) []*jobpool.Job {
 		f := func() (jobpool.JobResult, error) {
 			svc := conn.Sns(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 
 			params := &sns.ListTopicsInput{}
 			paginator := sns.NewListTopicsPaginator(svc, params)
@@ -111,7 +111,7 @@ func (a *mqlAwsSns) getTopics(conn *connection.AwsConnection) []*jobpool.Job {
 	return tasks
 }
 
-func (a *mqlAwsSnsTopic) attributes() (interface{}, error) {
+func (a *mqlAwsSnsTopic) attributes() (any, error) {
 	arn := a.Arn.Data
 	region := a.Region.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
@@ -126,7 +126,7 @@ func (a *mqlAwsSnsTopic) attributes() (interface{}, error) {
 	return convert.JsonToDict(topicAttributes.Attributes)
 }
 
-func (a *mqlAwsSnsTopic) tags() (map[string]interface{}, error) {
+func (a *mqlAwsSnsTopic) tags() (map[string]any, error) {
 	arn := a.Arn.Data
 	region := a.Region.Data
 
@@ -138,7 +138,7 @@ func (a *mqlAwsSnsTopic) tags() (map[string]interface{}, error) {
 	return getSNSTags(ctx, svc, &arn)
 }
 
-func getSNSTags(ctx context.Context, svc *sns.Client, arn *string) (map[string]interface{}, error) {
+func getSNSTags(ctx context.Context, svc *sns.Client, arn *string) (map[string]any, error) {
 	resp, err := svc.ListTagsForResource(ctx, &sns.ListTagsForResourceInput{ResourceArn: arn})
 	var respErr *http.ResponseError
 	if err != nil {
@@ -149,7 +149,7 @@ func getSNSTags(ctx context.Context, svc *sns.Client, arn *string) (map[string]i
 		}
 		return nil, err
 	}
-	tags := make(map[string]interface{})
+	tags := make(map[string]any)
 	for _, t := range resp.Tags {
 		if t.Key != nil && t.Value != nil {
 			tags[*t.Key] = *t.Value
@@ -158,7 +158,7 @@ func getSNSTags(ctx context.Context, svc *sns.Client, arn *string) (map[string]i
 	return tags, nil
 }
 
-func (a *mqlAwsSnsTopic) subscriptions() ([]interface{}, error) {
+func (a *mqlAwsSnsTopic) subscriptions() ([]any, error) {
 	arnValue := a.Arn.Data
 	regionVal := a.Region.Data
 
@@ -167,7 +167,7 @@ func (a *mqlAwsSnsTopic) subscriptions() ([]interface{}, error) {
 	svc := conn.Sns(regionVal)
 	ctx := context.Background()
 
-	mqlSubs := []interface{}{}
+	mqlSubs := []any{}
 	params := &sns.ListSubscriptionsByTopicInput{TopicArn: &arnValue}
 	paginator := sns.NewListSubscriptionsByTopicPaginator(svc, params)
 	for paginator.HasMorePages() {

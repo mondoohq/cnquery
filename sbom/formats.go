@@ -25,7 +25,7 @@ var parsingNotSupportedError = errors.New("parsing is not supported")
 
 type FormatSpecificationHandler interface {
 	// Convert converts cnquery sbom to the desired format
-	Convert(bom *Sbom) (interface{}, error)
+	Convert(bom *Sbom) (any, error)
 	// Parse parses the sbom format to *Sbom
 	Parse(r io.Reader) (*Sbom, error)
 	// Render writes the converted sbom to the writer in the desired format

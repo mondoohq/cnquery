@@ -9,10 +9,10 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/services"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/services"
 )
 
 func initService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -66,7 +66,7 @@ type mqlServicesInternal struct {
 	namedServices map[string]*mqlService
 }
 
-func (x *mqlServices) list() ([]interface{}, error) {
+func (x *mqlServices) list() ([]any, error) {
 	x.lock.Lock()
 	defer x.lock.Unlock()
 
@@ -88,8 +88,8 @@ func (x *mqlServices) list() ([]interface{}, error) {
 	}
 	log.Debug().Int("services", len(services)).Msg("mql[services]> running services")
 
-	// convert to interface{}{}
-	mqlSrvs := []interface{}{}
+	// convert to any{}
+	mqlSrvs := []any{}
 
 	for i := range services {
 		srv := services[i]
@@ -113,7 +113,7 @@ func (x *mqlServices) list() ([]interface{}, error) {
 	return mqlSrvs, x.refreshCache(mqlSrvs)
 }
 
-func (x *mqlServices) refreshCache(all []interface{}) error {
+func (x *mqlServices) refreshCache(all []any) error {
 	if all == nil {
 		raw := x.GetList()
 		if raw.Error != nil {

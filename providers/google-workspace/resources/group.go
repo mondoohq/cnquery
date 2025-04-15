@@ -7,26 +7,26 @@ import (
 	"context"
 	"strings"
 
-	"go.mondoo.com/cnquery/v11/providers/google-workspace/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/providers/google-workspace/connection"
+	"go.mondoo.com/cnquery/v12/types"
 	"google.golang.org/api/groupssettings/v1"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 	directory "google.golang.org/api/admin/directory/v1"
 	"google.golang.org/api/cloudidentity/v1"
 	"google.golang.org/api/option"
 )
 
-func (g *mqlGoogleworkspace) groups() ([]interface{}, error) {
+func (g *mqlGoogleworkspace) groups() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GoogleWorkspaceConnection)
 	directoryService, err := directoryService(conn, directory.AdminDirectoryGroupReadonlyScope)
 	if err != nil {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	groups, err := directoryService.Groups.List().Customer(conn.CustomerID()).Do()
 	if err != nil {
 		return nil, err
@@ -54,7 +54,7 @@ func (g *mqlGoogleworkspace) groups() ([]interface{}, error) {
 	return res, nil
 }
 
-func newMqlGoogleWorkspaceGroup(runtime *plugin.Runtime, entry *directory.Group) (interface{}, error) {
+func newMqlGoogleWorkspaceGroup(runtime *plugin.Runtime, entry *directory.Group) (any, error) {
 	return CreateResource(runtime, "googleworkspace.group", map[string]*llx.RawData{
 		"id":                 llx.StringData(entry.Id),
 		"name":               llx.StringData(entry.Name),
@@ -70,7 +70,7 @@ func (g *mqlGoogleworkspaceGroup) id() (string, error) {
 	return "googleworkspace.group/" + g.Id.Data, g.Id.Error
 }
 
-func (g *mqlGoogleworkspaceGroup) members() ([]interface{}, error) {
+func (g *mqlGoogleworkspaceGroup) members() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GoogleWorkspaceConnection)
 	client, err := conn.Client()
 	if err != nil {
@@ -87,7 +87,7 @@ func (g *mqlGoogleworkspaceGroup) members() ([]interface{}, error) {
 	}
 	id := g.Id.Data
 
-	res := []interface{}{}
+	res := []any{}
 
 	members, err := directoryService.Members.List(id).Do()
 	if err != nil {
@@ -116,7 +116,7 @@ func (g *mqlGoogleworkspaceGroup) members() ([]interface{}, error) {
 	return res, nil
 }
 
-func newMqlGoogleWorkspaceMember(runtime *plugin.Runtime, entry *directory.Member) (interface{}, error) {
+func newMqlGoogleWorkspaceMember(runtime *plugin.Runtime, entry *directory.Member) (any, error) {
 	return CreateResource(runtime, "googleworkspace.member", map[string]*llx.RawData{
 		"id":     llx.StringData(entry.Id),
 		"email":  llx.StringData(entry.Email),
@@ -167,7 +167,7 @@ func (g *mqlGoogleworkspaceMember) user() (*mqlGoogleworkspaceUser, error) {
 	return nil, nil
 }
 
-func (g *mqlGoogleworkspaceGroup) settings() (interface{}, error) {
+func (g *mqlGoogleworkspaceGroup) settings() (any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GoogleWorkspaceConnection)
 	service, err := groupSettingsService(conn, groupssettings.AppsGroupsSettingsScope)
 	if err != nil {
@@ -187,7 +187,7 @@ func (g *mqlGoogleworkspaceGroup) settings() (interface{}, error) {
 	return convert.JsonToDict(settings)
 }
 
-func (g *mqlGoogleworkspaceGroup) securitySettings() (interface{}, error) {
+func (g *mqlGoogleworkspaceGroup) securitySettings() (any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GoogleWorkspaceConnection)
 	service, err := cloudIdentityService(conn, cloudidentity.CloudIdentityGroupsReadonlyScope)
 	if err != nil {

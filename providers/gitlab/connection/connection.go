@@ -13,9 +13,9 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"gitlab.com/gitlab-org/api/client-go"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/vault"
 )
 
 type GitLabConnection struct {
@@ -152,14 +152,14 @@ func (c *GitLabConnection) IsProject() bool {
 	return c.projectName != "" || c.projectID != ""
 }
 
-func (c *GitLabConnection) GID() (interface{}, error) {
+func (c *GitLabConnection) GID() (any, error) {
 	if c.groupName == "" {
 		return nil, errors.New("cannot look up gitlab group, no group path defined")
 	}
 	return url.QueryEscape(c.groupName), nil
 }
 
-func (c *GitLabConnection) PID() (interface{}, error) {
+func (c *GitLabConnection) PID() (any, error) {
 	if c.projectID != "" {
 		return c.projectID, nil
 	}
@@ -208,7 +208,7 @@ func DiscoverSubAndDescendantGroupsForGroup(conn *GitLabConnection, rootGroup st
 	return list, nil
 }
 
-func groupDescendantGroups(conn *GitLabConnection, gid interface{}) ([]*gitlab.Group, error) {
+func groupDescendantGroups(conn *GitLabConnection, gid any) ([]*gitlab.Group, error) {
 	log.Debug().Msgf("calling list descendant groups with %v", gid)
 	perPage := 50
 	page := 1
@@ -227,7 +227,7 @@ func groupDescendantGroups(conn *GitLabConnection, gid interface{}) ([]*gitlab.G
 	return groups, nil
 }
 
-func groupSubgroups(conn *GitLabConnection, gid interface{}) ([]*gitlab.Group, error) {
+func groupSubgroups(conn *GitLabConnection, gid any) ([]*gitlab.Group, error) {
 	log.Debug().Msgf("calling list subgroups with %v", gid)
 	perPage := 50
 	page := 1

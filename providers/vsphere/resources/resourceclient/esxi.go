@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 
 	"github.com/rs/zerolog/log"
 	"github.com/vmware/govmomi"
@@ -44,8 +44,8 @@ func isSliceKey(key string) bool {
 	return false
 }
 
-func esxiValuesToDict(val esxcli.Values) map[string]interface{} {
-	dict := map[string]interface{}{}
+func esxiValuesToDict(val esxcli.Values) map[string]any {
+	dict := map[string]any{}
 	for k := range val {
 		if len(val[k]) == 1 && !isSliceKey(k) {
 			dict[k] = val[k][0]
@@ -57,8 +57,8 @@ func esxiValuesToDict(val esxcli.Values) map[string]interface{} {
 	return dict
 }
 
-func esxiValuesSliceToDict(values []esxcli.Values) []map[string]interface{} {
-	dicts := make([]map[string]interface{}, len(values))
+func esxiValuesSliceToDict(values []esxcli.Values) []map[string]any {
+	dicts := make([]map[string]any, len(values))
 	for i, val := range values {
 		dicts[i] = esxiValuesToDict(val)
 	}
@@ -66,7 +66,7 @@ func esxiValuesSliceToDict(values []esxcli.Values) []map[string]interface{} {
 }
 
 // (Get - EsxCli).network.vswitch.standard.list()
-func (esxi *Esxi) VswitchStandard() ([]map[string]interface{}, error) {
+func (esxi *Esxi) VswitchStandard() ([]map[string]any, error) {
 	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
 	if err != nil {
 		return nil, err
@@ -82,7 +82,7 @@ func (esxi *Esxi) VswitchStandard() ([]map[string]interface{}, error) {
 
 var doubleSpaceRegex = regexp.MustCompile(`\s+`)
 
-func (esxi *Esxi) Command(command string) ([]map[string]interface{}, error) {
+func (esxi *Esxi) Command(command string) ([]map[string]any, error) {
 	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
 	if err != nil {
 		return nil, err
@@ -104,7 +104,7 @@ func (esxi *Esxi) Command(command string) ([]map[string]interface{}, error) {
 }
 
 // (Get-ESXCli).network.vswitch.standard.policy.shaping.get('vSwitch0')
-func (esxi *Esxi) VswitchStandardShapingPolicy(standardSwitchName string) (map[string]interface{}, error) {
+func (esxi *Esxi) VswitchStandardShapingPolicy(standardSwitchName string) (map[string]any, error) {
 	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
 	if err != nil {
 		return nil, err
@@ -127,7 +127,7 @@ func (esxi *Esxi) VswitchStandardShapingPolicy(standardSwitchName string) (map[s
 }
 
 // (Get-ESXCli).network.vswitch.standard.policy.failover.get('vSwitch0')
-func (esxi *Esxi) VswitchStandardFailoverPolicy(standardSwitchName string) (map[string]interface{}, error) {
+func (esxi *Esxi) VswitchStandardFailoverPolicy(standardSwitchName string) (map[string]any, error) {
 	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
 	if err != nil {
 		return nil, err
@@ -150,7 +150,7 @@ func (esxi *Esxi) VswitchStandardFailoverPolicy(standardSwitchName string) (map[
 }
 
 // (Get-ESXCli).network.vswitch.standard.policy.security.get('vSwitch0')
-func (esxi *Esxi) VswitchStandardSecurityPolicy(standardSwitchName string) (map[string]interface{}, error) {
+func (esxi *Esxi) VswitchStandardSecurityPolicy(standardSwitchName string) (map[string]any, error) {
 	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
 	if err != nil {
 		return nil, err
@@ -173,7 +173,7 @@ func (esxi *Esxi) VswitchStandardSecurityPolicy(standardSwitchName string) (map[
 }
 
 // (Get-EsxCli).network.vswitch.dvs.vmware.list()
-func (esxi *Esxi) VswitchDvs() ([]map[string]interface{}, error) {
+func (esxi *Esxi) VswitchDvs() ([]map[string]any, error) {
 	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
 	if err != nil {
 		return nil, err
@@ -189,7 +189,7 @@ func (esxi *Esxi) VswitchDvs() ([]map[string]interface{}, error) {
 
 // Adapters will list the Physical NICs currently installed and loaded on the system.
 // (Get-EsxCli).network.nic.list.Invoke()
-func (esxi *Esxi) Adapters() ([]map[string]interface{}, error) {
+func (esxi *Esxi) Adapters() ([]map[string]any, error) {
 	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
 	if err != nil {
 		return nil, err
@@ -205,7 +205,7 @@ func (esxi *Esxi) Adapters() ([]map[string]interface{}, error) {
 
 // List adapter details for nic
 // Usage esxcli network nic pauseParams list
-func (esxi *Esxi) ListNicDetails(interfacename string) (map[string]interface{}, error) {
+func (esxi *Esxi) ListNicDetails(interfacename string) (map[string]any, error) {
 	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
 	if err != nil {
 		return nil, err
@@ -229,7 +229,7 @@ func (esxi *Esxi) ListNicDetails(interfacename string) (map[string]interface{}, 
 
 // List pause parameters of all NICs
 // Usage esxcli network nic pauseParams list
-func (esxi *Esxi) ListNicPauseParams() ([]map[string]interface{}, error) {
+func (esxi *Esxi) ListNicPauseParams() ([]map[string]any, error) {
 	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
 	if err != nil {
 		return nil, err
@@ -244,9 +244,9 @@ func (esxi *Esxi) ListNicPauseParams() ([]map[string]interface{}, error) {
 }
 
 type VmKernelNic struct {
-	Properties map[string]interface{}
-	Ipv4       []interface{}
-	Ipv6       []interface{}
+	Properties map[string]any
+	Ipv4       []any
+	Ipv6       []any
 	Tags       []string
 }
 
@@ -298,7 +298,7 @@ func (esxi *Esxi) Vmknics() ([]VmKernelNic, error) {
 }
 
 // (Get-EsxCli).network.ip.interface.ipv4.get('vmk0', 'defaultTcpipStack')
-func (esxi *Esxi) VmknicIp(interfacename string, netstack string, ipprotocol string) ([]interface{}, error) {
+func (esxi *Esxi) VmknicIp(interfacename string, netstack string, ipprotocol string) ([]any, error) {
 	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
 	if err != nil {
 		return nil, err
@@ -313,7 +313,7 @@ func (esxi *Esxi) VmknicIp(interfacename string, netstack string, ipprotocol str
 		return nil, nil
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range resp.Values {
 		entry := esxiValuesToDict(resp.Values[i])
 		res = append(res, entry)
@@ -699,7 +699,7 @@ func (esxi *Esxi) AdvancedSettings() ([]EsxiAdvancedSetting, error) {
 	return settings, nil
 }
 
-func (esxi *Esxi) Snmp() (map[string]interface{}, error) {
+func (esxi *Esxi) Snmp() (map[string]any, error) {
 	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
 	if err != nil {
 		return nil, err
@@ -718,7 +718,7 @@ func (esxi *Esxi) Snmp() (map[string]interface{}, error) {
 		return nil, errors.New("ambiguous esxi system version")
 	}
 
-	snmp := map[string]interface{}{}
+	snmp := map[string]any{}
 	val := res.Values[0]
 	for k := range val {
 		if len(val[k]) == 1 {

@@ -11,7 +11,7 @@ import (
 	msgraphgocore "github.com/microsoftgraph/msgraph-sdk-go-core"
 )
 
-func iterate[T interface{}](ctx context.Context, res interface{}, adapter abstractions.RequestAdapter, constructorFunc serialization.ParsableFactory) ([]T, error) {
+func iterate[T any](ctx context.Context, res any, adapter abstractions.RequestAdapter, constructorFunc serialization.ParsableFactory) ([]T, error) {
 	resp := []T{}
 	iterator, err := msgraphgocore.NewPageIterator[T](res, adapter, constructorFunc)
 	if err != nil {

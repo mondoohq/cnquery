@@ -8,10 +8,10 @@ import (
 	"fmt"
 	"time"
 
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
-func dereferenceDict(raw interface{}) (*RawData, error) {
+func dereferenceDict(raw any) (*RawData, error) {
 	switch data := raw.(type) {
 	case bool:
 		return BoolData(data), nil
@@ -28,11 +28,11 @@ func dereferenceDict(raw interface{}) (*RawData, error) {
 	case time.Time:
 		return TimeData(data), nil
 
-	case []interface{}:
+	case []any:
 		// TODO: we'll need to go deeper here to figure out what it really is
 		return ArrayData(data, types.Array(types.Any)), nil
 
-	case map[string]interface{}:
+	case map[string]any:
 		// TODO: we'll need to go deeper here to figure out what it really is
 		return MapData(data, types.Map(types.String, types.Any)), nil
 
@@ -41,8 +41,8 @@ func dereferenceDict(raw interface{}) (*RawData, error) {
 	}
 }
 
-func dereferenceBlock(data map[string]interface{}, codeID string, bundle *CodeBundle) (*RawData, error) {
-	res := make(map[string]interface{}, len(data))
+func dereferenceBlock(data map[string]any, codeID string, bundle *CodeBundle) (*RawData, error) {
+	res := make(map[string]any, len(data))
 
 	for k := range data {
 		if k == "_" || k == "__t" || k == "__s" {
@@ -63,8 +63,8 @@ func dereferenceBlock(data map[string]interface{}, codeID string, bundle *CodeBu
 	return MapData(res, types.Map(types.String, types.Any)), nil
 }
 
-func dereferenceArray(typ types.Type, data []interface{}, codeID string, bundle *CodeBundle) (*RawData, error) {
-	res := make([]interface{}, len(data))
+func dereferenceArray(typ types.Type, data []any, codeID string, bundle *CodeBundle) (*RawData, error) {
+	res := make([]any, len(data))
 	childType := typ.Child()
 
 	// TODO: detect any changes to the child type
@@ -80,8 +80,8 @@ func dereferenceArray(typ types.Type, data []interface{}, codeID string, bundle 
 	return ArrayData(res, childType), nil
 }
 
-func dereferenceStringMap(typ types.Type, data map[string]interface{}, codeID string, bundle *CodeBundle) (*RawData, error) {
-	res := make(map[string]interface{}, len(data))
+func dereferenceStringMap(typ types.Type, data map[string]any, codeID string, bundle *CodeBundle) (*RawData, error) {
+	res := make(map[string]any, len(data))
 	childType := typ.Child()
 
 	// TODO: detect any changes to the child type
@@ -113,17 +113,17 @@ func dereference(raw *RawData, codeID string, bundle *CodeBundle) (*RawData, err
 		return dereferenceDict(data)
 
 	case types.Block:
-		return dereferenceBlock(data.(map[string]interface{}), codeID, bundle)
+		return dereferenceBlock(data.(map[string]any), codeID, bundle)
 
 	case types.ArrayLike:
-		return dereferenceArray(typ, data.([]interface{}), codeID, bundle)
+		return dereferenceArray(typ, data.([]any), codeID, bundle)
 
 	case types.MapLike:
 		if typ.Key() == types.String {
-			return dereferenceStringMap(typ, data.(map[string]interface{}), codeID, bundle)
+			return dereferenceStringMap(typ, data.(map[string]any), codeID, bundle)
 		}
 		// if typ.Key() == types.Int {
-		// 	return dereferenceIntMap(typ, data.(map[int]interface{}), codeID, bundle)
+		// 	return dereferenceIntMap(typ, data.(map[int]any), codeID, bundle)
 		// }
 		return nil, errors.New("unable to dereference map, its type is not supported: " + typ.Label() + ", raw: " + fmt.Sprintf("%#v", data))
 

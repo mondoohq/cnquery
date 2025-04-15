@@ -284,7 +284,7 @@ const file_cnquery_report_proto_rawDesc = "" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x129\n" +
 	"\x05value\x18\x02 \x01(\v2#.mondoo.report.cnquery.v1.DataValueR\x05value:\x028\x01\"=\n" +
 	"\tDataValue\x120\n" +
-	"\acontent\x18\x01 \x01(\v2\x16.google.protobuf.ValueR\acontentB(Z&go.mondoo.com/cnquery/v11/cli/reporterb\x06proto3"
+	"\acontent\x18\x01 \x01(\v2\x16.google.protobuf.ValueR\acontentB(Z&go.mondoo.com/cnquery/v12/cli/reporterb\x06proto3"
 
 var (
 	file_cnquery_report_proto_rawDescOnce sync.Once

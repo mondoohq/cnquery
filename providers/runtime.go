@@ -9,15 +9,15 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/recording"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/resources"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream"
-	"go.mondoo.com/cnquery/v11/types"
-	"go.mondoo.com/cnquery/v11/utils/multierr"
-	"go.mondoo.com/cnquery/v11/utils/stringx"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/recording"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/upstream"
+	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/cnquery/v12/utils/multierr"
+	"go.mondoo.com/cnquery/v12/utils/stringx"
 	"google.golang.org/grpc/status"
 )
 
@@ -379,7 +379,7 @@ func (r *Runtime) Unregister(watcherUID string) error {
 }
 
 // WatchAndUpdate a resource field and call the function if it changes with its current value
-func (r *Runtime) WatchAndUpdate(resource llx.Resource, field string, watcherUID string, callback func(res interface{}, err error)) error {
+func (r *Runtime) WatchAndUpdate(resource llx.Resource, field string, watcherUID string, callback func(res any, err error)) error {
 	raw, err := r.watchAndUpdate(resource.MqlName(), resource.MqlID(), field, watcherUID)
 	if raw != nil {
 		callback(raw.Value, raw.Error)

@@ -14,7 +14,7 @@ func TestResource_Shadow(t *testing.T) {
 	t.Run("list shadow entries", func(t *testing.T) {
 		res := x.TestQuery(t, "shadow.list")
 		assert.NotEmpty(t, res)
-		assert.Equal(t, 3, len(res[0].Data.Value.([]interface{})))
+		assert.Equal(t, 3, len(res[0].Data.Value.([]any)))
 	})
 
 	t.Run("test a specific shadow entry", func(t *testing.T) {

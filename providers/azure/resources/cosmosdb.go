@@ -8,11 +8,11 @@ import (
 	"errors"
 	"fmt"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/azure/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/azure/connection"
+	"go.mondoo.com/cnquery/v12/types"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	cosmosdb "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos"
@@ -38,12 +38,12 @@ func initAzureSubscriptionCosmosDbService(runtime *plugin.Runtime, args map[stri
 	return args, nil, nil
 }
 
-func (a *mqlAzureSubscriptionCosmosDbService) accounts() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionCosmosDbService) accounts() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	subId := a.SubscriptionId.Data
 
-	res := []interface{}{}
+	res := []any{}
 
 	// Fetch resources of different types - other than MongoDB and PostgreSQL
 	cosmosAccounts, err := fetchCosmosDBAccounts(ctx, a.MqlRuntime, conn, subId)
@@ -67,7 +67,7 @@ func (a *mqlAzureSubscriptionCosmosDbService) accounts() ([]interface{}, error) 
 	return res, nil
 }
 
-func fetchCosmosDBAccounts(ctx context.Context, runtime *plugin.Runtime, conn *connection.AzureConnection, subId string) ([]interface{}, error) {
+func fetchCosmosDBAccounts(ctx context.Context, runtime *plugin.Runtime, conn *connection.AzureConnection, subId string) ([]any, error) {
 	accClient, err := cosmosdb.NewDatabaseAccountsClient(subId, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
@@ -75,7 +75,7 @@ func fetchCosmosDBAccounts(ctx context.Context, runtime *plugin.Runtime, conn *c
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	pager := accClient.NewListPager(&cosmosdb.DatabaseAccountsClientListOptions{})
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
@@ -108,7 +108,7 @@ func fetchCosmosDBAccounts(ctx context.Context, runtime *plugin.Runtime, conn *c
 	return res, nil
 }
 
-func fetchDbAccountsByType(ctx context.Context, runtime *plugin.Runtime, conn *connection.AzureConnection, subId string, resourceType string) ([]interface{}, error) {
+func fetchDbAccountsByType(ctx context.Context, runtime *plugin.Runtime, conn *connection.AzureConnection, subId string, resourceType string) ([]any, error) {
 	resClient, err := armresources.NewClient(subId, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
@@ -116,7 +116,7 @@ func fetchDbAccountsByType(ctx context.Context, runtime *plugin.Runtime, conn *c
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	filter := fmt.Sprintf("resourceType eq '%s'", resourceType)
 	pager := resClient.NewListPager(&armresources.ClientListOptions{
 		Filter: &filter,
@@ -153,7 +153,7 @@ func fetchDbAccountsByType(ctx context.Context, runtime *plugin.Runtime, conn *c
 }
 
 // fetches resources of type "Microsoft.DBforPostgreSQL/serverGroupsv2"
-func fetchCosmosForPostgres(ctx context.Context, runtime *plugin.Runtime, conn *connection.AzureConnection, subId string) ([]interface{}, error) {
+func fetchCosmosForPostgres(ctx context.Context, runtime *plugin.Runtime, conn *connection.AzureConnection, subId string) ([]any, error) {
 	resClient, err := armcosmosforpostgresql.NewClustersClient(subId, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
@@ -161,7 +161,7 @@ func fetchCosmosForPostgres(ctx context.Context, runtime *plugin.Runtime, conn *
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	pager := resClient.NewListPager(&armcosmosforpostgresql.ClustersClientListOptions{})
 	for pager.More() {
 		page, err := pager.NextPage(ctx)

@@ -3,9 +3,9 @@
 
 package convert
 
-// MapToInterfaceMap converts a map[string]T to map[string]interface{}
-func MapToInterfaceMap[T any](m map[string]T) map[string]interface{} {
-	res := make(map[string]interface{})
+// MapToInterfaceMap converts a map[string]T to map[string]any
+func MapToInterfaceMap[T any](m map[string]T) map[string]any {
+	res := make(map[string]any)
 	for k, v := range m {
 		res[k] = v
 	}
@@ -22,8 +22,8 @@ func PtrMapStrToStr(data map[string]*string) map[string]string {
 	return m
 }
 
-func PtrMapStrToInterface(data map[string]*string) map[string]interface{} {
-	m := make(map[string]interface{})
+func PtrMapStrToInterface(data map[string]*string) map[string]any {
+	m := make(map[string]any)
 	for key := range data {
 		if data[key] != nil {
 			m[key] = *data[key]

@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -419,11 +419,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"slack.accessLogs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSlack).AccessLogs, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlSlack).AccessLogs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"slack.userGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSlack).UserGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlSlack).UserGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"slack.conversations.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -431,19 +431,19 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"slack.conversations.privateChannels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSlackConversations).PrivateChannels, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlSlackConversations).PrivateChannels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"slack.conversations.publicChannels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSlackConversations).PublicChannels, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlSlackConversations).PublicChannels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"slack.conversations.directMessages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSlackConversations).DirectMessages, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlSlackConversations).DirectMessages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"slack.conversations.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSlackConversations).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlSlackConversations).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"slack.team.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -471,23 +471,23 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"slack.users.bots": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSlackUsers).Bots, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlSlackUsers).Bots, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"slack.users.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSlackUsers).Members, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlSlackUsers).Members, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"slack.users.admins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSlackUsers).Admins, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlSlackUsers).Admins, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"slack.users.owners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSlackUsers).Owners, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlSlackUsers).Owners, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"slack.users.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSlackUsers).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlSlackUsers).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"slack.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -587,7 +587,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"slack.user.profile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSlackUser).Profile, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlSlackUser).Profile, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"slack.user.enterpriseUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -675,7 +675,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"slack.userGroup.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSlackUserGroup).Members, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlSlackUserGroup).Members, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"slack.login.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -747,11 +747,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"slack.conversation.topic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSlackConversation).Topic, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlSlackConversation).Topic, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"slack.conversation.purpose": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSlackConversation).Purpose, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlSlackConversation).Purpose, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"slack.conversation.isArchived": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -803,7 +803,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"slack.conversation.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSlackConversation).Members, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlSlackConversation).Members, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 }
@@ -835,8 +835,8 @@ type mqlSlack struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlSlackInternal it will be used here
-	AccessLogs plugin.TValue[[]interface{}]
-	UserGroups plugin.TValue[[]interface{}]
+	AccessLogs plugin.TValue[[]any]
+	UserGroups plugin.TValue[[]any]
 }
 
 // createSlack creates a new instance of this resource
@@ -876,15 +876,15 @@ func (c *mqlSlack) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlSlack) GetAccessLogs() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.AccessLogs, func() ([]interface{}, error) {
+func (c *mqlSlack) GetAccessLogs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AccessLogs, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("slack", c.__id, "accessLogs")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -892,15 +892,15 @@ func (c *mqlSlack) GetAccessLogs() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlSlack) GetUserGroups() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.UserGroups, func() ([]interface{}, error) {
+func (c *mqlSlack) GetUserGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UserGroups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("slack", c.__id, "userGroups")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -913,10 +913,10 @@ type mqlSlackConversations struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlSlackConversationsInternal it will be used here
-	PrivateChannels plugin.TValue[[]interface{}]
-	PublicChannels plugin.TValue[[]interface{}]
-	DirectMessages plugin.TValue[[]interface{}]
-	List plugin.TValue[[]interface{}]
+	PrivateChannels plugin.TValue[[]any]
+	PublicChannels plugin.TValue[[]any]
+	DirectMessages plugin.TValue[[]any]
+	List plugin.TValue[[]any]
 }
 
 // createSlackConversations creates a new instance of this resource
@@ -956,15 +956,15 @@ func (c *mqlSlackConversations) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlSlackConversations) GetPrivateChannels() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.PrivateChannels, func() ([]interface{}, error) {
+func (c *mqlSlackConversations) GetPrivateChannels() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PrivateChannels, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("slack.conversations", c.__id, "privateChannels")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -972,15 +972,15 @@ func (c *mqlSlackConversations) GetPrivateChannels() *plugin.TValue[[]interface{
 	})
 }
 
-func (c *mqlSlackConversations) GetPublicChannels() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.PublicChannels, func() ([]interface{}, error) {
+func (c *mqlSlackConversations) GetPublicChannels() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PublicChannels, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("slack.conversations", c.__id, "publicChannels")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -988,15 +988,15 @@ func (c *mqlSlackConversations) GetPublicChannels() *plugin.TValue[[]interface{}
 	})
 }
 
-func (c *mqlSlackConversations) GetDirectMessages() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.DirectMessages, func() ([]interface{}, error) {
+func (c *mqlSlackConversations) GetDirectMessages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DirectMessages, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("slack.conversations", c.__id, "directMessages")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1004,15 +1004,15 @@ func (c *mqlSlackConversations) GetDirectMessages() *plugin.TValue[[]interface{}
 	})
 }
 
-func (c *mqlSlackConversations) GetList() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+func (c *mqlSlackConversations) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("slack.conversations", c.__id, "list")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1089,11 +1089,11 @@ type mqlSlackUsers struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlSlackUsersInternal it will be used here
-	Bots plugin.TValue[[]interface{}]
-	Members plugin.TValue[[]interface{}]
-	Admins plugin.TValue[[]interface{}]
-	Owners plugin.TValue[[]interface{}]
-	List plugin.TValue[[]interface{}]
+	Bots plugin.TValue[[]any]
+	Members plugin.TValue[[]any]
+	Admins plugin.TValue[[]any]
+	Owners plugin.TValue[[]any]
+	List plugin.TValue[[]any]
 }
 
 // createSlackUsers creates a new instance of this resource
@@ -1133,15 +1133,15 @@ func (c *mqlSlackUsers) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlSlackUsers) GetBots() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Bots, func() ([]interface{}, error) {
+func (c *mqlSlackUsers) GetBots() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Bots, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("slack.users", c.__id, "bots")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1149,15 +1149,15 @@ func (c *mqlSlackUsers) GetBots() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlSlackUsers) GetMembers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Members, func() ([]interface{}, error) {
+func (c *mqlSlackUsers) GetMembers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Members, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("slack.users", c.__id, "members")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1165,15 +1165,15 @@ func (c *mqlSlackUsers) GetMembers() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlSlackUsers) GetAdmins() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Admins, func() ([]interface{}, error) {
+func (c *mqlSlackUsers) GetAdmins() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Admins, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("slack.users", c.__id, "admins")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1181,15 +1181,15 @@ func (c *mqlSlackUsers) GetAdmins() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlSlackUsers) GetOwners() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Owners, func() ([]interface{}, error) {
+func (c *mqlSlackUsers) GetOwners() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Owners, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("slack.users", c.__id, "owners")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1197,15 +1197,15 @@ func (c *mqlSlackUsers) GetOwners() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlSlackUsers) GetList() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+func (c *mqlSlackUsers) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("slack.users", c.__id, "list")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1241,7 +1241,7 @@ type mqlSlackUser struct {
 	HasFiles plugin.TValue[bool]
 	Presence plugin.TValue[string]
 	Locale plugin.TValue[string]
-	Profile plugin.TValue[interface{}]
+	Profile plugin.TValue[any]
 	EnterpriseUser plugin.TValue[*mqlSlackEnterpriseUser]
 }
 
@@ -1374,7 +1374,7 @@ func (c *mqlSlackUser) GetLocale() *plugin.TValue[string] {
 	return &c.Locale
 }
 
-func (c *mqlSlackUser) GetProfile() *plugin.TValue[interface{}] {
+func (c *mqlSlackUser) GetProfile() *plugin.TValue[any] {
 	return &c.Profile
 }
 
@@ -1469,7 +1469,7 @@ type mqlSlackUserGroup struct {
 	UpdatedBy plugin.TValue[*mqlSlackUser]
 	DeletedBy plugin.TValue[*mqlSlackUser]
 	UserCount plugin.TValue[int64]
-	Members plugin.TValue[[]interface{}]
+	Members plugin.TValue[[]any]
 }
 
 // createSlackUserGroup creates a new instance of this resource
@@ -1561,15 +1561,15 @@ func (c *mqlSlackUserGroup) GetUserCount() *plugin.TValue[int64] {
 	return &c.UserCount
 }
 
-func (c *mqlSlackUserGroup) GetMembers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Members, func() ([]interface{}, error) {
+func (c *mqlSlackUserGroup) GetMembers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Members, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("slack.userGroup", c.__id, "members")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1681,8 +1681,8 @@ type mqlSlackConversation struct {
 	Creator plugin.TValue[*mqlSlackUser]
 	Created plugin.TValue[*time.Time]
 	Locale plugin.TValue[string]
-	Topic plugin.TValue[interface{}]
-	Purpose plugin.TValue[interface{}]
+	Topic plugin.TValue[any]
+	Purpose plugin.TValue[any]
 	IsArchived plugin.TValue[bool]
 	IsOpen plugin.TValue[bool]
 	IsPrivate plugin.TValue[bool]
@@ -1695,7 +1695,7 @@ type mqlSlackConversation struct {
 	IsPendingExtShared plugin.TValue[bool]
 	IsOrgShared plugin.TValue[bool]
 	Priority plugin.TValue[float64]
-	Members plugin.TValue[[]interface{}]
+	Members plugin.TValue[[]any]
 }
 
 // createSlackConversation creates a new instance of this resource
@@ -1767,11 +1767,11 @@ func (c *mqlSlackConversation) GetLocale() *plugin.TValue[string] {
 	return &c.Locale
 }
 
-func (c *mqlSlackConversation) GetTopic() *plugin.TValue[interface{}] {
+func (c *mqlSlackConversation) GetTopic() *plugin.TValue[any] {
 	return &c.Topic
 }
 
-func (c *mqlSlackConversation) GetPurpose() *plugin.TValue[interface{}] {
+func (c *mqlSlackConversation) GetPurpose() *plugin.TValue[any] {
 	return &c.Purpose
 }
 
@@ -1823,15 +1823,15 @@ func (c *mqlSlackConversation) GetPriority() *plugin.TValue[float64] {
 	return &c.Priority
 }
 
-func (c *mqlSlackConversation) GetMembers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Members, func() ([]interface{}, error) {
+func (c *mqlSlackConversation) GetMembers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Members, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("slack.conversation", c.__id, "members")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 

@@ -19,7 +19,7 @@ func TestResource_NtpConf(t *testing.T) {
 		res := x.TestQuery(t, "ntp.conf.servers")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, []interface{}{
+		assert.Equal(t, []any{
 			"127.127.1.0", "66.187.224.4", "18.26.4.105", "128.249.1.10",
 		}, res[0].Data.Value)
 	})
@@ -28,7 +28,7 @@ func TestResource_NtpConf(t *testing.T) {
 		res := x.TestQuery(t, "ntp.conf.restrict")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, []interface{}{
+		assert.Equal(t, []any{
 			"default ignore",
 			"66.187.224.4 mask 255.255.255.255 nomodify notrap noquery",
 			"18.26.4.105 mask 255.255.255.255 nomodify notrap noquery",
@@ -40,7 +40,7 @@ func TestResource_NtpConf(t *testing.T) {
 		res := x.TestQuery(t, "ntp.conf.fudge")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, []interface{}{
+		assert.Equal(t, []any{
 			"127.127.1.0 stratum 10",
 		}, res[0].Data.Value)
 	})

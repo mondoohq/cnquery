@@ -10,9 +10,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/terraform/connection"
-	"go.mondoo.com/cnquery/v11/providers/terraform/resources"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/terraform/connection"
+	"go.mondoo.com/cnquery/v12/providers/terraform/resources"
 )
 
 func TestResource_Tfplan(t *testing.T) {
@@ -109,9 +109,9 @@ func TestTerraformPlanParsing(t *testing.T) {
 // 	query = "terraform.plan.resourceChanges[0].change.replacePaths"
 // 	res = testTerraformPlanQueryWithPath(t, query, path)
 // 	require.NotEmpty(t, res)
-// 	resArrayInterface, ok := res[0].Data.Value.([]interface{})
+// 	resArrayInterface, ok := res[0].Data.Value.([]any)
 // 	require.True(t, ok)
-// 	resArrayStrings, ok := resArrayInterface[0].([]interface{})
+// 	resArrayStrings, ok := resArrayInterface[0].([]any)
 // 	require.True(t, ok)
 // 	assert.Equal(t, "member", resArrayStrings[0].(string))
 // }

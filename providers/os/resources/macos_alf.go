@@ -7,10 +7,10 @@ import (
 	"errors"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 var alfPlistLocations = []string{
@@ -52,10 +52,10 @@ func initMacosAlf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[st
 		return nil, nil, err
 	}
 
-	explicitAuthsRaw := alfConfig["explicitauths"].([]interface{})
-	explicitAuths := []interface{}{}
+	explicitAuthsRaw := alfConfig["explicitauths"].([]any)
+	explicitAuths := []any{}
 	for i := range explicitAuthsRaw {
-		entry := explicitAuthsRaw[i].(map[string]interface{})
+		entry := explicitAuthsRaw[i].(map[string]any)
 		explicitAuths = append(explicitAuths, entry["id"])
 	}
 
@@ -67,9 +67,9 @@ func initMacosAlf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[st
 	args["loggingOption"] = llx.IntData(int64(alfConfig["loggingoption"].(float64)))
 	args["stealthEnabled"] = llx.IntData(int64(alfConfig["stealthenabled"].(float64)))
 	args["version"] = llx.StringData(alfConfig["version"].(string))
-	args["exceptions"] = llx.ArrayData(alfConfig["exceptions"].([]interface{}), types.Dict)
+	args["exceptions"] = llx.ArrayData(alfConfig["exceptions"].([]any), types.Dict)
 	args["explicitAuths"] = llx.ArrayData(explicitAuths, types.String)
-	args["applications"] = llx.ArrayData(alfConfig["applications"].([]interface{}), types.Dict)
+	args["applications"] = llx.ArrayData(alfConfig["applications"].([]any), types.Dict)
 
 	return args, nil, nil
 }

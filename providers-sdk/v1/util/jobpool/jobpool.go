@@ -9,7 +9,7 @@ import (
 	"sync"
 )
 
-type JobResult interface{}
+type JobResult any
 
 // Job encapsulates a work item that should go in a work pool.
 type Job struct {

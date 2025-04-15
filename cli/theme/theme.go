@@ -8,8 +8,8 @@ import (
 
 	"github.com/c-bata/go-prompt"
 	"github.com/muesli/termenv"
-	"go.mondoo.com/cnquery/v11/cli/printer"
-	"go.mondoo.com/cnquery/v11/cli/theme/colors"
+	"go.mondoo.com/cnquery/v12/cli/printer"
+	"go.mondoo.com/cnquery/v12/cli/theme/colors"
 )
 
 type PromptColors struct {
@@ -40,22 +40,22 @@ type Theme struct {
 	PolicyPrinter printer.Printer
 }
 
-func (t Theme) Primary(s ...interface{}) string {
+func (t Theme) Primary(s ...any) string {
 	return termenv.String(fmt.Sprint(s...)).Foreground(t.Colors.Primary).String()
 }
 
-func (t Theme) Secondary(s ...interface{}) string {
+func (t Theme) Secondary(s ...any) string {
 	return termenv.String(fmt.Sprint(s...)).Foreground(t.Colors.Secondary).String()
 }
 
-func (t Theme) Disabled(s ...interface{}) string {
+func (t Theme) Disabled(s ...any) string {
 	return termenv.String(fmt.Sprint(s...)).Foreground(t.Colors.Disabled).String()
 }
 
-func (t Theme) Error(s ...interface{}) string {
+func (t Theme) Error(s ...any) string {
 	return termenv.String(fmt.Sprint(s...)).Foreground(DefaultTheme.Colors.Error).String()
 }
 
-func (t Theme) Success(s ...interface{}) string {
+func (t Theme) Success(s ...any) string {
 	return termenv.String(fmt.Sprint(s...)).Foreground(DefaultTheme.Colors.Success).String()
 }

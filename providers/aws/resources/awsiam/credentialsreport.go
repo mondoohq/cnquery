@@ -33,7 +33,7 @@ import (
 // cert_2_active
 // cert_2_last_rotated
 
-func Parse(r io.Reader) ([]map[string]interface{}, error) {
+func Parse(r io.Reader) ([]map[string]any, error) {
 	csvr := csv.NewReader(r)
 	csvr.Comma = ','
 
@@ -41,7 +41,7 @@ func Parse(r io.Reader) ([]map[string]interface{}, error) {
 
 	index := map[int]string{}
 
-	result := []map[string]interface{}{}
+	result := []map[string]any{}
 	for {
 		record, err := csvr.Read()
 		if err == io.EOF {
@@ -57,7 +57,7 @@ func Parse(r io.Reader) ([]map[string]interface{}, error) {
 				index[i] = record[i]
 			}
 		} else {
-			entry := map[string]interface{}{}
+			entry := map[string]any{}
 			for i := range record {
 				entry[index[i]] = record[i]
 			}

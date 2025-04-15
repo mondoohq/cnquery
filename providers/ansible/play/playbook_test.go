@@ -27,13 +27,13 @@ func TestPlaybookDecoding(t *testing.T) {
 		assert.Equal(t, 3, len(play.Tasks))
 		assert.Equal(t, "ensure apache is at the latest version", play.Tasks[0].Name)
 
-		action := play.Tasks[0].Action["yum"].(map[string]interface{})
+		action := play.Tasks[0].Action["yum"].(map[string]any)
 		assert.Equal(t, "httpd", action["name"])
 
 		assert.Equal(t, 1, len(play.Handlers))
 		assert.Equal(t, "restart apache", play.Handlers[0].Name)
 
-		handler := play.Handlers[0].Action["service"].(map[string]interface{})
+		handler := play.Handlers[0].Action["service"].(map[string]any)
 		assert.Equal(t, "httpd", handler["name"])
 	})
 
@@ -60,7 +60,7 @@ func TestPlaybookDecoding(t *testing.T) {
 
 		play := playbook[0]
 		list := play.Vars["list1"]
-		assert.Equal(t, []interface{}{"apple", "banana", "fig"}, list)
+		assert.Equal(t, []any{"apple", "banana", "fig"}, list)
 	})
 
 	t.Run("load playbook with serial", func(t *testing.T) {

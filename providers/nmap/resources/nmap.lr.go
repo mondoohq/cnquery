@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -226,11 +226,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"nmap.network.hosts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlNmapNetwork).Hosts, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlNmapNetwork).Hosts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"nmap.network.warnings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlNmapNetwork).Warnings, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlNmapNetwork).Warnings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"nmap.host.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -242,11 +242,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"nmap.host.distance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlNmapHost).Distance, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlNmapHost).Distance, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"nmap.host.os": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlNmapHost).Os, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlNmapHost).Os, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"nmap.host.endTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -258,19 +258,19 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"nmap.host.trace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlNmapHost).Trace, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlNmapHost).Trace, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"nmap.host.addresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlNmapHost).Addresses, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlNmapHost).Addresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"nmap.host.hostnames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlNmapHost).Hostnames, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlNmapHost).Hostnames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"nmap.host.ports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlNmapHost).Ports, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlNmapHost).Ports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"nmap.host.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -322,15 +322,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"nmap.versionInformation.compiledWith": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlNmapVersionInformation).CompiledWith, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlNmapVersionInformation).CompiledWith, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"nmap.versionInformation.compiledWithout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlNmapVersionInformation).CompiledWithout, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlNmapVersionInformation).CompiledWithout, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"nmap.versionInformation.nsockEngines": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlNmapVersionInformation).NsockEngines, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlNmapVersionInformation).NsockEngines, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 }
@@ -424,8 +424,8 @@ type mqlNmapNetwork struct {
 	__id string
 	mqlNmapNetworkInternal
 	Target plugin.TValue[string]
-	Hosts plugin.TValue[[]interface{}]
-	Warnings plugin.TValue[[]interface{}]
+	Hosts plugin.TValue[[]any]
+	Warnings plugin.TValue[[]any]
 }
 
 // createNmapNetwork creates a new instance of this resource
@@ -469,15 +469,15 @@ func (c *mqlNmapNetwork) GetTarget() *plugin.TValue[string] {
 	return &c.Target
 }
 
-func (c *mqlNmapNetwork) GetHosts() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Hosts, func() ([]interface{}, error) {
+func (c *mqlNmapNetwork) GetHosts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Hosts, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("nmap.network", c.__id, "hosts")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -485,8 +485,8 @@ func (c *mqlNmapNetwork) GetHosts() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlNmapNetwork) GetWarnings() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Warnings, func() ([]interface{}, error) {
+func (c *mqlNmapNetwork) GetWarnings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Warnings, func() ([]any, error) {
 		return c.warnings()
 	})
 }
@@ -497,14 +497,14 @@ type mqlNmapHost struct {
 	__id string
 	mqlNmapHostInternal
 	Name plugin.TValue[string]
-	Distance plugin.TValue[interface{}]
-	Os plugin.TValue[interface{}]
+	Distance plugin.TValue[any]
+	Os plugin.TValue[any]
 	EndTime plugin.TValue[*time.Time]
 	Comment plugin.TValue[string]
-	Trace plugin.TValue[interface{}]
-	Addresses plugin.TValue[[]interface{}]
-	Hostnames plugin.TValue[[]interface{}]
-	Ports plugin.TValue[[]interface{}]
+	Trace plugin.TValue[any]
+	Addresses plugin.TValue[[]any]
+	Hostnames plugin.TValue[[]any]
+	Ports plugin.TValue[[]any]
 	State plugin.TValue[string]
 }
 
@@ -549,14 +549,14 @@ func (c *mqlNmapHost) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlNmapHost) GetDistance() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Distance, func() (interface{}, error) {
+func (c *mqlNmapHost) GetDistance() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Distance, func() (any, error) {
 		return c.distance()
 	})
 }
 
-func (c *mqlNmapHost) GetOs() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Os, func() (interface{}, error) {
+func (c *mqlNmapHost) GetOs() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Os, func() (any, error) {
 		return c.os()
 	})
 }
@@ -573,33 +573,33 @@ func (c *mqlNmapHost) GetComment() *plugin.TValue[string] {
 	})
 }
 
-func (c *mqlNmapHost) GetTrace() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Trace, func() (interface{}, error) {
+func (c *mqlNmapHost) GetTrace() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Trace, func() (any, error) {
 		return c.trace()
 	})
 }
 
-func (c *mqlNmapHost) GetAddresses() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Addresses, func() ([]interface{}, error) {
+func (c *mqlNmapHost) GetAddresses() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Addresses, func() ([]any, error) {
 		return c.addresses()
 	})
 }
 
-func (c *mqlNmapHost) GetHostnames() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Hostnames, func() ([]interface{}, error) {
+func (c *mqlNmapHost) GetHostnames() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Hostnames, func() ([]any, error) {
 		return c.hostnames()
 	})
 }
 
-func (c *mqlNmapHost) GetPorts() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Ports, func() ([]interface{}, error) {
+func (c *mqlNmapHost) GetPorts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Ports, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("nmap.host", c.__id, "ports")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -694,9 +694,9 @@ type mqlNmapVersionInformation struct {
 	// optional: if you define mqlNmapVersionInformationInternal it will be used here
 	Version plugin.TValue[string]
 	Platform plugin.TValue[string]
-	CompiledWith plugin.TValue[[]interface{}]
-	CompiledWithout plugin.TValue[[]interface{}]
-	NsockEngines plugin.TValue[[]interface{}]
+	CompiledWith plugin.TValue[[]any]
+	CompiledWithout plugin.TValue[[]any]
+	NsockEngines plugin.TValue[[]any]
 }
 
 // createNmapVersionInformation creates a new instance of this resource
@@ -739,14 +739,14 @@ func (c *mqlNmapVersionInformation) GetPlatform() *plugin.TValue[string] {
 	return &c.Platform
 }
 
-func (c *mqlNmapVersionInformation) GetCompiledWith() *plugin.TValue[[]interface{}] {
+func (c *mqlNmapVersionInformation) GetCompiledWith() *plugin.TValue[[]any] {
 	return &c.CompiledWith
 }
 
-func (c *mqlNmapVersionInformation) GetCompiledWithout() *plugin.TValue[[]interface{}] {
+func (c *mqlNmapVersionInformation) GetCompiledWithout() *plugin.TValue[[]any] {
 	return &c.CompiledWithout
 }
 
-func (c *mqlNmapVersionInformation) GetNsockEngines() *plugin.TValue[[]interface{}] {
+func (c *mqlNmapVersionInformation) GetNsockEngines() *plugin.TValue[[]any] {
 	return &c.NsockEngines
 }

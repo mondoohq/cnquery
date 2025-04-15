@@ -4,8 +4,8 @@
 package resources
 
 import (
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/ipmi/connection"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/ipmi/connection"
 )
 
 func (r *mqlIpmi) id() (string, error) {
@@ -23,7 +23,7 @@ func (r *mqlIpmi) guid() (string, error) {
 	return resp.GUID, nil
 }
 
-func (r *mqlIpmi) deviceID() (map[string]interface{}, error) {
+func (r *mqlIpmi) deviceID() (map[string]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.IpmiConnection)
 	client := conn.Client()
 
@@ -39,7 +39,7 @@ func (r *mqlIpmiChassis) id() (string, error) {
 	return "ipmi.chassis", nil
 }
 
-func (r *mqlIpmiChassis) status() (map[string]interface{}, error) {
+func (r *mqlIpmiChassis) status() (map[string]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.IpmiConnection)
 	client := conn.Client()
 
@@ -51,7 +51,7 @@ func (r *mqlIpmiChassis) status() (map[string]interface{}, error) {
 	return convert.JsonToDict(resp)
 }
 
-func (r *mqlIpmiChassis) systemBootOptions() (map[string]interface{}, error) {
+func (r *mqlIpmiChassis) systemBootOptions() (map[string]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.IpmiConnection)
 	client := conn.Client()
 

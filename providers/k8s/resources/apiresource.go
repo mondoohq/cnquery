@@ -6,12 +6,12 @@ package resources
 import (
 	"fmt"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
-func (k *mqlK8s) apiResources() ([]interface{}, error) {
+func (k *mqlK8s) apiResources() ([]any, error) {
 	kt, err := k8sProvider(k.MqlRuntime.Connection)
 	if err != nil {
 		return nil, err
@@ -24,7 +24,7 @@ func (k *mqlK8s) apiResources() ([]interface{}, error) {
 
 	// convert to MQL resources
 	list := resources.Resources()
-	resp := []interface{}{}
+	resp := []any{}
 	for i := range list {
 		entry := list[i]
 

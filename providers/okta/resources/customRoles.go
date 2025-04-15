@@ -5,17 +5,17 @@ package resources
 
 import (
 	"context"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/okta/connection"
-	"go.mondoo.com/cnquery/v11/providers/okta/resources/sdk"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/okta/connection"
+	"go.mondoo.com/cnquery/v12/providers/okta/resources/sdk"
+	"go.mondoo.com/cnquery/v12/types"
 	"net/http"
 	"strings"
 )
 
-func (o *mqlOkta) customRoles() ([]interface{}, error) {
+func (o *mqlOkta) customRoles() ([]any, error) {
 	runtime := o.MqlRuntime
 
 	conn := runtime.Connection.(*connection.OktaConnection)
@@ -44,7 +44,7 @@ func (o *mqlOkta) customRoles() ([]interface{}, error) {
 		return nil, nil
 	}
 
-	list := []interface{}{}
+	list := []any{}
 	appendEntry := func(datalist []*sdk.CustomRole) error {
 		for i := range datalist {
 			r, err := newMqlOktaCustomRole(o.MqlRuntime, datalist[i])
@@ -77,7 +77,7 @@ func (o *mqlOkta) customRoles() ([]interface{}, error) {
 
 }
 
-func newMqlOktaCustomRole(runtime *plugin.Runtime, entry *sdk.CustomRole) (interface{}, error) {
+func newMqlOktaCustomRole(runtime *plugin.Runtime, entry *sdk.CustomRole) (any, error) {
 	return CreateResource(runtime, "okta.customRole", map[string]*llx.RawData{
 		"id":          llx.StringData(entry.Id),
 		"label":       llx.StringData(entry.Label),

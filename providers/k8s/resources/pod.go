@@ -7,10 +7,10 @@ import (
 	"errors"
 	"sync"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/k8s/connection/shared/resources"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/k8s/connection/shared/resources"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -29,8 +29,8 @@ func (k *mqlK8sPod) getPod() (*corev1.Pod, error) {
 	return nil, errors.New("invalid k8s pod")
 }
 
-func (k *mqlK8s) pods() ([]interface{}, error) {
-	return k8sResourceToMql(k.MqlRuntime, gvkString(corev1.SchemeGroupVersion.WithKind("pods")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+func (k *mqlK8s) pods() ([]any, error) {
+	return k8sResourceToMql(k.MqlRuntime, gvkString(corev1.SchemeGroupVersion.WithKind("pods")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (any, error) {
 		ts := obj.GetCreationTimestamp()
 
 		r, err := CreateResource(k.MqlRuntime, "k8s.pod", map[string]*llx.RawData{
@@ -52,7 +52,7 @@ func (k *mqlK8s) pods() ([]interface{}, error) {
 	})
 }
 
-func (k *mqlK8sPod) manifest() (map[string]interface{}, error) {
+func (k *mqlK8sPod) manifest() (map[string]any, error) {
 	manifest, err := convert.JsonToDict(k.obj)
 	if err != nil {
 		return nil, err
@@ -60,7 +60,7 @@ func (k *mqlK8sPod) manifest() (map[string]interface{}, error) {
 	return manifest, nil
 }
 
-func (k *mqlK8sPod) podSpec() (map[string]interface{}, error) {
+func (k *mqlK8sPod) podSpec() (map[string]any, error) {
 	pod, err := k.getPod()
 	if err != nil {
 		return nil, err
@@ -81,10 +81,10 @@ func (k *mqlK8sPod) id() (string, error) {
 }
 
 func initK8sPod(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	return initNamespacedResource[*mqlK8sPod](runtime, args, func(k *mqlK8s) *plugin.TValue[[]interface{}] { return k.GetPods() })
+	return initNamespacedResource[*mqlK8sPod](runtime, args, func(k *mqlK8s) *plugin.TValue[[]any] { return k.GetPods() })
 }
 
-func (k *mqlK8sPod) initContainers() ([]interface{}, error) {
+func (k *mqlK8sPod) initContainers() ([]any, error) {
 	pod, err := k.getPod()
 	if err != nil {
 		return nil, err
@@ -92,7 +92,7 @@ func (k *mqlK8sPod) initContainers() ([]interface{}, error) {
 	return getContainers(pod, &pod.ObjectMeta, k.MqlRuntime, InitContainerType)
 }
 
-func (k *mqlK8sPod) ephemeralContainers() ([]interface{}, error) {
+func (k *mqlK8sPod) ephemeralContainers() ([]any, error) {
 	pod, err := k.getPod()
 	if err != nil {
 		return nil, err
@@ -100,7 +100,7 @@ func (k *mqlK8sPod) ephemeralContainers() ([]interface{}, error) {
 	return getContainers(pod, &pod.ObjectMeta, k.MqlRuntime, EphemeralContainerType)
 }
 
-func (k *mqlK8sPod) containers() ([]interface{}, error) {
+func (k *mqlK8sPod) containers() ([]any, error) {
 	pod, err := k.getPod()
 	if err != nil {
 		return nil, err
@@ -108,7 +108,7 @@ func (k *mqlK8sPod) containers() ([]interface{}, error) {
 	return getContainers(pod, &pod.ObjectMeta, k.MqlRuntime, ContainerContainerType)
 }
 
-func (k *mqlK8sPod) annotations() (map[string]interface{}, error) {
+func (k *mqlK8sPod) annotations() (map[string]any, error) {
 	pod, err := k.getPod()
 	if err != nil {
 		return nil, err
@@ -116,7 +116,7 @@ func (k *mqlK8sPod) annotations() (map[string]interface{}, error) {
 	return convert.MapToInterfaceMap(pod.GetAnnotations()), nil
 }
 
-func (k *mqlK8sPod) labels() (map[string]interface{}, error) {
+func (k *mqlK8sPod) labels() (map[string]any, error) {
 	pod, err := k.getPod()
 	if err != nil {
 		return nil, err

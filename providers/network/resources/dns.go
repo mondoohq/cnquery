@@ -12,14 +12,14 @@ import (
 	"strings"
 
 	"github.com/miekg/dns"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/network/connection"
-	"go.mondoo.com/cnquery/v11/providers/network/resources/dnsshake"
-	"go.mondoo.com/cnquery/v11/providers/network/resources/domain"
-	"go.mondoo.com/cnquery/v11/types"
-	"go.mondoo.com/cnquery/v11/utils/sortx"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/network/connection"
+	"go.mondoo.com/cnquery/v12/providers/network/resources/dnsshake"
+	"go.mondoo.com/cnquery/v12/providers/network/resources/domain"
+	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/cnquery/v12/utils/sortx"
 )
 
 func (d *mqlDomainName) id() (string, error) {
@@ -74,7 +74,7 @@ func initDns(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]
 	return args, nil, nil
 }
 
-func (d *mqlDns) params(fqdn string) (interface{}, error) {
+func (d *mqlDns) params(fqdn string) (any, error) {
 	dnsShaker, err := dnsshake.New(fqdn)
 	if err != nil {
 		return nil, err
@@ -88,11 +88,11 @@ func (d *mqlDns) params(fqdn string) (interface{}, error) {
 	return convert.JsonToDict(records)
 }
 
-func (d *mqlDns) records(params interface{}) ([]interface{}, error) {
+func (d *mqlDns) records(params any) ([]any, error) {
 	// NOTE: mql does not cache the results of GetRecords since it has an input argument
 	// Iterations over map keys are not deterministic and therefore we need to sort the keys
 
-	paramsM, ok := params.(map[string]interface{})
+	paramsM, ok := params.(map[string]any)
 	if !ok {
 		return nil, errors.New("incorrect structure of params received")
 	}
@@ -100,7 +100,7 @@ func (d *mqlDns) records(params interface{}) ([]interface{}, error) {
 	// convert responses to dns types
 	resultMap := make(map[string]*mqlDnsRecord)
 	for k := range paramsM {
-		r, ok := paramsM[k].(map[string]interface{})
+		r, ok := paramsM[k].(map[string]any)
 		if !ok {
 			return nil, errors.New("incorrect structure of params entries received")
 		}
@@ -121,7 +121,7 @@ func (d *mqlDns) records(params interface{}) ([]interface{}, error) {
 			"ttl":   ttl,
 			"class": llx.StringData(r["class"].(string)),
 			"type":  llx.StringData(r["type"].(string)),
-			"rdata": llx.ArrayData(llx.TArr2Raw(r["rData"].([]interface{})), types.String),
+			"rdata": llx.ArrayData(llx.TArr2Raw(r["rData"].([]any)), types.String),
 		})
 		if err != nil {
 			return nil, err
@@ -132,7 +132,7 @@ func (d *mqlDns) records(params interface{}) ([]interface{}, error) {
 	}
 
 	keys := sortx.Keys(resultMap)
-	res := []interface{}{}
+	res := []any{}
 	for i := range keys {
 		res = append(res, resultMap[keys[i]])
 	}
@@ -144,23 +144,23 @@ func (d *mqlDnsRecord) id() (string, error) {
 	return "dns.record/" + d.Name.Data + "/" + d.Class.Data + "/" + d.Type.Data, nil
 }
 
-func (d *mqlDns) mx(params interface{}) ([]interface{}, error) {
-	paramsM, ok := params.(map[string]interface{})
+func (d *mqlDns) mx(params any) ([]any, error) {
+	paramsM, ok := params.(map[string]any)
 	if !ok {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 
-	mxEntries := []interface{}{}
+	mxEntries := []any{}
 	record, ok := paramsM["MX"]
 	if !ok {
 		return mxEntries, nil
 	}
 
-	r := record.(map[string]interface{})
+	r := record.(map[string]any)
 
 	var name, c, t string
 	var ttl int64
-	var rdata []interface{}
+	var rdata []any
 
 	if r["name"] != nil {
 		name = r["name"].(string)
@@ -179,7 +179,7 @@ func (d *mqlDns) mx(params interface{}) ([]interface{}, error) {
 	}
 
 	if r["rData"] != nil {
-		rdata = r["rData"].([]interface{})
+		rdata = r["rData"].([]any)
 	}
 
 	for j := range rdata {
@@ -213,30 +213,30 @@ func (d *mqlDnsMxRecord) id() (string, error) {
 	return "dns.mx/" + d.Name.Data + "+" + d.DomainName.Data, nil
 }
 
-func (d *mqlDns) dkim(params interface{}) ([]interface{}, error) {
-	paramsM, ok := params.(map[string]interface{})
+func (d *mqlDns) dkim(params any) ([]any, error) {
+	paramsM, ok := params.(map[string]any)
 	if !ok {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 
-	dkimEntries := []interface{}{}
+	dkimEntries := []any{}
 
 	record, ok := paramsM["TXT"]
 	if !ok {
 		return dkimEntries, nil
 	}
 
-	r := record.(map[string]interface{})
+	r := record.(map[string]any)
 
 	var name string
-	var rdata []interface{}
+	var rdata []any
 
 	if r["name"] != nil {
 		name = r["name"].(string)
 	}
 
 	if r["rData"] != nil {
-		rdata = r["rData"].([]interface{})
+		rdata = r["rData"].([]any)
 	}
 
 	for j := range rdata {

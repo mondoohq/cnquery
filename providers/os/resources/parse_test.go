@@ -6,7 +6,7 @@ package resources_test
 import (
 	"testing"
 
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/testutils"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/testutils"
 )
 
 func TestParsePlist(t *testing.T) {
@@ -25,12 +25,12 @@ func TestParseJson(t *testing.T) {
 		{
 			Code:        "parse.json(content: '{\"a\": 1}').params",
 			ResultIndex: 0,
-			Expectation: map[string]interface{}{"a": float64(1)},
+			Expectation: map[string]any{"a": float64(1)},
 		},
 		{
 			Code:        "parse.json(content: '[{\"a\": 1}]').params[0]",
 			ResultIndex: 0,
-			Expectation: map[string]interface{}{"a": float64(1)},
+			Expectation: map[string]any{"a": float64(1)},
 		},
 	})
 }
@@ -96,29 +96,29 @@ func TestParseYamlParams(t *testing.T) {
 		{
 			Code:        `parse.yaml(content: "simple: test").params`,
 			ResultIndex: 0,
-			Expectation: map[string]interface{}{
+			Expectation: map[string]any{
 				"simple": "test",
 			},
 		},
 		{
 			Code:        `parse.yaml(content: "number: 42").params`,
 			ResultIndex: 0,
-			Expectation: map[string]interface{}{
+			Expectation: map[string]any{
 				"number": float64(42),
 			},
 		},
 		{
 			Code:        `parse.yaml(content: "enabled: true").params`,
 			ResultIndex: 0,
-			Expectation: map[string]interface{}{
+			Expectation: map[string]any{
 				"enabled": true,
 			},
 		},
 		{
 			Code:        `parse.yaml(content: "parent:\n  child: value").params`,
 			ResultIndex: 0,
-			Expectation: map[string]interface{}{
-				"parent": map[string]interface{}{
+			Expectation: map[string]any{
+				"parent": map[string]any{
 					"child": "value",
 				},
 			},
@@ -126,12 +126,12 @@ func TestParseYamlParams(t *testing.T) {
 		{
 			Code:        `parse.yaml(content: "").params`,
 			ResultIndex: 0,
-			Expectation: map[string]interface{}{},
+			Expectation: map[string]any{},
 		},
 		{
 			Code:        `parse.yaml(content: "---\nname: single-doc\nversion: 1.2").params`,
 			ResultIndex: 0,
-			Expectation: map[string]interface{}{
+			Expectation: map[string]any{
 				"name":    "single-doc",
 				"version": float64(1.2),
 			},
@@ -139,13 +139,13 @@ func TestParseYamlParams(t *testing.T) {
 		{
 			Code:        `parse.yaml(content: "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: test\ndata:\n  key1: value1\n  key2: value2").params`,
 			ResultIndex: 0,
-			Expectation: map[string]interface{}{
+			Expectation: map[string]any{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
-				"metadata": map[string]interface{}{
+				"metadata": map[string]any{
 					"name": "test",
 				},
-				"data": map[string]interface{}{
+				"data": map[string]any{
 					"key1": "value1",
 					"key2": "value2",
 				},
@@ -154,25 +154,25 @@ func TestParseYamlParams(t *testing.T) {
 		{
 			Code:        `parse.yaml(content: "items:\n  - name: item1\n  - name: item2").params`,
 			ResultIndex: 0,
-			Expectation: map[string]interface{}{
-				"items": []interface{}{
-					map[string]interface{}{"name": "item1"},
-					map[string]interface{}{"name": "item2"},
+			Expectation: map[string]any{
+				"items": []any{
+					map[string]any{"name": "item1"},
+					map[string]any{"name": "item2"},
 				},
 			},
 		},
 		{
 			Code:        `parse.yaml(content: "---\napiVersion: v1\nkind: Pod\nmetadata:\n  name: test-pod\nspec:\n  containers:\n  - name: test\n    image: nginx").params`,
 			ResultIndex: 0,
-			Expectation: map[string]interface{}{
+			Expectation: map[string]any{
 				"apiVersion": "v1",
 				"kind":       "Pod",
-				"metadata": map[string]interface{}{
+				"metadata": map[string]any{
 					"name": "test-pod",
 				},
-				"spec": map[string]interface{}{
-					"containers": []interface{}{
-						map[string]interface{}{
+				"spec": map[string]any{
+					"containers": []any{
+						map[string]any{
 							"name":  "test",
 							"image": "nginx",
 						},
@@ -188,13 +188,13 @@ func TestParseYamlDocuments(t *testing.T) {
 		{
 			Code:        `parse.yaml(content: "").documents`,
 			ResultIndex: 0,
-			Expectation: []interface{}{},
+			Expectation: []any{},
 		},
 		{
 			Code:        `parse.yaml(content: "simple: test").documents`,
 			ResultIndex: 0,
-			Expectation: []interface{}{
-				map[string]interface{}{
+			Expectation: []any{
+				map[string]any{
 					"simple": "test",
 				},
 			},
@@ -202,8 +202,8 @@ func TestParseYamlDocuments(t *testing.T) {
 		{
 			Code:        `parse.yaml(content: "---\nname: single-doc\nversion: 1.2").documents`,
 			ResultIndex: 0,
-			Expectation: []interface{}{
-				map[string]interface{}{
+			Expectation: []any{
+				map[string]any{
 					"name":    "single-doc",
 					"version": float64(1.2),
 				},
@@ -212,8 +212,8 @@ func TestParseYamlDocuments(t *testing.T) {
 		{
 			Code:        `parse.yaml(content: "name: trailing-doc\nversion: 1.2\n---").documents`,
 			ResultIndex: 0,
-			Expectation: []interface{}{
-				map[string]interface{}{
+			Expectation: []any{
+				map[string]any{
 					"name":    "trailing-doc",
 					"version": float64(1.2),
 				},
@@ -222,8 +222,8 @@ func TestParseYamlDocuments(t *testing.T) {
 		{
 			Code:        `parse.yaml(content: "---\nname: wrapped-doc\nversion: 1.2\n---").documents`,
 			ResultIndex: 0,
-			Expectation: []interface{}{
-				map[string]interface{}{
+			Expectation: []any{
+				map[string]any{
 					"name":    "wrapped-doc",
 					"version": float64(1.2),
 				},
@@ -232,63 +232,63 @@ func TestParseYamlDocuments(t *testing.T) {
 		{
 			Code:        `parse.yaml(content: "name: doc1\n---\nname: doc2").documents`,
 			ResultIndex: 0,
-			Expectation: []interface{}{
-				map[string]interface{}{"name": "doc1"},
-				map[string]interface{}{"name": "doc2"},
+			Expectation: []any{
+				map[string]any{"name": "doc1"},
+				map[string]any{"name": "doc2"},
 			},
 		},
 		{
 			Code:        `parse.yaml(content: "---\nname: doc1\n---\nname: doc2").documents`,
 			ResultIndex: 0,
-			Expectation: []interface{}{
-				map[string]interface{}{"name": "doc1"},
-				map[string]interface{}{"name": "doc2"},
+			Expectation: []any{
+				map[string]any{"name": "doc1"},
+				map[string]any{"name": "doc2"},
 			},
 		},
 		{
 			Code:        `parse.yaml(content: "name: doc1\n---\nname: doc2\n---").documents`,
 			ResultIndex: 0,
-			Expectation: []interface{}{
-				map[string]interface{}{"name": "doc1"},
-				map[string]interface{}{"name": "doc2"},
+			Expectation: []any{
+				map[string]any{"name": "doc1"},
+				map[string]any{"name": "doc2"},
 			},
 		},
 		{
 			Code:        `parse.yaml(content: "name: doc1\n---\nname: doc2\n---\nname: doc3").documents`,
 			ResultIndex: 0,
-			Expectation: []interface{}{
-				map[string]interface{}{"name": "doc1"},
-				map[string]interface{}{"name": "doc2"},
-				map[string]interface{}{"name": "doc3"},
+			Expectation: []any{
+				map[string]any{"name": "doc1"},
+				map[string]any{"name": "doc2"},
+				map[string]any{"name": "doc3"},
 			},
 		},
 		{
 			Code:        `parse.yaml(content: "name: doc1\n---\nname: doc2").documents[0]`,
 			ResultIndex: 0,
-			Expectation: map[string]interface{}{"name": "doc1"},
+			Expectation: map[string]any{"name": "doc1"},
 		},
 		{
 			Code:        `parse.yaml(content: "name: doc1\n---\nname: doc2").documents[1]`,
 			ResultIndex: 0,
-			Expectation: map[string]interface{}{"name": "doc2"},
+			Expectation: map[string]any{"name": "doc2"},
 		},
 		{
 			Code:        `parse.yaml(content: "name: doc1\n---\n\n---\nname: doc2").documents`,
 			ResultIndex: 0,
-			Expectation: []interface{}{
-				map[string]interface{}{"name": "doc1"},
-				map[string]interface{}{"name": "doc2"},
+			Expectation: []any{
+				map[string]any{"name": "doc1"},
+				map[string]any{"name": "doc2"},
 			},
 		},
 		{
 			Code:        `parse.yaml(content: "apiVersion: v1\nkind: Service\n---\napiVersion: apps/v1\nkind: Deployment").documents`,
 			ResultIndex: 0,
-			Expectation: []interface{}{
-				map[string]interface{}{
+			Expectation: []any{
+				map[string]any{
 					"apiVersion": "v1",
 					"kind":       "Service",
 				},
-				map[string]interface{}{
+				map[string]any{
 					"apiVersion": "apps/v1",
 					"kind":       "Deployment",
 				},
@@ -297,12 +297,12 @@ func TestParseYamlDocuments(t *testing.T) {
 		{
 			Code:        `parse.yaml(content: "---").documents`,
 			ResultIndex: 0,
-			Expectation: []interface{}{},
+			Expectation: []any{},
 		},
 		{
 			Code:        `parse.yaml(content: "---\n---").documents`,
 			ResultIndex: 0,
-			Expectation: []interface{}{},
+			Expectation: []any{},
 		},
 		{
 			Code:        `parse.yaml(content: "name: doc1\n---\nname: doc2\n---\nname: doc3").documents.length`,

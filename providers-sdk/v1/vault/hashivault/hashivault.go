@@ -12,7 +12,7 @@ import (
 
 	"github.com/hashicorp/vault/api"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/vault"
 )
 
 var notImplemented = errors.New("not implemented")
@@ -105,7 +105,7 @@ func secretData(s *api.Secret) ([]byte, error) {
 		return nil, nil
 	}
 
-	data, ok := s.Data["data"].(map[string]interface{})
+	data, ok := s.Data["data"].(map[string]any)
 	if !ok {
 		return nil, fmt.Errorf("unable to convert data field to expected format")
 	}

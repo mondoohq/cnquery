@@ -8,14 +8,14 @@ import (
 	"fmt"
 
 	"github.com/vmware/govmomi/object"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/vsphere/connection"
-	"go.mondoo.com/cnquery/v11/providers/vsphere/resources/resourceclient"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/vsphere/connection"
+	"go.mondoo.com/cnquery/v12/providers/vsphere/resources/resourceclient"
 )
 
-func newVsphereHostResources(vClient *resourceclient.Client, runtime *plugin.Runtime, vhosts []*object.HostSystem) ([]interface{}, error) {
-	mqlHosts := make([]interface{}, len(vhosts))
+func newVsphereHostResources(vClient *resourceclient.Client, runtime *plugin.Runtime, vhosts []*object.HostSystem) ([]any, error) {
+	mqlHosts := make([]any, len(vhosts))
 	for i, h := range vhosts {
 
 		hostInfo, err := resourceclient.HostInfo(h)
@@ -54,7 +54,7 @@ func (v *mqlVsphereDatacenter) id() (string, error) {
 	return v.Moid.Data, nil
 }
 
-func (v *mqlVsphereDatacenter) hosts() ([]interface{}, error) {
+func (v *mqlVsphereDatacenter) hosts() ([]any, error) {
 	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
 	client := getClientInstance(conn)
 
@@ -75,7 +75,7 @@ func (v *mqlVsphereDatacenter) hosts() ([]interface{}, error) {
 	return newVsphereHostResources(client, v.MqlRuntime, vhosts)
 }
 
-func (v *mqlVsphereDatacenter) clusters() ([]interface{}, error) {
+func (v *mqlVsphereDatacenter) clusters() ([]any, error) {
 	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
 	client := getClientInstance(conn)
 
@@ -94,7 +94,7 @@ func (v *mqlVsphereDatacenter) clusters() ([]interface{}, error) {
 		return nil, err
 	}
 
-	mqlClusters := make([]interface{}, len(vCluster))
+	mqlClusters := make([]any, len(vCluster))
 	for i, c := range vCluster {
 
 		props, err := client.ClusterProperties(c)
@@ -122,7 +122,7 @@ func (v *mqlVsphereCluster) id() (string, error) {
 	return v.Moid.Data, nil
 }
 
-func (v *mqlVsphereCluster) hosts() ([]interface{}, error) {
+func (v *mqlVsphereCluster) hosts() ([]any, error) {
 	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
 	client := getClientInstance(conn)
 
@@ -143,7 +143,7 @@ func (v *mqlVsphereCluster) hosts() ([]interface{}, error) {
 	return newVsphereHostResources(client, v.MqlRuntime, vhosts)
 }
 
-func (v *mqlVsphereDatacenter) vms() ([]interface{}, error) {
+func (v *mqlVsphereDatacenter) vms() ([]any, error) {
 	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
 	vClient := getClientInstance(conn)
 
@@ -162,7 +162,7 @@ func (v *mqlVsphereDatacenter) vms() ([]interface{}, error) {
 		return nil, err
 	}
 
-	mqlVms := make([]interface{}, len(vms))
+	mqlVms := make([]any, len(vms))
 	for i, vm := range vms {
 		vmInfo, err := resourceclient.VmInfo(vm)
 		if err != nil {
@@ -180,7 +180,7 @@ func (v *mqlVsphereDatacenter) vms() ([]interface{}, error) {
 	return mqlVms, nil
 }
 
-func (v *mqlVsphereDatacenter) distributedSwitches() ([]interface{}, error) {
+func (v *mqlVsphereDatacenter) distributedSwitches() ([]any, error) {
 	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
 	client := getClientInstance(conn)
 
@@ -197,7 +197,7 @@ func (v *mqlVsphereDatacenter) distributedSwitches() ([]interface{}, error) {
 		return nil, err
 	}
 
-	mqlVswitches := make([]interface{}, len(vswitches))
+	mqlVswitches := make([]any, len(vswitches))
 	for i, s := range vswitches {
 
 		config, err := client.GetDistributedVirtualSwitchConfig(context.Background(), s)
@@ -228,7 +228,7 @@ func (v *mqlVsphereDatacenter) distributedSwitches() ([]interface{}, error) {
 	return mqlVswitches, nil
 }
 
-func (v *mqlVsphereDatacenter) distributedPortGroups() ([]interface{}, error) {
+func (v *mqlVsphereDatacenter) distributedPortGroups() ([]any, error) {
 	if v.InventoryPath.Error != nil {
 		return nil, v.InventoryPath.Error
 	}
@@ -241,7 +241,7 @@ func (v *mqlVsphereDatacenter) distributedPortGroups() ([]interface{}, error) {
 		return nil, err
 	}
 
-	mqlPGs := make([]interface{}, len(distPGs))
+	mqlPGs := make([]any, len(distPGs))
 	for i, distPG := range distPGs {
 		config, err := client.GetDistributedVirtualPortgroupConfig(context.Background(), distPG)
 		if err != nil {

@@ -9,9 +9,9 @@ import (
 	"errors"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -135,7 +135,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"ipmi.deviceID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIpmi).DeviceID, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlIpmi).DeviceID, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"ipmi.guid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -147,11 +147,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"ipmi.chassis.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIpmiChassis).Status, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlIpmiChassis).Status, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"ipmi.chassis.systemBootOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIpmiChassis).SystemBootOptions, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlIpmiChassis).SystemBootOptions, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 }
@@ -183,7 +183,7 @@ type mqlIpmi struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlIpmiInternal it will be used here
-	DeviceID plugin.TValue[interface{}]
+	DeviceID plugin.TValue[any]
 	Guid plugin.TValue[string]
 }
 
@@ -224,8 +224,8 @@ func (c *mqlIpmi) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlIpmi) GetDeviceID() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.DeviceID, func() (interface{}, error) {
+func (c *mqlIpmi) GetDeviceID() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.DeviceID, func() (any, error) {
 		return c.deviceID()
 	})
 }
@@ -241,8 +241,8 @@ type mqlIpmiChassis struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlIpmiChassisInternal it will be used here
-	Status plugin.TValue[interface{}]
-	SystemBootOptions plugin.TValue[interface{}]
+	Status plugin.TValue[any]
+	SystemBootOptions plugin.TValue[any]
 }
 
 // createIpmiChassis creates a new instance of this resource
@@ -282,14 +282,14 @@ func (c *mqlIpmiChassis) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlIpmiChassis) GetStatus() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Status, func() (interface{}, error) {
+func (c *mqlIpmiChassis) GetStatus() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Status, func() (any, error) {
 		return c.status()
 	})
 }
 
-func (c *mqlIpmiChassis) GetSystemBootOptions() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.SystemBootOptions, func() (interface{}, error) {
+func (c *mqlIpmiChassis) GetSystemBootOptions() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.SystemBootOptions, func() (any, error) {
 		return c.systemBootOptions()
 	})
 }

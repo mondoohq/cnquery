@@ -10,11 +10,11 @@ import (
 	"fmt"
 	"regexp"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/azure/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/azure/connection"
+	"go.mondoo.com/cnquery/v12/types"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	keyvault "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault"
@@ -83,7 +83,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceCertificate) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionKeyVaultService) vaults() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionKeyVaultService) vaults() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -96,7 +96,7 @@ func (a *mqlAzureSubscriptionKeyVaultService) vaults() ([]interface{}, error) {
 		return nil, err
 	}
 	pager := client.NewListPager(&keyvault.VaultsClientListOptions{})
-	res := []interface{}{}
+	res := []any{}
 
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
@@ -127,7 +127,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) vaultUri() (string, error) {
 	return KVUri, nil
 }
 
-func (a *mqlAzureSubscriptionKeyVaultServiceVault) properties() (interface{}, error) {
+func (a *mqlAzureSubscriptionKeyVaultServiceVault) properties() (any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -161,7 +161,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) rbacAuthorizationEnabled() (b
 	if props.Error != nil {
 		return false, props.Error
 	}
-	propsDict := props.Data.(map[string]interface{})
+	propsDict := props.Data.(map[string]any)
 	rbacProp := propsDict["enableRbacAuthorization"]
 	if rbacProp == nil {
 		return false, errors.New("key vault does not have enableRbacAuthorization property")
@@ -169,7 +169,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) rbacAuthorizationEnabled() (b
 	return rbacProp.(bool), nil
 }
 
-func (a *mqlAzureSubscriptionKeyVaultServiceVault) keys() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionKeyVaultServiceVault) keys() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -181,7 +181,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) keys() ([]interface{}, error)
 		return nil, err
 	}
 	pager := client.NewListKeyPropertiesPager(&azkeys.ListKeyPropertiesOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -221,7 +221,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceKeyAutorotation) id() (string, error
 	return kvid.Name, nil
 }
 
-func (a *mqlAzureSubscriptionKeyVaultServiceVault) autorotation() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionKeyVaultServiceVault) autorotation() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -234,7 +234,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) autorotation() ([]interface{}
 	}
 
 	pager := client.NewListKeyPropertiesPager(&azkeys.ListKeyPropertiesOptions{})
-	res := []interface{}{}
+	res := []any{}
 
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
@@ -276,7 +276,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) autorotation() ([]interface{}
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionKeyVaultServiceVault) secrets() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionKeyVaultServiceVault) secrets() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -288,7 +288,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) secrets() ([]interface{}, err
 		return nil, err
 	}
 	pager := client.NewListSecretPropertiesPager(&azsecrets.ListSecretPropertiesOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -318,7 +318,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) secrets() ([]interface{}, err
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionKeyVaultServiceVault) certificates() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionKeyVaultServiceVault) certificates() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -330,7 +330,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) certificates() ([]interface{}
 		return nil, err
 	}
 	pager := client.NewListCertificatePropertiesPager(&azcertificates.ListCertificatePropertiesOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -360,7 +360,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) certificates() ([]interface{}
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionKeyVaultServiceVault) diagnosticSettings() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionKeyVaultServiceVault) diagnosticSettings() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	return getDiagnosticSettings(a.Id.Data, a.MqlRuntime, conn)
 }
@@ -385,7 +385,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceKey) version() (string, error) {
 	return kvid.Version, nil
 }
 
-func (a *mqlAzureSubscriptionKeyVaultServiceKey) versions() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionKeyVaultServiceKey) versions() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	id := a.Kid.Data
 	kvid, err := parseKeyVaultId(id)
@@ -409,7 +409,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceKey) versions() ([]interface{}, erro
 
 	ctx := context.Background()
 	pager := client.NewListKeyPropertiesVersionsPager(kvid.Name, &azkeys.ListKeyPropertiesVersionsOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -458,7 +458,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceCertificate) version() (string, erro
 	return kvid.Version, nil
 }
 
-func (a *mqlAzureSubscriptionKeyVaultServiceCertificate) versions() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionKeyVaultServiceCertificate) versions() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	id := a.Id.Data
 	kvid, err := parseKeyVaultId(id)
@@ -483,7 +483,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceCertificate) versions() ([]interface
 	}
 	ctx := context.Background()
 	pager := client.NewListCertificatePropertiesVersionsPager(name, &azcertificates.ListCertificatePropertiesVersionsOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -532,7 +532,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceSecret) version() (string, error) {
 	return kvid.Version, nil
 }
 
-func (a *mqlAzureSubscriptionKeyVaultServiceSecret) versions() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionKeyVaultServiceSecret) versions() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	id := a.Id.Data
 	kvid, err := parseKeyVaultId(id)
@@ -559,7 +559,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceSecret) versions() ([]interface{}, e
 	}
 
 	pager := client.NewListSecretPropertiesVersionsPager(name, &azsecrets.ListSecretPropertiesVersionsOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {

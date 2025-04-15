@@ -8,11 +8,11 @@ import (
 	"errors"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/azure/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/azure/connection"
+	"go.mondoo.com/cnquery/v12/types"
 
 	sql "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql"
 )
@@ -63,7 +63,7 @@ func (a *mqlAzureSubscriptionSqlServiceFirewallrule) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionSqlService) servers() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionSqlService) servers() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -75,7 +75,7 @@ func (a *mqlAzureSubscriptionSqlService) servers() ([]interface{}, error) {
 		return nil, err
 	}
 	pager := dbClient.NewListPager(&sql.ServersClientListOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -106,7 +106,7 @@ func (a *mqlAzureSubscriptionSqlService) servers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionSqlServiceServer) databases() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceServer) databases() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -127,7 +127,7 @@ func (a *mqlAzureSubscriptionSqlServiceServer) databases() ([]interface{}, error
 		return nil, err
 	}
 	pager := dbDatabaseClient.NewListByServerPager(resourceID.ResourceGroup, server, &sql.DatabasesClientListByServerOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -170,7 +170,7 @@ func (a *mqlAzureSubscriptionSqlServiceServer) databases() ([]interface{}, error
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionSqlServiceServer) firewallRules() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceServer) firewallRules() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -193,7 +193,7 @@ func (a *mqlAzureSubscriptionSqlServiceServer) firewallRules() ([]interface{}, e
 	}
 
 	pager := dbFirewallClient.NewListByServerPager(resourceID.ResourceGroup, server, &sql.FirewallRulesClientListByServerOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -217,7 +217,7 @@ func (a *mqlAzureSubscriptionSqlServiceServer) firewallRules() ([]interface{}, e
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionSqlServiceServer) virtualNetworkRules() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceServer) virtualNetworkRules() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -240,7 +240,7 @@ func (a *mqlAzureSubscriptionSqlServiceServer) virtualNetworkRules() ([]interfac
 	}
 
 	pager := client.NewListByServerPager(resourceID.ResourceGroup, server, &sql.VirtualNetworkRulesClientListByServerOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -269,7 +269,7 @@ func (a *mqlAzureSubscriptionSqlServiceServer) virtualNetworkRules() ([]interfac
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionSqlServiceServer) azureAdAdministrators() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceServer) azureAdAdministrators() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -290,7 +290,7 @@ func (a *mqlAzureSubscriptionSqlServiceServer) azureAdAdministrators() ([]interf
 		return nil, err
 	}
 	pager := administratorClient.NewListByServerPager(resourceID.ResourceGroup, server, &sql.ServerAzureADAdministratorsClientListByServerOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -317,7 +317,7 @@ func (a *mqlAzureSubscriptionSqlServiceServer) azureAdAdministrators() ([]interf
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionSqlServiceServer) connectionPolicy() (interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceServer) connectionPolicy() (any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -346,7 +346,7 @@ func (a *mqlAzureSubscriptionSqlServiceServer) connectionPolicy() (interface{}, 
 	return convert.JsonToDict(policy)
 }
 
-func (a *mqlAzureSubscriptionSqlServiceServer) securityAlertPolicy() (interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceServer) securityAlertPolicy() (any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -375,7 +375,7 @@ func (a *mqlAzureSubscriptionSqlServiceServer) securityAlertPolicy() (interface{
 	return convert.JsonToDict(policy.ServerSecurityAlertPolicy.Properties)
 }
 
-func (a *mqlAzureSubscriptionSqlServiceServer) auditingPolicy() (interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceServer) auditingPolicy() (any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -403,7 +403,7 @@ func (a *mqlAzureSubscriptionSqlServiceServer) auditingPolicy() (interface{}, er
 	return convert.JsonToDict(policy.ServerBlobAuditingPolicy.Properties)
 }
 
-func (a *mqlAzureSubscriptionSqlServiceServer) threatDetectionPolicy() (interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceServer) threatDetectionPolicy() (any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -432,7 +432,7 @@ func (a *mqlAzureSubscriptionSqlServiceServer) threatDetectionPolicy() (interfac
 	return convert.JsonToDict(threatPolicy.Properties)
 }
 
-func (a *mqlAzureSubscriptionSqlServiceServer) encryptionProtector() (interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceServer) encryptionProtector() (any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -503,7 +503,7 @@ func (a *mqlAzureSubscriptionSqlServiceServer) vulnerabilityAssessmentSettings()
 	return res.(*mqlAzureSubscriptionSqlServiceServerVulnerabilityassessmentsettings), err
 }
 
-func (a *mqlAzureSubscriptionSqlServiceDatabase) transparentDataEncryption() (interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceDatabase) transparentDataEncryption() (any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -538,7 +538,7 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) transparentDataEncryption() (in
 	return convert.JsonToDict(policy.LogicalDatabaseTransparentDataEncryption.Properties)
 }
 
-func (a *mqlAzureSubscriptionSqlServiceDatabase) advisor() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceDatabase) advisor() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -571,7 +571,7 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) advisor() ([]interface{}, error
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for _, entry := range advisors.AdvisorArray {
 		dict, err := convert.JsonToDict(entry)
 		if err != nil {
@@ -584,7 +584,7 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) advisor() ([]interface{}, error
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionSqlServiceDatabase) threatDetectionPolicy() (interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceDatabase) threatDetectionPolicy() (any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -618,7 +618,7 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) threatDetectionPolicy() (interf
 	return convert.JsonToDict(policy.DatabaseSecurityAlertPolicy.Properties)
 }
 
-func (a *mqlAzureSubscriptionSqlServiceDatabase) connectionPolicy() (interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceDatabase) connectionPolicy() (any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -647,7 +647,7 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) connectionPolicy() (interface{}
 	return convert.JsonToDict(policy.ServerConnectionPolicy.Properties)
 }
 
-func (a *mqlAzureSubscriptionSqlServiceDatabase) auditingPolicy() (interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceDatabase) auditingPolicy() (any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -682,7 +682,7 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) auditingPolicy() (interface{}, 
 	return convert.JsonToDict(policy.DatabaseBlobAuditingPolicy.Properties)
 }
 
-func (a *mqlAzureSubscriptionSqlServiceDatabase) usage() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceDatabase) usage() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -709,7 +709,7 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) usage() ([]interface{}, error) 
 		return nil, err
 	}
 	pager := client.NewListByDatabasePager(resourceID.ResourceGroup, server, database, &sql.DatabaseUsagesClientListByDatabaseOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {

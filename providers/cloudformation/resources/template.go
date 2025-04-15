@@ -5,11 +5,11 @@ package resources
 
 import (
 	"github.com/aws-cloudformation/rain/cft"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/cloudformation/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/cloudformation/connection"
+	"go.mondoo.com/cnquery/v12/types"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 )
@@ -52,7 +52,7 @@ func (r *mqlCloudformationTemplate) id() (string, error) {
 	return "cloudformation", nil
 }
 
-func (r *mqlCloudformationTemplate) extractDict(section cft.Section) (map[string]interface{}, error) {
+func (r *mqlCloudformationTemplate) extractDict(section cft.Section) (map[string]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.CloudformationConnection)
 	template := conn.CftTemplate()
 
@@ -68,7 +68,7 @@ func (r *mqlCloudformationTemplate) extractDict(section cft.Section) (map[string
 		return nil, err
 	}
 
-	result := make(map[string]interface{})
+	result := make(map[string]any)
 	for i := 0; i < len(parameters.Content); i += 2 {
 		keyNode := parameters.Content[i]
 		valueNode := parameters.Content[i+1]
@@ -84,7 +84,7 @@ func (r *mqlCloudformationTemplate) extractDict(section cft.Section) (map[string
 	return result, nil
 }
 
-func (r *mqlCloudformationTemplate) mappings() (map[string]interface{}, error) {
+func (r *mqlCloudformationTemplate) mappings() (map[string]any, error) {
 	return r.extractDict(cft.Mappings)
 }
 
@@ -92,19 +92,19 @@ var Globals cft.Section = "Globals"
 
 // Reads the Globals section of the SAM template.
 // see https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-specification-template-anatomy.html
-func (r *mqlCloudformationTemplate) globals() (map[string]interface{}, error) {
+func (r *mqlCloudformationTemplate) globals() (map[string]any, error) {
 	return r.extractDict(Globals)
 }
 
-func (r *mqlCloudformationTemplate) parameters() (map[string]interface{}, error) {
+func (r *mqlCloudformationTemplate) parameters() (map[string]any, error) {
 	return r.extractDict(cft.Parameters)
 }
 
-func (r *mqlCloudformationTemplate) metadata() (map[string]interface{}, error) {
+func (r *mqlCloudformationTemplate) metadata() (map[string]any, error) {
 	return r.extractDict(cft.Metadata)
 }
 
-func (r *mqlCloudformationTemplate) conditions() (map[string]interface{}, error) {
+func (r *mqlCloudformationTemplate) conditions() (map[string]any, error) {
 	return r.extractDict(cft.Conditions)
 }
 
@@ -112,7 +112,7 @@ func (x *mqlCloudformationResource) id() (string, error) {
 	return x.Name.Data, nil
 }
 
-func (r *mqlCloudformationTemplate) resources() ([]interface{}, error) {
+func (r *mqlCloudformationTemplate) resources() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.CloudformationConnection)
 	template := conn.CftTemplate()
 	_, resources, err := gatherMapValue(template.Node.Content[0], string(cft.Resources))
@@ -122,7 +122,7 @@ func (r *mqlCloudformationTemplate) resources() ([]interface{}, error) {
 		return nil, err
 	}
 
-	result := make([]interface{}, 0)
+	result := make([]any, 0)
 	for i := 0; i < len(resources.Content); i += 2 {
 		keyNode := resources.Content[i]
 		valueNode := resources.Content[i+1]
@@ -144,7 +144,7 @@ func (r *mqlCloudformationTemplate) resources() ([]interface{}, error) {
 			resourceDocumentation = val.Value
 		}
 
-		attrs := make(map[string](interface{}))
+		attrs := make(map[string](any))
 		_, val, err = gatherMapValue(valueNode, "Attributes")
 		if err == nil {
 			attrs, err = convertYamlToDict(val)
@@ -153,7 +153,7 @@ func (r *mqlCloudformationTemplate) resources() ([]interface{}, error) {
 			}
 		}
 
-		props := make(map[string](interface{}))
+		props := make(map[string](any))
 		_, val, err = gatherMapValue(valueNode, "Properties")
 		if err == nil {
 			props, err = convertYamlToDict(val)
@@ -185,7 +185,7 @@ func (x *mqlCloudformationOutput) id() (string, error) {
 	return x.Name.Data, nil
 }
 
-func (r *mqlCloudformationTemplate) outputs() ([]interface{}, error) {
+func (r *mqlCloudformationTemplate) outputs() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.CloudformationConnection)
 	template := conn.CftTemplate()
 
@@ -196,7 +196,7 @@ func (r *mqlCloudformationTemplate) outputs() ([]interface{}, error) {
 		return nil, err
 	}
 
-	result := make([]interface{}, 0)
+	result := make([]any, 0)
 	for i := 0; i < len(outputs.Content); i += 2 {
 		keyNode := outputs.Content[i]
 		valueNode := outputs.Content[i+1]
@@ -221,7 +221,7 @@ func (r *mqlCloudformationTemplate) outputs() ([]interface{}, error) {
 	return result, nil
 }
 
-func (r *mqlCloudformationTemplate) types() ([]interface{}, error) {
+func (r *mqlCloudformationTemplate) types() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.CloudformationConnection)
 	template := conn.CftTemplate()
 

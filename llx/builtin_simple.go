@@ -13,7 +13,7 @@ import (
 	"time"
 	"unicode"
 
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 // run an operation that returns true/false on a bind data vs a chunk call.
@@ -47,7 +47,7 @@ func rawboolNotOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, f
 // this includes handling for the case where either side is nil, i.e.
 // - if both sides are nil we return true
 // - if either side is nil but not the other we return false
-func boolOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, f func(interface{}, interface{}) bool) (*RawData, uint64, error) {
+func boolOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, f func(any, any) bool) (*RawData, uint64, error) {
 	v, dref, err := e.resolveValue(chunk.Function.Args[0], ref)
 	if err != nil {
 		return nil, 0, err
@@ -68,7 +68,7 @@ func boolOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, f func(
 
 // boolOrOp behaves like boolOp, but checks if the left argument is true first
 // (and stop if it is). Only then proceeds to check the right argument.
-func boolOrOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, fLeft func(interface{}) bool, fRight func(interface{}) bool) (*RawData, uint64, error) {
+func boolOrOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, fLeft func(any) bool, fRight func(any) bool) (*RawData, uint64, error) {
 	if bind.Value != nil && fLeft(bind.Value) {
 		return BoolData(true), 0, nil
 	}
@@ -93,7 +93,7 @@ func boolOrOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, fLeft
 
 // boolAndOp behaves like boolOp, but checks if the left argument is false first
 // (and stop if it is). Only then proceeds to check the right argument.
-func boolAndOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, fLeft func(interface{}) bool, fRight func(interface{}) bool) (*RawData, uint64, error) {
+func boolAndOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, fLeft func(any) bool, fRight func(any) bool) (*RawData, uint64, error) {
 	arg := chunk.Function.Args[0]
 
 	if bind.Value != nil && !fLeft(bind.Value) {
@@ -132,7 +132,7 @@ func boolAndOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, fLef
 	return BoolData(fRight(v.Value)), 0, nil
 }
 
-func boolNotOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, f func(interface{}, interface{}) bool) (*RawData, uint64, error) {
+func boolNotOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, f func(any, any) bool) (*RawData, uint64, error) {
 	v, dref, err := e.resolveValue(chunk.Function.Args[0], ref)
 	if err != nil {
 		return nil, 0, err
@@ -151,7 +151,7 @@ func boolNotOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, f fu
 	return BoolData(!f(bind.Value, v.Value)), 0, nil
 }
 
-func dataOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, typ types.Type, f func(interface{}, interface{}) *RawData) (*RawData, uint64, error) {
+func dataOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, typ types.Type, f func(any, any) *RawData) (*RawData, uint64, error) {
 	v, dref, err := e.resolveValue(chunk.Function.Args[0], ref)
 	if err != nil {
 		return nil, 0, err
@@ -170,7 +170,7 @@ func dataOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, typ typ
 	return f(bind.Value, v.Value), 0, nil
 }
 
-func nonNilDataOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, typ types.Type, f func(interface{}, interface{}) *RawData) (*RawData, uint64, error) {
+func nonNilDataOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, typ types.Type, f func(any, any) *RawData) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return &RawData{Type: typ, Error: errors.New("left side of operation is null")}, 0, nil
 	}
@@ -223,25 +223,25 @@ func nonNilDataOpT[T any](e *blockExecutor, bind *RawData, chunk *Chunk, ref uin
 // we need to catch the case where both values end up nil
 
 func chunkEqTrueV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return boolOpV2(e, bind, chunk, ref, func(a interface{}, b interface{}) bool {
+	return boolOpV2(e, bind, chunk, ref, func(a any, b any) bool {
 		return true
 	})
 }
 
 func chunkEqFalseV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return boolOpV2(e, bind, chunk, ref, func(a interface{}, b interface{}) bool {
+	return boolOpV2(e, bind, chunk, ref, func(a any, b any) bool {
 		return false
 	})
 }
 
 func chunkNeqFalseV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return boolNotOpV2(e, bind, chunk, ref, func(a interface{}, b interface{}) bool {
+	return boolNotOpV2(e, bind, chunk, ref, func(a any, b any) bool {
 		return true
 	})
 }
 
 func chunkNeqTrueV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return boolNotOpV2(e, bind, chunk, ref, func(a interface{}, b interface{}) bool {
+	return boolNotOpV2(e, bind, chunk, ref, func(a any, b any) bool {
 		return false
 	})
 }
@@ -257,23 +257,23 @@ func bindingNeqNil(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 // raw operator handling
 // ==   !=
 
-func opBoolCmpBool(left interface{}, right interface{}) bool {
+func opBoolCmpBool(left any, right any) bool {
 	return left.(bool) == right.(bool)
 }
 
-func opIntCmpInt(left interface{}, right interface{}) bool {
+func opIntCmpInt(left any, right any) bool {
 	return left.(int64) == right.(int64)
 }
 
-func opFloatCmpFloat(left interface{}, right interface{}) bool {
+func opFloatCmpFloat(left any, right any) bool {
 	return left.(float64) == right.(float64)
 }
 
-func opStringCmpString(left interface{}, right interface{}) bool {
+func opStringCmpString(left any, right any) bool {
 	return left.(string) == right.(string)
 }
 
-func opTimeCmpTime(left interface{}, right interface{}) bool {
+func opTimeCmpTime(left any, right any) bool {
 	l := left.(*time.Time)
 	r := right.(*time.Time)
 	if l == nil {
@@ -290,45 +290,45 @@ func opTimeCmpTime(left interface{}, right interface{}) bool {
 	return (*l).Equal(*r)
 }
 
-func opStringCmpInt(left interface{}, right interface{}) bool {
+func opStringCmpInt(left any, right any) bool {
 	return left.(string) == strconv.FormatInt(right.(int64), 10)
 }
 
-func opIntCmpString(left interface{}, right interface{}) bool {
+func opIntCmpString(left any, right any) bool {
 	return right.(string) == strconv.FormatInt(left.(int64), 10)
 }
 
-func opStringCmpFloat(left interface{}, right interface{}) bool {
+func opStringCmpFloat(left any, right any) bool {
 	return left.(string) == strconv.FormatFloat(right.(float64), 'f', -1, 64)
 }
 
-func opFloatCmpString(left interface{}, right interface{}) bool {
+func opFloatCmpString(left any, right any) bool {
 	return right.(string) == strconv.FormatFloat(left.(float64), 'f', -1, 64)
 }
 
-func opStringCmpRegex(left interface{}, right interface{}) bool {
+func opStringCmpRegex(left any, right any) bool {
 	r := regexp.MustCompile(right.(string))
 	return r.Match([]byte(left.(string)))
 }
 
-func opRegexCmpString(left interface{}, right interface{}) bool {
+func opRegexCmpString(left any, right any) bool {
 	r := regexp.MustCompile(left.(string))
 	return r.Match([]byte(right.(string)))
 }
 
-func opRegexCmpInt(left interface{}, right interface{}) bool {
+func opRegexCmpInt(left any, right any) bool {
 	return opStringCmpRegex(strconv.FormatInt(right.(int64), 10), left.(string))
 }
 
-func opIntCmpRegex(left interface{}, right interface{}) bool {
+func opIntCmpRegex(left any, right any) bool {
 	return opStringCmpRegex(strconv.FormatInt(left.(int64), 10), right.(string))
 }
 
-func opRegexCmpFloat(left interface{}, right interface{}) bool {
+func opRegexCmpFloat(left any, right any) bool {
 	return opStringCmpRegex(strconv.FormatFloat(right.(float64), 'f', -1, 64), left.(string))
 }
 
-func opFloatCmpRegex(left interface{}, right interface{}) bool {
+func opFloatCmpRegex(left any, right any) bool {
 	return opStringCmpRegex(strconv.FormatFloat(left.(float64), 'f', -1, 64), right.(string))
 }
 
@@ -392,56 +392,56 @@ func stringNotEmptyV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 // int arithmetic
 
 func intPlusIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Int, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Int, func(left any, right any) *RawData {
 		res := left.(int64) + right.(int64)
 		return IntData(res)
 	})
 }
 
 func intMinusIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Int, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Int, func(left any, right any) *RawData {
 		res := left.(int64) - right.(int64)
 		return IntData(res)
 	})
 }
 
 func intTimesIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Int, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Int, func(left any, right any) *RawData {
 		res := left.(int64) * right.(int64)
 		return IntData(res)
 	})
 }
 
 func intDividedIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Int, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Int, func(left any, right any) *RawData {
 		res := left.(int64) / right.(int64)
 		return IntData(res)
 	})
 }
 
 func intPlusFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Float, func(left any, right any) *RawData {
 		res := float64(left.(int64)) + right.(float64)
 		return FloatData(res)
 	})
 }
 
 func intMinusFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Float, func(left any, right any) *RawData {
 		res := float64(left.(int64)) - right.(float64)
 		return FloatData(res)
 	})
 }
 
 func intTimesFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Float, func(left any, right any) *RawData {
 		res := float64(left.(int64)) * right.(float64)
 		return FloatData(res)
 	})
 }
 
 func intDividedFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Float, func(left any, right any) *RawData {
 		res := float64(left.(int64)) / right.(float64)
 		return FloatData(res)
 	})
@@ -450,56 +450,56 @@ func intDividedFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64
 // float arithmetic
 
 func floatPlusIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Float, func(left any, right any) *RawData {
 		res := left.(float64) + float64(right.(int64))
 		return FloatData(res)
 	})
 }
 
 func floatMinusIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Float, func(left any, right any) *RawData {
 		res := left.(float64) - float64(right.(int64))
 		return FloatData(res)
 	})
 }
 
 func floatTimesIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Float, func(left any, right any) *RawData {
 		res := left.(float64) * float64(right.(int64))
 		return FloatData(res)
 	})
 }
 
 func floatDividedIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Float, func(left any, right any) *RawData {
 		res := left.(float64) / float64(right.(int64))
 		return FloatData(res)
 	})
 }
 
 func floatPlusFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Float, func(left any, right any) *RawData {
 		res := left.(float64) + right.(float64)
 		return FloatData(res)
 	})
 }
 
 func floatMinusFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Float, func(left any, right any) *RawData {
 		res := left.(float64) - right.(float64)
 		return FloatData(res)
 	})
 }
 
 func floatTimesFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Float, func(left any, right any) *RawData {
 		res := left.(float64) * right.(float64)
 		return FloatData(res)
 	})
 }
 
 func floatDividedFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Float, func(left any, right any) *RawData {
 		res := left.(float64) / right.(float64)
 		return FloatData(res)
 	})
@@ -508,11 +508,11 @@ func floatDividedFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint
 // int vs float
 // int ==/!= float
 
-func opIntCmpFloat(left interface{}, right interface{}) bool {
+func opIntCmpFloat(left any, right any) bool {
 	return float64(left.(int64)) == right.(float64)
 }
 
-func opFloatCmpInt(left interface{}, right interface{}) bool {
+func opFloatCmpInt(left any, right any) bool {
 	return left.(float64) == float64(right.(int64))
 }
 
@@ -535,11 +535,11 @@ func floatNotIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 // string vs other types
 // string ==/!= nil
 
-func opStringCmpNil(left interface{}, right interface{}) bool {
+func opStringCmpNil(left any, right any) bool {
 	return left == nil
 }
 
-func opNilCmpString(left interface{}, right interface{}) bool {
+func opNilCmpString(left any, right any) bool {
 	return right == nil
 }
 
@@ -561,14 +561,14 @@ func nilNotStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 
 // string ==/!= bool
 
-func opStringCmpBool(left interface{}, right interface{}) bool {
+func opStringCmpBool(left any, right any) bool {
 	if right.(bool) == true {
 		return left.(string) == "true"
 	}
 	return left.(string) == "false"
 }
 
-func opBoolCmpString(left interface{}, right interface{}) bool {
+func opBoolCmpString(left any, right any) bool {
 	if left.(bool) == true {
 		return right.(string) == "true"
 	}
@@ -685,11 +685,11 @@ func regexNotFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) 
 // null vs other types
 // bool ==/!= nil
 
-func opBoolCmpNil(left interface{}, right interface{}) bool {
+func opBoolCmpNil(left any, right any) bool {
 	return left == nil
 }
 
-func opNilCmpBool(left interface{}, right interface{}) bool {
+func opNilCmpBool(left any, right any) bool {
 	return right == nil
 }
 
@@ -711,11 +711,11 @@ func nilNotBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 
 // int ==/!= nil
 
-func opIntCmpNil(left interface{}, right interface{}) bool {
+func opIntCmpNil(left any, right any) bool {
 	return left == nil
 }
 
-func opNilCmpInt(left interface{}, right interface{}) bool {
+func opNilCmpInt(left any, right any) bool {
 	return right == nil
 }
 
@@ -737,11 +737,11 @@ func nilNotIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Ra
 
 // float ==/!= nil
 
-func opFloatCmpNil(left interface{}, right interface{}) bool {
+func opFloatCmpNil(left any, right any) bool {
 	return left == nil
 }
 
-func opNilCmpFloat(left interface{}, right interface{}) bool {
+func opNilCmpFloat(left any, right any) bool {
 	return right == nil
 }
 
@@ -790,25 +790,25 @@ func nilNotTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 // string </>/<=/>= string
 
 func stringLTStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		return BoolData(left.(string) < right.(string))
 	})
 }
 
 func stringLTEStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		return BoolData(left.(string) <= right.(string))
 	})
 }
 
 func stringGTStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		return BoolData(left.(string) > right.(string))
 	})
 }
 
 func stringGTEStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		return BoolData(left.(string) >= right.(string))
 	})
 }
@@ -816,25 +816,25 @@ func stringGTEStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64
 // int </>/<=/>= int
 
 func intLTIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		return BoolData(left.(int64) < right.(int64))
 	})
 }
 
 func intLTEIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		return BoolData(left.(int64) <= right.(int64))
 	})
 }
 
 func intGTIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		return BoolData(left.(int64) > right.(int64))
 	})
 }
 
 func intGTEIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		return BoolData(left.(int64) >= right.(int64))
 	})
 }
@@ -842,25 +842,25 @@ func intGTEIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Ra
 // float </>/<=/>= float
 
 func floatLTFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		return BoolData(left.(float64) < right.(float64))
 	})
 }
 
 func floatLTEFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		return BoolData(left.(float64) <= right.(float64))
 	})
 }
 
 func floatGTFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		return BoolData(left.(float64) > right.(float64))
 	})
 }
 
 func floatGTEFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		return BoolData(left.(float64) >= right.(float64))
 	})
 }
@@ -868,7 +868,7 @@ func floatGTEFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) 
 // time </>/<=/>= time
 
 func timeLTTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		l := left.(*time.Time)
 		if l == nil {
 			return &RawData{Type: types.Bool, Error: errors.New("left side of operation is null")}
@@ -883,7 +883,7 @@ func timeLTTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 }
 
 func timeLTETimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		l := left.(*time.Time)
 		if l == nil {
 			return &RawData{Type: types.Bool, Error: errors.New("left side of operation is null")}
@@ -898,7 +898,7 @@ func timeLTETimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 }
 
 func timeGTTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		l := left.(*time.Time)
 		if l == nil {
 			return &RawData{Type: types.Bool, Error: errors.New("left side of operation is null")}
@@ -913,7 +913,7 @@ func timeGTTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 }
 
 func timeGTETimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		l := left.(*time.Time)
 		if l == nil {
 			return &RawData{Type: types.Bool, Error: errors.New("left side of operation is null")}
@@ -930,7 +930,7 @@ func timeGTETimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 // time arithmetic
 
 func timeMinusTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Time, func(left any, right any) *RawData {
 		l := left.(*time.Time)
 		r := right.(*time.Time)
 		if l == nil || r == nil {
@@ -957,7 +957,7 @@ func timeMinusTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) 
 }
 
 func timePlusTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Time, func(left any, right any) *RawData {
 		l := left.(*time.Time)
 		r := right.(*time.Time)
 		if l == nil || r == nil {
@@ -1001,7 +1001,7 @@ func timePlusTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 	})
 }
 
-func opTimeTimesInt(left interface{}, right interface{}) *RawData {
+func opTimeTimesInt(left any, right any) *RawData {
 	l := left.(*time.Time)
 	if l == nil {
 		return &RawData{Type: types.Time}
@@ -1019,7 +1019,7 @@ func opTimeTimesInt(left interface{}, right interface{}) *RawData {
 	return TimeData(res)
 }
 
-func opTimeTimesFloat(left interface{}, right interface{}) *RawData {
+func opTimeTimesFloat(left any, right any) *RawData {
 	l := left.(*time.Time)
 	if l == nil {
 		return &RawData{Type: types.Time}
@@ -1042,7 +1042,7 @@ func timeTimesIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 }
 
 func intTimesTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Time, func(left any, right any) *RawData {
 		return opTimeTimesInt(right, left)
 	})
 }
@@ -1052,7 +1052,7 @@ func timeTimesFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 }
 
 func floatTimesTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Time, func(left any, right any) *RawData {
 		return opTimeTimesFloat(right, left)
 	})
 }
@@ -1060,25 +1060,25 @@ func floatTimesTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 // int </>/<=/>= float
 
 func intLTFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		return BoolData(float64(left.(int64)) < right.(float64))
 	})
 }
 
 func intLTEFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		return BoolData(float64(left.(int64)) <= right.(float64))
 	})
 }
 
 func intGTFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		return BoolData(float64(left.(int64)) > right.(float64))
 	})
 }
 
 func intGTEFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		return BoolData(float64(left.(int64)) >= right.(float64))
 	})
 }
@@ -1086,25 +1086,25 @@ func intGTEFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 // float </>/<=/>= int
 
 func floatLTIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		return BoolData(left.(float64) < float64(right.(int64)))
 	})
 }
 
 func floatLTEIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		return BoolData(left.(float64) <= float64(right.(int64)))
 	})
 }
 
 func floatGTIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		return BoolData(left.(float64) > float64(right.(int64)))
 	})
 }
 
 func floatGTEIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		return BoolData(left.(float64) >= float64(right.(int64)))
 	})
 }
@@ -1112,7 +1112,7 @@ func floatGTEIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 // float </>/<=/>= string
 
 func floatLTStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		f, err := strconv.ParseFloat(right.(string), 64)
 		if err != nil {
 			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
@@ -1122,7 +1122,7 @@ func floatLTStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) 
 }
 
 func floatLTEStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		f, err := strconv.ParseFloat(right.(string), 64)
 		if err != nil {
 			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
@@ -1132,7 +1132,7 @@ func floatLTEStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 }
 
 func floatGTStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		f, err := strconv.ParseFloat(right.(string), 64)
 		if err != nil {
 			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
@@ -1142,7 +1142,7 @@ func floatGTStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) 
 }
 
 func floatGTEStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		f, err := strconv.ParseFloat(right.(string), 64)
 		if err != nil {
 			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
@@ -1154,7 +1154,7 @@ func floatGTEStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 // string </>/<=/>= float
 
 func stringLTFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		f, err := strconv.ParseFloat(left.(string), 64)
 		if err != nil {
 			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
@@ -1164,7 +1164,7 @@ func stringLTFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) 
 }
 
 func stringLTEFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		f, err := strconv.ParseFloat(left.(string), 64)
 		if err != nil {
 			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
@@ -1174,7 +1174,7 @@ func stringLTEFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 }
 
 func stringGTFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		f, err := strconv.ParseFloat(left.(string), 64)
 		if err != nil {
 			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
@@ -1184,7 +1184,7 @@ func stringGTFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) 
 }
 
 func stringGTEFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		f, err := strconv.ParseFloat(left.(string), 64)
 		if err != nil {
 			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
@@ -1196,7 +1196,7 @@ func stringGTEFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 // int </>/<=/>= string
 
 func intLTStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		f, err := strconv.ParseInt(right.(string), 10, 64)
 		if err != nil {
 			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to int")}
@@ -1206,7 +1206,7 @@ func intLTStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 }
 
 func intLTEStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		f, err := strconv.ParseInt(right.(string), 10, 64)
 		if err != nil {
 			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to int")}
@@ -1216,7 +1216,7 @@ func intLTEStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 }
 
 func intGTStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		f, err := strconv.ParseInt(right.(string), 10, 64)
 		if err != nil {
 			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to int")}
@@ -1226,7 +1226,7 @@ func intGTStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 }
 
 func intGTEStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		f, err := strconv.ParseInt(right.(string), 10, 64)
 		if err != nil {
 			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to int")}
@@ -1238,7 +1238,7 @@ func intGTEStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 // string </>/<=/>= int
 
 func stringLTIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		f, err := strconv.ParseInt(left.(string), 10, 64)
 		if err != nil {
 			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to int")}
@@ -1248,7 +1248,7 @@ func stringLTIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 }
 
 func stringLTEIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		f, err := strconv.ParseInt(left.(string), 10, 64)
 		if err != nil {
 			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to int")}
@@ -1258,7 +1258,7 @@ func stringLTEIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 }
 
 func stringGTIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		f, err := strconv.ParseInt(left.(string), 10, 64)
 		if err != nil {
 			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to int")}
@@ -1268,7 +1268,7 @@ func stringGTIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 }
 
 func stringGTEIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		f, err := strconv.ParseInt(left.(string), 10, 64)
 		if err != nil {
 			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to int")}
@@ -1283,27 +1283,27 @@ func stringGTEIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 
 // T &&/|| T
 
-func truthyBool(val interface{}) bool {
+func truthyBool(val any) bool {
 	return val.(bool)
 }
 
-func truthyInt(val interface{}) bool {
+func truthyInt(val any) bool {
 	return val.(int64) != 0
 }
 
-func truthyFloat(val interface{}) bool {
+func truthyFloat(val any) bool {
 	return val.(float64) != 0
 }
 
-func truthyString(val interface{}) bool {
+func truthyString(val any) bool {
 	return val.(string) != ""
 }
 
-func truthyArray(val interface{}) bool {
+func truthyArray(val any) bool {
 	return true
 }
 
-func truthyMap(val interface{}) bool {
+func truthyMap(val any) bool {
 	return true
 }
 
@@ -1437,20 +1437,20 @@ func arrayOrBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 	return boolOrOpV2(e, bind, chunk, ref, truthyArray, truthyBool)
 }
 
-func opBoolAndMap(left interface{}, right interface{}) bool {
-	return left.(bool) && (len(right.([]interface{})) != 0)
+func opBoolAndMap(left any, right any) bool {
+	return left.(bool) && (len(right.([]any)) != 0)
 }
 
-func opMapAndBool(left interface{}, right interface{}) bool {
-	return right.(bool) && (len(left.([]interface{})) != 0)
+func opMapAndBool(left any, right any) bool {
+	return right.(bool) && (len(left.([]any)) != 0)
 }
 
-func opBoolOrMap(left interface{}, right interface{}) bool {
-	return left.(bool) || (len(right.([]interface{})) != 0)
+func opBoolOrMap(left any, right any) bool {
+	return left.(bool) || (len(right.([]any)) != 0)
 }
 
-func opMapOrBool(left interface{}, right interface{}) bool {
-	return right.(bool) || (len(left.([]interface{})) != 0)
+func opMapOrBool(left any, right any) bool {
+	return right.(bool) || (len(left.([]any)) != 0)
 }
 
 func boolAndMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
@@ -1471,19 +1471,19 @@ func mapOrBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Ra
 
 // int &&/|| T
 
-func opIntAndFloat(left interface{}, right interface{}) bool {
+func opIntAndFloat(left any, right any) bool {
 	return (left.(int64) != 0) && (right.(float64) != 0)
 }
 
-func opFloatAndInt(left interface{}, right interface{}) bool {
+func opFloatAndInt(left any, right any) bool {
 	return (right.(int64) != 0) && (left.(float64) != 0)
 }
 
-func opIntOrFloat(left interface{}, right interface{}) bool {
+func opIntOrFloat(left any, right any) bool {
 	return (left.(int64) != 0) || (right.(float64) != 0)
 }
 
-func opFloatOrInt(left interface{}, right interface{}) bool {
+func opFloatOrInt(left any, right any) bool {
 	return (right.(int64) != 0) || (left.(float64) != 0)
 }
 
@@ -1503,19 +1503,19 @@ func floatOrIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 	return boolOpV2(e, bind, chunk, ref, opFloatOrInt)
 }
 
-func opIntAndString(left interface{}, right interface{}) bool {
+func opIntAndString(left any, right any) bool {
 	return (left.(int64) != 0) && (right.(string) != "")
 }
 
-func opStringAndInt(left interface{}, right interface{}) bool {
+func opStringAndInt(left any, right any) bool {
 	return (right.(int64) != 0) && (left.(string) != "")
 }
 
-func opIntOrString(left interface{}, right interface{}) bool {
+func opIntOrString(left any, right any) bool {
 	return (left.(int64) != 0) || (right.(string) != "")
 }
 
-func opStringOrInt(left interface{}, right interface{}) bool {
+func opStringOrInt(left any, right any) bool {
 	return (right.(int64) != 0) || (left.(string) != "")
 }
 
@@ -1551,20 +1551,20 @@ func regexOrIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 	return boolOpV2(e, bind, chunk, ref, opStringOrInt)
 }
 
-func opIntAndArray(left interface{}, right interface{}) bool {
-	return (left.(int64) != 0) && (len(right.([]interface{})) != 0)
+func opIntAndArray(left any, right any) bool {
+	return (left.(int64) != 0) && (len(right.([]any)) != 0)
 }
 
-func opArrayAndInt(left interface{}, right interface{}) bool {
-	return (right.(int64) != 0) && (len(left.([]interface{})) != 0)
+func opArrayAndInt(left any, right any) bool {
+	return (right.(int64) != 0) && (len(left.([]any)) != 0)
 }
 
-func opIntOrArray(left interface{}, right interface{}) bool {
-	return (left.(int64) != 0) || (len(right.([]interface{})) != 0)
+func opIntOrArray(left any, right any) bool {
+	return (left.(int64) != 0) || (len(right.([]any)) != 0)
 }
 
-func opArrayOrInt(left interface{}, right interface{}) bool {
-	return (right.(int64) != 0) || (len(left.([]interface{})) != 0)
+func opArrayOrInt(left any, right any) bool {
+	return (right.(int64) != 0) || (len(left.([]any)) != 0)
 }
 
 func intAndArrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
@@ -1583,20 +1583,20 @@ func arrayOrIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 	return boolOpV2(e, bind, chunk, ref, opArrayOrInt)
 }
 
-func opIntAndMap(left interface{}, right interface{}) bool {
-	return (left.(int64) != 0) && (len(right.(map[string]interface{})) != 0)
+func opIntAndMap(left any, right any) bool {
+	return (left.(int64) != 0) && (len(right.(map[string]any)) != 0)
 }
 
-func opMapAndInt(left interface{}, right interface{}) bool {
-	return (right.(int64) != 0) && (len(left.(map[string]interface{})) != 0)
+func opMapAndInt(left any, right any) bool {
+	return (right.(int64) != 0) && (len(left.(map[string]any)) != 0)
 }
 
-func opIntOrMap(left interface{}, right interface{}) bool {
-	return (left.(int64) != 0) || (len(right.(map[string]interface{})) != 0)
+func opIntOrMap(left any, right any) bool {
+	return (left.(int64) != 0) || (len(right.(map[string]any)) != 0)
 }
 
-func opMapOrInt(left interface{}, right interface{}) bool {
-	return (right.(int64) != 0) || (len(left.(map[string]interface{})) != 0)
+func opMapOrInt(left any, right any) bool {
+	return (right.(int64) != 0) || (len(left.(map[string]any)) != 0)
 }
 
 func intAndMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
@@ -1774,19 +1774,19 @@ func stringInRange(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 
 // float &&/|| T
 
-func opFloatAndString(left interface{}, right interface{}) bool {
+func opFloatAndString(left any, right any) bool {
 	return (left.(float64) != 0) && (right.(string) != "")
 }
 
-func opStringAndFloat(left interface{}, right interface{}) bool {
+func opStringAndFloat(left any, right any) bool {
 	return (right.(float64) != 0) && (left.(string) != "")
 }
 
-func opFloatOrString(left interface{}, right interface{}) bool {
+func opFloatOrString(left any, right any) bool {
 	return (left.(float64) != 0) || (right.(string) != "")
 }
 
-func opStringOrFloat(left interface{}, right interface{}) bool {
+func opStringOrFloat(left any, right any) bool {
 	return (right.(float64) != 0) || (left.(string) != "")
 }
 
@@ -1822,20 +1822,20 @@ func regexOrFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 	return boolOpV2(e, bind, chunk, ref, opStringOrFloat)
 }
 
-func opFloatAndArray(left interface{}, right interface{}) bool {
-	return (left.(float64) != 0) && (len(right.([]interface{})) != 0)
+func opFloatAndArray(left any, right any) bool {
+	return (left.(float64) != 0) && (len(right.([]any)) != 0)
 }
 
-func opArrayAndFloat(left interface{}, right interface{}) bool {
-	return (right.(float64) != 0) && (len(left.([]interface{})) != 0)
+func opArrayAndFloat(left any, right any) bool {
+	return (right.(float64) != 0) && (len(left.([]any)) != 0)
 }
 
-func opFloatOrArray(left interface{}, right interface{}) bool {
-	return (left.(float64) != 0) || (len(right.([]interface{})) != 0)
+func opFloatOrArray(left any, right any) bool {
+	return (left.(float64) != 0) || (len(right.([]any)) != 0)
 }
 
-func opArrayOrFloat(left interface{}, right interface{}) bool {
-	return (right.(float64) != 0) || (len(left.([]interface{})) != 0)
+func opArrayOrFloat(left any, right any) bool {
+	return (right.(float64) != 0) || (len(left.([]any)) != 0)
 }
 
 func floatAndArrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
@@ -1854,20 +1854,20 @@ func arrayOrFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 	return boolOpV2(e, bind, chunk, ref, opArrayOrFloat)
 }
 
-func opFloatAndMap(left interface{}, right interface{}) bool {
-	return (left.(float64) != 0) && (len(right.(map[string]interface{})) != 0)
+func opFloatAndMap(left any, right any) bool {
+	return (left.(float64) != 0) && (len(right.(map[string]any)) != 0)
 }
 
-func opMapAndFloat(left interface{}, right interface{}) bool {
-	return (right.(float64) != 0) && (len(left.(map[string]interface{})) != 0)
+func opMapAndFloat(left any, right any) bool {
+	return (right.(float64) != 0) && (len(left.(map[string]any)) != 0)
 }
 
-func opFloatOrMap(left interface{}, right interface{}) bool {
-	return (left.(float64) != 0) || (len(right.(map[string]interface{})) != 0)
+func opFloatOrMap(left any, right any) bool {
+	return (left.(float64) != 0) || (len(right.(map[string]any)) != 0)
 }
 
-func opMapOrFloat(left interface{}, right interface{}) bool {
-	return (right.(float64) != 0) || (len(left.(map[string]interface{})) != 0)
+func opMapOrFloat(left any, right any) bool {
+	return (right.(float64) != 0) || (len(left.(map[string]any)) != 0)
 }
 
 func floatAndMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
@@ -1904,20 +1904,20 @@ func regexOrStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) 
 	return boolOrOpV2(e, bind, chunk, ref, truthyString, truthyString)
 }
 
-func opStringAndArray(left interface{}, right interface{}) bool {
-	return (left.(float64) != 0) && (len(right.([]interface{})) != 0)
+func opStringAndArray(left any, right any) bool {
+	return (left.(float64) != 0) && (len(right.([]any)) != 0)
 }
 
-func opArrayAndString(left interface{}, right interface{}) bool {
-	return (right.(float64) != 0) && (len(left.([]interface{})) != 0)
+func opArrayAndString(left any, right any) bool {
+	return (right.(float64) != 0) && (len(left.([]any)) != 0)
 }
 
-func opStringOrArray(left interface{}, right interface{}) bool {
-	return (left.(float64) != 0) || (len(right.([]interface{})) != 0)
+func opStringOrArray(left any, right any) bool {
+	return (left.(float64) != 0) || (len(right.([]any)) != 0)
 }
 
-func opArrayOrString(left interface{}, right interface{}) bool {
-	return (right.(float64) != 0) || (len(left.([]interface{})) != 0)
+func opArrayOrString(left any, right any) bool {
+	return (right.(float64) != 0) || (len(left.([]any)) != 0)
 }
 
 func stringAndArrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
@@ -1936,20 +1936,20 @@ func arrayOrStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) 
 	return boolOpV2(e, bind, chunk, ref, opArrayOrString)
 }
 
-func opStringAndMap(left interface{}, right interface{}) bool {
-	return (left.(float64) != 0) && (len(right.(map[string]interface{})) != 0)
+func opStringAndMap(left any, right any) bool {
+	return (left.(float64) != 0) && (len(right.(map[string]any)) != 0)
 }
 
-func opMapAndString(left interface{}, right interface{}) bool {
-	return (right.(float64) != 0) && (len(left.(map[string]interface{})) != 0)
+func opMapAndString(left any, right any) bool {
+	return (right.(float64) != 0) && (len(left.(map[string]any)) != 0)
 }
 
-func opStringOrMap(left interface{}, right interface{}) bool {
-	return (left.(float64) != 0) || (len(right.(map[string]interface{})) != 0)
+func opStringOrMap(left any, right any) bool {
+	return (left.(float64) != 0) || (len(right.(map[string]any)) != 0)
 }
 
-func opMapOrString(left interface{}, right interface{}) bool {
-	return (right.(float64) != 0) || (len(left.(map[string]interface{})) != 0)
+func opMapOrString(left any, right any) bool {
+	return (right.(float64) != 0) || (len(left.(map[string]any)) != 0)
 }
 
 func stringAndMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
@@ -1971,7 +1971,7 @@ func mapOrStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 // string + T
 
 func stringPlusStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Time, func(left any, right any) *RawData {
 		l := left.(string)
 		r := right.(string)
 
@@ -2018,11 +2018,11 @@ func mapOrRegexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 // time &&/|| T
 // note: time is always truthy
 
-func opBoolAndTime(left interface{}, right interface{}) bool {
+func opBoolAndTime(left any, right any) bool {
 	return left.(bool)
 }
 
-func opTimeAndBool(left interface{}, right interface{}) bool {
+func opTimeAndBool(left any, right any) bool {
 	return right.(bool)
 }
 
@@ -2042,11 +2042,11 @@ func timeOrBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 	return BoolTrue, 0, nil
 }
 
-func opIntAndTime(left interface{}, right interface{}) bool {
+func opIntAndTime(left any, right any) bool {
 	return left.(int64) != 0
 }
 
-func opTimeAndInt(left interface{}, right interface{}) bool {
+func opTimeAndInt(left any, right any) bool {
 	return right.(int64) != 0
 }
 
@@ -2066,11 +2066,11 @@ func timeOrIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Ra
 	return BoolTrue, 0, nil
 }
 
-func opFloatAndTime(left interface{}, right interface{}) bool {
+func opFloatAndTime(left any, right any) bool {
 	return left.(float64) != 0
 }
 
-func opTimeAndFloat(left interface{}, right interface{}) bool {
+func opTimeAndFloat(left any, right any) bool {
 	return right.(float64) != 0
 }
 
@@ -2090,11 +2090,11 @@ func timeOrFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 	return BoolTrue, 0, nil
 }
 
-func opStringAndTime(left interface{}, right interface{}) bool {
+func opStringAndTime(left any, right any) bool {
 	return left.(string) != ""
 }
 
-func opTimeAndString(left interface{}, right interface{}) bool {
+func opTimeAndString(left any, right any) bool {
 	return right.(string) != ""
 }
 
@@ -2114,11 +2114,11 @@ func timeOrStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 	return BoolTrue, 0, nil
 }
 
-func opRegexAndTime(left interface{}, right interface{}) bool {
+func opRegexAndTime(left any, right any) bool {
 	return left.(string) != ""
 }
 
-func opTimeAndRegex(left interface{}, right interface{}) bool {
+func opTimeAndRegex(left any, right any) bool {
 	return right.(string) != ""
 }
 
@@ -2146,12 +2146,12 @@ func timeOrTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 	return BoolTrue, 0, nil
 }
 
-func opTimeAndArray(left interface{}, right interface{}) bool {
-	return len(right.([]interface{})) != 0
+func opTimeAndArray(left any, right any) bool {
+	return len(right.([]any)) != 0
 }
 
-func opArrayAndTime(left interface{}, right interface{}) bool {
-	return len(left.([]interface{})) != 0
+func opArrayAndTime(left any, right any) bool {
+	return len(left.([]any)) != 0
 }
 
 func timeAndArrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
@@ -2170,12 +2170,12 @@ func arrayOrTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 	return BoolTrue, 0, nil
 }
 
-func opTimeAndMap(left interface{}, right interface{}) bool {
-	return len(right.(map[string]interface{})) != 0
+func opTimeAndMap(left any, right any) bool {
+	return len(right.(map[string]any)) != 0
 }
 
-func opMapAndTime(left interface{}, right interface{}) bool {
-	return len(left.(map[string]interface{})) != 0
+func opMapAndTime(left any, right any) bool {
+	return len(left.(map[string]any)) != 0
 }
 
 func timeAndMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
@@ -2337,7 +2337,7 @@ func stringInArray(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 		return BoolFalse, 0, nil
 	}
 
-	arr := arg.Value.([]interface{})
+	arr := arg.Value.([]any)
 	for i := range arr {
 		v, ok := arr[i].(string)
 		if !ok {
@@ -2366,7 +2366,7 @@ func stringNotInArray(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 		return BoolTrue, 0, nil
 	}
 
-	arr := arg.Value.([]interface{})
+	arr := arg.Value.([]any)
 	for i := range arr {
 		v, ok := arr[i].(string)
 		if !ok {
@@ -2382,7 +2382,7 @@ func stringNotInArray(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 
 func stringFindV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
-		return ArrayData([]interface{}{}, types.String), 0, nil
+		return ArrayData([]any{}, types.String), 0, nil
 	}
 
 	argRef := chunk.Function.Args[0]
@@ -2392,7 +2392,7 @@ func stringFindV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 	}
 
 	if arg.Value == nil {
-		return ArrayData([]interface{}{}, types.String), 0, nil
+		return ArrayData([]any{}, types.String), 0, nil
 	}
 
 	reContent := arg.Value.(string)
@@ -2402,7 +2402,7 @@ func stringFindV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 	}
 
 	list := re.FindAllString(bind.Value.(string), -1)
-	res := make([]interface{}, len(list))
+	res := make([]any, len(list))
 	for i := range list {
 		res[i] = list[i]
 	}
@@ -2471,7 +2471,7 @@ func stringLinesV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 
 	s := bind.Value.(string)
 	lines := strings.Split(s, "\n")
-	res := make([]interface{}, len(lines))
+	res := make([]any, len(lines))
 	for i := range lines {
 		res[i] = lines[i]
 	}
@@ -2499,7 +2499,7 @@ func stringSplitV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 	}
 
 	splits := strings.Split(bind.Value.(string), arg.Value.(string))
-	res := make([]interface{}, len(splits))
+	res := make([]any, len(splits))
 	for i := range splits {
 		res[i] = splits[i]
 	}
@@ -2693,7 +2693,7 @@ func timeInRange(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Ra
 // stringslice methods
 
 func stringsliceEqString(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Int, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Int, func(left any, right any) *RawData {
 		l := left.(string)
 		r := right.(string)
 		idx := strings.Index(l, r)
@@ -2705,7 +2705,7 @@ func stringsliceEqString(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint
 }
 
 func stringsliceEqDict(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Int, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Int, func(left any, right any) *RawData {
 		l := left.(string)
 		ok, err := opStringContainsDict(l, right)
 		if err != nil {
@@ -2719,9 +2719,9 @@ func stringsliceEqDict(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64
 }
 
 func stringsliceEqArrayString(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return dataOpV2(e, bind, chunk, ref, types.Int, func(left interface{}, right interface{}) *RawData {
+	return dataOpV2(e, bind, chunk, ref, types.Int, func(left any, right any) *RawData {
 		l := left.(string)
-		arr := right.([]interface{})
+		arr := right.([]any)
 		for i := range arr {
 			r := arr[i].(string)
 			idx := strings.Index(l, r)

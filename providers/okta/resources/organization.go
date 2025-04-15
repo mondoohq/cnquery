@@ -6,12 +6,12 @@ package resources
 import (
 	"context"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/okta/connection"
-	"go.mondoo.com/cnquery/v11/providers/okta/resources/sdk"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/okta/connection"
+	"go.mondoo.com/cnquery/v12/providers/okta/resources/sdk"
+	"go.mondoo.com/cnquery/v12/types"
 	"go.mondoo.com/ranger-rpc"
 )
 
@@ -116,7 +116,7 @@ func (o *mqlOktaOrganization) technicalContact() (*mqlOktaUser, error) {
 	return newMqlOktaUser(o.MqlRuntime, usr)
 }
 
-func (o *mqlOktaOrganization) securityNotificationEmails() (interface{}, error) {
+func (o *mqlOktaOrganization) securityNotificationEmails() (any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
 	client := conn.Client()
 
@@ -149,7 +149,7 @@ func (o *mqlOktaOrganization) threatInsightSettings() (*mqlOktaThreatsConfigurat
 		return nil, err
 	}
 
-	excludesZones := []interface{}{}
+	excludesZones := []any{}
 	for i := range config.ExcludeZones {
 		zone, _, err := client.NetworkZone.GetNetworkZone(ctx, config.ExcludeZones[i])
 		if err != nil {

@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v11/utils/urlx"
+	"go.mondoo.com/cnquery/v12/utils/urlx"
 )
 
 func TestDetectNameFromFile_Directory(t *testing.T) {

@@ -157,7 +157,7 @@ const file_etl_proto_rawDesc = "" +
 	"\x06source\x18\a \x01(\v2\x16.cnquery.etl.v1.SourceR\x06source\".\n" +
 	"\x06Source\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x10\n" +
-	"\x03url\x18\x02 \x01(\tR\x03urlB9Z7go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream/etlb\x06proto3"
+	"\x03url\x18\x02 \x01(\tR\x03urlB9Z7go.mondoo.com/cnquery/v12/providers-sdk/v1/upstream/etlb\x06proto3"
 
 var (
 	file_etl_proto_rawDescOnce sync.Once

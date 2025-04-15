@@ -26,7 +26,7 @@ func TestResource_Secpol(t *testing.T) {
 		res := testWindowsQuery(t, "secpol.privilegerights['SeNetworkLogonRight']")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, []interface{}{
+		assert.Equal(t, []any{
 			"S-1-1-0",
 			"S-1-5-32-544",
 			"S-1-5-32-545",

@@ -130,7 +130,7 @@ func (s *CycloneDX) ApplyOptions(opts ...renderOption) {
 	}
 }
 
-func (ccx *CycloneDX) Convert(bom *Sbom) (interface{}, error) {
+func (ccx *CycloneDX) Convert(bom *Sbom) (any, error) {
 	return ccx.convertToCycloneDx(bom)
 }
 

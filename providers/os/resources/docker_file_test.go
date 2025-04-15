@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/utils/syncx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/utils/syncx"
 )
 
 func TestParseDockerfile(t *testing.T) {
@@ -16,8 +16,8 @@ func TestParseDockerfile(t *testing.T) {
 		purpose           string
 		subjectDockerFile string
 
-		expectedLabels          map[string]interface{}
-		expectedEnv             map[string]interface{}
+		expectedLabels          map[string]any
+		expectedEnv             map[string]any
 		expectedFromImage       string
 		expectedFromTag         string
 		expectedUser            plugin.TValue[*mqlDockerFileUser]
@@ -34,8 +34,8 @@ func TestParseDockerfile(t *testing.T) {
 FROM alpine
 CMD ["/bin/sh", "-c", "echo 'Hola'"]
 `,
-			expectedLabels:    map[string]interface{}{},
-			expectedEnv:       map[string]interface{}{},
+			expectedLabels:    map[string]any{},
+			expectedEnv:       map[string]any{},
 			expectedFromImage: "alpine",
 			expectedCmd: plugin.TValue[*mqlDockerFileRun]{
 				Data: &mqlDockerFileRun{
@@ -49,8 +49,8 @@ CMD ["/bin/sh", "-c", "echo 'Hola'"]
 FROM debian:stable
 ENTRYPOINT ["/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
 `,
-			expectedLabels:    map[string]interface{}{},
-			expectedEnv:       map[string]interface{}{},
+			expectedLabels:    map[string]any{},
+			expectedEnv:       map[string]any{},
 			expectedFromImage: "debian",
 			expectedFromTag:   "stable",
 			expectedEntrypoint: plugin.TValue[*mqlDockerFileRun]{
@@ -75,11 +75,11 @@ EXPOSE 8080
 COPY /foo /bar
 ADD /foo-add /bar-add
 `,
-			expectedLabels: map[string]interface{}{
+			expectedLabels: map[string]any{
 				"a": "b",
 				"c": "d",
 			},
-			expectedEnv: map[string]interface{}{
+			expectedEnv: map[string]any{
 				"foo": "bar",
 			},
 			expectedFromImage: "alpine",
@@ -102,8 +102,8 @@ ADD /foo-add /bar-add
 			},
 			expectedCopyStruct: []plugin.TValue[*mqlDockerFileCopy]{
 				{Data: &mqlDockerFileCopy{
-					Src: plugin.TValue[[]interface{}]{
-						Data: []interface{}{"/foo"}},
+					Src: plugin.TValue[[]any]{
+						Data: []any{"/foo"}},
 					Dst: plugin.TValue[string]{
 						Data: "/bar"},
 				}},
@@ -116,8 +116,8 @@ ADD /foo-add /bar-add
 			},
 			expectedAddStruct: []plugin.TValue[*mqlDockerFileAdd]{
 				{Data: &mqlDockerFileAdd{
-					Src: plugin.TValue[[]interface{}]{
-						Data: []interface{}{"/foo-add"}},
+					Src: plugin.TValue[[]any]{
+						Data: []any{"/foo-add"}},
 					Dst: plugin.TValue[string]{
 						Data: "/bar-add"},
 				}},

@@ -20,14 +20,14 @@ func CountLeadingSpace(line string) int {
 	return i
 }
 
-func ParseConfig(in io.Reader) map[string]interface{} {
-	stack := []map[string]interface{}{}
+func ParseConfig(in io.Reader) map[string]any {
+	stack := []map[string]any{}
 	keyStack := []string{}
 
 	scanner := bufio.NewScanner(in)
 
 	// add root to stack
-	stack = append(stack, map[string]interface{}{})
+	stack = append(stack, map[string]any{})
 	keyStack = append(keyStack, "root")
 
 	lastDepth := 0
@@ -48,7 +48,7 @@ func ParseConfig(in io.Reader) map[string]interface{} {
 
 		if level > lastDepth {
 			// add level to stack
-			entry := map[string]interface{}{}
+			entry := map[string]any{}
 			stack = append(stack, entry)
 			keyStack = append(keyStack, lastKey)
 		}

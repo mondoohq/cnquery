@@ -13,14 +13,14 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/fsutil"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/languages"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/languages/javascript/packagejson"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/languages/javascript/packagelockjson"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/fsutil"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/languages"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/languages/javascript/packagejson"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/languages/javascript/packagelockjson"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 var defaultNpmPaths = []string{
@@ -239,16 +239,16 @@ func (r *mqlNpmPackages) gatherData() error {
 	if err != nil {
 		return err
 	}
-	r.List = plugin.TValue[[]interface{}]{Data: transitiveResources, State: plugin.StateIsSet}
+	r.List = plugin.TValue[[]any]{Data: transitiveResources, State: plugin.StateIsSet}
 
 	directResources, err := newNpmPackageList(r.MqlRuntime, directDependencies)
 	if err != nil {
 		return err
 	}
-	r.DirectDependencies = plugin.TValue[[]interface{}]{Data: directResources, State: plugin.StateIsSet}
+	r.DirectDependencies = plugin.TValue[[]any]{Data: directResources, State: plugin.StateIsSet}
 
 	// create files for each path
-	mqlFiles := []interface{}{}
+	mqlFiles := []any{}
 	for i := range filePaths {
 		path := filePaths[i]
 		lf, err := CreateResource(r.MqlRuntime, "pkgFileInfo", map[string]*llx.RawData{
@@ -259,7 +259,7 @@ func (r *mqlNpmPackages) gatherData() error {
 		}
 		mqlFiles = append(mqlFiles, lf)
 	}
-	r.Files = plugin.TValue[[]interface{}]{Data: mqlFiles, State: plugin.StateIsSet}
+	r.Files = plugin.TValue[[]any]{Data: mqlFiles, State: plugin.StateIsSet}
 
 	return nil
 }
@@ -268,21 +268,21 @@ func (r *mqlNpmPackages) root() (*mqlNpmPackage, error) {
 	return nil, r.gatherData()
 }
 
-func (r *mqlNpmPackages) directDependencies() ([]interface{}, error) {
+func (r *mqlNpmPackages) directDependencies() ([]any, error) {
 	return nil, r.gatherData()
 }
 
-func (r *mqlNpmPackages) list() ([]interface{}, error) {
+func (r *mqlNpmPackages) list() ([]any, error) {
 	return nil, r.gatherData()
 }
 
-func (r *mqlNpmPackages) files() ([]interface{}, error) {
+func (r *mqlNpmPackages) files() ([]any, error) {
 	return nil, r.gatherData()
 }
 
 // newNpmPackageList creates a list of npm package resources
-func newNpmPackageList(runtime *plugin.Runtime, packages []*languages.Package) ([]interface{}, error) {
-	resources := []interface{}{}
+func newNpmPackageList(runtime *plugin.Runtime, packages []*languages.Package) ([]any, error) {
+	resources := []any{}
 	for i := range packages {
 		pkg, err := newNpmPackage(runtime, packages[i])
 		if err != nil {
@@ -296,7 +296,7 @@ func newNpmPackageList(runtime *plugin.Runtime, packages []*languages.Package) (
 // newNpmPackage creates a new npm package resource
 func newNpmPackage(runtime *plugin.Runtime, pkg *languages.Package) (*mqlNpmPackage, error) {
 	// handle cpes
-	cpes := []interface{}{}
+	cpes := []any{}
 	for i := range pkg.Cpes {
 		cpe, err := runtime.CreateSharedResource("cpe", map[string]*llx.RawData{
 			"uri": llx.StringData(pkg.Cpes[i]),
@@ -308,7 +308,7 @@ func newNpmPackage(runtime *plugin.Runtime, pkg *languages.Package) (*mqlNpmPack
 	}
 
 	// create files for each path
-	mqlFiles := []interface{}{}
+	mqlFiles := []any{}
 	for i := range pkg.EvidenceList {
 		evidence := pkg.EvidenceList[i]
 		lf, err := CreateResource(runtime, "pkgFileInfo", map[string]*llx.RawData{
@@ -356,11 +356,11 @@ func (r *mqlNpmPackage) purl() (string, error) {
 	return "", r.populateData()
 }
 
-func (r *mqlNpmPackage) cpes() ([]interface{}, error) {
+func (r *mqlNpmPackage) cpes() ([]any, error) {
 	return nil, r.populateData()
 }
 
-func (r *mqlNpmPackage) files() ([]interface{}, error) {
+func (r *mqlNpmPackage) files() ([]any, error) {
 	return nil, errors.New("not implemented")
 }
 
@@ -370,7 +370,7 @@ func (r *mqlNpmPackage) populateData() error {
 	r.Name = plugin.TValue[string]{State: plugin.StateIsSet | plugin.StateIsNull}
 	r.Version = plugin.TValue[string]{State: plugin.StateIsSet | plugin.StateIsNull}
 	r.Purl = plugin.TValue[string]{State: plugin.StateIsSet | plugin.StateIsNull}
-	r.Cpes = plugin.TValue[[]interface{}]{State: plugin.StateIsSet | plugin.StateIsNull}
-	r.Files = plugin.TValue[[]interface{}]{State: plugin.StateIsSet | plugin.StateIsNull}
+	r.Cpes = plugin.TValue[[]any]{State: plugin.StateIsSet | plugin.StateIsNull}
+	r.Files = plugin.TValue[[]any]{State: plugin.StateIsSet | plugin.StateIsNull}
 	return nil
 }

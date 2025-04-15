@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/testutils"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/testutils"
 )
 
 func TestResource_K8sKubelet(t *testing.T) {
@@ -127,8 +127,8 @@ func TestResource_K8sKubeletAKS(t *testing.T) {
 		res := x.TestQuery(t, "kubelet.configuration[\"tlsCipherSuites\"]")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, 8, len(res[0].Data.Value.([]interface{})))
-		assert.Contains(t, res[0].Data.Value.([]interface{}), "TLS_RSA_WITH_AES_128_GCM_SHA256")
+		assert.Equal(t, 8, len(res[0].Data.Value.([]any)))
+		assert.Contains(t, res[0].Data.Value.([]any), "TLS_RSA_WITH_AES_128_GCM_SHA256")
 	})
 
 	t.Run("kubelet flag eviction-hard", func(t *testing.T) {

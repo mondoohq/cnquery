@@ -7,9 +7,9 @@ import (
 	"errors"
 	"strings"
 
-	"go.mondoo.com/cnquery/v11/checksums"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/v12/checksums"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
 )
 
 const defaultRsyslogConf = "/etc/rsyslog.conf"
@@ -33,7 +33,7 @@ func (s *mqlRsyslogConf) path() (string, error) {
 	return defaultRsyslogConf, nil
 }
 
-func (s *mqlRsyslogConf) files(path string) ([]interface{}, error) {
+func (s *mqlRsyslogConf) files(path string) ([]any, error) {
 	if !strings.HasSuffix(path, ".conf") {
 		return nil, errors.New("failed to initialize, path must end in `.conf` so we can find files in `.d` directory")
 	}
@@ -59,10 +59,10 @@ func (s *mqlRsyslogConf) files(path string) ([]interface{}, error) {
 		return nil, list.Error
 	}
 
-	return append([]interface{}{f.(*mqlFile)}, list.Data...), nil
+	return append([]any{f.(*mqlFile)}, list.Data...), nil
 }
 
-func (s *mqlRsyslogConf) content(files []interface{}) (string, error) {
+func (s *mqlRsyslogConf) content(files []any) (string, error) {
 	var res strings.Builder
 
 	// TODO: this can be heavily improved once we do it right, since this is constantly
@@ -83,10 +83,10 @@ func (s *mqlRsyslogConf) content(files []interface{}) (string, error) {
 	return res.String(), nil
 }
 
-func (s *mqlRsyslogConf) settings(content string) ([]interface{}, error) {
+func (s *mqlRsyslogConf) settings(content string) ([]any, error) {
 	lines := strings.Split(content, "\n")
 
-	settings := []interface{}{}
+	settings := []any{}
 	var line string
 	for i := range lines {
 		line = lines[i]

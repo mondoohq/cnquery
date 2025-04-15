@@ -10,8 +10,8 @@
 package explorer
 
 import (
-	llx "go.mondoo.com/cnquery/v11/llx"
-	inventory "go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	llx "go.mondoo.com/cnquery/v12/llx"
+	inventory "go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	anypb "google.golang.org/protobuf/types/known/anypb"
@@ -3407,7 +3407,7 @@ const file_cnquery_explorer_proto_rawDesc = "" +
 	"\aResolve\x12\x1c.cnquery.explorer.ResolveReq\x1a\x1e.cnquery.explorer.ResolvedPack\"\x00\x12L\n" +
 	"\fStoreResults\x12!.cnquery.explorer.StoreResultsReq\x1a\x17.cnquery.explorer.Empty\"\x00\x12L\n" +
 	"\tGetReport\x12#.cnquery.explorer.EntityDataRequest\x1a\x18.cnquery.explorer.Report\"\x00\x12f\n" +
-	"\x11SynchronizeAssets\x12&.cnquery.explorer.SynchronizeAssetsReq\x1a'.cnquery.explorer.SynchronizeAssetsResp\"\x00B$Z\"go.mondoo.com/cnquery/v11/explorerb\x06proto3"
+	"\x11SynchronizeAssets\x12&.cnquery.explorer.SynchronizeAssetsReq\x1a'.cnquery.explorer.SynchronizeAssetsResp\"\x00B$Z\"go.mondoo.com/cnquery/v12/explorerb\x06proto3"
 
 var (
 	file_cnquery_explorer_proto_rawDescOnce sync.Once

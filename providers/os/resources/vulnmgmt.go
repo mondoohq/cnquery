@@ -9,11 +9,11 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/resources"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream/gql"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/upstream/gql"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
 	mondoogql "go.mondoo.com/mondoo-go"
 )
 
@@ -67,21 +67,21 @@ func (v *mqlVulnmgmt) lastAssessment() (*time.Time, error) {
 	return lastUpdateTime, nil
 }
 
-func (v *mqlVulnmgmt) cves() ([]interface{}, error) {
+func (v *mqlVulnmgmt) cves() ([]any, error) {
 	// see command resource for reference
 	// we ignore the return value because everything is set in populateData
 	// `plugin.StateIsSet` is used to indicate that the data is available
 	return nil, v.populateData()
 }
 
-func (v *mqlVulnmgmt) advisories() ([]interface{}, error) {
+func (v *mqlVulnmgmt) advisories() ([]any, error) {
 	// see command resource for reference
 	// we ignore the return value because everything is set in populateData
 	// `plugin.StateIsSet` is used to indicate that the data is available
 	return nil, v.populateData()
 }
 
-func (v *mqlVulnmgmt) packages() ([]interface{}, error) {
+func (v *mqlVulnmgmt) packages() ([]any, error) {
 	// see command resource for reference
 	// we ignore the return value because everything is set in populateData
 	// `plugin.StateIsSet` is used to indicate that the data is available
@@ -101,7 +101,7 @@ func (v *mqlVulnmgmt) populateData() error {
 		return err
 	}
 
-	mqlVulAdvisories := make([]interface{}, len(vulnReport.Advisories))
+	mqlVulAdvisories := make([]any, len(vulnReport.Advisories))
 	for i, a := range vulnReport.Advisories {
 		var parsedPublished *time.Time
 		var parsedModified *time.Time
@@ -141,7 +141,7 @@ func (v *mqlVulnmgmt) populateData() error {
 		mqlVulAdvisories[i] = mqlVulnAdvisory
 	}
 
-	mqlVulnCves := make([]interface{}, len(vulnReport.Cves))
+	mqlVulnCves := make([]any, len(vulnReport.Cves))
 	for i, c := range vulnReport.Cves {
 		var parsedPublished *time.Time
 		var parsedModified *time.Time
@@ -181,7 +181,7 @@ func (v *mqlVulnmgmt) populateData() error {
 		mqlVulnCves[i] = mqlVulnCve
 	}
 
-	mqlVulnPackages := make([]interface{}, len(vulnReport.Packages))
+	mqlVulnPackages := make([]any, len(vulnReport.Packages))
 	for i, p := range vulnReport.Packages {
 		mqlVulnPackage, err := CreateResource(v.MqlRuntime, "vuln.package", map[string]*llx.RawData{
 			"name":      llx.StringData(p.Name),
@@ -206,9 +206,9 @@ func (v *mqlVulnmgmt) populateData() error {
 	}
 	statsCvssScore := res.(*mqlAuditCvss)
 
-	v.Advisories = plugin.TValue[[]interface{}]{Data: mqlVulAdvisories, State: plugin.StateIsSet}
-	v.Cves = plugin.TValue[[]interface{}]{Data: mqlVulnCves, State: plugin.StateIsSet}
-	v.Packages = plugin.TValue[[]interface{}]{Data: mqlVulnPackages, State: plugin.StateIsSet}
+	v.Advisories = plugin.TValue[[]any]{Data: mqlVulAdvisories, State: plugin.StateIsSet}
+	v.Cves = plugin.TValue[[]any]{Data: mqlVulnCves, State: plugin.StateIsSet}
+	v.Packages = plugin.TValue[[]any]{Data: mqlVulnPackages, State: plugin.StateIsSet}
 	v.Stats = plugin.TValue[*mqlAuditCvss]{Data: statsCvssScore, State: plugin.StateIsSet}
 
 	return nil

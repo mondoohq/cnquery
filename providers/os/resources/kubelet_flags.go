@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 )
 
 // mergeFlagsIntoConfig adds flags to the kubelet config
@@ -17,7 +17,7 @@ import (
 // That also means, that some flags do not have a matching parameter in the kubelet config file and are added as is
 // The list of flags is taken from
 // /var/lib/minikube/binaries/v1.24.3/kubelet --help | grep -v DEPRECATED | grep -v -E "(vmodule|version|help|v level)"
-func mergeFlagsIntoConfig(kubeletConfig map[string]interface{}, flags map[string]interface{}) error {
+func mergeFlagsIntoConfig(kubeletConfig map[string]any, flags map[string]any) error {
 	cliOnlyFlags := []string{
 		"azure-container-registry-config",
 		"bootstrap-kubeconfig",
@@ -70,7 +70,7 @@ func mergeFlagsIntoConfig(kubeletConfig map[string]interface{}, flags map[string
 // This is a separate function in hope we can get rid of it in the future
 // The list of flags is taken from
 // https://github.com/kubernetes/kubernetes/blob/release-1.25/cmd/kubelet/app/options/options.go
-func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]interface{}, flags map[string]interface{}) error {
+func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]any, flags map[string]any) error {
 	evictionRegex := regexp.MustCompile(`^(.+)[<>=]+([\d]+[A-Za-z%]*)$`)
 
 	if _, ok := flags["enable-server"]; ok {
@@ -116,79 +116,79 @@ func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]interface{}, flags 
 		kubeletConfig["readOnlyPort"] = flags["read-only-port"]
 	}
 	if _, ok := flags["anonymous-auth"]; ok {
-		auth := map[string]interface{}{}
+		auth := map[string]any{}
 		if _, ok := kubeletConfig["authentication"]; ok {
-			auth = kubeletConfig["authentication"].(map[string]interface{})
+			auth = kubeletConfig["authentication"].(map[string]any)
 		}
-		anon := map[string]interface{}{}
+		anon := map[string]any{}
 		if _, ok := auth["anonymous"]; ok {
-			anon = auth["anonymous"].(map[string]interface{})
+			anon = auth["anonymous"].(map[string]any)
 		}
 		anon["enabled"] = flags["anonymous-auth"]
 	}
 	if _, ok := flags["authentication-token-webhook"]; ok {
-		auth := map[string]interface{}{}
+		auth := map[string]any{}
 		if _, ok := kubeletConfig["authentication"]; ok {
-			auth = kubeletConfig["authentication"].(map[string]interface{})
+			auth = kubeletConfig["authentication"].(map[string]any)
 		}
-		webhook := map[string]interface{}{}
+		webhook := map[string]any{}
 		if _, ok := auth["webhook"]; ok {
-			webhook = auth["webhook"].(map[string]interface{})
+			webhook = auth["webhook"].(map[string]any)
 		}
 		webhook["enabled"] = flags["authentication-token-webhook"]
 	}
 	if _, ok := flags["authentication-token-webhook-cache-ttl"]; ok {
-		auth := map[string]interface{}{}
+		auth := map[string]any{}
 		if _, ok := kubeletConfig["authentication"]; ok {
-			auth = kubeletConfig["authentication"].(map[string]interface{})
+			auth = kubeletConfig["authentication"].(map[string]any)
 		}
-		webhook := map[string]interface{}{}
+		webhook := map[string]any{}
 		if _, ok := auth["webhook"]; ok {
-			webhook = auth["webhook"].(map[string]interface{})
+			webhook = auth["webhook"].(map[string]any)
 		}
 		webhook["cacheTTL"] = flags["authentication-token-webhook-cache-ttl"].(string)
 		kubeletConfig["authentication"] = auth
 	}
 	if _, ok := flags["client-ca-file"]; ok {
-		auth := map[string]interface{}{}
+		auth := map[string]any{}
 		if _, ok := kubeletConfig["authentication"]; ok {
-			auth = kubeletConfig["authentication"].(map[string]interface{})
+			auth = kubeletConfig["authentication"].(map[string]any)
 		}
-		x509 := map[string]interface{}{}
+		x509 := map[string]any{}
 		if _, ok := auth["x509"]; ok {
-			x509 = auth["x509"].(map[string]interface{})
+			x509 = auth["x509"].(map[string]any)
 		}
 		x509["clientCAFile"] = flags["client-ca-file"]
 		kubeletConfig["authentication"] = auth
 	}
 	if _, ok := flags["authorization-mode"]; ok {
-		authz := map[string]interface{}{}
+		authz := map[string]any{}
 		if _, ok := kubeletConfig["authorization"]; ok {
-			authz = kubeletConfig["authorization"].(map[string]interface{})
+			authz = kubeletConfig["authorization"].(map[string]any)
 		}
 		authz["mode"] = flags["authorization-mode"]
 		kubeletConfig["authorization"] = authz
 	}
 	if _, ok := flags["authorization-webhook-cache-authorized-ttl"]; ok {
-		authz := map[string]interface{}{}
+		authz := map[string]any{}
 		if _, ok := kubeletConfig["authorization"]; ok {
-			authz = kubeletConfig["authorization"].(map[string]interface{})
+			authz = kubeletConfig["authorization"].(map[string]any)
 		}
-		webhook := map[string]interface{}{}
+		webhook := map[string]any{}
 		if _, ok := authz["webhook"]; ok {
-			webhook = authz["webhook"].(map[string]interface{})
+			webhook = authz["webhook"].(map[string]any)
 		}
 		webhook["cacheAuthorizedTTL"] = flags["authorization-webhook-cache-authorized-ttl"]
 		kubeletConfig["authorization"] = authz
 	}
 	if _, ok := flags["authorization-webhook-cache-unauthorized-ttl"]; ok {
-		authz := map[string]interface{}{}
+		authz := map[string]any{}
 		if _, ok := kubeletConfig["authorization"]; ok {
-			authz = kubeletConfig["authorization"].(map[string]interface{})
+			authz = kubeletConfig["authorization"].(map[string]any)
 		}
-		webhook := map[string]interface{}{}
+		webhook := map[string]any{}
 		if _, ok := authz["webhook"]; ok {
-			webhook = authz["webhook"].(map[string]interface{})
+			webhook = authz["webhook"].(map[string]any)
 		}
 		webhook["cacheUnauthorizedTTL"] = flags["authorization-webhook-cache-unauthorized-ttl"]
 		kubeletConfig["authorization"] = authz

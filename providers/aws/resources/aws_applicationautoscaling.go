@@ -11,11 +11,11 @@ import (
 	aatypes "github.com/aws/aws-sdk-go-v2/service/applicationautoscaling/types"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (a *mqlAwsApplicationAutoscaling) id() (string, error) {
@@ -26,14 +26,14 @@ func (a *mqlAwsApplicationAutoscalingTarget) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func (a *mqlAwsApplicationAutoscaling) scalableTargets() ([]interface{}, error) {
+func (a *mqlAwsApplicationAutoscaling) scalableTargets() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	namespace := a.Namespace.Data
 	if namespace == "" {
 		return nil, errors.New("namespace required for application autoscaling query. please specify one of [comprehend, rds, sagemaker, appstream, elasticmapreduce, dynamodb, lambda, ecs, cassandra, ec2, neptune, kafka, custom-resource, elasticache]")
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getTargets(conn, aatypes.ServiceNamespace(namespace)), 5)
 	poolOfJobs.Run()
 
@@ -43,7 +43,7 @@ func (a *mqlAwsApplicationAutoscaling) scalableTargets() ([]interface{}, error) 
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
@@ -63,7 +63,7 @@ func (a *mqlAwsApplicationAutoscaling) getTargets(conn *connection.AwsConnection
 			svc := conn.ApplicationAutoscaling(region)
 			ctx := context.Background()
 
-			res := []interface{}{}
+			res := []any{}
 			params := &applicationautoscaling.DescribeScalableTargetsInput{ServiceNamespace: namespace}
 			paginator := applicationautoscaling.NewDescribeScalableTargetsPaginator(svc, params)
 			for paginator.HasMorePages() {

@@ -17,23 +17,23 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
 
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (a *mqlAwsCloudwatch) id() (string, error) {
 	return "aws.cloudwatch", nil
 }
 
-func (a *mqlAwsCloudwatch) metrics() ([]interface{}, error) {
+func (a *mqlAwsCloudwatch) metrics() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getMetrics(conn), 5)
 	poolOfJobs.Run()
 
@@ -43,7 +43,7 @@ func (a *mqlAwsCloudwatch) metrics() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 	return res, nil
 }
@@ -60,7 +60,7 @@ func (a *mqlAwsCloudwatch) getMetrics(conn *connection.AwsConnection) []*jobpool
 			svc := conn.Cloudwatch(region)
 			ctx := context.Background()
 
-			res := []interface{}{}
+			res := []any{}
 			params := &cloudwatch.ListMetricsInput{}
 			paginator := cloudwatch.NewListMetricsPaginator(svc, params)
 			for paginator.HasMorePages() {
@@ -73,7 +73,7 @@ func (a *mqlAwsCloudwatch) getMetrics(conn *connection.AwsConnection) []*jobpool
 					return nil, err
 				}
 				for _, metric := range metrics.Metrics {
-					dimensions := []interface{}{}
+					dimensions := []any{}
 					for _, d := range metric.Dimensions {
 						mqlDimension, err := CreateResource(a.MqlRuntime, "aws.cloudwatch.metricdimension",
 							map[string]*llx.RawData{
@@ -176,7 +176,7 @@ func initAwsCloudwatchMetric(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	if len(metrics.Metrics) > 1 {
 		return nil, nil, errors.New("more than one metric found for " + namespace + " " + name + " in region " + region)
 	}
-	dimensions := []interface{}{}
+	dimensions := []any{}
 
 	metric := metrics.Metrics[0]
 	for _, d := range metric.Dimensions {
@@ -199,7 +199,7 @@ func initAwsCloudwatchMetric(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	return args, nil, nil
 }
 
-func (a *mqlAwsCloudwatchMetric) dimensions() ([]interface{}, error) {
+func (a *mqlAwsCloudwatchMetric) dimensions() ([]any, error) {
 	name := a.Name.Data
 	namespace := a.Namespace.Data
 	regionVal := a.Region.Data
@@ -223,7 +223,7 @@ func (a *mqlAwsCloudwatchMetric) dimensions() ([]interface{}, error) {
 	if len(metrics.Metrics) > 1 {
 		return nil, errors.New("more than one metric found for " + namespace + " " + name + " in region " + regionVal)
 	}
-	dimensions := []interface{}{}
+	dimensions := []any{}
 
 	metric := metrics.Metrics[0]
 	for _, d := range metric.Dimensions {
@@ -295,7 +295,7 @@ func initAwsCloudwatchMetricstatistics(runtime *plugin.Runtime, args map[string]
 	if err != nil {
 		return args, nil, err
 	}
-	datapoints := []interface{}{}
+	datapoints := []any{}
 	for _, datapoint := range statsResp.Datapoints {
 		mqlDatapoint, err := CreateResource(runtime, "aws.cloudwatch.metric.datapoint",
 			map[string]*llx.RawData{
@@ -355,7 +355,7 @@ func (a *mqlAwsCloudwatchMetric) statistics() (*mqlAwsCloudwatchMetricstatistics
 	if err != nil {
 		return nil, errors.Wrap(err, "could not gather AWS CloudWatch stats")
 	}
-	datapoints := []interface{}{}
+	datapoints := []any{}
 	for _, datapoint := range statsResp.Datapoints {
 		mqlDatapoint, err := CreateResource(a.MqlRuntime, "aws.cloudwatch.metric.datapoint",
 			map[string]*llx.RawData{
@@ -401,7 +401,7 @@ func formatDatapointId(d cloudwatchtypes.Datapoint) string {
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
-func (a *mqlAwsCloudwatchMetric) alarms() ([]interface{}, error) {
+func (a *mqlAwsCloudwatchMetric) alarms() ([]any, error) {
 	metricName := a.Name.Data
 	namespace := a.Namespace.Data
 	regionVal := a.Region.Data
@@ -420,7 +420,7 @@ func (a *mqlAwsCloudwatchMetric) alarms() ([]interface{}, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "could not gather AWS CloudWatch alarms")
 	}
-	res := []interface{}{}
+	res := []any{}
 	for _, alarm := range alarmsResp.MetricAlarms {
 		mqlAlarm, err := NewResource(a.MqlRuntime, "aws.cloudwatch.metricsalarm",
 			map[string]*llx.RawData{"arn": llx.StringData(convert.ToValue(alarm.AlarmArn))})
@@ -432,10 +432,10 @@ func (a *mqlAwsCloudwatchMetric) alarms() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsCloudwatch) alarms() ([]interface{}, error) {
+func (a *mqlAwsCloudwatch) alarms() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getAlarms(conn), 5)
 	poolOfJobs.Run()
 
@@ -445,7 +445,7 @@ func (a *mqlAwsCloudwatch) alarms() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 	return res, nil
 }
@@ -462,7 +462,7 @@ func (a *mqlAwsCloudwatch) getAlarms(conn *connection.AwsConnection) []*jobpool.
 			svc := conn.Cloudwatch(region)
 			ctx := context.Background()
 
-			res := []interface{}{}
+			res := []any{}
 			params := &cloudwatch.DescribeAlarmsInput{}
 			paginator := cloudwatch.NewDescribeAlarmsPaginator(svc, params)
 			for paginator.HasMorePages() {
@@ -476,7 +476,7 @@ func (a *mqlAwsCloudwatch) getAlarms(conn *connection.AwsConnection) []*jobpool.
 				}
 
 				for _, alarm := range alarms.MetricAlarms {
-					actions := []interface{}{}
+					actions := []any{}
 					for _, action := range alarm.AlarmActions {
 						mqlAlarmAction, err := NewResource(a.MqlRuntime, "aws.sns.topic",
 							map[string]*llx.RawData{
@@ -488,7 +488,7 @@ func (a *mqlAwsCloudwatch) getAlarms(conn *connection.AwsConnection) []*jobpool.
 						}
 						actions = append(actions, mqlAlarmAction)
 					}
-					insuffActions := []interface{}{}
+					insuffActions := []any{}
 					for _, action := range alarm.InsufficientDataActions {
 						mqlInsuffAction, err := NewResource(a.MqlRuntime, "aws.sns.topic",
 							map[string]*llx.RawData{
@@ -501,7 +501,7 @@ func (a *mqlAwsCloudwatch) getAlarms(conn *connection.AwsConnection) []*jobpool.
 						insuffActions = append(insuffActions, mqlInsuffAction)
 					}
 
-					okActions := []interface{}{}
+					okActions := []any{}
 					for _, action := range alarm.OKActions {
 						mqlokAction, err := NewResource(a.MqlRuntime, "aws.sns.topic",
 							map[string]*llx.RawData{
@@ -540,10 +540,10 @@ func (a *mqlAwsCloudwatch) getAlarms(conn *connection.AwsConnection) []*jobpool.
 	return tasks
 }
 
-func (a *mqlAwsCloudwatch) logGroups() ([]interface{}, error) {
+func (a *mqlAwsCloudwatch) logGroups() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getLogGroups(conn), 5)
 	poolOfJobs.Run()
 
@@ -553,7 +553,7 @@ func (a *mqlAwsCloudwatch) logGroups() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 	return res, nil
 }
@@ -573,7 +573,7 @@ func (a *mqlAwsCloudwatch) getLogGroups(conn *connection.AwsConnection) []*jobpo
 
 			params := &cloudwatchlogs.DescribeLogGroupsInput{}
 			paginator := cloudwatchlogs.NewDescribeLogGroupsPaginator(svc, params)
-			res := []interface{}{}
+			res := []any{}
 			for paginator.HasMorePages() {
 				logGroups, err := paginator.NextPage(ctx)
 				if err != nil {
@@ -665,7 +665,7 @@ func (a *mqlAwsCloudwatchLoggroup) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func (a *mqlAwsCloudwatchLoggroup) metricsFilters() ([]interface{}, error) {
+func (a *mqlAwsCloudwatchLoggroup) metricsFilters() ([]any, error) {
 	arnValue := a.Arn.Data
 
 	// arn:aws:logs:<region>:<aws_account_number>:log-group:GROUPVAL:*
@@ -679,14 +679,14 @@ func (a *mqlAwsCloudwatchLoggroup) metricsFilters() ([]interface{}, error) {
 
 	params := &cloudwatchlogs.DescribeMetricFiltersInput{LogGroupName: &groupName}
 	paginator := cloudwatchlogs.NewDescribeMetricFiltersPaginator(svc, params)
-	metricFilters := []interface{}{}
+	metricFilters := []any{}
 	for paginator.HasMorePages() {
 		metricsResp, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not gather log metric filters")
 		}
 		for _, m := range metricsResp.MetricFilters {
-			mqlCloudwatchMetrics := []interface{}{}
+			mqlCloudwatchMetrics := []any{}
 			for _, mt := range m.MetricTransformations {
 				mqlAwsMetric, err := CreateResource(a.MqlRuntime, "aws.cloudwatch.metric",
 					map[string]*llx.RawData{

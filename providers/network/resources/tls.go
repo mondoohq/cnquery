@@ -14,14 +14,14 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/core/resources/regex"
-	"go.mondoo.com/cnquery/v11/providers/network/connection"
-	"go.mondoo.com/cnquery/v11/providers/network/resources/certificates"
-	"go.mondoo.com/cnquery/v11/providers/network/resources/tlsshake"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/core/resources/regex"
+	"go.mondoo.com/cnquery/v12/providers/network/connection"
+	"go.mondoo.com/cnquery/v12/providers/network/resources/certificates"
+	"go.mondoo.com/cnquery/v12/providers/network/resources/tlsshake"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 var reTarget = regexp.MustCompile("([^/:]+?)(:\\d+)?$")
@@ -127,8 +127,8 @@ func (s *mqlTls) id() (string, error) {
 	return "tls+" + s.Socket.Data.__id, nil
 }
 
-func parseCertificates(runtime *plugin.Runtime, domainName string, certificateList []*x509.Certificate, revocations map[string]*tlsshake.Revocation) ([]interface{}, []string, error) {
-	res := make([]interface{}, len(certificateList))
+func parseCertificates(runtime *plugin.Runtime, domainName string, certificateList []*x509.Certificate, revocations map[string]*tlsshake.Revocation) ([]any, []string, error) {
+	res := make([]any, len(certificateList))
 	errors := []string{}
 
 	verified := false
@@ -196,7 +196,7 @@ func parseCertificates(runtime *plugin.Runtime, domainName string, certificateLi
 	return res, errors, nil
 }
 
-func (s *mqlTls) params(socket *mqlSocket, domainName string) (map[string]interface{}, error) {
+func (s *mqlTls) params(socket *mqlSocket, domainName string) (map[string]any, error) {
 	enabled, err := s.TLSEnabled(socket, domainName)
 	if err != nil {
 		return nil, err
@@ -209,14 +209,14 @@ func (s *mqlTls) params(socket *mqlSocket, domainName string) (map[string]interf
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	res := map[string]interface{}{}
+	res := map[string]any{}
 	findings := s.tester.Findings
 
 	lists := map[string][]string{
 		"errors": findings.Errors,
 	}
 	for field, data := range lists {
-		v := make([]interface{}, len(data))
+		v := make([]any, len(data))
 		for i := range data {
 			v[i] = data[i]
 		}
@@ -229,7 +229,7 @@ func (s *mqlTls) params(socket *mqlSocket, domainName string) (map[string]interf
 		"extensions": findings.Extensions,
 	}
 	for field, data := range maps {
-		v := make(map[string]interface{}, len(data))
+		v := make(map[string]any, len(data))
 		for k, vv := range data {
 			v[k] = vv
 		}
@@ -239,8 +239,8 @@ func (s *mqlTls) params(socket *mqlSocket, domainName string) (map[string]interf
 	return res, nil
 }
 
-func (s *mqlTls) versions(params interface{}) ([]interface{}, error) {
-	paramsM, ok := params.(map[string]interface{})
+func (s *mqlTls) versions(params any) ([]any, error) {
+	paramsM, ok := params.(map[string]any)
 	// only happens in case of unexpected errors or null
 	if !ok {
 		s.Versions.State = plugin.StateIsSet | plugin.StateIsNull
@@ -249,11 +249,11 @@ func (s *mqlTls) versions(params interface{}) ([]interface{}, error) {
 
 	raw, ok := paramsM["versions"]
 	if !ok {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 
-	data := raw.(map[string]interface{})
-	res := []interface{}{}
+	data := raw.(map[string]any)
+	res := []any{}
 	for k, v := range data {
 		if v.(bool) {
 			res = append(res, k)
@@ -263,21 +263,21 @@ func (s *mqlTls) versions(params interface{}) ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *mqlTls) ciphers(params interface{}) ([]interface{}, error) {
-	paramsM, ok := params.(map[string]interface{})
+func (s *mqlTls) ciphers(params any) ([]any, error) {
+	paramsM, ok := params.(map[string]any)
 	// only happens in case of unexpected errors or null
 	if !ok {
 		s.Ciphers.State = plugin.StateIsSet | plugin.StateIsNull
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 
 	raw, ok := paramsM["ciphers"]
 	if !ok {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 
-	data := raw.(map[string]interface{})
-	res := []interface{}{}
+	data := raw.(map[string]any)
+	res := []any{}
 	for k, v := range data {
 		if v.(bool) {
 			res = append(res, k)
@@ -287,21 +287,21 @@ func (s *mqlTls) ciphers(params interface{}) ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *mqlTls) extensions(params interface{}) ([]interface{}, error) {
-	paramsM, ok := params.(map[string]interface{})
+func (s *mqlTls) extensions(params any) ([]any, error) {
+	paramsM, ok := params.(map[string]any)
 	// only happens in case of unexpected errors or null
 	if !ok {
 		s.Extensions.State = plugin.StateIsSet | plugin.StateIsNull
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 
 	raw, ok := paramsM["extensions"]
 	if !ok {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 
-	data := raw.(map[string]interface{})
-	res := []interface{}{}
+	data := raw.(map[string]any)
+	res := []any{}
 	for k, v := range data {
 		if v.(bool) {
 			res = append(res, k)
@@ -441,31 +441,31 @@ func (s *mqlTls) populateCertificates(socket *mqlSocket, domainName string) erro
 
 	certs, nonSniCerts, err := gatherTlsCertificates(proto, host, strconv.FormatInt(port, 10), domainName)
 	if err != nil {
-		s.Certificates = plugin.TValue[[]interface{}]{Error: err, State: plugin.StateIsSet}
-		s.NonSniCertificates = plugin.TValue[[]interface{}]{Error: err, State: plugin.StateIsSet}
+		s.Certificates = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet}
+		s.NonSniCertificates = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet}
 		return err
 	}
 
 	mqlCerts, _, err := parseCertificates(s.MqlRuntime, domainName, certs, map[string]*tlsshake.Revocation{})
 	if err != nil {
-		s.Certificates = plugin.TValue[[]interface{}]{Error: err, State: plugin.StateIsSet}
+		s.Certificates = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet}
 	} else {
-		s.Certificates = plugin.TValue[[]interface{}]{Data: mqlCerts, State: plugin.StateIsSet}
+		s.Certificates = plugin.TValue[[]any]{Data: mqlCerts, State: plugin.StateIsSet}
 	}
 
 	mqlNonSniCerts, _, err := parseCertificates(s.MqlRuntime, domainName, nonSniCerts, map[string]*tlsshake.Revocation{})
 	if err != nil {
-		s.NonSniCertificates = plugin.TValue[[]interface{}]{Error: err, State: plugin.StateIsSet}
+		s.NonSniCertificates = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet}
 	} else {
-		s.NonSniCertificates = plugin.TValue[[]interface{}]{Data: mqlNonSniCerts, State: plugin.StateIsSet}
+		s.NonSniCertificates = plugin.TValue[[]any]{Data: mqlNonSniCerts, State: plugin.StateIsSet}
 	}
 	return nil
 }
 
-func (s *mqlTls) certificates(socket *mqlSocket, domainName string) ([]interface{}, error) {
+func (s *mqlTls) certificates(socket *mqlSocket, domainName string) ([]any, error) {
 	return nil, s.populateCertificates(socket, domainName)
 }
 
-func (s *mqlTls) nonSniCertificates(socket *mqlSocket, domainName string) ([]interface{}, error) {
+func (s *mqlTls) nonSniCertificates(socket *mqlSocket, domainName string) ([]any, error) {
 	return nil, s.populateCertificates(socket, domainName)
 }

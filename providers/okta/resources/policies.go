@@ -14,11 +14,11 @@ import (
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	"github.com/okta/okta-sdk-golang/v2/okta/query"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/okta/connection"
-	"go.mondoo.com/cnquery/v11/providers/okta/resources/sdk"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/okta/connection"
+	"go.mondoo.com/cnquery/v12/providers/okta/resources/sdk"
 )
 
 // https://developer.okta.com/docs/reference/api/policy/#policy-object
@@ -38,7 +38,7 @@ func (o *mqlOktaPolicies) id() (string, error) {
 	return "okta.policies", nil
 }
 
-func listPolicies(runtime *plugin.Runtime, policyType PolicyType) ([]interface{}, error) {
+func listPolicies(runtime *plugin.Runtime, policyType PolicyType) ([]any, error) {
 	conn := runtime.Connection.(*connection.OktaConnection)
 	client := conn.Client()
 
@@ -71,7 +71,7 @@ func listPolicies(runtime *plugin.Runtime, policyType PolicyType) ([]interface{}
 		return nil, nil
 	}
 
-	list := []interface{}{}
+	list := []any{}
 	appendEntry := func(datalist ...*sdk.PolicyWrapper) error {
 		for i := range datalist {
 			r, err := newMqlOktaPolicy(runtime, datalist[i])
@@ -106,35 +106,35 @@ func listPolicies(runtime *plugin.Runtime, policyType PolicyType) ([]interface{}
 	return list, nil
 }
 
-func (o *mqlOktaPolicies) password() ([]interface{}, error) {
+func (o *mqlOktaPolicies) password() ([]any, error) {
 	return listPolicies(o.MqlRuntime, PASSWORD)
 }
 
-func (o *mqlOktaPolicies) mfaEnroll() ([]interface{}, error) {
+func (o *mqlOktaPolicies) mfaEnroll() ([]any, error) {
 	return listPolicies(o.MqlRuntime, MFA_ENROLL)
 }
 
-func (o *mqlOktaPolicies) signOn() ([]interface{}, error) {
+func (o *mqlOktaPolicies) signOn() ([]any, error) {
 	return listPolicies(o.MqlRuntime, OKTA_SIGN_ON)
 }
 
-func (o *mqlOktaPolicies) oauthAuthorizationPolicy() ([]interface{}, error) {
+func (o *mqlOktaPolicies) oauthAuthorizationPolicy() ([]any, error) {
 	return listPolicies(o.MqlRuntime, OAUTH_AUTHORIZATION_POLICY)
 }
 
-func (o *mqlOktaPolicies) idpDiscovery() ([]interface{}, error) {
+func (o *mqlOktaPolicies) idpDiscovery() ([]any, error) {
 	return listPolicies(o.MqlRuntime, IDP_DISCOVERY)
 }
 
-func (o *mqlOktaPolicies) accessPolicy() ([]interface{}, error) {
+func (o *mqlOktaPolicies) accessPolicy() ([]any, error) {
 	return listPolicies(o.MqlRuntime, ACCESS_POLICY)
 }
 
-func (o *mqlOktaPolicies) profileEnrollment() ([]interface{}, error) {
+func (o *mqlOktaPolicies) profileEnrollment() ([]any, error) {
 	return listPolicies(o.MqlRuntime, PROFILE_ENROLLMENT)
 }
 
-func newMqlOktaPolicy(runtime *plugin.Runtime, entry *sdk.PolicyWrapper) (interface{}, error) {
+func newMqlOktaPolicy(runtime *plugin.Runtime, entry *sdk.PolicyWrapper) (any, error) {
 	conditions, err := convert.JsonToDict(entry.Conditions)
 	if err != nil {
 		return nil, err
@@ -169,7 +169,7 @@ func (o *mqlOktaPolicy) id() (string, error) {
 	return "okta.policy/" + o.Id.Data, o.Id.Error
 }
 
-func (o mqlOktaPolicy) rules() ([]interface{}, error) {
+func (o mqlOktaPolicy) rules() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
 	client := conn.Client()
 
@@ -191,7 +191,7 @@ func (o mqlOktaPolicy) rules() ([]interface{}, error) {
 		return nil, nil
 	}
 
-	list := []interface{}{}
+	list := []any{}
 	appendEntry := func(datalist []*okta.PolicyRule) error {
 		for i := range datalist {
 			r, err := newMqlOktaPolicyRule(o.MqlRuntime, datalist[i])
@@ -222,12 +222,12 @@ func (o mqlOktaPolicy) rules() ([]interface{}, error) {
 	return list, nil
 }
 
-func getAccessPolicyRules(ctx context.Context, runtime *plugin.Runtime, policyId, host, token string) ([]interface{}, error) {
+func getAccessPolicyRules(ctx context.Context, runtime *plugin.Runtime, policyId, host, token string) ([]any, error) {
 	rules, err := fetchAccessPolicyRules(ctx, policyId, host, token)
 	if err != nil {
 		return nil, err
 	}
-	res := []interface{}{}
+	res := []any{}
 	for _, entry := range rules {
 		actions, err := convert.JsonToDict(entry.Actions)
 		if err != nil {
@@ -264,7 +264,7 @@ func getAccessPolicyRules(ctx context.Context, runtime *plugin.Runtime, policyId
 	return res, nil
 }
 
-func newMqlOktaPolicyRule(runtime *plugin.Runtime, entry *okta.PolicyRule) (interface{}, error) {
+func newMqlOktaPolicyRule(runtime *plugin.Runtime, entry *okta.PolicyRule) (any, error) {
 	actions, err := convert.JsonToDict(entry.Actions)
 	if err != nil {
 		return nil, err

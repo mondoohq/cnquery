@@ -8,18 +8,18 @@ import (
 	"fmt"
 
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/ms365/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (m *mqlMicrosoftConditionalAccessIpNamedLocation) id() (string, error) {
 	return m.Name.Data, nil
 }
 
-func (a *mqlMicrosoftConditionalAccessNamedLocations) ipLocations() ([]interface{}, error) {
+func (a *mqlMicrosoftConditionalAccessNamedLocations) ipLocations() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -32,7 +32,7 @@ func (a *mqlMicrosoftConditionalAccessNamedLocations) ipLocations() ([]interface
 		return nil, transformError(err)
 	}
 
-	var locationDetails []interface{}
+	var locationDetails []any
 	for _, location := range namedLocations.GetValue() {
 		if ipLocation, ok := location.(*models.IpNamedLocation); ok {
 			displayName := ipLocation.GetDisplayName()
@@ -68,7 +68,7 @@ func (m *mqlMicrosoftConditionalAccessCountryNamedLocation) id() (string, error)
 	return m.Name.Data, nil
 }
 
-func (a *mqlMicrosoftConditionalAccessNamedLocations) countryLocations() ([]interface{}, error) {
+func (a *mqlMicrosoftConditionalAccessNamedLocations) countryLocations() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -81,7 +81,7 @@ func (a *mqlMicrosoftConditionalAccessNamedLocations) countryLocations() ([]inte
 		return nil, transformError(err)
 	}
 
-	var locationDetails []interface{}
+	var locationDetails []any
 	for _, location := range namedLocations.GetValue() {
 		if countryLocation, ok := location.(*models.CountryNamedLocation); ok {
 			displayName := countryLocation.GetDisplayName()
@@ -131,7 +131,7 @@ func (m *mqlMicrosoftConditionalAccessPolicySessionControls) id() (string, error
 }
 
 // Conditional Access Policies
-func (a *mqlMicrosoftConditionalAccess) policies() ([]interface{}, error) {
+func (a *mqlMicrosoftConditionalAccess) policies() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -144,7 +144,7 @@ func (a *mqlMicrosoftConditionalAccess) policies() ([]interface{}, error) {
 		return nil, transformError(err)
 	}
 
-	var policyDetails []interface{}
+	var policyDetails []any
 	for _, policy := range policies.GetValue() {
 		id := policy.GetId()
 		displayName := policy.GetDisplayName()
@@ -162,7 +162,7 @@ func (a *mqlMicrosoftConditionalAccess) policies() ([]interface{}, error) {
 }
 
 // Helper methods for creating policy sub-resources
-func (a *mqlMicrosoftConditionalAccess) createPolicyResource(policy models.ConditionalAccessPolicyable) (interface{}, error) {
+func (a *mqlMicrosoftConditionalAccess) createPolicyResource(policy models.ConditionalAccessPolicyable) (any, error) {
 	id := policy.GetId()
 	if id == nil {
 		return nil, fmt.Errorf("policy ID cannot be nil")
@@ -525,7 +525,7 @@ func newMqlAuthenticationMethodsPolicy(runtime *plugin.Runtime, policy models.Au
 		return nil, fmt.Errorf("authentication methods policy has a nil ID")
 	}
 
-	var authMethodConfigs []interface{}
+	var authMethodConfigs []any
 	for _, config := range policy.GetAuthenticationMethodConfigurations() {
 		mqlConfig, err := newMqlAuthenticationMethodConfiguration(runtime, config)
 		if err != nil {

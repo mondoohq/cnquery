@@ -4,20 +4,20 @@
 package resources
 
 import (
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/google-workspace/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/google-workspace/connection"
 	directory "google.golang.org/api/admin/directory/v1"
 )
 
-func (g *mqlGoogleworkspace) orgUnits() ([]interface{}, error) {
+func (g *mqlGoogleworkspace) orgUnits() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GoogleWorkspaceConnection)
 	directoryService, err := directoryService(conn, directory.AdminDirectoryOrgunitReadonlyScope)
 	if err != nil {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 
 	orgUnits, err := directoryService.Orgunits.List(conn.CustomerID()).Do()
 	if err != nil {
@@ -35,7 +35,7 @@ func (g *mqlGoogleworkspace) orgUnits() ([]interface{}, error) {
 	return res, nil
 }
 
-func newMqlGoogleWorkspaceOrgUnit(runtime *plugin.Runtime, entry *directory.OrgUnit) (interface{}, error) {
+func newMqlGoogleWorkspaceOrgUnit(runtime *plugin.Runtime, entry *directory.OrgUnit) (any, error) {
 	return CreateResource(runtime, "googleworkspace.orgUnit", map[string]*llx.RawData{
 		"id":          llx.StringData(entry.OrgUnitId),
 		"name":        llx.StringData(entry.Name),

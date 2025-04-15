@@ -6,17 +6,17 @@ package resources
 import (
 	"context"
 	"encoding/json"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 	"strings"
 	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/snowflake/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/snowflake/connection"
 )
 
-func (r *mqlSnowflakeAccount) networkPolicies() ([]interface{}, error) {
+func (r *mqlSnowflakeAccount) networkPolicies() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
 	client := conn.Client()
 	ctx := context.Background()
@@ -27,7 +27,7 @@ func (r *mqlSnowflakeAccount) networkPolicies() ([]interface{}, error) {
 		return nil, err
 	}
 
-	list := []interface{}{}
+	list := []any{}
 	for i := range networkPolicies {
 		mqlNetworkPolicy, err := newMqlSnowflakeNetworkPolicy(r.MqlRuntime, networkPolicies[i])
 		if err != nil {
@@ -87,19 +87,19 @@ func (r *mqlSnowflakeNetworkPolicy) gatherNetworkPolicyDetails() error {
 	}
 
 	// set default values
-	r.AllowedIpList = plugin.TValue[[]interface{}]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
-	r.BlockedIpList = plugin.TValue[[]interface{}]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
-	r.AllowedNetworkRules = plugin.TValue[[]interface{}]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
-	r.BlockedNetworkRules = plugin.TValue[[]interface{}]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
+	r.AllowedIpList = plugin.TValue[[]any]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
+	r.BlockedIpList = plugin.TValue[[]any]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
+	r.AllowedNetworkRules = plugin.TValue[[]any]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
+	r.BlockedNetworkRules = plugin.TValue[[]any]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
 
 	for _, desc := range networkDescriptions {
 		switch desc.Name {
 		case "ALLOWED_IP_LIST":
 			ipList := strings.Split(desc.Value, ",")
-			r.AllowedIpList = plugin.TValue[[]interface{}]{Data: convert.SliceAnyToInterface(ipList), Error: nil, State: plugin.StateIsSet}
+			r.AllowedIpList = plugin.TValue[[]any]{Data: convert.SliceAnyToInterface(ipList), Error: nil, State: plugin.StateIsSet}
 		case "BLOCKED_IP_LIST":
 			ipList := strings.Split(desc.Value, ",")
-			r.BlockedIpList = plugin.TValue[[]interface{}]{Data: convert.SliceAnyToInterface(ipList), Error: nil, State: plugin.StateIsSet}
+			r.BlockedIpList = plugin.TValue[[]any]{Data: convert.SliceAnyToInterface(ipList), Error: nil, State: plugin.StateIsSet}
 		case "ALLOWED_NETWORK_RULE_LIST":
 			var networkRules []NetworkRulesSnowflakeDTO
 			err := json.Unmarshal([]byte(desc.Value), &networkRules)
@@ -110,7 +110,7 @@ func (r *mqlSnowflakeNetworkPolicy) gatherNetworkPolicyDetails() error {
 			for i, ele := range networkRules {
 				networkRulesFullyQualified[i] = sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(ele.FullyQualifiedRuleName).FullyQualifiedName()
 			}
-			r.AllowedNetworkRules = plugin.TValue[[]interface{}]{Data: convert.SliceAnyToInterface(networkRulesFullyQualified), Error: nil, State: plugin.StateIsSet}
+			r.AllowedNetworkRules = plugin.TValue[[]any]{Data: convert.SliceAnyToInterface(networkRulesFullyQualified), Error: nil, State: plugin.StateIsSet}
 		case "BLOCKED_NETWORK_RULE_LIST":
 			var networkRules []NetworkRulesSnowflakeDTO
 			err := json.Unmarshal([]byte(desc.Value), &networkRules)
@@ -121,24 +121,24 @@ func (r *mqlSnowflakeNetworkPolicy) gatherNetworkPolicyDetails() error {
 			for i, ele := range networkRules {
 				networkRulesFullyQualified[i] = sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(ele.FullyQualifiedRuleName).FullyQualifiedName()
 			}
-			r.BlockedNetworkRules = plugin.TValue[[]interface{}]{Data: convert.SliceAnyToInterface(networkRulesFullyQualified), Error: nil, State: plugin.StateIsSet}
+			r.BlockedNetworkRules = plugin.TValue[[]any]{Data: convert.SliceAnyToInterface(networkRulesFullyQualified), Error: nil, State: plugin.StateIsSet}
 		}
 	}
 	return nil
 }
 
-func (r *mqlSnowflakeNetworkPolicy) allowedIpList() ([]interface{}, error) {
+func (r *mqlSnowflakeNetworkPolicy) allowedIpList() ([]any, error) {
 	return nil, r.gatherNetworkPolicyDetails()
 }
 
-func (r *mqlSnowflakeNetworkPolicy) blockedIpList() ([]interface{}, error) {
+func (r *mqlSnowflakeNetworkPolicy) blockedIpList() ([]any, error) {
 	return nil, r.gatherNetworkPolicyDetails()
 }
 
-func (r *mqlSnowflakeNetworkPolicy) allowedNetworkRules() ([]interface{}, error) {
+func (r *mqlSnowflakeNetworkPolicy) allowedNetworkRules() ([]any, error) {
 	return nil, r.gatherNetworkPolicyDetails()
 }
 
-func (r *mqlSnowflakeNetworkPolicy) blockedNetworkRules() ([]interface{}, error) {
+func (r *mqlSnowflakeNetworkPolicy) blockedNetworkRules() ([]any, error) {
 	return nil, r.gatherNetworkPolicyDetails()
 }

@@ -11,21 +11,21 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
 	"github.com/aws/aws-sdk-go-v2/service/guardduty/types"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
 )
 
 func (a *mqlAwsGuardduty) id() (string, error) {
 	return "aws.guardduty", nil
 }
 
-func (a *mqlAwsGuardduty) detectors() ([]interface{}, error) {
+func (a *mqlAwsGuardduty) detectors() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getDetectors(conn), 5)
 	poolOfJobs.Run()
 
@@ -35,7 +35,7 @@ func (a *mqlAwsGuardduty) detectors() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 	return res, nil
 }
@@ -56,7 +56,7 @@ func (a *mqlAwsGuardduty) getDetectors(conn *connection.AwsConnection) []*jobpoo
 			svc := conn.Guardduty(region)
 			ctx := context.Background()
 
-			res := []interface{}{}
+			res := []any{}
 			params := &guardduty.ListDetectorsInput{}
 			paginator := guardduty.NewListDetectorsPaginator(svc, params)
 			for paginator.HasMorePages() {
@@ -94,8 +94,8 @@ func (a *mqlAwsGuarddutyDetector) populateData() error {
 	// default set values
 	a.Status = plugin.TValue[string]{State: plugin.StateIsSet | plugin.StateIsNull}
 	a.FindingPublishingFrequency = plugin.TValue[string]{State: plugin.StateIsSet | plugin.StateIsNull}
-	a.Features = plugin.TValue[[]interface{}]{State: plugin.StateIsSet | plugin.StateIsNull}
-	a.Tags = plugin.TValue[map[string]interface{}]{State: plugin.StateIsSet | plugin.StateIsNull}
+	a.Features = plugin.TValue[[]any]{State: plugin.StateIsSet | plugin.StateIsNull}
+	a.Tags = plugin.TValue[map[string]any]{State: plugin.StateIsSet | plugin.StateIsNull}
 
 	detectorId := a.GetId().Data
 	region := a.GetRegion().Data
@@ -113,8 +113,8 @@ func (a *mqlAwsGuarddutyDetector) populateData() error {
 	a.Status = plugin.TValue[string]{Data: string(detector.Status), State: plugin.StateIsSet}
 	a.FindingPublishingFrequency = plugin.TValue[string]{Data: string(detector.FindingPublishingFrequency), State: plugin.StateIsSet}
 	features, _ := convert.JsonToDictSlice(detector.Features)
-	a.Features = plugin.TValue[[]interface{}]{Data: features, State: plugin.StateIsSet}
-	a.Tags = plugin.TValue[map[string]interface{}]{Data: convert.MapToInterfaceMap(detector.Tags), State: plugin.StateIsSet}
+	a.Features = plugin.TValue[[]any]{Data: features, State: plugin.StateIsSet}
+	a.Tags = plugin.TValue[map[string]any]{Data: convert.MapToInterfaceMap(detector.Tags), State: plugin.StateIsSet}
 
 	return nil
 }
@@ -123,11 +123,11 @@ func (a *mqlAwsGuarddutyDetector) status() (string, error) {
 	return "", a.populateData()
 }
 
-func (a *mqlAwsGuarddutyDetector) features() ([]interface{}, error) {
+func (a *mqlAwsGuarddutyDetector) features() ([]any, error) {
 	return nil, a.populateData()
 }
 
-func (a *mqlAwsGuarddutyDetector) tags() (map[string]interface{}, error) {
+func (a *mqlAwsGuarddutyDetector) tags() (map[string]any, error) {
 	return nil, a.populateData()
 }
 
@@ -135,7 +135,7 @@ func (a *mqlAwsGuarddutyDetector) findingPublishingFrequency() (string, error) {
 	return "", a.populateData()
 }
 
-func (a *mqlAwsGuarddutyDetector) findings() ([]interface{}, error) {
+func (a *mqlAwsGuarddutyDetector) findings() ([]any, error) {
 	detectorId := a.Id.Data
 	region := a.Region.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
@@ -153,7 +153,7 @@ func (a *mqlAwsGuarddutyDetector) findings() ([]interface{}, error) {
 	return fetchFindings(svc, detectorId, region, params, a.MqlRuntime)
 }
 
-func (a *mqlAwsGuardduty) findings() ([]interface{}, error) {
+func (a *mqlAwsGuardduty) findings() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	// we need to retrieve all the detectors first and we group them by region to request all findings
@@ -173,7 +173,7 @@ func (a *mqlAwsGuardduty) findings() ([]interface{}, error) {
 		detectorMap[region] = append(detectorMap[region], detectorInstance.GetId().Data)
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.listFindings(conn, detectorMap), 5)
 	poolOfJobs.Run()
 
@@ -183,7 +183,7 @@ func (a *mqlAwsGuardduty) findings() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 	return res, nil
 }
@@ -199,7 +199,7 @@ func (a *mqlAwsGuardduty) listFindings(conn *connection.AwsConnection, detectorM
 		f := func() (jobpool.JobResult, error) {
 			svc := conn.Guardduty(region)
 
-			res := []interface{}{}
+			res := []any{}
 			detectorList := detectorMap[region]
 			for _, detectorId := range detectorList {
 				params := &guardduty.ListFindingsInput{
@@ -229,8 +229,8 @@ func (a *mqlAwsGuardduty) listFindings(conn *connection.AwsConnection, detectorM
 }
 
 // fetchFindings list all findings for a detector and fetches the details to create the MQL resources
-func fetchFindings(svc *guardduty.Client, detectorId string, regionVal string, params *guardduty.ListFindingsInput, runtime *plugin.Runtime) ([]interface{}, error) {
-	res := []interface{}{}
+func fetchFindings(svc *guardduty.Client, detectorId string, regionVal string, params *guardduty.ListFindingsInput, runtime *plugin.Runtime) ([]any, error) {
+	res := []any{}
 	ctx := context.Background()
 	findingIds := []string{}
 	paginator := guardduty.NewListFindingsPaginator(svc, params)

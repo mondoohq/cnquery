@@ -6,7 +6,7 @@ package main
 import (
 	"fmt"
 
-	"go.mondoo.com/cnquery/v11/cli/components"
+	"go.mondoo.com/cnquery/v12/cli/components"
 )
 
 type CustomString string

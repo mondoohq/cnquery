@@ -10,8 +10,8 @@ import "encoding/json"
 
 // JsonToDict converts a raw golang object (typically loaded from JSON)
 // into a `dict` type
-func JsonToDict(v interface{}) (map[string]interface{}, error) {
-	res := make(map[string]interface{})
+func JsonToDict(v any) (map[string]any, error) {
+	res := make(map[string]any)
 
 	data, err := json.Marshal(v)
 	if err != nil {
@@ -26,8 +26,8 @@ func JsonToDict(v interface{}) (map[string]interface{}, error) {
 
 // JsonToDictSlice converts a raw golang object (typically loaded from JSON)
 // into an array of `dict` types
-func JsonToDictSlice(v interface{}) ([]interface{}, error) {
-	res := []interface{}{}
+func JsonToDictSlice(v any) ([]any, error) {
+	res := []any{}
 
 	data, err := json.Marshal(v)
 	if err != nil {
@@ -42,9 +42,9 @@ func JsonToDictSlice(v interface{}) ([]interface{}, error) {
 
 // DictToTypedMap converts a `dict` into a `map[string]T` safely.
 // It discards anything that can't be converted to `T`.
-func DictToTypedMap[T any](d interface{}) map[string]T {
+func DictToTypedMap[T any](d any) map[string]T {
 	m := make(map[string]T)
-	dict, ok := d.(map[string]interface{})
+	dict, ok := d.(map[string]any)
 	if ok {
 		for k, v := range dict {
 			if t, ok := v.(T); ok {

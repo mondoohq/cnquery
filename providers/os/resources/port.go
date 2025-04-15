@@ -19,12 +19,12 @@ import (
 	"unsafe"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/lsof"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/ports"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/powershell"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/lsof"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/ports"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/powershell"
 )
 
 type mqlPortsInternal struct {
@@ -32,7 +32,7 @@ type mqlPortsInternal struct {
 	lock            sync.Mutex
 }
 
-func (p *mqlPorts) list() ([]interface{}, error) {
+func (p *mqlPorts) list() ([]any, error) {
 	conn := p.MqlRuntime.Connection.(shared.Connection)
 	pf := conn.Asset().Platform
 
@@ -51,13 +51,13 @@ func (p *mqlPorts) list() ([]interface{}, error) {
 	}
 }
 
-func (p *mqlPorts) listening() ([]interface{}, error) {
+func (p *mqlPorts) listening() ([]any, error) {
 	all := p.GetList()
 	if all.Error != nil {
 		return nil, all.Error
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range all.Data {
 		cur := all.Data[i]
 		port := cur.(*mqlPort)
@@ -245,7 +245,7 @@ func (p *mqlPorts) processesBySocket() (map[int64]*mqlProcess, error) {
 
 // parseProcNet parses the proc filesystem
 // See socket/address parsing: https://wiki.christophchamp.com/index.php?title=Unix_sockets
-func (p *mqlPorts) parseProcNet(path string, protocol string, users map[int64]*mqlUser) ([]interface{}, error) {
+func (p *mqlPorts) parseProcNet(path string, protocol string, users map[int64]*mqlUser) ([]any, error) {
 	conn := p.MqlRuntime.Connection.(shared.Connection)
 	fs := conn.FileSystem()
 	stat, err := fs.Stat(path)
@@ -265,7 +265,7 @@ func (p *mqlPorts) parseProcNet(path string, protocol string, users map[int64]*m
 	}
 	defer fi.Close()
 
-	var res []interface{}
+	var res []any
 	scanner := bufio.NewScanner(fi)
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -382,7 +382,7 @@ func parseProcNetLine(line string) (*procNetPort, error) {
 	return port, nil
 }
 
-func (p *mqlPorts) listLinux() ([]interface{}, error) {
+func (p *mqlPorts) listLinux() ([]any, error) {
 	users, err := p.users()
 	if err != nil {
 		return nil, err
@@ -390,7 +390,7 @@ func (p *mqlPorts) listLinux() ([]interface{}, error) {
 
 	// check if kernel supports /proc/net/tcp4
 
-	var ports []interface{}
+	var ports []any
 	tcpPorts, err := p.parseProcNet("/proc/net/tcp", "tcp4", users)
 	if err != nil {
 		return nil, err
@@ -438,7 +438,7 @@ func (p *mqlPorts) processesByPid() (map[int64]*mqlProcess, error) {
 
 // Windows Implementation
 
-func (p *mqlPorts) listWindows() ([]interface{}, error) {
+func (p *mqlPorts) listWindows() ([]any, error) {
 	processes, err := p.processesByPid()
 	if err != nil {
 		return nil, err
@@ -467,13 +467,13 @@ func (p *mqlPorts) listWindows() ([]interface{}, error) {
 	return list, nil
 }
 
-func (p *mqlPorts) parseWindowsPorts(r io.Reader, processes map[int64]*mqlProcess) ([]interface{}, error) {
+func (p *mqlPorts) parseWindowsPorts(r io.Reader, processes map[int64]*mqlProcess) ([]any, error) {
 	portList, err := ports.ParseWindowsNetTCPConnections(r)
 	if err != nil {
 		return nil, err
 	}
 
-	var res []interface{}
+	var res []any
 	for i := range portList {
 		port := portList[i]
 
@@ -542,7 +542,7 @@ func (p *mqlPorts) parseWindowsPorts(r io.Reader, processes map[int64]*mqlProces
 // macOS Implementation
 
 // listMacos reads the lsof information of all open files that are tcp sockets
-func (p *mqlPorts) listMacos() ([]interface{}, error) {
+func (p *mqlPorts) listMacos() ([]any, error) {
 	users, err := p.users()
 	if err != nil {
 		return nil, err
@@ -565,7 +565,7 @@ func (p *mqlPorts) listMacos() ([]interface{}, error) {
 	}
 
 	// iterating over all processes to find the once that have network file descriptors
-	var res []interface{}
+	var res []any
 	for i := range lsofProcesses {
 		process := lsofProcesses[i]
 		for j := range process.FileDescriptors {

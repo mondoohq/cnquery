@@ -12,13 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecrpublic"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
 
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (a *mqlAwsEcr) id() (string, error) {
@@ -36,13 +36,13 @@ func (a *mqlAwsEcrImage) id() (string, error) {
 	return id + "/" + name + "/" + sha, nil
 }
 
-func (a *mqlAwsEcr) images() ([]interface{}, error) {
+func (a *mqlAwsEcr) images() ([]any, error) {
 	obj, err := CreateResource(a.MqlRuntime, "aws.ecr", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
 	}
 	ecr := obj.(*mqlAwsEcr)
-	res := []interface{}{}
+	res := []any{}
 
 	repos, err := ecr.publicRepositories()
 	if err != nil {
@@ -69,10 +69,10 @@ func (a *mqlAwsEcr) images() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsEcr) privateRepositories() ([]interface{}, error) {
+func (a *mqlAwsEcr) privateRepositories() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getPrivateRepositories(conn), 5)
 	poolOfJobs.Run()
 
@@ -82,7 +82,7 @@ func (a *mqlAwsEcr) privateRepositories() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
@@ -100,7 +100,7 @@ func (a *mqlAwsEcr) getPrivateRepositories(conn *connection.AwsConnection) []*jo
 		region := regions[ri]
 		f := func() (jobpool.JobResult, error) {
 			svc := conn.Ecr(region)
-			res := []interface{}{}
+			res := []any{}
 
 			repoResp, err := svc.DescribeRepositories(ctx, &ecr.DescribeRepositoriesInput{})
 			if err != nil {
@@ -139,7 +139,7 @@ func (a *mqlAwsEcr) getPrivateRepositories(conn *connection.AwsConnection) []*jo
 	return tasks
 }
 
-func (a *mqlAwsEcrRepository) images() ([]interface{}, error) {
+func (a *mqlAwsEcrRepository) images() ([]any, error) {
 	name := a.Name.Data
 	region := a.Region.Data
 	public := a.Public.Data
@@ -147,7 +147,7 @@ func (a *mqlAwsEcrRepository) images() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	ctx := context.Background()
-	mqlres := []interface{}{}
+	mqlres := []any{}
 	if public {
 		svc := conn.EcrPublic(region)
 		res, err := svc.DescribeImages(ctx, &ecrpublic.DescribeImagesInput{RepositoryName: &name})
@@ -160,7 +160,7 @@ func (a *mqlAwsEcrRepository) images() ([]interface{}, error) {
 		}
 
 		for _, image := range res.ImageDetails {
-			tags := []interface{}{}
+			tags := []any{}
 			for _, imageTag := range image.ImageTags {
 				tags = append(tags, imageTag)
 			}
@@ -192,7 +192,7 @@ func (a *mqlAwsEcrRepository) images() ([]interface{}, error) {
 		}
 		for i := range res.ImageDetails {
 			image := res.ImageDetails[i]
-			tags := []interface{}{}
+			tags := []any{}
 			for i := range image.ImageTags {
 				tags = append(tags, image.ImageTags[i])
 			}
@@ -270,11 +270,11 @@ func initAwsEcrImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	return nil, nil, errors.New("ecr image does not exist")
 }
 
-func (a *mqlAwsEcr) publicRepositories() ([]interface{}, error) {
+func (a *mqlAwsEcr) publicRepositories() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.EcrPublic("us-east-1") // only supported for us-east-1
-	res := []interface{}{}
+	res := []any{}
 
 	// TODO: consider using pagination here
 	repoResp, err := svc.DescribeRepositories(context.TODO(), &ecrpublic.DescribeRepositoriesInput{RegistryId: aws.String(conn.AccountId())})

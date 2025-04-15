@@ -7,10 +7,10 @@ import (
 	"errors"
 	"sync"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/types"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -29,8 +29,8 @@ func (k *mqlK8sConfigmap) getConfigMap() (*corev1.ConfigMap, error) {
 	return nil, errors.New("invalid k8s configmap")
 }
 
-func (k *mqlK8s) configmaps() ([]interface{}, error) {
-	return k8sResourceToMql(k.MqlRuntime, gvkString(corev1.SchemeGroupVersion.WithKind("configmaps")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+func (k *mqlK8s) configmaps() ([]any, error) {
+	return k8sResourceToMql(k.MqlRuntime, gvkString(corev1.SchemeGroupVersion.WithKind("configmaps")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (any, error) {
 		ts := obj.GetCreationTimestamp()
 
 		cm, ok := resource.(*corev1.ConfigMap)
@@ -56,7 +56,7 @@ func (k *mqlK8s) configmaps() ([]interface{}, error) {
 	})
 }
 
-func (k *mqlK8sConfigmap) manifest() (map[string]interface{}, error) {
+func (k *mqlK8sConfigmap) manifest() (map[string]any, error) {
 	manifest, err := convert.JsonToDict(k.obj)
 	if err != nil {
 		return nil, err
@@ -69,10 +69,10 @@ func (k *mqlK8sConfigmap) id() (string, error) {
 }
 
 func initK8sConfigmap(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	return initNamespacedResource[*mqlK8sConfigmap](runtime, args, func(k *mqlK8s) *plugin.TValue[[]interface{}] { return k.GetConfigmaps() })
+	return initNamespacedResource[*mqlK8sConfigmap](runtime, args, func(k *mqlK8s) *plugin.TValue[[]any] { return k.GetConfigmaps() })
 }
 
-func (k *mqlK8sConfigmap) annotations() (map[string]interface{}, error) {
+func (k *mqlK8sConfigmap) annotations() (map[string]any, error) {
 	// Get the ConfigMap object
 	cm, err := k.getConfigMap()
 	if err != nil {
@@ -81,7 +81,7 @@ func (k *mqlK8sConfigmap) annotations() (map[string]interface{}, error) {
 	return convert.MapToInterfaceMap(cm.GetAnnotations()), nil
 }
 
-func (k *mqlK8sConfigmap) labels() (map[string]interface{}, error) {
+func (k *mqlK8sConfigmap) labels() (map[string]any, error) {
 	cm, err := k.getConfigMap()
 	if err != nil {
 		return nil, err

@@ -7,10 +7,10 @@ import (
 	"errors"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 var BsdCertFiles = []string{
@@ -56,7 +56,7 @@ func initOsRootCertificates(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 
 	// search the first file that exists, it mimics the behavior go is doing
-	files := []interface{}{}
+	files := []any{}
 	for i := range paths {
 		f, err := CreateResource(runtime, "file", map[string]*llx.RawData{
 			"path": llx.StringData(paths[i]),
@@ -87,8 +87,8 @@ func initOsRootCertificates(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	return args, nil, nil
 }
 
-func (s *mqlOsRootCertificates) content(files []interface{}) ([]interface{}, error) {
-	contents := []interface{}{}
+func (s *mqlOsRootCertificates) content(files []any) ([]any, error) {
+	contents := []any{}
 
 	for i := range files {
 		file := files[i].(*mqlFile)
@@ -103,8 +103,8 @@ func (s *mqlOsRootCertificates) content(files []interface{}) ([]interface{}, err
 	return contents, nil
 }
 
-func (p *mqlOsRootCertificates) list(contents []interface{}) ([]interface{}, error) {
-	var res []interface{}
+func (p *mqlOsRootCertificates) list(contents []any) ([]any, error) {
+	var res []any
 	for i := range contents {
 		certificates, err := p.MqlRuntime.CreateSharedResource("certificates", map[string]*llx.RawData{
 			"pem": llx.StringData(contents[i].(string)),
@@ -118,7 +118,7 @@ func (p *mqlOsRootCertificates) list(contents []interface{}) ([]interface{}, err
 			return nil, err
 		}
 
-		res = append(res, list.Value.([]interface{})...)
+		res = append(res, list.Value.([]any)...)
 	}
 
 	return res, nil

@@ -7,11 +7,11 @@ import (
 	"context"
 	"errors"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/azure/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/azure/connection"
+	"go.mondoo.com/cnquery/v12/types"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	appinsights "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/applicationinsights/armapplicationinsights"
@@ -80,7 +80,7 @@ func initAzureSubscriptionMonitorServiceActivityLog(runtime *plugin.Runtime, arg
 	return args, nil, nil
 }
 
-func (a *mqlAzureSubscriptionMonitorService) logProfiles() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMonitorService) logProfiles() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -93,7 +93,7 @@ func (a *mqlAzureSubscriptionMonitorService) logProfiles() ([]interface{}, error
 	}
 
 	pager := client.NewListPager(&monitor.LogProfilesClientListOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -125,12 +125,12 @@ func (a *mqlAzureSubscriptionMonitorService) logProfiles() ([]interface{}, error
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionMonitorService) diagnosticSettings() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMonitorService) diagnosticSettings() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	return getDiagnosticSettings("/subscriptions/"+a.SubscriptionId.Data, a.MqlRuntime, conn)
 }
 
-func (a *mqlAzureSubscriptionMonitorService) applicationInsights() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMonitorService) applicationInsights() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -144,7 +144,7 @@ func (a *mqlAzureSubscriptionMonitorService) applicationInsights() ([]interface{
 	}
 
 	pager := client.NewListPager(&appinsights.ComponentsClientListOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -175,7 +175,7 @@ func (a *mqlAzureSubscriptionMonitorService) applicationInsights() ([]interface{
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionMonitorServiceActivityLog) alerts() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMonitorServiceActivityLog) alerts() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -187,7 +187,7 @@ func (a *mqlAzureSubscriptionMonitorServiceActivityLog) alerts() ([]interface{},
 		return nil, err
 	}
 	pager := client.NewListBySubscriptionIDPager(&monitor.ActivityLogAlertsClientListBySubscriptionIDOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -241,7 +241,7 @@ func (a *mqlAzureSubscriptionMonitorServiceActivityLog) alerts() ([]interface{},
 				conditions = append(conditions, mqlCondition)
 			}
 
-			actionsDict := []interface{}{}
+			actionsDict := []any{}
 			for _, a := range actions {
 				dict, err := convert.JsonToDict(a)
 				if err != nil {
@@ -249,7 +249,7 @@ func (a *mqlAzureSubscriptionMonitorServiceActivityLog) alerts() ([]interface{},
 				}
 				actionsDict = append(actionsDict, dict)
 			}
-			conditionsDict := []interface{}{}
+			conditionsDict := []any{}
 			for _, c := range conditions {
 				dict, err := convert.JsonToDict(c)
 				if err != nil {
@@ -306,7 +306,7 @@ func (a *mqlAzureSubscriptionMonitorServiceDiagnosticsetting) storageAccount() (
 	return getStorageAccount(storageAccId, a.MqlRuntime, a.MqlRuntime.Connection.(*connection.AzureConnection))
 }
 
-func getDiagnosticSettings(id string, runtime *plugin.Runtime, conn *connection.AzureConnection) ([]interface{}, error) {
+func getDiagnosticSettings(id string, runtime *plugin.Runtime, conn *connection.AzureConnection) ([]any, error) {
 	ctx := context.Background()
 	token := conn.Token()
 	client, err := monitor.NewDiagnosticSettingsClient(token, &arm.ClientOptions{
@@ -316,7 +316,7 @@ func getDiagnosticSettings(id string, runtime *plugin.Runtime, conn *connection.
 		return nil, err
 	}
 	pager := client.NewListPager(id, &monitor.DiagnosticSettingsClientListOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {

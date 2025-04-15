@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"sync"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/k8s/connection/shared/resources"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/k8s/connection/shared/resources"
 	admissionv1 "k8s.io/api/admission/v1"
 	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -110,8 +110,8 @@ type mqlK8sAdmissionValidatingwebhookconfigurationInternal struct {
 	obj  *admissionregistrationv1.ValidatingWebhookConfiguration
 }
 
-func (k *mqlK8s) validatingWebhookConfigurations() ([]interface{}, error) {
-	return k8sResourceToMql(k.MqlRuntime, gvkString(admissionregistrationv1.SchemeGroupVersion.WithKind("ValidatingWebhookConfiguration")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+func (k *mqlK8s) validatingWebhookConfigurations() ([]any, error) {
+	return k8sResourceToMql(k.MqlRuntime, gvkString(admissionregistrationv1.SchemeGroupVersion.WithKind("ValidatingWebhookConfiguration")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (any, error) {
 		ts := obj.GetCreationTimestamp()
 
 		r, err := CreateResource(k.MqlRuntime, "k8s.admission.validatingwebhookconfiguration", map[string]*llx.RawData{
@@ -137,7 +137,7 @@ func (k *mqlK8s) validatingWebhookConfigurations() ([]interface{}, error) {
 	})
 }
 
-func (k *mqlK8sAdmissionValidatingwebhookconfiguration) manifest() (map[string]interface{}, error) {
+func (k *mqlK8sAdmissionValidatingwebhookconfiguration) manifest() (map[string]any, error) {
 	manifest, err := convert.JsonToDict(k.obj)
 	if err != nil {
 		return nil, err
@@ -145,15 +145,15 @@ func (k *mqlK8sAdmissionValidatingwebhookconfiguration) manifest() (map[string]i
 	return manifest, nil
 }
 
-func (k *mqlK8sAdmissionValidatingwebhookconfiguration) annotations() (map[string]interface{}, error) {
+func (k *mqlK8sAdmissionValidatingwebhookconfiguration) annotations() (map[string]any, error) {
 	return convert.MapToInterfaceMap(k.obj.GetAnnotations()), nil
 }
 
-func (k *mqlK8sAdmissionValidatingwebhookconfiguration) labels() (map[string]interface{}, error) {
+func (k *mqlK8sAdmissionValidatingwebhookconfiguration) labels() (map[string]any, error) {
 	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
 }
 
-func (k *mqlK8sAdmissionValidatingwebhookconfiguration) webhooks() ([]interface{}, error) {
+func (k *mqlK8sAdmissionValidatingwebhookconfiguration) webhooks() ([]any, error) {
 	dict, err := convert.JsonToDictSlice(k.obj.Webhooks)
 	if err != nil {
 		return nil, err

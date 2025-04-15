@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/muesli/termenv"
-	"go.mondoo.com/cnquery/v11/cli/theme/colors"
+	"go.mondoo.com/cnquery/v12/cli/theme/colors"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -36,13 +36,13 @@ func NewConsoleWriter(out io.Writer, compact bool) zerolog.Logger {
 	w.FormatErrFieldValue = consoleDefaultFormatErrFieldValue()
 	w.FormatCaller = consoleDefaultFormatCaller()
 	w.FormatMessage = consoleDefaultFormatMessage
-	w.FormatTimestamp = func(i interface{}) string { return "" }
+	w.FormatTimestamp = func(i any) string { return "" }
 
 	return log.Output(w)
 }
 
 func consoleDefaultFormatCaller() zerolog.Formatter {
-	return func(i interface{}) string {
+	return func(i any) string {
 		var c string
 		if cc, ok := i.(string); ok {
 			c = cc
@@ -58,7 +58,7 @@ func consoleDefaultFormatCaller() zerolog.Formatter {
 	}
 }
 
-func consoleDefaultFormatMessage(i interface{}) string {
+func consoleDefaultFormatMessage(i any) string {
 	if i == nil {
 		return ""
 	}
@@ -66,23 +66,23 @@ func consoleDefaultFormatMessage(i interface{}) string {
 }
 
 func consoleDefaultFormatFieldName() zerolog.Formatter {
-	return func(i interface{}) string {
+	return func(i any) string {
 		return termenv.String(fmt.Sprintf("%s=", i)).Foreground(colors.DefaultColorTheme.Primary).String()
 	}
 }
 
-func consoleDefaultFormatFieldValue(i interface{}) string {
+func consoleDefaultFormatFieldValue(i any) string {
 	return fmt.Sprintf("%s", i)
 }
 
 func consoleDefaultFormatErrFieldName() zerolog.Formatter {
-	return func(i interface{}) string {
+	return func(i any) string {
 		return termenv.String(fmt.Sprintf("%s=", i)).Foreground(colors.DefaultColorTheme.Error).String()
 	}
 }
 
 func consoleDefaultFormatErrFieldValue() zerolog.Formatter {
-	return func(i interface{}) string {
+	return func(i any) string {
 		return termenv.String(fmt.Sprintf("%s", i)).Foreground(colors.DefaultColorTheme.Error).String()
 	}
 }
@@ -91,7 +91,7 @@ func consoleDefaultFormatErrFieldValue() zerolog.Formatter {
 // this is used for compact mode and primarily for windows which has a restricted color palette and character set
 // for the console
 func consoleFormatLevelNoColor() zerolog.Formatter {
-	return func(i interface{}) string {
+	return func(i any) string {
 		var l string
 
 		if ll, ok := i.(string); ok {
@@ -126,7 +126,7 @@ func consoleFormatLevelNoColor() zerolog.Formatter {
 }
 
 func consoleFormatLevel() zerolog.Formatter {
-	return func(i interface{}) string {
+	return func(i any) string {
 		var l string
 		var color termenv.Color
 

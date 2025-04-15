@@ -9,11 +9,11 @@ import (
 
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/security"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/ms365/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (m *mqlMicrosoftSecuritySecurityscore) id() (string, error) {
@@ -24,7 +24,7 @@ func newMqlMicrosoftSecureScore(runtime *plugin.Runtime, score models.SecureScor
 	if score == nil {
 		return nil, nil
 	}
-	averageComparativeScores := []interface{}{}
+	averageComparativeScores := []any{}
 	graphAverageComparativeScores := score.GetAverageComparativeScores()
 	for j := range graphAverageComparativeScores {
 		entry, err := convert.JsonToDict(newAverageComparativeScore(graphAverageComparativeScores[j]))
@@ -34,7 +34,7 @@ func newMqlMicrosoftSecureScore(runtime *plugin.Runtime, score models.SecureScor
 		averageComparativeScores = append(averageComparativeScores, entry)
 	}
 
-	controlScores := []interface{}{}
+	controlScores := []any{}
 	graphControlScores := score.GetControlScores()
 	for j := range graphControlScores {
 		entry, err := convert.JsonToDict(newControlScore(graphControlScores[j]))
@@ -49,7 +49,7 @@ func newMqlMicrosoftSecureScore(runtime *plugin.Runtime, score models.SecureScor
 		return nil, err
 	}
 
-	enabledServices := []interface{}{}
+	enabledServices := []any{}
 	for _, service := range score.GetEnabledServices() {
 		enabledServices = append(enabledServices, service)
 	}
@@ -93,7 +93,7 @@ func (a *mqlMicrosoftSecurity) latestSecureScores() (*mqlMicrosoftSecuritySecuri
 }
 
 // see https://docs.microsoft.com/en-us/graph/api/securescore-get?view=graph-rest-1.0&tabs=http
-func (a *mqlMicrosoftSecurity) secureScores() ([]interface{}, error) {
+func (a *mqlMicrosoftSecurity) secureScores() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -105,7 +105,7 @@ func (a *mqlMicrosoftSecurity) secureScores() ([]interface{}, error) {
 		return nil, transformError(err)
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	scores := resp.GetValue()
 	for i := range scores {
 		score := scores[i]

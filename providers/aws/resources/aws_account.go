@@ -9,16 +9,16 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
 )
 
 func (a *mqlAwsAccount) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAwsAccount) aliases() ([]interface{}, error) {
+func (a *mqlAwsAccount) aliases() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	client := conn.Iam("") // no region for iam, use configured region
 
@@ -26,7 +26,7 @@ func (a *mqlAwsAccount) aliases() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	result := []interface{}{}
+	result := []any{}
 	for i := range res.AccountAliases {
 		result = append(result, res.AccountAliases[i])
 	}
@@ -51,7 +51,7 @@ func (a *mqlAwsAccount) organization() (*mqlAwsOrganization, error) {
 	return res.(*mqlAwsOrganization), err
 }
 
-func (a *mqlAwsOrganization) accounts() ([]interface{}, error) {
+func (a *mqlAwsOrganization) accounts() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	client := conn.Organizations("") // no region for orgs, use configured region
 
@@ -59,7 +59,7 @@ func (a *mqlAwsOrganization) accounts() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	accounts := []interface{}{}
+	accounts := []any{}
 	for i := range orgAccounts.Accounts {
 		account := orgAccounts.Accounts[i]
 		res, err := CreateResource(a.MqlRuntime, "aws.account",
@@ -75,7 +75,7 @@ func (a *mqlAwsOrganization) accounts() ([]interface{}, error) {
 }
 
 // tags retrieves a map of tags for a given AWS resource.
-func (c *mqlAwsAccount) tags() (map[string]interface{}, error) {
+func (c *mqlAwsAccount) tags() (map[string]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.AwsConnection)
 	client := conn.Organizations("") // no region for orgs, use configured region
 
@@ -86,7 +86,7 @@ func (c *mqlAwsAccount) tags() (map[string]interface{}, error) {
 	// Note: This operation can only be called from the organization's management
 	// account or by a member account that is a delegated administrator for an
 	// Amazon Web Services service.
-	tags := make(map[string]interface{})
+	tags := make(map[string]any)
 	paginator := organizations.NewListTagsForResourcePaginator(client, input)
 	for paginator.HasMorePages() {
 		res, err := paginator.NextPage(context.Background())

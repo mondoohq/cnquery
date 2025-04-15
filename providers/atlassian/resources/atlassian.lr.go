@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -400,11 +400,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"atlassian.scim.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianScim).Users, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAtlassianScim).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"atlassian.scim.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianScim).Groups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAtlassianScim).Groups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"atlassian.scim.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -460,15 +460,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"atlassian.admin.organization.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianAdminOrganization).Policies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAtlassianAdminOrganization).Policies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"atlassian.admin.organization.domains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianAdminOrganization).Domains, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAtlassianAdminOrganization).Domains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"atlassian.admin.organization.managedUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianAdminOrganization).ManagedUsers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAtlassianAdminOrganization).ManagedUsers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"atlassian.admin.organization.managedUser.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -500,7 +500,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"atlassian.admin.organization.managedUser.productAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianAdminOrganizationManagedUser).ProductAccess, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAtlassianAdminOrganizationManagedUser).ProductAccess, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"atlassian.admin.organization.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -548,19 +548,19 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"atlassian.jira.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianJira).Users, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAtlassianJira).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"atlassian.jira.projects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianJira).Projects, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAtlassianJira).Projects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"atlassian.jira.issues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianJira).Issues, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAtlassianJira).Issues, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"atlassian.jira.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianJira).Groups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAtlassianJira).Groups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"atlassian.jira.serverInfos": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -644,11 +644,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"atlassian.jira.user.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianJiraUser).Groups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAtlassianJiraUser).Groups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"atlassian.jira.user.applicationRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianJiraUser).ApplicationRoles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAtlassianJiraUser).ApplicationRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"atlassian.jira.applicationRole.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -704,7 +704,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"atlassian.jira.project.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianJiraProject).Properties, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAtlassianJiraProject).Properties, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"atlassian.jira.project.property.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -732,7 +732,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"atlassian.confluence.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianConfluence).Users, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAtlassianConfluence).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"atlassian.confluence.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -780,8 +780,8 @@ type mqlAtlassianScim struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAtlassianScimInternal it will be used here
-	Users plugin.TValue[[]interface{}]
-	Groups plugin.TValue[[]interface{}]
+	Users plugin.TValue[[]any]
+	Groups plugin.TValue[[]any]
 }
 
 // createAtlassianScim creates a new instance of this resource
@@ -821,15 +821,15 @@ func (c *mqlAtlassianScim) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAtlassianScim) GetUsers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Users, func() ([]interface{}, error) {
+func (c *mqlAtlassianScim) GetUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Users, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.scim", c.__id, "users")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -837,15 +837,15 @@ func (c *mqlAtlassianScim) GetUsers() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAtlassianScim) GetGroups() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Groups, func() ([]interface{}, error) {
+func (c *mqlAtlassianScim) GetGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Groups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.scim", c.__id, "groups")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -984,9 +984,9 @@ type mqlAtlassianAdminOrganization struct {
 	Id plugin.TValue[string]
 	Name plugin.TValue[string]
 	Type plugin.TValue[string]
-	Policies plugin.TValue[[]interface{}]
-	Domains plugin.TValue[[]interface{}]
-	ManagedUsers plugin.TValue[[]interface{}]
+	Policies plugin.TValue[[]any]
+	Domains plugin.TValue[[]any]
+	ManagedUsers plugin.TValue[[]any]
 }
 
 // createAtlassianAdminOrganization creates a new instance of this resource
@@ -1038,15 +1038,15 @@ func (c *mqlAtlassianAdminOrganization) GetType() *plugin.TValue[string] {
 	return &c.Type
 }
 
-func (c *mqlAtlassianAdminOrganization) GetPolicies() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Policies, func() ([]interface{}, error) {
+func (c *mqlAtlassianAdminOrganization) GetPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Policies, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.admin.organization", c.__id, "policies")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1054,15 +1054,15 @@ func (c *mqlAtlassianAdminOrganization) GetPolicies() *plugin.TValue[[]interface
 	})
 }
 
-func (c *mqlAtlassianAdminOrganization) GetDomains() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Domains, func() ([]interface{}, error) {
+func (c *mqlAtlassianAdminOrganization) GetDomains() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Domains, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.admin.organization", c.__id, "domains")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1070,15 +1070,15 @@ func (c *mqlAtlassianAdminOrganization) GetDomains() *plugin.TValue[[]interface{
 	})
 }
 
-func (c *mqlAtlassianAdminOrganization) GetManagedUsers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.ManagedUsers, func() ([]interface{}, error) {
+func (c *mqlAtlassianAdminOrganization) GetManagedUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedUsers, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.admin.organization", c.__id, "managedUsers")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1097,7 +1097,7 @@ type mqlAtlassianAdminOrganizationManagedUser struct {
 	Email plugin.TValue[string]
 	Status plugin.TValue[string]
 	LastActive plugin.TValue[*time.Time]
-	ProductAccess plugin.TValue[[]interface{}]
+	ProductAccess plugin.TValue[[]any]
 }
 
 // createAtlassianAdminOrganizationManagedUser creates a new instance of this resource
@@ -1161,7 +1161,7 @@ func (c *mqlAtlassianAdminOrganizationManagedUser) GetLastActive() *plugin.TValu
 	return &c.LastActive
 }
 
-func (c *mqlAtlassianAdminOrganizationManagedUser) GetProductAccess() *plugin.TValue[[]interface{}] {
+func (c *mqlAtlassianAdminOrganizationManagedUser) GetProductAccess() *plugin.TValue[[]any] {
 	return &c.ProductAccess
 }
 
@@ -1298,10 +1298,10 @@ type mqlAtlassianJira struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAtlassianJiraInternal it will be used here
-	Users plugin.TValue[[]interface{}]
-	Projects plugin.TValue[[]interface{}]
-	Issues plugin.TValue[[]interface{}]
-	Groups plugin.TValue[[]interface{}]
+	Users plugin.TValue[[]any]
+	Projects plugin.TValue[[]any]
+	Issues plugin.TValue[[]any]
+	Groups plugin.TValue[[]any]
 	ServerInfos plugin.TValue[*mqlAtlassianJiraServerInfo]
 }
 
@@ -1342,15 +1342,15 @@ func (c *mqlAtlassianJira) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAtlassianJira) GetUsers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Users, func() ([]interface{}, error) {
+func (c *mqlAtlassianJira) GetUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Users, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.jira", c.__id, "users")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1358,15 +1358,15 @@ func (c *mqlAtlassianJira) GetUsers() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAtlassianJira) GetProjects() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Projects, func() ([]interface{}, error) {
+func (c *mqlAtlassianJira) GetProjects() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Projects, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.jira", c.__id, "projects")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1374,15 +1374,15 @@ func (c *mqlAtlassianJira) GetProjects() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAtlassianJira) GetIssues() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Issues, func() ([]interface{}, error) {
+func (c *mqlAtlassianJira) GetIssues() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Issues, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.jira", c.__id, "issues")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1390,15 +1390,15 @@ func (c *mqlAtlassianJira) GetIssues() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAtlassianJira) GetGroups() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Groups, func() ([]interface{}, error) {
+func (c *mqlAtlassianJira) GetGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Groups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.jira", c.__id, "groups")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1574,8 +1574,8 @@ type mqlAtlassianJiraUser struct {
 	Name plugin.TValue[string]
 	Type plugin.TValue[string]
 	Picture plugin.TValue[string]
-	Groups plugin.TValue[[]interface{}]
-	ApplicationRoles plugin.TValue[[]interface{}]
+	Groups plugin.TValue[[]any]
+	ApplicationRoles plugin.TValue[[]any]
 }
 
 // createAtlassianJiraUser creates a new instance of this resource
@@ -1631,15 +1631,15 @@ func (c *mqlAtlassianJiraUser) GetPicture() *plugin.TValue[string] {
 	return &c.Picture
 }
 
-func (c *mqlAtlassianJiraUser) GetGroups() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Groups, func() ([]interface{}, error) {
+func (c *mqlAtlassianJiraUser) GetGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Groups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.jira.user", c.__id, "groups")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1647,15 +1647,15 @@ func (c *mqlAtlassianJiraUser) GetGroups() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAtlassianJiraUser) GetApplicationRoles() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.ApplicationRoles, func() ([]interface{}, error) {
+func (c *mqlAtlassianJiraUser) GetApplicationRoles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ApplicationRoles, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.jira.user", c.__id, "applicationRoles")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1726,7 +1726,7 @@ type mqlAtlassianJiraProject struct {
 	Private plugin.TValue[bool]
 	Deleted plugin.TValue[bool]
 	Archived plugin.TValue[bool]
-	Properties plugin.TValue[[]interface{}]
+	Properties plugin.TValue[[]any]
 }
 
 // createAtlassianJiraProject creates a new instance of this resource
@@ -1802,15 +1802,15 @@ func (c *mqlAtlassianJiraProject) GetArchived() *plugin.TValue[bool] {
 	return &c.Archived
 }
 
-func (c *mqlAtlassianJiraProject) GetProperties() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Properties, func() ([]interface{}, error) {
+func (c *mqlAtlassianJiraProject) GetProperties() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Properties, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.jira.project", c.__id, "properties")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1926,7 +1926,7 @@ type mqlAtlassianConfluence struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAtlassianConfluenceInternal it will be used here
-	Users plugin.TValue[[]interface{}]
+	Users plugin.TValue[[]any]
 }
 
 // createAtlassianConfluence creates a new instance of this resource
@@ -1966,15 +1966,15 @@ func (c *mqlAtlassianConfluence) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAtlassianConfluence) GetUsers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Users, func() ([]interface{}, error) {
+func (c *mqlAtlassianConfluence) GetUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Users, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.confluence", c.__id, "users")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 

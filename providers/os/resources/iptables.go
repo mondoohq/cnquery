@@ -11,8 +11,8 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
 )
 
 // Stat represents a structured statistic entry.
@@ -34,10 +34,10 @@ func (ie *mqlIptablesEntry) id() (string, error) {
 	return strconv.FormatInt(ie.LineNumber.Data, 10) + ie.Chain.Data, nil
 }
 
-func (i *mqlIptables) output() ([]interface{}, error) {
+func (i *mqlIptables) output() ([]any, error) {
 	conn := i.MqlRuntime.Connection.(shared.Connection)
 
-	ipstats := []interface{}{}
+	ipstats := []any{}
 	cmd, err := conn.RunCommand("iptables -L OUTPUT -v -n -x --line-numbers")
 	if err != nil {
 		return nil, err
@@ -78,10 +78,10 @@ func (i *mqlIptables) output() ([]interface{}, error) {
 	return ipstats, nil
 }
 
-func (i *mqlIptables) input() ([]interface{}, error) {
+func (i *mqlIptables) input() ([]any, error) {
 	conn := i.MqlRuntime.Connection.(shared.Connection)
 
-	ipstats := []interface{}{}
+	ipstats := []any{}
 	cmd, err := conn.RunCommand("iptables -L INPUT -v -n -x --line-numbers")
 	if err != nil {
 		return nil, err
@@ -122,10 +122,10 @@ func (i *mqlIptables) input() ([]interface{}, error) {
 	return ipstats, nil
 }
 
-func (i *mqlIp6tables) output() ([]interface{}, error) {
+func (i *mqlIp6tables) output() ([]any, error) {
 	conn := i.MqlRuntime.Connection.(shared.Connection)
 
-	ipstats := []interface{}{}
+	ipstats := []any{}
 	cmd, err := conn.RunCommand("ip6tables -L OUTPUT -v -n -x --line-numbers")
 	if err != nil {
 		return nil, err
@@ -166,10 +166,10 @@ func (i *mqlIp6tables) output() ([]interface{}, error) {
 	return ipstats, nil
 }
 
-func (i *mqlIp6tables) input() ([]interface{}, error) {
+func (i *mqlIp6tables) input() ([]any, error) {
 	conn := i.MqlRuntime.Connection.(shared.Connection)
 
-	ipstats := []interface{}{}
+	ipstats := []any{}
 	cmd, err := conn.RunCommand("ip6tables -L INPUT -v -n -x --line-numbers")
 	if err != nil {
 		return nil, err

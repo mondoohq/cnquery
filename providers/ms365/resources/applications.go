@@ -17,11 +17,11 @@ import (
 	"github.com/microsoftgraph/msgraph-sdk-go/applications"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/serviceprincipals"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/ms365/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (a *mqlMicrosoft) applications() (*mqlMicrosoftApplications, error) {
@@ -29,7 +29,7 @@ func (a *mqlMicrosoft) applications() (*mqlMicrosoftApplications, error) {
 	return mqlResource.(*mqlMicrosoftApplications), err
 }
 
-func (a *mqlMicrosoftApplications) list() ([]interface{}, error) {
+func (a *mqlMicrosoftApplications) list() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -53,7 +53,7 @@ func (a *mqlMicrosoftApplications) list() ([]interface{}, error) {
 		return nil, transformError(err)
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for _, app := range allApps {
 		mqlResource, err := newMqlMicrosoftApplication(a.MqlRuntime, app)
 		if err != nil {
@@ -91,7 +91,7 @@ func (a *mqlMicrosoftApplications) length() (int64, error) {
 // better description of the fields
 func newMqlMicrosoftApplication(runtime *plugin.Runtime, app models.Applicationable) (*mqlMicrosoftApplication, error) {
 	// certificates
-	var certificates []interface{}
+	var certificates []any
 	keycredentials := app.GetKeyCredentials()
 	for _, keycredential := range keycredentials {
 		cert, err := newMqlMicrosoftKeyCredential(runtime, keycredential)
@@ -101,7 +101,7 @@ func newMqlMicrosoftApplication(runtime *plugin.Runtime, app models.Applicationa
 		certificates = append(certificates, cert)
 	}
 	// secrets
-	var secrets []interface{}
+	var secrets []any
 	clientSecrets := app.GetPasswordCredentials()
 	for _, clientSecret := range clientSecrets {
 		secret, err := newMqlMicrosoftPasswordCredential(runtime, clientSecret)
@@ -132,7 +132,7 @@ func newMqlMicrosoftApplication(runtime *plugin.Runtime, app models.Applicationa
 		nativeAuthenticationApisEnabled = &val
 	}
 
-	mqlAppRoleList := []interface{}{}
+	mqlAppRoleList := []any{}
 	appRoles := app.GetAppRoles()
 	for i := range appRoles {
 		appRole := appRoles[i]
@@ -340,7 +340,7 @@ func (a *mqlMicrosoftApplication) servicePrincipal() (*mqlMicrosoftServiceprinci
 	return newMqlMicrosoftServicePrincipal(a.MqlRuntime, servicePrincipals[0])
 }
 
-func (a *mqlMicrosoftApplication) owners() ([]interface{}, error) {
+func (a *mqlMicrosoftApplication) owners() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 
 	msResource, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "microsoft", map[string]*llx.RawData{})
@@ -364,7 +364,7 @@ func (a *mqlMicrosoftApplication) owners() ([]interface{}, error) {
 		return nil, transformError(err)
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range resp.GetValue() {
 		ownerId := resp.GetValue()[i].GetId()
 		if ownerId == nil {
