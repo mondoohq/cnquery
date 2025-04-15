@@ -38,6 +38,10 @@ nobody:*:65534:
 messagebus:*:556:
 vagrant:*:1001:"""
 
+[files."/etc/passwd"]
+content="""root:x:0:0:root:/root:/bin/bash
+"""
+
 [commands."uname -s"]
 stdout = "FreeBSD"
 
