@@ -6,6 +6,7 @@ package config
 import (
 	"bytes"
 	"encoding/base64"
+	"encoding/json"
 	"os"
 	"strings"
 
@@ -117,13 +118,71 @@ func InitViperConfig() {
 		_, err := AppFs.Stat(Path)
 		if err == nil {
 			log.Debug().Str("configfile", viper.ConfigFileUsed()).Msg("try to load local config file")
-			if err := viper.ReadInConfig(); err == nil {
-				LoadedConfig = true
+
+			// Check if this is a WIF config file
+			isWif, wifErr := IsWifConfigFormat(Path)
+			if wifErr != nil {
+				log.Debug().Err(wifErr).Msg("error checking for WIF config format")
+			} else if isWif {
+				log.Debug().Msg("detected WIF config file format")
+
+				// Convert the WIF config to Viper format
+				if err := ConvertWifConfig(Path, viper.GetViper()); err != nil {
+					LoadedConfig = false
+					log.Error().Err(err).Str("path", Path).Msg("could not convert WIF config file")
+				} else {
+					LoadedConfig = true
+					log.Debug().Msg("successfully converted WIF config")
+				}
 			} else {
-				LoadedConfig = false
-				log.Error().Err(err).Str("path", Path).Msg("could not read config file")
+				// Regular config file - load it normally
+				if err := viper.ReadInConfig(); err == nil {
+					LoadedConfig = true
+				} else {
+					LoadedConfig = false
+					log.Error().Err(err).Str("path", Path).Msg("could not read config file")
+				}
 			}
 		}
+	}
+
+	// Check if this is a WIF config file
+	// This detects the new format: {"type": "external_account", "audience": "...", "issuerUri": "..."}
+	if viper.GetString("type") == "external_account" {
+		log.Debug().Msg("detected WIF config format")
+
+		// Configure authentication method
+		if !viper.IsSet("auth") {
+			viper.Set("auth", map[string]string{"method": "wif"})
+		} else {
+			// If auth exists but method isn't set, set it to wif
+			authMap := viper.GetStringMap("auth")
+			if _, exists := authMap["method"]; !exists {
+				viper.Set("auth.method", "wif")
+			}
+		}
+
+		// Set the audience if available
+		if audience := viper.GetString("audience"); audience != "" {
+			viper.Set("audience", audience)
+		}
+
+		// Set the issuer URI if available
+		if issuerUri := viper.GetString("issuerUri"); issuerUri != "" {
+			viper.Set("issuer_uri", issuerUri)
+		}
+
+		// Set the API endpoint from universeDomain if available
+		if universeDomain := viper.GetString("universeDomain"); universeDomain != "" {
+			viper.Set("api_endpoint", universeDomain)
+		}
+
+		// Log the detected configuration
+		log.Debug().
+			Str("audience", viper.GetString("audience")).
+			Str("issuerUri", viper.GetString("issuer_uri")).
+			Str("apiEndpoint", viper.GetString("api_endpoint")).
+			Msg("configured WIF authentication from config file")
 	}
 
 	// by default it uses console output, for production we may want to set it to json output
@@ -249,6 +308,7 @@ func (c *CommonOpts) GetFeatures() cnquery.Features {
 // GetServiceCredential returns the service credential that is defined in the config.
 // If no service credential is defined, it will return nil.
 func (c *CommonOpts) GetServiceCredential() *upstream.ServiceAccountCredentials {
+	// If we have an authentication method defined, use it
 	if c.Authentication != nil {
 		switch c.Authentication.Method {
 		case "ssh":
@@ -261,7 +321,37 @@ func (c *CommonOpts) GetServiceCredential() *upstream.ServiceAccountCredentials 
 			return serviceAccount
 		case "wif":
 			log.Info().Msg("using wif authentication method, generate temporary credentials")
-			serviceAccount, err := upstream.ExchangeExternalToken(c.UpstreamApiEndpoint(), c.Audience, c.IssuerURI)
+
+			// Validate required fields for WIF
+			if c.Audience == "" {
+				log.Error().Msg("missing required field 'audience' for WIF authentication")
+				return nil
+			}
+
+			// If apiEndpoint is not set, check for universeDomain in viper
+			if c.APIEndpoint == "" {
+				universeDomain := viper.GetString("universeDomain")
+				if universeDomain != "" {
+					c.APIEndpoint = universeDomain
+					log.Debug().Str("apiEndpoint", c.APIEndpoint).Msg("using universeDomain as API endpoint for WIF authentication")
+				}
+			}
+
+			// Now check if we have an API endpoint
+			if c.APIEndpoint == "" {
+				log.Error().Msg("missing required API endpoint for WIF authentication. Set 'universeDomain' in config or use --api-endpoint flag")
+				return nil
+			}
+
+			// Provide default issuer if not set
+			issuerURI := c.IssuerURI
+			if issuerURI == "" {
+				// Default to Google accounts as issuer if none provided
+				issuerURI = "https://accounts.google.com"
+				log.Debug().Str("issuerURI", issuerURI).Msg("using default issuer URI for WIF authentication")
+			}
+
+			serviceAccount, err := upstream.ExchangeExternalToken(c.UpstreamApiEndpoint(), c.Audience, issuerURI)
 			if err != nil {
 				log.Error().Err(err).Msg("could not exchange external (wif) token")
 				return nil
@@ -269,6 +359,41 @@ func (c *CommonOpts) GetServiceCredential() *upstream.ServiceAccountCredentials 
 
 			return serviceAccount
 		}
+	}
+
+	// Check if we have a type field that indicates external_account but no authentication method
+	// This is a fallback for backward compatibility
+	if viper.GetString("type") == "external_account" && c.Audience != "" {
+		log.Info().Msg("detected external account config, using wif authentication method")
+
+		// If apiEndpoint is not set, check for universeDomain in viper
+		if c.APIEndpoint == "" {
+			universeDomain := viper.GetString("universeDomain")
+			if universeDomain != "" {
+				c.APIEndpoint = universeDomain
+				log.Debug().Str("apiEndpoint", c.APIEndpoint).Msg("using universeDomain as API endpoint for WIF authentication")
+			}
+		}
+
+		// Now check if we have an API endpoint
+		if c.APIEndpoint == "" {
+			log.Error().Msg("missing required API endpoint for WIF authentication. Set 'universeDomain' in config or use --api-endpoint flag")
+			return nil
+		}
+
+		issuerURI := c.IssuerURI
+		if issuerURI == "" {
+			issuerURI = "https://accounts.google.com"
+			log.Debug().Str("issuerURI", issuerURI).Msg("using default issuer URI for WIF authentication")
+		}
+
+		serviceAccount, err := upstream.ExchangeExternalToken(c.UpstreamApiEndpoint(), c.Audience, issuerURI)
+		if err != nil {
+			log.Error().Err(err).Msg("could not exchange external (wif) token")
+			return nil
+		}
+
+		return serviceAccount
 	}
 
 	// return nil when no service account is defined
@@ -324,4 +449,84 @@ func (c *CommonOpts) UpstreamApiEndpoint() string {
 	}
 
 	return apiEndpoint
+}
+
+// IsWifConfigFormat determines if a file is in the WIF config format
+func IsWifConfigFormat(filePath string) (bool, error) {
+	// Read the file
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return false, err
+	}
+
+	// Try to parse it as JSON
+	var config map[string]interface{}
+	if err := json.Unmarshal(data, &config); err != nil {
+		return false, nil // Not JSON, so not WIF format
+	}
+
+	// Check if it has the required fields for WIF format
+	accountType, hasType := config["type"]
+	if !hasType {
+		return false, nil
+	}
+
+	// Check if it's an external account config
+	typeStr, ok := accountType.(string)
+	if !ok || typeStr != "external_account" {
+		return false, nil
+	}
+
+	// Check for audience
+	_, hasAudience := config["audience"]
+
+	return hasAudience, nil
+}
+
+// ConvertWifConfig reads a WIF config file and converts it to a Viper-compatible format
+func ConvertWifConfig(filePath string, v *viper.Viper) error {
+	// Read the file
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return err
+	}
+
+	// Parse it as JSON
+	var wifConfig map[string]interface{}
+	if err := json.Unmarshal(data, &wifConfig); err != nil {
+		return errors.Wrap(err, "failed to parse WIF config as JSON")
+	}
+
+	// Set the authentication method
+	v.Set("auth", map[string]string{"method": "wif"})
+
+	// Set the required fields
+	if audience, ok := wifConfig["audience"].(string); ok {
+		v.Set("audience", audience)
+	} else {
+		return errors.New("WIF config missing required 'audience' field")
+	}
+
+	// Check for universeDomain (required for API endpoint)
+	if universeDomain, ok := wifConfig["universeDomain"].(string); ok {
+		v.Set("universeDomain", universeDomain)
+		v.Set("api_endpoint", universeDomain)
+		log.Debug().Str("universeDomain", universeDomain).Msg("setting API endpoint from universeDomain")
+	} else {
+		return errors.New("WIF config missing required 'universeDomain' field")
+	}
+
+	// Set optional fields
+	if issuerUri, ok := wifConfig["issuerUri"].(string); ok {
+		v.Set("issuer_uri", issuerUri)
+	}
+
+	// Copy all other fields for consistency
+	for key, value := range wifConfig {
+		if key != "auth" && key != "audience" && key != "issuer_uri" && key != "api_endpoint" && key != "universeDomain" {
+			v.Set(key, value)
+		}
+	}
+
+	return nil
 }
