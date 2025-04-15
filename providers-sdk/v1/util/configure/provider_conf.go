@@ -60,7 +60,7 @@ func (b *Builtin) UnmarshalJSON(data []byte) error {
 	var name string
 	if err := json.Unmarshal(data, &name); err == nil {
 		b.Name = name
-		b.GoPackage = "go.mondoo.com/cnquery/v11/providers/" + name
+		b.GoPackage = "go.mondoo.com/cnquery/v12/providers/" + name
 
 		return nil
 	}

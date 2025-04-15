@@ -7,8 +7,8 @@ import (
 	"context"
 
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers/ms365/connection"
 )
 
 func (m *mqlMicrosoftConditionalAccessIpNamedLocation) id() (string, error) {

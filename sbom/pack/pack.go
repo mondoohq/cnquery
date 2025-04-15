@@ -6,7 +6,7 @@ package pack
 import (
 	_ "embed"
 
-	"go.mondoo.com/cnquery/v11/explorer"
+	"go.mondoo.com/cnquery/v12/explorer"
 )
 
 // SBOMQueryPack is a protobuf message that contains the SBOM query pack

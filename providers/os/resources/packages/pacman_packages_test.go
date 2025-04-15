@@ -7,10 +7,10 @@ import (
 	"strings"
 	"testing"
 
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/packages"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/packages"
 )
 
 func TestPacmanParser(t *testing.T) {

@@ -10,8 +10,8 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
-	inventory "go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
+	inventory "go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/vault"
 )
 
 func NewGitClone(asset *inventory.Asset) (string, func(), error) {

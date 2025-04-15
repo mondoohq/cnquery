@@ -8,15 +8,15 @@ import (
 	"slices"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/detector"
-	"go.mondoo.com/cnquery/v11/providers/os/id"
-	"go.mondoo.com/cnquery/v11/providers/os/id/clouddetect"
-	"go.mondoo.com/cnquery/v11/providers/os/id/hostname"
-	"go.mondoo.com/cnquery/v11/providers/os/id/ids"
-	"go.mondoo.com/cnquery/v11/providers/os/id/machineid"
-	"go.mondoo.com/cnquery/v11/providers/os/id/sshhostkey"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/detector"
+	"go.mondoo.com/cnquery/v12/providers/os/id"
+	"go.mondoo.com/cnquery/v12/providers/os/id/clouddetect"
+	"go.mondoo.com/cnquery/v12/providers/os/id/hostname"
+	"go.mondoo.com/cnquery/v12/providers/os/id/ids"
+	"go.mondoo.com/cnquery/v12/providers/os/id/machineid"
+	"go.mondoo.com/cnquery/v12/providers/os/id/sshhostkey"
 )
 
 // default id detectors

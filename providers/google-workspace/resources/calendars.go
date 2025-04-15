@@ -4,8 +4,8 @@
 package resources
 
 import (
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers/google-workspace/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers/google-workspace/connection"
 	"google.golang.org/api/calendar/v3"
 )
 

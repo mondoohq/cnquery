@@ -6,9 +6,9 @@ package shared
 import (
 	hclog "github.com/hashicorp/go-hclog"
 	plugin "github.com/hashicorp/go-plugin"
-	"go.mondoo.com/cnquery/v11/providers"
-	"go.mondoo.com/cnquery/v11/shared/proto"
-	"go.mondoo.com/cnquery/v11/utils/iox"
+	"go.mondoo.com/cnquery/v12/providers"
+	"go.mondoo.com/cnquery/v12/shared/proto"
+	"go.mondoo.com/cnquery/v12/utils/iox"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )

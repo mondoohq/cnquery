@@ -7,8 +7,8 @@ import (
 	"bytes"
 	"sort"
 
-	"go.mondoo.com/cnquery/v11/checksums"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/checksums"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (b *Block) ChunkIndex() uint32 {

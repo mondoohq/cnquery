@@ -16,7 +16,7 @@ import (
 	"strings"
 	"time"
 
-	"go.mondoo.com/cnquery/v11/utils/stringx"
+	"go.mondoo.com/cnquery/v12/utils/stringx"
 
 	mastermind "github.com/Masterminds/semver"
 	tea "github.com/charmbracelet/bubbletea"
@@ -26,9 +26,9 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"go.mondoo.com/cnquery/v11/cli/components"
-	"go.mondoo.com/cnquery/v11/logger"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/cli/components"
+	"go.mondoo.com/cnquery/v12/logger"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 	"golang.org/x/mod/modfile"
 )
 

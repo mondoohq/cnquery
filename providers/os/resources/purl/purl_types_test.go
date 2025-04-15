@@ -8,7 +8,7 @@ import (
 
 	"github.com/package-url/packageurl-go"
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/purl"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/purl"
 )
 
 func TestValidType(t *testing.T) {

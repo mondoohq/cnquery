@@ -1,13 +1,13 @@
-module go.mondoo.com/cnquery/v11/providers/atlassian
+module go.mondoo.com/cnquery/v12/providers/atlassian
 
-replace go.mondoo.com/cnquery/v11 => ../..
+replace go.mondoo.com/cnquery/v12 => ../..
 
-go 1.23.0
+go 1.24.0
 
 require (
 	github.com/ctreminiom/go-atlassian v1.6.1
 	github.com/pkg/errors v0.9.1
-	go.mondoo.com/cnquery/v11 v11.47.1
+	go.mondoo.com/cnquery/v12 v12.0.0-00010101000000-000000000000
 	go.mondoo.com/ranger-rpc v0.6.5
 )
 

@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/shadow"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/shadow"
 )
 
 const defaultShadowConfig = "/etc/shadow"

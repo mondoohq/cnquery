@@ -5,8 +5,8 @@ package resources
 
 import (
 	"context"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/snowflake/connection"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/snowflake/connection"
 )
 
 func (r *mqlSnowflakeAccount) id() (string, error) {

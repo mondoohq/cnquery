@@ -6,8 +6,8 @@ package resources_test
 import (
 	"testing"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/testutils"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/testutils"
 )
 
 var x = testutils.InitTester(testutils.LinuxMock())

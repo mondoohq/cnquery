@@ -7,9 +7,9 @@ import (
 	"encoding/json"
 	"errors"
 
-	"go.mondoo.com/cnquery/v11/explorer"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/utils/iox"
+	"go.mondoo.com/cnquery/v12/explorer"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/utils/iox"
 )
 
 func CodeBundleToJSON(code *llx.CodeBundle, results map[string]*llx.RawResult, out iox.OutputHelper) error {

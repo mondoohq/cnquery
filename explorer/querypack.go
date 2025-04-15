@@ -9,9 +9,9 @@ import (
 	"sort"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/checksums"
-	"go.mondoo.com/cnquery/v11/utils/multierr"
-	"go.mondoo.com/cnquery/v11/utils/sortx"
+	"go.mondoo.com/cnquery/v12/checksums"
+	"go.mondoo.com/cnquery/v12/utils/multierr"
+	"go.mondoo.com/cnquery/v12/utils/sortx"
 )
 
 func (p *QueryPack) InvalidateAllChecksums() {

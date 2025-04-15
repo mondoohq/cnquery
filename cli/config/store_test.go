@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	subject "go.mondoo.com/cnquery/v11/cli/config"
+	subject "go.mondoo.com/cnquery/v12/cli/config"
 	"gopkg.in/yaml.v2"
 
 	"github.com/spf13/afero"

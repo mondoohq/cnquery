@@ -7,9 +7,9 @@ import (
 	"runtime"
 
 	"github.com/c-bata/go-prompt"
-	"go.mondoo.com/cnquery/v11"
-	"go.mondoo.com/cnquery/v11/mqlc"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/v12"
+	"go.mondoo.com/cnquery/v12/mqlc"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
 )
 
 var completerSeparator = string([]byte{'.', ' '})

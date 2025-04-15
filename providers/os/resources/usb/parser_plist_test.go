@@ -10,7 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/plist"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/plist"
 )
 
 func TestUsbPlist(t *testing.T) {

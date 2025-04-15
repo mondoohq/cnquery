@@ -1,13 +1,13 @@
-module go.mondoo.com/cnquery/v11/providers/oci
+module go.mondoo.com/cnquery/v12/providers/oci
 
-go 1.23.0
+go 1.24.0
 
-replace go.mondoo.com/cnquery/v11 => ../..
+replace go.mondoo.com/cnquery/v12 => ../..
 
 require (
 	github.com/oracle/oci-go-sdk/v65 v65.88.0
 	github.com/rs/zerolog v1.34.0
-	go.mondoo.com/cnquery/v11 v11.47.1
+	go.mondoo.com/cnquery/v12 v12.0.0-00010101000000-000000000000
 )
 
 require (

@@ -10,9 +10,9 @@
 package plugin
 
 import (
-	llx "go.mondoo.com/cnquery/v11/llx"
-	inventory "go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	upstream "go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream"
+	llx "go.mondoo.com/cnquery/v12/llx"
+	inventory "go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	upstream "go.mondoo.com/cnquery/v12/providers-sdk/v1/upstream"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"

@@ -7,11 +7,11 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"go.mondoo.com/cnquery/v11/mrn"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream"
-	"go.mondoo.com/cnquery/v11/utils/multierr"
+	"go.mondoo.com/cnquery/v12/mrn"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/upstream"
+	"go.mondoo.com/cnquery/v12/utils/multierr"
 	mondoogql "go.mondoo.com/mondoo-go"
 	"go.mondoo.com/mondoo-go/option"
 )

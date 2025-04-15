@@ -7,12 +7,12 @@ import (
 	"context"
 	"errors"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream"
-	"go.mondoo.com/cnquery/v11/providers/core/resources"
-	"go.mondoo.com/cnquery/v11/types"
-	"go.mondoo.com/cnquery/v11/utils/mapx"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/upstream"
+	"go.mondoo.com/cnquery/v12/providers/core/resources"
+	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/cnquery/v12/utils/mapx"
 )
 
 const defaultConnection uint32 = 1

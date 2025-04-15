@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"text/template"
 
-	"go.mondoo.com/cnquery/v11/utils/stringx"
+	"go.mondoo.com/cnquery/v12/utils/stringx"
 )
 
 type platformCPEEntry struct {

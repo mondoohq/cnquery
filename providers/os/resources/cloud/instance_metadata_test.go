@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/cloud"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/cloud"
 )
 
 func TestMqlID(t *testing.T) {

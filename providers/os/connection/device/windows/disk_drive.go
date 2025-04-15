@@ -14,7 +14,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"go.mondoo.com/cnquery/v11/providers/os/resources/powershell"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/powershell"
 )
 
 const (

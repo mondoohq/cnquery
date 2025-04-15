@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"time"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers/atlassian/connection/jira"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers/atlassian/connection/jira"
 )
 
 const (

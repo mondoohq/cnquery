@@ -7,13 +7,13 @@ import (
 	"encoding/json"
 	"testing"
 
-	subject "go.mondoo.com/cnquery/v11/providers/os/id/vmware/vmtoolsd"
+	subject "go.mondoo.com/cnquery/v12/providers/os/id/vmware/vmtoolsd"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/mock"
-	"go.mondoo.com/cnquery/v11/providers/os/detector"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/v12/providers/os/detector"
 )
 
 func TestDetectLinuxInstance(t *testing.T) {

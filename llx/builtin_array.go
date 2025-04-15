@@ -8,8 +8,8 @@ import (
 	"math/rand"
 	"strconv"
 
-	"go.mondoo.com/cnquery/v11/types"
-	"go.mondoo.com/cnquery/v11/utils/multierr"
+	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/cnquery/v12/utils/multierr"
 )
 
 var arrayBlockType = types.Array(types.Block)

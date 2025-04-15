@@ -11,7 +11,7 @@ import (
 	cmdtest "github.com/google/go-cmdtest"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v11/apps/cnquery/cmd"
+	"go.mondoo.com/cnquery/v12/apps/cnquery/cmd"
 )
 
 var once sync.Once
