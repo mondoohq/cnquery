@@ -13,9 +13,9 @@ import (
 
 	"sigs.k8s.io/yaml"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 )
 
 const defaultKubeletConfig = "/var/lib/kubelet/config.yaml"
@@ -62,12 +62,12 @@ func initKubelet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 	return args, nil, nil
 }
 
-func (m *mqlKubelet) configuration() (map[string]interface{}, error) {
+func (m *mqlKubelet) configuration() (map[string]any, error) {
 	configFileData := ""
 	if m.ConfigFile.Data.GetContent() != nil {
 		configFileData = m.ConfigFile.Data.GetContent().Data
 	}
-	kubeletFlags := map[string]interface{}{}
+	kubeletFlags := map[string]any{}
 	if m.Process.Data.GetFlags() != nil {
 		kubeletFlags = m.Process.Data.GetFlags().Data
 	}
@@ -82,7 +82,7 @@ func (m *mqlKubelet) configuration() (map[string]interface{}, error) {
 // createConfiguration applies the kubelet defaults to the config and then
 // merges the kubelet flags and the kubelet config file into a single map
 // This map is representing the running state of the kubelet config
-func createConfiguration(kubeletFlags map[string]interface{}, configFileContent string) (map[string]interface{}, error) {
+func createConfiguration(kubeletFlags map[string]any, configFileContent string) (map[string]any, error) {
 	kubeletConfig := kubeletconfigv1beta1.KubeletConfiguration{}
 	SetDefaults_KubeletConfiguration(&kubeletConfig)
 

@@ -4,10 +4,10 @@
 package main
 
 import (
-	"go.mondoo.com/cnquery/v11"
-	"go.mondoo.com/cnquery/v11/apps/cnquery/cmd"
-	"go.mondoo.com/cnquery/v11/metrics"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream/health"
+	"go.mondoo.com/cnquery/v12"
+	"go.mondoo.com/cnquery/v12/apps/cnquery/cmd"
+	"go.mondoo.com/cnquery/v12/metrics"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/upstream/health"
 )
 
 func main() {

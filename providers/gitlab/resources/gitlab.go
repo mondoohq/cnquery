@@ -9,9 +9,9 @@ import (
 	"strconv"
 
 	"gitlab.com/gitlab-org/api/client-go"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/gitlab/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/gitlab/connection"
 )
 
 func (g *mqlGitlabGroup) id() (string, error) {
@@ -48,7 +48,7 @@ func initGitlabGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 
 // GetProjects list all projects that belong to a group
 // see https://docs.gitlab.com/ee/api/projects.html
-func (g *mqlGitlabGroup) projects() ([]interface{}, error) {
+func (g *mqlGitlabGroup) projects() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GitLabConnection)
 
 	if g.Path.Error != nil {
@@ -61,7 +61,7 @@ func (g *mqlGitlabGroup) projects() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var mqlProjects []interface{}
+	var mqlProjects []any
 	for i := range grp.Projects {
 		prj := grp.Projects[i]
 
@@ -157,7 +157,7 @@ func (p *mqlGitlabProject) approvalSettings() (*mqlGitlabProjectApprovalSetting,
 }
 
 // New function to fetch project approval rules
-func (p *mqlGitlabProject) approvalRules() ([]interface{}, error) {
+func (p *mqlGitlabProject) approvalRules() ([]any, error) {
 	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
 
 	projectID := int(p.Id.Data)
@@ -166,7 +166,7 @@ func (p *mqlGitlabProject) approvalRules() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var approvalRules []interface{}
+	var approvalRules []any
 	for _, rule := range approvals {
 		approvalRule := map[string]*llx.RawData{
 			"id":                llx.IntData(int64(rule.ID)),
@@ -213,7 +213,7 @@ func (g *mqlGitlabProjectProtectedBranch) id() (string, error) {
 }
 
 // To fetch protected branch settings
-func (p *mqlGitlabProject) protectedBranches() ([]interface{}, error) {
+func (p *mqlGitlabProject) protectedBranches() ([]any, error) {
 	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
 
 	projectID := int(p.Id.Data)
@@ -229,7 +229,7 @@ func (p *mqlGitlabProject) protectedBranches() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var mqlProtectedBranches []interface{}
+	var mqlProtectedBranches []any
 	for _, branch := range protectedBranches {
 		// Declare and initialize isDefaultBranch variable
 		isDefaultBranch := branch.Name == defaultBranch
@@ -258,7 +258,7 @@ func (g *mqlGitlabProjectMember) id() (string, error) {
 }
 
 // To fetch the list of members in the project with their roles
-func (p *mqlGitlabProject) projectMembers() ([]interface{}, error) {
+func (p *mqlGitlabProject) projectMembers() ([]any, error) {
 	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
 
 	projectID := int(p.Id.Data)
@@ -287,7 +287,7 @@ func (p *mqlGitlabProject) projectMembers() ([]interface{}, error) {
 		}
 	}
 
-	var mqlMembers []interface{}
+	var mqlMembers []any
 	for _, member := range members {
 		role := mapAccessLevelToRole(int(member.AccessLevel))
 		memberInfo := map[string]*llx.RawData{
@@ -315,7 +315,7 @@ func (f *mqlGitlabProjectFile) id() (string, error) {
 }
 
 // To fetch the list of files in the project repository and their contents
-func (p *mqlGitlabProject) projectFiles() ([]interface{}, error) {
+func (p *mqlGitlabProject) projectFiles() ([]any, error) {
 	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
 
 	projectID := int(p.Id.Data)
@@ -336,7 +336,7 @@ func (p *mqlGitlabProject) projectFiles() ([]interface{}, error) {
 		return nil, fmt.Errorf("failed to list files in repository: %w", err)
 	}
 
-	var mqlFiles []interface{}
+	var mqlFiles []any
 	for _, file := range files {
 		// Making sure we only fetch file content for blobs (files) not directories
 		if file.Type == "blob" {
@@ -377,7 +377,7 @@ func (g *mqlGitlabProjectWebhook) id() (string, error) {
 }
 
 // Function to fetch and check the webhooks for a project
-func (p *mqlGitlabProject) webhooks() ([]interface{}, error) {
+func (p *mqlGitlabProject) webhooks() ([]any, error) {
 	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
 
 	projectID := int(p.Id.Data)
@@ -387,7 +387,7 @@ func (p *mqlGitlabProject) webhooks() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var mqlWebhooks []interface{}
+	var mqlWebhooks []any
 	for _, hook := range hooks {
 		hookInfo := map[string]*llx.RawData{
 			"url":             llx.StringData(hook.URL),

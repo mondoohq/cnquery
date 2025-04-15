@@ -5,13 +5,13 @@ package resources
 
 import (
 	"github.com/facebookincubator/nvdtools/wfn"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/cpe"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/cpe"
 	"strings"
 )
 
-func (a *mqlAsset) cpes() ([]interface{}, error) {
+func (a *mqlAsset) cpes() ([]any, error) {
 	// 1 - try to read the cpe from the file
 	lf, err := CreateResource(a.MqlRuntime, "file", map[string]*llx.RawData{
 		"path": llx.StringData("/etc/system-release-cpe"),
@@ -31,7 +31,7 @@ func (a *mqlAsset) cpes() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			return []interface{}{cpe}, nil
+			return []any{cpe}, nil
 		}
 	}
 
@@ -52,7 +52,7 @@ func (a *mqlAsset) cpes() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			return []interface{}{cpe}, nil
+			return []any{cpe}, nil
 		}
 	}
 

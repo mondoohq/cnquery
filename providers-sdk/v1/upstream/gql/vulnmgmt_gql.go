@@ -17,7 +17,7 @@ func (c *MondooClient) LastAssessment(mrn string) (string, error) {
 			LastUpdated string
 		} `graphql:"assetLastPackageUpdateTime(input: $input)"`
 	}
-	err := c.Query(context.Background(), &m, map[string]interface{}{"input": mondoogql.AssetLastPackageUpdateTimeInput{Mrn: mondoogql.String(mrn)}})
+	err := c.Query(context.Background(), &m, map[string]any{"input": mondoogql.AssetLastPackageUpdateTimeInput{Mrn: mondoogql.String(mrn)}})
 	if err != nil {
 		return "", err
 	}
@@ -166,7 +166,7 @@ func (c *MondooClient) GetVulnCompactReport(mrn string) (*VulnReport, error) {
 			} `graphql:"... on AssetVulnerabilityCompactReport"`
 		} `graphql:"assetVulnerabilityCompactReport(input: $input)"`
 	}
-	err := c.Query(context.Background(), &m, map[string]interface{}{"input": mondoogql.AssetVulnerabilityReportInput{AssetMrn: mondoogql.String(mrn)}})
+	err := c.Query(context.Background(), &m, map[string]any{"input": mondoogql.AssetVulnerabilityReportInput{AssetMrn: mondoogql.String(mrn)}})
 	if err != nil {
 		return nil, err
 	}
@@ -221,7 +221,7 @@ func (c *MondooClient) GetIncognitoVulnReport(platform mondoogql.PlatformInput, 
 		Packages: pkgs,
 	}
 
-	err := c.Query(context.Background(), &m, map[string]interface{}{"input": gqlInput})
+	err := c.Query(context.Background(), &m, map[string]any{"input": gqlInput})
 	if err != nil {
 		return nil, err
 	}

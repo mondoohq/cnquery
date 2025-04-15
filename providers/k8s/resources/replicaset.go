@@ -7,10 +7,10 @@ import (
 	"errors"
 	"sync"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/k8s/connection/shared/resources"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/k8s/connection/shared/resources"
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -29,8 +29,8 @@ func (k *mqlK8sReplicaset) getReplicaSet() (*appsv1.ReplicaSet, error) {
 	return nil, errors.New("invalid k8s replicaset")
 }
 
-func (k *mqlK8s) replicasets() ([]interface{}, error) {
-	return k8sResourceToMql(k.MqlRuntime, gvkString(appsv1.SchemeGroupVersion.WithKind("replicasets")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+func (k *mqlK8s) replicasets() ([]any, error) {
+	return k8sResourceToMql(k.MqlRuntime, gvkString(appsv1.SchemeGroupVersion.WithKind("replicasets")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (any, error) {
 		ts := obj.GetCreationTimestamp()
 
 		r, err := CreateResource(k.MqlRuntime, "k8s.replicaset", map[string]*llx.RawData{
@@ -51,7 +51,7 @@ func (k *mqlK8s) replicasets() ([]interface{}, error) {
 	})
 }
 
-func (k *mqlK8sReplicaset) manifest() (map[string]interface{}, error) {
+func (k *mqlK8sReplicaset) manifest() (map[string]any, error) {
 	manifest, err := convert.JsonToDict(k.obj)
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ func (k *mqlK8sReplicaset) manifest() (map[string]interface{}, error) {
 	return manifest, nil
 }
 
-func (k *mqlK8sReplicaset) podSpec() (map[string]interface{}, error) {
+func (k *mqlK8sReplicaset) podSpec() (map[string]any, error) {
 	podSpec, err := resources.GetPodSpec(k.obj)
 	if err != nil {
 		return nil, err
@@ -76,10 +76,10 @@ func (k *mqlK8sReplicaset) id() (string, error) {
 }
 
 func initK8sReplicaset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	return initNamespacedResource[*mqlK8sReplicaset](runtime, args, func(k *mqlK8s) *plugin.TValue[[]interface{}] { return k.GetReplicasets() })
+	return initNamespacedResource[*mqlK8sReplicaset](runtime, args, func(k *mqlK8s) *plugin.TValue[[]any] { return k.GetReplicasets() })
 }
 
-func (k *mqlK8sReplicaset) annotations() (map[string]interface{}, error) {
+func (k *mqlK8sReplicaset) annotations() (map[string]any, error) {
 	rs, err := k.getReplicaSet()
 	if err != nil {
 		return nil, err
@@ -87,7 +87,7 @@ func (k *mqlK8sReplicaset) annotations() (map[string]interface{}, error) {
 	return convert.MapToInterfaceMap(rs.GetAnnotations()), nil
 }
 
-func (k *mqlK8sReplicaset) labels() (map[string]interface{}, error) {
+func (k *mqlK8sReplicaset) labels() (map[string]any, error) {
 	rs, err := k.getReplicaSet()
 	if err != nil {
 		return nil, err
@@ -95,7 +95,7 @@ func (k *mqlK8sReplicaset) labels() (map[string]interface{}, error) {
 	return convert.MapToInterfaceMap(rs.GetLabels()), nil
 }
 
-func (k *mqlK8sReplicaset) initContainers() ([]interface{}, error) {
+func (k *mqlK8sReplicaset) initContainers() ([]any, error) {
 	rs, err := k.getReplicaSet()
 	if err != nil {
 		return nil, err
@@ -103,7 +103,7 @@ func (k *mqlK8sReplicaset) initContainers() ([]interface{}, error) {
 	return getContainers(rs, &rs.ObjectMeta, k.MqlRuntime, InitContainerType)
 }
 
-func (k *mqlK8sReplicaset) containers() ([]interface{}, error) {
+func (k *mqlK8sReplicaset) containers() ([]any, error) {
 	rs, err := k.getReplicaSet()
 	if err != nil {
 		return nil, err

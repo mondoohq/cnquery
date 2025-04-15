@@ -11,11 +11,11 @@ import (
 	graphidentitygovernance "github.com/microsoftgraph/msgraph-sdk-go/identitygovernance"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	graphpolicies "github.com/microsoftgraph/msgraph-sdk-go/policies"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/ms365/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 const (
@@ -39,7 +39,7 @@ func initMicrosoftIdentityAndAccess(runtime *plugin.Runtime, args map[string]*ll
 }
 
 // The data-fetching logic is now in the list() method of the new resource.
-func (a *mqlMicrosoftIdentityAndAccess) list() ([]interface{}, error) {
+func (a *mqlMicrosoftIdentityAndAccess) list() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -79,7 +79,7 @@ func (a *mqlMicrosoftIdentityAndAccess) list() ([]interface{}, error) {
 		return nil, fmt.Errorf("failed to retrieve role management policies with filter '%s': %w", requestFilter, err)
 	}
 
-	var policyResources []interface{}
+	var policyResources []any
 	if policies == nil {
 		return nil, nil
 	}
@@ -98,7 +98,7 @@ func (a *mqlMicrosoftIdentityAndAccess) list() ([]interface{}, error) {
 }
 
 func newMqlRoleManagementPolicy(runtime *plugin.Runtime, u models.UnifiedRoleManagementPolicyable) (*mqlMicrosoftIdentityAndAccessPolicy, error) {
-	lastModifiedByDict := map[string]interface{}{}
+	lastModifiedByDict := map[string]any{}
 	var err error
 
 	if u.GetLastModifiedBy() != nil {
@@ -126,7 +126,7 @@ func newMqlRoleManagementPolicy(runtime *plugin.Runtime, u models.UnifiedRoleMan
 	return resource.(*mqlMicrosoftIdentityAndAccessPolicy), nil
 }
 
-func (m *mqlMicrosoftIdentityAndAccessPolicy) rules() ([]interface{}, error) {
+func (m *mqlMicrosoftIdentityAndAccessPolicy) rules() ([]any, error) {
 	conn := m.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -145,7 +145,7 @@ func (m *mqlMicrosoftIdentityAndAccessPolicy) rules() ([]interface{}, error) {
 		return nil, fmt.Errorf("failed to get rules for policy %s: %w", policyId, err)
 	}
 
-	var ruleResources []interface{}
+	var ruleResources []any
 	if rulesResult == nil {
 		return nil, nil
 	}
@@ -199,7 +199,7 @@ func newMqlRoleManagementPolicyRule(runtime *plugin.Runtime, rule models.Unified
 }
 
 // Least privileged permissions: RoleEligibilitySchedule.Read.Directory
-func (a *mqlMicrosoftIdentityAndAccess) roleEligibilityScheduleInstances() ([]interface{}, error) {
+func (a *mqlMicrosoftIdentityAndAccess) roleEligibilityScheduleInstances() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -215,7 +215,7 @@ func (a *mqlMicrosoftIdentityAndAccess) roleEligibilityScheduleInstances() ([]in
 		return nil, nil
 	}
 
-	var instances []interface{}
+	var instances []any
 	for _, inst := range roleEligibilityScheduleInstances.GetValue() {
 		if inst.GetId() == nil {
 			continue
@@ -338,7 +338,7 @@ func (a *mqlMicrosoft) accessReviews() (*mqlMicrosoftIdentityAndAccessAccessRevi
 // ./members: List every accessReviewScheduleDefinition scoped to all Microsoft 365 groups with guests.
 // accessPackageAssignments:	List every accessReviewScheduleDefinition on an access package.
 // roleAssignmentScheduleInstances:	List every accessReviewScheduleDefinition for principals that are assigned to a privileged role.
-func (a *mqlMicrosoftIdentityAndAccessAccessReviews) list() ([]interface{}, error) {
+func (a *mqlMicrosoftIdentityAndAccessAccessReviews) list() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -370,7 +370,7 @@ func (a *mqlMicrosoftIdentityAndAccessAccessReviews) list() ([]interface{}, erro
 		return nil, nil
 	}
 
-	var accessReviewResources []interface{}
+	var accessReviewResources []any
 	for _, accessReviewSchedule := range definitions.GetValue() {
 		if accessReviewSchedule.GetId() != nil {
 			reviewResource, err := newMqlAccessReviewDefinition(a.MqlRuntime, accessReviewSchedule)
@@ -385,7 +385,7 @@ func (a *mqlMicrosoftIdentityAndAccessAccessReviews) list() ([]interface{}, erro
 }
 
 func newMqlAccessReviewDefinition(runtime *plugin.Runtime, d models.AccessReviewScheduleDefinitionable) (*mqlMicrosoftIdentityAndAccessAccessReviewDefinition, error) {
-	reviewersDict := []interface{}{}
+	reviewersDict := []any{}
 	if d.GetReviewers() != nil {
 		for _, reviewer := range d.GetReviewers() {
 			reviewerDict := map[string]*llx.RawData{
@@ -404,8 +404,8 @@ func newMqlAccessReviewDefinition(runtime *plugin.Runtime, d models.AccessReview
 	if d.GetSettings() != nil {
 		settingsId := *d.GetId() + "_settings"
 
-		var patternDict map[string]interface{}
-		var rangeDict map[string]interface{}
+		var patternDict map[string]any
+		var rangeDict map[string]any
 
 		if recurrence := d.GetSettings().GetRecurrence(); recurrence != nil {
 			if pattern := recurrence.GetPattern(); pattern != nil {

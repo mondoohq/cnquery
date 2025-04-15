@@ -9,22 +9,22 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/emr"
 	emrtypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
 
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (a *mqlAwsEmr) id() (string, error) {
 	return "aws.emr", nil
 }
 
-func (a *mqlAwsEmr) clusters() ([]interface{}, error) {
+func (a *mqlAwsEmr) clusters() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getClusters(conn), 5)
 	poolOfJobs.Run()
 
@@ -34,7 +34,7 @@ func (a *mqlAwsEmr) clusters() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 	return res, nil
 }
@@ -55,7 +55,7 @@ func (a *mqlAwsEmr) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 			svc := conn.Emr(region)
 			ctx := context.Background()
 
-			res := []interface{}{}
+			res := []any{}
 
 			params := &emr.ListClustersInput{}
 			paginator := emr.NewListClustersPaginator(svc, params)
@@ -95,7 +95,7 @@ func (a *mqlAwsEmr) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 	return tasks
 }
 
-func (a *mqlAwsEmrCluster) masterInstances() ([]interface{}, error) {
+func (a *mqlAwsEmrCluster) masterInstances() ([]any, error) {
 	arn := a.Arn.Data
 	id := a.Id.Data
 	region, err := GetRegionFromArn(arn)

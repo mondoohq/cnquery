@@ -7,17 +7,17 @@ import (
 	"context"
 	"fmt"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/gcp/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v12/types"
 
 	"google.golang.org/api/apikeys/v2"
 	"google.golang.org/api/option"
 )
 
-func (g *mqlGcpProject) apiKeys() ([]interface{}, error) {
+func (g *mqlGcpProject) apiKeys() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
 	if g.Id.Error != nil {
@@ -50,11 +50,11 @@ func (g *mqlGcpProject) apiKeys() ([]interface{}, error) {
 		return nil, err
 	}
 
-	mqlKeys := make([]interface{}, 0, len(keys.Keys))
+	mqlKeys := make([]any, 0, len(keys.Keys))
 	for _, k := range keys.Keys {
 		var mqlRestrictions plugin.Resource
 		if k.Restrictions != nil {
-			var mqlAndroidRestr interface{}
+			var mqlAndroidRestr any
 			if k.Restrictions.AndroidKeyRestrictions != nil {
 
 				type mqlAllowedApp struct {
@@ -79,7 +79,7 @@ func (g *mqlGcpProject) apiKeys() ([]interface{}, error) {
 				}
 			}
 
-			mqlApiTargets := make([]interface{}, 0, len(k.Restrictions.ApiTargets))
+			mqlApiTargets := make([]any, 0, len(k.Restrictions.ApiTargets))
 			if k.Restrictions.ApiTargets != nil {
 				type mqlApiTarget struct {
 					Service string   `json:"service"`
@@ -98,7 +98,7 @@ func (g *mqlGcpProject) apiKeys() ([]interface{}, error) {
 				}
 			}
 
-			var mqlBrowserRest interface{}
+			var mqlBrowserRest any
 			if k.Restrictions.BrowserKeyRestrictions != nil {
 				type mqlBrowserKeyRestrictions struct {
 					AllowedReferrers []string `json:"allowedReferrers"`
@@ -112,7 +112,7 @@ func (g *mqlGcpProject) apiKeys() ([]interface{}, error) {
 				}
 			}
 
-			var mqlIosRestr interface{}
+			var mqlIosRestr any
 			if k.Restrictions.IosKeyRestrictions != nil {
 				type mqlIosKeyRestrictions struct {
 					AllowedBundleIds []string `json:"allowedBundleIds"`
@@ -126,7 +126,7 @@ func (g *mqlGcpProject) apiKeys() ([]interface{}, error) {
 				}
 			}
 
-			var mqlServerKeyRestr interface{}
+			var mqlServerKeyRestr any
 			if k.Restrictions.ServerKeyRestrictions != nil {
 				type mqlServerKeyRestrictions struct {
 					AllowedIps []string `json:"allowedIps"`

@@ -35,13 +35,13 @@ function Get-CustomComputerInfo {
 Get-CustomComputerInfo | ConvertTo-Json
 `
 
-func ParseComputerInfo(r io.Reader) (map[string]interface{}, error) {
+func ParseComputerInfo(r io.Reader) (map[string]any, error) {
 	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
 
-	var properties map[string]interface{}
+	var properties map[string]any
 	err = json.Unmarshal(data, &properties)
 	if err != nil {
 		return nil, err
@@ -51,14 +51,14 @@ func ParseComputerInfo(r io.Reader) (map[string]interface{}, error) {
 }
 
 type CustomComputerInfo struct {
-	Bios           map[string]interface{} `json:"Bios"`
-	ComputerSystem map[string]interface{} `json:"ComputerSystem"`
-	Os             map[string]interface{} `json:"Os"`
-	TimeZone       map[string]interface{} `json:"TimeZone"`
-	WindowsProduct map[string]interface{} `json:"WindowsProduct"`
+	Bios           map[string]any `json:"Bios"`
+	ComputerSystem map[string]any `json:"ComputerSystem"`
+	Os             map[string]any `json:"Os"`
+	TimeZone       map[string]any `json:"TimeZone"`
+	WindowsProduct map[string]any `json:"WindowsProduct"`
 }
 
-func ParseCustomComputerInfo(r io.Reader) (map[string]interface{}, error) {
+func ParseCustomComputerInfo(r io.Reader) (map[string]any, error) {
 	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
@@ -70,7 +70,7 @@ func ParseCustomComputerInfo(r io.Reader) (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"BiosBIOSVersion":                    customComputerInfo.Bios["SMBIOSBIOSVersion"],
 		"BiosCaption":                        customComputerInfo.Bios["Caption"],
 		"BiosCharacteristics":                customComputerInfo.Bios["BiosCharacteristics"],

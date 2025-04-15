@@ -18,7 +18,7 @@ type Play struct {
 
 	// Hosts is a pattern that matches hosts
 	// see https://docs.ansible.com/ansible/latest/inventory_guide/intro_patterns.html
-	Hosts interface{} `yaml:"hosts"`
+	Hosts any `yaml:"hosts"`
 
 	// RemoteUser sets the user to use for the connection
 	// see https://docs.ansible.com/ansible/latest/inventory_guide/connection_details.html
@@ -42,7 +42,7 @@ type Play struct {
 
 	// Serial sets the batch size
 	// see https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_strategies.html#setting-the-batch-size-with-serial
-	Serial interface{} `yaml:"serial,omitempty"` // Can be an integer or a string
+	Serial any `yaml:"serial,omitempty"` // Can be an integer or a string
 
 	// Playbook execution strategy
 	// see https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_strategies.html
@@ -62,7 +62,7 @@ type Play struct {
 
 	// Vars are variables to be used in the play
 	// see https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html
-	Vars map[string]interface{} `yaml:"vars,omitempty"`
+	Vars map[string]any `yaml:"vars,omitempty"`
 
 	// Roles are a list of roles to be applied to the play
 	// see https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html
@@ -92,11 +92,11 @@ type Task struct {
 	Name string `yaml:"name,omitempty"`
 
 	// Action is the module to be executed
-	Action map[string]interface{} `yaml:",inline"` // Use inline to handle dynamic task modules
+	Action map[string]any `yaml:",inline"` // Use inline to handle dynamic task modules
 
 	// Vars are variables to be used in the play
 	// see https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html
-	Vars map[string]interface{} `yaml:"vars,omitempty"`
+	Vars map[string]any `yaml:"vars,omitempty"`
 
 	// see https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tags.html
 	Tags []string `yaml:"tags,omitempty"`
@@ -156,7 +156,7 @@ type Handler struct {
 	// Name is the name of the handler
 	Name string `yaml:"name,omitempty"`
 	// Action is the module to be executed
-	Action map[string]interface{} `yaml:",inline"` // Use inline to handle dynamic handler modules
+	Action map[string]any `yaml:",inline"` // Use inline to handle dynamic handler modules
 }
 
 func DecodeTasks(data []byte) (Tasks, error) {

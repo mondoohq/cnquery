@@ -7,9 +7,9 @@ import (
 	"context"
 
 	"github.com/microsoftgraph/msgraph-sdk-go/domains"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers/ms365/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (m *mqlMicrosoftDomain) id() (string, error) {
@@ -20,7 +20,7 @@ func (m *mqlMicrosoftDomaindnsrecord) id() (string, error) {
 	return m.Id.Data, nil
 }
 
-func (a *mqlMicrosoft) domains() ([]interface{}, error) {
+func (a *mqlMicrosoft) domains() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -32,10 +32,10 @@ func (a *mqlMicrosoft) domains() ([]interface{}, error) {
 		return nil, transformError(err)
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	domains := resp.GetValue()
 	for _, domain := range domains {
-		supportedServices := []interface{}{}
+		supportedServices := []any{}
 		for _, service := range domain.GetSupportedServices() {
 			supportedServices = append(supportedServices, service)
 		}
@@ -62,7 +62,7 @@ func (a *mqlMicrosoft) domains() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlMicrosoftDomain) serviceConfigurationRecords() ([]interface{}, error) {
+func (a *mqlMicrosoftDomain) serviceConfigurationRecords() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -76,7 +76,7 @@ func (a *mqlMicrosoftDomain) serviceConfigurationRecords() ([]interface{}, error
 		return nil, transformError(err)
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	records := resp.GetValue()
 	for _, record := range records {
 		mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.domaindnsrecord",

@@ -6,10 +6,10 @@ package plugin
 import (
 	"errors"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream"
-	"go.mondoo.com/cnquery/v11/types"
-	"go.mondoo.com/cnquery/v11/utils/syncx"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/upstream"
+	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/cnquery/v12/utils/syncx"
 )
 
 type Runtime struct {
@@ -105,10 +105,10 @@ func (r *Runtime) FieldResourceFromRecording(resource string, id string, field s
 	return raw, err
 }
 
-func (r *Runtime) initResourcesFromRecording(val interface{}, typ types.Type) (interface{}, error) {
+func (r *Runtime) initResourcesFromRecording(val any, typ types.Type) (any, error) {
 	switch {
 	case typ.IsArray():
-		arr := val.([]interface{})
+		arr := val.([]any)
 		ct := typ.Child()
 		var err error
 		for i := range arr {
@@ -120,7 +120,7 @@ func (r *Runtime) initResourcesFromRecording(val interface{}, typ types.Type) (i
 		return arr, nil
 
 	case typ.IsMap():
-		m := val.(map[string]interface{})
+		m := val.(map[string]any)
 		ct := typ.Child()
 		var err error
 		for k, v := range m {
@@ -223,9 +223,9 @@ func PrimitiveToTValue[T any](p *llx.Primitive) TValue[T] {
 	return TValue[T]{Data: raw.Value.(T), State: StateIsSet}
 }
 
-// RawToTValue converts a raw (interface{}) value into a typed value
+// RawToTValue converts a raw (any) value into a typed value
 // and returns true if the type was correct.
-func RawToTValue[T any](value interface{}, err error) (TValue[T], bool) {
+func RawToTValue[T any](value any, err error) (TValue[T], bool) {
 	if value == nil {
 		return TValue[T]{State: StateIsNull | StateIsSet, Error: err}, true
 	}

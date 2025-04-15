@@ -7,12 +7,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/testutils"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/testutils"
 )
 
 func TestResource_FilesFind(t *testing.T) {
 	res := x.TestQuery(t, "files.find(from: '/etc').list")
 	assert.NotEmpty(t, res)
 	testutils.TestNoResultErrors(t, res)
-	assert.Equal(t, 5, len(res[0].Data.Value.([]interface{})))
+	assert.Equal(t, 5, len(res[0].Data.Value.([]any)))
 }

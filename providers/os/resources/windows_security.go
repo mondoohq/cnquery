@@ -4,14 +4,14 @@
 package resources
 
 import (
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/windows"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/windows"
 )
 
-func (w *mqlWindowsSecurity) products() ([]interface{}, error) {
+func (w *mqlWindowsSecurity) products() ([]any, error) {
 	conn := w.MqlRuntime.Connection.(shared.Connection)
 
 	products, err := windows.GetSecurityProducts(conn)
@@ -19,7 +19,7 @@ func (w *mqlWindowsSecurity) products() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range products {
 		p := products[i]
 

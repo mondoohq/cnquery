@@ -11,12 +11,12 @@ import (
 	"strconv"
 	"time"
 
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/types"
 	"google.golang.org/protobuf/proto"
 )
 
 type (
-	dataConverter      func(interface{}, types.Type) (*Primitive, error)
+	dataConverter      func(any, types.Type) (*Primitive, error)
 	primitiveConverter func(*Primitive) *RawData
 )
 
@@ -72,7 +72,7 @@ func init() {
 	}
 }
 
-func dict2primitive(value interface{}) (*Primitive, error) {
+func dict2primitive(value any) (*Primitive, error) {
 	if value == nil {
 		return NilPrimitive, nil
 	}
@@ -86,7 +86,7 @@ func dict2primitive(value interface{}) (*Primitive, error) {
 		return FloatPrimitive(x), nil
 	case string:
 		return StringPrimitive(x), nil
-	case []interface{}:
+	case []any:
 		res := make([]*Primitive, len(x))
 		var err error
 		for i := range x {
@@ -97,7 +97,7 @@ func dict2primitive(value interface{}) (*Primitive, error) {
 		}
 		return &Primitive{Type: string(types.Array(types.Dict)), Array: res}, nil
 
-	case map[string]interface{}:
+	case map[string]any:
 		res := make(map[string]*Primitive, len(x))
 		var err error
 		for k, v := range x {
@@ -113,7 +113,7 @@ func dict2primitive(value interface{}) (*Primitive, error) {
 	}
 }
 
-func primitive2dictV2(p *Primitive) (interface{}, error) {
+func primitive2dictV2(p *Primitive) (any, error) {
 	switch types.Type(p.Type).Underlying() {
 	case types.Nil:
 		return nil, nil
@@ -138,19 +138,19 @@ func primitive2dictV2(p *Primitive) (interface{}, error) {
 	}
 }
 
-func unset2result(value interface{}, typ types.Type) (*Primitive, error) {
+func unset2result(value any, typ types.Type) (*Primitive, error) {
 	return UnsetPrimitive, nil
 }
 
-func nil2result(value interface{}, typ types.Type) (*Primitive, error) {
+func nil2result(value any, typ types.Type) (*Primitive, error) {
 	return NilPrimitive, nil
 }
 
-func errInvalidConversion(value interface{}, expectedType types.Type) error {
+func errInvalidConversion(value any, expectedType types.Type) error {
 	return fmt.Errorf("could not convert %T to %s", value, expectedType.Label())
 }
 
-func bool2result(value interface{}, typ types.Type) (*Primitive, error) {
+func bool2result(value any, typ types.Type) (*Primitive, error) {
 	v, ok := value.(bool)
 	if !ok {
 		return nil, errInvalidConversion(value, typ)
@@ -158,7 +158,7 @@ func bool2result(value interface{}, typ types.Type) (*Primitive, error) {
 	return BoolPrimitive(v), nil
 }
 
-func ref2resultV2(value interface{}, typ types.Type) (*Primitive, error) {
+func ref2resultV2(value any, typ types.Type) (*Primitive, error) {
 	v, ok := value.(uint64)
 	if !ok {
 		return nil, errInvalidConversion(value, typ)
@@ -166,7 +166,7 @@ func ref2resultV2(value interface{}, typ types.Type) (*Primitive, error) {
 	return RefPrimitiveV2(v), nil
 }
 
-func int2result(value interface{}, typ types.Type) (*Primitive, error) {
+func int2result(value any, typ types.Type) (*Primitive, error) {
 	if v, ok := value.(int64); ok {
 		return IntPrimitive(v), nil
 	}
@@ -177,7 +177,7 @@ func int2result(value interface{}, typ types.Type) (*Primitive, error) {
 	return nil, errInvalidConversion(value, typ)
 }
 
-func float2result(value interface{}, typ types.Type) (*Primitive, error) {
+func float2result(value any, typ types.Type) (*Primitive, error) {
 	v, ok := value.(float64)
 	if !ok {
 		return nil, errInvalidConversion(value, typ)
@@ -185,7 +185,7 @@ func float2result(value interface{}, typ types.Type) (*Primitive, error) {
 	return FloatPrimitive(v), nil
 }
 
-func string2result(value interface{}, typ types.Type) (*Primitive, error) {
+func string2result(value any, typ types.Type) (*Primitive, error) {
 	v, ok := value.(string)
 	if !ok {
 		return nil, errInvalidConversion(value, typ)
@@ -196,7 +196,7 @@ func string2result(value interface{}, typ types.Type) (*Primitive, error) {
 	return p, nil
 }
 
-func regex2result(value interface{}, typ types.Type) (*Primitive, error) {
+func regex2result(value any, typ types.Type) (*Primitive, error) {
 	v, ok := value.(string)
 	if !ok {
 		return nil, errInvalidConversion(value, typ)
@@ -204,7 +204,7 @@ func regex2result(value interface{}, typ types.Type) (*Primitive, error) {
 	return RegexPrimitive(v), nil
 }
 
-func time2result(value interface{}, typ types.Type) (*Primitive, error) {
+func time2result(value any, typ types.Type) (*Primitive, error) {
 	v, ok := value.(*time.Time)
 	if !ok {
 		return nil, errInvalidConversion(value, typ)
@@ -212,7 +212,7 @@ func time2result(value interface{}, typ types.Type) (*Primitive, error) {
 	return TimePrimitive(v), nil
 }
 
-func dict2result(value interface{}, typ types.Type) (*Primitive, error) {
+func dict2result(value any, typ types.Type) (*Primitive, error) {
 	prim, err := dict2primitive(value)
 	if err != nil {
 		return nil, err
@@ -226,7 +226,7 @@ func dict2result(value interface{}, typ types.Type) (*Primitive, error) {
 	return &Primitive{Type: string(types.Dict), Value: raw}, nil
 }
 
-func score2result(value interface{}, typ types.Type) (*Primitive, error) {
+func score2result(value any, typ types.Type) (*Primitive, error) {
 	v, ok := value.([]byte)
 	if !ok {
 		return nil, errInvalidConversion(value, typ)
@@ -237,12 +237,12 @@ func score2result(value interface{}, typ types.Type) (*Primitive, error) {
 	}, nil
 }
 
-func empty2result(value interface{}, typ types.Type) (*Primitive, error) {
+func empty2result(value any, typ types.Type) (*Primitive, error) {
 	return EmptyPrimitive, nil
 }
 
-func block2result(value interface{}, typ types.Type) (*Primitive, error) {
-	m, ok := value.(map[string]interface{})
+func block2result(value any, typ types.Type) (*Primitive, error) {
+	m, ok := value.(map[string]any)
 	if !ok {
 		return nil, errInvalidConversion(value, typ)
 	}
@@ -258,7 +258,7 @@ func block2result(value interface{}, typ types.Type) (*Primitive, error) {
 	return &Primitive{Type: string(typ), Map: res}, nil
 }
 
-func version2result(value interface{}, typ types.Type) (*Primitive, error) {
+func version2result(value any, typ types.Type) (*Primitive, error) {
 	v, ok := value.(string)
 	if !ok {
 		return nil, errInvalidConversion(value, typ)
@@ -279,8 +279,8 @@ func ip2result(value any, typ types.Type) (*Primitive, error) {
 	return &Primitive{Type: string(typ), Value: res}, err
 }
 
-func array2result(value interface{}, typ types.Type) (*Primitive, error) {
-	arr, ok := value.([]interface{})
+func array2result(value any, typ types.Type) (*Primitive, error) {
+	arr, ok := value.([]any)
 	if !ok {
 		return nil, errInvalidConversion(value, typ)
 	}
@@ -296,8 +296,8 @@ func array2result(value interface{}, typ types.Type) (*Primitive, error) {
 	return &Primitive{Type: string(typ), Array: res}, nil
 }
 
-func stringmap2result(value interface{}, typ types.Type) (*Primitive, error) {
-	m, ok := value.(map[string]interface{})
+func stringmap2result(value any, typ types.Type) (*Primitive, error) {
+	m, ok := value.(map[string]any)
 	if !ok {
 		return nil, errInvalidConversion(value, typ)
 	}
@@ -313,8 +313,8 @@ func stringmap2result(value interface{}, typ types.Type) (*Primitive, error) {
 	return &Primitive{Type: string(typ), Map: res}, nil
 }
 
-func intmap2result(value interface{}, typ types.Type) (*Primitive, error) {
-	m, ok := value.(map[int64]interface{})
+func intmap2result(value any, typ types.Type) (*Primitive, error) {
+	m, ok := value.(map[int64]any)
 	if !ok {
 		return nil, errInvalidConversion(value, typ)
 	}
@@ -330,7 +330,7 @@ func intmap2result(value interface{}, typ types.Type) (*Primitive, error) {
 	return &Primitive{Type: string(typ), Map: res}, nil
 }
 
-func map2result(value interface{}, typ types.Type) (*Primitive, error) {
+func map2result(value any, typ types.Type) (*Primitive, error) {
 	switch typ.Key() {
 	case types.String:
 		return stringmap2result(value, typ)
@@ -341,7 +341,7 @@ func map2result(value interface{}, typ types.Type) (*Primitive, error) {
 	}
 }
 
-func resource2result(value interface{}, typ types.Type) (*Primitive, error) {
+func resource2result(value any, typ types.Type) (*Primitive, error) {
 	m, ok := value.(Resource)
 	if !ok {
 		return nil, errInvalidConversion(value, typ)
@@ -349,7 +349,7 @@ func resource2result(value interface{}, typ types.Type) (*Primitive, error) {
 	return &Primitive{Type: string(typ), Value: []byte(m.MqlID())}, nil
 }
 
-func function2result(value interface{}, typ types.Type) (*Primitive, error) {
+func function2result(value any, typ types.Type) (*Primitive, error) {
 	v, ok := value.(uint64)
 	if ok {
 		return FunctionPrimitive(v), nil
@@ -365,7 +365,7 @@ func range2result(value any, typ types.Type) (*Primitive, error) {
 	return RangePrimitive(v), nil
 }
 
-func raw2primitive(value interface{}, typ types.Type) (*Primitive, error) {
+func raw2primitive(value any, typ types.Type) (*Primitive, error) {
 	if value == nil {
 		// there are only few types whose value is allowed to be nil
 		switch typ {
@@ -389,7 +389,7 @@ func raw2primitive(value interface{}, typ types.Type) (*Primitive, error) {
 }
 
 // Result converts the raw data into a proto-compliant data structure that
-// can be sent over the wire. It converts the interface{} value of RawData
+// can be sent over the wire. It converts the any value of RawData
 // into a []byte structure that is easily serializable
 func (r *RawData) Result() *Result {
 	errorMsg := ""
@@ -414,7 +414,7 @@ func (r *RawData) Result() *Result {
 	if err != nil {
 		// If we already have an error on record, we just return that instead.
 		// This typically only happens when the above check for Value==nil cannot
-		// be determined, because it is hidden behind an interface{}. See:
+		// be determined, because it is hidden behind an any. See:
 		// https://stackoverflow.com/questions/43059653/golang-interfacenil-is-nil-or-not
 		if errorMsg == "" {
 			errorMsg = err.Error()
@@ -634,7 +634,7 @@ func parray2raw(p *Primitive) *RawData {
 	// much later when you try to just get to the values of the returned data.
 	d, _, err := primitive2array(nil, 0, p.Array)
 	if d == nil {
-		d = []interface{}{}
+		d = []any{}
 	}
 	return &RawData{Value: d, Error: err, Type: types.Type(p.Type)}
 }
@@ -679,12 +679,12 @@ func prange2raw(p *Primitive) *RawData {
 
 // Tries to resolve primitives; returns refs if they don't exist yet.
 // Returns nil and a ref != 0 if a value needs resolving.
-func primitive2array(b *blockExecutor, ref uint64, args []*Primitive) ([]interface{}, uint64, error) {
+func primitive2array(b *blockExecutor, ref uint64, args []*Primitive) ([]any, uint64, error) {
 	if args == nil {
-		return []interface{}{}, 0, nil
+		return []any{}, 0, nil
 	}
 
-	res := make([]interface{}, len(args))
+	res := make([]any, len(args))
 	for i := range args {
 		var cur *RawData
 
@@ -711,12 +711,12 @@ func primitive2array(b *blockExecutor, ref uint64, args []*Primitive) ([]interfa
 
 // Converts a map of primitives into a map of go data (no type info).
 // Return map is never nil.
-func primitive2mapV2(m map[string]*Primitive) (map[string]interface{}, error) {
+func primitive2mapV2(m map[string]*Primitive) (map[string]any, error) {
 	if m == nil {
-		return map[string]interface{}{}, nil
+		return map[string]any{}, nil
 	}
 
-	res := make(map[string]interface{})
+	res := make(map[string]any)
 	for k, v := range m {
 		if v == nil {
 			res[k] = nil
@@ -733,12 +733,12 @@ func primitive2mapV2(m map[string]*Primitive) (map[string]interface{}, error) {
 
 // Converts a map of primitives into a map of RawData (to preserve type-info).
 // Return map is never nil.
-func primitive2rawdataMapV2(m map[string]*Primitive) (map[string]interface{}, error) {
+func primitive2rawdataMapV2(m map[string]*Primitive) (map[string]any, error) {
 	if m == nil {
-		return map[string]interface{}{}, nil
+		return map[string]any{}, nil
 	}
 
-	res := make(map[string]interface{})
+	res := make(map[string]any)
 	for k, v := range m {
 		if v == nil {
 			res[k] = nil
@@ -805,7 +805,7 @@ func (b *blockExecutor) resolveValue(arg *Primitive, ref uint64) (*RawData, uint
 		srcRef := uint64(bytes2int(arg.Value))
 		return b.resolveRef(srcRef, ref)
 	case types.ArrayLike:
-		res := make([]interface{}, len(arg.Array))
+		res := make([]any, len(arg.Array))
 		for i := range arg.Array {
 			c, ref, err := b.resolveValue(arg.Array[i], ref)
 			if ref != 0 || err != nil {
@@ -825,23 +825,23 @@ func (b *blockExecutor) resolveValue(arg *Primitive, ref uint64) (*RawData, uint
 	}
 }
 
-func TArr2Raw[T any](arr []T) []interface{} {
-	res := make([]interface{}, len(arr))
+func TArr2Raw[T any](arr []T) []any {
+	res := make([]any, len(arr))
 	for i := range arr {
 		res[i] = arr[i]
 	}
 	return res
 }
 
-func TMap2Raw[T any](m map[string]T) map[string]interface{} {
-	res := make(map[string]interface{}, len(m))
+func TMap2Raw[T any](m map[string]T) map[string]any {
+	res := make(map[string]any, len(m))
 	for k, v := range m {
 		res[k] = v
 	}
 	return res
 }
 
-func TRaw2T[T any](v interface{}) T {
+func TRaw2T[T any](v any) T {
 	if res, ok := v.(T); ok {
 		return res
 	}
@@ -849,8 +849,8 @@ func TRaw2T[T any](v interface{}) T {
 	return res
 }
 
-func TRaw2TArr[T any](v interface{}) []T {
-	arr, ok := v.([]interface{})
+func TRaw2TArr[T any](v any) []T {
+	arr, ok := v.([]any)
 	if !ok {
 		return nil
 	}
@@ -862,8 +862,8 @@ func TRaw2TArr[T any](v interface{}) []T {
 	return res
 }
 
-func TRaw2TMap[T any](v interface{}) map[string]T {
-	m, ok := v.(map[string]interface{})
+func TRaw2TMap[T any](v any) map[string]T {
+	m, ok := v.(map[string]any)
 	if !ok {
 		return nil
 	}

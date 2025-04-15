@@ -13,12 +13,12 @@ import (
 	"sync"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/logger"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/logger"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/ms365/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 const (
@@ -66,7 +66,7 @@ ConvertTo-Json -Depth 4 $msteams
 `
 
 type MsTeamsReport struct {
-	CsTeamsClientConfiguration      interface{}                      `json:"CsTeamsClientConfiguration"`
+	CsTeamsClientConfiguration      any                      `json:"CsTeamsClientConfiguration"`
 	CsTenantFederationConfiguration *CsTenantFederationConfiguration `json:"CsTenantFederationConfiguration"`
 	CsTeamsMeetingPolicy            *CsTeamsMeetingPolicy            `json:"CsTeamsMeetingPolicy"`
 	CsTeamsMessagingPolicy          *CsTeamsMessagingPolicy          `json:"CsTeamsMessagingPolicy"`
@@ -84,7 +84,7 @@ type CsTenantFederationConfiguration struct {
 	AllowedDomains                              []string `json:"AllowedDomains"`
 	// TODO: we need to figure out how to get this right when using Convert-ToJson
 	// it currently comes back as an empty json object {} but the pwsh cmdlet spits out a string-looking value
-	BlockedDomains interface{} `json:"BlockedDomains"`
+	BlockedDomains any `json:"BlockedDomains"`
 }
 
 type CsTeamsMeetingPolicy struct {
@@ -180,9 +180,9 @@ func (r *mqlMs365Teams) gatherTeamsReport() error {
 
 	if report.CsTeamsClientConfiguration != nil {
 		csTeamsConfiguration, csTeamsConfigurationErr := convert.JsonToDict(report.CsTeamsClientConfiguration)
-		r.CsTeamsClientConfiguration = plugin.TValue[interface{}]{Data: csTeamsConfiguration, State: plugin.StateIsSet, Error: csTeamsConfigurationErr}
+		r.CsTeamsClientConfiguration = plugin.TValue[any]{Data: csTeamsConfiguration, State: plugin.StateIsSet, Error: csTeamsConfigurationErr}
 	} else {
-		r.CsTeamsClientConfiguration = plugin.TValue[interface{}]{State: plugin.StateIsSet, Error: errors.New("CsTeamsClientConfiguration is nil")}
+		r.CsTeamsClientConfiguration = plugin.TValue[any]{State: plugin.StateIsSet, Error: errors.New("CsTeamsClientConfiguration is nil")}
 	}
 
 	if report.CsTenantFederationConfiguration != nil {
@@ -252,7 +252,7 @@ func (r *mqlMs365Teams) gatherTeamsReport() error {
 	return nil
 }
 
-func (r *mqlMs365Teams) csTeamsClientConfiguration() (interface{}, error) {
+func (r *mqlMs365Teams) csTeamsClientConfiguration() (any, error) {
 	return nil, r.gatherTeamsReport()
 }
 

@@ -11,13 +11,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/k8s/connection/manifest"
-	"go.mondoo.com/cnquery/v11/providers/k8s/connection/shared"
-	sharedres "go.mondoo.com/cnquery/v11/providers/k8s/connection/shared/resources"
-	"go.mondoo.com/cnquery/v11/utils/syncx"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/k8s/connection/manifest"
+	"go.mondoo.com/cnquery/v12/providers/k8s/connection/shared"
+	sharedres "go.mondoo.com/cnquery/v12/providers/k8s/connection/shared/resources"
+	"go.mondoo.com/cnquery/v12/utils/syncx"
 )
 
 type K8sObjectKindTest struct {
@@ -69,43 +69,43 @@ func TestManifestFiles(t *testing.T) {
 				assert.Equal(t, "mondoo", v.GetName().Data)
 				podSpec := v.GetPodSpec().Data
 				assert.NotNil(t, podSpec)
-				podSpecMap := podSpec.(map[string]interface{})
+				podSpecMap := podSpec.(map[string]any)
 				assert.NotNil(t, podSpecMap["containers"])
 			case *mqlK8sJob:
 				assert.Equal(t, "mondoo", v.GetName().Data)
 				podSpec := v.GetPodSpec().Data
 				assert.NotNil(t, podSpec)
-				podSpecMap := podSpec.(map[string]interface{})
+				podSpecMap := podSpec.(map[string]any)
 				assert.NotNil(t, podSpecMap["containers"])
 			case *mqlK8sDeployment:
 				assert.Equal(t, "mondoo", v.GetName().Data)
 				podSpec := v.GetPodSpec().Data
 				assert.NotNil(t, podSpec)
-				podSpecMap := podSpec.(map[string]interface{})
+				podSpecMap := podSpec.(map[string]any)
 				assert.NotNil(t, podSpecMap["containers"])
 			case *mqlK8sStatefulset:
 				assert.Equal(t, "mondoo", v.GetName().Data)
 				podSpec := v.GetPodSpec().Data
 				assert.NotNil(t, podSpec)
-				podSpecMap := podSpec.(map[string]interface{})
+				podSpecMap := podSpec.(map[string]any)
 				assert.NotNil(t, podSpecMap["containers"])
 			case *mqlK8sReplicaset:
 				assert.Equal(t, "mondoo", v.GetName().Data)
 				podSpec := v.GetPodSpec().Data
 				assert.NotNil(t, podSpec)
-				podSpecMap := podSpec.(map[string]interface{})
+				podSpecMap := podSpec.(map[string]any)
 				assert.NotNil(t, podSpecMap["containers"])
 			case *mqlK8sDaemonset:
 				assert.Equal(t, "mondoo", v.GetName().Data)
 				podSpec := v.GetPodSpec().Data
 				assert.NotNil(t, podSpec)
-				podSpecMap := podSpec.(map[string]interface{})
+				podSpecMap := podSpec.(map[string]any)
 				assert.NotNil(t, podSpecMap["containers"])
 			case *mqlK8sPod:
 				assert.Equal(t, "mondoo", v.GetName().Data)
 				podSpec := v.GetPodSpec().Data
 				assert.NotNil(t, podSpec)
-				podSpecMap := podSpec.(map[string]interface{})
+				podSpecMap := podSpec.(map[string]any)
 				assert.NotNil(t, podSpecMap["containers"])
 			default:
 				fmt.Printf("I don't know about type %T!\n", v)

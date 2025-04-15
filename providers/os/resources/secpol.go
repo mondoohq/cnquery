@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"strings"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/powershell"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/windows"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/powershell"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/windows"
 )
 
 type mqlSecpolInternal struct {
@@ -45,7 +45,7 @@ func (s *mqlSecpol) policy() (*windows.Secpol, error) {
 	return policy, nil
 }
 
-func (s *mqlSecpol) systemaccess() (map[string]interface{}, error) {
+func (s *mqlSecpol) systemaccess() (map[string]any, error) {
 	policy, err := s.policy()
 	if err != nil {
 		return nil, err
@@ -53,7 +53,7 @@ func (s *mqlSecpol) systemaccess() (map[string]interface{}, error) {
 	return policy.SystemAccess, nil
 }
 
-func (s *mqlSecpol) eventaudit() (map[string]interface{}, error) {
+func (s *mqlSecpol) eventaudit() (map[string]any, error) {
 	policy, err := s.policy()
 	if err != nil {
 		return nil, err
@@ -61,7 +61,7 @@ func (s *mqlSecpol) eventaudit() (map[string]interface{}, error) {
 	return policy.EventAudit, nil
 }
 
-func (s *mqlSecpol) registryvalues() (map[string]interface{}, error) {
+func (s *mqlSecpol) registryvalues() (map[string]any, error) {
 	policy, err := s.policy()
 	if err != nil {
 		return nil, err
@@ -69,7 +69,7 @@ func (s *mqlSecpol) registryvalues() (map[string]interface{}, error) {
 	return policy.RegistryValues, nil
 }
 
-func (s *mqlSecpol) privilegerights() (map[string]interface{}, error) {
+func (s *mqlSecpol) privilegerights() (map[string]any, error) {
 	policy, err := s.policy()
 	if err != nil {
 		return nil, err

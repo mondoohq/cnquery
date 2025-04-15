@@ -1,15 +1,15 @@
-module go.mondoo.com/cnquery/v11/providers/cloudformation
+module go.mondoo.com/cnquery/v12/providers/cloudformation
 
 go 1.24.0
 
 toolchain go1.24.3
 
-replace go.mondoo.com/cnquery/v11 => ../..
+replace go.mondoo.com/cnquery/v12 => ../..
 
 require (
 	github.com/aws-cloudformation/rain v1.23.0
 	github.com/stretchr/testify v1.10.0
-	go.mondoo.com/cnquery/v11 v11.61.0
+	go.mondoo.com/cnquery/v12 v12.0.0
 	go.mondoo.com/ranger-rpc v0.7.0
 	gopkg.in/yaml.v3 v3.0.1
 )

@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/snapshot"
-	"go.mondoo.com/cnquery/v11/providers/os/resources"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/snapshot"
+	"go.mondoo.com/cnquery/v12/providers/os/resources"
 	"go.uber.org/mock/gomock"
 )
 

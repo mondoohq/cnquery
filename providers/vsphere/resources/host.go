@@ -9,12 +9,12 @@ import (
 
 	"github.com/vmware/govmomi/vim25/mo"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/vsphere/connection"
-	"go.mondoo.com/cnquery/v11/providers/vsphere/resources/resourceclient"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/vsphere/connection"
+	"go.mondoo.com/cnquery/v12/providers/vsphere/resources/resourceclient"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 type mqlVsphereHostInternal struct {
@@ -65,7 +65,7 @@ func (v *mqlVsphereHost) esxiClient() (*resourceclient.Esxi, error) {
 	return esxiClient(conn, path)
 }
 
-func (v *mqlVsphereHost) standardSwitch() ([]interface{}, error) {
+func (v *mqlVsphereHost) standardSwitch() ([]any, error) {
 	esxiClient, err := v.esxiClient()
 	if err != nil {
 		return nil, err
@@ -76,7 +76,7 @@ func (v *mqlVsphereHost) standardSwitch() ([]interface{}, error) {
 		return nil, err
 	}
 
-	mqlVswitches := make([]interface{}, len(vswitches))
+	mqlVswitches := make([]any, len(vswitches))
 	for i, s := range vswitches {
 		mqlVswitch, err := CreateResource(v.MqlRuntime, "vsphere.vswitch.standard", map[string]*llx.RawData{
 			"name":       llx.StringData(s["Name"].(string)),
@@ -97,7 +97,7 @@ func (v *mqlVsphereHost) standardSwitch() ([]interface{}, error) {
 	return mqlVswitches, nil
 }
 
-func (v *mqlVsphereHost) distributedSwitch() ([]interface{}, error) {
+func (v *mqlVsphereHost) distributedSwitch() ([]any, error) {
 	esxiClient, err := v.esxiClient()
 	if err != nil {
 		return nil, err
@@ -108,7 +108,7 @@ func (v *mqlVsphereHost) distributedSwitch() ([]interface{}, error) {
 		return nil, err
 	}
 
-	mqlVswitches := make([]interface{}, len(vswitches))
+	mqlVswitches := make([]any, len(vswitches))
 	for i, s := range vswitches {
 		mqlVswitch, err := CreateResource(v.MqlRuntime, "vsphere.vswitch.dvs", map[string]*llx.RawData{
 			"name":       llx.StringData(s["Name"].(string)),
@@ -129,7 +129,7 @@ func (v *mqlVsphereHost) distributedSwitch() ([]interface{}, error) {
 	return mqlVswitches, nil
 }
 
-func (v *mqlVsphereHost) adapters() ([]interface{}, error) {
+func (v *mqlVsphereHost) adapters() ([]any, error) {
 	esxiClient, err := v.esxiClient()
 	if err != nil {
 		return nil, err
@@ -144,14 +144,14 @@ func (v *mqlVsphereHost) adapters() ([]interface{}, error) {
 		return nil, err
 	}
 
-	pauseParams := map[string]map[string]interface{}{}
+	pauseParams := map[string]map[string]any{}
 	// sort pause params by nic
 	for i, p := range pParams {
 		nicName := pParams[i]["NIC"].(string)
 		pauseParams[nicName] = p
 	}
 
-	mqlAdapters := make([]interface{}, len(adapters))
+	mqlAdapters := make([]any, len(adapters))
 	for i, a := range adapters {
 		nicName := a["Name"].(string)
 		pParams := pauseParams[nicName]
@@ -188,7 +188,7 @@ func (v *mqlVsphereVmnic) esxiClient() (*resourceclient.Esxi, error) {
 	return esxiClient(conn, v.hostInventoryPath)
 }
 
-func (v *mqlVsphereVmnic) details() (map[string]interface{}, error) {
+func (v *mqlVsphereVmnic) details() (map[string]any, error) {
 	name := v.Name.Data
 
 	esxiClient, err := v.esxiClient()
@@ -199,7 +199,7 @@ func (v *mqlVsphereVmnic) details() (map[string]interface{}, error) {
 	return esxiClient.ListNicDetails(name)
 }
 
-func (v *mqlVsphereHost) vmknics() ([]interface{}, error) {
+func (v *mqlVsphereHost) vmknics() ([]any, error) {
 	esxiClient, err := v.esxiClient()
 	if err != nil {
 		return nil, err
@@ -209,7 +209,7 @@ func (v *mqlVsphereHost) vmknics() ([]interface{}, error) {
 		return nil, err
 	}
 
-	mqlVmknics := make([]interface{}, len(vmknics))
+	mqlVmknics := make([]any, len(vmknics))
 	for i := range vmknics {
 		entry := vmknics[i]
 		mqlVswitch, err := CreateResource(v.MqlRuntime, "vsphere.vmknic", map[string]*llx.RawData{
@@ -228,7 +228,7 @@ func (v *mqlVsphereHost) vmknics() ([]interface{}, error) {
 	return mqlVmknics, nil
 }
 
-func (v *mqlVsphereHost) packages() ([]interface{}, error) {
+func (v *mqlVsphereHost) packages() ([]any, error) {
 	esxiClient, err := v.esxiClient()
 	if err != nil {
 		return nil, err
@@ -238,7 +238,7 @@ func (v *mqlVsphereHost) packages() ([]interface{}, error) {
 		return nil, err
 	}
 
-	mqlPackages := make([]interface{}, len(vibs))
+	mqlPackages := make([]any, len(vibs))
 	for i := range vibs {
 		vib := vibs[i]
 
@@ -285,7 +285,7 @@ func (v *mqlVsphereHost) acceptanceLevel() (string, error) {
 	return esxiClient.SoftwareAcceptance()
 }
 
-func (v *mqlVsphereHost) kernelModules() ([]interface{}, error) {
+func (v *mqlVsphereHost) kernelModules() ([]any, error) {
 	esxiClient, err := v.esxiClient()
 	if err != nil {
 		return nil, err
@@ -295,7 +295,7 @@ func (v *mqlVsphereHost) kernelModules() ([]interface{}, error) {
 		return nil, err
 	}
 
-	mqlModules := make([]interface{}, len(modules))
+	mqlModules := make([]any, len(modules))
 	for i, m := range modules {
 		mqlModule, err := CreateResource(v.MqlRuntime, "esxi.kernelmodule", map[string]*llx.RawData{
 			"name":                 llx.StringData(m.Module),
@@ -318,7 +318,7 @@ func (v *mqlVsphereHost) kernelModules() ([]interface{}, error) {
 	return mqlModules, nil
 }
 
-func (v *mqlVsphereHost) advancedSettings() (map[string]interface{}, error) {
+func (v *mqlVsphereHost) advancedSettings() (map[string]any, error) {
 	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
 	vClient := getClientInstance(conn)
 
@@ -335,7 +335,7 @@ func (v *mqlVsphereHost) advancedSettings() (map[string]interface{}, error) {
 	return resourceclient.HostOptions(host)
 }
 
-func (v *mqlVsphereHost) services() ([]interface{}, error) {
+func (v *mqlVsphereHost) services() ([]any, error) {
 	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
 	vClient := getClientInstance(conn)
 
@@ -353,7 +353,7 @@ func (v *mqlVsphereHost) services() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	mqlServices := make([]interface{}, len(services))
+	mqlServices := make([]any, len(services))
 	for i, s := range services {
 		mqlService, err := CreateResource(v.MqlRuntime, "esxi.service", map[string]*llx.RawData{
 			"key":      llx.StringData(s.Key),
@@ -426,8 +426,8 @@ func (v *mqlVsphereHost) ntp() (*mqlEsxiNtpconfig, error) {
 		return nil, err
 	}
 
-	var server []interface{}
-	var config []interface{}
+	var server []any
+	var config []any
 
 	if datetimeinfo != nil && datetimeinfo.NtpConfig != nil {
 		server = convert.SliceAnyToInterface(datetimeinfo.NtpConfig.Server)
@@ -446,7 +446,7 @@ func (v *mqlVsphereHost) ntp() (*mqlEsxiNtpconfig, error) {
 	return mqlNtpConfig.(*mqlEsxiNtpconfig), nil
 }
 
-func (v *mqlVsphereHost) snmp() (map[string]interface{}, error) {
+func (v *mqlVsphereHost) snmp() (map[string]any, error) {
 	esxiClient, err := v.esxiClient()
 	if err != nil {
 		return nil, err

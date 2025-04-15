@@ -7,9 +7,9 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 )
@@ -20,10 +20,10 @@ type mqlK8sNamespaceInternal struct {
 }
 
 func initK8sNamespace(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	return initResource[*mqlK8sNamespace](runtime, args, func(k *mqlK8s) *plugin.TValue[[]interface{}] { return k.GetNamespaces() })
+	return initResource[*mqlK8sNamespace](runtime, args, func(k *mqlK8s) *plugin.TValue[[]any] { return k.GetNamespaces() })
 }
 
-func (k *mqlK8s) namespaces() ([]interface{}, error) {
+func (k *mqlK8s) namespaces() ([]any, error) {
 	kp, err := k8sProvider(k.MqlRuntime.Connection)
 	if err != nil {
 		return nil, err
@@ -34,7 +34,7 @@ func (k *mqlK8s) namespaces() ([]interface{}, error) {
 		return nil, err
 	}
 
-	resp := make([]interface{}, 0, len(nss))
+	resp := make([]any, 0, len(nss))
 	for _, ns := range nss {
 		ts := ns.GetCreationTimestamp()
 
@@ -61,7 +61,7 @@ func (k *mqlK8s) namespaces() ([]interface{}, error) {
 	return resp, nil
 }
 
-func (k *mqlK8sNamespace) manifest() (map[string]interface{}, error) {
+func (k *mqlK8sNamespace) manifest() (map[string]any, error) {
 	manifest, err := convert.JsonToDict(k.obj)
 	if err != nil {
 		return nil, err
@@ -73,10 +73,10 @@ func (k *mqlK8sNamespace) id() (string, error) {
 	return k.Id.Data, nil
 }
 
-func (k *mqlK8sNamespace) annotations() (map[string]interface{}, error) {
+func (k *mqlK8sNamespace) annotations() (map[string]any, error) {
 	return convert.MapToInterfaceMap(k.obj.GetAnnotations()), nil
 }
 
-func (k *mqlK8sNamespace) labels() (map[string]interface{}, error) {
+func (k *mqlK8sNamespace) labels() (map[string]any, error) {
 	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
 }

@@ -19,7 +19,7 @@ func (s *CnqueryBOM) ApplyOptions(opts ...renderOption) {
 	}
 }
 
-func (ccx *CnqueryBOM) Convert(bom *Sbom) (interface{}, error) {
+func (ccx *CnqueryBOM) Convert(bom *Sbom) (any, error) {
 	// nothing to do, the cnquery BOM is already in the correct format
 	return bom, nil
 }

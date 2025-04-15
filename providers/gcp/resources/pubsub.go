@@ -10,11 +10,11 @@ import (
 	"time"
 
 	"cloud.google.com/go/pubsub"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/gcp/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v12/types"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
@@ -135,7 +135,7 @@ func (g *mqlGcpProjectPubsubServiceSnapshot) id() (string, error) {
 	return fmt.Sprintf("%s/%s", projectId, name), nil
 }
 
-func (g *mqlGcpProjectPubsubService) topics() ([]interface{}, error) {
+func (g *mqlGcpProjectPubsubService) topics() ([]any, error) {
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -156,7 +156,7 @@ func (g *mqlGcpProjectPubsubService) topics() ([]interface{}, error) {
 	}
 	defer pubsubSvc.Close()
 
-	var topics []interface{}
+	var topics []any
 
 	it := pubsubSvc.Topics(ctx)
 	for {
@@ -232,7 +232,7 @@ func (g *mqlGcpProjectPubsubServiceTopic) config() (*mqlGcpProjectPubsubServiceT
 	return res.(*mqlGcpProjectPubsubServiceTopicConfig), nil
 }
 
-func (g *mqlGcpProjectPubsubService) subscriptions() ([]interface{}, error) {
+func (g *mqlGcpProjectPubsubService) subscriptions() ([]any, error) {
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -253,7 +253,7 @@ func (g *mqlGcpProjectPubsubService) subscriptions() ([]interface{}, error) {
 	}
 	defer pubsubSvc.Close()
 
-	var subs []interface{}
+	var subs []any
 
 	it := pubsubSvc.Subscriptions(ctx)
 	for {
@@ -343,7 +343,7 @@ func (g *mqlGcpProjectPubsubServiceSubscription) config() (*mqlGcpProjectPubsubS
 	return res.(*mqlGcpProjectPubsubServiceSubscriptionConfig), nil
 }
 
-func (g *mqlGcpProjectPubsubService) snapshots() ([]interface{}, error) {
+func (g *mqlGcpProjectPubsubService) snapshots() ([]any, error) {
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -364,7 +364,7 @@ func (g *mqlGcpProjectPubsubService) snapshots() ([]interface{}, error) {
 	}
 	defer pubsubSvc.Close()
 
-	var subs []interface{}
+	var subs []any
 
 	it := pubsubSvc.Snapshots(ctx)
 	for {

@@ -12,9 +12,9 @@ import (
 	"time"
 
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 )
 
 type ConnectionType string
@@ -154,7 +154,7 @@ func (f *FileInfo) IsDir() bool {
 	return f.FIsDir
 }
 
-func (f *FileInfo) Sys() interface{} {
+func (f *FileInfo) Sys() any {
 	return f
 }
 

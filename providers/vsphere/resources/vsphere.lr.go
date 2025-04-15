@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -590,11 +590,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"asset.cpes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAsset).Cpes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAsset).Cpes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"asset.vulnerabilityReport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAsset).VulnerabilityReport, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAsset).VulnerabilityReport, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"vulnmgmt.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -602,15 +602,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"vulnmgmt.cves": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVulnmgmt).Cves, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlVulnmgmt).Cves, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vulnmgmt.advisories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVulnmgmt).Advisories, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlVulnmgmt).Advisories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vulnmgmt.packages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVulnmgmt).Packages, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlVulnmgmt).Packages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vulnmgmt.lastAssessment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -718,15 +718,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"vsphere.about": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphere).About, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlVsphere).About, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"vsphere.licenses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphere).Licenses, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlVsphere).Licenses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.datacenters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphere).Datacenters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlVsphere).Datacenters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.license.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -774,23 +774,23 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vsphere.datacenter.hosts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereDatacenter).Hosts, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlVsphereDatacenter).Hosts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.datacenter.vms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereDatacenter).Vms, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlVsphereDatacenter).Vms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.datacenter.clusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereDatacenter).Clusters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlVsphereDatacenter).Clusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.datacenter.distributedSwitches": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereDatacenter).DistributedSwitches, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlVsphereDatacenter).DistributedSwitches, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.datacenter.distributedPortGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereDatacenter).DistributedPortGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlVsphereDatacenter).DistributedPortGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -810,11 +810,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vsphere.cluster.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereCluster).Properties, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlVsphereCluster).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"vsphere.cluster.hosts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereCluster).Hosts, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlVsphereCluster).Hosts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.host.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -834,27 +834,27 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vsphere.host.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereHost).Properties, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlVsphereHost).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"vsphere.host.standardSwitch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereHost).StandardSwitch, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlVsphereHost).StandardSwitch, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.host.distributedSwitch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereHost).DistributedSwitch, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlVsphereHost).DistributedSwitch, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.host.adapters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereHost).Adapters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlVsphereHost).Adapters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.host.vmknics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereHost).Vmknics, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlVsphereHost).Vmknics, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.host.packages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereHost).Packages, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlVsphereHost).Packages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.host.acceptanceLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -862,15 +862,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vsphere.host.kernelModules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereHost).KernelModules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlVsphereHost).KernelModules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.host.advancedSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereHost).AdvancedSettings, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlVsphereHost).AdvancedSettings, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.host.services": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereHost).Services, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlVsphereHost).Services, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.host.timezone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -882,11 +882,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vsphere.host.snmp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereHost).Snmp, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlVsphereHost).Snmp, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.host.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereHost).Tags, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlVsphereHost).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.vm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -906,15 +906,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vsphere.vm.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereVm).Properties, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlVsphereVm).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"vsphere.vm.advancedSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereVm).AdvancedSettings, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlVsphereVm).AdvancedSettings, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.vm.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereVm).Tags, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlVsphereVm).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.vswitch.standard.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -926,23 +926,23 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vsphere.vswitch.standard.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereVswitchStandard).Properties, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlVsphereVswitchStandard).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"vsphere.vswitch.standard.failoverPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereVswitchStandard).FailoverPolicy, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlVsphereVswitchStandard).FailoverPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"vsphere.vswitch.standard.securityPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereVswitchStandard).SecurityPolicy, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlVsphereVswitchStandard).SecurityPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"vsphere.vswitch.standard.shapingPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereVswitchStandard).ShapingPolicy, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlVsphereVswitchStandard).ShapingPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"vsphere.vswitch.standard.uplinks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereVswitchStandard).Uplinks, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlVsphereVswitchStandard).Uplinks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.vswitch.dvs.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -958,11 +958,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vsphere.vswitch.dvs.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereVswitchDvs).Properties, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlVsphereVswitchDvs).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"vsphere.vswitch.dvs.uplinks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereVswitchDvs).Uplinks, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlVsphereVswitchDvs).Uplinks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.vswitch.portgroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -978,7 +978,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vsphere.vswitch.portgroup.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereVswitchPortgroup).Properties, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlVsphereVswitchPortgroup).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"vsphere.vmnic.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -990,15 +990,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vsphere.vmnic.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereVmnic).Properties, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlVsphereVmnic).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"vsphere.vmnic.details": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereVmnic).Details, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlVsphereVmnic).Details, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"vsphere.vmnic.pauseParams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereVmnic).PauseParams, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlVsphereVmnic).PauseParams, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"vsphere.vmknic.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1010,19 +1010,19 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vsphere.vmknic.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereVmknic).Properties, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlVsphereVmknic).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"vsphere.vmknic.ipv4": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereVmknic).Ipv4, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlVsphereVmknic).Ipv4, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.vmknic.ipv6": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereVmknic).Ipv6, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlVsphereVmknic).Ipv6, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.vmknic.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereVmknic).Tags, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlVsphereVmknic).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"esxi.command.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1038,7 +1038,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"esxi.command.result": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlEsxiCommand).Result, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlEsxiCommand).Result, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"esxi.vib.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1142,7 +1142,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"esxi.service.ruleset": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlEsxiService).Ruleset, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlEsxiService).Ruleset, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"esxi.service.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1178,11 +1178,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"esxi.ntpconfig.server": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlEsxiNtpconfig).Server, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlEsxiNtpconfig).Server, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"esxi.ntpconfig.config": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlEsxiNtpconfig).Config, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlEsxiNtpconfig).Config, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 }
@@ -1214,8 +1214,8 @@ type mqlAsset struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAssetInternal it will be used here
-	Cpes plugin.TValue[[]interface{}]
-	VulnerabilityReport plugin.TValue[interface{}]
+	Cpes plugin.TValue[[]any]
+	VulnerabilityReport plugin.TValue[any]
 }
 
 // createAsset creates a new instance of this resource
@@ -1250,15 +1250,15 @@ func (c *mqlAsset) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAsset) GetCpes() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Cpes, func() ([]interface{}, error) {
+func (c *mqlAsset) GetCpes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Cpes, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("asset", c.__id, "cpes")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1266,8 +1266,8 @@ func (c *mqlAsset) GetCpes() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAsset) GetVulnerabilityReport() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.VulnerabilityReport, func() (interface{}, error) {
+func (c *mqlAsset) GetVulnerabilityReport() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.VulnerabilityReport, func() (any, error) {
 		return c.vulnerabilityReport()
 	})
 }
@@ -1277,9 +1277,9 @@ type mqlVulnmgmt struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	mqlVulnmgmtInternal
-	Cves plugin.TValue[[]interface{}]
-	Advisories plugin.TValue[[]interface{}]
-	Packages plugin.TValue[[]interface{}]
+	Cves plugin.TValue[[]any]
+	Advisories plugin.TValue[[]any]
+	Packages plugin.TValue[[]any]
 	LastAssessment plugin.TValue[*time.Time]
 	Stats plugin.TValue[*mqlAuditCvss]
 }
@@ -1316,15 +1316,15 @@ func (c *mqlVulnmgmt) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlVulnmgmt) GetCves() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Cves, func() ([]interface{}, error) {
+func (c *mqlVulnmgmt) GetCves() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Cves, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("vulnmgmt", c.__id, "cves")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1332,15 +1332,15 @@ func (c *mqlVulnmgmt) GetCves() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlVulnmgmt) GetAdvisories() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Advisories, func() ([]interface{}, error) {
+func (c *mqlVulnmgmt) GetAdvisories() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Advisories, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("vulnmgmt", c.__id, "advisories")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1348,15 +1348,15 @@ func (c *mqlVulnmgmt) GetAdvisories() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlVulnmgmt) GetPackages() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Packages, func() ([]interface{}, error) {
+func (c *mqlVulnmgmt) GetPackages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Packages, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("vulnmgmt", c.__id, "packages")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1652,9 +1652,9 @@ type mqlVsphere struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlVsphereInternal it will be used here
-	About plugin.TValue[interface{}]
-	Licenses plugin.TValue[[]interface{}]
-	Datacenters plugin.TValue[[]interface{}]
+	About plugin.TValue[any]
+	Licenses plugin.TValue[[]any]
+	Datacenters plugin.TValue[[]any]
 }
 
 // createVsphere creates a new instance of this resource
@@ -1694,21 +1694,21 @@ func (c *mqlVsphere) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlVsphere) GetAbout() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.About, func() (interface{}, error) {
+func (c *mqlVsphere) GetAbout() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.About, func() (any, error) {
 		return c.about()
 	})
 }
 
-func (c *mqlVsphere) GetLicenses() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Licenses, func() ([]interface{}, error) {
+func (c *mqlVsphere) GetLicenses() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Licenses, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere", c.__id, "licenses")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1716,15 +1716,15 @@ func (c *mqlVsphere) GetLicenses() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlVsphere) GetDatacenters() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Datacenters, func() ([]interface{}, error) {
+func (c *mqlVsphere) GetDatacenters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Datacenters, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere", c.__id, "datacenters")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1877,11 +1877,11 @@ type mqlVsphereDatacenter struct {
 	Moid plugin.TValue[string]
 	Name plugin.TValue[string]
 	InventoryPath plugin.TValue[string]
-	Hosts plugin.TValue[[]interface{}]
-	Vms plugin.TValue[[]interface{}]
-	Clusters plugin.TValue[[]interface{}]
-	DistributedSwitches plugin.TValue[[]interface{}]
-	DistributedPortGroups plugin.TValue[[]interface{}]
+	Hosts plugin.TValue[[]any]
+	Vms plugin.TValue[[]any]
+	Clusters plugin.TValue[[]any]
+	DistributedSwitches plugin.TValue[[]any]
+	DistributedPortGroups plugin.TValue[[]any]
 }
 
 // createVsphereDatacenter creates a new instance of this resource
@@ -1933,15 +1933,15 @@ func (c *mqlVsphereDatacenter) GetInventoryPath() *plugin.TValue[string] {
 	return &c.InventoryPath
 }
 
-func (c *mqlVsphereDatacenter) GetHosts() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Hosts, func() ([]interface{}, error) {
+func (c *mqlVsphereDatacenter) GetHosts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Hosts, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.datacenter", c.__id, "hosts")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1949,15 +1949,15 @@ func (c *mqlVsphereDatacenter) GetHosts() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlVsphereDatacenter) GetVms() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Vms, func() ([]interface{}, error) {
+func (c *mqlVsphereDatacenter) GetVms() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Vms, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.datacenter", c.__id, "vms")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1965,15 +1965,15 @@ func (c *mqlVsphereDatacenter) GetVms() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlVsphereDatacenter) GetClusters() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Clusters, func() ([]interface{}, error) {
+func (c *mqlVsphereDatacenter) GetClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Clusters, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.datacenter", c.__id, "clusters")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1981,15 +1981,15 @@ func (c *mqlVsphereDatacenter) GetClusters() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlVsphereDatacenter) GetDistributedSwitches() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.DistributedSwitches, func() ([]interface{}, error) {
+func (c *mqlVsphereDatacenter) GetDistributedSwitches() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DistributedSwitches, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.datacenter", c.__id, "distributedSwitches")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1997,15 +1997,15 @@ func (c *mqlVsphereDatacenter) GetDistributedSwitches() *plugin.TValue[[]interfa
 	})
 }
 
-func (c *mqlVsphereDatacenter) GetDistributedPortGroups() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.DistributedPortGroups, func() ([]interface{}, error) {
+func (c *mqlVsphereDatacenter) GetDistributedPortGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DistributedPortGroups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.datacenter", c.__id, "distributedPortGroups")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -2021,8 +2021,8 @@ type mqlVsphereCluster struct {
 	Moid plugin.TValue[string]
 	Name plugin.TValue[string]
 	InventoryPath plugin.TValue[string]
-	Properties plugin.TValue[interface{}]
-	Hosts plugin.TValue[[]interface{}]
+	Properties plugin.TValue[any]
+	Hosts plugin.TValue[[]any]
 }
 
 // createVsphereCluster creates a new instance of this resource
@@ -2074,19 +2074,19 @@ func (c *mqlVsphereCluster) GetInventoryPath() *plugin.TValue[string] {
 	return &c.InventoryPath
 }
 
-func (c *mqlVsphereCluster) GetProperties() *plugin.TValue[interface{}] {
+func (c *mqlVsphereCluster) GetProperties() *plugin.TValue[any] {
 	return &c.Properties
 }
 
-func (c *mqlVsphereCluster) GetHosts() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Hosts, func() ([]interface{}, error) {
+func (c *mqlVsphereCluster) GetHosts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Hosts, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.cluster", c.__id, "hosts")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -2102,20 +2102,20 @@ type mqlVsphereHost struct {
 	Moid plugin.TValue[string]
 	Name plugin.TValue[string]
 	InventoryPath plugin.TValue[string]
-	Properties plugin.TValue[interface{}]
-	StandardSwitch plugin.TValue[[]interface{}]
-	DistributedSwitch plugin.TValue[[]interface{}]
-	Adapters plugin.TValue[[]interface{}]
-	Vmknics plugin.TValue[[]interface{}]
-	Packages plugin.TValue[[]interface{}]
+	Properties plugin.TValue[any]
+	StandardSwitch plugin.TValue[[]any]
+	DistributedSwitch plugin.TValue[[]any]
+	Adapters plugin.TValue[[]any]
+	Vmknics plugin.TValue[[]any]
+	Packages plugin.TValue[[]any]
 	AcceptanceLevel plugin.TValue[string]
-	KernelModules plugin.TValue[[]interface{}]
-	AdvancedSettings plugin.TValue[map[string]interface{}]
-	Services plugin.TValue[[]interface{}]
+	KernelModules plugin.TValue[[]any]
+	AdvancedSettings plugin.TValue[map[string]any]
+	Services plugin.TValue[[]any]
 	Timezone plugin.TValue[*mqlEsxiTimezone]
 	Ntp plugin.TValue[*mqlEsxiNtpconfig]
-	Snmp plugin.TValue[map[string]interface{}]
-	Tags plugin.TValue[[]interface{}]
+	Snmp plugin.TValue[map[string]any]
+	Tags plugin.TValue[[]any]
 }
 
 // createVsphereHost creates a new instance of this resource
@@ -2167,19 +2167,19 @@ func (c *mqlVsphereHost) GetInventoryPath() *plugin.TValue[string] {
 	return &c.InventoryPath
 }
 
-func (c *mqlVsphereHost) GetProperties() *plugin.TValue[interface{}] {
+func (c *mqlVsphereHost) GetProperties() *plugin.TValue[any] {
 	return &c.Properties
 }
 
-func (c *mqlVsphereHost) GetStandardSwitch() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.StandardSwitch, func() ([]interface{}, error) {
+func (c *mqlVsphereHost) GetStandardSwitch() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.StandardSwitch, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.host", c.__id, "standardSwitch")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -2187,15 +2187,15 @@ func (c *mqlVsphereHost) GetStandardSwitch() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlVsphereHost) GetDistributedSwitch() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.DistributedSwitch, func() ([]interface{}, error) {
+func (c *mqlVsphereHost) GetDistributedSwitch() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DistributedSwitch, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.host", c.__id, "distributedSwitch")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -2203,15 +2203,15 @@ func (c *mqlVsphereHost) GetDistributedSwitch() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlVsphereHost) GetAdapters() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Adapters, func() ([]interface{}, error) {
+func (c *mqlVsphereHost) GetAdapters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Adapters, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.host", c.__id, "adapters")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -2219,15 +2219,15 @@ func (c *mqlVsphereHost) GetAdapters() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlVsphereHost) GetVmknics() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Vmknics, func() ([]interface{}, error) {
+func (c *mqlVsphereHost) GetVmknics() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Vmknics, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.host", c.__id, "vmknics")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -2235,15 +2235,15 @@ func (c *mqlVsphereHost) GetVmknics() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlVsphereHost) GetPackages() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Packages, func() ([]interface{}, error) {
+func (c *mqlVsphereHost) GetPackages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Packages, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.host", c.__id, "packages")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -2257,15 +2257,15 @@ func (c *mqlVsphereHost) GetAcceptanceLevel() *plugin.TValue[string] {
 	})
 }
 
-func (c *mqlVsphereHost) GetKernelModules() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.KernelModules, func() ([]interface{}, error) {
+func (c *mqlVsphereHost) GetKernelModules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.KernelModules, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.host", c.__id, "kernelModules")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -2273,21 +2273,21 @@ func (c *mqlVsphereHost) GetKernelModules() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlVsphereHost) GetAdvancedSettings() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.AdvancedSettings, func() (map[string]interface{}, error) {
+func (c *mqlVsphereHost) GetAdvancedSettings() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.AdvancedSettings, func() (map[string]any, error) {
 		return c.advancedSettings()
 	})
 }
 
-func (c *mqlVsphereHost) GetServices() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Services, func() ([]interface{}, error) {
+func (c *mqlVsphereHost) GetServices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Services, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.host", c.__id, "services")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -2327,13 +2327,13 @@ func (c *mqlVsphereHost) GetNtp() *plugin.TValue[*mqlEsxiNtpconfig] {
 	})
 }
 
-func (c *mqlVsphereHost) GetSnmp() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Snmp, func() (map[string]interface{}, error) {
+func (c *mqlVsphereHost) GetSnmp() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Snmp, func() (map[string]any, error) {
 		return c.snmp()
 	})
 }
 
-func (c *mqlVsphereHost) GetTags() *plugin.TValue[[]interface{}] {
+func (c *mqlVsphereHost) GetTags() *plugin.TValue[[]any] {
 	return &c.Tags
 }
 
@@ -2345,9 +2345,9 @@ type mqlVsphereVm struct {
 	Moid plugin.TValue[string]
 	Name plugin.TValue[string]
 	InventoryPath plugin.TValue[string]
-	Properties plugin.TValue[interface{}]
-	AdvancedSettings plugin.TValue[map[string]interface{}]
-	Tags plugin.TValue[[]interface{}]
+	Properties plugin.TValue[any]
+	AdvancedSettings plugin.TValue[map[string]any]
+	Tags plugin.TValue[[]any]
 }
 
 // createVsphereVm creates a new instance of this resource
@@ -2399,17 +2399,17 @@ func (c *mqlVsphereVm) GetInventoryPath() *plugin.TValue[string] {
 	return &c.InventoryPath
 }
 
-func (c *mqlVsphereVm) GetProperties() *plugin.TValue[interface{}] {
+func (c *mqlVsphereVm) GetProperties() *plugin.TValue[any] {
 	return &c.Properties
 }
 
-func (c *mqlVsphereVm) GetAdvancedSettings() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.AdvancedSettings, func() (map[string]interface{}, error) {
+func (c *mqlVsphereVm) GetAdvancedSettings() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.AdvancedSettings, func() (map[string]any, error) {
 		return c.advancedSettings()
 	})
 }
 
-func (c *mqlVsphereVm) GetTags() *plugin.TValue[[]interface{}] {
+func (c *mqlVsphereVm) GetTags() *plugin.TValue[[]any] {
 	return &c.Tags
 }
 
@@ -2419,11 +2419,11 @@ type mqlVsphereVswitchStandard struct {
 	__id string
 	mqlVsphereVswitchStandardInternal
 	Name plugin.TValue[string]
-	Properties plugin.TValue[interface{}]
-	FailoverPolicy plugin.TValue[interface{}]
-	SecurityPolicy plugin.TValue[interface{}]
-	ShapingPolicy plugin.TValue[interface{}]
-	Uplinks plugin.TValue[[]interface{}]
+	Properties plugin.TValue[any]
+	FailoverPolicy plugin.TValue[any]
+	SecurityPolicy plugin.TValue[any]
+	ShapingPolicy plugin.TValue[any]
+	Uplinks plugin.TValue[[]any]
 }
 
 // createVsphereVswitchStandard creates a new instance of this resource
@@ -2467,37 +2467,37 @@ func (c *mqlVsphereVswitchStandard) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlVsphereVswitchStandard) GetProperties() *plugin.TValue[interface{}] {
+func (c *mqlVsphereVswitchStandard) GetProperties() *plugin.TValue[any] {
 	return &c.Properties
 }
 
-func (c *mqlVsphereVswitchStandard) GetFailoverPolicy() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.FailoverPolicy, func() (interface{}, error) {
+func (c *mqlVsphereVswitchStandard) GetFailoverPolicy() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.FailoverPolicy, func() (any, error) {
 		return c.failoverPolicy()
 	})
 }
 
-func (c *mqlVsphereVswitchStandard) GetSecurityPolicy() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.SecurityPolicy, func() (interface{}, error) {
+func (c *mqlVsphereVswitchStandard) GetSecurityPolicy() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.SecurityPolicy, func() (any, error) {
 		return c.securityPolicy()
 	})
 }
 
-func (c *mqlVsphereVswitchStandard) GetShapingPolicy() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.ShapingPolicy, func() (interface{}, error) {
+func (c *mqlVsphereVswitchStandard) GetShapingPolicy() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.ShapingPolicy, func() (any, error) {
 		return c.shapingPolicy()
 	})
 }
 
-func (c *mqlVsphereVswitchStandard) GetUplinks() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Uplinks, func() ([]interface{}, error) {
+func (c *mqlVsphereVswitchStandard) GetUplinks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Uplinks, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vswitch.standard", c.__id, "uplinks")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -2512,8 +2512,8 @@ type mqlVsphereVswitchDvs struct {
 	mqlVsphereVswitchDvsInternal
 	Moid plugin.TValue[string]
 	Name plugin.TValue[string]
-	Properties plugin.TValue[interface{}]
-	Uplinks plugin.TValue[[]interface{}]
+	Properties plugin.TValue[any]
+	Uplinks plugin.TValue[[]any]
 }
 
 // createVsphereVswitchDvs creates a new instance of this resource
@@ -2561,19 +2561,19 @@ func (c *mqlVsphereVswitchDvs) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlVsphereVswitchDvs) GetProperties() *plugin.TValue[interface{}] {
+func (c *mqlVsphereVswitchDvs) GetProperties() *plugin.TValue[any] {
 	return &c.Properties
 }
 
-func (c *mqlVsphereVswitchDvs) GetUplinks() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Uplinks, func() ([]interface{}, error) {
+func (c *mqlVsphereVswitchDvs) GetUplinks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Uplinks, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vswitch.dvs", c.__id, "uplinks")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -2588,7 +2588,7 @@ type mqlVsphereVswitchPortgroup struct {
 	// optional: if you define mqlVsphereVswitchPortgroupInternal it will be used here
 	Moid plugin.TValue[string]
 	Name plugin.TValue[string]
-	Properties plugin.TValue[interface{}]
+	Properties plugin.TValue[any]
 }
 
 // createVsphereVswitchPortgroup creates a new instance of this resource
@@ -2636,7 +2636,7 @@ func (c *mqlVsphereVswitchPortgroup) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlVsphereVswitchPortgroup) GetProperties() *plugin.TValue[interface{}] {
+func (c *mqlVsphereVswitchPortgroup) GetProperties() *plugin.TValue[any] {
 	return &c.Properties
 }
 
@@ -2646,9 +2646,9 @@ type mqlVsphereVmnic struct {
 	__id string
 	mqlVsphereVmnicInternal
 	Name plugin.TValue[string]
-	Properties plugin.TValue[interface{}]
-	Details plugin.TValue[interface{}]
-	PauseParams plugin.TValue[interface{}]
+	Properties plugin.TValue[any]
+	Details plugin.TValue[any]
+	PauseParams plugin.TValue[any]
 }
 
 // createVsphereVmnic creates a new instance of this resource
@@ -2692,17 +2692,17 @@ func (c *mqlVsphereVmnic) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlVsphereVmnic) GetProperties() *plugin.TValue[interface{}] {
+func (c *mqlVsphereVmnic) GetProperties() *plugin.TValue[any] {
 	return &c.Properties
 }
 
-func (c *mqlVsphereVmnic) GetDetails() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Details, func() (interface{}, error) {
+func (c *mqlVsphereVmnic) GetDetails() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Details, func() (any, error) {
 		return c.details()
 	})
 }
 
-func (c *mqlVsphereVmnic) GetPauseParams() *plugin.TValue[interface{}] {
+func (c *mqlVsphereVmnic) GetPauseParams() *plugin.TValue[any] {
 	return &c.PauseParams
 }
 
@@ -2712,10 +2712,10 @@ type mqlVsphereVmknic struct {
 	__id string
 	// optional: if you define mqlVsphereVmknicInternal it will be used here
 	Name plugin.TValue[string]
-	Properties plugin.TValue[interface{}]
-	Ipv4 plugin.TValue[[]interface{}]
-	Ipv6 plugin.TValue[[]interface{}]
-	Tags plugin.TValue[[]interface{}]
+	Properties plugin.TValue[any]
+	Ipv4 plugin.TValue[[]any]
+	Ipv6 plugin.TValue[[]any]
+	Tags plugin.TValue[[]any]
 }
 
 // createVsphereVmknic creates a new instance of this resource
@@ -2759,19 +2759,19 @@ func (c *mqlVsphereVmknic) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlVsphereVmknic) GetProperties() *plugin.TValue[interface{}] {
+func (c *mqlVsphereVmknic) GetProperties() *plugin.TValue[any] {
 	return &c.Properties
 }
 
-func (c *mqlVsphereVmknic) GetIpv4() *plugin.TValue[[]interface{}] {
+func (c *mqlVsphereVmknic) GetIpv4() *plugin.TValue[[]any] {
 	return &c.Ipv4
 }
 
-func (c *mqlVsphereVmknic) GetIpv6() *plugin.TValue[[]interface{}] {
+func (c *mqlVsphereVmknic) GetIpv6() *plugin.TValue[[]any] {
 	return &c.Ipv6
 }
 
-func (c *mqlVsphereVmknic) GetTags() *plugin.TValue[[]interface{}] {
+func (c *mqlVsphereVmknic) GetTags() *plugin.TValue[[]any] {
 	return &c.Tags
 }
 
@@ -2782,7 +2782,7 @@ type mqlEsxiCommand struct {
 	// optional: if you define mqlEsxiCommandInternal it will be used here
 	InventoryPath plugin.TValue[string]
 	Command plugin.TValue[string]
-	Result plugin.TValue[[]interface{}]
+	Result plugin.TValue[[]any]
 }
 
 // createEsxiCommand creates a new instance of this resource
@@ -2830,8 +2830,8 @@ func (c *mqlEsxiCommand) GetCommand() *plugin.TValue[string] {
 	return &c.Command
 }
 
-func (c *mqlEsxiCommand) GetResult() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Result, func() ([]interface{}, error) {
+func (c *mqlEsxiCommand) GetResult() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Result, func() ([]any, error) {
 		return c.result()
 	})
 }
@@ -3023,7 +3023,7 @@ type mqlEsxiService struct {
 	Label plugin.TValue[string]
 	Required plugin.TValue[bool]
 	Running plugin.TValue[bool]
-	Ruleset plugin.TValue[[]interface{}]
+	Ruleset plugin.TValue[[]any]
 	Policy plugin.TValue[string]
 }
 
@@ -3080,7 +3080,7 @@ func (c *mqlEsxiService) GetRunning() *plugin.TValue[bool] {
 	return &c.Running
 }
 
-func (c *mqlEsxiService) GetRuleset() *plugin.TValue[[]interface{}] {
+func (c *mqlEsxiService) GetRuleset() *plugin.TValue[[]any] {
 	return &c.Ruleset
 }
 
@@ -3158,8 +3158,8 @@ type mqlEsxiNtpconfig struct {
 	__id string
 	// optional: if you define mqlEsxiNtpconfigInternal it will be used here
 	Id plugin.TValue[string]
-	Server plugin.TValue[[]interface{}]
-	Config plugin.TValue[[]interface{}]
+	Server plugin.TValue[[]any]
+	Config plugin.TValue[[]any]
 }
 
 // createEsxiNtpconfig creates a new instance of this resource
@@ -3203,10 +3203,10 @@ func (c *mqlEsxiNtpconfig) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
-func (c *mqlEsxiNtpconfig) GetServer() *plugin.TValue[[]interface{}] {
+func (c *mqlEsxiNtpconfig) GetServer() *plugin.TValue[[]any] {
 	return &c.Server
 }
 
-func (c *mqlEsxiNtpconfig) GetConfig() *plugin.TValue[[]interface{}] {
+func (c *mqlEsxiNtpconfig) GetConfig() *plugin.TValue[[]any] {
 	return &c.Config
 }

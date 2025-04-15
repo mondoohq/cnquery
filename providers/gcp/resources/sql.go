@@ -8,11 +8,11 @@ import (
 	"errors"
 	"fmt"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/gcp/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v12/types"
 
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/iam/v1"
@@ -114,7 +114,7 @@ func (g *mqlGcpProject) sql() (*mqlGcpProjectSqlService, error) {
 	return res.(*mqlGcpProjectSqlService), nil
 }
 
-func (g *mqlGcpProjectSqlService) instances() ([]interface{}, error) {
+func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
 	if g.ProjectId.Error != nil {
@@ -139,7 +139,7 @@ func (g *mqlGcpProjectSqlService) instances() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := make([]interface{}, 0, len(sqlinstances.Items))
+	res := make([]any, 0, len(sqlinstances.Items))
 	for i := range sqlinstances.Items {
 		instance := sqlinstances.Items[i]
 		instanceId := fmt.Sprintf("%s/%s", projectId, instance.Name)
@@ -147,7 +147,7 @@ func (g *mqlGcpProjectSqlService) instances() ([]interface{}, error) {
 		type mqlDiskEncryptionCfg struct {
 			KmsKeyName string `json:"kmsKeyName"`
 		}
-		var mqlEncCfg map[string]interface{}
+		var mqlEncCfg map[string]any
 		if instance.DiskEncryptionConfiguration != nil {
 			mqlEncCfg, err = convert.JsonToDict(mqlDiskEncryptionCfg{
 				KmsKeyName: instance.DiskEncryptionConfiguration.KmsKeyName,
@@ -160,7 +160,7 @@ func (g *mqlGcpProjectSqlService) instances() ([]interface{}, error) {
 		type mqlDiskEncryptionStatus struct {
 			KmsKeyVersionName string `json:"kmsKeyVersionName"`
 		}
-		var mqlEncStatus map[string]interface{}
+		var mqlEncStatus map[string]any
 		if instance.DiskEncryptionStatus != nil {
 			mqlEncStatus, err = convert.JsonToDict(mqlDiskEncryptionStatus{
 				KmsKeyVersionName: instance.DiskEncryptionStatus.KmsKeyVersionName,
@@ -174,7 +174,7 @@ func (g *mqlGcpProjectSqlService) instances() ([]interface{}, error) {
 			Available bool   `json:"available"`
 			Name      string `json:"name"`
 		}
-		var mqlFailoverReplica map[string]interface{}
+		var mqlFailoverReplica map[string]any
 		if instance.FailoverReplica != nil {
 			mqlFailoverReplica, err = convert.JsonToDict(mqlFailoverReplicaCfg{
 				Available: instance.FailoverReplica.Available,
@@ -185,7 +185,7 @@ func (g *mqlGcpProjectSqlService) instances() ([]interface{}, error) {
 			}
 		}
 
-		mqlIpAddresses := make([]interface{}, 0, len(instance.IpAddresses))
+		mqlIpAddresses := make([]any, 0, len(instance.IpAddresses))
 		for i, a := range instance.IpAddresses {
 			mqlIpAddress, err := CreateResource(g.MqlRuntime, "gcp.project.sqlService.instance.ipMapping", map[string]*llx.RawData{
 				"id":           llx.StringData(fmt.Sprintf("%s/ipAddresses%d", instanceId, i)),
@@ -208,7 +208,7 @@ func (g *mqlGcpProjectSqlService) instances() ([]interface{}, error) {
 		type mqlActiveDirectoryCfg struct {
 			Domain string `json:"domain,omitempty"`
 		}
-		var mqlADCfg map[string]interface{}
+		var mqlADCfg map[string]any
 		if s.ActiveDirectoryConfig != nil {
 			mqlADCfg, err = convert.JsonToDict(mqlActiveDirectoryCfg{
 				Domain: s.ActiveDirectoryConfig.Domain,
@@ -247,7 +247,7 @@ func (g *mqlGcpProjectSqlService) instances() ([]interface{}, error) {
 			}
 		}
 
-		mqlDenyMaintenancePeriods := make([]interface{}, 0, len(s.DenyMaintenancePeriods))
+		mqlDenyMaintenancePeriods := make([]any, 0, len(s.DenyMaintenancePeriods))
 		for i, p := range s.DenyMaintenancePeriods {
 			mqlPeriod, err := CreateResource(g.MqlRuntime, "gcp.project.sqlService.instance.settings.denyMaintenancePeriod", map[string]*llx.RawData{
 				"id":        llx.StringData(fmt.Sprintf("%s/settings/denyMaintenancePeriod%d", instanceId, i)),
@@ -268,7 +268,7 @@ func (g *mqlGcpProjectSqlService) instances() ([]interface{}, error) {
 			RecordApplicationTags bool  `json:"recordApplicationTags"`
 			RecordClientAddress   bool  `json:"recordClientAddress"`
 		}
-		var mqlInsightsConfig map[string]interface{}
+		var mqlInsightsConfig map[string]any
 		if s.InsightsConfig != nil {
 			mqlInsightsConfig, err = convert.JsonToDict(mqlInsightsCfg{
 				QueryInsightsEnabled:  s.InsightsConfig.QueryInsightsEnabled,
@@ -290,7 +290,7 @@ func (g *mqlGcpProjectSqlService) instances() ([]interface{}, error) {
 		}
 		var mqlIpCfg plugin.Resource
 		if s.IpConfiguration != nil {
-			mqlAclEntries := make([]interface{}, 0, len(s.IpConfiguration.AuthorizedNetworks))
+			mqlAclEntries := make([]any, 0, len(s.IpConfiguration.AuthorizedNetworks))
 			for _, e := range s.IpConfiguration.AuthorizedNetworks {
 				mqlAclEntry, err := convert.JsonToDict(mqlAclEntry{
 					ExpirationTime: e.ExpirationTime,
@@ -324,7 +324,7 @@ func (g *mqlGcpProjectSqlService) instances() ([]interface{}, error) {
 			SecondaryZone        string `json:"secondaryZone"`
 			Zone                 string `json:"zone"`
 		}
-		var mqlLocationP map[string]interface{}
+		var mqlLocationP map[string]any
 		if s.LocationPreference != nil {
 			mqlLocationP, err = convert.JsonToDict(mqlLocationPref{
 				FollowGaeApplication: s.LocationPreference.FollowGaeApplication,
@@ -370,7 +370,7 @@ func (g *mqlGcpProjectSqlService) instances() ([]interface{}, error) {
 			RetentionInterval string `json:"retentionInterval"`
 			UploadInterval    string `json:"uploadInterval"`
 		}
-		var mqlSqlServerAuditCfg map[string]interface{}
+		var mqlSqlServerAuditCfg map[string]any
 		if s.SqlServerAuditConfig != nil {
 			mqlSqlServerAuditCfg, err = convert.JsonToDict(mqlSqlServerAuditConfig{
 				Bucket:            s.SqlServerAuditConfig.Bucket,
@@ -453,7 +453,7 @@ func (g *mqlGcpProjectSqlService) instances() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGcpProjectSqlServiceInstance) databases() ([]interface{}, error) {
+func (g *mqlGcpProjectSqlServiceInstance) databases() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
 	if g.ProjectId.Error != nil {
@@ -483,13 +483,13 @@ func (g *mqlGcpProjectSqlServiceInstance) databases() ([]interface{}, error) {
 		return nil, err
 	}
 
-	mqlDbs := make([]interface{}, 0, len(dbs.Items))
+	mqlDbs := make([]any, 0, len(dbs.Items))
 	for _, db := range dbs.Items {
 		type mqlSqlServerDbDetails struct {
 			CompatibilityLevel int64  `json:"compatibilityLevel"`
 			RecoveryModel      string `json:"recoveryModel"`
 		}
-		var sqlServerDbDetails map[string]interface{}
+		var sqlServerDbDetails map[string]any
 		if db.SqlserverDatabaseDetails != nil {
 			sqlServerDbDetails, err = convert.JsonToDict(mqlSqlServerDbDetails{
 				CompatibilityLevel: db.SqlserverDatabaseDetails.CompatibilityLevel,

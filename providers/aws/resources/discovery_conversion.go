@@ -13,14 +13,14 @@ import (
 	ssmtypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection/awsec2ebsconn"
-	awsec2ebstypes "go.mondoo.com/cnquery/v11/providers/aws/connection/awsec2ebsconn/types"
-	"go.mondoo.com/cnquery/v11/providers/os/id/awsec2"
-	"go.mondoo.com/cnquery/v11/providers/os/id/containerid"
-	"go.mondoo.com/cnquery/v11/providers/os/id/ids"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection/awsec2ebsconn"
+	awsec2ebstypes "go.mondoo.com/cnquery/v12/providers/aws/connection/awsec2ebsconn/types"
+	"go.mondoo.com/cnquery/v12/providers/os/id/awsec2"
+	"go.mondoo.com/cnquery/v12/providers/os/id/containerid"
+	"go.mondoo.com/cnquery/v12/providers/os/id/ids"
 )
 
 const (
@@ -337,8 +337,8 @@ func addConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, 
 		}}
 	}
 	// if the ssm agent indicates it is online, we assume ssm is an option
-	if instance.GetSsm() != nil && instance.GetSsm().Data != nil && len(instance.GetSsm().Data.(map[string]interface{})["InstanceInformationList"].([]interface{})) > 0 {
-		if instance.GetSsm().Data.(map[string]interface{})["InstanceInformationList"].([]interface{})[0].(map[string]interface{})["PingStatus"] == "Online" {
+	if instance.GetSsm() != nil && instance.GetSsm().Data != nil && len(instance.GetSsm().Data.(map[string]any)["InstanceInformationList"].([]any)) > 0 {
+		if instance.GetSsm().Data.(map[string]any)["InstanceInformationList"].([]any)[0].(map[string]any)["PingStatus"] == "Online" {
 			asset.Labels[MondooSsmConnection] = "Online"
 			if len(asset.Connections) > 0 {
 				asset.Connections[0].Credentials = append(asset.Connections[0].Credentials, &vault.Credential{

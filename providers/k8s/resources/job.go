@@ -7,10 +7,10 @@ import (
 	"errors"
 	"sync"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/k8s/connection/shared/resources"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/k8s/connection/shared/resources"
 	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -29,8 +29,8 @@ func (k *mqlK8sJob) getJob() (*batchv1.Job, error) {
 	return nil, errors.New("invalid k8s job")
 }
 
-func (k *mqlK8s) jobs() ([]interface{}, error) {
-	return k8sResourceToMql(k.MqlRuntime, gvkString(batchv1.SchemeGroupVersion.WithKind("jobs")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+func (k *mqlK8s) jobs() ([]any, error) {
+	return k8sResourceToMql(k.MqlRuntime, gvkString(batchv1.SchemeGroupVersion.WithKind("jobs")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (any, error) {
 		ts := obj.GetCreationTimestamp()
 
 		r, err := CreateResource(k.MqlRuntime, "k8s.job", map[string]*llx.RawData{
@@ -51,7 +51,7 @@ func (k *mqlK8s) jobs() ([]interface{}, error) {
 	})
 }
 
-func (k *mqlK8sJob) manifest() (map[string]interface{}, error) {
+func (k *mqlK8sJob) manifest() (map[string]any, error) {
 	manifest, err := convert.JsonToDict(k.obj)
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ func (k *mqlK8sJob) manifest() (map[string]interface{}, error) {
 	return manifest, nil
 }
 
-func (k *mqlK8sJob) podSpec() (map[string]interface{}, error) {
+func (k *mqlK8sJob) podSpec() (map[string]any, error) {
 	podSpec, err := resources.GetPodSpec(k.obj)
 	if err != nil {
 		return nil, err
@@ -76,10 +76,10 @@ func (k *mqlK8sJob) id() (string, error) {
 }
 
 func initK8sJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	return initNamespacedResource[*mqlK8sJob](runtime, args, func(k *mqlK8s) *plugin.TValue[[]interface{}] { return k.GetJobs() })
+	return initNamespacedResource[*mqlK8sJob](runtime, args, func(k *mqlK8s) *plugin.TValue[[]any] { return k.GetJobs() })
 }
 
-func (k *mqlK8sJob) annotations() (map[string]interface{}, error) {
+func (k *mqlK8sJob) annotations() (map[string]any, error) {
 	j, err := k.getJob()
 	if err != nil {
 		return nil, err
@@ -87,7 +87,7 @@ func (k *mqlK8sJob) annotations() (map[string]interface{}, error) {
 	return convert.MapToInterfaceMap(j.GetAnnotations()), nil
 }
 
-func (k *mqlK8sJob) labels() (map[string]interface{}, error) {
+func (k *mqlK8sJob) labels() (map[string]any, error) {
 	j, err := k.getJob()
 	if err != nil {
 		return nil, err
@@ -95,7 +95,7 @@ func (k *mqlK8sJob) labels() (map[string]interface{}, error) {
 	return convert.MapToInterfaceMap(j.GetLabels()), nil
 }
 
-func (k *mqlK8sJob) initContainers() ([]interface{}, error) {
+func (k *mqlK8sJob) initContainers() ([]any, error) {
 	j, err := k.getJob()
 	if err != nil {
 		return nil, err
@@ -103,7 +103,7 @@ func (k *mqlK8sJob) initContainers() ([]interface{}, error) {
 	return getContainers(j, &j.ObjectMeta, k.MqlRuntime, InitContainerType)
 }
 
-func (k *mqlK8sJob) containers() ([]interface{}, error) {
+func (k *mqlK8sJob) containers() ([]any, error) {
 	j, err := k.getJob()
 	if err != nil {
 		return nil, err

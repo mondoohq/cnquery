@@ -6,10 +6,10 @@ package resources
 import (
 	"context"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/tailscale/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/tailscale/connection"
 )
 
 func (r *mqlTailscale) id() (string, error) {
@@ -44,7 +44,7 @@ func (t *mqlTailscale) devices() ([]any, error) {
 		return nil, err
 	}
 
-	var resources []interface{}
+	var resources []any
 	for _, device := range devices {
 		resource, err := createTailscaleDeviceResource(t.MqlRuntime, &device)
 		if err != nil {
@@ -64,7 +64,7 @@ func (t *mqlTailscale) users() ([]any, error) {
 		return nil, err
 	}
 
-	var resources []interface{}
+	var resources []any
 	for _, user := range users {
 		resource, err := createTailscaleUserResource(t.MqlRuntime, &user)
 		if err != nil {

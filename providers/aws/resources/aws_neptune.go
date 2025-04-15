@@ -10,21 +10,21 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/neptune"
 	neptune_types "github.com/aws/aws-sdk-go-v2/service/neptune/types"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (a *mqlAwsNeptune) id() (string, error) {
 	return "aws.neptune", nil
 }
 
-func (a *mqlAwsNeptune) clusters() ([]interface{}, error) {
+func (a *mqlAwsNeptune) clusters() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getDbClusters(conn), 5)
 	poolOfJobs.Run()
 
@@ -35,7 +35,7 @@ func (a *mqlAwsNeptune) clusters() ([]interface{}, error) {
 	// get all the results
 	for i := range poolOfJobs.Jobs {
 		if poolOfJobs.Jobs[i].Result != nil {
-			res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 		}
 	}
 
@@ -55,7 +55,7 @@ func (a *mqlAwsNeptune) getDbClusters(conn *connection.AwsConnection) []*jobpool
 
 			svc := conn.Neptune(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 
 			params := &neptune.DescribeDBClustersInput{
 				Filters: []neptune_types.Filter{
@@ -135,9 +135,9 @@ func newMqlAwsNeptuneCluster(runtime *plugin.Runtime, region string, cluster nep
 	return resource.(*mqlAwsNeptuneCluster), nil
 }
 
-func (a *mqlAwsNeptune) instances() ([]interface{}, error) {
+func (a *mqlAwsNeptune) instances() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getDbInstances(conn), 5)
 	poolOfJobs.Run()
 
@@ -148,7 +148,7 @@ func (a *mqlAwsNeptune) instances() ([]interface{}, error) {
 	// get all the results
 	for i := range poolOfJobs.Jobs {
 		if poolOfJobs.Jobs[i].Result != nil {
-			res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 		}
 	}
 
@@ -168,7 +168,7 @@ func (a *mqlAwsNeptune) getDbInstances(conn *connection.AwsConnection) []*jobpoo
 
 			svc := conn.Neptune(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 
 			params := &neptune.DescribeDBInstancesInput{
 				Filters: []neptune_types.Filter{

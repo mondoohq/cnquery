@@ -8,11 +8,11 @@ import (
 	"errors"
 	"time"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/atlassian/connection/admin"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/atlassian/connection/admin"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func initAtlassianAdminOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -40,7 +40,7 @@ func initAtlassianAdminOrganization(runtime *plugin.Runtime, args map[string]*ll
 	return args, nil, nil
 }
 
-func (a *mqlAtlassianAdminOrganization) managedUsers() ([]interface{}, error) {
+func (a *mqlAtlassianAdminOrganization) managedUsers() ([]any, error) {
 	conn, ok := a.MqlRuntime.Connection.(*admin.AdminConnection)
 	if !ok {
 		return nil, errors.New("Current connection does not allow admin access")
@@ -52,7 +52,7 @@ func (a *mqlAtlassianAdminOrganization) managedUsers() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	res := []interface{}{}
+	res := []any{}
 	for _, user := range managedUsers.Data {
 
 		type ProductAccess struct {
@@ -112,7 +112,7 @@ func (a *mqlAtlassianAdminOrganizationManagedUser) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAtlassianAdminOrganization) policies() ([]interface{}, error) {
+func (a *mqlAtlassianAdminOrganization) policies() ([]any, error) {
 	conn, ok := a.MqlRuntime.Connection.(*admin.AdminConnection)
 	if !ok {
 		return nil, errors.New("Current connection does not allow admin access")
@@ -123,7 +123,7 @@ func (a *mqlAtlassianAdminOrganization) policies() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	res := []interface{}{}
+	res := []any{}
 	for _, policy := range policies.Data {
 		mqlAtlassianAdminPolicy, err := CreateResource(a.MqlRuntime, "atlassian.admin.organization.policy",
 			map[string]*llx.RawData{
@@ -141,7 +141,7 @@ func (a *mqlAtlassianAdminOrganization) policies() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAtlassianAdminOrganization) domains() ([]interface{}, error) {
+func (a *mqlAtlassianAdminOrganization) domains() ([]any, error) {
 	conn, ok := a.MqlRuntime.Connection.(*admin.AdminConnection)
 	if !ok {
 		return nil, errors.New("Current connection does not allow admin access")
@@ -157,7 +157,7 @@ func (a *mqlAtlassianAdminOrganization) domains() ([]interface{}, error) {
 	} else if err != nil {
 		return nil, err
 	}
-	res := []interface{}{}
+	res := []any{}
 	for _, domain := range domains.Data {
 		mqlAtlassianAdminDomain, err := CreateResource(a.MqlRuntime, "atlassian.admin.organization.domain",
 			map[string]*llx.RawData{

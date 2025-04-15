@@ -5,12 +5,12 @@ package resources
 
 import (
 	"github.com/vmware/go-vcloud-director/v2/types/v56"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/vcd/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/vcd/connection"
 )
 
-func (v *mqlVcd) providerVDCs() ([]interface{}, error) {
+func (v *mqlVcd) providerVDCs() ([]any, error) {
 	conn := v.MqlRuntime.Connection.(*connection.VcdConnection)
 	client := conn.Client()
 
@@ -19,7 +19,7 @@ func (v *mqlVcd) providerVDCs() ([]interface{}, error) {
 		return nil, err
 	}
 
-	list := []interface{}{}
+	list := []any{}
 	for i := range vdcList {
 		entry, err := newMqlVcdProvider(v.MqlRuntime, vdcList[i])
 		if err != nil {
@@ -31,7 +31,7 @@ func (v *mqlVcd) providerVDCs() ([]interface{}, error) {
 	return list, nil
 }
 
-func newMqlVcdProvider(runtime *plugin.Runtime, vcdProvider *types.QueryResultVMWProviderVdcRecordType) (interface{}, error) {
+func newMqlVcdProvider(runtime *plugin.Runtime, vcdProvider *types.QueryResultVMWProviderVdcRecordType) (any, error) {
 	return CreateResource(runtime, "vcd.vdcProvider", map[string]*llx.RawData{
 		"name":                    llx.StringData(vcdProvider.Name),
 		"status":                  llx.StringData(vcdProvider.Status),
@@ -60,7 +60,7 @@ func (v *mqlVcdVdcProvider) id() (string, error) {
 	return "vcd.vdcProvider/" + v.Name.Data, v.Name.Error
 }
 
-func (v *mqlVcdVdcProvider) metadata() (map[string]interface{}, error) {
+func (v *mqlVcdVdcProvider) metadata() (map[string]any, error) {
 	conn := v.MqlRuntime.Connection.(*connection.VcdConnection)
 	client := conn.Client()
 
@@ -69,7 +69,7 @@ func (v *mqlVcdVdcProvider) metadata() (map[string]interface{}, error) {
 	}
 	name := v.Name.Data
 
-	res := map[string]interface{}{}
+	res := map[string]any{}
 
 	vdc, err := client.GetProviderVdcByName(name)
 	if err != nil {

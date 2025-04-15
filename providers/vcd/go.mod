@@ -1,6 +1,6 @@
-module go.mondoo.com/cnquery/v11/providers/vcd
+module go.mondoo.com/cnquery/v12/providers/vcd
 
-replace go.mondoo.com/cnquery/v11 => ../..
+replace go.mondoo.com/cnquery/v12 => ../..
 
 go 1.24.0
 
@@ -10,7 +10,7 @@ require (
 	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.10.0
 	github.com/vmware/go-vcloud-director/v2 v2.26.1
-	go.mondoo.com/cnquery/v11 v11.61.0
+	go.mondoo.com/cnquery/v12 v12.0.0
 )
 
 require (

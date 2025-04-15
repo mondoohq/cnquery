@@ -8,8 +8,8 @@ package providers
 
 import (
 	_ "embed"
-	// osconf "go.mondoo.com/cnquery/v11/providers/os/config"
-	// os "go.mondoo.com/cnquery/v11/providers/os/provider"
+	// osconf "go.mondoo.com/cnquery/v12/providers/os/config"
+	// os "go.mondoo.com/cnquery/v12/providers/os/provider"
 )
 
 // //go:embed os/resources/os.resources.json

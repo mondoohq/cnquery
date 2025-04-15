@@ -11,20 +11,20 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
 	aatypes "github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (a *mqlAwsIamAccessanalyzerAnalyzer) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func (a *mqlAwsIamAccessAnalyzer) analyzers() ([]interface{}, error) {
+func (a *mqlAwsIamAccessAnalyzer) analyzers() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getAnalyzers(conn), 5)
 	poolOfJobs.Run()
 
@@ -34,7 +34,7 @@ func (a *mqlAwsIamAccessAnalyzer) analyzers() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
@@ -50,7 +50,7 @@ func (a *mqlAwsIamAccessAnalyzer) getAnalyzers(conn *connection.AwsConnection) [
 	for _, region := range regions {
 		f := func() (jobpool.JobResult, error) {
 			svc := conn.AccessAnalyzer(region)
-			res := []interface{}{}
+			res := []any{}
 
 			// we need to iterate over all the analyzers types in the account
 			analyzerTypes := []aatypes.Type{aatypes.TypeAccount, aatypes.TypeOrganization, aatypes.TypeAccountUnusedAccess, aatypes.TypeOrganizationUnusedAccess}
@@ -97,7 +97,7 @@ func (a *mqlAwsIamAccessAnalyzer) getAnalyzers(conn *connection.AwsConnection) [
 	return tasks
 }
 
-func (a *mqlAwsIamAccessAnalyzer) findings() ([]interface{}, error) {
+func (a *mqlAwsIamAccessAnalyzer) findings() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	analyzerMap := map[string][]string{}
@@ -119,7 +119,7 @@ func (a *mqlAwsIamAccessAnalyzer) findings() ([]interface{}, error) {
 	}
 
 	// collect the list of findings
-	res := []interface{}{}
+	res := []any{}
 
 	// start ppol and run the jobs
 	poolOfJobs := jobpool.CreatePool(a.listFindings(conn, analyzerMap), 5)
@@ -131,7 +131,7 @@ func (a *mqlAwsIamAccessAnalyzer) findings() ([]interface{}, error) {
 	}
 
 	for i := range poolOfJobs.Jobs {
-		results := poolOfJobs.Jobs[i].Result.([]interface{})
+		results := poolOfJobs.Jobs[i].Result.([]any)
 		res = append(res, results...)
 	}
 	return res, nil
@@ -147,7 +147,7 @@ func (a *mqlAwsIamAccessAnalyzer) listFindings(conn *connection.AwsConnection, a
 	for _, region := range regions {
 		f := func() (jobpool.JobResult, error) {
 			svc := conn.AccessAnalyzer(region)
-			res := []interface{}{}
+			res := []any{}
 
 			analyzerList := analyzerMap[region]
 			for _, analyzerArn := range analyzerList {

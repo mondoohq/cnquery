@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func TestResource_Processes(t *testing.T) {
@@ -29,7 +29,7 @@ func TestResource_Processes(t *testing.T) {
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
 
-		m, ok := res[0].Data.Value.(map[string]interface{})
+		m, ok := res[0].Data.Value.(map[string]any)
 		if !ok {
 			t.Error("failed to retrieve correct type of result")
 			t.FailNow()

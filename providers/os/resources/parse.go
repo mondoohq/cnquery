@@ -10,12 +10,12 @@ import (
 	"fmt"
 	"strings"
 
-	"go.mondoo.com/cnquery/v11/checksums"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/parsers"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/plist"
-	"go.mondoo.com/cnquery/v11/utils/xml"
+	"go.mondoo.com/cnquery/v12/checksums"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/parsers"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/plist"
+	"go.mondoo.com/cnquery/v12/utils/xml"
 	"sigs.k8s.io/yaml"
 )
 
@@ -79,10 +79,10 @@ func (s *mqlParseIni) content(file *mqlFile) (string, error) {
 	return c.Data, c.Error
 }
 
-func (s *mqlParseIni) sections(content string, delimiter string) (map[string]interface{}, error) {
+func (s *mqlParseIni) sections(content string, delimiter string) (map[string]any, error) {
 	ini := parsers.ParseIni(content, delimiter)
 
-	res := make(map[string]interface{}, len(ini.Fields))
+	res := make(map[string]any, len(ini.Fields))
 	for k, v := range ini.Fields {
 		res[k] = v
 	}
@@ -90,12 +90,12 @@ func (s *mqlParseIni) sections(content string, delimiter string) (map[string]int
 	return res, nil
 }
 
-func (s *mqlParseIni) params(sections map[string]interface{}) (map[string]interface{}, error) {
+func (s *mqlParseIni) params(sections map[string]any) (map[string]any, error) {
 	res := sections[""]
 	if res == nil {
-		return map[string]interface{}{}, nil
+		return map[string]any{}, nil
 	}
-	return res.(map[string]interface{}), nil
+	return res.(map[string]any), nil
 }
 
 func initParseJson(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -120,12 +120,12 @@ func (s *mqlParseJson) content(file *mqlFile) (string, error) {
 	return c.Data, c.Error
 }
 
-func (s *mqlParseJson) params(content string) (interface{}, error) {
+func (s *mqlParseJson) params(content string) (any, error) {
 	if content == "" {
 		return nil, nil
 	}
 
-	var res interface{}
+	var res any
 	if err := json.Unmarshal([]byte(content), &res); err != nil {
 		return nil, err
 	}
@@ -154,7 +154,7 @@ func (s *mqlParseXml) content(file *mqlFile) (string, error) {
 	return c.Data, c.Error
 }
 
-func (s *mqlParseXml) params(content string) (interface{}, error) {
+func (s *mqlParseXml) params(content string) (any, error) {
 	return xml.Parse([]byte(content))
 }
 
@@ -180,8 +180,8 @@ func (s *mqlParseYaml) content(file *mqlFile) (string, error) {
 	return c.Data, c.Error
 }
 
-func (s *mqlParseYaml) params(content string) (map[string]interface{}, error) {
-	res := make(map[string](interface{}))
+func (s *mqlParseYaml) params(content string) (map[string]any, error) {
+	res := make(map[string](any))
 
 	if content == "" {
 		return nil, nil
@@ -195,12 +195,12 @@ func (s *mqlParseYaml) params(content string) (map[string]interface{}, error) {
 	return res, nil
 }
 
-func (s *mqlParseYaml) documents(content string) ([]interface{}, error) {
+func (s *mqlParseYaml) documents(content string) ([]any, error) {
 	if content == "" {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 
-	var documents []interface{}
+	var documents []any
 
 	// Split content by YAML document separator
 	yamlDocs := strings.Split(content, "---")
@@ -211,7 +211,7 @@ func (s *mqlParseYaml) documents(content string) ([]interface{}, error) {
 			continue
 		}
 
-		var parsed interface{}
+		var parsed any
 		err := yaml.Unmarshal([]byte(doc), &parsed)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse YAML document: %w", err)
@@ -246,7 +246,7 @@ func (s *mqlParsePlist) content(file *mqlFile) (string, error) {
 	return c.Data, c.Error
 }
 
-func (s *mqlParsePlist) params(content string) (map[string]interface{}, error) {
+func (s *mqlParsePlist) params(content string) (map[string]any, error) {
 	return plist.Decode(strings.NewReader(content))
 }
 
@@ -314,7 +314,7 @@ func (a *mqlParseCertificates) content(file *mqlFile) (string, error) {
 	return res.Data, res.Error
 }
 
-func (p *mqlParseCertificates) list(content string, path string) ([]interface{}, error) {
+func (p *mqlParseCertificates) list(content string, path string) ([]any, error) {
 	certificates, err := p.MqlRuntime.CreateSharedResource("certificates", map[string]*llx.RawData{
 		"pem": llx.StringData(content),
 	})
@@ -327,7 +327,7 @@ func (p *mqlParseCertificates) list(content string, path string) ([]interface{},
 		return nil, err
 	}
 
-	return list.Value.([]interface{}), nil
+	return list.Value.([]any), nil
 }
 
 func initParseOpenpgp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -375,7 +375,7 @@ func (a *mqlParseOpenpgp) content(file plugin.Resource) (string, error) {
 	return res.Data, res.Error
 }
 
-func (p *mqlParseOpenpgp) list(content string) ([]interface{}, error) {
+func (p *mqlParseOpenpgp) list(content string) ([]any, error) {
 	certificates, err := p.MqlRuntime.CreateSharedResource("openpgp.entities", map[string]*llx.RawData{
 		"content": llx.StringData(content),
 	})
@@ -388,5 +388,5 @@ func (p *mqlParseOpenpgp) list(content string) ([]interface{}, error) {
 		return nil, err
 	}
 
-	return list.Value.([]interface{}), nil
+	return list.Value.([]any), nil
 }

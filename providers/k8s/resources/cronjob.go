@@ -7,10 +7,10 @@ import (
 	"errors"
 	"sync"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/k8s/connection/shared/resources"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/k8s/connection/shared/resources"
 	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -29,8 +29,8 @@ func (k *mqlK8sCronjob) getCronJob() (*batchv1.CronJob, error) {
 	return nil, errors.New("invalid k8s cronjob")
 }
 
-func (k *mqlK8s) cronjobs() ([]interface{}, error) {
-	return k8sResourceToMql(k.MqlRuntime, gvkString(batchv1.SchemeGroupVersion.WithKind("cronjobs")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+func (k *mqlK8s) cronjobs() ([]any, error) {
+	return k8sResourceToMql(k.MqlRuntime, gvkString(batchv1.SchemeGroupVersion.WithKind("cronjobs")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (any, error) {
 		ts := obj.GetCreationTimestamp()
 
 		r, err := CreateResource(k.MqlRuntime, "k8s.cronjob", map[string]*llx.RawData{
@@ -51,7 +51,7 @@ func (k *mqlK8s) cronjobs() ([]interface{}, error) {
 	})
 }
 
-func (k *mqlK8sCronjob) manifest() (map[string]interface{}, error) {
+func (k *mqlK8sCronjob) manifest() (map[string]any, error) {
 	manifest, err := convert.JsonToDict(k.obj)
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ func (k *mqlK8sCronjob) manifest() (map[string]interface{}, error) {
 	return manifest, nil
 }
 
-func (k *mqlK8sCronjob) podSpec() (map[string]interface{}, error) {
+func (k *mqlK8sCronjob) podSpec() (map[string]any, error) {
 	podSpec, err := resources.GetPodSpec(k.obj)
 	if err != nil {
 		return nil, err
@@ -76,10 +76,10 @@ func (k *mqlK8sCronjob) id() (string, error) {
 }
 
 func initK8sCronjob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	return initNamespacedResource[*mqlK8sCronjob](runtime, args, func(k *mqlK8s) *plugin.TValue[[]interface{}] { return k.GetCronjobs() })
+	return initNamespacedResource[*mqlK8sCronjob](runtime, args, func(k *mqlK8s) *plugin.TValue[[]any] { return k.GetCronjobs() })
 }
 
-func (k *mqlK8sCronjob) annotations() (map[string]interface{}, error) {
+func (k *mqlK8sCronjob) annotations() (map[string]any, error) {
 	// Get the CronJob object
 	cj, err := k.getCronJob()
 	if err != nil {
@@ -88,7 +88,7 @@ func (k *mqlK8sCronjob) annotations() (map[string]interface{}, error) {
 	return convert.MapToInterfaceMap(cj.GetAnnotations()), nil
 }
 
-func (k *mqlK8sCronjob) labels() (map[string]interface{}, error) {
+func (k *mqlK8sCronjob) labels() (map[string]any, error) {
 	cj, err := k.getCronJob()
 	if err != nil {
 		return nil, err
@@ -96,7 +96,7 @@ func (k *mqlK8sCronjob) labels() (map[string]interface{}, error) {
 	return convert.MapToInterfaceMap(cj.GetLabels()), nil
 }
 
-func (k *mqlK8sCronjob) initContainers() ([]interface{}, error) {
+func (k *mqlK8sCronjob) initContainers() ([]any, error) {
 	// Get the CronJob object
 	cj, err := k.getCronJob()
 	if err != nil {
@@ -105,7 +105,7 @@ func (k *mqlK8sCronjob) initContainers() ([]interface{}, error) {
 	return getContainers(cj, &cj.ObjectMeta, k.MqlRuntime, InitContainerType)
 }
 
-func (k *mqlK8sCronjob) containers() ([]interface{}, error) {
+func (k *mqlK8sCronjob) containers() ([]any, error) {
 	cj, err := k.getCronJob()
 	if err != nil {
 		return nil, err

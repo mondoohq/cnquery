@@ -16,22 +16,22 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v11"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/logger"
-	"go.mondoo.com/cnquery/v11/mql"
-	"go.mondoo.com/cnquery/v11/mqlc"
-	"go.mondoo.com/cnquery/v11/providers"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/lr"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/lr/docs"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/recording"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/resources"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/testutils/mockprovider"
-	networkconf "go.mondoo.com/cnquery/v11/providers/network/config"
-	networkprovider "go.mondoo.com/cnquery/v11/providers/network/provider"
-	osconf "go.mondoo.com/cnquery/v11/providers/os/config"
-	osprovider "go.mondoo.com/cnquery/v11/providers/os/provider"
+	"go.mondoo.com/cnquery/v12"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/logger"
+	"go.mondoo.com/cnquery/v12/mql"
+	"go.mondoo.com/cnquery/v12/mqlc"
+	"go.mondoo.com/cnquery/v12/providers"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/lr"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/lr/docs"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/recording"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/testutils/mockprovider"
+	networkconf "go.mondoo.com/cnquery/v12/providers/network/config"
+	networkprovider "go.mondoo.com/cnquery/v12/providers/network/provider"
+	osconf "go.mondoo.com/cnquery/v12/providers/os/config"
+	osprovider "go.mondoo.com/cnquery/v12/providers/os/provider"
 	"sigs.k8s.io/yaml"
 )
 
@@ -337,7 +337,7 @@ func RecordingMock(absTestdataPath string) llx.Runtime {
 type SimpleTest struct {
 	Code        string
 	ResultIndex int
-	Expectation interface{}
+	Expectation any
 	Error       string
 }
 

@@ -10,13 +10,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v12/llx"
 
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
-	llxtypes "go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
+	llxtypes "go.mondoo.com/cnquery/v12/types"
 )
 
 func (a *mqlAwsInspector) id() (string, error) {
@@ -27,9 +27,9 @@ func (a *mqlAwsInspectorCoverage) id() (string, error) {
 	return a.AccountId.Data + "/" + a.ResourceId.Data, nil
 }
 
-func (a *mqlAwsInspector) coverages() ([]interface{}, error) {
+func (a *mqlAwsInspector) coverages() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getCoverage(conn), 5)
 	poolOfJobs.Run()
 
@@ -39,7 +39,7 @@ func (a *mqlAwsInspector) coverages() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
@@ -56,7 +56,7 @@ func (a *mqlAwsInspector) getCoverage(conn *connection.AwsConnection) []*jobpool
 		f := func() (jobpool.JobResult, error) {
 			svc := conn.Inspector(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 
 			params := &inspector2.ListCoverageInput{}
 			paginator := inspector2.NewListCoveragePaginator(svc, params)
@@ -139,16 +139,16 @@ func (a *mqlAwsInspectorCoverage) ec2Instance() (*mqlAwsInspectorCoverageInstanc
 	return nil, nil
 }
 
-func mapConversion(m map[string]string) map[string]interface{} {
-	newMap := make(map[string]interface{})
+func mapConversion(m map[string]string) map[string]any {
+	newMap := make(map[string]any)
 	for k, v := range m {
 		newMap[k] = v
 	}
 	return newMap
 }
 
-func listMapConversion(m []string) map[string]interface{} {
-	newMap := make(map[string]interface{})
+func listMapConversion(m []string) map[string]any {
+	newMap := make(map[string]any)
 	for _, k := range m {
 		newMap[k] = ""
 	}

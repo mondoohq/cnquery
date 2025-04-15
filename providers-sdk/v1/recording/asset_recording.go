@@ -6,7 +6,7 @@ package recording
 import (
 	"sort"
 
-	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v12/llx"
 )
 
 type Asset struct {

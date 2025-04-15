@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	subject "go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
+	subject "go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 )
 
 func TestPtr(t *testing.T) {
@@ -58,7 +58,7 @@ func TestPtr(t *testing.T) {
 	})
 
 	t.Run("Pointer to nil interface", func(t *testing.T) {
-		var value interface{}
+		var value any
 		ptr := subject.ToPtr(value)
 		assert.NotNil(t, ptr)
 		assert.Nil(t, *ptr)
@@ -72,8 +72,8 @@ func TestValue(t *testing.T) {
 
 	tests := []struct {
 		name string
-		ptr  interface{}
-		want interface{}
+		ptr  any
+		want any
 	}{
 		{"Nil int pointer", (*int)(nil), 0},
 		{"Non-nil int pointer", subject.ToPtr(42), 42},

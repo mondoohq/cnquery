@@ -8,11 +8,11 @@ import (
 	"fmt"
 	"strings"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/gcp/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v12/types"
 
 	"cloud.google.com/go/logging/logadmin"
 	"google.golang.org/api/iterator"
@@ -43,7 +43,7 @@ func (g *mqlGcpProject) logging() (*mqlGcpProjectLoggingservice, error) {
 	return res.(*mqlGcpProjectLoggingservice), nil
 }
 
-func (g *mqlGcpProjectLoggingservice) buckets() ([]interface{}, error) {
+func (g *mqlGcpProjectLoggingservice) buckets() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
 	if g.ProjectId.Error != nil {
@@ -66,10 +66,10 @@ func (g *mqlGcpProjectLoggingservice) buckets() ([]interface{}, error) {
 		return nil, err
 	}
 
-	mqlBuckets := make([]interface{}, 0, len(buckets.Buckets))
+	mqlBuckets := make([]any, 0, len(buckets.Buckets))
 	for _, bucket := range buckets.Buckets {
 
-		var mqlCmekSettingsDict map[string]interface{}
+		var mqlCmekSettingsDict map[string]any
 		if bucket.CmekSettings != nil {
 			type mqlCmekSettings struct {
 				KmsKeyName        string `json:"kmsKeyName"`
@@ -88,7 +88,7 @@ func (g *mqlGcpProjectLoggingservice) buckets() ([]interface{}, error) {
 			}
 		}
 
-		indexConfigs := make([]interface{}, 0, len(bucket.IndexConfigs))
+		indexConfigs := make([]any, 0, len(bucket.IndexConfigs))
 		for i, cfg := range bucket.IndexConfigs {
 			mqlIndexConfig, err := CreateResource(g.MqlRuntime, "gcp.project.loggingservice.bucket.indexConfigs", map[string]*llx.RawData{
 				"id":        llx.StringData(fmt.Sprintf("%s/indexConfigs/%d", bucket.Name, i)),
@@ -123,7 +123,7 @@ func (g *mqlGcpProjectLoggingservice) buckets() ([]interface{}, error) {
 	return mqlBuckets, nil
 }
 
-func (g *mqlGcpProjectLoggingservice) metrics() ([]interface{}, error) {
+func (g *mqlGcpProjectLoggingservice) metrics() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
 	if g.ProjectId.Error != nil {
@@ -142,7 +142,7 @@ func (g *mqlGcpProjectLoggingservice) metrics() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var metrics []interface{}
+	var metrics []any
 	it := logadminClient.Metrics(ctx)
 	for {
 		m, err := it.Next()
@@ -166,7 +166,7 @@ func (g *mqlGcpProjectLoggingservice) metrics() ([]interface{}, error) {
 	return metrics, nil
 }
 
-func (g *mqlGcpProjectLoggingserviceMetric) alertPolicies() ([]interface{}, error) {
+func (g *mqlGcpProjectLoggingserviceMetric) alertPolicies() ([]any, error) {
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -190,7 +190,7 @@ func (g *mqlGcpProjectLoggingserviceMetric) alertPolicies() ([]interface{}, erro
 		return nil, alertPolicies.Error
 	}
 
-	var res []interface{}
+	var res []any
 	for _, alertPolicy := range alertPolicies.Data {
 		mqlAP := alertPolicy.(*mqlGcpProjectMonitoringServiceAlertPolicy)
 		conditions := mqlAP.GetConditions()
@@ -198,16 +198,16 @@ func (g *mqlGcpProjectLoggingserviceMetric) alertPolicies() ([]interface{}, erro
 			return nil, conditions.Error
 		}
 		for _, c := range conditions.Data {
-			mqlC := c.(map[string]interface{})
-			var cond map[string]interface{}
+			mqlC := c.(map[string]any)
+			var cond map[string]any
 			if mqlC["threshold"] != nil {
-				cond = mqlC["threshold"].(map[string]interface{})
+				cond = mqlC["threshold"].(map[string]any)
 			} else if mqlC["absent"] != nil {
-				cond = mqlC["absent"].(map[string]interface{})
+				cond = mqlC["absent"].(map[string]any)
 			} else if mqlC["matchedLog"] != nil {
-				cond = mqlC["matchedLog"].(map[string]interface{})
+				cond = mqlC["matchedLog"].(map[string]any)
 			} else if mqlC["monitoringQueryLanguage"] != nil {
-				cond = mqlC["monitoringQueryLanguage"].(map[string]interface{})
+				cond = mqlC["monitoringQueryLanguage"].(map[string]any)
 			} else {
 				continue
 			}
@@ -220,7 +220,7 @@ func (g *mqlGcpProjectLoggingserviceMetric) alertPolicies() ([]interface{}, erro
 	return res, nil
 }
 
-func parseAlertPolicyConditionFilterMetricName(condition map[string]interface{}) string {
+func parseAlertPolicyConditionFilterMetricName(condition map[string]any) string {
 	filter := condition["filter"].(string)
 	// The filter is composed of multiple statements split by AND or OR and spaces in between
 	parts := strings.Split(filter, " ")
@@ -235,7 +235,7 @@ func parseAlertPolicyConditionFilterMetricName(condition map[string]interface{})
 	return ""
 }
 
-func (g *mqlGcpProjectLoggingservice) sinks() ([]interface{}, error) {
+func (g *mqlGcpProjectLoggingservice) sinks() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
 	if g.ProjectId.Error != nil {
@@ -254,7 +254,7 @@ func (g *mqlGcpProjectLoggingservice) sinks() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var sinks []interface{}
+	var sinks []any
 	it := logadminClient.Sinks(ctx)
 	for {
 		s, err := it.Next()

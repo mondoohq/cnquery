@@ -9,11 +9,11 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/gcp/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v12/types"
 	"google.golang.org/api/compute/v1"
 	dataproc "google.golang.org/api/dataproc/v1"
 	"google.golang.org/api/option"
@@ -77,7 +77,7 @@ func (g *mqlGcpProject) dataproc() (*mqlGcpProjectDataprocService, error) {
 	return res.(*mqlGcpProjectDataprocService), nil
 }
 
-func (g *mqlGcpProjectDataprocService) regions() ([]interface{}, error) {
+func (g *mqlGcpProjectDataprocService) regions() ([]any, error) {
 	// no check whether DataProc service is enabled here, this uses a different service
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
@@ -102,20 +102,20 @@ func (g *mqlGcpProjectDataprocService) regions() ([]interface{}, error) {
 		return nil, err
 	}
 
-	regionNames := make([]interface{}, 0, len(regions.Items))
+	regionNames := make([]any, 0, len(regions.Items))
 	for _, region := range regions.Items {
 		regionNames = append(regionNames, region.Name)
 	}
 	return regionNames, nil
 }
 
-func (g *mqlGcpProjectDataprocService) clusters() ([]interface{}, error) {
+func (g *mqlGcpProjectDataprocService) clusters() ([]any, error) {
 	if g.Enabled.Error != nil {
 		return nil, g.Enabled.Error
 	}
 	enabled := g.Enabled.Data
 	if !enabled {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
@@ -142,7 +142,7 @@ func (g *mqlGcpProjectDataprocService) clusters() ([]interface{}, error) {
 	}
 
 	var wg sync.WaitGroup
-	var mqlClusters []interface{}
+	var mqlClusters []any
 	wg.Add(len(regions.Data))
 	mux := &sync.Mutex{}
 	for _, region := range regions.Data {
@@ -155,7 +155,7 @@ func (g *mqlGcpProjectDataprocService) clusters() ([]interface{}, error) {
 				for _, c := range clusters.Clusters {
 					var mqlConfig plugin.Resource
 					if c.Config != nil {
-						var mqlAutoscalingCfg map[string]interface{}
+						var mqlAutoscalingCfg map[string]any
 						if c.Config.AutoscalingConfig != nil {
 							type mqlAutoscalingConfig struct {
 								PolicyUri string `json:"policyUri"`
@@ -166,7 +166,7 @@ func (g *mqlGcpProjectDataprocService) clusters() ([]interface{}, error) {
 							}
 						}
 
-						var mqlMetricsCfg map[string]interface{}
+						var mqlMetricsCfg map[string]any
 						if c.Config.DataprocMetricConfig != nil {
 							type mqlMetricsConfigMetric struct {
 								MetricOverrides []string `json:"metricOverrides"`
@@ -190,7 +190,7 @@ func (g *mqlGcpProjectDataprocService) clusters() ([]interface{}, error) {
 							}
 						}
 
-						var mqlEncryptionCfg map[string]interface{}
+						var mqlEncryptionCfg map[string]any
 						if c.Config.EncryptionConfig != nil {
 							type mqlEncryptionConfig struct {
 								GcePdKmsKeyName string `json:"gcePdKmsKeyName"`
@@ -201,7 +201,7 @@ func (g *mqlGcpProjectDataprocService) clusters() ([]interface{}, error) {
 							}
 						}
 
-						var mqlEndpointCfg map[string]interface{}
+						var mqlEndpointCfg map[string]any
 						if c.Config.EndpointConfig != nil {
 							type mqlEndpointConfig struct {
 								HttpPorts            map[string]string `json:"httpPorts"`
@@ -218,7 +218,7 @@ func (g *mqlGcpProjectDataprocService) clusters() ([]interface{}, error) {
 
 						var mqlGceClusterCfg plugin.Resource
 						if c.Config.GceClusterConfig != nil {
-							var mqlConfidentialInstanceCfg map[string]interface{}
+							var mqlConfidentialInstanceCfg map[string]any
 							if c.Config.GceClusterConfig.ConfidentialInstanceConfig != nil {
 								type mqlConfidentialInstanceConfig struct {
 									EnableConfidentialCompute bool `json:"enableConfidentialCompute"`
@@ -231,7 +231,7 @@ func (g *mqlGcpProjectDataprocService) clusters() ([]interface{}, error) {
 								}
 							}
 
-							var mqlNodeGroupAffinityCfg map[string]interface{}
+							var mqlNodeGroupAffinityCfg map[string]any
 							if c.Config.GceClusterConfig.NodeGroupAffinity != nil {
 								type mqlNodeGroupAffinityConfig struct {
 									Uri string `json:"uri"`
@@ -352,7 +352,7 @@ func (g *mqlGcpProjectDataprocService) clusters() ([]interface{}, error) {
 						type mqlMetastoreConfig struct {
 							DataprocMetastoreService string `json:"dataprocMetastoreService"`
 						}
-						var mqlMetastoreCfg map[string]interface{}
+						var mqlMetastoreCfg map[string]any
 						if c.Config.MetastoreConfig != nil {
 							mqlMetastoreCfg, err = convert.JsonToDict(mqlMetastoreConfig{
 								DataprocMetastoreService: c.Config.MetastoreConfig.DataprocMetastoreService,
@@ -392,7 +392,7 @@ func (g *mqlGcpProjectDataprocService) clusters() ([]interface{}, error) {
 							IdentityConfig mqlSecurityIdentity `json:"identityConfig,omitempty"`
 							KerberosConfig mqlSecurityKerberos `json:"kerberosConfig,omitempty"`
 						}
-						var mqlSecurityCfg map[string]interface{}
+						var mqlSecurityCfg map[string]any
 						if c.Config.SecurityConfig != nil {
 							cfg := mqlSecurityConfig{}
 							if c.Config.SecurityConfig.IdentityConfig != nil {
@@ -429,7 +429,7 @@ func (g *mqlGcpProjectDataprocService) clusters() ([]interface{}, error) {
 							ImageVersion       string   `json:"imageVersion"`
 							OptionalComponents []string `json:"optionalComponents"`
 						}
-						var mqlSoftwareCfg map[string]interface{}
+						var mqlSoftwareCfg map[string]any
 						if c.Config.SoftwareConfig != nil {
 							mqlSoftwareCfg, err = convert.JsonToDict(mqlSoftwareConfig{
 								ImageVersion:       c.Config.SoftwareConfig.ImageVersion,
@@ -470,7 +470,7 @@ func (g *mqlGcpProjectDataprocService) clusters() ([]interface{}, error) {
 						}
 					}
 
-					var mqlMetrics map[string]interface{}
+					var mqlMetrics map[string]any
 					if c.Metrics != nil {
 						type mqlClusterMetrics struct {
 							HdfsMetrics map[string]string `json:"hdfsMetrics"`
@@ -496,7 +496,7 @@ func (g *mqlGcpProjectDataprocService) clusters() ([]interface{}, error) {
 						}
 					}
 
-					mqlStatusHistory := make([]interface{}, 0, len(c.StatusHistory))
+					mqlStatusHistory := make([]any, 0, len(c.StatusHistory))
 					for i, s := range c.StatusHistory {
 						mqlStatus, err = CreateResource(g.MqlRuntime, "gcp.project.dataprocService.cluster.status", map[string]*llx.RawData{
 							"id":       llx.StringData(fmt.Sprintf("%s/dataproc/%s/status/%d", projectId, c.ClusterName, i)),
@@ -777,7 +777,7 @@ func instanceGroupConfigToMql(runtime *plugin.Runtime, igc *dataproc.InstanceGro
 		InstanceGroupManagerName string `json:"instanceGroupManagerName"`
 		InstanceTemplateName     string `json:"instanceTemplateName"`
 	}
-	var mqlManagerGroupCfg map[string]interface{}
+	var mqlManagerGroupCfg map[string]any
 	if igc.ManagedGroupConfig != nil {
 		mqlManagerGroupCfg, err = convert.JsonToDict(mqlManagedGroupConfig{
 			InstanceGroupManagerName: igc.ManagedGroupConfig.InstanceGroupManagerName,

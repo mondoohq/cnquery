@@ -7,9 +7,9 @@ import (
 	"errors"
 	"sync"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -21,8 +21,8 @@ type mqlK8sSecretInternal struct {
 	metaObj metav1.Object
 }
 
-func (k *mqlK8s) secrets() ([]interface{}, error) {
-	return k8sResourceToMql(k.MqlRuntime, gvkString(corev1.SchemeGroupVersion.WithKind("secrets")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+func (k *mqlK8s) secrets() ([]any, error) {
+	return k8sResourceToMql(k.MqlRuntime, gvkString(corev1.SchemeGroupVersion.WithKind("secrets")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (any, error) {
 		ts := obj.GetCreationTimestamp()
 
 		s, ok := resource.(*corev1.Secret)
@@ -49,7 +49,7 @@ func (k *mqlK8s) secrets() ([]interface{}, error) {
 	})
 }
 
-func (k *mqlK8sSecret) manifest() (map[string]interface{}, error) {
+func (k *mqlK8sSecret) manifest() (map[string]any, error) {
 	manifest, err := convert.JsonToDict(k.obj)
 	if err != nil {
 		return nil, err
@@ -62,18 +62,18 @@ func (k *mqlK8sSecret) id() (string, error) {
 }
 
 func initK8sSecret(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	return initNamespacedResource[*mqlK8sSecret](runtime, args, func(k *mqlK8s) *plugin.TValue[[]interface{}] { return k.GetSecrets() })
+	return initNamespacedResource[*mqlK8sSecret](runtime, args, func(k *mqlK8s) *plugin.TValue[[]any] { return k.GetSecrets() })
 }
 
-func (k *mqlK8sSecret) annotations() (map[string]interface{}, error) {
+func (k *mqlK8sSecret) annotations() (map[string]any, error) {
 	return convert.MapToInterfaceMap(k.obj.GetAnnotations()), nil
 }
 
-func (k *mqlK8sSecret) labels() (map[string]interface{}, error) {
+func (k *mqlK8sSecret) labels() (map[string]any, error) {
 	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
 }
 
-func (k *mqlK8sSecret) certificates() ([]interface{}, error) {
+func (k *mqlK8sSecret) certificates() ([]any, error) {
 	if k.obj.Type != corev1.SecretTypeTLS {
 		// this is not an error, it just does not contain a certificate
 		return nil, nil
@@ -96,5 +96,5 @@ func (k *mqlK8sSecret) certificates() ([]interface{}, error) {
 		return nil, err
 	}
 
-	return list.Value.([]interface{}), nil
+	return list.Value.([]any), nil
 }

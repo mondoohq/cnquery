@@ -8,9 +8,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/mock"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/powershell"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/powershell"
 )
 
 func TestParseSecpol(t *testing.T) {
@@ -27,6 +27,6 @@ func TestParseSecpol(t *testing.T) {
 	assert.Equal(t, "42", secpol.SystemAccess["MaximumPasswordAge"])
 	assert.Equal(t, "chris", secpol.SystemAccess["NewAdministratorName"])
 	assert.Equal(t, "0", secpol.EventAudit["AuditLogonEvents"])
-	assert.Equal(t, []interface{}{"S-1-1-0", "S-1-5-32-544", "S-1-5-32-545", "S-1-5-32-551"}, secpol.PrivilegeRights["SeNetworkLogonRight"])
+	assert.Equal(t, []any{"S-1-1-0", "S-1-5-32-544", "S-1-5-32-545", "S-1-5-32-551"}, secpol.PrivilegeRights["SeNetworkLogonRight"])
 	assert.Equal(t, "3,0", secpol.RegistryValues["MACHINE\\System\\CurrentControlSet\\Control\\Lsa\\FullPrivilegeAuditing"])
 }

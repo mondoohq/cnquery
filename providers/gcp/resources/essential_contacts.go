@@ -6,16 +6,16 @@ package resources
 import (
 	"context"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/gcp/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v12/types"
 
 	"google.golang.org/api/essentialcontacts/v1"
 	"google.golang.org/api/option"
 )
 
-func (g *mqlGcpProject) essentialContacts() ([]interface{}, error) {
+func (g *mqlGcpProject) essentialContacts() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
 	if g.Id.Error != nil {
@@ -48,7 +48,7 @@ func (g *mqlGcpProject) essentialContacts() ([]interface{}, error) {
 		return nil, err
 	}
 
-	mqlContacts := make([]interface{}, 0, len(contacts.Contacts))
+	mqlContacts := make([]any, 0, len(contacts.Contacts))
 	for _, c := range contacts.Contacts {
 		mqlC, err := CreateResource(g.MqlRuntime, "gcp.essentialContact", map[string]*llx.RawData{
 			"resourcePath":           llx.StringData(c.Name),

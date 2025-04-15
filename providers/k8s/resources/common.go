@@ -9,9 +9,9 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/k8s/connection/shared"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/k8s/connection/shared"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -26,13 +26,13 @@ func k8sProvider(t plugin.Connection) (shared.Connection, error) {
 	return at, nil
 }
 
-type resourceConvertFn func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error)
+type resourceConvertFn func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (any, error)
 
 func gvkString(gvk schema.GroupVersionKind) string {
 	return gvk.Kind + "." + gvk.Version + "." + gvk.Group
 }
 
-func k8sResourceToMql(r *plugin.Runtime, kind string, fn resourceConvertFn) ([]interface{}, error) {
+func k8sResourceToMql(r *plugin.Runtime, kind string, fn resourceConvertFn) ([]any, error) {
 	kt, err := k8sProvider(r.Connection)
 	if err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ func k8sResourceToMql(r *plugin.Runtime, kind string, fn resourceConvertFn) ([]i
 		return nil, err
 	}
 
-	resp := []interface{}{}
+	resp := []any{}
 	for i := range result.Resources {
 		resource := result.Resources[i]
 
@@ -108,7 +108,7 @@ func objIdFromFields(kind, namespace, name string) string {
 }
 
 func initNamespacedResource[T K8sNamespacedObject](
-	runtime *plugin.Runtime, args map[string]*llx.RawData, r func(k8s *mqlK8s) *plugin.TValue[[]interface{}],
+	runtime *plugin.Runtime, args map[string]*llx.RawData, r func(k8s *mqlK8s) *plugin.TValue[[]any],
 ) (map[string]*llx.RawData, plugin.Resource, error) {
 	// pass-through if all args are already provided
 	if len(args) > 2 {
@@ -182,7 +182,7 @@ func initNamespacedResource[T K8sNamespacedObject](
 }
 
 func initResource[T K8sObject](
-	runtime *plugin.Runtime, args map[string]*llx.RawData, r func(k8s *mqlK8s) *plugin.TValue[[]interface{}],
+	runtime *plugin.Runtime, args map[string]*llx.RawData, r func(k8s *mqlK8s) *plugin.TValue[[]any],
 ) (map[string]*llx.RawData, plugin.Resource, error) {
 	// pass-through if all args are already provided
 	if len(args) > 1 {

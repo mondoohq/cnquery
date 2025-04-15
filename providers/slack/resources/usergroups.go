@@ -8,12 +8,12 @@ import (
 	"errors"
 
 	"github.com/slack-go/slack"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/slack/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/slack/connection"
 )
 
-func (s *mqlSlack) userGroups() ([]interface{}, error) {
+func (s *mqlSlack) userGroups() ([]any, error) {
 	conn := s.MqlRuntime.Connection.(*connection.SlackConnection)
 	client := conn.Client()
 	if client == nil {
@@ -29,7 +29,7 @@ func (s *mqlSlack) userGroups() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	var list []interface{}
+	var list []any
 	for i := range groups {
 		mqlGroup, err := newMqlSlackUserGroup(s.MqlRuntime, groups[i])
 		if err != nil {
@@ -41,7 +41,7 @@ func (s *mqlSlack) userGroups() ([]interface{}, error) {
 	return list, nil
 }
 
-func newMqlSlackUserGroup(runtime *plugin.Runtime, userGroup slack.UserGroup) (interface{}, error) {
+func newMqlSlackUserGroup(runtime *plugin.Runtime, userGroup slack.UserGroup) (any, error) {
 	dateCreate := userGroup.DateCreate.Time()
 	dateUpdate := userGroup.DateUpdate.Time()
 	dateDelete := userGroup.DateDelete.Time()
@@ -88,13 +88,13 @@ func (x *mqlSlackUserGroup) id() (string, error) {
 	return "slack.userGroup/" + x.Id.Data, nil
 }
 
-func (s *mqlSlackUserGroup) members() ([]interface{}, error) {
+func (s *mqlSlackUserGroup) members() ([]any, error) {
 	conn := s.MqlRuntime.Connection.(*connection.SlackConnection)
 	client := conn.Client()
 
 	userID := s.Id.Data
 
-	var list []interface{}
+	var list []any
 
 	members, err := client.GetUserGroupMembers(userID)
 	if err != nil {

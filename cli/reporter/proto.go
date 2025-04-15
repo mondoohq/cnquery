@@ -9,8 +9,8 @@ import (
 	"errors"
 	"strings"
 
-	"go.mondoo.com/cnquery/v11/explorer"
-	"go.mondoo.com/cnquery/v11/utils/iox"
+	"go.mondoo.com/cnquery/v12/explorer"
+	"go.mondoo.com/cnquery/v12/utils/iox"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/structpb"
 )
@@ -76,7 +76,7 @@ func ConvertToProto(data *explorer.ReportCollection) (*Report, error) {
 			}
 
 			var v *structpb.Value
-			var jsonStruct map[string]interface{}
+			var jsonStruct map[string]any
 			err = json.Unmarshal([]byte(buf.Bytes()), &jsonStruct)
 			if err == nil {
 				v, err = structpb.NewValue(jsonStruct)

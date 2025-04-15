@@ -10,10 +10,10 @@ import (
 
 	"github.com/shadowscatcher/shodan/models"
 	"github.com/shadowscatcher/shodan/search"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/shodan/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/shodan/connection"
 )
 
 func initShodanDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -44,9 +44,9 @@ func (r *mqlShodanDomain) fetchBaseInformation() error {
 	}
 
 	// set default information
-	r.Tags = plugin.TValue[[]interface{}]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
-	r.Subdomains = plugin.TValue[[]interface{}]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
-	r.Nsrecords = plugin.TValue[[]interface{}]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
+	r.Tags = plugin.TValue[[]any]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
+	r.Subdomains = plugin.TValue[[]any]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
+	r.Nsrecords = plugin.TValue[[]any]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
 
 	ctx := context.Background()
 	domain := r.Name.Data
@@ -74,10 +74,10 @@ func (r *mqlShodanDomain) fetchBaseInformation() error {
 		domainSearch.Page++
 	}
 
-	r.Tags = plugin.TValue[[]interface{}]{Data: convert.SliceAnyToInterface(tags), Error: nil, State: plugin.StateIsSet}
-	r.Subdomains = plugin.TValue[[]interface{}]{Data: convert.SliceAnyToInterface(subdomains), Error: nil, State: plugin.StateIsSet}
+	r.Tags = plugin.TValue[[]any]{Data: convert.SliceAnyToInterface(tags), Error: nil, State: plugin.StateIsSet}
+	r.Subdomains = plugin.TValue[[]any]{Data: convert.SliceAnyToInterface(subdomains), Error: nil, State: plugin.StateIsSet}
 
-	var mqlNsRecords []interface{}
+	var mqlNsRecords []any
 	for _, nsrecord := range nsrecords {
 		lastSeen := llx.NilData
 
@@ -98,20 +98,20 @@ func (r *mqlShodanDomain) fetchBaseInformation() error {
 		}
 		mqlNsRecords = append(mqlNsRecords, recordResource)
 	}
-	r.Nsrecords = plugin.TValue[[]interface{}]{Data: mqlNsRecords, Error: nil, State: plugin.StateIsSet}
+	r.Nsrecords = plugin.TValue[[]any]{Data: mqlNsRecords, Error: nil, State: plugin.StateIsSet}
 
 	return nil
 }
 
-func (r *mqlShodanDomain) tags() ([]interface{}, error) {
+func (r *mqlShodanDomain) tags() ([]any, error) {
 	return nil, r.fetchBaseInformation()
 }
 
-func (r *mqlShodanDomain) subdomains() ([]interface{}, error) {
+func (r *mqlShodanDomain) subdomains() ([]any, error) {
 	return nil, r.fetchBaseInformation()
 }
 
-func (r *mqlShodanDomain) nsrecords() ([]interface{}, error) {
+func (r *mqlShodanDomain) nsrecords() ([]any, error) {
 	return nil, r.fetchBaseInformation()
 }
 

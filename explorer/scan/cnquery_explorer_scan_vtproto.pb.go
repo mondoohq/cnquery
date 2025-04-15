@@ -7,8 +7,8 @@ package scan
 import (
 	fmt "fmt"
 	protohelpers "github.com/planetscale/vtprotobuf/protohelpers"
-	explorer "go.mondoo.com/cnquery/v11/explorer"
-	inventory "go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	explorer "go.mondoo.com/cnquery/v12/explorer"
+	inventory "go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
 	proto "google.golang.org/protobuf/proto"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	io "io"

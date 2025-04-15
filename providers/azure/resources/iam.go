@@ -12,11 +12,11 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	authorization "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/msi/armmsi"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/azure/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/azure/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (a *mqlAzureSubscription) iam() (*mqlAzureSubscriptionAuthorizationService, error) {
@@ -48,7 +48,7 @@ func initAzureSubscriptionAuthorizationService(runtime *plugin.Runtime, args map
 	return args, nil, nil
 }
 
-func (a *mqlAzureSubscriptionAuthorizationService) roles() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionAuthorizationService) roles() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -64,7 +64,7 @@ func (a *mqlAzureSubscriptionAuthorizationService) roles() ([]interface{}, error
 	// on which this connection is running
 	scope := fmt.Sprintf("/subscriptions/%s", subId)
 	pager := client.NewListPager(scope, &authorization.RoleDefinitionsClientListOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -72,13 +72,13 @@ func (a *mqlAzureSubscriptionAuthorizationService) roles() ([]interface{}, error
 		}
 		for _, roleDef := range page.Value {
 			roleType := convert.ToValue(roleDef.Properties.RoleType)
-			scopes := []interface{}{}
+			scopes := []any{}
 			for _, s := range roleDef.Properties.AssignableScopes {
 				if s != nil {
 					scopes = append(scopes, *s)
 				}
 			}
-			permissions := []interface{}{}
+			permissions := []any{}
 			for idx, p := range roleDef.Properties.Permissions {
 				id := fmt.Sprintf("%s/azure.subscription.authorizationService.roleDefinition.permission/%d", *roleDef.ID, idx)
 				permission, err := newMqlRolePermission(a.MqlRuntime, id, p)
@@ -106,11 +106,11 @@ func (a *mqlAzureSubscriptionAuthorizationService) roles() ([]interface{}, error
 	return res, nil
 }
 
-func newMqlRolePermission(runtime *plugin.Runtime, id string, permission *authorization.Permission) (interface{}, error) {
-	allowedActions := []interface{}{}
-	deniedActions := []interface{}{}
-	allowedDataActions := []interface{}{}
-	deniedDataActions := []interface{}{}
+func newMqlRolePermission(runtime *plugin.Runtime, id string, permission *authorization.Permission) (any, error) {
+	allowedActions := []any{}
+	deniedActions := []any{}
+	allowedDataActions := []any{}
+	deniedDataActions := []any{}
 
 	for _, a := range permission.Actions {
 		if a != nil {
@@ -148,7 +148,7 @@ func newMqlRolePermission(runtime *plugin.Runtime, id string, permission *author
 	return p, nil
 }
 
-func (a *mqlAzureSubscriptionAuthorizationService) roleAssignments() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionAuthorizationService) roleAssignments() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
@@ -164,7 +164,7 @@ func (a *mqlAzureSubscriptionAuthorizationService) roleAssignments() ([]interfac
 	// we're interested in subscription-level role definitions, so we scope this to the subscription,
 	// on which this connection is running
 	pager := client.NewListForSubscriptionPager(&authorization.RoleAssignmentsClientListForSubscriptionOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -251,7 +251,7 @@ func (a *mqlAzureSubscriptionAuthorizationServiceRoleAssignment) role() (*mqlAzu
 	return nil, errors.New("role definition not found")
 }
 
-func (a *mqlAzureSubscriptionAuthorizationService) managedIdentities() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionAuthorizationService) managedIdentities() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
@@ -270,7 +270,7 @@ func (a *mqlAzureSubscriptionAuthorizationService) managedIdentities() ([]interf
 
 	// list user assigned identities
 	pager := client.NewListBySubscriptionPager(nil)
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -283,9 +283,9 @@ func (a *mqlAzureSubscriptionAuthorizationService) managedIdentities() ([]interf
 			}
 
 			// set assigned roles to nil
-			mqlManagedIdentity.RoleAssignments = plugin.TValue[[]interface{}]{Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
+			mqlManagedIdentity.RoleAssignments = plugin.TValue[[]any]{Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
 
-			assignedRoles := []interface{}{}
+			assignedRoles := []any{}
 			for i := range roleAssignments {
 				roleAssignment := roleAssignments[i].(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment)
 				if roleAssignment.PrincipalId == mqlManagedIdentity.PrincipalId {
@@ -294,7 +294,7 @@ func (a *mqlAzureSubscriptionAuthorizationService) managedIdentities() ([]interf
 			}
 
 			if len(assignedRoles) > 0 {
-				mqlManagedIdentity.RoleAssignments = plugin.TValue[[]interface{}]{Error: nil, Data: assignedRoles, State: plugin.StateIsSet}
+				mqlManagedIdentity.RoleAssignments = plugin.TValue[[]any]{Error: nil, Data: assignedRoles, State: plugin.StateIsSet}
 			}
 
 			res = append(res, mqlManagedIdentity)
@@ -320,7 +320,7 @@ func newMqlManagedIdentity(runtime *plugin.Runtime, managedIdentity *armmsi.Iden
 	return mqlManagedIdentity, nil
 }
 
-func (a *mqlAzureSubscriptionManagedIdentity) roleAssignments() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionManagedIdentity) roleAssignments() ([]any, error) {
 	// NOTE: this should never be called since we assign roles during the managed identities query
 	return nil, errors.New("could not fetch role assignments for managed identities")
 }

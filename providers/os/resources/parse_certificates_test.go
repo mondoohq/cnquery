@@ -89,7 +89,7 @@ func TestResource_ParseCertificates(t *testing.T) {
 		res := x.TestQuery(t, "parse.certificates('/etc/ssl/cert.pem').list[0].keyUsage")
 		require.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
-		list := res[0].Data.Value.([]interface{})
+		list := res[0].Data.Value.([]any)
 		assert.Contains(t, list, "CRLSign")
 		assert.Contains(t, list, "DigitalSignature")
 		assert.Contains(t, list, "CertificateSign")
@@ -99,28 +99,28 @@ func TestResource_ParseCertificates(t *testing.T) {
 		res := x.TestQuery(t, "parse.certificates('/etc/ssl/cert.pem').list[0].extendedKeyUsage")
 		require.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, []interface{}{}, res[0].Data.Value)
+		assert.Equal(t, []any{}, res[0].Data.Value)
 	})
 
 	t.Run("test certificate crldistributionpoints", func(t *testing.T) {
 		res := x.TestQuery(t, "parse.certificates('/etc/ssl/cert.pem').list[0].crlDistributionPoints")
 		require.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, []interface{}{}, res[0].Data.Value)
+		assert.Equal(t, []any{}, res[0].Data.Value)
 	})
 
 	t.Run("test certificate ocspserver", func(t *testing.T) {
 		res := x.TestQuery(t, "parse.certificates('/etc/ssl/cert.pem').list[0].ocspServer")
 		require.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, []interface{}{}, res[0].Data.Value)
+		assert.Equal(t, []any{}, res[0].Data.Value)
 	})
 
 	t.Run("test certificate issuingcertificateurl", func(t *testing.T) {
 		res := x.TestQuery(t, "parse.certificates('/etc/ssl/cert.pem').list[0].issuingCertificateUrl")
 		require.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, []interface{}{}, res[0].Data.Value)
+		assert.Equal(t, []any{}, res[0].Data.Value)
 	})
 
 	t.Run("test certificate loading from content", func(t *testing.T) {

@@ -7,12 +7,12 @@ import (
 	"context"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/snowflake/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/snowflake/connection"
 )
 
-func (r *mqlSnowflakeAccount) users() ([]interface{}, error) {
+func (r *mqlSnowflakeAccount) users() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
 	client := conn.Client()
 	ctx := context.Background()
@@ -22,7 +22,7 @@ func (r *mqlSnowflakeAccount) users() ([]interface{}, error) {
 		return nil, err
 	}
 
-	list := []interface{}{}
+	list := []any{}
 	for i := range users {
 		mqlUser, err := newMqlSnowflakeUser(r.MqlRuntime, users[i])
 		if err != nil {
@@ -66,7 +66,7 @@ func newMqlSnowflakeUser(runtime *plugin.Runtime, user sdk.User) (*mqlSnowflakeU
 	return mqlResource, nil
 }
 
-func (r *mqlSnowflakeUser) parameters() ([]interface{}, error) {
+func (r *mqlSnowflakeUser) parameters() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
 	client := conn.Client()
 	ctx := context.Background()
@@ -80,7 +80,7 @@ func (r *mqlSnowflakeUser) parameters() ([]interface{}, error) {
 		return nil, err
 	}
 
-	list := []interface{}{}
+	list := []any{}
 	for i := range parameters {
 		mqlResource, err := newMqlSnowflakeParameter(r.MqlRuntime, parameters[i])
 		if err != nil {

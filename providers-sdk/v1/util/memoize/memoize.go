@@ -57,7 +57,7 @@ func New(defaultExpiration, cleanupInterval time.Duration) Memoizer {
 // Memoize executes and returns the results of the given function, unless there was a cached value of the same key.
 // Only one execution is in-flight for a given key at a time.
 // The boolean return value indicates whether v was previously stored.
-func (m *goCache) Memoize(key string, fn func() (interface{}, error)) (interface{}, bool, error) {
+func (m *goCache) Memoize(key string, fn func() (any, error)) (any, bool, error) {
 	m.init()
 
 	// Check cache
@@ -67,7 +67,7 @@ func (m *goCache) Memoize(key string, fn func() (interface{}, error)) (interface
 	}
 
 	// Combine memoized function with a cache store
-	value, err, _ := m.group.Do(key, func() (interface{}, error) {
+	value, err, _ := m.group.Do(key, func() (any, error) {
 		data, innerErr := fn()
 
 		if innerErr == nil {

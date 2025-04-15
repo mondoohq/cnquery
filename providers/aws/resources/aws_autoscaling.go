@@ -11,12 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (a *mqlAwsAutoscaling) id() (string, error) {
@@ -27,10 +27,10 @@ func (a *mqlAwsAutoscalingGroup) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func (a *mqlAwsAutoscaling) groups() ([]interface{}, error) {
+func (a *mqlAwsAutoscaling) groups() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getGroups(conn), 5)
 	poolOfJobs.Run()
 
@@ -40,15 +40,15 @@ func (a *mqlAwsAutoscaling) groups() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
 }
 
-func (a *mqlAwsAutoscalingGroup) instances() ([]interface{}, error) {
+func (a *mqlAwsAutoscalingGroup) instances() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	groupInstances := []interface{}{}
+	groupInstances := []any{}
 	for _, instance := range a.groupInstances {
 		mqlInstance, err := NewResource(a.MqlRuntime, "aws.ec2.instance",
 			map[string]*llx.RawData{
@@ -86,11 +86,11 @@ func initAwsAutoscalingGroup(runtime *plugin.Runtime, args map[string]*llx.RawDa
 
 	if len(ags.AutoScalingGroups) == 1 {
 		group := ags.AutoScalingGroups[0]
-		lbNames := []interface{}{}
+		lbNames := []any{}
 		for _, name := range group.LoadBalancerNames {
 			lbNames = append(lbNames, name)
 		}
-		availabilityZones := []interface{}{}
+		availabilityZones := []any{}
 		for _, zone := range group.AvailabilityZones {
 			availabilityZones = append(availabilityZones, zone)
 		}
@@ -133,7 +133,7 @@ func (a *mqlAwsAutoscaling) getGroups(conn *connection.AwsConnection) []*jobpool
 		f := func() (jobpool.JobResult, error) {
 			svc := conn.Autoscaling(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 
 			params := &autoscaling.DescribeAutoScalingGroupsInput{}
 			paginator := autoscaling.NewDescribeAutoScalingGroupsPaginator(svc, params)
@@ -147,11 +147,11 @@ func (a *mqlAwsAutoscaling) getGroups(conn *connection.AwsConnection) []*jobpool
 					return nil, err
 				}
 				for _, group := range groups.AutoScalingGroups {
-					lbNames := []interface{}{}
+					lbNames := []any{}
 					for _, name := range group.LoadBalancerNames {
 						lbNames = append(lbNames, name)
 					}
-					availabilityZones := []interface{}{}
+					availabilityZones := []any{}
 					for _, zone := range group.AvailabilityZones {
 						availabilityZones = append(availabilityZones, zone)
 					}
@@ -189,8 +189,8 @@ func (a *mqlAwsAutoscaling) getGroups(conn *connection.AwsConnection) []*jobpool
 	return tasks
 }
 
-func autoscalingTagsToMap(tags []ec2types.TagDescription) map[string]interface{} {
-	tagsMap := make(map[string]interface{})
+func autoscalingTagsToMap(tags []ec2types.TagDescription) map[string]any {
+	tagsMap := make(map[string]any)
 
 	if len(tags) > 0 {
 		for i := range tags {

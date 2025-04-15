@@ -10,11 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (a *mqlAwsBackup) id() (string, error) {
@@ -29,10 +29,10 @@ func (a *mqlAwsBackupVaultRecoveryPoint) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func (a *mqlAwsBackup) vaults() ([]interface{}, error) {
+func (a *mqlAwsBackup) vaults() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getVaults(conn), 5)
 	poolOfJobs.Run()
 
@@ -42,7 +42,7 @@ func (a *mqlAwsBackup) vaults() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
@@ -59,7 +59,7 @@ func (a *mqlAwsBackup) getVaults(conn *connection.AwsConnection) []*jobpool.Job 
 		f := func() (jobpool.JobResult, error) {
 			svc := conn.Backup(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 
 			vaults, err := svc.ListBackupVaults(ctx, &backup.ListBackupVaultsInput{})
 			if err != nil {
@@ -92,7 +92,7 @@ func (a *mqlAwsBackup) getVaults(conn *connection.AwsConnection) []*jobpool.Job 
 	return tasks
 }
 
-func (a *mqlAwsBackupVault) recoveryPoints() ([]interface{}, error) {
+func (a *mqlAwsBackupVault) recoveryPoints() ([]any, error) {
 	vArn := a.Arn.Data
 	parsedArn, err := arn.Parse(vArn)
 	if err != nil {
@@ -102,7 +102,7 @@ func (a *mqlAwsBackupVault) recoveryPoints() ([]interface{}, error) {
 
 	svc := conn.Backup(parsedArn.Region)
 	ctx := context.Background()
-	res := []interface{}{}
+	res := []any{}
 
 	name := strings.TrimPrefix(parsedArn.Resource, "backup-vault:")
 	params := &backup.ListRecoveryPointsByBackupVaultInput{BackupVaultName: &name}

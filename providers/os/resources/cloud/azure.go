@@ -11,9 +11,9 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/id/azcompute"
-	"go.mondoo.com/cnquery/v11/providers/os/id/hostname"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/id/azcompute"
+	"go.mondoo.com/cnquery/v12/providers/os/id/hostname"
 )
 
 const AZURE Provider = "Azure"
@@ -215,7 +215,7 @@ type AzureInstanceMetadata struct {
 		} `json:"securityProfile"`
 		Sku            string `json:"sku"`
 		StorageProfile struct {
-			DataDisks      []interface{} `json:"dataDisks"`
+			DataDisks      []any `json:"dataDisks"`
 			ImageReference struct {
 				ID        string `json:"id"`
 				Offer     string `json:"offer"`
@@ -251,15 +251,15 @@ type AzureInstanceMetadata struct {
 				Size string `json:"size"`
 			} `json:"resourceDisk"`
 		} `json:"storageProfile"`
-		SubscriptionID string        `json:"subscriptionId"`
-		Tags           string        `json:"tags"`
-		TagsList       []interface{} `json:"tagsList"`
-		UserData       string        `json:"userData"`
-		Version        string        `json:"version"`
-		VMID           string        `json:"vmId"`
-		VMScaleSetName string        `json:"vmScaleSetName"`
-		VMSize         string        `json:"vmSize"`
-		Zone           string        `json:"zone"`
+		SubscriptionID string `json:"subscriptionId"`
+		Tags           string `json:"tags"`
+		TagsList       []any  `json:"tagsList"`
+		UserData       string `json:"userData"`
+		Version        string `json:"version"`
+		VMID           string `json:"vmId"`
+		VMScaleSetName string `json:"vmScaleSetName"`
+		VMSize         string `json:"vmSize"`
+		Zone           string `json:"zone"`
 	} `json:"compute"`
 	Network AzureNetwork `json:"network"`
 }
@@ -276,7 +276,7 @@ type AzureNetworkInterface struct {
 		// leaving it as an interface for now.
 		//
 		// https://learn.microsoft.com/en-us/azure/virtual-machines/instance-metadata-service?tabs=windows
-		IPAddress []interface{} `json:"ipAddress"`
+		IPAddress []any `json:"ipAddress"`
 	} `json:"ipv6"`
 }
 

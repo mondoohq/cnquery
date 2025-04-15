@@ -11,13 +11,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v11"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/logger"
-	"go.mondoo.com/cnquery/v11/mqlc"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/logger"
+	"go.mondoo.com/cnquery/v12/mqlc"
+	"go.mondoo.com/cnquery/v12/types"
 
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/testutils"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/testutils"
 )
 
 var (
@@ -528,18 +528,18 @@ func TestCompiler_Assignment(t *testing.T) {
 }
 
 func TestCompiler_Props(t *testing.T) {
-	compileProps(t, "props.name", mqlc.SimpleProps(map[string]*llx.Primitive{
+	compileProps(t, "props.name", mqlc.SimpleProps{
 		"name": {Type: string(types.String)},
-	}), func(res *llx.CodeBundle) {
+	}, func(res *llx.CodeBundle) {
 		assertProperty(t, "name", types.String, res.CodeV2.Blocks[0].Chunks[0])
 		assert.Equal(t, []uint64{(1 << 32) | 1}, res.CodeV2.Entrypoints())
 		assert.Equal(t, map[string]string{"name": string(types.String)}, res.Props)
 	})
 
 	// prop <op> value
-	compileProps(t, "props.name == 'bob'", mqlc.SimpleProps(map[string]*llx.Primitive{
+	compileProps(t, "props.name == 'bob'", mqlc.SimpleProps{
 		"name": {Type: string(types.String)},
-	}), func(res *llx.CodeBundle) {
+	}, func(res *llx.CodeBundle) {
 		assertProperty(t, "name", types.String, res.CodeV2.Blocks[0].Chunks[0])
 		assertFunction(t, "=="+string(types.String), &llx.Function{
 			Type:    string(types.Bool),
@@ -551,19 +551,19 @@ func TestCompiler_Props(t *testing.T) {
 	})
 
 	// different compile stages yielding the same checksums
-	compileProps(t, "props.name == 'bob'", mqlc.SimpleProps(map[string]*llx.Primitive{
+	compileProps(t, "props.name == 'bob'", mqlc.SimpleProps{
 		"name": {Type: string(types.String)},
-	}), func(res1 *llx.CodeBundle) {
-		compileProps(t, "props.name == 'bob'", mqlc.SimpleProps(map[string]*llx.Primitive{
+	}, func(res1 *llx.CodeBundle) {
+		compileProps(t, "props.name == 'bob'", mqlc.SimpleProps{
 			"name": {Type: string(types.String), Value: []byte("yoman")},
-		}), func(res2 *llx.CodeBundle) {
+		}, func(res2 *llx.CodeBundle) {
 			assert.Equal(t, res2.CodeV2.Id, res1.CodeV2.Id)
 		})
 	})
 
-	compileProps(t, "props.name == props.name", mqlc.SimpleProps(map[string]*llx.Primitive{
+	compileProps(t, "props.name == props.name", mqlc.SimpleProps{
 		"name": {Type: string(types.String)},
-	}), func(res *llx.CodeBundle) {
+	}, func(res *llx.CodeBundle) {
 		assertProperty(t, "name", types.String, res.CodeV2.Blocks[0].Chunks[0])
 		assertProperty(t, "name", types.String, res.CodeV2.Blocks[0].Chunks[1])
 		assertFunction(t, "=="+string(types.String), &llx.Function{
@@ -577,9 +577,9 @@ func TestCompiler_Props(t *testing.T) {
 }
 
 func TestCompiler_Dict(t *testing.T) {
-	compileProps(t, "props.d.A.B", mqlc.SimpleProps(map[string]*llx.Primitive{
+	compileProps(t, "props.d.A.B", mqlc.SimpleProps{
 		"d": {Type: string(types.Dict)},
-	}), func(res *llx.CodeBundle) {
+	}, func(res *llx.CodeBundle) {
 		assertProperty(t, "d", types.Dict, res.CodeV2.Blocks[0].Chunks[0])
 		assert.Equal(t, []uint64{(1 << 32) | 3}, res.CodeV2.Entrypoints())
 		assertFunction(t, "[]", &llx.Function{
@@ -595,9 +595,9 @@ func TestCompiler_Dict(t *testing.T) {
 		assert.Equal(t, map[string]string{"d": string(types.Dict)}, res.Props)
 	})
 
-	compileProps(t, "props.d.A-1", mqlc.SimpleProps(map[string]*llx.Primitive{
+	compileProps(t, "props.d.A-1", mqlc.SimpleProps{
 		"d": {Type: string(types.Dict)},
-	}), func(res *llx.CodeBundle) {
+	}, func(res *llx.CodeBundle) {
 		assertProperty(t, "d", types.Dict, res.CodeV2.Blocks[0].Chunks[0])
 		assert.Equal(t, []uint64{(1 << 32) | 2, (1 << 32) | 3}, res.CodeV2.Entrypoints())
 		assertFunction(t, "[]", &llx.Function{

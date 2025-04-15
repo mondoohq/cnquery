@@ -9,10 +9,10 @@ import (
 
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25/mo"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/vsphere/connection"
-	"go.mondoo.com/cnquery/v11/providers/vsphere/resources/resourceclient"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/vsphere/connection"
+	"go.mondoo.com/cnquery/v12/providers/vsphere/resources/resourceclient"
 )
 
 func getClientInstance(conn *connection.VsphereConnection) *resourceclient.Client {
@@ -35,14 +35,14 @@ func (v *mqlVsphere) id() (string, error) {
 	return "vsphere", nil
 }
 
-func (v *mqlVsphere) about() (map[string]interface{}, error) {
+func (v *mqlVsphere) about() (map[string]any, error) {
 	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
 	client := getClientInstance(conn)
 
 	return client.AboutInfo()
 }
 
-func (v *mqlVsphere) datacenters() ([]interface{}, error) {
+func (v *mqlVsphere) datacenters() ([]any, error) {
 	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
 	client := getClientInstance(conn)
 
@@ -53,7 +53,7 @@ func (v *mqlVsphere) datacenters() ([]interface{}, error) {
 	}
 
 	// convert datacenter to MQL
-	datacenters := make([]interface{}, len(dcs))
+	datacenters := make([]any, len(dcs))
 	for i, dc := range dcs {
 		mqlDc, err := CreateResource(v.MqlRuntime, "vsphere.datacenter", map[string]*llx.RawData{
 			"moid":          llx.StringData(dc.Reference().Encode()),
@@ -70,7 +70,7 @@ func (v *mqlVsphere) datacenters() ([]interface{}, error) {
 	return datacenters, nil
 }
 
-func (v *mqlVsphere) licenses() ([]interface{}, error) {
+func (v *mqlVsphere) licenses() ([]any, error) {
 	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
 	client := getClientInstance(conn)
 
@@ -81,7 +81,7 @@ func (v *mqlVsphere) licenses() ([]interface{}, error) {
 	}
 
 	// convert licenses to MQL
-	licenses := make([]interface{}, len(lcs))
+	licenses := make([]any, len(lcs))
 	for i, l := range lcs {
 		mqlLicense, err := CreateResource(v.MqlRuntime, "vsphere.license", map[string]*llx.RawData{
 			"name":  llx.StringData(l.Name),
@@ -291,7 +291,7 @@ func hostSystem(conn *connection.VsphereConnection, identifier string) (*object.
 	return h, nil
 }
 
-func (v *mqlEsxiCommand) result() ([]interface{}, error) {
+func (v *mqlEsxiCommand) result() ([]any, error) {
 	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
 
 	if v.InventoryPath.Error != nil {
@@ -309,7 +309,7 @@ func (v *mqlEsxiCommand) result() ([]interface{}, error) {
 	}
 	cmd := v.Command.Data
 
-	res := []interface{}{}
+	res := []any{}
 
 	resp, err := esxiClient.Command(cmd)
 	if err != nil {
