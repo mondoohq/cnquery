@@ -613,6 +613,11 @@ func createMqlNodePool(runtime *plugin.Runtime, np *containerpb.NodePool, cluste
 		return nil, err
 	}
 
+	mqlPoolAutoscaling, err := createMqlNodePoolAutoscaling(runtime, np, nodePoolId)
+	if err != nil {
+		return nil, err
+	}
+
 	var management map[string]interface{}
 	if np.Management != nil {
 		var upgradeOpts map[string]interface{}
@@ -640,6 +645,7 @@ func createMqlNodePool(runtime *plugin.Runtime, np *containerpb.NodePool, cluste
 		"instanceGroupUrls": llx.ArrayData(convert.SliceAnyToInterface(np.InstanceGroupUrls), types.String),
 		"status":            llx.StringData(np.Status.String()),
 		"management":        llx.DictData(management),
+		"autoscaling":       llx.ResourceData(mqlPoolAutoscaling, "gcp.project.gkeService.cluster.nodepool.autoscaling"),
 	})
 }
 
@@ -821,6 +827,25 @@ func createMqlNodePoolNetworkConfig(runtime *plugin.Runtime, np *containerpb.Nod
 		"podRange":          llx.StringData(netCfg.PodRange),
 		"podIpv4CidrBlock":  llx.StringData(netCfg.PodIpv4CidrBlock),
 		"performanceConfig": llx.ResourceData(performanceConfig, "gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig"),
+	})
+}
+
+func createMqlNodePoolAutoscaling(runtime *plugin.Runtime, nodepool *containerpb.NodePool, nodePoolId string) (plugin.Resource, error) {
+	autoscalingCfg := nodepool.Autoscaling
+	if autoscalingCfg == nil {
+		return nil, nil
+	}
+
+	autoscalingId := fmt.Sprintf("gcp.project.gkeService.cluster.nodepool.autoscaling/%s", nodePoolId)
+
+	return CreateResource(runtime, "gcp.project.gkeService.cluster.nodepool.autoscaling", map[string]*llx.RawData{
+		"__id":              llx.StringData(autoscalingId),
+		"minNodeCount":      llx.IntData(autoscalingCfg.MinNodeCount),
+		"maxNodeCount":      llx.IntData(autoscalingCfg.MaxNodeCount),
+		"autoprovisioned":   llx.BoolData(autoscalingCfg.Autoprovisioned),
+		"enabled":           llx.BoolData(autoscalingCfg.Enabled),
+		"totalMinNodeCount": llx.IntData(autoscalingCfg.TotalMinNodeCount),
+		"totalMaxNodeCount": llx.IntData(autoscalingCfg.TotalMaxNodeCount),
 	})
 }
 
