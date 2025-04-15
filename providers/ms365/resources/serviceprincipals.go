@@ -12,12 +12,12 @@ import (
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/serviceprincipals"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
-	"go.mondoo.com/cnquery/v11/types"
-	"go.mondoo.com/cnquery/v11/utils/stringx"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/ms365/connection"
+	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/cnquery/v12/utils/stringx"
 )
 
 const (
@@ -248,7 +248,7 @@ func initMicrosoftServiceprincipal(runtime *plugin.Runtime, args map[string]*llx
 
 // enterprise applications are just service principals with a special tag, attached to them
 // this is the same way the portal UI fetches the enterprise apps by looking for the tag
-func (a *mqlMicrosoft) enterpriseApplications() ([]interface{}, error) {
+func (a *mqlMicrosoft) enterpriseApplications() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	top := int32(999)
 	filter := "tags/Any(x: x eq 'WindowsAzureActiveDirectoryIntegratedApp')"
@@ -260,7 +260,7 @@ func (a *mqlMicrosoft) enterpriseApplications() ([]interface{}, error) {
 	return fetchServicePrincipals(a.MqlRuntime, conn, params, nil)
 }
 
-func (a *mqlMicrosoft) serviceprincipals() ([]interface{}, error) {
+func (a *mqlMicrosoft) serviceprincipals() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	top := int32(999)
 	params := &serviceprincipals.ServicePrincipalsRequestBuilderGetQueryParameters{
@@ -271,7 +271,7 @@ func (a *mqlMicrosoft) serviceprincipals() ([]interface{}, error) {
 	return fetchServicePrincipals(a.MqlRuntime, conn, params, a)
 }
 
-func fetchServicePrincipals(runtime *plugin.Runtime, conn *connection.Ms365Connection, params *serviceprincipals.ServicePrincipalsRequestBuilderGetQueryParameters, permissionIndexer PermissionIndexer) ([]interface{}, error) {
+func fetchServicePrincipals(runtime *plugin.Runtime, conn *connection.Ms365Connection, params *serviceprincipals.ServicePrincipalsRequestBuilderGetQueryParameters, permissionIndexer PermissionIndexer) ([]any, error) {
 	graphClient, err := conn.GraphClient()
 	if err != nil {
 		return nil, err
@@ -287,7 +287,7 @@ func fetchServicePrincipals(runtime *plugin.Runtime, conn *connection.Ms365Conne
 	if err != nil {
 		return nil, transformError(err)
 	}
-	res := []interface{}{}
+	res := []any{}
 	for _, sp := range sps {
 		// create resource
 		mqlResource, err := newMqlMicrosoftServicePrincipal(runtime, sp)
@@ -309,7 +309,7 @@ func fetchServicePrincipals(runtime *plugin.Runtime, conn *connection.Ms365Conne
 
 func newMqlMicrosoftServicePrincipal(runtime *plugin.Runtime, sp models.ServicePrincipalable) (*mqlMicrosoftServiceprincipal, error) {
 	hideApp := stringx.Contains(sp.GetTags(), "HideApp")
-	assignments := []interface{}{}
+	assignments := []any{}
 	for _, a := range sp.GetAppRoleAssignedTo() {
 		assignment, err := CreateResource(runtime, "microsoft.serviceprincipal.assignment", map[string]*llx.RawData{
 			"id":          llx.StringDataPtr(a.GetId()),
@@ -329,7 +329,7 @@ func newMqlMicrosoftServicePrincipal(runtime *plugin.Runtime, sp models.ServiceP
 
 	verifiedPublisher, _ := convert.JsonToDict(newVerifiedPublisher(sp.GetVerifiedPublisher()))
 
-	mqlAppRoleList := []interface{}{}
+	mqlAppRoleList := []any{}
 	appRoles := sp.GetAppRoles()
 	for i := range appRoles {
 		appRole := appRoles[i]
@@ -403,7 +403,7 @@ func (a *mqlMicrosoftServiceprincipal) isFirstParty() (bool, error) {
 	return false, nil
 }
 
-func (a *mqlMicrosoftServiceprincipal) permissions() ([]interface{}, error) {
+func (a *mqlMicrosoftServiceprincipal) permissions() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -428,7 +428,7 @@ func (a *mqlMicrosoftServiceprincipal) permissions() ([]interface{}, error) {
 	}
 
 	// TODO: also list ungranted app roles
-	list := []interface{}{}
+	list := []any{}
 	appRolesAssignments := grantedApplicationRolesResp.GetValue()
 	for _, roleAssignment := range appRolesAssignments {
 		assignmentID := roleAssignment.GetId()

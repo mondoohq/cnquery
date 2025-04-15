@@ -14,10 +14,10 @@ import (
 
 	uuid "github.com/gofrs/uuid"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/logger"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/resources"
-	"go.mondoo.com/cnquery/v11/types"
-	"go.mondoo.com/cnquery/v11/utils/multierr"
+	"go.mondoo.com/cnquery/v12/logger"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/cnquery/v12/utils/multierr"
 )
 
 // ResultCallback function type
@@ -390,12 +390,12 @@ type arrayBlockCallResults struct {
 }
 
 type arrayBlockCallResult struct {
-	entrypoints map[string]interface{}
-	datapoints  map[string]interface{}
+	entrypoints map[string]any
+	datapoints  map[string]any
 }
 
 func (a arrayBlockCallResult) toRawData() *RawData {
-	v := make(map[string]interface{}, len(a.entrypoints)+len(a.datapoints))
+	v := make(map[string]any, len(a.entrypoints)+len(a.datapoints))
 
 	for checksum, res := range a.entrypoints {
 		v[checksum] = res
@@ -531,8 +531,8 @@ func newArrayBlockCallResultsV2(expectedBlockCalls int, code *CodeV2, blockRef u
 
 	for i := range results {
 		results[i] = arrayBlockCallResult{
-			entrypoints: map[string]interface{}{},
-			datapoints:  map[string]interface{}{},
+			entrypoints: map[string]any{},
+			datapoints:  map[string]any{},
 		}
 	}
 
@@ -639,7 +639,7 @@ func (b *blockExecutor) runBlock(bind *RawData, functionRef *Primitive, args []*
 
 		data := results[0].toRawData()
 		data.Error = err.Deduplicate()
-		blockResult := data.Value.(map[string]interface{})
+		blockResult := data.Value.(map[string]any)
 
 		if bind != nil && bind.Type.IsResource() {
 			rr, ok := bind.Value.(Resource)

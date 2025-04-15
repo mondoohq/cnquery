@@ -12,7 +12,7 @@ type PamLine struct {
 	PamType string
 	Control string
 	Module  string
-	Options []interface{}
+	Options []any
 }
 
 func ParseLine(line string) (*PamLine, error) {
@@ -24,7 +24,7 @@ func ParseLine(line string) (*PamLine, error) {
 
 	fields := strings.Fields(line)
 
-	options := []interface{}{}
+	options := []any{}
 
 	// check if we have @include
 	if len(fields) == 2 && fields[0] == "@include" {
@@ -79,7 +79,7 @@ func complicatedParse(fields []string) (*PamLine, error) {
 		}
 	}
 	module := fields[i+1]
-	options := []interface{}{}
+	options := []any{}
 	if i+2 < len(fields) {
 		for _, f := range fields[i+2:] {
 			options = append(options, f)

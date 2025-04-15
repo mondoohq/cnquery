@@ -10,22 +10,22 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
 	"github.com/aws/smithy-go/transport/http"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (a *mqlAwsEs) id() (string, error) {
 	return "aws.es", nil
 }
 
-func (a *mqlAwsEs) domains() ([]interface{}, error) {
+func (a *mqlAwsEs) domains() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getDomains(conn), 5)
 	poolOfJobs.Run()
 
@@ -35,7 +35,7 @@ func (a *mqlAwsEs) domains() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
@@ -52,7 +52,7 @@ func (a *mqlAwsEs) getDomains(conn *connection.AwsConnection) []*jobpool.Job {
 		f := func() (jobpool.JobResult, error) {
 			svc := conn.Es(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 
 			domains, err := svc.ListDomainNames(ctx, &elasticsearchservice.ListDomainNamesInput{})
 			if err != nil {
@@ -121,7 +121,7 @@ func (a *mqlAwsEsDomain) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func getESTags(ctx context.Context, svc *elasticsearchservice.Client, arn *string) (map[string]interface{}, error) {
+func getESTags(ctx context.Context, svc *elasticsearchservice.Client, arn *string) (map[string]any, error) {
 	resp, err := svc.ListTags(ctx, &elasticsearchservice.ListTagsInput{ARN: arn})
 	var respErr *http.ResponseError
 	if err != nil {
@@ -132,7 +132,7 @@ func getESTags(ctx context.Context, svc *elasticsearchservice.Client, arn *strin
 		}
 		return nil, err
 	}
-	tags := make(map[string]interface{})
+	tags := make(map[string]any)
 	for _, t := range resp.TagList {
 		if t.Key != nil && t.Value != nil {
 			tags[*t.Key] = *t.Value

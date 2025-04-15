@@ -10,15 +10,15 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/logger"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/resources"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream/gql"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream/mvd"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream/mvd/cvss"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/logger"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/upstream/gql"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/upstream/mvd"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/upstream/mvd/cvss"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
 )
 
 // TODO: generalize this kind of function
@@ -28,7 +28,7 @@ func getKernelVersion(kernel *mqlKernel) string {
 		return ""
 	}
 
-	info, ok := raw.Data.(map[string]interface{})
+	info, ok := raw.Data.(map[string]any)
 	if !ok {
 		return ""
 	}
@@ -41,7 +41,7 @@ func getKernelVersion(kernel *mqlKernel) string {
 	return val.(string)
 }
 
-func fetchVulnReport(runtime *plugin.Runtime) (interface{}, error) {
+func fetchVulnReport(runtime *plugin.Runtime) (any, error) {
 	mcc := runtime.Upstream
 	if mcc == nil || mcc.ApiEndpoint == "" {
 		return nil, resources.MissingUpstreamError{}
@@ -107,12 +107,12 @@ func fetchVulnReport(runtime *plugin.Runtime) (interface{}, error) {
 	return convert.JsonToDict(report)
 }
 
-func (p *mqlPlatform) vulnerabilityReport() (interface{}, error) {
+func (p *mqlPlatform) vulnerabilityReport() (any, error) {
 	return fetchVulnReport(p.MqlRuntime)
 }
 
 // fetches the vulnerability report and returns the full report
-func (p *mqlAsset) vulnerabilityReport() (interface{}, error) {
+func (p *mqlAsset) vulnerabilityReport() (any, error) {
 	return fetchVulnReport(p.MqlRuntime)
 }
 
@@ -166,13 +166,13 @@ func (a *mqlPlatformAdvisories) cvss() (*mqlAuditCvss, error) {
 	return obj.(*mqlAuditCvss), nil
 }
 
-func (a *mqlPlatformAdvisories) list() ([]interface{}, error) {
+func (a *mqlPlatformAdvisories) list() ([]any, error) {
 	report, err := getAdvisoryReport(a.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
 
-	mqlAdvisories := make([]interface{}, len(report.Advisories))
+	mqlAdvisories := make([]any, len(report.Advisories))
 	for i := range report.Advisories {
 		advisory := report.Advisories[i]
 
@@ -224,7 +224,7 @@ func (a *mqlPlatformAdvisories) list() ([]interface{}, error) {
 	return mqlAdvisories, nil
 }
 
-func (a *mqlPlatformAdvisories) stats() (interface{}, error) {
+func (a *mqlPlatformAdvisories) stats() (any, error) {
 	report, err := getAdvisoryReport(a.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -242,7 +242,7 @@ func (a *mqlPlatformCves) id() (string, error) {
 	return "platform.cves", nil
 }
 
-func (a *mqlPlatformCves) list() ([]interface{}, error) {
+func (a *mqlPlatformCves) list() ([]any, error) {
 	report, err := getAdvisoryReport(a.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -250,7 +250,7 @@ func (a *mqlPlatformCves) list() ([]interface{}, error) {
 
 	cveList := report.Cves()
 
-	mqlCves := make([]interface{}, len(cveList))
+	mqlCves := make([]any, len(cveList))
 	for i := range cveList {
 		cve := cveList[i]
 
@@ -333,7 +333,7 @@ func (a *mqlPlatformCves) cvss() (*mqlAuditCvss, error) {
 	return obj.(*mqlAuditCvss), nil
 }
 
-func (a *mqlPlatformCves) stats() (interface{}, error) {
+func (a *mqlPlatformCves) stats() (any, error) {
 	report, err := getAdvisoryReport(a.MqlRuntime)
 	if err != nil {
 		return nil, err

@@ -11,10 +11,10 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/id/metadata"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/powershell"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/id/metadata"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/powershell"
 )
 
 // deprecated: use MondooGcpInstancePlatformMrn
@@ -86,7 +86,7 @@ func (m *CommandInstanceMetadata) GetMetadataValue(path string) (string, error) 
 	return m.curl(path)
 }
 
-func (m *CommandInstanceMetadata) curlDecode(key string, v interface{}) error {
+func (m *CommandInstanceMetadata) curlDecode(key string, v any) error {
 	cmd, err := m.connection.RunCommand("curl --noproxy '*' -H Metadata-Flavor:Google " + metadataSvcURL + key + "?alt=json")
 	if err != nil {
 		return err

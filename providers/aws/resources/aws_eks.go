@@ -14,23 +14,23 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	ekstypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
 
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (a *mqlAwsEks) id() (string, error) {
 	return "aws.eks", nil
 }
 
-func (a *mqlAwsEks) clusters() ([]interface{}, error) {
+func (a *mqlAwsEks) clusters() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getClusters(conn), 5)
 	poolOfJobs.Run()
 
@@ -40,7 +40,7 @@ func (a *mqlAwsEks) clusters() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
@@ -58,7 +58,7 @@ func (a *mqlAwsEks) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 
 			svc := conn.Eks(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 
 			describeClusterRes, err := svc.ListClusters(ctx, &eks.ListClustersInput{})
 			if err != nil {
@@ -179,14 +179,14 @@ func (a *mqlAwsEksCluster) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func (a *mqlAwsEksCluster) nodeGroups() ([]interface{}, error) {
+func (a *mqlAwsEksCluster) nodeGroups() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	regionVal := a.Region.Data
 	log.Debug().Msgf("eks>getNodegroups>calling aws with region %s", regionVal)
 
 	svc := conn.Eks(regionVal)
 	ctx := context.Background()
-	res := []interface{}{}
+	res := []any{}
 
 	nodeGroupsRes, err := svc.ListNodegroups(ctx, &eks.ListNodegroupsInput{ClusterName: aws.String(a.Name.Data)})
 	if err != nil {
@@ -230,7 +230,7 @@ func (a *mqlAwsEksNodegroup) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func (a *mqlAwsEksNodegroup) autoscalingGroups() ([]interface{}, error) {
+func (a *mqlAwsEksNodegroup) autoscalingGroups() ([]any, error) {
 	ng, err := a.fetchDetails()
 	if err != nil {
 		return nil, err
@@ -238,7 +238,7 @@ func (a *mqlAwsEksNodegroup) autoscalingGroups() ([]interface{}, error) {
 	if ng.Resources == nil || ng.Resources.AutoScalingGroups == nil {
 		return nil, nil
 	}
-	res := []interface{}{}
+	res := []any{}
 	for i := range ng.Resources.AutoScalingGroups {
 		ag := ng.Resources.AutoScalingGroups[i]
 		mqlAg, err := NewResource(a.MqlRuntime, "aws.autoscaling.group",
@@ -332,7 +332,7 @@ func (a *mqlAwsEksNodegroup) modifiedAt() (*time.Time, error) {
 	return ng.ModifiedAt, nil
 }
 
-func (a *mqlAwsEksNodegroup) scalingConfig() (map[string]interface{}, error) {
+func (a *mqlAwsEksNodegroup) scalingConfig() (map[string]any, error) {
 	ng, err := a.fetchDetails()
 	if err != nil {
 		return nil, err
@@ -340,36 +340,36 @@ func (a *mqlAwsEksNodegroup) scalingConfig() (map[string]interface{}, error) {
 	return convert.JsonToDict(ng.ScalingConfig)
 }
 
-func (a *mqlAwsEksNodegroup) instanceTypes() ([]interface{}, error) {
+func (a *mqlAwsEksNodegroup) instanceTypes() ([]any, error) {
 	ng, err := a.fetchDetails()
 	if err != nil {
 		return nil, err
 	}
-	s := []interface{}{}
+	s := []any{}
 	for i := range ng.InstanceTypes {
 		s = append(s, ng.InstanceTypes[i])
 	}
 	return s, nil
 }
 
-func (a *mqlAwsEksNodegroup) labels() (map[string]interface{}, error) {
+func (a *mqlAwsEksNodegroup) labels() (map[string]any, error) {
 	ng, err := a.fetchDetails()
 	if err != nil {
 		return nil, err
 	}
-	new := make(map[string]interface{})
+	new := make(map[string]any)
 	for k, v := range ng.Labels {
 		new[k] = v
 	}
 	return new, nil
 }
 
-func (a *mqlAwsEksNodegroup) tags() (map[string]interface{}, error) {
+func (a *mqlAwsEksNodegroup) tags() (map[string]any, error) {
 	ng, err := a.fetchDetails()
 	if err != nil {
 		return nil, err
 	}
-	new := make(map[string]interface{})
+	new := make(map[string]any)
 	for k, v := range ng.Labels {
 		new[k] = v
 	}
@@ -396,14 +396,14 @@ func (a *mqlAwsEksNodegroup) nodeRole() (*mqlAwsIamRole, error) {
 }
 
 // AwsEksAddons
-func (a *mqlAwsEksCluster) addons() ([]interface{}, error) {
+func (a *mqlAwsEksCluster) addons() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	regionVal := a.Region.Data
 	log.Debug().Msgf("eks>getAddons>calling aws with region %s", regionVal)
 
 	svc := conn.Eks(regionVal)
 	ctx := context.Background()
-	res := []interface{}{}
+	res := []any{}
 
 	addonsRes, err := svc.ListAddons(ctx, &eks.ListAddonsInput{ClusterName: aws.String(a.Name.Data)})
 	if err != nil {
@@ -495,12 +495,12 @@ func (a *mqlAwsEksAddon) modifiedAt() (*time.Time, error) {
 	return ao.ModifiedAt, nil
 }
 
-func (a *mqlAwsEksAddon) tags() (map[string]interface{}, error) {
+func (a *mqlAwsEksAddon) tags() (map[string]any, error) {
 	ao, err := a.fetchDetails()
 	if err != nil {
 		return nil, err
 	}
-	new := make(map[string]interface{})
+	new := make(map[string]any)
 	for k, v := range ao.Tags {
 		new[k] = v
 	}

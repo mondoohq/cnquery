@@ -16,11 +16,11 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/rs/zerolog/log"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/azure/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/azure/connection"
+	"go.mondoo.com/cnquery/v12/types"
 
 	web "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/appservice/armappservice"
 )
@@ -93,12 +93,12 @@ func (a *mqlAzureSubscriptionWebServiceAppsiteconfig) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionWebServiceAppsite) diagnosticSettings() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionWebServiceAppsite) diagnosticSettings() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	return getDiagnosticSettings(a.Id.Data, a.MqlRuntime, conn)
 }
 
-func (a *mqlAzureSubscriptionWebService) apps() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionWebService) apps() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -110,7 +110,7 @@ func (a *mqlAzureSubscriptionWebService) apps() ([]interface{}, error) {
 		return nil, err
 	}
 	pager := client.NewListPager(&web.WebAppsClientListOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -148,7 +148,7 @@ func (a *mqlAzureSubscriptionWebService) apps() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionWebService) availableRuntimes() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionWebService) availableRuntimes() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -160,7 +160,7 @@ func (a *mqlAzureSubscriptionWebService) availableRuntimes() ([]interface{}, err
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	mapIDs := map[string]struct{}{}
 	pager := client.NewGetWebAppStacksPager(&web.ProviderClientGetWebAppStacksOptions{
 		StackOsType: convert.ToPtr(web.Enum19All),
@@ -355,7 +355,7 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) authenticationSettings() (*mqlAz
 	return res.(*mqlAzureSubscriptionWebServiceAppsiteauthsettings), nil
 }
 
-func (a *mqlAzureSubscriptionWebServiceAppsite) metadata() (interface{}, error) {
+func (a *mqlAzureSubscriptionWebServiceAppsite) metadata() (any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -383,7 +383,7 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) metadata() (interface{}, error) 
 		return nil, err
 	}
 
-	res := make(map[string]interface{})
+	res := make(map[string]any)
 
 	for k := range metadata.Properties {
 		res[k] = convert.ToValue(metadata.Properties[k])
@@ -478,7 +478,7 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) scm() (*mqlAzureSubscriptionWebS
 	return mqlResource.(*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies), nil
 }
 
-func (a *mqlAzureSubscriptionWebServiceAppsite) functions() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionWebServiceAppsite) functions() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -500,7 +500,7 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) functions() ([]interface{}, erro
 	}
 
 	pager := client.NewListFunctionsPager(resourceID.ResourceGroup, site, &web.WebAppsClientListFunctionsOptions{})
-	res := []interface{}{}
+	res := []any{}
 
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
@@ -533,7 +533,7 @@ func (a *mqlAzureSubscriptionWebServiceFunction) id() (string, error) {
 	return a.id()
 }
 
-func (a *mqlAzureSubscriptionWebServiceAppsite) connectionSettings() (interface{}, error) {
+func (a *mqlAzureSubscriptionWebServiceAppsite) connectionSettings() (any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -561,7 +561,7 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) connectionSettings() (interface{
 		return nil, err
 	}
 
-	res := make(map[string]interface{})
+	res := make(map[string]any)
 
 	for k := range settings.Properties {
 		value, err := convert.JsonToDict(settings.Properties[k])
@@ -576,7 +576,7 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) connectionSettings() (interface{
 }
 
 // TODO: check here if we can use cached stuff (and how)
-func (a *mqlAzureSubscriptionWebServiceAppsite) stack() (interface{}, error) {
+func (a *mqlAzureSubscriptionWebServiceAppsite) stack() (any, error) {
 	configPlugin := a.GetConfiguration()
 	if configPlugin.Error != nil {
 		return nil, configPlugin.Error
@@ -620,7 +620,7 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) stack() (interface{}, error) {
 		runtime.Name = strings.ToLower(fxversion[0])
 		runtime.MinorVersion = strings.ToLower(fxversion[1])
 	} else {
-		metadata, ok := metadata.(map[string]interface{})
+		metadata, ok := metadata.(map[string]any)
 		if !ok {
 			return nil, nil // see behavior below
 		}
@@ -677,11 +677,11 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) stack() (interface{}, error) {
 	}
 
 	runtimes := runtimesPlugin.Data
-	var match map[string]interface{}
+	var match map[string]any
 
 	for i := range runtimes {
 		rt := runtimes[i]
-		hashmap := rt.(map[string]interface{})
+		hashmap := rt.(map[string]any)
 		if (hashmap["name"] == runtime.Name && hashmap["minorVersion"] == runtime.MinorVersion) || hashmap["id"] == runtime.ID {
 			match = hashmap
 		}
@@ -704,7 +704,7 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) stack() (interface{}, error) {
 	return convert.JsonToDict(runtime)
 }
 
-func (a *mqlAzureSubscriptionWebServiceAppsite) applicationSettings() (interface{}, error) {
+func (a *mqlAzureSubscriptionWebServiceAppsite) applicationSettings() (any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -732,7 +732,7 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) applicationSettings() (interface
 		return nil, err
 	}
 
-	res := make(map[string]interface{})
+	res := make(map[string]any)
 
 	for k := range settings.Properties {
 		res[k] = convert.ToValue(settings.Properties[k])

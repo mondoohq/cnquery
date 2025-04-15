@@ -13,11 +13,11 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
 )
 
 const (
@@ -30,9 +30,9 @@ func (c *mqlAwsCodedeploy) id() (string, error) {
 	return "aws.codedeploy", nil
 }
 
-func (c *mqlAwsCodedeploy) applications() ([]interface{}, error) {
+func (c *mqlAwsCodedeploy) applications() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(c.getApplicationResources(conn), 5)
 	poolOfJobs.Run()
 
@@ -42,7 +42,7 @@ func (c *mqlAwsCodedeploy) applications() ([]interface{}, error) {
 
 	for _, job := range poolOfJobs.Jobs {
 		if job.Result != nil {
-			res = append(res, job.Result.([]interface{})...)
+			res = append(res, job.Result.([]any)...)
 		}
 	}
 	return res, nil
@@ -61,7 +61,7 @@ func (c *mqlAwsCodedeploy) getApplicationResources(conn *connection.AwsConnectio
 			log.Debug().Msgf("codedeploy>getApplicationResources>calling aws with region %s", reg)
 			svc := conn.CodeDeploy(reg)
 			ctx := context.Background()
-			appResources := []interface{}{}
+			appResources := []any{}
 
 			params := &codedeploy.ListApplicationsInput{}
 			paginator := codedeploy.NewListApplicationsPaginator(svc, params)
@@ -112,7 +112,7 @@ func (a *mqlAwsCodedeployApplication) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func (a *mqlAwsCodedeployApplication) tags() (map[string]interface{}, error) {
+func (a *mqlAwsCodedeployApplication) tags() (map[string]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.CodeDeploy(a.Region.Data)
 	ctx := context.Background()
@@ -122,18 +122,18 @@ func (a *mqlAwsCodedeployApplication) tags() (map[string]interface{}, error) {
 		return nil, errors.Wrapf(err, "could not list tags for CodeDeploy application %s", a.Arn.Data)
 	}
 
-	tagsMap := make(map[string]interface{})
+	tagsMap := make(map[string]any)
 	for _, tag := range output.Tags {
 		tagsMap[aws.ToString(tag.Key)] = aws.ToString(tag.Value)
 	}
 	return tagsMap, nil
 }
 
-func (a *mqlAwsCodedeployApplication) deploymentGroups() ([]interface{}, error) {
+func (a *mqlAwsCodedeployApplication) deploymentGroups() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.CodeDeploy(a.Region.Data)
 	ctx := context.Background()
-	dgResources := []interface{}{}
+	dgResources := []any{}
 
 	params := &codedeploy.ListDeploymentGroupsInput{
 		ApplicationName: aws.String(a.ApplicationName.Data),
@@ -183,13 +183,13 @@ func (a *mqlAwsCodedeployApplication) deploymentGroups() ([]interface{}, error) 
 	return dgResources, nil
 }
 
-func (a *mqlAwsCodedeployApplication) deployments() ([]interface{}, error) {
+func (a *mqlAwsCodedeployApplication) deployments() ([]any, error) {
 	groups, err := a.deploymentGroups()
 	if err != nil {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for _, g := range groups {
 		group := g.(*mqlAwsCodedeployDeploymentGroup)
 		deployments, err := group.deployments()
@@ -210,14 +210,14 @@ func (dg *mqlAwsCodedeployDeploymentGroup) id() (string, error) {
 	return dg.Arn.Data, nil
 }
 
-func (dg *mqlAwsCodedeployDeploymentGroup) targetRevision() (interface{}, error) {
+func (dg *mqlAwsCodedeployDeploymentGroup) targetRevision() (any, error) {
 	if dg.sdkData.TargetRevision == nil {
 		return nil, nil
 	}
 	return convert.JsonToDict(dg.sdkData.TargetRevision)
 }
 
-func (dg *mqlAwsCodedeployDeploymentGroup) tags() (map[string]interface{}, error) {
+func (dg *mqlAwsCodedeployDeploymentGroup) tags() (map[string]any, error) {
 	conn := dg.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.CodeDeploy(dg.Region.Data)
 	ctx := context.Background()
@@ -227,19 +227,19 @@ func (dg *mqlAwsCodedeployDeploymentGroup) tags() (map[string]interface{}, error
 		return nil, errors.Wrapf(err, "could not list tags for CodeDeploy deployment group %s", dg.Arn.Data)
 	}
 
-	tagsMap := make(map[string]interface{})
+	tagsMap := make(map[string]any)
 	for _, tag := range output.Tags {
 		tagsMap[aws.ToString(tag.Key)] = aws.ToString(tag.Value)
 	}
 	return tagsMap, nil
 }
 
-func (dg *mqlAwsCodedeployDeploymentGroup) deployments() ([]interface{}, error) {
+func (dg *mqlAwsCodedeployDeploymentGroup) deployments() ([]any, error) {
 	return listDeployments(dg.MqlRuntime, dg.Region.Data, &dg.ApplicationName.Data, &dg.DeploymentGroupName.Data)
 }
 
-func (dg *mqlAwsCodedeployDeploymentGroup) autoScalingGroups() ([]interface{}, error) {
-	asgResources := []interface{}{}
+func (dg *mqlAwsCodedeployDeploymentGroup) autoScalingGroups() ([]any, error) {
+	asgResources := []any{}
 	if dg.sdkData.AutoScalingGroups == nil {
 		return asgResources, nil
 	}
@@ -265,11 +265,11 @@ func (dg *mqlAwsCodedeployDeploymentGroup) autoScalingGroups() ([]interface{}, e
 	return asgResources, nil
 }
 
-func (dg *mqlAwsCodedeployDeploymentGroup) ec2TagFilters() ([]interface{}, error) {
+func (dg *mqlAwsCodedeployDeploymentGroup) ec2TagFilters() ([]any, error) {
 	return convert.JsonToDictSlice(dg.sdkData.Ec2TagFilters)
 }
 
-func (dg *mqlAwsCodedeployDeploymentGroup) onPremisesInstanceTagFilters() ([]interface{}, error) {
+func (dg *mqlAwsCodedeployDeploymentGroup) onPremisesInstanceTagFilters() ([]any, error) {
 	return convert.JsonToDictSlice(dg.sdkData.OnPremisesInstanceTagFilters)
 }
 
@@ -289,21 +289,21 @@ func (dg *mqlAwsCodedeployDeploymentGroup) lastAttemptedDeployment() (*mqlAwsCod
 	return getDeploymentResource(dg.MqlRuntime, dg.Region.Data, &dg.ApplicationName.Data, &dg.DeploymentGroupName.Data, dg.sdkData.LastAttemptedDeployment.DeploymentId)
 }
 
-func (dg *mqlAwsCodedeployDeploymentGroup) deploymentStyle() (interface{}, error) {
+func (dg *mqlAwsCodedeployDeploymentGroup) deploymentStyle() (any, error) {
 	if dg.sdkData.DeploymentStyle == nil {
 		return nil, nil
 	}
 	return convert.JsonToDict(dg.sdkData.DeploymentStyle)
 }
 
-func (dg *mqlAwsCodedeployDeploymentGroup) blueGreenDeploymentConfiguration() (interface{}, error) {
+func (dg *mqlAwsCodedeployDeploymentGroup) blueGreenDeploymentConfiguration() (any, error) {
 	if dg.sdkData.BlueGreenDeploymentConfiguration == nil {
 		return nil, nil
 	}
 	return convert.JsonToDict(dg.sdkData.BlueGreenDeploymentConfiguration)
 }
 
-func (dg *mqlAwsCodedeployDeploymentGroup) loadBalancerInfo() (interface{}, error) {
+func (dg *mqlAwsCodedeployDeploymentGroup) loadBalancerInfo() (any, error) {
 	if dg.sdkData.LoadBalancerInfo == nil {
 		return nil, nil
 	}
@@ -318,28 +318,28 @@ type mqlAwsCodedeployDeploymentInternal struct {
 	sdkData codedeploytypes.DeploymentInfo // Store fetched data
 }
 
-func (d *mqlAwsCodedeployDeployment) targetInstances() (interface{}, error) {
+func (d *mqlAwsCodedeployDeployment) targetInstances() (any, error) {
 	if d.sdkData.TargetInstances == nil {
 		return nil, nil
 	}
 	return convert.JsonToDict(d.sdkData.TargetInstances)
 }
 
-func (d *mqlAwsCodedeployDeployment) revision() (interface{}, error) {
+func (d *mqlAwsCodedeployDeployment) revision() (any, error) {
 	if d.sdkData.Revision == nil {
 		return nil, nil
 	}
 	return convert.JsonToDict(d.sdkData.Revision)
 }
 
-func (d *mqlAwsCodedeployDeployment) errorInformation() (interface{}, error) {
+func (d *mqlAwsCodedeployDeployment) errorInformation() (any, error) {
 	if d.sdkData.ErrorInformation == nil {
 		return nil, nil
 	}
 	return convert.JsonToDict(d.sdkData.ErrorInformation)
 }
 
-func (d *mqlAwsCodedeployDeployment) deploymentOverview() (interface{}, error) {
+func (d *mqlAwsCodedeployDeployment) deploymentOverview() (any, error) {
 	if d.sdkData.DeploymentOverview == nil {
 		return nil, nil
 	}
@@ -353,7 +353,7 @@ func (d *mqlAwsCodedeployDeployment) isRollback() (bool, error) {
 	return d.sdkData.RollbackInfo.RollbackDeploymentId != nil, nil
 }
 
-func (d *mqlAwsCodedeployDeployment) rollbackInfo() (interface{}, error) {
+func (d *mqlAwsCodedeployDeployment) rollbackInfo() (any, error) {
 	if d.sdkData.RollbackInfo == nil {
 		return nil, nil
 	}
@@ -361,11 +361,11 @@ func (d *mqlAwsCodedeployDeployment) rollbackInfo() (interface{}, error) {
 }
 
 // Helper function to list deployments
-func listDeployments(runtime *plugin.Runtime, region string, appName, dgName *string) ([]interface{}, error) {
+func listDeployments(runtime *plugin.Runtime, region string, appName, dgName *string) ([]any, error) {
 	conn := runtime.Connection.(*connection.AwsConnection)
 	svc := conn.CodeDeploy(region)
 	ctx := context.Background()
-	depResources := []interface{}{}
+	depResources := []any{}
 
 	params := &codedeploy.ListDeploymentsInput{
 		ApplicationName:     appName,

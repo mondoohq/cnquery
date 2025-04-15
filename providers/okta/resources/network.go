@@ -8,14 +8,14 @@ import (
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	"github.com/okta/okta-sdk-golang/v2/okta/query"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/okta/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/okta/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
-func (o *mqlOkta) networks() ([]interface{}, error) {
+func (o *mqlOkta) networks() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
 	client := conn.Client()
 
@@ -34,7 +34,7 @@ func (o *mqlOkta) networks() ([]interface{}, error) {
 		return nil, nil
 	}
 
-	list := []interface{}{}
+	list := []any{}
 	appendEntry := func(datalist []*okta.NetworkZone) error {
 		for i := range datalist {
 			entry := datalist[i]
@@ -67,7 +67,7 @@ func (o *mqlOkta) networks() ([]interface{}, error) {
 	return list, nil
 }
 
-func newMqlOktaNetworkZone(runtime *plugin.Runtime, entry *okta.NetworkZone) (interface{}, error) {
+func newMqlOktaNetworkZone(runtime *plugin.Runtime, entry *okta.NetworkZone) (any, error) {
 	proxies, err := convert.JsonToDictSlice(entry.Proxies)
 	if err != nil {
 		return nil, err

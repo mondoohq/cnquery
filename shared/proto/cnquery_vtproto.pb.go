@@ -7,7 +7,7 @@ package proto
 import (
 	fmt "fmt"
 	protohelpers "github.com/planetscale/vtprotobuf/protohelpers"
-	inventory "go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	inventory "go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
 	proto "google.golang.org/protobuf/proto"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	io "io"

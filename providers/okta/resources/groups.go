@@ -8,13 +8,13 @@ import (
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	"github.com/okta/okta-sdk-golang/v2/okta/query"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/okta/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/okta/connection"
 )
 
-func (o *mqlOkta) groups() ([]interface{}, error) {
+func (o *mqlOkta) groups() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
 	client := conn.Client()
 
@@ -33,7 +33,7 @@ func (o *mqlOkta) groups() ([]interface{}, error) {
 		return nil, nil
 	}
 
-	list := []interface{}{}
+	list := []any{}
 	appendEntry := func(datalist []*okta.Group) error {
 		for i := range datalist {
 			entry := datalist[i]
@@ -66,7 +66,7 @@ func (o *mqlOkta) groups() ([]interface{}, error) {
 	return list, nil
 }
 
-func newMqlOktaGroup(runtime *plugin.Runtime, entry *okta.Group) (interface{}, error) {
+func newMqlOktaGroup(runtime *plugin.Runtime, entry *okta.Group) (any, error) {
 	profile, err := convert.JsonToDict(entry.Profile)
 	if err != nil {
 		return nil, err
@@ -88,7 +88,7 @@ func (o *mqlOktaGroup) id() (string, error) {
 	return "okta.group/" + o.Id.Data, o.Id.Error
 }
 
-func (o *mqlOktaGroup) members() ([]interface{}, error) {
+func (o *mqlOktaGroup) members() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
 	client := conn.Client()
 
@@ -100,7 +100,7 @@ func (o *mqlOktaGroup) members() ([]interface{}, error) {
 		return nil, nil
 	}
 
-	list := []interface{}{}
+	list := []any{}
 	appendEntry := func(datalist []*okta.User) error {
 		for i := range datalist {
 			entry := datalist[i]
@@ -134,7 +134,7 @@ func (o *mqlOktaGroup) members() ([]interface{}, error) {
 
 }
 
-func (o *mqlOktaGroup) roles() ([]interface{}, error) {
+func (o *mqlOktaGroup) roles() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
 	client := conn.Client()
 
@@ -146,7 +146,7 @@ func (o *mqlOktaGroup) roles() ([]interface{}, error) {
 		return nil, nil
 	}
 
-	list := []interface{}{}
+	list := []any{}
 	appendEntry := func(datalist []*okta.Role) error {
 		for i := range datalist {
 			entry := datalist[i]
@@ -179,7 +179,7 @@ func (o *mqlOktaGroup) roles() ([]interface{}, error) {
 	return list, nil
 }
 
-func (o *mqlOkta) groupRules() ([]interface{}, error) {
+func (o *mqlOkta) groupRules() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
 	client := conn.Client()
 
@@ -198,7 +198,7 @@ func (o *mqlOkta) groupRules() ([]interface{}, error) {
 		return nil, nil
 	}
 
-	list := []interface{}{}
+	list := []any{}
 	appendEntry := func(datalist []*okta.GroupRule) error {
 		for i := range datalist {
 			entry := datalist[i]
@@ -231,7 +231,7 @@ func (o *mqlOkta) groupRules() ([]interface{}, error) {
 	return list, nil
 }
 
-func newMqlOktaGroupRule(runtime *plugin.Runtime, entry *okta.GroupRule) (interface{}, error) {
+func newMqlOktaGroupRule(runtime *plugin.Runtime, entry *okta.GroupRule) (any, error) {
 
 	return CreateResource(runtime, "okta.groupRule", map[string]*llx.RawData{
 		"id":     llx.StringData(entry.Id),

@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/google-workspace/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/google-workspace/connection"
+	"go.mondoo.com/cnquery/v12/types"
 	reports "google.golang.org/api/admin/reports/v1"
 )
 
@@ -46,14 +46,14 @@ func (g *mqlGoogleworkspaceReportApps) id() (string, error) {
 	return "googleworkspace.report.apps", nil
 }
 
-func (g *mqlGoogleworkspaceReportApps) drive() ([]interface{}, error) {
+func (g *mqlGoogleworkspaceReportApps) drive() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GoogleWorkspaceConnection)
 	reportsService, err := reportsService(conn)
 	if err != nil {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 
 	activities, err := reportsService.Activities.List("all", "drive").CustomerId(conn.CustomerID()).Do()
 	if err != nil {
@@ -83,14 +83,14 @@ func (g *mqlGoogleworkspaceReportApps) drive() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGoogleworkspaceReportApps) admin() ([]interface{}, error) {
+func (g *mqlGoogleworkspaceReportApps) admin() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GoogleWorkspaceConnection)
 	reportsService, err := reportsService(conn)
 	if err != nil {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 
 	activities, err := reportsService.Activities.List("all", "admin").CustomerId(conn.CustomerID()).Do()
 	if err != nil {
@@ -128,7 +128,7 @@ func (g *mqlGoogleworkspaceReportActivity) id() (string, error) {
 	return "googleworkspace.report.activity/" + strconv.FormatInt(id, 10), nil
 }
 
-func newMqlGoogleWorkspaceReportActivity(runtime *plugin.Runtime, entry *reports.Activity) (interface{}, error) {
+func newMqlGoogleWorkspaceReportActivity(runtime *plugin.Runtime, entry *reports.Activity) (any, error) {
 	actor, err := convert.JsonToDict(entry.Actor)
 	if err != nil {
 		return nil, err
@@ -151,14 +151,14 @@ func (g *mqlGoogleworkspaceReportUsers) id() (string, error) {
 	return "googleworkspace.report.users", nil
 }
 
-func (g *mqlGoogleworkspaceReportUsers) list() ([]interface{}, error) {
+func (g *mqlGoogleworkspaceReportUsers) list() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GoogleWorkspaceConnection)
 	reportsService, err := reportsService(conn)
 	if err != nil {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	date := time.Now()
 	expectedErr := "googleapi: Error 400: Data for dates later than"
 
@@ -189,8 +189,8 @@ func (g *mqlGoogleworkspaceReportUsers) list() ([]interface{}, error) {
 	return res, nil
 }
 
-func fetchReportUsage(runtime *plugin.Runtime, service *reports.Service, customerId, date string) ([]interface{}, error) {
-	res := []interface{}{}
+func fetchReportUsage(runtime *plugin.Runtime, service *reports.Service, customerId, date string) ([]any, error) {
+	res := []any{}
 
 	usageReports, err := service.UserUsageReport.Get("all", date).CustomerId(customerId).Do()
 	if err != nil {
@@ -412,17 +412,17 @@ func parseUserReports(params []*reports.UsageReportParameters) *userReport {
 	return r
 }
 
-func (g *mqlGoogleworkspaceReportUsage) account() (interface{}, error) {
+func (g *mqlGoogleworkspaceReportUsage) account() (any, error) {
 	// is auto-computed during creation time
 	return nil, errors.New("not implemented")
 }
 
-func (g *mqlGoogleworkspaceReportUsage) security() (interface{}, error) {
+func (g *mqlGoogleworkspaceReportUsage) security() (any, error) {
 	// is auto-computed during creation time
 	return nil, errors.New("not implemented")
 }
 
-func (g *mqlGoogleworkspaceReportUsage) appUsage() (interface{}, error) {
+func (g *mqlGoogleworkspaceReportUsage) appUsage() (any, error) {
 	// is auto-computed during creation time
 	return nil, errors.New("not implemented")
 }

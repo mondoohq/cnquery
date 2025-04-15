@@ -10,21 +10,21 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	acmtypes "github.com/aws/aws-sdk-go-v2/service/acm/types"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (a *mqlAwsAcm) id() (string, error) {
 	return "aws.acm", nil
 }
 
-func (a *mqlAwsAcm) certificates() ([]interface{}, error) {
+func (a *mqlAwsAcm) certificates() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getCertificates(conn), 5)
 	poolOfJobs.Run()
 
@@ -34,7 +34,7 @@ func (a *mqlAwsAcm) certificates() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
@@ -51,7 +51,7 @@ func (a *mqlAwsAcm) getCertificates(conn *connection.AwsConnection) []*jobpool.J
 		f := func() (jobpool.JobResult, error) {
 			svc := conn.Acm(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 
 			params := &acm.ListCertificatesInput{}
 			paginator := acm.NewListCertificatesPaginator(svc, params)
@@ -130,8 +130,8 @@ func initAwsAcmCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData
 	return args, nil, nil
 }
 
-func CertTagsToMapTags(tags []acmtypes.Tag) map[string]interface{} {
-	mapTags := make(map[string]interface{})
+func CertTagsToMapTags(tags []acmtypes.Tag) map[string]any {
+	mapTags := make(map[string]any)
 	for i := range tags {
 		if tags[i].Key != nil && tags[i].Value != nil {
 			mapTags[*tags[i].Key] = *tags[i].Value
@@ -167,5 +167,5 @@ func (a *mqlAwsAcmCertificate) certificate() (plugin.Resource, error) {
 	if err != nil {
 		return nil, err
 	}
-	return list.Value.([]interface{})[0].(plugin.Resource), nil
+	return list.Value.([]any)[0].(plugin.Resource), nil
 }

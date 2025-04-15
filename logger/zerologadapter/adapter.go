@@ -23,28 +23,28 @@ type Adapter struct {
 	logger zerolog.Logger
 }
 
-func (z *Adapter) Msg(msg string, keysAndValues ...interface{}) {
+func (z *Adapter) Msg(msg string, keysAndValues ...any) {
 	z.logger.Debug().Fields(convertToFields(keysAndValues...)).Msg(msg)
 }
 
-func (z *Adapter) Error(msg string, keysAndValues ...interface{}) {
+func (z *Adapter) Error(msg string, keysAndValues ...any) {
 	z.logger.Debug().Fields(convertToFields(keysAndValues...)).Msg(msg)
 }
 
-func (z *Adapter) Info(msg string, keysAndValues ...interface{}) {
+func (z *Adapter) Info(msg string, keysAndValues ...any) {
 	z.logger.Debug().Fields(convertToFields(keysAndValues...)).Msg(msg)
 }
 
-func (z *Adapter) Debug(msg string, keysAndValues ...interface{}) {
+func (z *Adapter) Debug(msg string, keysAndValues ...any) {
 	z.logger.Debug().Fields(convertToFields(keysAndValues...)).Msg(msg)
 }
 
-func (z *Adapter) Warn(msg string, keysAndValues ...interface{}) {
+func (z *Adapter) Warn(msg string, keysAndValues ...any) {
 	z.logger.Debug().Fields(convertToFields(keysAndValues...)).Msg(msg)
 }
 
-func convertToFields(keysAndValues ...interface{}) map[string]interface{} {
-	fields := make(map[string]interface{})
+func convertToFields(keysAndValues ...any) map[string]any {
+	fields := make(map[string]any)
 	for i := 0; i < len(keysAndValues); i += 2 {
 		if i+1 < len(keysAndValues) {
 			keyString, ok := keysAndValues[i].(string)

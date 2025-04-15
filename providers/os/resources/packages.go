@@ -9,12 +9,12 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/packages"
-	"go.mondoo.com/cnquery/v11/types"
-	"go.mondoo.com/cnquery/v11/utils/multierr"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/packages"
+	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/cnquery/v12/utils/multierr"
 )
 
 var PKG_IDENTIFIER = regexp.MustCompile(`^(.*):\/\/(.*)\/(.*)\/(.*)$`)
@@ -94,7 +94,7 @@ func (p *mqlPackage) origin() (string, error) {
 	return "", nil
 }
 
-func (p *mqlPackage) files() ([]interface{}, error) {
+func (p *mqlPackage) files() ([]any, error) {
 	if p.filesState == packages.PkgFilesNotAvailable {
 		return nil, nil
 	}
@@ -121,7 +121,7 @@ func (p *mqlPackage) files() ([]interface{}, error) {
 		}
 	}
 
-	var pkgFiles []interface{}
+	var pkgFiles []any
 	for _, file := range filesOnDisk {
 		pkgFile, err := CreateResource(p.MqlRuntime, "pkgFileInfo", map[string]*llx.RawData{
 			"path": llx.StringData(file.Path),
@@ -139,7 +139,7 @@ type mqlPackagesInternal struct {
 	packagesByName map[string]*mqlPackage
 }
 
-func (x *mqlPackages) list() ([]interface{}, error) {
+func (x *mqlPackages) list() ([]any, error) {
 	x.lock.Lock()
 	defer x.lock.Unlock()
 
@@ -179,7 +179,7 @@ func (x *mqlPackages) list() ([]interface{}, error) {
 	}
 
 	// create MQL package os for each package
-	pkgs := make([]interface{}, len(osPkgs))
+	pkgs := make([]any, len(osPkgs))
 	for i, osPkg := range osPkgs {
 		// check if we found a newer version
 		available := ""
@@ -189,7 +189,7 @@ func (x *mqlPackages) list() ([]interface{}, error) {
 			log.Debug().Str("package", osPkg.Name).Str("available", update.Available).Msg("mql[packages]> found newer version")
 		}
 
-		cpes := []interface{}{}
+		cpes := []any{}
 		for _, osPkgCpe := range osPkg.CPEs {
 			cpe, err := x.MqlRuntime.CreateSharedResource("cpe", map[string]*llx.RawData{
 				"uri": llx.StringData(osPkgCpe),
@@ -228,7 +228,7 @@ func (x *mqlPackages) list() ([]interface{}, error) {
 	return pkgs, x.refreshCache(pkgs)
 }
 
-func (x *mqlPackages) refreshCache(all []interface{}) error {
+func (x *mqlPackages) refreshCache(all []any) error {
 	if all == nil {
 		raw := x.GetList()
 		if raw.Error != nil {

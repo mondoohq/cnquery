@@ -8,13 +8,13 @@ import (
 	"errors"
 	"io"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/plist"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/usb"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/plist"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/usb"
 )
 
-func (d *mqlUsb) devices() ([]interface{}, error) {
+func (d *mqlUsb) devices() ([]any, error) {
 	conn := d.MqlRuntime.Connection.(shared.Connection)
 	pf := conn.Asset().Platform
 
@@ -26,7 +26,7 @@ func (d *mqlUsb) devices() ([]interface{}, error) {
 	}
 }
 
-func (d *mqlUsb) listMacos() ([]interface{}, error) {
+func (d *mqlUsb) listMacos() ([]any, error) {
 	conn := d.MqlRuntime.Connection.(shared.Connection)
 
 	cmd, err := conn.RunCommand("ioreg -p IOUSB -l -w 0 -a")
@@ -48,7 +48,7 @@ func (d *mqlUsb) listMacos() ([]interface{}, error) {
 	var devices []usb.USBDevice
 	usb.ParseMacosIORegData(plistData, &devices)
 
-	mqlUsbDevices := make([]interface{}, 0, len(devices))
+	mqlUsbDevices := make([]any, 0, len(devices))
 	for _, device := range devices {
 
 		if device.DeviceClass == "" {

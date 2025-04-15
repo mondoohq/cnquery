@@ -11,12 +11,12 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/google/go-github/v72/github"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/logger"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/github/connection"
-	"go.mondoo.com/cnquery/v11/types"
-	"go.mondoo.com/cnquery/v11/utils/stringx"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/logger"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/github/connection"
+	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/cnquery/v12/utils/stringx"
 	"go.mondoo.com/ranger-rpc"
 )
 
@@ -98,7 +98,7 @@ func (g *mqlGithubInstallation) id() (string, error) {
 	return strconv.FormatInt(id, 10), nil
 }
 
-func (g *mqlGithubUser) repositories() ([]interface{}, error) {
+func (g *mqlGithubUser) repositories() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
 	if g.Login.Error != nil {
@@ -130,7 +130,7 @@ func (g *mqlGithubUser) repositories() ([]interface{}, error) {
 		g.repoCacheMap = make(map[string]*mqlGithubRepository)
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range allRepos {
 		repo := allRepos[i]
 		r, err := newMqlGithubRepository(g.MqlRuntime, repo)
@@ -152,7 +152,7 @@ func (g *mqlGithubGist) id() (string, error) {
 	return "github.gist/" + id, nil
 }
 
-func (g *mqlGithubUser) gists() ([]interface{}, error) {
+func (g *mqlGithubUser) gists() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
 	if g.Login.Error != nil {
@@ -180,11 +180,11 @@ func (g *mqlGithubUser) gists() ([]interface{}, error) {
 		listOpts.Page = resp.NextPage
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range allGists {
 		gist := allGists[i]
 
-		files := []interface{}{}
+		files := []any{}
 		for k := range gist.Files {
 			f := gist.Files[k]
 

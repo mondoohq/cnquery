@@ -11,8 +11,8 @@ import (
 
 func TestConvertToFields(t *testing.T) {
 	t.Run("Valid key-value pairs", func(t *testing.T) {
-		input := []interface{}{"key1", "value1", "key2", 42, "key3", true}
-		expected := map[string]interface{}{
+		input := []any{"key1", "value1", "key2", 42, "key3", true}
+		expected := map[string]any{
 			"key1": "value1",
 			"key2": 42,
 			"key3": true,
@@ -23,8 +23,8 @@ func TestConvertToFields(t *testing.T) {
 	})
 
 	t.Run("Odd number of elements", func(t *testing.T) {
-		input := []interface{}{"key1", "value1", "key2"}
-		expected := map[string]interface{}{
+		input := []any{"key1", "value1", "key2"}
+		expected := map[string]any{
 			"key1": "value1",
 		}
 
@@ -33,8 +33,8 @@ func TestConvertToFields(t *testing.T) {
 	})
 
 	t.Run("Non-string keys are ignored", func(t *testing.T) {
-		input := []interface{}{123, "value1", "key2", 42, 3.14, "value3", "key3", true}
-		expected := map[string]interface{}{
+		input := []any{123, "value1", "key2", 42, 3.14, "value3", "key3", true}
+		expected := map[string]any{
 			"key2": 42,
 			"key3": true,
 		}
@@ -44,16 +44,16 @@ func TestConvertToFields(t *testing.T) {
 	})
 
 	t.Run("Empty input", func(t *testing.T) {
-		input := []interface{}{}
-		expected := map[string]interface{}{}
+		input := []any{}
+		expected := map[string]any{}
 
 		result := convertToFields(input...)
 		assert.Equal(t, expected, result)
 	})
 
 	t.Run("Nil input", func(t *testing.T) {
-		var input []interface{}
-		expected := map[string]interface{}{}
+		var input []any
+		expected := map[string]any{}
 
 		result := convertToFields(input...)
 		assert.Equal(t, expected, result)

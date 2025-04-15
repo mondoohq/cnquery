@@ -7,15 +7,15 @@ import (
 	"context"
 	"github.com/microsoftgraph/msgraph-sdk-go/identityprotection"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/ms365/connection"
 )
 
 // riskyUsers returns a list of risky users
 // requires IdentityRiskyUser.Read.All permission
 // see https://learn.microsoft.com/en-us/graph/api/resources/riskyuser?view=graph-rest-1.0
-func (a *mqlMicrosoftSecurity) riskyUsers() ([]interface{}, error) {
+func (a *mqlMicrosoftSecurity) riskyUsers() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -33,7 +33,7 @@ func (a *mqlMicrosoftSecurity) riskyUsers() ([]interface{}, error) {
 		return nil, transformError(err)
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	users := resp.GetValue()
 	for i := range users {
 		riskyUser := users[i]

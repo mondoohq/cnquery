@@ -8,12 +8,12 @@ import (
 	"time"
 
 	"github.com/slack-go/slack"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/slack/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/slack/connection"
 )
 
-func (s *mqlSlack) accessLogs() ([]interface{}, error) {
+func (s *mqlSlack) accessLogs() ([]any, error) {
 	conn := s.MqlRuntime.Connection.(*connection.SlackConnection)
 	client := conn.Client()
 	if client == nil {
@@ -26,7 +26,7 @@ func (s *mqlSlack) accessLogs() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	list := []interface{}{}
+	list := []any{}
 	for i := range accessLogs {
 		mqlUser, err := newMqlSlackLogin(s.MqlRuntime, accessLogs[i])
 		if err != nil {
@@ -38,7 +38,7 @@ func (s *mqlSlack) accessLogs() ([]interface{}, error) {
 	return list, nil
 }
 
-func newMqlSlackLogin(runtime *plugin.Runtime, login slack.Login) (interface{}, error) {
+func newMqlSlackLogin(runtime *plugin.Runtime, login slack.Login) (any, error) {
 	dateFirst := time.Unix(int64(login.DateFirst), 0)
 	dateLast := time.Unix(int64(login.DateLast), 0)
 	return CreateResource(runtime, "slack.login", map[string]*llx.RawData{

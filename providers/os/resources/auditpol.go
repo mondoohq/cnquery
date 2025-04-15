@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"strings"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/windows"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/windows"
 )
 
-func (p *mqlAuditpol) list() ([]interface{}, error) {
+func (p *mqlAuditpol) list() ([]any, error) {
 	o, err := CreateResource(p.MqlRuntime, "powershell", map[string]*llx.RawData{
 		"script": llx.StringData("[Console]::OutputEncoding = [Text.Encoding]::UTF8;auditpol /get /category:* /r"),
 	})
@@ -30,7 +30,7 @@ func (p *mqlAuditpol) list() ([]interface{}, error) {
 		return nil, err
 	}
 
-	auditPolEntries := make([]interface{}, len(entries))
+	auditPolEntries := make([]any, len(entries))
 	for i := range entries {
 		entry := entries[i]
 		o, err := CreateResource(p.MqlRuntime, "auditpol.entry", map[string]*llx.RawData{

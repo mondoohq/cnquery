@@ -19,19 +19,19 @@ import (
 	"github.com/aws/smithy-go/transport/http"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
-	"go.mondoo.com/cnquery/v11/providers/aws/resources/awspolicy"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/providers/aws/resources/awspolicy"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (a *mqlAwsS3control) id() (string, error) {
 	return "aws.s3control", nil
 }
 
-func (a *mqlAwsS3control) accountPublicAccessBlock() (interface{}, error) {
+func (a *mqlAwsS3control) accountPublicAccessBlock() (any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.S3Control("")
@@ -55,7 +55,7 @@ func (a *mqlAwsS3) id() (string, error) {
 	return "aws.s3", nil
 }
 
-func (a *mqlAwsS3) buckets() ([]interface{}, error) {
+func (a *mqlAwsS3) buckets() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.S3("")
@@ -74,7 +74,7 @@ func (a *mqlAwsS3) buckets() ([]interface{}, error) {
 		totalBuckets = append(totalBuckets, output.Buckets...)
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for _, bucket := range totalBuckets {
 		location, err := svc.GetBucketLocation(ctx, &s3.GetBucketLocationInput{
 			Bucket: bucket.Name,
@@ -251,7 +251,7 @@ func (a *mqlAwsS3Bucket) policy() (*mqlAwsS3BucketPolicy, error) {
 	return nil, nil
 }
 
-func (a *mqlAwsS3Bucket) tags() (map[string]interface{}, error) {
+func (a *mqlAwsS3Bucket) tags() (map[string]any, error) {
 	bucketname := a.Name.Data
 	location := a.Location.Data
 
@@ -274,7 +274,7 @@ func (a *mqlAwsS3Bucket) tags() (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	res := map[string]interface{}{}
+	res := map[string]any{}
 	for i := range tags.TagSet {
 		tag := tags.TagSet[i]
 		res[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
@@ -327,7 +327,7 @@ func (a *mqlAwsS3Bucket) gatherAcl() (*s3.GetBucketAclOutput, error) {
 	return acl, nil
 }
 
-func (a *mqlAwsS3Bucket) acl() ([]interface{}, error) {
+func (a *mqlAwsS3Bucket) acl() ([]any, error) {
 	bucketname := a.Name.Data
 
 	acl, err := a.gatherAcl()
@@ -335,7 +335,7 @@ func (a *mqlAwsS3Bucket) acl() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for _, grant := range acl.Grants {
 		// NOTE: not all grantees have URI and IDs, canonical users have id, groups have URIs and the
 		// display name may not be unique
@@ -343,7 +343,7 @@ func (a *mqlAwsS3Bucket) acl() ([]interface{}, error) {
 			return nil, fmt.Errorf("unsupported grant: %v", grant)
 		}
 
-		grantee := map[string]interface{}{
+		grantee := map[string]any{
 			"id":           convert.ToValue(grant.Grantee.ID),
 			"name":         convert.ToValue(grant.Grantee.DisplayName),
 			"emailAddress": convert.ToValue(grant.Grantee.EmailAddress),
@@ -373,7 +373,7 @@ func (a *mqlAwsS3Bucket) acl() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsS3Bucket) publicAccessBlock() (interface{}, error) {
+func (a *mqlAwsS3Bucket) publicAccessBlock() (any, error) {
 	bucketname := a.Name.Data
 	location := a.Location.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
@@ -394,7 +394,7 @@ func (a *mqlAwsS3Bucket) publicAccessBlock() (interface{}, error) {
 	return convert.JsonToDict(publicAccessBlock.PublicAccessBlockConfiguration)
 }
 
-func (a *mqlAwsS3Bucket) owner() (map[string]interface{}, error) {
+func (a *mqlAwsS3Bucket) owner() (map[string]any, error) {
 	acl, err := a.gatherAcl()
 	if err != nil {
 		return nil, err
@@ -404,7 +404,7 @@ func (a *mqlAwsS3Bucket) owner() (map[string]interface{}, error) {
 		return nil, errors.New("could not gather aws s3 bucket's owner information")
 	}
 
-	res := map[string]interface{}{}
+	res := map[string]any{}
 	res["id"] = convert.ToValue(acl.Owner.ID)
 	res["name"] = convert.ToValue(acl.Owner.DisplayName)
 
@@ -502,7 +502,7 @@ func (a *mqlAwsS3Bucket) public() (bool, error) {
 	return false, nil
 }
 
-func (a *mqlAwsS3Bucket) cors() ([]interface{}, error) {
+func (a *mqlAwsS3Bucket) cors() ([]any, error) {
 	bucketname := a.Name.Data
 	location := a.Location.Data
 
@@ -521,7 +521,7 @@ func (a *mqlAwsS3Bucket) cors() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range cors.CORSRules {
 		corsrule := cors.CORSRules[i]
 		mqlBucketCors, err := CreateResource(a.MqlRuntime, "aws.s3.bucket.corsrule",
@@ -542,7 +542,7 @@ func (a *mqlAwsS3Bucket) cors() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsS3Bucket) logging() (map[string]interface{}, error) {
+func (a *mqlAwsS3Bucket) logging() (map[string]any, error) {
 	bucketname := a.Name.Data
 	bucketlocation := a.Location.Data
 
@@ -558,7 +558,7 @@ func (a *mqlAwsS3Bucket) logging() (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	res := map[string]interface{}{}
+	res := map[string]any{}
 
 	if logging != nil && logging.LoggingEnabled != nil {
 		if logging.LoggingEnabled.TargetPrefix != nil {
@@ -578,7 +578,7 @@ func (a *mqlAwsS3Bucket) logging() (map[string]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsS3Bucket) versioning() (map[string]interface{}, error) {
+func (a *mqlAwsS3Bucket) versioning() (map[string]any, error) {
 	bucketname := a.Name.Data
 	location := a.Location.Data
 
@@ -594,7 +594,7 @@ func (a *mqlAwsS3Bucket) versioning() (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	res := map[string]interface{}{}
+	res := map[string]any{}
 
 	if versioning != nil {
 		res["MFADelete"] = string(versioning.MFADelete)
@@ -604,7 +604,7 @@ func (a *mqlAwsS3Bucket) versioning() (map[string]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsS3Bucket) replication() (interface{}, error) {
+func (a *mqlAwsS3Bucket) replication() (any, error) {
 	bucketname := a.Name.Data
 	region := a.Location.Data
 
@@ -625,7 +625,7 @@ func (a *mqlAwsS3Bucket) replication() (interface{}, error) {
 	return convert.JsonToDict(bucketReplication.ReplicationConfiguration)
 }
 
-func (a *mqlAwsS3Bucket) encryption() (interface{}, error) {
+func (a *mqlAwsS3Bucket) encryption() (any, error) {
 	bucketname := a.Name.Data
 	region := a.Location.Data
 
@@ -637,7 +637,7 @@ func (a *mqlAwsS3Bucket) encryption() (interface{}, error) {
 	encryption, err := svc.GetBucketEncryption(ctx, &s3.GetBucketEncryptionInput{
 		Bucket: &bucketname,
 	})
-	var res interface{}
+	var res any
 	if err != nil {
 		var ae smithy.APIError
 		if errors.As(err, &ae) {
@@ -673,7 +673,7 @@ func (a *mqlAwsS3Bucket) defaultLock() (string, error) {
 	return string(objectLockConfiguration.ObjectLockConfiguration.ObjectLockEnabled), nil
 }
 
-func (a *mqlAwsS3Bucket) staticWebsiteHosting() (map[string]interface{}, error) {
+func (a *mqlAwsS3Bucket) staticWebsiteHosting() (map[string]any, error) {
 	bucketname := a.Name.Data
 	region := a.Location.Data
 
@@ -692,7 +692,7 @@ func (a *mqlAwsS3Bucket) staticWebsiteHosting() (map[string]interface{}, error) 
 		return nil, err
 	}
 
-	res := map[string]interface{}{}
+	res := map[string]any{}
 
 	if website != nil {
 		if website.ErrorDocument != nil {
@@ -740,7 +740,7 @@ func (a *mqlAwsS3BucketPolicy) version() (string, error) {
 	return policy.Version, nil
 }
 
-func (a *mqlAwsS3BucketPolicy) statements() ([]interface{}, error) {
+func (a *mqlAwsS3BucketPolicy) statements() ([]any, error) {
 	policy, err := a.parsePolicyDocument()
 	if err != nil {
 		return nil, err

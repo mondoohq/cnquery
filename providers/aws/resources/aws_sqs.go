@@ -16,10 +16,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
 )
 
 func (a *mqlAwsSqs) id() (string, error) {
@@ -30,9 +30,9 @@ func (a *mqlAwsSqsQueue) id() (string, error) {
 	return a.Url.Data, nil
 }
 
-func (a *mqlAwsSqs) queues() ([]interface{}, error) {
+func (a *mqlAwsSqs) queues() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getQueues(conn), 5)
 	poolOfJobs.Run()
 
@@ -42,7 +42,7 @@ func (a *mqlAwsSqs) queues() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
@@ -59,7 +59,7 @@ func (a *mqlAwsSqs) getQueues(conn *connection.AwsConnection) []*jobpool.Job {
 		f := func() (jobpool.JobResult, error) {
 			svc := conn.Sqs(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 
 			params := &sqs.ListQueuesInput{}
 			paginator := sqs.NewListQueuesPaginator(svc, params)

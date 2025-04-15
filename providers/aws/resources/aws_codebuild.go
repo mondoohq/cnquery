@@ -10,22 +10,22 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codebuild"
 	cbtypes "github.com/aws/aws-sdk-go-v2/service/codebuild/types"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (a *mqlAwsCodebuild) id() (string, error) {
 	return "aws.codebuild", nil
 }
 
-func (a *mqlAwsCodebuild) projects() ([]interface{}, error) {
+func (a *mqlAwsCodebuild) projects() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getProjects(conn), 5)
 	poolOfJobs.Run()
 
@@ -35,7 +35,7 @@ func (a *mqlAwsCodebuild) projects() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 	return res, nil
 }
@@ -52,7 +52,7 @@ func (a *mqlAwsCodebuild) getProjects(conn *connection.AwsConnection) []*jobpool
 			svc := conn.Codebuild(region)
 			ctx := context.Background()
 
-			res := []interface{}{}
+			res := []any{}
 			params := &codebuild.ListProjectsInput{}
 			paginator := codebuild.NewListProjectsPaginator(svc, params)
 			for paginator.HasMorePages() {
@@ -128,8 +128,8 @@ func initAwsCodebuildProject(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	return args, nil, nil
 }
 
-func cbTagsToMap(tags []cbtypes.Tag) map[string]interface{} {
-	tagsMap := make(map[string]interface{})
+func cbTagsToMap(tags []cbtypes.Tag) map[string]any {
+	tagsMap := make(map[string]any)
 
 	if len(tags) > 0 {
 		for i := range tags {

@@ -20,7 +20,7 @@ func TestParseLine(t *testing.T) {
 			PamType: "account",
 			Control: "required",
 			Module:  "pam_opendirectory.so",
-			Options: []interface{}{},
+			Options: []any{},
 		}
 		result, err := ParseLine(line)
 		require.NoError(t, err)
@@ -33,7 +33,7 @@ func TestParseLine(t *testing.T) {
 			PamType: "account",
 			Control: "required",
 			Module:  "pam_opendirectory.so",
-			Options: []interface{}{"no_warn", "group=admin,wheel"},
+			Options: []any{"no_warn", "group=admin,wheel"},
 		}
 		result, err := ParseLine(line)
 		require.NoError(t, err)
@@ -46,7 +46,7 @@ func TestParseLine(t *testing.T) {
 			PamType: "account",
 			Control: "[default=bad success=ok user_unknown=ignore]",
 			Module:  "pam_sss.so",
-			Options: []interface{}{},
+			Options: []any{},
 		}
 		result, err := ParseLine(line)
 		require.NoError(t, err)
@@ -59,7 +59,7 @@ func TestParseLine(t *testing.T) {
 			PamType: "account",
 			Control: "[default=bad success=ok user_unknown=ignore]",
 			Module:  "pam_opendirectory.so",
-			Options: []interface{}{"no_warn", "group=admin,wheel"},
+			Options: []any{"no_warn", "group=admin,wheel"},
 		}
 		result, err := ParseLine(line)
 		require.NoError(t, err)
@@ -72,7 +72,7 @@ func TestParseLine(t *testing.T) {
 			PamType: "account",
 			Control: "[default=bad]",
 			Module:  "pam_opendirectory.so",
-			Options: []interface{}{"no_warn", "group=admin,wheel"},
+			Options: []any{"no_warn", "group=admin,wheel"},
 		}
 		result, err := ParseLine(line)
 		require.NoError(t, err)
@@ -85,7 +85,7 @@ func TestParseLine(t *testing.T) {
 			PamType: "@include",
 			Control: "common-password",
 			Module:  "",
-			Options: []interface{}{},
+			Options: []any{},
 		}
 		result, err := ParseLine(line)
 		require.NoError(t, err)
@@ -118,13 +118,13 @@ func TestSimplePamConfigurationFile(t *testing.T) {
 			PamType: "auth",
 			Control: "required",
 			Module:  "pam_securetty.so",
-			Options: []interface{}{},
+			Options: []any{},
 		},
 		{
 			PamType: "auth",
 			Control: "required",
 			Module:  "pam_unix.so",
-			Options: []interface{}{
+			Options: []any{
 				"nullok",
 			},
 		},
@@ -132,19 +132,19 @@ func TestSimplePamConfigurationFile(t *testing.T) {
 			PamType: "auth",
 			Control: "required",
 			Module:  "pam_nologin.so",
-			Options: []interface{}{},
+			Options: []any{},
 		},
 		{
 			PamType: "account",
 			Control: "required",
 			Module:  "pam_unix.so",
-			Options: []interface{}{},
+			Options: []any{},
 		},
 		{
 			PamType: "password",
 			Control: "required",
 			Module:  "pam_cracklib.so",
-			Options: []interface{}{
+			Options: []any{
 				"retry=3",
 			},
 		},
@@ -152,7 +152,7 @@ func TestSimplePamConfigurationFile(t *testing.T) {
 			PamType: "password",
 			Control: "required",
 			Module:  "pam_unix.so",
-			Options: []interface{}{
+			Options: []any{
 				"shadow",
 				"nullok",
 				"use_authtok",
@@ -162,7 +162,7 @@ func TestSimplePamConfigurationFile(t *testing.T) {
 			PamType: "session",
 			Control: "required",
 			Module:  "pam_unix.so",
-			Options: []interface{}{},
+			Options: []any{},
 		},
 	}
 	entries, err := parsePamContent(content)
@@ -181,20 +181,20 @@ func TestRebootPamConfigurationFile(t *testing.T) {
 			PamType: "auth",
 			Control: "sufficient",
 			Module:  "pam_rootok.so",
-			Options: []interface{}{},
+			Options: []any{},
 		},
 		{
 			PamType: "auth",
 			Control: "required",
 			Module:  "pam_console.so",
-			Options: []interface{}{},
+			Options: []any{},
 		},
 		nil,
 		{
 			PamType: "account",
 			Control: "required",
 			Module:  "pam_permit.so",
-			Options: []interface{}{},
+			Options: []any{},
 		},
 	}
 	entries, err := parsePamContent(content)
@@ -212,37 +212,37 @@ func TestCommonSessionNonInteractivePamConfigurationFile(t *testing.T) {
 			PamType: "session",
 			Control: "[default=1]",
 			Module:  "pam_permit.so",
-			Options: []interface{}{},
+			Options: []any{},
 		},
 		{
 			PamType: "session",
 			Control: "requisite",
 			Module:  "pam_deny.so",
-			Options: []interface{}{},
+			Options: []any{},
 		},
 		{
 			PamType: "session",
 			Control: "required",
 			Module:  "pam_permit.so",
-			Options: []interface{}{},
+			Options: []any{},
 		},
 		{
 			PamType: "session",
 			Control: "optional",
 			Module:  "pam_umask.so",
-			Options: []interface{}{},
+			Options: []any{},
 		},
 		{
 			PamType: "session",
 			Control: "required",
 			Module:  "pam_unix.so",
-			Options: []interface{}{},
+			Options: []any{},
 		},
 		{
 			PamType: "session",
 			Control: "optional",
 			Module:  "pam_ecryptfs.so",
-			Options: []interface{}{
+			Options: []any{
 				"unwrap",
 			},
 		},
@@ -262,31 +262,31 @@ func TestIncludePamConfigurationFile(t *testing.T) {
 			PamType: "auth",
 			Control: "required",
 			Module:  "pam_env.so",
-			Options: []interface{}{},
+			Options: []any{},
 		},
 		{
 			PamType: "@include",
 			Control: "common-auth",
 			Module:  "",
-			Options: []interface{}{},
+			Options: []any{},
 		},
 		{
 			PamType: "@include",
 			Control: "common-account",
 			Module:  "",
-			Options: []interface{}{},
+			Options: []any{},
 		},
 		{
 			PamType: "@include",
 			Control: "common-session-noninteractive",
 			Module:  "",
-			Options: []interface{}{},
+			Options: []any{},
 		},
 		{
 			PamType: "session",
 			Control: "required",
 			Module:  "pam_limits.so",
-			Options: []interface{}{},
+			Options: []any{},
 		},
 	}
 	entries, err := parsePamContent(content)

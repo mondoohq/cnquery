@@ -9,9 +9,9 @@ import (
 	"errors"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -180,11 +180,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"muser.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMuser).Groups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlMuser).Groups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"muser.dict": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMuser).Dict, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlMuser).Dict, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"muser.error": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -216,7 +216,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"customGroups.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCustomGroups).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlCustomGroups).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 }
@@ -252,8 +252,8 @@ type mqlMuser struct {
 	Group plugin.TValue[*mqlMgroup]
 	Nullgroup plugin.TValue[*mqlMgroup]
 	Nullstring plugin.TValue[string]
-	Groups plugin.TValue[[]interface{}]
-	Dict plugin.TValue[interface{}]
+	Groups plugin.TValue[[]any]
+	Dict plugin.TValue[any]
 	Error plugin.TValue[string]
 }
 
@@ -336,15 +336,15 @@ func (c *mqlMuser) GetNullstring() *plugin.TValue[string] {
 	})
 }
 
-func (c *mqlMuser) GetGroups() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Groups, func() ([]interface{}, error) {
+func (c *mqlMuser) GetGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Groups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("muser", c.__id, "groups")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -352,8 +352,8 @@ func (c *mqlMuser) GetGroups() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlMuser) GetDict() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Dict, func() (interface{}, error) {
+func (c *mqlMuser) GetDict() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Dict, func() (any, error) {
 		return c.dict()
 	})
 }
@@ -475,7 +475,7 @@ type mqlCustomGroups struct {
 	__id string
 	// optional: if you define mqlCustomGroupsInternal it will be used here
 	Length plugin.TValue[int64]
-	List plugin.TValue[[]interface{}]
+	List plugin.TValue[[]any]
 }
 
 // createCustomGroups creates a new instance of this resource
@@ -516,15 +516,15 @@ func (c *mqlCustomGroups) GetLength() *plugin.TValue[int64] {
 	})
 }
 
-func (c *mqlCustomGroups) GetList() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+func (c *mqlCustomGroups) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("customGroups", c.__id, "list")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 

@@ -8,12 +8,12 @@ import (
 	"errors"
 
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/ms365/connection"
 )
 
-func (a *mqlMicrosoft) groupLifecyclePolicies() ([]interface{}, error) {
+func (a *mqlMicrosoft) groupLifecyclePolicies() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -25,7 +25,7 @@ func (a *mqlMicrosoft) groupLifecyclePolicies() ([]interface{}, error) {
 		return nil, transformError(err)
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for _, p := range resp.GetValue() {
 		policy, err := newMqlMicrosoftGroupLifecyclePolicy(a.MqlRuntime, p)
 		if err != nil {

@@ -12,10 +12,10 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/checksums"
-	"go.mondoo.com/cnquery/v11/mqlc"
-	"go.mondoo.com/cnquery/v11/utils/multierr"
-	"go.mondoo.com/cnquery/v11/utils/sortx"
+	"go.mondoo.com/cnquery/v12/checksums"
+	"go.mondoo.com/cnquery/v12/mqlc"
+	"go.mondoo.com/cnquery/v12/utils/multierr"
+	"go.mondoo.com/cnquery/v12/utils/sortx"
 )
 
 // NewFilters creates a Filters object from a simple list of MQL snippets

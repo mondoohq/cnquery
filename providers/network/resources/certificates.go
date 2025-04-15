@@ -14,24 +14,24 @@ import (
 	"sync"
 	"time"
 
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/checksums"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/network/resources/certificates"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/checksums"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/network/resources/certificates"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func pkixnameToMql(runtime *plugin.Runtime, name pkix.Name, id string) (*mqlPkixName, error) {
-	names := map[string]interface{}{}
+	names := map[string]any{}
 	for i := range name.Names {
 		key := name.Names[i].Type.String()
 		names[key] = fmt.Sprintf("%v", name.Names[i].Value)
 	}
 
-	extraNames := map[string]interface{}{}
+	extraNames := map[string]any{}
 	for i := range name.ExtraNames {
 		key := name.ExtraNames[i].Type.String()
 		extraNames[key] = fmt.Sprintf("%v", name.ExtraNames[i].Value)
@@ -115,7 +115,7 @@ func (r *mqlCertificates) id() (string, error) {
 	return checksums.New.Add(r.Pem.Data).String(), nil
 }
 
-func (r *mqlCertificates) list() ([]interface{}, error) {
+func (r *mqlCertificates) list() ([]any, error) {
 	certs, err := certificates.ParseCertsFromPEM(strings.NewReader(r.Pem.Data))
 	if err != nil {
 		return nil, errors.New("certificate has invalid pem data: " + err.Error())
@@ -126,8 +126,8 @@ func (r *mqlCertificates) list() ([]interface{}, error) {
 
 // CertificatesToMqlCertificates takes a collection of x509 certs
 // and converts it into MQL certificate objects
-func CertificatesToMqlCertificates(runtime *plugin.Runtime, certs []*x509.Certificate) ([]interface{}, error) {
-	res := []interface{}{}
+func CertificatesToMqlCertificates(runtime *plugin.Runtime, certs []*x509.Certificate) ([]any, error) {
+	res := []any{}
 	// to create certificate resources
 	for i := range certs {
 		cert := certs[i]
@@ -217,7 +217,7 @@ func (s *mqlCertificate) getGoCert() error {
 		s.allCertFieldsSet = true
 
 		cert := s.cert.Data
-		s.Fingerprints = plugin.TValue[map[string]interface{}]{Data: certificates.Fingerprints(cert), State: plugin.StateIsSet}
+		s.Fingerprints = plugin.TValue[map[string]any]{Data: certificates.Fingerprints(cert), State: plugin.StateIsSet}
 		s.Serial = plugin.TValue[string]{Data: certificates.HexEncodeToHumanString(cert.SerialNumber.Bytes()), State: plugin.StateIsSet}
 		s.SubjectKeyID = plugin.TValue[string]{Data: certificates.HexEncodeToHumanString(cert.SubjectKeyId), State: plugin.StateIsSet}
 		s.AuthorityKeyID = plugin.TValue[string]{Data: certificates.HexEncodeToHumanString(cert.AuthorityKeyId), State: plugin.StateIsSet}
@@ -230,16 +230,16 @@ func (s *mqlCertificate) getGoCert() error {
 		s.ExpiresIn = plugin.TValue[*time.Time]{Data: &expiresIn, State: plugin.StateIsSet}
 		s.SigningAlgorithm = plugin.TValue[string]{Data: cert.SignatureAlgorithm.String(), State: plugin.StateIsSet}
 		s.Signature = plugin.TValue[string]{Data: hex.EncodeToString(cert.Signature), State: plugin.StateIsSet}
-		s.CrlDistributionPoints = plugin.TValue[[]interface{}]{Data: llx.TArr2Raw(cert.CRLDistributionPoints), State: plugin.StateIsSet}
-		s.OcspServer = plugin.TValue[[]interface{}]{Data: llx.TArr2Raw(cert.OCSPServer), State: plugin.StateIsSet}
-		s.IssuingCertificateUrl = plugin.TValue[[]interface{}]{Data: llx.TArr2Raw(cert.IssuingCertificateURL), State: plugin.StateIsSet}
+		s.CrlDistributionPoints = plugin.TValue[[]any]{Data: llx.TArr2Raw(cert.CRLDistributionPoints), State: plugin.StateIsSet}
+		s.OcspServer = plugin.TValue[[]any]{Data: llx.TArr2Raw(cert.OCSPServer), State: plugin.StateIsSet}
+		s.IssuingCertificateUrl = plugin.TValue[[]any]{Data: llx.TArr2Raw(cert.IssuingCertificateURL), State: plugin.StateIsSet}
 	}
 
 	// in case the cert was already set, use the cached error state
 	return s.cert.Error
 }
 
-func (s *mqlCertificate) fingerprints() (map[string]interface{}, error) {
+func (s *mqlCertificate) fingerprints() (map[string]any, error) {
 	return nil, s.getGoCert()
 }
 
@@ -316,12 +316,12 @@ var keyusageNames = map[x509.KeyUsage]string{
 	x509.KeyUsageDecipherOnly:      "DecipherOnly",
 }
 
-func (s *mqlCertificate) keyUsage() ([]interface{}, error) {
+func (s *mqlCertificate) keyUsage() ([]any, error) {
 	if err := s.getGoCert(); err != nil {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for k := range keyusageNames {
 		if s.cert.Data.KeyUsage&k != 0 {
 			res = append(res, keyusageNames[k])
@@ -348,12 +348,12 @@ var extendendkeyusageNames = map[x509.ExtKeyUsage]string{
 	x509.ExtKeyUsageMicrosoftKernelCodeSigning:     "MicrosoftKernelCodeSigning",
 }
 
-func (s *mqlCertificate) extendedKeyUsage() ([]interface{}, error) {
+func (s *mqlCertificate) extendedKeyUsage() ([]any, error) {
 	if err := s.getGoCert(); err != nil {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range s.cert.Data.ExtKeyUsage {
 		entry := s.cert.Data.ExtKeyUsage[i]
 		val, ok := extendendkeyusageNames[entry]
@@ -365,13 +365,13 @@ func (s *mqlCertificate) extendedKeyUsage() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *mqlCertificate) extensions() ([]interface{}, error) {
+func (s *mqlCertificate) extensions() ([]any, error) {
 	if err := s.getGoCert(); err != nil {
 		return nil, err
 	}
 
 	cert := s.cert.Data
-	res := []interface{}{}
+	res := []any{}
 	fingerprint := hex.EncodeToString(certificates.Sha256Hash(cert))
 	for i := range cert.Extensions {
 		extension := cert.Extensions[i]
@@ -407,12 +407,12 @@ func (s *mqlCertificate) sanExtension() (*mqlPkixSanExtension, error) {
 		return nil, err
 	}
 
-	ipAddressesValues := []interface{}{}
+	ipAddressesValues := []any{}
 	for i := range ipAddresses {
 		ipAddressesValues = append(ipAddressesValues, ipAddresses[i].String())
 	}
 
-	uriValues := []interface{}{}
+	uriValues := []any{}
 	for i := range URIs {
 		uriValues = append(uriValues, URIs[i].String())
 	}
@@ -430,13 +430,13 @@ func (s *mqlCertificate) sanExtension() (*mqlPkixSanExtension, error) {
 	return r.(*mqlPkixSanExtension), nil
 }
 
-func (s *mqlCertificate) policyIdentifier() ([]interface{}, error) {
+func (s *mqlCertificate) policyIdentifier() ([]any, error) {
 	if err := s.getGoCert(); err != nil {
 		return nil, err
 	}
 
 	cert := s.cert.Data
-	res := []interface{}{}
+	res := []any{}
 	for i := range cert.PolicyIdentifiers {
 		res = append(res, cert.PolicyIdentifiers[i].String())
 	}
@@ -452,15 +452,15 @@ func (s *mqlCertificate) signature() (string, error) {
 	return "", s.getGoCert()
 }
 
-func (s *mqlCertificate) crlDistributionPoints() ([]interface{}, error) {
+func (s *mqlCertificate) crlDistributionPoints() ([]any, error) {
 	return nil, s.getGoCert()
 }
 
-func (s *mqlCertificate) ocspServer() ([]interface{}, error) {
+func (s *mqlCertificate) ocspServer() ([]any, error) {
 	return nil, s.getGoCert()
 }
 
-func (s *mqlCertificate) issuingCertificateUrl() ([]interface{}, error) {
+func (s *mqlCertificate) issuingCertificateUrl() ([]any, error) {
 	return nil, s.getGoCert()
 }
 

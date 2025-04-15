@@ -62,7 +62,7 @@ func (p *ProviderPluginImpl) GRPCServer(broker *plugin.GRPCBroker, s *grpc.Serve
 	return nil
 }
 
-func (p *ProviderPluginImpl) GRPCClient(ctx context.Context, broker *plugin.GRPCBroker, c *grpc.ClientConn) (interface{}, error) {
+func (p *ProviderPluginImpl) GRPCClient(ctx context.Context, broker *plugin.GRPCBroker, c *grpc.ClientConn) (any, error) {
 	return &GRPCClient{
 		client: NewProviderPluginClient(c),
 		broker: broker,

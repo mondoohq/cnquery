@@ -6,8 +6,8 @@ import (
 	"context"
 
 	"github.com/cloudflare/cloudflare-go"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers/cloudflare/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers/cloudflare/connection"
 )
 
 func (c *mqlCloudflareR2) id() (string, error) {

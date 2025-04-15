@@ -10,9 +10,9 @@ import (
 	"net/http"
 
 	"github.com/cloudflare/cloudflare-go"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/cloudflare/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/cloudflare/connection"
 )
 
 func (c *mqlCloudflareStreamsLiveInput) id() (string, error) {
@@ -57,7 +57,7 @@ func fetchLiveInputs(runtime *plugin.Runtime, account_id string) ([]any, error) 
 			Modified                 string                 `json:"modified"`
 			Created                  string                 `json:"created"`
 			DeleteRecordingAfterDays int                    `json:"deleteRecordingAfterDays"`
-			Meta                     map[string]interface{} `json:"meta"`
+			Meta                     map[string]any `json:"meta"`
 		} `json:"result"`
 	}
 

@@ -10,8 +10,8 @@ import (
 
 	"github.com/Ullaakut/nmap/v3"
 	"github.com/cockroachdb/errors"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 )
 
 type mqlNmapNetworkInternal struct {
@@ -30,8 +30,8 @@ func (r *mqlNmapNetwork) scan() error {
 	defer cancel()
 
 	// set default values
-	r.Hosts = plugin.TValue[[]interface{}]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
-	r.Warnings = plugin.TValue[[]interface{}]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
+	r.Hosts = plugin.TValue[[]any]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
+	r.Warnings = plugin.TValue[[]any]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
 
 	if r.Target.Data == "" {
 		return errors.New("target is required")
@@ -56,10 +56,10 @@ func (r *mqlNmapNetwork) scan() error {
 	}
 
 	if warnings != nil && len(*warnings) > 0 {
-		r.Warnings = plugin.TValue[[]interface{}]{Data: convert.SliceAnyToInterface(*warnings), Error: nil, State: plugin.StateIsSet}
+		r.Warnings = plugin.TValue[[]any]{Data: convert.SliceAnyToInterface(*warnings), Error: nil, State: plugin.StateIsSet}
 	}
 
-	var hosts []interface{}
+	var hosts []any
 	for _, host := range result.Hosts {
 		r, err := newMqlNmapHost(r.MqlRuntime, host)
 		if err != nil {
@@ -68,15 +68,15 @@ func (r *mqlNmapNetwork) scan() error {
 		hosts = append(hosts, r)
 	}
 
-	r.Hosts = plugin.TValue[[]interface{}]{Data: hosts, Error: nil, State: plugin.StateIsSet}
+	r.Hosts = plugin.TValue[[]any]{Data: hosts, Error: nil, State: plugin.StateIsSet}
 
 	return nil
 }
 
-func (r *mqlNmapNetwork) hosts() ([]interface{}, error) {
+func (r *mqlNmapNetwork) hosts() ([]any, error) {
 	return nil, r.scan()
 }
 
-func (r *mqlNmapNetwork) warnings() ([]interface{}, error) {
+func (r *mqlNmapNetwork) warnings() ([]any, error) {
 	return nil, r.scan()
 }

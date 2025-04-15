@@ -6,7 +6,7 @@ package mapx_test
 import (
 	"testing"
 
-	subject "go.mondoo.com/cnquery/v11/utils/mapx"
+	subject "go.mondoo.com/cnquery/v12/utils/mapx"
 
 	"github.com/stretchr/testify/assert"
 )

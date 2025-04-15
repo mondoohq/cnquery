@@ -37,7 +37,7 @@ type packageJson struct {
 type enginesField map[string]string
 
 func (p *enginesField) UnmarshalJSON(data []byte) error {
-	var raw interface{}
+	var raw any
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return err
 	}
@@ -46,7 +46,7 @@ func (p *enginesField) UnmarshalJSON(data []byte) error {
 	n := map[string]string{}
 
 	switch v := raw.(type) {
-	case map[string]interface{}:
+	case map[string]any:
 		for key, value := range v {
 			if strVal, ok := value.(string); ok {
 				n[key] = strVal
@@ -64,7 +64,7 @@ func (p *enginesField) UnmarshalJSON(data []byte) error {
 type booleanField bool
 
 func (p *booleanField) UnmarshalJSON(data []byte) error {
-	var raw interface{}
+	var raw any
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return err
 	}

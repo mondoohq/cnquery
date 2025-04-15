@@ -38,27 +38,27 @@ func (l *hclogger) IsError() bool {
 	return l.Logger.GetLevel() == zerolog.ErrorLevel
 }
 
-func (l *hclogger) Trace(format string, args ...interface{}) {
+func (l *hclogger) Trace(format string, args ...any) {
 	l.Logger.Trace().Fields(args).Msg(format)
 }
 
-func (l *hclogger) Debug(format string, args ...interface{}) {
+func (l *hclogger) Debug(format string, args ...any) {
 	l.Logger.Debug().Fields(args).Msg(format)
 }
 
-func (l *hclogger) Info(format string, args ...interface{}) {
+func (l *hclogger) Info(format string, args ...any) {
 	l.Logger.Info().Fields(args).Msg(format)
 }
 
-func (l *hclogger) Warn(format string, args ...interface{}) {
+func (l *hclogger) Warn(format string, args ...any) {
 	l.Logger.Warn().Fields(args).Msg(format)
 }
 
-func (l *hclogger) Error(format string, args ...interface{}) {
+func (l *hclogger) Error(format string, args ...any) {
 	l.Logger.Error().Fields(args).Msg(format)
 }
 
-func (l *hclogger) Log(level hclog.Level, format string, args ...interface{}) {
+func (l *hclogger) Log(level hclog.Level, format string, args ...any) {
 	switch level {
 	case hclog.Trace:
 		l.Logger.Trace().Fields(args).Msg(format)
@@ -123,7 +123,7 @@ func (l *hclogger) ResetNamed(name string) hclog.Logger {
 	return &hclogger{l.Logger.With().Str("name", name).Logger()}
 }
 
-func (l *hclogger) With(args ...interface{}) hclog.Logger {
+func (l *hclogger) With(args ...any) hclog.Logger {
 	return &hclogger{l.Logger.With().Fields(args).Logger()}
 }
 
@@ -135,6 +135,6 @@ func (l *hclogger) StandardWriter(opts *hclog.StandardLoggerOptions) io.Writer {
 	return l.Logger
 }
 
-func (l *hclogger) ImpliedArgs() []interface{} {
+func (l *hclogger) ImpliedArgs() []any {
 	return nil
 }

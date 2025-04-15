@@ -10,22 +10,22 @@ import (
 	secretstypes "github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
 
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (a *mqlAwsSecretsmanager) id() (string, error) {
 	return "aws.secretsmanager", nil
 }
 
-func (a *mqlAwsSecretsmanager) secrets() ([]interface{}, error) {
+func (a *mqlAwsSecretsmanager) secrets() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getSecrets(conn), 5)
 	poolOfJobs.Run()
 
@@ -35,7 +35,7 @@ func (a *mqlAwsSecretsmanager) secrets() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 	return res, nil
 }
@@ -56,7 +56,7 @@ func (a *mqlAwsSecretsmanager) getSecrets(conn *connection.AwsConnection) []*job
 			svc := conn.Secretsmanager(region)
 			ctx := context.Background()
 
-			res := []interface{}{}
+			res := []any{}
 
 			params := &secretsmanager.ListSecretsInput{}
 			paginator := secretsmanager.NewListSecretsPaginator(svc, params)
@@ -96,8 +96,8 @@ func (a *mqlAwsSecretsmanager) getSecrets(conn *connection.AwsConnection) []*job
 	return tasks
 }
 
-func secretTagsToMap(tags []secretstypes.Tag) map[string]interface{} {
-	tagsMap := make(map[string]interface{})
+func secretTagsToMap(tags []secretstypes.Tag) map[string]any {
+	tagsMap := make(map[string]any)
 
 	if len(tags) > 0 {
 		for i := range tags {

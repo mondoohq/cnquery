@@ -10,11 +10,11 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	clusters "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v2"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/azure/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/azure/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (a *mqlAzureSubscriptionAksService) id() (string, error) {
@@ -39,7 +39,7 @@ func (a *mqlAzureSubscriptionAksServiceCluster) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionAksService) clusters() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -51,7 +51,7 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]interface{}, error) {
 		return nil, err
 	}
 	pager := client.NewListPager(&clusters.ManagedClustersClientListOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -86,13 +86,13 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			addonProfiles := []interface{}{}
+			addonProfiles := []any{}
 			for k, a := range entry.Properties.AddonProfiles {
 				dict, err := convert.JsonToDict(a)
 				if err != nil {
 					return nil, err
 				}
-				m := map[string]interface{}{}
+				m := map[string]any{}
 				m[k] = dict
 				addonProfiles = append(addonProfiles, m)
 			}

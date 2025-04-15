@@ -8,11 +8,11 @@ import (
 	"errors"
 	"strconv"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/gcp/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v12/types"
 
 	"github.com/rs/zerolog/log"
 	"google.golang.org/api/cloudresourcemanager/v3"
@@ -96,7 +96,7 @@ func (g *mqlGcpOrganization) lifecycleState() (string, error) {
 	return "", errors.New("not implemented")
 }
 
-func (g *mqlGcpOrganization) iamPolicy() ([]interface{}, error) {
+func (g *mqlGcpOrganization) iamPolicy() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
 	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
@@ -122,7 +122,7 @@ func (g *mqlGcpOrganization) iamPolicy() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range orgpolicy.Bindings {
 		b := orgpolicy.Bindings[i]
 

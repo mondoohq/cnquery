@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -254,19 +254,19 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"shodan.host.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlShodanHost).Tags, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlShodanHost).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"shodan.host.hostnames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlShodanHost).Hostnames, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlShodanHost).Hostnames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"shodan.host.ports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlShodanHost).Ports, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlShodanHost).Ports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"shodan.host.vulnerabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlShodanHost).Vulnerabilities, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlShodanHost).Vulnerabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"shodan.host.country": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -286,15 +286,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"shodan.domain.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlShodanDomain).Tags, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlShodanDomain).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"shodan.domain.subdomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlShodanDomain).Subdomains, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlShodanDomain).Subdomains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"shodan.domain.nsrecords": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlShodanDomain).Nsrecords, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlShodanDomain).Nsrecords, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"shodan.nsrecord.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -447,10 +447,10 @@ type mqlShodanHost struct {
 	Org plugin.TValue[string]
 	Isp plugin.TValue[string]
 	Asn plugin.TValue[string]
-	Tags plugin.TValue[[]interface{}]
-	Hostnames plugin.TValue[[]interface{}]
-	Ports plugin.TValue[[]interface{}]
-	Vulnerabilities plugin.TValue[[]interface{}]
+	Tags plugin.TValue[[]any]
+	Hostnames plugin.TValue[[]any]
+	Ports plugin.TValue[[]any]
+	Vulnerabilities plugin.TValue[[]any]
 	Country plugin.TValue[string]
 	City plugin.TValue[string]
 }
@@ -520,26 +520,26 @@ func (c *mqlShodanHost) GetAsn() *plugin.TValue[string] {
 	})
 }
 
-func (c *mqlShodanHost) GetTags() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Tags, func() ([]interface{}, error) {
+func (c *mqlShodanHost) GetTags() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tags, func() ([]any, error) {
 		return c.tags()
 	})
 }
 
-func (c *mqlShodanHost) GetHostnames() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Hostnames, func() ([]interface{}, error) {
+func (c *mqlShodanHost) GetHostnames() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Hostnames, func() ([]any, error) {
 		return c.hostnames()
 	})
 }
 
-func (c *mqlShodanHost) GetPorts() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Ports, func() ([]interface{}, error) {
+func (c *mqlShodanHost) GetPorts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Ports, func() ([]any, error) {
 		return c.ports()
 	})
 }
 
-func (c *mqlShodanHost) GetVulnerabilities() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Vulnerabilities, func() ([]interface{}, error) {
+func (c *mqlShodanHost) GetVulnerabilities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Vulnerabilities, func() ([]any, error) {
 		return c.vulnerabilities()
 	})
 }
@@ -562,9 +562,9 @@ type mqlShodanDomain struct {
 	__id string
 	// optional: if you define mqlShodanDomainInternal it will be used here
 	Name plugin.TValue[string]
-	Tags plugin.TValue[[]interface{}]
-	Subdomains plugin.TValue[[]interface{}]
-	Nsrecords plugin.TValue[[]interface{}]
+	Tags plugin.TValue[[]any]
+	Subdomains plugin.TValue[[]any]
+	Nsrecords plugin.TValue[[]any]
 }
 
 // createShodanDomain creates a new instance of this resource
@@ -608,27 +608,27 @@ func (c *mqlShodanDomain) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlShodanDomain) GetTags() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Tags, func() ([]interface{}, error) {
+func (c *mqlShodanDomain) GetTags() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tags, func() ([]any, error) {
 		return c.tags()
 	})
 }
 
-func (c *mqlShodanDomain) GetSubdomains() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Subdomains, func() ([]interface{}, error) {
+func (c *mqlShodanDomain) GetSubdomains() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subdomains, func() ([]any, error) {
 		return c.subdomains()
 	})
 }
 
-func (c *mqlShodanDomain) GetNsrecords() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Nsrecords, func() ([]interface{}, error) {
+func (c *mqlShodanDomain) GetNsrecords() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Nsrecords, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("shodan.domain", c.__id, "nsrecords")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 

@@ -11,10 +11,10 @@ import (
 	"io"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/powershell"
-	"go.mondoo.com/cnquery/v11/utils/multierr"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/powershell"
+	"go.mondoo.com/cnquery/v12/utils/multierr"
 )
 
 const (
@@ -82,7 +82,7 @@ func (m *commandInstanceMetadata) RawMetadata() (any, error) {
 		return nil, err
 	}
 
-	var instanceMap map[string]interface{}
+	var instanceMap map[string]any
 	if err = json.Unmarshal(data, &instanceMap); err != nil {
 		return nil, err
 	}
@@ -104,7 +104,7 @@ func (m *commandInstanceMetadata) RawMetadata() (any, error) {
 		return metadata, nil
 	}
 
-	var loadbalancerMap map[string]interface{}
+	var loadbalancerMap map[string]any
 	if err = json.Unmarshal(data, &loadbalancerMap); err != nil {
 		log.Debug().Err(err).Msg("unable to unmarshal data from endpoint 'loadbalancer/'")
 		return metadata, nil

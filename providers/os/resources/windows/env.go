@@ -13,7 +13,7 @@ type WindowsEnv struct {
 	Value string
 }
 
-func ParseEnv(r io.Reader) (map[string]interface{}, error) {
+func ParseEnv(r io.Reader) (map[string]any, error) {
 	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
@@ -25,7 +25,7 @@ func ParseEnv(r io.Reader) (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	res := map[string]interface{}{}
+	res := map[string]any{}
 	for i := range env {
 		envVar := env[i]
 		res[envVar.Key] = envVar.Value

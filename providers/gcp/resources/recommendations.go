@@ -9,10 +9,10 @@ import (
 	"strings"
 	"sync"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/gcp/connection"
 
 	"google.golang.org/api/cloudresourcemanager/v1"
 
@@ -87,7 +87,7 @@ var recommenders = []string{
 }
 
 // GetRecommendations returns recommendations from Google Cloud
-func (g *mqlGcpProject) recommendations() ([]interface{}, error) {
+func (g *mqlGcpProject) recommendations() ([]any, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
 	}
@@ -130,7 +130,7 @@ func (g *mqlGcpProject) recommendations() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	var wg sync.WaitGroup
 	wg.Add(len(zones))
 	mux := &sync.Mutex{}

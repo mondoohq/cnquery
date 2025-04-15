@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/package-url/packageurl-go"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/cpe"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/cpe"
 )
 
 type PackageDetails struct {

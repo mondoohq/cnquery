@@ -10,14 +10,14 @@ import (
 	"github.com/google/uuid"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/policies"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/ms365/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
-func (a *mqlMicrosoftPolicies) authorizationPolicy() (interface{}, error) {
+func (a *mqlMicrosoftPolicies) authorizationPolicy() (any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -32,7 +32,7 @@ func (a *mqlMicrosoftPolicies) authorizationPolicy() (interface{}, error) {
 	return convert.JsonToDict(newAuthorizationPolicy(resp))
 }
 
-func (a *mqlMicrosoftPolicies) identitySecurityDefaultsEnforcementPolicy() (interface{}, error) {
+func (a *mqlMicrosoftPolicies) identitySecurityDefaultsEnforcementPolicy() (any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -49,7 +49,7 @@ func (a *mqlMicrosoftPolicies) identitySecurityDefaultsEnforcementPolicy() (inte
 
 // https://docs.microsoft.com/en-us/azure/active-directory/manage-apps/configure-user-consent?tabs=azure-powershell
 // https://docs.microsoft.com/en-us/graph/api/permissiongrantpolicy-list?view=graph-rest-1.0&tabs=http
-func (a *mqlMicrosoftPolicies) permissionGrantPolicies() ([]interface{}, error) {
+func (a *mqlMicrosoftPolicies) permissionGrantPolicies() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -66,7 +66,7 @@ func (a *mqlMicrosoftPolicies) permissionGrantPolicies() ([]interface{}, error) 
 
 // https://learn.microsoft.com/en-us/graph/api/groupsetting-get?view=graph-rest-1.0&tabs=http
 
-func (a *mqlMicrosoftPolicies) consentPolicySettings() (interface{}, error) {
+func (a *mqlMicrosoftPolicies) consentPolicySettings() (any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -80,12 +80,12 @@ func (a *mqlMicrosoftPolicies) consentPolicySettings() (interface{}, error) {
 		return nil, transformError(err)
 	}
 
-	actualSettingsMap := make(map[string]map[string]interface{})
+	actualSettingsMap := make(map[string]map[string]any)
 	for _, setting := range groupSettings.GetValue() {
 		displayName := setting.GetDisplayName()
 		if displayName != nil {
 			if _, exists := actualSettingsMap[*displayName]; !exists {
-				actualSettingsMap[*displayName] = make(map[string]interface{})
+				actualSettingsMap[*displayName] = make(map[string]any)
 			}
 
 			for _, settingValue := range setting.GetValues() {
@@ -124,7 +124,7 @@ func (a *mqlMicrosoftPolicies) authenticationMethodsPolicy() (*mqlMicrosoftPolic
 	return newAuthenticationMethodsPolicy(a.MqlRuntime, resp)
 }
 
-func (a *mqlMicrosoftPolicies) activityBasedTimeoutPolicies() ([]interface{}, error) {
+func (a *mqlMicrosoftPolicies) activityBasedTimeoutPolicies() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -137,7 +137,7 @@ func (a *mqlMicrosoftPolicies) activityBasedTimeoutPolicies() ([]interface{}, er
 		return nil, transformError(err)
 	}
 
-	var activityBasedTimeoutPolicies []interface{}
+	var activityBasedTimeoutPolicies []any
 	for _, policy := range resp.GetValue() {
 		mqlPolicy, err := CreateResource(a.MqlRuntime, "microsoft.policies.activityBasedTimeoutPolicy",
 			map[string]*llx.RawData{
@@ -179,12 +179,12 @@ func newAuthenticationMethodsPolicy(runtime *plugin.Runtime, policy models.Authe
 	return mqlAuthenticationMethodsPolicy.(*mqlMicrosoftPoliciesAuthenticationMethodsPolicy), nil
 }
 
-func newAuthenticationMethodConfigurations(runtime *plugin.Runtime, configs []models.AuthenticationMethodConfigurationable) ([]interface{}, error) {
-	var configResources []interface{}
+func newAuthenticationMethodConfigurations(runtime *plugin.Runtime, configs []models.AuthenticationMethodConfigurationable) ([]any, error) {
+	var configResources []any
 	for _, config := range configs {
-		excludeTargets := []interface{}{}
+		excludeTargets := []any{}
 		for _, target := range config.GetExcludeTargets() {
-			targetDict := map[string]interface{}{}
+			targetDict := map[string]any{}
 			if target.GetId() != nil {
 				targetDict["id"] = *target.GetId()
 			}
@@ -231,7 +231,7 @@ func (a *mqlMicrosoftPolicies) adminConsentRequestPolicy() (*mqlMicrosoftAdminCo
 
 	pId := uuid.NewString()
 
-	var reviewers []interface{}
+	var reviewers []any
 	if adminConsentRequestPolicy.GetReviewers() != nil {
 		for i, reviewer := range adminConsentRequestPolicy.GetReviewers() {
 			revId := fmt.Sprintf("%s-reviewer-scope-%d", pId, i)

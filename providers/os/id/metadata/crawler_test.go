@@ -7,7 +7,7 @@ import (
 	"errors"
 	"testing"
 
-	subject "go.mondoo.com/cnquery/v11/providers/os/id/metadata"
+	subject "go.mondoo.com/cnquery/v12/providers/os/id/metadata"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -36,11 +36,11 @@ func TestCrawl_Mock(t *testing.T) {
 
 	result, err := subject.Crawl(m, "valid/path")
 	assert.NoError(t, err)
-	assert.Equal(t, map[string]interface{}{"key": "value"}, result)
+	assert.Equal(t, map[string]any{"key": "value"}, result)
 
 	result, err = subject.Crawl(m, "nested/path/")
 	assert.NoError(t, err)
-	assert.Equal(t, map[string]interface{}{"subpath1": "value1", "subpath2": "value2"}, result)
+	assert.Equal(t, map[string]any{"subpath1": "value1", "subpath2": "value2"}, result)
 
 	_, err = subject.Crawl(m, "error")
 	assert.Error(t, err)

@@ -19,11 +19,11 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
 	advisor "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/advisor/armadvisor"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/azure/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/azure/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func initAzureSubscriptionAdvisorService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -40,7 +40,7 @@ func initAzureSubscriptionAdvisorService(runtime *plugin.Runtime, args map[strin
 	return args, nil, nil
 }
 
-func (a *mqlAzureSubscriptionAdvisorService) recommendations() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionAdvisorService) recommendations() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -52,7 +52,7 @@ func (a *mqlAzureSubscriptionAdvisorService) recommendations() ([]interface{}, e
 		return nil, err
 	}
 	pager := client.NewListPager(&advisor.RecommendationsClientListOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -90,7 +90,7 @@ func (a *mqlAzureSubscriptionAdvisorService) recommendations() ([]interface{}, e
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionAdvisorService) scores() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionAdvisorService) scores() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -106,11 +106,11 @@ func (a *mqlAzureSubscriptionAdvisorService) scores() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	res := []interface{}{}
+	res := []any{}
 	for _, s := range scores {
-		timeSeries := []interface{}{}
+		timeSeries := []any{}
 		for tsIdx, ts := range s.Properties.TimeSeries {
-			scores := []interface{}{}
+			scores := []any{}
 			for idx, sh := range ts.ScoreHistory {
 				dt, err := time.Parse(time.RFC3339, sh.Date)
 				if err != nil {

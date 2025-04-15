@@ -339,23 +339,23 @@ func (typ Type) Label() string {
 
 // Equal provides a set of function for a range of types to test if 2 values
 // of that type are equal
-var Equal = map[Type]func(interface{}, interface{}) bool{
-	Bool: func(left, right interface{}) bool {
+var Equal = map[Type]func(any, any) bool{
+	Bool: func(left, right any) bool {
 		return left.(bool) == right.(bool)
 	},
-	Int: func(left, right interface{}) bool {
+	Int: func(left, right any) bool {
 		return left.(int64) == right.(int64)
 	},
-	Float: func(left, right interface{}) bool {
+	Float: func(left, right any) bool {
 		return left.(float64) == right.(float64)
 	},
-	String: func(left, right interface{}) bool {
+	String: func(left, right any) bool {
 		return left.(string) == right.(string)
 	},
-	Regex: func(left, right interface{}) bool {
+	Regex: func(left, right any) bool {
 		return left.(string) == right.(string)
 	},
-	Time: func(left, right interface{}) bool {
+	Time: func(left, right any) bool {
 		l := left.(*time.Time)
 		r := right.(*time.Time)
 		if l == nil || r == nil {
@@ -363,8 +363,8 @@ var Equal = map[Type]func(interface{}, interface{}) bool{
 		}
 		return l.Equal(*r)
 	},
-	// types.Dict: func(left, right interface{}) bool {},
-	Score: func(left, right interface{}) bool {
+	// types.Dict: func(left, right any) bool {},
+	Score: func(left, right any) bool {
 		return left.(int32) == right.(int32)
 	},
 }

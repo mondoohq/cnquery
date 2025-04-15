@@ -10,12 +10,12 @@ import (
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/azure/connection"
-	"go.mondoo.com/cnquery/v11/types"
-	"go.mondoo.com/cnquery/v11/utils/stringx"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/azure/connection"
+	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/cnquery/v12/utils/stringx"
 
 	network "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
 )
@@ -38,7 +38,7 @@ func initAzureSubscriptionNetworkService(runtime *plugin.Runtime, args map[strin
 	return args, nil, nil
 }
 
-func (a *mqlAzureSubscriptionNetworkService) interfaces() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkService) interfaces() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -52,7 +52,7 @@ func (a *mqlAzureSubscriptionNetworkService) interfaces() ([]interface{}, error)
 	}
 
 	pager := client.NewListAllPager(&network.InterfacesClientListAllOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -71,7 +71,7 @@ func (a *mqlAzureSubscriptionNetworkService) interfaces() ([]interface{}, error)
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionNetworkService) securityGroups() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkService) securityGroups() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -85,7 +85,7 @@ func (a *mqlAzureSubscriptionNetworkService) securityGroups() ([]interface{}, er
 	}
 
 	pager := client.NewListAllPager(&network.SecurityGroupsClientListAllOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -104,7 +104,7 @@ func (a *mqlAzureSubscriptionNetworkService) securityGroups() ([]interface{}, er
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionNetworkService) watchers() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkService) watchers() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -118,7 +118,7 @@ func (a *mqlAzureSubscriptionNetworkService) watchers() ([]interface{}, error) {
 	}
 
 	pager := client.NewListAllPager(&network.WatchersClientListAllOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -150,7 +150,7 @@ func (a *mqlAzureSubscriptionNetworkService) watchers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionNetworkService) publicIpAddresses() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkService) publicIpAddresses() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -164,7 +164,7 @@ func (a *mqlAzureSubscriptionNetworkService) publicIpAddresses() ([]interface{},
 	}
 
 	pager := client.NewListAllPager(&network.PublicIPAddressesClientListAllOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -183,7 +183,7 @@ func (a *mqlAzureSubscriptionNetworkService) publicIpAddresses() ([]interface{},
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionNetworkService) bastionHosts() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkService) bastionHosts() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -197,7 +197,7 @@ func (a *mqlAzureSubscriptionNetworkService) bastionHosts() ([]interface{}, erro
 	}
 
 	pager := client.NewListPager(&network.BastionHostsClientListOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -235,7 +235,7 @@ func (a *mqlAzureSubscriptionNetworkServiceInterface) vm() (*mqlAzureSubscriptio
 	return nil, errors.New("not implemented")
 }
 
-func (a *mqlAzureSubscriptionNetworkServiceWatcher) flowLogs() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkServiceWatcher) flowLogs() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -253,7 +253,7 @@ func (a *mqlAzureSubscriptionNetworkServiceWatcher) flowLogs() ([]interface{}, e
 		return nil, err
 	}
 	pager := client.NewListPager(resourceID.ResourceGroup, name, &network.FlowLogsClientListOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -318,7 +318,7 @@ func (a *mqlAzureSubscriptionNetworkServiceWatcher) flowLogs() ([]interface{}, e
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionNetworkService) loadBalancers() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkService) loadBalancers() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -332,20 +332,20 @@ func (a *mqlAzureSubscriptionNetworkService) loadBalancers() ([]interface{}, err
 	}
 
 	pager := client.NewListAllPager(&network.LoadBalancersClientListAllOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
 		for _, lb := range page.Value {
-			probes := []interface{}{}
-			backendPools := []interface{}{}
-			frontendIConfigs := []interface{}{}
-			inboundNatPools := []interface{}{}
-			inboundNatRules := []interface{}{}
-			outboundRules := []interface{}{}
-			loadBalancerRules := []interface{}{}
+			probes := []any{}
+			backendPools := []any{}
+			frontendIConfigs := []any{}
+			inboundNatPools := []any{}
+			inboundNatRules := []any{}
+			outboundRules := []any{}
+			loadBalancerRules := []any{}
 			for _, p := range lb.Properties.Probes {
 				props, err := convert.JsonToDict(p.Properties)
 				if err != nil {
@@ -510,7 +510,7 @@ func (a *mqlAzureSubscriptionNetworkService) loadBalancers() ([]interface{}, err
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionNetworkService) natGateways() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkService) natGateways() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -524,7 +524,7 @@ func (a *mqlAzureSubscriptionNetworkService) natGateways() ([]interface{}, error
 	}
 
 	pager := client.NewListAllPager(&network.NatGatewaysClientListAllOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -543,7 +543,7 @@ func (a *mqlAzureSubscriptionNetworkService) natGateways() ([]interface{}, error
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionNetworkService) firewalls() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkService) firewalls() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -556,7 +556,7 @@ func (a *mqlAzureSubscriptionNetworkService) firewalls() ([]interface{}, error) 
 	}
 
 	pager := client.NewListAllPager(&network.AzureFirewallsClientListAllOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -580,12 +580,12 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewall) policy() (*mqlAzureSubscrip
 	ctx := context.Background()
 	token := conn.Token()
 	props := a.Properties.Data
-	propsDict := props.(map[string]interface{})
+	propsDict := props.(map[string]any)
 	fwp := propsDict["firewallPolicy"]
 	if fwp == nil {
 		return nil, errors.New("no firewall policy is associated with the ip configuration")
 	}
-	fwpDict := fwp.(map[string]interface{})
+	fwpDict := fwp.(map[string]any)
 	id := fwpDict["id"]
 	if id != nil {
 		strId := id.(string)
@@ -618,12 +618,12 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewallIpConfig) publicIpAddress() (
 	ctx := context.Background()
 	token := conn.Token()
 	props := a.Properties.Data
-	propsDict := props.(map[string]interface{})
+	propsDict := props.(map[string]any)
 	publicIpAddress := propsDict["publicIPAddress"]
 	if publicIpAddress == nil {
 		return nil, errors.New("no public ip address is associated with the ip configuration")
 	}
-	ipAddressDict := publicIpAddress.(map[string]interface{})
+	ipAddressDict := publicIpAddress.(map[string]any)
 	id := ipAddressDict["id"]
 	if id != nil {
 		strId := id.(string)
@@ -656,12 +656,12 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig) public
 	ctx := context.Background()
 	token := conn.Token()
 	props := a.Properties.Data
-	propsDict := props.(map[string]interface{})
+	propsDict := props.(map[string]any)
 	publicIpAddress := propsDict["publicIPAddress"]
 	if publicIpAddress == nil {
 		return nil, errors.New("no public ip address is associated with the ip configuration")
 	}
-	ipAddressDict := publicIpAddress.(map[string]interface{})
+	ipAddressDict := publicIpAddress.(map[string]any)
 	id := ipAddressDict["id"]
 	if id != nil {
 		strId := id.(string)
@@ -694,12 +694,12 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewallIpConfig) subnet() (*mqlAzure
 	ctx := context.Background()
 	token := conn.Token()
 	props := a.Properties.Data
-	propsDict := props.(map[string]interface{})
+	propsDict := props.(map[string]any)
 	subnet := propsDict["subnet"]
 	if subnet == nil {
 		return nil, errors.New("no subnet is associated with the ip configuration")
 	}
-	subnetDict := subnet.(map[string]interface{})
+	subnetDict := subnet.(map[string]any)
 	id := subnetDict["id"]
 	if id != nil {
 		strId := id.(string)
@@ -731,7 +731,7 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewallIpConfig) subnet() (*mqlAzure
 	return nil, errors.New("no subnet is associated with the ip configuration")
 }
 
-func (a *mqlAzureSubscriptionNetworkService) firewallPolicies() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkService) firewallPolicies() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -744,7 +744,7 @@ func (a *mqlAzureSubscriptionNetworkService) firewallPolicies() ([]interface{}, 
 	}
 
 	pager := client.NewListAllPager(&network.FirewallPoliciesClientListAllOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -763,7 +763,7 @@ func (a *mqlAzureSubscriptionNetworkService) firewallPolicies() ([]interface{}, 
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionNetworkService) virtualNetworks() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkService) virtualNetworks() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -777,7 +777,7 @@ func (a *mqlAzureSubscriptionNetworkService) virtualNetworks() ([]interface{}, e
 	}
 
 	pager := client.NewListAllPager(&network.VirtualNetworksClientListAllOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -788,7 +788,7 @@ func (a *mqlAzureSubscriptionNetworkService) virtualNetworks() ([]interface{}, e
 			if err != nil {
 				return nil, err
 			}
-			subnets := []interface{}{}
+			subnets := []any{}
 			for _, s := range vn.Properties.Subnets {
 				if s != nil {
 					mqlSubnet, err := azureSubnetToMql(a.MqlRuntime, *s)
@@ -835,7 +835,7 @@ func (a *mqlAzureSubscriptionNetworkService) virtualNetworks() ([]interface{}, e
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionNetworkService) applicationSecurityGroups() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkService) applicationSecurityGroups() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -849,7 +849,7 @@ func (a *mqlAzureSubscriptionNetworkService) applicationSecurityGroups() ([]inte
 	}
 
 	pager := client.NewListAllPager(&network.ApplicationSecurityGroupsClientListAllOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -879,7 +879,7 @@ func (a *mqlAzureSubscriptionNetworkService) applicationSecurityGroups() ([]inte
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionNetworkService) virtualNetworkGateways() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkService) virtualNetworkGateways() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -904,7 +904,7 @@ func (a *mqlAzureSubscriptionNetworkService) virtualNetworkGateways() ([]interfa
 	if rgs.Error != nil {
 		return nil, err
 	}
-	res := []interface{}{}
+	res := []any{}
 	for _, rg := range rgs.Data {
 		mqlRg := rg.(*mqlAzureSubscriptionResourcegroup)
 		pager := client.NewListPager(mqlRg.Name.Data, &network.VirtualNetworkGatewaysClientListOptions{})
@@ -918,7 +918,7 @@ func (a *mqlAzureSubscriptionNetworkService) virtualNetworkGateways() ([]interfa
 				if err != nil {
 					return nil, err
 				}
-				bgpPeeringAddresses := []interface{}{}
+				bgpPeeringAddresses := []any{}
 				bgpSettingsId := *vng.ID + "/bgpSettings"
 				for i, bpa := range vng.Properties.BgpSettings.BgpPeeringAddresses {
 					bpaId := fmt.Sprintf("%s/%s/%d", bgpSettingsId, "bgpPeeringAddresses", i)
@@ -947,8 +947,8 @@ func (a *mqlAzureSubscriptionNetworkService) virtualNetworkGateways() ([]interfa
 					return nil, err
 				}
 
-				ipConfigs := []interface{}{}
-				natRules := []interface{}{}
+				ipConfigs := []any{}
+				natRules := []any{}
 
 				for _, nr := range vng.Properties.NatRules {
 					props, err := convert.JsonToDict(nr.Properties)
@@ -1011,7 +1011,7 @@ func (a *mqlAzureSubscriptionNetworkService) virtualNetworkGateways() ([]interfa
 				if vng.Properties.CustomRoutes != nil {
 					args["addressPrefixes"] = llx.ArrayData(convert.SliceStrPtrToInterface(vng.Properties.CustomRoutes.AddressPrefixes), types.String)
 				} else {
-					args["addressPrefixes"] = llx.ArrayData([]interface{}{}, types.String)
+					args["addressPrefixes"] = llx.ArrayData([]any{}, types.String)
 				}
 				if vng.Properties.VPNClientConfiguration != nil {
 					vpnClientDict, err := convert.JsonToDict(vng.Properties.VPNClientConfiguration)
@@ -1033,7 +1033,7 @@ func (a *mqlAzureSubscriptionNetworkService) virtualNetworkGateways() ([]interfa
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionNetworkService) applicationGateways() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkService) applicationGateways() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -1046,7 +1046,7 @@ func (a *mqlAzureSubscriptionNetworkService) applicationGateways() ([]interface{
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	pager := client.NewListAllPager(&network.ApplicationGatewaysClientListAllOptions{})
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
@@ -1070,7 +1070,7 @@ func (a *mqlAzureSubscriptionNetworkServiceWafConfig) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionNetworkServiceApplicationGateway) wafConfiguration() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkServiceApplicationGateway) wafConfiguration() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -1087,7 +1087,7 @@ func (a *mqlAzureSubscriptionNetworkServiceApplicationGateway) wafConfiguration(
 	}
 	c := client.NewApplicationGatewayWafDynamicManifestsClient()
 
-	res := []interface{}{}
+	res := []any{}
 	pager := c.NewGetPager(a.Location.Data, &network.ApplicationGatewayWafDynamicManifestsClientGetOptions{})
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
@@ -1117,7 +1117,7 @@ func (a *mqlAzureSubscriptionNetworkServiceApplicationGateway) wafConfiguration(
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionNetworkService) applicationFirewallPolicies() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkService) applicationFirewallPolicies() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -1130,7 +1130,7 @@ func (a *mqlAzureSubscriptionNetworkService) applicationFirewallPolicies() ([]in
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	pager := client.NewListAllPager(&network.WebApplicationFirewallPoliciesClientListAllOptions{})
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
@@ -1155,12 +1155,12 @@ func (a *mqlAzureSubscriptionNetworkServiceApplicationGateway) policy() (*mqlAzu
 	if props.Error != nil {
 		return nil, props.Error
 	}
-	propsDict := props.Data.(map[string]interface{})
+	propsDict := props.Data.(map[string]any)
 	fwDict := propsDict["firewallPolicy"]
 	if fwDict == nil {
 		return nil, errors.New("no firewall policy is associated with the application gateway")
 	}
-	fwId := fwDict.(map[string]interface{})["id"]
+	fwId := fwDict.(map[string]any)["id"]
 	if fwId == nil {
 		return nil, errors.New("no firewall policy is associated with the application gateway")
 	}
@@ -1189,12 +1189,12 @@ func (a *mqlAzureSubscriptionNetworkServiceApplicationGateway) policy() (*mqlAzu
 	return azureAppFirewallPolicyToMql(a.MqlRuntime, policy.WebApplicationFirewallPolicy)
 }
 
-func (a *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy) gateways() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy) gateways() ([]any, error) {
 	props := a.Properties
 	if props.Error != nil {
 		return nil, props.Error
 	}
-	propsDict := props.Data.(map[string]interface{})
+	propsDict := props.Data.(map[string]any)
 	gateways := propsDict["applicationGateways"]
 	if gateways == nil {
 		return nil, nil
@@ -1209,10 +1209,10 @@ func (a *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy) gateways()
 		return nil, err
 	}
 
-	gatewaysList := gateways.([]interface{})
-	res := []interface{}{}
+	gatewaysList := gateways.([]any)
+	res := []any{}
 	for _, g := range gatewaysList {
-		id := g.(map[string]interface{})["id"]
+		id := g.(map[string]any)["id"]
 		strId := id.(string)
 		azureId, err := ParseResourceID(strId)
 		if err != nil {
@@ -1235,7 +1235,7 @@ func (a *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy) gateways()
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionNetworkServiceNatGateway) publicIpAddresses() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkServiceNatGateway) publicIpAddresses() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -1245,22 +1245,22 @@ func (a *mqlAzureSubscriptionNetworkServiceNatGateway) publicIpAddresses() ([]in
 		return nil, err
 	}
 	props := a.Properties.Data
-	propsDict := props.(map[string]interface{})
+	propsDict := props.(map[string]any)
 	publicIpAddresses := propsDict["publicIpAddresses"]
 	// if we have no present public ip addresses ids, we can just return nil
 	if publicIpAddresses == nil {
 		return nil, nil
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	client, err := network.NewPublicIPAddressesClient(azureId.SubscriptionID, token, &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
 	if err != nil {
 		return nil, err
 	}
-	for _, p := range publicIpAddresses.([]interface{}) {
-		pDict := p.(map[string]interface{})
+	for _, p := range publicIpAddresses.([]any) {
+		pDict := p.(map[string]any)
 		pId := pDict["id"].(string)
 		resourceID, err := ParseResourceID(pId)
 		if err != nil {
@@ -1284,7 +1284,7 @@ func (a *mqlAzureSubscriptionNetworkServiceNatGateway) publicIpAddresses() ([]in
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) connections() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) connections() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -1300,7 +1300,7 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) connections() 
 		return nil, err
 	}
 	pager := client.NewListPager(azureId.ResourceGroup, &network.VirtualNetworkGatewayConnectionsClientListOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -1343,7 +1343,7 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) connections() 
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionNetworkServiceNatGateway) subnets() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkServiceNatGateway) subnets() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -1353,21 +1353,21 @@ func (a *mqlAzureSubscriptionNetworkServiceNatGateway) subnets() ([]interface{},
 		return nil, err
 	}
 	props := a.Properties.Data
-	propsDict := props.(map[string]interface{})
+	propsDict := props.(map[string]any)
 	subnets := propsDict["subnets"]
 	// if we have no present subnets in the dict, we can just return nil
 	if subnets == nil {
 		return nil, nil
 	}
-	res := []interface{}{}
+	res := []any{}
 	client, err := network.NewSubnetsClient(azureId.SubscriptionID, token, &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
 	if err != nil {
 		return nil, err
 	}
-	for _, s := range subnets.([]interface{}) {
-		sDict := s.(map[string]interface{})
+	for _, s := range subnets.([]any) {
+		sDict := s.(map[string]any)
 		sId := sDict["id"].(string)
 		resourceID, err := ParseResourceID(sId)
 		if err != nil {
@@ -1404,13 +1404,13 @@ func (a *mqlAzureSubscriptionNetworkServiceSubnet) natGateway() (*mqlAzureSubscr
 		return nil, err
 	}
 	props := a.Properties.Data
-	propsDict := props.(map[string]interface{})
+	propsDict := props.(map[string]any)
 	natGatewayDict := propsDict["natGateway"]
 	if natGatewayDict == nil {
 		// TODO: Preslav: how do we define a 'nil' resource here? if i return nil, it panics
 		return nil, errors.New("subnet has no NAT gateway associated with it")
 	}
-	natGatewayFields := natGatewayDict.(map[string]interface{})
+	natGatewayFields := natGatewayDict.(map[string]any)
 	natGatewayId := natGatewayFields["id"].(string)
 	resourceID, err := ParseResourceID(natGatewayId)
 	if err != nil {
@@ -1437,20 +1437,20 @@ func (a *mqlAzureSubscriptionNetworkServiceSubnet) natGateway() (*mqlAzureSubscr
 	return mqlNatGateway, nil
 }
 
-func (a *mqlAzureSubscriptionNetworkServiceSubnet) ipConfigurations() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkServiceSubnet) ipConfigurations() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	subId := conn.SubId()
 	props := a.Properties.Data
-	propsDict := props.(map[string]interface{})
+	propsDict := props.(map[string]any)
 	ipConfigsDict := propsDict["ipConfigurations"]
 	if ipConfigsDict == nil {
 		return nil, nil
 	}
-	res := []interface{}{}
+	res := []any{}
 	ipConfigIds := []string{}
-	ipConfigsList := ipConfigsDict.([]interface{})
+	ipConfigsList := ipConfigsDict.([]any)
 	for _, ipc := range ipConfigsList {
-		ipcDict := ipc.(map[string]interface{})
+		ipcDict := ipc.(map[string]any)
 		ipcId := ipcDict["id"].(string)
 		ipConfigIds = append(ipConfigIds, strings.ToLower(ipcId))
 	}
@@ -1489,13 +1489,13 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicy) basePolicy() (*mqlAzu
 	ctx := context.Background()
 	token := conn.Token()
 	props := a.Properties.Data
-	propsDict := props.(map[string]interface{})
+	propsDict := props.(map[string]any)
 	basePolicy := propsDict["basePolicy"]
 	if basePolicy == nil {
 		// TODO: find a way to return nil instead of err here, nil currently panics
 		return nil, errors.New("no base policy found")
 	}
-	basePolicyDict := basePolicy.(map[string]interface{})
+	basePolicyDict := basePolicy.(map[string]any)
 	basePolicyId := basePolicyDict["id"].(string)
 	resourceID, err := ParseResourceID(basePolicyId)
 	if err != nil {
@@ -1518,12 +1518,12 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicy) basePolicy() (*mqlAzu
 	return azureFirewallPolicyToMql(a.MqlRuntime, basePolicyRes.FirewallPolicy)
 }
 
-func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicy) childPolicies() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicy) childPolicies() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
 	props := a.Properties.Data
-	propsDict := props.(map[string]interface{})
+	propsDict := props.(map[string]any)
 	childPolicies := propsDict["childPolicies"]
 	if childPolicies == nil {
 		return nil, nil
@@ -1539,10 +1539,10 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicy) childPolicies() ([]in
 	if err != nil {
 		return nil, err
 	}
-	res := []interface{}{}
-	childPoliciesList := childPolicies.([]interface{})
+	res := []any{}
+	childPoliciesList := childPolicies.([]any)
 	for _, cp := range childPoliciesList {
-		cpDict := cp.(map[string]interface{})
+		cpDict := cp.(map[string]any)
 		cpId := cpDict["id"].(string)
 		resourceID, err := ParseResourceID(cpId)
 		if err != nil {
@@ -1565,12 +1565,12 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicy) childPolicies() ([]in
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicy) firewalls() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicy) firewalls() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
 	props := a.Properties.Data
-	propsDict := props.(map[string]interface{})
+	propsDict := props.(map[string]any)
 	firewalls := propsDict["firewalls"]
 	if firewalls == nil {
 		return nil, nil
@@ -1586,10 +1586,10 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicy) firewalls() ([]interf
 	if err != nil {
 		return nil, err
 	}
-	res := []interface{}{}
-	firewallsList := firewalls.([]interface{})
+	res := []any{}
+	firewallsList := firewalls.([]any)
 	for _, fw := range firewallsList {
-		fwDict := fw.(map[string]interface{})
+		fwDict := fw.(map[string]any)
 		fwId := fwDict["id"].(string)
 		resourceID, err := ParseResourceID(fwId)
 		if err != nil {
@@ -1783,10 +1783,10 @@ func azureAppGatewayToMql(runtime *plugin.Runtime, ag network.ApplicationGateway
 }
 
 func azureFirewallToMql(runtime *plugin.Runtime, fw network.AzureFirewall) (*mqlAzureSubscriptionNetworkServiceFirewall, error) {
-	applicationRules := []interface{}{}
-	natRules := []interface{}{}
-	networkRules := []interface{}{}
-	ipConfigs := []interface{}{}
+	applicationRules := []any{}
+	natRules := []any{}
+	networkRules := []any{}
+	ipConfigs := []any{}
 	props, err := convert.JsonToDict(fw.Properties)
 	if err != nil {
 		return nil, err
@@ -2012,10 +2012,10 @@ func azureInterfaceToMql(runtime *plugin.Runtime, iface network.Interface) (*mql
 type AzureSecurityGroupPropertiesFormat network.SecurityGroupPropertiesFormat
 
 func azureSecGroupToMql(runtime *plugin.Runtime, secGroup network.SecurityGroup) (*mqlAzureSubscriptionNetworkServiceSecurityGroup, error) {
-	var properties map[string]interface{}
-	ifaces := []interface{}{}
-	securityRules := []interface{}{}
-	defaultSecurityRules := []interface{}{}
+	var properties map[string]any
+	ifaces := []any{}
+	securityRules := []any{}
+	defaultSecurityRules := []any{}
 	var err error
 	if secGroup.Properties != nil {
 		// avoid using the azure sdk SecurityGroupPropertiesFormat MarshalJSON
@@ -2092,12 +2092,12 @@ func azureSecurityRuleToMql(runtime *plugin.Runtime, secRule network.SecurityRul
 		return nil, err
 	}
 
-	destinationPortRange := []interface{}{}
+	destinationPortRange := []any{}
 
 	if secRule.Properties != nil && secRule.Properties.DestinationPortRange != nil {
 		dPortRange := parseAzureSecurityRulePortRange(*secRule.Properties.DestinationPortRange)
 		for i := range dPortRange {
-			destinationPortRange = append(destinationPortRange, map[string]interface{}{
+			destinationPortRange = append(destinationPortRange, map[string]any{
 				"fromPort": dPortRange[i].FromPort,
 				"toPort":   dPortRange[i].ToPort,
 			})
@@ -2108,7 +2108,7 @@ func azureSecurityRuleToMql(runtime *plugin.Runtime, secRule network.SecurityRul
 		for _, r := range secRule.Properties.DestinationPortRanges {
 			dPortRange := parseAzureSecurityRulePortRange(*r)
 			for i := range dPortRange {
-				destinationPortRange = append(destinationPortRange, map[string]interface{}{
+				destinationPortRange = append(destinationPortRange, map[string]any{
 					"fromPort": dPortRange[i].FromPort,
 					"toPort":   dPortRange[i].ToPort,
 				})

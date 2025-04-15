@@ -9,9 +9,9 @@ import (
 	"fmt"
 	"strings"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/gcp/connection"
 	"google.golang.org/api/cloudresourcemanager/v3"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/iam/v1"
@@ -80,7 +80,7 @@ func initGcpFolder(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 	return args, nil, nil
 }
 
-func (g *mqlGcpFolders) children() ([]interface{}, error) {
+func (g *mqlGcpFolders) children() ([]any, error) {
 	if g.ParentId.Error != nil {
 		return nil, g.ParentId.Error
 	}
@@ -104,7 +104,7 @@ func (g *mqlGcpFolders) children() ([]interface{}, error) {
 		return nil, err
 	}
 
-	mqlFolders := make([]interface{}, 0, len(folders.Folders))
+	mqlFolders := make([]any, 0, len(folders.Folders))
 	for _, f := range folders.Folders {
 		mqlF, err := folderToMql(g.MqlRuntime, f)
 		if err != nil {
@@ -115,7 +115,7 @@ func (g *mqlGcpFolders) children() ([]interface{}, error) {
 	return mqlFolders, nil
 }
 
-func (g *mqlGcpFolders) list() ([]interface{}, error) {
+func (g *mqlGcpFolders) list() ([]any, error) {
 	if g.ParentId.Error != nil {
 		return nil, g.ParentId.Error
 	}
@@ -140,7 +140,7 @@ func (g *mqlGcpFolders) list() ([]interface{}, error) {
 	}
 
 	filteredFolders := getChildren(folders.Folders, parentId)
-	mqlFolders := make([]interface{}, 0, len(filteredFolders))
+	mqlFolders := make([]any, 0, len(filteredFolders))
 	for _, f := range filteredFolders {
 		mqlF, err := folderToMql(g.MqlRuntime, f)
 		if err != nil {
@@ -190,7 +190,7 @@ func (g *mqlGcpFolder) projects() (*mqlGcpProjects, error) {
 	return res.(*mqlGcpProjects), nil
 }
 
-func folderToMql(runtime *plugin.Runtime, f *cloudresourcemanager.Folder) (interface{}, error) {
+func folderToMql(runtime *plugin.Runtime, f *cloudresourcemanager.Folder) (any, error) {
 	return CreateResource(runtime, "gcp.folder", map[string]*llx.RawData{
 		"id":       llx.StringData(f.Name),
 		"name":     llx.StringData(f.DisplayName),

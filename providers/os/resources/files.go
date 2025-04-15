@@ -11,9 +11,9 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
 )
 
 var findTypes = map[string]string{
@@ -62,7 +62,7 @@ func (l *mqlFilesFind) id() (string, error) {
 	return id.String(), nil
 }
 
-func (l *mqlFilesFind) list() ([]interface{}, error) {
+func (l *mqlFilesFind) list() ([]any, error) {
 	var err error
 	var compiledRegexp *regexp.Regexp
 	if len(l.Regex.Data) > 0 {
@@ -163,7 +163,7 @@ func (l *mqlFilesFind) list() ([]interface{}, error) {
 		return nil, errors.New("find is not supported for your platform")
 	}
 
-	files := make([]interface{}, len(foundFiles))
+	files := make([]any, len(foundFiles))
 	var filepath string
 	for i := range foundFiles {
 		filepath = foundFiles[i]

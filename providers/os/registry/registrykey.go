@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 )
 
 // derived from "golang.org/x/sys/windows/registry"
@@ -67,7 +67,7 @@ func (k RegistryKeyItem) Kind() string {
 	return "<unsupported>"
 }
 
-func (k RegistryKeyItem) GetRawValue() interface{} {
+func (k RegistryKeyItem) GetRawValue() any {
 	switch k.Value.Kind {
 	case NONE:
 		return nil
@@ -118,7 +118,7 @@ type RegistryKeyChild struct {
 
 type keyKindRaw struct {
 	Kind int
-	Data interface{}
+	Data any
 }
 
 func (k *RegistryKeyValue) UnmarshalJSON(b []byte) error {
@@ -152,7 +152,7 @@ func (k *RegistryKeyValue) UnmarshalJSON(b []byte) error {
 		}
 		k.String = value
 	case BINARY: // Binary data
-		rawData, ok := raw.Data.([]interface{})
+		rawData, ok := raw.Data.([]any)
 		if !ok {
 			return fmt.Errorf("registry key value is not a byte array: %v", raw.Data)
 		}
@@ -185,7 +185,7 @@ func (k *RegistryKeyValue) UnmarshalJSON(b []byte) error {
 			if value != "" {
 				k.MultiString = []string{value}
 			}
-		case []interface{}:
+		case []any:
 			if len(value) > 0 {
 				var multiString []string
 				for _, v := range value {

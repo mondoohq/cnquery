@@ -7,15 +7,15 @@ import (
 	"errors"
 	"io"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/packages"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/powershell"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/windows"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/packages"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/powershell"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/windows"
 )
 
-func (s *mqlWindows) computerInfo() (map[string]interface{}, error) {
+func (s *mqlWindows) computerInfo() (map[string]any, error) {
 	conn := s.MqlRuntime.Connection.(shared.Connection)
 
 	cmd := windows.PSGetComputerInfo
@@ -105,7 +105,7 @@ func initWindowsHotfix(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	return nil, nil, errors.New("could not find hotfix " + name)
 }
 
-func (w *mqlWindows) hotfixes() ([]interface{}, error) {
+func (w *mqlWindows) hotfixes() ([]any, error) {
 	conn := w.MqlRuntime.Connection.(shared.Connection)
 
 	// query hotfixes
@@ -129,7 +129,7 @@ func (w *mqlWindows) hotfixes() ([]interface{}, error) {
 	}
 
 	// convert hotfixes to MQL resource
-	mqlHotFixes := make([]interface{}, len(hotfixes))
+	mqlHotFixes := make([]any, len(hotfixes))
 	for i, hf := range hotfixes {
 		mqlHotfix, err := CreateResource(w.MqlRuntime, "windows.hotfix", map[string]*llx.RawData{
 			"hotfixId":    llx.StringData(hf.HotFixId),
@@ -189,7 +189,7 @@ func initWindowsFeature(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	return nil, nil, errors.New("could not find feature " + name)
 }
 
-func (w *mqlWindows) features() ([]interface{}, error) {
+func (w *mqlWindows) features() ([]any, error) {
 	conn := w.MqlRuntime.Connection.(shared.Connection)
 
 	// query features
@@ -213,7 +213,7 @@ func (w *mqlWindows) features() ([]interface{}, error) {
 	}
 
 	// convert features to MQL resource
-	mqlFeatures := make([]interface{}, len(features))
+	mqlFeatures := make([]any, len(features))
 	for i, feature := range features {
 
 		mqlFeature, err := CreateResource(w.MqlRuntime, "windows.feature", map[string]*llx.RawData{
@@ -275,7 +275,7 @@ func initWindowsServerFeature(runtime *plugin.Runtime, args map[string]*llx.RawD
 	return nil, nil, errors.New("could not find feature " + name)
 }
 
-func (w *mqlWindows) serverFeatures() ([]interface{}, error) {
+func (w *mqlWindows) serverFeatures() ([]any, error) {
 	conn := w.MqlRuntime.Connection.(shared.Connection)
 
 	// query features
@@ -299,7 +299,7 @@ func (w *mqlWindows) serverFeatures() ([]interface{}, error) {
 	}
 
 	// convert features to MQL resource
-	mqlFeatures := make([]interface{}, len(features))
+	mqlFeatures := make([]any, len(features))
 	for i, feature := range features {
 
 		mqlFeature, err := CreateResource(w.MqlRuntime, "windows.serverFeature", map[string]*llx.RawData{
@@ -361,7 +361,7 @@ func initWindowsOptionalFeature(runtime *plugin.Runtime, args map[string]*llx.Ra
 	return nil, nil, errors.New("could not find feature " + name)
 }
 
-func (w *mqlWindows) optionalFeatures() ([]interface{}, error) {
+func (w *mqlWindows) optionalFeatures() ([]any, error) {
 	conn := w.MqlRuntime.Connection.(shared.Connection)
 
 	// query features
@@ -385,7 +385,7 @@ func (w *mqlWindows) optionalFeatures() ([]interface{}, error) {
 	}
 
 	// convert features to MQL resource
-	mqlFeatures := make([]interface{}, len(features))
+	mqlFeatures := make([]any, len(features))
 	for i, feature := range features {
 
 		mqlFeature, err := CreateResource(w.MqlRuntime, "windows.optionalFeature", map[string]*llx.RawData{

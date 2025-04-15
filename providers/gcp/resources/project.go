@@ -11,11 +11,11 @@ import (
 	"strings"
 	"time"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/gcp/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v12/types"
 
 	"google.golang.org/api/cloudresourcemanager/v3"
 	"google.golang.org/api/compute/v1"
@@ -119,13 +119,13 @@ func (g *mqlGcpProject) createTime() (*time.Time, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (g *mqlGcpProject) labels() (map[string]interface{}, error) {
+func (g *mqlGcpProject) labels() (map[string]any, error) {
 	// placeholder to convince MQL that this is an optional field
 	// should never be called since the data is initialized in init
 	return nil, errors.New("not implemented")
 }
 
-func (g *mqlGcpProject) iamPolicy() ([]interface{}, error) {
+func (g *mqlGcpProject) iamPolicy() ([]any, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
 	}
@@ -149,7 +149,7 @@ func (g *mqlGcpProject) iamPolicy() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range policy.Bindings {
 		b := policy.Bindings[i]
 
@@ -167,7 +167,7 @@ func (g *mqlGcpProject) iamPolicy() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGcpProject) commonInstanceMetadata() (map[string]interface{}, error) {
+func (g *mqlGcpProject) commonInstanceMetadata() (map[string]any, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
 	}
@@ -205,7 +205,7 @@ func (g *mqlGcpProject) commonInstanceMetadata() (map[string]interface{}, error)
 	return convert.MapToInterfaceMap(metadata), nil
 }
 
-func (g *mqlGcpProjects) children() ([]interface{}, error) {
+func (g *mqlGcpProjects) children() ([]any, error) {
 	if g.ParentId.Error != nil {
 		return nil, g.ParentId.Error
 	}
@@ -229,7 +229,7 @@ func (g *mqlGcpProjects) children() ([]interface{}, error) {
 		return nil, err
 	}
 
-	mqlProjects := make([]interface{}, 0, len(projects.Projects))
+	mqlProjects := make([]any, 0, len(projects.Projects))
 	for _, p := range projects.Projects {
 		mqlP, err := projectToMql(g.MqlRuntime, p)
 		if err != nil {
@@ -240,7 +240,7 @@ func (g *mqlGcpProjects) children() ([]interface{}, error) {
 	return mqlProjects, nil
 }
 
-func (g *mqlGcpProjects) list() ([]interface{}, error) {
+func (g *mqlGcpProjects) list() ([]any, error) {
 	if g.ParentId.Error != nil {
 		return nil, g.ParentId.Error
 	}
@@ -284,7 +284,7 @@ func (g *mqlGcpProjects) list() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	mqlProjects := make([]interface{}, 0, len(projects.Projects))
+	mqlProjects := make([]any, 0, len(projects.Projects))
 	for _, p := range projects.Projects {
 		if _, ok := foldersMap[p.Parent]; ok {
 			mqlP, err := projectToMql(g.MqlRuntime, p)

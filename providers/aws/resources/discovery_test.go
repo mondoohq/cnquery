@@ -9,23 +9,23 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
 )
 
 func TestFilters(t *testing.T) {
 	// image filters
 	require.True(t, imageMatchesFilters(&mqlAwsEcrImage{
-		Tags: plugin.TValue[[]interface{}]{Data: []interface{}{"latest"}},
+		Tags: plugin.TValue[[]any]{Data: []any{"latest"}},
 	}, connection.EcrDiscoveryFilters{}))
 
 	require.True(t, imageMatchesFilters(&mqlAwsEcrImage{
-		Tags: plugin.TValue[[]interface{}]{Data: []interface{}{"latest"}},
+		Tags: plugin.TValue[[]any]{Data: []any{"latest"}},
 	}, connection.EcrDiscoveryFilters{Tags: []string{"latest"}}))
 
 	require.False(t, imageMatchesFilters(&mqlAwsEcrImage{
-		Tags: plugin.TValue[[]interface{}]{Data: []interface{}{"ubu", "test"}},
+		Tags: plugin.TValue[[]any]{Data: []any{"ubu", "test"}},
 	}, connection.EcrDiscoveryFilters{Tags: []string{"latest"}}))
 
 	// container filters

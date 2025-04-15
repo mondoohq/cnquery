@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -376,11 +376,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"mondoo.jobEnvironment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMondoo).JobEnvironment, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlMondoo).JobEnvironment, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"mondoo.capabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMondoo).Capabilities, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlMondoo).Capabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"asset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -392,7 +392,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"asset.ids": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAsset).Ids, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAsset).Ids, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"asset.platform": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -420,7 +420,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"asset.family": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAsset).Family, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAsset).Family, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"asset.fqdn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -432,15 +432,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"asset.platformMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAsset).PlatformMetadata, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAsset).PlatformMetadata, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"asset.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAsset).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAsset).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"asset.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAsset).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAsset).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"asset.eol.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -707,8 +707,8 @@ type mqlMondoo struct {
 	Version plugin.TValue[string]
 	Build plugin.TValue[string]
 	Arch plugin.TValue[string]
-	JobEnvironment plugin.TValue[interface{}]
-	Capabilities plugin.TValue[[]interface{}]
+	JobEnvironment plugin.TValue[any]
+	Capabilities plugin.TValue[[]any]
 }
 
 // createMondoo creates a new instance of this resource
@@ -761,14 +761,14 @@ func (c *mqlMondoo) GetArch() *plugin.TValue[string] {
 	})
 }
 
-func (c *mqlMondoo) GetJobEnvironment() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.JobEnvironment, func() (interface{}, error) {
+func (c *mqlMondoo) GetJobEnvironment() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.JobEnvironment, func() (any, error) {
 		return c.jobEnvironment()
 	})
 }
 
-func (c *mqlMondoo) GetCapabilities() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Capabilities, func() ([]interface{}, error) {
+func (c *mqlMondoo) GetCapabilities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Capabilities, func() ([]any, error) {
 		return c.capabilities()
 	})
 }
@@ -779,19 +779,19 @@ type mqlAsset struct {
 	__id string
 	// optional: if you define mqlAssetInternal it will be used here
 	Name plugin.TValue[string]
-	Ids plugin.TValue[[]interface{}]
+	Ids plugin.TValue[[]any]
 	Platform plugin.TValue[string]
 	Kind plugin.TValue[string]
 	Runtime plugin.TValue[string]
 	Version plugin.TValue[string]
 	Arch plugin.TValue[string]
 	Title plugin.TValue[string]
-	Family plugin.TValue[[]interface{}]
+	Family plugin.TValue[[]any]
 	Fqdn plugin.TValue[string]
 	Build plugin.TValue[string]
-	PlatformMetadata plugin.TValue[map[string]interface{}]
-	Labels plugin.TValue[map[string]interface{}]
-	Annotations plugin.TValue[map[string]interface{}]
+	PlatformMetadata plugin.TValue[map[string]any]
+	Labels plugin.TValue[map[string]any]
+	Annotations plugin.TValue[map[string]any]
 }
 
 // createAsset creates a new instance of this resource
@@ -830,7 +830,7 @@ func (c *mqlAsset) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlAsset) GetIds() *plugin.TValue[[]interface{}] {
+func (c *mqlAsset) GetIds() *plugin.TValue[[]any] {
 	return &c.Ids
 }
 
@@ -858,7 +858,7 @@ func (c *mqlAsset) GetTitle() *plugin.TValue[string] {
 	return &c.Title
 }
 
-func (c *mqlAsset) GetFamily() *plugin.TValue[[]interface{}] {
+func (c *mqlAsset) GetFamily() *plugin.TValue[[]any] {
 	return &c.Family
 }
 
@@ -870,15 +870,15 @@ func (c *mqlAsset) GetBuild() *plugin.TValue[string] {
 	return &c.Build
 }
 
-func (c *mqlAsset) GetPlatformMetadata() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAsset) GetPlatformMetadata() *plugin.TValue[map[string]any] {
 	return &c.PlatformMetadata
 }
 
-func (c *mqlAsset) GetLabels() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAsset) GetLabels() *plugin.TValue[map[string]any] {
 	return &c.Labels
 }
 
-func (c *mqlAsset) GetAnnotations() *plugin.TValue[map[string]interface{}] {
+func (c *mqlAsset) GetAnnotations() *plugin.TValue[map[string]any] {
 	return &c.Annotations
 }
 

@@ -9,12 +9,12 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/kernel"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/kernel"
 )
 
 func initKernel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -45,7 +45,7 @@ type KernelVersion struct {
 	Running bool   `json:"running"`
 }
 
-func (k *mqlKernel) installed() ([]interface{}, error) {
+func (k *mqlKernel) installed() ([]any, error) {
 	res := []KernelVersion{}
 
 	conn := k.MqlRuntime.Connection.(shared.Connection)
@@ -59,7 +59,7 @@ func (k *mqlKernel) installed() ([]interface{}, error) {
 			return nil, errors.New("could not determine kernel version")
 		}
 
-		kernelInfo, ok := info.Data.(map[string]interface{})
+		kernelInfo, ok := info.Data.(map[string]any)
 		if !ok {
 			return nil, errors.New("no structured kernel information found")
 		}
@@ -202,7 +202,7 @@ func (k *mqlKernel) installed() ([]interface{}, error) {
 	return convert.JsonToDictSlice(res)
 }
 
-func (k *mqlKernel) info() (interface{}, error) {
+func (k *mqlKernel) info() (any, error) {
 	// find suitable kernel module manager
 	conn := k.MqlRuntime.Connection.(shared.Connection)
 	mm, err := kernel.ResolveManager(conn)
@@ -219,7 +219,7 @@ func (k *mqlKernel) info() (interface{}, error) {
 	return convert.JsonToDict(kernelInfo)
 }
 
-func (k *mqlKernel) parameters() (map[string]interface{}, error) {
+func (k *mqlKernel) parameters() (map[string]any, error) {
 	// find suitable kernel module manager
 	conn := k.MqlRuntime.Connection.(shared.Connection)
 	mm, err := kernel.ResolveManager(conn)
@@ -234,7 +234,7 @@ func (k *mqlKernel) parameters() (map[string]interface{}, error) {
 	}
 
 	// copy values to fulfill the interface
-	res := make(map[string]interface{})
+	res := make(map[string]any)
 	for key, value := range kernelParameters {
 		res[key] = value
 	}
@@ -242,7 +242,7 @@ func (k *mqlKernel) parameters() (map[string]interface{}, error) {
 	return res, nil
 }
 
-func (k *mqlKernel) modules() ([]interface{}, error) {
+func (k *mqlKernel) modules() ([]any, error) {
 	k.lock.Lock()
 	defer k.lock.Unlock()
 
@@ -261,7 +261,7 @@ func (k *mqlKernel) modules() ([]interface{}, error) {
 	log.Debug().Int("modules", len(kernelModules)).Msg("[kernel.modules]> modules")
 
 	// create MQL kernel module entry resources for each entry
-	moduleEntries := make([]interface{}, len(kernelModules))
+	moduleEntries := make([]any, len(kernelModules))
 	for i, kernelModule := range kernelModules {
 
 		raw, err := CreateResource(k.MqlRuntime, "kernel.module", map[string]*llx.RawData{
@@ -279,7 +279,7 @@ func (k *mqlKernel) modules() ([]interface{}, error) {
 	return moduleEntries, k.refreshCache(moduleEntries)
 }
 
-func (x *mqlKernel) refreshCache(all []interface{}) error {
+func (x *mqlKernel) refreshCache(all []any) error {
 	if all == nil {
 		raw := x.GetModules()
 		if raw.Error != nil {

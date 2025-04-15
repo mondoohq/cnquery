@@ -19,7 +19,7 @@ type CustomRole struct {
 	Label       string      `json:"label,omitempty"`
 	Description string      `json:"description,omitempty"`
 	Permissions []string    `json:"permissions,omitempty"`
-	Links       interface{} `json:"_links,omitempty"`
+	Links       any `json:"_links,omitempty"`
 }
 
 // ListCustomRoles Gets all customRoles based on the query params

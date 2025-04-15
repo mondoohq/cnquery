@@ -10,11 +10,11 @@ import (
 	"net/url"
 	"strings"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/azure/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/azure/connection"
+	"go.mondoo.com/cnquery/v12/types"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	table "github.com/Azure/azure-sdk-for-go/sdk/data/aztables"
@@ -73,7 +73,7 @@ func (a *mqlAzureSubscriptionStorageServiceAccountServicePropertiesMetrics) id()
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionStorageService) accounts() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionStorageService) accounts() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -87,7 +87,7 @@ func (a *mqlAzureSubscriptionStorageService) accounts() ([]interface{}, error) {
 	}
 
 	pager := client.NewListPager(&storage.AccountsClientListOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -105,7 +105,7 @@ func (a *mqlAzureSubscriptionStorageService) accounts() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionStorageServiceAccount) containers() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionStorageServiceAccount) containers() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -127,7 +127,7 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) containers() ([]interface{},
 	}
 
 	pager := client.NewListPager(resourceID.ResourceGroup, account, &storage.BlobContainersClientListOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -349,7 +349,7 @@ func toMqlServiceStorageProperties(runtime *plugin.Runtime, props table.ServiceP
 }
 
 func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mqlAzureSubscriptionStorageServiceAccount, error) {
-	var properties map[string]interface{}
+	var properties map[string]any
 	var err error
 	if account.Properties != nil {
 		properties, err = convert.JsonToDict(AzureStorageAccountProperties(*account.Properties))

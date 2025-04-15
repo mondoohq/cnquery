@@ -14,11 +14,11 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/logger"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/logger"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/ms365/connection"
 )
 
 var sharepointReport = `
@@ -46,8 +46,8 @@ ConvertTo-Json -Depth 4 $sharepoint -EnumsAsStrings
 `
 
 type SharepointOnlineReport struct {
-	SpoTenant                      interface{} `json:"SPOTenant"`
-	SpoTenantSyncClientRestriction interface{} `json:"SPOTenantSyncClientRestriction"`
+	SpoTenant                      any `json:"SPOTenant"`
+	SpoTenantSyncClientRestriction any `json:"SPOTenantSyncClientRestriction"`
 	SpoSite                        []*SpoSite  `json:"SPOSite"`
 	DefaultLinkPermission          string      `json:"DefaultLinkPermission"`
 }
@@ -176,12 +176,12 @@ func (r *mqlMs365Sharepointonline) getSharepointOnlineReport() error {
 	}
 
 	spoTenant, spoTenantErr := convert.JsonToDict(report.SpoTenant)
-	r.SpoTenant = plugin.TValue[interface{}]{Data: spoTenant, State: plugin.StateIsSet, Error: spoTenantErr}
+	r.SpoTenant = plugin.TValue[any]{Data: spoTenant, State: plugin.StateIsSet, Error: spoTenantErr}
 
 	spoTenantSyncClientRestriction, spoTenantSyncClientRestrictionErr := convert.JsonToDict(report.SpoTenantSyncClientRestriction)
-	r.SpoTenantSyncClientRestriction = plugin.TValue[interface{}]{Data: spoTenantSyncClientRestriction, State: plugin.StateIsSet, Error: spoTenantSyncClientRestrictionErr}
+	r.SpoTenantSyncClientRestriction = plugin.TValue[any]{Data: spoTenantSyncClientRestriction, State: plugin.StateIsSet, Error: spoTenantSyncClientRestrictionErr}
 
-	sites := []interface{}{}
+	sites := []any{}
 	var sitesErr error
 	for _, s := range report.SpoSite {
 		mqlSpoSite, err := CreateResource(r.MqlRuntime, "ms365.sharepointonline.site",
@@ -195,22 +195,22 @@ func (r *mqlMs365Sharepointonline) getSharepointOnlineReport() error {
 		}
 		sites = append(sites, mqlSpoSite)
 	}
-	r.SpoSites = plugin.TValue[[]interface{}]{Data: sites, State: plugin.StateIsSet, Error: sitesErr}
+	r.SpoSites = plugin.TValue[[]any]{Data: sites, State: plugin.StateIsSet, Error: sitesErr}
 
 	r.DefaultLinkPermission = plugin.TValue[string]{Data: report.DefaultLinkPermission, State: plugin.StateIsSet}
 
 	return nil
 }
 
-func (r *mqlMs365Sharepointonline) spoTenant() (interface{}, error) {
+func (r *mqlMs365Sharepointonline) spoTenant() (any, error) {
 	return nil, r.getSharepointOnlineReport()
 }
 
-func (r *mqlMs365Sharepointonline) spoTenantSyncClientRestriction() (interface{}, error) {
+func (r *mqlMs365Sharepointonline) spoTenantSyncClientRestriction() (any, error) {
 	return nil, r.getSharepointOnlineReport()
 }
 
-func (r *mqlMs365Sharepointonline) spoSites() ([]interface{}, error) {
+func (r *mqlMs365Sharepointonline) spoSites() ([]any, error) {
 	return nil, r.getSharepointOnlineReport()
 }
 

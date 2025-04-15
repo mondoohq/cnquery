@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/authorizedkeys"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/authorizedkeys"
 )
 
 func (x *mqlAuthorizedkeysEntry) id() (string, error) {
@@ -77,8 +77,8 @@ func (a *mqlAuthorizedkeys) content(file *mqlFile) (string, error) {
 	return content.Data, content.Error
 }
 
-func (x *mqlAuthorizedkeys) list(file *mqlFile, content string) ([]interface{}, error) {
-	res := []interface{}{}
+func (x *mqlAuthorizedkeys) list(file *mqlFile, content string) ([]any, error) {
+	res := []any{}
 
 	if !file.GetExists().Data {
 		return res, file.Exists.Error

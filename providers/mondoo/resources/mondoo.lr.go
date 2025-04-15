@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -206,7 +206,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"mondoo.organization.spaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMondooOrganization).Spaces, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlMondooOrganization).Spaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"mondoo.space.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -222,7 +222,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"mondoo.space.assets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMondooSpace).Assets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlMondooSpace).Assets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"mondoo.asset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -242,11 +242,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"mondoo.asset.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMondooAsset).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlMondooAsset).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"mondoo.asset.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMondooAsset).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlMondooAsset).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"mondoo.asset.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -262,7 +262,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"mondoo.asset.resources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMondooAsset).Resources, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlMondooAsset).Resources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"mondoo.resource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -352,7 +352,7 @@ type mqlMondooOrganization struct {
 	// optional: if you define mqlMondooOrganizationInternal it will be used here
 	Name plugin.TValue[string]
 	Mrn plugin.TValue[string]
-	Spaces plugin.TValue[[]interface{}]
+	Spaces plugin.TValue[[]any]
 }
 
 // createMondooOrganization creates a new instance of this resource
@@ -400,15 +400,15 @@ func (c *mqlMondooOrganization) GetMrn() *plugin.TValue[string] {
 	return &c.Mrn
 }
 
-func (c *mqlMondooOrganization) GetSpaces() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Spaces, func() ([]interface{}, error) {
+func (c *mqlMondooOrganization) GetSpaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Spaces, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("mondoo.organization", c.__id, "spaces")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -423,7 +423,7 @@ type mqlMondooSpace struct {
 	// optional: if you define mqlMondooSpaceInternal it will be used here
 	Name plugin.TValue[string]
 	Mrn plugin.TValue[string]
-	Assets plugin.TValue[[]interface{}]
+	Assets plugin.TValue[[]any]
 }
 
 // createMondooSpace creates a new instance of this resource
@@ -471,15 +471,15 @@ func (c *mqlMondooSpace) GetMrn() *plugin.TValue[string] {
 	return &c.Mrn
 }
 
-func (c *mqlMondooSpace) GetAssets() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Assets, func() ([]interface{}, error) {
+func (c *mqlMondooSpace) GetAssets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Assets, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("mondoo.space", c.__id, "assets")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -495,12 +495,12 @@ type mqlMondooAsset struct {
 	Name plugin.TValue[string]
 	Mrn plugin.TValue[string]
 	Platform plugin.TValue[string]
-	Annotations plugin.TValue[map[string]interface{}]
-	Labels plugin.TValue[map[string]interface{}]
+	Annotations plugin.TValue[map[string]any]
+	Labels plugin.TValue[map[string]any]
 	UpdatedAt plugin.TValue[*time.Time]
 	ScoreValue plugin.TValue[int64]
 	ScoreGrade plugin.TValue[string]
-	Resources plugin.TValue[[]interface{}]
+	Resources plugin.TValue[[]any]
 }
 
 // createMondooAsset creates a new instance of this resource
@@ -552,11 +552,11 @@ func (c *mqlMondooAsset) GetPlatform() *plugin.TValue[string] {
 	return &c.Platform
 }
 
-func (c *mqlMondooAsset) GetAnnotations() *plugin.TValue[map[string]interface{}] {
+func (c *mqlMondooAsset) GetAnnotations() *plugin.TValue[map[string]any] {
 	return &c.Annotations
 }
 
-func (c *mqlMondooAsset) GetLabels() *plugin.TValue[map[string]interface{}] {
+func (c *mqlMondooAsset) GetLabels() *plugin.TValue[map[string]any] {
 	return &c.Labels
 }
 
@@ -572,15 +572,15 @@ func (c *mqlMondooAsset) GetScoreGrade() *plugin.TValue[string] {
 	return &c.ScoreGrade
 }
 
-func (c *mqlMondooAsset) GetResources() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Resources, func() ([]interface{}, error) {
+func (c *mqlMondooAsset) GetResources() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Resources, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("mondoo.asset", c.__id, "resources")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 

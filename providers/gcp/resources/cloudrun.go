@@ -10,16 +10,16 @@ import (
 	"strconv"
 	"sync"
 
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/gcp/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v12/types"
 
 	"cloud.google.com/go/longrunning/autogen/longrunningpb"
 	run "cloud.google.com/go/run/apiv2"
 	runpb "cloud.google.com/go/run/apiv2/runpb"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v12/llx"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
@@ -116,7 +116,7 @@ func (g *mqlGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate) id() (str
 	return g.Id.Data, g.Id.Error
 }
 
-func (g *mqlGcpProjectCloudRunService) regions() ([]interface{}, error) {
+func (g *mqlGcpProjectCloudRunService) regions() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
 	if g.ProjectId.Error != nil {
@@ -140,14 +140,14 @@ func (g *mqlGcpProjectCloudRunService) regions() ([]interface{}, error) {
 		return nil, err
 	}
 
-	regionNames := make([]interface{}, 0, len(regions.Items))
+	regionNames := make([]any, 0, len(regions.Items))
 	for _, region := range regions.Items {
 		regionNames = append(regionNames, region.Name)
 	}
 	return regionNames, nil
 }
 
-func (g *mqlGcpProjectCloudRunService) operations() ([]interface{}, error) {
+func (g *mqlGcpProjectCloudRunService) operations() ([]any, error) {
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -174,7 +174,7 @@ func (g *mqlGcpProjectCloudRunService) operations() ([]interface{}, error) {
 	defer runSvc.Close()
 
 	var wg sync.WaitGroup
-	var operations []interface{}
+	var operations []any
 	wg.Add(len(regions))
 	mux := &sync.Mutex{}
 	for _, region := range regions {
@@ -207,7 +207,7 @@ func (g *mqlGcpProjectCloudRunService) operations() ([]interface{}, error) {
 	return operations, nil
 }
 
-func (g *mqlGcpProjectCloudRunService) services() ([]interface{}, error) {
+func (g *mqlGcpProjectCloudRunService) services() ([]any, error) {
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -247,7 +247,7 @@ func (g *mqlGcpProjectCloudRunService) services() ([]interface{}, error) {
 	}
 
 	var wg sync.WaitGroup
-	var services []interface{}
+	var services []any
 	wg.Add(len(regions))
 	mux := &sync.Mutex{}
 	for _, region := range regions {
@@ -266,7 +266,7 @@ func (g *mqlGcpProjectCloudRunService) services() ([]interface{}, error) {
 
 				var mqlTemplate plugin.Resource
 				if s.Template != nil {
-					var scalingCfg map[string]interface{}
+					var scalingCfg map[string]any
 					if s.Template.Scaling != nil {
 						scalingCfg, err = convert.JsonToDict(mqlRevisionScaling{
 							MinInstanceCount: s.Template.Scaling.MinInstanceCount,
@@ -309,9 +309,9 @@ func (g *mqlGcpProjectCloudRunService) services() ([]interface{}, error) {
 					}
 				}
 
-				mqlTraffic := make([]interface{}, 0, len(s.Traffic))
+				mqlTraffic := make([]any, 0, len(s.Traffic))
 				for _, t := range s.Traffic {
-					mqlTraffic = append(mqlTraffic, map[string]interface{}{
+					mqlTraffic = append(mqlTraffic, map[string]any{
 						"type":     t.Type.String(),
 						"revision": t.Revision,
 						"percent":  strconv.Itoa(int(t.Percent)),
@@ -324,7 +324,7 @@ func (g *mqlGcpProjectCloudRunService) services() ([]interface{}, error) {
 					log.Error().Err(err).Send()
 				}
 
-				mqlConditions := make([]interface{}, 0, len(s.Conditions))
+				mqlConditions := make([]any, 0, len(s.Conditions))
 				for i, c := range s.Conditions {
 					mqlCondition, err := mqlCondition(g.MqlRuntime, c, s.Name, fmt.Sprintf("%d", i))
 					if err != nil {
@@ -333,9 +333,9 @@ func (g *mqlGcpProjectCloudRunService) services() ([]interface{}, error) {
 					mqlConditions = append(mqlConditions, mqlCondition)
 				}
 
-				mqlTrafficStatuses := make([]interface{}, 0, len(s.TrafficStatuses))
+				mqlTrafficStatuses := make([]any, 0, len(s.TrafficStatuses))
 				for _, t := range s.TrafficStatuses {
-					mqlTrafficStatuses = append(mqlTrafficStatuses, map[string]interface{}{
+					mqlTrafficStatuses = append(mqlTrafficStatuses, map[string]any{
 						"type":     t.Type.String(),
 						"revision": t.Revision,
 						"percent":  strconv.Itoa(int(t.Percent)),
@@ -427,7 +427,7 @@ func (g *mqlGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate) serviceAc
 	return res.(*mqlGcpProjectIamServiceServiceAccount), nil
 }
 
-func (g *mqlGcpProjectCloudRunService) jobs() ([]interface{}, error) {
+func (g *mqlGcpProjectCloudRunService) jobs() ([]any, error) {
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -453,7 +453,7 @@ func (g *mqlGcpProjectCloudRunService) jobs() ([]interface{}, error) {
 	defer runSvc.Close()
 
 	var wg sync.WaitGroup
-	var jobs []interface{}
+	var jobs []any
 	wg.Add(len(regions))
 	mux := &sync.Mutex{}
 	for _, region := range regions {
@@ -525,7 +525,7 @@ func (g *mqlGcpProjectCloudRunService) jobs() ([]interface{}, error) {
 					return
 				}
 
-				mqlConditions := make([]interface{}, 0, len(j.Conditions))
+				mqlConditions := make([]any, 0, len(j.Conditions))
 				for i, c := range j.Conditions {
 					mqlCondition, err := mqlCondition(g.MqlRuntime, c, j.Name, fmt.Sprintf("%d", i))
 					if err != nil {
@@ -577,24 +577,24 @@ func mqlContainerProbe(runtime *plugin.Runtime, probe *runpb.Probe, containerId 
 	if probe == nil {
 		return nil, nil
 	}
-	var mqlHttpGet map[string]interface{}
+	var mqlHttpGet map[string]any
 	if httpGet := probe.GetHttpGet(); httpGet != nil {
-		mqlHttpHeaders := make([]interface{}, 0, len(httpGet.HttpHeaders))
+		mqlHttpHeaders := make([]any, 0, len(httpGet.HttpHeaders))
 		for _, h := range httpGet.HttpHeaders {
-			mqlHttpHeaders = append(mqlHttpHeaders, map[string]interface{}{
+			mqlHttpHeaders = append(mqlHttpHeaders, map[string]any{
 				"name":  h.Name,
 				"value": h.Value,
 			})
 		}
-		mqlHttpGet = map[string]interface{}{
+		mqlHttpGet = map[string]any{
 			"path":        httpGet.Path,
 			"httpHeaders": mqlHttpHeaders,
 		}
 	}
 
-	var mqlTcpSocket map[string]interface{}
+	var mqlTcpSocket map[string]any
 	if tcpSocket := probe.GetTcpSocket(); tcpSocket != nil {
-		mqlTcpSocket = map[string]interface{}{
+		mqlTcpSocket = map[string]any{
 			"port": tcpSocket.Port,
 		}
 	}
@@ -624,7 +624,7 @@ func mqlCondition(runtime *plugin.Runtime, c *runpb.Condition, parentId, suffix 
 	})
 }
 
-func mqlVpcAccess(vpcAccess *runpb.VpcAccess) (map[string]interface{}, error) {
+func mqlVpcAccess(vpcAccess *runpb.VpcAccess) (map[string]any, error) {
 	type mqlVpcAccess struct {
 		Connector string `json:"connector"`
 		Egress    string `json:"egress"`
@@ -638,47 +638,47 @@ func mqlVpcAccess(vpcAccess *runpb.VpcAccess) (map[string]interface{}, error) {
 	})
 }
 
-func mqlContainers(runtime *plugin.Runtime, containers []*runpb.Container, templateId string) ([]interface{}, error) {
-	mqlContainers := make([]interface{}, 0, len(containers))
+func mqlContainers(runtime *plugin.Runtime, containers []*runpb.Container, templateId string) ([]any, error) {
+	mqlContainers := make([]any, 0, len(containers))
 	for _, c := range containers {
-		mqlEnvs := make([]interface{}, 0, len(c.Env))
+		mqlEnvs := make([]any, 0, len(c.Env))
 		for _, e := range c.Env {
 			valueSource := e.GetValueSource()
-			var mqlValueSource map[string]interface{}
+			var mqlValueSource map[string]any
 			if valueSource != nil {
-				mqlValueSource = map[string]interface{}{
-					"secretKeyRef": map[string]interface{}{
+				mqlValueSource = map[string]any{
+					"secretKeyRef": map[string]any{
 						"secret":  valueSource.SecretKeyRef.Secret,
 						"version": valueSource.SecretKeyRef.Version,
 					},
 				}
 			}
-			mqlEnvs = append(mqlEnvs, map[string]interface{}{
+			mqlEnvs = append(mqlEnvs, map[string]any{
 				"name":        e.Name,
 				"value":       e.GetValue(),
 				"valueSource": mqlValueSource,
 			})
 		}
 
-		var mqlResources map[string]interface{}
+		var mqlResources map[string]any
 		if c.Resources != nil {
-			mqlResources = map[string]interface{}{
+			mqlResources = map[string]any{
 				"limits":  convert.MapToInterfaceMap(c.Resources.Limits),
 				"cpuIdle": c.Resources.CpuIdle,
 			}
 		}
 
-		mqlPorts := make([]interface{}, 0, len(c.Ports))
+		mqlPorts := make([]any, 0, len(c.Ports))
 		for _, p := range c.Ports {
-			mqlPorts = append(mqlPorts, map[string]interface{}{
+			mqlPorts = append(mqlPorts, map[string]any{
 				"name":          p.Name,
 				"containerPort": p.ContainerPort,
 			})
 		}
 
-		mqlVolumeMounts := make([]interface{}, 0, len(c.Ports))
+		mqlVolumeMounts := make([]any, 0, len(c.Ports))
 		for _, v := range c.VolumeMounts {
-			mqlVolumeMounts = append(mqlVolumeMounts, map[string]interface{}{
+			mqlVolumeMounts = append(mqlVolumeMounts, map[string]any{
 				"name":      v.Name,
 				"mountPath": v.MountPath,
 			})
@@ -717,10 +717,10 @@ func mqlContainers(runtime *plugin.Runtime, containers []*runpb.Container, templ
 	return mqlContainers, nil
 }
 
-func mqlVolumes(volumes []*runpb.Volume) []interface{} {
-	mqlVolumes := make([]interface{}, 0, len(volumes))
+func mqlVolumes(volumes []*runpb.Volume) []any {
+	mqlVolumes := make([]any, 0, len(volumes))
 	for _, v := range volumes {
-		mqlVolumes = append(mqlVolumes, map[string]interface{}{
+		mqlVolumes = append(mqlVolumes, map[string]any{
 			"name": v.Name,
 		})
 	}

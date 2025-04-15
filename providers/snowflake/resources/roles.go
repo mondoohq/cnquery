@@ -7,12 +7,12 @@ import (
 	"context"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/snowflake/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/snowflake/connection"
 )
 
-func (r *mqlSnowflakeAccount) roles() ([]interface{}, error) {
+func (r *mqlSnowflakeAccount) roles() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
 	client := conn.Client()
 	ctx := context.Background()
@@ -22,7 +22,7 @@ func (r *mqlSnowflakeAccount) roles() ([]interface{}, error) {
 		return nil, err
 	}
 
-	list := []interface{}{}
+	list := []any{}
 	for i := range roles {
 		mqlRole, err := newMqlSnowflakeRole(r.MqlRuntime, roles[i])
 		if err != nil {

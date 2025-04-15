@@ -8,11 +8,11 @@ import (
 	"fmt"
 	"strings"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/azure/connection"
-	"go.mondoo.com/cnquery/v11/utils/stringx"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/azure/connection"
+	"go.mondoo.com/cnquery/v12/utils/stringx"
 
 	subscriptions "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions"
 )
@@ -684,19 +684,19 @@ func getInstancesLabels(vm *mqlAzureSubscriptionComputeServiceVm) (map[string]st
 		return nil, props.Error
 	}
 
-	propsDict := props.Data.(map[string]interface{})
+	propsDict := props.Data.(map[string]any)
 	osProfile, ok := propsDict["osProfile"]
 	if ok {
-		if osProfileDict, ok := osProfile.(map[string]interface{}); ok {
+		if osProfileDict, ok := osProfile.(map[string]any); ok {
 			labels["azure.mondoo.com/computername"] = osProfileDict["computerName"].(string)
 		}
 	}
 	storageProfile, ok := propsDict["storageProfile"]
 	if ok {
-		if storageProfile, ok := storageProfile.(map[string]interface{}); ok {
+		if storageProfile, ok := storageProfile.(map[string]any); ok {
 			osDisk, ok := storageProfile["osDisk"]
 			if ok {
-				if osDisk, ok := osDisk.(map[string]interface{}); ok {
+				if osDisk, ok := osDisk.(map[string]any); ok {
 					if osType, ok := osDisk["osType"]; ok {
 						labels["azure.mondoo.com/ostype"] = osType.(string)
 					}
@@ -874,7 +874,7 @@ func addInformationalLabels(l map[string]string, o mqlObject) map[string]string 
 	return l
 }
 
-func interfaceMapToStr(m map[string]interface{}) map[string]string {
+func interfaceMapToStr(m map[string]any) map[string]string {
 	res := make(map[string]string)
 	for k, v := range m {
 		if str, ok := v.(string); ok {

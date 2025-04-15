@@ -10,11 +10,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/cloudformation/connection"
-	"go.mondoo.com/cnquery/v11/utils/syncx"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/cloudformation/connection"
+	"go.mondoo.com/cnquery/v12/utils/syncx"
 )
 
 func loadTemplate(path string) (*mqlCloudformationTemplate, error) {
@@ -108,7 +108,7 @@ func TestCloudformationResources(t *testing.T) {
 		val := res.Data["Function"]
 		assert.NotNil(t, val)
 
-		entries := val.(map[string]interface{})
+		entries := val.(map[string]any)
 		assert.Equal(t, "nodejs12.x", entries["Runtime"])
 	})
 
@@ -123,8 +123,8 @@ func TestCloudformationResources(t *testing.T) {
 		val := res.Data["RegionMap"]
 		assert.NotNil(t, val)
 
-		entries := val.(map[string]interface{})
-		entry := entries["us-east-1"].(map[string]interface{})
+		entries := val.(map[string]any)
+		entry := entries["us-east-1"].(map[string]any)
 		assert.Equal(t, "ami-0ff8a91507f77f867", entry["HVM64"])
 	})
 
@@ -203,6 +203,6 @@ func TestCloudformationResources(t *testing.T) {
 		tpl, err := loadTemplate(path)
 		require.NoError(t, err)
 
-		assert.Equal(t, []interface{}{"MyMacro", "AWS::Serverless"}, tpl.Transform.Data)
+		assert.Equal(t, []any{"MyMacro", "AWS::Serverless"}, tpl.Transform.Data)
 	})
 }

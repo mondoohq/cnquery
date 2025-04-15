@@ -6,13 +6,13 @@ package resources
 import (
 	"github.com/vmware/go-vcloud-director/v2/govcd"
 	"github.com/vmware/go-vcloud-director/v2/types/v56"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/vcd/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/vcd/connection"
 )
 
 // https://developer.vmware.com/apis/1260/vmware-cloud-director/doc/doc/types/VimServerType.html
-func (v *mqlVcd) serverInstances() ([]interface{}, error) {
+func (v *mqlVcd) serverInstances() ([]any, error) {
 	conn := v.MqlRuntime.Connection.(*connection.VcdConnection)
 	client := conn.Client()
 
@@ -21,7 +21,7 @@ func (v *mqlVcd) serverInstances() ([]interface{}, error) {
 		return nil, err
 	}
 
-	list := []interface{}{}
+	list := []any{}
 	for i := range vdcList {
 		entry, err := newMqlVcdServerInstance(v.MqlRuntime, vdcList[i])
 		if err != nil {
@@ -33,7 +33,7 @@ func (v *mqlVcd) serverInstances() ([]interface{}, error) {
 	return list, nil
 }
 
-func newMqlVcdServerInstance(runtime *plugin.Runtime, vcdProvider *types.QueryResultVirtualCenterRecordType) (interface{}, error) {
+func newMqlVcdServerInstance(runtime *plugin.Runtime, vcdProvider *types.QueryResultVirtualCenterRecordType) (any, error) {
 	return CreateResource(runtime, "vcd.serverInstance", map[string]*llx.RawData{
 		"name":          llx.StringData(vcdProvider.Name),
 		"isBusy":        llx.BoolData(vcdProvider.IsBusy),

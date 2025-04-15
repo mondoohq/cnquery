@@ -4,10 +4,10 @@
 package resources
 
 import (
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/types"
-	"go.mondoo.com/cnquery/v11/utils/stringx"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/cnquery/v12/utils/stringx"
 )
 
 type connectedApp struct {
@@ -18,7 +18,7 @@ type connectedApp struct {
 	tokens   []*mqlGoogleworkspaceToken
 }
 
-func (g *mqlGoogleworkspace) connectedApps() ([]interface{}, error) {
+func (g *mqlGoogleworkspace) connectedApps() ([]any, error) {
 	// get all users
 	if g.Users.Error != nil {
 		return nil, g.Users.Error
@@ -77,19 +77,19 @@ func (g *mqlGoogleworkspace) connectedApps() ([]interface{}, error) {
 
 	// group token by client id
 	runtime := g.MqlRuntime
-	res := make([]interface{}, len(connectedApps))
+	res := make([]any, len(connectedApps))
 	i := 0
 	for k := range connectedApps {
 		connectedApp := connectedApps[k]
 
-		mqlUsers := make([]interface{}, len(connectedApp.users))
+		mqlUsers := make([]any, len(connectedApp.users))
 		if connectedApp.users != nil && len(connectedApp.users) > 0 {
 			for i := range connectedApp.users {
 				mqlUsers[i] = connectedApp.users[i]
 			}
 		}
 
-		mqlTokens := make([]interface{}, len(connectedApp.tokens))
+		mqlTokens := make([]any, len(connectedApp.tokens))
 		if connectedApp.tokens != nil && len(connectedApp.tokens) > 0 {
 			for i := range connectedApp.tokens {
 				mqlTokens[i] = connectedApp.tokens[i]
