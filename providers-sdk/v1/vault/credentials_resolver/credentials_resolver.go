@@ -8,8 +8,8 @@ import (
 	"errors"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault/cache"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/vault/cache"
 )
 
 type resolver struct {

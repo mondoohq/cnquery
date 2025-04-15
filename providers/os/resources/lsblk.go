@@ -8,8 +8,8 @@ import (
 	"errors"
 	"slices"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (l *mqlLsblk) id() (string, error) {

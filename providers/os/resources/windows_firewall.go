@@ -7,11 +7,11 @@ import (
 	"errors"
 	"io"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/powershell"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/windows"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/powershell"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/windows"
 )
 
 func (w *mqlWindowsFirewallProfile) id() (string, error) {

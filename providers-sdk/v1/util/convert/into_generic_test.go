@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"testing"
 
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 
 	"github.com/stretchr/testify/assert"
 )

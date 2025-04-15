@@ -10,7 +10,7 @@
 package resources
 
 import (
-	llx "go.mondoo.com/cnquery/v11/llx"
+	llx "go.mondoo.com/cnquery/v12/llx"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"

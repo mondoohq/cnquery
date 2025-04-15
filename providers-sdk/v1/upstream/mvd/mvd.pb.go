@@ -10,7 +10,7 @@
 package mvd
 
 import (
-	cvss "go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream/mvd/cvss"
+	cvss "go.mondoo.com/cnquery/v12/providers-sdk/v1/upstream/mvd/cvss"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"

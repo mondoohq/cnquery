@@ -6,10 +6,10 @@ package resources
 import (
 	"context"
 
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/resources"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream/mvd"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/vsphere/connection"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/upstream/mvd"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/vsphere/connection"
 )
 
 // fetches the vulnerability report and returns the full report
