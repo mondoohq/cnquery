@@ -174,6 +174,11 @@ func NewAwsEbsConnection(id uint32, conf *inventory.Config, asset *inventory.Ass
 	return c, nil
 }
 
+// no-op since ebs connection doesn't do any verification
+func (c *AwsEbsConnection) Hash() uint64            { return 0 }
+func (c *AwsEbsConnection) Verify() (string, error) { return "no-op", nil }
+func (c *AwsEbsConnection) SetAccountId(_ string)   {}
+
 func (c *AwsEbsConnection) FileInfo(path string) (shared.FileInfoDetails, error) {
 	return shared.FileInfoDetails{}, errors.New("FileInfo not implemented")
 }
