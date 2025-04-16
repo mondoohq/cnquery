@@ -788,3 +788,15 @@ license/headers/check:
 license/headers/apply:
 	copywrite headers
 
+
+#   📈 METRICS       #
+
+metrics/start: metrics/prometheus/start metrics/grafana/start
+
+metrics/prometheus/start:
+	prometheus --config.file=prometheus.yml
+
+metrics/grafana/start:
+	docker run -d --name=grafana \
+		-p 3000:3000               \
+		grafana/grafana
