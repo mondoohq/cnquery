@@ -246,6 +246,7 @@ type mqlAwsRdsDbinstanceInternal struct {
 func newMqlAwsParameterGroup(runtime *plugin.Runtime, region string, parameterGroup rds_types.DBParameterGroup) (*mqlAwsRdsParameterGroup, error) {
 	resource, err := CreateResource(runtime, "aws.rds.parameterGroup",
 		map[string]*llx.RawData{
+			"__id":        llx.StringData(fmt.Sprintf("%s/%s", *parameterGroup.DBParameterGroupArn, *parameterGroup.DBParameterGroupName)),
 			"arn":         llx.StringDataPtr(parameterGroup.DBParameterGroupArn),
 			"family":      llx.StringDataPtr(parameterGroup.DBParameterGroupFamily),
 			"name":        llx.StringDataPtr(parameterGroup.DBParameterGroupName),
