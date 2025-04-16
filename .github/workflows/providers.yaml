@@ -174,14 +174,26 @@ jobs:
           name: ${{ matrix.provider }}
           path: dist
 
-      - uses: sarisia/actions-status-discord@v1
+      - name: Send Slack notification on failure
+        uses: slackapi/slack-github-action@v2.0.0
         if: ${{ steps.build-providers.outcome != 'success' }}
         with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK }}
-          status: ${{ steps.build-providers.outcome }}
-          url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          description: Workflow ${{ github.workflow }} for commit ${{ github.sha }} on ${{ github.ref_name }} failed
-          color: 0xff4d4d
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            {
+              "channel": "C07QZDJFF89",
+              "text": "⚠️ Provider Build failed for ${{ matrix.provider }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":x: *Provider Build failed for ${{ matrix.provider }}*:  <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View GitHub Action Run>"
+                  }
+                }
+              ]
+            }
 
   provider-index:
     needs: [provider-build, scoping]
