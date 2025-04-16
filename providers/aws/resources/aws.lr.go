@@ -538,6 +538,10 @@ func init() {
 			// to override args, implement: initAwsRdsPendingMaintenanceAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsRdsPendingMaintenanceAction,
 		},
+		"aws.rds.parameterGroup": {
+			// to override args, implement: initAwsRdsParameterGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsRdsParameterGroup,
+		},
 		"aws.elasticache": {
 			// to override args, implement: initAwsElasticache(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsElasticache,
@@ -3173,6 +3177,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.allPendingMaintenanceActions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRds).GetAllPendingMaintenanceActions()).ToDataRes(types.Array(types.Resource("aws.rds.pendingMaintenanceAction")))
 	},
+	"aws.rds.parameterGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRds).GetParameterGroups()).ToDataRes(types.Array(types.Resource("aws.rds.parameterGroup")))
+	},
 	"aws.rds.backupsetting.target": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsBackupsetting).GetTarget()).ToDataRes(types.String)
 	},
@@ -3322,6 +3329,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.rds.dbcluster.httpEndpointEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbcluster).GetHttpEndpointEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.rds.dbcluster.parameterGroupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetParameterGroupName()).ToDataRes(types.String)
 	},
 	"aws.rds.snapshot.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsSnapshot).GetArn()).ToDataRes(types.String)
@@ -3517,6 +3527,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.rds.pendingMaintenanceAction.optInStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsPendingMaintenanceAction).GetOptInStatus()).ToDataRes(types.String)
+	},
+	"aws.rds.parameterGroup.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsParameterGroup).GetArn()).ToDataRes(types.String)
+	},
+	"aws.rds.parameterGroup.family": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsParameterGroup).GetFamily()).ToDataRes(types.String)
+	},
+	"aws.rds.parameterGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsParameterGroup).GetName()).ToDataRes(types.String)
+	},
+	"aws.rds.parameterGroup.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsParameterGroup).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.rds.parameterGroup.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsParameterGroup).GetRegion()).ToDataRes(types.String)
 	},
 	"aws.elasticache.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticache).GetClusters()).ToDataRes(types.Array(types.Dict))
@@ -8674,6 +8699,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsRds).AllPendingMaintenanceActions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"aws.rds.parameterGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRds).ParameterGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"aws.rds.backupsetting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsRdsBackupsetting).__id, ok = v.Value.(string)
 			return
@@ -8880,6 +8909,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.rds.dbcluster.httpEndpointEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbcluster).HttpEndpointEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.parameterGroupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).ParameterGroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.rds.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9152,6 +9185,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.rds.pendingMaintenanceAction.optInStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsPendingMaintenanceAction).OptInStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.parameterGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsRdsParameterGroup).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.rds.parameterGroup.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsParameterGroup).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.parameterGroup.family": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsParameterGroup).Family, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.parameterGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsParameterGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.parameterGroup.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsParameterGroup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.parameterGroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsParameterGroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.elasticache.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -22143,6 +22200,7 @@ type mqlAwsRds struct {
 	DbClusters plugin.TValue[[]interface{}]
 	Clusters plugin.TValue[[]interface{}]
 	AllPendingMaintenanceActions plugin.TValue[[]interface{}]
+	ParameterGroups plugin.TValue[[]interface{}]
 }
 
 // createAwsRds creates a new instance of this resource
@@ -22259,6 +22317,22 @@ func (c *mqlAwsRds) GetAllPendingMaintenanceActions() *plugin.TValue[[]interface
 		}
 
 		return c.allPendingMaintenanceActions()
+	})
+}
+
+func (c *mqlAwsRds) GetParameterGroups() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.ParameterGroups, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds", c.__id, "parameterGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.parameterGroups()
 	})
 }
 
@@ -22413,6 +22487,7 @@ type mqlAwsRdsDbcluster struct {
 	PreferredMaintenanceWindow plugin.TValue[string]
 	PreferredBackupWindow plugin.TValue[string]
 	HttpEndpointEnabled plugin.TValue[bool]
+	ParameterGroupName plugin.TValue[string]
 }
 
 // createAwsRdsDbcluster creates a new instance of this resource
@@ -22646,6 +22721,10 @@ func (c *mqlAwsRdsDbcluster) GetPreferredBackupWindow() *plugin.TValue[string] {
 
 func (c *mqlAwsRdsDbcluster) GetHttpEndpointEnabled() *plugin.TValue[bool] {
 	return &c.HttpEndpointEnabled
+}
+
+func (c *mqlAwsRdsDbcluster) GetParameterGroupName() *plugin.TValue[string] {
+	return &c.ParameterGroupName
 }
 
 // mqlAwsRdsSnapshot for the aws.rds.snapshot resource
@@ -23160,6 +23239,70 @@ func (c *mqlAwsRdsPendingMaintenanceAction) GetForcedApplyDate() *plugin.TValue[
 
 func (c *mqlAwsRdsPendingMaintenanceAction) GetOptInStatus() *plugin.TValue[string] {
 	return &c.OptInStatus
+}
+
+// mqlAwsRdsParameterGroup for the aws.rds.parameterGroup resource
+type mqlAwsRdsParameterGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsRdsParameterGroupInternal it will be used here
+	Arn plugin.TValue[string]
+	Family plugin.TValue[string]
+	Name plugin.TValue[string]
+	Description plugin.TValue[string]
+	Region plugin.TValue[string]
+}
+
+// createAwsRdsParameterGroup creates a new instance of this resource
+func createAwsRdsParameterGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRdsParameterGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.rds.parameterGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRdsParameterGroup) MqlName() string {
+	return "aws.rds.parameterGroup"
+}
+
+func (c *mqlAwsRdsParameterGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRdsParameterGroup) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsRdsParameterGroup) GetFamily() *plugin.TValue[string] {
+	return &c.Family
+}
+
+func (c *mqlAwsRdsParameterGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsRdsParameterGroup) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsRdsParameterGroup) GetRegion() *plugin.TValue[string] {
+	return &c.Region
 }
 
 // mqlAwsElasticache for the aws.elasticache resource

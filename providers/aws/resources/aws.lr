@@ -2074,6 +2074,8 @@ aws.rds {
   clusters() []aws.rds.dbcluster
   // List of all pending maintenance actions for the database instance
   allPendingMaintenanceActions() []aws.rds.pendingMaintenanceAction
+  // List of all parameter groups
+  parameterGroups() []aws.rds.parameterGroup
 }
 
 // Amazon RDS Backup Setting
@@ -2182,6 +2184,8 @@ aws.rds.dbcluster @defaults("id region engine engineVersion") {
   preferredBackupWindow string
   // Whether the HTTP API endpoint is enabled
   httpEndpointEnabled bool
+  // Container for engine configuration values
+  parameterGroupName string
 }
 
 // Amazon RDS snapshot
@@ -2325,6 +2329,21 @@ private aws.rds.pendingMaintenanceAction {
   // Opt-in status
   optInStatus string
 }
+
+// Amazon RDS parameter groups
+aws.rds.parameterGroup @defaults("name family region") {
+  // ARN for resource
+  arn string
+  // Family of the Parameter Group
+  family string
+  // Name of the Parameter Group
+  name string
+  // Description of the Parameter Group
+  description string
+  // Region of the paramaters
+  region string
+}
+
 
 // Amazon ElastiCache
 aws.elasticache @defaults("cacheClusters") {

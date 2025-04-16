@@ -54,6 +54,67 @@ func (a *mqlAwsRds) instances() ([]interface{}, error) {
 	return res, nil
 }
 
+func (a *mqlAwsRds) parameterGroups() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []interface{}{}
+	poolOfJobs := jobpool.CreatePool(a.getParameterGroups(conn), 5)
+	poolOfJobs.Run()
+
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsRds) getParameterGroups(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	for _, region := range regions {
+		regionVal := region
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("rds>getParameterGroup>calling aws with region %s", regionVal)
+			res := []interface{}{}
+			svc := conn.Rds(regionVal)
+			ctx := context.Background()
+
+			var marker *string
+			for {
+				DBParameterGroups, err := svc.DescribeDBParameterGroups(ctx, &rds.DescribeDBParameterGroupsInput{Marker: marker})
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, dbParameterGroup := range DBParameterGroups.DBParameterGroups {
+
+					mqlParameterGroup, err := newMqlAwsParameterGroup(a.MqlRuntime, region, dbParameterGroup)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlParameterGroup)
+				}
+				if marker == nil {
+					break
+				}
+				marker = DBParameterGroups.Marker
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
 func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := conn.Regions()
@@ -154,7 +215,7 @@ func (a *mqlAwsRds) getPendingMaintenanceActions(conn *connection.AwsConnection)
 					}
 					for _, action := range resp.PendingMaintenanceActionDetails {
 						resourceArn := *resp.ResourceIdentifier
-						mqlPendingAction, err := newMqlAwsPendingMaintenanceAction(a.MqlRuntime, region, resourceArn, action)
+						mqlPendingAction, err := newMqlAwsPendingMaintenanceAction(a.MqlRuntime, resourceArn, action)
 						if err != nil {
 							return nil, err
 						}
@@ -181,6 +242,22 @@ type mqlAwsRdsDbinstanceInternal struct {
 	securityGroupIdHandler
 	cacheSubnets *rds_types.DBSubnetGroup
 	region       string
+}
+
+func newMqlAwsParameterGroup(runtime *plugin.Runtime, region string, parameterGroup rds_types.DBParameterGroup) (*mqlAwsRdsParameterGroup, error) {
+	resource, err := CreateResource(runtime, "aws.rds.parameterGroup",
+		map[string]*llx.RawData{
+			"arn":         llx.StringDataPtr(parameterGroup.DBParameterGroupArn),
+			"family":      llx.StringDataPtr(parameterGroup.DBParameterGroupFamily),
+			"name":        llx.StringDataPtr(parameterGroup.DBParameterGroupName),
+			"description": llx.StringDataPtr(parameterGroup.Description),
+			"region":      llx.StringData(region),
+		})
+	if err != nil {
+		return nil, err
+	}
+	mqlParameterGroup := resource.(*mqlAwsRdsParameterGroup)
+	return mqlParameterGroup, nil
 }
 
 func newMqlAwsRdsInstance(runtime *plugin.Runtime, region string, accountID string, dbInstance rds_types.DBInstance) (*mqlAwsRdsDbinstance, error) {
@@ -407,7 +484,7 @@ func (a *mqlAwsRdsDbinstance) pendingMaintenanceActions() ([]interface{}, error)
 			}
 			for _, action := range resp.PendingMaintenanceActionDetails {
 				resourceArn := *resp.ResourceIdentifier
-				mqlDbSnapshot, err := newMqlAwsPendingMaintenanceAction(a.MqlRuntime, region, resourceArn, action)
+				mqlDbSnapshot, err := newMqlAwsPendingMaintenanceAction(a.MqlRuntime, resourceArn, action)
 				if err != nil {
 					return nil, err
 				}
@@ -423,7 +500,7 @@ func (a *mqlAwsRdsDbinstance) pendingMaintenanceActions() ([]interface{}, error)
 }
 
 // newMqlAwsPendingMaintenanceAction creates a new mqlAwsRdsPendingMaintenanceActions from a rds_types.PendingMaintenanceAction
-func newMqlAwsPendingMaintenanceAction(runtime *plugin.Runtime, region string, resourceArn string, maintenanceAction rds_types.PendingMaintenanceAction) (*mqlAwsRdsPendingMaintenanceAction, error) {
+func newMqlAwsPendingMaintenanceAction(runtime *plugin.Runtime, resourceArn string, maintenanceAction rds_types.PendingMaintenanceAction) (*mqlAwsRdsPendingMaintenanceAction, error) {
 	action := ""
 	if maintenanceAction.Action != nil {
 		action = *maintenanceAction.Action
@@ -603,6 +680,7 @@ func newMqlAwsRdsCluster(runtime *plugin.Runtime, region string, accountID strin
 			"preferredBackupWindow":      llx.StringDataPtr(cluster.PreferredBackupWindow),
 			"preferredMaintenanceWindow": llx.StringDataPtr(cluster.PreferredMaintenanceWindow),
 			"publiclyAccessible":         llx.BoolDataPtr(cluster.PubliclyAccessible),
+			"parameterGroupName":         llx.StringDataPtr(cluster.DBClusterParameterGroup),
 			"region":                     llx.StringData(region),
 			"status":                     llx.StringDataPtr(cluster.Status),
 			"storageAllocated":           llx.IntDataDefault(cluster.AllocatedStorage, 0),
