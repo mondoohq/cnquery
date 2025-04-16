@@ -19,14 +19,10 @@ type collector[R any] struct {
 
 func (c *collector[R]) start() {
 	go func() {
-		for {
-			select {
-			case result := <-c.resultsCh:
-				c.read.Lock()
-				c.results = append(c.results, result)
-				c.read.Unlock()
-			}
-
+		for result := range c.resultsCh {
+			c.read.Lock()
+			c.results = append(c.results, result)
+			c.read.Unlock()
 			atomic.AddInt64(&c.requestsRead, 1)
 		}
 	}()

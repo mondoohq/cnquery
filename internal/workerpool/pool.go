@@ -112,6 +112,7 @@ func (p *Pool[R]) GettErrors() []error {
 func (p *Pool[R]) Close() {
 	p.Wait()
 	close(p.queueCh)
+	close(p.resultsCh)
 }
 
 // Wait waits until all tasks have been processed.

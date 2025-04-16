@@ -12,7 +12,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.com/cnquery/v11/internal/workerpool"
+	"go.uber.org/goleak"
 )
+
+func TestMain(m *testing.M) {
+	// verify that we are not leaking goroutines
+	goleak.VerifyTestMain(m)
+}
 
 func TestPoolSubmitAndRetrieveResult(t *testing.T) {
 	pool := workerpool.New[int](2)
