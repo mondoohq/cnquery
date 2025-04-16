@@ -96,7 +96,6 @@ func (a *mqlAwsRds) getParameterGroups(conn *connection.AwsConnection) []*jobpoo
 					return nil, err
 				}
 				for _, dbParameterGroup := range DBParameterGroups.DBParameterGroups {
-
 					mqlParameterGroup, err := newMqlAwsParameterGroup(a.MqlRuntime, region, dbParameterGroup)
 					if err != nil {
 						return nil, err
