@@ -12,7 +12,22 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/goleak"
 )
+
+func TestMain(m *testing.M) {
+	// verify that we are not leaking goroutines
+	goleak.VerifyTestMain(m)
+}
+
+// Test that if a new Memoizer is created but NOT used, it doesn't create
+// unnecessary resources.
+func TestNewMemoizerUnused(t *testing.T) {
+	cache := NewMemoizer(time.Second, time.Minute)
+	assert.NotNil(t, cache)
+	// we do not call Flush on purpose, it is not needed since the cache
+	// was never used, and no resources were allocated
+}
 
 // TestBasic adopts the code from readme.md into a simple test case
 func TestBasic(t *testing.T) {
@@ -43,6 +58,24 @@ func TestBasic(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, result.(int), 2)
 	assert.False(t, cached)
+
+	// call flush
+	cache.Flush()
+
+	// After flush, expect a new cache, so we call and cache
+	result, err, cached = cache.Memoize("key1", expensive)
+	assert.NoError(t, err)
+	assert.Equal(t, result.(int), 3)
+	assert.False(t, cached)
+	// Second after flush is cached, so it doesn't get called
+	result, err, cached = cache.Memoize("key1", expensive)
+	assert.NoError(t, err)
+	assert.Equal(t, result.(int), 3)
+	assert.True(t, cached)
+
+	// callers need to flush to remove leftover resources
+	cache.Flush()
+
 }
 
 // TestFailure checks that failed function values are not cached
@@ -79,4 +112,7 @@ func TestFailure(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, result.(int), 2)
 	assert.True(t, cached)
+
+	// callers need to flush to remove leftover resources
+	cache.Flush()
 }
