@@ -266,6 +266,10 @@ func init() {
 			// to override args, implement: initGcpProjectGkeServiceClusterNodepool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectGkeServiceClusterNodepool,
 		},
+		"gcp.project.gkeService.cluster.nodepool.autoscaling": {
+			// to override args, implement: initGcpProjectGkeServiceClusterNodepoolAutoscaling(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectGkeServiceClusterNodepoolAutoscaling,
+		},
 		"gcp.project.gkeService.cluster.nodepool.networkConfig": {
 			// to override args, implement: initGcpProjectGkeServiceClusterNodepoolNetworkConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectGkeServiceClusterNodepoolNetworkConfig,
@@ -2814,6 +2818,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.gkeService.cluster.nodepool.management": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceClusterNodepool).GetManagement()).ToDataRes(types.Dict)
+	},
+	"gcp.project.gkeService.cluster.nodepool.autoscaling": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterNodepool).GetAutoscaling()).ToDataRes(types.Resource("gcp.project.gkeService.cluster.nodepool.autoscaling"))
+	},
+	"gcp.project.gkeService.cluster.nodepool.autoscaling.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.gkeService.cluster.nodepool.autoscaling.minNodeCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling).GetMinNodeCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.gkeService.cluster.nodepool.autoscaling.maxNodeCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling).GetMaxNodeCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.gkeService.cluster.nodepool.autoscaling.autoprovisioned": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling).GetAutoprovisioned()).ToDataRes(types.Bool)
+	},
+	"gcp.project.gkeService.cluster.nodepool.autoscaling.totalMinNodeCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling).GetTotalMinNodeCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.gkeService.cluster.nodepool.autoscaling.totalMaxNodeCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling).GetTotalMaxNodeCount()).ToDataRes(types.Int)
 	},
 	"gcp.project.gkeService.cluster.nodepool.networkConfig.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceClusterNodepoolNetworkConfig).GetId()).ToDataRes(types.String)
@@ -7477,6 +7502,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"gcp.project.gkeService.cluster.nodepool.management": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceClusterNodepool).Management, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.nodepool.autoscaling": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterNodepool).Autoscaling, ok = plugin.RawToTValue[*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.nodepool.autoscaling.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling).__id, ok = v.Value.(string)
+			return
+		},
+	"gcp.project.gkeService.cluster.nodepool.autoscaling.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.nodepool.autoscaling.minNodeCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling).MinNodeCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.nodepool.autoscaling.maxNodeCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling).MaxNodeCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.nodepool.autoscaling.autoprovisioned": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling).Autoprovisioned, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.nodepool.autoscaling.totalMinNodeCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling).TotalMinNodeCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.nodepool.autoscaling.totalMaxNodeCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling).TotalMaxNodeCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"gcp.project.gkeService.cluster.nodepool.networkConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16906,6 +16963,7 @@ type mqlGcpProjectGkeServiceClusterNodepool struct {
 	InstanceGroupUrls plugin.TValue[[]interface{}]
 	Status plugin.TValue[string]
 	Management plugin.TValue[interface{}]
+	Autoscaling plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling]
 }
 
 // createGcpProjectGkeServiceClusterNodepool creates a new instance of this resource
@@ -16983,6 +17041,79 @@ func (c *mqlGcpProjectGkeServiceClusterNodepool) GetStatus() *plugin.TValue[stri
 
 func (c *mqlGcpProjectGkeServiceClusterNodepool) GetManagement() *plugin.TValue[interface{}] {
 	return &c.Management
+}
+
+func (c *mqlGcpProjectGkeServiceClusterNodepool) GetAutoscaling() *plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling] {
+	return &c.Autoscaling
+}
+
+// mqlGcpProjectGkeServiceClusterNodepoolAutoscaling for the gcp.project.gkeService.cluster.nodepool.autoscaling resource
+type mqlGcpProjectGkeServiceClusterNodepoolAutoscaling struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlGcpProjectGkeServiceClusterNodepoolAutoscalingInternal it will be used here
+	Enabled plugin.TValue[bool]
+	MinNodeCount plugin.TValue[int64]
+	MaxNodeCount plugin.TValue[int64]
+	Autoprovisioned plugin.TValue[bool]
+	TotalMinNodeCount plugin.TValue[int64]
+	TotalMaxNodeCount plugin.TValue[int64]
+}
+
+// createGcpProjectGkeServiceClusterNodepoolAutoscaling creates a new instance of this resource
+func createGcpProjectGkeServiceClusterNodepoolAutoscaling(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectGkeServiceClusterNodepoolAutoscaling{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.gkeService.cluster.nodepool.autoscaling", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectGkeServiceClusterNodepoolAutoscaling) MqlName() string {
+	return "gcp.project.gkeService.cluster.nodepool.autoscaling"
+}
+
+func (c *mqlGcpProjectGkeServiceClusterNodepoolAutoscaling) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectGkeServiceClusterNodepoolAutoscaling) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlGcpProjectGkeServiceClusterNodepoolAutoscaling) GetMinNodeCount() *plugin.TValue[int64] {
+	return &c.MinNodeCount
+}
+
+func (c *mqlGcpProjectGkeServiceClusterNodepoolAutoscaling) GetMaxNodeCount() *plugin.TValue[int64] {
+	return &c.MaxNodeCount
+}
+
+func (c *mqlGcpProjectGkeServiceClusterNodepoolAutoscaling) GetAutoprovisioned() *plugin.TValue[bool] {
+	return &c.Autoprovisioned
+}
+
+func (c *mqlGcpProjectGkeServiceClusterNodepoolAutoscaling) GetTotalMinNodeCount() *plugin.TValue[int64] {
+	return &c.TotalMinNodeCount
+}
+
+func (c *mqlGcpProjectGkeServiceClusterNodepoolAutoscaling) GetTotalMaxNodeCount() *plugin.TValue[int64] {
+	return &c.TotalMaxNodeCount
 }
 
 // mqlGcpProjectGkeServiceClusterNodepoolNetworkConfig for the gcp.project.gkeService.cluster.nodepool.networkConfig resource

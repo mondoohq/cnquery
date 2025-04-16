@@ -1765,6 +1765,31 @@ private gcp.project.gkeService.cluster.nodepool @defaults("name") {
   status string
   // Node management configuration
   management dict
+  // Autoscaler configuration for this NodePool
+  autoscaling gcp.project.gkeService.cluster.nodepool.autoscaling
+}
+
+private gcp.project.gkeService.cluster.nodepool.autoscaling @defaults( "enabled" ) {
+  // Is autoscaling enabled for this node pool.
+  enabled bool
+  // Minimum number of nodes for one location in the node pool. Must be greater
+  // than or equal to 0 and less than or equal to max_node_count.
+  minNodeCount int
+  // Maximum number of nodes for one location in the node pool. Must be >=
+  // min_node_count. There has to be enough quota to scale up the cluster.
+  maxNodeCount int
+  // Can this node pool be deleted automatically.
+  autoprovisioned bool
+  // Minimum number of nodes in the node pool. Must be greater than or equal
+  // to 0 and less than or equal to total_max_node_count.
+  // The total_*_node_count fields are mutually exclusive with the *_node_count
+  // fields.
+  totalMinNodeCount int
+  // Maximum number of nodes in the node pool. Must be greater than or equal to
+  // total_min_node_count. There has to be enough quota to scale up the cluster.
+  // The total_*_node_count fields are mutually exclusive with the *_node_count
+  // fields.
+  totalMaxNodeCount int
 }
 
 // Google Kubernetes Engine (GKE) node pool-Level network configuration

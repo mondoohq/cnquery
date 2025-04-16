@@ -1531,6 +1531,8 @@ resources:
       url: https://cloud.google.com/kubernetes-engine/docs/best-practices/networking
   gcp.project.gkeService.cluster.nodepool:
     fields:
+      autoscaling:
+        min_mondoo_version: 9.0.0
       config: {}
       id: {}
       initialNodeCount: {}
@@ -1549,6 +1551,19 @@ resources:
     refs:
     - title: About node pools
       url: https://cloud.google.com/kubernetes-engine/docs/concepts/node-pools
+  gcp.project.gkeService.cluster.nodepool.autoscaling:
+    fields:
+      autoprovisioned: {}
+      enabled: {}
+      maxNodeCount: {}
+      minNodeCount: {}
+      totalMaxNodeCount: {}
+      totalMinNodeCount: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - gcp
   gcp.project.gkeService.cluster.nodepool.config:
     fields:
       accelerators: {}
