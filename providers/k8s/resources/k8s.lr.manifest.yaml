@@ -167,7 +167,6 @@ resources:
         min_mondoo_version: 6.17.0
       envFrom:
         min_mondoo_version: 6.17.0
-      image: {}
       imageName:
         min_mondoo_version: 5.31.0
       imagePullPolicy: {}
@@ -304,7 +303,6 @@ resources:
       containerImage: {}
       env: {}
       envFrom: {}
-      image: {}
       imageName: {}
       imagePullPolicy: {}
       name: {}
@@ -416,7 +414,6 @@ resources:
         min_mondoo_version: 6.17.0
       envFrom:
         min_mondoo_version: 6.17.0
-      image: {}
       imageName: {}
       imagePullPolicy: {}
       name: {}
