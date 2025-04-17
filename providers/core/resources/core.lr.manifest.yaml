@@ -283,13 +283,6 @@ resources:
       cvss: {}
       stats: {}
     min_mondoo_version: 5.15.0
-  platform.virtualization:
-    docs:
-      desc: |
-        The `platform.virtualization.isContainer`is deprecated. Please use `platform.kind` or `platform.runtime` instead.
-    fields:
-      isContainer: {}
-    min_mondoo_version: 5.15.0
   port:
     fields:
       address: {}
