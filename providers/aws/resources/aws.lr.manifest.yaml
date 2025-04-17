@@ -2112,7 +2112,6 @@ resources:
         The `aws.iam.group` resource provides fields for assessing the configuration of IAM Groups. For usage, read the `aws.iam` resource documentation.
     fields:
       arn: {}
-      createDate: {}
       createdAt:
         min_mondoo_version: 9.0.0
       id: {}
@@ -2126,7 +2125,6 @@ resources:
   aws.iam.instanceProfile:
     fields:
       arn: {}
-      createDate: {}
       createdAt: {}
       iamRoles: {}
       instanceProfileId: {}
@@ -2155,7 +2153,6 @@ resources:
       attachedRoles: {}
       attachedUsers: {}
       attachmentCount: {}
-      createDate: {}
       createdAt:
         min_mondoo_version: 9.0.0
       defaultVersion: {}
@@ -2179,7 +2176,6 @@ resources:
         The `aws.iam.policyversion` resource provides fields for assessing the metadata for IAM Policy versions. For usage, read the `aws.iam` resource documentation.
     fields:
       arn: {}
-      createDate: {}
       createdAt:
         min_mondoo_version: 9.0.0
       document: {}
@@ -2197,7 +2193,6 @@ resources:
     fields:
       arn: {}
       assumeRolePolicyDocument: {}
-      createDate: {}
       createdAt:
         min_mondoo_version: 9.0.0
       description: {}
@@ -2217,7 +2212,6 @@ resources:
       accessKeys: {}
       arn: {}
       attachedPolicies: {}
-      createDate: {}
       createdAt:
         min_mondoo_version: 9.0.0
       groups: {}
