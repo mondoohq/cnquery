@@ -2625,9 +2625,27 @@ resources:
       family: {}
       id: {}
       name: {}
+      parameters: {}
       region:
         min_mondoo_version: 9.0.0
     min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - aws
+  aws.rds.parameterGroup.parameter:
+    fields:
+      allowedValues: {}
+      applyMethod: {}
+      applyType: {}
+      dataType: {}
+      description: {}
+      isModifiable: {}
+      minimumEngineVersion: {}
+      name: {}
+      source: {}
+      supportedEngineModes: {}
+      value: {}
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - aws

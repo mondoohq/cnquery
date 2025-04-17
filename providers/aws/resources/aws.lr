@@ -2342,6 +2342,33 @@ aws.rds.parameterGroup @defaults("name family region") {
   description string
   // Region of the paramaters
   region string
+  // The Parameters of the group
+  parameters() []aws.rds.parameterGroup.parameter
+}
+
+aws.rds.parameterGroup.parameter @defaults("name value") {
+  // Specifies the valid range of values for the parameter.
+	allowedValues string
+	// Indicates when to apply parameter updates.
+	applyMethod string
+	// Specifies the engine specific parameters type.
+	applyType string
+	// Specifies the valid data type for the parameter.
+	dataType string
+	// Provides a description of the parameter.
+	description string
+	// being changed.
+	isModifiable bool
+	// The earliest engine version to which the parameter can apply.
+	minimumEngineVersion string
+	// The name of the parameter.
+	name string
+	// The value of the parameter.
+	value string
+	// The source of the parameter value.
+	source string
+	// The valid DB engine modes.
+	supportedEngineModes []string
 }
 
 

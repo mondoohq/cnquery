@@ -542,6 +542,10 @@ func init() {
 			// to override args, implement: initAwsRdsParameterGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsRdsParameterGroup,
 		},
+		"aws.rds.parameterGroup.parameter": {
+			// to override args, implement: initAwsRdsParameterGroupParameter(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsRdsParameterGroupParameter,
+		},
 		"aws.elasticache": {
 			// to override args, implement: initAwsElasticache(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsElasticache,
@@ -3542,6 +3546,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.rds.parameterGroup.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsParameterGroup).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.rds.parameterGroup.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsParameterGroup).GetParameters()).ToDataRes(types.Array(types.Resource("aws.rds.parameterGroup.parameter")))
+	},
+	"aws.rds.parameterGroup.parameter.allowedValues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsParameterGroupParameter).GetAllowedValues()).ToDataRes(types.String)
+	},
+	"aws.rds.parameterGroup.parameter.applyMethod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsParameterGroupParameter).GetApplyMethod()).ToDataRes(types.String)
+	},
+	"aws.rds.parameterGroup.parameter.applyType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsParameterGroupParameter).GetApplyType()).ToDataRes(types.String)
+	},
+	"aws.rds.parameterGroup.parameter.dataType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsParameterGroupParameter).GetDataType()).ToDataRes(types.String)
+	},
+	"aws.rds.parameterGroup.parameter.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsParameterGroupParameter).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.rds.parameterGroup.parameter.isModifiable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsParameterGroupParameter).GetIsModifiable()).ToDataRes(types.Bool)
+	},
+	"aws.rds.parameterGroup.parameter.minimumEngineVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsParameterGroupParameter).GetMinimumEngineVersion()).ToDataRes(types.String)
+	},
+	"aws.rds.parameterGroup.parameter.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsParameterGroupParameter).GetName()).ToDataRes(types.String)
+	},
+	"aws.rds.parameterGroup.parameter.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsParameterGroupParameter).GetValue()).ToDataRes(types.String)
+	},
+	"aws.rds.parameterGroup.parameter.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsParameterGroupParameter).GetSource()).ToDataRes(types.String)
+	},
+	"aws.rds.parameterGroup.parameter.supportedEngineModes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsParameterGroupParameter).GetSupportedEngineModes()).ToDataRes(types.Array(types.String))
 	},
 	"aws.elasticache.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticache).GetClusters()).ToDataRes(types.Array(types.Dict))
@@ -9209,6 +9249,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.rds.parameterGroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsParameterGroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.parameterGroup.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsParameterGroup).Parameters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.rds.parameterGroup.parameter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsRdsParameterGroupParameter).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.rds.parameterGroup.parameter.allowedValues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsParameterGroupParameter).AllowedValues, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.parameterGroup.parameter.applyMethod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsParameterGroupParameter).ApplyMethod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.parameterGroup.parameter.applyType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsParameterGroupParameter).ApplyType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.parameterGroup.parameter.dataType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsParameterGroupParameter).DataType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.parameterGroup.parameter.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsParameterGroupParameter).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.parameterGroup.parameter.isModifiable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsParameterGroupParameter).IsModifiable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.rds.parameterGroup.parameter.minimumEngineVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsParameterGroupParameter).MinimumEngineVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.parameterGroup.parameter.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsParameterGroupParameter).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.parameterGroup.parameter.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsParameterGroupParameter).Value, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.parameterGroup.parameter.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsParameterGroupParameter).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.parameterGroup.parameter.supportedEngineModes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsParameterGroupParameter).SupportedEngineModes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"aws.elasticache.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -23251,6 +23343,7 @@ type mqlAwsRdsParameterGroup struct {
 	Name plugin.TValue[string]
 	Description plugin.TValue[string]
 	Region plugin.TValue[string]
+	Parameters plugin.TValue[[]interface{}]
 }
 
 // createAwsRdsParameterGroup creates a new instance of this resource
@@ -23303,6 +23396,116 @@ func (c *mqlAwsRdsParameterGroup) GetDescription() *plugin.TValue[string] {
 
 func (c *mqlAwsRdsParameterGroup) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+func (c *mqlAwsRdsParameterGroup) GetParameters() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Parameters, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.parameterGroup", c.__id, "parameters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.parameters()
+	})
+}
+
+// mqlAwsRdsParameterGroupParameter for the aws.rds.parameterGroup.parameter resource
+type mqlAwsRdsParameterGroupParameter struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsRdsParameterGroupParameterInternal it will be used here
+	AllowedValues plugin.TValue[string]
+	ApplyMethod plugin.TValue[string]
+	ApplyType plugin.TValue[string]
+	DataType plugin.TValue[string]
+	Description plugin.TValue[string]
+	IsModifiable plugin.TValue[bool]
+	MinimumEngineVersion plugin.TValue[string]
+	Name plugin.TValue[string]
+	Value plugin.TValue[string]
+	Source plugin.TValue[string]
+	SupportedEngineModes plugin.TValue[[]interface{}]
+}
+
+// createAwsRdsParameterGroupParameter creates a new instance of this resource
+func createAwsRdsParameterGroupParameter(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRdsParameterGroupParameter{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.rds.parameterGroup.parameter", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRdsParameterGroupParameter) MqlName() string {
+	return "aws.rds.parameterGroup.parameter"
+}
+
+func (c *mqlAwsRdsParameterGroupParameter) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRdsParameterGroupParameter) GetAllowedValues() *plugin.TValue[string] {
+	return &c.AllowedValues
+}
+
+func (c *mqlAwsRdsParameterGroupParameter) GetApplyMethod() *plugin.TValue[string] {
+	return &c.ApplyMethod
+}
+
+func (c *mqlAwsRdsParameterGroupParameter) GetApplyType() *plugin.TValue[string] {
+	return &c.ApplyType
+}
+
+func (c *mqlAwsRdsParameterGroupParameter) GetDataType() *plugin.TValue[string] {
+	return &c.DataType
+}
+
+func (c *mqlAwsRdsParameterGroupParameter) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsRdsParameterGroupParameter) GetIsModifiable() *plugin.TValue[bool] {
+	return &c.IsModifiable
+}
+
+func (c *mqlAwsRdsParameterGroupParameter) GetMinimumEngineVersion() *plugin.TValue[string] {
+	return &c.MinimumEngineVersion
+}
+
+func (c *mqlAwsRdsParameterGroupParameter) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsRdsParameterGroupParameter) GetValue() *plugin.TValue[string] {
+	return &c.Value
+}
+
+func (c *mqlAwsRdsParameterGroupParameter) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlAwsRdsParameterGroupParameter) GetSupportedEngineModes() *plugin.TValue[[]interface{}] {
+	return &c.SupportedEngineModes
 }
 
 // mqlAwsElasticache for the aws.elasticache resource

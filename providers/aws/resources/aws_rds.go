@@ -260,6 +260,67 @@ func newMqlAwsParameterGroup(runtime *plugin.Runtime, region string, parameterGr
 	return mqlParameterGroup, nil
 }
 
+func (a *mqlAwsRdsParameterGroup) parameters() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []interface{}{}
+	svc := conn.Rds(a.Region.Data)
+	ctx := context.Background()
+
+	var marker *string
+	for {
+		parameters, err := svc.DescribeDBParameters(ctx, &rds.DescribeDBParametersInput{
+			DBParameterGroupName: &a.Name.Data,
+			Marker:               marker,
+		})
+		if err != nil {
+			return nil, err
+		}
+		for _, parameter := range parameters.Parameters {
+			log.Debug().Msgf("rds>getParameterGroup>parameters %s", *parameter.ParameterName)
+		}
+		for _, parameter := range parameters.Parameters {
+			mqlParameter, err := newMqlAwsRdsParameterGroupParameter(a.MqlRuntime, parameter)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlParameter)
+		}
+		if parameters.Marker == nil {
+			break
+		}
+		marker = parameters.Marker
+	}
+	return res, nil
+}
+
+func newMqlAwsRdsParameterGroupParameter(runtime *plugin.Runtime, parameter rds_types.Parameter) (*mqlAwsRdsParameterGroupParameter, error) {
+	engineModes := []interface{}{}
+	for _, engineMode := range parameter.SupportedEngineModes {
+		engineModes = append(engineModes, engineMode)
+	}
+
+	resource, err := CreateResource(runtime, "aws.rds.parameterGroup.parameter",
+		map[string]*llx.RawData{
+			"__id":                 llx.StringDataPtr(parameter.ParameterName),
+			"name":                 llx.StringDataPtr(parameter.ParameterName),
+			"value":                llx.StringDataPtr(parameter.ParameterValue),
+			"allowedValues":        llx.StringDataPtr(parameter.AllowedValues),
+			"applyType":            llx.StringDataPtr(parameter.ApplyType),
+			"applyMethod":          llx.StringData(string(parameter.ApplyMethod)),
+			"dataType":             llx.StringDataPtr(parameter.DataType),
+			"description":          llx.StringDataPtr(parameter.Description),
+			"isModifiable":         llx.BoolDataPtr(parameter.IsModifiable),
+			"source":               llx.StringDataPtr(parameter.Source),
+			"minimumEngineVersion": llx.StringDataPtr(parameter.MinimumEngineVersion),
+			"supportedEngineModes": llx.ArrayData(engineModes, types.String),
+		})
+	if err != nil {
+		return nil, err
+	}
+	mqlParameter := resource.(*mqlAwsRdsParameterGroupParameter)
+	return mqlParameter, nil
+}
+
 func newMqlAwsRdsInstance(runtime *plugin.Runtime, region string, accountID string, dbInstance rds_types.DBInstance) (*mqlAwsRdsDbinstance, error) {
 	stringSliceInterface := []interface{}{}
 	for _, logExport := range dbInstance.EnabledCloudwatchLogsExports {
