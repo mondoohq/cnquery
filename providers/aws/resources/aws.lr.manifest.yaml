@@ -2505,8 +2505,6 @@ resources:
         min_mondoo_version: 9.0.0
       clusters:
         min_mondoo_version: 9.0.0
-      dbClusters: {}
-      dbInstances: {}
       instances:
         min_mondoo_version: 9.0.0
       parameterGroups:
@@ -2519,11 +2517,11 @@ resources:
     - title: Security in Amazon RDS
       url: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.html
     snippets:
-    - query: aws.rds.dbInstances.all(snapshots.length > 0)
+    - query: aws.rds.instances.all(snapshots.length > 0)
       title: Check whether RDS DB instances have backups enabled
-    - query: aws.rds.dbInstances.all(multiAZ == true)
+    - query: aws.rds.instances.all(multiAZ == true)
       title: Check whether high availability is enabled for all rds instances
-    - query: aws.rds.dbClusters { snapshots.where( encrypted == false) } { arn region
+    - query: aws.rds.clusters { snapshots.where( encrypted == false) } { arn region
         id }
       title: Return a list of RDS Clusters across all regions where snapshots are
         not encrypted and return the `arn` `region` and `id` for the cluster
