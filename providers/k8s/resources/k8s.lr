@@ -347,8 +347,6 @@ private k8s.container @defaults("name") {
   name string
   // Container image name
   imageName string
-  // Deprecated; use `imageName` instead
-  image string
   // Container image
   containerImage() os.container.image
   // Entry point array
@@ -387,8 +385,6 @@ private k8s.initContainer @defaults("name") {
   name string
   // Container image name
   imageName string
-  // Deprecated. Use `imageName` instead.
-  image string
   // Container image
   containerImage() os.container.image
   // Entrypoint array
@@ -423,8 +419,6 @@ private k8s.ephemeralContainer @defaults("name") {
   name string
   // Container image name
   imageName string
-  // Deprecated; use `imageName` instead
-  image string
   // Container image
   containerImage() os.container.image
   // Entry point array

@@ -86,7 +86,6 @@ func getContainers(
 			"uid":             llx.StringData(id + "/" + c.Name), // container names are unique within a resource
 			"name":            llx.StringData(c.Name),
 			"imageName":       llx.StringData(c.Image),
-			"image":           llx.StringData(c.Image), // deprecated, will be replaced with the containerImage going forward
 			"command":         llx.ArrayData(convert.SliceAnyToInterface(c.Command), types.String),
 			"args":            llx.ArrayData(convert.SliceAnyToInterface(c.Args), types.String),
 			"volumeMounts":    llx.ArrayData(volumeMounts, types.Dict),
