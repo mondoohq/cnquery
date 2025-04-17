@@ -1697,9 +1697,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.iam.usercredentialreportentry.user": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUsercredentialreportentry).GetUser()).ToDataRes(types.Resource("aws.iam.user"))
 	},
-	"aws.iam.usercredentialreportentry.userCreationTime": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamUsercredentialreportentry).GetUserCreationTime()).ToDataRes(types.Time)
-	},
 	"aws.iam.usercredentialreportentry.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUsercredentialreportentry).GetCreatedAt()).ToDataRes(types.Time)
 	},
@@ -1711,9 +1708,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.iam.user.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUser).GetName()).ToDataRes(types.String)
-	},
-	"aws.iam.user.createDate": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamUser).GetCreateDate()).ToDataRes(types.Time)
 	},
 	"aws.iam.user.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUser).GetCreatedAt()).ToDataRes(types.Time)
@@ -1742,9 +1736,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.iam.instanceProfile.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamInstanceProfile).GetArn()).ToDataRes(types.String)
 	},
-	"aws.iam.instanceProfile.createDate": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamInstanceProfile).GetCreateDate()).ToDataRes(types.Time)
-	},
 	"aws.iam.instanceProfile.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamInstanceProfile).GetCreatedAt()).ToDataRes(types.Time)
 	},
@@ -1766,9 +1757,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.iam.policy.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamPolicy).GetArn()).ToDataRes(types.String)
 	},
-	"aws.iam.policy.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamPolicy).GetId()).ToDataRes(types.String)
-	},
 	"aws.iam.policy.policyId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamPolicy).GetPolicyId()).ToDataRes(types.String)
 	},
@@ -1783,9 +1771,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.iam.policy.attachmentCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamPolicy).GetAttachmentCount()).ToDataRes(types.Int)
-	},
-	"aws.iam.policy.createDate": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamPolicy).GetCreateDate()).ToDataRes(types.Time)
 	},
 	"aws.iam.policy.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamPolicy).GetCreatedAt()).ToDataRes(types.Time)
@@ -1823,9 +1808,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.iam.policyversion.document": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamPolicyversion).GetDocument()).ToDataRes(types.Dict)
 	},
-	"aws.iam.policyversion.createDate": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamPolicyversion).GetCreateDate()).ToDataRes(types.Time)
-	},
 	"aws.iam.policyversion.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamPolicyversion).GetCreatedAt()).ToDataRes(types.Time)
 	},
@@ -1844,9 +1826,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.iam.role.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamRole).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
-	"aws.iam.role.createDate": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamRole).GetCreateDate()).ToDataRes(types.Time)
-	},
 	"aws.iam.role.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamRole).GetCreatedAt()).ToDataRes(types.Time)
 	},
@@ -1861,9 +1840,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.iam.group.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamGroup).GetName()).ToDataRes(types.String)
-	},
-	"aws.iam.group.createDate": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamGroup).GetCreateDate()).ToDataRes(types.Time)
 	},
 	"aws.iam.group.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamGroup).GetCreatedAt()).ToDataRes(types.Time)
@@ -6476,10 +6452,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsIamUsercredentialreportentry).User, ok = plugin.RawToTValue[*mqlAwsIamUser](v.Value, v.Error)
 		return
 	},
-	"aws.iam.usercredentialreportentry.userCreationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamUsercredentialreportentry).UserCreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
-		return
-	},
 	"aws.iam.usercredentialreportentry.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamUsercredentialreportentry).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -6498,10 +6470,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.iam.user.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamUser).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.iam.user.createDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamUser).CreateDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.iam.user.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6544,10 +6512,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsIamInstanceProfile).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.iam.instanceProfile.createDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamInstanceProfile).CreateDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
-		return
-	},
 	"aws.iam.instanceProfile.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamInstanceProfile).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -6584,10 +6548,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsIamPolicy).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.iam.policy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"aws.iam.policy.policyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamPolicy).PolicyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -6606,10 +6566,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.iam.policy.attachmentCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamPolicy).AttachmentCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"aws.iam.policy.createDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamPolicy).CreateDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.iam.policy.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6664,10 +6620,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsIamPolicyversion).Document, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
-	"aws.iam.policyversion.createDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamPolicyversion).CreateDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
-		return
-	},
 	"aws.iam.policyversion.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamPolicyversion).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -6696,10 +6648,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsIamRole).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
 		return
 	},
-	"aws.iam.role.createDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamRole).CreateDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
-		return
-	},
 	"aws.iam.role.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamRole).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -6722,10 +6670,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.iam.group.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.iam.group.createDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamGroup).CreateDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.iam.group.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15421,7 +15365,6 @@ type mqlAwsIamUsercredentialreportentry struct {
 	PasswordLastUsed plugin.TValue[*time.Time]
 	PasswordNextRotation plugin.TValue[*time.Time]
 	User plugin.TValue[*mqlAwsIamUser]
-	UserCreationTime plugin.TValue[*time.Time]
 	CreatedAt plugin.TValue[*time.Time]
 }
 
@@ -15602,12 +15545,6 @@ func (c *mqlAwsIamUsercredentialreportentry) GetUser() *plugin.TValue[*mqlAwsIam
 	})
 }
 
-func (c *mqlAwsIamUsercredentialreportentry) GetUserCreationTime() *plugin.TValue[*time.Time] {
-	return plugin.GetOrCompute[*time.Time](&c.UserCreationTime, func() (*time.Time, error) {
-		return c.userCreationTime()
-	})
-}
-
 func (c *mqlAwsIamUsercredentialreportentry) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
 		return c.createdAt()
@@ -15622,7 +15559,6 @@ type mqlAwsIamUser struct {
 	Arn plugin.TValue[string]
 	Id plugin.TValue[string]
 	Name plugin.TValue[string]
-	CreateDate plugin.TValue[*time.Time]
 	CreatedAt plugin.TValue[*time.Time]
 	PasswordLastUsed plugin.TValue[*time.Time]
 	Tags plugin.TValue[map[string]interface{}]
@@ -15680,10 +15616,6 @@ func (c *mqlAwsIamUser) GetId() *plugin.TValue[string] {
 
 func (c *mqlAwsIamUser) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlAwsIamUser) GetCreateDate() *plugin.TValue[*time.Time] {
-	return &c.CreateDate
 }
 
 func (c *mqlAwsIamUser) GetCreatedAt() *plugin.TValue[*time.Time] {
@@ -15754,7 +15686,6 @@ type mqlAwsIamInstanceProfile struct {
 	__id string
 	mqlAwsIamInstanceProfileInternal
 	Arn plugin.TValue[string]
-	CreateDate plugin.TValue[*time.Time]
 	CreatedAt plugin.TValue[*time.Time]
 	InstanceProfileId plugin.TValue[string]
 	InstanceProfileName plugin.TValue[string]
@@ -15801,10 +15732,6 @@ func (c *mqlAwsIamInstanceProfile) MqlID() string {
 
 func (c *mqlAwsIamInstanceProfile) GetArn() *plugin.TValue[string] {
 	return &c.Arn
-}
-
-func (c *mqlAwsIamInstanceProfile) GetCreateDate() *plugin.TValue[*time.Time] {
-	return &c.CreateDate
 }
 
 func (c *mqlAwsIamInstanceProfile) GetCreatedAt() *plugin.TValue[*time.Time] {
@@ -15889,13 +15816,11 @@ type mqlAwsIamPolicy struct {
 	__id string
 	mqlAwsIamPolicyInternal
 	Arn plugin.TValue[string]
-	Id plugin.TValue[string]
 	PolicyId plugin.TValue[string]
 	Name plugin.TValue[string]
 	Description plugin.TValue[string]
 	IsAttachable plugin.TValue[bool]
 	AttachmentCount plugin.TValue[int64]
-	CreateDate plugin.TValue[*time.Time]
 	CreatedAt plugin.TValue[*time.Time]
 	UpdateDate plugin.TValue[*time.Time]
 	Scope plugin.TValue[string]
@@ -15947,10 +15872,6 @@ func (c *mqlAwsIamPolicy) GetArn() *plugin.TValue[string] {
 	return &c.Arn
 }
 
-func (c *mqlAwsIamPolicy) GetId() *plugin.TValue[string] {
-	return &c.Id
-}
-
 func (c *mqlAwsIamPolicy) GetPolicyId() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.PolicyId, func() (string, error) {
 		return c.policyId()
@@ -15978,12 +15899,6 @@ func (c *mqlAwsIamPolicy) GetIsAttachable() *plugin.TValue[bool] {
 func (c *mqlAwsIamPolicy) GetAttachmentCount() *plugin.TValue[int64] {
 	return plugin.GetOrCompute[int64](&c.AttachmentCount, func() (int64, error) {
 		return c.attachmentCount()
-	})
-}
-
-func (c *mqlAwsIamPolicy) GetCreateDate() *plugin.TValue[*time.Time] {
-	return plugin.GetOrCompute[*time.Time](&c.CreateDate, func() (*time.Time, error) {
-		return c.createDate()
 	})
 }
 
@@ -16094,7 +16009,6 @@ type mqlAwsIamPolicyversion struct {
 	VersionId plugin.TValue[string]
 	IsDefaultVersion plugin.TValue[bool]
 	Document plugin.TValue[interface{}]
-	CreateDate plugin.TValue[*time.Time]
 	CreatedAt plugin.TValue[*time.Time]
 }
 
@@ -16153,10 +16067,6 @@ func (c *mqlAwsIamPolicyversion) GetDocument() *plugin.TValue[interface{}] {
 	})
 }
 
-func (c *mqlAwsIamPolicyversion) GetCreateDate() *plugin.TValue[*time.Time] {
-	return &c.CreateDate
-}
-
 func (c *mqlAwsIamPolicyversion) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
@@ -16171,7 +16081,6 @@ type mqlAwsIamRole struct {
 	Name plugin.TValue[string]
 	Description plugin.TValue[string]
 	Tags plugin.TValue[map[string]interface{}]
-	CreateDate plugin.TValue[*time.Time]
 	CreatedAt plugin.TValue[*time.Time]
 	AssumeRolePolicyDocument plugin.TValue[interface{}]
 }
@@ -16233,10 +16142,6 @@ func (c *mqlAwsIamRole) GetTags() *plugin.TValue[map[string]interface{}] {
 	return &c.Tags
 }
 
-func (c *mqlAwsIamRole) GetCreateDate() *plugin.TValue[*time.Time] {
-	return &c.CreateDate
-}
-
 func (c *mqlAwsIamRole) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
@@ -16253,7 +16158,6 @@ type mqlAwsIamGroup struct {
 	Arn plugin.TValue[string]
 	Id plugin.TValue[string]
 	Name plugin.TValue[string]
-	CreateDate plugin.TValue[*time.Time]
 	CreatedAt plugin.TValue[*time.Time]
 	Usernames plugin.TValue[[]interface{}]
 }
@@ -16305,10 +16209,6 @@ func (c *mqlAwsIamGroup) GetId() *plugin.TValue[string] {
 
 func (c *mqlAwsIamGroup) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlAwsIamGroup) GetCreateDate() *plugin.TValue[*time.Time] {
-	return &c.CreateDate
 }
 
 func (c *mqlAwsIamGroup) GetCreatedAt() *plugin.TValue[*time.Time] {
