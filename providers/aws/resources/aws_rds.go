@@ -30,11 +30,6 @@ func (a *mqlAwsRds) id() (string, error) {
 	return "aws.rds", nil
 }
 
-// Deprecated: use instances() instead
-func (a *mqlAwsRds) dbInstances() ([]interface{}, error) {
-	return a.instances()
-}
-
 // instances returns all RDS instances
 func (a *mqlAwsRds) instances() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
@@ -242,7 +237,7 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 	return tasks
 }
 
-// pendingMaintenanceActions returns all pending maintaince actions for all RDS instances
+// pendingMaintenanceActions returns all pending maintenance actions for all RDS instances
 func (a *mqlAwsRds) allPendingMaintenanceActions() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	res := []interface{}{}
@@ -519,7 +514,7 @@ func initAwsRdsDbcluster(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 	rds := obj.(*mqlAwsRds)
 
-	rawResources := rds.GetDbClusters()
+	rawResources := rds.GetClusters()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -557,7 +552,7 @@ func initAwsRdsDbinstance(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 	rds := obj.(*mqlAwsRds)
 
-	rawResources := rds.GetDbInstances()
+	rawResources := rds.GetInstances()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -699,11 +694,6 @@ func rdsTagsToMap(tags []rds_types.Tag) map[string]interface{} {
 	}
 
 	return tagsMap
-}
-
-// Deprecated: use clusters() instead
-func (a *mqlAwsRds) dbClusters() ([]interface{}, error) {
-	return a.clusters()
 }
 
 // clusters returns all RDS clusters
