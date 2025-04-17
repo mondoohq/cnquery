@@ -2408,6 +2408,8 @@ resources:
     fields:
       allPendingMaintenanceActions:
         min_mondoo_version: 9.0.0
+      clusterParameterGroups:
+        min_mondoo_version: 9.0.0
       clusters:
         min_mondoo_version: 9.0.0
       dbClusters: {}
@@ -2445,6 +2447,18 @@ resources:
       target: {}
       timezone: {}
     is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.rds.clusterParameterGroup:
+    fields:
+      arn: {}
+      description: {}
+      family: {}
+      name: {}
+      parameters: {}
+      region: {}
     min_mondoo_version: 9.0.0
     platform:
       name:

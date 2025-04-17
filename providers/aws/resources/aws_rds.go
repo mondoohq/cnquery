@@ -54,6 +54,23 @@ func (a *mqlAwsRds) instances() ([]interface{}, error) {
 	return res, nil
 }
 
+func (a *mqlAwsRds) clusterParameterGroups() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []interface{}{}
+	poolOfJobs := jobpool.CreatePool(a.getClusterParameterGroups(conn), 5)
+	poolOfJobs.Run()
+
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	}
+	return res, nil
+}
+
 func (a *mqlAwsRds) parameterGroups() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	res := []interface{}{}
@@ -69,6 +86,66 @@ func (a *mqlAwsRds) parameterGroups() ([]interface{}, error) {
 		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
 	}
 	return res, nil
+}
+
+func (a *mqlAwsRds) getClusterParameterGroups(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	for _, region := range regions {
+		regionVal := region
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("rds>getClusterParameterGroup>calling aws with region %s", regionVal)
+			res := []interface{}{}
+			svc := conn.Rds(regionVal)
+			ctx := context.Background()
+
+			var marker *string
+			for {
+				DBClusterParameterGroups, err := svc.DescribeDBClusterParameterGroups(ctx, &rds.DescribeDBClusterParameterGroupsInput{Marker: marker})
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, dbClusterParameterGroup := range DBClusterParameterGroups.DBClusterParameterGroups {
+					mqlParameterGroup, err := newMqlAwsRdsClusterParameterGroup(a.MqlRuntime, region, dbClusterParameterGroup)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlParameterGroup)
+				}
+				if marker == nil {
+					break
+				}
+				marker = DBClusterParameterGroups.Marker
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func newMqlAwsRdsClusterParameterGroup(runtime *plugin.Runtime, region string, parameterGroup rds_types.DBClusterParameterGroup) (*mqlAwsRdsClusterParameterGroup, error) {
+	resource, err := CreateResource(runtime, "aws.rds.clusterParameterGroup",
+		map[string]*llx.RawData{
+			"__id":        llx.StringData(fmt.Sprintf("%s/%s", *parameterGroup.DBClusterParameterGroupArn, *parameterGroup.DBClusterParameterGroupName)),
+			"arn":         llx.StringDataPtr(parameterGroup.DBClusterParameterGroupArn),
+			"family":      llx.StringDataPtr(parameterGroup.DBParameterGroupFamily),
+			"name":        llx.StringDataPtr(parameterGroup.DBClusterParameterGroupName),
+			"description": llx.StringDataPtr(parameterGroup.Description),
+			"region":      llx.StringData(region),
+		})
+	if err != nil {
+		return nil, err
+	}
+	mqlParameterGroup := resource.(*mqlAwsRdsClusterParameterGroup)
+	return mqlParameterGroup, nil
 }
 
 func (a *mqlAwsRds) getParameterGroups(conn *connection.AwsConnection) []*jobpool.Job {
@@ -260,6 +337,36 @@ func newMqlAwsParameterGroup(runtime *plugin.Runtime, region string, parameterGr
 	return mqlParameterGroup, nil
 }
 
+func (a mqlAwsRdsClusterParameterGroup) parameters() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []interface{}{}
+	svc := conn.Rds(a.Region.Data)
+	ctx := context.Background()
+
+	var marker *string
+	for {
+		parameters, err := svc.DescribeDBClusterParameters(ctx, &rds.DescribeDBClusterParametersInput{
+			DBClusterParameterGroupName: &a.Name.Data,
+			Marker:                      marker,
+		})
+		if err != nil {
+			return nil, err
+		}
+		for _, parameter := range parameters.Parameters {
+			mqlParameter, err := newMqlAwsRdsParameterGroupParameter(a.MqlRuntime, parameter)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlParameter)
+		}
+		if parameters.Marker == nil {
+			break
+		}
+		marker = parameters.Marker
+	}
+	return res, nil
+}
+
 func (a *mqlAwsRdsParameterGroup) parameters() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	res := []interface{}{}
@@ -274,9 +381,6 @@ func (a *mqlAwsRdsParameterGroup) parameters() ([]interface{}, error) {
 		})
 		if err != nil {
 			return nil, err
-		}
-		for _, parameter := range parameters.Parameters {
-			log.Debug().Msgf("rds>getParameterGroup>parameters %s", *parameter.ParameterName)
 		}
 		for _, parameter := range parameters.Parameters {
 			mqlParameter, err := newMqlAwsRdsParameterGroupParameter(a.MqlRuntime, parameter)

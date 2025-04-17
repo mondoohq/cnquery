@@ -2076,6 +2076,8 @@ aws.rds {
   allPendingMaintenanceActions() []aws.rds.pendingMaintenanceAction
   // List of all parameter groups
   parameterGroups() []aws.rds.parameterGroup
+  // List of all cluster parameter groups
+  clusterParameterGroups() []aws.rds.clusterParameterGroup
 }
 
 // Amazon RDS Backup Setting
@@ -2330,8 +2332,23 @@ private aws.rds.pendingMaintenanceAction {
   optInStatus string
 }
 
+aws.rds.clusterParameterGroup @defaults("name family region arn") {
+  // ARN for resource
+  arn string
+  // Family of the Parameter Group
+  family string
+  // Name of the Parameter Group
+  name string
+  // Description of the Parameter Group
+  description string
+  // Region of the parameters
+  region string
+  parameters() []aws.rds.parameterGroup.parameter
+}
+
+
 // Amazon RDS parameter groups
-aws.rds.parameterGroup @defaults("name family region") {
+aws.rds.parameterGroup @defaults("name family region arn") {
   // ARN for resource
   arn string
   // Family of the Parameter Group

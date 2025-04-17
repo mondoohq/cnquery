@@ -538,6 +538,10 @@ func init() {
 			// to override args, implement: initAwsRdsPendingMaintenanceAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsRdsPendingMaintenanceAction,
 		},
+		"aws.rds.clusterParameterGroup": {
+			// to override args, implement: initAwsRdsClusterParameterGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsRdsClusterParameterGroup,
+		},
 		"aws.rds.parameterGroup": {
 			// to override args, implement: initAwsRdsParameterGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsRdsParameterGroup,
@@ -3184,6 +3188,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.parameterGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRds).GetParameterGroups()).ToDataRes(types.Array(types.Resource("aws.rds.parameterGroup")))
 	},
+	"aws.rds.clusterParameterGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRds).GetClusterParameterGroups()).ToDataRes(types.Array(types.Resource("aws.rds.clusterParameterGroup")))
+	},
 	"aws.rds.backupsetting.target": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsBackupsetting).GetTarget()).ToDataRes(types.String)
 	},
@@ -3531,6 +3538,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.rds.pendingMaintenanceAction.optInStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsPendingMaintenanceAction).GetOptInStatus()).ToDataRes(types.String)
+	},
+	"aws.rds.clusterParameterGroup.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsClusterParameterGroup).GetArn()).ToDataRes(types.String)
+	},
+	"aws.rds.clusterParameterGroup.family": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsClusterParameterGroup).GetFamily()).ToDataRes(types.String)
+	},
+	"aws.rds.clusterParameterGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsClusterParameterGroup).GetName()).ToDataRes(types.String)
+	},
+	"aws.rds.clusterParameterGroup.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsClusterParameterGroup).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.rds.clusterParameterGroup.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsClusterParameterGroup).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.rds.clusterParameterGroup.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsClusterParameterGroup).GetParameters()).ToDataRes(types.Array(types.Resource("aws.rds.parameterGroup.parameter")))
 	},
 	"aws.rds.parameterGroup.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsParameterGroup).GetArn()).ToDataRes(types.String)
@@ -8743,6 +8768,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsRds).ParameterGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"aws.rds.clusterParameterGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRds).ClusterParameterGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"aws.rds.backupsetting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsRdsBackupsetting).__id, ok = v.Value.(string)
 			return
@@ -9225,6 +9254,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.rds.pendingMaintenanceAction.optInStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsPendingMaintenanceAction).OptInStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.clusterParameterGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsRdsClusterParameterGroup).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.rds.clusterParameterGroup.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsClusterParameterGroup).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.clusterParameterGroup.family": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsClusterParameterGroup).Family, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.clusterParameterGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsClusterParameterGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.clusterParameterGroup.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsClusterParameterGroup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.clusterParameterGroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsClusterParameterGroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.clusterParameterGroup.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsClusterParameterGroup).Parameters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"aws.rds.parameterGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -22293,6 +22350,7 @@ type mqlAwsRds struct {
 	Clusters plugin.TValue[[]interface{}]
 	AllPendingMaintenanceActions plugin.TValue[[]interface{}]
 	ParameterGroups plugin.TValue[[]interface{}]
+	ClusterParameterGroups plugin.TValue[[]interface{}]
 }
 
 // createAwsRds creates a new instance of this resource
@@ -22425,6 +22483,22 @@ func (c *mqlAwsRds) GetParameterGroups() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.parameterGroups()
+	})
+}
+
+func (c *mqlAwsRds) GetClusterParameterGroups() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.ClusterParameterGroups, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds", c.__id, "clusterParameterGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.clusterParameterGroups()
 	})
 }
 
@@ -23331,6 +23405,87 @@ func (c *mqlAwsRdsPendingMaintenanceAction) GetForcedApplyDate() *plugin.TValue[
 
 func (c *mqlAwsRdsPendingMaintenanceAction) GetOptInStatus() *plugin.TValue[string] {
 	return &c.OptInStatus
+}
+
+// mqlAwsRdsClusterParameterGroup for the aws.rds.clusterParameterGroup resource
+type mqlAwsRdsClusterParameterGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsRdsClusterParameterGroupInternal it will be used here
+	Arn plugin.TValue[string]
+	Family plugin.TValue[string]
+	Name plugin.TValue[string]
+	Description plugin.TValue[string]
+	Region plugin.TValue[string]
+	Parameters plugin.TValue[[]interface{}]
+}
+
+// createAwsRdsClusterParameterGroup creates a new instance of this resource
+func createAwsRdsClusterParameterGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRdsClusterParameterGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.rds.clusterParameterGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRdsClusterParameterGroup) MqlName() string {
+	return "aws.rds.clusterParameterGroup"
+}
+
+func (c *mqlAwsRdsClusterParameterGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRdsClusterParameterGroup) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsRdsClusterParameterGroup) GetFamily() *plugin.TValue[string] {
+	return &c.Family
+}
+
+func (c *mqlAwsRdsClusterParameterGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsRdsClusterParameterGroup) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsRdsClusterParameterGroup) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsRdsClusterParameterGroup) GetParameters() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Parameters, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.clusterParameterGroup", c.__id, "parameters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.parameters()
+	})
 }
 
 // mqlAwsRdsParameterGroup for the aws.rds.parameterGroup resource
