@@ -2048,12 +2048,8 @@ private aws.sqs.queue {
 
 // Amazon Relational Database Service (RDS)
 aws.rds {
-  // Deprecated: Use `instances` instead
-  dbInstances() []aws.rds.dbinstance
   // List of database instances
   instances() []aws.rds.dbinstance
-  // Deprecated: Use `clusters` instead
-  dbClusters() []aws.rds.dbcluster
   // List of RDS database clusters
   clusters() []aws.rds.dbcluster
   // List of all pending maintenance actions for the database instance
