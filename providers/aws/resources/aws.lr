@@ -2349,7 +2349,7 @@ aws.rds.parameterGroup @defaults("name family region") {
 aws.rds.parameterGroup.parameter @defaults("name value") {
   // Specifies the valid range of values for the parameter.
 	allowedValues string
-	// Indicates when to apply parameter updates.
+	// When to apply parameter updates.
 	applyMethod string
 	// Specifies the engine specific parameters type.
 	applyType string
