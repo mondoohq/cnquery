@@ -2340,7 +2340,7 @@ aws.rds.parameterGroup @defaults("name family region") {
   name string
   // Description of the Parameter Group
   description string
-  // Region of the paramaters
+  // Region of the parameters
   region string
   // The Parameters of the group
   parameters() []aws.rds.parameterGroup.parameter
