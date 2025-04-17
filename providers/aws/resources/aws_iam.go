@@ -306,7 +306,6 @@ func (a *mqlAwsIam) createInstanceProfile(instanceProfile *iamtypes.InstanceProf
 	res, err := CreateResource(a.MqlRuntime, "aws.iam.instanceProfile",
 		map[string]*llx.RawData{
 			"arn":                 llx.StringDataPtr(instanceProfile.Arn),
-			"createDate":          llx.TimeDataPtr(instanceProfile.CreateDate),
 			"createdAt":           llx.TimeDataPtr(instanceProfile.CreateDate),
 			"instanceProfileId":   llx.StringDataPtr(instanceProfile.InstanceProfileId),
 			"instanceProfileName": llx.StringDataPtr(instanceProfile.InstanceProfileName),
@@ -354,7 +353,6 @@ func (a *mqlAwsIam) createIamUser(usr *iamtypes.User) (plugin.Resource, error) {
 			"arn":              llx.StringDataPtr(usr.Arn),
 			"id":               llx.StringDataPtr(usr.UserId),
 			"name":             llx.StringDataPtr(usr.UserName),
-			"createDate":       llx.TimeDataPtr(usr.CreateDate),
 			"createdAt":        llx.TimeDataPtr(usr.CreateDate),
 			"passwordLastUsed": llx.TimeDataPtr(usr.PasswordLastUsed),
 			"tags":             llx.MapData(iamTagsToMap(usr.Tags), types.String),
@@ -544,7 +542,6 @@ func (a *mqlAwsIam) roles() ([]interface{}, error) {
 					"name":                     llx.StringDataPtr(role.RoleName),
 					"description":              llx.StringDataPtr(role.Description),
 					"tags":                     llx.MapData(iamTagsToMap(role.Tags), types.String),
-					"createDate":               llx.TimeDataPtr(role.CreateDate),
 					"createdAt":                llx.TimeDataPtr(role.CreateDate),
 					"assumeRolePolicyDocument": llx.MapData(policyDocumentMap, types.Any),
 				})
@@ -800,10 +797,6 @@ func (a *mqlAwsIamUsercredentialreportentry) createdAt() (*time.Time, error) {
 	return a.getTimeValue("user_creation_time")
 }
 
-func (a *mqlAwsIamUsercredentialreportentry) userCreationTime() (*time.Time, error) {
-	return a.getTimeValue("user_creation_time")
-}
-
 func (a *mqlAwsIamVirtualmfadevice) id() (string, error) {
 	return a.SerialNumber.Data, nil
 }
@@ -841,7 +834,6 @@ func initAwsIamUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 			args["arn"] = llx.StringDataPtr(usr.Arn)
 			args["id"] = llx.StringDataPtr(usr.UserId)
 			args["name"] = llx.StringDataPtr(usr.UserName)
-			args["createDate"] = llx.TimeDataPtr(usr.CreateDate)
 			args["createdAt"] = llx.TimeDataPtr(usr.CreateDate)
 			args["passwordLastUsed"] = llx.TimeDataPtr(usr.PasswordLastUsed)
 			args["tags"] = llx.MapData(iamTagsToMap(usr.Tags), types.String)
@@ -1044,16 +1036,6 @@ func (a *mqlAwsIamPolicy) attachmentCount() (int64, error) {
 	return int64(*policy.AttachmentCount), nil
 }
 
-func (a *mqlAwsIamPolicy) createDate() (*time.Time, error) {
-	arn := a.Arn.Data
-
-	policy, err := a.loadPolicy(arn)
-	if err != nil {
-		return nil, err
-	}
-	return policy.CreateDate, nil
-}
-
 func (a *mqlAwsIamPolicy) createdAt() (*time.Time, error) {
 	arn := a.Arn.Data
 
@@ -1234,7 +1216,6 @@ func (a *mqlAwsIamPolicy) defaultVersion() (*mqlAwsIamPolicyversion, error) {
 					"arn":              llx.StringData(arn),
 					"versionId":        llx.StringDataPtr(policyversion.VersionId),
 					"isDefaultVersion": llx.BoolData(policyversion.IsDefaultVersion),
-					"createDate":       llx.TimeDataPtr(policyversion.CreateDate),
 					"createdAt":        llx.TimeDataPtr(policyversion.CreateDate),
 				})
 			if err != nil {
@@ -1268,7 +1249,6 @@ func (a *mqlAwsIamPolicy) versions() ([]interface{}, error) {
 				"arn":              llx.StringData(arn),
 				"versionId":        llx.StringDataPtr(policyversion.VersionId),
 				"isDefaultVersion": llx.BoolData(policyversion.IsDefaultVersion),
-				"createDate":       llx.TimeDataPtr(policyversion.CreateDate),
 				"createdAt":        llx.TimeDataPtr(policyversion.CreateDate),
 			})
 		if err != nil {
@@ -1375,7 +1355,6 @@ func initAwsIamRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 		args["name"] = llx.StringDataPtr(role.RoleName)
 		args["description"] = llx.StringDataPtr(role.Description)
 		args["tags"] = llx.MapData(iamTagsToMap(role.Tags), types.String)
-		args["createDate"] = llx.TimeDataPtr(role.CreateDate)
 		args["createdAt"] = llx.TimeDataPtr(role.CreateDate)
 		args["assumeRolePolicyDocument"] = llx.MapData(policyDocumentMap, types.Any)
 		return args, nil, nil
@@ -1424,7 +1403,6 @@ func initAwsIamGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		args["arn"] = llx.StringDataPtr(grp.Arn)
 		args["id"] = llx.StringDataPtr(grp.GroupId)
 		args["name"] = llx.StringDataPtr(grp.GroupName)
-		args["createDate"] = llx.TimeDataPtr(grp.CreateDate)
 		args["createdAt"] = llx.TimeDataPtr(grp.CreateDate)
 		args["usernames"] = llx.ArrayData(usernames, types.String)
 		return args, nil, nil
@@ -1547,7 +1525,6 @@ func initAwsIamInstanceProfile(runtime *plugin.Runtime, args map[string]*llx.Raw
 		ip := resp.InstanceProfile
 		res, err := CreateResource(runtime, "aws.iam.instanceProfile", map[string]*llx.RawData{
 			"arn":                 llx.StringDataPtr(ip.Arn),
-			"createDate":          llx.TimeDataPtr(ip.CreateDate),
 			"createdAt":           llx.TimeDataPtr(ip.CreateDate),
 			"instanceProfileId":   llx.StringDataPtr(ip.InstanceProfileId),
 			"instanceProfileName": llx.StringDataPtr(ip.InstanceProfileName),
