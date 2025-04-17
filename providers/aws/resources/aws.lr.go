@@ -3162,14 +3162,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.sqs.queue.visibilityTimeoutSeconds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSqsQueue).GetVisibilityTimeoutSeconds()).ToDataRes(types.Int)
 	},
-	"aws.rds.dbInstances": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsRds).GetDbInstances()).ToDataRes(types.Array(types.Resource("aws.rds.dbinstance")))
-	},
 	"aws.rds.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRds).GetInstances()).ToDataRes(types.Array(types.Resource("aws.rds.dbinstance")))
-	},
-	"aws.rds.dbClusters": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsRds).GetDbClusters()).ToDataRes(types.Array(types.Resource("aws.rds.dbcluster")))
 	},
 	"aws.rds.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRds).GetClusters()).ToDataRes(types.Array(types.Resource("aws.rds.dbcluster")))
@@ -8851,16 +8845,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsRds).__id, ok = v.Value.(string)
 			return
 		},
-	"aws.rds.dbInstances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRds).DbInstances, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
-		return
-	},
 	"aws.rds.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRds).Instances, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
-		return
-	},
-	"aws.rds.dbClusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRds).DbClusters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"aws.rds.clusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -22619,9 +22605,7 @@ type mqlAwsRds struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsRdsInternal it will be used here
-	DbInstances plugin.TValue[[]interface{}]
 	Instances plugin.TValue[[]interface{}]
-	DbClusters plugin.TValue[[]interface{}]
 	Clusters plugin.TValue[[]interface{}]
 	AllPendingMaintenanceActions plugin.TValue[[]interface{}]
 	ParameterGroups plugin.TValue[[]interface{}]
@@ -22665,22 +22649,6 @@ func (c *mqlAwsRds) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsRds) GetDbInstances() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.DbInstances, func() ([]interface{}, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds", c.__id, "dbInstances")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.([]interface{}), nil
-			}
-		}
-
-		return c.dbInstances()
-	})
-}
-
 func (c *mqlAwsRds) GetInstances() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.Instances, func() ([]interface{}, error) {
 		if c.MqlRuntime.HasRecording {
@@ -22694,22 +22662,6 @@ func (c *mqlAwsRds) GetInstances() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.instances()
-	})
-}
-
-func (c *mqlAwsRds) GetDbClusters() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.DbClusters, func() ([]interface{}, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds", c.__id, "dbClusters")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.([]interface{}), nil
-			}
-		}
-
-		return c.dbClusters()
 	})
 }
 

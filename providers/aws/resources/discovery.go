@@ -486,7 +486,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 
 		r := res.(*mqlAwsRds)
 
-		dbs := r.GetDbInstances()
+		dbs := r.GetInstances()
 		if dbs == nil {
 			return assetList, nil
 		}
@@ -512,7 +512,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 
 		r := res.(*mqlAwsRds)
 
-		clusters := r.GetDbClusters()
+		clusters := r.GetClusters()
 		if clusters == nil {
 			return assetList, nil
 		}
