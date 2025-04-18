@@ -2755,9 +2755,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.authorizationService.roleDefinition.type": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition).GetType()).ToDataRes(types.String)
 	},
-	"azure.subscription.authorizationService.roleDefinition.isCustom": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition).GetIsCustom()).ToDataRes(types.Bool)
-	},
 	"azure.subscription.authorizationService.roleDefinition.scopes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition).GetScopes()).ToDataRes(types.Array(types.String))
 	},
@@ -6364,10 +6361,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"azure.subscription.authorizationService.roleDefinition.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"azure.subscription.authorizationService.roleDefinition.isCustom": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition).IsCustom, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.authorizationService.roleDefinition.scopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16135,7 +16128,6 @@ type mqlAzureSubscriptionAuthorizationServiceRoleDefinition struct {
 	Description plugin.TValue[string]
 	Name plugin.TValue[string]
 	Type plugin.TValue[string]
-	IsCustom plugin.TValue[bool]
 	Scopes plugin.TValue[[]interface{}]
 	Permissions plugin.TValue[[]interface{}]
 }
@@ -16186,10 +16178,6 @@ func (c *mqlAzureSubscriptionAuthorizationServiceRoleDefinition) GetName() *plug
 
 func (c *mqlAzureSubscriptionAuthorizationServiceRoleDefinition) GetType() *plugin.TValue[string] {
 	return &c.Type
-}
-
-func (c *mqlAzureSubscriptionAuthorizationServiceRoleDefinition) GetIsCustom() *plugin.TValue[bool] {
-	return &c.IsCustom
 }
 
 func (c *mqlAzureSubscriptionAuthorizationServiceRoleDefinition) GetScopes() *plugin.TValue[[]interface{}] {

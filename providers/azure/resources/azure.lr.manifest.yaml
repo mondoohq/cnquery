@@ -264,7 +264,6 @@ resources:
     fields:
       description: {}
       id: {}
-      isCustom: {}
       name: {}
       permissions: {}
       scopes: {}
@@ -328,7 +327,6 @@ resources:
     fields:
       description: {}
       id: {}
-      isCustom: {}
       name: {}
       permissions: {}
       scopes: {}
