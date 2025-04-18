@@ -1666,7 +1666,6 @@ resources:
         Use the `aws.elasticache` resource to assess the configuration of Amazon ElastiCache.
     fields:
       cacheClusters: {}
-      clusters: {}
       serverlessCaches:
         min_mondoo_version: 9.0.0
     min_mondoo_version: 5.15.0
