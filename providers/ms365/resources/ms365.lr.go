@@ -701,9 +701,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.application.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftApplication).GetName()).ToDataRes(types.String)
 	},
-	"microsoft.application.displayName": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftApplication).GetDisplayName()).ToDataRes(types.String)
-	},
 	"microsoft.application.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftApplication).GetDescription()).ToDataRes(types.String)
 	},
@@ -1127,9 +1124,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.devicemanagement.deviceconfiguration.version": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementDeviceconfiguration).GetVersion()).ToDataRes(types.Int)
 	},
-	"microsoft.devicemanagement.deviceconfiguration.properties": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftDevicemanagementDeviceconfiguration).GetProperties()).ToDataRes(types.Dict)
-	},
 	"microsoft.devicemanagement.devicecompliancepolicy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).GetId()).ToDataRes(types.String)
 	},
@@ -1150,9 +1144,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.devicemanagement.devicecompliancepolicy.assignments": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).GetAssignments()).ToDataRes(types.Array(types.Dict))
-	},
-	"microsoft.devicemanagement.devicecompliancepolicy.properties": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).GetProperties()).ToDataRes(types.Dict)
 	},
 	"ms365.exchangeonline.malwareFilterPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetMalwareFilterPolicy()).ToDataRes(types.Array(types.Dict))
@@ -2005,10 +1996,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMicrosoftApplication).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"microsoft.application.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftApplication).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"microsoft.application.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftApplication).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2637,10 +2624,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMicrosoftDevicemanagementDeviceconfiguration).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"microsoft.devicemanagement.deviceconfiguration.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftDevicemanagementDeviceconfiguration).Properties, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
-		return
-	},
 	"microsoft.devicemanagement.devicecompliancepolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).__id, ok = v.Value.(string)
 			return
@@ -2671,10 +2654,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.devicemanagement.devicecompliancepolicy.assignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).Assignments, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
-		return
-	},
-	"microsoft.devicemanagement.devicecompliancepolicy.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).Properties, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"ms365.exchangeonline.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4744,7 +4723,6 @@ type mqlMicrosoftApplication struct {
 	Id plugin.TValue[string]
 	AppId plugin.TValue[string]
 	Name plugin.TValue[string]
-	DisplayName plugin.TValue[string]
 	Description plugin.TValue[string]
 	Notes plugin.TValue[string]
 	Tags plugin.TValue[[]interface{}]
@@ -4822,10 +4800,6 @@ func (c *mqlMicrosoftApplication) GetAppId() *plugin.TValue[string] {
 
 func (c *mqlMicrosoftApplication) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlMicrosoftApplication) GetDisplayName() *plugin.TValue[string] {
-	return &c.DisplayName
 }
 
 func (c *mqlMicrosoftApplication) GetDescription() *plugin.TValue[string] {
@@ -6249,7 +6223,6 @@ type mqlMicrosoftDevicemanagementDeviceconfiguration struct {
 	Description plugin.TValue[string]
 	DisplayName plugin.TValue[string]
 	Version plugin.TValue[int64]
-	Properties plugin.TValue[interface{}]
 }
 
 // createMicrosoftDevicemanagementDeviceconfiguration creates a new instance of this resource
@@ -6313,10 +6286,6 @@ func (c *mqlMicrosoftDevicemanagementDeviceconfiguration) GetVersion() *plugin.T
 	return &c.Version
 }
 
-func (c *mqlMicrosoftDevicemanagementDeviceconfiguration) GetProperties() *plugin.TValue[interface{}] {
-	return &c.Properties
-}
-
 // mqlMicrosoftDevicemanagementDevicecompliancepolicy for the microsoft.devicemanagement.devicecompliancepolicy resource
 type mqlMicrosoftDevicemanagementDevicecompliancepolicy struct {
 	MqlRuntime *plugin.Runtime
@@ -6329,7 +6298,6 @@ type mqlMicrosoftDevicemanagementDevicecompliancepolicy struct {
 	LastModifiedDateTime plugin.TValue[*time.Time]
 	Version plugin.TValue[int64]
 	Assignments plugin.TValue[[]interface{}]
-	Properties plugin.TValue[interface{}]
 }
 
 // createMicrosoftDevicemanagementDevicecompliancepolicy creates a new instance of this resource
@@ -6395,10 +6363,6 @@ func (c *mqlMicrosoftDevicemanagementDevicecompliancepolicy) GetVersion() *plugi
 
 func (c *mqlMicrosoftDevicemanagementDevicecompliancepolicy) GetAssignments() *plugin.TValue[[]interface{}] {
 	return &c.Assignments
-}
-
-func (c *mqlMicrosoftDevicemanagementDevicecompliancepolicy) GetProperties() *plugin.TValue[interface{}] {
-	return &c.Properties
 }
 
 // mqlMs365Exchangeonline for the ms365.exchangeonline resource
