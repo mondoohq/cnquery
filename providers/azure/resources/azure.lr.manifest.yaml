@@ -15,7 +15,6 @@ resources:
     fields:
       advisor: {}
       aks: {}
-      authorization: {}
       authorizationSource: {}
       cloudDefender: {}
       compute: {}
