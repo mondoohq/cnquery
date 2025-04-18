@@ -165,7 +165,6 @@ func newMqlMicrosoftApplication(runtime *plugin.Runtime, app models.Applicationa
 			"id":                                llx.StringDataPtr(app.GetId()),
 			"appId":                             llx.StringDataPtr(app.GetAppId()),
 			"applicationTemplateId":             llx.StringDataPtr(app.GetApplicationTemplateId()),
-			"createdDateTime":                   llx.TimeDataPtr(app.GetCreatedDateTime()),
 			"createdAt":                         llx.TimeDataPtr(app.GetCreatedDateTime()),
 			"displayName":                       llx.StringDataPtr(app.GetDisplayName()),
 			"disabledByMicrosoftStatus":         llx.StringDataPtr(app.GetDisabledByMicrosoftStatus()),
