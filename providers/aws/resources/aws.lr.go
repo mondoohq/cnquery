@@ -2276,9 +2276,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.guardduty.detector.findings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGuarddutyDetector).GetFindings()).ToDataRes(types.Array(types.Resource("aws.guardduty.finding")))
 	},
-	"aws.guardduty.detector.unarchivedFindings": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsGuarddutyDetector).GetUnarchivedFindings()).ToDataRes(types.Array(types.Dict))
-	},
 	"aws.guardduty.finding.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGuarddutyFinding).GetArn()).ToDataRes(types.String)
 	},
@@ -7266,10 +7263,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.guardduty.detector.findings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsGuarddutyDetector).Findings, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
-		return
-	},
-	"aws.guardduty.detector.unarchivedFindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsGuarddutyDetector).UnarchivedFindings, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"aws.guardduty.finding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -17999,7 +17992,6 @@ type mqlAwsGuarddutyDetector struct {
 	Tags plugin.TValue[map[string]interface{}]
 	FindingPublishingFrequency plugin.TValue[string]
 	Findings plugin.TValue[[]interface{}]
-	UnarchivedFindings plugin.TValue[[]interface{}]
 }
 
 // createAwsGuarddutyDetector creates a new instance of this resource
@@ -18084,12 +18076,6 @@ func (c *mqlAwsGuarddutyDetector) GetFindings() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.findings()
-	})
-}
-
-func (c *mqlAwsGuarddutyDetector) GetUnarchivedFindings() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.UnarchivedFindings, func() ([]interface{}, error) {
-		return c.unarchivedFindings()
 	})
 }
 
