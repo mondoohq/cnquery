@@ -1954,7 +1954,7 @@ resources:
           region
           status
           findingPublishingFrequency
-          unarchivedFindings
+          findings
         }
       title: Return a list of Amazon GuardDuty Detectors along with the values for
         specified fields
@@ -1976,7 +1976,6 @@ resources:
       status: {}
       tags:
         min_mondoo_version: 9.0.0
-      unarchivedFindings: {}
     is_private: true
     min_mondoo_version: 5.15.0
     platform:
