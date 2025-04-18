@@ -107,8 +107,6 @@ microsoft.tenant @defaults("name") {
   provisionedPlans []dict
   // Deprecated: use `createdAt` instead
   createdDateTime time
-  // Deprecated: use `name` instead
-  displayName string
   // Tenant display name
   name string
   // Organization verified domains
@@ -875,8 +873,6 @@ microsoft.application @defaults("id displayName hasExpiredCredentials") {
   appId string
   // Application display name
   name string
-  // Deprecated: Use `name` instead
-  displayName string
   // Description
   description string
   // Notes

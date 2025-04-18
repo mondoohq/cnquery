@@ -592,9 +592,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.tenant.createdDateTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenant).GetCreatedDateTime()).ToDataRes(types.Time)
 	},
-	"microsoft.tenant.displayName": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftTenant).GetDisplayName()).ToDataRes(types.String)
-	},
 	"microsoft.tenant.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenant).GetName()).ToDataRes(types.String)
 	},
@@ -2561,10 +2558,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.tenant.createdDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftTenant).CreatedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
-		return
-	},
-	"microsoft.tenant.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftTenant).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.tenant.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5912,7 +5905,6 @@ type mqlMicrosoftTenant struct {
 	AssignedPlans plugin.TValue[[]interface{}]
 	ProvisionedPlans plugin.TValue[[]interface{}]
 	CreatedDateTime plugin.TValue[*time.Time]
-	DisplayName plugin.TValue[string]
 	Name plugin.TValue[string]
 	VerifiedDomains plugin.TValue[[]interface{}]
 	OnPremisesSyncEnabled plugin.TValue[bool]
@@ -5977,10 +5969,6 @@ func (c *mqlMicrosoftTenant) GetProvisionedPlans() *plugin.TValue[[]interface{}]
 
 func (c *mqlMicrosoftTenant) GetCreatedDateTime() *plugin.TValue[*time.Time] {
 	return &c.CreatedDateTime
-}
-
-func (c *mqlMicrosoftTenant) GetDisplayName() *plugin.TValue[string] {
-	return &c.DisplayName
 }
 
 func (c *mqlMicrosoftTenant) GetName() *plugin.TValue[string] {
