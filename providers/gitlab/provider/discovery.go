@@ -9,9 +9,9 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"gitlab.com/gitlab-org/api/client-go"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
-	"go.mondoo.com/cnquery/v11/providers/gitlab/connection"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/v12/providers/gitlab/connection"
 	"golang.org/x/exp/slices"
 	"google.golang.org/protobuf/proto"
 )

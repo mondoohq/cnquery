@@ -5,13 +5,14 @@ package resources
 
 import (
 	"context"
+
 	"github.com/microsoftgraph/msgraph-sdk-go/directory"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/organization"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/ms365/connection"
 )
 
 func (m *mqlMicrosoftTenant) id() (string, error) {
@@ -102,7 +103,6 @@ func newMicrosoftTenant(runtime *plugin.Runtime, org models.Organizationable) (*
 			"assignedPlans":         llx.DictData(assignedPlans),
 			"createdDateTime":       llx.TimeDataPtr(org.GetCreatedDateTime()), // deprecated
 			"name":                  llx.StringDataPtr(org.GetDisplayName()),
-			"displayName":           llx.StringDataPtr(org.GetDisplayName()), // deprecated
 			"verifiedDomains":       llx.DictData(verifiedDomains),
 			"onPremisesSyncEnabled": llx.BoolDataPtr(org.GetOnPremisesSyncEnabled()),
 			"createdAt":             llx.TimeDataPtr(org.GetCreatedDateTime()),

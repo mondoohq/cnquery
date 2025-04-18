@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"strings"
 
-	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v12/llx"
 )
 
 // newListResourceIdFromArguments generates a new __id for a list resource that has query

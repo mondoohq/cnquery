@@ -5,8 +5,8 @@ package main
 import (
 	"os"
 
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/cloudflare/provider"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/cloudflare/provider"
 )
 
 func main() {

@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 // RangePrimitive creates a range primitive from the given

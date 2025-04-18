@@ -10,7 +10,7 @@
 package proto
 
 import (
-	inventory "go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	inventory "go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"

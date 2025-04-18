@@ -9,81 +9,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	elasticache_types "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (a *mqlAwsElasticache) id() (string, error) {
 	return "aws.elasticache", nil
-}
-
-func (a *mqlAwsElasticache) clusters() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(a.getClusters(conn), 5)
-	poolOfJobs.Run()
-
-	// check for errors
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	// get all the results
-	for i := range poolOfJobs.Jobs {
-		if poolOfJobs.Jobs[i].Result != nil {
-			res = append(res, poolOfJobs.Jobs[i].Result.(interface{}))
-		}
-	}
-
-	return res, nil
-}
-
-func (a *mqlAwsElasticache) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
-	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.Regions()
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
-
-	for _, region := range regions {
-		regionVal := region
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("elasticache>getClusters>calling aws with region %s", regionVal)
-
-			svc := conn.Elasticache(regionVal)
-			ctx := context.Background()
-			var res interface{}
-
-			var marker *string
-			for {
-				clusters, err := svc.DescribeCacheClusters(ctx, &elasticache.DescribeCacheClustersInput{Marker: marker})
-				if err != nil {
-					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
-						return res, nil
-					}
-					return nil, err
-				}
-				if len(clusters.CacheClusters) == 0 {
-					return nil, nil
-				}
-				if clusters.Marker == nil {
-					break
-				}
-				marker = clusters.Marker
-			}
-			jsonRes, err := convert.JsonToDictSlice(res)
-			if err != nil {
-				return nil, err
-			}
-			return jobpool.JobResult(jsonRes), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
 }
 
 func (a *mqlAwsElasticache) cacheClusters() ([]interface{}, error) {

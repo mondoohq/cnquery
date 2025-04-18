@@ -9,10 +9,10 @@ import (
 
 	"github.com/google/go-github/v69/github"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/memoize"
-	"go.mondoo.com/cnquery/v11/providers/github/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/memoize"
+	"go.mondoo.com/cnquery/v12/providers/github/connection"
 )
 
 // We use a global MQL resource for the connection to store the memoizer.

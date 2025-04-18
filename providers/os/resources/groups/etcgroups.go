@@ -13,9 +13,9 @@ import (
 	"slices"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/users"
-	"go.mondoo.com/cnquery/v11/utils/multierr"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/users"
+	"go.mondoo.com/cnquery/v12/utils/multierr"
 )
 
 // a good description of this file is available at:

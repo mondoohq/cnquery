@@ -1,8 +1,8 @@
-module go.mondoo.com/cnquery/v11/providers/snowflake
+module go.mondoo.com/cnquery/v12/providers/snowflake
 
-replace go.mondoo.com/cnquery/v11 => ../..
+replace go.mondoo.com/cnquery/v12 => ../..
 
-go 1.23.0
+go 1.24.0
 
 require (
 	// pin v0.92.0
@@ -10,7 +10,7 @@ require (
 	github.com/jmoiron/sqlx v1.4.0 // indirect
 	github.com/snowflakedb/gosnowflake v1.13.1
 	github.com/stretchr/testify v1.10.0 // indirect
-	go.mondoo.com/cnquery/v11 v11.47.1
+	go.mondoo.com/cnquery/v12 v12.0.0-00010101000000-000000000000
 	go.mondoo.com/ranger-rpc v0.6.5
 	golang.org/x/crypto v0.36.0
 )

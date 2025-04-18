@@ -8,10 +8,10 @@ import (
 	"errors"
 	"io"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/plist"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/usb"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/plist"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/usb"
 )
 
 func (d *mqlUsb) devices() ([]interface{}, error) {

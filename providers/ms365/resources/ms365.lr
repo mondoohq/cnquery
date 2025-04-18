@@ -54,8 +54,6 @@ microsoft.tenant @defaults("name") {
   provisionedPlans []dict
   // Deprecated: use `createdAt` instead
   createdDateTime time
-  // Deprecated: use `name` instead
-  displayName string
   // Tenant display name
   name string
   // Organization verified domains
@@ -180,9 +178,9 @@ private microsoft.user.auditlog {
   // The user's interactive sign-in entries (a maximum of 50 entries from the last 24 hours only)
   signins() []microsoft.user.signin
   // The user's last interactive sign-in
-  lastInteractiveSignIn() microsoft.user.signin 
+  lastInteractiveSignIn() microsoft.user.signin
   // The user's last non-interactive sign-in (from the last 24 hours only)
-  lastNonInteractiveSignIn() microsoft.user.signin 
+  lastNonInteractiveSignIn() microsoft.user.signin
 }
 
 // Microsoft user identity
@@ -356,8 +354,6 @@ private microsoft.domaindnsrecord @defaults("id label") {
   supportedService string
   // Domain record TTL
   ttl int
-  // Deprecated; kept for backwards compatibility
-  properties dict
 }
 
 // Microsoft Entra ID application registration
@@ -369,8 +365,6 @@ microsoft.application @defaults("id displayName hasExpiredCredentials") {
   appId string
   // Application display name
   name string
-  // Deprecated: Use `name` instead
-  displayName string
   // Description
   description string
   // Notes
@@ -385,8 +379,6 @@ microsoft.application @defaults("id displayName hasExpiredCredentials") {
   groupMembershipClaims string
   // Application creation date
   createdAt time
-  // Deprecated: Use `createdAt` instead
-  createdDateTime time
   // Application identifier URIs
   identifierUris []string
   // Application publisher domain
@@ -720,8 +712,6 @@ private microsoft.devicemanagement.deviceconfiguration @defaults("id displayName
   displayName string
   // Device configuration version
   version int
-  // Deprecated; kept for backwards compatibility
-  properties dict
 }
 
 // Microsoft device compliance policy
@@ -740,8 +730,6 @@ private microsoft.devicemanagement.devicecompliancepolicy @defaults("id displayN
   version int
   // Device compliance policy assignments
   assignments []dict
-  // Deprecated; kept for backwards compatibility
-  properties dict
 }
 
 // Microsoft 365 Exchange Online
@@ -878,7 +866,7 @@ private ms365.teams.tenantFederationConfig {
   allowFederatedUsers bool
   // Whether public users are allowed
   allowPublicUsers bool
-  // Whether to allow external Teams consumers 
+  // Whether to allow external Teams consumers
   allowTeamsConsumer bool
   // Whether to allow inbound communication with external Teams consumers
   allowTeamsConsumerInbound bool

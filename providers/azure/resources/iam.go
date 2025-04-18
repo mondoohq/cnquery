@@ -12,11 +12,11 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	authorization "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/msi/armmsi"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/azure/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/azure/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (a *mqlAzureSubscription) iam() (*mqlAzureSubscriptionAuthorizationService, error) {
@@ -28,11 +28,6 @@ func (a *mqlAzureSubscription) iam() (*mqlAzureSubscriptionAuthorizationService,
 	}
 	authSvc := svc.(*mqlAzureSubscriptionAuthorizationService)
 	return authSvc, nil
-}
-
-// Deprecated: use iam instead
-func (a *mqlAzureSubscription) authorization() (*mqlAzureSubscriptionAuthorizationService, error) {
-	return a.iam()
 }
 
 func (a *mqlAzureSubscriptionAuthorizationService) id() (string, error) {
@@ -51,11 +46,6 @@ func initAzureSubscriptionAuthorizationService(runtime *plugin.Runtime, args map
 	args["subscriptionId"] = llx.StringData(conn.SubId())
 
 	return args, nil, nil
-}
-
-// Deprecated: use roles instead
-func (a *mqlAzureSubscriptionAuthorizationService) roleDefinitions() ([]interface{}, error) {
-	return a.roles()
 }
 
 func (a *mqlAzureSubscriptionAuthorizationService) roles() ([]interface{}, error) {
@@ -82,7 +72,6 @@ func (a *mqlAzureSubscriptionAuthorizationService) roles() ([]interface{}, error
 		}
 		for _, roleDef := range page.Value {
 			roleType := convert.ToValue(roleDef.Properties.RoleType)
-			isCustom := roleType == "CustomRole"
 			scopes := []interface{}{}
 			for _, s := range roleDef.Properties.AssignableScopes {
 				if s != nil {
@@ -105,7 +94,6 @@ func (a *mqlAzureSubscriptionAuthorizationService) roles() ([]interface{}, error
 					"name":        llx.StringDataPtr(roleDef.Properties.RoleName),
 					"description": llx.StringDataPtr(roleDef.Properties.Description),
 					"type":        llx.StringData(roleType),
-					"isCustom":    llx.BoolData(isCustom),
 					"scopes":      llx.ArrayData(scopes, types.String),
 					"permissions": llx.ArrayData(permissions, types.ResourceLike),
 				})

@@ -9,8 +9,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/languages"
-	"go.mondoo.com/cnquery/v11/sbom"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/languages"
+	"go.mondoo.com/cnquery/v12/sbom"
 )
 
 func TestPackageJsonLockExtractorWithPackages(t *testing.T) {

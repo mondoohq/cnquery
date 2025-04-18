@@ -1,6 +1,6 @@
-module go.mondoo.com/cnquery/v11
+module go.mondoo.com/cnquery/v12
 
-go 1.23.0
+go 1.24.0
 
 // Later versions break the build of the os provider for Windows
 replace modernc.org/libc => modernc.org/libc v1.53.3

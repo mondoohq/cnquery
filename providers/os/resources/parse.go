@@ -9,11 +9,11 @@ import (
 	"errors"
 	"strings"
 
-	"go.mondoo.com/cnquery/v11/checksums"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/parsers"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/plist"
+	"go.mondoo.com/cnquery/v12/checksums"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/parsers"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/plist"
 	"sigs.k8s.io/yaml"
 )
 

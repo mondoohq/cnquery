@@ -152,7 +152,6 @@ resources:
         min_mondoo_version: 6.17.0
       envFrom:
         min_mondoo_version: 6.17.0
-      image: {}
       imageName:
         min_mondoo_version: 5.31.0
       imagePullPolicy: {}
@@ -289,7 +288,6 @@ resources:
       containerImage: {}
       env: {}
       envFrom: {}
-      image: {}
       imageName: {}
       imagePullPolicy: {}
       name: {}
@@ -401,7 +399,6 @@ resources:
         min_mondoo_version: 6.17.0
       envFrom:
         min_mondoo_version: 6.17.0
-      image: {}
       imageName: {}
       imagePullPolicy: {}
       name: {}
@@ -560,27 +557,6 @@ resources:
     refs:
     - title: Pods Documentation
       url: https://kubernetes.io/docs/concepts/workloads/pods/
-  k8s.podsecuritypolicy:
-    fields:
-      annotations: {}
-      created: {}
-      id:
-        min_mondoo_version: 6.10.0
-      kind: {}
-      labels: {}
-      manifest: {}
-      name: {}
-      resourceVersion: {}
-      spec: {}
-      uid: {}
-    is_private: true
-    min_mondoo_version: 5.31.0
-    platform:
-      name:
-      - kubernetes
-    refs:
-    - title: Pod Security Policies Documentation
-      url: https://kubernetes.io/docs/concepts/security/pod-security-policy/
   k8s.rbac.clusterrole:
     fields:
       aggregationRule: {}

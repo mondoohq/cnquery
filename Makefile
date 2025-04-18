@@ -19,6 +19,7 @@ ifndef VERSION
 # echo "read VERSION from git"
 VERSION=${LATEST_VERSION_TAG}+$(shell git rev-list --count HEAD)
 endif
+MAJOR_VERSION="v12"
 
 ifndef TARGETOS
 	TARGETOS = $(shell go env GOOS)
@@ -33,8 +34,8 @@ ifeq ($(TARGETOS),windows)
 	BIN_SUFFIX=".exe"
 endif
 
-LDFLAGS=-ldflags "-s -w -X go.mondoo.com/cnquery/v11.Version=${VERSION} -X go.mondoo.com/cnquery/v11.Build=${TAG}" # -linkmode external -extldflags=-static
-LDFLAGSDIST=-tags production -ldflags "-s -w -X go.mondoo.com/cnquery/v11.Version=${LATEST_VERSION_TAG} -X go.mondoo.com/cnquery/v11.Build=${TAG} -s -w"
+LDFLAGS=-ldflags "-s -w -X go.mondoo.com/cnquery/${MAJOR_VERSION}.Version=${VERSION} -X go.mondoo.com/cnquery/${MAJOR_VERSION}.Build=${TAG}" # -linkmode external -extldflags=-static
+LDFLAGSDIST=-tags production -ldflags "-s -w -X go.mondoo.com/cnquery/${MAJOR_VERSION}.Version=${LATEST_VERSION_TAG} -X go.mondoo.com/cnquery/${MAJOR_VERSION}.Build=${TAG} -s -w"
 
 .PHONY: info/ldflags
 info/ldflags:
@@ -738,11 +739,11 @@ test/lint: test/lint/golangci-lint/run
 test: test/go test/lint
 
 benchmark/go:
-	go test -bench=. -benchmem go.mondoo.com/cnquery/v11/explorer/scan/benchmark
+	go test -bench=. -benchmem go.mondoo.com/cnquery/${MAJOR_VERSION}/explorer/scan/benchmark
 
 race/go:
-	go test -race go.mondoo.com/cnquery/v11/internal/workerpool
-	go test -race go.mondoo.com/cnquery/v11/explorer/scan
+	go test -race go.mondoo.com/cnquery/${MAJOR_VERSION}/internal/workerpool
+	go test -race go.mondoo.com/cnquery/${MAJOR_VERSION}/explorer/scan
 
 test/generate: prep/tools/mockgen
 	go generate ./providers/...
