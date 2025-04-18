@@ -327,8 +327,6 @@ private esxi.service @defaults("key label") {
   label string
   // Flag indicating whether the service is required and cannot be disabled
   required bool
-  // Deprecated; always set to false
-  uninstallable bool
   // Flag indicating whether the service is currently running
   running bool
   // Firewall rulesets used by this service
