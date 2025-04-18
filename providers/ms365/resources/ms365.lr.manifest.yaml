@@ -341,7 +341,6 @@ resources:
       assignedPlans: {}
       createdAt: {}
       createdDateTime: {}
-      displayName: {}
       id: {}
       name: {}
       onPremisesSyncEnabled: {}
