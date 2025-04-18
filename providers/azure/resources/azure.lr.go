@@ -2724,9 +2724,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.authorizationService.roles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAuthorizationService).GetRoles()).ToDataRes(types.Array(types.Resource("azure.subscription.authorizationService.roleDefinition")))
 	},
-	"azure.subscription.authorizationService.roleDefinitions": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionAuthorizationService).GetRoleDefinitions()).ToDataRes(types.Array(types.Resource("azure.subscription.authorizationService.roleDefinition")))
-	},
 	"azure.subscription.authorizationService.roleAssignments": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAuthorizationService).GetRoleAssignments()).ToDataRes(types.Array(types.Resource("azure.subscription.authorizationService.roleAssignment")))
 	},
@@ -6326,10 +6323,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"azure.subscription.authorizationService.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionAuthorizationService).Roles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
-		return
-	},
-	"azure.subscription.authorizationService.roleDefinitions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionAuthorizationService).RoleDefinitions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.authorizationService.roleAssignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16027,7 +16020,6 @@ type mqlAzureSubscriptionAuthorizationService struct {
 	// optional: if you define mqlAzureSubscriptionAuthorizationServiceInternal it will be used here
 	SubscriptionId plugin.TValue[string]
 	Roles plugin.TValue[[]interface{}]
-	RoleDefinitions plugin.TValue[[]interface{}]
 	RoleAssignments plugin.TValue[[]interface{}]
 	ManagedIdentities plugin.TValue[[]interface{}]
 }
@@ -16086,22 +16078,6 @@ func (c *mqlAzureSubscriptionAuthorizationService) GetRoles() *plugin.TValue[[]i
 		}
 
 		return c.roles()
-	})
-}
-
-func (c *mqlAzureSubscriptionAuthorizationService) GetRoleDefinitions() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.RoleDefinitions, func() ([]interface{}, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.authorizationService", c.__id, "roleDefinitions")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.([]interface{}), nil
-			}
-		}
-
-		return c.roleDefinitions()
 	})
 }
 

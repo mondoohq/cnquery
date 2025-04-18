@@ -295,7 +295,6 @@ resources:
         min_mondoo_version: 9.0.0
       roleAssignments:
         min_mondoo_version: 9.0.0
-      roleDefinitions: {}
       roles:
         min_mondoo_version: 9.0.0
       subscriptionId: {}

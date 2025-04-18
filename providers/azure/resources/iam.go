@@ -53,11 +53,6 @@ func initAzureSubscriptionAuthorizationService(runtime *plugin.Runtime, args map
 	return args, nil, nil
 }
 
-// Deprecated: use roles instead
-func (a *mqlAzureSubscriptionAuthorizationService) roleDefinitions() ([]interface{}, error) {
-	return a.roles()
-}
-
 func (a *mqlAzureSubscriptionAuthorizationService) roles() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
