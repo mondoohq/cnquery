@@ -2408,11 +2408,15 @@ resources:
     fields:
       allPendingMaintenanceActions:
         min_mondoo_version: 9.0.0
+      clusterParameterGroups:
+        min_mondoo_version: 9.0.0
       clusters:
         min_mondoo_version: 9.0.0
       dbClusters: {}
       dbInstances: {}
       instances:
+        min_mondoo_version: 9.0.0
+      parameterGroups:
         min_mondoo_version: 9.0.0
     min_mondoo_version: 5.15.0
     platform:
@@ -2443,6 +2447,18 @@ resources:
       target: {}
       timezone: {}
     is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.rds.clusterParameterGroup:
+    fields:
+      arn: {}
+      description: {}
+      family: {}
+      name: {}
+      parameters: {}
+      region: {}
     min_mondoo_version: 9.0.0
     platform:
       name:
@@ -2502,6 +2518,8 @@ resources:
       multiAZ:
         min_mondoo_version: 9.0.0
       networkType:
+        min_mondoo_version: 9.0.0
+      parameterGroupName:
         min_mondoo_version: 9.0.0
       port:
         min_mondoo_version: 9.0.0
@@ -2611,6 +2629,37 @@ resources:
         min_mondoo_version: 9.0.0
       tags: {}
     min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - aws
+  aws.rds.parameterGroup:
+    fields:
+      arn: {}
+      description: {}
+      family: {}
+      id: {}
+      name: {}
+      parameters: {}
+      region:
+        min_mondoo_version: 9.0.0
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - aws
+  aws.rds.parameterGroup.parameter:
+    fields:
+      allowedValues: {}
+      applyMethod: {}
+      applyType: {}
+      dataType: {}
+      description: {}
+      isModifiable: {}
+      minimumEngineVersion: {}
+      name: {}
+      source: {}
+      supportedEngineModes: {}
+      value: {}
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - aws

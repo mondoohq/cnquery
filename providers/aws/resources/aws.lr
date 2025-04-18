@@ -2074,6 +2074,10 @@ aws.rds {
   clusters() []aws.rds.dbcluster
   // List of all pending maintenance actions for the database instance
   allPendingMaintenanceActions() []aws.rds.pendingMaintenanceAction
+  // List of all parameter groups
+  parameterGroups() []aws.rds.parameterGroup
+  // List of all cluster parameter groups
+  clusterParameterGroups() []aws.rds.clusterParameterGroup
 }
 
 // Amazon RDS Backup Setting
@@ -2182,6 +2186,8 @@ aws.rds.dbcluster @defaults("id region engine engineVersion") {
   preferredBackupWindow string
   // Whether the HTTP API endpoint is enabled
   httpEndpointEnabled bool
+  // Container for engine configuration values
+  parameterGroupName string
 }
 
 // Amazon RDS snapshot
@@ -2325,6 +2331,63 @@ private aws.rds.pendingMaintenanceAction {
   // Opt-in status
   optInStatus string
 }
+
+aws.rds.clusterParameterGroup @defaults("name family region arn") {
+  // ARN for resource
+  arn string
+  // Family of the Parameter Group
+  family string
+  // Name of the Parameter Group
+  name string
+  // Description of the Parameter Group
+  description string
+  // Region of the parameters
+  region string
+  parameters() []aws.rds.parameterGroup.parameter
+}
+
+
+// Amazon RDS parameter groups
+aws.rds.parameterGroup @defaults("name family region arn") {
+  // ARN for resource
+  arn string
+  // Family of the Parameter Group
+  family string
+  // Name of the Parameter Group
+  name string
+  // Description of the Parameter Group
+  description string
+  // Region of the parameters
+  region string
+  // The Parameters of the group
+  parameters() []aws.rds.parameterGroup.parameter
+}
+
+aws.rds.parameterGroup.parameter @defaults("name value") {
+  // Specifies the valid range of values for the parameter.
+	allowedValues string
+	// When to apply parameter updates.
+	applyMethod string
+	// Specifies the engine specific parameters type.
+	applyType string
+	// Specifies the valid data type for the parameter.
+	dataType string
+	// Provides a description of the parameter.
+	description string
+	// being changed.
+	isModifiable bool
+	// The earliest engine version to which the parameter can apply.
+	minimumEngineVersion string
+	// The name of the parameter.
+	name string
+	// The value of the parameter.
+	value string
+	// The source of the parameter value.
+	source string
+	// The valid DB engine modes.
+	supportedEngineModes []string
+}
+
 
 // Amazon ElastiCache
 aws.elasticache @defaults("cacheClusters") {
