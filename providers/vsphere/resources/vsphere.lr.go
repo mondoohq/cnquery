@@ -524,9 +524,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"esxi.service.required": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlEsxiService).GetRequired()).ToDataRes(types.Bool)
 	},
-	"esxi.service.uninstallable": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlEsxiService).GetUninstallable()).ToDataRes(types.Bool)
-	},
 	"esxi.service.running": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlEsxiService).GetRunning()).ToDataRes(types.Bool)
 	},
@@ -1111,10 +1108,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"esxi.service.required": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlEsxiService).Required, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"esxi.service.uninstallable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlEsxiService).Uninstallable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"esxi.service.running": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2992,7 +2985,6 @@ type mqlEsxiService struct {
 	Key plugin.TValue[string]
 	Label plugin.TValue[string]
 	Required plugin.TValue[bool]
-	Uninstallable plugin.TValue[bool]
 	Running plugin.TValue[bool]
 	Ruleset plugin.TValue[[]interface{}]
 	Policy plugin.TValue[string]
@@ -3045,10 +3037,6 @@ func (c *mqlEsxiService) GetLabel() *plugin.TValue[string] {
 
 func (c *mqlEsxiService) GetRequired() *plugin.TValue[bool] {
 	return &c.Required
-}
-
-func (c *mqlEsxiService) GetUninstallable() *plugin.TValue[bool] {
-	return &c.Uninstallable
 }
 
 func (c *mqlEsxiService) GetRunning() *plugin.TValue[bool] {
