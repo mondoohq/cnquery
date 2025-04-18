@@ -13,8 +13,6 @@ const (
 	DiscoveryAuto         = "auto"
 	DiscoveryRepos        = "repos"
 	DiscoveryUsers        = "users"
-	DiscoveryRepository   = "repository" // deprecated: use repos
-	DiscoveryUser         = "user"       // deprecated: use users
 	DiscoveryOrganization = "organization"
 	DiscoveryTerraform    = "terraform"
 	DiscoveryK8sManifests = "k8s-manifests"
