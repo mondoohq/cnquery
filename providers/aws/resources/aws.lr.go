@@ -3597,9 +3597,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.parameterGroup.parameter.supportedEngineModes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsParameterGroupParameter).GetSupportedEngineModes()).ToDataRes(types.Array(types.String))
 	},
-	"aws.elasticache.clusters": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsElasticache).GetClusters()).ToDataRes(types.Array(types.Dict))
-	},
 	"aws.elasticache.cacheClusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticache).GetCacheClusters()).ToDataRes(types.Array(types.Resource("aws.elasticache.cluster")))
 	},
@@ -9458,10 +9455,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsElasticache).__id, ok = v.Value.(string)
 			return
 		},
-	"aws.elasticache.clusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsElasticache).Clusters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
-		return
-	},
 	"aws.elasticache.cacheClusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElasticache).CacheClusters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
@@ -23891,7 +23884,6 @@ type mqlAwsElasticache struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsElasticacheInternal it will be used here
-	Clusters plugin.TValue[[]interface{}]
 	CacheClusters plugin.TValue[[]interface{}]
 	ServerlessCaches plugin.TValue[[]interface{}]
 }
@@ -23931,12 +23923,6 @@ func (c *mqlAwsElasticache) MqlName() string {
 
 func (c *mqlAwsElasticache) MqlID() string {
 	return c.__id
-}
-
-func (c *mqlAwsElasticache) GetClusters() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Clusters, func() ([]interface{}, error) {
-		return c.clusters()
-	})
 }
 
 func (c *mqlAwsElasticache) GetCacheClusters() *plugin.TValue[[]interface{}] {
