@@ -1439,9 +1439,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.domaindnsrecord.ttl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDomaindnsrecord).GetTtl()).ToDataRes(types.Int)
 	},
-	"microsoft.domaindnsrecord.properties": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftDomaindnsrecord).GetProperties()).ToDataRes(types.Dict)
-	},
 	"microsoft.application.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftApplication).GetId()).ToDataRes(types.String)
 	},
@@ -3866,10 +3863,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.domaindnsrecord.ttl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDomaindnsrecord).Ttl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"microsoft.domaindnsrecord.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftDomaindnsrecord).Properties, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"microsoft.application.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9494,7 +9487,6 @@ type mqlMicrosoftDomaindnsrecord struct {
 	RecordType plugin.TValue[string]
 	SupportedService plugin.TValue[string]
 	Ttl plugin.TValue[int64]
-	Properties plugin.TValue[interface{}]
 }
 
 // createMicrosoftDomaindnsrecord creates a new instance of this resource
@@ -9556,10 +9548,6 @@ func (c *mqlMicrosoftDomaindnsrecord) GetSupportedService() *plugin.TValue[strin
 
 func (c *mqlMicrosoftDomaindnsrecord) GetTtl() *plugin.TValue[int64] {
 	return &c.Ttl
-}
-
-func (c *mqlMicrosoftDomaindnsrecord) GetProperties() *plugin.TValue[interface{}] {
-	return &c.Properties
 }
 
 // mqlMicrosoftApplication for the microsoft.application resource
