@@ -130,7 +130,7 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 		})
 	}
 
-	if stringx.ContainsAnyOf(targets, connection.DiscoveryRepos, connection.DiscoveryRepository, connection.DiscoveryAll, connection.DiscoveryAuto) {
+	if stringx.ContainsAnyOf(targets, connection.DiscoveryRepos, connection.DiscoveryAll, connection.DiscoveryAuto) {
 		for i := range org.GetRepositories().Data {
 			repo := org.GetRepositories().Data[i].(*mqlGithubRepository)
 			if reposFilter.skipRepo(repo.Name.Data) {
@@ -162,7 +162,7 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 			}
 		}
 	}
-	if stringx.ContainsAnyOf(targets, connection.DiscoveryUsers, connection.DiscoveryUser) {
+	if stringx.ContainsAnyOf(targets, connection.DiscoveryUsers) {
 		assetList = []*inventory.Asset{}
 		for i := range org.GetMembers().Data {
 			user := org.GetMembers().Data[i].(*mqlGithubUser)
