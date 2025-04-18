@@ -54,8 +54,6 @@ azure.subscription @defaults ("name") {
   keyVault() azure.subscription.keyVaultService
   // Authorization resources in the subscription
   iam() azure.subscription.authorizationService
-  // Deprecated: use `iam` instead
-  authorization() azure.subscription.authorizationService
   // Monitor resources in the subscription
   monitor() azure.subscription.monitorService
   // Cloud defender resources in the subscription
