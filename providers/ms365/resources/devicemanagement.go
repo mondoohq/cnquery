@@ -139,7 +139,6 @@ func (a *mqlMicrosoftDevicemanagement) deviceConfigurations() ([]interface{}, er
 	res := []interface{}{}
 	configurations := resp.GetValue()
 	for _, configuration := range configurations {
-		properties := getConfigurationProperties(configuration)
 		mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.devicemanagement.deviceconfiguration",
 			map[string]*llx.RawData{
 				"id":                   llx.StringDataPtr(configuration.GetId()),
@@ -148,7 +147,6 @@ func (a *mqlMicrosoftDevicemanagement) deviceConfigurations() ([]interface{}, er
 				"description":          llx.StringDataPtr(configuration.GetDescription()),
 				"displayName":          llx.StringDataPtr(configuration.GetDisplayName()),
 				"version":              llx.IntDataDefault(configuration.GetVersion(), 0),
-				"properties":           llx.DictData(properties),
 			})
 		if err != nil {
 			return nil, err
@@ -219,7 +217,6 @@ func (a *mqlMicrosoftDevicemanagement) deviceCompliancePolicies() ([]interface{}
 		if err != nil {
 			return nil, err
 		}
-		properties := getComplianceProperties(compliancePolicy)
 		mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.devicemanagement.devicecompliancepolicy",
 			map[string]*llx.RawData{
 				"id":                   llx.StringDataPtr(compliancePolicy.GetId()),
@@ -229,7 +226,6 @@ func (a *mqlMicrosoftDevicemanagement) deviceCompliancePolicies() ([]interface{}
 				"lastModifiedDateTime": llx.TimeDataPtr(compliancePolicy.GetLastModifiedDateTime()),
 				"version":              llx.IntDataDefault(compliancePolicy.GetVersion(), 0),
 				"assignments":          llx.ArrayData(assignments, types.Any),
-				"properties":           llx.DictData(properties),
 			})
 		if err != nil {
 			return nil, err
