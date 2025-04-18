@@ -16,12 +16,6 @@ extend asset {
   vulnerabilityReport() dict
 }
 
-// vSphere platform resource (deprecated)
-platform {
-  // deprecated: use asset.vulnerabilityReport instead
-  vulnerabilityReport() dict
-}
-
 // Vulnerability Information
 vulnmgmt {
   // List of all CVEs affecting the asset
@@ -57,7 +51,7 @@ private vuln.cve @defaults("id") {
 // Advisory information
 private vuln.advisory @defaults("id") {
   // Advisory ID
-  id string  
+  id string
   // Title of the advisory
   title string
   // Description of the advisory
