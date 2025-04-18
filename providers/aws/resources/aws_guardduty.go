@@ -153,36 +153,6 @@ func (a *mqlAwsGuarddutyDetector) findings() ([]interface{}, error) {
 	return fetchFindings(svc, detectorId, region, params, a.MqlRuntime)
 }
 
-// unarchivedFindings returns all findings that are not archived
-// Deprecated: use findings instead
-func (a *mqlAwsGuarddutyDetector) unarchivedFindings() ([]interface{}, error) {
-	id := a.Id.Data
-	region := a.Region.Data
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
-	svc := conn.Guardduty(region)
-	ctx := context.Background()
-
-	findings, err := svc.ListFindings(ctx, &guardduty.ListFindingsInput{
-		DetectorId: &id,
-		FindingCriteria: &types.FindingCriteria{
-			Criterion: map[string]types.Condition{
-				"service.archived": {
-					Equals: []string{"false"},
-				},
-			},
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
-	findingDetails, err := svc.GetFindings(ctx, &guardduty.GetFindingsInput{FindingIds: findings.FindingIds, DetectorId: &id})
-	if err != nil {
-		return nil, err
-	}
-	return convert.JsonToDictSlice(findingDetails.Findings)
-}
-
 func (a *mqlAwsGuardduty) findings() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
