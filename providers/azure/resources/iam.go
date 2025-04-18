@@ -30,11 +30,6 @@ func (a *mqlAzureSubscription) iam() (*mqlAzureSubscriptionAuthorizationService,
 	return authSvc, nil
 }
 
-// Deprecated: use iam instead
-func (a *mqlAzureSubscription) authorization() (*mqlAzureSubscriptionAuthorizationService, error) {
-	return a.iam()
-}
-
 func (a *mqlAzureSubscriptionAuthorizationService) id() (string, error) {
 	return "azure.subscription.authorization/" + a.SubscriptionId.Data, nil
 }
