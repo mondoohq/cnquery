@@ -588,9 +588,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.iam": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscription).GetIam()).ToDataRes(types.Resource("azure.subscription.authorizationService"))
 	},
-	"azure.subscription.authorization": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscription).GetAuthorization()).ToDataRes(types.Resource("azure.subscription.authorizationService"))
-	},
 	"azure.subscription.monitor": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscription).GetMonitor()).ToDataRes(types.Resource("azure.subscription.monitorService"))
 	},
@@ -3100,10 +3097,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"azure.subscription.iam": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscription).Iam, ok = plugin.RawToTValue[*mqlAzureSubscriptionAuthorizationService](v.Value, v.Error)
-		return
-	},
-	"azure.subscription.authorization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscription).Authorization, ok = plugin.RawToTValue[*mqlAzureSubscriptionAuthorizationService](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.monitor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6828,7 +6821,6 @@ type mqlAzureSubscription struct {
 	CosmosDb plugin.TValue[*mqlAzureSubscriptionCosmosDbService]
 	KeyVault plugin.TValue[*mqlAzureSubscriptionKeyVaultService]
 	Iam plugin.TValue[*mqlAzureSubscriptionAuthorizationService]
-	Authorization plugin.TValue[*mqlAzureSubscriptionAuthorizationService]
 	Monitor plugin.TValue[*mqlAzureSubscriptionMonitorService]
 	CloudDefender plugin.TValue[*mqlAzureSubscriptionCloudDefenderService]
 	Aks plugin.TValue[*mqlAzureSubscriptionAksService]
@@ -7115,22 +7107,6 @@ func (c *mqlAzureSubscription) GetIam() *plugin.TValue[*mqlAzureSubscriptionAuth
 		}
 
 		return c.iam()
-	})
-}
-
-func (c *mqlAzureSubscription) GetAuthorization() *plugin.TValue[*mqlAzureSubscriptionAuthorizationService] {
-	return plugin.GetOrCompute[*mqlAzureSubscriptionAuthorizationService](&c.Authorization, func() (*mqlAzureSubscriptionAuthorizationService, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription", c.__id, "authorization")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlAzureSubscriptionAuthorizationService), nil
-			}
-		}
-
-		return c.authorization()
 	})
 }
 
