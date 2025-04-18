@@ -1850,8 +1850,6 @@ private azure.subscription.authorizationService {
   subscriptionId string
   // Role definitions for the Azure subscription
   roles() []azure.subscription.authorizationService.roleDefinition
-  // Deprecated: use `roles` instead
-  roleDefinitions() []azure.subscription.authorizationService.roleDefinition
   // Role assignments
   roleAssignments() []azure.subscription.authorizationService.roleAssignment
   // Managed identities
