@@ -891,8 +891,6 @@ microsoft.application @defaults("id displayName hasExpiredCredentials") {
   groupMembershipClaims string
   // Application creation date
   createdAt time
-  // Deprecated: Use `createdAt` instead
-  createdDateTime time
   // Application identifier URIs
   identifierUris []string
   // Application publisher domain
