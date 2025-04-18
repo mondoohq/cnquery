@@ -1465,9 +1465,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.application.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftApplication).GetCreatedAt()).ToDataRes(types.Time)
 	},
-	"microsoft.application.createdDateTime": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftApplication).GetCreatedDateTime()).ToDataRes(types.Time)
-	},
 	"microsoft.application.identifierUris": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftApplication).GetIdentifierUris()).ToDataRes(types.Array(types.String))
 	},
@@ -3924,10 +3921,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.application.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftApplication).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
-		return
-	},
-	"microsoft.application.createdDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftApplication).CreatedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"microsoft.application.identifierUris": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9605,7 +9598,6 @@ type mqlMicrosoftApplication struct {
 	DisabledByMicrosoftStatus plugin.TValue[string]
 	GroupMembershipClaims plugin.TValue[string]
 	CreatedAt plugin.TValue[*time.Time]
-	CreatedDateTime plugin.TValue[*time.Time]
 	IdentifierUris plugin.TValue[[]interface{}]
 	PublisherDomain plugin.TValue[string]
 	SignInAudience plugin.TValue[string]
@@ -9708,10 +9700,6 @@ func (c *mqlMicrosoftApplication) GetGroupMembershipClaims() *plugin.TValue[stri
 
 func (c *mqlMicrosoftApplication) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
-}
-
-func (c *mqlMicrosoftApplication) GetCreatedDateTime() *plugin.TValue[*time.Time] {
-	return &c.CreatedDateTime
 }
 
 func (c *mqlMicrosoftApplication) GetIdentifierUris() *plugin.TValue[[]interface{}] {
