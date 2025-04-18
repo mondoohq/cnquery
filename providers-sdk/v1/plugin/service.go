@@ -13,6 +13,7 @@ import (
 
 	llx "go.mondoo.com/cnquery/v11/llx"
 	inventory "go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/memoize"
 )
 
 const DISABLE_DELAYED_DISCOVERY_OPTION = "disable-delayed-discovery"
@@ -24,11 +25,19 @@ type Service struct {
 
 	lastHeartbeat int64
 	heartbeatLock sync.Mutex
+
+	memoize.Memoizer
 }
+
+var (
+	cacheExpirationTime = 3 * time.Hour
+	cacheCleanupTime    = 6 * time.Hour
+)
 
 func NewService() *Service {
 	return &Service{
 		runtimes: make(map[uint32]*Runtime),
+		Memoizer: memoize.New(cacheExpirationTime, cacheCleanupTime),
 	}
 }
 
@@ -132,6 +141,7 @@ func (s *Service) Disconnect(req *DisconnectReq) (*DisconnectRes, error) {
 	s.runtimesLock.Lock()
 	defer s.runtimesLock.Unlock()
 	s.doDisconnect(req.Connection)
+	s.Flush() // flush our Memoizer
 	return &DisconnectRes{}, nil
 }
 
@@ -268,5 +278,7 @@ func (s *Service) Shutdown(req *ShutdownReq) (*ShutdownRes, error) {
 	for id := range s.runtimes {
 		s.doDisconnect(id)
 	}
+
+	s.Flush() // flush our Memoizer
 	return &ShutdownRes{}, nil
 }

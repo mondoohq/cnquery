@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/utils/syncx"
+	"go.uber.org/goleak"
 )
 
 type TestConnection struct {
@@ -30,6 +31,10 @@ func (c *TestConnection) ID() uint32 {
 
 func (c *TestConnection) ParentID() uint32 {
 	return c.parentId
+}
+
+func TestMain(m *testing.M) {
+	goleak.VerifyTestMain(m)
 }
 
 type TestConnectionWithClose struct {

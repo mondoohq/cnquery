@@ -292,6 +292,8 @@ require (
 	github.com/moby/sys/mount v0.3.4
 )
 
+require go.uber.org/goleak v1.3.0
+
 require (
 	cel.dev/expr v0.22.1 // indirect
 	cloud.google.com/go/auth v0.15.0 // indirect
