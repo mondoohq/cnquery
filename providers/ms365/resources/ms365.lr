@@ -180,9 +180,9 @@ private microsoft.user.auditlog {
   // The user's interactive sign-in entries (a maximum of 50 entries from the last 24 hours only)
   signins() []microsoft.user.signin
   // The user's last interactive sign-in
-  lastInteractiveSignIn() microsoft.user.signin 
+  lastInteractiveSignIn() microsoft.user.signin
   // The user's last non-interactive sign-in (from the last 24 hours only)
-  lastNonInteractiveSignIn() microsoft.user.signin 
+  lastNonInteractiveSignIn() microsoft.user.signin
 }
 
 // Microsoft user identity
@@ -385,8 +385,6 @@ microsoft.application @defaults("id displayName hasExpiredCredentials") {
   groupMembershipClaims string
   // Application creation date
   createdAt time
-  // Deprecated: Use `createdAt` instead
-  createdDateTime time
   // Application identifier URIs
   identifierUris []string
   // Application publisher domain
@@ -878,7 +876,7 @@ private ms365.teams.tenantFederationConfig {
   allowFederatedUsers bool
   // Whether public users are allowed
   allowPublicUsers bool
-  // Whether to allow external Teams consumers 
+  // Whether to allow external Teams consumers
   allowTeamsConsumer bool
   // Whether to allow inbound communication with external Teams consumers
   allowTeamsConsumerInbound bool
