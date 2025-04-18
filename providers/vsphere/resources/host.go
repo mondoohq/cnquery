@@ -356,13 +356,12 @@ func (v *mqlVsphereHost) services() ([]interface{}, error) {
 	mqlServices := make([]interface{}, len(services))
 	for i, s := range services {
 		mqlService, err := CreateResource(v.MqlRuntime, "esxi.service", map[string]*llx.RawData{
-			"key":           llx.StringData(s.Key),
-			"label":         llx.StringData(s.Label),
-			"required":      llx.BoolData(s.Required),
-			"uninstallable": llx.BoolData(s.Uninstallable),
-			"running":       llx.BoolData(s.Running),
-			"ruleset":       llx.ArrayData(convert.SliceAnyToInterface(s.Ruleset), types.String),
-			"policy":        llx.StringData(s.Policy), // on, off, automatic
+			"key":      llx.StringData(s.Key),
+			"label":    llx.StringData(s.Label),
+			"required": llx.BoolData(s.Required),
+			"running":  llx.BoolData(s.Running),
+			"ruleset":  llx.ArrayData(convert.SliceAnyToInterface(s.Ruleset), types.String),
+			"policy":   llx.StringData(s.Policy), // on, off, automatic
 		})
 		if err != nil {
 			return nil, err

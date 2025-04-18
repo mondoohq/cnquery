@@ -81,7 +81,6 @@ resources:
       required: {}
       ruleset: {}
       running: {}
-      uninstallable: {}
     is_private: true
     min_mondoo_version: 5.15.0
     platform:
