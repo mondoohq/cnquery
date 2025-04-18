@@ -77,7 +77,6 @@ func (a *mqlAzureSubscriptionAuthorizationService) roles() ([]interface{}, error
 		}
 		for _, roleDef := range page.Value {
 			roleType := convert.ToValue(roleDef.Properties.RoleType)
-			isCustom := roleType == "CustomRole"
 			scopes := []interface{}{}
 			for _, s := range roleDef.Properties.AssignableScopes {
 				if s != nil {
@@ -100,7 +99,6 @@ func (a *mqlAzureSubscriptionAuthorizationService) roles() ([]interface{}, error
 					"name":        llx.StringDataPtr(roleDef.Properties.RoleName),
 					"description": llx.StringDataPtr(roleDef.Properties.Description),
 					"type":        llx.StringData(roleType),
-					"isCustom":    llx.BoolData(isCustom),
 					"scopes":      llx.ArrayData(scopes, types.String),
 					"permissions": llx.ArrayData(permissions, types.ResourceLike),
 				})

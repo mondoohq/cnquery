@@ -1866,8 +1866,6 @@ private azure.subscription.authorizationService.roleDefinition @defaults ("name 
   name string
   // Role type
   type string
-  // Deprecated: use `type` instead
-  isCustom bool
   // Scopes for which the role definition applies
   scopes []string
   // Permissions that are attached to the role definition
