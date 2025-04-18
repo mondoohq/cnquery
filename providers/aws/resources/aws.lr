@@ -2373,8 +2373,6 @@ aws.rds.parameterGroup.parameter @defaults("name value") {
 
 // Amazon ElastiCache
 aws.elasticache @defaults("cacheClusters") {
-  // Deprecated: Use `cacheClusters` instead.
-  clusters() []dict
   // List of cache clusters
   cacheClusters() []aws.elasticache.cluster
   // List of serverless caches
