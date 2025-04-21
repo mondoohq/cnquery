@@ -121,10 +121,9 @@ func InitViperConfig() {
 			log.Debug().Str("configfile", viper.ConfigFileUsed()).Msg("try to load local config file")
 
 			// Check if this is a WIF config file
-			isWif, wifErr := IsWifConfigFormat(Path)
-			if wifErr != nil {
-				log.Debug().Err(wifErr).Msg("error checking for WIF config format")
-			} else if isWif {
+			isWif := IsWifConfigFormat(Path)
+
+			if isWif {
 				log.Debug().Msg("detected WIF config file format")
 
 				// Convert the WIF config to Viper format
@@ -146,6 +145,26 @@ func InitViperConfig() {
 			}
 		}
 	}
+
+	// by default it uses console output, for production we may want to set it to json output
+	if viper.GetString("log.format") == "json" {
+		logger.UseJSONLogging(logger.LogOutputWriter)
+	}
+
+	if viper.GetBool("log.color") == true {
+		logger.CliCompactLogger(logger.LogOutputWriter)
+	}
+
+	// override values with env variables
+	viper.SetEnvPrefix("mondoo")
+	// to parse env variables properly we need to replace some chars
+	// all hyphens need to be underscores
+	// all dots neeto to be underscores
+	replacer := strings.NewReplacer("-", "_", ".", "_")
+	viper.SetEnvKeyReplacer(replacer)
+
+	// read in environment variables that match
+	viper.AutomaticEnv()
 
 	// Check if this is a WIF config file
 	// This detects the new format: {"type": "external_account", "audience": "...", "issuerUri": "..."}
@@ -185,26 +204,6 @@ func InitViperConfig() {
 			Str("apiEndpoint", viper.GetString("api_endpoint")).
 			Msg("configured WIF authentication from config file")
 	}
-
-	// by default it uses console output, for production we may want to set it to json output
-	if viper.GetString("log.format") == "json" {
-		logger.UseJSONLogging(logger.LogOutputWriter)
-	}
-
-	if viper.GetBool("log.color") == true {
-		logger.CliCompactLogger(logger.LogOutputWriter)
-	}
-
-	// override values with env variables
-	viper.SetEnvPrefix("mondoo")
-	// to parse env variables properly we need to replace some chars
-	// all hyphens need to be underscores
-	// all dots neeto to be underscores
-	replacer := strings.NewReplacer("-", "_", ".", "_")
-	viper.SetEnvKeyReplacer(replacer)
-
-	// read in environment variables that match
-	viper.AutomaticEnv()
 }
 
 func DisplayUsedConfig() {
@@ -323,35 +322,7 @@ func (c *CommonOpts) GetServiceCredential() *upstream.ServiceAccountCredentials 
 		case "wif":
 			log.Info().Msg("using wif authentication method, generate temporary credentials")
 
-			// Validate required fields for WIF
-			if c.Audience == "" {
-				log.Error().Msg("missing required field 'audience' for WIF authentication")
-				return nil
-			}
-
-			// If apiEndpoint is not set, check for universeDomain in viper
-			if c.APIEndpoint == "" {
-				universeDomain := viper.GetString("universeDomain")
-				if universeDomain != "" {
-					c.APIEndpoint = universeDomain
-					log.Debug().Str("apiEndpoint", c.APIEndpoint).Msg("using universeDomain as API endpoint for WIF authentication")
-				}
-			}
-
-			// Now check if we have an API endpoint
-			if c.APIEndpoint == "" {
-				log.Error().Msg("missing required API endpoint for WIF authentication. Set 'universeDomain' in config")
-				return nil
-			}
-
-			// Provide default issuer if not set
-			issuerURI := c.IssuerURI
-			if issuerURI == "" {
-				log.Error().Msg("missing required issuer URI for WIF authentication. Set 'issuer_uri' in config ")
-				return nil
-			}
-
-			serviceAccount, err := upstream.ExchangeExternalToken(c.UpstreamApiEndpoint(), c.Audience, issuerURI)
+			serviceAccount, err := upstream.ExchangeExternalToken(c.UpstreamApiEndpoint(), c.Audience, c.IssuerURI)
 			if err != nil {
 				log.Error().Err(err).Msg("could not exchange external (wif) token")
 				return nil
@@ -401,11 +372,6 @@ func (c *CommonOpts) GetParentMrn() string {
 }
 
 func (c *CommonOpts) UpstreamApiEndpoint() string {
-	// First check for environment variable override
-	if envEndpoint := os.Getenv("MONDOO_API_ENDPOINT"); envEndpoint != "" {
-		return envEndpoint
-	}
-
 	apiEndpoint := c.APIEndpoint
 
 	// fallback to default api if nothing was set
@@ -417,35 +383,35 @@ func (c *CommonOpts) UpstreamApiEndpoint() string {
 }
 
 // IsWifConfigFormat determines if a file is in the WIF config format
-func IsWifConfigFormat(filePath string) (bool, error) {
+func IsWifConfigFormat(filePath string) bool {
 	// Read the file
 	data, err := afero.ReadFile(AppFs, filePath)
 	if err != nil {
-		return false, err
+		return false
 	}
 
 	// Try to parse it as JSON
 	var config map[string]interface{}
 	if err := json.Unmarshal(data, &config); err != nil {
-		return false, nil // Not JSON, so not WIF format
+		return false
 	}
 
 	// Check if it has the required fields for WIF format
 	accountType, hasType := config["type"]
 	if !hasType {
-		return false, nil
+		return false
 	}
 
 	// Check if it's an external account config
 	typeStr, ok := accountType.(string)
 	if !ok || typeStr != "external_account" {
-		return false, nil
+		return false
 	}
 
 	// Check for audience
 	_, hasAudience := config["audience"]
 
-	return hasAudience, nil
+	return hasAudience
 }
 
 // ConvertWifConfig reads a WIF config file and converts it to a Viper-compatible format
@@ -481,8 +447,8 @@ func ConvertWifConfig(filePath string, v *viper.Viper) error {
 		return errors.New("WIF config missing required 'universeDomain' field")
 	}
 
-	if issuerUri, ok := wifConfig["issuerUri"].(string); ok {
-		v.Set("issuer_uri", issuerUri)
+	if issuerURI, ok := wifConfig["issuerUri"].(string); ok {
+		v.Set("issuer_uri", issuerURI)
 	} else {
 		return errors.New("WIF config missing required 'issuerUri' field")
 	}
