@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"maps"
 	"net/http"
 	"slices"
 	"strconv"
@@ -22,6 +23,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/mitchellh/hashstructure/v2"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v11/logger/zerologadapter"
@@ -33,17 +35,22 @@ import (
 
 type AwsConnection struct {
 	plugin.Connection
-	Conf              *inventory.Config
-	asset             *inventory.Asset
-	cfg               aws.Config
-	accountId         string
-	clientcache       ClientsCache
-	awsConfigOptions  []func(*config.LoadOptions) error
-	profile           string
-	PlatformOverride  string
-	connectionOptions map[string]string
-	Filters           DiscoveryFilters
-	scope             string
+	Conf             *inventory.Config
+	asset            *inventory.Asset
+	cfg              aws.Config
+	accountId        string
+	clientcache      ClientsCache
+	awsConfigOptions []func(*config.LoadOptions) error
+	PlatformOverride string
+	Filters          DiscoveryFilters
+
+	opts awsConnectionOptions
+}
+
+type awsConnectionOptions struct {
+	scope   string
+	profile string
+	options map[string]string
 }
 
 type DiscoveryFilters struct {
@@ -100,7 +107,11 @@ func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 		awsConfigOptions: []func(*config.LoadOptions) error{},
 		Filters:          EmptyDiscoveryFilters(),
 	}
-	opts := parseFlagsForConnectionOptions(asset.Options, conf.Options, conf.GetCredentials())
+
+	// merge the options to make sure we don't miss anything
+	maps.Copy(asset.Options, conf.Options)
+
+	opts := parseFlagsForConnectionOptions(asset.Options, conf.GetCredentials())
 	for _, opt := range opts {
 		opt(c)
 	}
@@ -118,32 +129,58 @@ func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 		log.Info().Msg("no AWS region found, using us-east-1")
 		cfg.Region = "us-east-1" // in case the user has no region set, default to us-east-1
 	}
-	// gather information about the aws account
-	cfgCopy := cfg.Copy()
-	identity, err := CheckIam(cfgCopy)
-	if err != nil {
-		log.Debug().Err(err).Msg("could not gather details of AWS account")
-		// try with govcloud region
-		cfgCopy.Region = "us-gov-west-1"
-		identity, err = CheckIam(cfgCopy)
-		if err != nil {
-			log.Debug().Err(err).Msg("could not gather details of AWS account")
-			return nil, err
-		}
-	}
 
 	c.Connection = plugin.NewConnection(id, asset)
 	c.Conf = conf
 	c.asset = asset
 	c.cfg = cfg
-	c.accountId = *identity.Account
-	c.profile = asset.Options["profile"]
-	c.scope = asset.Options["scope"]
-	c.connectionOptions = asset.Options
+	c.opts.profile = asset.Options["profile"]
+	c.opts.scope = asset.Options["scope"]
+	c.opts.options = asset.Options
 	if conf.Discover != nil {
 		c.Filters = parseOptsToFilters(conf.Discover.Filter)
 	}
 	return c, nil
+}
+
+func (c *AwsConnection) Hash() uint64 {
+	// generate hash of the config options used to to initialize this connection,
+	// we use this to avoid verifying a client with the same options more than once
+	hash, err := hashstructure.Hash(c.opts, hashstructure.FormatV2, nil)
+	if err != nil {
+		log.Error().Err(err).Msg("unable to hash connection")
+	}
+	return hash
+}
+
+func (c *AwsConnection) Verify() (string, error) {
+	identity, err := CheckIam(c.cfg.Copy())
+	if err != nil {
+		log.Debug().Err(err).Msg("could not gather details of AWS account")
+		// try with govcloud region, store error to return it if this last option does not work
+		err1 := err
+		cfgCopy := c.cfg.Copy()
+		cfgCopy.Region = "us-gov-west-1"
+		identity, err = CheckIam(cfgCopy)
+		if err != nil {
+			return "", err1
+		}
+	}
+	account := ""
+	if identity.Account != nil {
+		account = *identity.Account
+	}
+
+	return account, nil
+}
+
+func (c *AwsConnection) SetAccountId(id string) {
+	if id != "" {
+		c.accountId = id
+	}
+}
+func (p *AwsConnection) AccountId() string {
+	return p.accountId
 }
 
 func parseOptsToFilters(opts map[string]string) DiscoveryFilters {
@@ -186,15 +223,7 @@ func parseOptsToFilters(opts map[string]string) DiscoveryFilters {
 	return d
 }
 
-func parseFlagsForConnectionOptions(m1 map[string]string, m2 map[string]string, creds []*vault.Credential) []ConnectionOption {
-	// merge the options to make sure we don't miss anything
-	m := m1
-	if m == nil {
-		m = make(map[string]string)
-	}
-	for k, v := range m2 {
-		m[k] = v
-	}
+func parseFlagsForConnectionOptions(m map[string]string, creds []*vault.Credential) []ConnectionOption {
 	o := make([]ConnectionOption, 0)
 	if apiEndpoint, ok := m["endpoint-url"]; ok {
 		o = append(o, WithEndpoint(apiEndpoint))
@@ -300,20 +329,16 @@ func (p *AwsConnection) UpdateAsset(asset *inventory.Asset) {
 	p.asset = asset
 }
 
-func (p *AwsConnection) AccountId() string {
-	return p.accountId
-}
-
 func (p *AwsConnection) Profile() string {
-	return p.profile
+	return p.opts.profile
 }
 
 func (p *AwsConnection) Scope() string {
-	return p.scope
+	return p.opts.scope
 }
 
 func (p *AwsConnection) ConnectionOptions() map[string]string {
-	return p.connectionOptions
+	return p.opts.options
 }
 
 func (p *AwsConnection) RunCommand(command string) (*shared.Command, error) {
