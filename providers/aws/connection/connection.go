@@ -144,8 +144,8 @@ func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 }
 
 func (c *AwsConnection) Hash() uint64 {
-	// generate hash of the config options used to generate this connection
-	// used to avoid verifying a client with the same options more than once
+	// generate hash of the config options used to to initialize this connection,
+	// we use this to avoid verifying a client with the same options more than once
 	hash, err := hashstructure.Hash(c.opts, hashstructure.FormatV2, nil)
 	if err != nil {
 		log.Error().Err(err).Msg("unable to hash connection")
@@ -154,12 +154,12 @@ func (c *AwsConnection) Hash() uint64 {
 }
 
 func (c *AwsConnection) Verify() (string, error) {
-	cfgCopy := c.cfg.Copy()
 	identity, err := CheckIam(c.cfg.Copy())
 	if err != nil {
 		log.Debug().Err(err).Msg("could not gather details of AWS account")
+		// try with govcloud region, store error to return it if this last option does not work
 		err1 := err
-		// try with govcloud region
+		cfgCopy := c.cfg.Copy()
 		cfgCopy.Region = "us-gov-west-1"
 		identity, err = CheckIam(cfgCopy)
 		if err != nil {
