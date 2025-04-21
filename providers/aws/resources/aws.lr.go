@@ -4142,12 +4142,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.vpc.peeringConnection.peeringVpc.allowDnsResolutionFromRemoteVpc": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcPeeringConnectionPeeringVpc).GetAllowDnsResolutionFromRemoteVpc()).ToDataRes(types.Bool)
 	},
-	"aws.vpc.peeringConnection.peeringVpc.allowEgressFromLocalClassicLinkToRemoteVpc": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsVpcPeeringConnectionPeeringVpc).GetAllowEgressFromLocalClassicLinkToRemoteVpc()).ToDataRes(types.Bool)
-	},
-	"aws.vpc.peeringConnection.peeringVpc.allowEgressFromLocalVpcToRemoteClassicLink": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsVpcPeeringConnectionPeeringVpc).GetAllowEgressFromLocalVpcToRemoteClassicLink()).ToDataRes(types.Bool)
-	},
 	"aws.vpc.peeringConnection.peeringVpc.ipv4CiderBlocks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcPeeringConnectionPeeringVpc).GetIpv4CiderBlocks()).ToDataRes(types.Array(types.String))
 	},
@@ -10130,14 +10124,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		},
 	"aws.vpc.peeringConnection.peeringVpc.allowDnsResolutionFromRemoteVpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpcPeeringConnectionPeeringVpc).AllowDnsResolutionFromRemoteVpc, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"aws.vpc.peeringConnection.peeringVpc.allowEgressFromLocalClassicLinkToRemoteVpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVpcPeeringConnectionPeeringVpc).AllowEgressFromLocalClassicLinkToRemoteVpc, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"aws.vpc.peeringConnection.peeringVpc.allowEgressFromLocalVpcToRemoteClassicLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVpcPeeringConnectionPeeringVpc).AllowEgressFromLocalVpcToRemoteClassicLink, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.peeringConnection.peeringVpc.ipv4CiderBlocks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25830,8 +25816,6 @@ type mqlAwsVpcPeeringConnectionPeeringVpc struct {
 	__id string
 	// optional: if you define mqlAwsVpcPeeringConnectionPeeringVpcInternal it will be used here
 	AllowDnsResolutionFromRemoteVpc plugin.TValue[bool]
-	AllowEgressFromLocalClassicLinkToRemoteVpc plugin.TValue[bool]
-	AllowEgressFromLocalVpcToRemoteClassicLink plugin.TValue[bool]
 	Ipv4CiderBlocks plugin.TValue[[]interface{}]
 	Ipv6CiderBlocks plugin.TValue[[]interface{}]
 	OwnerID plugin.TValue[string]
@@ -25879,14 +25863,6 @@ func (c *mqlAwsVpcPeeringConnectionPeeringVpc) MqlID() string {
 
 func (c *mqlAwsVpcPeeringConnectionPeeringVpc) GetAllowDnsResolutionFromRemoteVpc() *plugin.TValue[bool] {
 	return &c.AllowDnsResolutionFromRemoteVpc
-}
-
-func (c *mqlAwsVpcPeeringConnectionPeeringVpc) GetAllowEgressFromLocalClassicLinkToRemoteVpc() *plugin.TValue[bool] {
-	return &c.AllowEgressFromLocalClassicLinkToRemoteVpc
-}
-
-func (c *mqlAwsVpcPeeringConnectionPeeringVpc) GetAllowEgressFromLocalVpcToRemoteClassicLink() *plugin.TValue[bool] {
-	return &c.AllowEgressFromLocalVpcToRemoteClassicLink
 }
 
 func (c *mqlAwsVpcPeeringConnectionPeeringVpc) GetIpv4CiderBlocks() *plugin.TValue[[]interface{}] {
