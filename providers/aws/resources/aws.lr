@@ -2844,10 +2844,6 @@ private aws.vpc.peeringConnection {
 private aws.vpc.peeringConnection.peeringVpc {
   // Whether DNS resolution from the remote VPC is allowed
   allowDnsResolutionFromRemoteVpc bool
-  // Whether egress is allowed from a local classic link to the remote VPC
-  allowEgressFromLocalClassicLinkToRemoteVpc bool
-  // Whether egress is allowed from a local VPC to a classic link
-  allowEgressFromLocalVpcToRemoteClassicLink bool
   // List of IPv4 CIDR blocks for peering connection
   ipv4CiderBlocks []string
   // List of IPv6 CIDR blocks for peering connection

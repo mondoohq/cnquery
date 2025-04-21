@@ -3360,8 +3360,6 @@ resources:
   aws.vpc.peeringConnection.peeringVpc:
     fields:
       allowDnsResolutionFromRemoteVpc: {}
-      allowEgressFromLocalClassicLinkToRemoteVpc: {}
-      allowEgressFromLocalVpcToRemoteClassicLink: {}
       ipv4CiderBlocks: {}
       ipv6CiderBlocks: {}
       ownerID: {}
