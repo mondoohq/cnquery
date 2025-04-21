@@ -98,7 +98,7 @@ func (s *LocalScanner) Run(ctx context.Context, job *Job) (*explorer.ReportColle
 	if err != nil {
 		return nil, err
 	}
-	reports, err := s.distributeJob(job, ctx, upstreamConfig)
+	reports, err := s.distributeJob(ctx, job, upstreamConfig)
 	if err != nil {
 		if code := status.Code(err); code == codes.Unauthenticated {
 			return nil, multierr.Wrap(err,
@@ -148,7 +148,7 @@ func (s *LocalScanner) RunIncognito(ctx context.Context, job *Job) (*explorer.Re
 
 	// skip the error check, we are running in incognito
 	upstreamConfig, _ := s.getUpstreamConfig(job.Inventory, true)
-	reports, err := s.distributeJob(job, ctx, upstreamConfig)
+	reports, err := s.distributeJob(ctx, job, upstreamConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -205,7 +205,7 @@ func CreateProgressBar(discoveredAssets *DiscoveredAssets, disableProgressBar bo
 	return multiprogress, nil
 }
 
-func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *upstream.UpstreamConfig) (*explorer.ReportCollection, error) {
+func (s *LocalScanner) distributeJob(ctx context.Context, job *Job, upstream *upstream.UpstreamConfig) (*explorer.ReportCollection, error) {
 	log.Info().Msgf("discover related assets for %d asset(s)", len(job.Inventory.Spec.Assets))
 
 	discoveredAssets, err := DiscoverAssets(ctx, job.Inventory, upstream, s.recording)

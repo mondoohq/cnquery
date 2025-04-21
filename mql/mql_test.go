@@ -16,6 +16,7 @@ import (
 	"go.mondoo.com/cnquery/v11/mql"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/testutils"
 	"go.mondoo.com/cnquery/v11/types"
+	"go.uber.org/goleak"
 )
 
 var features cnquery.Features
@@ -46,6 +47,22 @@ func getEnvFeatures() cnquery.Features {
 		}
 	}
 	return fts
+}
+
+func TestMain(m *testing.M) {
+	// verify that we are not leaking goroutines
+	goleak.VerifyTestMain(m)
+}
+
+func TestMqlHundreds(t *testing.T) {
+	for i := range 500 {
+		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
+			res, err := mql.Exec("asset.platform", runtime(), features, nil)
+			assert.NoError(t, err)
+			assert.NoError(t, res.Error)
+			assert.Equal(t, "arch", res.Value)
+		})
+	}
 }
 
 func TestMqlSimple(t *testing.T) {

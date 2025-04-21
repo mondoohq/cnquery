@@ -17,7 +17,6 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/memoize"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/v11/providers/github/connection"
 	"go.mondoo.com/cnquery/v11/providers/github/resources"
@@ -32,13 +31,11 @@ var (
 
 type Service struct {
 	*plugin.Service
-	*memoize.Memoizer
 }
 
 func Init() *Service {
 	return &Service{
 		plugin.NewService(),
-		memoize.NewMemoizer(cacheExpirationTime, cacheCleanupTime),
 	}
 }
 
@@ -189,20 +186,26 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		}
 
 		// verify the connection only once
-		_, err, _ = s.Memoize(fmt.Sprintf("conn_%d", conn.Hash), func() (interface{}, error) {
-			log.Trace().Msg("verifying github connection client")
+		_, _, err = s.Memoize(fmt.Sprintf("conn_%d", conn.Hash), func() (any, error) {
+			log.Debug().Msg("verifying github connection client")
 			err := conn.Verify()
 			return nil, err
 		})
 		if err != nil {
 			return nil, err
 		}
-		var upstream *upstream.UpstreamClient
+
+		// create an upstream client only once
+		var upstreamClient *upstream.UpstreamClient
 		if req.Upstream != nil && !req.Upstream.Incognito {
-			upstream, err = req.Upstream.InitClient(context.Background())
+			data, _, err := s.Memoize(
+				fmt.Sprintf("upstream_%d", req.Upstream.Hash()), func() (any, error) {
+					return req.Upstream.InitClient(context.Background())
+				})
 			if err != nil {
 				return nil, err
 			}
+			upstreamClient = data.(*upstream.UpstreamClient)
 		}
 
 		asset.Connections[0].Id = connId
@@ -214,7 +217,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			resources.NewResource,
 			resources.GetData,
 			resources.SetData,
-			upstream), nil
+			upstreamClient), nil
 	})
 	if err != nil {
 		return nil, err
