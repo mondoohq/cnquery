@@ -62,7 +62,7 @@ func ExchangeSSHKey(apiEndpoint string, identityMrn string, resourceMrn string) 
 
 func ExchangeExternalToken(apiEndpoint string, audience string, issuerURI string) (*ServiceAccountCredentials, error) {
 	// Fetch the identity token from the cloud provider
-	jsonToken, provider, err := fetchIdentityToken(audience)
+	jsonToken, err := fetchIdentityToken(audience)
 	if err != nil {
 		return nil, err
 	}
@@ -70,20 +70,6 @@ func ExchangeExternalToken(apiEndpoint string, audience string, issuerURI string
 	stsClient, err := NewSecureTokenServiceClient(apiEndpoint, ranger.DefaultHttpClient())
 	if err != nil {
 		return nil, err
-	}
-
-	// If issuerURI is not provided, default based on the provider
-	if issuerURI == "" {
-		switch provider {
-		case "gcp":
-			issuerURI = "https://accounts.google.com"
-		case "azure":
-			issuerURI = "https://sts.windows.net/"
-		case "github":
-			issuerURI = "https://token.actions.githubusercontent.com"
-		default:
-			issuerURI = "https://accounts.google.com"
-		}
 	}
 
 	request := &ExchangeExternalTokenRequest{
@@ -131,23 +117,23 @@ func ExchangeExternalToken(apiEndpoint string, audience string, issuerURI string
 
 // fetchIdentityToken fetches an identity token from the current cloud environment
 // It supports GCP, Azure, and GitHub Actions
-func fetchIdentityToken(audience string) (string, string, error) {
+func fetchIdentityToken(audience string) (string, error) {
 	// Try GCP
 	if token, err := fetchGCPIdentityToken(audience); err == nil {
-		return token, "gcp", nil
+		return token, nil
 	}
 
 	// Try Azure
 	if token, err := fetchAzureIdentityToken(audience); err == nil {
-		return token, "azure", nil
+		return token, nil
 	}
 
 	// Try GitHub Actions
 	if token, err := fetchGitHubActionsIdentityToken(audience); err == nil {
-		return token, "github", nil
+		return token, nil
 	}
 
-	return "", "", fmt.Errorf("failed to fetch identity token from any supported cloud provider")
+	return "", fmt.Errorf("failed to fetch identity token from any supported cloud provider")
 }
 
 // fetchGCPIdentityToken fetches an identity token from GCP metadata service

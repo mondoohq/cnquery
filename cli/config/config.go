@@ -340,14 +340,15 @@ func (c *CommonOpts) GetServiceCredential() *upstream.ServiceAccountCredentials 
 
 			// Now check if we have an API endpoint
 			if c.APIEndpoint == "" {
-				log.Error().Msg("missing required API endpoint for WIF authentication. Set 'universeDomain' in config or use --api-endpoint flag")
+				log.Error().Msg("missing required API endpoint for WIF authentication. Set 'universeDomain' in config")
 				return nil
 			}
 
 			// Provide default issuer if not set
 			issuerURI := c.IssuerURI
 			if issuerURI == "" {
-				log.Debug().Str("issuerURI", issuerURI).Msg("using default issuer URI for WIF authentication")
+				log.Error().Msg("missing required issuer URI for WIF authentication. Set 'issuer_uri' in config ")
+				return nil
 			}
 
 			serviceAccount, err := upstream.ExchangeExternalToken(c.UpstreamApiEndpoint(), c.Audience, issuerURI)
@@ -358,41 +359,6 @@ func (c *CommonOpts) GetServiceCredential() *upstream.ServiceAccountCredentials 
 
 			return serviceAccount
 		}
-	}
-
-	// Check if we have a type field that indicates external_account but no authentication method
-	// This is a fallback for backward compatibility
-	if viper.GetString("type") == "external_account" && c.Audience != "" {
-		log.Info().Msg("detected external account config, using wif authentication method")
-
-		// If apiEndpoint is not set, check for universeDomain in viper
-		if c.APIEndpoint == "" {
-			universeDomain := viper.GetString("universeDomain")
-			if universeDomain != "" {
-				c.APIEndpoint = universeDomain
-				log.Debug().Str("apiEndpoint", c.APIEndpoint).Msg("using universeDomain as API endpoint for WIF authentication")
-			}
-		}
-
-		// Now check if we have an API endpoint
-		if c.APIEndpoint == "" {
-			log.Error().Msg("missing required API endpoint for WIF authentication. Set 'universeDomain' in config or use --api-endpoint flag")
-			return nil
-		}
-
-		issuerURI := c.IssuerURI
-		if issuerURI == "" {
-			issuerURI = "https://accounts.google.com"
-			log.Debug().Str("issuerURI", issuerURI).Msg("using default issuer URI for WIF authentication")
-		}
-
-		serviceAccount, err := upstream.ExchangeExternalToken(c.UpstreamApiEndpoint(), c.Audience, issuerURI)
-		if err != nil {
-			log.Error().Err(err).Msg("could not exchange external (wif) token")
-			return nil
-		}
-
-		return serviceAccount
 	}
 
 	// return nil when no service account is defined
@@ -515,9 +481,10 @@ func ConvertWifConfig(filePath string, v *viper.Viper) error {
 		return errors.New("WIF config missing required 'universeDomain' field")
 	}
 
-	// Set optional fields
 	if issuerUri, ok := wifConfig["issuerUri"].(string); ok {
 		v.Set("issuer_uri", issuerUri)
+	} else {
+		return errors.New("WIF config missing required 'issuerUri' field")
 	}
 
 	// Copy all other fields for consistency
