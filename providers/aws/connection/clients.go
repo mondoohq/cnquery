@@ -65,13 +65,27 @@ type CacheEntry struct {
 }
 
 // Cache is a map containing CacheEntry values
-type ClientsCache struct{ sync.Map }
+type ClientsCache struct {
+	sync.Map
+
+	disabled bool
+}
 
 // Store a Cache Entry
-func (c *ClientsCache) Store(key string, v *CacheEntry) { c.Map.Store(key, v) }
+func (c *ClientsCache) Store(key string, v *CacheEntry) {
+	if c.disabled {
+		return
+	}
+
+	c.Map.Store(key, v)
+}
 
 // Load a Cache Entry
 func (c *ClientsCache) Load(key string) (*CacheEntry, bool) {
+	if c.disabled {
+		return nil, false
+	}
+
 	res, ok := c.Map.Load(key)
 	if res == nil {
 		return nil, ok
@@ -80,7 +94,13 @@ func (c *ClientsCache) Load(key string) (*CacheEntry, bool) {
 }
 
 // Delete a Cache Entry
-func (c *ClientsCache) Delete(key string) { c.Map.Delete(key) }
+func (c *ClientsCache) Delete(key string) {
+	if c.disabled {
+		return
+	}
+
+	c.Map.Delete(key)
+}
 
 func (t *AwsConnection) Organizations(region string) *organizations.Client {
 	// if no region value is sent in, use the configured region
