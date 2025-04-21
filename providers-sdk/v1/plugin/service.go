@@ -141,7 +141,10 @@ func (s *Service) Disconnect(req *DisconnectReq) (*DisconnectRes, error) {
 	s.runtimesLock.Lock()
 	defer s.runtimesLock.Unlock()
 	s.doDisconnect(req.Connection)
-	s.Flush() // flush our Memoizer
+	if len(s.runtimes) == 0 {
+		// flush our memoizer when there are no more connected runtimes
+		s.Flush()
+	}
 	return &DisconnectRes{}, nil
 }
 

@@ -14,7 +14,7 @@ import (
 
 type Runtime struct {
 	Connection     Connection
-	Resources      *syncx.Map[Resource]
+	Resources      Resources[Resource]
 	Callback       ProviderCallback
 	HasRecording   bool
 	CreateResource CreateNamedResource

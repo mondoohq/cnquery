@@ -371,15 +371,15 @@ func (p *Platform) PrettyTitle() string {
 		runtimeKind := p.Kind
 		switch runtimeKind {
 		case AssetKindBaremetal:
-			runtimeNiceName = "bare metal"
+			runtimeNiceName = "Bare metal system"
 		case "container":
 			runtimeNiceName = "Container"
 		case "container-image":
-			runtimeNiceName = "Container Image"
+			runtimeNiceName = "Container image"
 		case AssetKindCloudVM:
-			runtimeNiceName = "Virtual Machine"
+			runtimeNiceName = "Virtual machine"
 		case "virtualmachine-image":
-			runtimeNiceName = "Virtual Machine Image"
+			runtimeNiceName = "Virtual machine image"
 		}
 	}
 	// e.g. ", Kubernetes Cluster" and also "Kubernetes, Kubernetes Cluster" do not look nice, so prevent them

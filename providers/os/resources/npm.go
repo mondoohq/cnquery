@@ -32,8 +32,14 @@ var (
 		"/home/*/.npm-global/lib",
 		// Windows
 		"C:\\Users\\*\\AppData\\Roaming\\npm",
+		"C:\\Program Files\\nodejs\\node_modules\\npm",
+		"C:\\Users\\*\\node_modules",
 		// macOS
 		"/Users/*/.npm-global/lib",
+		// Container app paths
+		"/app",
+		"/home/node/app",
+		"/usr/src/app",
 	}
 )
 

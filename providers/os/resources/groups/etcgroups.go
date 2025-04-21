@@ -5,12 +5,17 @@ package groups
 
 import (
 	"bufio"
+	"errors"
 	"io"
 	"strconv"
 	"strings"
 
+	"slices"
+
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v11/providers/os/resources/users"
+	"go.mondoo.com/cnquery/v11/utils/multierr"
 )
 
 // a good description of this file is available at:
@@ -77,7 +82,40 @@ func (s *UnixGroupManager) List() ([]*Group, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	defer f.Close()
-	return ParseEtcGroup(f)
+
+	groups, err := ParseEtcGroup(f)
+	if err != nil {
+		return nil, multierr.Wrap(err, "could not parse /etc/group")
+	}
+
+	um, err := users.ResolveManager(s.conn)
+	if err != nil {
+		return nil, multierr.Wrap(err, "cannot resolve users manager")
+	}
+	if um == nil {
+		return nil, errors.New("cannot find users manager")
+	}
+
+	groupsByGid := map[int64]*Group{}
+	for i := range groups {
+		g := groups[i]
+		groupsByGid[g.Gid] = g
+	}
+
+	users, err := um.List()
+	if err != nil {
+		return nil, multierr.Wrap(err, "could not retrieve users list")
+	}
+
+	for _, u := range users {
+		if g, ok := groupsByGid[u.Gid]; ok {
+			if slices.Contains(g.Members, u.Name) {
+				continue
+			}
+			g.Members = append(g.Members, u.Name)
+		}
+	}
+
+	return groups, nil
 }

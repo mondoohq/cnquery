@@ -88,7 +88,7 @@ func (m *goCache) Flush() {
 	if m.storage != nil {
 		m.storage.Flush()
 		m.storage = nil
-		go runtime.GC()
+		runtime.GC()
 	}
 }
 
