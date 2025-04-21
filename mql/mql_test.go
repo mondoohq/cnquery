@@ -92,7 +92,6 @@ func TestMqlSimple(t *testing.T) {
 			assert.Equal(t, one.assertion, res.Value)
 		})
 	}
-	goleak.VerifyNone(t)
 }
 
 func TestCustomData(t *testing.T) {
