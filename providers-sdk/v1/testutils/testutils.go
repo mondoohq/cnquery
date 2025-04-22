@@ -94,7 +94,7 @@ func (ctx *tester) ExecuteCode(bundle *llx.CodeBundle, props map[string]*llx.Pri
 	return mql.ExecuteCode(ctx.Runtime, bundle, props, Features)
 }
 
-func (ctx *tester) TestQueryPWithError(t *testing.T, query string, props map[string]*llx.Primitive) ([]*llx.RawResult, error) {
+func (ctx *tester) TestQueryPWithError(t *testing.T, query string, props mqlc.PropsHandler) ([]*llx.RawResult, error) {
 	t.Helper()
 	bundle, err := mqlc.Compile(query, props, mqlc.NewConfig(ctx.Runtime.Schema(), Features))
 	if err != nil {
@@ -104,10 +104,10 @@ func (ctx *tester) TestQueryPWithError(t *testing.T, query string, props map[str
 	if err != nil {
 		return nil, fmt.Errorf("failed to check invariants: %w", err)
 	}
-	return ctx.TestMqlc(t, bundle, props), nil
+	return ctx.TestMqlc(t, bundle, props.Available()), nil
 }
 
-func (ctx *tester) TestQueryP(t *testing.T, query string, props map[string]*llx.Primitive) []*llx.RawResult {
+func (ctx *tester) TestQueryP(t *testing.T, query string, props mqlc.PropsHandler) []*llx.RawResult {
 	t.Helper()
 	bundle, err := mqlc.Compile(query, props, mqlc.NewConfig(ctx.Runtime.Schema(), Features))
 	if err != nil {
@@ -115,7 +115,7 @@ func (ctx *tester) TestQueryP(t *testing.T, query string, props map[string]*llx.
 	}
 	err = mqlc.Invariants.Check(bundle)
 	require.NoError(t, err)
-	return ctx.TestMqlc(t, bundle, props)
+	return ctx.TestMqlc(t, bundle, props.Available())
 }
 
 func (ctx *tester) TestQuery(t *testing.T, query string) []*llx.RawResult {
