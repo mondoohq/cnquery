@@ -9,6 +9,10 @@ packs:
   filters:
   - asset.family.contains("unix")
 
+  props:
+    - uid: username
+      mql: return "ada"
+
   # Queries can be grouped together, which gives us additional filters on each group.
   # For example: the first group is for macOS only, the second for is for Linux
   groups:
@@ -39,21 +43,26 @@ packs:
 
         # This query demonstrates how properties work. They are small configurable
         # variables that are used in queries to give some configurability to users.
-        # It also shows how filters can be embedded.
+        # It also shows how filters can be embedded and how to use props from the
+        # querypack.
         - uid: home-info
           title: Collect data about the home folder
           filters:
           - mql: asset.family.contains("linux")
+          # Here we define properties that are available to this query.
           props:
+            # We define a property called "home". It can be accessed in MQL
+            # via `props.home`, as seen in the example below.
             - uid: home
               # when dealing with strings in yaml, make sure to write it like this,
               # so that we don't loose the double quotes `"` from parsing the yaml
               mql: |
                 "/home"
-          # This MQL uses the property defined above. You can override it via
-          # e.g. --props "home='/home/user'"
+          # This MQL uses the property defined above. You can override the property
+          # value via e.g. --props "home='/home/user'"
+          # We also use the property `username` that is defined in the querypack.
           mql: |
-            file( props.home ) { basename user group }
+            file( props.home + "/" + props.username ) { basename user group }
 
 # These are shared queries that can be used in any querypack
 queries:

@@ -30,7 +30,7 @@ func (p *Property) RefreshMRN(ownerMRN string) error {
 }
 
 // Compile a given property and return the bundle.
-func (p *Property) Compile(props map[string]*llx.Primitive, conf mqlc.CompilerConfig) (*llx.CodeBundle, error) {
+func (p *Property) Compile(props mqlc.PropsHandler, conf mqlc.CompilerConfig) (*llx.CodeBundle, error) {
 	return mqlc.Compile(p.Mql, props, conf)
 }
 

@@ -110,6 +110,33 @@ func NewConfig(schema resources.ResourcesSchema, features cnquery.Features) Comp
 	}
 }
 
+type PropsHandler interface {
+	// Get a property for a given name. In some cases, we may look up
+	// indirectly available properties (e.g. via policies).
+	Get(name string) *llx.Primitive
+	// Available returns the list of available properties. This is typically
+	// the list of properties that are associated with a query. This should include
+	// properties that are indirectly available AND have been requested via Get.
+	Available() map[string]*llx.Primitive
+	// All looks up all possible properties, direct or indirectly available ones.
+	// This is used to provide users with suggestions.
+	All() map[string]*llx.Primitive
+}
+
+type emptyPropsHandler struct{}
+
+var EmptyPropsHandler = emptyPropsHandler{}
+
+func (e emptyPropsHandler) Get(name string) *llx.Primitive       { return nil }
+func (e emptyPropsHandler) Available() map[string]*llx.Primitive { return map[string]*llx.Primitive{} }
+func (e emptyPropsHandler) All() map[string]*llx.Primitive       { return map[string]*llx.Primitive{} }
+
+type SimpleProps map[string]*llx.Primitive
+
+func (s SimpleProps) Get(name string) *llx.Primitive       { return s[name] }
+func (s SimpleProps) Available() map[string]*llx.Primitive { return s }
+func (s SimpleProps) All() map[string]*llx.Primitive       { return s }
+
 type compiler struct {
 	CompilerConfig
 
@@ -120,7 +147,7 @@ type compiler struct {
 	block     *llx.Block
 	blockRef  uint64
 	blockDeps []uint64
-	props     map[string]*llx.Primitive
+	props     PropsHandler
 	comment   string
 
 	// a standalone code is one that doesn't call any of its bindings
@@ -1218,10 +1245,11 @@ func (c *compiler) compileProps(call *parser.Call, calls []*parser.Call, res *ll
 	}
 
 	name := *nextCall.Ident
-	prim, ok := c.props[name]
-	if !ok {
-		keys := make(map[string]llx.Documentation, len(c.props))
-		for key, prim := range c.props {
+	prim := c.props.Get(name)
+	if prim == nil {
+		props := c.props.All()
+		keys := make(map[string]llx.Documentation, len(props))
+		for key, prim := range props {
 			keys[key] = llx.Documentation{
 				Field: key,
 				Title: key + " (" + types.Type(prim.Type).Label() + ")",
@@ -2111,13 +2139,13 @@ func getMinMondooVersion(schema resources.ResourcesSchema, current string, resou
 }
 
 // CompileAST with a schema into a chunky code
-func CompileAST(ast *parser.AST, props map[string]*llx.Primitive, conf CompilerConfig) (*llx.CodeBundle, error) {
+func CompileAST(ast *parser.AST, props PropsHandler, conf CompilerConfig) (*llx.CodeBundle, error) {
 	if conf.Schema == nil {
 		return nil, errors.New("mqlc> please provide a schema to compile this code")
 	}
 
 	if props == nil {
-		props = map[string]*llx.Primitive{}
+		props = EmptyPropsHandler
 	}
 
 	codeBundle := &llx.CodeBundle{
@@ -2151,7 +2179,7 @@ func CompileAST(ast *parser.AST, props map[string]*llx.Primitive, conf CompilerC
 }
 
 // Compile a code piece against a schema into chunky code
-func compile(input string, props map[string]*llx.Primitive, compilerConf CompilerConfig) (*llx.CodeBundle, error) {
+func compile(input string, props PropsHandler, compilerConf CompilerConfig) (*llx.CodeBundle, error) {
 	// remove leading whitespace; we are re-using this later on
 	input = Dedent(input)
 
@@ -2194,7 +2222,7 @@ func compile(input string, props map[string]*llx.Primitive, compilerConf Compile
 	return res, nil
 }
 
-func Compile(input string, props map[string]*llx.Primitive, conf CompilerConfig) (*llx.CodeBundle, error) {
+func Compile(input string, props PropsHandler, conf CompilerConfig) (*llx.CodeBundle, error) {
 	// Note: we do not check the conf because it will get checked by the
 	// first CompileAST call. Do not use it earlier or add a check.
 	defer func() {
