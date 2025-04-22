@@ -2346,7 +2346,6 @@ aws.rds.clusterParameterGroup @defaults("name family region arn") {
   parameters() []aws.rds.parameterGroup.parameter
 }
 
-
 // Amazon RDS parameter groups
 aws.rds.parameterGroup @defaults("name family region arn") {
   // ARN for resource
