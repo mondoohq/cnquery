@@ -248,8 +248,7 @@ func TestIsWifConfigFormat(t *testing.T) {
 		configPath := filepath.Join(homeConfigDir, "wif_config.json")
 		require.NoError(t, afero.WriteFile(AppFs, configPath, []byte(wifConfig), 0o644))
 
-		isWif, err := IsWifConfigFormat(configPath)
-		require.NoError(t, err)
+		isWif := IsWifConfigFormat(configPath)
 		assert.True(t, isWif)
 	})
 
@@ -258,8 +257,7 @@ func TestIsWifConfigFormat(t *testing.T) {
 		configPath := filepath.Join(homeConfigDir, "invalid.json")
 		require.NoError(t, afero.WriteFile(AppFs, configPath, []byte(invalidJSON), 0o644))
 
-		isWif, err := IsWifConfigFormat(configPath)
-		require.NoError(t, err)
+		isWif := IsWifConfigFormat(configPath)
 		assert.False(t, isWif)
 	})
 
@@ -272,8 +270,7 @@ func TestIsWifConfigFormat(t *testing.T) {
 		configPath := filepath.Join(homeConfigDir, "non_wif.json")
 		require.NoError(t, afero.WriteFile(AppFs, configPath, []byte(nonWifConfig), 0o644))
 
-		isWif, err := IsWifConfigFormat(configPath)
-		require.NoError(t, err)
+		isWif := IsWifConfigFormat(configPath)
 		assert.False(t, isWif)
 	})
 
@@ -285,8 +282,7 @@ func TestIsWifConfigFormat(t *testing.T) {
 		configPath := filepath.Join(homeConfigDir, "missing_fields.json")
 		require.NoError(t, afero.WriteFile(AppFs, configPath, []byte(missingFields), 0o644))
 
-		isWif, err := IsWifConfigFormat(configPath)
-		require.NoError(t, err)
+		isWif := IsWifConfigFormat(configPath)
 		assert.False(t, isWif)
 	})
 }
