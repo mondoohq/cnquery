@@ -2332,14 +2332,15 @@ private aws.rds.pendingMaintenanceAction {
   optInStatus string
 }
 
+// Amazon RDS cluster parameter groups
 aws.rds.clusterParameterGroup @defaults("name family region arn") {
   // ARN for resource
   arn string
-  // Family of the Parameter Group
+  // Family of the parameter group
   family string
-  // Name of the Parameter Group
+  // Name of the parameter group
   name string
-  // Description of the Parameter Group
+  // Description of the parameter group
   description string
   // Region of the parameters
   region string
@@ -2350,47 +2351,47 @@ aws.rds.clusterParameterGroup @defaults("name family region arn") {
 aws.rds.parameterGroup @defaults("name family region arn") {
   // ARN for resource
   arn string
-  // Family of the Parameter Group
+  // Family of the parameter group
   family string
-  // Name of the Parameter Group
+  // Name of the parameter group
   name string
-  // Description of the Parameter Group
+  // Description of the parameter group
   description string
   // Region of the parameters
   region string
-  // The Parameters of the group
+  // The parameters of the group
   parameters() []aws.rds.parameterGroup.parameter
 }
 
 aws.rds.parameterGroup.parameter @defaults("name value") {
-  // Specifies the valid range of values for the parameter.
-	allowedValues string
-	// When to apply parameter updates.
-	applyMethod string
-	// Specifies the engine specific parameters type.
-	applyType string
-	// Specifies the valid data type for the parameter.
-	dataType string
-	// Provides a description of the parameter.
-	description string
-	// being changed.
-	isModifiable bool
-	// The earliest engine version to which the parameter can apply.
-	minimumEngineVersion string
-	// The name of the parameter.
-	name string
-	// The value of the parameter.
-	value string
-	// The source of the parameter value.
-	source string
-	// The valid DB engine modes.
-	supportedEngineModes []string
+  // Specifies the valid range of values for the parameter
+  allowedValues string
+  // When to apply parameter updates
+  applyMethod string
+  // Specifies the engine specific parameters type
+  applyType string
+  // Specifies the valid data type for the parameter
+  dataType string
+  // Provides a description of the parameter
+  description string
+  // being changed
+  isModifiable bool
+  // The earliest engine version to which the parameter can apply
+  minimumEngineVersion string
+  // The name of the parameter
+  name string
+  // The value of the parameter
+  value string
+  // The source of the parameter value
+  source string
+  // The valid DB engine modes
+  supportedEngineModes []string
 }
 
 
 // Amazon ElastiCache
 aws.elasticache @defaults("cacheClusters") {
-    // Deprecated: Use `cacheClusters` instead.
+  // Deprecated: Use `cacheClusters` instead.
   clusters() []dict
   // List of cache clusters
   cacheClusters() []aws.elasticache.cluster
