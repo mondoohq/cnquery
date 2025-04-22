@@ -28,11 +28,11 @@ type Executor struct {
 }
 
 // Exec runs a query with properties against the runtime
-func (e *Executor) Exec(query string, props map[string]*llx.Primitive) (*llx.RawData, error) {
+func (e *Executor) Exec(query string, props mqlc.PropsHandler) (*llx.RawData, error) {
 	return Exec(query, e.runtime, e.features, props)
 }
 
-func Exec(query string, runtime llx.Runtime, features cnquery.Features, props map[string]*llx.Primitive) (*llx.RawData, error) {
+func Exec(query string, runtime llx.Runtime, features cnquery.Features, props mqlc.PropsHandler) (*llx.RawData, error) {
 	bundle, err := mqlc.Compile(query, props, mqlc.NewConfig(runtime.Schema(), features))
 	if err != nil {
 		return nil, errors.New("failed to compile: " + err.Error())
@@ -48,7 +48,7 @@ func Exec(query string, runtime llx.Runtime, features cnquery.Features, props ma
 		log.Warn().Str("query", query).Msg("mql> Code must only return one value, but it has many configured. Only returning last result.")
 	}
 
-	raw, err := ExecuteCode(runtime, bundle, props, features)
+	raw, err := ExecuteCode(runtime, bundle, props.Available(), features)
 	if err != nil {
 		return nil, err
 	}

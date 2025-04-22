@@ -251,7 +251,7 @@ func (s *LocalServices) addQueryToJob(ctx context.Context, query *Mquery, job *E
 		return nil
 	}
 
-	codeBundle, err := query.Compile(props, compilerConfig)
+	codeBundle, err := query.Compile(mqlc.SimpleProps(props), compilerConfig)
 	if err != nil {
 		return err
 	}
