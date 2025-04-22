@@ -176,7 +176,7 @@ jobs:
 
       - name: Send Slack notification on failure
         uses: slackapi/slack-github-action@v2.0.0
-        if: ${{ steps.build-providers.outcome != 'success' }}
+        if: ${{ always() && steps.build-providers.outcome != 'success' }}
         with:
           method: chat.postMessage
           token: ${{ secrets.SLACK_BOT_TOKEN }}
