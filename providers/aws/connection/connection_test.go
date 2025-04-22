@@ -7,7 +7,14 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 )
+
+func TestNewAwsConnection(t *testing.T) {
+	conn, err := NewAwsConnection(123, &inventory.Asset{}, &inventory.Config{})
+	require.Nil(t, err)
+	require.NotNil(t, conn)
+}
 
 func TestParseOptsToFilters(t *testing.T) {
 	t.Run("all opts are mapped to discovery filters correctly", func(t *testing.T) {

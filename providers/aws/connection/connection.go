@@ -109,6 +109,9 @@ func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 	}
 
 	// merge the options to make sure we don't miss anything
+	if asset.Options == nil {
+		asset.Options = map[string]string{}
+	}
 	maps.Copy(asset.Options, conf.Options)
 
 	opts := parseFlagsForConnectionOptions(asset.Options, conf.GetCredentials())
