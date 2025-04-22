@@ -22,7 +22,7 @@ import (
 
 // Compile a given query and return the bundle. Both v1 and v2 versions are compiled.
 // Both versions will be given the same code id.
-func (m *Mquery) Compile(props map[string]*llx.Primitive, conf mqlc.CompilerConfig) (*llx.CodeBundle, error) {
+func (m *Mquery) Compile(props mqlc.PropsHandler, conf mqlc.CompilerConfig) (*llx.CodeBundle, error) {
 	if m.Mql == "" {
 		if m.Query == "" {
 			return nil, errors.New("query is not implemented '" + m.Mrn + "'")
@@ -203,7 +203,7 @@ func (m QueryMap) GetQuery(ctx context.Context, mrn string) (*Mquery, error) {
 }
 
 func (m *Mquery) refreshChecksumAndType(queries map[string]*Mquery, props map[string]PropertyRef, conf mqlc.CompilerConfig) (*llx.CodeBundle, error) {
-	localProps := map[string]*llx.Primitive{}
+	localProps := mqlc.SimpleProps{}
 	for i := range m.Props {
 		prop := m.Props[i]
 
