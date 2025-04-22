@@ -13,6 +13,7 @@ message UpstreamConfig {
   bool incognito = 4;
   ServiceAccountCredentials creds = 5;
   string api_proxy = 6;
+
 }
 
 // ServiceAccountCredentials are used to authenticate with Mondoo Platform
@@ -92,6 +93,8 @@ message Confirmation {
 
 service SecureTokenService {
   rpc ExchangeSSH (ExchangeSSHKeyRequest) returns (ExchangeSSHKeyResponse) {}
+  rpc ExchangeExternalToken (ExchangeExternalTokenRequest)
+      returns (ExchangeExternalTokenResponse) {}
 }
 
 message ExchangeSSHKeyRequest {
@@ -121,4 +124,18 @@ message SshSignature {
   string alg = 1;
   string kid = 2;
   string sig = 3;
+}
+
+message ExchangeExternalTokenRequest {
+  // Issuer URI of the external identity provider
+  string issuer_uri = 1;
+  // Audience for the service account
+  string audience = 2;
+  // Token provided by the external identity provider to exchange
+  string jwt_token = 3;
+}
+
+message ExchangeExternalTokenResponse {
+  // Base64 encoded service account credential
+  string base64_credential = 1;
 }
