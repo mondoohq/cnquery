@@ -726,7 +726,7 @@ auditd.config {
   init(path? string)
   // File of this Auditd configuration
   file() file
-  // Conifguration values of this config
+  // Configuration values of this config
   params(file) map[string]string
 }
 
