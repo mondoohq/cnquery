@@ -165,7 +165,9 @@ func (x *xmlElem) addAttr(a []xml.Attr) {
 	if len(a) == 0 {
 		return
 	}
-	x.attributes = map[string]string{}
+	if x.attributes == nil {
+		x.attributes = map[string]string{}
+	}
 	for ai := range a {
 		attr := a[ai]
 		x.attributes[attrName(attr.Name)] = attr.Value
