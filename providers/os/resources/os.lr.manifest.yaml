@@ -45,6 +45,16 @@ resources:
       vector: {}
     is_private: true
     min_mondoo_version: 5.15.0
+  auditd.conf:
+    fields:
+      file: {}
+      params: {}
+    min_mondoo_version: 9.0.0
+  auditd.config:
+    fields:
+      file: {}
+      params: {}
+    min_mondoo_version: 9.0.0
   auditpol:
     fields:
       list:

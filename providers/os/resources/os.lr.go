@@ -230,6 +230,10 @@ func init() {
 			// to override args, implement: initSshdConfigMatchBlock(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createSshdConfigMatchBlock,
 		},
+		"auditd.config": {
+			Init: initAuditdConfig,
+			Create: createAuditdConfig,
+		},
 		"service": {
 			Init: initService,
 			Create: createService,
@@ -1326,6 +1330,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"sshd.config.matchBlock.context": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSshdConfigMatchBlock).GetContext()).ToDataRes(types.Resource("file.context"))
+	},
+	"auditd.config.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditdConfig).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"auditd.config.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditdConfig).GetParams()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"service.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlService).GetName()).ToDataRes(types.String)
@@ -3680,6 +3690,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"sshd.config.matchBlock.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSshdConfigMatchBlock).Context, ok = plugin.RawToTValue[*mqlFileContext](v.Value, v.Error)
+		return
+	},
+	"auditd.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAuditdConfig).__id, ok = v.Value.(string)
+			return
+		},
+	"auditd.config.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditdConfig).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"auditd.config.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditdConfig).Params, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
 		return
 	},
 	"service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9851,6 +9873,79 @@ func (c *mqlSshdConfigMatchBlock) GetContext() *plugin.TValue[*mqlFileContext] {
 		}
 
 		return c.context()
+	})
+}
+
+// mqlAuditdConfig for the auditd.config resource
+type mqlAuditdConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlAuditdConfigInternal
+	File plugin.TValue[*mqlFile]
+	Params plugin.TValue[map[string]interface{}]
+}
+
+// createAuditdConfig creates a new instance of this resource
+func createAuditdConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAuditdConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("auditd.config", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAuditdConfig) MqlName() string {
+	return "auditd.config"
+}
+
+func (c *mqlAuditdConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAuditdConfig) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("auditd.config", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlAuditdConfig) GetParams() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Params, func() (map[string]interface{}, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.params(vargFile.Data)
 	})
 }
 
