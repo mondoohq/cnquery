@@ -154,6 +154,10 @@ func init() {
 			Init: initParseJson,
 			Create: createParseJson,
 		},
+		"parse.xml": {
+			Init: initParseXml,
+			Create: createParseXml,
+		},
 		"parse.plist": {
 			Init: initParsePlist,
 			Create: createParsePlist,
@@ -1078,6 +1082,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"parse.json.params": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlParseJson).GetParams()).ToDataRes(types.Dict)
+	},
+	"parse.xml.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlParseXml).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"parse.xml.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlParseXml).GetContent()).ToDataRes(types.String)
+	},
+	"parse.xml.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlParseXml).GetParams()).ToDataRes(types.Dict)
 	},
 	"parse.plist.file": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlParsePlist).GetFile()).ToDataRes(types.Resource("file"))
@@ -3278,6 +3291,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"parse.json.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlParseJson).Params, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"parse.xml.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlParseXml).__id, ok = v.Value.(string)
+			return
+		},
+	"parse.xml.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlParseXml).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"parse.xml.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlParseXml).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"parse.xml.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlParseXml).Params, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"parse.plist.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8251,6 +8280,79 @@ func (c *mqlParseJson) GetContent() *plugin.TValue[string] {
 }
 
 func (c *mqlParseJson) GetParams() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.Params, func() (interface{}, error) {
+		vargContent := c.GetContent()
+		if vargContent.Error != nil {
+			return nil, vargContent.Error
+		}
+
+		return c.params(vargContent.Data)
+	})
+}
+
+// mqlParseXml for the parse.xml resource
+type mqlParseXml struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlParseXmlInternal it will be used here
+	File plugin.TValue[*mqlFile]
+	Content plugin.TValue[string]
+	Params plugin.TValue[interface{}]
+}
+
+// createParseXml creates a new instance of this resource
+func createParseXml(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlParseXml{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("parse.xml", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlParseXml) MqlName() string {
+	return "parse.xml"
+}
+
+func (c *mqlParseXml) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlParseXml) GetFile() *plugin.TValue[*mqlFile] {
+	return &c.File
+}
+
+func (c *mqlParseXml) GetContent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.content(vargFile.Data)
+	})
+}
+
+func (c *mqlParseXml) GetParams() *plugin.TValue[interface{}] {
 	return plugin.GetOrCompute[interface{}](&c.Params, func() (interface{}, error) {
 		vargContent := c.GetContent()
 		if vargContent.Error != nil {
