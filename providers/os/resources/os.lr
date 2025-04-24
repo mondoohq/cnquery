@@ -733,9 +733,10 @@ private sshd.config.matchBlock @defaults("criteria") @context("file.context") {
   params map[string]string
 }
 
+// auditd (Linux Audit Daemon) configuration
 auditd.config {
   init(path? string)
-  // File of this Auditd configuration
+  // File of this auditd configuration
   file() file
   // Configuration values of this config
   params(file) map[string]string
