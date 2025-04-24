@@ -53,7 +53,7 @@ func (k *mqlK8s) apps() ([]interface{}, error) {
 	appList := []interface{}{}
 	for _, app := range apps {
 		r, err := CreateResource(k.MqlRuntime, "k8s.app", map[string]*llx.RawData{
-			"__id":       llx.StringData("app"),
+			"__id":       llx.StringData(app.name + "/" + app.instance),
 			"name":       llx.StringData(app.name),
 			"version":    llx.StringData(app.version),
 			"instance":   llx.StringData(app.instance),
