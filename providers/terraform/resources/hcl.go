@@ -318,6 +318,10 @@ func (t *mqlTerraformBlock) id() (string, error) {
 	// NOTE: a hcl block is identified by its filename and position
 	fp := t.Start
 
+	if fp.State != plugin.StateIsSet || fp.Data == nil {
+		return "", errors.New("terraform block has invalid position data")
+	}
+
 	file := fp.Data.Path.Data
 	line := fp.Data.Line.Data
 	column := fp.Data.Column.Data
