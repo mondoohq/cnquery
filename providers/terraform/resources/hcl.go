@@ -711,7 +711,7 @@ func initTerraformSettings(runtime *plugin.Runtime, args map[string]*llx.RawData
 	}
 
 	blocks := terraform.terraformBlocks
-	if len(blocks) != 1 {
+	if len(blocks) == 0 {
 		// no terraform settings block found, this is ok for terraform and not an error
 		// TODO: return modified arguments to load from recording
 		return nil, &mqlTerraformSettings{
@@ -721,34 +721,38 @@ func initTerraformSettings(runtime *plugin.Runtime, args map[string]*llx.RawData
 		}, nil
 	}
 
-	settingsBlock := blocks[0]
-	args["block"] = llx.ResourceData(settingsBlock, "terraform.block")
-	args["requiredProviders"] = llx.DictData(map[string]interface{}{})
-	args["backend"] = llx.DictData(map[string]interface{}{})
+	// The block `terraform {}` can be defined multiple times but we don't support that yet,
+	// we will point to the first block and collect all the settings from all blocks to give
+	// as much information as possible back
+	args["block"] = llx.ResourceData(blocks[0], "terraform.block")
+	args["requiredProviders"] = llx.DictData(map[string]any{})
+	args["backend"] = llx.DictData(map[string]any{})
 
-	if settingsBlock.block.State == plugin.StateIsSet {
-		hb := settingsBlock.block.Data
-		requireProviderBlock := getBlockByName(hb, "required_providers")
-		if requireProviderBlock != nil {
-			attributes, _ := requireProviderBlock.Body.JustAttributes()
-			dict, err := hclResolvedAttributesToDict(attributes)
-			if err != nil {
-				return nil, nil, err
+	for _, settingsBlock := range blocks {
+		if settingsBlock.block.State == plugin.StateIsSet {
+			hb := settingsBlock.block.Data
+			requireProviderBlock := getBlockByName(hb, "required_providers")
+			if requireProviderBlock != nil {
+				attributes, _ := requireProviderBlock.Body.JustAttributes()
+				dict, err := hclResolvedAttributesToDict(attributes)
+				if err != nil {
+					return nil, nil, err
+				}
+				args["requiredProviders"] = llx.DictData(dict)
 			}
-			args["requiredProviders"] = llx.DictData(dict)
-		}
 
-		backendBlock := getBlockByName(hb, "backend")
-		if backendBlock != nil {
-			attributes, _ := backendBlock.Body.JustAttributes()
-			dict, err := hclResolvedAttributesToDict(attributes)
-			if err != nil {
-				return nil, nil, err
+			backendBlock := getBlockByName(hb, "backend")
+			if backendBlock != nil {
+				attributes, _ := backendBlock.Body.JustAttributes()
+				dict, err := hclResolvedAttributesToDict(attributes)
+				if err != nil {
+					return nil, nil, err
+				}
+				if len(backendBlock.Labels) != 0 {
+					dict["type"] = backendBlock.Labels[0]
+				}
+				args["backend"] = llx.DictData(dict)
 			}
-			if len(backendBlock.Labels) != 0 {
-				dict["type"] = backendBlock.Labels[0]
-			}
-			args["backend"] = llx.DictData(dict)
 		}
 	}
 
