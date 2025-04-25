@@ -379,6 +379,26 @@ func EnsureProvider(search ProviderLookup, autoUpdate bool, existing Providers) 
 
 	existing.Add(nu)
 	PrintInstallResults([]*Provider{nu})
+
+	// Check if we just installed the OS provider, and if so, ensure that the network provider
+	// is also installed since the OS provider depends on it for some functionality
+	if upstream.Name == "os" {
+		// Check if network provider is already installed
+		networkProvider := existing.Lookup(ProviderLookup{ProviderName: "network"})
+		if networkProvider == nil {
+			upstreamNetwork := DefaultProviders.Lookup(ProviderLookup{ProviderName: "network"})
+			if upstreamNetwork != nil {
+				networkProvider, err := Install(upstreamNetwork.Name, "")
+				if err != nil {
+					log.Warn().Err(err).Msg("failed to install network provider dependency for OS provider")
+				} else {
+					existing.Add(networkProvider)
+					PrintInstallResults([]*Provider{networkProvider})
+				}
+			}
+		}
+	}
+
 	return nu, nil
 }
 
