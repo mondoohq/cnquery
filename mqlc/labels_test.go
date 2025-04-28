@@ -177,6 +177,38 @@ func TestLabels(t *testing.T) {
 				},
 			},
 		},
+		{
+			"1 >= 2",
+			&llx.Labels{
+				Labels: map[string]string{
+					"KN8O7dRC1dktiemLwSo3kqNRIwRf5jXqEqPsa2O7bgs31z7LM3fxYrm6tOCyzYAC7Jpic3q6CUYbbYtn7yaifQ==": " >= 2",
+				},
+			},
+		},
+		{
+			"1 > 2",
+			&llx.Labels{
+				Labels: map[string]string{
+					"hPdqqG1LQ4F3OnnS3gey0/665f+p0XLMoOVCTUScM/pMQuothxnwd0TyuzQOIPn3fkpf+kTtxZNgi0y688AN9Q==": " > 2",
+				},
+			},
+		},
+		{
+			"1 <= 2",
+			&llx.Labels{
+				Labels: map[string]string{
+					"JxA4wNPJRq2CsRwXpkvnx7leIVGoeg1e8s3En5Aize9mdZoPD7GpLb9JG86dh30DzdgncT+Hgm87nZehVdgw2w==": " <= 2",
+				},
+			},
+		},
+		{
+			"1 < 2",
+			&llx.Labels{
+				Labels: map[string]string{
+					"PaamyN/AAZNMNmh4OAzjmG/ArLYReuNzi4p2KyDyDE/CZw+puUX0A2oCV8aHh+QJvF5o/4TfjvL+vCmb7Ge9KA==": " < 2",
+				},
+			},
+		},
 	}
 
 	for i := range tests {
