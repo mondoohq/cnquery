@@ -6,10 +6,15 @@ package provider
 import (
 	"context"
 	"errors"
+	"maps"
 	"net/url"
 	"strconv"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
@@ -318,6 +323,19 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		}
 	}
 
+	for _, connCreds := range conn.Asset().Connections[0].Credentials {
+		switch connCreds.Type {
+		case vault.CredentialType_aws_ec2_instance_connect:
+			tags, err := s.discoverEc2Tags(conn.Asset().Connections[0], conn.Asset().PlatformIds)
+			if err == nil {
+				if req.Asset.Labels == nil {
+					req.Asset.Labels = map[string]string{}
+				}
+				maps.Copy(req.Asset.Labels, tags)
+			}
+		}
+	}
+
 	return &plugin.ConnectRes{
 		Id:        uint32(conn.ID()),
 		Name:      conn.Name(),
@@ -543,6 +561,55 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	}
 
 	return runtime.Connection.(shared.Connection), nil
+}
+
+func (s *Service) discoverEc2Tags(conf *inventory.Config, platformIds []string) (map[string]string, error) {
+	if conf == nil {
+		return nil, nil
+	}
+	var instanceId string
+	for _, id := range platformIds {
+		// we are looking for a platform id similar to:
+		// //platformid.api.mondoo.app/runtime/aws/ec2/v1/accounts/{}/regions/{}/instances/{id}"
+		if strings.Contains(id, "/instances/") {
+			parts := strings.Split(id, "/")
+			instanceId = parts[len(parts)-1]
+		}
+	}
+
+	awsConfigOptions := []func(*config.LoadOptions) error{}
+	for key, value := range conf.Options {
+		switch key {
+		case "region":
+			awsConfigOptions = append(awsConfigOptions, config.WithRegion(value))
+		case "profile":
+			awsConfigOptions = append(awsConfigOptions, config.WithSharedConfigProfile(value))
+		}
+	}
+	cfg, err := config.LoadDefaultConfig(context.Background(), awsConfigOptions...)
+	if err != nil {
+		return nil, err
+	}
+
+	ec2svc := ec2.NewFromConfig(cfg)
+	filters := []ec2types.Filter{
+		{
+			Name:   aws.String("resource-id"),
+			Values: []string{instanceId},
+		},
+	}
+	tags, err := ec2svc.DescribeTags(context.Background(), &ec2.DescribeTagsInput{Filters: filters})
+	if err != nil {
+		return nil, err
+	}
+
+	m := map[string]string{}
+	for _, t := range tags.Tags {
+		if t.Key != nil && t.Value != nil {
+			m[*t.Key] = *t.Value
+		}
+	}
+	return m, nil
 }
 
 func (s *Service) discoverLocalContainers(conf *inventory.Config) (*inventory.Inventory, error) {
