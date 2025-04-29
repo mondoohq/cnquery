@@ -47,7 +47,7 @@ terraform.fileposition {
 }
 
 // Terraform resource block
-terraform.block @defaults("type labels") {
+private terraform.block @defaults("type labels") {
   // Block type
   type string
   // Block Labels
