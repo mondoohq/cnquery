@@ -23,6 +23,7 @@ var DefaultProviders Providers = map[string]*Provider{
 					Short: "an Ansible playbook",
 				},
 			},
+			Dependencies: []string{},
 		},
 	},
 
@@ -38,6 +39,7 @@ var DefaultProviders Providers = map[string]*Provider{
 					Short: "an Arista EOS device",
 				},
 			},
+			Dependencies: []string{},
 		},
 	},
 
@@ -53,6 +55,7 @@ var DefaultProviders Providers = map[string]*Provider{
 					Short: "an Atlassian Cloud Jira, Confluence or Bitbucket instance",
 				},
 			},
+			Dependencies: []string{},
 		},
 	},
 
@@ -68,6 +71,7 @@ var DefaultProviders Providers = map[string]*Provider{
 					Short: "an AWS account",
 				},
 			},
+			Dependencies: []string{},
 		},
 	},
 
@@ -83,6 +87,7 @@ var DefaultProviders Providers = map[string]*Provider{
 					Short: "an Azure subscription",
 				},
 			},
+			Dependencies: []string{},
 		},
 	},
 
@@ -98,6 +103,7 @@ var DefaultProviders Providers = map[string]*Provider{
 					Short: "an AWS CloudFormation template or AWS SAM template",
 				},
 			},
+			Dependencies: []string{},
 		},
 	},
 
@@ -113,6 +119,7 @@ var DefaultProviders Providers = map[string]*Provider{
 					Short: "Cloudflare provider",
 				},
 			},
+			Dependencies: []string{},
 		},
 	},
 
@@ -122,6 +129,7 @@ var DefaultProviders Providers = map[string]*Provider{
 			ID:              "go.mondoo.com/cnquery/v9/providers/core",
 			ConnectionTypes: []string(nil),
 			Connectors:      []plugin.Connector{},
+			Dependencies:    []string{},
 		},
 	},
 
@@ -137,6 +145,7 @@ var DefaultProviders Providers = map[string]*Provider{
 					Short: "an Equinix Metal organization",
 				},
 			},
+			Dependencies: []string{},
 		},
 	},
 
@@ -152,6 +161,7 @@ var DefaultProviders Providers = map[string]*Provider{
 					Short: "a Google Cloud project or folder",
 				},
 			},
+			Dependencies: []string{},
 		},
 	},
 
@@ -167,6 +177,7 @@ var DefaultProviders Providers = map[string]*Provider{
 					Short: "a GitHub organization or repository",
 				},
 			},
+			Dependencies: []string{},
 		},
 	},
 
@@ -182,6 +193,7 @@ var DefaultProviders Providers = map[string]*Provider{
 					Short: "a GitLab group or project",
 				},
 			},
+			Dependencies: []string{},
 		},
 	},
 
@@ -197,6 +209,7 @@ var DefaultProviders Providers = map[string]*Provider{
 					Short: "a Google Workspace account",
 				},
 			},
+			Dependencies: []string{},
 		},
 	},
 
@@ -212,6 +225,7 @@ var DefaultProviders Providers = map[string]*Provider{
 					Short: "an IPMI interface",
 				},
 			},
+			Dependencies: []string{},
 		},
 	},
 
@@ -227,6 +241,7 @@ var DefaultProviders Providers = map[string]*Provider{
 					Short: "a Kubernetes cluster or local manifest file(s)",
 				},
 			},
+			Dependencies: []string{},
 		},
 	},
 
@@ -242,6 +257,7 @@ var DefaultProviders Providers = map[string]*Provider{
 					Short: "a Microsoft 365 account",
 				},
 			},
+			Dependencies: []string{},
 		},
 	},
 
@@ -257,6 +273,7 @@ var DefaultProviders Providers = map[string]*Provider{
 					Short: "a remote host",
 				},
 			},
+			Dependencies: []string{},
 		},
 	},
 
@@ -272,6 +289,7 @@ var DefaultProviders Providers = map[string]*Provider{
 					Short: "a Nmap network scanner",
 				},
 			},
+			Dependencies: []string{},
 		},
 	},
 
@@ -287,6 +305,7 @@ var DefaultProviders Providers = map[string]*Provider{
 					Short: "an Oracle Cloud Infrastructure tenancy",
 				},
 			},
+			Dependencies: []string{},
 		},
 	},
 
@@ -302,6 +321,7 @@ var DefaultProviders Providers = map[string]*Provider{
 					Short: "an Okta organization",
 				},
 			},
+			Dependencies: []string{},
 		},
 	},
 
@@ -317,6 +337,7 @@ var DefaultProviders Providers = map[string]*Provider{
 					Short: "an OPC UA device",
 				},
 			},
+			Dependencies: []string{},
 		},
 	},
 
@@ -368,6 +389,7 @@ var DefaultProviders Providers = map[string]*Provider{
 					Short: "a mounted file system target",
 				},
 			},
+			Dependencies: []string{"network"},
 		},
 	},
 
@@ -383,6 +405,7 @@ var DefaultProviders Providers = map[string]*Provider{
 					Short: "a Shodan account",
 				},
 			},
+			Dependencies: []string{},
 		},
 	},
 
@@ -398,6 +421,7 @@ var DefaultProviders Providers = map[string]*Provider{
 					Short: "a Slack team",
 				},
 			},
+			Dependencies: []string{},
 		},
 	},
 
@@ -413,6 +437,7 @@ var DefaultProviders Providers = map[string]*Provider{
 					Short: "a Snowflake account",
 				},
 			},
+			Dependencies: []string{},
 		},
 	},
 
@@ -428,6 +453,7 @@ var DefaultProviders Providers = map[string]*Provider{
 					Short: "a Terraform HCL file or directory",
 				},
 			},
+			Dependencies: []string{},
 		},
 	},
 
@@ -443,6 +469,7 @@ var DefaultProviders Providers = map[string]*Provider{
 					Short: "a Tailscale network",
 				},
 			},
+			Dependencies: []string{},
 		},
 	},
 
@@ -458,6 +485,7 @@ var DefaultProviders Providers = map[string]*Provider{
 					Short: "a VMware Cloud Director installation",
 				},
 			},
+			Dependencies: []string{},
 		},
 	},
 
@@ -473,6 +501,7 @@ var DefaultProviders Providers = map[string]*Provider{
 					Short: "a VMware vSphere installation",
 				},
 			},
+			Dependencies: []string{},
 		},
 	},
 }
