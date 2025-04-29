@@ -30,7 +30,7 @@ func init() {
 			Create: createTerraformFileposition,
 		},
 		"terraform.block": {
-			// to override args, implement: initTerraformBlock(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initTerraformBlock,
 			Create: createTerraformBlock,
 		},
 		"terraform.module": {
