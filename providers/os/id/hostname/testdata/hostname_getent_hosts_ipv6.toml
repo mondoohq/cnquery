@@ -1,5 +1,14 @@
+[commands."hostname -f"]
+stdout="localhost"
+
+[commands."getent hosts 127.0.0.1"]
+stdout="127.0.0.1	localhost"
+
+[commands."getent hosts ::1"]
+stdout="::1     localhost ip6-localhost ip6-loopback myhost.example.com"
+
 [commands."hostname"]
-stdout="abefed34cc9c"
+stdout="myhost"
 
 [commands."uname -s"]
 stdout = "Linux"
