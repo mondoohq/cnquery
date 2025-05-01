@@ -18,7 +18,17 @@ func Schema(ast *LR) (*resources.Schema, error) {
 	}
 
 	res := &resources.Schema{
-		Resources: make(map[string]*resources.ResourceInfo, len(ast.Resources)),
+		Resources:    make(map[string]*resources.ResourceInfo, len(ast.Resources)),
+		Dependencies: make(map[string]*resources.ProviderInfo, 0),
+	}
+
+	for dep := range ast.imports {
+		if !strings.HasSuffix(provider, dep) && dep != "core" {
+			res.Dependencies[dep] = &resources.ProviderInfo{
+				Id:   strings.TrimSuffix(ast.packPaths[dep], "/resources"),
+				Name: dep,
+			}
+		}
 	}
 
 	for i := range ast.Resources {

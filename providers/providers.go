@@ -478,21 +478,34 @@ func installVersion(name string, version string) (*Provider, error) {
 
 // installDependencies ensures all dependencies of a provider are installed
 func installDependencies(provider *Provider, existing Providers) error {
-	for _, depName := range provider.Dependencies {
-		// Check if dependency is already installed
-		depProvider := existing.Lookup(ProviderLookup{ProviderName: depName})
-		if depProvider == nil {
-			upstreamDep := DefaultProviders.Lookup(ProviderLookup{ProviderName: depName})
-			if upstreamDep != nil {
-				depProvider, err := Install(upstreamDep.Name, "")
-				if err != nil {
-					return err
-				} else {
-					existing.Add(depProvider)
-					PrintInstallResults([]*Provider{depProvider})
-				}
-			}
+	if provider.Schema == nil {
+		return nil
+	}
+
+	for _, dependency := range provider.Schema.Dependencies {
+		dependencyLookup := ProviderLookup{
+			ID:           dependency.Id,
+			ProviderName: dependency.Name,
 		}
+
+		// Check if dependency is already installed
+		depProvider := existing.Lookup(dependencyLookup)
+		if depProvider == nil {
+			continue
+		}
+
+		upstreamDep := DefaultProviders.Lookup(dependencyLookup)
+		if upstreamDep == nil {
+			continue
+		}
+
+		depProvider, err := Install(upstreamDep.Name, "")
+		if err != nil {
+			return err
+		}
+
+		existing.Add(depProvider)
+		PrintInstallResults([]*Provider{depProvider})
 	}
 	return nil
 }
