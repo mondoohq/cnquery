@@ -26,7 +26,7 @@ func Hostname(conn shared.Connection, pf *inventory.Platform) (string, bool) {
 		return "", false
 	}
 
-	// on unix systems we try to get the hostname via `hostname -f` first since it returns the fqdn
+	// On unix systems we try to get the hostname via `hostname -f` first since it returns the fqdn.
 	if pf.IsFamily(inventory.FAMILY_UNIX) {
 		fqdn, err := runCommand(conn, "hostname -f")
 		if err == nil && fqdn != "localhost" && fqdn != "" {
@@ -34,16 +34,15 @@ func Hostname(conn shared.Connection, pf *inventory.Platform) (string, bool) {
 		}
 		log.Debug().Err(err).Msg("could not detect hostname via `hostname -f` command")
 
-		// if the output of `hostname -f` is localhost, we will `getent hosts`
-
-		// IPv4
+		// If the output of `hostname -f` is localhost, we try to fetch it via `getent hosts`,
+		// start with the most common protocol IPv4.
 		hostname, err := parseGetentHosts(conn, "127.0.0.1")
 		if err == nil && hostname != "" {
 			return hostname, true
 		}
 		log.Debug().Err(err).Str("ipversion", "IPv4").Msg("could not detect hostname")
 
-		// IPv6
+		// When IPv4 is not configured, try IPv6.
 		hostname, err = parseGetentHosts(conn, "::1")
 		if err == nil && hostname != "" {
 			return hostname, true
