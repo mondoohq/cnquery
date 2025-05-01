@@ -350,7 +350,10 @@ func EnsureProvider(search ProviderLookup, autoUpdate bool, existing Providers) 
 	if provider != nil {
 		// For already installed providers, ensure all dependencies are installed
 		if autoUpdate {
-			installDependencies(provider, existing)
+			err := installDependencies(provider, existing)
+			if err != nil {
+				return nil, err
+			}
 		}
 		return provider, nil
 	}
@@ -385,7 +388,10 @@ func EnsureProvider(search ProviderLookup, autoUpdate bool, existing Providers) 
 	PrintInstallResults([]*Provider{nu})
 
 	// Check for and install any dependencies this provider requires
-	installDependencies(nu, existing)
+	err = installDependencies(nu, existing)
+	if err != nil {
+		return nil, err
+	}
 
 	return nu, nil
 }
@@ -471,7 +477,7 @@ func installVersion(name string, version string) (*Provider, error) {
 }
 
 // installDependencies ensures all dependencies of a provider are installed
-func installDependencies(provider *Provider, existing Providers) {
+func installDependencies(provider *Provider, existing Providers) error {
 	for _, depName := range provider.Dependencies {
 		// Check if dependency is already installed
 		depProvider := existing.Lookup(ProviderLookup{ProviderName: depName})
@@ -480,10 +486,7 @@ func installDependencies(provider *Provider, existing Providers) {
 			if upstreamDep != nil {
 				depProvider, err := Install(upstreamDep.Name, "")
 				if err != nil {
-					log.Warn().Err(err).
-						Str("provider", provider.Name).
-						Str("dependency", depName).
-						Msg("failed to install provider dependency")
+					return err
 				} else {
 					existing.Add(depProvider)
 					PrintInstallResults([]*Provider{depProvider})
@@ -491,6 +494,7 @@ func installDependencies(provider *Provider, existing Providers) {
 			}
 		}
 	}
+	return nil
 }
 
 func LatestVersion(name string) (string, error) {
@@ -888,7 +892,10 @@ func TryProviderUpdate(provider *Provider, update UpdateProvidersConfig) (*Provi
 	if diff >= 0 {
 		// Even if the provider doesn't need updating, we should check for any missing dependencies
 		if providers, err := ListActive(); err == nil {
-			installDependencies(provider, providers)
+			err := installDependencies(provider, providers)
+			if err != nil {
+				return nil, err
+			}
 		}
 		return provider, nil
 	}
@@ -911,7 +918,10 @@ func TryProviderUpdate(provider *Provider, update UpdateProvidersConfig) (*Provi
 
 	// After updating the provider, also install any dependencies it requires
 	if providers, err := ListActive(); err == nil {
-		installDependencies(provider, providers)
+		err := installDependencies(provider, providers)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return provider, nil
