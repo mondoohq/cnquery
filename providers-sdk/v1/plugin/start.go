@@ -33,6 +33,7 @@ type Provider struct {
 	CrossProviderTypes []string
 	Connectors         []Connector
 	AssetUrlTrees      []*inventory.AssetUrlBranch
+	Dependencies       []string
 }
 
 type Connector struct {

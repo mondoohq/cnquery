@@ -348,6 +348,13 @@ func EnsureProvider(search ProviderLookup, autoUpdate bool, existing Providers) 
 
 	provider := existing.Lookup(search)
 	if provider != nil {
+		// For already installed providers, ensure all dependencies are installed
+		if autoUpdate {
+			err := installDependencies(provider, existing)
+			if err != nil {
+				return nil, err
+			}
+		}
 		return provider, nil
 	}
 
@@ -379,6 +386,13 @@ func EnsureProvider(search ProviderLookup, autoUpdate bool, existing Providers) 
 
 	existing.Add(nu)
 	PrintInstallResults([]*Provider{nu})
+
+	// Check for and install any dependencies this provider requires
+	err = installDependencies(nu, existing)
+	if err != nil {
+		return nil, err
+	}
+
 	return nu, nil
 }
 
@@ -460,6 +474,27 @@ func installVersion(name string, version string) (*Provider, error) {
 	}
 
 	return installed[0], nil
+}
+
+// installDependencies ensures all dependencies of a provider are installed
+func installDependencies(provider *Provider, existing Providers) error {
+	for _, depName := range provider.Dependencies {
+		// Check if dependency is already installed
+		depProvider := existing.Lookup(ProviderLookup{ProviderName: depName})
+		if depProvider == nil {
+			upstreamDep := DefaultProviders.Lookup(ProviderLookup{ProviderName: depName})
+			if upstreamDep != nil {
+				depProvider, err := Install(upstreamDep.Name, "")
+				if err != nil {
+					return err
+				} else {
+					existing.Add(depProvider)
+					PrintInstallResults([]*Provider{depProvider})
+				}
+			}
+		}
+	}
+	return nil
 }
 
 func LatestVersion(name string) (string, error) {
@@ -855,6 +890,13 @@ func TryProviderUpdate(provider *Provider, update UpdateProvidersConfig) (*Provi
 		return nil, err
 	}
 	if diff >= 0 {
+		// Even if the provider doesn't need updating, we should check for any missing dependencies
+		if providers, err := ListActive(); err == nil {
+			err := installDependencies(provider, providers)
+			if err != nil {
+				return nil, err
+			}
+		}
 		return provider, nil
 	}
 
@@ -872,6 +914,14 @@ func TryProviderUpdate(provider *Provider, update UpdateProvidersConfig) (*Provi
 		log.Warn().
 			Str("provider", provider.Name).
 			Msg("failed to update refresh time on provider")
+	}
+
+	// After updating the provider, also install any dependencies it requires
+	if providers, err := ListActive(); err == nil {
+		err := installDependencies(provider, providers)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return provider, nil

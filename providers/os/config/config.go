@@ -30,6 +30,7 @@ var Config = plugin.Provider{
 		shared.Type_Winrm.String(),
 		shared.Type_Device.String(),
 	},
+	Dependencies: []string{"network"},
 	Connectors: []plugin.Connector{
 		{
 			Name:  "local",
