@@ -25,8 +25,11 @@ const (
 )
 
 type Schema struct {
-	state         protoimpl.MessageState   `protogen:"open.v1"`
-	Resources     map[string]*ResourceInfo `protobuf:"bytes,3,rep,name=resources,proto3" json:"resources,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	state     protoimpl.MessageState   `protogen:"open.v1"`
+	Resources map[string]*ResourceInfo `protobuf:"bytes,3,rep,name=resources,proto3" json:"resources,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// Resources can depend on resources from another provider,
+	// this is the list of of providers the schema depends on.
+	Dependencies  map[string]*ProviderInfo `protobuf:"bytes,4,rep,name=dependencies,proto3" json:"dependencies,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -68,6 +71,65 @@ func (x *Schema) GetResources() map[string]*ResourceInfo {
 	return nil
 }
 
+func (x *Schema) GetDependencies() map[string]*ProviderInfo {
+	if x != nil {
+		return x.Dependencies
+	}
+	return nil
+}
+
+type ProviderInfo struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ProviderInfo) Reset() {
+	*x = ProviderInfo{}
+	mi := &file_resources_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ProviderInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ProviderInfo) ProtoMessage() {}
+
+func (x *ProviderInfo) ProtoReflect() protoreflect.Message {
+	mi := &file_resources_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ProviderInfo.ProtoReflect.Descriptor instead.
+func (*ProviderInfo) Descriptor() ([]byte, []int) {
+	return file_resources_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *ProviderInfo) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *ProviderInfo) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
 type ResourceID struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -78,7 +140,7 @@ type ResourceID struct {
 
 func (x *ResourceID) Reset() {
 	*x = ResourceID{}
-	mi := &file_resources_proto_msgTypes[1]
+	mi := &file_resources_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -90,7 +152,7 @@ func (x *ResourceID) String() string {
 func (*ResourceID) ProtoMessage() {}
 
 func (x *ResourceID) ProtoReflect() protoreflect.Message {
-	mi := &file_resources_proto_msgTypes[1]
+	mi := &file_resources_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -103,7 +165,7 @@ func (x *ResourceID) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResourceID.ProtoReflect.Descriptor instead.
 func (*ResourceID) Descriptor() ([]byte, []int) {
-	return file_resources_proto_rawDescGZIP(), []int{1}
+	return file_resources_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *ResourceID) GetId() string {
@@ -131,7 +193,7 @@ type TypedArg struct {
 
 func (x *TypedArg) Reset() {
 	*x = TypedArg{}
-	mi := &file_resources_proto_msgTypes[2]
+	mi := &file_resources_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -143,7 +205,7 @@ func (x *TypedArg) String() string {
 func (*TypedArg) ProtoMessage() {}
 
 func (x *TypedArg) ProtoReflect() protoreflect.Message {
-	mi := &file_resources_proto_msgTypes[2]
+	mi := &file_resources_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -156,7 +218,7 @@ func (x *TypedArg) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TypedArg.ProtoReflect.Descriptor instead.
 func (*TypedArg) Descriptor() ([]byte, []int) {
-	return file_resources_proto_rawDescGZIP(), []int{2}
+	return file_resources_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *TypedArg) GetName() string {
@@ -189,7 +251,7 @@ type Init struct {
 
 func (x *Init) Reset() {
 	*x = Init{}
-	mi := &file_resources_proto_msgTypes[3]
+	mi := &file_resources_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -201,7 +263,7 @@ func (x *Init) String() string {
 func (*Init) ProtoMessage() {}
 
 func (x *Init) ProtoReflect() protoreflect.Message {
-	mi := &file_resources_proto_msgTypes[3]
+	mi := &file_resources_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -214,7 +276,7 @@ func (x *Init) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Init.ProtoReflect.Descriptor instead.
 func (*Init) Descriptor() ([]byte, []int) {
-	return file_resources_proto_rawDescGZIP(), []int{3}
+	return file_resources_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *Init) GetArgs() []*TypedArg {
@@ -251,7 +313,7 @@ type ResourceInfo struct {
 
 func (x *ResourceInfo) Reset() {
 	*x = ResourceInfo{}
-	mi := &file_resources_proto_msgTypes[4]
+	mi := &file_resources_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -263,7 +325,7 @@ func (x *ResourceInfo) String() string {
 func (*ResourceInfo) ProtoMessage() {}
 
 func (x *ResourceInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_resources_proto_msgTypes[4]
+	mi := &file_resources_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -276,7 +338,7 @@ func (x *ResourceInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResourceInfo.ProtoReflect.Descriptor instead.
 func (*ResourceInfo) Descriptor() ([]byte, []int) {
-	return file_resources_proto_rawDescGZIP(), []int{4}
+	return file_resources_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *ResourceInfo) GetId() string {
@@ -402,7 +464,7 @@ type Field struct {
 
 func (x *Field) Reset() {
 	*x = Field{}
-	mi := &file_resources_proto_msgTypes[5]
+	mi := &file_resources_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -414,7 +476,7 @@ func (x *Field) String() string {
 func (*Field) ProtoMessage() {}
 
 func (x *Field) ProtoReflect() protoreflect.Message {
-	mi := &file_resources_proto_msgTypes[5]
+	mi := &file_resources_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -427,7 +489,7 @@ func (x *Field) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Field.ProtoReflect.Descriptor instead.
 func (*Field) Descriptor() ([]byte, []int) {
-	return file_resources_proto_rawDescGZIP(), []int{5}
+	return file_resources_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *Field) GetName() string {
@@ -518,12 +580,19 @@ var File_resources_proto protoreflect.FileDescriptor
 
 const file_resources_proto_rawDesc = "" +
 	"\n" +
-	"\x0fresources.proto\x12\x10mondoo.resources\"\xad\x01\n" +
+	"\x0fresources.proto\x12\x10mondoo.resources\"\xde\x02\n" +
 	"\x06Schema\x12E\n" +
-	"\tresources\x18\x03 \x03(\v2'.mondoo.resources.Schema.ResourcesEntryR\tresources\x1a\\\n" +
+	"\tresources\x18\x03 \x03(\v2'.mondoo.resources.Schema.ResourcesEntryR\tresources\x12N\n" +
+	"\fdependencies\x18\x04 \x03(\v2*.mondoo.resources.Schema.DependenciesEntryR\fdependencies\x1a\\\n" +
 	"\x0eResourcesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x124\n" +
-	"\x05value\x18\x02 \x01(\v2\x1e.mondoo.resources.ResourceInfoR\x05value:\x028\x01\"0\n" +
+	"\x05value\x18\x02 \x01(\v2\x1e.mondoo.resources.ResourceInfoR\x05value:\x028\x01\x1a_\n" +
+	"\x11DependenciesEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x124\n" +
+	"\x05value\x18\x02 \x01(\v2\x1e.mondoo.resources.ProviderInfoR\x05value:\x028\x01\"2\n" +
+	"\fProviderInfo\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\"0\n" +
 	"\n" +
 	"ResourceID\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
@@ -580,31 +649,35 @@ func file_resources_proto_rawDescGZIP() []byte {
 	return file_resources_proto_rawDescData
 }
 
-var file_resources_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_resources_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_resources_proto_goTypes = []any{
 	(*Schema)(nil),       // 0: mondoo.resources.Schema
-	(*ResourceID)(nil),   // 1: mondoo.resources.ResourceID
-	(*TypedArg)(nil),     // 2: mondoo.resources.TypedArg
-	(*Init)(nil),         // 3: mondoo.resources.Init
-	(*ResourceInfo)(nil), // 4: mondoo.resources.ResourceInfo
-	(*Field)(nil),        // 5: mondoo.resources.Field
-	nil,                  // 6: mondoo.resources.Schema.ResourcesEntry
-	nil,                  // 7: mondoo.resources.ResourceInfo.FieldsEntry
+	(*ProviderInfo)(nil), // 1: mondoo.resources.ProviderInfo
+	(*ResourceID)(nil),   // 2: mondoo.resources.ResourceID
+	(*TypedArg)(nil),     // 3: mondoo.resources.TypedArg
+	(*Init)(nil),         // 4: mondoo.resources.Init
+	(*ResourceInfo)(nil), // 5: mondoo.resources.ResourceInfo
+	(*Field)(nil),        // 6: mondoo.resources.Field
+	nil,                  // 7: mondoo.resources.Schema.ResourcesEntry
+	nil,                  // 8: mondoo.resources.Schema.DependenciesEntry
+	nil,                  // 9: mondoo.resources.ResourceInfo.FieldsEntry
 }
 var file_resources_proto_depIdxs = []int32{
-	6, // 0: mondoo.resources.Schema.resources:type_name -> mondoo.resources.Schema.ResourcesEntry
-	2, // 1: mondoo.resources.Init.args:type_name -> mondoo.resources.TypedArg
-	7, // 2: mondoo.resources.ResourceInfo.fields:type_name -> mondoo.resources.ResourceInfo.FieldsEntry
-	3, // 3: mondoo.resources.ResourceInfo.init:type_name -> mondoo.resources.Init
-	4, // 4: mondoo.resources.ResourceInfo.others:type_name -> mondoo.resources.ResourceInfo
-	5, // 5: mondoo.resources.Field.others:type_name -> mondoo.resources.Field
-	4, // 6: mondoo.resources.Schema.ResourcesEntry.value:type_name -> mondoo.resources.ResourceInfo
-	5, // 7: mondoo.resources.ResourceInfo.FieldsEntry.value:type_name -> mondoo.resources.Field
-	8, // [8:8] is the sub-list for method output_type
-	8, // [8:8] is the sub-list for method input_type
-	8, // [8:8] is the sub-list for extension type_name
-	8, // [8:8] is the sub-list for extension extendee
-	0, // [0:8] is the sub-list for field type_name
+	7,  // 0: mondoo.resources.Schema.resources:type_name -> mondoo.resources.Schema.ResourcesEntry
+	8,  // 1: mondoo.resources.Schema.dependencies:type_name -> mondoo.resources.Schema.DependenciesEntry
+	3,  // 2: mondoo.resources.Init.args:type_name -> mondoo.resources.TypedArg
+	9,  // 3: mondoo.resources.ResourceInfo.fields:type_name -> mondoo.resources.ResourceInfo.FieldsEntry
+	4,  // 4: mondoo.resources.ResourceInfo.init:type_name -> mondoo.resources.Init
+	5,  // 5: mondoo.resources.ResourceInfo.others:type_name -> mondoo.resources.ResourceInfo
+	6,  // 6: mondoo.resources.Field.others:type_name -> mondoo.resources.Field
+	5,  // 7: mondoo.resources.Schema.ResourcesEntry.value:type_name -> mondoo.resources.ResourceInfo
+	1,  // 8: mondoo.resources.Schema.DependenciesEntry.value:type_name -> mondoo.resources.ProviderInfo
+	6,  // 9: mondoo.resources.ResourceInfo.FieldsEntry.value:type_name -> mondoo.resources.Field
+	10, // [10:10] is the sub-list for method output_type
+	10, // [10:10] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_resources_proto_init() }
@@ -618,7 +691,7 @@ func file_resources_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_resources_proto_rawDesc), len(file_resources_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

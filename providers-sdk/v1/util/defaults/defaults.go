@@ -73,7 +73,7 @@ func goGen(configs []*plugin.Provider) ([]byte, error) {
 			conn := conf.Connectors[j]
 			conns.WriteString(fmt.Sprintf(connectorTemplate, conn.Name, conn.Use, conn.Short))
 		}
-		body.WriteString(fmt.Sprintf(providerTemplate, conf.Name, conf.Name, conf.ID, conf.ConnectionTypes, conns.String(), conf.Dependencies))
+		body.WriteString(fmt.Sprintf(providerTemplate, conf.Name, conf.Name, conf.ID, conf.ConnectionTypes, conns.String()))
 	}
 
 	res := fmt.Sprintf(template, body.String())
@@ -106,7 +106,6 @@ const providerTemplate = `
 			Connectors: []plugin.Connector{
 				%s
 			},
-			Dependencies: %#v,
 		},
 	},
 `

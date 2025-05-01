@@ -10,6 +10,15 @@ option go_package = "go.mondoo.com/cnquery/v11/providers-sdk/v1/resources";
 
 message Schema {
   map<string, ResourceInfo> resources = 3;
+
+  // Resources can depend on resources from another provider,
+  // this is the list of of providers the schema depends on.
+  map<string, ProviderInfo> dependencies = 4;
+}
+
+message ProviderInfo {
+  string id = 1;
+  string name = 2;
 }
 
 message ResourceID {
