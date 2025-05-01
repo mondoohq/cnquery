@@ -318,6 +318,10 @@ func (t *mqlTerraformBlock) id() (string, error) {
 	// NOTE: a hcl block is identified by its filename and position
 	fp := t.Start
 
+	if fp.State != plugin.StateIsSet || fp.Data == nil {
+		return "", errors.New("terraform block has invalid position data")
+	}
+
 	file := fp.Data.Path.Data
 	line := fp.Data.Line.Data
 	column := fp.Data.Column.Data
@@ -779,4 +783,12 @@ func getBlockByName(hb *hcl.Block, name string) *hcl.Block {
 		}
 	}
 	return nil
+}
+
+// initTerraformBlock provides initialization for terraform.block resource
+// to safely handle direct queries without crashing when a block is queried
+// without required parameters.
+func initTerraformBlock(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// Return a direct error instead of a resource with an error
+	return args, nil, errors.New("terraform.block cannot be queried directly. Use terraform.blocks(), terraform.resources(), terraform.file(path).blocks(), or other collection methods instead.")
 }

@@ -38,6 +38,7 @@ resources:
       snippet: {}
       start: {}
       type: {}
+    is_private: true
     maturity: experimental
     min_mondoo_version: 5.15.0
     platform:
