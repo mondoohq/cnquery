@@ -4,6 +4,7 @@
 package lr
 
 import (
+	"bytes"
 	"os"
 	"testing"
 
@@ -281,10 +282,14 @@ func TestParseLR(t *testing.T) {
 		absPath := "../../../providers/" + lrPath
 
 		t.Run(lrPath, func(t *testing.T) {
+			hasImports := false
 			res, err := Resolve(absPath, func(path string) ([]byte, error) {
 				raw, err := os.ReadFile(path)
 				if err != nil {
 					t.Fatal("failed to load " + path + ":" + err.Error())
+				}
+				if bytes.Contains(raw, []byte("import \"")) {
+					hasImports = true
 				}
 				return raw, err
 			})
@@ -305,6 +310,11 @@ func TestParseLR(t *testing.T) {
 				t.Fatal("failed to generate schema for " + lrPath + ":" + err.Error())
 			}
 			assert.NotEmpty(t, schema)
+			assert.NotEmpty(t, schema.Resources)
+
+			if hasImports {
+				assert.NotEmpty(t, schema.Dependencies)
+			}
 		})
 	}
 }
