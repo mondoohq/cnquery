@@ -75,6 +75,18 @@ func TestHypervisorWindowsWmicGetModel(t *testing.T) {
 	assert.Equal(t, "VirtualBox", hypervisor)
 }
 
+func TestHypervisorWindowsServer2022SMBIOSBIOSVersion(t *testing.T) {
+	conn, err := mock.New(0, "./testdata/windows_serer_2022_running_hyper_v.toml", &inventory.Asset{})
+	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
+
+	hypervisor, ok := subject.Hypervisor(conn, platform)
+	require.True(t, ok)
+
+	assert.Equal(t, "Hyper-V", hypervisor)
+}
+
 func TestHypervisorLinuxDmidecode(t *testing.T) {
 	conn, err := mock.New(0, "./testdata/linux_dmidecode.toml", &inventory.Asset{})
 	require.NoError(t, err)
