@@ -9,9 +9,9 @@ import (
 	"errors"
 	"time"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -21,10 +21,6 @@ func init() {
 		"asset": {
 			// to override args, implement: initAsset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAsset,
-		},
-		"platform": {
-			// to override args, implement: initPlatform(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createPlatform,
 		},
 		"vulnmgmt": {
 			// to override args, implement: initVulnmgmt(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -191,9 +187,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"asset.vulnerabilityReport": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAsset).GetVulnerabilityReport()).ToDataRes(types.Dict)
-	},
-	"platform.vulnerabilityReport": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlPlatform).GetVulnerabilityReport()).ToDataRes(types.Dict)
 	},
 	"vulnmgmt.cves": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVulnmgmt).GetCves()).ToDataRes(types.Array(types.Resource("vuln.cve")))
@@ -531,9 +524,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"esxi.service.required": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlEsxiService).GetRequired()).ToDataRes(types.Bool)
 	},
-	"esxi.service.uninstallable": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlEsxiService).GetUninstallable()).ToDataRes(types.Bool)
-	},
 	"esxi.service.running": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlEsxiService).GetRunning()).ToDataRes(types.Bool)
 	},
@@ -586,14 +576,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"asset.vulnerabilityReport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAsset).VulnerabilityReport, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
-		return
-	},
-	"platform.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlPlatform).__id, ok = v.Value.(string)
-			return
-		},
-	"platform.vulnerabilityReport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlPlatform).VulnerabilityReport, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"vulnmgmt.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1128,10 +1110,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlEsxiService).Required, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"esxi.service.uninstallable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlEsxiService).Uninstallable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
 	"esxi.service.running": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlEsxiService).Running, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -1262,52 +1240,6 @@ func (c *mqlAsset) GetCpes() *plugin.TValue[[]interface{}] {
 }
 
 func (c *mqlAsset) GetVulnerabilityReport() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.VulnerabilityReport, func() (interface{}, error) {
-		return c.vulnerabilityReport()
-	})
-}
-
-// mqlPlatform for the platform resource
-type mqlPlatform struct {
-	MqlRuntime *plugin.Runtime
-	__id string
-	// optional: if you define mqlPlatformInternal it will be used here
-	VulnerabilityReport plugin.TValue[interface{}]
-}
-
-// createPlatform creates a new instance of this resource
-func createPlatform(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlPlatform{
-		MqlRuntime: runtime,
-	}
-
-	err := SetAllData(res, args)
-	if err != nil {
-		return res, err
-	}
-
-	// to override __id implement: id() (string, error)
-
-	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("platform", res.__id)
-		if err != nil || args == nil {
-			return res, err
-		}
-		return res, SetAllData(res, args)
-	}
-
-	return res, nil
-}
-
-func (c *mqlPlatform) MqlName() string {
-	return "platform"
-}
-
-func (c *mqlPlatform) MqlID() string {
-	return c.__id
-}
-
-func (c *mqlPlatform) GetVulnerabilityReport() *plugin.TValue[interface{}] {
 	return plugin.GetOrCompute[interface{}](&c.VulnerabilityReport, func() (interface{}, error) {
 		return c.vulnerabilityReport()
 	})
@@ -3053,7 +2985,6 @@ type mqlEsxiService struct {
 	Key plugin.TValue[string]
 	Label plugin.TValue[string]
 	Required plugin.TValue[bool]
-	Uninstallable plugin.TValue[bool]
 	Running plugin.TValue[bool]
 	Ruleset plugin.TValue[[]interface{}]
 	Policy plugin.TValue[string]
@@ -3106,10 +3037,6 @@ func (c *mqlEsxiService) GetLabel() *plugin.TValue[string] {
 
 func (c *mqlEsxiService) GetRequired() *plugin.TValue[bool] {
 	return &c.Required
-}
-
-func (c *mqlEsxiService) GetUninstallable() *plugin.TValue[bool] {
-	return &c.Uninstallable
 }
 
 func (c *mqlEsxiService) GetRunning() *plugin.TValue[bool] {

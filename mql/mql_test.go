@@ -11,11 +11,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v11"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/mql"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/testutils"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/mql"
+	"go.mondoo.com/cnquery/v12/mqlc"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/testutils"
+	"go.mondoo.com/cnquery/v12/types"
 	"go.uber.org/goleak"
 )
 
@@ -104,10 +105,10 @@ func TestCustomData(t *testing.T) {
 
 func TestMqlProps(t *testing.T) {
 	query := "props.a + props.b"
-	props := map[string]*llx.Primitive{
+	props := mqlc.SimpleProps(map[string]*llx.Primitive{
 		"a": llx.IntPrimitive(2),
 		"b": llx.IntPrimitive(2),
-	}
+	})
 
 	value, err := mql.Exec(query, runtime(), features, props)
 	require.NoError(t, err)
@@ -118,16 +119,16 @@ func TestMqlIfElseProps(t *testing.T) {
 	me := mql.New(runtime(), cnquery.DefaultFeatures)
 	query := "if (props.a > 2) { return {\"a\": \"valuea\"} } return {\"a\": \"valueb\"}"
 
-	props := map[string]*llx.Primitive{
+	props := mqlc.SimpleProps(map[string]*llx.Primitive{
 		"a": llx.IntPrimitive(3),
-	}
+	})
 	value, err := me.Exec(query, props)
 	require.NoError(t, err)
 	assert.Equal(t, map[string]interface{}{"a": "valuea"}, value.Value)
 
-	props = map[string]*llx.Primitive{
+	props = mqlc.SimpleProps(map[string]*llx.Primitive{
 		"a": llx.IntPrimitive(2),
-	}
+	})
 	value, err = me.Exec(query, props)
 	require.NoError(t, err)
 	assert.Equal(t, map[string]interface{}{"a": "valueb"}, value.Value)
@@ -137,16 +138,16 @@ func TestMqlIfAndProps(t *testing.T) {
 	me := mql.New(runtime(), cnquery.DefaultFeatures)
 	query := "if (props.a > 2) { return {\"a\": \"valuea\"} }"
 
-	props := map[string]*llx.Primitive{
+	props := mqlc.SimpleProps(map[string]*llx.Primitive{
 		"a": llx.IntPrimitive(3),
-	}
+	})
 	value, err := me.Exec(query, props)
 	require.NoError(t, err)
 	assert.Equal(t, map[string]interface{}{"a": "valuea"}, value.Value)
 
-	props = map[string]*llx.Primitive{
+	props = mqlc.SimpleProps(map[string]*llx.Primitive{
 		"a": llx.IntPrimitive(2),
-	}
+	})
 	value, err = me.Exec(query, props)
 	require.NoError(t, err)
 	assert.Equal(t, nil, value.Value)

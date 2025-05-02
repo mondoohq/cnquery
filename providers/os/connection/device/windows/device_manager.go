@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/snapshot"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/snapshot"
 )
 
 const (

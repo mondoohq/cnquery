@@ -15,12 +15,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	vpctypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (a *mqlAwsVpc) id() (string, error) {
@@ -505,14 +505,12 @@ func (a *mqlAwsVpcPeeringConnection) acceptorVpc() (*mqlAwsVpcPeeringConnectionP
 	}
 	mql, err := CreateResource(a.MqlRuntime, "aws.vpc.peeringConnection.peeringVpc",
 		map[string]*llx.RawData{
-			"allowDnsResolutionFromRemoteVpc":            llx.BoolDataPtr(acceptor.PeeringOptions.AllowDnsResolutionFromRemoteVpc),
-			"allowEgressFromLocalClassicLinkToRemoteVpc": llx.BoolDataPtr(acceptor.PeeringOptions.AllowEgressFromLocalClassicLinkToRemoteVpc), // this is deprecated by aws...
-			"allowEgressFromLocalVpcToRemoteClassicLink": llx.BoolDataPtr(acceptor.PeeringOptions.AllowEgressFromLocalVpcToRemoteClassicLink), // this is deprecated by aws...
-			"ipv4CiderBlocks":                            llx.ArrayData(ipv4, types.String),
-			"ipv6CiderBlocks":                            llx.ArrayData(ipv6, types.String),
-			"ownerID":                                    llx.StringDataPtr(acceptor.OwnerId),
-			"region":                                     llx.StringData(a.region),
-			"vpcId":                                      llx.StringDataPtr(acceptor.VpcId),
+			"allowDnsResolutionFromRemoteVpc": llx.BoolDataPtr(acceptor.PeeringOptions.AllowDnsResolutionFromRemoteVpc),
+			"ipv4CiderBlocks":                 llx.ArrayData(ipv4, types.String),
+			"ipv6CiderBlocks":                 llx.ArrayData(ipv6, types.String),
+			"ownerID":                         llx.StringDataPtr(acceptor.OwnerId),
+			"region":                          llx.StringData(a.region),
+			"vpcId":                           llx.StringDataPtr(acceptor.VpcId),
 		},
 	)
 	if err != nil {
@@ -543,13 +541,11 @@ func (a *mqlAwsVpcPeeringConnection) requestorVpc() (*mqlAwsVpcPeeringConnection
 	}
 	mql, err := CreateResource(a.MqlRuntime, "aws.vpc.peeringConnection.peeringVpc",
 		map[string]*llx.RawData{
-			"allowDnsResolutionFromRemoteVpc":            llx.BoolDataPtr(acceptor.PeeringOptions.AllowDnsResolutionFromRemoteVpc),
-			"allowEgressFromLocalClassicLinkToRemoteVpc": llx.BoolDataPtr(acceptor.PeeringOptions.AllowEgressFromLocalClassicLinkToRemoteVpc), // this is deprecated by aws...
-			"allowEgressFromLocalVpcToRemoteClassicLink": llx.BoolDataPtr(acceptor.PeeringOptions.AllowEgressFromLocalVpcToRemoteClassicLink), // this is deprecated by aws...
-			"ipv4CiderBlocks":                            llx.ArrayData(ipv4, types.String),
-			"ipv6CiderBlocks":                            llx.ArrayData(ipv6, types.String),
-			"ownerID":                                    llx.StringDataPtr(acceptor.OwnerId),
-			"region":                                     llx.StringData(a.region),
+			"allowDnsResolutionFromRemoteVpc": llx.BoolDataPtr(acceptor.PeeringOptions.AllowDnsResolutionFromRemoteVpc),
+			"ipv4CiderBlocks":                 llx.ArrayData(ipv4, types.String),
+			"ipv6CiderBlocks":                 llx.ArrayData(ipv6, types.String),
+			"ownerID":                         llx.StringDataPtr(acceptor.OwnerId),
+			"region":                          llx.StringData(a.region),
 			// vpc() aws.vpc // ← We can populate this if the VPC is in this account
 			"vpcId": llx.StringDataPtr(acceptor.VpcId),
 		},

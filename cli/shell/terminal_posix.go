@@ -10,7 +10,7 @@ import (
 	"syscall"
 
 	"github.com/pkg/term/termios"
-	"go.mondoo.com/cnquery/v11/utils/piped"
+	"go.mondoo.com/cnquery/v12/utils/piped"
 	"golang.org/x/sys/unix"
 )
 

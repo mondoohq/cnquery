@@ -9,9 +9,9 @@ import (
 	"errors"
 	"time"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -331,9 +331,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.tenant.createdDateTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenant).GetCreatedDateTime()).ToDataRes(types.Time)
-	},
-	"microsoft.tenant.displayName": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftTenant).GetDisplayName()).ToDataRes(types.String)
 	},
 	"microsoft.tenant.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenant).GetName()).ToDataRes(types.String)
@@ -692,9 +689,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.domaindnsrecord.ttl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDomaindnsrecord).GetTtl()).ToDataRes(types.Int)
 	},
-	"microsoft.domaindnsrecord.properties": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftDomaindnsrecord).GetProperties()).ToDataRes(types.Dict)
-	},
 	"microsoft.application.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftApplication).GetId()).ToDataRes(types.String)
 	},
@@ -703,9 +697,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.application.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftApplication).GetName()).ToDataRes(types.String)
-	},
-	"microsoft.application.displayName": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftApplication).GetDisplayName()).ToDataRes(types.String)
 	},
 	"microsoft.application.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftApplication).GetDescription()).ToDataRes(types.String)
@@ -727,9 +718,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.application.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftApplication).GetCreatedAt()).ToDataRes(types.Time)
-	},
-	"microsoft.application.createdDateTime": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftApplication).GetCreatedDateTime()).ToDataRes(types.Time)
 	},
 	"microsoft.application.identifierUris": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftApplication).GetIdentifierUris()).ToDataRes(types.Array(types.String))
@@ -1133,9 +1121,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.devicemanagement.deviceconfiguration.version": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementDeviceconfiguration).GetVersion()).ToDataRes(types.Int)
 	},
-	"microsoft.devicemanagement.deviceconfiguration.properties": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftDevicemanagementDeviceconfiguration).GetProperties()).ToDataRes(types.Dict)
-	},
 	"microsoft.devicemanagement.devicecompliancepolicy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).GetId()).ToDataRes(types.String)
 	},
@@ -1156,9 +1141,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.devicemanagement.devicecompliancepolicy.assignments": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).GetAssignments()).ToDataRes(types.Array(types.Dict))
-	},
-	"microsoft.devicemanagement.devicecompliancepolicy.properties": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).GetProperties()).ToDataRes(types.Dict)
 	},
 	"ms365.exchangeonline.malwareFilterPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetMalwareFilterPolicy()).ToDataRes(types.Array(types.Dict))
@@ -1453,10 +1435,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.tenant.createdDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftTenant).CreatedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
-		return
-	},
-	"microsoft.tenant.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftTenant).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.tenant.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1995,10 +1973,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMicrosoftDomaindnsrecord).Ttl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"microsoft.domaindnsrecord.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftDomaindnsrecord).Properties, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
-		return
-	},
 	"microsoft.application.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlMicrosoftApplication).__id, ok = v.Value.(string)
 			return
@@ -2013,10 +1987,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.application.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftApplication).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"microsoft.application.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftApplication).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.application.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2045,10 +2015,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.application.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftApplication).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
-		return
-	},
-	"microsoft.application.createdDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftApplication).CreatedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"microsoft.application.identifierUris": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2651,10 +2617,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMicrosoftDevicemanagementDeviceconfiguration).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"microsoft.devicemanagement.deviceconfiguration.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftDevicemanagementDeviceconfiguration).Properties, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
-		return
-	},
 	"microsoft.devicemanagement.devicecompliancepolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).__id, ok = v.Value.(string)
 			return
@@ -2685,10 +2647,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.devicemanagement.devicecompliancepolicy.assignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).Assignments, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
-		return
-	},
-	"microsoft.devicemanagement.devicecompliancepolicy.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).Properties, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"ms365.exchangeonline.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3343,7 +3301,6 @@ type mqlMicrosoftTenant struct {
 	AssignedPlans plugin.TValue[[]interface{}]
 	ProvisionedPlans plugin.TValue[[]interface{}]
 	CreatedDateTime plugin.TValue[*time.Time]
-	DisplayName plugin.TValue[string]
 	Name plugin.TValue[string]
 	VerifiedDomains plugin.TValue[[]interface{}]
 	OnPremisesSyncEnabled plugin.TValue[bool]
@@ -3403,10 +3360,6 @@ func (c *mqlMicrosoftTenant) GetProvisionedPlans() *plugin.TValue[[]interface{}]
 
 func (c *mqlMicrosoftTenant) GetCreatedDateTime() *plugin.TValue[*time.Time] {
 	return &c.CreatedDateTime
-}
-
-func (c *mqlMicrosoftTenant) GetDisplayName() *plugin.TValue[string] {
-	return &c.DisplayName
 }
 
 func (c *mqlMicrosoftTenant) GetName() *plugin.TValue[string] {
@@ -4687,7 +4640,6 @@ type mqlMicrosoftDomaindnsrecord struct {
 	RecordType plugin.TValue[string]
 	SupportedService plugin.TValue[string]
 	Ttl plugin.TValue[int64]
-	Properties plugin.TValue[interface{}]
 }
 
 // createMicrosoftDomaindnsrecord creates a new instance of this resource
@@ -4751,10 +4703,6 @@ func (c *mqlMicrosoftDomaindnsrecord) GetTtl() *plugin.TValue[int64] {
 	return &c.Ttl
 }
 
-func (c *mqlMicrosoftDomaindnsrecord) GetProperties() *plugin.TValue[interface{}] {
-	return &c.Properties
-}
-
 // mqlMicrosoftApplication for the microsoft.application resource
 type mqlMicrosoftApplication struct {
 	MqlRuntime *plugin.Runtime
@@ -4763,7 +4711,6 @@ type mqlMicrosoftApplication struct {
 	Id plugin.TValue[string]
 	AppId plugin.TValue[string]
 	Name plugin.TValue[string]
-	DisplayName plugin.TValue[string]
 	Description plugin.TValue[string]
 	Notes plugin.TValue[string]
 	Tags plugin.TValue[[]interface{}]
@@ -4771,7 +4718,6 @@ type mqlMicrosoftApplication struct {
 	DisabledByMicrosoftStatus plugin.TValue[string]
 	GroupMembershipClaims plugin.TValue[string]
 	CreatedAt plugin.TValue[*time.Time]
-	CreatedDateTime plugin.TValue[*time.Time]
 	IdentifierUris plugin.TValue[[]interface{}]
 	PublisherDomain plugin.TValue[string]
 	SignInAudience plugin.TValue[string]
@@ -4844,10 +4790,6 @@ func (c *mqlMicrosoftApplication) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlMicrosoftApplication) GetDisplayName() *plugin.TValue[string] {
-	return &c.DisplayName
-}
-
 func (c *mqlMicrosoftApplication) GetDescription() *plugin.TValue[string] {
 	return &c.Description
 }
@@ -4874,10 +4816,6 @@ func (c *mqlMicrosoftApplication) GetGroupMembershipClaims() *plugin.TValue[stri
 
 func (c *mqlMicrosoftApplication) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
-}
-
-func (c *mqlMicrosoftApplication) GetCreatedDateTime() *plugin.TValue[*time.Time] {
-	return &c.CreatedDateTime
 }
 
 func (c *mqlMicrosoftApplication) GetIdentifierUris() *plugin.TValue[[]interface{}] {
@@ -6273,7 +6211,6 @@ type mqlMicrosoftDevicemanagementDeviceconfiguration struct {
 	Description plugin.TValue[string]
 	DisplayName plugin.TValue[string]
 	Version plugin.TValue[int64]
-	Properties plugin.TValue[interface{}]
 }
 
 // createMicrosoftDevicemanagementDeviceconfiguration creates a new instance of this resource
@@ -6337,10 +6274,6 @@ func (c *mqlMicrosoftDevicemanagementDeviceconfiguration) GetVersion() *plugin.T
 	return &c.Version
 }
 
-func (c *mqlMicrosoftDevicemanagementDeviceconfiguration) GetProperties() *plugin.TValue[interface{}] {
-	return &c.Properties
-}
-
 // mqlMicrosoftDevicemanagementDevicecompliancepolicy for the microsoft.devicemanagement.devicecompliancepolicy resource
 type mqlMicrosoftDevicemanagementDevicecompliancepolicy struct {
 	MqlRuntime *plugin.Runtime
@@ -6353,7 +6286,6 @@ type mqlMicrosoftDevicemanagementDevicecompliancepolicy struct {
 	LastModifiedDateTime plugin.TValue[*time.Time]
 	Version plugin.TValue[int64]
 	Assignments plugin.TValue[[]interface{}]
-	Properties plugin.TValue[interface{}]
 }
 
 // createMicrosoftDevicemanagementDevicecompliancepolicy creates a new instance of this resource
@@ -6419,10 +6351,6 @@ func (c *mqlMicrosoftDevicemanagementDevicecompliancepolicy) GetVersion() *plugi
 
 func (c *mqlMicrosoftDevicemanagementDevicecompliancepolicy) GetAssignments() *plugin.TValue[[]interface{}] {
 	return &c.Assignments
-}
-
-func (c *mqlMicrosoftDevicemanagementDevicecompliancepolicy) GetProperties() *plugin.TValue[interface{}] {
-	return &c.Properties
 }
 
 // mqlMs365Exchangeonline for the ms365.exchangeonline resource

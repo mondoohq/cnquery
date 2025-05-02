@@ -9,12 +9,12 @@ import (
 
 	"github.com/vmware/govmomi/vim25/mo"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/vsphere/connection"
-	"go.mondoo.com/cnquery/v11/providers/vsphere/resources/resourceclient"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/vsphere/connection"
+	"go.mondoo.com/cnquery/v12/providers/vsphere/resources/resourceclient"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 type mqlVsphereHostInternal struct {
@@ -356,13 +356,12 @@ func (v *mqlVsphereHost) services() ([]interface{}, error) {
 	mqlServices := make([]interface{}, len(services))
 	for i, s := range services {
 		mqlService, err := CreateResource(v.MqlRuntime, "esxi.service", map[string]*llx.RawData{
-			"key":           llx.StringData(s.Key),
-			"label":         llx.StringData(s.Label),
-			"required":      llx.BoolData(s.Required),
-			"uninstallable": llx.BoolData(s.Uninstallable),
-			"running":       llx.BoolData(s.Running),
-			"ruleset":       llx.ArrayData(convert.SliceAnyToInterface(s.Ruleset), types.String),
-			"policy":        llx.StringData(s.Policy), // on, off, automatic
+			"key":      llx.StringData(s.Key),
+			"label":    llx.StringData(s.Label),
+			"required": llx.BoolData(s.Required),
+			"running":  llx.BoolData(s.Running),
+			"ruleset":  llx.ArrayData(convert.SliceAnyToInterface(s.Ruleset), types.String),
+			"policy":   llx.StringData(s.Policy), // on, off, automatic
 		})
 		if err != nil {
 			return nil, err

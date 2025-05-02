@@ -14,12 +14,12 @@ import (
 	rds_types "github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/aws/smithy-go/transport/http"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 // The cluster and instance API also return data for non-RDS engines like Neptune and DocumentDB. We have to filter
@@ -28,11 +28,6 @@ var nonRdsEngines = []string{"neptune", "docdb"}
 
 func (a *mqlAwsRds) id() (string, error) {
 	return "aws.rds", nil
-}
-
-// Deprecated: use instances() instead
-func (a *mqlAwsRds) dbInstances() ([]interface{}, error) {
-	return a.instances()
 }
 
 // instances returns all RDS instances
@@ -242,7 +237,7 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 	return tasks
 }
 
-// pendingMaintenanceActions returns all pending maintaince actions for all RDS instances
+// pendingMaintenanceActions returns all pending maintenance actions for all RDS instances
 func (a *mqlAwsRds) allPendingMaintenanceActions() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	res := []interface{}{}
@@ -519,7 +514,7 @@ func initAwsRdsDbcluster(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 	rds := obj.(*mqlAwsRds)
 
-	rawResources := rds.GetDbClusters()
+	rawResources := rds.GetClusters()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -557,7 +552,7 @@ func initAwsRdsDbinstance(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 	rds := obj.(*mqlAwsRds)
 
-	rawResources := rds.GetDbInstances()
+	rawResources := rds.GetInstances()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -699,11 +694,6 @@ func rdsTagsToMap(tags []rds_types.Tag) map[string]interface{} {
 	}
 
 	return tagsMap
-}
-
-// Deprecated: use clusters() instead
-func (a *mqlAwsRds) dbClusters() ([]interface{}, error) {
-	return a.clusters()
 }
 
 // clusters returns all RDS clusters

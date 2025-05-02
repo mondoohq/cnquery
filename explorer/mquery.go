@@ -11,19 +11,19 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/checksums"
-	llx "go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/mqlc"
-	"go.mondoo.com/cnquery/v11/mrn"
-	"go.mondoo.com/cnquery/v11/types"
-	"go.mondoo.com/cnquery/v11/utils/multierr"
-	"go.mondoo.com/cnquery/v11/utils/sortx"
+	"go.mondoo.com/cnquery/v12/checksums"
+	llx "go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/mqlc"
+	"go.mondoo.com/cnquery/v12/mrn"
+	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/cnquery/v12/utils/multierr"
+	"go.mondoo.com/cnquery/v12/utils/sortx"
 	"google.golang.org/protobuf/proto"
 )
 
 // Compile a given query and return the bundle. Both v1 and v2 versions are compiled.
 // Both versions will be given the same code id.
-func (m *Mquery) Compile(props map[string]*llx.Primitive, conf mqlc.CompilerConfig) (*llx.CodeBundle, error) {
+func (m *Mquery) Compile(props mqlc.PropsHandler, conf mqlc.CompilerConfig) (*llx.CodeBundle, error) {
 	if m.Mql == "" {
 		if m.Query == "" {
 			return nil, errors.New("query is not implemented '" + m.Mrn + "'")
@@ -210,7 +210,7 @@ func (m QueryMap) GetQuery(ctx context.Context, mrn string) (*Mquery, error) {
 }
 
 func (m *Mquery) refreshChecksumAndType(queries map[string]*Mquery, props map[string]PropertyRef, conf mqlc.CompilerConfig) (*llx.CodeBundle, error) {
-	localProps := map[string]*llx.Primitive{}
+	localProps := mqlc.SimpleProps{}
 	for i := range m.Props {
 		prop := m.Props[i]
 

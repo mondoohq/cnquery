@@ -13,13 +13,13 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/core/resources/regex"
-	"go.mondoo.com/cnquery/v11/providers/network/connection"
-	"go.mondoo.com/cnquery/v11/providers/network/resources/certificates"
-	"go.mondoo.com/cnquery/v11/providers/network/resources/tlsshake"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/core/resources/regex"
+	"go.mondoo.com/cnquery/v12/providers/network/connection"
+	"go.mondoo.com/cnquery/v12/providers/network/resources/certificates"
+	"go.mondoo.com/cnquery/v12/providers/network/resources/tlsshake"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 var reTarget = regexp.MustCompile("([^/:]+?)(:\\d+)?$")

@@ -12,11 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
 	"github.com/aws/aws-sdk-go-v2/service/guardduty/types"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
 )
 
 func (a *mqlAwsGuardduty) id() (string, error) {
@@ -114,7 +114,6 @@ func (a *mqlAwsGuarddutyDetector) populateData() error {
 		DetectorId: &detectorId,
 	})
 	if err != nil {
-
 		return err
 	}
 
@@ -159,36 +158,6 @@ func (a *mqlAwsGuarddutyDetector) findings() ([]interface{}, error) {
 		},
 	}
 	return fetchFindings(svc, detectorId, region, params, a.MqlRuntime)
-}
-
-// unarchivedFindings returns all findings that are not archived
-// Deprecated: use findings instead
-func (a *mqlAwsGuarddutyDetector) unarchivedFindings() ([]interface{}, error) {
-	id := a.Id.Data
-	region := a.Region.Data
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
-	svc := conn.Guardduty(region)
-	ctx := context.Background()
-
-	findings, err := svc.ListFindings(ctx, &guardduty.ListFindingsInput{
-		DetectorId: &id,
-		FindingCriteria: &types.FindingCriteria{
-			Criterion: map[string]types.Condition{
-				"service.archived": {
-					Equals: []string{"false"},
-				},
-			},
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
-	findingDetails, err := svc.GetFindings(ctx, &guardduty.GetFindingsInput{FindingIds: findings.FindingIds, DetectorId: &id})
-	if err != nil {
-		return nil, err
-	}
-	return convert.JsonToDictSlice(findingDetails.Findings)
 }
 
 func (a *mqlAwsGuardduty) findings() ([]interface{}, error) {

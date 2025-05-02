@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/v11/cli/shell"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/testutils"
+	"go.mondoo.com/cnquery/v12/cli/shell"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/testutils"
 )
 
 func localShell() *shell.Shell {
