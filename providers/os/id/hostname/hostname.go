@@ -4,6 +4,7 @@
 package hostname
 
 import (
+	"fmt"
 	"io"
 	"strings"
 
@@ -20,36 +21,41 @@ import (
 // On Windows the `hostname` command (without the -f flag) works more reliable than `powershell -c "$env:computername"`
 // since it will return a non-zero exit code.
 func Hostname(conn shared.Connection, pf *inventory.Platform) (string, bool) {
-	var hostname string
-
 	if !pf.IsFamily(inventory.FAMILY_UNIX) && !pf.IsFamily(inventory.FAMILY_WINDOWS) {
 		log.Warn().Msg("your platform is not supported for hostname detection")
-		return hostname, false
+		return "", false
 	}
 
-	// on unix systems we try to get the hostname via `hostname -f` first since it returns the fqdn
+	// On unix systems we try to get the hostname via `hostname -f` first since it returns the fqdn.
 	if pf.IsFamily(inventory.FAMILY_UNIX) {
-		cmd, err := conn.RunCommand("hostname -f")
-		if err == nil && cmd.ExitStatus == 0 {
-			data, err := io.ReadAll(cmd.Stdout)
-			if err == nil {
-				return strings.TrimSpace(string(data)), true
-			}
-		} else {
-			log.Debug().Err(err).Msg("could not run `hostname -f` command")
+		fqdn, err := runCommand(conn, "hostname -f")
+		if err == nil && fqdn != "localhost" && fqdn != "" {
+			return fqdn, true
 		}
+		log.Debug().Err(err).Msg("could not detect hostname via `hostname -f` command")
+
+		// If the output of `hostname -f` is localhost, we try to fetch it via `getent hosts`,
+		// start with the most common protocol IPv4.
+		hostname, err := parseGetentHosts(conn, "127.0.0.1")
+		if err == nil && hostname != "" {
+			return hostname, true
+		}
+		log.Debug().Err(err).Str("ipversion", "IPv4").Msg("could not detect hostname")
+
+		// When IPv4 is not configured, try IPv6.
+		hostname, err = parseGetentHosts(conn, "::1")
+		if err == nil && hostname != "" {
+			return hostname, true
+		}
+		log.Debug().Err(err).Str("ipversion", "IPv6").Msg("could not detect hostname")
 	}
 
 	// This is the preferred way to get the hostname on windows, it is important to not use the -f flag here
-	cmd, err := conn.RunCommand("hostname")
-	if err == nil && cmd.ExitStatus == 0 {
-		data, err := io.ReadAll(cmd.Stdout)
-		if err == nil {
-			return strings.TrimSpace(string(data)), true
-		}
-	} else {
-		log.Debug().Err(err).Msg("could not run `hostname` command")
+	hostname, err := runCommand(conn, "hostname")
+	if err == nil && hostname != "" {
+		return hostname, true
 	}
+	log.Debug().Err(err).Msg("could not run `hostname` command")
 
 	// Fallback to for unix systems to /etc/hostname, since hostname command is not available on all systems
 	// This mechanism is also working for static analysis
@@ -100,4 +106,52 @@ func Hostname(conn shared.Connection, pf *inventory.Platform) (string, bool) {
 	}
 
 	return "", false
+}
+
+// runCommand is a wrapper around shared.Connection.RunCommand that helps execute commands
+// and read the standard output all in one function.
+func runCommand(conn shared.Connection, commandString string) (string, error) {
+	cmd, err := conn.RunCommand(commandString)
+	if err != nil && cmd.ExitStatus == 0 {
+		return "", err
+	}
+
+	data, err := io.ReadAll(cmd.Stdout)
+	if err != nil {
+		return "", err
+	}
+
+	return strings.TrimSpace(string(data)), nil
+}
+
+// parseGetentHosts runs `getent hosts <address>` and returns the first valid hostname
+// that is not a variant of "localhost".
+func parseGetentHosts(conn shared.Connection, ip string) (string, error) {
+	output, err := runCommand(conn, fmt.Sprintf("getent hosts %s", ip))
+	if err != nil {
+		return "", err
+	}
+
+	fields := strings.Fields(output)
+
+	if len(fields) < 2 {
+		return "", fmt.Errorf("no hostnames found for IP %s", ip)
+	}
+
+	for _, host := range fields[1:] {
+		if !isLocalhostVariant(host) {
+			return host, nil
+		}
+	}
+
+	return "", fmt.Errorf("no non-localhost hostname found for IP %s", ip)
+}
+
+// isLocalhostVariant returns true if the given hostname is a variant of "localhost"
+func isLocalhostVariant(host string) bool {
+	lh := strings.ToLower(host)
+	return lh == "localhost" ||
+		lh == "localhost.localdomain" ||
+		lh == "ip6-localhost" ||
+		lh == "ip6-loopback"
 }
