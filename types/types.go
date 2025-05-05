@@ -49,6 +49,7 @@ const (
 	byteEmpty
 	byteVersion
 	byteIP
+	byteUint
 	byteArray = 1<<4 + iota - 7 // set to 25 to avoid breaking changes
 	byteMap
 	byteResource
@@ -93,6 +94,8 @@ const (
 	Version = Type(rune(byteVersion))
 	// IP address and subnet
 	IP = Type(rune(byteIP))
+	// Uint for integers
+	Uint = Type(rune(byteUint))
 	// ArrayLike is the underlying type of all arrays
 	ArrayLike = Type(rune(byteArray))
 	// MapLike is the underlying type of all maps
@@ -137,6 +140,7 @@ func All() []Type {
 		Empty,
 		Version,
 		IP,
+		Uint,
 		ArrayLike,
 		MapLike,
 		ResourceLike,
@@ -289,6 +293,7 @@ var labels = map[byte]string{
 	byteEmpty:       "empty",
 	byteVersion:     "version",
 	byteIP:          "ip",
+	byteUint:        "uint",
 	byteStringSlice: "stringslice",
 	byteRange:       "range",
 }
@@ -362,6 +367,14 @@ var Equal = map[Type]func(interface{}, interface{}) bool{
 			return false
 		}
 		return l.Equal(*r)
+	},
+	Uint: func(left, right interface{}) bool {
+		l, ok1 := left.(uint64)
+		r, ok2 := right.(uint64)
+		if !ok1 || !ok2 {
+			return false
+		}
+		return l == r
 	},
 	// types.Dict: func(left, right interface{}) bool {},
 	Score: func(left, right interface{}) bool {

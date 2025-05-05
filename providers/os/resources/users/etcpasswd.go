@@ -30,11 +30,11 @@ func ParseEtcPasswd(input io.Reader) ([]*User, error) {
 
 		if len(m) >= 7 {
 			// parse uid
-			uid, err := strconv.ParseInt(m[2], 10, 0)
+			uid, err := strconv.ParseUint(m[2], 10, 64)
 			if err != nil {
 				log.Error().Err(err).Str("user", m[0]).Msg("could not parse uid")
 			}
-			gid, err := strconv.ParseInt(m[3], 10, 0)
+			gid, err := strconv.ParseUint(m[3], 10, 64)
 			if err != nil {
 				log.Error().Err(err).Str("user", m[0]).Msg("could not parse gid")
 			}

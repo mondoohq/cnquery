@@ -9,7 +9,7 @@ import (
 
 type Group struct {
 	ID      string // is the string representation of gid on linux/unix and sid on windows
-	Gid     int64
+	Gid     uint64
 	Sid     string
 	Name    string
 	Members []string

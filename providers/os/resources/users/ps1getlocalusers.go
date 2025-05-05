@@ -6,6 +6,7 @@ package users
 import (
 	"encoding/json"
 	"io"
+	"math"
 
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/powershell"
@@ -93,8 +94,8 @@ func winToUser(g WindowsLocalUser) *User {
 	return &User{
 		ID:      g.SID.Value,
 		Sid:     g.SID.Value,
-		Uid:     -1, // TODO: not its suboptimal, but lets make sure to avoid runtime conflicts for now
-		Gid:     -1,
+		Uid:     math.MaxUint64, // TODO: not its suboptimal, but lets make sure to avoid runtime conflicts for now
+		Gid:     math.MaxUint64,
 		Name:    g.Name,
 		Enabled: g.Enabled,
 	}

@@ -7,10 +7,9 @@ import (
 	"bufio"
 	"errors"
 	"io"
+	"slices"
 	"strconv"
 	"strings"
-
-	"slices"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
@@ -34,7 +33,7 @@ func ParseEtcGroup(input io.Reader) ([]*Group, error) {
 		m := strings.Split(line, ":")
 		if len(m) >= 4 {
 			// parse gid
-			gid, err := strconv.ParseInt(m[2], 10, 0)
+			gid, err := strconv.ParseUint(m[2], 10, 64)
 			if err != nil {
 				log.Error().Err(err).Str("group", m[0]).Msg("could not parse gid")
 			}
@@ -97,7 +96,7 @@ func (s *UnixGroupManager) List() ([]*Group, error) {
 		return nil, errors.New("cannot find users manager")
 	}
 
-	groupsByGid := map[int64]*Group{}
+	groupsByGid := map[uint64]*Group{}
 	for i := range groups {
 		g := groups[i]
 		groupsByGid[g.Gid] = g

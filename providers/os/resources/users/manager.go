@@ -11,8 +11,8 @@ import (
 
 type User struct {
 	ID          string
-	Uid         int64
-	Gid         int64
+	Uid         uint64
+	Gid         uint64
 	Sid         string
 	Name        string
 	Description string

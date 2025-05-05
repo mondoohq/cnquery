@@ -49,6 +49,10 @@ func (r *RawData) MarshalJSON() ([]byte, error) {
 			return nil, multierr.Wrap(err, "failed to marshal IP address "+ip.CIDR())
 		}
 		return json.Marshal(RawData{Type: r.Type, Value: data})
+	case types.Uint:
+		// Serialize uint64 as a string to avoid JSON number precision issues for large values
+		s := strconv.FormatUint(r.Value.(uint64), 10)
+		return json.Marshal(RawData{Type: r.Type, Value: s})
 	}
 
 	type rd2 RawData
@@ -83,6 +87,13 @@ func (r *RawData) UnmarshalJSON(data []byte) error {
 				return multierr.Wrap(err, "failed to unmarshal IP data")
 			}
 			r.Value = *ip
+		case types.Uint:
+			// We expect the value to be unmarshaled as a string (as per MarshalJSON)
+			u, err := strconv.ParseUint(r.Value.(string), 10, 64)
+			if err != nil {
+				return multierr.Wrap(err, "llx: UnmarshalJSON failed to parse uint string")
+			}
+			r.Value = u
 		}
 		return nil
 	}
@@ -155,6 +166,8 @@ func rawDataString(typ types.Type, value interface{}) string {
 		}
 	case types.Int:
 		return strconv.FormatInt(value.(int64), 10)
+	case types.Uint:
+		return strconv.FormatUint(value.(uint64), 10)
 	case types.Float:
 		return strconv.FormatFloat(value.(float64), 'f', -1, 64)
 	case types.String:
@@ -269,6 +282,9 @@ func isTruthy(data interface{}, typ types.Type) (bool, bool) {
 
 	case types.Int:
 		return data.(int64) != 0, true
+
+	case types.Uint:
+		return data.(uint64) != 0, true
 
 	case types.Float:
 		return data.(float64) != 0, true
@@ -469,6 +485,14 @@ var BoolFalse = BoolData(false)
 
 // BoolTrue is a RawData boolean set to true
 var BoolTrue = BoolData(true)
+
+// UintData creates a rawdata struct from a go uint64
+func UintData(v uint64) *RawData {
+	return &RawData{
+		Type:  types.Uint,
+		Value: v,
+	}
+}
 
 // IntData creates a rawdata struct from a go int
 func IntData[T int64 | int32 | int](v T) *RawData {

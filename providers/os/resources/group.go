@@ -135,7 +135,7 @@ func (x *mqlGroups) list() ([]interface{}, error) {
 		group := groups[i]
 		nu, err := CreateResource(x.MqlRuntime, "group", map[string]*llx.RawData{
 			"name": llx.StringData(group.Name),
-			"gid":  llx.IntData(group.Gid),
+			"gid":  llx.UintData(group.Gid),
 			"sid":  llx.StringData(group.Sid),
 		})
 		if err != nil {

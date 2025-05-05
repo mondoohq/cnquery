@@ -6,6 +6,7 @@ package groups
 import (
 	"encoding/json"
 	"io"
+	"math"
 
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/powershell"
@@ -79,7 +80,7 @@ func winToGroup(g WindowsLocalGroup) *Group {
 	return &Group{
 		ID:      g.SID.Value,
 		Sid:     g.SID.Value,
-		Gid:     -1, // TODO: not its suboptimal, but lets make sure to avoid runtime conflicts for now
+		Gid:     math.MaxUint64, // TODO: not its suboptimal, but lets make sure to avoid runtime conflicts for now
 		Name:    g.Name,
 		Members: []string{},
 	}
