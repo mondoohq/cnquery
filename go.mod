@@ -336,5 +336,3 @@ require (
 	go.opentelemetry.io/otel/sdk/metric v1.35.0 // indirect
 	gotest.tools/v3 v3.5.1 // indirect
 )
-
-
