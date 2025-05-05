@@ -2892,6 +2892,22 @@ resources:
     refs:
     - title: Azure Web documentation
       url: https://learn.microsoft.com/en-us/azure/?product=web
+  azure.subscription.webService.appRuntimeStack:
+    fields:
+      autoUpdate: {}
+      deprecated: {}
+      endOfLifeDate: {}
+      hidden: {}
+      majorVersion: {}
+      minorVersion: {}
+      name: {}
+      preferredOs: {}
+      runtimeVersion: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
   azure.subscription.webService.appsite:
     fields:
       applicationSettings: {}
