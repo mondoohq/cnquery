@@ -6,6 +6,8 @@ package llx
 import (
 	"encoding/json"
 	"errors"
+	"math"
+	"strconv"
 	"testing"
 	"time"
 
@@ -16,9 +18,13 @@ import (
 
 var testTime = time.Unix(1715874169, 1)
 
+const maxUintVal = math.MaxUint64
+
 func TestRawData_String(t *testing.T) {
 	strVal := "yo"
 	intVal := int64(1)
+	uintVal := uint64(123)
+	largeUintVal := uint64(4294967294)
 	boolVal := true
 	tests := []struct {
 		data *RawData
@@ -32,6 +38,10 @@ func TestRawData_String(t *testing.T) {
 		{IntData(0), "0"},
 		{IntDataPtr(&intVal), "1"},
 		{IntDataPtr[int](nil), "<null>"},
+		{UintData(0), "0"},
+		{UintData(uintVal), "123"},
+		{UintData(largeUintVal), "4294967294"},
+		{UintData(maxUintVal), strconv.FormatUint(maxUintVal, 10)},
 		{FloatData(123), "123"},
 		{StringData("yo"), "\"yo\""},
 		{StringDataPtr(nil), "<null>"},
@@ -73,6 +83,10 @@ func TestTruthy(t *testing.T) {
 		{IntData(123), true},
 		{FloatData(0), false},
 		{FloatData(1.23), true},
+		{UintData(0), false},
+		{UintData(123), true},
+		{UintData(4294967294), true},
+		{UintData(math.MaxUint64), true},
 		{StringData(""), false},
 		{StringData("b"), true},
 		{StringDataPtr(nil), false},
@@ -185,12 +199,19 @@ func TestSuccess(t *testing.T) {
 }
 
 func TestRawData_JSON(t *testing.T) {
+	uintVal := uint64(123)
+	largeUintVal := uint64(4294967294)
+
 	tests := []*RawData{
 		NilData,
 		BoolTrue,
 		BoolFalse,
 		IntData(0),
 		IntData(123),
+		UintData(0),
+		UintData(uintVal),
+		UintData(largeUintVal),
+		UintData(maxUintVal),
 		FloatData(0),
 		FloatData(1.23),
 		StringData(""),
