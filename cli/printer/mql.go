@@ -450,6 +450,9 @@ func (print *Printer) dict(typ types.Type, raw interface{}, codeID string, bundl
 	case int64:
 		return print.Secondary(fmt.Sprintf("%d", data))
 
+	case uint64:
+		return print.Secondary(fmt.Sprintf("%d", data))
+
 	case float64:
 		return print.Secondary(fmt.Sprintf("%f", data))
 
@@ -726,6 +729,11 @@ func (print *Printer) Data(typ types.Type, data interface{}, codeID string, bund
 			return print.Secondary("-Infinity")
 		}
 		return print.Secondary(strconv.FormatInt(data.(int64), 10))
+	case types.Uint:
+		if data == nil {
+			return print.Secondary("null")
+		}
+		return print.Secondary(strconv.FormatUint(data.(uint64), 10))
 	case types.Float:
 		if data == nil {
 			return print.Secondary("null")
