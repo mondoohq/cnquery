@@ -165,7 +165,7 @@ func (typ Type) IsArray() bool {
 
 // Map for an association of keys and values
 func Map(key, value Type) Type {
-	if key != String && key != Int {
+	if key != String && key != Int && key != Uint {
 		panic("Unsupported map on key type " + key.Label())
 	}
 	return MapLike + key + value

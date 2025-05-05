@@ -117,6 +117,8 @@ func dictRawDataString(value interface{}) string {
 		}
 	case int64:
 		return strconv.FormatInt(x, 10)
+	case uint64:
+		return strconv.FormatUint(x, 10)
 	case float64:
 		return strconv.FormatFloat(x, 'f', -1, 64)
 	case string:

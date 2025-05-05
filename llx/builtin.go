@@ -178,6 +178,9 @@ func init() {
 			string("||" + types.MapLike):             {f: intOrMapV2, Label: "||"},
 			string("inRange"):                        {f: intInRange, Label: "inRange"},
 		},
+		types.Uint: {
+			// TODO:
+		},
 		types.Float: {
 			// == / !=
 			string("==" + types.Nil):                 {f: floatCmpNilV2, Label: "=="},
