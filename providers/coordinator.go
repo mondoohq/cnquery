@@ -108,6 +108,9 @@ func (c *coordinator) newRuntime() *Runtime {
 		providers:       map[string]*ConnectedProvider{},
 		recording:       recording.Null{},
 		shutdownTimeout: defaultShutdownTimeout,
+		AutoUpdate: UpdateProvidersConfig{
+			Enabled: true,
+		},
 	}
 
 	c.mutex.Lock()
