@@ -4,6 +4,7 @@
 package connection
 
 import (
+	"errors"
 	"os"
 
 	"github.com/aws-cloudformation/rain/cft"
@@ -44,7 +45,10 @@ func NewCloudformationConnection(id uint32, asset *inventory.Asset, conf *invent
 	if err != nil {
 		return nil, err
 	}
-	conn.cftTemplate = cftTemplate
+	if cftTemplate == nil {
+		return nil, errors.New("cftTemplate is nil")
+	}
+	conn.cftTemplate = *cftTemplate
 
 	return conn, nil
 }
