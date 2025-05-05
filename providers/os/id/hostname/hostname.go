@@ -112,8 +112,16 @@ func Hostname(conn shared.Connection, pf *inventory.Platform) (string, bool) {
 // and read the standard output all in one function.
 func runCommand(conn shared.Connection, commandString string) (string, error) {
 	cmd, err := conn.RunCommand(commandString)
-	if err != nil && cmd.ExitStatus == 0 {
+	if err != nil {
 		return "", err
+	}
+
+	if cmd.ExitStatus != 0 {
+		outErr, err := io.ReadAll(cmd.Stderr)
+		if err != nil {
+			return "", err
+		}
+		return "", fmt.Errorf("failed to run command: %s", outErr)
 	}
 
 	data, err := io.ReadAll(cmd.Stdout)
