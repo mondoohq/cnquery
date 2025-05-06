@@ -6,7 +6,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
+
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/resources"
 )
 
 type ProvidersConf struct {
@@ -15,7 +18,26 @@ type ProvidersConf struct {
 	providers []string // Providers names
 }
 
-func (c ProvidersConf) Providers() []string {
+// AddProvider registers a new builtin provider into the providers configuration
+func (c *ProvidersConf) AddProvider(provider *resources.ProviderInfo) {
+	if slices.Contains(c.Providers(), provider.Name) {
+		return // provider already exist
+	}
+
+	// add provider
+	c.Builtin = append(c.Builtin, Builtin{
+		GoPackage: provider.Id,
+		Name:      provider.Name,
+		// Remote dependencies are not yet supported, we need to
+		// modify this once we support them.
+		// Remote:    provider.Remote,
+	})
+
+	// invalidate the internal list of providers since it changed
+	c.providers = nil
+}
+
+func (c *ProvidersConf) Providers() []string {
 	if len(c.providers) == 0 {
 		for _, b := range c.Builtin {
 			c.providers = append(c.providers, b.Name)
