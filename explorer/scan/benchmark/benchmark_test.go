@@ -107,7 +107,6 @@ func BenchmarkScan_MultipleAssets(b *testing.B) {
 	require.NoError(b, err)
 
 	job.Bundle = bundle
-
 	scanner := scan.NewLocalScanner(scan.DisableProgressBar())
 	b.ResetTimer()
 
