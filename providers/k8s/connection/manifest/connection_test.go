@@ -97,7 +97,7 @@ func TestManifestDiscovery(t *testing.T) {
 	}
 	inv, err := resources.Discover(pluginRuntime, cnquery.Features{})
 	require.NoError(t, err)
-	require.Len(t, inv.Spec.Assets, 2)
+	require.Len(t, inv.Spec.Assets, 3)
 
 	conn.InventoryConfig().Discover.Targets = []string{"all"}
 	pluginRuntime = &plugin.Runtime{
@@ -108,7 +108,7 @@ func TestManifestDiscovery(t *testing.T) {
 	}
 	inv, err = resources.Discover(pluginRuntime, cnquery.Features{})
 	require.NoError(t, err)
-	require.Len(t, inv.Spec.Assets, 2)
+	require.Len(t, inv.Spec.Assets, 3)
 
 	conn.InventoryConfig().Discover.Targets = []string{"deployments"}
 	pluginRuntime = &plugin.Runtime{
@@ -153,7 +153,7 @@ func TestOperatorManifest(t *testing.T) {
 	}
 	inv, err := resources.Discover(pluginRuntime, cnquery.Features{})
 	require.NoError(t, err)
-	require.Len(t, inv.Spec.Assets, 3)
+	require.Len(t, inv.Spec.Assets, 4)
 
 	require.Len(t, inv.Spec.Assets[1].PlatformIds, 1)
 
@@ -175,7 +175,8 @@ func TestOperatorManifest(t *testing.T) {
 
 	require.NotEqual(t, inv.Spec.Assets[0].PlatformIds[0], inv.Spec.Assets[1].PlatformIds[0])
 	require.Equal(t, "//platformid.api.mondoo.app/runtime/k8s/uid/"+manifestHash, inv.Spec.Assets[0].PlatformIds[0])
-	require.Equal(t, "//platformid.api.mondoo.app/runtime/k8s/uid/"+manifestHash+"/namespace/mondoo-operator/deployments/name/mondoo-operator-controller-manager", inv.Spec.Assets[2].PlatformIds[0])
+	require.Equal(t, "//platformid.api.mondoo.app/runtime/k8s/uid/"+manifestHash+"/namespace/mondoo-operator/services/name/mondoo-operator-controller-manager-metrics-service", inv.Spec.Assets[2].PlatformIds[0])
+	require.Equal(t, "//platformid.api.mondoo.app/runtime/k8s/uid/"+manifestHash+"/namespace/mondoo-operator/deployments/name/mondoo-operator-controller-manager", inv.Spec.Assets[3].PlatformIds[0])
 }
 
 func TestOperatorManifestWithNamespaceFilter(t *testing.T) {
@@ -222,9 +223,17 @@ func TestOperatorManifestWithNamespaceFilter(t *testing.T) {
 		require.NoError(t, err)
 		require.NotEmpty(t, asset.PlatformIds[0])
 	}
+
+	h := sha256.New()
+	absPath, err := filepath.Abs(path)
+	require.NoError(t, err)
+	h.Write([]byte(absPath))
+	manifestHash := hex.EncodeToString(h.Sum(nil))
+	require.NoError(t, err)
+
 	require.NotEqual(t, inv.Spec.Assets[0].PlatformIds[0], inv.Spec.Assets[1].PlatformIds[0])
-	require.Equal(t, "//platformid.api.mondoo.app/runtime/k8s/uid/namespace/mondoo-operator", inv.Spec.Assets[0].PlatformIds[0])
-	require.Equal(t, "//platformid.api.mondoo.app/runtime/k8s/uid/namespace/mondoo-operator/deployments/name/mondoo-operator-controller-manager", inv.Spec.Assets[2].PlatformIds[0])
+	require.Equal(t, "//platformid.api.mondoo.app/runtime/k8s/uid/"+manifestHash+"/namespace/mondoo-operator", inv.Spec.Assets[0].PlatformIds[0])
+	require.Equal(t, "//platformid.api.mondoo.app/runtime/k8s/uid/"+manifestHash+"/namespace/mondoo-operator/deployments/name/mondoo-operator-controller-manager", inv.Spec.Assets[2].PlatformIds[0])
 }
 
 func TestManifestNoObjects(t *testing.T) {
@@ -316,5 +325,5 @@ func TestManifestDir(t *testing.T) {
 	}
 	require.NotEmpty(t, inv.Spec.Assets[0].PlatformIds[0])
 	// we have the operator deployment twice
-	require.Equal(t, inv.Spec.Assets[1].PlatformIds[0], inv.Spec.Assets[2].PlatformIds[0])
+	require.Equal(t, inv.Spec.Assets[3].PlatformIds[0], inv.Spec.Assets[4].PlatformIds[0])
 }

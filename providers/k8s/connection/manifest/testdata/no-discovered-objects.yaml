@@ -319,19 +319,3 @@ kind: ConfigMap
 metadata:
   name: mondoo-operator-manager-config
   namespace: mondoo-operator
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app.kubernetes.io/name: mondoo-operator
-  name: mondoo-operator-controller-manager-metrics-service
-  namespace: mondoo-operator
-spec:
-  ports:
-  - name: metrics
-    port: 8080
-    protocol: TCP
-    targetPort: metrics
-  selector:
-    app.kubernetes.io/name: mondoo-operator

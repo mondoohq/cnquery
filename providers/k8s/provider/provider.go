@@ -108,7 +108,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	return &res, nil
 }
 
-func (s *Service) MockConnect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*plugin.ConnectRes, error) {
+func (s *Service) MockConnect(_ *plugin.ConnectReq, _ plugin.ProviderCallback) (*plugin.ConnectRes, error) {
 	return nil, errors.New("mock connect not yet implemented")
 }
 
@@ -135,7 +135,7 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	}
 
 	return &plugin.ConnectRes{
-		Id:        uint32(conn.ID()),
+		Id:        conn.ID(),
 		Name:      conn.Name(),
 		Asset:     req.Asset,
 		Inventory: inventory,
