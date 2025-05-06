@@ -493,8 +493,8 @@ func installDependencies(provider *Provider, existing Providers) error {
 
 		// Check if dependency is already installed
 		depProvider := existing.Lookup(dependencyLookup)
-		if depProvider == nil {
-			continue
+		if depProvider != nil {
+			continue // exist
 		}
 
 		upstreamDep := DefaultProviders.Lookup(dependencyLookup)
