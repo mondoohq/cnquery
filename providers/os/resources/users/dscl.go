@@ -77,7 +77,7 @@ func (s *OSXUserManager) List() ([]*User, error) {
 		return nil, err
 	}
 	for k := range m {
-		uid, err := strconv.ParseInt(m[k], 10, 0)
+		uid, err := strconv.ParseFloat(m[k], 64)
 		if err != nil {
 			log.Error().Err(err).Str("user", k).Msg("could not parse uid")
 		}
@@ -142,7 +142,7 @@ func (s *OSXUserManager) List() ([]*User, error) {
 		return nil, err
 	}
 	for k := range m {
-		gid, err := strconv.ParseInt(m[k], 10, 0)
+		gid, err := strconv.ParseFloat(m[k], 64)
 		if err != nil {
 			log.Error().Err(err).Str("user", k).Msg("could not parse gid")
 		}
