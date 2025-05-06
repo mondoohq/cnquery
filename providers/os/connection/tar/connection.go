@@ -111,11 +111,11 @@ func (c *Connection) FileInfo(path string) (shared.FileInfoDetails, error) {
 		return shared.FileInfoDetails{}, err
 	}
 
-	uid := int64(-1)
-	gid := int64(-1)
+	uid := float64(-1)
+	gid := float64(-1)
 	if stat, ok := stat.Sys().(*tar.Header); ok {
-		uid = int64(stat.Uid)
-		gid = int64(stat.Gid)
+		uid = float64(stat.Uid)
+		gid = float64(stat.Gid)
 	}
 	mode := stat.Mode()
 

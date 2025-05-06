@@ -190,7 +190,7 @@ func ipv6EndianTranslation(s string) string {
 	return string(swappedBytes)
 }
 
-func (p *mqlPorts) users() (map[int64]*mqlUser, error) {
+func (p *mqlPorts) users() (map[float64]*mqlUser, error) {
 	obj, err := CreateResource(p.MqlRuntime, "users", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
@@ -245,7 +245,7 @@ func (p *mqlPorts) processesBySocket() (map[int64]*mqlProcess, error) {
 
 // parseProcNet parses the proc filesystem
 // See socket/address parsing: https://wiki.christophchamp.com/index.php?title=Unix_sockets
-func (p *mqlPorts) parseProcNet(path string, protocol string, users map[int64]*mqlUser) ([]interface{}, error) {
+func (p *mqlPorts) parseProcNet(path string, protocol string, users map[float64]*mqlUser) ([]interface{}, error) {
 	conn := p.MqlRuntime.Connection.(shared.Connection)
 	fs := conn.FileSystem()
 	stat, err := fs.Stat(path)
@@ -311,7 +311,7 @@ type procNetPort struct {
 	RemoteAddress string
 	RemotePort    int64
 	State         string
-	Uid           int64
+	Uid           float64
 	Inode         int64
 }
 
@@ -367,11 +367,11 @@ func parseProcNetLine(line string) (*procNetPort, error) {
 	}
 	port.State = state
 
-	uid, err := strconv.ParseUint(m[6], 10, 64)
+	uid, err := strconv.ParseFloat(m[6], 64)
 	if err != nil {
 		return nil, errors.New("failed to parse port UID: " + m[6])
 	}
-	port.Uid = int64(uid)
+	port.Uid = uid
 
 	inode, err := strconv.ParseUint(m[7], 10, 64)
 	if err != nil {
@@ -574,11 +574,11 @@ func (p *mqlPorts) listMacos() ([]interface{}, error) {
 				continue
 			}
 
-			uid, err := strconv.Atoi(process.UID)
+			uid, err := strconv.ParseFloat(process.UID, 64)
 			if err != nil {
 				return nil, err
 			}
-			user, ok := users[int64(uid)]
+			user, ok := users[uid]
 			if !ok {
 				return nil, errors.New("cannot find user for uid " + process.UID)
 			}

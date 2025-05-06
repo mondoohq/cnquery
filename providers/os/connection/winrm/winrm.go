@@ -154,8 +154,8 @@ func (p *Connection) FileInfo(path string) (shared.FileInfoDetails, error) {
 		return shared.FileInfoDetails{}, err
 	}
 
-	uid := int64(-1)
-	gid := int64(-1)
+	uid := float64(-1)
+	gid := float64(-1)
 	mode := stat.Mode()
 
 	return shared.FileInfoDetails{

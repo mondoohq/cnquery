@@ -28,7 +28,7 @@ func TestManagerDebian(t *testing.T) {
 
 	grp := findGroup(groupList, "0")
 	assert.Equal(t, "0", grp.ID)
-	assert.Equal(t, int64(0), grp.Gid)
+	assert.Equal(t, float64(0), grp.Gid)
 	assert.Equal(t, "root", grp.Name)
 	assert.Equal(t, []string{"root", "sync", "shutdown", "halt", "operator"}, grp.Members)
 
@@ -50,7 +50,7 @@ func TestManagerMacos(t *testing.T) {
 
 	grp := findGroup(groupList, "216")
 	assert.Equal(t, "216", grp.ID)
-	assert.Equal(t, int64(216), grp.Gid)
+	assert.Equal(t, float64(216), grp.Gid)
 	assert.Equal(t, "_postgres", grp.Name)
 	assert.Equal(t, []string{"_devicemgr", "_calendar", "_teamsserver", "_xserverdocs"}, grp.Members)
 
@@ -72,7 +72,7 @@ func TestManagerFreebsd(t *testing.T) {
 
 	grp := findGroup(groupList, "0")
 	assert.Equal(t, "0", grp.ID)
-	assert.Equal(t, int64(0), grp.Gid)
+	assert.Equal(t, float64(0), grp.Gid)
 	assert.Equal(t, "wheel", grp.Name)
 	assert.Equal(t, []string{"root", "vagrant"}, grp.Members)
 
@@ -94,7 +94,7 @@ func TestManagerWindows(t *testing.T) {
 
 	grp := findGroup(groupList, "S-1-5-32-544")
 	assert.Equal(t, "S-1-5-32-544", grp.ID)
-	assert.Equal(t, int64(-1), grp.Gid)
+	assert.Equal(t, float64(-1), grp.Gid)
 	assert.Equal(t, "Administrators", grp.Name)
 	assert.Equal(t, []string{}, grp.Members)
 

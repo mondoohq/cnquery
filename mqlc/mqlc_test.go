@@ -1299,11 +1299,11 @@ func TestCompiler_ResourceExpansion(t *testing.T) {
 			}, res.CodeV2.Blocks[1].Chunks[1])
 			assertFunction(t, "uid", &llx.Function{
 				Binding: (2 << 32) | 1,
-				Type:    string(types.Int),
+				Type:    string(types.Float),
 			}, res.CodeV2.Blocks[1].Chunks[2])
 			assertFunction(t, "gid", &llx.Function{
 				Binding: (2 << 32) | 1,
-				Type:    string(types.Int),
+				Type:    string(types.Float),
 			}, res.CodeV2.Blocks[1].Chunks[3])
 
 			assert.Equal(t, map[string]uint64{res.CodeV2.Checksums[1<<32|3]: 2 << 32}, res.AutoExpand)
@@ -1339,7 +1339,7 @@ func TestCompiler_ResourceExpansion(t *testing.T) {
 			}, res.CodeV2.Blocks[2].Chunks[1])
 			assertFunction(t, "gid", &llx.Function{
 				Binding: (3 << 32) | 1,
-				Type:    string(types.Int),
+				Type:    string(types.Float),
 			}, res.CodeV2.Blocks[2].Chunks[2])
 
 			assert.Equal(t, map[string]uint64{res.CodeV2.Checksums[2<<32|3]: 3 << 32}, res.AutoExpand)
@@ -1494,7 +1494,7 @@ func TestCompiler_ArrayResourceFieldGlob(t *testing.T) {
 			Type: string(types.Resource("group")),
 		}, res.CodeV2.Blocks[1].Chunks[0])
 		assertFunction(t, "gid", &llx.Function{
-			Type:    string(types.Int),
+			Type:    string(types.Float),
 			Binding: (2 << 32) | 1,
 		}, res.CodeV2.Blocks[1].Chunks[1])
 		assertFunction(t, "members", &llx.Function{

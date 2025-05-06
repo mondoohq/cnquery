@@ -28,12 +28,12 @@ func TestParseDscacheutilResult(t *testing.T) {
 	assert.Equal(t, 3, len(m), "detected the right amount of groups")
 
 	grp := findGroup(m, "395")
-	assert.Equal(t, int64(395), grp.Gid, "detected group id")
+	assert.Equal(t, float64(395), grp.Gid, "detected group id")
 	assert.Equal(t, "com.apple.access_ftp", grp.Name, "detected group name")
 	assert.Equal(t, []string{}, grp.Members, "detected group members")
 
 	grp = findGroup(m, "216")
-	assert.Equal(t, int64(216), grp.Gid, "detected group id")
+	assert.Equal(t, float64(216), grp.Gid, "detected group id")
 	assert.Equal(t, "_postgres", grp.Name, "detected group name")
 	assert.Equal(t, []string{"_devicemgr", "_calendar", "_teamsserver", "_xserverdocs"}, grp.Members, "detected group members")
 }

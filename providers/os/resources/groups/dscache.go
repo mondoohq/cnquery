@@ -54,7 +54,7 @@ func ParseDscacheutilResult(input io.Reader) ([]*Group, error) {
 		case "password":
 			// we ignore the password for now
 		case "gid":
-			gid, err := strconv.ParseInt(m[2], 10, 0)
+			gid, err := strconv.ParseFloat(m[2], 64)
 			if err != nil {
 				log.Error().Err(err).Str("group", m[0]).Msg("could not parse gid")
 			}

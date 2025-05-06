@@ -256,18 +256,18 @@ func (c *Connection) FileInfo(path string) (shared.FileInfoDetails, error) {
 		return shared.FileInfoDetails{}, err
 	}
 
-	uid := int64(-1)
-	gid := int64(-1)
+	uid := float64(-1)
+	gid := float64(-1)
 
 	if c.Sudo != nil || c.UseScpFilesystem {
 		if stat, ok := stat.Sys().(*shared.FileInfo); ok {
-			uid = int64(stat.Uid)
-			gid = int64(stat.Gid)
+			uid = float64(stat.Uid)
+			gid = float64(stat.Gid)
 		}
 	} else {
 		if stat, ok := stat.Sys().(*rawsftp.FileStat); ok {
-			uid = int64(stat.UID)
-			gid = int64(stat.GID)
+			uid = float64(stat.UID)
+			gid = float64(stat.GID)
 		}
 	}
 	mode := stat.Mode()

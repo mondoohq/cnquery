@@ -701,7 +701,7 @@
           "ID": "group/0/root",
           "Fields": {
             "gid": {
-              "type": "\u0005",
+              "type": "\u0006",
               "value": 0
             },
             "name": {
@@ -715,7 +715,7 @@
           "ID": "group/1/bin",
           "Fields": {
             "gid": {
-              "type": "\u0005",
+              "type": "\u0006",
               "value": 1
             },
             "name": {
@@ -729,7 +729,7 @@
           "ID": "group/1000/chris",
           "Fields": {
             "gid": {
-              "type": "\u0005",
+              "type": "\u0006",
               "value": 1000
             },
             "name": {
@@ -743,7 +743,7 @@
           "ID": "group/998/wheel",
           "Fields": {
             "gid": {
-              "type": "\u0005",
+              "type": "\u0006",
               "value": 998
             },
             "name": {
@@ -1152,7 +1152,7 @@
               "value": false
             },
             "gid": {
-              "type": "\u0005",
+              "type": "\u0006",
               "value": 0
             },
             "group": {
@@ -1171,7 +1171,7 @@
               "value": "root"
             },
             "uid": {
-              "type": "\u0005",
+              "type": "\u0006",
               "value": 0
             }
           }
@@ -1185,7 +1185,7 @@
               "value": false
             },
             "gid": {
-              "type": "\u0005",
+              "type": "\u0006",
               "value": 1
             },
             "group": {
@@ -1200,7 +1200,7 @@
               "value": "bin"
             },
             "uid": {
-              "type": "\u0005",
+              "type": "\u0006",
               "value": 1
             }
           }
@@ -1214,7 +1214,7 @@
               "value": false
             },
             "gid": {
-              "type": "\u0005",
+              "type": "\u0006",
               "value": 1000
             },
             "group": {
@@ -1233,7 +1233,7 @@
               "value": "chris"
             },
             "uid": {
-              "type": "\u0005",
+              "type": "\u0006",
               "value": 1000
             }
           }
@@ -1247,7 +1247,7 @@
               "value": false
             },
             "gid": {
-              "type": "\u0005",
+              "type": "\u0006",
               "value": 1000
             },
             "group": {
@@ -1262,7 +1262,7 @@
               "value": "christopher"
             },
             "uid": {
-              "type": "\u0005",
+              "type": "\u0006",
               "value": 1001
             }
           }

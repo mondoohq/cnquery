@@ -530,9 +530,9 @@ parse.openpgp {
 // User on this system
 user @defaults("name uid gid") {
   // User ID
-  uid int
+  uid float
   // User's group ID
-  gid int
+  gid float
   // User's security identifier (Windows)
   sid string
   // Name of the user
@@ -600,7 +600,7 @@ authorizedkeys.entry @defaults("key") {
 group @defaults("name gid") {
   init(id string)
   // Group ID
-  gid int
+  gid float
   // Group's security identifier (Windows)
   sid string
   // Name of this group

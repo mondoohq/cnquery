@@ -28,11 +28,16 @@ func TestManagerDebian(t *testing.T) {
 
 	usr := findUser(userList, "0")
 	assert.Equal(t, "0", usr.ID)
-	assert.Equal(t, int64(0), usr.Uid)
-	assert.Equal(t, int64(0), usr.Gid)
+	assert.Equal(t, float64(0), usr.Uid)
+	assert.Equal(t, float64(0), usr.Gid)
 	assert.Equal(t, "/root", usr.Home)
 	assert.Equal(t, "root", usr.Name)
 	assert.Equal(t, "/bin/bash", usr.Shell)
+
+	usr2 := findUser(userList, "4294967294")
+	assert.Equal(t, "4294967294", usr2.ID)
+	assert.Equal(t, float64(4294967294), usr2.Uid)
+	assert.Equal(t, float64(4294967294), usr2.Gid)
 
 	assert.Equal(t, 13, len(userList))
 }
@@ -52,8 +57,8 @@ func TestManagerMacos(t *testing.T) {
 
 	usr := findUser(userList, "0")
 	assert.Equal(t, "0", usr.ID)
-	assert.Equal(t, int64(0), usr.Uid)
-	assert.Equal(t, int64(0), usr.Gid)
+	assert.Equal(t, float64(0), usr.Uid)
+	assert.Equal(t, float64(0), usr.Gid)
 	assert.Equal(t, "/var/root /private/var/root", usr.Home)
 	assert.Equal(t, "root", usr.Name)
 	assert.Equal(t, "/bin/sh", usr.Shell)
@@ -76,8 +81,8 @@ func TestManagerFreebsd(t *testing.T) {
 
 	usr := findUser(userList, "0")
 	assert.Equal(t, "0", usr.ID)
-	assert.Equal(t, int64(0), usr.Uid)
-	assert.Equal(t, int64(0), usr.Gid)
+	assert.Equal(t, float64(0), usr.Uid)
+	assert.Equal(t, float64(0), usr.Gid)
 	assert.Equal(t, "/root", usr.Home)
 	assert.Equal(t, "root", usr.Name)
 	assert.Equal(t, "/bin/csh", usr.Shell)
@@ -100,8 +105,8 @@ func TestManagerWindows(t *testing.T) {
 
 	usr := findUser(userList, "S-1-5-21-2356735557-1575748656-448136971-500")
 	assert.Equal(t, "S-1-5-21-2356735557-1575748656-448136971-500", usr.ID)
-	assert.Equal(t, int64(-1), usr.Uid)
-	assert.Equal(t, int64(-1), usr.Gid)
+	assert.Equal(t, float64(-1), usr.Uid)
+	assert.Equal(t, float64(-1), usr.Gid)
 	assert.Equal(t, "", usr.Home)
 	assert.Equal(t, "chris", usr.Name)
 	assert.Equal(t, "", usr.Shell)

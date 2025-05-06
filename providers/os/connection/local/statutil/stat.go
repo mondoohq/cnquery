@@ -112,7 +112,6 @@ func (s *statHelper) linux(name string) (os.FileInfo, error) {
 	// Therefore we continue after this command and try to parse the result and focus on making the parsing more robust
 	command := sb.String()
 	cmd, err = s.commandRunner.RunCommand(command)
-
 	// we get stderr content in cases where we could not gather the security context via failed to get security context of
 	// it could also include: No such file or directory
 	if err != nil {
@@ -145,12 +144,12 @@ func (s *statHelper) linux(name string) (os.FileInfo, error) {
 		return nil, errors.Wrap(err, "could not stat "+name)
 	}
 
-	uid, err := strconv.ParseInt(statsData[2], 10, 64)
+	uid, err := strconv.ParseFloat(statsData[2], 64)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not stat "+name)
 	}
 
-	gid, err := strconv.ParseInt(statsData[3], 10, 64)
+	gid, err := strconv.ParseFloat(statsData[3], 64)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not stat "+name)
 	}
@@ -214,12 +213,12 @@ func (s *statHelper) unix(name string) (os.FileInfo, error) {
 		return nil, errors.Wrap(err, "could not stat "+name)
 	}
 
-	uid, err := strconv.ParseInt(statsData[2], 10, 64)
+	uid, err := strconv.ParseFloat(statsData[2], 64)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not stat "+name)
 	}
 
-	gid, err := strconv.ParseInt(statsData[3], 10, 64)
+	gid, err := strconv.ParseFloat(statsData[3], 64)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not stat "+name)
 	}
@@ -254,19 +253,19 @@ func (s *statHelper) aix(name string) (os.FileInfo, error) {
 
 	// AIX does not ship with stat, therefore we use perl stat function to retrieve the same information as on linux
 	// Codes are taken from https://perldoc.perl.org/functions/stat
-	//0 dev      device number of filesystem
-	//1 ino      inode number
-	//2 mode     file mode  (type and permissions)
-	//3 nlink    number of (hard) links to the file
-	//4 uid      numeric user ID of file's owner
-	//5 gid      numeric group ID of file's owner
-	//6 rdev     the device identifier (special files only)
-	//7 size     total size of file, in bytes
-	//8 atime    last access time since the epoch
-	//9 mtime    last modify time since the epoch
-	//10 ctime    inode change time (NOT creation time!) since the epoch
-	//11 blksize  preferred block size for file system I/O
-	//12 blocks   actual number of blocks allocated
+	// 0 dev      device number of filesystem
+	// 1 ino      inode number
+	// 2 mode     file mode  (type and permissions)
+	// 3 nlink    number of (hard) links to the file
+	// 4 uid      numeric user ID of file's owner
+	// 5 gid      numeric group ID of file's owner
+	// 6 rdev     the device identifier (special files only)
+	// 7 size     total size of file, in bytes
+	// 8 atime    last access time since the epoch
+	// 9 mtime    last modify time since the epoch
+	// 10 ctime    inode change time (NOT creation time!) since the epoch
+	// 11 blksize  preferred block size for file system I/O
+	// 12 blocks   actual number of blocks allocated
 	script := `perl -e '@a = stat(shift) or exit 2; $u = getpwuid($a[4]); $g = getgrgid($a[5]); printf("0%o:%s:%d:%s:%d:%d:%d", $a[2], $u, $a[4], $g, $a[5], $a[7], $a[9])'`
 	sb.WriteString(script)
 	sb.WriteString(" ")
@@ -292,12 +291,12 @@ func (s *statHelper) aix(name string) (os.FileInfo, error) {
 		return nil, errors.Wrap(err, "could not stat "+name)
 	}
 
-	uid, err := strconv.ParseInt(statsData[2], 10, 64)
+	uid, err := strconv.ParseFloat(statsData[2], 64)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not stat "+name)
 	}
 
-	gid, err := strconv.ParseInt(statsData[4], 10, 64)
+	gid, err := strconv.ParseFloat(statsData[4], 64)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not stat "+name)
 	}

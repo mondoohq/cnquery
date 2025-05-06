@@ -24,7 +24,7 @@ func (x *mqlUser) id() (string, error) {
 	if len(x.Sid.Data) > 0 {
 		id = x.Sid.Data
 	} else {
-		id = strconv.FormatInt(x.Uid.Data, 10)
+		id = strconv.FormatInt(int64(x.Uid.Data), 10)
 	}
 
 	return "user/" + id + "/" + x.Name.Data, nil
@@ -65,13 +65,13 @@ func initUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string
 	}
 
 	if idOk {
-		id, ok := rawUID.Value.(int64)
+		id, ok := rawUID.Value.(float64)
 		if !ok {
-			return nil, nil, errors.New("cannot detect user, invalid type for name (expected int)")
+			return nil, nil, errors.New("cannot detect user, invalid type for name (expected float64)")
 		}
 		user, ok := users.usersByID[id]
 		if !ok {
-			return nil, nil, errors.New("cannot find user with UID '" + strconv.Itoa(int(id)) + "'")
+			return nil, nil, errors.New("cannot find user with UID '" + strconv.FormatFloat(id, 'f', -1, 64) + "'")
 		}
 		return nil, user, nil
 	}
@@ -79,7 +79,7 @@ func initUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string
 	return nil, nil, errors.New("cannot find user, no search criteria provided")
 }
 
-func (x *mqlUser) group(gid int64) (*mqlGroup, error) {
+func (x *mqlUser) group(gid float64) (*mqlGroup, error) {
 	raw, err := CreateResource(x.MqlRuntime, "groups", nil)
 	if err != nil {
 		return nil, errors.New("cannot get groups info for user: " + err.Error())
@@ -102,7 +102,7 @@ func (u *mqlUser) authorizedkeys(home string) (*mqlAuthorizedkeys, error) {
 
 type mqlUsersInternal struct {
 	lock        sync.Mutex
-	usersByID   map[int64]*mqlUser
+	usersByID   map[float64]*mqlUser
 	usersByName map[string]*mqlUser
 }
 
@@ -136,8 +136,8 @@ func (x *mqlUsers) list() ([]interface{}, error) {
 		user := users[i]
 		nu, err := CreateResource(x.MqlRuntime, "user", map[string]*llx.RawData{
 			"name":    llx.StringData(user.Name),
-			"uid":     llx.IntData(user.Uid),
-			"gid":     llx.IntData(user.Gid),
+			"uid":     llx.FloatData(user.Uid),
+			"gid":     llx.FloatData(user.Gid),
 			"sid":     llx.StringData(user.Sid),
 			"home":    llx.StringData(user.Home),
 			"shell":   llx.StringData(user.Shell),
@@ -162,7 +162,7 @@ func (x *mqlUsers) refreshCache(all []interface{}) error {
 		all = raw.Data
 	}
 
-	x.usersByID = map[int64]*mqlUser{}
+	x.usersByID = map[float64]*mqlUser{}
 	x.usersByName = map[string]*mqlUser{}
 
 	for i := range all {
@@ -174,7 +174,7 @@ func (x *mqlUsers) refreshCache(all []interface{}) error {
 	return nil
 }
 
-func (x *mqlUsers) findID(id int64) (*mqlUser, error) {
+func (x *mqlUsers) findID(id float64) (*mqlUser, error) {
 	if x := x.GetList(); x.Error != nil {
 		return nil, x.Error
 	}

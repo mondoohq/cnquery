@@ -53,13 +53,13 @@ func initGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[strin
 	}
 
 	if idOk {
-		id, ok := rawGID.Value.(int64)
+		id, ok := rawGID.Value.(float64)
 		if !ok {
-			return nil, nil, errors.New("cannot detect group, invalid type for name (expected int)")
+			return nil, nil, errors.New("cannot detect group, invalid type for name (expected float64)")
 		}
 		group, ok := groups.groupsByID[id]
 		if !ok {
-			return nil, nil, errors.New("cannot find group with UID '" + strconv.Itoa(int(id)) + "'")
+			return nil, nil, errors.New("cannot find group with GID '" + strconv.FormatFloat(id, 'f', -1, 64) + "'")
 		}
 		return nil, group, nil
 	}
@@ -72,7 +72,7 @@ func (x *mqlGroup) id() (string, error) {
 	if len(x.Sid.Data) > 0 {
 		id = x.Sid.Data
 	} else {
-		id = strconv.FormatInt(x.Gid.Data, 10)
+		id = strconv.FormatInt(int64(x.Gid.Data), 10)
 	}
 
 	return "group/" + id + "/" + x.Name.Data, nil
@@ -103,7 +103,7 @@ func (x *mqlGroup) members() ([]interface{}, error) {
 
 type mqlGroupsInternal struct {
 	lock         sync.Mutex
-	groupsByID   map[int64]*mqlGroup
+	groupsByID   map[float64]*mqlGroup
 	groupsByName map[string]*mqlGroup
 }
 
@@ -117,7 +117,7 @@ func (x *mqlGroups) list() ([]interface{}, error) {
 	if x.groupsByID != nil {
 		return nil, nil
 	}
-	x.groupsByID = map[int64]*mqlGroup{}
+	x.groupsByID = map[float64]*mqlGroup{}
 
 	conn := x.MqlRuntime.Connection.(shared.Connection)
 	gm, err := groups.ResolveManager(conn)
@@ -135,7 +135,7 @@ func (x *mqlGroups) list() ([]interface{}, error) {
 		group := groups[i]
 		nu, err := CreateResource(x.MqlRuntime, "group", map[string]*llx.RawData{
 			"name": llx.StringData(group.Name),
-			"gid":  llx.IntData(group.Gid),
+			"gid":  llx.FloatData(group.Gid),
 			"sid":  llx.StringData(group.Sid),
 		})
 		if err != nil {
@@ -160,7 +160,7 @@ func (x *mqlGroups) refreshCache(all []interface{}) error {
 		all = raw.Data
 	}
 
-	x.groupsByID = map[int64]*mqlGroup{}
+	x.groupsByID = map[float64]*mqlGroup{}
 	x.groupsByName = map[string]*mqlGroup{}
 
 	for i := range all {
@@ -172,7 +172,7 @@ func (x *mqlGroups) refreshCache(all []interface{}) error {
 	return nil
 }
 
-func (x *mqlGroups) findID(id int64) (*mqlGroup, error) {
+func (x *mqlGroups) findID(id float64) (*mqlGroup, error) {
 	if x := x.GetList(); x.Error != nil {
 		return nil, x.Error
 	}
