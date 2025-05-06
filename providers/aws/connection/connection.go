@@ -101,11 +101,12 @@ func NewMockConnection(id uint32, asset *inventory.Asset, conf *inventory.Config
 }
 
 func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*AwsConnection, error) {
-	log.Debug().Msg("new aws connection")
+	log.Trace().Msg("new aws connection")
 	// check flags for connection options
 	c := &AwsConnection{
 		awsConfigOptions: []func(*config.LoadOptions) error{},
 		Filters:          EmptyDiscoveryFilters(),
+		clientcache:      ClientsCache{disabled: true},
 	}
 
 	// merge the options to make sure we don't miss anything
