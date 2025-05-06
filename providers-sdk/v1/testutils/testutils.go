@@ -221,7 +221,7 @@ func Local() llx.Runtime {
 	schema.Add(mockprovider.Config.Name, mockSchema)
 
 	runtime := providers.Coordinator.NewRuntime()
-
+	providers.SetDefaultRuntime(runtime)
 	runtime.AutoUpdate = providers.UpdateProvidersConfig{
 		Enabled:         false,
 		RefreshInterval: 60 * 60,
