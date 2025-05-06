@@ -136,8 +136,8 @@ func (x *mqlUsers) list() ([]interface{}, error) {
 		user := users[i]
 		nu, err := CreateResource(x.MqlRuntime, "user", map[string]*llx.RawData{
 			"name":    llx.StringData(user.Name),
-			"uid":     llx.IntData(user.Uid),
-			"gid":     llx.IntData(user.Gid),
+			"uid":     llx.FloatData(user.Uid),
+			"gid":     llx.FloatData(user.Gid),
 			"sid":     llx.StringData(user.Sid),
 			"home":    llx.StringData(user.Home),
 			"shell":   llx.StringData(user.Shell),
