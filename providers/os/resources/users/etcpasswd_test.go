@@ -32,7 +32,7 @@ func TestParseLinuxEtcPasswd(t *testing.T) {
 	assert.Equal(t, "root", m[0].Name, "detected user name")
 	assert.Equal(t, float64(0), m[0].Uid, "detected root uid")
 	assert.Equal(t, float64(0), m[0].Gid, "detected root gid")
-	
+
 	assert.Equal(t, float64(4294967294), m[12].Uid, "detected nobody uid")
 	assert.Equal(t, float64(4294967294), m[12].Gid, "detected nobody gid")
 
