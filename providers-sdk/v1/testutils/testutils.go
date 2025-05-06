@@ -222,6 +222,11 @@ func Local() llx.Runtime {
 
 	runtime := providers.Coordinator.NewRuntime()
 
+	runtime.AutoUpdate = providers.UpdateProvidersConfig{
+		Enabled:         false,
+		RefreshInterval: 60 * 60,
+	}
+
 	provider := &providers.RunningProvider{
 		Name:   osconf.Config.Name,
 		ID:     osconf.Config.ID,
