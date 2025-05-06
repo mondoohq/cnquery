@@ -140,6 +140,12 @@ func TestDiscoverAssets(t *testing.T) {
 		}
 	}
 
+	runtime := providers.Coordinator.NewRuntime()
+	runtime.AutoUpdate = providers.UpdateProvidersConfig{
+		Enabled:         false,
+		RefreshInterval: 60 * 60,
+	}
+
 	t.Run("normal", func(t *testing.T) {
 		inv := getInventory()
 		discoveredAssets, err := DiscoverAssets(context.Background(), inv, nil, recording.Null{})
