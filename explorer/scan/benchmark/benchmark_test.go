@@ -5,6 +5,7 @@ package benchmark
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/rs/zerolog"
@@ -14,6 +15,7 @@ import (
 	"go.mondoo.com/cnquery/v11"
 	"go.mondoo.com/cnquery/v11/explorer"
 	"go.mondoo.com/cnquery/v11/explorer/scan"
+	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/mqlc"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/testutils"
@@ -24,9 +26,18 @@ func init() {
 	zerolog.SetGlobalLevel(zerolog.Disabled)
 }
 
+// extract the runtime from the benchmark function since we want to focus on
+// compilation and scan time, not the preparation
+var runtime llx.Runtime
+
+func TestMain(m *testing.M) {
+	runtime = testutils.Local()
+	exitVal := m.Run()
+	os.Exit(exitVal)
+}
+
 func BenchmarkScan_SingleAsset(b *testing.B) {
 	ctx := context.Background()
-	runtime := testutils.Local()
 	conf := mqlc.NewConfig(runtime.Schema(), cnquery.DefaultFeatures)
 	job := &scan.Job{
 		Inventory: &inventory.Inventory{
@@ -73,7 +84,6 @@ func BenchmarkScan_SingleAsset(b *testing.B) {
 
 func BenchmarkScan_MultipleAssets(b *testing.B) {
 	ctx := context.Background()
-	runtime := testutils.Local()
 	conf := mqlc.NewConfig(runtime.Schema(), cnquery.DefaultFeatures)
 	job := &scan.Job{
 		Inventory: &inventory.Inventory{
