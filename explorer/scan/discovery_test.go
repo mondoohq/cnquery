@@ -141,8 +141,9 @@ func TestDiscoverAssets(t *testing.T) {
 	}
 
 	runtime := providers.Coordinator.NewRuntime()
+	assert.Nil(t, providers.SetDefaultRuntime(runtime))
 	runtime.AutoUpdate = providers.UpdateProvidersConfig{
-		Enabled:         false,
+		Enabled:         true,
 		RefreshInterval: 60 * 60,
 	}
 

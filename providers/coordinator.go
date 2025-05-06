@@ -123,6 +123,7 @@ func (c *coordinator) newRuntime() *Runtime {
 func (c *coordinator) NewRuntimeFrom(parent *Runtime) *Runtime {
 	res := c.NewRuntime()
 	res.UpstreamConfig = parent.UpstreamConfig
+	res.AutoUpdate = parent.AutoUpdate
 	res.recording = parent.Recording()
 	for k, v := range parent.providers {
 		res.providers[k] = v
