@@ -181,7 +181,7 @@ func (r *Runtime) providerForAsset(asset *inventory.Asset) (*Provider, error) {
 			conn.Type = inventory.ConnBackendToType(conn.Backend)
 		}
 
-		provider, err := EnsureProvider(ProviderLookup{ConnType: conn.Type}, true, r.coordinator.Providers())
+		provider, err := EnsureProvider(ProviderLookup{ConnType: conn.Type}, r.AutoUpdate.Enabled, r.coordinator.Providers())
 		if err != nil {
 			errs.Add(err)
 			continue
