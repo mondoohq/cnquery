@@ -1341,7 +1341,7 @@ private azure.subscription.postgreSqlService.database @defaults("id name") {
 }
 
 // Azure SQL configuration
-private azure.subscription.sqlService.configuration @defaults("id name") {
+private azure.subscription.sqlService.configuration @defaults("name value") {
   // SQL configuration ID
   id string
   // SQL configuration name

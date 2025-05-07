@@ -103,6 +103,15 @@
 # Product Names
 #
 
+# s.b. auditd
+\bAuditd\b
+
+# s.b. WatchGuard
+\bWatchguard\b
+
+# s.b. Airtable
+\bAirTable\b
+
 # s.b. Tailscale
 \bTailScale\b
 
@@ -280,6 +289,9 @@
 
 # s.b. name server
 \bnameserver\b
+
+# s.b. Nmap
+\b[Nn]Map\b
 
 #
 # Kubernetes Terms
@@ -603,6 +615,7 @@
 # s.b. Memorystore
 \bMemoryStore\b
 \bMemory Store\b
+\bMem[Ss]tore\b
 
 # s.b. Pub/Sub
 \bPubSub\b
@@ -623,9 +636,6 @@
 
 # s.b. Datastore
 \bDataStore\b
-
-# s.b. Memorystore
-\bMemoryStore\b
 
 #
 # Azure Products
