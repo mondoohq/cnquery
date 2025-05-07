@@ -226,6 +226,10 @@ func init() {
 			Init: initAzureSubscriptionWebService,
 			Create: createAzureSubscriptionWebService,
 		},
+		"azure.subscription.webService.appRuntimeStack": {
+			// to override args, implement: initAzureSubscriptionWebServiceAppRuntimeStack(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionWebServiceAppRuntimeStack,
+		},
 		"azure.subscription.webService.appsite": {
 			// to override args, implement: initAzureSubscriptionWebServiceAppsite(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionWebServiceAppsite,
@@ -1740,7 +1744,34 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAzureSubscriptionWebService).GetApps()).ToDataRes(types.Array(types.Resource("azure.subscription.webService.appsite")))
 	},
 	"azure.subscription.webService.availableRuntimes": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebService).GetAvailableRuntimes()).ToDataRes(types.Array(types.Dict))
+		return (r.(*mqlAzureSubscriptionWebService).GetAvailableRuntimes()).ToDataRes(types.Array(types.Resource("azure.subscription.webService.appRuntimeStack")))
+	},
+	"azure.subscription.webService.appRuntimeStack.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appRuntimeStack.preferredOs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).GetPreferredOs()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appRuntimeStack.runtimeVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).GetRuntimeVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appRuntimeStack.majorVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).GetMajorVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appRuntimeStack.minorVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).GetMinorVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appRuntimeStack.autoUpdate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).GetAutoUpdate()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.webService.appRuntimeStack.deprecated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).GetDeprecated()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.webService.appRuntimeStack.hidden": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).GetHidden()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.webService.appRuntimeStack.endOfLifeDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).GetEndOfLifeDate()).ToDataRes(types.Time)
 	},
 	"azure.subscription.webService.appsite.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetId()).ToDataRes(types.String)
@@ -4819,6 +4850,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"azure.subscription.webService.availableRuntimes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionWebService).AvailableRuntimes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appRuntimeStack.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).__id, ok = v.Value.(string)
+			return
+		},
+	"azure.subscription.webService.appRuntimeStack.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appRuntimeStack.preferredOs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).PreferredOs, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appRuntimeStack.runtimeVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).RuntimeVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appRuntimeStack.majorVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).MajorVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appRuntimeStack.minorVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).MinorVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appRuntimeStack.autoUpdate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).AutoUpdate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appRuntimeStack.deprecated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).Deprecated, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appRuntimeStack.hidden": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).Hidden, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appRuntimeStack.endOfLifeDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).EndOfLifeDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.webService.appsite.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11766,8 +11837,102 @@ func (c *mqlAzureSubscriptionWebService) GetApps() *plugin.TValue[[]interface{}]
 
 func (c *mqlAzureSubscriptionWebService) GetAvailableRuntimes() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.AvailableRuntimes, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.webService", c.__id, "availableRuntimes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
 		return c.availableRuntimes()
 	})
+}
+
+// mqlAzureSubscriptionWebServiceAppRuntimeStack for the azure.subscription.webService.appRuntimeStack resource
+type mqlAzureSubscriptionWebServiceAppRuntimeStack struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAzureSubscriptionWebServiceAppRuntimeStackInternal it will be used here
+	Name plugin.TValue[string]
+	PreferredOs plugin.TValue[string]
+	RuntimeVersion plugin.TValue[string]
+	MajorVersion plugin.TValue[string]
+	MinorVersion plugin.TValue[string]
+	AutoUpdate plugin.TValue[bool]
+	Deprecated plugin.TValue[bool]
+	Hidden plugin.TValue[bool]
+	EndOfLifeDate plugin.TValue[*time.Time]
+}
+
+// createAzureSubscriptionWebServiceAppRuntimeStack creates a new instance of this resource
+func createAzureSubscriptionWebServiceAppRuntimeStack(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionWebServiceAppRuntimeStack{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.webService.appRuntimeStack", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppRuntimeStack) MqlName() string {
+	return "azure.subscription.webService.appRuntimeStack"
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppRuntimeStack) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppRuntimeStack) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppRuntimeStack) GetPreferredOs() *plugin.TValue[string] {
+	return &c.PreferredOs
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppRuntimeStack) GetRuntimeVersion() *plugin.TValue[string] {
+	return &c.RuntimeVersion
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppRuntimeStack) GetMajorVersion() *plugin.TValue[string] {
+	return &c.MajorVersion
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppRuntimeStack) GetMinorVersion() *plugin.TValue[string] {
+	return &c.MinorVersion
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppRuntimeStack) GetAutoUpdate() *plugin.TValue[bool] {
+	return &c.AutoUpdate
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppRuntimeStack) GetDeprecated() *plugin.TValue[bool] {
+	return &c.Deprecated
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppRuntimeStack) GetHidden() *plugin.TValue[bool] {
+	return &c.Hidden
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppRuntimeStack) GetEndOfLifeDate() *plugin.TValue[*time.Time] {
+	return &c.EndOfLifeDate
 }
 
 // mqlAzureSubscriptionWebServiceAppsite for the azure.subscription.webService.appsite resource

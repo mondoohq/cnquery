@@ -1026,7 +1026,29 @@ private azure.subscription.webService {
   // List of web apps
   apps() []azure.subscription.webService.appsite
   // Available runtimes
-  availableRuntimes() []dict
+  availableRuntimes() []azure.subscription.webService.appRuntimeStack
+}
+
+// Azure Web App runtime stack
+private azure.subscription.webService.appRuntimeStack @defaults("preferredOs runtimeVersion") {
+  // Web App stack name
+  name string
+  // Web App stack preferred OS
+  preferredOs string
+  // Web App runtime version
+  runtimeVersion string
+  // Web App stack major version name
+  majorVersion string
+  // Web App stack minor version name
+  minorVersion string
+  // Whether the stack version is auto-updated
+  autoUpdate bool
+  // Whether the stack is deprecated
+  deprecated bool
+  // Whether the stack is hidden
+  hidden bool
+  // End-of-life date for the minor version
+  endOfLifeDate time
 }
 
 // Azure Web app site
