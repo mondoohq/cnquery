@@ -251,3 +251,69 @@ func TestToPackage(t *testing.T) {
 
 	assert.Equal(t, expected, pkg)
 }
+
+func findPkgByName(pkgs []Package, name string) *Package {
+	for i := range pkgs {
+		if pkgs[i].Name == name {
+			return &pkgs[i]
+		}
+	}
+	return nil
+}
+
+func TestFindAndUpdateMsSqlHotfixes(t *testing.T) {
+	// Setup: create a list of packages with SQL Server hotfixes and SQL Server packages
+	packages := []Package{
+		{Name: "SQL Server 2019 Database Engine Services", Version: "15.0.2000.5", PUrl: "pkg:windows/windows/SQL%20Server%202019%20Database%20Engine%20Services@15.0.2000.5?arch=x86"},
+		{Name: "SQL Server 2019 Shared Management Objects", Version: "15.0.2000.5", PUrl: "pkg:windows/windows/SQL%20Server%202019%20Shared%20Management%20Objects@15.0.2000.5?arch=x86"},
+		// We should not update the setup package
+		{Name: "Microsoft SQL Server 2019 Setup (English)", Version: "15.0.2123.5", PUrl: "pkg:windows/windows/Microsoft%20SQL%20Server%202019%20Setup%20%28English%29@15.0.2123.5?arch=x86"},
+		{Name: "Hotfix KB5001090 SQL Server", Version: "15.0.4102.2", PUrl: "pkg:windows/windows/Hotfix%20KB5001090%20SQL%20Server@15.0.4102.2?arch=x86"},
+		{Name: "Hotfix KB5001091 SQL Server", Version: "15.0.4123.1", PUrl: "pkg:windows/windows/Hotfix%20KB5001091%20SQL%20Server@15.0.4123.1?arch=x86"},
+		{Name: "Not a hotfix", Version: "1.0.0", PUrl: "pkg:windows/windows/Not%20a%20hotfix@1.0.0?arch=x86"},
+	}
+
+	// Step 1: Find SQL Server hotfixes
+	hotfixes := findMsSqlHotfixes(packages)
+	require.Len(t, hotfixes, 2, "expected 2 hotfixes")
+
+	// Step 2: Get the latest hotfix (should be the last one after sorting)
+	latestHotfix := hotfixes[len(hotfixes)-1]
+	expectedLatestVersion := "15.0.4123.1"
+	require.Equal(t, expectedLatestVersion, latestHotfix.Version, "expected latest hotfix version")
+
+	// Step 3: Update SQL Server packages with the latest hotfix version
+	updated := updateMsSqlPackages(packages, latestHotfix)
+
+	// Step 4: Check that all SQL Server packages have the updated version
+	pkg := findPkgByName(updated, "SQL Server 2019 Database Engine Services")
+	require.NotNil(t, pkg, "SQL Server 2019 Database Engine Services package should exist")
+	require.Equal(t, expectedLatestVersion, pkg.Version, "expected SQL Server 2019 Database Engine Services to have updated version")
+	assert.Equal(t, "pkg:windows/windows/SQL%20Server%202019%20Database%20Engine%20Services@15.0.4123.1?arch=x86", pkg.PUrl)
+
+	pkg = findPkgByName(updated, "SQL Server 2019 Shared Management Objects")
+	require.NotNil(t, pkg, "SQL Server 2019 Shared Management Objects package should exist")
+	require.Equal(t, expectedLatestVersion, pkg.Version, "expected SQL Server 2019 Shared Management Objects to have updated version")
+	assert.Equal(t, "pkg:windows/windows/SQL%20Server%202019%20Shared%20Management%20Objects@15.0.4123.1?arch=x86", pkg.PUrl)
+
+	pkg = findPkgByName(updated, "Microsoft SQL Server 2019 Setup (English)")
+	require.NotNil(t, pkg, "Microsoft SQL Server 2019 Setup (English) package should exist")
+	require.Equal(t, "15.0.2123.5", pkg.Version, "expected Microsoft SQL Server 2019 Setup (English) to remain unchanged")
+	assert.Equal(t, "pkg:windows/windows/Microsoft%20SQL%20Server%202019%20Setup%20%28English%29@15.0.2123.5?arch=x86", pkg.PUrl)
+
+	pkg = findPkgByName(updated, "Hotfix KB5001090 SQL Server")
+	require.NotNil(t, pkg, "Hotfix KB5001090 SQL Server package should exist")
+	require.Equal(t, "15.0.4102.2", pkg.Version, "expected Hotfix KB5001090 SQL Server to remain unchanged")
+	assert.Equal(t, "pkg:windows/windows/Hotfix%20KB5001090%20SQL%20Server@15.0.4102.2?arch=x86", pkg.PUrl)
+
+	pkg = findPkgByName(updated, "Hotfix KB5001091 SQL Server")
+	require.NotNil(t, pkg, "Hotfix KB5001091 SQL Server package should exist")
+	require.Equal(t, "15.0.4123.1", pkg.Version, "expected Hotfix KB5001091 SQL Server to remain unchanged")
+	assert.Equal(t, "pkg:windows/windows/Hotfix%20KB5001091%20SQL%20Server@15.0.4123.1?arch=x86", pkg.PUrl)
+
+	// Step 5: Ensure non-SQL Server packages are unchanged
+	pkg = findPkgByName(updated, "Not a hotfix")
+	require.NotNil(t, pkg, "Not a hotfix package should exist")
+	require.Equal(t, "1.0.0", pkg.Version, "expected non-SQL Server package to remain unchanged")
+	assert.Equal(t, "pkg:windows/windows/Not%20a%20hotfix@1.0.0?arch=x86", pkg.PUrl)
+}

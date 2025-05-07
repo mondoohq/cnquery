@@ -11,6 +11,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/cockroachdb/errors"
@@ -358,6 +360,12 @@ func (w *WinPkgManager) getFsInstalledApps() ([]Package, error) {
 			packages = append(packages, *p)
 		}
 	}
+
+	msSqlHotfixes := findMsSqlHotfixes(packages)
+	if len(msSqlHotfixes) > 0 {
+		packages = updateMsSqlPackages(packages, msSqlHotfixes[len(msSqlHotfixes)-1])
+	}
+
 	return packages, nil
 }
 
@@ -522,6 +530,11 @@ func (w *WinPkgManager) List() ([]Package, error) {
 	}
 	hotfixAsPkgs := HotFixesToPackages(hotfixes)
 
+	msSqlHotfixes := findMsSqlHotfixes(appPkgs)
+	if len(msSqlHotfixes) > 0 {
+		pkgs = updateMsSqlPackages(pkgs, msSqlHotfixes[len(msSqlHotfixes)-1])
+	}
+
 	pkgs = append(pkgs, hotfixAsPkgs...)
 	return pkgs, nil
 }
@@ -600,4 +613,42 @@ func (win *WinPkgManager) Available() (map[string]PackageUpdate, error) {
 func (win *WinPkgManager) Files(name string, version string, arch string) ([]FileRecord, error) {
 	// not yet implemented
 	return nil, nil
+}
+
+// findMsSqlHotfixes returns a list of hotfixes that are related to Microsoft SQL Server
+// The list is sorted by the hotfix id
+func findMsSqlHotfixes(packages []Package) []Package {
+	sqlHotfixRegExp := regexp.MustCompile(`^Hotfix .+ SQL Server`)
+	sqlHotfixes := []Package{}
+	for _, p := range packages {
+		if sqlHotfixRegExp.MatchString(p.Name) {
+			sqlHotfixes = append(sqlHotfixes, p)
+		}
+	}
+	slices.SortFunc(sqlHotfixes, func(a, b Package) int {
+		return strings.Compare(a.Version, b.Version)
+	})
+	return sqlHotfixes
+}
+
+// updateMsSqlPackages updates the version of the SQL Server packages to the latest hotfix version
+func updateMsSqlPackages(pkgs []Package, latestMsSqlHotfix Package) []Package {
+	// Find the database engine package and use version as a reference for the update
+	msSqlServiceRegexp := regexp.MustCompile(`^SQL Server \d+ Database Engine Services$`)
+	currentVersion := ""
+	for _, pkg := range pkgs {
+		if msSqlServiceRegexp.MatchString(pkg.Name) {
+			currentVersion = pkg.Version
+			break
+		}
+	}
+
+	// Find other SQL Server packages and update them to the latest hotfix version
+	for i, pkg := range pkgs {
+		if strings.Contains(pkg.Name, "SQL Server") && pkg.Version == currentVersion {
+			pkgs[i].Version = latestMsSqlHotfix.Version
+			pkgs[i].PUrl = strings.Replace(pkgs[i].PUrl, currentVersion, latestMsSqlHotfix.Version, 1)
+		}
+	}
+	return pkgs
 }
