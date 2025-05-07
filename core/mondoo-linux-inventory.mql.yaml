@@ -112,15 +112,15 @@ packs:
       - uid: mondoo-linux-cpu-type
         title: CPU type
         mql: |
-          command('cat /proc/cpuinfo | grep "model name" | sort -u | cut -d : -f 2-').stdout.trim
+          file("/proc/cpuinfo").content.lines.where(_.contains("model name")).first().split(":").last().trim()
       - uid: mondoo-linux-root-volume
         title: Root volume size and filesystem type
         mql: |
-          command("df -TH / | grep '/dev' | awk '{ print $3 "+'" "'+" $2 }'").stdout.trim
+          command("df -TH / | awk '{ print $3 "+'" "'+" $2 }'").stdout.trim
       - uid: mondoo-linux-physical-memory
         title: Physical memory size
         mql: |
-          command("free --mega | grep Mem | awk '{ print $2}'").stdout.trim + "M"
+          file("/proc/meminfo").content.lines.where(_.contains("MemTotal")).first().split(":").last().trim()
       - uid: mondoo-linux-smbios-baseboard
         title: SMBIOS baseboard (or module) information
         mql: machine.baseboard { manufacturer version serial assetTag product }
