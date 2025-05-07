@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"go/format"
+	"maps"
 	"os"
 	"os/exec"
 	"regexp"
@@ -19,6 +20,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"go.mondoo.com/cnquery/v11/logger"
+	cproviders "go.mondoo.com/cnquery/v11/providers"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/resources"
 	"golang.org/x/mod/modfile"
 	"sigs.k8s.io/yaml"
 )
@@ -65,6 +68,13 @@ var rootCmd = &cobra.Command{
 			log.Fatal().Err(err).Str("path", confPath).Msg("failed to parse config file")
 		}
 
+		deps := buildProviders(conf.Builtin)
+		buildDependencies(deps)
+		for _, dep := range deps {
+			conf.AddProvider(dep)
+		}
+		log.Info().Strs("providers", conf.Providers()).Msg("(1/3) built providers")
+
 		builtinGo, err := genBuiltinGo(conf)
 		if err != nil {
 			log.Fatal().Err(err).Str("path", confPath).Msg("failed to generate builtin go")
@@ -73,10 +83,7 @@ var rootCmd = &cobra.Command{
 		if err = os.WriteFile(outPath, builtinGo, 0o644); err != nil {
 			log.Fatal().Err(err).Str("path", outPath).Msg("failed to write output")
 		}
-		log.Info().Str("path", outPath).Strs("providers", conf.Providers()).Msg("(1/3) configured builtin providers")
-
-		buildProviders(conf.Builtin)
-		log.Info().Strs("providers", conf.Providers()).Msg("(2/3) built providers")
+		log.Info().Str("path", outPath).Strs("providers", conf.Providers()).Msg("(2/3) configured builtin providers")
 
 		rewireDependencies(conf.Builtin)
 		log.Info().Str("path", outPath).Strs("providers", conf.Providers()).Msg("(3/3) rewired dependencies/files")
@@ -208,7 +215,8 @@ func init() {
 }
 `
 
-func buildProviders(providers []Builtin) {
+func buildProviders(providers []Builtin) map[string]*resources.ProviderInfo {
+	deps := map[string]*resources.ProviderInfo{}
 	for i, provider := range providers {
 		cmd := exec.Command("make", "providers/build/"+provider.Name)
 		if provider.Remote != "" {
@@ -219,7 +227,9 @@ func buildProviders(providers []Builtin) {
 		var out bytes.Buffer
 		cmd.Stdout = &out
 		cmd.Stderr = &out
-		log.Debug().Str("provider", provider.Name).Msg("build provider " + strconv.Itoa(i+1) + "/" + strconv.Itoa(len(providers)))
+		log.Debug().
+			Str("provider", provider.Name).
+			Msg("build provider " + strconv.Itoa(i+1) + "/" + strconv.Itoa(len(providers)))
 		if err := cmd.Run(); err != nil {
 			fmt.Println(out.String())
 			log.Error().Err(err).Str("provider", provider.Name).Msg("failed to build provider")
@@ -233,6 +243,46 @@ func buildProviders(providers []Builtin) {
 		}
 
 		dst := provider.Dist()
+		err = os.WriteFile(dst, raw, 0o644)
+		if err != nil {
+			log.Fatal().Err(err).Str("dst", dst).Msg("failed to write resources json")
+		}
+
+		// check for dependencies
+		schema := cproviders.MustLoadSchema(provider.Name, raw)
+		maps.Copy(deps, schema.Dependencies)
+	}
+	return deps
+}
+
+func buildDependencies(deps map[string]*resources.ProviderInfo) {
+	i := 0
+	for name, provider := range deps {
+		cmd := exec.Command("make", "providers/build/"+name)
+		var out bytes.Buffer
+		cmd.Stdout = &out
+		cmd.Stderr = &out
+		log.Debug().
+			Str("dependency", provider.Id).
+			Msg("build dependency " + strconv.Itoa(i+1) + "/" + strconv.Itoa(len(deps)))
+		if err := cmd.Run(); err != nil {
+			fmt.Println(out.String())
+			log.Error().Err(err).
+				Str("dependency", name).
+				Msg("failed to build provider dependency")
+		}
+
+		// Remote dependencies are not yet supported, we need to
+		// modify this once we support them.
+		// src := provider.Resource()
+		src := "providers/" + name + "/resources/" + name + ".resources.json"
+		raw, err := os.ReadFile(src)
+		if err != nil {
+			log.Fatal().Err(err).Str("src", src).Msg("failed to read resources json")
+		}
+
+		// dst := provider.Dist()
+		dst := "providers/" + name + ".resources.json"
 		err = os.WriteFile(dst, raw, 0o644)
 		if err != nil {
 			log.Fatal().Err(err).Str("dst", dst).Msg("failed to write resources json")
