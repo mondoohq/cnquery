@@ -93,8 +93,9 @@ func TestSolarisManager(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	pkgManager, err := ResolveSystemPkgManager(conn)
+	pms, err := ResolveSystemPkgManager(conn)
 	require.NoError(t, err)
+	pkgManager := pms[0]
 
 	pkgList, err := pkgManager.List()
 	require.NoError(t, err)

@@ -107,13 +107,17 @@ func (p *mqlPackage) files() ([]interface{}, error) {
 	} else {
 		// we need to retrieve the data on-demand
 		conn := p.MqlRuntime.Connection.(shared.Connection)
-		pm, err := packages.ResolveSystemPkgManager(conn)
-		if pm == nil || err != nil {
+		pms, err := packages.ResolveSystemPkgManager(conn)
+		if len(pms) == 0 || err != nil {
 			return nil, errors.New("could not detect suitable package manager for platform")
 		}
-		filesOnDisk, err = pm.Files(p.Name.Data, p.Version.Data, p.Arch.Data)
-		if err != nil {
-			return nil, err
+		filesOnDisk = []packages.FileRecord{}
+		for _, pm := range pms {
+			filesOD, err := pm.Files(p.Name.Data, p.Version.Data, p.Arch.Data)
+			if err != nil {
+				return nil, err
+			}
+			filesOnDisk = append(filesOnDisk, filesOD...)
 		}
 	}
 
@@ -140,23 +144,31 @@ func (x *mqlPackages) list() ([]interface{}, error) {
 	defer x.lock.Unlock()
 
 	conn := x.MqlRuntime.Connection.(shared.Connection)
-	pm, err := packages.ResolveSystemPkgManager(conn)
-	if pm == nil || err != nil {
+	pms, err := packages.ResolveSystemPkgManager(conn)
+	if len(pms) == 0 || err != nil {
 		return nil, errors.New("could not detect suitable package manager for platform")
 	}
 
-	// retrieve all system packages
-	osPkgs, err := pm.List()
-	if err != nil {
-		return nil, multierr.Wrap(err, "could not retrieve package list for platform")
-	}
+	osPkgs := []packages.Package{}
+	osAvailablePkgs := map[string]packages.PackageUpdate{}
+	for _, pm := range pms {
+		// retrieve all system packages
+		pkgs, err := pm.List()
+		if err != nil {
+			return nil, multierr.Wrap(err, "could not retrieve package list for platform")
+		}
+		osPkgs = append(osPkgs, pkgs...)
 
-	// TODO: do we really need to make this a blocking call, we could update available updates async
-	// we try to retrieve the available updates
-	osAvailablePkgs, err := pm.Available()
-	if err != nil {
-		log.Debug().Err(err).Msg("mql[packages]> could not retrieve available updates")
-		osAvailablePkgs = map[string]packages.PackageUpdate{}
+		// TODO: do we really need to make this a blocking call, we could update available updates async
+		// we try to retrieve the available updates
+		available, err := pm.Available()
+		if err != nil {
+			log.Debug().Err(err).Msg("mql[packages]> could not retrieve available updates")
+			available = map[string]packages.PackageUpdate{}
+		}
+		for k, v := range available {
+			osAvailablePkgs[k] = v
+		}
 	}
 
 	// make available updates easily findable
