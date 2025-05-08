@@ -111,8 +111,8 @@ func TestLabels(t *testing.T) {
 			"users.list { uid }",
 			&llx.Labels{
 				Labels: map[string]string{
-					"IB4yJOaaWXlkuGCEIjatVrL5rQZWQucCaOM55RqFxHYXGFvano6W1uqe55OJVo3joocfdpiSZjNqRjse8SMfiA==": "users.list",
-					"kijfKPV0fU/MBdcby4ng65mWcsH/kOn5PcVmYvbDBfUlSSSqGKiyhy1Qte+BO/GqMfL62iaaIRP8LgfRZ0/3pg==": "uid",
+					"p+Ev/uaC5uYn5PCkwtGWYG7KBBSQZGdjFrxOIgGtCl4rEn2aeegTkvGPA0CQFsln0u30+/G9f+SEvyX1Pf0R2A==": "users.list",
+					"1BF9D6QaYM83qOLACgwaUWnwU1TW0SJlOwFE9TktNq/7sV4LzUbv1O3gPBUKO08ZJZNHQ+ucFQRC726bqcTncw==": "uid",
 				},
 			},
 		},
@@ -120,9 +120,9 @@ func TestLabels(t *testing.T) {
 			"users.list[0]",
 			&llx.Labels{
 				Labels: map[string]string{
-					"IWmJEZKJxco/zD8JR+g8Lqmw49kbCYWSsxQm3QBFf0D0xhVqK8ukpiHhF0TCcDYLm/SrnvpWCnUelRJhqahnZw==": "users.list[0]",
-					"MCqGdk4puEdBb/fxS3qDqAV/8gv3DIxFT+InTY7+JcySIzGMDzq8L1t2C8W6qh4z8GI3MvR6ZQ64bVQl0f2Xww==": "uid",
-					"T4APLiU1zCnhKjG6cI0dADH4zDmV9qAZ7cwqmY4oUX3iVUDa4VLSotQ3whx+FRFbhaHkg8GI6cyEpN/nyT2jkQ==": "gid",
+					"DkmEtbI05F7wdVsbPvb/WYmz23krsv+dzyGtLbOvaZAfBdue+1sWEFjWOeTfDvwH0+QkcOAr2VkoXYwjypBOWg==": "users.list[0]",
+					"YZAwDOgeLgfhdF4u2ZXYAEtAOKIJ+wCb6ngklIu3zN/k2wYfQAjGB73PbxromnPw9Fcg4gDB3EwDoZOehdkyPA==": "uid",
+					"h+MQ3LiiaZv39U2piraB1akgzfFdnBXVpbKH8Ak7+e44Hnt15Dkvjls9GU8SSVRuWyxNhjINxUUoW1Tyq7MFYg==": "gid",
 					"lq0/cF0a/88fFC/0iEmNVILRf68BM92KtITqSh/WSb+UD1QtnydjwcBpC7IW9CSRXekh74bHSm88taykkFx77w==": "name",
 				},
 			},
@@ -131,8 +131,8 @@ func TestLabels(t *testing.T) {
 			"users.list[0] { uid }",
 			&llx.Labels{
 				Labels: map[string]string{
-					"ITQmg8B2q1g7hUGGDcnFYQjiQ/w1TPr9xyd4dlWAPjwGyRdH2CrtCv55kn7v4SUVqGaJ8k021tUTZznlRzeXNg==": "users.list[0]",
-					"MCqGdk4puEdBb/fxS3qDqAV/8gv3DIxFT+InTY7+JcySIzGMDzq8L1t2C8W6qh4z8GI3MvR6ZQ64bVQl0f2Xww==": "uid",
+					"SGUkje4+8mnTUORpDNQOIDg0aY1aOMSSQv1GXftjDJuMCqLal+bEj0efrbp6glq3UO9Ttmd1NEguh5JE9gS/gQ==": "users.list[0]",
+					"YZAwDOgeLgfhdF4u2ZXYAEtAOKIJ+wCb6ngklIu3zN/k2wYfQAjGB73PbxromnPw9Fcg4gDB3EwDoZOehdkyPA==": "uid",
 				},
 			},
 		},

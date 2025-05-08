@@ -47,8 +47,8 @@ type FileInfo struct {
 	Mode    os.FileMode `toml:"mode"`
 	ModTime time.Time   `toml:"time"`
 	IsDir   bool        `toml:"isdir"`
-	Uid     int64       `toml:"uid"`
-	Gid     int64       `toml:"gid"`
+	Uid     float64     `toml:"uid"`
+	Gid     float64     `toml:"gid"`
 	Size    int64       `toml:"size"`
 }
 
