@@ -69,6 +69,10 @@ var (
 		WinArchArm:        "arm",
 		WinArchX86OnArm64: "x86onarm",
 	}
+
+	sqlHotfixRegExp = regexp.MustCompile(`^Hotfix .+ SQL Server`)
+	// Find the database engine package and use version as a reference for the update
+	msSqlServiceRegexp = regexp.MustCompile(`^SQL Server \d+ Database Engine Services$`)
 )
 
 type WSUSClassification int
@@ -618,7 +622,6 @@ func (win *WinPkgManager) Files(name string, version string, arch string) ([]Fil
 // findMsSqlHotfixes returns a list of hotfixes that are related to Microsoft SQL Server
 // The list is sorted by the hotfix id
 func findMsSqlHotfixes(packages []Package) []Package {
-	sqlHotfixRegExp := regexp.MustCompile(`^Hotfix .+ SQL Server`)
 	sqlHotfixes := []Package{}
 	for _, p := range packages {
 		if sqlHotfixRegExp.MatchString(p.Name) {
@@ -633,8 +636,6 @@ func findMsSqlHotfixes(packages []Package) []Package {
 
 // updateMsSqlPackages updates the version of the SQL Server packages to the latest hotfix version
 func updateMsSqlPackages(pkgs []Package, latestMsSqlHotfix Package) []Package {
-	// Find the database engine package and use version as a reference for the update
-	msSqlServiceRegexp := regexp.MustCompile(`^SQL Server \d+ Database Engine Services$`)
 	currentVersion := ""
 	for _, pkg := range pkgs {
 		if msSqlServiceRegexp.MatchString(pkg.Name) {
