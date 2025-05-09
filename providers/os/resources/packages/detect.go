@@ -13,7 +13,7 @@ import (
 
 func Detect(conn shared.Connection) ([]Package, map[string]PackageUpdate, error) {
 	// find suitable package manager
-	pms, err := ResolveSystemPkgManager(conn)
+	pms, err := ResolveSystemPkgManagers(conn)
 	if len(pms) == 0 || err != nil {
 		return nil, nil, err
 	}

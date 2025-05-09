@@ -79,7 +79,7 @@ func TestOpkgManager(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	pms, err := packages.ResolveSystemPkgManager(conn)
+	pms, err := packages.ResolveSystemPkgManagers(conn)
 	require.NoError(t, err)
 	pkgManager := pms[0]
 	pkgList, err := pkgManager.List()

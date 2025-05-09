@@ -68,12 +68,16 @@ func (spm *SnapPkgManager) List() ([]Package, error) {
 		manifest, err := afs.Open(file)
 		if err != nil {
 			log.Error().Err(err).Str("file", file).Msg("could not open manifest file")
+			continue
 		}
 		pkg, err := spm.parseSnapManifest(manifest)
 		if err != nil {
 			log.Error().Err(err).Str("file", file).Msg("could not parse manifest file")
+			manifest.Close()
+			continue
 		}
 		pkgList = append(pkgList, pkg)
+		manifest.Close()
 	}
 	return pkgList, nil
 }

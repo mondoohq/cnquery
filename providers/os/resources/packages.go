@@ -107,7 +107,7 @@ func (p *mqlPackage) files() ([]interface{}, error) {
 	} else {
 		// we need to retrieve the data on-demand
 		conn := p.MqlRuntime.Connection.(shared.Connection)
-		pms, err := packages.ResolveSystemPkgManager(conn)
+		pms, err := packages.ResolveSystemPkgManagers(conn)
 		if len(pms) == 0 || err != nil {
 			return nil, errors.New("could not detect suitable package manager for platform")
 		}
@@ -144,7 +144,7 @@ func (x *mqlPackages) list() ([]interface{}, error) {
 	defer x.lock.Unlock()
 
 	conn := x.MqlRuntime.Connection.(shared.Connection)
-	pms, err := packages.ResolveSystemPkgManager(conn)
+	pms, err := packages.ResolveSystemPkgManagers(conn)
 	if len(pms) == 0 || err != nil {
 		return nil, errors.New("could not detect suitable package manager for platform")
 	}

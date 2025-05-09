@@ -89,7 +89,7 @@ type OperatingSystemPkgManager interface {
 }
 
 // this will find the right package manager for the operating system
-func ResolveSystemPkgManager(conn shared.Connection) ([]OperatingSystemPkgManager, error) {
+func ResolveSystemPkgManagers(conn shared.Connection) ([]OperatingSystemPkgManager, error) {
 	var pms []OperatingSystemPkgManager
 
 	asset := conn.Asset()
