@@ -318,7 +318,7 @@ func (r *recording) finalize() {
 }
 
 func (r *recording) findAssetConnID(asset *inventory.Asset) (int, string) {
-	if asset.Mrn != "" || asset.Id != "" {
+	if asset.Mrn != "" || asset.Id != "" || len(asset.PlatformIds) > 0 {
 		for i := range r.Assets {
 			id := r.Assets[i].Asset.ID
 			if id == "" {
