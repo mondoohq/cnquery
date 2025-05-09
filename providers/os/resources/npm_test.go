@@ -21,8 +21,10 @@ import (
 func TestNpmPackage_unique(t *testing.T) {
 	mockFS := afero.NewMemMapFs()
 	// create test files and directories
-	mockFS.MkdirAll("/usr/local/lib/node_modules/generator-code", 0o755)
-	mockFS.MkdirAll("/usr/local/lib/node_modules/yo", 0o755)
+	err := mockFS.MkdirAll("/usr/local/lib/node_modules/generator-code", 0o755)
+	require.NoError(t, err)
+	err = mockFS.MkdirAll("/usr/local/lib/node_modules/yo", 0o755)
+	require.NoError(t, err)
 
 	// Read package.json files from testdata
 	yoPkg, err := os.ReadFile(filepath.Join("packages", "testdata", "yo_package.json"))
@@ -33,8 +35,10 @@ func TestNpmPackage_unique(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, gcPkg)
 
-	afero.WriteFile(mockFS, "/usr/local/lib/node_modules/generator-code/package.json", gcPkg, 0o644)
-	afero.WriteFile(mockFS, "/usr/local/lib/node_modules/yo/package.json", yoPkg, 0o644)
+	err = afero.WriteFile(mockFS, "/usr/local/lib/node_modules/generator-code/package.json", gcPkg, 0o644)
+	require.NoError(t, err)
+	err = afero.WriteFile(mockFS, "/usr/local/lib/node_modules/yo/package.json", yoPkg, 0o644)
+	require.NoError(t, err)
 
 	conn, err := fs.NewFileSystemConnectionWithFs(0, &inventory.Config{}, &inventory.Asset{}, "", nil, mockFS)
 	require.NoError(t, err)
@@ -73,9 +77,7 @@ func TestNpmPackage_unique(t *testing.T) {
 
 // Mock callbacks for testing
 // These are needed during calls to CreateSharedResource
-type providerCallbacks struct {
-	runtime *plugin.Runtime
-}
+type providerCallbacks struct{}
 
 func (p *providerCallbacks) GetData(req *plugin.DataReq) (*plugin.DataRes, error) {
 	return &plugin.DataRes{
