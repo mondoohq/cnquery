@@ -89,8 +89,8 @@ type OperatingSystemPkgManager interface {
 }
 
 // this will find the right package manager for the operating system
-func ResolveSystemPkgManager(conn shared.Connection) (OperatingSystemPkgManager, error) {
-	var pm OperatingSystemPkgManager
+func ResolveSystemPkgManagers(conn shared.Connection) ([]OperatingSystemPkgManager, error) {
+	var pms []OperatingSystemPkgManager
 
 	asset := conn.Asset()
 	if asset == nil || asset.Platform == nil {
@@ -99,48 +99,55 @@ func ResolveSystemPkgManager(conn shared.Connection) (OperatingSystemPkgManager,
 
 	switch {
 	case asset.Platform.IsFamily("arch"): // arch family
-		pm = &PacmanPkgManager{conn: conn, platform: asset.Platform}
+		pms = append(pms, &PacmanPkgManager{conn: conn, platform: asset.Platform})
 	case asset.Platform.IsFamily("debian"): // debian family
-		pm = &DebPkgManager{conn: conn, platform: asset.Platform}
+		pms = append(pms, &DebPkgManager{conn: conn, platform: asset.Platform})
+		// This is supported in Debian and Ubuntu:
+		// https: // snapcraft.io/docs/distro-support
+		pms = append(pms, &SnapPkgManager{conn: conn, platform: asset.Platform})
 	case asset.Platform.Name == "amazonlinux" || asset.Platform.Name == "photon" || asset.Platform.Name == "wrlinux":
 		fallthrough
 	case asset.Platform.IsFamily("redhat"): // rhel family
-		pm = &RpmPkgManager{conn: conn, platform: asset.Platform}
+		pms = append(pms, &RpmPkgManager{conn: conn, platform: asset.Platform})
+		if asset.Platform.Name == "fedora" {
+			// https: // snapcraft.io/docs/distro-support
+			pms = append(pms, &SnapPkgManager{conn: conn, platform: asset.Platform})
+		}
 	case asset.Platform.IsFamily("suse"): // suse handling
-		pm = &SusePkgManager{RpmPkgManager{conn: conn, platform: asset.Platform}}
+		pms = append(pms, &SusePkgManager{RpmPkgManager{conn: conn, platform: asset.Platform}})
 	case asset.Platform.Name == "alpine" || asset.Platform.Name == "wolfi": // alpine & wolfi share apk
-		pm = &AlpinePkgManager{conn: conn, platform: asset.Platform}
+		pms = append(pms, &AlpinePkgManager{conn: conn, platform: asset.Platform})
 	case asset.Platform.Name == "macos": // mac os family
-		pm = &MacOSPkgManager{conn: conn, platform: asset.Platform}
+		pms = append(pms, &MacOSPkgManager{conn: conn, platform: asset.Platform})
 	case asset.Platform.Name == "windows":
-		pm = &WinPkgManager{conn: conn, platform: asset.Platform}
+		pms = append(pms, &WinPkgManager{conn: conn, platform: asset.Platform})
 	case asset.Platform.Name == "scratch" || asset.Platform.Name == "coreos":
-		pm = &ScratchPkgManager{conn: conn}
+		pms = append(pms, &ScratchPkgManager{conn: conn})
 	case asset.Platform.Name == "openwrt":
-		pm = &OpkgPkgManager{conn: conn}
+		pms = append(pms, &OpkgPkgManager{conn: conn})
 	case asset.Platform.Name == "solaris":
-		pm = &SolarisPkgManager{conn: conn}
+		pms = append(pms, &SolarisPkgManager{conn: conn})
 	case asset.Platform.Name == "cos":
-		pm = &CosPkgManager{conn: conn}
+		pms = append(pms, &CosPkgManager{conn: conn})
 	case asset.Platform.Name == "freebsd":
-		pm = &FreeBSDPkgManager{conn: conn}
+		pms = append(pms, &FreeBSDPkgManager{conn: conn})
 	case asset.Platform.Name == "aix":
-		pm = &AixPkgManager{conn: conn, platform: asset.Platform}
+		pms = append(pms, &AixPkgManager{conn: conn, platform: asset.Platform})
 	case asset.Platform.IsFamily("linux"):
 		// no clear package manager for linux platform found
 		// most likely we land here if we have a yocto-based system
 		opkgPaths := []string{"/bin/opkg", "/usr/bin/opkg"}
 		for i := range opkgPaths {
 			if _, err := conn.FileSystem().Stat(opkgPaths[i]); err == nil {
-				pm = &OpkgPkgManager{conn: conn}
+				pms = append(pms, &OpkgPkgManager{conn: conn})
 				break
 			}
 		}
 	}
 
-	if pm == nil {
+	if len(pms) == 0 {
 		return nil, errors.New("could not detect suitable package manager for platform: " + asset.Platform.Name)
 	}
 
-	return pm, nil
+	return pms, nil
 }

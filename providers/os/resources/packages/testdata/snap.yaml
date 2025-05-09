@@ -1,0 +1,10 @@
+base: core18
+grade: stable
+confinement: strict
+name: dbgate
+version: 6.1.0
+title: DbGate
+summary: DbGate
+description: Opensource database administration tool
+architectures:
+  - amd64

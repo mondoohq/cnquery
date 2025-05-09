@@ -19,6 +19,8 @@ var (
 	TypeMacos Type = "macos"
 	// Type_X_Platform is a pkg:platform purl.
 	Type_X_Platform Type = "platform"
+	// TypeSnap is a pkg:snap purl.
+	TypeSnap Type = "snap"
 	// Types we use coming from:
 	// https://github.com/package-url/packageurl-go/blob/master/packageurl.go#L54
 	TypeGeneric = Type(packageurl.TypeGeneric)
