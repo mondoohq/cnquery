@@ -752,6 +752,15 @@ auditd.config {
   params(file) map[string]string
 }
 
+// systemd journald configuration
+journald.config {
+  init(path? string)
+  // File of this journald configuration
+  file() file
+  // Configuration values of this config
+  params(file) map[string]string
+}
+
 // Service on this system
 service @defaults("name running enabled type") {
   init(name string)
