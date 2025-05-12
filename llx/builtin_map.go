@@ -502,11 +502,13 @@ func dictInRange(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Ra
 		return BoolFalse, 0, nil
 	}
 
-	switch x := bind.Value.(type) {
+	switch v := bind.Value.(type) {
 	case int64:
-		return int64InRange(e, x, chunk, ref)
+		return int64InRange(e, v, chunk, ref)
 	case float64:
-		return float64InRange(e, x, chunk, ref)
+		return float64InRange(e, v, chunk, ref)
+	case string:
+		return stringInRange(e, bind, chunk, ref)
 	default:
 		return nil, 0, errors.New("dict value does not support `inRange`")
 	}

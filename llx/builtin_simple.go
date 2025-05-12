@@ -1613,6 +1613,21 @@ func int64InRange(e *blockExecutor, val int64, chunk *Chunk, ref uint64) (*RawDa
 		if float64(val) < minval {
 			return BoolFalse, 0, nil
 		}
+	case string:
+		f, err := strconv.ParseInt(minval, 10, 64)
+		if err == nil {
+			if val < f {
+				return BoolFalse, 0, nil
+			}
+		} else {
+			f, err := strconv.ParseFloat(minval, 64)
+			if err != nil {
+				return &RawData{Type: types.Bool, Error: errors.New("failed to parse minimum value of inRange as a number")}, 0, nil
+			}
+			if float64(val) < f {
+				return BoolFalse, 0, nil
+			}
+		}
 	}
 
 	maxRef := chunk.Function.Args[1]
@@ -1629,6 +1644,21 @@ func int64InRange(e *blockExecutor, val int64, chunk *Chunk, ref uint64) (*RawDa
 	case float64:
 		if float64(val) > maxval {
 			return BoolFalse, 0, nil
+		}
+	case string:
+		max, err := strconv.ParseInt(maxval, 10, 64)
+		if err == nil {
+			if val > max {
+				return BoolFalse, 0, nil
+			}
+		} else {
+			max, err := strconv.ParseFloat(maxval, 64)
+			if err != nil {
+				return &RawData{Type: types.Bool, Error: errors.New("failed to parse maximum value of inRange as a number")}, 0, nil
+			}
+			if float64(val) > max {
+				return BoolFalse, 0, nil
+			}
 		}
 	}
 
@@ -1668,6 +1698,21 @@ func float64InRange(e *blockExecutor, val float64, chunk *Chunk, ref uint64) (*R
 		if val > maxval {
 			return BoolFalse, 0, nil
 		}
+	case string:
+		max, err := strconv.ParseInt(maxval, 10, 64)
+		if err == nil {
+			if val > float64(max) {
+				return BoolFalse, 0, nil
+			}
+		} else {
+			max, err := strconv.ParseFloat(maxval, 64)
+			if err != nil {
+				return &RawData{Type: types.Bool, Error: errors.New("failed to parse maximum value of inRange as a number")}, 0, nil
+			}
+			if float64(val) > max {
+				return BoolFalse, 0, nil
+			}
+		}
 	}
 
 	return BoolTrue, 0, nil
@@ -1681,6 +1726,22 @@ func intInRange(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Raw
 func floatInRange(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	val := bind.Value.(float64)
 	return float64InRange(e, val, chunk, ref)
+}
+
+func stringInRange(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	val := bind.Value.(string)
+
+	i, err := strconv.ParseInt(val, 10, 64)
+	if err == nil {
+		return int64InRange(e, i, chunk, ref)
+	}
+
+	f, err := strconv.ParseFloat(val, 64)
+	if err == nil {
+		return float64InRange(e, f, chunk, ref)
+	}
+
+	return &RawData{Type: types.Bool, Error: errors.New("can only check `inRange` on numbers")}, 0, nil
 }
 
 // float &&/|| T

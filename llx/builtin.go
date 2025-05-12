@@ -333,6 +333,7 @@ func init() {
 			string("contains" + types.Array(types.Regex)):  {f: stringContainsArrayRegex, Label: "contains"},
 			string("in"):        {f: stringInArray, Label: "in"},
 			string("notIn"):     {f: stringNotInArray, Label: "in"},
+			string("inRange"):   {f: stringInRange, Label: "inRange"},
 			string("find"):      {f: stringFindV2, Label: "find"},
 			string("camelcase"): {f: stringCamelcaseV2, Label: "camelcase"},
 			string("downcase"):  {f: stringDowncaseV2, Label: "downcase"},
