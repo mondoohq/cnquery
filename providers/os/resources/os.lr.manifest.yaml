@@ -1004,13 +1004,23 @@ resources:
       title: Check that the SSH banner is sourced from /etc/ssh/sshd-banner
   sshd.config.matchBlock:
     fields:
+      ciphers:
+        min_mondoo_version: 9.0.0
       condition: {}
       context:
         min_mondoo_version: 9.0.0
       criteria: {}
       file:
         min_mondoo_version: 9.0.0
+      hostkeys:
+        min_mondoo_version: 9.0.0
+      kexs:
+        min_mondoo_version: 9.0.0
+      macs:
+        min_mondoo_version: 9.0.0
       params: {}
+      permitRootLogin:
+        min_mondoo_version: 9.0.0
     is_private: true
     min_mondoo_version: latest
   usb:
