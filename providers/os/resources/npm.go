@@ -23,25 +23,23 @@ import (
 	"go.mondoo.com/cnquery/v11/types"
 )
 
-var (
-	defaultNpmPaths = []string{
-		// Linux
-		"/usr/local/lib",
-		"/opt/homebrew/lib",
-		"/usr/lib",
-		"/home/*/.npm-global/lib",
-		// Windows
-		"C:\\Users\\*\\AppData\\Roaming\\npm",
-		"C:\\Program Files\\nodejs\\node_modules\\npm",
-		"C:\\Users\\*\\node_modules",
-		// macOS
-		"/Users/*/.npm-global/lib",
-		// Container app paths
-		"/app",
-		"/home/node/app",
-		"/usr/src/app",
-	}
-)
+var defaultNpmPaths = []string{
+	// Linux
+	"/usr/local/lib",
+	"/opt/homebrew/lib",
+	"/usr/lib",
+	"/home/*/.npm-global/lib",
+	// Windows
+	"C:\\Users\\*\\AppData\\Roaming\\npm",
+	"C:\\Program Files\\nodejs\\node_modules\\npm",
+	"C:\\Users\\*\\node_modules",
+	// macOS
+	"/Users/*/.npm-global/lib",
+	// Container app paths
+	"/app",
+	"/home/node/app",
+	"/usr/src/app",
+}
 
 func initNpmPackages(_ *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if x, ok := args["path"]; ok {
@@ -82,7 +80,7 @@ func collectNpmPackagesInPaths(runtime *plugin.Runtime, fs afero.Fs, paths []str
 		// we walk through the directories and check if there is a node_modules directory
 		log.Debug().Str("path", walkPath).Msg("found npm package")
 		nodeModulesPath := filepath.Join(walkPath, "node_modules")
-		var files, err = afs.ReadDir(nodeModulesPath)
+		files, err := afs.ReadDir(nodeModulesPath)
 		if err != nil {
 			// we ignore the error, it is expected that there is no node_modules directory
 			return nil
@@ -322,8 +320,14 @@ func newNpmPackage(runtime *plugin.Runtime, pkg *languages.Package) (*mqlNpmPack
 		mqlFiles = append(mqlFiles, lf)
 	}
 
+	path := ""
+	if len(mqlFiles) > 0 {
+		if fi, ok := mqlFiles[0].(*mqlPkgFileInfo); ok {
+			path = fi.Path.Data
+		}
+	}
 	mqlPkg, err := CreateResource(runtime, "npm.package", map[string]*llx.RawData{
-		"id":      llx.StringData(pkg.Name),
+		"id":      llx.StringData(pkg.Name + path),
 		"name":    llx.StringData(pkg.Name),
 		"version": llx.StringData(pkg.Version),
 		"purl":    llx.StringData(pkg.Purl),
