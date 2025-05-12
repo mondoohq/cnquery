@@ -40,8 +40,8 @@ func (spm *SnapPkgManager) List() ([]Package, error) {
 	afs := &afero.Afero{Fs: fs}
 	_, dErr := afs.Stat(snapDir)
 	if dErr != nil {
-		log.Debug().Err(dErr).Str("path", snapDir).Msg("cannot find snap dir")
-		return nil, fmt.Errorf("could not find snap package list")
+		log.Warn().Str("path", snapDir).Msg("cannot find snap dir")
+		return []Package{}, nil
 	}
 
 	// e.g. /snap/firefox/6103/meta/snap.yaml
