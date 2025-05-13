@@ -85,6 +85,10 @@ func TestCore_If(t *testing.T) {
 			Expectation: int64(789),
 		},
 		{
+			Code:        "if (1.0 == 1) { return 123 } return 456",
+			Expectation: int64(123),
+		},
+		{
 			// This test comes out from an issue we had where return was not
 			// generating a single entrypoint, causing the first reported
 			// value to be used as the return value.
