@@ -58,6 +58,8 @@ k8s {
   customresources() []k8s.customresource
   // Kubernetes admission webhook configurations
   validatingWebhookConfigurations() []k8s.admission.validatingwebhookconfiguration
+  // Kubernetes applications
+  apps() []k8s.app
 }
 
 // Kubernetes API resources
@@ -865,6 +867,7 @@ private k8s.userinfo @defaults("username") {
   uid string
 }
 
+// Kubernetes Validating Webhook Configuration
 private k8s.admission.validatingwebhookconfiguration @defaults("name") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -886,4 +889,20 @@ private k8s.admission.validatingwebhookconfiguration @defaults("name") {
   manifest() dict
   // Webhooks configuration
   webhooks() []dict
+}
+
+// Kubernetes Application
+private k8s.app {
+  // Application name
+  name string
+  // Application version
+  version string
+  // Application instance
+  instance string
+  // Managed by
+  managedBy string
+  // Name of the higher-level application
+  partOf string
+  // Components
+  components []string 
 }
