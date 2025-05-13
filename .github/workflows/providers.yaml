@@ -175,7 +175,7 @@ jobs:
           path: dist
 
       - name: Send Slack notification on failure
-        uses: slackapi/slack-github-action@v2.0.0
+        uses: slackapi/slack-github-action@v2.1.0
         if: ${{ always() && steps.build-providers.outcome != 'success' }}
         with:
           method: chat.postMessage
