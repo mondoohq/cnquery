@@ -160,7 +160,7 @@ UMASK		022
 #	PASS_WARN_AGE	Number of days warning given before a password expires.
 #
 PASS_MAX_DAYS	99999
-PASS_MIN_DAYS	0
+PASS_MIN_DAYS	1   # Updated by CIS Build Kit
 PASS_WARN_AGE	7
 
 #
