@@ -602,8 +602,12 @@ func (p *mqlPorts) listMacos() ([]interface{}, error) {
 			}
 			// lsof presents a process listening on any ipv6 address as listening on "*"
 			// change this to a more ipv6-friendly formatting
-			if protocol == "ipv6" && strings.HasPrefix(localAddress, "*") {
-				localAddress = strings.Replace(localAddress, "*", "[::]", 1)
+			if strings.HasPrefix(localAddress, "*") {
+				if strings.HasSuffix(protocol, "6") {
+					localAddress = strings.Replace(localAddress, "*", "::1", 1)
+				} else {
+					localAddress = strings.Replace(localAddress, "*", "127.0.0.1", 1)
+				}
 			}
 
 			state, ok := TCP_STATES[fd.TcpState()]
@@ -649,7 +653,11 @@ func (s *mqlPort) id() (string, error) {
 
 func (s *mqlPort) tls(address string, port int64, proto string) (plugin.Resource, error) {
 	if address == "" || address == "0.0.0.0" {
-		address = "127.0.0.1"
+		if proto == "tcp6" {
+			address = "::1"
+		} else {
+			address = "127.0.0.1"
+		}
 	}
 
 	socket, err := s.MqlRuntime.CreateSharedResource("socket", map[string]*llx.RawData{
