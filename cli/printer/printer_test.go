@@ -169,7 +169,7 @@ func TestPrinter(t *testing.T) {
 			"", // ignore
 			[]string{
 				"users.list: [\n" +
-					"  0: user name=\"root\" gid=0 uid=0 \n" +
+					"  0: user name=\"root\" uid=0 gid=0\n" +
 					"  1: user name=\"bin\" uid=1 gid=1\n" +
 					"  2: user name=\"chris\" uid=1000 gid=1000\n" +
 					"  3: user name=\"christopher\" uid=1001 gid=1000\n" +
