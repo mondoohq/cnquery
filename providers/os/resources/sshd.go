@@ -246,7 +246,7 @@ func (s *mqlSshdConfig) blocks(file *mqlFile) ([]any, error) {
 	return nil, s.parse(file)
 }
 
-func (s *mqlSshdConfig) parseConfigEntrySlice(raw interface{}) ([]interface{}, error) {
+func parseConfigEntrySlice(raw interface{}) ([]interface{}, error) {
 	str, ok := raw.(string)
 	if !ok {
 		return nil, errors.New("value is not a valid string")
@@ -268,7 +268,7 @@ func (s *mqlSshdConfig) ciphers(params map[string]interface{}) ([]interface{}, e
 		return nil, nil
 	}
 
-	return s.parseConfigEntrySlice(rawCiphers)
+	return parseConfigEntrySlice(rawCiphers)
 }
 
 func (s *mqlSshdConfig) macs(params map[string]interface{}) ([]interface{}, error) {
@@ -277,7 +277,7 @@ func (s *mqlSshdConfig) macs(params map[string]interface{}) ([]interface{}, erro
 		return nil, nil
 	}
 
-	return s.parseConfigEntrySlice(rawMacs)
+	return parseConfigEntrySlice(rawMacs)
 }
 
 func (s *mqlSshdConfig) kexs(params map[string]interface{}) ([]interface{}, error) {
@@ -286,7 +286,7 @@ func (s *mqlSshdConfig) kexs(params map[string]interface{}) ([]interface{}, erro
 		return nil, nil
 	}
 
-	return s.parseConfigEntrySlice(rawkexs)
+	return parseConfigEntrySlice(rawkexs)
 }
 
 func (s *mqlSshdConfig) hostkeys(params map[string]interface{}) ([]interface{}, error) {
@@ -295,7 +295,7 @@ func (s *mqlSshdConfig) hostkeys(params map[string]interface{}) ([]interface{}, 
 		return nil, nil
 	}
 
-	return s.parseConfigEntrySlice(rawHostKeys)
+	return parseConfigEntrySlice(rawHostKeys)
 }
 
 func (s *mqlSshdConfig) permitRootLogin(params map[string]interface{}) ([]interface{}, error) {
@@ -304,9 +304,54 @@ func (s *mqlSshdConfig) permitRootLogin(params map[string]interface{}) ([]interf
 		return nil, nil
 	}
 
-	return s.parseConfigEntrySlice(rawHostKeys)
+	return parseConfigEntrySlice(rawHostKeys)
 }
 
 func (s *mqlSshdConfigMatchBlock) context() (*mqlFileContext, error) {
 	return nil, errors.New("context was not provided for sshd.config match block")
+}
+
+func (s *mqlSshdConfigMatchBlock) ciphers(params map[string]interface{}) ([]interface{}, error) {
+	rawCiphers, ok := params["Ciphers"]
+	if !ok {
+		return nil, nil
+	}
+
+	return parseConfigEntrySlice(rawCiphers)
+}
+
+func (s *mqlSshdConfigMatchBlock) macs(params map[string]interface{}) ([]interface{}, error) {
+	rawMacs, ok := params["MACs"]
+	if !ok {
+		return nil, nil
+	}
+
+	return parseConfigEntrySlice(rawMacs)
+}
+
+func (s *mqlSshdConfigMatchBlock) kexs(params map[string]interface{}) ([]interface{}, error) {
+	rawkexs, ok := params["KexAlgorithms"]
+	if !ok {
+		return nil, nil
+	}
+
+	return parseConfigEntrySlice(rawkexs)
+}
+
+func (s *mqlSshdConfigMatchBlock) hostkeys(params map[string]interface{}) ([]interface{}, error) {
+	rawHostKeys, ok := params["HostKey"]
+	if !ok {
+		return nil, nil
+	}
+
+	return parseConfigEntrySlice(rawHostKeys)
+}
+
+func (s *mqlSshdConfigMatchBlock) permitRootLogin(params map[string]interface{}) ([]interface{}, error) {
+	rawHostKeys, ok := params["PermitRootLogin"]
+	if !ok {
+		return nil, nil
+	}
+
+	return parseConfigEntrySlice(rawHostKeys)
 }
