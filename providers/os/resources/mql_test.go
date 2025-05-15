@@ -262,6 +262,42 @@ func TestResource_duplicateFields(t *testing.T) {
 	})
 }
 
+func TestDict_Methods_In(t *testing.T) {
+	p := "parse.json('/dummy.json')."
+
+	x := testutils.InitTester(testutils.LinuxMock())
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:        p + "params['hello'].in(['1','2','hello'])",
+			ResultIndex: 1,
+			Expectation: true,
+		},
+		{
+			Code:        p + "params['hello'].in(['1','2'])",
+			ResultIndex: 1,
+			Expectation: false,
+		},
+	})
+}
+
+func TestDict_Methods_NotIn(t *testing.T) {
+	p := "parse.json('/dummy.json')."
+
+	x := testutils.InitTester(testutils.LinuxMock())
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:        p + "params['hello'].notIn(['1','2','hello'])",
+			ResultIndex: 1,
+			Expectation: false,
+		},
+		{
+			Code:        p + "params['hello'].notIn(['1','2'])",
+			ResultIndex: 1,
+			Expectation: true,
+		},
+	})
+}
+
 func TestDict_Methods_InRange(t *testing.T) {
 	p := "parse.json('/dummy.json')."
 

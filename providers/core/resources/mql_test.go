@@ -437,6 +437,14 @@ func TestString_Methods(t *testing.T) {
 			Expectation: false,
 		},
 		{
+			Code:        "'hiya'.notIn(['one', 'hiya'])",
+			Expectation: false,
+		},
+		{
+			Code:        "'hiya'.notIn(['one', 'two'])",
+			Expectation: true,
+		},
+		{
 			Code:        "'oh-hello-world!'.camelcase",
 			Expectation: "ohHelloWorld!",
 		},

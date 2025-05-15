@@ -820,6 +820,18 @@ func anyArrayInStringArray(e *blockExecutor, bind *RawData, chunk *Chunk, ref ui
 	return BoolTrue, 0, nil
 }
 
+func anyArrayNotInStringArray(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	// mildly inefficient, but reduces complexity
+	res, ref, err := anyArrayInStringArray(e, bind, chunk, ref)
+	if res == BoolTrue {
+		return BoolFalse, ref, err
+	}
+	if res == BoolFalse {
+		return BoolTrue, ref, err
+	}
+	return res, ref, err
+}
+
 func arrayContainsAll(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return &RawData{Type: bind.Type, Error: bind.Error}, 0, nil
