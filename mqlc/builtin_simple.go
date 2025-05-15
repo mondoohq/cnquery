@@ -166,7 +166,7 @@ func compileStringContains(c *compiler, typ types.Type, ref uint64, id string, c
 	}
 }
 
-func compileStringIn(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+func compileStringInOrNotIn(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
 	if call == nil || len(call.Function) != 1 {
 		return types.Nil, errors.New("function " + id + " needs one argument")
 	}
@@ -178,7 +178,7 @@ func compileStringIn(c *compiler, typ types.Type, ref uint64, id string, call *p
 
 	c.addChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
-		Id:   "in",
+		Id:   id,
 		Function: &llx.Function{
 			Type:    string(types.Bool),
 			Binding: ref,

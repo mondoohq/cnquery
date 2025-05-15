@@ -68,8 +68,12 @@ func init() {
 				desc: "Checks if this string contains another string",
 			},
 			"in": {
-				typ: boolType, compile: compileStringIn,
+				typ: boolType, compile: compileStringInOrNotIn,
 				desc: "Checks if this string is contained in an array of strings",
+			},
+			"notIn": {
+				typ: boolType, compile: compileStringInOrNotIn,
+				desc: "Checks if this string is not contained in an array of strings",
 			},
 			"find": {
 				typ: stringArrayType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Regex}},
@@ -126,6 +130,9 @@ func init() {
 			"lines":     {typ: stringArrayType, signature: FunctionSignature{}},
 			"split":     {typ: stringArrayType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
 			"trim":      {typ: stringType, signature: FunctionSignature{Required: 0, Args: []types.Type{types.String}}},
+			// string / array
+			"in":    {typ: boolType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Array(types.String), types.Array(types.Dict)}}},
+			"notIn": {typ: boolType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Array(types.String), types.Array(types.Dict)}}},
 			// array- or map-ish
 			"first":   {typ: dictType, signature: FunctionSignature{}},
 			"last":    {typ: dictType, signature: FunctionSignature{}},
@@ -136,7 +143,6 @@ func init() {
 				compile: compileDictContains, typ: boolType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}},
 				desc: "When dealing with strings, check if it contains another string. When dealing with maps or arrays, check if any entry matches the given condition.",
 			},
-			"in":           {typ: boolType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Array(types.String)}}},
 			"containsOnly": {compile: compileDictContainsOnly, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"containsAll":  {compile: compileDictContainsAll, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"containsNone": {compile: compileDictContainsNone, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
@@ -187,7 +193,8 @@ func init() {
 			"sample":       {typHandler: &sameType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Int}}},
 			"duplicates":   {compile: compileArrayDuplicates, signature: FunctionSignature{Required: 0, Args: []types.Type{types.String}}},
 			"unique":       {compile: compileArrayUnique, signature: FunctionSignature{Required: 0}},
-			"in":           {typ: boolType, compile: compileStringIn, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Array(types.String)}}},
+			"in":           {typ: boolType, compile: compileStringInOrNotIn, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Array(types.String)}}},
+			"notIn":        {typ: boolType, compile: compileStringInOrNotIn, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Array(types.String)}}},
 			"contains":     {compile: compileArrayContains, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"containsOnly": {compile: compileArrayContainsOnly, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"containsAll":  {compile: compileArrayContainsAll, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},

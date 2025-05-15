@@ -327,7 +327,7 @@ func TestNullString(t *testing.T) {
 	})
 }
 
-func TestDictMethods(t *testing.T) {
+func TestDictContains(t *testing.T) {
 	x := testutils.InitTester(testutils.LinuxMock())
 	x.TestSimple(t, []testutils.SimpleTest{
 		{

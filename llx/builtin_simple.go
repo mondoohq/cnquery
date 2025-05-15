@@ -2262,6 +2262,35 @@ func stringInArray(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 	return BoolFalse, 0, nil
 }
 
+func stringNotInArray(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return BoolTrue, 0, nil
+	}
+
+	argRef := chunk.Function.Args[0]
+	arg, rref, err := e.resolveValue(argRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+
+	if arg.Value == nil {
+		return BoolTrue, 0, nil
+	}
+
+	arr := arg.Value.([]interface{})
+	for i := range arr {
+		v, ok := arr[i].(string)
+		if !ok {
+			return nil, 0, errors.New("invalid type in array")
+		}
+
+		if v == bind.Value.(string) {
+			return BoolFalse, 0, nil
+		}
+	}
+	return BoolTrue, 0, nil
+}
+
 func stringFindV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return ArrayData([]interface{}{}, types.String), 0, nil

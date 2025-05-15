@@ -1535,6 +1535,17 @@ func dictIn(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData
 	}
 }
 
+func dictNotIn(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	switch bind.Value.(type) {
+	case string:
+		return stringNotInArray(e, bind, chunk, ref)
+	case []any:
+		return anyArrayNotInStringArray(e, bind, chunk, ref)
+	default:
+		return nil, 0, errors.New("dict value does not support field `in`")
+	}
+}
+
 func dictFindV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	switch bind.Value.(type) {
 	case string:
