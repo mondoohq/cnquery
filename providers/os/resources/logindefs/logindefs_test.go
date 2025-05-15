@@ -25,6 +25,7 @@ func TestLoginDefsParser(t *testing.T) {
 
 	assert.Equal(t, "tty", entries["TTYGROUP"])
 	assert.Equal(t, "PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games", entries["ENV_PATH"])
+	assert.Equal(t, "1", entries["PASS_MIN_DAYS"])
 
 	_, ok := entries["SHA_CRYPT_MIN_ROUNDS"]
 	assert.False(t, ok)
