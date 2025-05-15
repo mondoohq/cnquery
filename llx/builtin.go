@@ -182,6 +182,8 @@ func init() {
 			// == / !=
 			string("==" + types.Nil):                 {f: floatCmpNilV2, Label: "=="},
 			string("!=" + types.Nil):                 {f: floatNotNilV2, Label: "!="},
+			string("==" + types.Int):                 {f: floatCmpIntV2, Label: "=="},
+			string("!=" + types.Int):                 {f: floatNotIntV2, Label: "!="},
 			string("==" + types.Float):               {f: floatCmpFloatV2, Label: "=="},
 			string("!=" + types.Float):               {f: floatNotFloatV2, Label: "!="},
 			string("==" + types.String):              {f: floatCmpStringV2, Label: "=="},
