@@ -30,8 +30,12 @@ func TestParseLinuxEtcPasswd(t *testing.T) {
 	assert.Equal(t, 13, len(m), "detected the right amount of services")
 
 	assert.Equal(t, "root", m[0].Name, "detected user name")
-	assert.Equal(t, int64(0), m[0].Uid, "detected uid")
-	assert.Equal(t, int64(0), m[0].Gid, "detected gid")
+	assert.Equal(t, float64(0), m[0].Uid, "detected root uid")
+	assert.Equal(t, float64(0), m[0].Gid, "detected root gid")
+
+	assert.Equal(t, float64(4294967294), m[12].Uid, "detected nobody uid")
+	assert.Equal(t, float64(4294967294), m[12].Gid, "detected nobody gid")
+
 	assert.Equal(t, "root", m[0].Description, "user description")
 	assert.Equal(t, "/root", m[0].Home, "detected user home")
 	assert.Equal(t, "/bin/bash", m[0].Shell, "detected user shell")
@@ -54,8 +58,8 @@ func TestParseFreebsdLinuxEtcPasswd(t *testing.T) {
 	assert.Equal(t, 28, len(m), "detected the right amount of services")
 
 	assert.Equal(t, "root", m[0].Name, "detected user name")
-	assert.Equal(t, int64(0), m[0].Uid, "detected uid")
-	assert.Equal(t, int64(0), m[0].Gid, "detected gid")
+	assert.Equal(t, float64(0), m[0].Uid, "detected uid")
+	assert.Equal(t, float64(0), m[0].Gid, "detected gid")
 	assert.Equal(t, "Charlie &", m[0].Description, "user description")
 	assert.Equal(t, "/root", m[0].Home, "detected user home")
 	assert.Equal(t, "/bin/csh", m[0].Shell, "detected user shell")
@@ -76,8 +80,8 @@ func TestParseLinuxGetentPasswd(t *testing.T) {
 	assert.Equal(t, 20, len(list), "detected the right amount of users")
 
 	assert.Equal(t, "root", list[0].Name, "detected user name")
-	assert.Equal(t, int64(0), list[0].Uid, "detected uid")
-	assert.Equal(t, int64(0), list[0].Gid, "detected gid")
+	assert.Equal(t, float64(0), list[0].Uid, "detected uid")
+	assert.Equal(t, float64(0), list[0].Gid, "detected gid")
 	assert.Equal(t, "root", list[0].Description, "user description")
 	assert.Equal(t, "/root", list[0].Home, "detected user home")
 	assert.Equal(t, "/bin/bash", list[0].Shell, "detected user shell")

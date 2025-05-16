@@ -141,12 +141,12 @@ func (c *ContainerConnection) FileInfo(path string) (shared.FileInfoDetails, err
 
 	mode := stat.Mode()
 
-	uid := int64(-1)
-	gid := int64(-1)
+	uid := float64(-1)
+	gid := float64(-1)
 
 	if stat, ok := stat.Sys().(*shared.FileInfo); ok {
-		uid = stat.Uid
-		gid = stat.Gid
+		uid = float64(stat.Uid)
+		gid = float64(stat.Gid)
 	}
 
 	return shared.FileInfoDetails{

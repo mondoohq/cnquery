@@ -1135,10 +1135,10 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlParseOpenpgp).GetList()).ToDataRes(types.Array(types.Resource("openpgp.entity")))
 	},
 	"user.uid": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlUser).GetUid()).ToDataRes(types.Int)
+		return (r.(*mqlUser).GetUid()).ToDataRes(types.Float)
 	},
 	"user.gid": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlUser).GetGid()).ToDataRes(types.Int)
+		return (r.(*mqlUser).GetGid()).ToDataRes(types.Float)
 	},
 	"user.sid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlUser).GetSid()).ToDataRes(types.String)
@@ -1210,7 +1210,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAuthorizedkeysEntry).GetFile()).ToDataRes(types.Resource("file"))
 	},
 	"group.gid": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGroup).GetGid()).ToDataRes(types.Int)
+		return (r.(*mqlGroup).GetGid()).ToDataRes(types.Float)
 	},
 	"group.sid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGroup).GetSid()).ToDataRes(types.String)
@@ -3401,11 +3401,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"user.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlUser).Uid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlUser).Uid, ok = plugin.RawToTValue[float64](v.Value, v.Error)
 		return
 	},
 	"user.gid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlUser).Gid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlUser).Gid, ok = plugin.RawToTValue[float64](v.Value, v.Error)
 		return
 	},
 	"user.sid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3521,7 +3521,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"group.gid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGroup).Gid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlGroup).Gid, ok = plugin.RawToTValue[float64](v.Value, v.Error)
 		return
 	},
 	"group.sid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8742,8 +8742,8 @@ type mqlUser struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlUserInternal it will be used here
-	Uid plugin.TValue[int64]
-	Gid plugin.TValue[int64]
+	Uid plugin.TValue[float64]
+	Gid plugin.TValue[float64]
 	Sid plugin.TValue[string]
 	Name plugin.TValue[string]
 	Home plugin.TValue[string]
@@ -8791,11 +8791,11 @@ func (c *mqlUser) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlUser) GetUid() *plugin.TValue[int64] {
+func (c *mqlUser) GetUid() *plugin.TValue[float64] {
 	return &c.Uid
 }
 
-func (c *mqlUser) GetGid() *plugin.TValue[int64] {
+func (c *mqlUser) GetGid() *plugin.TValue[float64] {
 	return &c.Gid
 }
 
@@ -9169,7 +9169,7 @@ type mqlGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	mqlGroupInternal
-	Gid plugin.TValue[int64]
+	Gid plugin.TValue[float64]
 	Sid plugin.TValue[string]
 	Name plugin.TValue[string]
 	Members plugin.TValue[[]interface{}]
@@ -9212,7 +9212,7 @@ func (c *mqlGroup) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlGroup) GetGid() *plugin.TValue[int64] {
+func (c *mqlGroup) GetGid() *plugin.TValue[float64] {
 	return &c.Gid
 }
 
