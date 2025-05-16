@@ -1,11 +1,9 @@
 ACCOUNTADMIN
-applyable
 atlassian
 auditlog
 Auths
 autoaccept
 autoprovisioned
-autoscaler
 backupconfiguration
 backupsetting
 bigquery
@@ -16,7 +14,6 @@ certificatechains
 cloudflare
 Clusterwide
 cmek
-Cooldown
 cpe
 cryptokey
 customresources
@@ -27,8 +24,6 @@ deliverychannel
 dfw
 dlq
 dlv
-MCAS
-WDATP
 eip
 ekm
 elbv
@@ -103,7 +98,6 @@ spo
 sqli
 sqlimatchstatement
 sqlserver
-nameservers
 targetgroup
 tde
 testutils
