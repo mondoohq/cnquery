@@ -193,11 +193,11 @@ func compileNumberInRange(c *compiler, typ types.Type, ref uint64, id string, ca
 		return types.Nil, errors.New("function " + id + " needs two arguments")
 	}
 
-	min, err := callArgTypeIs(c, call, id, "min", 0, types.Int, types.Float, types.Dict)
+	min, err := callArgTypeIs(c, call, id, "min", 0, types.Int, types.Float, types.Dict, types.String)
 	if err != nil {
 		return types.Nil, err
 	}
-	max, err := callArgTypeIs(c, call, id, "max", 1, types.Int, types.Float, types.Dict)
+	max, err := callArgTypeIs(c, call, id, "max", 1, types.Int, types.Float, types.Dict, types.String)
 	if err != nil {
 		return types.Nil, err
 	}

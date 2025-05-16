@@ -374,6 +374,12 @@ func TestNumber_Methods(t *testing.T) {
 		{
 			Code: "3.0.inRange(1.0,2)", Expectation: false,
 		},
+		{
+			Code: "4.inRange('-4', '4')", Expectation: true,
+		},
+		{
+			Code: "5.inRange('-4', '4')", Expectation: false,
+		},
 	})
 }
 
@@ -479,6 +485,10 @@ func TestString_Methods(t *testing.T) {
 		{
 			Code:        "'hello ' + 'world'",
 			Expectation: "hello world",
+		},
+		{
+			Code:        "'23'.inRange(1,23)",
+			Expectation: true,
 		},
 	})
 }

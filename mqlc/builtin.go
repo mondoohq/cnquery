@@ -75,6 +75,10 @@ func init() {
 				typ: boolType, compile: compileStringInOrNotIn,
 				desc: "Checks if this string is not contained in an array of strings",
 			},
+			"inRange": {
+				typ: boolType, compile: compileNumberInRange,
+				desc: "Checks if the number is in range of a min and max",
+			},
 			"find": {
 				typ: stringArrayType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Regex}},
 				desc: "Find a regular expression in a string and return all matches as an array",
