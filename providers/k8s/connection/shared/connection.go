@@ -26,7 +26,7 @@ const (
 	OPTION_OBJECT_KIND       = "object-kind"
 	OPTION_CONTEXT           = "context"
 	OPTION_KUBELOGIN         = "kubelogin"
-	idPrefix                 = "//platformid.api.mondoo.app/runtime/k8s/uid/"
+	IdPrefix                 = "//platformid.api.mondoo.app/runtime/k8s/uid/"
 )
 
 type ConnectionType string
@@ -44,6 +44,7 @@ type Connection interface {
 	Platform() *inventory.Platform
 	Asset() *inventory.Asset
 	AssetId() (string, error)
+	BasePlatformId() (string, error)
 
 	AdmissionReviews() ([]admissionv1.AdmissionReview, error)
 	Namespace(name string) (*v1.Namespace, error)
@@ -76,12 +77,12 @@ func sliceToPtrSlice[T any](items []T) []*T {
 }
 
 func NewPlatformId(assetId string) string {
-	return idPrefix + assetId
+	return IdPrefix + assetId
 }
 
-func NewWorkloadPlatformId(clusterIdentifier, workloadType, namespace, name, uid string) string {
+func NewWorkloadPlatformId(basePlatformId, clusterIdentifier, workloadType, namespace, name, uid string) string {
 	if workloadType == "namespace" {
-		return NewNamespacePlatformId(clusterIdentifier, name, uid)
+		return NewNamespacePlatformId(basePlatformId, name, uid)
 	}
 
 	platformIdentifier := clusterIdentifier
@@ -95,10 +96,6 @@ func NewWorkloadPlatformId(clusterIdentifier, workloadType, namespace, name, uid
 	return platformIdentifier
 }
 
-func NewNamespacePlatformId(clusterIdentifier, name, uid string) string {
-	if clusterIdentifier == "" {
-		return fmt.Sprintf("%snamespace/%s", idPrefix, name)
-	}
-
-	return fmt.Sprintf("%s/namespace/%s/uid/%s", clusterIdentifier, name, uid)
+func NewNamespacePlatformId(basePlatformId, name, uid string) string {
+	return fmt.Sprintf("%s%s/namespace/%s", basePlatformId, uid, name)
 }

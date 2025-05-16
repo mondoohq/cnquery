@@ -214,6 +214,10 @@ func (c *Connection) Platform() *inventory.Platform {
 	}
 }
 
+func (c *Connection) BasePlatformId() (string, error) {
+	return shared.IdPrefix, nil
+}
+
 func (c *Connection) AssetId() (string, error) {
 	// we use "kube-system" namespace uid as identifier for the cluster
 	// use the internal resources function to make sure we can get the right namespace
