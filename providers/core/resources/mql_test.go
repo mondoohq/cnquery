@@ -805,6 +805,11 @@ func TestMap(t *testing.T) {
 			Code:        m + ".c.inRange(0,3)",
 			ResultIndex: 0, Expectation: true,
 		},
+		{
+			// works with nil value
+			Code:        m + ".d.inRange(0,3)",
+			ResultIndex: 0, Expectation: false,
+		},
 		// contains
 		{
 			Code:        m + ".contains(key == 'a')",

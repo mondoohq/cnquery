@@ -1719,16 +1719,26 @@ func float64InRange(e *blockExecutor, val float64, chunk *Chunk, ref uint64) (*R
 }
 
 func intInRange(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return BoolFalse, 0, nil
+	}
 	val := bind.Value.(int64)
 	return int64InRange(e, val, chunk, ref)
 }
 
 func floatInRange(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return BoolFalse, 0, nil
+	}
 	val := bind.Value.(float64)
 	return float64InRange(e, val, chunk, ref)
 }
 
 func stringInRange(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return BoolFalse, 0, nil
+	}
+
 	val := bind.Value.(string)
 
 	i, err := strconv.ParseInt(val, 10, 64)
