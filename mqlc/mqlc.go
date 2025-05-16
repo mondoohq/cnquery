@@ -1452,6 +1452,7 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 						Args:    []*llx.Primitive{llx.StringPrimitive(id)},
 					},
 				})
+				typ = typ.Child()
 			} else {
 				typ = resType
 			}

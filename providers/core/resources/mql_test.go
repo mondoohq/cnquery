@@ -801,6 +801,10 @@ func TestMap(t *testing.T) {
 			Code:        m + ".c",
 			ResultIndex: 0, Expectation: int64(2),
 		},
+		{
+			Code:        m + ".c.inRange(0,3)",
+			ResultIndex: 0, Expectation: true,
+		},
 		// contains
 		{
 			Code:        m + ".contains(key == 'a')",
