@@ -69,49 +69,6 @@ func (se *mqlPamConfServiceEntry) id() (string, error) {
 	return id, nil
 }
 
-func (s *mqlPamConf) getFiles(confPath string) ([]interface{}, error) {
-	// check if the pam.d directory or pam config file exists
-	raw, err := CreateResource(s.MqlRuntime, "file", map[string]*llx.RawData{
-		"path": llx.StringData(confPath),
-	})
-	if err != nil {
-		return nil, err
-	}
-	f := raw.(*mqlFile)
-	exists := f.GetExists()
-	if exists.Error != nil {
-		return nil, exists.Error
-	}
-
-	if !exists.Data {
-		return nil, errors.New(" could not load pam configuration: " + confPath)
-	}
-
-	perm := f.GetPermissions()
-	if perm.Error != nil {
-		return nil, perm.Error
-	}
-
-	if perm.Data.IsDirectory.Data {
-		return s.getConfDFiles(confPath)
-	} else {
-		return []interface{}{f}, nil
-	}
-}
-
-func (s *mqlPamConf) getConfDFiles(confD string) ([]interface{}, error) {
-	files, err := CreateResource(s.MqlRuntime, "files.find", map[string]*llx.RawData{
-		"from": llx.StringData(confD),
-		"type": llx.StringData("file"),
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	res := files.(*mqlFilesFind).GetList()
-	return res.Data, res.Error
-}
-
 // GetFiles is called when the user has not provided a custom path. Otherwise files are set in the init
 // method and this function is never called then since the data is already cached.
 func (s *mqlPamConf) files() ([]interface{}, error) {
@@ -131,9 +88,9 @@ func (s *mqlPamConf) files() ([]interface{}, error) {
 	}
 
 	if exist.Data {
-		return s.getFiles(defaultPamDir)
+		return getSortedPathFiles(s.MqlRuntime, defaultPamDir)
 	} else {
-		return s.getFiles(defaultPamConf)
+		return getSortedPathFiles(s.MqlRuntime, defaultPamConf)
 	}
 }
 
