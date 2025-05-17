@@ -103,6 +103,12 @@
 # Product Names
 #
 
+# s.b. Copilot
+\bCoPilot\b
+
+# s.b. OpenAI
+\bOpen AI\b
+
 # s.b. auditd
 \bAuditd\b
 
@@ -336,6 +342,10 @@
 
 # s.b. Entra ID
 \bEntraID\b
+
+# s.b. WinRM
+\bwinRM\b
+\bWin RM\b
 
 # s.b. Microsoft
 \bMicroSoft\b
