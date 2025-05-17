@@ -1087,6 +1087,12 @@ var aix = &PlatformResolver{
 			}
 		}
 
+		// collect build version
+		buildversion, err := osrd.command("oslevel -s")
+		if err == nil {
+			pf.Build = strings.TrimSpace(buildversion)
+		}
+
 		return true, nil
 	},
 }
