@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v11/providers/os/id/awsebs"
 	"go.mondoo.com/cnquery/v11/providers/os/id/awsec2"
 	"go.mondoo.com/cnquery/v11/providers/os/id/awsecs"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/smbios"
@@ -26,7 +27,22 @@ func readValue(conn shared.Connection, fPath string) string {
 
 func Detect(conn shared.Connection, p *inventory.Platform, smbiosMgr smbios.SmBiosManager) (string, string, []string) {
 	var values []string
-	if p.IsFamily(inventory.FAMILY_LINUX) {
+	if conn.Type() == shared.Type_Device {
+		// Special case for when we are running an EBS scan. The mounted volume doesn't have
+		// information about `/sys` because it is a virtual pseudo-filesystem. For these type
+		// of connections we detect if we are connected to an EBS volume in a different way.
+
+		if p.IsFamily(inventory.FAMILY_LINUX) {
+			values = []string{
+				readValue(conn, "/etc/cloud/cloud.cfg"),
+			}
+		} else {
+			values = []string{
+				// @afiune how do we detect the mounted drive?
+				readValue(conn, "\\ProgramData\\Amazon\\EC2Launch\\config\\agent-config.json"),
+			}
+		}
+	} else if p.IsFamily(inventory.FAMILY_LINUX) {
 		// Fetching the data from the smbios manager is slow for some transports
 		// because it iterates through files we don't need to check. This
 		// is an optimization for our sshfs. Also, be aware that on linux,
@@ -69,6 +85,7 @@ func Detect(conn shared.Connection, p *inventory.Platform, smbiosMgr smbios.SmBi
 		}
 		log.Debug().Err(err).
 			Strs("platform", p.GetFamily()).
+			Str("method", "awsec2").
 			Msg("failed to get AWS platform id")
 		// try ecs
 		mdsvcEcs, err := awsecs.Resolve(conn, p)
@@ -82,6 +99,22 @@ func Detect(conn shared.Connection, p *inventory.Platform, smbiosMgr smbios.SmBi
 		}
 		log.Debug().Err(err).
 			Strs("platform", p.GetFamily()).
+			Str("method", "awsecs").
+			Msg("failed to get AWS platform id")
+
+		// try ebs TODO @afiune
+		mdsvcEBS, err := awsebs.Resolve(conn, p)
+		if err != nil {
+			log.Debug().Err(err).Msg("failed to get metadata resolver")
+			return "", "", nil
+		}
+		idEBS, err := mdsvcEBS.Identify()
+		if err == nil {
+			return idEBS.InstanceMachineID, idEBS.InstanceID, idEBS.PlatformIDs
+		}
+		log.Debug().Err(err).
+			Strs("platform", p.GetFamily()).
+			Str("method", "awsebs").
 			Msg("failed to get AWS platform id")
 	}
 
