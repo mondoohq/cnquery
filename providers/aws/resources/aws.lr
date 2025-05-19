@@ -3428,7 +3428,7 @@ private aws.eks.addon @defaults("name addonVersion status") {
 }
 
 // Amazon EKS cluster
-private aws.eks.cluster @defaults("arn version status") {
+aws.eks.cluster @defaults("arn version status") {
   // Name of the cluster
   name string
   // ARN of the cluster

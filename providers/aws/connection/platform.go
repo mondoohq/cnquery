@@ -136,6 +136,8 @@ func getTitleForPlatformName(name string) string {
 		return "AWS SSM Instance"
 	case "aws-ecr-image":
 		return "AWS ECR Image"
+	case "aws-eks-cluster":
+		return "AWS EKS Cluster"
 	}
 	return "Amazon Web Services"
 }

@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -137,6 +138,44 @@ func (a *mqlAwsEks) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func initAwsEksCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
+
+	if args["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch eks cluster")
+	}
+
+	// load all eks clusters
+	obj, err := CreateResource(runtime, "aws.eks", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	eks := obj.(*mqlAwsEks)
+
+	rawResources := eks.GetClusters()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	arnVal := args["arn"].Value.(string)
+	for i := range rawResources.Data {
+		cluster := rawResources.Data[i].(*mqlAwsEksCluster)
+		if cluster.Arn.Data == arnVal {
+			return args, cluster, nil
+		}
+	}
+	return nil, nil, errors.New("eks cluster does not exist")
 }
 
 func (a *mqlAwsEksCluster) id() (string, error) {

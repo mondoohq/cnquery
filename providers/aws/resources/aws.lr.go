@@ -759,7 +759,7 @@ func init() {
 			Create: createAwsEksAddon,
 		},
 		"aws.eks.cluster": {
-			// to override args, implement: initAwsEksCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initAwsEksCluster,
 			Create: createAwsEksCluster,
 		},
 		"aws.neptune": {
