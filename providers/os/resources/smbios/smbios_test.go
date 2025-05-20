@@ -257,3 +257,30 @@ func TestManagerWindows(t *testing.T) {
 		},
 	}, biosInfo)
 }
+
+func TestManagerAIX(t *testing.T) {
+	conn, err := mock.New(0, "./testdata/aix.toml", &inventory.Asset{})
+	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
+
+	mm, err := ResolveManager(conn, platform)
+	require.NoError(t, err)
+	biosInfo, err := mm.Info()
+	require.NoError(t, err)
+	assert.Equal(t, &SmBiosInfo{
+		SysInfo: SysInfo{
+			Vendor:       "IBM",
+			Model:        "IBM,9009-22A",
+			Version:      "IBM,FW950.D0 (VL950_175)",
+			SerialNumber: "7835450",
+			Family:       "IBM Power Systems",
+		},
+		BaseBoardInfo: BaseBoardInfo{
+			Vendor:       "IBM",
+			Model:        "IBM,9009-22A",
+			Version:      "IBM,FW950.D0 (VL950_175)",
+			SerialNumber: "7835450",
+		},
+	}, biosInfo)
+}
