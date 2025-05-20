@@ -24,53 +24,6 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// VexSource is used to identify the source of the vulnerability.
-type VexSource int32
-
-const (
-	VexSource_VEX_SOURCE_UNSPECIFIED VexSource = 0
-	VexSource_VEX_SOURCE_SHODAN      VexSource = 10
-)
-
-// Enum value maps for VexSource.
-var (
-	VexSource_name = map[int32]string{
-		0:  "VEX_SOURCE_UNSPECIFIED",
-		10: "VEX_SOURCE_SHODAN",
-	}
-	VexSource_value = map[string]int32{
-		"VEX_SOURCE_UNSPECIFIED": 0,
-		"VEX_SOURCE_SHODAN":      10,
-	}
-)
-
-func (x VexSource) Enum() *VexSource {
-	p := new(VexSource)
-	*p = x
-	return p
-}
-
-func (x VexSource) String() string {
-	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
-}
-
-func (VexSource) Descriptor() protoreflect.EnumDescriptor {
-	return file_etl_proto_enumTypes[0].Descriptor()
-}
-
-func (VexSource) Type() protoreflect.EnumType {
-	return &file_etl_proto_enumTypes[0]
-}
-
-func (x VexSource) Number() protoreflect.EnumNumber {
-	return protoreflect.EnumNumber(x)
-}
-
-// Deprecated: Use VexSource.Descriptor instead.
-func (VexSource) EnumDescriptor() ([]byte, []int) {
-	return file_etl_proto_rawDescGZIP(), []int{0}
-}
-
 // VulnerabilityExchange are used for sharing information about vulnerabilities
 // across systems. Cnquery uses this format as a main mean to store detected
 // vulnerability information. The same document is generated independently from
@@ -204,11 +157,7 @@ const file_etl_proto_rawDesc = "" +
 	"\x06source\x18\a \x01(\v2\x16.cnquery.etl.v1.SourceR\x06source\".\n" +
 	"\x06Source\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x10\n" +
-	"\x03url\x18\x02 \x01(\tR\x03url*>\n" +
-	"\tVexSource\x12\x1a\n" +
-	"\x16VEX_SOURCE_UNSPECIFIED\x10\x00\x12\x15\n" +
-	"\x11VEX_SOURCE_SHODAN\x10\n" +
-	"B9Z7go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream/etlb\x06proto3"
+	"\x03url\x18\x02 \x01(\tR\x03urlB9Z7go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream/etlb\x06proto3"
 
 var (
 	file_etl_proto_rawDescOnce sync.Once
@@ -222,15 +171,13 @@ func file_etl_proto_rawDescGZIP() []byte {
 	return file_etl_proto_rawDescData
 }
 
-var file_etl_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_etl_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_etl_proto_goTypes = []any{
-	(VexSource)(0),                // 0: cnquery.etl.v1.VexSource
-	(*VulnerabilityExchange)(nil), // 1: cnquery.etl.v1.VulnerabilityExchange
-	(*Source)(nil),                // 2: cnquery.etl.v1.Source
+	(*VulnerabilityExchange)(nil), // 0: cnquery.etl.v1.VulnerabilityExchange
+	(*Source)(nil),                // 1: cnquery.etl.v1.Source
 }
 var file_etl_proto_depIdxs = []int32{
-	2, // 0: cnquery.etl.v1.VulnerabilityExchange.source:type_name -> cnquery.etl.v1.Source
+	1, // 0: cnquery.etl.v1.VulnerabilityExchange.source:type_name -> cnquery.etl.v1.Source
 	1, // [1:1] is the sub-list for method output_type
 	1, // [1:1] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
@@ -248,14 +195,13 @@ func file_etl_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_etl_proto_rawDesc), len(file_etl_proto_rawDesc)),
-			NumEnums:      1,
+			NumEnums:      0,
 			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
 		GoTypes:           file_etl_proto_goTypes,
 		DependencyIndexes: file_etl_proto_depIdxs,
-		EnumInfos:         file_etl_proto_enumTypes,
 		MessageInfos:      file_etl_proto_msgTypes,
 	}.Build()
 	File_etl_proto = out.File

@@ -12,7 +12,6 @@ import (
 
 	"github.com/shadowscatcher/shodan/search"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream/etl"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v11/providers/shodan/connection"
 )
@@ -107,7 +106,7 @@ func (r *mqlShodanHost) fetchBaseInformation() error {
 			vexResource, err := CreateResource(r.MqlRuntime, "vulnerability.exchange", map[string]*llx.RawData{
 				"__id":   llx.StringData(vuln),
 				"id":     llx.StringData(vuln),
-				"source": llx.StringData(etl.VexSource_VEX_SOURCE_SHODAN.String()),
+				"source": llx.StringData("SHODAN"),
 			})
 			if err != nil {
 				return err

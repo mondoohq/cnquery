@@ -27,9 +27,3 @@ message Source {
   // Optional. URL of the source
   string url = 2;
 }
-
-// VexSource is used to identify the source of the vulnerability.
-enum VexSource {
-  VEX_SOURCE_UNSPECIFIED = 0;
-  VEX_SOURCE_SHODAN = 10;
-}
