@@ -79,7 +79,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 			conf.Host = req.Args[1]
 			conf.Options["search"] = "domain"
 		default:
-			return nil, errors.New("invalid Shodan sub-command, supported are: org, host, or domain")
+			return nil, errors.New("invalid Shodan sub-command, supported are: host or domain")
 		}
 	} else {
 		name = "Shodan"

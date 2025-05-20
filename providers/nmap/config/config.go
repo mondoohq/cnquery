@@ -33,7 +33,7 @@ var Config = plugin.Provider{
 					Long:    "networks",
 					Type:    plugin.FlagType_List,
 					Default: "",
-					Desc:    "Only include repositories with matching names",
+					Desc:    "Only include matching networks",
 				},
 			},
 		},
