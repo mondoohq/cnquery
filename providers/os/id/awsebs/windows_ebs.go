@@ -38,9 +38,13 @@ func (m *ebsMetadata) windowsMetadata() (any, error) {
 		// Configuration done.
 		//
 		launchLogs, err := afero.ReadFile(m.conn.FileSystem(), `\ProgramData\Amazon\EC2Launch\log\agent.log`)
-		if err == nil {
-			if match := winHostnameRE.FindString(string(launchLogs)); match != "" {
-				mdata["hostname"] = match
+		scanner := bufio.NewScanner(bytes.NewReader(launchLogs))
+		for scanner.Scan() {
+			line := scanner.Text()
+			if err == nil {
+				if match := winHostnameRE.FindStringSubmatch(line); len(match) > 1 {
+					mdata["hostname"] = match[1]
+				}
 			}
 		}
 	}

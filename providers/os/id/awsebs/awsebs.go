@@ -142,11 +142,17 @@ func (m *ebsMetadata) extractInjectedPlatformID() (string, *awsec2.MondooInstanc
 	if asset := m.conn.Asset(); asset != nil {
 		connections := asset.GetConnections()
 		index := slices.IndexFunc(connections, func(c *inventory.Config) bool {
-			if c != nil && c.Type == shared.Type_Device.String() {
+			if c != nil && c.Type == shared.Type_FileSystem.String() {
 				return true
 			}
 			return false
 		})
+
+		if index > 0 {
+			log.Debug().Msgf("awsebs.metadata> no connection found of type %s", shared.Type_FileSystem.String())
+			return "", nil, false
+		}
+
 		// @afiune we can't use `device.PlatformIdInject` because of a cyclic dep
 		// TODO move it to a shared package
 		platformInjected, ok := connections[index].Options["inject-platform-ids"]
