@@ -50,7 +50,7 @@ resources:
       displayName: {}
       member: {}
     min_mondoo_version: 9.0.0
-  vulnerabilityExchange:
+  vulnerability.exchange:
     fields:
       id: {}
       source: {}

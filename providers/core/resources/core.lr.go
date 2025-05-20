@@ -58,6 +58,10 @@ func init() {
 			// to override args, implement: initProductReleaseCycleInformation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createProductReleaseCycleInformation,
 		},
+		"vulnerability.exchange": {
+			// to override args, implement: initVulnerabilityExchange(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVulnerabilityExchange,
+		},
 	}
 }
 
@@ -323,6 +327,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"product.releaseCycleInformation.link": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProductReleaseCycleInformation).GetLink()).ToDataRes(types.String)
+	},
+	"vulnerability.exchange.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVulnerabilityExchange).GetId()).ToDataRes(types.String)
+	},
+	"vulnerability.exchange.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVulnerabilityExchange).GetSource()).ToDataRes(types.String)
 	},
 }
 
@@ -638,6 +648,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"product.releaseCycleInformation.link": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProductReleaseCycleInformation).Link, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vulnerability.exchange.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlVulnerabilityExchange).__id, ok = v.Value.(string)
+			return
+		},
+	"vulnerability.exchange.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVulnerabilityExchange).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vulnerability.exchange.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVulnerabilityExchange).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -1484,4 +1506,53 @@ func (c *mqlProductReleaseCycleInformation) GetEndOfExtendedSupport() *plugin.TV
 
 func (c *mqlProductReleaseCycleInformation) GetLink() *plugin.TValue[string] {
 	return &c.Link
+}
+
+// mqlVulnerabilityExchange for the vulnerability.exchange resource
+type mqlVulnerabilityExchange struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlVulnerabilityExchangeInternal it will be used here
+	Id plugin.TValue[string]
+	Source plugin.TValue[string]
+}
+
+// createVulnerabilityExchange creates a new instance of this resource
+func createVulnerabilityExchange(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVulnerabilityExchange{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vulnerability.exchange", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVulnerabilityExchange) MqlName() string {
+	return "vulnerability.exchange"
+}
+
+func (c *mqlVulnerabilityExchange) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVulnerabilityExchange) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlVulnerabilityExchange) GetSource() *plugin.TValue[string] {
+	return &c.Source
 }

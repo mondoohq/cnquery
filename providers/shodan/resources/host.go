@@ -17,10 +17,6 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/shodan/connection"
 )
 
-func (r *mqlVulnerabilityExchange) id() (string, error) {
-	return r.Id.Data, nil
-}
-
 func initShodanHost(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if _, ok := args["ip"]; !ok {
 		// try to get the ip from the connection
@@ -108,9 +104,10 @@ func (r *mqlShodanHost) fetchBaseInformation() error {
 		r.Vulnerabilities = plugin.TValue[[]interface{}]{Data: convert.SliceAnyToInterface(host.Vulns), Error: nil, State: plugin.StateIsSet}
 		mqlVulnerabilityExchanges := make([]interface{}, len(host.Vulns))
 		for i, vuln := range host.Vulns {
-			vexResource, err := CreateResource(r.MqlRuntime, "vulnerabilityExchange", map[string]*llx.RawData{
+			vexResource, err := CreateResource(r.MqlRuntime, "vulnerability.exchange", map[string]*llx.RawData{
+				"__id":   llx.StringData(vuln),
 				"id":     llx.StringData(vuln),
-				"source": llx.StringData(etl.VexSourceName_VEX_SOURCE_NAME_SHODAN.String()),
+				"source": llx.StringData(etl.VexSource_VEX_SOURCE_SHODAN.String()),
 			})
 			if err != nil {
 				return err

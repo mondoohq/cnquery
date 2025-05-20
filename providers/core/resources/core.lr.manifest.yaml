@@ -454,6 +454,12 @@ resources:
       cvssVector: {}
       id: {}
     min_mondoo_version: latest
+  vulnerability.exchange:
+    fields:
+      id: {}
+      source: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   vulnmgmt:
     fields:
       advisories: {}
