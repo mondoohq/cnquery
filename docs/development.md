@@ -352,10 +352,10 @@ When debugging `cnquery`, you can monitor and profile memory and CPU usage using
 
 1. Install `prometheus` from https://prometheus.io/download/ (macOS: `brew install prometheus`)
 1. Start both, Prometheus and Grafana with `make metrics/start`
-1. **(one time only)** Create a Grafana Dashboard  
-    1. Open Grafana at <!-- markdown-link-check-disable --> http://localhost:3000 <!-- markdown-link-check-enable -->  
-    1. Add Prometheus as a data source (URL: `http://host.docker.internal:9009`)  
-    1. Use an existing Go profiling dashboard from [Grafana](https://grafana.com/grafana/dashboards/) dashboards e.g. [10826](https://grafana.com/grafana/dashboards/10826-go-metrics/)  
+1. **(one time only)** Create a Grafana Dashboard
+    1. Open Grafana at <!-- markdown-link-check-disable --> http://localhost:3000 <!-- markdown-link-check-enable -->
+    1. Add Prometheus as a data source (URL: `http://host.docker.internal:9009`)
+    1. Use an existing Go profiling dashboard from [Grafana](https://grafana.com/grafana/dashboards/) dashboards e.g. [10826](https://grafana.com/grafana/dashboards/10826-go-metrics/)
 1. Run `cnquery` with `DEBUG=1` e.g. `DEBUG=1 cnquery scan local`
 
 You should start seeing data in Grafana!
