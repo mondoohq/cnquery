@@ -6,9 +6,8 @@ package resources
 import (
 	"context"
 	"errors"
-	"strings"
-
 	"go.mondoo.com/cnquery/v11/llx"
+	"strings"
 
 	"github.com/shadowscatcher/shodan/search"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
@@ -52,7 +51,6 @@ func (r *mqlShodanHost) fetchBaseInformation() error {
 	r.Hostnames = plugin.TValue[[]interface{}]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
 	r.Ports = plugin.TValue[[]interface{}]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
 	r.Vulnerabilities = plugin.TValue[[]interface{}]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
-	r.VulnerabilityExchanges = plugin.TValue[[]interface{}]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
 
 	ctx := context.Background()
 	host, err := client.Host(ctx, search.HostParams{
@@ -101,19 +99,6 @@ func (r *mqlShodanHost) fetchBaseInformation() error {
 
 	if host.Vulns != nil {
 		r.Vulnerabilities = plugin.TValue[[]interface{}]{Data: convert.SliceAnyToInterface(host.Vulns), Error: nil, State: plugin.StateIsSet}
-		mqlVulnerabilityExchanges := make([]interface{}, len(host.Vulns))
-		for i, vuln := range host.Vulns {
-			vexResource, err := CreateResource(r.MqlRuntime, "vulnerability.exchange", map[string]*llx.RawData{
-				"__id":   llx.StringData(vuln),
-				"id":     llx.StringData(vuln),
-				"source": llx.StringData("SHODAN"),
-			})
-			if err != nil {
-				return err
-			}
-			mqlVulnerabilityExchanges[i] = vexResource
-		}
-		r.VulnerabilityExchanges = plugin.TValue[[]interface{}]{Data: mqlVulnerabilityExchanges, Error: nil, State: plugin.StateIsSet}
 	}
 
 	return nil
@@ -148,9 +133,5 @@ func (r *mqlShodanHost) ports() ([]interface{}, error) {
 }
 
 func (r *mqlShodanHost) vulnerabilities() ([]interface{}, error) {
-	return nil, r.fetchBaseInformation()
-}
-
-func (r *mqlShodanHost) vulnerabilityExchanges() ([]interface{}, error) {
 	return nil, r.fetchBaseInformation()
 }
