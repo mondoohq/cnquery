@@ -71,7 +71,7 @@ func TestOS_Vars(t *testing.T) {
 	x.TestSimple(t, []testutils.SimpleTest{
 		{
 			Code:        "p = file('/dummy.json'); parse.json(file: p).params.length",
-			Expectation: int64(13),
+			Expectation: int64(15),
 		},
 	})
 }
@@ -105,15 +105,15 @@ func TestMap(t *testing.T) {
 		},
 		{
 			Code:        "parse.json('/dummy.json').params.length",
-			Expectation: int64(13),
+			Expectation: int64(15),
 		},
 		{
 			Code:        "parse.json('/dummy.json').params.keys.length",
-			Expectation: int64(13),
+			Expectation: int64(15),
 		},
 		{
 			Code:        "parse.json('/dummy.json').params.values.length",
-			Expectation: int64(13),
+			Expectation: int64(15),
 		},
 		{
 			Code: "parse.json('/dummy.json').params { _['Protocol'] != 1 }",
@@ -262,6 +262,54 @@ func TestResource_duplicateFields(t *testing.T) {
 	})
 }
 
+func TestDict_Methods_In(t *testing.T) {
+	p := "parse.json('/dummy.json')."
+
+	x := testutils.InitTester(testutils.LinuxMock())
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:        p + "params['hello'].in(['1','2','hello'])",
+			ResultIndex: 1,
+			Expectation: true,
+		},
+		{
+			Code:        p + "params['hello'].in(['1','2'])",
+			ResultIndex: 1,
+			Expectation: false,
+		},
+		{
+			// embedded value doesn't exist
+			Code:        p + "params.e.hi.in(['hello','world'])",
+			ResultIndex: 1,
+			Expectation: true,
+		},
+		{
+			// embedded value doesn't exist
+			Code:        p + "params.e.hi.in(['world'])",
+			ResultIndex: 1,
+			Expectation: false,
+		},
+	})
+}
+
+func TestDict_Methods_NotIn(t *testing.T) {
+	p := "parse.json('/dummy.json')."
+
+	x := testutils.InitTester(testutils.LinuxMock())
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:        p + "params['hello'].notIn(['1','2','hello'])",
+			ResultIndex: 1,
+			Expectation: false,
+		},
+		{
+			Code:        p + "params['hello'].notIn(['1','2'])",
+			ResultIndex: 1,
+			Expectation: true,
+		},
+	})
+}
+
 func TestDict_Methods_InRange(t *testing.T) {
 	p := "parse.json('/dummy.json')."
 
@@ -274,6 +322,12 @@ func TestDict_Methods_InRange(t *testing.T) {
 		},
 		{
 			Code:        p + "params['1'].inRange(3,4)",
+			ResultIndex: 1,
+			Expectation: false,
+		},
+		{
+			// value doesn't exist
+			Code:        p + "params['123'].inRange(0,999)",
 			ResultIndex: 1,
 			Expectation: false,
 		},

@@ -115,52 +115,42 @@ func Discover(runtime *plugin.Runtime, features cnquery.Features) (*inventory.In
 	// the platform IDs for the assets based on the namespace.
 	if len(nsFilter.include) == 0 && len(nsFilter.exclude) == 0 {
 		assetId, err := conn.AssetId()
-		if err != nil {
-			return nil, err
-		}
-
-		root := &inventory.Asset{
-			PlatformIds: []string{assetId},
-			Name:        conn.Name(),
-			Platform:    conn.Platform(),
-			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
-		}
-		if stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryAuto, DiscoveryAll, DiscoveryClusters) && resFilters.IsEmpty() {
-			in.Spec.Assets = append(in.Spec.Assets, root)
-		}
-
-		od := NewPlatformIdOwnershipIndex(assetId)
-
-		assets, err := discoverAssets(runtime, conn, invConfig, assetId, k8s, nsFilter, resFilters, od, false)
-		if err != nil {
-			return nil, err
-		}
-		setRelatedAssets(conn, root, assets, od, features)
-		in.Spec.Assets = append(in.Spec.Assets, assets...)
-	} else {
-		nss, err := discoverNamespaces(conn, invConfig, "", nil, nsFilter)
-		if err != nil {
-			return nil, err
-		}
-
-		if resFilters.IsEmpty() {
-			in.Spec.Assets = append(in.Spec.Assets, nss...)
-		}
-
-		// Discover the assets for each namespace and use the namespace platform ID as root
-		for _, ns := range nss {
-			nsFilter = NamespaceFilterOpts{include: []string{ns.Name}}
-
-			od := NewPlatformIdOwnershipIndex(ns.PlatformIds[0])
-
-			// We don't want to discover the namespaces again since we have already done this above
-			assets, err := discoverAssets(runtime, conn, invConfig, ns.PlatformIds[0], k8s, nsFilter, resFilters, od, true)
-			if err != nil {
-				return nil, err
+		if err == nil {
+			root := &inventory.Asset{
+				PlatformIds: []string{assetId},
+				Name:        conn.Name(),
+				Platform:    conn.Platform(),
+				Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
 			}
-			setRelatedAssets(conn, ns, assets, od, features)
-			in.Spec.Assets = append(in.Spec.Assets, assets...)
+			if stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryAuto, DiscoveryAll, DiscoveryClusters) && resFilters.IsEmpty() {
+				in.Spec.Assets = append(in.Spec.Assets, root)
+			}
+		} else {
+			log.Warn().Err(err).Msg("failed to discover cluster asset")
 		}
+	}
+	nss, err := discoverNamespaces(conn, invConfig, "", nil, nsFilter)
+	if err != nil {
+		return nil, err
+	}
+
+	if resFilters.IsEmpty() && stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryNamespaces, DiscoveryAuto, DiscoveryAll) {
+		in.Spec.Assets = append(in.Spec.Assets, nss...)
+	}
+
+	// Discover the assets for each namespace and use the namespace platform ID as root
+	for _, ns := range nss {
+		nsFilter = NamespaceFilterOpts{include: []string{ns.Name}}
+
+		od := NewPlatformIdOwnershipIndex(ns.PlatformIds[0])
+
+		// We don't want to discover the namespaces again since we have already done this above
+		assets, err := discoverAssets(runtime, conn, invConfig, ns.PlatformIds[0], k8s, nsFilter, resFilters, od)
+		if err != nil {
+			return nil, err
+		}
+		setRelatedAssets(conn, ns, assets, od, features)
+		in.Spec.Assets = append(in.Spec.Assets, assets...)
 	}
 
 	return in, nil
@@ -175,7 +165,6 @@ func discoverAssets(
 	nsFilter NamespaceFilterOpts,
 	resFilters *ResourceFilters,
 	od *PlatformIdOwnershipIndex,
-	skipNsDiscovery bool,
 ) ([]*inventory.Asset, error) {
 	var assets []*inventory.Asset
 	var err error
@@ -251,15 +240,8 @@ func discoverAssets(
 			}
 			assets = append(assets, list...)
 		}
-		if target == DiscoveryNamespaces && !skipNsDiscovery {
-			list, err = discoverNamespaces(conn, invConfig, clusterId, od, nsFilter)
-			if err != nil {
-				return nil, err
-			}
-			assets = append(assets, list...)
-		}
 		if target == DiscoveryContainerImages || target == DiscoveryAll {
-			list, err = discoverContainerImages(conn, runtime, invConfig, clusterId, k8s, nsFilter)
+			list, err = discoverContainerImages(conn, runtime, invConfig, k8s, nsFilter)
 			if err != nil {
 				return nil, err
 			}
@@ -281,6 +263,11 @@ func discoverPods(
 	pods := k8s.GetPods()
 	if pods.Error != nil {
 		return nil, pods.Error
+	}
+
+	basePlatformId, err := conn.BasePlatformId()
+	if err != nil {
+		return nil, err
 	}
 
 	// If there is a resources filter we should only retrieve the workloads that are in the filter.
@@ -315,7 +302,7 @@ func discoverPods(
 		}
 		assetList = append(assetList, &inventory.Asset{
 			PlatformIds: []string{
-				shared.NewWorkloadPlatformId(clusterId, "pod", pod.Namespace.Data, pod.Name.Data, pod.Uid.Data),
+				shared.NewWorkloadPlatformId(basePlatformId, clusterId, "pod", pod.Namespace.Data, pod.Name.Data, pod.Uid.Data),
 			},
 			Name:        assetName(pod.Namespace.Data, pod.Name.Data),
 			Platform:    platform,
@@ -323,7 +310,7 @@ func discoverPods(
 			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(invConfig.Id))}, // pass-in the parent connection config
 			Category:    conn.Asset().Category,
 		})
-		od.Add(pod.obj)
+		od.Add(basePlatformId, pod.obj)
 	}
 	return assetList, nil
 }
@@ -340,6 +327,11 @@ func discoverJobs(
 	jobs := k8s.GetJobs()
 	if jobs.Error != nil {
 		return nil, jobs.Error
+	}
+
+	basePlatformId, err := conn.BasePlatformId()
+	if err != nil {
+		return nil, err
 	}
 
 	// If there is a resources filter we should only retrieve the workloads that are in the filter.
@@ -374,7 +366,7 @@ func discoverJobs(
 		}
 		assetList = append(assetList, &inventory.Asset{
 			PlatformIds: []string{
-				shared.NewWorkloadPlatformId(clusterId, "job", job.Namespace.Data, job.Name.Data, job.Uid.Data),
+				shared.NewWorkloadPlatformId(basePlatformId, clusterId, "job", job.Namespace.Data, job.Name.Data, job.Uid.Data),
 			},
 			Name:        assetName(job.Namespace.Data, job.Name.Data),
 			Platform:    platform,
@@ -382,7 +374,7 @@ func discoverJobs(
 			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(invConfig.Id))}, // pass-in the parent connection config
 			Category:    conn.Asset().Category,
 		})
-		od.Add(job.obj)
+		od.Add(basePlatformId, job.obj)
 	}
 	return assetList, nil
 }
@@ -399,6 +391,11 @@ func discoverServices(
 	cjs := k8s.GetServices()
 	if cjs.Error != nil {
 		return nil, cjs.Error
+	}
+
+	basePlatformId, err := conn.BasePlatformId()
+	if err != nil {
+		return nil, err
 	}
 
 	// If there is a resources filter we should only retrieve the workloads that are in the filter.
@@ -429,7 +426,7 @@ func discoverServices(
 		}
 		assetList = append(assetList, &inventory.Asset{
 			PlatformIds: []string{
-				shared.NewWorkloadPlatformId(clusterId, "service", serv.Namespace.Data, serv.Name.Data, serv.Uid.Data),
+				shared.NewWorkloadPlatformId(basePlatformId, clusterId, "service", serv.Namespace.Data, serv.Name.Data, serv.Uid.Data),
 			},
 			Name:        assetName(serv.Namespace.Data, serv.Name.Data),
 			Platform:    platform,
@@ -437,7 +434,7 @@ func discoverServices(
 			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(invConfig.Id))}, // pass-in the parent connection config
 			Category:    conn.Asset().Category,
 		})
-		od.Add(serv.obj)
+		od.Add(basePlatformId, serv.obj)
 	}
 	return assetList, nil
 }
@@ -454,6 +451,11 @@ func discoverCronJobs(
 	cjs := k8s.GetCronjobs()
 	if cjs.Error != nil {
 		return nil, cjs.Error
+	}
+
+	basePlatformId, err := conn.BasePlatformId()
+	if err != nil {
+		return nil, err
 	}
 
 	// If there is a resources filter we should only retrieve the workloads that are in the filter.
@@ -484,7 +486,7 @@ func discoverCronJobs(
 		}
 		assetList = append(assetList, &inventory.Asset{
 			PlatformIds: []string{
-				shared.NewWorkloadPlatformId(clusterId, "cronjob", cjob.Namespace.Data, cjob.Name.Data, cjob.Uid.Data),
+				shared.NewWorkloadPlatformId(basePlatformId, clusterId, "cronjob", cjob.Namespace.Data, cjob.Name.Data, cjob.Uid.Data),
 			},
 			Name:        assetName(cjob.Namespace.Data, cjob.Name.Data),
 			Platform:    platform,
@@ -492,7 +494,7 @@ func discoverCronJobs(
 			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(invConfig.Id))}, // pass-in the parent connection config
 			Category:    conn.Asset().Category,
 		})
-		od.Add(cjob.obj)
+		od.Add(basePlatformId, cjob.obj)
 	}
 	return assetList, nil
 }
@@ -509,6 +511,11 @@ func discoverStatefulSets(
 	ss := k8s.GetStatefulsets()
 	if ss.Error != nil {
 		return nil, ss.Error
+	}
+
+	basePlatformId, err := conn.BasePlatformId()
+	if err != nil {
+		return nil, err
 	}
 
 	// If there is a resources filter we should only retrieve the workloads that are in the filter.
@@ -539,7 +546,7 @@ func discoverStatefulSets(
 		}
 		assetList = append(assetList, &inventory.Asset{
 			PlatformIds: []string{
-				shared.NewWorkloadPlatformId(clusterId, "statefulset", statefulset.Namespace.Data, statefulset.Name.Data, statefulset.Uid.Data),
+				shared.NewWorkloadPlatformId(basePlatformId, clusterId, "statefulset", statefulset.Namespace.Data, statefulset.Name.Data, statefulset.Uid.Data),
 			},
 			Name:        assetName(statefulset.Namespace.Data, statefulset.Name.Data),
 			Platform:    platform,
@@ -547,7 +554,7 @@ func discoverStatefulSets(
 			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(invConfig.Id))}, // pass-in the parent connection config
 			Category:    conn.Asset().Category,
 		})
-		od.Add(statefulset.obj)
+		od.Add(basePlatformId, statefulset.obj)
 	}
 	return assetList, nil
 }
@@ -564,6 +571,11 @@ func discoverDeployments(
 	ds := k8s.GetDeployments()
 	if ds.Error != nil {
 		return nil, ds.Error
+	}
+
+	basePlatformId, err := conn.BasePlatformId()
+	if err != nil {
+		return nil, err
 	}
 
 	// If there is a resources filter we should only retrieve the workloads that are in the filter.
@@ -594,7 +606,7 @@ func discoverDeployments(
 		}
 		assetList = append(assetList, &inventory.Asset{
 			PlatformIds: []string{
-				shared.NewWorkloadPlatformId(clusterId, "deployment", deployment.Namespace.Data, deployment.Name.Data, deployment.Uid.Data),
+				shared.NewWorkloadPlatformId(basePlatformId, clusterId, "deployment", deployment.Namespace.Data, deployment.Name.Data, deployment.Uid.Data),
 			},
 			Name:        assetName(deployment.Namespace.Data, deployment.Name.Data),
 			Platform:    platform,
@@ -602,7 +614,7 @@ func discoverDeployments(
 			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(invConfig.Id))}, // pass-in the parent connection config
 			Category:    conn.Asset().Category,
 		})
-		od.Add(deployment.obj)
+		od.Add(basePlatformId, deployment.obj)
 	}
 	return assetList, nil
 }
@@ -619,6 +631,11 @@ func discoverReplicaSets(
 	rs := k8s.GetReplicasets()
 	if rs.Error != nil {
 		return nil, rs.Error
+	}
+
+	basePlatformId, err := conn.BasePlatformId()
+	if err != nil {
+		return nil, err
 	}
 
 	// If there is a resources filter we should only retrieve the workloads that are in the filter.
@@ -653,7 +670,7 @@ func discoverReplicaSets(
 		}
 		assetList = append(assetList, &inventory.Asset{
 			PlatformIds: []string{
-				shared.NewWorkloadPlatformId(clusterId, "replicaset", replicaset.Namespace.Data, replicaset.Name.Data, replicaset.Uid.Data),
+				shared.NewWorkloadPlatformId(basePlatformId, clusterId, "replicaset", replicaset.Namespace.Data, replicaset.Name.Data, replicaset.Uid.Data),
 			},
 			Name:        assetName(replicaset.Namespace.Data, replicaset.Name.Data),
 			Platform:    platform,
@@ -661,7 +678,7 @@ func discoverReplicaSets(
 			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(invConfig.Id))}, // pass-in the parent connection config
 			Category:    conn.Asset().Category,
 		})
-		od.Add(replicaset.obj)
+		od.Add(basePlatformId, replicaset.obj)
 	}
 	return assetList, nil
 }
@@ -678,6 +695,11 @@ func discoverDaemonSets(
 	ds := k8s.GetDaemonsets()
 	if ds.Error != nil {
 		return nil, ds.Error
+	}
+
+	basePlatformId, err := conn.BasePlatformId()
+	if err != nil {
+		return nil, err
 	}
 
 	// If there is a resources filter we should only retrieve the workloads that are in the filter.
@@ -708,7 +730,7 @@ func discoverDaemonSets(
 		}
 		assetList = append(assetList, &inventory.Asset{
 			PlatformIds: []string{
-				shared.NewWorkloadPlatformId(clusterId, "daemonset", daemonset.Namespace.Data, daemonset.Name.Data, daemonset.Uid.Data),
+				shared.NewWorkloadPlatformId(basePlatformId, clusterId, "daemonset", daemonset.Namespace.Data, daemonset.Name.Data, daemonset.Uid.Data),
 			},
 			Name:        assetName(daemonset.Namespace.Data, daemonset.Name.Data),
 			Platform:    platform,
@@ -716,7 +738,7 @@ func discoverDaemonSets(
 			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(invConfig.Id))}, // pass-in the parent connection config
 			Category:    conn.Asset().Category,
 		})
-		od.Add(daemonset.obj)
+		od.Add(basePlatformId, daemonset.obj)
 	}
 	return assetList, nil
 }
@@ -765,6 +787,11 @@ func discoverIngresses(
 		return nil, is.Error
 	}
 
+	basePlatformId, err := conn.BasePlatformId()
+	if err != nil {
+		return nil, err
+	}
+
 	// If there is a resources filter we should only retrieve the workloads that are in the filter.
 	if !resFilter.IsEmpty() && resFilter.IsEmptyForType("ingress") {
 		return []*inventory.Asset{}, nil
@@ -793,7 +820,7 @@ func discoverIngresses(
 		}
 		assetList = append(assetList, &inventory.Asset{
 			PlatformIds: []string{
-				shared.NewWorkloadPlatformId(clusterId, "ingress", ingress.Namespace.Data, ingress.Name.Data, ingress.Uid.Data),
+				shared.NewWorkloadPlatformId(basePlatformId, clusterId, "ingress", ingress.Namespace.Data, ingress.Name.Data, ingress.Uid.Data),
 			},
 			Name:        assetName(ingress.Namespace.Data, ingress.Name.Data),
 			Platform:    platform,
@@ -801,7 +828,7 @@ func discoverIngresses(
 			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(invConfig.Id))}, // pass-in the parent connection config
 			Category:    conn.Asset().Category,
 		})
-		od.Add(ingress.obj)
+		od.Add(basePlatformId, ingress.obj)
 	}
 	return assetList, nil
 }
@@ -816,17 +843,26 @@ func discoverNamespaces(
 	// We don't use MQL here since we need to handle k8s permission errors
 	nss, err := conn.Namespaces()
 	if err != nil {
-		if k8sErrors.IsForbidden(err) && len(nsFilter.include) > 0 {
-			for _, ns := range nsFilter.include {
-				n, err := conn.Namespace(ns)
-				if err != nil {
-					return nil, err
+		if k8sErrors.IsForbidden(err) {
+			if len(nsFilter.include) > 0 {
+				for _, ns := range nsFilter.include {
+					n, err := conn.Namespace(ns)
+					if err != nil {
+						return nil, err
+					}
+					nss = append(nss, *n)
 				}
-				nss = append(nss, *n)
+			} else {
+				return nil, errors.Wrap(err, "no permissions to list cluster namespaces, try specifying namespaces explicitly")
 			}
 		} else {
 			return nil, errors.Wrap(err, "failed to list namespaces")
 		}
+	}
+
+	basePlatformId, err := conn.BasePlatformId()
+	if err != nil {
+		return nil, err
 	}
 
 	assetList := make([]*inventory.Asset, 0, len(nss))
@@ -846,7 +882,7 @@ func discoverNamespaces(
 		}
 		assetList = append(assetList, &inventory.Asset{
 			PlatformIds: []string{
-				shared.NewNamespacePlatformId(clusterId, ns.Name, string(ns.UID)),
+				shared.NewNamespacePlatformId(basePlatformId, ns.Name, string(ns.UID)),
 			},
 			Name:        ns.Name,
 			Platform:    platform,
@@ -855,13 +891,13 @@ func discoverNamespaces(
 			Category:    conn.Asset().Category,
 		})
 		if od != nil {
-			od.Add(&ns)
+			od.Add(basePlatformId, &ns)
 		}
 	}
 	return assetList, nil
 }
 
-func discoverContainerImages(conn shared.Connection, runtime *plugin.Runtime, invConfig *inventory.Config, clusterId string, k8s *mqlK8s, nsFilter NamespaceFilterOpts) ([]*inventory.Asset, error) {
+func discoverContainerImages(conn shared.Connection, runtime *plugin.Runtime, invConfig *inventory.Config, k8s *mqlK8s, nsFilter NamespaceFilterOpts) ([]*inventory.Asset, error) {
 	pods := k8s.GetPods()
 	if pods.Error != nil {
 		return nil, pods.Error
@@ -949,6 +985,11 @@ func assetFromAdmissionReview(conn shared.Connection, a admissionv1.AdmissionRev
 		return nil, err
 	}
 
+	basePlatformId, err := conn.BasePlatformId()
+	if err != nil {
+		return nil, err
+	}
+
 	objectKind := objType.GetKind()
 	platformData, err := createPlatformData(a.Kind, runtime)
 	if err != nil {
@@ -976,7 +1017,7 @@ func assetFromAdmissionReview(conn shared.Connection, a admissionv1.AdmissionRev
 	addMondooAssetLabels(assetLabels, objMeta, clusterIdentifier)
 
 	asset := &inventory.Asset{
-		PlatformIds: []string{shared.NewWorkloadPlatformId(clusterIdentifier, strings.ToLower(objectKind), objMeta.GetNamespace(), objMeta.GetName(), string(objMeta.GetUID()))},
+		PlatformIds: []string{shared.NewWorkloadPlatformId(basePlatformId, clusterIdentifier, strings.ToLower(objectKind), objMeta.GetNamespace(), objMeta.GetName(), string(objMeta.GetUID()))},
 		Name:        name,
 		Platform:    platformData,
 		Connections: []*inventory.Config{connection},

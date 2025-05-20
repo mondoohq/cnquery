@@ -1341,6 +1341,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"sshd.config.matchBlock.params": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSshdConfigMatchBlock).GetParams()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"sshd.config.matchBlock.ciphers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSshdConfigMatchBlock).GetCiphers()).ToDataRes(types.Array(types.String))
+	},
+	"sshd.config.matchBlock.macs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSshdConfigMatchBlock).GetMacs()).ToDataRes(types.Array(types.String))
+	},
+	"sshd.config.matchBlock.kexs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSshdConfigMatchBlock).GetKexs()).ToDataRes(types.Array(types.String))
+	},
+	"sshd.config.matchBlock.hostkeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSshdConfigMatchBlock).GetHostkeys()).ToDataRes(types.Array(types.String))
+	},
+	"sshd.config.matchBlock.permitRootLogin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSshdConfigMatchBlock).GetPermitRootLogin()).ToDataRes(types.Array(types.String))
+	},
 	"sshd.config.matchBlock.context": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSshdConfigMatchBlock).GetContext()).ToDataRes(types.Resource("file.context"))
 	},
@@ -3715,6 +3730,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"sshd.config.matchBlock.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSshdConfigMatchBlock).Params, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"sshd.config.matchBlock.ciphers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSshdConfigMatchBlock).Ciphers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"sshd.config.matchBlock.macs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSshdConfigMatchBlock).Macs, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"sshd.config.matchBlock.kexs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSshdConfigMatchBlock).Kexs, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"sshd.config.matchBlock.hostkeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSshdConfigMatchBlock).Hostkeys, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"sshd.config.matchBlock.permitRootLogin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSshdConfigMatchBlock).PermitRootLogin, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"sshd.config.matchBlock.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9919,6 +9954,11 @@ type mqlSshdConfigMatchBlock struct {
 	// optional: if you define mqlSshdConfigMatchBlockInternal it will be used here
 	Criteria plugin.TValue[string]
 	Params plugin.TValue[map[string]interface{}]
+	Ciphers plugin.TValue[[]interface{}]
+	Macs plugin.TValue[[]interface{}]
+	Kexs plugin.TValue[[]interface{}]
+	Hostkeys plugin.TValue[[]interface{}]
+	PermitRootLogin plugin.TValue[[]interface{}]
 	Context plugin.TValue[*mqlFileContext]
 }
 
@@ -9960,6 +10000,61 @@ func (c *mqlSshdConfigMatchBlock) GetCriteria() *plugin.TValue[string] {
 
 func (c *mqlSshdConfigMatchBlock) GetParams() *plugin.TValue[map[string]interface{}] {
 	return &c.Params
+}
+
+func (c *mqlSshdConfigMatchBlock) GetCiphers() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Ciphers, func() ([]interface{}, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.ciphers(vargParams.Data)
+	})
+}
+
+func (c *mqlSshdConfigMatchBlock) GetMacs() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Macs, func() ([]interface{}, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.macs(vargParams.Data)
+	})
+}
+
+func (c *mqlSshdConfigMatchBlock) GetKexs() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Kexs, func() ([]interface{}, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.kexs(vargParams.Data)
+	})
+}
+
+func (c *mqlSshdConfigMatchBlock) GetHostkeys() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Hostkeys, func() ([]interface{}, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.hostkeys(vargParams.Data)
+	})
+}
+
+func (c *mqlSshdConfigMatchBlock) GetPermitRootLogin() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.PermitRootLogin, func() ([]interface{}, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.permitRootLogin(vargParams.Data)
+	})
 }
 
 func (c *mqlSshdConfigMatchBlock) GetContext() *plugin.TValue[*mqlFileContext] {

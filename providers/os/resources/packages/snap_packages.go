@@ -40,7 +40,7 @@ func (spm *SnapPkgManager) List() ([]Package, error) {
 	afs := &afero.Afero{Fs: fs}
 	_, dErr := afs.Stat(snapDir)
 	if dErr != nil {
-		log.Warn().Str("path", snapDir).Msg("cannot find snap dir")
+		log.Debug().Str("path", snapDir).Msg("cannot find snap dir")
 		return []Package{}, nil
 	}
 

@@ -182,6 +182,8 @@ func init() {
 			// == / !=
 			string("==" + types.Nil):                 {f: floatCmpNilV2, Label: "=="},
 			string("!=" + types.Nil):                 {f: floatNotNilV2, Label: "!="},
+			string("==" + types.Int):                 {f: floatCmpIntV2, Label: "=="},
+			string("!=" + types.Int):                 {f: floatNotIntV2, Label: "!="},
 			string("==" + types.Float):               {f: floatCmpFloatV2, Label: "=="},
 			string("!=" + types.Float):               {f: floatNotFloatV2, Label: "!="},
 			string("==" + types.String):              {f: floatCmpStringV2, Label: "=="},
@@ -330,6 +332,8 @@ func init() {
 			string("contains" + types.Regex):               {f: stringContainsRegex, Label: "contains"},
 			string("contains" + types.Array(types.Regex)):  {f: stringContainsArrayRegex, Label: "contains"},
 			string("in"):        {f: stringInArray, Label: "in"},
+			string("notIn"):     {f: stringNotInArray, Label: "in"},
+			string("inRange"):   {f: stringInRange, Label: "inRange"},
 			string("find"):      {f: stringFindV2, Label: "find"},
 			string("camelcase"): {f: stringCamelcaseV2, Label: "camelcase"},
 			string("downcase"):  {f: stringDowncaseV2, Label: "downcase"},
@@ -564,6 +568,7 @@ func init() {
 			string("contains" + types.Regex):               {f: dictContainsRegex, Label: "contains"},
 			string("contains" + types.Array(types.Regex)):  {f: dictContainsArrayRegex, Label: "contains"},
 			"in":           {f: dictIn, Label: "in"},
+			"notIn":        {f: dictNotIn, Label: "notIn"},
 			string("find"): {f: dictFindV2, Label: "find"},
 			// NOTE: the following functions are internal ONLY!
 			// We have not yet decided if and how these may be exposed to users
@@ -627,6 +632,7 @@ func init() {
 			"unique":                   {f: arrayUniqueV2},
 			"difference":               {f: arrayDifferenceV2},
 			"in":                       {f: anyArrayInStringArray},
+			"notIn":                    {f: anyArrayNotInStringArray},
 			"containsAll":              {f: arrayContainsAll},
 			"containsNone":             {f: arrayContainsNone},
 			"==":                       {Compiler: compileArrayOpArray("=="), f: tarrayCmpTarrayV2, Label: "=="},

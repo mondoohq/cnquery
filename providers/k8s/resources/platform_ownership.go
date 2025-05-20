@@ -45,7 +45,7 @@ func NewPlatformIdOwnershipIndex(clusterIdentifier string) *PlatformIdOwnershipI
 	}
 }
 
-func (od *PlatformIdOwnershipIndex) Add(obj runtime.Object) {
+func (od *PlatformIdOwnershipIndex) Add(basePlatformId string, obj runtime.Object) {
 	k8sMeta, err := meta.Accessor(obj)
 	if err != nil {
 		log.Error().Err(err).Msg("could not access object meta attributes")
@@ -57,12 +57,12 @@ func (od *PlatformIdOwnershipIndex) Add(obj runtime.Object) {
 		return
 	}
 
-	objPlatformId := shared.NewWorkloadPlatformId(od.clusterIdentifier, strings.ToLower(objType.GetKind()), k8sMeta.GetNamespace(), k8sMeta.GetName(), string(k8sMeta.GetUID()))
+	objPlatformId := shared.NewWorkloadPlatformId(basePlatformId, od.clusterIdentifier, strings.ToLower(objType.GetKind()), k8sMeta.GetNamespace(), k8sMeta.GetName(), string(k8sMeta.GetUID()))
 	objMeta := NewKubernetesObjectInfo(od.clusterIdentifier, objType.GetKind(), k8sMeta.GetNamespace(), k8sMeta.GetName())
 
 	od.metadataMap[objPlatformId] = objMeta
 	for _, ownerRef := range k8sMeta.GetOwnerReferences() {
-		ownerPlatformId := shared.NewWorkloadPlatformId(od.clusterIdentifier, strings.ToLower(ownerRef.Kind), k8sMeta.GetNamespace(), ownerRef.Name, "")
+		ownerPlatformId := shared.NewWorkloadPlatformId(basePlatformId, od.clusterIdentifier, strings.ToLower(ownerRef.Kind), k8sMeta.GetNamespace(), ownerRef.Name, "")
 		ownerMeta := NewKubernetesObjectInfo(od.clusterIdentifier, ownerRef.Kind, k8sMeta.GetNamespace(), ownerRef.Name)
 		od.metadataMap[ownerPlatformId] = ownerMeta
 

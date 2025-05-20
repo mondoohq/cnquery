@@ -85,6 +85,10 @@ func TestCore_If(t *testing.T) {
 			Expectation: int64(789),
 		},
 		{
+			Code:        "if (1.0 == 1) { return 123 } return 456",
+			Expectation: int64(123),
+		},
+		{
 			// This test comes out from an issue we had where return was not
 			// generating a single entrypoint, causing the first reported
 			// value to be used as the return value.
@@ -370,6 +374,12 @@ func TestNumber_Methods(t *testing.T) {
 		{
 			Code: "3.0.inRange(1.0,2)", Expectation: false,
 		},
+		{
+			Code: "4.inRange('-4', '4')", Expectation: true,
+		},
+		{
+			Code: "5.inRange('-4', '4')", Expectation: false,
+		},
 	})
 }
 
@@ -437,6 +447,14 @@ func TestString_Methods(t *testing.T) {
 			Expectation: false,
 		},
 		{
+			Code:        "'hiya'.notIn(['one', 'hiya'])",
+			Expectation: false,
+		},
+		{
+			Code:        "'hiya'.notIn(['one', 'two'])",
+			Expectation: true,
+		},
+		{
 			Code:        "'oh-hello-world!'.camelcase",
 			Expectation: "ohHelloWorld!",
 		},
@@ -467,6 +485,10 @@ func TestString_Methods(t *testing.T) {
 		{
 			Code:        "'hello ' + 'world'",
 			Expectation: "hello world",
+		},
+		{
+			Code:        "'23'.inRange(1,23)",
+			Expectation: true,
 		},
 	})
 }
@@ -778,6 +800,15 @@ func TestMap(t *testing.T) {
 		{
 			Code:        m + ".c",
 			ResultIndex: 0, Expectation: int64(2),
+		},
+		{
+			Code:        m + ".c.inRange(0,3)",
+			ResultIndex: 0, Expectation: true,
+		},
+		{
+			// works with nil value
+			Code:        m + ".d.inRange(0,3)",
+			ResultIndex: 0, Expectation: false,
 		},
 		// contains
 		{

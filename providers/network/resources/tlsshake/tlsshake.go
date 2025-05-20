@@ -46,7 +46,11 @@ const DefaultTimeout = 2 * time.Second
 
 var ErrFailedToConnect = errors.New("failed to connect")
 
+var ErrFailedToWrite = errors.New("failed to write")
+
 var ErrFailedToTlsResponse = errors.New("failed to get a TLS response")
+
+var ErrTimeout = errors.New("timeout failure")
 
 func DefaultScanConfig() ScanConfig {
 	return ScanConfig{
@@ -247,7 +251,7 @@ func (s *Tester) testTLSWithConn(conn net.Conn, conf *ScanConfig) (int, error) {
 
 	_, err = conn.Write(msg)
 	if err != nil {
-		return 0, multierr.Wrap(err, "failed to send TLS hello")
+		return 0, ErrFailedToWrite
 	}
 
 	success, err := s.parseHello(conn, conf)
@@ -545,6 +549,8 @@ func (s *Tester) parseHello(conn net.Conn, conf *ScanConfig) (bool, error) {
 					s.sync.Unlock()
 				}
 				return false, nil
+			} else if strings.Contains(err.Error(), "i/o timeout") {
+				return false, ErrTimeout
 			}
 			return false, err
 		}
