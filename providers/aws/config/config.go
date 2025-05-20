@@ -39,7 +39,7 @@ Available commands:
 																									Provide the snapshot ID
 
 Examples:
-  cnquery shell aws 
+  cnquery shell aws
 	cnspec scan aws
 	cnquery scan aws -f mondoo-aws-incident-response.mql.yaml --querypack mondoo-incident-response-aws
 	cnquery shell aws --role <role-arn>
@@ -68,6 +68,7 @@ Notes:
 
 				resources.DiscoveryOrg,
 				resources.DiscoveryResources,
+				resources.DiscoveryEKSClusters,
 				resources.DiscoveryS3Buckets,
 				resources.DiscoveryCloudtrailTrails,
 				resources.DiscoveryRdsDbInstances,

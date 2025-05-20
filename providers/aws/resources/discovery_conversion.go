@@ -203,6 +203,10 @@ func getPlatformName(awsObject awsObject) string {
 		if awsObject.objectType == "image" {
 			return "aws-ecr-image"
 		}
+	case "eks":
+		if awsObject.objectType == "cluster" {
+			return "aws-eks-cluster"
+		}
 	}
 	return ""
 }
