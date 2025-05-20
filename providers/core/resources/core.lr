@@ -182,3 +182,10 @@ private product.releaseCycleInformation {
   // Release link
   link string
 }
+
+vulnerability.exchange @defaults("id source") {
+  // Vulnerability ID
+  id string
+  // Vulnerability source
+  source string  
+}
