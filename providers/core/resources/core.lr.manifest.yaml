@@ -471,9 +471,3 @@ resources:
       name: {}
       version: {}
     min_mondoo_version: latest
-  yaml.path:
-    fields:
-      filepath: {}
-      jsonpath: {}
-      result: {}
-    min_mondoo_version: 5.15.0
