@@ -151,7 +151,7 @@ func TestDiscoverAssets(t *testing.T) {
 		inv := getInventory()
 		discoveredAssets, err := DiscoverAssets(context.Background(), inv, nil, recording.Null{})
 		require.NoError(t, err)
-		assert.Len(t, discoveredAssets.Assets, 3)
+		assert.Len(t, discoveredAssets.Assets, 4)
 		assert.Len(t, discoveredAssets.Errors, 0)
 		assert.Equal(t, "mondoo-operator-123", discoveredAssets.Assets[0].Asset.ManagedBy)
 		assert.Equal(t, "mondoo-operator-123", discoveredAssets.Assets[1].Asset.ManagedBy)
@@ -169,7 +169,7 @@ func TestDiscoverAssets(t *testing.T) {
 		require.NoError(t, err)
 
 		// Make sure no duplicates are returned
-		assert.Len(t, discoveredAssets.Assets, 3)
+		assert.Len(t, discoveredAssets.Assets, 4)
 		assert.Len(t, discoveredAssets.Errors, 0)
 
 		for _, asset := range discoveredAssets.Assets {
@@ -184,7 +184,7 @@ func TestDiscoverAssets(t *testing.T) {
 		require.NoError(t, err)
 
 		// Make sure no duplicates are returned
-		assert.Len(t, discoveredAssets.Assets, 3)
+		assert.Len(t, discoveredAssets.Assets, 4)
 		assert.Len(t, discoveredAssets.Errors, 0)
 
 		for _, asset := range discoveredAssets.Assets {
