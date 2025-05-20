@@ -4,6 +4,7 @@
 package procfs
 
 import (
+	"bytes"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -38,4 +39,57 @@ func TestParseProcessCmdline(t *testing.T) {
 	cmd, err := ParseProcessCmdline(f)
 	require.NoError(t, err)
 	assert.Equal(t, "/bin/bash", cmd, "detected process name")
+}
+
+func TestParseProcessCmdline_Direct(t *testing.T) {
+	testCases := []struct {
+		name           string
+		inputBytes     []byte
+		expectedOutput string
+	}{
+		{
+			name:           "single argument with trailing null",
+			inputBytes:     []byte("/bin/bash\x00"), // \x00 is the null byte
+			expectedOutput: "/bin/bash",
+		},
+		{
+			name:           "multiple arguments with trailing null",
+			inputBytes:     []byte("/usr/bin/my-app\x00--option\x00value\x00"),
+			expectedOutput: "/usr/bin/my-app --option value",
+		},
+		{
+			name:           "argument with spaces, then trailing null",
+			inputBytes:     []byte("/usr/bin/app with spaces\x00-arg\x00"),
+			expectedOutput: "/usr/bin/app with spaces -arg",
+		},
+		{
+			name:           "empty cmdline (just a null terminator, e.g., kernel thread)",
+			inputBytes:     []byte("\x00"),
+			expectedOutput: "",
+		},
+		{
+			name:           "double null (empty argument in middle) then trailing null",
+			inputBytes:     []byte("arg1\x00\x00arg3\x00"),
+			expectedOutput: "arg1 arg3",
+		},
+		{
+			name:           "cmdline without trailing null (less common, but good to test)",
+			inputBytes:     []byte("/bin/no-null"),
+			expectedOutput: "/bin/no-null",
+		},
+		{
+			name:           "empty input",
+			inputBytes:     []byte{},
+			expectedOutput: "",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			reader := bytes.NewReader(tc.inputBytes)
+			cmd, err := ParseProcessCmdline(reader)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expectedOutput, cmd)
+		})
+	}
 }
