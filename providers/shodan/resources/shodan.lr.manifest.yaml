@@ -32,6 +32,7 @@ resources:
       ports: {}
       tags: {}
       vulnerabilities: {}
+      vulnerabilityExchanges: {}
     min_mondoo_version: 9.0.0
   shodan.nsrecord:
     fields:
@@ -48,4 +49,10 @@ resources:
       credits: {}
       displayName: {}
       member: {}
+    min_mondoo_version: 9.0.0
+  vulnerabilityExchange:
+    fields:
+      id: {}
+      source: {}
+    is_private: true
     min_mondoo_version: 9.0.0

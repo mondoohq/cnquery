@@ -42,6 +42,10 @@ func init() {
 			Init: initShodanApiPlan,
 			Create: createShodanApiPlan,
 		},
+		"vulnerabilityExchange": {
+			// to override args, implement: initVulnerabilityExchange(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVulnerabilityExchange,
+		},
 	}
 }
 
@@ -137,6 +141,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"shodan.host.vulnerabilities": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlShodanHost).GetVulnerabilities()).ToDataRes(types.Array(types.String))
 	},
+	"shodan.host.vulnerabilityExchanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHost).GetVulnerabilityExchanges()).ToDataRes(types.Array(types.Resource("vulnerabilityExchange")))
+	},
 	"shodan.domain.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlShodanDomain).GetName()).ToDataRes(types.String)
 	},
@@ -194,6 +201,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"shodan.apiPlan.monitoredIps": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlShodanApiPlan).GetMonitoredIps()).ToDataRes(types.Int)
 	},
+	"vulnerabilityExchange.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVulnerabilityExchange).GetId()).ToDataRes(types.String)
+	},
+	"vulnerabilityExchange.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVulnerabilityExchange).GetSource()).ToDataRes(types.String)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -248,6 +261,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"shodan.host.vulnerabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlShodanHost).Vulnerabilities, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"shodan.host.vulnerabilityExchanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHost).VulnerabilityExchanges, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"shodan.domain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -342,6 +359,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlShodanApiPlan).MonitoredIps, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"vulnerabilityExchange.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlVulnerabilityExchange).__id, ok = v.Value.(string)
+			return
+		},
+	"vulnerabilityExchange.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVulnerabilityExchange).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vulnerabilityExchange.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVulnerabilityExchange).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -424,6 +453,7 @@ type mqlShodanHost struct {
 	Hostnames plugin.TValue[[]interface{}]
 	Ports plugin.TValue[[]interface{}]
 	Vulnerabilities plugin.TValue[[]interface{}]
+	VulnerabilityExchanges plugin.TValue[[]interface{}]
 }
 
 // createShodanHost creates a new instance of this resource
@@ -512,6 +542,22 @@ func (c *mqlShodanHost) GetPorts() *plugin.TValue[[]interface{}] {
 func (c *mqlShodanHost) GetVulnerabilities() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.Vulnerabilities, func() ([]interface{}, error) {
 		return c.vulnerabilities()
+	})
+}
+
+func (c *mqlShodanHost) GetVulnerabilityExchanges() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.VulnerabilityExchanges, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("shodan.host", c.__id, "vulnerabilityExchanges")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.vulnerabilityExchanges()
 	})
 }
 
@@ -800,4 +846,58 @@ func (c *mqlShodanApiPlan) GetTelnet() *plugin.TValue[bool] {
 
 func (c *mqlShodanApiPlan) GetMonitoredIps() *plugin.TValue[int64] {
 	return &c.MonitoredIps
+}
+
+// mqlVulnerabilityExchange for the vulnerabilityExchange resource
+type mqlVulnerabilityExchange struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlVulnerabilityExchangeInternal it will be used here
+	Id plugin.TValue[string]
+	Source plugin.TValue[string]
+}
+
+// createVulnerabilityExchange creates a new instance of this resource
+func createVulnerabilityExchange(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVulnerabilityExchange{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vulnerabilityExchange", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVulnerabilityExchange) MqlName() string {
+	return "vulnerabilityExchange"
+}
+
+func (c *mqlVulnerabilityExchange) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVulnerabilityExchange) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlVulnerabilityExchange) GetSource() *plugin.TValue[string] {
+	return &c.Source
 }

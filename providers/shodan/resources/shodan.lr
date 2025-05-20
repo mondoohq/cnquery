@@ -28,6 +28,8 @@ shodan.host @defaults("ip") {
   ports() []int
   // Vulnerabilities
   vulnerabilities() []string
+  // Vulnerability Exchange
+  vulnerabilityExchanges() []vulnerabilityExchange
 }
 
 // Shodan Search Engine domain information
@@ -83,4 +85,11 @@ shodan.apiPlan @defaults("plan"){
   telnet bool
   // Number of monitored IPs
   monitoredIps int
+}
+
+private vulnerabilityExchange @defaults("id") {
+  // Vulnerability ID
+  id string
+  // Vulnerability source
+  source string  
 }
