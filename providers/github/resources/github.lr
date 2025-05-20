@@ -378,6 +378,10 @@ private github.repository @defaults("fullName") {
   supportFile() github.file
   // Repository security file
   securityFile() github.file
+  // Checks if security alerats are enabled
+  vulnerabilityAlertsEnabled() bool
+  // Repository
+  vulnerabilityAlerts() []github.dependabotAlert
 }
 
 // GitHub license
@@ -646,4 +650,12 @@ private github.issue @defaults("title") {
   assignees []github.user
   // User who closed the issue
   closedBy github.user
+}
+
+// GitHub Dependabot alert
+github.dependabotAlert {
+  number int
+  state string
+  repoName string
+  cve string
 }

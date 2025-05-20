@@ -122,6 +122,10 @@ func init() {
 			// to override args, implement: initGithubIssue(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGithubIssue,
 		},
+		"github.dependabotAlert": {
+			// to override args, implement: initGithubDependabotAlert(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGithubDependabotAlert,
+		},
 	}
 }
 
@@ -685,6 +689,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.repository.securityFile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetSecurityFile()).ToDataRes(types.Resource("github.file"))
 	},
+	"github.repository.vulnerabilityAlertsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepository).GetVulnerabilityAlertsEnabled()).ToDataRes(types.Bool)
+	},
+	"github.repository.vulnerabilityAlerts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepository).GetVulnerabilityAlerts()).ToDataRes(types.Array(types.Resource("github.dependabotAlert")))
+	},
 	"github.license.key": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubLicense).GetKey()).ToDataRes(types.String)
 	},
@@ -1002,6 +1012,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"github.issue.closedBy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubIssue).GetClosedBy()).ToDataRes(types.Resource("github.user"))
+	},
+	"github.dependabotAlert.number": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDependabotAlert).GetNumber()).ToDataRes(types.Int)
+	},
+	"github.dependabotAlert.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDependabotAlert).GetState()).ToDataRes(types.String)
+	},
+	"github.dependabotAlert.repoName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDependabotAlert).GetRepoName()).ToDataRes(types.String)
+	},
+	"github.dependabotAlert.cve": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDependabotAlert).GetCve()).ToDataRes(types.String)
 	},
 }
 
@@ -1723,6 +1745,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlGithubRepository).SecurityFile, ok = plugin.RawToTValue[*mqlGithubFile](v.Value, v.Error)
 		return
 	},
+	"github.repository.vulnerabilityAlertsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepository).VulnerabilityAlertsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.repository.vulnerabilityAlerts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepository).VulnerabilityAlerts, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"github.license.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlGithubLicense).__id, ok = v.Value.(string)
 			return
@@ -2201,6 +2231,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"github.issue.closedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubIssue).ClosedBy, ok = plugin.RawToTValue[*mqlGithubUser](v.Value, v.Error)
+		return
+	},
+	"github.dependabotAlert.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGithubDependabotAlert).__id, ok = v.Value.(string)
+			return
+		},
+	"github.dependabotAlert.number": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).Number, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"github.dependabotAlert.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.dependabotAlert.repoName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).RepoName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.dependabotAlert.cve": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).Cve, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -3512,6 +3562,8 @@ type mqlGithubRepository struct {
 	CodeOfConductFile plugin.TValue[*mqlGithubFile]
 	SupportFile plugin.TValue[*mqlGithubFile]
 	SecurityFile plugin.TValue[*mqlGithubFile]
+	VulnerabilityAlertsEnabled plugin.TValue[bool]
+	VulnerabilityAlerts plugin.TValue[[]interface{}]
 }
 
 // createGithubRepository creates a new instance of this resource
@@ -4028,6 +4080,28 @@ func (c *mqlGithubRepository) GetSecurityFile() *plugin.TValue[*mqlGithubFile] {
 		}
 
 		return c.securityFile()
+	})
+}
+
+func (c *mqlGithubRepository) GetVulnerabilityAlertsEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.VulnerabilityAlertsEnabled, func() (bool, error) {
+		return c.vulnerabilityAlertsEnabled()
+	})
+}
+
+func (c *mqlGithubRepository) GetVulnerabilityAlerts() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.VulnerabilityAlerts, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "vulnerabilityAlerts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.vulnerabilityAlerts()
 	})
 }
 
@@ -5253,4 +5327,63 @@ func (c *mqlGithubIssue) GetAssignees() *plugin.TValue[[]interface{}] {
 
 func (c *mqlGithubIssue) GetClosedBy() *plugin.TValue[*mqlGithubUser] {
 	return &c.ClosedBy
+}
+
+// mqlGithubDependabotAlert for the github.dependabotAlert resource
+type mqlGithubDependabotAlert struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlGithubDependabotAlertInternal it will be used here
+	Number plugin.TValue[int64]
+	State plugin.TValue[string]
+	RepoName plugin.TValue[string]
+	Cve plugin.TValue[string]
+}
+
+// createGithubDependabotAlert creates a new instance of this resource
+func createGithubDependabotAlert(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGithubDependabotAlert{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("github.dependabotAlert", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGithubDependabotAlert) MqlName() string {
+	return "github.dependabotAlert"
+}
+
+func (c *mqlGithubDependabotAlert) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGithubDependabotAlert) GetNumber() *plugin.TValue[int64] {
+	return &c.Number
+}
+
+func (c *mqlGithubDependabotAlert) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGithubDependabotAlert) GetRepoName() *plugin.TValue[string] {
+	return &c.RepoName
+}
+
+func (c *mqlGithubDependabotAlert) GetCve() *plugin.TValue[string] {
+	return &c.Cve
 }

@@ -92,6 +92,13 @@ resources:
       url: {}
     is_private: true
     min_mondoo_version: 6.4.0
+  github.dependabotAlert:
+    fields:
+      cve: {}
+      number: {}
+      repoName: {}
+      state: {}
+    min_mondoo_version: 9.0.0
   github.file:
     fields:
       content: {}
@@ -411,6 +418,10 @@ resources:
         min_mondoo_version: 7.14.0
       updatedAt: {}
       visibility: {}
+      vulnerabilityAlerts:
+        min_mondoo_version: 9.0.0
+      vulnerabilityAlertsEnabled:
+        min_mondoo_version: 9.0.0
       watchersCount:
         min_mondoo_version: 7.14.0
       webhooks:

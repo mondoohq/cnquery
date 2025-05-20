@@ -269,6 +269,81 @@ func (g *mqlGithubRepository) license() (*mqlGithubLicense, error) {
 	return res.(*mqlGithubLicense), nil
 }
 
+func (g *mqlGithubRepository) vulnerabilityAlertsEnabled() (bool, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+	if g.Name.Error != nil {
+		return false, g.Name.Error
+	}
+	repoName := g.Name.Data
+	if g.Owner.Error != nil {
+		return false, g.Owner.Error
+	}
+	ownerName := g.Owner.Data
+	if ownerName.Login.Error != nil {
+		return false, ownerName.Login.Error
+	}
+	ownerLogin := ownerName.Login.Data
+
+	enabled, _, err := conn.Client().Repositories.GetVulnerabilityAlerts(conn.Context(), ownerLogin, repoName)
+	return enabled, err
+}
+
+func (g *mqlGithubRepository) vulnerabilityAlerts() ([]interface{}, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	repoName := g.Name.Data
+	if g.Owner.Error != nil {
+		return nil, g.Owner.Error
+	}
+	ownerName := g.Owner.Data
+	if ownerName.Login.Error != nil {
+		return nil, ownerName.Login.Error
+	}
+	ownerLogin := ownerName.Login.Data
+
+	state := "open"
+	listOpts := &github.ListAlertsOptions{
+		State: &state,
+		ListOptions: github.ListOptions{
+			PerPage: paginationPerPage,
+		},
+	}
+	var allSecurityAlerts []*github.DependabotAlert
+	for {
+		alerts, resp, err := conn.Client().Dependabot.ListRepoAlerts(conn.Context(), ownerLogin, repoName, listOpts)
+		if err != nil {
+			if strings.Contains(err.Error(), "404") {
+				return nil, nil
+			}
+			return nil, err
+		}
+		allSecurityAlerts = append(allSecurityAlerts, alerts...)
+		if resp.NextPage == 0 {
+			break
+		}
+		listOpts.ListOptions.Page = resp.NextPage
+	}
+
+	res := []interface{}{}
+	for i := range allSecurityAlerts {
+		alert := allSecurityAlerts[i]
+		r, err := CreateResource(g.MqlRuntime, "github.dependabotAlert", map[string]*llx.RawData{
+			"__id":     llx.StringDataPtr(alert.URL),
+			"number":   llx.IntData(int64(*alert.Number)),
+			"state":    llx.StringDataPtr(alert.State),
+			"repoName": llx.StringData(repoName),
+			"cve":      llx.StringDataPtr(alert.SecurityAdvisory.CVEID),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, r)
+	}
+	return res, nil
+}
+
 func (g *mqlGithubRepository) getMergeRequests(state string) ([]interface{}, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 	if g.Name.Error != nil {
