@@ -22,6 +22,11 @@ func (m *ebsMetadata) unixMetadata() (any, error) {
 		mdata["instance-id"] = instanceID
 	}
 
+	region, ok := m.getRegion()
+	if ok {
+		mdata["region"] = region
+	}
+
 	if privateHostname, ok := hostname.Hostname(m.conn, m.platform); ok {
 		mdata["hostname"] = privateHostname
 	} else {
@@ -140,11 +145,4 @@ func (m *ebsMetadata) getUnixNetworkInterfaces() (any, bool) {
 	}
 
 	return map[string]any{"macs": macs}, detected
-}
-
-type macDetails struct {
-	MAC         string `json:"mac"`
-	InterfaceID string `json:"interface-id"`
-	LocalIPv4s  string `json:"local-ipv4s"`
-	PublicIPv4s string `json:"public-ipv4s"`
 }

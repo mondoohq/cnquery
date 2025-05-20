@@ -25,9 +25,9 @@ func readValue(conn shared.Connection, fPath string) string {
 	return string(content)
 }
 
-func Detect(conn shared.Connection, p *inventory.Platform, smbiosMgr smbios.SmBiosManager) (string, string, []string) {
+func Detect(conn shared.Connection, p *inventory.Platform) (string, string, []string) {
 	var values []string
-	if conn.Type() == shared.Type_Device {
+	if conn.Type() == shared.Type_FileSystem {
 		// Special case for when we are running an EBS scan. The mounted volume doesn't have
 		// information about `/sys` because it is a virtual pseudo-filesystem. For these type
 		// of connections we detect if we are connected to an EBS volume in a different way.
@@ -54,6 +54,12 @@ func Detect(conn shared.Connection, p *inventory.Platform, smbiosMgr smbios.SmBi
 			readValue(conn, "/sys/class/dmi/id/bios_vendor"),
 		}
 	} else {
+		smbiosMgr, err := smbios.ResolveManager(conn, p)
+		if err != nil {
+			log.Debug().Err(err).Msg("failed to resolve smbios manager")
+			return "", "", nil
+		}
+
 		info, err := smbiosMgr.Info()
 		if err != nil {
 			log.Debug().Err(err).Msg("failed to query smbios")

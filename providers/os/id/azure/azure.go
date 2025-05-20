@@ -18,7 +18,7 @@ const (
 	azureIdentifierFileLinux = "/sys/class/dmi/id/sys_vendor"
 )
 
-func Detect(conn shared.Connection, pf *inventory.Platform, smbiosMgr smbios.SmBiosManager) (string, string, []string) {
+func Detect(conn shared.Connection, pf *inventory.Platform) (string, string, []string) {
 	sysVendor := ""
 	if pf.IsFamily("linux") {
 		// Fetching the product version from the smbios manager is slow
@@ -33,6 +33,12 @@ func Detect(conn shared.Connection, pf *inventory.Platform, smbiosMgr smbios.SmB
 		}
 		sysVendor = string(content)
 	} else {
+		smbiosMgr, err := smbios.ResolveManager(conn, pf)
+		if err != nil {
+			log.Debug().Err(err).Msg("failed to resolve smbios manager")
+			return "", "", nil
+		}
+
 		info, err := smbiosMgr.Info()
 		if err != nil {
 			log.Debug().Err(err).Msg("failed to query smbios")

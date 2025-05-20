@@ -20,7 +20,7 @@ var identifierFilesLinux = []string{
 	// For windows, the smbios will return:                  "VMware, Inc."
 }
 
-func Detect(conn shared.Connection, pf *inventory.Platform, smbiosMgr smbios.SmBiosManager) (string, string, []string) {
+func Detect(conn shared.Connection, pf *inventory.Platform) (string, string, []string) {
 	sysVendor := ""
 	if pf.IsFamily("linux") {
 		// Fetching the product version from the smbios manager is slow
@@ -37,6 +37,12 @@ func Detect(conn shared.Connection, pf *inventory.Platform, smbiosMgr smbios.SmB
 			log.Debug().Err(err).Msgf("unable to read %s", identityFile)
 		}
 	} else {
+		smbiosMgr, err := smbios.ResolveManager(conn, pf)
+		if err != nil {
+			log.Debug().Err(err).Msg("failed to resolve smbios manager")
+			return "", "", nil
+		}
+
 		info, err := smbiosMgr.Info()
 		if err != nil {
 			log.Debug().Err(err).Msg("failed to query smbios")
