@@ -1611,7 +1611,7 @@ func (g *mqlGithubRepository) getIssues(state string) ([]interface{}, error) {
 		if resp.NextPage == 0 {
 			break
 		}
-		listOpts.Page = resp.NextPage
+		listOpts.ListOptions.Page = resp.NextPage
 	}
 
 	res := []interface{}{}
