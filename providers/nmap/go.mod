@@ -1,8 +1,8 @@
 module go.mondoo.com/cnquery/v11/providers/nmap
 
-go 1.23.0
+go 1.24.0
 
-toolchain go1.23.3
+toolchain go1.24.3
 
 replace go.mondoo.com/cnquery/v11 => ../..
 
@@ -11,7 +11,7 @@ require (
 	github.com/cockroachdb/errors v1.12.0
 	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.10.0
-	go.mondoo.com/cnquery/v11 v11.54.0
+	go.mondoo.com/cnquery/v11 v11.55.0
 )
 
 require (
