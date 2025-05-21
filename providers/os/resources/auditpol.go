@@ -22,7 +22,7 @@ func (p *mqlAuditpol) list() ([]interface{}, error) {
 	cmd := o.(*mqlPowershell)
 	out := cmd.GetStdout()
 	if out.Error != nil {
-		return nil, fmt.Errorf("could not run auditpol: %s", out.Error.Error())
+		return nil, fmt.Errorf("could not run auditpol: %w", out.Error)
 	}
 
 	entries, err := windows.ParseAuditpol(strings.NewReader(out.Data))
