@@ -102,7 +102,10 @@ func ParseProcessCmdline(content io.Reader) (string, error) {
 	parts := bytes.Split(data, []byte{0})
 	var strParts []string
 	for _, p := range parts {
-		strParts = append(strParts, strings.TrimSpace(string(p)))
+		s := strings.TrimSpace(string(p))
+		if s != "" {
+			strParts = append(strParts, s)
+		}
 	}
 
 	return strings.Join(strParts, " "), nil
