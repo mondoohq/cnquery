@@ -49,6 +49,8 @@ func ResolveManager(conn shared.Connection) (OSKernelManager, error) {
 	} else if platform.Name == "freebsd" {
 		// NOTE: kldstat may work on other bsd linux
 		kmm = &FreebsdKernelManager{conn: conn}
+	} else if platform.Name == "aix" {
+		kmm = &AixKernelManager{conn: conn}
 	}
 
 	if kmm == nil {
@@ -229,4 +231,41 @@ func (s *FreebsdKernelManager) Modules() ([]*KernelModule, error) {
 	}
 
 	return ParseKldstat(cmd.Stdout), nil
+}
+
+type AixKernelManager struct {
+	conn shared.Connection
+}
+
+func (s *AixKernelManager) Name() string {
+	return "AIX Kernel Manager"
+}
+
+func (s *AixKernelManager) Info() (KernelInfo, error) {
+	// Use `oslevel -s` to get the kernel version
+	cmd, err := s.conn.RunCommand("oslevel -s")
+	if err != nil {
+		return KernelInfo{}, errors.Wrap(err, "could not read kernel version")
+	}
+	version, err := io.ReadAll(cmd.Stdout)
+	if err != nil {
+		return KernelInfo{}, errors.Wrap(err, "could not read kernel version")
+	}
+
+	return KernelInfo{
+		Version: strings.TrimSpace(string(version)),
+	}, nil
+}
+
+func (s *AixKernelManager) Parameters() (map[string]string, error) {
+	return map[string]string{}, nil
+}
+
+func (s *AixKernelManager) Modules() ([]*KernelModule, error) {
+	cmd, err := s.conn.RunCommand("genkex")
+	if err != nil {
+		return nil, errors.Wrap(err, "could not read kernel modules")
+	}
+
+	return ParseGenkex(cmd.Stdout)
 }

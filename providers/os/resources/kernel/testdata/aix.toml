@@ -1,0 +1,13 @@
+[commands."uname -s"]
+stdout = "AIX"
+
+[commands."genkex"]
+stdout = """Text address     Size File
+
+f10009d5b06d8000     d000 /usr/lib/drivers/bpf
+f10009d5b06a2000    36000 /usr/lib/drivers/autofs.ext
+f10009d5b0685000    1d000 /usr/lib/drivers/ahafs.ext
+"""
+
+[commands."oslevel -s"]
+stdout = "7300-03-00-2446"
