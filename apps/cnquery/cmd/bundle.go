@@ -100,7 +100,7 @@ var queryPackLintCmd = &cobra.Command{
 		if len(errors) > 0 {
 			log.Error().Msg("could not validate query pack")
 			for i := range errors {
-				fmt.Fprintf(os.Stderr, stringx.Indent(2, errors[i]))
+				fmt.Fprint(os.Stderr, stringx.Indent(2, errors[i]))
 			}
 			cmd.SilenceUsage = true
 			cmd.SilenceErrors = true
@@ -138,7 +138,7 @@ var queryPackPublishCmd = &cobra.Command{
 		if len(bundleErrors) > 0 {
 			log.Error().Msg("could not validate query pack")
 			for i := range bundleErrors {
-				fmt.Fprintf(os.Stderr, stringx.Indent(2, bundleErrors[i]))
+				fmt.Fprint(os.Stderr, stringx.Indent(2, bundleErrors[i]))
 			}
 			cmd.SilenceUsage = true
 			cmd.SilenceErrors = true

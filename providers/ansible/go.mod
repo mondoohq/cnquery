@@ -1,12 +1,14 @@
 module go.mondoo.com/cnquery/v11/providers/ansible
 
-go 1.23.0
+go 1.24.0
+
+toolchain go1.24.3
 
 replace go.mondoo.com/cnquery/v11 => ../..
 
 require (
 	github.com/stretchr/testify v1.10.0
-	go.mondoo.com/cnquery/v11 v11.54.0
+	go.mondoo.com/cnquery/v11 v11.55.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 

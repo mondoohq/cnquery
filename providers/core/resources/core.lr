@@ -182,3 +182,11 @@ private product.releaseCycleInformation {
   // Release link
   link string
 }
+
+// Experimental: Vulnerability Exchange information
+vulnerability.exchange @defaults("id source") {
+  // Vulnerability ID, eg. CVE-2025-12345
+  id string
+  // Vulnerability source
+  source string  
+}

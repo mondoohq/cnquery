@@ -14,7 +14,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "aws",
 	ID:              "go.mondoo.com/cnquery/v9/providers/aws",
-	Version:         "11.5.45",
+	Version:         "11.5.46",
 	ConnectionTypes: []string{provider.DefaultConnectionType, string(awsec2ebsconn.EBSConnectionType)},
 	Connectors: []plugin.Connector{
 		{
@@ -39,7 +39,7 @@ Available commands:
 																									Provide the snapshot ID
 
 Examples:
-  cnquery shell aws 
+  cnquery shell aws
 	cnspec scan aws
 	cnquery scan aws -f mondoo-aws-incident-response.mql.yaml --querypack mondoo-incident-response-aws
 	cnquery shell aws --role <role-arn>
@@ -68,6 +68,7 @@ Notes:
 
 				resources.DiscoveryOrg,
 				resources.DiscoveryResources,
+				resources.DiscoveryEKSClusters,
 				resources.DiscoveryS3Buckets,
 				resources.DiscoveryCloudtrailTrails,
 				resources.DiscoveryRdsDbInstances,

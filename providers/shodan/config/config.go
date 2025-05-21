@@ -13,7 +13,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "shodan",
 	ID:              "go.mondoo.com/cnquery/v11/providers/shodan",
-	Version:         "11.0.68",
+	Version:         "11.0.69",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{
 		{
@@ -44,7 +44,7 @@ Examples:
 					Long:    "networks",
 					Type:    plugin.FlagType_List,
 					Default: "",
-					Desc:    "Only include repositories with matching names",
+					Desc:    "Only include matching networks",
 				},
 			},
 		},
