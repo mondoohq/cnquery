@@ -53,7 +53,7 @@ type LrDocsDocumentation struct {
 }
 
 func (d LrDocsDocumentation) MarshalGo() string {
-	return fmt.Sprintf("Description: " + strconv.Quote(d.Description) + ",\n")
+	return fmt.Sprint("Description: " + strconv.Quote(d.Description) + ",\n")
 }
 
 type LrDocsRefs struct {

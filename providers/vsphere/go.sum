@@ -632,8 +632,8 @@ github.com/zeebo/errs v1.4.0/go.mod h1:sgbWHsvVuTPHcqJJGQ1WhI5KbWlHYz+2+2C/LSEtC
 go.etcd.io/etcd/api/v3 v3.5.1/go.mod h1:cbVKeC6lCfl7j/8jBhAK6aIYO9XOjdptoxU/nLQcPvs=
 go.etcd.io/etcd/client/pkg/v3 v3.5.1/go.mod h1:IJHfcCEKxYu1Os13ZdwCwIUTUVGYTSAM3YSwc9/Ac1g=
 go.etcd.io/etcd/client/v2 v2.305.1/go.mod h1:pMEacxZW7o8pg4CrFE7pquyCJJzZvkvdD2RibOCCCGs=
-go.mondoo.com/mondoo-go v0.0.0-20250516231106-a2d61592d8cc h1:0ZBkMdTiDHcSMLA7BR+hRTqON34rGlYDd/BuBEQs/xA=
-go.mondoo.com/mondoo-go v0.0.0-20250516231106-a2d61592d8cc/go.mod h1:0HMHhLaS0V1himFIJQxABmvqEAdWv1NUScXpSjrhxqo=
+go.mondoo.com/mondoo-go v0.0.0-20250521000422-a1a55448b223 h1:yNa6Sjk2gINbmrjQzjWwK717CBKkDSgY7K81cz5nmVI=
+go.mondoo.com/mondoo-go v0.0.0-20250521000422-a1a55448b223/go.mod h1:0HMHhLaS0V1himFIJQxABmvqEAdWv1NUScXpSjrhxqo=
 go.mondoo.com/ranger-rpc v0.6.5 h1:KKoeTGPonJI3T6lrT9oxdH9eNlZC6pdqYvsuWZWyB6w=
 go.mondoo.com/ranger-rpc v0.6.5/go.mod h1:kwPJSYj32vZJjWoQSKEao5YoUO/ZRcjVGxBOL4tApf0=
 go.opencensus.io v0.21.0/go.mod h1:mSImk1erAIZhrmZN+AvHh14ztQfjbGwt4TtuofqLduU=

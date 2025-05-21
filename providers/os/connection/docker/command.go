@@ -11,7 +11,7 @@ import (
 	"io"
 	"time"
 
-	docker "github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 )
@@ -27,7 +27,7 @@ func (c *Command) Exec(command string) (*shared.Command, error) {
 	c.Command.Stats.Start = time.Now()
 
 	ctx := context.Background()
-	res, err := c.Client.ContainerExecCreate(ctx, c.Container, docker.ExecConfig{
+	res, err := c.Client.ContainerExecCreate(ctx, c.Container, container.ExecOptions{
 		Cmd:          []string{"/bin/sh", "-c", c.Command.Command},
 		Detach:       true,
 		Tty:          false,
@@ -39,7 +39,7 @@ func (c *Command) Exec(command string) (*shared.Command, error) {
 		return nil, err
 	}
 
-	resp, err := c.Client.ContainerExecAttach(ctx, res.ID, docker.ExecStartCheck{
+	resp, err := c.Client.ContainerExecAttach(ctx, res.ID, container.ExecStartOptions{
 		Detach: false,
 		Tty:    false,
 	})

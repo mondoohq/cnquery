@@ -2,7 +2,9 @@ module go.mondoo.com/cnquery/v11/providers/vsphere
 
 replace go.mondoo.com/cnquery/v11 => ../..
 
-go 1.23.0
+go 1.24.0
+
+toolchain go1.24.3
 
 require (
 	github.com/facebookincubator/nvdtools v0.1.5
@@ -10,8 +12,8 @@ require (
 	github.com/stretchr/testify v1.10.0
 	// pin v0.46.3
 	github.com/vmware/govmomi v0.46.3
-	go.mondoo.com/cnquery/v11 v11.54.0
-	go.mondoo.com/mondoo-go v0.0.0-20250516231106-a2d61592d8cc
+	go.mondoo.com/cnquery/v11 v11.55.0
+	go.mondoo.com/mondoo-go v0.0.0-20250521000422-a1a55448b223
 )
 
 require (

@@ -11,16 +11,18 @@ replace k8s.io/apimachinery => k8s.io/apimachinery v0.28.9
 
 replace k8s.io/client-go => k8s.io/client-go v0.28.9
 
-go 1.23.0
+go 1.24.0
+
+toolchain go1.24.3
 
 require (
 	github.com/cockroachdb/errors v1.12.0
 	github.com/gobwas/glob v0.2.3
-	github.com/google/go-containerregistry v0.20.3 // indirect
+	github.com/google/go-containerregistry v0.20.4 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.10.0
-	go.mondoo.com/cnquery/v11 v11.54.0
+	go.mondoo.com/cnquery/v11 v11.55.0
 	// pin v0.28.9
 	k8s.io/api v0.28.9
 	// pin v0.28.9
@@ -109,9 +111,9 @@ require (
 	github.com/danieljoos/wincred v1.2.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/distribution/reference v0.6.0 // indirect
-	github.com/docker/cli v27.5.1+incompatible // indirect
+	github.com/docker/cli v28.1.1+incompatible // indirect
 	github.com/docker/distribution v2.8.3+incompatible // indirect
-	github.com/docker/docker v27.5.1+incompatible // indirect
+	github.com/docker/docker v28.1.1+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.9.3 // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
@@ -256,7 +258,7 @@ require (
 	github.com/tidwall/transform v0.0.0-20201103190739-32f242e2dbde // indirect
 	github.com/tonistiigi/go-csvvalue v0.0.0-20240710180619-ddb21b71c0b4 // indirect
 	github.com/ulikunitz/xz v0.5.12 // indirect
-	github.com/vbatts/tar-split v0.11.6 // indirect
+	github.com/vbatts/tar-split v0.12.1 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	github.com/zeebo/errs v1.4.0 // indirect
 	go.mondoo.com/mondoo-go v0.0.0-20250516231106-a2d61592d8cc // indirect
