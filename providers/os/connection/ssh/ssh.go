@@ -500,7 +500,7 @@ func establishClientConnection(pCfg *inventory.Config, hostKeyCallback ssh.HostK
 	}
 
 	supportsHybrid, err := serverSupportsHybridKEX(addr)
-	if supportsHybrid {
+	if err == nil && supportsHybrid {
 		// force the Key Exchange Algorithm to a compatible one
 		sshClientConfig.Config = ssh.Config{
 			KeyExchanges: []string{
@@ -525,7 +525,8 @@ func establishClientConnection(pCfg *inventory.Config, hostKeyCallback ssh.HostK
 func serverSupportsHybridKEX(addr string) (bool, error) {
 	conn, err := net.DialTimeout("tcp", addr, 5*time.Second)
 	if err != nil {
-		return false, errors.Wrap(err, "failed to dial")
+		log.Debug().Err(err).Msg("fail to verify KEX algorithms")
+		return false, err
 	}
 	defer conn.Close()
 
