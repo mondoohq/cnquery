@@ -13,7 +13,6 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/id/azure"
 	"go.mondoo.com/cnquery/v11/providers/os/id/gcp"
 	"go.mondoo.com/cnquery/v11/providers/os/id/vmware"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/smbios"
 )
 
 type (
@@ -22,7 +21,7 @@ type (
 	PlatformID        = string
 )
 
-type detectorFunc func(conn shared.Connection, p *inventory.Platform, smbiosMgr smbios.SmBiosManager) (PlatformID, PlatformName, []RelatedPlatformID)
+type detectorFunc func(conn shared.Connection, p *inventory.Platform) (PlatformID, PlatformName, []RelatedPlatformID)
 
 // CloudProviderType is the type of cloud provider that the cloud detect detected
 type CloudProviderType string
@@ -54,11 +53,6 @@ type PlatformInfo struct {
 // Detect tried to detect if we are running on a cloud asset, and if so, it returns
 // the platform information, otherwise it returns a `nil` pointer.
 func Detect(conn shared.Connection, p *inventory.Platform) *PlatformInfo {
-	mgr, err := smbios.ResolveManager(conn, p)
-	if err != nil {
-		return nil
-	}
-
 	wg := sync.WaitGroup{}
 	wg.Add(len(detectors))
 
@@ -67,7 +61,7 @@ func Detect(conn shared.Connection, p *inventory.Platform) *PlatformInfo {
 		go func(provider CloudProviderType, f detectorFunc) {
 			defer wg.Done()
 
-			id, name, related := f(conn, p, mgr)
+			id, name, related := f(conn, p)
 			if id != "" {
 				valChan <- PlatformInfo{
 					ID:                 id,

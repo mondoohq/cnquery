@@ -102,6 +102,10 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 	if !stringx.Contains(asset.IdDetector, ids.IdDetector_MachineID) {
 		asset.IdDetector = append(asset.IdDetector, ids.IdDetector_MachineID)
 	}
+	// This detector helps set the `asset.kind` if the connected device is a cloud instance
+	if !stringx.Contains(asset.IdDetector, ids.IdDetector_CloudDetect) {
+		asset.IdDetector = append(asset.IdDetector, ids.IdDetector_CloudDetect)
+	}
 
 	res.partitions = make(map[string]*snapshot.PartitionInfo)
 

@@ -9,6 +9,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v11/providers/os/id/awsebs"
 	"go.mondoo.com/cnquery/v11/providers/os/id/awsec2"
 )
 
@@ -23,17 +24,56 @@ func (a *aws) Provider() Provider {
 	return AWS
 }
 
-func (a *aws) Instance() (*InstanceMetadata, error) {
+func (a *aws) getAwsEC2Metadata() (any, error) {
 	mdsvc, err := awsec2.Resolve(a.conn, a.conn.Asset().GetPlatform())
 	if err != nil {
-		log.Debug().Err(err).Msg("os.cloud.aws> failed to get metadata resolver")
+		log.Debug().Err(err).
+			Str("method", "awsec2").
+			Msg("os.cloud.aws> failed to get metadata resolver")
 		return nil, err
 	}
 	metadata, err := mdsvc.RawMetadata()
 	if err != nil {
-		log.Debug().Err(err).Msg("os.cloud.aws> failed to get raw metadata")
+		log.Debug().Err(err).
+			Str("method", "awsec2").
+			Msg("os.cloud.aws> failed to get raw metadata")
 		return nil, err
 	}
+
+	return metadata, nil
+}
+
+func (a *aws) getAwsEBSMetadata() (any, error) {
+	mdsvc, err := awsebs.Resolve(a.conn, a.conn.Asset().GetPlatform())
+	if err != nil {
+		log.Debug().Err(err).
+			Str("method", "awsebs").
+			Msg("os.cloud.aws> failed to get metadata resolver")
+		return nil, err
+	}
+	metadata, err := mdsvc.RawMetadata()
+	if err != nil {
+		log.Debug().Err(err).
+			Str("method", "awsebs").
+			Msg("os.cloud.aws> failed to get raw metadata")
+		return nil, err
+	}
+	return metadata, nil
+}
+
+func (a *aws) Instance() (*InstanceMetadata, error) {
+	var metadata any
+	var err, errEBS error
+	metadata, err = a.getAwsEC2Metadata()
+	if err != nil {
+		// Special case for when we are running an EBS scan.
+		metadata, errEBS = a.getAwsEBSMetadata()
+		if errEBS != nil {
+			// we have no other way to detect instance information
+			return nil, errors.New("failed to get instance metadata")
+		}
+	}
+
 	if metadata == nil {
 		log.Debug().Msg("os.cloud.aws> no metadata found")
 		return nil, errors.New("no metadata")
