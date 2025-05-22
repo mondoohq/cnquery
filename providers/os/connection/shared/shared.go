@@ -130,8 +130,8 @@ type FileInfo struct {
 	FIsDir   bool
 	FModTime time.Time
 	FMode    os.FileMode
-	Uid      int64
-	Gid      int64
+	Uid      float64
+	Gid      float64
 }
 
 func (f *FileInfo) Name() string {
@@ -161,8 +161,8 @@ func (f *FileInfo) Sys() interface{} {
 type FileInfoDetails struct {
 	Size int64
 	Mode FileModeDetails
-	Uid  int64
-	Gid  int64
+	Uid  float64
+	Gid  float64
 	Path string
 }
 

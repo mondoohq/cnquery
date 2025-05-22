@@ -11,7 +11,7 @@ mail:x:8:12:mail:/var/spool/mail:/sbin/nologin
 operator:x:11:0:operator:/root:/sbin/nologin
 games:x:12:100:games:/usr/games:/sbin/nologin
 ftp:x:14:50:FTP User:/var/ftp:/sbin/nologin
-nobody:x:99:99:Nobody:/:/sbin/nologin"""
+nobody:x:4294967294:4294967294:Nobody:/:/sbin/nologin"""
 
 [commands."uname -r"]
 stdout = "4.19.76-linuxkit"

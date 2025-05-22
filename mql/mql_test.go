@@ -76,10 +76,10 @@ func TestMqlSimple(t *testing.T) {
 			"version":  "rolling",
 		}},
 		{"users { name uid }", []interface{}{
-			map[string]interface{}{"name": "root", "uid": int64(0)},
-			map[string]interface{}{"name": "bin", "uid": int64(1)},
-			map[string]interface{}{"name": "chris", "uid": int64(1000)},
-			map[string]interface{}{"name": "christopher", "uid": int64(1001)},
+			map[string]interface{}{"name": "root", "uid": float64(0)},
+			map[string]interface{}{"name": "bin", "uid": float64(1)},
+			map[string]interface{}{"name": "chris", "uid": float64(1000)},
+			map[string]interface{}{"name": "christopher", "uid": float64(1001)},
 		}},
 	}
 
