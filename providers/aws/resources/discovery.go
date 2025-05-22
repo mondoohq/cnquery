@@ -34,6 +34,7 @@ const (
 	DiscoveryEC2InstanceAPI             = "ec2-instances-api"  // need policy + dedup story
 	DiscoverySSMInstanceAPI             = "ssm-instances-api"  // need policy + dedup story
 	DiscoveryS3Buckets                  = "s3-buckets"
+	DiscoveryEKSClusters                = "eks-clusters"
 	DiscoveryCloudtrailTrails           = "cloudtrail-trails"
 	DiscoveryRdsDbInstances             = "rds-dbinstances"
 	DiscoveryRdsDbClusters              = "rds-dbclusters"
@@ -74,6 +75,7 @@ var AllAPIResources = []string{
 	// DiscoveryEC2InstanceAPI,
 	// DiscoverySSMInstanceAPI,
 	DiscoveryS3Buckets,
+	DiscoveryEKSClusters,
 	DiscoveryCloudtrailTrails,
 	DiscoveryRdsDbInstances,
 	DiscoveryRdsDbClusters,
@@ -421,6 +423,32 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 				awsObject: awsObject{
 					account: accountId, region: f.Location.Data, arn: f.Arn.Data,
 					id: f.Name.Data, service: "s3", objectType: "bucket",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
+		}
+	case DiscoveryEKSClusters:
+		res, err := NewResource(runtime, "aws.eks", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		s := res.(*mqlAwsEks)
+
+		bs := s.GetClusters()
+		if bs == nil {
+			return assetList, nil
+		}
+
+		for i := range bs.Data {
+			f := bs.Data[i].(*mqlAwsEksCluster)
+
+			tags := mapStringInterfaceToStringString(f.Tags.Data)
+			m := mqlObject{
+				name: f.Name.Data, labels: tags,
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.Name.Data, service: "eks", objectType: "cluster",
 				},
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))

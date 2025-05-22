@@ -26,7 +26,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.52.3
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.52.0
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.43.1
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.218.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.220.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.57.1
@@ -39,12 +39,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/emr v1.49.0
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.54.5
 	github.com/aws/aws-sdk-go-v2/service/iam v1.42.0
-	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.36.1
+	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/kms v1.38.3
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.71.2
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.38.3
-	github.com/aws/aws-sdk-go-v2/service/rds v1.95.0
+	github.com/aws/aws-sdk-go-v2/service/rds v1.96.0
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.54.3
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.79.3
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.58.0
@@ -66,7 +66,7 @@ require (
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/afero v1.14.0
 	github.com/stretchr/testify v1.10.0
-	go.mondoo.com/cnquery/v11 v11.54.0
+	go.mondoo.com/cnquery/v11 v11.55.0
 	golang.org/x/exp v0.0.0-20250506013437-ce4c2cf36ca6
 	k8s.io/client-go v0.33.1
 )
@@ -132,9 +132,9 @@ require (
 	github.com/danieljoos/wincred v1.2.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/distribution/reference v0.6.0 // indirect
-	github.com/docker/cli v27.5.1+incompatible // indirect
+	github.com/docker/cli v28.1.1+incompatible // indirect
 	github.com/docker/distribution v2.8.3+incompatible // indirect
-	github.com/docker/docker v27.5.1+incompatible // indirect
+	github.com/docker/docker v28.1.1+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.9.3 // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
@@ -166,7 +166,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
-	github.com/google/go-containerregistry v0.20.3 // indirect
+	github.com/google/go-containerregistry v0.20.4 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.6 // indirect
 	github.com/googleapis/gax-go/v2 v2.14.2 // indirect
@@ -243,7 +243,7 @@ require (
 	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.5.0 // indirect
 	github.com/tonistiigi/go-csvvalue v0.0.0-20240710180619-ddb21b71c0b4 // indirect
-	github.com/vbatts/tar-split v0.11.6 // indirect
+	github.com/vbatts/tar-split v0.12.1 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	github.com/zeebo/errs v1.4.0 // indirect

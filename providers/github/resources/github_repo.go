@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/go-github/v69/github"
+	"github.com/google/go-github/v72/github"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/logger"
@@ -1611,7 +1611,7 @@ func (g *mqlGithubRepository) getIssues(state string) ([]interface{}, error) {
 		if resp.NextPage == 0 {
 			break
 		}
-		listOpts.Page = resp.NextPage
+		listOpts.ListOptions.Page = resp.NextPage
 	}
 
 	res := []interface{}{}

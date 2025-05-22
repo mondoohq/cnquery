@@ -1274,12 +1274,6 @@ resources:
       title: Check that a specific Windows Server feature is installed
     - query: windows.serverFeature('Windows-Defender').installed == false
       title: Check that a specific Windows Server feature is not installed
-  yaml.path:
-    fields:
-      filepath: {}
-      jsonpath: {}
-      result: {}
-    min_mondoo_version: 5.15.0
   yum:
     fields:
       repos: {}

@@ -12,7 +12,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/google/go-github/v69/github"
+	"github.com/google/go-github/v72/github"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"

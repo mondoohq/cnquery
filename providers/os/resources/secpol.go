@@ -33,7 +33,7 @@ func (s *mqlSecpol) policy() (*windows.Secpol, error) {
 	cmd := o.(*mqlCommand)
 	out := cmd.GetStdout()
 	if out.Error != nil {
-		return nil, fmt.Errorf("could not run auditpol: " + out.Error.Error())
+		return nil, fmt.Errorf("could not run auditpol: %w", out.Error)
 	}
 
 	policy, err := windows.ParseSecpol(strings.NewReader(out.Data))

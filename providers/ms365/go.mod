@@ -2,7 +2,9 @@ module go.mondoo.com/cnquery/v11/providers/ms365
 
 replace go.mondoo.com/cnquery/v11 => ../..
 
-go 1.23.0
+go 1.24.0
+
+toolchain go1.24.3
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.18.0
@@ -10,12 +12,12 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/microsoft/kiota-abstractions-go v1.9.2
 	github.com/microsoft/kiota-authentication-azure-go v1.3.0
-	github.com/microsoftgraph/msgraph-beta-sdk-go v0.137.0
-	github.com/microsoftgraph/msgraph-sdk-go v1.71.0
+	github.com/microsoftgraph/msgraph-beta-sdk-go v0.138.0
+	github.com/microsoftgraph/msgraph-sdk-go v1.72.0
 	github.com/microsoftgraph/msgraph-sdk-go-core v1.3.2
 	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.10.0
-	go.mondoo.com/cnquery/v11 v11.54.0
+	go.mondoo.com/cnquery/v11 v11.55.0
 )
 
 require (
@@ -151,11 +153,11 @@ require (
 	go.opentelemetry.io/contrib/detectors/gcp v1.35.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.60.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.60.0 // indirect
-	go.opentelemetry.io/otel v1.35.0 // indirect
-	go.opentelemetry.io/otel/metric v1.35.0 // indirect
+	go.opentelemetry.io/otel v1.36.0 // indirect
+	go.opentelemetry.io/otel/metric v1.36.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.35.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v1.35.0 // indirect
-	go.opentelemetry.io/otel/trace v1.35.0 // indirect
+	go.opentelemetry.io/otel/trace v1.36.0 // indirect
 	go.uber.org/mock v0.5.2 // indirect
 	golang.org/x/crypto v0.38.0 // indirect
 	golang.org/x/mod v0.24.0 // indirect
