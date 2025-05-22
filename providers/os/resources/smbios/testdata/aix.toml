@@ -1,0 +1,69 @@
+[commands."uname -s"]
+stdout = "AIX"
+
+[commands."prtconf"]
+stdout = """
+System Model: IBM,9009-22A
+Machine Serial Number: 7835450
+Processor Type: PowerPC_POWER9
+Processor Implementation Mode: POWER 9
+Processor Version: PV_9_Compat
+Number Of Processors: 1
+Processor Clock Speed: 2500 MHz
+CPU Type: 64-bit
+Kernel Type: 64-bit
+LPAR Info: 41 p1256-pvm1-76faa655-0000096b
+Memory Size: 2048 MB
+Good Memory Size: 2048 MB
+Platform Firmware level: VL950_175
+Firmware Version: IBM,FW950.D0 (VL950_175)
+Console Login: enable
+Auto Restart: true
+Full Core: false
+NX Crypto Acceleration: Capable and Enabled
+In-Core Crypto Acceleration: Capable, but not Enabled
+
+Network Information
+        Host Name: p1256-pvm1
+        IP Address: 129.40.51.113
+        Sub Netmask: 255.255.255.240
+        Gateway: 129.40.51.126
+        Name Server:
+        Domain Name:
+
+Paging Space Information
+        Total Paging Space: 4096MB
+        Percent Used: 0%
+
+Volume Groups Information
+==============================================================================
+Active VGs
+==============================================================================
+rootvg:
+PV_NAME           PV STATE          TOTAL PPs   FREE PPs    FREE DISTRIBUTION
+hdisk0            active            799         380         103..00..00..117..160
+==============================================================================
+
+INSTALLED RESOURCE LIST
+
+The following resources are installed on the machine.
++/- = Added or deleted from Resource List.
+*   = Diagnostic support not available.
+
+  Model Architecture: chrp
+  Model Implementation: Multiple Processor, PCI bus
+
++ sys0                                                            System Object
++ sysplanar0                                                      System Planar
+* vio0                                                            Virtual I/O Bus
+* ent0             U9009.22A.7835450-V41-C32-T1                   Virtual I/O Ethernet Adapter (l-lan)
+* vscsi1           U9009.22A.7835450-V41-C3-T1                    Virtual SCSI Client Adapter
+* vscsi0           U9009.22A.7835450-V41-C2-T1                    Virtual SCSI Client Adapter
+* cd0              U9009.22A.7835450-V41-C2-T1-L8200000000000000  Virtual SCSI Optical Served by VIO Server
+* hdisk0           U9009.22A.7835450-V41-C2-T1-L8100000000000000  Virtual SCSI Disk Drive
+* vsa0             U9009.22A.7835450-V41-C0                       LPAR Virtual Serial Adapter
+* vty0             U9009.22A.7835450-V41-C0-L0                    Asynchronous Terminal
++ L2cache0                                                        L2 Cache
++ mem0                                                            Memory
++ proc0                                                           Processor
+"""
