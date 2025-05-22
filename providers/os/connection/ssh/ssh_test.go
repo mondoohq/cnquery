@@ -52,7 +52,7 @@ func startMockSSHServer(t *testing.T, banner string) (addr string, closeFn func(
 		}
 		defer conn.Close()
 		// simulate SSH banner
-		conn.Write([]byte(banner + "\r\n"))
+		_, _ = conn.Write([]byte(banner + "\r\n"))
 	}()
 
 	return ln.Addr().String(), func() { ln.Close() }
