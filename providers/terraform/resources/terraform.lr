@@ -27,7 +27,7 @@ terraform {
 }
 
 // Terraform configuration file (.tf or .tf.json file)
-terraform.file @defaults("path") {
+private terraform.file @defaults("path") {
   // Terraform (.tf or tf.json file)
   path string
   // All blocks within the file
