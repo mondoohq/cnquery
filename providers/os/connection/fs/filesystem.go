@@ -21,7 +21,7 @@ var (
 )
 
 func NewFileSystemConnectionWithClose(id uint32, conf *inventory.Config, asset *inventory.Asset, closeFN func()) (*FileSystemConnection, error) {
-	path, ok := conf.Options["path"]
+	path, ok := conf.GetOptions()["path"]
 	if !ok {
 		// fallback to host + path option
 		path = conf.Host + conf.Path
