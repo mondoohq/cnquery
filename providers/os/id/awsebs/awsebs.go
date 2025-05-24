@@ -148,7 +148,7 @@ func (m *ebsMetadata) extractInjectedPlatformID() (string, *awsec2.MondooInstanc
 			return false
 		})
 
-		if index > 0 {
+		if index < 0 {
 			log.Debug().Msgf("awsebs.metadata> no connection found of type %s", shared.Type_FileSystem.String())
 			return "", nil, false
 		}
