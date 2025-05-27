@@ -296,14 +296,23 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 		// We do not stop on failed updates. Up until some other errors happens,
 		// things are still functional. We want to consider failure, possibly
 		// with a config entry in the future.
-		updated, err := TryProviderUpdate(provider, update)
-		if err != nil {
-			log.Error().
-				Err(err).
+
+		// Only skip k8s provider updates when running in Kubernetes (docker container)
+		// unless explicitly enabled via MONDOO_AUTO_UPDATE=true in operator code
+		if provider.Name == "k8s" && os.Getenv("MONDOO_AUTO_UPDATE") == "false" {
+			log.Debug().
 				Str("provider", provider.Name).
-				Msg("failed to update provider")
+				Msg("skipping k8s provider update in containerized environment")
 		} else {
-			provider = updated
+			updated, err := TryProviderUpdate(provider, update)
+			if err != nil {
+				log.Error().
+					Err(err).
+					Str("provider", provider.Name).
+					Msg("failed to update provider")
+			} else {
+				provider = updated
+			}
 		}
 	}
 
