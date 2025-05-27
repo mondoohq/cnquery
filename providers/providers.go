@@ -166,7 +166,7 @@ func (p Providers) Add(nu *Provider) {
 
 type Provider struct {
 	*plugin.Provider
-	Schema    *resources.Schema
+	Schema    resources.ResourcesSchema
 	Path      string
 	HasBinary bool
 }
@@ -289,6 +289,7 @@ func ListAll() ([]*Provider, error) {
 	for _, x := range builtinProviders {
 		all = append(all, &Provider{
 			Provider: x.Config,
+			Schema:   x.Runtime.Schema,
 		})
 	}
 
@@ -309,9 +310,18 @@ func ListAll() ([]*Provider, error) {
 				Str("provider", provider.Name).
 				Str("path", provider.Path).
 				Msg("failed to load provider")
-		} else {
-			res = append(res, provider)
+			continue
 		}
+
+		if err := provider.LoadResources(); err != nil {
+			log.Error().Err(err).
+				Str("provider", provider.Name).
+				Str("path", provider.Path).
+				Msg("failed to load provider resources")
+			continue
+		}
+
+		res = append(res, provider)
 	}
 
 	CachedProviders = res
@@ -485,7 +495,7 @@ func installDependencies(provider *Provider, existing Providers) error {
 		return nil
 	}
 
-	for _, dependency := range provider.Schema.Dependencies {
+	for _, dependency := range provider.Schema.AllDependencies() {
 		dependencyLookup := ProviderLookup{
 			ID:           dependency.Id,
 			ProviderName: dependency.Name,
@@ -745,6 +755,11 @@ func InstallIO(reader io.ReadCloser, conf InstallConf) ([]*Provider, error) {
 
 		if err := provider.LoadJSON(); err != nil {
 			log.Error().Err(err).Str("path", pdir).Msg("failed to read provider metadata, please remove or fix it")
+			continue
+		}
+
+		if err := provider.LoadResources(); err != nil {
+			log.Error().Err(err).Str("path", pdir).Msg("failed to read provider resources, please remove or fix it")
 			continue
 		}
 

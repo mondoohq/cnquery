@@ -70,6 +70,18 @@ func (x *extensibleSchema) AllResources() map[string]*resources.ResourceInfo {
 	return x.roAggregate.Resources
 }
 
+func (x *extensibleSchema) AllDependencies() map[string]*resources.ProviderInfo {
+	x.sync.Lock()
+	defer x.sync.Unlock()
+
+	if x.lastRefreshed < LastProviderInstall {
+		x.unsafeLoadAll()
+		x.unsafeRefresh()
+	}
+
+	return x.roAggregate.Dependencies
+}
+
 func (x *extensibleSchema) Close() {
 	x.sync.Lock()
 	x.loaded = map[string]resources.ResourcesSchema{}
@@ -189,7 +201,8 @@ func (x *extensibleSchema) unsafeAdd(name string, schema resources.ResourcesSche
 
 func (x *extensibleSchema) unsafeRefresh() {
 	res := resources.Schema{
-		Resources: map[string]*resources.ResourceInfo{},
+		Resources:    map[string]*resources.ResourceInfo{},
+		Dependencies: map[string]*resources.ProviderInfo{},
 	}
 
 	for _, schema := range x.loaded {
@@ -199,6 +212,7 @@ func (x *extensibleSchema) unsafeRefresh() {
 	// Note: This object is read-only and thus must be re-created to
 	// prevent concurrency issues with access outside this struct
 	x.roAggregate = resources.Schema{
-		Resources: res.Resources,
+		Resources:    res.Resources,
+		Dependencies: res.Dependencies,
 	}
 }
