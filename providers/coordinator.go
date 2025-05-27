@@ -16,6 +16,8 @@ import (
 	"github.com/muesli/termenv"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
+	"go.mondoo.com/cnquery/v11/cli/config"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	pp "go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/recording"
@@ -103,13 +105,16 @@ func (c *coordinator) NewRuntime() *Runtime {
 }
 
 func (c *coordinator) newRuntime() *Runtime {
+	config.InitViperConfig()
+	autoUpdate := viper.GetBool("auto_update")
+
 	res := &Runtime{
 		coordinator:     c,
 		providers:       map[string]*ConnectedProvider{},
 		recording:       recording.Null{},
 		shutdownTimeout: defaultShutdownTimeout,
 		AutoUpdate: UpdateProvidersConfig{
-			Enabled: true,
+			Enabled: autoUpdate,
 		},
 	}
 
@@ -296,23 +301,14 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 		// We do not stop on failed updates. Up until some other errors happens,
 		// things are still functional. We want to consider failure, possibly
 		// with a config entry in the future.
-
-		// Only skip k8s provider updates when running in Kubernetes (docker container)
-		// unless explicitly enabled via MONDOO_AUTO_UPDATE=true in operator code
-		if provider.Name == "k8s" && os.Getenv("MONDOO_AUTO_UPDATE") == "false" {
-			log.Debug().
+		updated, err := TryProviderUpdate(provider, update)
+		if err != nil {
+			log.Error().
+				Err(err).
 				Str("provider", provider.Name).
-				Msg("skipping k8s provider update in containerized environment")
+				Msg("failed to update provider")
 		} else {
-			updated, err := TryProviderUpdate(provider, update)
-			if err != nil {
-				log.Error().
-					Err(err).
-					Str("provider", provider.Name).
-					Msg("failed to update provider")
-			} else {
-				provider = updated
-			}
+			provider = updated
 		}
 	}
 
