@@ -16,8 +16,6 @@ import (
 	"github.com/muesli/termenv"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/viper"
-	"go.mondoo.com/cnquery/v11/cli/config"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	pp "go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/recording"
@@ -48,11 +46,12 @@ var BuiltinCoreID = coreconf.Config.ID
 
 var Coordinator ProvidersCoordinator
 
-func newCoordinator() *coordinator {
+func newCoordinator(globalAutoUpdateCfg UpdateProvidersConfig) *coordinator {
 	c := &coordinator{
-		runningByID: map[string]*RunningProvider{},
-		runtimes:    map[string]*Runtime{},
-		schema:      newExtensibleSchema(),
+		runningByID:      map[string]*RunningProvider{},
+		runtimes:         map[string]*Runtime{},
+		schema:           newExtensibleSchema(),
+		autoUpdateConfig: globalAutoUpdateCfg,
 	}
 	c.schema.coordinator = c
 	return c
@@ -70,6 +69,7 @@ type coordinator struct {
 	runtimeCnt          int
 	mutex               sync.Mutex
 	schema              extensibleSchema
+	autoUpdateConfig    UpdateProvidersConfig
 }
 
 type builtinProvider struct {
@@ -105,17 +105,12 @@ func (c *coordinator) NewRuntime() *Runtime {
 }
 
 func (c *coordinator) newRuntime() *Runtime {
-	config.InitViperConfig()
-	autoUpdate := viper.GetBool("auto_update")
-
 	res := &Runtime{
 		coordinator:     c,
 		providers:       map[string]*ConnectedProvider{},
 		recording:       recording.Null{},
 		shutdownTimeout: defaultShutdownTimeout,
-		AutoUpdate: UpdateProvidersConfig{
-			Enabled: autoUpdate,
-		},
+		AutoUpdate:      c.autoUpdateConfig,
 	}
 
 	c.mutex.Lock()

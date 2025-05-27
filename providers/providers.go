@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -22,6 +23,7 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
+	"github.com/spf13/viper"
 	"github.com/ulikunitz/xz"
 	"go.mondoo.com/cnquery/v11/cli/config"
 	"go.mondoo.com/cnquery/v11/logger/zerologadapter"
@@ -44,7 +46,9 @@ var (
 	// LastProviderInstall keeps track of when the last provider installation
 	// took place relative to this runtime. It is initialized to a non-zero
 	// timestamp during this file's init() method. Timestamps are unix seconds.
-	LastProviderInstall int64
+	LastProviderInstall          int64
+	coordinatorInitializedByHost bool       // New flag
+	initMutex                    sync.Mutex // To protect Coordinator assignment
 )
 
 func init() {
@@ -61,9 +65,37 @@ func init() {
 
 	LastProviderInstall = time.Now().Unix()
 
-	// Initialize the global coordinator instance
-	coordinator := newCoordinator()
-	Coordinator = coordinator
+	initMutex.Lock()
+	defer initMutex.Unlock()
+
+	if !coordinatorInitializedByHost { // Check if host already initialized
+		log.Warn().Msg("DEPRECATED: cnquery.providers.Coordinator is being implicitly initialized. " +
+			"The host application should call InitGlobalCoordinator for proper configuration.")
+
+		viper.SetEnvPrefix("mondoo")
+		viper.AutomaticEnv()
+
+		autoUpdateEnabled := viper.GetBool("auto_update")
+
+		log.Info().
+			Bool("autoUpdateEnabled", autoUpdateEnabled).
+			Msg("cnquery.providers.init(): Implicitly initializing global Coordinator from ENV (MONDOO_AUTO_UPDATE).")
+
+		legacyCoordinatorCfg := UpdateProvidersConfig{
+			Enabled:         autoUpdateEnabled,
+			RefreshInterval: 60 * 60,
+		}
+		Coordinator = newCoordinator(legacyCoordinatorCfg)
+	}
+}
+
+func InitGlobalCoordinator(cfg UpdateProvidersConfig) {
+	initMutex.Lock()
+	defer initMutex.Unlock()
+
+	log.Info().Msgf("Host application is explicitly initializing cnquery.providers.Coordinator (autoUpdate: %v).", cfg.Enabled)
+	Coordinator = newCoordinator(cfg)
+	coordinatorInitializedByHost = true // Mark that host took over
 }
 
 type ProviderLookup struct {
