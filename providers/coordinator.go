@@ -46,11 +46,16 @@ var BuiltinCoreID = coreconf.Config.ID
 
 var Coordinator ProvidersCoordinator
 
-func newCoordinator() *coordinator {
+func newCoordinator(globalAutoUpdateCfg UpdateProvidersConfig) *coordinator {
+	log.Info().
+		Bool("global auto-update is enabled", globalAutoUpdateCfg.Enabled).
+		Msg(">>> newCoordinator")
+
 	c := &coordinator{
-		runningByID: map[string]*RunningProvider{},
-		runtimes:    map[string]*Runtime{},
-		schema:      newExtensibleSchema(),
+		runningByID:      map[string]*RunningProvider{},
+		runtimes:         map[string]*Runtime{},
+		schema:           newExtensibleSchema(),
+		autoUpdateConfig: globalAutoUpdateCfg,
 	}
 	c.schema.coordinator = c
 	return c
@@ -68,6 +73,7 @@ type coordinator struct {
 	runtimeCnt          int
 	mutex               sync.Mutex
 	schema              extensibleSchema
+	autoUpdateConfig    UpdateProvidersConfig
 }
 
 type builtinProvider struct {
@@ -108,9 +114,7 @@ func (c *coordinator) newRuntime() *Runtime {
 		providers:       map[string]*ConnectedProvider{},
 		recording:       recording.Null{},
 		shutdownTimeout: defaultShutdownTimeout,
-		AutoUpdate: UpdateProvidersConfig{
-			Enabled: true,
-		},
+		AutoUpdate:      c.autoUpdateConfig,
 	}
 
 	c.mutex.Lock()
@@ -245,6 +249,11 @@ func (c *coordinator) RemoveRuntime(runtime *Runtime) {
 }
 
 func (c *coordinator) GetRunningProvider(id string, update UpdateProvidersConfig) (*RunningProvider, error) {
+	log.Info().
+		Str("id", id).
+		Bool("update is enabled", update.Enabled).
+		Msg(">>> GetRunningProvider()")
+
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	running := c.runningByID[id]
@@ -261,6 +270,10 @@ func (c *coordinator) GetRunningProvider(id string, update UpdateProvidersConfig
 // unsafeStartProvider will start a provider and add it to the list of running providers. Must be called
 // with a mutex lock around it.
 func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfig) (*RunningProvider, error) {
+	log.Info().
+		Str("id", id).
+		Bool("update is enabled", update.Enabled).Msg(">>> unsafeStartProvider()")
+
 	if x, ok := builtinProviders[id]; ok {
 		// We don't warn for core providers, which are the only providers
 		// built into the binary (for now).

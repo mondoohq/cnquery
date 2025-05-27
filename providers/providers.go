@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -22,6 +23,7 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
+	"github.com/spf13/viper"
 	"github.com/ulikunitz/xz"
 	"go.mondoo.com/cnquery/v11/cli/config"
 	"go.mondoo.com/cnquery/v11/logger/zerologadapter"
@@ -44,7 +46,9 @@ var (
 	// LastProviderInstall keeps track of when the last provider installation
 	// took place relative to this runtime. It is initialized to a non-zero
 	// timestamp during this file's init() method. Timestamps are unix seconds.
-	LastProviderInstall int64
+	LastProviderInstall          int64
+	coordinatorInitializedByHost bool       // New flag
+	initMutex                    sync.Mutex // To protect Coordinator assignment
 )
 
 func init() {
@@ -61,9 +65,24 @@ func init() {
 
 	LastProviderInstall = time.Now().Unix()
 
-	// Initialize the global coordinator instance
-	coordinator := newCoordinator()
-	Coordinator = coordinator
+	viper.SetEnvPrefix("mondoo")
+	viper.AutomaticEnv()
+
+	autoUpdateEnabled := true
+	config.InitViperConfig()
+	if viper.IsSet("auto_update") {
+		autoUpdateEnabled = viper.GetBool("auto_update")
+	}
+
+	log.Info().
+		Bool("autoUpdateEnabled", autoUpdateEnabled).
+		Msg(">>> cnquery.providers.init(): initializing global Coordinator from ENV.")
+
+	coordinatorCfg := UpdateProvidersConfig{
+		Enabled:         autoUpdateEnabled,
+		RefreshInterval: 60 * 60,
+	}
+	Coordinator = newCoordinator(coordinatorCfg)
 }
 
 type ProviderLookup struct {
@@ -936,7 +955,9 @@ func TryProviderUpdate(provider *Provider, update UpdateProvidersConfig) (*Provi
 	log.Info().
 		Str("installed", provider.Version).
 		Str("latest", latest).
+		Bool("update is enabled", update.Enabled).
 		Msg("found a new version for '" + provider.Name + "' provider")
+
 	provider, err = installVersion(provider.Name, latest)
 	if err != nil {
 		return nil, err

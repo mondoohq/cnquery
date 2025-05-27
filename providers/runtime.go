@@ -56,6 +56,12 @@ func (c *coordinator) RuntimeWithShutdownTimeout(timeout time.Duration) *Runtime
 	return runtime
 }
 
+func (c *coordinator) RuntimeWithUpdateProvidersConfig(update UpdateProvidersConfig) *Runtime {
+	runtime := c.NewRuntime()
+	runtime.AutoUpdate = update
+	return runtime
+}
+
 type shutdownResult struct {
 	Response *plugin.ShutdownRes
 	Error    error
@@ -141,6 +147,11 @@ func (r *Runtime) setProviderConnection(c *plugin.ConnectRes, err error) {
 }
 
 func (r *Runtime) addProvider(id string) (*ConnectedProvider, error) {
+	log.Info().
+		Str("id", id).
+		Bool("update is enabled", r.AutoUpdate.Enabled).
+		Msg(">>> addProvider()")
+
 	// TODO: we need to detect only the shared running providers
 	running, err := r.coordinator.GetRunningProvider(id, r.AutoUpdate)
 	if err != nil {
