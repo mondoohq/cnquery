@@ -12,6 +12,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/id/aws"
 	"go.mondoo.com/cnquery/v11/providers/os/id/azure"
 	"go.mondoo.com/cnquery/v11/providers/os/id/gcp"
+	"go.mondoo.com/cnquery/v11/providers/os/id/ibm"
 	"go.mondoo.com/cnquery/v11/providers/os/id/vmware"
 )
 
@@ -32,6 +33,7 @@ var (
 	GCP     CloudProviderType = "GCP"
 	AZURE   CloudProviderType = "AZURE"
 	VMWARE  CloudProviderType = "VMWARE"
+	IBM     CloudProviderType = "IBM"
 )
 
 var detectors = map[CloudProviderType]detectorFunc{
@@ -39,6 +41,7 @@ var detectors = map[CloudProviderType]detectorFunc{
 	GCP:    gcp.Detect,
 	AZURE:  azure.Detect,
 	VMWARE: vmware.Detect,
+	IBM:    ibm.Detect,
 }
 
 // PlatformInfo contains platform information gathered from one of our cloud detectors.

@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package vmware
+package ibm
 
 import (
 	"strings"
@@ -10,24 +10,27 @@ import (
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/id/vmware/vmtoolsd"
+	"go.mondoo.com/cnquery/v11/providers/os/id/ibmcompute"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/smbios"
 )
 
 var identifierFilesLinux = []string{
-	"/sys/devices/virtual/dmi/id/product_name", // Expected: "VMware Virtual Platform"
-	"/sys/class/dmi/id/sys_vendor",             // Expected: "VMware, Inc."
-	// For windows, the smbios will return:                  "VMware, Inc."
+	"/sys/class/dmi/id/chassis_vendor",
+	"/sys/class/dmi/id/uevent",
+	"/sys/class/dmi/id/modalias",
 }
 
 func Detect(conn shared.Connection, pf *inventory.Platform) (string, string, []string) {
 	sysVendor := ""
-	if pf.IsFamily(inventory.FAMILY_LINUX) {
+	if pf.IsFamily(inventory.FAMILY_LINUX) && pf.Name != "aix" {
 		// Fetching the product version from the smbios manager is slow
 		// because it iterates through files we don't need to check. This
 		// is an optimization for our sshfs. Also, be aware that on linux,
 		// you may not have access to all the smbios things under /sys, so
 		// you want to make sure to only check some files for detection
+		//
+		// NOTE: The smbios implementation for AIX systems use the command
+		// `prtconf` which is exactly what we need and performant.
 		for _, identityFile := range identifierFilesLinux {
 			content, err := afero.ReadFile(conn.FileSystem(), identityFile)
 			if err == nil {
@@ -48,30 +51,23 @@ func Detect(conn shared.Connection, pf *inventory.Platform) (string, string, []s
 			log.Debug().Err(err).Msg("failed to query smbios")
 			return "", "", nil
 		}
-		// For windows we expect this to be: "VMware, Inc."
+
 		sysVendor = info.SysInfo.Vendor
 	}
 
-	if strings.Contains(sysVendor, "VMware") {
-		mdsvc, err := vmtoolsd.Resolve(conn, pf)
+	if strings.Contains(sysVendor, "IBM") {
+		mdsvc, err := ibmcompute.Resolve(conn, pf)
 		if err != nil {
 			log.Debug().Err(err).Msg("failed to get metadata resolver")
 			return "", "", nil
 		}
 		id, err := mdsvc.Identify()
 		if err == nil {
-			relatedIds := []string{}
-			if id.VCenterMOID != "" {
-				relatedIds = append(relatedIds, id.VCenterMOID)
-			}
-			if id.VSphereMOID != "" {
-				relatedIds = append(relatedIds, id.VSphereMOID)
-			}
-			return id.UUID, "", relatedIds
+			return id.InstanceID, id.InstanceName, id.PlatformMrns
 		}
 		log.Debug().Err(err).
 			Strs("platform", pf.GetFamily()).
-			Msg("failed to get VMware platform id")
+			Msg("failed to get IBM platform id")
 	}
 
 	return "", "", nil
