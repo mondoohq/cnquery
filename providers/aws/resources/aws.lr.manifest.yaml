@@ -649,6 +649,104 @@ resources:
     platform:
       name:
       - aws
+  aws.codedeploy:
+    fields:
+      applications: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.codedeploy.application:
+    fields:
+      applicationId: {}
+      applicationName: {}
+      arn: {}
+      computePlatform: {}
+      createDate: {}
+      deploymentGroups: {}
+      deployments: {}
+      linkedToGitHub: {}
+      region: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.codedeploy.deployment:
+    fields:
+      applicationName: {}
+      arn: {}
+      completeTime: {}
+      createTime: {}
+      creator: {}
+      deploymentConfigName: {}
+      deploymentGroupName: {}
+      deploymentId: {}
+      deploymentOverview: {}
+      description: {}
+      errorInformation: {}
+      ignoreApplicationStopFailures: {}
+      isRollback: {}
+      region: {}
+      revision: {}
+      rollbackInfo: {}
+      status: {}
+      targetInstances: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.codedeploy.deploymentGroup:
+    fields:
+      applicationName: {}
+      arn: {}
+      autoScalingGroups: {}
+      blueGreenDeploymentConfiguration: {}
+      computePlatform: {}
+      deploymentGroupId: {}
+      deploymentGroupName: {}
+      deploymentStyle: {}
+      deployments: {}
+      ec2TagFilters: {}
+      lastAttemptedDeployment: {}
+      lastSuccessfulDeployment: {}
+      loadBalancerInfo: {}
+      onPremisesInstanceTagFilters: {}
+      region: {}
+      serviceRoleArn: {}
+      tags: {}
+      targetRevision: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.codedeploy.deploymentgroup:
+    fields:
+      applicationName: {}
+      arn: {}
+      autoScalingGroups: {}
+      blueGreenDeploymentConfiguration: {}
+      computePlatform: {}
+      deploymentGroupId: {}
+      deploymentGroupName: {}
+      deploymentStyle: {}
+      deployments: {}
+      ec2TagFilters: {}
+      lastAttemptedDeployment: {}
+      lastSuccessfulDeployment: {}
+      loadBalancerInfo: {}
+      onPremisesInstanceTagFilters: {}
+      region: {}
+      serviceRoleArn: {}
+      tags: {}
+      targetRevision: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
   aws.config:
     docs:
       desc: |

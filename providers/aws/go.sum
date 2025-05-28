@@ -189,6 +189,8 @@ github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.50.0 h1:t/xT0VNZUj9oQmzQj
 github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.50.0/go.mod h1:uo14VBn5cNk/BPGTPz3kyLBxgpgOObgO8lmz+H7Z4Ck=
 github.com/aws/aws-sdk-go-v2/service/codebuild v1.61.0 h1:i95KOXBgI8qGelzhuDY+Q+pYwaUkIelwwEnqflpy1ZQ=
 github.com/aws/aws-sdk-go-v2/service/codebuild v1.61.0/go.mod h1:13SjlSpfNt71ZBZZqLMSy08j9jSPA9D5179dKV9RRz4=
+github.com/aws/aws-sdk-go-v2/service/codedeploy v1.30.3 h1:6gvzjZYWlzDuT/VQxetlunnHbGfQt6Sq6PeWLMQyqMo=
+github.com/aws/aws-sdk-go-v2/service/codedeploy v1.30.3/go.mod h1:32JRv9exrmbpVxDJc0aoovh4K2CxStudvLctugWBR/o=
 github.com/aws/aws-sdk-go-v2/service/configservice v1.52.3 h1:Gw9GpbCShTzWPezPKdiV8yGFbQ/yLb+NircxQUGXC0I=
 github.com/aws/aws-sdk-go-v2/service/configservice v1.52.3/go.mod h1:nJdDaoBiWBPdMaARQFA5xXHS0CHpxRzGbdp7QYqAVK0=
 github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.52.0 h1:sL+/hCtgDrWmnbEBha9DgoUt2gw0Iw8bgnh2591nBkE=
