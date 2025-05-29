@@ -286,6 +286,7 @@ func (dg *mqlAwsCodedeployDeploymentGroup) onPremisesInstanceTagFilters() ([]int
 
 func (dg *mqlAwsCodedeployDeploymentGroup) lastSuccessfulDeployment() (*mqlAwsCodedeployDeployment, error) {
 	if dg.sdkData.LastSuccessfulDeployment == nil || dg.sdkData.LastSuccessfulDeployment.DeploymentId == nil {
+		dg.LastSuccessfulDeployment = plugin.TValue[*mqlAwsCodedeployDeployment]{State: plugin.StateIsSet | plugin.StateIsNull}
 		return nil, nil
 	}
 	return getDeploymentResource(dg.MqlRuntime, dg.Region.Data, &dg.ApplicationName.Data, &dg.DeploymentGroupName.Data, dg.sdkData.LastSuccessfulDeployment.DeploymentId)
@@ -293,6 +294,7 @@ func (dg *mqlAwsCodedeployDeploymentGroup) lastSuccessfulDeployment() (*mqlAwsCo
 
 func (dg *mqlAwsCodedeployDeploymentGroup) lastAttemptedDeployment() (*mqlAwsCodedeployDeployment, error) {
 	if dg.sdkData.LastAttemptedDeployment == nil || dg.sdkData.LastAttemptedDeployment.DeploymentId == nil {
+		dg.LastAttemptedDeployment = plugin.TValue[*mqlAwsCodedeployDeployment]{State: plugin.StateIsSet | plugin.StateIsNull}
 		return nil, nil
 	}
 	return getDeploymentResource(dg.MqlRuntime, dg.Region.Data, &dg.ApplicationName.Data, &dg.DeploymentGroupName.Data, dg.sdkData.LastAttemptedDeployment.DeploymentId)
@@ -320,10 +322,7 @@ func (dg *mqlAwsCodedeployDeploymentGroup) loadBalancerInfo() (interface{}, erro
 }
 
 func (d *mqlAwsCodedeployDeployment) id() (string, error) {
-	// Deployments are identified by their ID, which is unique within an AWS account and region.
-	// Construct a synthetic ARN-like ID for uniqueness if needed, or use DeploymentId.
-	// Using DeploymentId as it's the primary identifier returned by the API for a specific deployment.
-	return d.DeploymentId.Data, nil
+	return d.Arn.Data, nil
 }
 
 type mqlAwsCodedeployDeploymentInternal struct {
@@ -382,9 +381,9 @@ func listDeployments(runtime *plugin.Runtime, region string, appName, dgName *st
 	var nextToken *string
 	for {
 		listInput := &codedeploy.ListDeploymentsInput{
-			ApplicationName: appName,
-			// DeploymentGroupName: dgName,
-			NextToken: nextToken,
+			ApplicationName:     appName,
+			DeploymentGroupName: dgName,
+			NextToken:           nextToken,
 		}
 		// Potentially filter by IncludeOnlyStatuses for active ones if desired
 		// listInput.IncludeOnlyStatuses = []codedeploytypes.DeploymentStatus{DeploymentStatusInProgress, DeploymentStatusQueued, DeploymentStatusReady}

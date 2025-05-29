@@ -3754,7 +3754,7 @@ private aws.codedeploy.deployment @defaults("deploymentId status applicationName
   // Deployment overview (counts for Pending, InProgress, Succeeded, Failed, Skipped, Ready)
   deploymentOverview() dict
   // Whether this deployment is a rollback
-  isRollback bool
+  isRollback() bool
   // Rollback information if this deployment is a rollback or was rolled back
   rollbackInfo() dict
 }

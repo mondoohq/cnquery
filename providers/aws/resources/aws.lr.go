@@ -30466,7 +30466,9 @@ func (c *mqlAwsCodedeployDeployment) GetDeploymentOverview() *plugin.TValue[inte
 }
 
 func (c *mqlAwsCodedeployDeployment) GetIsRollback() *plugin.TValue[bool] {
-	return &c.IsRollback
+	return plugin.GetOrCompute[bool](&c.IsRollback, func() (bool, error) {
+		return c.isRollback()
+	})
 }
 
 func (c *mqlAwsCodedeployDeployment) GetRollbackInfo() *plugin.TValue[interface{}] {
