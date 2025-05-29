@@ -175,7 +175,7 @@ func (a *mqlAwsCodedeployApplication) deploymentGroups() ([]interface{}, error) 
 					"region":              llx.StringData(a.Region.Data),
 				}
 
-				mqlDg, err := CreateResource(a.MqlRuntime, "aws.codedeploy.deploymentgroup", args)
+				mqlDg, err := CreateResource(a.MqlRuntime, "aws.codedeploy.deploymentGroup", args)
 				if err != nil {
 					return nil, err
 				}
