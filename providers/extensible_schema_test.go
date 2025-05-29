@@ -64,4 +64,37 @@ func TestExtensibleSchema(t *testing.T) {
 	require.Equal(t, resources.FieldPath{"v"}, filePath)
 	require.Len(t, fieldinfos, 1)
 	require.Equal(t, "first", fieldinfos[0].Provider)
+
+	// Check no dependencies
+	require.Lenf(t, s.AllDependencies(), 0, "should not have dependencies")
+
+	t.Run("with dependencies", func(t *testing.T) {
+		s.Add("third", &resources.Schema{
+			Resources: map[string]*resources.ResourceInfo{
+				"eternity": {
+					Fields: map[string]*resources.Field{
+						"iii": {Provider: "third"},
+						"x":   {Provider: "third"},
+					},
+					Provider: "third",
+				},
+			},
+			Dependencies: map[string]*resources.ProviderInfo{
+				"core": {
+					Id:   "go.mondoo.com/cnquery/v9/providers/core",
+					Name: "core",
+				},
+			},
+		})
+		info := s.Lookup("eternity")
+		require.NotNil(t, info)
+		require.Len(t, info.Others, 2)
+		providers := []string{info.Provider, info.Others[0].Provider, info.Others[1].Provider}
+		assert.ElementsMatch(t, []string{"first", "second", "third"}, providers)
+
+		// Check dependencies
+		deps := s.AllDependencies()
+		require.Len(t, deps, 1)
+		assert.Equal(t, "go.mondoo.com/cnquery/v9/providers/core", deps["core"].Id)
+	})
 }

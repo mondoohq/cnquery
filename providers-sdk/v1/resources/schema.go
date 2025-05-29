@@ -12,6 +12,7 @@ type ResourcesSchema interface {
 	LookupField(resource string, field string) (*ResourceInfo, *Field)
 	FindField(resource *ResourceInfo, field string) (FieldPath, []*Field, bool)
 	AllResources() map[string]*ResourceInfo
+	AllDependencies() map[string]*ProviderInfo
 }
 
 // Add another schema and return yourself. other may be nil.
@@ -101,6 +102,20 @@ func (s *Schema) Add(other ResourcesSchema) ResourcesSchema {
 		}
 	}
 
+	for k, v := range other.AllDependencies() {
+		if existing, ok := s.Dependencies[k]; ok {
+			if v.Name != "" {
+				existing.Name = v.Name
+			}
+		} else {
+			pi := &ProviderInfo{
+				Id:   v.Id,
+				Name: v.Name,
+			}
+			s.Dependencies[k] = pi
+		}
+	}
+
 	return s
 }
 
@@ -162,4 +177,8 @@ func (s *Schema) FindField(resource *ResourceInfo, field string) (FieldPath, []*
 
 func (s *Schema) AllResources() map[string]*ResourceInfo {
 	return s.Resources
+}
+
+func (s *Schema) AllDependencies() map[string]*ProviderInfo {
+	return s.Dependencies
 }
