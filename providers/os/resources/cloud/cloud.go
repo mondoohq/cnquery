@@ -41,6 +41,8 @@ func Resolve(conn shared.Connection) (OSCloud, error) {
 		return &azure{conn}, nil
 	case clouddetect.VMWARE:
 		return &vmware{conn}, nil
+	case clouddetect.IBM:
+		return &ibm{conn}, nil
 	default:
 		return &none{}, nil
 	}

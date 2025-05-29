@@ -20,7 +20,7 @@ const (
 
 func Detect(conn shared.Connection, p *inventory.Platform) (string, string, []string) {
 	productName := ""
-	if p.IsFamily("linux") {
+	if p.IsFamily(inventory.FAMILY_LINUX) {
 		// Fetching the product version from the smbios manager is slow
 		// because it iterates through files we don't need to check. This
 		// is an optimization for our sshfs. Also, be aware that on linux,

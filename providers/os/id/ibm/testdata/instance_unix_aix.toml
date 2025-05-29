@@ -1,0 +1,244 @@
+[commands."uname -s"]
+stdout = "AIX"
+
+[commands."uname -m"]
+stdout = "00CC00A04B00"
+
+[commands."uname -rvp"]
+stdout = "3 7 powerpc"
+
+[commands."oslevel -s"]
+stdout = "7300-03-00-2446"
+
+[commands."prtconf"]
+stdout = """
+System Model: IBM,9009-22A
+Machine Serial Number: 78C00A0
+Processor Type: PowerPC_POWER9
+Processor Implementation Mode: POWER 9
+Processor Version: PV_9_Compat
+Number Of Processors: 1
+Processor Clock Speed: 2500 MHz
+CPU Type: 64-bit
+Kernel Type: 64-bit
+LPAR Info: 37 ans-4-51e59a83-000373d8
+Memory Size: 2048 MB
+Good Memory Size: 2048 MB
+Platform Firmware level: VL950_168
+Firmware Version: IBM,FW950.C1 (VL950_168)
+Console Login: enable
+Auto Restart: true
+Full Core: false
+NX Crypto Acceleration: Capable and Enabled
+In-Core Crypto Acceleration: Capable, but not Enabled
+"""
+
+[commands."curl -H \"Metadata-Flavor: ibm\" -X PUT \"http://169.254.169.254/instance_identity/v1/token?version=2025-05-20\" -d '{}'"]
+stdout = """
+{"access_token":"MYTOKEN","created_at":"2025-05-28T20:14:51.056Z","expires_at":"2025-05-28T20:19:51.056Z","expires_in":300}
+"""
+
+[commands."curl -H \"Authorization: Bearer MYTOKEN\" -v http://169.254.169.254/metadata/v1/instance?version=2025-05-20"]
+stdout = """
+{
+  "availability_policy": {
+    "host_failure": "restart"
+  },
+  "bandwidth": 4000,
+  "boot_volume_attachment": {
+    "device": {
+      "id": "0767-68e2ea44-39bf-46a8-8f5c-f11175e3629b-wp2qb"
+    },
+    "id": "0767-68e2ea44-39bf-46a8-8f5c-f11175e3629b",
+    "name": "hayride-rumble-juggling-blur",
+    "volume": {
+      "crn": "crn:v1:bluemix:public:is:us-east-2:a/bbb1e1386b1c419f929ecf7499b20ab6::volume:r014-d61682bc-d86e-419b-a313-b5c83fce9d50",
+      "id": "r014-d61682bc-d86e-419b-a313-b5c83fce9d50",
+      "name": "salim-test-boot-1748376813000",
+      "resource_type": "volume"
+    }
+  },
+  "cluster_network_attachments": [],
+  "confidential_compute_mode": "disabled",
+  "created_at": "2025-05-27T20:15:28.000Z",
+  "crn": "crn:v1:bluemix:public:is:us-east-2:a/bbb1e1386b1c419f929ecf7499b20ab6::instance:0767_596409db-cb61-4d33-9550-6b86b503ed12",
+  "disks": [],
+  "enable_secure_boot": false,
+  "health_reasons": [],
+  "health_state": "ok",
+  "id": "0767_596409db-cb61-4d33-9550-6b86b503ed12",
+  "image": {
+    "crn": "crn:v1:bluemix:public:is:us-east:a/811f8abfbd32425597dc7ba40da98fa6::image:r014-a2cb25b9-9f8e-4e84-b2a3-d931f557e10d",
+    "id": "r014-a2cb25b9-9f8e-4e84-b2a3-d931f557e10d",
+    "name": "ibm-centos-stream-9-amd64-10",
+    "resource_type": "image"
+  },
+  "lifecycle_reasons": [],
+  "lifecycle_state": "stable",
+  "memory": 8,
+  "metadata_service": {
+    "enabled": true,
+    "protocol": "http",
+    "response_hop_limit": 1
+  },
+  "name": "salim-test",
+  "network_attachments": [
+    {
+      "id": "0767-fdba0aee-7016-499d-977b-043d81e52c70",
+      "name": "eth0",
+      "primary_ip": {
+        "address": "10.241.64.4",
+        "id": "0767-74cad75f-3215-4388-b3e8-c570df6a71c5",
+        "name": "ergonomic-sneak-line-region",
+        "resource_type": "subnet_reserved_ip"
+      },
+      "resource_type": "instance_network_attachment",
+      "subnet": {
+        "crn": "crn:v1:bluemix:public:is:us-east-2:a/bbb1e1386b1c419f929ecf7499b20ab6::subnet:0767-a714c3db-5bc7-4199-8408-1e68ac45bceb",
+        "id": "0767-a714c3db-5bc7-4199-8408-1e68ac45bceb",
+        "name": "sn-20250515-02",
+        "resource_type": "subnet"
+      },
+      "virtual_network_interface": {
+        "crn": "crn:v1:bluemix:public:is:us-east-2:a/bbb1e1386b1c419f929ecf7499b20ab6::virtual-network-interface:0767-9b9e77ac-d0d9-4cf6-bdaf-fd7757f2d91b",
+        "id": "0767-9b9e77ac-d0d9-4cf6-bdaf-fd7757f2d91b",
+        "name": "stipulate-fetch-repeater-swear",
+        "resource_type": "virtual_network_interface"
+      }
+    },
+    {
+      "id": "0767-51be678a-59e6-4983-af90-ef5dc10bcd59",
+      "name": "eth1",
+      "primary_ip": {
+        "address": "10.241.64.5",
+        "id": "0767-aed82f99-03ee-4d1a-b5cf-93d2a00c2598",
+        "name": "unwoven-smilingly-chair-imaging",
+        "resource_type": "subnet_reserved_ip"
+      },
+      "resource_type": "instance_network_attachment",
+      "subnet": {
+        "crn": "crn:v1:bluemix:public:is:us-east-2:a/bbb1e1386b1c419f929ecf7499b20ab6::subnet:0767-a714c3db-5bc7-4199-8408-1e68ac45bceb",
+        "id": "0767-a714c3db-5bc7-4199-8408-1e68ac45bceb",
+        "name": "sn-20250515-02",
+        "resource_type": "subnet"
+      },
+      "virtual_network_interface": {
+        "crn": "crn:v1:bluemix:public:is:us-east-2:a/bbb1e1386b1c419f929ecf7499b20ab6::virtual-network-interface:0767-ded1545d-3fac-4f82-8eac-167352025ddd",
+        "id": "0767-ded1545d-3fac-4f82-8eac-167352025ddd",
+        "name": "rope-flounder-vending-epidural",
+        "resource_type": "virtual_network_interface"
+      }
+    }
+  ],
+  "network_interfaces": [
+    {
+      "id": "0767-fdba0aee-7016-499d-977b-043d81e52c70",
+      "name": "eth0",
+      "primary_ipv4_address": "10.241.64.4",
+      "resource_type": "network_interface",
+      "subnet": {
+        "crn": "crn:v1:bluemix:public:is:us-east-2:a/bbb1e1386b1c419f929ecf7499b20ab6::subnet:0767-a714c3db-5bc7-4199-8408-1e68ac45bceb",
+        "id": "0767-a714c3db-5bc7-4199-8408-1e68ac45bceb",
+        "name": "sn-20250515-02",
+        "resource_type": "subnet"
+      }
+    },
+    {
+      "id": "0767-51be678a-59e6-4983-af90-ef5dc10bcd59",
+      "name": "eth1",
+      "primary_ipv4_address": "10.241.64.5",
+      "resource_type": "network_interface",
+      "subnet": {
+        "crn": "crn:v1:bluemix:public:is:us-east-2:a/bbb1e1386b1c419f929ecf7499b20ab6::subnet:0767-a714c3db-5bc7-4199-8408-1e68ac45bceb",
+        "id": "0767-a714c3db-5bc7-4199-8408-1e68ac45bceb",
+        "name": "sn-20250515-02",
+        "resource_type": "subnet"
+      }
+    }
+  ],
+  "numa_count": 1,
+  "primary_network_attachment": {
+    "id": "0767-fdba0aee-7016-499d-977b-043d81e52c70",
+    "name": "eth0",
+    "primary_ip": {
+      "address": "10.241.64.4",
+      "id": "0767-74cad75f-3215-4388-b3e8-c570df6a71c5",
+      "name": "ergonomic-sneak-line-region",
+      "resource_type": "subnet_reserved_ip"
+    },
+    "resource_type": "instance_network_attachment",
+    "subnet": {
+      "crn": "crn:v1:bluemix:public:is:us-east-2:a/bbb1e1386b1c419f929ecf7499b20ab6::subnet:0767-a714c3db-5bc7-4199-8408-1e68ac45bceb",
+      "id": "0767-a714c3db-5bc7-4199-8408-1e68ac45bceb",
+      "name": "sn-20250515-02",
+      "resource_type": "subnet"
+    },
+    "virtual_network_interface": {
+      "crn": "crn:v1:bluemix:public:is:us-east-2:a/bbb1e1386b1c419f929ecf7499b20ab6::virtual-network-interface:0767-9b9e77ac-d0d9-4cf6-bdaf-fd7757f2d91b",
+      "id": "0767-9b9e77ac-d0d9-4cf6-bdaf-fd7757f2d91b",
+      "name": "stipulate-fetch-repeater-swear",
+      "resource_type": "virtual_network_interface"
+    }
+  },
+  "primary_network_interface": {
+    "id": "0767-fdba0aee-7016-499d-977b-043d81e52c70",
+    "name": "eth0",
+    "primary_ipv4_address": "10.241.64.4",
+    "resource_type": "network_interface",
+    "subnet": {
+      "crn": "crn:v1:bluemix:public:is:us-east-2:a/bbb1e1386b1c419f929ecf7499b20ab6::subnet:0767-a714c3db-5bc7-4199-8408-1e68ac45bceb",
+      "id": "0767-a714c3db-5bc7-4199-8408-1e68ac45bceb",
+      "name": "sn-20250515-02",
+      "resource_type": "subnet"
+    }
+  },
+  "profile": {
+    "name": "bx2-2x8",
+    "resource_type": "instance_profile"
+  },
+  "reservation_affinity": {
+    "policy": "automatic",
+    "pool": []
+  },
+  "resource_group": {
+    "id": "ba706c0ae6a34b5b80de06375ee2ea9e",
+    "name": "Default"
+  },
+  "resource_type": "instance",
+  "startable": true,
+  "status": "running",
+  "status_reasons": [],
+  "total_network_bandwidth": 3000,
+  "total_volume_bandwidth": 1000,
+  "vcpu": {
+    "architecture": "amd64",
+    "count": 2,
+    "manufacturer": "intel"
+  },
+  "volume_attachments": [
+    {
+      "device": {
+        "id": "0767-68e2ea44-39bf-46a8-8f5c-f11175e3629b-wp2qb"
+      },
+      "id": "0767-68e2ea44-39bf-46a8-8f5c-f11175e3629b",
+      "name": "hayride-rumble-juggling-blur",
+      "volume": {
+        "crn": "crn:v1:bluemix:public:is:us-east-2:a/bbb1e1386b1c419f929ecf7499b20ab6::volume:r014-d61682bc-d86e-419b-a313-b5c83fce9d50",
+        "id": "r014-d61682bc-d86e-419b-a313-b5c83fce9d50",
+        "name": "salim-test-boot-1748376813000",
+        "resource_type": "volume"
+      }
+    }
+  ],
+  "vpc": {
+    "crn": "crn:v1:bluemix:public:is:us-east:a/bbb1e1386b1c419f929ecf7499b20ab6::vpc:r014-70f79485-7f94-4158-bb20-32b64b5dc1e9",
+    "id": "r014-70f79485-7f94-4158-bb20-32b64b5dc1e9",
+    "name": "sample-vpc",
+    "resource_type": "vpc"
+  },
+  "zone": {
+    "name": "us-east-2"
+  }
+}
+"""
+
