@@ -662,7 +662,6 @@ resources:
       applicationName: {}
       arn: {}
       computePlatform: {}
-      createDate: {}
       createdAt: {}
       deploymentGroups: {}
       deployments: {}
