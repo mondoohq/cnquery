@@ -3648,3 +3648,113 @@ private aws.timestream.liveanalytics.table @defaults("name region") {
   // Retention duration properties for the table
   retentionProperties dict
 }
+
+// AWS CodeDeploy
+aws.codedeploy {
+  // List of CodeDeploy applications across all enabled regions
+  applications() []aws.codedeploy.application
+}
+
+// AWS CodeDeploy Application
+private aws.codedeploy.application @defaults("applicationName computePlatform createdAt region") {
+  // ARN of the application
+  arn string
+  // ID of the application
+  applicationId string
+  // Name of the application
+  applicationName string
+  // Compute platform of the application (Server, Lambda, or ECS)
+  computePlatform string
+  // Time the application was created
+  createdAt time
+  // Whether the application is linked to a GitHub account
+  linkedToGitHub bool
+  // Tags for the application
+  tags() map[string]string
+  // List of deployment groups for this application
+  deploymentGroups() []aws.codedeploy.deploymentGroup
+  // List of deployments for this application
+  deployments() []aws.codedeploy.deployment
+  // Region of the application
+  region string
+}
+
+// AWS CodeDeploy Deployment Group
+private aws.codedeploy.deploymentGroup @defaults("deploymentGroupName computePlatform deploymentGroupId region") {
+  // Application name this deployment group belongs to
+  applicationName string
+  // ARN of the deployment group
+  arn string
+  // ID of the deployment group
+  deploymentGroupId string
+  // Name of the deployment group
+  deploymentGroupName string
+  // Compute platform of the deployment group (Server, Lambda, or ECS)
+  computePlatform string
+  // Service role ARN for the deployment group
+  serviceRoleArn string
+  // Target revision for the deployment group (includes type, location, etc.)
+  targetRevision() dict
+  // Tags for the deployment group
+  tags() map[string]string
+  // Region of the deployment group
+  region string
+  // List of deployments for this deployment group
+  deployments() []aws.codedeploy.deployment
+  // Auto scaling groups associated with the deployment group
+  autoScalingGroups() []aws.autoscaling.group
+  // EC2 tag filters for the deployment group
+  ec2TagFilters() []dict
+  // On-premises instance tag filters for the deployment group
+  onPremisesInstanceTagFilters() []dict
+  // Last successful deployment information
+  lastSuccessfulDeployment() aws.codedeploy.deployment
+  // Last attempted deployment information
+  lastAttemptedDeployment() aws.codedeploy.deployment
+  // Deployment style (BLUE_GREEN or IN_PLACE)
+  deploymentStyle() dict
+  // Blue/green deployment configuration
+  blueGreenDeploymentConfiguration() dict
+  // Load balancer info
+  loadBalancerInfo() dict
+}
+
+// AWS CodeDeploy Deployment
+private aws.codedeploy.deployment @defaults("deploymentId status applicationName deploymentGroupName createdAt region") {
+  // Application name for the deployment
+  applicationName string
+  // Deployment ID
+  deploymentId string
+  // ARN of the deployment (Note: Deployments themselves don't have ARNs, this will be a synthetic ID or the deploymentId itself)
+  arn string
+  // Status of the deployment (Created, Queued, InProgress, Succeeded, Failed, Stopped, Ready)
+  status string
+  // Deployment group name
+  deploymentGroupName string
+  // Deployment configuration name
+  deploymentConfigName string
+  // Time the deployment was created
+  createdAt time
+  // Time the deployment was completed
+  compleatedAt time
+  // Description of the deployment
+  description string
+  // Creator of the deployment (user, autoscaling, codeDeployRollback, etc.)
+  creator string
+  // Whether to ignore application stop failures
+  ignoreApplicationStopFailures bool
+  // Information about the instances targeted by the deployment (complex structure, represented as dict)
+  targetInstances() dict
+  // Revision information for the deployment (S3 location, GitHub location, etc.)
+  revision() dict
+  // Region of the deployment
+  region string
+  // Error information, if any
+  errorInformation() dict
+  // Deployment overview (counts for Pending, InProgress, Succeeded, Failed, Skipped, Ready)
+  deploymentOverview() dict
+  // Whether this deployment is a rollback
+  isRollback bool
+  // Rollback information if this deployment is a rollback or was rolled back
+  rollbackInfo() dict
+}

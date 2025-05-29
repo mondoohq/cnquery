@@ -786,6 +786,22 @@ func init() {
 			// to override args, implement: initAwsTimestreamLiveanalyticsTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsTimestreamLiveanalyticsTable,
 		},
+		"aws.codedeploy": {
+			// to override args, implement: initAwsCodedeploy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCodedeploy,
+		},
+		"aws.codedeploy.application": {
+			Init: initAwsCodedeployApplication,
+			Create: createAwsCodedeployApplication,
+		},
+		"aws.codedeploy.deploymentGroup": {
+			// to override args, implement: initAwsCodedeployDeploymentGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCodedeployDeploymentGroup,
+		},
+		"aws.codedeploy.deployment": {
+			// to override args, implement: initAwsCodedeployDeployment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCodedeployDeployment,
+		},
 	}
 }
 
@@ -5143,6 +5159,147 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.timestream.liveanalytics.table.retentionProperties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsTimestreamLiveanalyticsTable).GetRetentionProperties()).ToDataRes(types.Dict)
+	},
+	"aws.codedeploy.applications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeploy).GetApplications()).ToDataRes(types.Array(types.Resource("aws.codedeploy.application")))
+	},
+	"aws.codedeploy.application.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployApplication).GetArn()).ToDataRes(types.String)
+	},
+	"aws.codedeploy.application.applicationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployApplication).GetApplicationId()).ToDataRes(types.String)
+	},
+	"aws.codedeploy.application.applicationName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployApplication).GetApplicationName()).ToDataRes(types.String)
+	},
+	"aws.codedeploy.application.computePlatform": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployApplication).GetComputePlatform()).ToDataRes(types.String)
+	},
+	"aws.codedeploy.application.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployApplication).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.codedeploy.application.linkedToGitHub": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployApplication).GetLinkedToGitHub()).ToDataRes(types.Bool)
+	},
+	"aws.codedeploy.application.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployApplication).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.codedeploy.application.deploymentGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployApplication).GetDeploymentGroups()).ToDataRes(types.Array(types.Resource("aws.codedeploy.deploymentGroup")))
+	},
+	"aws.codedeploy.application.deployments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployApplication).GetDeployments()).ToDataRes(types.Array(types.Resource("aws.codedeploy.deployment")))
+	},
+	"aws.codedeploy.application.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployApplication).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.codedeploy.deploymentGroup.applicationName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeploymentGroup).GetApplicationName()).ToDataRes(types.String)
+	},
+	"aws.codedeploy.deploymentGroup.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeploymentGroup).GetArn()).ToDataRes(types.String)
+	},
+	"aws.codedeploy.deploymentGroup.deploymentGroupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeploymentGroup).GetDeploymentGroupId()).ToDataRes(types.String)
+	},
+	"aws.codedeploy.deploymentGroup.deploymentGroupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeploymentGroup).GetDeploymentGroupName()).ToDataRes(types.String)
+	},
+	"aws.codedeploy.deploymentGroup.computePlatform": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeploymentGroup).GetComputePlatform()).ToDataRes(types.String)
+	},
+	"aws.codedeploy.deploymentGroup.serviceRoleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeploymentGroup).GetServiceRoleArn()).ToDataRes(types.String)
+	},
+	"aws.codedeploy.deploymentGroup.targetRevision": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeploymentGroup).GetTargetRevision()).ToDataRes(types.Dict)
+	},
+	"aws.codedeploy.deploymentGroup.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeploymentGroup).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.codedeploy.deploymentGroup.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeploymentGroup).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.codedeploy.deploymentGroup.deployments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeploymentGroup).GetDeployments()).ToDataRes(types.Array(types.Resource("aws.codedeploy.deployment")))
+	},
+	"aws.codedeploy.deploymentGroup.autoScalingGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeploymentGroup).GetAutoScalingGroups()).ToDataRes(types.Array(types.Resource("aws.autoscaling.group")))
+	},
+	"aws.codedeploy.deploymentGroup.ec2TagFilters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeploymentGroup).GetEc2TagFilters()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.codedeploy.deploymentGroup.onPremisesInstanceTagFilters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeploymentGroup).GetOnPremisesInstanceTagFilters()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.codedeploy.deploymentGroup.lastSuccessfulDeployment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeploymentGroup).GetLastSuccessfulDeployment()).ToDataRes(types.Resource("aws.codedeploy.deployment"))
+	},
+	"aws.codedeploy.deploymentGroup.lastAttemptedDeployment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeploymentGroup).GetLastAttemptedDeployment()).ToDataRes(types.Resource("aws.codedeploy.deployment"))
+	},
+	"aws.codedeploy.deploymentGroup.deploymentStyle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeploymentGroup).GetDeploymentStyle()).ToDataRes(types.Dict)
+	},
+	"aws.codedeploy.deploymentGroup.blueGreenDeploymentConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeploymentGroup).GetBlueGreenDeploymentConfiguration()).ToDataRes(types.Dict)
+	},
+	"aws.codedeploy.deploymentGroup.loadBalancerInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeploymentGroup).GetLoadBalancerInfo()).ToDataRes(types.Dict)
+	},
+	"aws.codedeploy.deployment.applicationName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeployment).GetApplicationName()).ToDataRes(types.String)
+	},
+	"aws.codedeploy.deployment.deploymentId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeployment).GetDeploymentId()).ToDataRes(types.String)
+	},
+	"aws.codedeploy.deployment.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeployment).GetArn()).ToDataRes(types.String)
+	},
+	"aws.codedeploy.deployment.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeployment).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.codedeploy.deployment.deploymentGroupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeployment).GetDeploymentGroupName()).ToDataRes(types.String)
+	},
+	"aws.codedeploy.deployment.deploymentConfigName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeployment).GetDeploymentConfigName()).ToDataRes(types.String)
+	},
+	"aws.codedeploy.deployment.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeployment).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.codedeploy.deployment.compleatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeployment).GetCompleatedAt()).ToDataRes(types.Time)
+	},
+	"aws.codedeploy.deployment.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeployment).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.codedeploy.deployment.creator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeployment).GetCreator()).ToDataRes(types.String)
+	},
+	"aws.codedeploy.deployment.ignoreApplicationStopFailures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeployment).GetIgnoreApplicationStopFailures()).ToDataRes(types.Bool)
+	},
+	"aws.codedeploy.deployment.targetInstances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeployment).GetTargetInstances()).ToDataRes(types.Dict)
+	},
+	"aws.codedeploy.deployment.revision": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeployment).GetRevision()).ToDataRes(types.Dict)
+	},
+	"aws.codedeploy.deployment.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeployment).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.codedeploy.deployment.errorInformation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeployment).GetErrorInformation()).ToDataRes(types.Dict)
+	},
+	"aws.codedeploy.deployment.deploymentOverview": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeployment).GetDeploymentOverview()).ToDataRes(types.Dict)
+	},
+	"aws.codedeploy.deployment.isRollback": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeployment).GetIsRollback()).ToDataRes(types.Bool)
+	},
+	"aws.codedeploy.deployment.rollbackInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeployment).GetRollbackInfo()).ToDataRes(types.Dict)
 	},
 }
 
@@ -11642,6 +11799,210 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.timestream.liveanalytics.table.retentionProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsTimestreamLiveanalyticsTable).RetentionProperties, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsCodedeploy).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.codedeploy.applications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeploy).Applications, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.application.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsCodedeployApplication).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.codedeploy.application.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployApplication).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.application.applicationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployApplication).ApplicationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.application.applicationName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployApplication).ApplicationName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.application.computePlatform": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployApplication).ComputePlatform, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.application.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployApplication).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.application.linkedToGitHub": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployApplication).LinkedToGitHub, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.application.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployApplication).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.application.deploymentGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployApplication).DeploymentGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.application.deployments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployApplication).Deployments, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.application.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployApplication).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deploymentGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsCodedeployDeploymentGroup).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.codedeploy.deploymentGroup.applicationName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeploymentGroup).ApplicationName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deploymentGroup.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeploymentGroup).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deploymentGroup.deploymentGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeploymentGroup).DeploymentGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deploymentGroup.deploymentGroupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeploymentGroup).DeploymentGroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deploymentGroup.computePlatform": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeploymentGroup).ComputePlatform, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deploymentGroup.serviceRoleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeploymentGroup).ServiceRoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deploymentGroup.targetRevision": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeploymentGroup).TargetRevision, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deploymentGroup.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeploymentGroup).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deploymentGroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeploymentGroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deploymentGroup.deployments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeploymentGroup).Deployments, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deploymentGroup.autoScalingGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeploymentGroup).AutoScalingGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deploymentGroup.ec2TagFilters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeploymentGroup).Ec2TagFilters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deploymentGroup.onPremisesInstanceTagFilters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeploymentGroup).OnPremisesInstanceTagFilters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deploymentGroup.lastSuccessfulDeployment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeploymentGroup).LastSuccessfulDeployment, ok = plugin.RawToTValue[*mqlAwsCodedeployDeployment](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deploymentGroup.lastAttemptedDeployment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeploymentGroup).LastAttemptedDeployment, ok = plugin.RawToTValue[*mqlAwsCodedeployDeployment](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deploymentGroup.deploymentStyle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeploymentGroup).DeploymentStyle, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deploymentGroup.blueGreenDeploymentConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeploymentGroup).BlueGreenDeploymentConfiguration, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deploymentGroup.loadBalancerInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeploymentGroup).LoadBalancerInfo, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deployment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsCodedeployDeployment).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.codedeploy.deployment.applicationName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeployment).ApplicationName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deployment.deploymentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeployment).DeploymentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deployment.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeployment).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deployment.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeployment).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deployment.deploymentGroupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeployment).DeploymentGroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deployment.deploymentConfigName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeployment).DeploymentConfigName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deployment.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeployment).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deployment.compleatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeployment).CompleatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deployment.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeployment).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deployment.creator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeployment).Creator, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deployment.ignoreApplicationStopFailures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeployment).IgnoreApplicationStopFailures, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deployment.targetInstances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeployment).TargetInstances, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deployment.revision": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeployment).Revision, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deployment.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeployment).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deployment.errorInformation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeployment).ErrorInformation, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deployment.deploymentOverview": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeployment).DeploymentOverview, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deployment.isRollback": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeployment).IsRollback, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deployment.rollbackInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeployment).RollbackInfo, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 }
@@ -29591,4 +29952,525 @@ func (c *mqlAwsTimestreamLiveanalyticsTable) GetMagneticStoreWriteProperties() *
 
 func (c *mqlAwsTimestreamLiveanalyticsTable) GetRetentionProperties() *plugin.TValue[interface{}] {
 	return &c.RetentionProperties
+}
+
+// mqlAwsCodedeploy for the aws.codedeploy resource
+type mqlAwsCodedeploy struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsCodedeployInternal it will be used here
+	Applications plugin.TValue[[]interface{}]
+}
+
+// createAwsCodedeploy creates a new instance of this resource
+func createAwsCodedeploy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCodedeploy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.codedeploy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCodedeploy) MqlName() string {
+	return "aws.codedeploy"
+}
+
+func (c *mqlAwsCodedeploy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCodedeploy) GetApplications() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Applications, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.codedeploy", c.__id, "applications")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.applications()
+	})
+}
+
+// mqlAwsCodedeployApplication for the aws.codedeploy.application resource
+type mqlAwsCodedeployApplication struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsCodedeployApplicationInternal it will be used here
+	Arn plugin.TValue[string]
+	ApplicationId plugin.TValue[string]
+	ApplicationName plugin.TValue[string]
+	ComputePlatform plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
+	LinkedToGitHub plugin.TValue[bool]
+	Tags plugin.TValue[map[string]interface{}]
+	DeploymentGroups plugin.TValue[[]interface{}]
+	Deployments plugin.TValue[[]interface{}]
+	Region plugin.TValue[string]
+}
+
+// createAwsCodedeployApplication creates a new instance of this resource
+func createAwsCodedeployApplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCodedeployApplication{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.codedeploy.application", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCodedeployApplication) MqlName() string {
+	return "aws.codedeploy.application"
+}
+
+func (c *mqlAwsCodedeployApplication) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCodedeployApplication) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsCodedeployApplication) GetApplicationId() *plugin.TValue[string] {
+	return &c.ApplicationId
+}
+
+func (c *mqlAwsCodedeployApplication) GetApplicationName() *plugin.TValue[string] {
+	return &c.ApplicationName
+}
+
+func (c *mqlAwsCodedeployApplication) GetComputePlatform() *plugin.TValue[string] {
+	return &c.ComputePlatform
+}
+
+func (c *mqlAwsCodedeployApplication) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsCodedeployApplication) GetLinkedToGitHub() *plugin.TValue[bool] {
+	return &c.LinkedToGitHub
+}
+
+func (c *mqlAwsCodedeployApplication) GetTags() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Tags, func() (map[string]interface{}, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsCodedeployApplication) GetDeploymentGroups() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.DeploymentGroups, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.codedeploy.application", c.__id, "deploymentGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.deploymentGroups()
+	})
+}
+
+func (c *mqlAwsCodedeployApplication) GetDeployments() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Deployments, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.codedeploy.application", c.__id, "deployments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.deployments()
+	})
+}
+
+func (c *mqlAwsCodedeployApplication) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsCodedeployDeploymentGroup for the aws.codedeploy.deploymentGroup resource
+type mqlAwsCodedeployDeploymentGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlAwsCodedeployDeploymentGroupInternal
+	ApplicationName plugin.TValue[string]
+	Arn plugin.TValue[string]
+	DeploymentGroupId plugin.TValue[string]
+	DeploymentGroupName plugin.TValue[string]
+	ComputePlatform plugin.TValue[string]
+	ServiceRoleArn plugin.TValue[string]
+	TargetRevision plugin.TValue[interface{}]
+	Tags plugin.TValue[map[string]interface{}]
+	Region plugin.TValue[string]
+	Deployments plugin.TValue[[]interface{}]
+	AutoScalingGroups plugin.TValue[[]interface{}]
+	Ec2TagFilters plugin.TValue[[]interface{}]
+	OnPremisesInstanceTagFilters plugin.TValue[[]interface{}]
+	LastSuccessfulDeployment plugin.TValue[*mqlAwsCodedeployDeployment]
+	LastAttemptedDeployment plugin.TValue[*mqlAwsCodedeployDeployment]
+	DeploymentStyle plugin.TValue[interface{}]
+	BlueGreenDeploymentConfiguration plugin.TValue[interface{}]
+	LoadBalancerInfo plugin.TValue[interface{}]
+}
+
+// createAwsCodedeployDeploymentGroup creates a new instance of this resource
+func createAwsCodedeployDeploymentGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCodedeployDeploymentGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.codedeploy.deploymentGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCodedeployDeploymentGroup) MqlName() string {
+	return "aws.codedeploy.deploymentGroup"
+}
+
+func (c *mqlAwsCodedeployDeploymentGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCodedeployDeploymentGroup) GetApplicationName() *plugin.TValue[string] {
+	return &c.ApplicationName
+}
+
+func (c *mqlAwsCodedeployDeploymentGroup) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsCodedeployDeploymentGroup) GetDeploymentGroupId() *plugin.TValue[string] {
+	return &c.DeploymentGroupId
+}
+
+func (c *mqlAwsCodedeployDeploymentGroup) GetDeploymentGroupName() *plugin.TValue[string] {
+	return &c.DeploymentGroupName
+}
+
+func (c *mqlAwsCodedeployDeploymentGroup) GetComputePlatform() *plugin.TValue[string] {
+	return &c.ComputePlatform
+}
+
+func (c *mqlAwsCodedeployDeploymentGroup) GetServiceRoleArn() *plugin.TValue[string] {
+	return &c.ServiceRoleArn
+}
+
+func (c *mqlAwsCodedeployDeploymentGroup) GetTargetRevision() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.TargetRevision, func() (interface{}, error) {
+		return c.targetRevision()
+	})
+}
+
+func (c *mqlAwsCodedeployDeploymentGroup) GetTags() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Tags, func() (map[string]interface{}, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsCodedeployDeploymentGroup) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsCodedeployDeploymentGroup) GetDeployments() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Deployments, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.codedeploy.deploymentGroup", c.__id, "deployments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.deployments()
+	})
+}
+
+func (c *mqlAwsCodedeployDeploymentGroup) GetAutoScalingGroups() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.AutoScalingGroups, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.codedeploy.deploymentGroup", c.__id, "autoScalingGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.autoScalingGroups()
+	})
+}
+
+func (c *mqlAwsCodedeployDeploymentGroup) GetEc2TagFilters() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Ec2TagFilters, func() ([]interface{}, error) {
+		return c.ec2TagFilters()
+	})
+}
+
+func (c *mqlAwsCodedeployDeploymentGroup) GetOnPremisesInstanceTagFilters() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.OnPremisesInstanceTagFilters, func() ([]interface{}, error) {
+		return c.onPremisesInstanceTagFilters()
+	})
+}
+
+func (c *mqlAwsCodedeployDeploymentGroup) GetLastSuccessfulDeployment() *plugin.TValue[*mqlAwsCodedeployDeployment] {
+	return plugin.GetOrCompute[*mqlAwsCodedeployDeployment](&c.LastSuccessfulDeployment, func() (*mqlAwsCodedeployDeployment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.codedeploy.deploymentGroup", c.__id, "lastSuccessfulDeployment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCodedeployDeployment), nil
+			}
+		}
+
+		return c.lastSuccessfulDeployment()
+	})
+}
+
+func (c *mqlAwsCodedeployDeploymentGroup) GetLastAttemptedDeployment() *plugin.TValue[*mqlAwsCodedeployDeployment] {
+	return plugin.GetOrCompute[*mqlAwsCodedeployDeployment](&c.LastAttemptedDeployment, func() (*mqlAwsCodedeployDeployment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.codedeploy.deploymentGroup", c.__id, "lastAttemptedDeployment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCodedeployDeployment), nil
+			}
+		}
+
+		return c.lastAttemptedDeployment()
+	})
+}
+
+func (c *mqlAwsCodedeployDeploymentGroup) GetDeploymentStyle() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.DeploymentStyle, func() (interface{}, error) {
+		return c.deploymentStyle()
+	})
+}
+
+func (c *mqlAwsCodedeployDeploymentGroup) GetBlueGreenDeploymentConfiguration() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.BlueGreenDeploymentConfiguration, func() (interface{}, error) {
+		return c.blueGreenDeploymentConfiguration()
+	})
+}
+
+func (c *mqlAwsCodedeployDeploymentGroup) GetLoadBalancerInfo() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.LoadBalancerInfo, func() (interface{}, error) {
+		return c.loadBalancerInfo()
+	})
+}
+
+// mqlAwsCodedeployDeployment for the aws.codedeploy.deployment resource
+type mqlAwsCodedeployDeployment struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlAwsCodedeployDeploymentInternal
+	ApplicationName plugin.TValue[string]
+	DeploymentId plugin.TValue[string]
+	Arn plugin.TValue[string]
+	Status plugin.TValue[string]
+	DeploymentGroupName plugin.TValue[string]
+	DeploymentConfigName plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
+	CompleatedAt plugin.TValue[*time.Time]
+	Description plugin.TValue[string]
+	Creator plugin.TValue[string]
+	IgnoreApplicationStopFailures plugin.TValue[bool]
+	TargetInstances plugin.TValue[interface{}]
+	Revision plugin.TValue[interface{}]
+	Region plugin.TValue[string]
+	ErrorInformation plugin.TValue[interface{}]
+	DeploymentOverview plugin.TValue[interface{}]
+	IsRollback plugin.TValue[bool]
+	RollbackInfo plugin.TValue[interface{}]
+}
+
+// createAwsCodedeployDeployment creates a new instance of this resource
+func createAwsCodedeployDeployment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCodedeployDeployment{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.codedeploy.deployment", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCodedeployDeployment) MqlName() string {
+	return "aws.codedeploy.deployment"
+}
+
+func (c *mqlAwsCodedeployDeployment) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCodedeployDeployment) GetApplicationName() *plugin.TValue[string] {
+	return &c.ApplicationName
+}
+
+func (c *mqlAwsCodedeployDeployment) GetDeploymentId() *plugin.TValue[string] {
+	return &c.DeploymentId
+}
+
+func (c *mqlAwsCodedeployDeployment) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsCodedeployDeployment) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsCodedeployDeployment) GetDeploymentGroupName() *plugin.TValue[string] {
+	return &c.DeploymentGroupName
+}
+
+func (c *mqlAwsCodedeployDeployment) GetDeploymentConfigName() *plugin.TValue[string] {
+	return &c.DeploymentConfigName
+}
+
+func (c *mqlAwsCodedeployDeployment) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsCodedeployDeployment) GetCompleatedAt() *plugin.TValue[*time.Time] {
+	return &c.CompleatedAt
+}
+
+func (c *mqlAwsCodedeployDeployment) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsCodedeployDeployment) GetCreator() *plugin.TValue[string] {
+	return &c.Creator
+}
+
+func (c *mqlAwsCodedeployDeployment) GetIgnoreApplicationStopFailures() *plugin.TValue[bool] {
+	return &c.IgnoreApplicationStopFailures
+}
+
+func (c *mqlAwsCodedeployDeployment) GetTargetInstances() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.TargetInstances, func() (interface{}, error) {
+		return c.targetInstances()
+	})
+}
+
+func (c *mqlAwsCodedeployDeployment) GetRevision() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.Revision, func() (interface{}, error) {
+		return c.revision()
+	})
+}
+
+func (c *mqlAwsCodedeployDeployment) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsCodedeployDeployment) GetErrorInformation() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.ErrorInformation, func() (interface{}, error) {
+		return c.errorInformation()
+	})
+}
+
+func (c *mqlAwsCodedeployDeployment) GetDeploymentOverview() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.DeploymentOverview, func() (interface{}, error) {
+		return c.deploymentOverview()
+	})
+}
+
+func (c *mqlAwsCodedeployDeployment) GetIsRollback() *plugin.TValue[bool] {
+	return &c.IsRollback
+}
+
+func (c *mqlAwsCodedeployDeployment) GetRollbackInfo() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.RollbackInfo, func() (interface{}, error) {
+		return c.rollbackInfo()
+	})
 }
