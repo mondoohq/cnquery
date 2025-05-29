@@ -663,6 +663,7 @@ resources:
       arn: {}
       computePlatform: {}
       createDate: {}
+      createdAt: {}
       deploymentGroups: {}
       deployments: {}
       linkedToGitHub: {}
@@ -677,8 +678,8 @@ resources:
     fields:
       applicationName: {}
       arn: {}
-      completeTime: {}
-      createTime: {}
+      compleatedAt: {}
+      createdAt: {}
       creator: {}
       deploymentConfigName: {}
       deploymentGroupName: {}

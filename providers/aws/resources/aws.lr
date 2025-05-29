@@ -3656,7 +3656,7 @@ aws.codedeploy {
 }
 
 // AWS CodeDeploy Application
-private aws.codedeploy.application @defaults("applicationName computePlatform createDate region") {
+private aws.codedeploy.application @defaults("applicationName computePlatform createdAt region") {
   // ARN of the application
   arn string
   // ID of the application
@@ -3666,7 +3666,7 @@ private aws.codedeploy.application @defaults("applicationName computePlatform cr
   // Compute platform of the application (Server, Lambda, or ECS)
   computePlatform string
   // Time the application was created
-  createDate time
+  createdAt time
   // Whether the application is linked to a GitHub account
   linkedToGitHub bool
   // Tags for the application
@@ -3720,7 +3720,7 @@ private aws.codedeploy.deploymentGroup @defaults("deploymentGroupName computePla
 }
 
 // AWS CodeDeploy Deployment
-private aws.codedeploy.deployment @defaults("deploymentId status applicationName deploymentGroupName createTime region") {
+private aws.codedeploy.deployment @defaults("deploymentId status applicationName deploymentGroupName createdAt region") {
   // Application name for the deployment
   applicationName string
   // Deployment ID
@@ -3734,9 +3734,9 @@ private aws.codedeploy.deployment @defaults("deploymentId status applicationName
   // Deployment configuration name
   deploymentConfigName string
   // Time the deployment was created
-  createTime time
+  createdAt time
   // Time the deployment was completed
-  completeTime time
+  compleatedAt time
   // Description of the deployment
   description string
   // Creator of the deployment (user, autoscaling, codeDeployRollback, etc.)
