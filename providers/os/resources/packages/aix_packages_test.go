@@ -28,6 +28,7 @@ func TestParseAixPackages(t *testing.T) {
 
 	p := Package{
 		Name:        "X11.apps.msmit",
+		Arch:        "powerpc",
 		Version:     "7.3.0.0",
 		Description: "AIXwindows msmit Application",
 		PUrl:        "pkg:generic/aix/X11.apps.msmit@7.3.0.0?arch=powerpc",
@@ -42,6 +43,7 @@ func TestParseAixPackages(t *testing.T) {
 
 	p = Package{
 		Name:        "bos.sysmgt.nim.client",
+		Arch:        "powerpc",
 		Version:     "7.3.3.0",
 		Description: "Network Install Manager - Client Tools",
 		PUrl:        "pkg:generic/aix/bos.sysmgt.nim.client@7.3.3.0?arch=powerpc&efix=locked",

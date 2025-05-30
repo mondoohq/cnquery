@@ -51,6 +51,7 @@ func parseAixPackages(pf *inventory.Platform, r io.Reader) ([]Package, error) {
 			Version:     record[2],
 			Description: strings.TrimSpace(record[6]),
 			Format:      AixPkgFormat,
+			Arch:        pf.Arch,
 			PUrl: purl.NewPackageURL(
 				pf, purl.TypeGeneric, record[1], record[2], purl.WithNamespace(pf.Name), purl.WithQualifiers(qualifiers),
 			).String(),
