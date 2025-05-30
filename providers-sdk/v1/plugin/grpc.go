@@ -4,6 +4,9 @@
 package plugin
 
 import (
+	"bytes"
+	"unicode/utf8"
+
 	plugin "github.com/hashicorp/go-plugin"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -126,7 +129,12 @@ func (m *GRPCServer) Shutdown(ctx context.Context, req *ShutdownReq) (*ShutdownR
 }
 
 func (m *GRPCServer) GetData(ctx context.Context, req *DataReq) (*DataRes, error) {
-	return m.Impl.GetData(req)
+	resp, err := m.Impl.GetData(req)
+	if err != nil {
+		return nil, err
+	}
+	sanitizeDataRes(resp)
+	return resp, nil
 }
 
 func (m *GRPCServer) StoreData(ctx context.Context, req *StoreReq) (*StoreRes, error) {
@@ -146,7 +154,12 @@ func (m *GRPCProviderCallbackClient) GetRecording(req *DataReq) (*ResourceData, 
 }
 
 func (m *GRPCProviderCallbackClient) GetData(req *DataReq) (*DataRes, error) {
-	return m.client.GetData(context.Background(), req)
+	resp, err := m.client.GetData(context.Background(), req)
+	if err != nil {
+		return nil, err
+	}
+	sanitizeDataRes(resp)
+	return resp, nil
 }
 
 // Here is the gRPC server that GRPCClient talks to.
@@ -167,5 +180,41 @@ func (m *GRPCProviderCallbackServer) GetRecording(ctx context.Context, req *Data
 }
 
 func (m *GRPCProviderCallbackServer) GetData(ctx context.Context, req *DataReq) (resp *DataRes, err error) {
-	return m.Impl.GetData(req)
+	resp, err = m.Impl.GetData(req)
+	if err != nil {
+		return nil, err
+	}
+	sanitizeDataRes(resp)
+	return resp, nil
+}
+
+func sanitizeDataRes(res *DataRes) {
+	if res == nil {
+		return
+	}
+	res.Error = sanitizeUtf8(res.Error)
+	if res.Data == nil {
+		return
+	}
+}
+
+func sanitizeUtf8(s string) string {
+	// This is a workaround for the fact that some providers
+	// return can non-UTF8 strings on Windows. We need to sanitize them
+	// to avoid issues with gRPC serialization.
+	if utf8.ValidString(s) {
+		return s
+	}
+	var buf bytes.Buffer
+	for i := 0; i < len(s); {
+		r, size := utf8.DecodeRuneInString(s[i:])
+		if r == utf8.RuneError && size == 1 {
+			// Invalid byte, skip it
+			i++
+			continue
+		}
+		buf.WriteRune(r)
+		i += size
+	}
+	return buf.String()
 }
