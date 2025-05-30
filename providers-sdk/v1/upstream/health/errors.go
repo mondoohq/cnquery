@@ -20,7 +20,7 @@ import (
 type PanicReportFn func(product, version, build string, r any, stacktrace []byte)
 
 func ReportPanic(product, version, build string, reporters ...PanicReportFn) {
-	if build != "dev" {
+	if build == "dev" {
 		return // avoid reporting panics from our development environments
 	}
 
