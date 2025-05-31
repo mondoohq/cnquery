@@ -24,6 +24,8 @@ resources:
   shodan.host:
     fields:
       asn: {}
+      city: {}
+      country: {}
       hostnames: {}
       ip: {}
       isp: {}

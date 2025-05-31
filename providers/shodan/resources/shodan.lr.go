@@ -137,6 +137,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"shodan.host.vulnerabilities": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlShodanHost).GetVulnerabilities()).ToDataRes(types.Array(types.String))
 	},
+	"shodan.host.country": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHost).GetCountry()).ToDataRes(types.String)
+	},
+	"shodan.host.city": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHost).GetCity()).ToDataRes(types.String)
+	},
 	"shodan.domain.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlShodanDomain).GetName()).ToDataRes(types.String)
 	},
@@ -248,6 +254,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"shodan.host.vulnerabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlShodanHost).Vulnerabilities, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"shodan.host.country": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHost).Country, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"shodan.host.city": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHost).City, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"shodan.domain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -424,6 +438,8 @@ type mqlShodanHost struct {
 	Hostnames plugin.TValue[[]interface{}]
 	Ports plugin.TValue[[]interface{}]
 	Vulnerabilities plugin.TValue[[]interface{}]
+	Country plugin.TValue[string]
+	City plugin.TValue[string]
 }
 
 // createShodanHost creates a new instance of this resource
@@ -512,6 +528,18 @@ func (c *mqlShodanHost) GetPorts() *plugin.TValue[[]interface{}] {
 func (c *mqlShodanHost) GetVulnerabilities() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.Vulnerabilities, func() ([]interface{}, error) {
 		return c.vulnerabilities()
+	})
+}
+
+func (c *mqlShodanHost) GetCountry() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Country, func() (string, error) {
+		return c.country()
+	})
+}
+
+func (c *mqlShodanHost) GetCity() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.City, func() (string, error) {
+		return c.city()
 	})
 }
 
