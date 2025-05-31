@@ -28,6 +28,10 @@ shodan.host @defaults("ip") {
   ports() []int
   // Vulnerabilities
   vulnerabilities() []string
+  // Country
+  country() string
+  // City
+  city() string
 }
 
 // Shodan Search Engine domain information
