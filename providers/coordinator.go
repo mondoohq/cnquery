@@ -47,7 +47,7 @@ var BuiltinCoreID = coreconf.Config.ID
 var Coordinator ProvidersCoordinator
 
 func newCoordinator(globalAutoUpdateCfg UpdateProvidersConfig) *coordinator {
-	log.Info().
+	log.Debug().
 		Bool("global auto-update is enabled", globalAutoUpdateCfg.Enabled).
 		Msg("providers.newCoordinator() is called")
 
@@ -249,7 +249,7 @@ func (c *coordinator) RemoveRuntime(runtime *Runtime) {
 }
 
 func (c *coordinator) GetRunningProvider(id string, update UpdateProvidersConfig) (*RunningProvider, error) {
-	log.Info().
+	log.Debug().
 		Str("id", id).
 		Bool("update is enabled", update.Enabled).
 		Msg("coordinator.GetRunningProvider() is called")
@@ -270,10 +270,6 @@ func (c *coordinator) GetRunningProvider(id string, update UpdateProvidersConfig
 // unsafeStartProvider will start a provider and add it to the list of running providers. Must be called
 // with a mutex lock around it.
 func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfig) (*RunningProvider, error) {
-	log.Info().
-		Str("id", id).
-		Bool("update is enabled", update.Enabled).Msg(">>> unsafeStartProvider()")
-
 	if x, ok := builtinProviders[id]; ok {
 		// We don't warn for core providers, which are the only providers
 		// built into the binary (for now).

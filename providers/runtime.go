@@ -141,7 +141,7 @@ func (r *Runtime) setProviderConnection(c *plugin.ConnectRes, err error) {
 }
 
 func (r *Runtime) addProvider(id string) (*ConnectedProvider, error) {
-	log.Info().
+	log.Debug().
 		Str("id", id).
 		Bool("update is enabled", r.AutoUpdate.Enabled).
 		Msg("Runtime.addProvider() is called")
