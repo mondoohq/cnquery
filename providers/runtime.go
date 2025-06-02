@@ -150,7 +150,7 @@ func (r *Runtime) addProvider(id string) (*ConnectedProvider, error) {
 	log.Info().
 		Str("id", id).
 		Bool("update is enabled", r.AutoUpdate.Enabled).
-		Msg(">>> addProvider()")
+		Msg("Runtime.addProvider() is called")
 
 	// TODO: we need to detect only the shared running providers
 	running, err := r.coordinator.GetRunningProvider(id, r.AutoUpdate)

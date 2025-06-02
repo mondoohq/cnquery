@@ -49,7 +49,7 @@ var Coordinator ProvidersCoordinator
 func newCoordinator(globalAutoUpdateCfg UpdateProvidersConfig) *coordinator {
 	log.Info().
 		Bool("global auto-update is enabled", globalAutoUpdateCfg.Enabled).
-		Msg(">>> newCoordinator")
+		Msg("providers.newCoordinator() is called")
 
 	c := &coordinator{
 		runningByID:      map[string]*RunningProvider{},
@@ -252,7 +252,7 @@ func (c *coordinator) GetRunningProvider(id string, update UpdateProvidersConfig
 	log.Info().
 		Str("id", id).
 		Bool("update is enabled", update.Enabled).
-		Msg(">>> GetRunningProvider()")
+		Msg("coordinator.GetRunningProvider() is called")
 
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
