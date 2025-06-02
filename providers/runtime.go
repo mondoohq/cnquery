@@ -56,12 +56,6 @@ func (c *coordinator) RuntimeWithShutdownTimeout(timeout time.Duration) *Runtime
 	return runtime
 }
 
-func (c *coordinator) RuntimeWithUpdateProvidersConfig(update UpdateProvidersConfig) *Runtime {
-	runtime := c.NewRuntime()
-	runtime.AutoUpdate = update
-	return runtime
-}
-
 type shutdownResult struct {
 	Response *plugin.ShutdownRes
 	Error    error
