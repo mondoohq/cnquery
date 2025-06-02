@@ -15,7 +15,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"sync"
 	"syscall"
 	"time"
 
@@ -46,9 +45,7 @@ var (
 	// LastProviderInstall keeps track of when the last provider installation
 	// took place relative to this runtime. It is initialized to a non-zero
 	// timestamp during this file's init() method. Timestamps are unix seconds.
-	LastProviderInstall          int64
-	coordinatorInitializedByHost bool       // New flag
-	initMutex                    sync.Mutex // To protect Coordinator assignment
+	LastProviderInstall int64
 )
 
 func init() {
