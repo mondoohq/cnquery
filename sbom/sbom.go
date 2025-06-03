@@ -6,9 +6,11 @@ package sbom
 //go:generate protoc --proto_path=. --go_out=. --go_opt=paths=source_relative sbom.proto
 
 import (
+	"cmp"
 	"fmt"
-	"github.com/mitchellh/hashstructure/v2"
 	"io"
+
+	"github.com/mitchellh/hashstructure/v2"
 )
 
 type Decoder interface {
@@ -21,4 +23,14 @@ func (b *Package) Hash() (string, error) {
 		return "", err
 	}
 	return fmt.Sprintf("%016x", hash), nil
+}
+
+// SortFn is a helper function for slices.SortFunc to sort a slice of Package
+// by name and version. Use it like this: slices.SortFunc(packages, sbom.SortFn)
+func SortFn(a, b *Package) int {
+	if n := cmp.Compare(a.Name, b.Name); n != 0 {
+		return n
+	}
+	// if names are equal, order by version
+	return cmp.Compare(a.Version, b.Version)
 }

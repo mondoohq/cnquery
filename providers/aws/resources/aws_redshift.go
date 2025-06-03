@@ -77,12 +77,12 @@ func (a *mqlAwsRedshift) getClusters(conn *connection.AwsConnection) []*jobpool.
 				for _, cluster := range clusters.Clusters {
 					var names []interface{}
 					for _, group := range cluster.ClusterParameterGroups {
-						names = append(names, convert.ToString(group.ParameterGroupName))
+						names = append(names, convert.ToValue(group.ParameterGroupName))
 					}
 					mqlDBInstance, err := CreateResource(a.MqlRuntime, "aws.redshift.cluster",
 						map[string]*llx.RawData{
 							"allowVersionUpgrade":              llx.BoolDataPtr(cluster.AllowVersionUpgrade),
-							"arn":                              llx.StringData(fmt.Sprintf(redshiftClusterArnPattern, regionVal, conn.AccountId(), convert.ToString(cluster.ClusterIdentifier))),
+							"arn":                              llx.StringData(fmt.Sprintf(redshiftClusterArnPattern, regionVal, conn.AccountId(), convert.ToValue(cluster.ClusterIdentifier))),
 							"automatedSnapshotRetentionPeriod": llx.IntDataDefault(cluster.AutomatedSnapshotRetentionPeriod, 0),
 							"availabilityZone":                 llx.StringDataPtr(cluster.AvailabilityZone),
 							"clusterParameterGroupNames":       llx.ArrayData(names, types.String),
@@ -128,7 +128,7 @@ func redshiftTagsToMap(tags []redshifttypes.Tag) map[string]interface{} {
 	if len(tags) > 0 {
 		for i := range tags {
 			tag := tags[i]
-			tagsMap[convert.ToString(tag.Key)] = convert.ToString(tag.Value)
+			tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
 		}
 	}
 

@@ -13,6 +13,7 @@ import (
 
 const (
 	LunOption          = "lun"
+	LunsOption         = "luns"
 	SerialNumberOption = "serial-number"
 )
 
@@ -91,14 +92,14 @@ func (d *WindowsDeviceManager) IdentifyMountTargets(opts map[string]string) ([]*
 
 // validates the options provided to the device manager
 func validateOpts(opts map[string]string) error {
-	lun := opts[LunOption]
-	serialNumber := opts[SerialNumberOption]
+	lunPresent := opts[LunOption] != "" || opts[LunsOption] != ""
+	serialNumberPresent := opts[SerialNumberOption] != ""
 
-	if lun != "" && serialNumber != "" {
+	if lunPresent && serialNumberPresent {
 		return errors.New("lun and serial-number are mutually exclusive options")
 	}
 
-	if lun == "" && serialNumber == "" {
+	if !lunPresent && !serialNumberPresent {
 		return errors.New("either lun or serial-number must be provided")
 	}
 

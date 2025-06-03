@@ -48,7 +48,7 @@ func convertToFields(keysAndValues ...interface{}) map[string]interface{} {
 	for i := 0; i < len(keysAndValues); i += 2 {
 		if i+1 < len(keysAndValues) {
 			keyString, ok := keysAndValues[i].(string)
-			if ok { // safety first, eventhough we always expect a string
+			if ok { // safety first, even though we always expect a string
 				fields[keyString] = keysAndValues[i+1]
 			}
 		}

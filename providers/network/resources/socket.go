@@ -3,8 +3,11 @@
 
 package resources
 
-import "strconv"
+import (
+	"net"
+	"strconv"
+)
 
 func (s *mqlSocket) id() (string, error) {
-	return s.Protocol.Data + "://" + s.Address.Data + ":" + strconv.Itoa(int(s.Port.Data)), nil
+	return s.Protocol.Data + "://" + net.JoinHostPort(s.Address.Data, strconv.Itoa(int(s.Port.Data))), nil
 }

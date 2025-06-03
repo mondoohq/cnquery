@@ -5,8 +5,9 @@ package generator
 
 import (
 	"encoding/json"
-	"go.mondoo.com/cnquery/v11/cli/reporter"
 	"os"
+
+	"go.mondoo.com/cnquery/v11/cli/reporter"
 	"sigs.k8s.io/yaml"
 )
 
@@ -15,6 +16,7 @@ type BomAsset struct {
 	Name     string            `json:"name,omitempty"`
 	Platform string            `json:"platform,omitempty"`
 	Version  string            `json:"version,omitempty"`
+	Build    string            `json:"build,omitempty"`
 	Family   []string          `json:"family,omitempty"`
 	Arch     string            `json:"arch,omitempty"`
 	CPEs     []string          `json:"cpes.map,omitempty"`
@@ -59,7 +61,6 @@ func LoadReport(filename string) (*reporter.Report, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
-
 	}
 	var report *reporter.Report
 	err = yaml.Unmarshal(data, &report)

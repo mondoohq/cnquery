@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
@@ -44,6 +45,11 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		insecure, _ = found.RawData().Value.(bool)
 	}
 
+	options := map[string]string{}
+	if found, ok := req.Flags[connection.OPTION_FOLLOW_REDIRECTS]; ok {
+		options[connection.OPTION_FOLLOW_REDIRECTS] = strconv.FormatBool(found.RawData().Value.(bool))
+	}
+
 	asset := inventory.Asset{
 		Connections: []*inventory.Config{{
 			Type:     "host",
@@ -52,6 +58,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 			Path:     path,
 			Runtime:  scheme,
 			Insecure: insecure,
+			Options:  options,
 		}},
 	}
 

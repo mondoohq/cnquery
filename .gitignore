@@ -9,6 +9,7 @@ id_rsa.pub
 mondoo-test-secret-key
 gha-creds-*.json
 /tools
+data/
 # primarily used to ignore all dist files built for providers
 providers/*.resources.json
 providers/*/dist
@@ -19,3 +20,4 @@ providers/mock_plugin_interface.go
 providers/mock_schema.go
 providers-sdk/*/testutils/mockprovider/resources/*.resources.json
 !providers/core/resources/*.resources.json
+providers/os/connection/snapshot/mock_volumemounter.go

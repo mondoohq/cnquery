@@ -47,8 +47,9 @@ const (
 	byteScore
 	byteBlock
 	byteEmpty
-	byteSemver
-	byteArray = 1<<4 + iota - 6 // set to 25 to avoid breaking changes
+	byteVersion
+	byteIP
+	byteArray = 1<<4 + iota - 7 // set to 25 to avoid breaking changes
 	byteMap
 	byteResource
 	byteFunction
@@ -88,8 +89,10 @@ const (
 	Block = Type(rune(byteBlock))
 	// Empty value
 	Empty = Type(rune(byteEmpty))
-	// Semver value
-	Semver = Type(rune(byteSemver))
+	// Version value
+	Version = Type(rune(byteVersion))
+	// IP address and subnet
+	IP = Type(rune(byteIP))
 	// ArrayLike is the underlying type of all arrays
 	ArrayLike = Type(rune(byteArray))
 	// MapLike is the underlying type of all maps
@@ -114,6 +117,32 @@ const (
 	// efficient storage and transmission structure.
 	Range = Type(rune(byteRange))
 )
+
+// All returns a list of all types available
+func All() []Type {
+	return []Type{
+		Unset,
+		Any,
+		Nil,
+		Ref,
+		Bool,
+		Int,
+		Float,
+		String,
+		Regex,
+		Time,
+		Dict,
+		Score,
+		Block,
+		Empty,
+		Version,
+		IP,
+		ArrayLike,
+		MapLike,
+		ResourceLike,
+		FunctionLike,
+	}
+}
 
 // NotSet returns true if the type has no information
 func (typ Type) NotSet() bool {
@@ -258,7 +287,8 @@ var labels = map[byte]string{
 	byteScore:       "score",
 	byteBlock:       "block",
 	byteEmpty:       "empty",
-	byteSemver:      "semver",
+	byteVersion:     "version",
+	byteIP:          "ip",
 	byteStringSlice: "stringslice",
 	byteRange:       "range",
 }
@@ -267,10 +297,25 @@ var labelfun map[byte]func(Type) string
 
 func init() {
 	labelfun = map[byte]func(Type) string{
-		byteArray:    func(s Type) string { return "[]" + s.Label() },
-		byteMap:      func(s Type) string { return "map[" + Type(s[0]).Label() + "]" + s[1:].Label() },
-		byteResource: func(s Type) string { return string(s) },
-		byteFunction: func(f Type) string { return "function(..??..)" },
+		byteArray: func(s Type) string {
+			if s == "" {
+				return "[]"
+			}
+			return "[]" + s.Label()
+		},
+		byteMap: func(s Type) string {
+			if s == "" {
+				return "map"
+			}
+			return "map[" + Type(s[0]).Label() + "]" + s[1:].Label()
+		},
+		byteResource: func(s Type) string {
+			if s == "" {
+				return "resource"
+			}
+			return string(s)
+		},
+		byteFunction: func(f Type) string { return "func()" },
 	}
 }
 

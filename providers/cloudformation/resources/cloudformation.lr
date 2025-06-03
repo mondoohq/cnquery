@@ -26,7 +26,7 @@ cloudformation.template @defaults("description") {
   resources() []cloudformation.resource
   // Template outputs
   outputs() []cloudformation.output
-  // supported resource types
+  // Supported resource types
   types() []string
 }
 

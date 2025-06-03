@@ -1,0 +1,74 @@
+{
+    "assets": {
+        "//explorer.api.mondoo.com/assets/2cNOBxIv7117UjcqsDBvKUgwkKw": {
+            "mrn": "//explorer.api.mondoo.com/assets/2cNOBxIv7117UjcqsDBvKUgwkKw",
+            "name": "alpine:latest",
+            "trace_id": "trace-alpine"
+        }
+    },
+    "data": {
+        "//explorer.api.mondoo.com/assets/2cNOBxIv7117UjcqsDBvKUgwkKw": {
+            "values": {
+                "//local.cnquery.io/run/local-execution/queries/mondoo-sbom-asset": {
+                    "content": {
+                        "asset": {
+                            "version": "3.19.0",
+                            "arch": "aarch64",
+                            "labels": {
+                                "distro-id": "alpine"
+                            },
+                            "platform": "alpine",
+                            "ids": [
+                                "//platformid.api.mondoo.app/runtime/docker/images/1dc785547989b0db1c3cd9949c57574393e69bea98bfe044b0588e24721aa402"
+                            ],
+                            "name": "alpine:latest",
+                            "cpes.map": [
+                                "cpe:2.3:o:alpinelinux:alpine_linux:3.19.0:*:*:*:*:*:*:*"
+                            ]
+                        }
+                    }
+                },
+                "//local.cnquery.io/run/local-execution/queries/mondoo-sbom-packages": {
+                    "content": {
+                        "packages.list": {
+                            "error": "error fetching sbom packages"
+                        }
+                    }
+                },
+                "//local.cnquery.io/run/local-execution/queries/mondoo-sbom-python-packages": {
+                    "content": {
+                        "python.packages": [
+                            {
+                                "name": "pip",
+                                "version": "21.2.4",
+                                "cpes.map": [
+                                    "cpe:2.3:a:pip_project:pip:21.2.4:*:*:*:*:*:*:*"
+                                ],
+                                "purl": "pkg:pypi/pip@21.2.4",
+                                "file.path": "/opt/lib/python3.9/site-packages/pip-21.2.4.dist-info/METADATA"
+                            }
+                        ]
+                    }
+                },
+                "//local.cnquery.io/run/local-execution/queries/mondoo-sbom-npm-packages": {
+                    "content": {
+                        "npm.packages.list": [
+                            {
+                                "name": "npm",
+                                "files.map": [
+                                    "/opt/lib/node_modules/npm/package.json"
+                                ],
+                                "cpes.map": [
+                                    "cpe:2.3:a:npm:npm:10.2.4:*:*:*:*:*:*:*"
+                                ],
+                                "purl": "pkg:npm/npm@10.2.4",
+                                "version": "10.2.4"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    "errors": {}
+}

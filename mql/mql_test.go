@@ -16,6 +16,7 @@ import (
 	"go.mondoo.com/cnquery/v11/mql"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/testutils"
 	"go.mondoo.com/cnquery/v11/types"
+	"go.uber.org/goleak"
 )
 
 var features cnquery.Features
@@ -46,6 +47,22 @@ func getEnvFeatures() cnquery.Features {
 		}
 	}
 	return fts
+}
+
+func TestMain(m *testing.M) {
+	// verify that we are not leaking goroutines
+	goleak.VerifyTestMain(m)
+}
+
+func TestMqlHundreds(t *testing.T) {
+	for i := range 500 {
+		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
+			res, err := mql.Exec("asset.platform", runtime(), features, nil)
+			assert.NoError(t, err)
+			assert.NoError(t, res.Error)
+			assert.Equal(t, "arch", res.Value)
+		})
+	}
 }
 
 func TestMqlSimple(t *testing.T) {
@@ -310,13 +327,65 @@ func TestNullString(t *testing.T) {
 	})
 }
 
-func TestDictMethods(t *testing.T) {
+func TestDictContains(t *testing.T) {
 	x := testutils.InitTester(testutils.LinuxMock())
 	x.TestSimple(t, []testutils.SimpleTest{
 		{
 			Code:        "muser.dict.nonexisting.contains('abc')",
+			ResultIndex: 3,
+			Expectation: false,
+		},
+		{
+			Code:        "muser.dict.string.contains(muser.dict.string2)",
+			ResultIndex: 3,
+			Expectation: false,
+		},
+		{
+			Code:        "muser.dict.string.contains(muser.dict.string)",
+			ResultIndex: 3,
+			Expectation: true,
+		},
+		{
+			Code:        "'<< hello world >>'.contains(muser.dict.string)",
+			ResultIndex: 1,
+			Expectation: true,
+		},
+		{
+			Code:        "'<< hello + world >>'.contains(muser.dict.string)",
 			ResultIndex: 1,
 			Expectation: false,
+		},
+		{
+			Code:        "'<< hello world >>'.contains([muser.dict.string])",
+			ResultIndex: 1,
+			Expectation: true,
+		},
+		{
+			Code:        "'<< hello + world >>'.contains([muser.dict.string])",
+			ResultIndex: 1,
+			Expectation: false,
+		},
+	})
+}
+
+func TestBuiltinFunctionOverride(t *testing.T) {
+	x := testutils.InitTester(testutils.LinuxMock())
+	x.TestSimple(t, []testutils.SimpleTest{
+		// This access the resource length property,
+		// which overrides the builtin function `length`
+		{
+			Code:        "mos.groups.length",
+			ResultIndex: 0, Expectation: int64(5),
+		},
+		// This calls the native builtin `length` function
+		{
+			Code:        "mos.groups.list.length",
+			ResultIndex: 0, Expectation: int64(7),
+		},
+		// Same here, builtin `length` function
+		{
+			Code:        "muser.groups.length",
+			ResultIndex: 0, Expectation: int64(2),
 		},
 	})
 }

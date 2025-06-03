@@ -5,6 +5,7 @@ package mqlc
 
 import (
 	"errors"
+	"fmt"
 	"regexp"
 	"sort"
 	"strconv"
@@ -89,6 +90,7 @@ type CompilerConfig struct {
 	Schema          resources.ResourcesSchema
 	UseAssetContext bool
 	Stats           CompilerStats
+	Features        cnquery.Features
 }
 
 func (c *CompilerConfig) EnableStats() {
@@ -104,6 +106,7 @@ func NewConfig(schema resources.ResourcesSchema, features cnquery.Features) Comp
 		Schema:          schema,
 		UseAssetContext: features.IsActive(cnquery.MQLAssetContext),
 		Stats:           compilerStatsNull{},
+		Features:        features,
 	}
 }
 
@@ -603,8 +606,8 @@ type blockRefs struct {
 }
 
 // evaluates the given expressions on a non-array resource (eg: no `[]int` nor `groups`)
-// and creates a function, whose reference is returned
-func (c *compiler) blockOnResource(expressions []*parser.Expression, typ types.Type, binding uint64, bindingName string) (blockRefs, error) {
+// and creates a function, returning the entire block compiler after completion
+func (c *compiler) blockcompileOnResource(expressions []*parser.Expression, typ types.Type, binding uint64, bindingName string) (*compiler, error) {
 	blockCompiler := c.newBlockCompiler(nil)
 	blockCompiler.block.AddArgumentPlaceholder(blockCompiler.Result.CodeV2,
 		blockCompiler.blockRef, typ, blockCompiler.Result.CodeV2.Checksums[binding])
@@ -620,18 +623,25 @@ func (c *compiler) blockOnResource(expressions []*parser.Expression, typ types.T
 
 	err := blockCompiler.compileExpressions(expressions)
 	if err != nil {
-		return blockRefs{}, err
+		return &blockCompiler, err
 	}
 
 	blockCompiler.updateEntrypoints(false)
 	blockCompiler.updateLabels()
 
+	return &blockCompiler, nil
+}
+
+// evaluates the given expressions on a non-array resource (eg: no `[]int` nor `groups`)
+// and creates a function, returning resource references after completion
+func (c *compiler) blockOnResource(expressions []*parser.Expression, typ types.Type, binding uint64, bindingName string) (blockRefs, error) {
+	blockCompiler, err := c.blockcompileOnResource(expressions, typ, binding, bindingName)
 	return blockRefs{
 		block:        blockCompiler.blockRef,
 		deps:         blockCompiler.blockDeps,
 		isStandalone: blockCompiler.standalone,
 		binding:      binding,
-	}, nil
+	}, err
 }
 
 // blockExpressions evaluates the given expressions as if called by a block and
@@ -829,7 +839,7 @@ func (c *compiler) compileBuiltinFunction(h *compileHandler, id string, binding 
 		return types.Nil, err
 	}
 
-	resType := h.typ(binding.typ)
+	resType := h.returnType(binding.typ)
 	c.addChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   id,
@@ -881,41 +891,6 @@ func filterEmptyExpressions(expressions []*parser.Expression) []*parser.Expressi
 	return res
 }
 
-type fieldPath []string
-
-// TODO: embed this into the Schema LookupField call!
-func (c *compiler) findField(resource *resources.ResourceInfo, fieldName string) (fieldPath, []*resources.Field, bool) {
-	fieldInfo, ok := resource.Fields[fieldName]
-	if ok {
-		return fieldPath{fieldName}, []*resources.Field{fieldInfo}, true
-	}
-
-	for _, f := range resource.Fields {
-		if f.IsEmbedded {
-			typ := types.Type(f.Type)
-			nextResource := c.Schema.Lookup(typ.ResourceName())
-			if nextResource == nil {
-				continue
-			}
-			childFieldPath, childFieldInfos, ok := c.findField(nextResource, fieldName)
-			if ok {
-				fp := make(fieldPath, len(childFieldPath)+1)
-				fieldInfos := make([]*resources.Field, len(childFieldPath)+1)
-				fp[0] = f.Name
-				fieldInfos[0] = f
-				for i, n := range childFieldPath {
-					fp[i+1] = n
-				}
-				for i, f := range childFieldInfos {
-					fieldInfos[i+1] = f
-				}
-				return fp, fieldInfos, true
-			}
-		}
-	}
-	return nil, nil, false
-}
-
 // compile a bound identifier to its binding
 // example: user { name } , where name is compiled bound to the user
 // it will return false if it cannot bind the identifier
@@ -932,7 +907,7 @@ func (c *compiler) compileBoundIdentifierWithMqlCtx(id string, binding *variable
 			return true, types.Nil, errors.New("cannot find resource that is called by '" + id + "' of type " + typ.Label())
 		}
 
-		fieldPath, fieldinfos, ok := c.findField(resource, id)
+		fieldPath, fieldinfos, ok := c.Schema.FindField(resource, id)
 		if ok {
 			fieldinfo := fieldinfos[len(fieldinfos)-1]
 			c.CompilerConfig.Stats.CallField(resource.Name, fieldinfo)
@@ -1477,6 +1452,7 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 						Args:    []*llx.Primitive{llx.StringPrimitive(id)},
 					},
 				})
+				typ = typ.Child()
 			} else {
 				typ = resType
 			}
@@ -1669,6 +1645,10 @@ func (c *compiler) postCompile() {
 				// default fields
 				ref = chunk.Function.Binding
 				chunk := code.Chunk(ref)
+				if chunk.Function == nil {
+					// nothing to expand
+					continue
+				}
 				typ = types.Type(chunk.Function.Type)
 				expanded := c.expandResourceFields(chunk, typ, ref)
 				// when no defaults are defined or query isn't about a resource, no block was added
@@ -1905,7 +1885,10 @@ func (c *compiler) expandResourceFields(chunk *llx.Chunk, typ types.Type, ref ui
 	}
 
 	info := c.Schema.Lookup(typ.ResourceName())
-	if info == nil || info.Defaults == "" {
+	if info == nil {
+		return false
+	}
+	if info.Defaults == "" {
 		return false
 	}
 
@@ -1915,22 +1898,46 @@ func (c *compiler) expandResourceFields(chunk *llx.Chunk, typ types.Type, ref ui
 		return false
 	}
 
-	refs, err := c.blockOnResource(ast.Expressions, types.Resource(info.Name), ref, "_")
+	blockCompiler, err := c.blockcompileOnResource(ast.Expressions, types.Resource(info.Name), ref, "_")
 	if err != nil {
 		log.Error().Err(err).Msg("failed to compile default for " + info.Name)
 	}
-	if len(refs.deps) != 0 {
+	if len(blockCompiler.blockDeps) != 0 {
 		log.Warn().Msg("defaults somehow included external dependencies for resource " + info.Name)
 	}
 
-	args := []*llx.Primitive{llx.FunctionPrimitive(refs.block)}
+	if c.CompilerConfig.Features.IsActive(cnquery.ResourceContext) && info.Context != "" {
+		// (Dom) Note: This is the very first expansion block implementation, so there are some
+		// serious limitations while we figure things out.
+		// 1. We can only expand a resource that has defaults defined. As soon as you add
+		//    a resource without defaults that needs an expansion, please adjust the above code to
+		//    provide a function block we can attach to AND don't exit early on defaults==empty.
+		//    One way could be to just create a new defaults code and add context to it.
+		// 2. The `context` field may be part of defaults and the actual `@context`. Obviously we
+		//    only ever need and want one. This needs fixing in LR.
+
+		ctxType := types.Resource(info.Context)
+		blockCompiler.addChunk(&llx.Chunk{
+			Call: llx.Chunk_FUNCTION,
+			Id:   "context",
+			Function: &llx.Function{
+				Type:    string(ctxType),
+				Binding: blockCompiler.block.HeadRef(blockCompiler.blockRef),
+				Args:    []*llx.Primitive{},
+			},
+		})
+		blockCompiler.expandResourceFields(blockCompiler.block.LastChunk(), ctxType, blockCompiler.tailRef())
+		blockCompiler.block.Entrypoints = append(blockCompiler.block.Entrypoints, blockCompiler.tailRef())
+	}
+
+	args := []*llx.Primitive{llx.FunctionPrimitive(blockCompiler.blockRef)}
 	block := c.Result.CodeV2.Block(ref)
 	block.AddChunk(c.Result.CodeV2, ref, &llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   "{}",
 		Function: &llx.Function{
 			Type:    string(resultType),
-			Binding: refs.binding,
+			Binding: ref,
 			Args:    args,
 		},
 	})
@@ -1938,7 +1945,7 @@ func (c *compiler) expandResourceFields(chunk *llx.Chunk, typ types.Type, ref ui
 	block.ReplaceEntrypoint(ref, ep)
 	ref = ep
 
-	c.Result.AutoExpand[c.Result.CodeV2.Checksums[ref]] = refs.block
+	c.Result.AutoExpand[c.Result.CodeV2.Checksums[ref]] = blockCompiler.blockRef
 	return true
 }
 
@@ -2180,6 +2187,12 @@ func compile(input string, props map[string]*llx.Primitive, compilerConf Compile
 func Compile(input string, props map[string]*llx.Primitive, conf CompilerConfig) (*llx.CodeBundle, error) {
 	// Note: we do not check the conf because it will get checked by the
 	// first CompileAST call. Do not use it earlier or add a check.
+	defer func() {
+		if r := recover(); r != nil {
+			errNew := fmt.Errorf("panic compiling %q: %v", input, r)
+			panic(errNew)
+		}
+	}()
 
 	res, err := compile(input, props, conf)
 	if err != nil {

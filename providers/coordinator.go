@@ -46,11 +46,16 @@ var BuiltinCoreID = coreconf.Config.ID
 
 var Coordinator ProvidersCoordinator
 
-func newCoordinator() *coordinator {
+func newCoordinator(globalAutoUpdateCfg UpdateProvidersConfig) *coordinator {
+	log.Debug().
+		Bool("global auto-update is enabled", globalAutoUpdateCfg.Enabled).
+		Msg("providers.newCoordinator() is called")
+
 	c := &coordinator{
-		runningByID: map[string]*RunningProvider{},
-		runtimes:    map[string]*Runtime{},
-		schema:      newExtensibleSchema(),
+		runningByID:      map[string]*RunningProvider{},
+		runtimes:         map[string]*Runtime{},
+		schema:           newExtensibleSchema(),
+		autoUpdateConfig: globalAutoUpdateCfg,
 	}
 	c.schema.coordinator = c
 	return c
@@ -68,6 +73,7 @@ type coordinator struct {
 	runtimeCnt          int
 	mutex               sync.Mutex
 	schema              extensibleSchema
+	autoUpdateConfig    UpdateProvidersConfig
 }
 
 type builtinProvider struct {
@@ -108,6 +114,7 @@ func (c *coordinator) newRuntime() *Runtime {
 		providers:       map[string]*ConnectedProvider{},
 		recording:       recording.Null{},
 		shutdownTimeout: defaultShutdownTimeout,
+		AutoUpdate:      c.autoUpdateConfig,
 	}
 
 	c.mutex.Lock()
@@ -123,6 +130,7 @@ func (c *coordinator) newRuntime() *Runtime {
 func (c *coordinator) NewRuntimeFrom(parent *Runtime) *Runtime {
 	res := c.NewRuntime()
 	res.UpstreamConfig = parent.UpstreamConfig
+	res.AutoUpdate = parent.AutoUpdate
 	res.recording = parent.Recording()
 	for k, v := range parent.providers {
 		res.providers[k] = v
@@ -241,6 +249,11 @@ func (c *coordinator) RemoveRuntime(runtime *Runtime) {
 }
 
 func (c *coordinator) GetRunningProvider(id string, update UpdateProvidersConfig) (*RunningProvider, error) {
+	log.Debug().
+		Str("id", id).
+		Bool("update is enabled", update.Enabled).
+		Msg("coordinator.GetRunningProvider() is called")
+
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	running := c.runningByID[id]

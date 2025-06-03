@@ -22,6 +22,79 @@ func TestInventoryParser(t *testing.T) {
 	assert.Equal(t, "{ id: 'secret-1' }", inventory.Spec.CredentialQuery)
 }
 
+func TestPlatformMerge(t *testing.T) {
+	base := &Platform{
+		Name:                  "linux",
+		Arch:                  "",
+		Family:                []string{"unix"},
+		Metadata:              map[string]string{"env": "prod"},
+		TechnologyUrlSegments: []string{"a", "b", "c"},
+		Version:               "",
+	}
+
+	incoming := &Platform{
+		Name:                  "", // Should not override
+		Arch:                  "amd64",
+		Family:                []string{"gnu"}, // Should override (because of option)
+		Metadata:              map[string]string{"region": "us-east-1"},
+		TechnologyUrlSegments: []string{"x", "y", "z"},
+		Version:               "1.0.0",
+	}
+
+	expected := &Platform{
+		Name:   "linux",         // original
+		Arch:   "amd64",         // merged in
+		Family: []string{"gnu"}, // overridden (because we say so)
+		Metadata: map[string]string{
+			"env":    "prod",
+			"region": "us-east-1", // merged map
+		},
+		Version:               "1.0.0", // merged in
+		TechnologyUrlSegments: []string{"x", "y", "z"},
+	}
+
+	base.Merge(incoming)
+
+	assert.Equal(t, expected.Name, base.Name)
+	assert.Equal(t, expected.Arch, base.Arch)
+	assert.Equal(t, expected.Family, base.Family)
+	assert.Equal(t, expected.Version, base.Version)
+	assert.Equal(t, expected.Metadata["env"], base.Metadata["env"])
+	assert.Equal(t, expected.Metadata["region"], base.Metadata["region"])
+	assert.Equal(t, expected.TechnologyUrlSegments, base.TechnologyUrlSegments)
+
+	t.Run("cases", func(t *testing.T) {
+		p := &Platform{
+			Name:                  "terraform-plan",
+			Title:                 "Terraform Plan",
+			Family:                []string{"terraform"},
+			Kind:                  "code",
+			Runtime:               "terraform",
+			TechnologyUrlSegments: []string{"iac", "terraform", "plan"},
+		}
+
+		expectTheSame := &Platform{
+			Name:                  "terraform-plan",
+			Title:                 "Terraform Plan",
+			Family:                []string{"terraform"},
+			Kind:                  "code",
+			Runtime:               "terraform",
+			TechnologyUrlSegments: []string{"iac", "terraform", "plan"},
+		}
+
+		t.Run("nil", func(t *testing.T) {
+			p.Merge(nil)
+			assert.Equal(t, expectTheSame, p)
+		})
+
+		t.Run("empty", func(t *testing.T) {
+			p.Merge(&Platform{})
+			assert.Equal(t, expectTheSame, p)
+		})
+
+	})
+}
+
 func TestPreprocess(t *testing.T) {
 	t.Run("preprocess empty inventory", func(t *testing.T) {
 		v1inventory := &Inventory{}

@@ -11,6 +11,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/cockroachdb/errors"
@@ -22,6 +24,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/registry"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/cpe"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/powershell"
+	"go.mondoo.com/cnquery/v11/providers/os/resources/purl"
 )
 
 // ProcessorArchitecture Enum
@@ -66,6 +69,10 @@ var (
 		WinArchArm:        "arm",
 		WinArchX86OnArm64: "x86onarm",
 	}
+
+	sqlHotfixRegExp = regexp.MustCompile(`^Hotfix .+ SQL Server`)
+	// Find the database engine package and use version as a reference for the update
+	msSqlServiceRegexp = regexp.MustCompile(`^SQL Server \d+ Database Engine Services$`)
 )
 
 type WSUSClassification int
@@ -112,7 +119,7 @@ type winAppxPackages struct {
 	arch string `json:"-"`
 }
 
-func (p winAppxPackages) toPackage() Package {
+func (p winAppxPackages) toPackage(platform *inventory.Platform) Package {
 	if p.arch == "" {
 		arch, ok := appxArchitecture[p.Architecture]
 		if !ok {
@@ -128,12 +135,16 @@ func (p winAppxPackages) toPackage() Package {
 		Arch:    p.arch,
 		Format:  "windows/appx",
 		Vendor:  p.Publisher,
+		PUrl:    purl.NewPackageURL(platform, purl.TypeAppx, p.Name, p.Version).String(),
 	}
 
-	if p.Name != "" && p.Version != "" {
+	if p.Version != "" {
 		cpeWfns, err := cpe.NewPackage2Cpe(p.Publisher, p.Name, p.Version, "", "")
 		if err != nil {
-			log.Debug().Err(err).Str("name", p.Name).Str("version", p.Version).Msg("could not create cpe for windows appx package")
+			log.Debug().Err(err).
+				Str("name", p.Name).
+				Str("version", p.Version).
+				Msg("could not create cpe for windows appx package")
 		} else {
 			pkg.CPEs = cpeWfns
 		}
@@ -145,7 +156,7 @@ func (p winAppxPackages) toPackage() Package {
 }
 
 // Good read: https://www.wintips.org/view-installed-apps-and-packages-in-windows-10-8-1-8-from-powershell/
-func ParseWindowsAppxPackages(input io.Reader) ([]Package, error) {
+func ParseWindowsAppxPackages(platform *inventory.Platform, input io.Reader) ([]Package, error) {
 	data, err := io.ReadAll(input)
 	if err != nil {
 		return nil, err
@@ -165,8 +176,10 @@ func ParseWindowsAppxPackages(input io.Reader) ([]Package, error) {
 
 	pkgs := make([]Package, len(appxPackages))
 	for i, p := range appxPackages {
-		pkg := p.toPackage()
-		pkgs[i] = pkg
+		if p.Name == "" {
+			continue
+		}
+		pkgs[i] = p.toPackage(platform)
 	}
 	return pkgs, nil
 }
@@ -246,7 +259,7 @@ func (w *WinPkgManager) getLocalInstalledApps() ([]Package, error) {
 			continue
 		}
 		for _, c := range children {
-			p, err := getPackageFromRegistryKey(c)
+			p, err := getPackageFromRegistryKey(c, w.platform)
 			if err != nil {
 				return nil, err
 			}
@@ -281,7 +294,7 @@ func (w *WinPkgManager) getInstalledApps() ([]Package, error) {
 		return nil, errors.New("failed to retrieve installed apps: " + string(stderr))
 	}
 
-	return ParseWindowsAppPackages(cmd.Stdout)
+	return ParseWindowsAppPackages(w.platform, cmd.Stdout)
 }
 
 func (w *WinPkgManager) getAppxPackages() ([]Package, error) {
@@ -309,7 +322,7 @@ func (w *WinPkgManager) getPwshAppxPackages() ([]Package, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not read appx package list")
 	}
-	return ParseWindowsAppxPackages(cmd.Stdout)
+	return ParseWindowsAppxPackages(w.platform, cmd.Stdout)
 }
 
 func (w *WinPkgManager) getFsInstalledApps() ([]Package, error) {
@@ -341,7 +354,7 @@ func (w *WinPkgManager) getFsInstalledApps() ([]Package, error) {
 			continue
 		}
 		for _, c := range children {
-			p, err := getPackageFromRegistryKey(c)
+			p, err := getPackageFromRegistryKey(c, w.platform)
 			if err != nil {
 				return nil, err
 			}
@@ -351,6 +364,12 @@ func (w *WinPkgManager) getFsInstalledApps() ([]Package, error) {
 			packages = append(packages, *p)
 		}
 	}
+
+	msSqlHotfixes := findMsSqlHotfixes(packages)
+	if len(msSqlHotfixes) > 0 {
+		packages = updateMsSqlPackages(packages, msSqlHotfixes[len(msSqlHotfixes)-1])
+	}
+
 	return packages, nil
 }
 
@@ -394,7 +413,10 @@ func (w *WinPkgManager) getFsAppxPackages() ([]Package, error) {
 			log.Debug().Err(err).Str("path", p).Msg("could not parse appx manifest")
 			continue
 		}
-		pkg := winAppxPkg.toPackage()
+		if winAppxPkg.Name == "" {
+			continue
+		}
+		pkg := winAppxPkg.toPackage(w.platform)
 		pkgs = append(pkgs, pkg)
 
 	}
@@ -416,16 +438,16 @@ func parseAppxManifest(input []byte) (winAppxPackages, error) {
 	return pkg, nil
 }
 
-func getPackageFromRegistryKey(key registry.RegistryKeyChild) (*Package, error) {
+func getPackageFromRegistryKey(key registry.RegistryKeyChild, platform *inventory.Platform) (*Package, error) {
 	items, err := registry.GetNativeRegistryKeyItems(key.Path + "\\" + key.Name)
 	if err != nil {
 		log.Debug().Err(err).Str("path", key.Path).Msg("could not read registry key children")
 		return nil, err
 	}
-	return getPackageFromRegistryKeyItems(items), nil
+	return getPackageFromRegistryKeyItems(items, platform), nil
 }
 
-func getPackageFromRegistryKeyItems(children []registry.RegistryKeyItem) *Package {
+func getPackageFromRegistryKeyItems(children []registry.RegistryKeyItem, platform *inventory.Platform) *Package {
 	var uninstallString string
 	var displayName string
 	var displayVersion string
@@ -448,14 +470,26 @@ func getPackageFromRegistryKeyItems(children []registry.RegistryKeyItem) *Packag
 		return nil
 	}
 
+	// TODO: We need to figure out why we have empty displayNames.
+	// this is common in windows but we need to verify it is a windows
+	// issue and not a cnquery issue.
+	if displayName == "" {
+		log.Debug().Msg("ignored package since display name is missing")
+		return nil
+	}
+
 	pkg := &Package{
 		Name:    displayName,
 		Version: displayVersion,
 		Format:  "windows/app",
+		Arch:    platform.Arch,
 		Vendor:  publisher,
+		PUrl: purl.NewPackageURL(
+			platform, purl.TypeWindows, displayName, displayVersion,
+		).String(),
 	}
 
-	if displayName != "" && displayVersion != "" {
+	if displayVersion != "" {
 		cpeWfns, err := cpe.NewPackage2Cpe(publisher, displayName, displayVersion, "", "")
 		if err != nil {
 			log.Debug().Err(err).Str("name", displayName).Str("version", displayVersion).Msg("could not create cpe for windows app package")
@@ -500,11 +534,16 @@ func (w *WinPkgManager) List() ([]Package, error) {
 	}
 	hotfixAsPkgs := HotFixesToPackages(hotfixes)
 
+	msSqlHotfixes := findMsSqlHotfixes(appPkgs)
+	if len(msSqlHotfixes) > 0 {
+		pkgs = updateMsSqlPackages(pkgs, msSqlHotfixes[len(msSqlHotfixes)-1])
+	}
+
 	pkgs = append(pkgs, hotfixAsPkgs...)
 	return pkgs, nil
 }
 
-func ParseWindowsAppPackages(input io.Reader) ([]Package, error) {
+func ParseWindowsAppPackages(platform *inventory.Platform, input io.Reader) ([]Package, error) {
 	data, err := io.ReadAll(input)
 	if err != nil {
 		return nil, err
@@ -537,10 +576,20 @@ func ParseWindowsAppPackages(input io.Reader) ([]Package, error) {
 			continue
 		}
 		cpeWfns := []string{}
-		if entry.DisplayName != "" && entry.DisplayVersion != "" {
+
+		// TODO: We need to figure out why we have empty displayNames.
+		// this is common in windows but we need to verify it is a windows
+		// issue and not a cnquery issue.
+		if entry.DisplayName == "" {
+			continue
+		}
+		if entry.DisplayVersion != "" {
 			cpeWfns, err = cpe.NewPackage2Cpe(entry.Publisher, entry.DisplayName, entry.DisplayVersion, "", "")
 			if err != nil {
-				log.Debug().Err(err).Str("name", entry.DisplayName).Str("version", entry.DisplayVersion).Msg("could not create cpe for windows app package")
+				log.Debug().Err(err).
+					Str("name", entry.DisplayName).
+					Str("version", entry.DisplayVersion).
+					Msg("could not create cpe for windows app package")
 			}
 		} else {
 			log.Debug().Msg("ignored package since information is missing")
@@ -551,6 +600,10 @@ func ParseWindowsAppPackages(input io.Reader) ([]Package, error) {
 			Format:  "windows/app",
 			CPEs:    cpeWfns,
 			Vendor:  entry.Publisher,
+			Arch:    platform.Arch,
+			PUrl: purl.NewPackageURL(
+				platform, purl.TypeWindows, entry.DisplayName, entry.DisplayVersion,
+			).String(),
 		})
 	}
 
@@ -564,4 +617,39 @@ func (win *WinPkgManager) Available() (map[string]PackageUpdate, error) {
 func (win *WinPkgManager) Files(name string, version string, arch string) ([]FileRecord, error) {
 	// not yet implemented
 	return nil, nil
+}
+
+// findMsSqlHotfixes returns a list of hotfixes that are related to Microsoft SQL Server
+// The list is sorted by the hotfix id
+func findMsSqlHotfixes(packages []Package) []Package {
+	sqlHotfixes := []Package{}
+	for _, p := range packages {
+		if sqlHotfixRegExp.MatchString(p.Name) {
+			sqlHotfixes = append(sqlHotfixes, p)
+		}
+	}
+	slices.SortFunc(sqlHotfixes, func(a, b Package) int {
+		return strings.Compare(a.Version, b.Version)
+	})
+	return sqlHotfixes
+}
+
+// updateMsSqlPackages updates the version of the SQL Server packages to the latest hotfix version
+func updateMsSqlPackages(pkgs []Package, latestMsSqlHotfix Package) []Package {
+	currentVersion := ""
+	for _, pkg := range pkgs {
+		if msSqlServiceRegexp.MatchString(pkg.Name) {
+			currentVersion = pkg.Version
+			break
+		}
+	}
+
+	// Find other SQL Server packages and update them to the latest hotfix version
+	for i, pkg := range pkgs {
+		if strings.Contains(pkg.Name, "SQL Server") && pkg.Version == currentVersion {
+			pkgs[i].Version = latestMsSqlHotfix.Version
+			pkgs[i].PUrl = strings.Replace(pkgs[i].PUrl, currentVersion, latestMsSqlHotfix.Version, 1)
+		}
+	}
+	return pkgs
 }

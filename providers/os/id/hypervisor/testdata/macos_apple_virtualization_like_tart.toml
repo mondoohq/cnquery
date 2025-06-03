@@ -1,0 +1,37 @@
+[commands."uname -s"]
+stdout = "Darwin"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "18.6.0"
+
+[commands."/usr/bin/sw_vers"]
+stdout = """
+ProductName:	macOS
+ProductVersion:	14.6
+BuildVersion:	23G80
+"""
+
+[commands."sysctl -n machdep.cpu.features"]
+stdout = ""
+
+[commands."sysctl -n kern.hv_vmm_present"]
+stdout = "1"
+
+[commands."ioreg -lw0"]
+stdout = """
++-o Root  <class IORegistryEntry, id 0x100000100, retain 37>
+  | {
+  |   "IOKitBuildVersion" = "Darwin Kernel Version 23.6.0: Mon Jul 29 21:14:30 PDT 2024; root:xnu-10063.141.2~1/RELEASE_ARM64_T6030"
+  |   "OS Build Version" = "23G93"
+  |   "OSKernelCPUSubtype" = 18446744072635809794
+  |   "OSKernelCPUType" = 16777228
+  |   "OSPrelinkKextCount" = 5
+  |   "Manufacturer" = <"Apple Inc.">
+  +-o AppleVirtualPlatformARMPE <class AppleVirtualPlatformARMPE, id 0x100000213, registered, matched, active, busy 0 (211ms), retain 25>
+  |  |  {
+  |  |    "IOClass" = "AppleVirtualPlatformARMPE"
+  |  |    "IONameMatch" = "AppleVirtualPlatformARM"
+"""

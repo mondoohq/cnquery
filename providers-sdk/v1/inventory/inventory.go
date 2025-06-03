@@ -7,8 +7,10 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"slices"
 	"strings"
 
+	"dario.cat/mergo"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/segmentio/ksuid"
@@ -318,13 +320,20 @@ var (
 	FAMILY_WINDOWS = "windows"
 )
 
-func (p *Platform) IsFamily(family string) bool {
-	for i := range p.Family {
-		if p.Family[i] == family {
-			return true
+// Merge performs a deep merge of the provided platform.
+func (p *Platform) Merge(pf *Platform) {
+	if pf != nil {
+		if err := mergo.Merge(p, pf, mergo.WithOverride); err != nil {
+			log.Error().Err(err).
+				Interface("target", p).
+				Interface("source", pf).
+				Msg("unable to merge platform details")
 		}
 	}
-	return false
+}
+
+func (p *Platform) IsFamily(family string) bool {
+	return slices.Contains(p.Family, family)
 }
 
 func (p *Platform) PrettyTitle() string {
@@ -361,16 +370,16 @@ func (p *Platform) PrettyTitle() string {
 	} else {
 		runtimeKind := p.Kind
 		switch runtimeKind {
-		case "baremetal":
-			runtimeNiceName = "bare metal"
+		case AssetKindBaremetal:
+			runtimeNiceName = "Bare metal system"
 		case "container":
 			runtimeNiceName = "Container"
 		case "container-image":
-			runtimeNiceName = "Container Image"
-		case "virtualmachine":
-			runtimeNiceName = "Virtual Machine"
+			runtimeNiceName = "Container image"
+		case AssetKindCloudVM:
+			runtimeNiceName = "Virtual machine"
 		case "virtualmachine-image":
-			runtimeNiceName = "Virtual Machine Image"
+			runtimeNiceName = "Virtual machine image"
 		}
 	}
 	// e.g. ", Kubernetes Cluster" and also "Kubernetes, Kubernetes Cluster" do not look nice, so prevent them
@@ -389,11 +398,21 @@ func (p *Platform) PrettyTitle() string {
 type cloneSettings struct {
 	noDiscovery        bool
 	parentConnectionId *uint32
+	withFilters        bool
 }
 
 type CloneOption interface {
 	Apply(*cloneSettings)
 }
+
+// WithFilters ensures the discovery filters still get copied over
+func WithFilters() CloneOption {
+	return withFilters{}
+}
+
+type withFilters struct{}
+
+func (w withFilters) Apply(o *cloneSettings) { o.withFilters = true }
 
 // WithoutDiscovery removes the discovery flags in the opts to ensure the same discovery does not run again
 func WithoutDiscovery() CloneOption {
@@ -432,6 +451,15 @@ func (cfg *Config) Clone(opts ...CloneOption) *Config {
 	}
 	if cloneSettings.parentConnectionId != nil {
 		clonedObject.ParentConnectionId = *cloneSettings.parentConnectionId
+	}
+	if cloneSettings.withFilters {
+		if clonedObject.Discover == nil {
+			clonedObject.Discover = &Discovery{}
+		}
+		clonedObject.Discover.Filter = make(map[string]string)
+		for k, v := range cfg.Discover.Filter {
+			clonedObject.Discover.Filter[k] = v
+		}
 	}
 
 	return clonedObject

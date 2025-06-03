@@ -5,28 +5,74 @@ package resources
 
 import (
 	"context"
+
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 
+	abstractions "github.com/microsoft/kiota-abstractions-go"
 	"github.com/microsoftgraph/msgraph-sdk-go/rolemanagement"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
 	"go.mondoo.com/cnquery/v11/types"
 )
 
-func fetchRoles(runtime *plugin.Runtime) ([]interface{}, error) {
-	conn := runtime.Connection.(*connection.Ms365Connection)
+var roledefinitionsSelectFields = []string{
+	"id",
+	"description",
+	"displayName",
+	"isBuiltIn",
+	"isEnabled",
+	"rolePermissions",
+	"templateId",
+	"version",
+}
+
+func (a *mqlMicrosoftRoles) list() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
 		return nil, err
 	}
-	ctx := context.Background()
 
-	resp, err := graphClient.RoleManagement().Directory().RoleDefinitions().Get(ctx, &rolemanagement.DirectoryRoleDefinitionsRequestBuilderGetRequestConfiguration{
+	ctx := context.Background()
+	opts := &rolemanagement.DirectoryRoleDefinitionsRequestBuilderGetRequestConfiguration{
 		QueryParameters: &rolemanagement.DirectoryRoleDefinitionsRequestBuilderGetQueryParameters{
-			Select: []string{"id", "description", "displayName", "isBuiltIn", "isEnabled", "rolePermissions", "templateId", "version"},
+			Select: roledefinitionsSelectFields,
 		},
-	})
+	}
+
+	if a.Search.State == plugin.StateIsSet || a.Filter.State == plugin.StateIsSet {
+		// search and filter requires this header
+		headers := abstractions.NewRequestHeaders()
+		headers.Add("ConsistencyLevel", "eventual")
+		opts.Headers = headers
+
+		if a.Search.State == plugin.StateIsSet {
+			log.Debug().
+				Str("search", a.Search.Data).
+				Msg("microsoft.roles.list.search set")
+			search, err := parseSearch(a.Search.Data)
+			if err != nil {
+				return nil, err
+			}
+			opts.QueryParameters.Search = &search
+		}
+		if a.Filter.State == plugin.StateIsSet {
+			log.Debug().
+				Str("filter", a.Filter.Data).
+				Msg("microsoft.roles.list.filter set")
+			opts.QueryParameters.Filter = &a.Filter.Data
+			count := true
+			opts.QueryParameters.Count = &count
+		}
+	}
+
+	resp, err := graphClient.
+		RoleManagement().
+		Directory().
+		RoleDefinitions().
+		Get(ctx, opts)
 	if err != nil {
 		return nil, transformError(err)
 	}
@@ -38,7 +84,7 @@ func fetchRoles(runtime *plugin.Runtime) ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		mqlResource, err := CreateResource(runtime, "microsoft.rolemanagement.roledefinition",
+		mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.rolemanagement.roledefinition",
 			map[string]*llx.RawData{
 				"id":              llx.StringDataPtr(role.GetId()),
 				"description":     llx.StringDataPtr(role.GetDescription()),
@@ -58,8 +104,23 @@ func fetchRoles(runtime *plugin.Runtime) ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlMicrosoft) roles() ([]interface{}, error) {
-	return fetchRoles(a.MqlRuntime)
+func (a *mqlMicrosoft) roles() (*mqlMicrosoftRoles, error) {
+	resource, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "microsoft.roles", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+
+	return resource.(*mqlMicrosoftRoles), nil
+}
+
+func initMicrosoftRoles(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	args["__id"] = newListResourceIdFromArguments("microsoft.roles", args)
+	resource, err := runtime.CreateResource(runtime, "microsoft.roles", args)
+	if err != nil {
+		return args, nil, err
+	}
+
+	return args, resource.(*mqlMicrosoftRoles), nil
 }
 
 func (m *mqlMicrosoftRolemanagementRoledefinition) id() (string, error) {
@@ -72,8 +133,13 @@ func (m *mqlMicrosoftRolemanagementRoleassignment) id() (string, error) {
 }
 
 // Deprecated: use mqlMicrosoft roles() instead
-func (a *mqlMicrosoftRolemanagement) roleDefinitions() ([]interface{}, error) {
-	return fetchRoles(a.MqlRuntime)
+func (a *mqlMicrosoftRolemanagement) roleDefinitions() (*mqlMicrosoftRoles, error) {
+	resource, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "microsoft.roles", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+
+	return resource.(*mqlMicrosoftRoles), nil
 }
 
 func (a *mqlMicrosoftRolemanagementRoledefinition) assignments() ([]interface{}, error) {

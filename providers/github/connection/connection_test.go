@@ -1,29 +1,80 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-//go:build debugtest
-// +build debugtest
-
-package github
+package connection
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
 	"os"
 	"testing"
 
-	"github.com/google/go-github/v67/github"
+	"github.com/google/go-github/v72/github"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
 )
 
-func TestGithub(t *testing.T) {
+func TestGithubNoConnection(t *testing.T) {
 	os.Setenv("GITHUB_TOKEN", "")
-	p, err := NewGithubConnection(0, &inventory.Config{})
+	_, err := NewGithubConnection(0, &inventory.Asset{})
+	require.Error(t, err)
+}
+
+func TestGithubValidConnection_Private_Key(t *testing.T) {
+	// Generate a new RSA private key
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048) // 2048-bit key size
 	require.NoError(t, err)
+	privateKeyDER := x509.MarshalPKCS1PrivateKey(privateKey)
+	privateKeyPEM := &pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: privateKeyDER,
+	}
+	pemData := pem.EncodeToMemory(privateKeyPEM)
 
-	client := p.Client()
+	_, err = NewGithubConnection(0, &inventory.Asset{
+		Connections: []*inventory.Config{
+			{
+				Options: map[string]string{
+					OPTION_APP_ID:              "123",
+					OPTION_APP_INSTALLATION_ID: "890",
+				},
+				Credentials: []*vault.Credential{
+					{
+						Type:   vault.CredentialType_private_key,
+						Secret: pemData,
+					},
+				},
+			},
+		},
+	})
+	require.NoError(t, err)
+}
 
+func TestGithubValidConnection_Password(t *testing.T) {
+	_, err := NewGithubConnection(0, &inventory.Asset{
+		Connections: []*inventory.Config{
+			{
+				Credentials: []*vault.Credential{
+					{
+						Type:   vault.CredentialType_password,
+						Secret: []byte("super_secret"),
+					},
+				},
+			},
+		},
+	})
+	require.NoError(t, err)
+}
+
+func TestGithubNeedsFix(t *testing.T) {
+	t.Skip()
+	p, err := NewGithubConnection(0, &inventory.Asset{})
 	orgName := "mondoohq"
+	client := p.Client()
 	ctx := context.Background()
 	org, _, err := client.Organizations.Get(ctx, orgName)
 	require.NoError(t, err)

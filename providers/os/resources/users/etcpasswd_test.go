@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/mock"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/users"
@@ -58,4 +59,26 @@ func TestParseFreebsdLinuxEtcPasswd(t *testing.T) {
 	assert.Equal(t, "Charlie &", m[0].Description, "user description")
 	assert.Equal(t, "/root", m[0].Home, "detected user home")
 	assert.Equal(t, "/bin/csh", m[0].Shell, "detected user shell")
+}
+
+func TestParseLinuxGetentPasswd(t *testing.T) {
+	conn, err := mock.New(0, "./testdata/oraclelinux_getent_passwd.toml", &inventory.Asset{
+		Platform: &inventory.Platform{
+			Family: []string{"os", "unix", "linux", "redhat"},
+		},
+	})
+	require.NoError(t, err)
+	m, err := users.ResolveManager(conn)
+	require.Nil(t, err)
+
+	list, err := m.List()
+	require.Nil(t, err)
+	assert.Equal(t, 20, len(list), "detected the right amount of users")
+
+	assert.Equal(t, "root", list[0].Name, "detected user name")
+	assert.Equal(t, int64(0), list[0].Uid, "detected uid")
+	assert.Equal(t, int64(0), list[0].Gid, "detected gid")
+	assert.Equal(t, "root", list[0].Description, "user description")
+	assert.Equal(t, "/root", list[0].Home, "detected user home")
+	assert.Equal(t, "/bin/bash", list[0].Shell, "detected user shell")
 }

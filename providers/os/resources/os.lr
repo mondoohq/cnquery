@@ -258,6 +258,8 @@ os {
   rebootpending() bool
   // Hostname for this OS
   hostname() string
+  // Hypervisor for this OS
+  hypervisor() string
   // Machine ID for this OS
   machineid() string
 }
@@ -373,6 +375,16 @@ file @defaults("path size permissions.string") {
   empty(path) bool
 }
 
+// File context is a range of lines/columns in a file
+private file.context @defaults("file.path range content") {
+  // File referenced by this file context
+  file file
+  // Range of content in the file
+  range range
+  // Content for this range in the file, shown as an excerpt
+  content(file, range) string
+}
+
 // Access permissions for a given file
 private file.permissions @defaults("string") {
   // Raw POSIX mode for the permissions
@@ -449,6 +461,17 @@ parse.ini {
 
 // Parse JSON files
 parse.json {
+  init(path string)
+  // File that is parsed
+  file file
+  // Raw content of the file that is parsed
+  content(file) string
+  // The parsed parameters defined in this file
+  params(content) dict
+}
+
+// Parse XML files
+parse.xml {
   init(path string)
   // File that is parsed
   file file
@@ -702,11 +725,31 @@ sshd.config {
   permitRootLogin(params) []string
 }
 
-private sshd.config.matchBlock @defaults("criteria") {
+// A block of SSH server configuration
+private sshd.config.matchBlock @defaults("criteria") @context("file.context") {
   // The match criteria for this block
   criteria string
   // Configuration values in this block
   params map[string]string
+  // Ciphers configured for this SSH server
+  ciphers(params) []string
+  // MACs configured for this SSH server
+  macs(params) []string
+  // Key exchange algorithms configured for this SSH server
+  kexs(params) []string
+  // Host keys configured for this SSH server
+  hostkeys(params) []string
+  // PermitRootLogin setting in SSH server
+  permitRootLogin(params) []string
+}
+
+// auditd (Linux Audit Daemon) configuration
+auditd.config {
+  init(path? string)
+  // File of this auditd configuration
+  file() file
+  // Configuration values of this config
+  params(file) map[string]string
 }
 
 // Service on this system
@@ -867,9 +910,8 @@ docker.image {
 }
 
 // Docker container
-docker.container {
+docker.container @defaults("names.first status"){
   embed os.linux as os
-
   // Container ID
   id string
   // Container command
@@ -886,6 +928,8 @@ docker.container {
   status string
   // Label key value pairs
   labels map[string]string
+  // Container configuration that depends on the host running the container
+  hostConfig() dict
 }
 
 // IPv4 tables
@@ -1293,7 +1337,7 @@ npm.packages {
 
   init(path? string)
 
-  // optional path to search for packages
+  // Optional path to search for packages
   path string
 
   // Root Package (may not exist)
@@ -1677,4 +1721,100 @@ windows.security.health {
   uac dict
   // Security Center service information
   securityCenterService dict
+}
+
+// Details about an asset in the cloud
+cloud @defaults("provider") {
+  // Cloud provider (e.g. aws, azure, gcp)
+  provider() string
+  // Cloud instance metadata
+  instance() cloudInstance
+}
+
+// Cloud instance metadata
+private cloudInstance @defaults("publicHostname privateHostname") {
+  // Cloud instance public hostname
+  publicHostname() string
+  // List of public IPv4 addresses
+  publicIpv4() []ipAddress
+  // Cloud instance private hostname
+  privateHostname() string
+  // List of private IPv4 addresses
+  privateIpv4() []ipAddress
+  // Raw access to the cloud instance metadata
+  metadata() dict
+}
+
+// IP address (v4 or v6) with additional networking details
+ipAddress @defaults("ip") {
+  // Unique number that identifies a device on a network (e.g. 172.31.24.71 or 2001:0:2851:782c:869:1f7d:a331:f3e1)
+  ip ip
+  // Logical subdivision of a network (e.g. 172.31.16.0/20 or 2001:db8::/64)
+  subnet ip
+  // Classless Inter-Domain Routing notation (e.g. 172.31.24.71/20 or 2001:0:2851:782c:869:1f7d:a331:f3e1/64)
+  cidr ip
+  // Network address used to transmit to all devices connected to a network
+  broadcast ip
+  // IP address that acts as the entry point to another, or external, network
+  gateway ip
+}
+
+// Network information on this system
+network {
+  // Network interfaces
+  interfaces() []networkInterface
+}
+
+// Detailed information of a network interface
+private networkInterface @defaults("name mac active") {
+  // Name of the network interface
+  name string
+  // Unique 12-digit hexadecimal identifier assigned by the manufacturer
+  mac string
+  // Company that manufactures the network interface
+  vendor string
+  // List of IP addresses assigned to the network interface (v4 and v6)
+  ips []ipAddress
+  // Maximum transmission unit
+  mtu int
+  // Information about an interface's status and capabilities
+  flags []string
+  // Status of the network interface
+  active bool
+  // Whether a network interface is virtual of not
+  virtual bool
+}
+
+// Experimental: USB resource
+usb {
+  // List of USB devices
+  devices() []usb.device
+}
+
+// Experimental: USB device
+private usb.device @defaults("manufacturer name") {
+  // USB device vendor id
+  vendorId string
+  // USB manufacturer
+  manufacturer string
+  // USB device product id
+  productId string
+  // USB device serial number
+  serial string
+  // USB device name
+  name string
+  // USB device version
+  version string
+  // USB speed
+  speed string
+  // USB device class
+  class string
+  // USB device class name
+  className string
+  // USB device subclass
+  subclass string
+  // Protocol
+  protocol string
+  // Removable device
+  isRemovable bool
 }

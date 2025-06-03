@@ -322,6 +322,32 @@ func TestGetPartitions(t *testing.T) {
 		}
 		require.ElementsMatch(t, expected, parts)
 	})
+
+	t.Run("lvm2 partitions", func(t *testing.T) {
+		block := BlockDevice{
+			Name: "sda",
+			Children: []BlockDevice{
+				{Uuid: "1234", FsType: "fat32", Label: "EFI", Name: "sda1", MountPoint: ""},
+				{
+					Uuid: "12345", FsType: "lvm2_member", Label: "LVM", Name: "sda2", MountPoint: "", Children: []BlockDevice{
+						{Uuid: "lv12346", FsType: "lvm", Label: "ROOT", Name: "rootvg-rootlv", MountPoint: ""},
+						{Uuid: "lv12347", FsType: "lvm", Label: "HOME", Name: "rootvg-homelv", MountPoint: ""},
+					},
+				},
+			},
+		}
+
+		parts, err := block.GetPartitions(true, false)
+		require.NoError(t, err)
+
+		expected := []*PartitionInfo{
+			{Name: "/dev/sda1", FsType: "fat32", Uuid: "1234", Label: "EFI"},
+			{Name: "/dev/mapper/rootvg-rootlv", FsType: "lvm", Uuid: "lv12346", Label: "ROOT"},
+			{Name: "/dev/mapper/rootvg-homelv", FsType: "lvm", Uuid: "lv12347", Label: "HOME"},
+		}
+
+		require.ElementsMatch(t, expected, parts)
+	})
 }
 
 func TestLongestMatchingSuffix(t *testing.T) {

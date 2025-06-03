@@ -11,7 +11,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/package-url/packageurl-go"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
@@ -39,7 +38,10 @@ func ParseDpkgPackages(pf *inventory.Platform, input io.Reader) ([]Package, erro
 	add := func(pkg Package) {
 		// do sanitization checks to ensure we have minimal information
 		if pkg.Name != "" && pkg.Version != "" {
-			pkg.PUrl = purl.NewPackageUrl(pf, pkg.Name, pkg.Version, pkg.Arch, pkg.Epoch, packageurl.TypeDebian)
+			pkg.PUrl = purl.NewPackageURL(pf, purl.TypeDebian, pkg.Name, pkg.Version,
+				purl.WithArch(pkg.Arch),
+				purl.WithEpoch(pkg.Epoch),
+			).String()
 			cpes, _ := cpe.NewPackage2Cpe(pkg.Name, pkg.Name, pkg.Version, pkg.Epoch, pkg.Arch)
 			cpesWithoutArch, _ := cpe.NewPackage2Cpe(pkg.Name, pkg.Name, pkg.Version, pkg.Epoch, "")
 			cpes = append(cpes, cpesWithoutArch...)
@@ -215,36 +217,20 @@ func (dpm *DebPkgManager) Available() (map[string]PackageUpdate, error) {
 func (dpm *DebPkgManager) Files(name string, version string, arch string) ([]FileRecord, error) {
 	fs := dpm.conn.FileSystem()
 
-	files := []string{
+	dpkgListFiles := []string{
 		"/var/lib/dpkg/info/" + name + ".list",
 	}
+
 	if arch != "" {
-		files = append(files, "/var/lib/dpkg/info/"+name+":"+arch+".list")
+		dpkgListFiles = append(dpkgListFiles, "/var/lib/dpkg/info/"+name+":"+arch+".list")
 	}
 
 	fileRecords := []FileRecord{}
-	for i := range files {
-		file := files[i]
-		_, err := fs.Stat(file)
-		if err != nil {
+	for _, file := range dpkgListFiles {
+		if _, err := fs.Stat(file); err != nil {
 			continue
 		}
-
-		fi, err := fs.Open(file)
-		if err != nil {
-			return nil, err
-		}
-		defer fi.Close()
-
-		scanner := bufio.NewScanner(fi)
-		for scanner.Scan() {
-			line := scanner.Text()
-			fileRecords = append(fileRecords, FileRecord{
-				Path: line,
-			})
-		}
-		// we only need the first file that exists
-		break
+		fileRecords = append(fileRecords, FileRecord{Path: file})
 	}
 
 	return fileRecords, nil

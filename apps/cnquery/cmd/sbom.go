@@ -95,10 +95,7 @@ var sbomCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *pl
 		logger.DebugDumpJSON("mondoo-sbom-report", data)
 	}
 
-	boms, err := generator.NewBom(cnspecReport)
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to parse bom")
-	}
+	boms := generator.GenerateBom(cnspecReport)
 
 	var exporter sbom.FormatSpecificationHandler
 	output := viper.GetString("output")

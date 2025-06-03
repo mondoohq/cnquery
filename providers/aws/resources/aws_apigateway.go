@@ -72,10 +72,10 @@ func (a *mqlAwsApigateway) getRestApis(conn *connection.AwsConnection) []*jobpoo
 				for _, restApi := range restApisResp.Items {
 					mqlRestApi, err := CreateResource(a.MqlRuntime, "aws.apigateway.restapi",
 						map[string]*llx.RawData{
-							"arn":         llx.StringData(fmt.Sprintf(apiArnPattern, regionVal, conn.AccountId(), convert.ToString(restApi.Id))),
-							"id":          llx.StringData(convert.ToString(restApi.Id)),
-							"name":        llx.StringData(convert.ToString(restApi.Name)),
-							"description": llx.StringData(convert.ToString(restApi.Description)),
+							"arn":         llx.StringData(fmt.Sprintf(apiArnPattern, regionVal, conn.AccountId(), convert.ToValue(restApi.Id))),
+							"id":          llx.StringData(convert.ToValue(restApi.Id)),
+							"name":        llx.StringData(convert.ToValue(restApi.Name)),
+							"description": llx.StringData(convert.ToValue(restApi.Description)),
 							"createdDate": llx.TimeDataPtr(restApi.CreatedDate),
 							"region":      llx.StringData(regionVal),
 							"tags":        llx.MapData(strMapToInterface(restApi.Tags), types.String),
@@ -155,11 +155,11 @@ func (a *mqlAwsApigatewayRestapi) stages() ([]interface{}, error) {
 		}
 		mqlStage, err := CreateResource(a.MqlRuntime, "aws.apigateway.stage",
 			map[string]*llx.RawData{
-				"arn":            llx.StringData(fmt.Sprintf(apiStageArnPattern, region, conn.AccountId(), restApiId, convert.ToString(stage.StageName))),
-				"name":           llx.StringData(convert.ToString(stage.StageName)),
-				"description":    llx.StringData(convert.ToString(stage.Description)),
+				"arn":            llx.StringData(fmt.Sprintf(apiStageArnPattern, region, conn.AccountId(), restApiId, convert.ToValue(stage.StageName))),
+				"name":           llx.StringData(convert.ToValue(stage.StageName)),
+				"description":    llx.StringData(convert.ToValue(stage.Description)),
 				"tracingEnabled": llx.BoolData(stage.TracingEnabled),
-				"deploymentId":   llx.StringData(convert.ToString(stage.DeploymentId)),
+				"deploymentId":   llx.StringData(convert.ToValue(stage.DeploymentId)),
 				"methodSettings": llx.MapData(dictMethodSettings, types.Any),
 			})
 		if err != nil {

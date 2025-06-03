@@ -22,11 +22,11 @@ func (c *GcpConnection) Credentials(scopes ...string) (*googleoauth.Credentials,
 	ctx := context.Background()
 	credParams := googleoauth.CredentialsParams{
 		Scopes:  scopes,
-		Subject: c.serviceAccountSubject,
+		Subject: c.opts.serviceAccountSubject,
 	}
-	if c.cred != nil {
+	if c.opts.cred != nil {
 		// use service account from secret
-		data, err := credsServiceAccountData(c.cred)
+		data, err := credsServiceAccountData(c.opts.cred)
 		if err != nil {
 			return nil, err
 		}
@@ -42,12 +42,12 @@ func (c *GcpConnection) Client(scope ...string) (*http.Client, error) {
 	ctx := context.Background()
 
 	// use service account from secret if one is provided
-	if c.cred != nil {
-		data, err := credsServiceAccountData(c.cred)
+	if c.opts.cred != nil {
+		data, err := credsServiceAccountData(c.opts.cred)
 		if err != nil {
 			return nil, err
 		}
-		return serviceAccountAuth(ctx, c.serviceAccountSubject, data, scope...)
+		return serviceAccountAuth(ctx, c.opts.serviceAccountSubject, data, scope...)
 	}
 
 	// otherwise fallback to default google sdk authentication

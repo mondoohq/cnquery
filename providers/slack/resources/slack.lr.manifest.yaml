@@ -32,7 +32,6 @@ resources:
     min_mondoo_version: latest
   slack.conversations:
     fields:
-      "": {}
       directMessages: {}
       list: {}
       privateChannels: {}
@@ -117,6 +116,5 @@ resources:
       bots: {}
       list: {}
       members: {}
-      owner: {}
       owners: {}
     min_mondoo_version: latest

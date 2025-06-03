@@ -9,7 +9,6 @@ import (
 	"io"
 	"strings"
 
-	"github.com/package-url/packageurl-go"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	cpe2 "go.mondoo.com/cnquery/v11/providers/os/resources/cpe"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/purl"
@@ -37,14 +36,27 @@ func parseAixPackages(pf *inventory.Platform, r io.Reader) ([]Package, error) {
 		record := strings.Split(line, ":")
 
 		cpes, _ := cpe2.NewPackage2Cpe(record[1], record[1], record[2], "", pf.Arch)
+
+		state := record[4]
+		qualifiers := map[string]string{}
+
+		if record[7] != "" {
+			state = state + "|" + record[7]
+			qualifiers["efix"] = "locked"
+		}
+
 		// Fileset, Level, PtfID, State, Type, Description, EFIXLocked
 		pkgs = append(pkgs, Package{
 			Name:        record[1],
 			Version:     record[2],
 			Description: strings.TrimSpace(record[6]),
 			Format:      AixPkgFormat,
-			PUrl:        purl.NewPackageUrl(pf, record[1], record[2], "", "", packageurl.TypeGeneric),
-			CPEs:        cpes,
+			Arch:        pf.Arch,
+			PUrl: purl.NewPackageURL(
+				pf, purl.TypeGeneric, record[1], record[2], purl.WithNamespace(pf.Name), purl.WithQualifiers(qualifiers),
+			).String(),
+			CPEs:   cpes,
+			Status: state,
 		})
 
 	}

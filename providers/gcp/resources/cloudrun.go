@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"sync"
 
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
@@ -216,6 +217,14 @@ func (g *mqlGcpProjectCloudRunService) services() ([]interface{}, error) {
 		return nil, g.Regions.Error
 	}
 	regions := g.Regions.Data
+	if len(regions) == 0 {
+		// regions data has not been fetched, we need to get it
+		r, err := g.regions()
+		if err != nil {
+			return nil, err
+		}
+		regions = r
+	}
 
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
@@ -252,6 +261,7 @@ func (g *mqlGcpProjectCloudRunService) services() ([]interface{}, error) {
 				}
 				if err != nil {
 					log.Error().Err(err).Send()
+					break
 				}
 
 				var mqlTemplate plugin.Resource
@@ -304,7 +314,7 @@ func (g *mqlGcpProjectCloudRunService) services() ([]interface{}, error) {
 					mqlTraffic = append(mqlTraffic, map[string]interface{}{
 						"type":     t.Type.String(),
 						"revision": t.Revision,
-						"percent":  t.Percent,
+						"percent":  strconv.Itoa(int(t.Percent)),
 						"tag":      t.Tag,
 					})
 				}
@@ -328,7 +338,7 @@ func (g *mqlGcpProjectCloudRunService) services() ([]interface{}, error) {
 					mqlTrafficStatuses = append(mqlTrafficStatuses, map[string]interface{}{
 						"type":     t.Type.String(),
 						"revision": t.Revision,
-						"percent":  t.Percent,
+						"percent":  strconv.Itoa(int(t.Percent)),
 						"tag":      t.Tag,
 						"uri":      t.Uri,
 					})
@@ -386,7 +396,7 @@ func (g *mqlGcpProjectCloudRunServiceServiceRevisionTemplate) serviceAccount() (
 	}
 	email := g.ServiceAccountEmail.Data
 
-	res, err := CreateResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount", map[string]*llx.RawData{
+	res, err := NewResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount", map[string]*llx.RawData{
 		"projectId": llx.StringData(projectId),
 		"email":     llx.StringData(email),
 	})
@@ -407,7 +417,7 @@ func (g *mqlGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate) serviceAc
 	}
 	email := g.ServiceAccountEmail.Data
 
-	res, err := CreateResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount", map[string]*llx.RawData{
+	res, err := NewResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount", map[string]*llx.RawData{
 		"projectId": llx.StringData(projectId),
 		"email":     llx.StringData(email),
 	})

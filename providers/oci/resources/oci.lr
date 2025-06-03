@@ -274,7 +274,7 @@ private oci.objectStorage.bucket {
   publicAccessType() string
   // Storage tier type
   storageTier() string
-  // auto tiering status
+  // Auto tiering status
   autoTiering() string
   // Bucket versioning
   versioning() string

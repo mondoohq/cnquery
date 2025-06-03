@@ -21,7 +21,7 @@ import (
 )
 
 var (
-	features    = cnquery.Features{}
+	features    = cnquery.Features{byte(cnquery.ResourceContext)}
 	core_schema = testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "core"})
 	os_schema   = testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "os"})
 	conf        = mqlc.NewConfig(
@@ -1023,6 +1023,113 @@ func TestCompiler_ArrayAll(t *testing.T) {
 	})
 }
 
+func TestCompiler_Empty_All_ANY_Issue5248(t *testing.T) {
+	unsetArray := []string{
+		"[].any()",
+		"[].all()",
+		"[].none()",
+		"[].any()",
+	}
+	for _, code := range unsetArray {
+		t.Run(code, func(t *testing.T) {
+			compileT(t, code, func(res *llx.CodeBundle) {
+				require.Equal(t, 2, len(res.CodeV2.Blocks[0].Chunks))
+				assert.Nil(t, res.CodeV2.Blocks[0].Chunks[0].Function)
+				// all of these builtin functions should return an empty array
+				// of unset values
+				assertPrimitive(t, &llx.Primitive{
+					// type is an array of unset values
+					Type: string(types.Array(types.Unset)),
+					// without content
+					Array: []*llx.Primitive{},
+				}, res.CodeV2.Blocks[0].Chunks[0])
+			})
+		})
+	}
+
+	unsetMap := []string{
+		"{}.any()",
+		"{}.all()",
+		"{}.none()",
+		"{}.any()",
+	}
+	for _, code := range unsetMap {
+		t.Run(code, func(t *testing.T) {
+			compileT(t, code, func(res *llx.CodeBundle) {
+				require.Equal(t, 2, len(res.CodeV2.Blocks[0].Chunks))
+				assert.Nil(t, res.CodeV2.Blocks[0].Chunks[0].Function)
+				// all of these builtin functions should return an empty map
+				// of unset values
+				assertPrimitive(t, &llx.Primitive{
+					// type is a map of unset values
+					Type: string(types.Map(types.String, types.Unset)),
+					// map without content
+					Map: map[string]*llx.Primitive{},
+				}, res.CodeV2.Blocks[0].Chunks[0])
+			})
+		})
+	}
+
+	otherCases := []struct {
+		code string
+		res  *llx.Primitive
+	}{
+		{
+			code: "[1,2].any()",
+			res: &llx.Primitive{
+				// test that we compile successfully into int values
+				Type: string(types.Array(types.Int)),
+				Array: []*llx.Primitive{
+					llx.IntPrimitive(1),
+					llx.IntPrimitive(2),
+				},
+			},
+		},
+		{
+			code: "[\"a\",\"b\"].all()",
+			res: &llx.Primitive{
+				// test that we compile successfully into string values
+				Type: string(types.Array(types.String)),
+				Array: []*llx.Primitive{
+					llx.StringPrimitive("a"),
+					llx.StringPrimitive("b"),
+				},
+			},
+		},
+		{
+			code: "{a: 123}.all()",
+			res: &llx.Primitive{
+				// type is a map of unset values
+				Type: string(types.Map(types.String, types.Int)),
+				// map without content
+				Map: map[string]*llx.Primitive{
+					"a": llx.IntPrimitive(123),
+				},
+			},
+		},
+		{
+			code: "[true,false].none()",
+			res: &llx.Primitive{
+				// test that we compile successfully into boolean values
+				Type: string(types.Array(types.Bool)),
+				Array: []*llx.Primitive{
+					llx.BoolPrimitive(true),
+					llx.BoolPrimitive(false),
+				},
+			},
+		},
+	}
+	for _, v := range otherCases {
+		t.Run(v.code, func(t *testing.T) {
+			compileT(t, v.code, func(res *llx.CodeBundle) {
+				require.Equal(t, 2, len(res.CodeV2.Blocks[0].Chunks))
+				assert.Nil(t, res.CodeV2.Blocks[0].Chunks[0].Function)
+				assertPrimitive(t, v.res, res.CodeV2.Blocks[0].Chunks[0])
+			})
+		})
+	}
+}
+
 func TestCompiler_All_Issue1316(t *testing.T) {
 	// https://github.com/mondoohq/cnquery/issues/1316
 	compileT(t, `files.find(from: ".", type: "file").all( permissions.other_readable == false )`, func(res *llx.CodeBundle) {
@@ -1110,6 +1217,46 @@ func TestCompiler_ResourceMapLength(t *testing.T) {
 
 func TestCompiler_ResourceExpansion(t *testing.T) {
 	var cmd string
+
+	cmd = "sshd.config.blocks"
+	t.Run(cmd, func(t *testing.T) {
+		compileT(t, cmd, func(res *llx.CodeBundle) {
+			require.Len(t, res.CodeV2.Blocks, 3)
+
+			require.Len(t, res.CodeV2.Blocks[0].Chunks, 3)
+			require.Equal(t, "{}", res.CodeV2.Blocks[0].Chunks[2].Id)
+
+			require.Len(t, res.CodeV2.Blocks[1].Chunks, 4)
+			assertFunction(t, "context", &llx.Function{
+				Type:    string(types.Resource("file.context")),
+				Binding: (2 << 32) | 1,
+				Args:    []*llx.Primitive{},
+			}, res.CodeV2.Blocks[1].Chunks[2])
+			assertFunction(t, "{}", &llx.Function{
+				Type:    string(types.Block),
+				Binding: (2 << 32) | 3,
+				Args:    []*llx.Primitive{llx.FunctionPrimitive(3 << 32)},
+			}, res.CodeV2.Blocks[1].Chunks[3])
+
+			require.Len(t, res.CodeV2.Blocks[2].Chunks, 5)
+			assertFunction(t, "file", &llx.Function{
+				Type:    string(types.Resource("file")),
+				Binding: (3 << 32) | 1,
+			}, res.CodeV2.Blocks[2].Chunks[1])
+			assertFunction(t, "path", &llx.Function{
+				Type:    string(types.String),
+				Binding: (3 << 32) | 2,
+			}, res.CodeV2.Blocks[2].Chunks[2])
+			assertFunction(t, "range", &llx.Function{
+				Type:    string(types.Range),
+				Binding: (3 << 32) | 1,
+			}, res.CodeV2.Blocks[2].Chunks[3])
+			assertFunction(t, "content", &llx.Function{
+				Type:    string(types.String),
+				Binding: (3 << 32) | 1,
+			}, res.CodeV2.Blocks[2].Chunks[4])
+		})
+	})
 
 	cmd = "mondoo"
 	t.Run(cmd, func(t *testing.T) {

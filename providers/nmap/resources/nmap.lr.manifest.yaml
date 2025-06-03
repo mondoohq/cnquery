@@ -1,0 +1,47 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+resources:
+  nmap:
+    fields:
+      version: {}
+    min_mondoo_version: 9.0.0
+  nmap.host:
+    fields:
+      addresses: {}
+      comment: {}
+      distance: {}
+      endTime: {}
+      hostnames: {}
+      name: {}
+      os: {}
+      ports: {}
+      state: {}
+      trace: {}
+    min_mondoo_version: 9.0.0
+  nmap.network:
+    fields:
+      hosts: {}
+      target: {}
+      warnings: {}
+    min_mondoo_version: 9.0.0
+  nmap.port:
+    fields:
+      method: {}
+      port: {}
+      product: {}
+      protocol: {}
+      service: {}
+      state: {}
+      version: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  nmap.versionInformation:
+    fields:
+      compiledWith: {}
+      compiledWithout: {}
+      nsockEngines: {}
+      platform: {}
+      version: {}
+    is_private: true
+    min_mondoo_version: 9.0.0

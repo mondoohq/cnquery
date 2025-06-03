@@ -5,7 +5,11 @@ package connection
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"io"
+	"maps"
+	"net/http"
 	"slices"
 	"strconv"
 	"strings"
@@ -14,9 +18,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/credentials/stscreds"
+	"github.com/aws/aws-sdk-go-v2/service/account"
+	"github.com/aws/aws-sdk-go-v2/service/account/types"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/mitchellh/hashstructure/v2"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v11/logger/zerologadapter"
@@ -28,17 +35,22 @@ import (
 
 type AwsConnection struct {
 	plugin.Connection
-	Conf              *inventory.Config
-	asset             *inventory.Asset
-	cfg               aws.Config
-	accountId         string
-	clientcache       ClientsCache
-	awsConfigOptions  []func(*config.LoadOptions) error
-	profile           string
-	PlatformOverride  string
-	connectionOptions map[string]string
-	Filters           DiscoveryFilters
-	scope             string
+	Conf             *inventory.Config
+	asset            *inventory.Asset
+	cfg              aws.Config
+	accountId        string
+	clientcache      ClientsCache
+	awsConfigOptions []func(*config.LoadOptions) error
+	PlatformOverride string
+	Filters          DiscoveryFilters
+
+	opts awsConnectionOptions
+}
+
+type awsConnectionOptions struct {
+	scope   string
+	profile string
+	options map[string]string
 }
 
 type DiscoveryFilters struct {
@@ -95,7 +107,14 @@ func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 		awsConfigOptions: []func(*config.LoadOptions) error{},
 		Filters:          EmptyDiscoveryFilters(),
 	}
-	opts := parseFlagsForConnectionOptions(asset.Options, conf.Options, conf.GetCredentials())
+
+	// merge the options to make sure we don't miss anything
+	if asset.Options == nil {
+		asset.Options = map[string]string{}
+	}
+	maps.Copy(asset.Options, conf.Options)
+
+	opts := parseFlagsForConnectionOptions(asset.Options, conf.GetCredentials())
 	for _, opt := range opts {
 		opt(c)
 	}
@@ -113,32 +132,58 @@ func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 		log.Info().Msg("no AWS region found, using us-east-1")
 		cfg.Region = "us-east-1" // in case the user has no region set, default to us-east-1
 	}
-	// gather information about the aws account
-	cfgCopy := cfg.Copy()
-	identity, err := CheckIam(cfgCopy)
-	if err != nil {
-		log.Debug().Err(err).Msg("could not gather details of AWS account")
-		// try with govcloud region
-		cfgCopy.Region = "us-gov-west-1"
-		identity, err = CheckIam(cfgCopy)
-		if err != nil {
-			log.Debug().Err(err).Msg("could not gather details of AWS account")
-			return nil, err
-		}
-	}
 
 	c.Connection = plugin.NewConnection(id, asset)
 	c.Conf = conf
 	c.asset = asset
 	c.cfg = cfg
-	c.accountId = *identity.Account
-	c.profile = asset.Options["profile"]
-	c.scope = asset.Options["scope"]
-	c.connectionOptions = asset.Options
+	c.opts.profile = asset.Options["profile"]
+	c.opts.scope = asset.Options["scope"]
+	c.opts.options = asset.Options
 	if conf.Discover != nil {
 		c.Filters = parseOptsToFilters(conf.Discover.Filter)
 	}
 	return c, nil
+}
+
+func (c *AwsConnection) Hash() uint64 {
+	// generate hash of the config options used to to initialize this connection,
+	// we use this to avoid verifying a client with the same options more than once
+	hash, err := hashstructure.Hash(c.opts, hashstructure.FormatV2, nil)
+	if err != nil {
+		log.Error().Err(err).Msg("unable to hash connection")
+	}
+	return hash
+}
+
+func (c *AwsConnection) Verify() (string, error) {
+	identity, err := CheckIam(c.cfg.Copy())
+	if err != nil {
+		log.Debug().Err(err).Msg("could not gather details of AWS account")
+		// try with govcloud region, store error to return it if this last option does not work
+		err1 := err
+		cfgCopy := c.cfg.Copy()
+		cfgCopy.Region = "us-gov-west-1"
+		identity, err = CheckIam(cfgCopy)
+		if err != nil {
+			return "", err1
+		}
+	}
+	account := ""
+	if identity.Account != nil {
+		account = *identity.Account
+	}
+
+	return account, nil
+}
+
+func (c *AwsConnection) SetAccountId(id string) {
+	if id != "" {
+		c.accountId = id
+	}
+}
+func (p *AwsConnection) AccountId() string {
+	return p.accountId
 }
 
 func parseOptsToFilters(opts map[string]string) DiscoveryFilters {
@@ -181,15 +226,7 @@ func parseOptsToFilters(opts map[string]string) DiscoveryFilters {
 	return d
 }
 
-func parseFlagsForConnectionOptions(m1 map[string]string, m2 map[string]string, creds []*vault.Credential) []ConnectionOption {
-	// merge the options to make sure we dont miss anything
-	m := m1
-	if m == nil {
-		m = make(map[string]string)
-	}
-	for k, v := range m2 {
-		m[k] = v
-	}
+func parseFlagsForConnectionOptions(m map[string]string, creds []*vault.Credential) []ConnectionOption {
 	o := make([]ConnectionOption, 0)
 	if apiEndpoint, ok := m["endpoint-url"]; ok {
 		o = append(o, WithEndpoint(apiEndpoint))
@@ -295,20 +332,16 @@ func (p *AwsConnection) UpdateAsset(asset *inventory.Asset) {
 	p.asset = asset
 }
 
-func (p *AwsConnection) AccountId() string {
-	return p.accountId
-}
-
 func (p *AwsConnection) Profile() string {
-	return p.profile
+	return p.opts.profile
 }
 
 func (p *AwsConnection) Scope() string {
-	return p.scope
+	return p.opts.scope
 }
 
 func (p *AwsConnection) ConnectionOptions() map[string]string {
-	return p.connectionOptions
+	return p.opts.options
 }
 
 func (p *AwsConnection) RunCommand(command string) (*shared.Command, error) {
@@ -376,25 +409,139 @@ func (h *AwsConnection) Regions() ([]string, error) {
 	// if no cache, get regions using ec2 client (using the ssm list global regions does not give the same list)
 	log.Debug().Msg("no region cache or region limits found. fetching regions")
 	regions := []string{}
-	svc := h.Ec2("us-east-1")
+	svc := h.Ec2(h.cfg.Region)
 	ctx := context.Background()
 
 	res, err := svc.DescribeRegions(ctx, &ec2.DescribeRegionsInput{})
 	if err != nil {
-		// try with govcloud region
-		svc := h.Ec2("us-gov-west-1")
-		res, err = svc.DescribeRegions(ctx, &ec2.DescribeRegionsInput{})
-		if err != nil {
+		log.Warn().Err(err).Msg("unable to describe regions")
+		// when we can't use `DescribeRegions` we will fallback to:
+		// 1. Account list-regions
+		// 2. Public regional table + region access verification
+		enabledRegions, fallbackErr := h.fallbackGetEnabledRegions(ctx)
+		if fallbackErr != nil {
+			log.Warn().Err(fallbackErr).Msg("unable to list regions from fallback options")
 			return regions, err
 		}
-	}
-	for _, region := range res.Regions {
-		// ensure excluded regions are discarded
-		if !slices.Contains(h.Filters.DiscoveryFilters.ExcludeRegions, *region.RegionName) {
+		regions = enabledRegions
+	} else {
+		for _, region := range res.Regions {
 			regions = append(regions, *region.RegionName)
 		}
 	}
+
+	// ensure excluded regions are discarded
+	filteredRegions := []string{}
+	for _, region := range regions {
+		if !slices.Contains(h.Filters.DiscoveryFilters.ExcludeRegions, region) {
+			filteredRegions = append(filteredRegions, region)
+		}
+	}
+
+	if len(filteredRegions) != len(regions) {
+		log.Debug().
+			Strs("filtered_regions", filteredRegions).
+			Msg("list of regions changed based of applied filters")
+	}
+
 	// cache the regions as part of the provider instance
-	h.clientcache.Store("_regions", &CacheEntry{Data: regions})
-	return regions, nil
+	h.clientcache.Store("_regions", &CacheEntry{Data: filteredRegions})
+	return filteredRegions, nil
+}
+
+// fallbackGetEnabledRegions tries multiple ways to return the list of enabled regions.
+//
+// NOTE use this only if `DescribeRegions` doesn't work
+func (h *AwsConnection) fallbackGetEnabledRegions(ctx context.Context) (regions []string, err error) {
+	// 1. Account list-regions
+	response, err := h.Account("").ListRegions(ctx, &account.ListRegionsInput{
+		RegionOptStatusContains: []types.RegionOptStatus{
+			types.RegionOptStatusEnabled,
+			types.RegionOptStatusEnabling,
+			types.RegionOptStatusEnabledByDefault,
+		},
+	})
+	if err == nil {
+		for _, region := range response.Regions {
+			regions = append(regions, *region.RegionName)
+		}
+		log.Debug().Strs("regions", regions).Msg("regions>fallback> using account list-regions")
+		return
+	}
+
+	log.Warn().Err(err).Msg("unable to list account regions")
+
+	// 2. Public regional table + region access verification
+	regionsFromTable, err := getRegionsFromRegionalTable()
+	if err != nil {
+		return
+	}
+
+	// verify which regions are enabled
+	for _, region := range regionsFromTable {
+		if h.isRegionEnabled(ctx, region) {
+			regions = append(regions, region)
+		}
+	}
+
+	log.Debug().Strs("regions", regions).Msg("using public regional table")
+	return
+}
+
+// isRegionEnabled returns true if the provided region is enabled. We verify if a region is
+// enabled by doing a simple request to that region.
+func (h *AwsConnection) isRegionEnabled(ctx context.Context, region string) bool {
+	_, err := h.STS(region).GetCallerIdentity(ctx, nil)
+	return err == nil
+}
+
+type regionalTable struct {
+	Metadata struct {
+		Copyright     string `json:"copyright"`
+		Disclaimer    string `json:"disclaimer"`
+		FormatVersion string `json:"format:version"`
+		SourceVersion string `json:"source:version"`
+	} `json:"metadata"`
+	Prices []struct {
+		Attributes struct {
+			AwsRegion      string `json:"aws:region"`
+			AwsServiceName string `json:"aws:serviceName"`
+			AwsServiceURL  string `json:"aws:serviceUrl"`
+		} `json:"attributes"`
+		ID string `json:"id"`
+	} `json:"prices"`
+}
+
+// getRegionsFromRegionalTable is a workaround for cases where the DescribeRegions API
+// is blocked. This function returns all possible AWS regions using a well known regional
+// table provided by AWS.
+//
+// https://api.regional-table.region-services.aws.a2z.com/index.json
+//
+// NOTE: if we need to validate that we have access to that region or, that the region is
+// enabled, we can improve this function to do STS identity calls for all regions.
+func getRegionsFromRegionalTable() (regions []string, err error) {
+	resp, err := http.Get("https://api.regional-table.region-services.aws.a2z.com/index.json")
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+	var regionalTableJSON regionalTable
+	err = json.Unmarshal(body, &regionalTableJSON)
+	if err != nil {
+		return
+	}
+
+	for _, p := range regionalTableJSON.Prices {
+		if p.Attributes.AwsRegion != "" {
+			regions = append(regions, p.Attributes.AwsRegion)
+		}
+	}
+	slices.Sort(regions)
+	regions = slices.Compact(regions)
+	return
 }

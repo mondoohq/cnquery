@@ -45,6 +45,16 @@ resources:
       vector: {}
     is_private: true
     min_mondoo_version: 5.15.0
+  auditd.conf:
+    fields:
+      file: {}
+      params: {}
+    min_mondoo_version: 9.0.0
+  auditd.config:
+    fields:
+      file: {}
+      params: {}
+    min_mondoo_version: 9.0.0
   auditpol:
     fields:
       list:
@@ -83,6 +93,20 @@ resources:
       options: {}
       type: {}
     min_mondoo_version: latest
+  cloud:
+    fields:
+      instance: {}
+      provider: {}
+    min_mondoo_version: 9.0.0
+  cloudInstance:
+    fields:
+      metadata: {}
+      privateHostname: {}
+      privateIpv4: {}
+      publicHostname: {}
+      publicIpv4: {}
+    is_private: true
+    min_mondoo_version: 11.45.0
   command:
     fields:
       command: {}
@@ -120,6 +144,8 @@ resources:
         The `docker.container` resource provides fields for assessing running Docker containers.
     fields:
       command: {}
+      hostConfig:
+        min_mondoo_version: 9.0.0
       id: {}
       image: {}
       imageid: {}
@@ -234,99 +260,6 @@ resources:
     refs:
     - title: What is an image?
       url: https://docs.docker.com/guides/docker-concepts/the-basics/what-is-an-image/
-  equinix.metal.device:
-    fields:
-      billingCycle: {}
-      createdAt: {}
-      description: {}
-      hostname: {}
-      id: {}
-      locked: {}
-      os: {}
-      shortID: {}
-      spotInstance: {}
-      state: {}
-      updatedAt: {}
-      url: {}
-    maturity: experimental
-    min_mondoo_version: 5.15.0
-    platform:
-      name:
-      - equinix
-  equinix.metal.organization:
-    fields:
-      address: {}
-      billingPhone: {}
-      createdAt: {}
-      creditAmount: {}
-      description: {}
-      id: {}
-      mainPhone: {}
-      name: {}
-      taxId: {}
-      twitter: {}
-      updatedAt: {}
-      url: {}
-      website: {}
-    maturity: experimental
-    min_mondoo_version: 5.15.0
-    platform:
-      name:
-      - equinix
-  equinix.metal.project:
-    fields:
-      createdAt: {}
-      devices: {}
-      id: {}
-      name: {}
-      organization: {}
-      paymentMethod: {}
-      sshKeys: {}
-      updatedAt: {}
-      url: {}
-      users: {}
-    maturity: experimental
-    min_mondoo_version: 5.15.0
-    platform:
-      name:
-      - equinix
-  equinix.metal.sshkey:
-    fields:
-      createdAt: {}
-      fingerPrint: {}
-      id: {}
-      key: {}
-      label: {}
-      updatedAt: {}
-      url: {}
-    maturity: experimental
-    min_mondoo_version: 5.15.0
-    platform:
-      name:
-      - equinix
-  equinix.metal.user:
-    fields:
-      avatarUrl: {}
-      createdAt: {}
-      email: {}
-      facebook: {}
-      firstName: {}
-      fullName: {}
-      id: {}
-      lastName: {}
-      linkedin: {}
-      phoneNumber: {}
-      timezone: {}
-      twitter: {}
-      twoFactorAuth: {}
-      updatedAt: {}
-      url: {}
-      vpn: {}
-    maturity: experimental
-    min_mondoo_version: 5.15.0
-    platform:
-      name:
-      - equinix
   file:
     fields:
       basename: {}
@@ -348,6 +281,13 @@ resources:
           permissions.isDirectory
         }
       title: Test if a directory exists
+  file.context:
+    fields:
+      content: {}
+      file: {}
+      range: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   file.permissions:
     fields:
       group_executable: {}
@@ -421,6 +361,14 @@ resources:
       input: {}
       output: {}
     min_mondoo_version: 5.15.0
+  ipAddress:
+    fields:
+      broadcast: {}
+      cidr: {}
+      gateway: {}
+      ip: {}
+      subnet: {}
+    min_mondoo_version: 11.45.0
   iptables:
     fields:
       input: {}
@@ -628,6 +576,27 @@ resources:
       options: {}
       path: {}
     min_mondoo_version: 5.15.0
+  network:
+    fields:
+      interfaces: {}
+    min_mondoo_version: 9.0.0
+  networkInterface:
+    fields:
+      active: {}
+      driver: {}
+      firmware: {}
+      flags: {}
+      ips: {}
+      mac: {}
+      manufacturer: {}
+      model: {}
+      mtu: {}
+      name: {}
+      status: {}
+      vendor: {}
+      virtual: {}
+    is_private: true
+    min_mondoo_version: 11.45.0
   npm.package:
     fields:
       cpes: {}
@@ -661,6 +630,8 @@ resources:
     fields:
       env: {}
       hostname: {}
+      hypervisor:
+        min_mondoo_version: 9.0.0
       machineid: {}
       name: {}
       path: {}
@@ -806,6 +777,12 @@ resources:
       file: {}
       params: {}
     min_mondoo_version: 5.15.0
+  parse.xml:
+    fields:
+      content: {}
+      file: {}
+      params: {}
+    min_mondoo_version: 9.0.0
   parse.yaml:
     fields:
       content: {}
@@ -1027,11 +1004,48 @@ resources:
       title: Check that the SSH banner is sourced from /etc/ssh/sshd-banner
   sshd.config.matchBlock:
     fields:
+      ciphers:
+        min_mondoo_version: 9.0.0
       condition: {}
+      context:
+        min_mondoo_version: 9.0.0
       criteria: {}
+      file:
+        min_mondoo_version: 9.0.0
+      hostkeys:
+        min_mondoo_version: 9.0.0
+      kexs:
+        min_mondoo_version: 9.0.0
+      macs:
+        min_mondoo_version: 9.0.0
       params: {}
+      permitRootLogin:
+        min_mondoo_version: 9.0.0
     is_private: true
     min_mondoo_version: latest
+  usb:
+    fields:
+      devices: {}
+    min_mondoo_version: 9.0.0
+  usb.device:
+    fields:
+      class: {}
+      className: {}
+      isRemovable: {}
+      manufacturer: {}
+      name: {}
+      product: {}
+      productId: {}
+      protocol: {}
+      removable: {}
+      serial: {}
+      speed: {}
+      subclass: {}
+      vendor: {}
+      vendorId: {}
+      version: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   user:
     fields:
       authorizedkeys: {}
@@ -1260,12 +1274,6 @@ resources:
       title: Check that a specific Windows Server feature is installed
     - query: windows.serverFeature('Windows-Defender').installed == false
       title: Check that a specific Windows Server feature is not installed
-  yaml.path:
-    fields:
-      filepath: {}
-      jsonpath: {}
-      result: {}
-    min_mondoo_version: 5.15.0
   yum:
     fields:
       repos: {}

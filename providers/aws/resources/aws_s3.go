@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -98,10 +99,11 @@ func (a *mqlAwsS3) buckets() ([]interface{}, error) {
 		mqlS3Bucket, err := CreateResource(a.MqlRuntime, "aws.s3.bucket",
 			map[string]*llx.RawData{
 				"name":        llx.StringDataPtr(bucket.Name),
-				"arn":         llx.StringData(fmt.Sprintf(s3ArnPattern, convert.ToString(bucket.Name))),
+				"arn":         llx.StringData(fmt.Sprintf(s3ArnPattern, convert.ToValue(bucket.Name))),
 				"exists":      llx.BoolData(true),
 				"location":    llx.StringData(region),
 				"createdTime": llx.TimeDataPtr(bucket.CreationDate),
+				"createdAt":   llx.TimeDataPtr(bucket.CreationDate),
 			})
 		if err != nil {
 			return nil, err
@@ -110,6 +112,31 @@ func (a *mqlAwsS3) buckets() ([]interface{}, error) {
 	}
 
 	return res, nil
+}
+
+func initAwsS3BucketPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// reuse the init func for the bucket
+	_, s3bucketResource, err := initAwsS3Bucket(runtime, args)
+	if err != nil {
+		return args, nil, err
+	}
+	// then use it to get its policy
+	policyResource := s3bucketResource.(*mqlAwsS3Bucket).GetPolicy()
+	if policyResource != nil && policyResource.State == plugin.StateIsSet {
+		return args, policyResource.Data, nil
+	}
+
+	// no policy found
+	resource := &mqlAwsS3BucketPolicy{}
+	resource.Id.State = plugin.StateIsNull | plugin.StateIsSet
+	resource.Name.State = plugin.StateIsNull | plugin.StateIsSet
+	resource.Document.State = plugin.StateIsNull | plugin.StateIsSet
+	resource.Version.State = plugin.StateIsNull | plugin.StateIsSet
+	resource.Statements.State = plugin.StateIsNull | plugin.StateIsSet
+	resource.BucketName = plugin.TValue[string]{
+		Data: s3bucketResource.(*mqlAwsS3Bucket).GetName().Data, State: plugin.StateIsSet,
+	}
+	return args, resource, nil
 }
 
 func initAwsS3Bucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -131,6 +158,9 @@ func initAwsS3Bucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	var arn string
 	if args["arn"] != nil {
 		arn = args["arn"].Value.(string)
+		if !strings.HasPrefix(arn, "arn:aws:s3:") {
+			return nil, nil, errors.Newf("not a valid bucket ARN '%s'", arn)
+		}
 	} else {
 		nameVal := args["name"].Value.(string)
 		arn = fmt.Sprintf(s3ArnPattern, nameVal)
@@ -178,20 +208,6 @@ func (a *mqlAwsS3Bucket) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func emptyAwsS3BucketPolicy(runtime *plugin.Runtime) (*mqlAwsS3BucketPolicy, error) {
-	res, err := CreateResource(runtime, "aws.s3.bucket.policy", map[string]*llx.RawData{
-		"name":       llx.StringData(""),
-		"document":   llx.StringData("{}"),
-		"version":    llx.StringData(""),
-		"id":         llx.StringData(""),
-		"statements": llx.ArrayData([]interface{}{}, types.Dict),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlAwsS3BucketPolicy), nil
-}
-
 func (a *mqlAwsS3Bucket) policy() (*mqlAwsS3BucketPolicy, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
@@ -205,26 +221,36 @@ func (a *mqlAwsS3Bucket) policy() (*mqlAwsS3BucketPolicy, error) {
 	})
 	if err != nil {
 		if isNotFoundForS3(err) {
-			return emptyAwsS3BucketPolicy(a.MqlRuntime)
+			a.Policy.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
 		}
 		return nil, err
 	}
 
 	if policy != nil && policy.Policy != nil {
+		parsedPolicy, err := parseS3BucketPolicy(*policy.Policy)
+		if err != nil {
+			return nil, err
+		}
 		// create the policy resource
 		mqlS3BucketPolicy, err := CreateResource(a.MqlRuntime, "aws.s3.bucket.policy",
 			map[string]*llx.RawData{
-				"name":     llx.StringData(bucketname),
-				"document": llx.StringDataPtr(policy.Policy),
+				"id":         llx.StringData(parsedPolicy.Id),
+				"name":       llx.StringData(bucketname),
+				"bucketName": llx.StringData(bucketname),
+				"version":    llx.StringData(parsedPolicy.Version),
+				"document":   llx.StringDataPtr(policy.Policy),
 			})
 		if err != nil {
 			return nil, err
 		}
+
 		return mqlS3BucketPolicy.(*mqlAwsS3BucketPolicy), nil
 	}
 
 	// no bucket policy found, return nil for the policy
-	return emptyAwsS3BucketPolicy(a.MqlRuntime)
+	a.Policy.State = plugin.StateIsNull | plugin.StateIsSet
+	return nil, nil
 }
 
 func (a *mqlAwsS3Bucket) tags() (map[string]interface{}, error) {
@@ -253,7 +279,7 @@ func (a *mqlAwsS3Bucket) tags() (map[string]interface{}, error) {
 	res := map[string]interface{}{}
 	for i := range tags.TagSet {
 		tag := tags.TagSet[i]
-		res[convert.ToString(tag.Key)] = convert.ToString(tag.Value)
+		res[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
 	}
 
 	return res, nil
@@ -322,11 +348,11 @@ func (a *mqlAwsS3Bucket) acl() ([]interface{}, error) {
 		}
 
 		grantee := map[string]interface{}{
-			"id":           convert.ToString(grant.Grantee.ID),
-			"name":         convert.ToString(grant.Grantee.DisplayName),
-			"emailAddress": convert.ToString(grant.Grantee.EmailAddress),
+			"id":           convert.ToValue(grant.Grantee.ID),
+			"name":         convert.ToValue(grant.Grantee.DisplayName),
+			"emailAddress": convert.ToValue(grant.Grantee.EmailAddress),
 			"type":         string(grant.Grantee.Type),
-			"uri":          convert.ToString(grant.Grantee.URI),
+			"uri":          convert.ToValue(grant.Grantee.URI),
 		}
 
 		id := bucketname + "/" + string(grant.Permission)
@@ -383,8 +409,8 @@ func (a *mqlAwsS3Bucket) owner() (map[string]interface{}, error) {
 	}
 
 	res := map[string]interface{}{}
-	res["id"] = convert.ToString(acl.Owner.ID)
-	res["name"] = convert.ToString(acl.Owner.DisplayName)
+	res["id"] = convert.ToValue(acl.Owner.ID)
+	res["name"] = convert.ToValue(acl.Owner.DisplayName)
 
 	return res, nil
 }
@@ -396,6 +422,76 @@ const (
 )
 
 func (a *mqlAwsS3Bucket) public() (bool, error) {
+	var (
+		bucketname = a.Name.Data
+		location   = a.Location.Data
+		conn       = a.MqlRuntime.Connection.(*connection.AwsConnection)
+		svc        = conn.S3(location)
+		ctx        = context.Background()
+	)
+
+	// Check Public Access Block settings first
+	publicAccess, err := svc.GetPublicAccessBlock(ctx, &s3.GetPublicAccessBlockInput{
+		Bucket: &bucketname,
+	})
+	if err != nil && !isNotFoundForS3(err) {
+		return false, err
+	}
+
+	notPublic := false
+	if publicAccess != nil && publicAccess.PublicAccessBlockConfiguration != nil {
+		accessBlock := publicAccess.PublicAccessBlockConfiguration
+		if accessBlock.BlockPublicAcls != nil && *accessBlock.BlockPublicAcls {
+			notPublic = true
+		}
+		if accessBlock.BlockPublicPolicy != nil && *accessBlock.BlockPublicPolicy {
+			notPublic = true
+		}
+		if accessBlock.IgnorePublicAcls != nil && *accessBlock.IgnorePublicAcls {
+			notPublic = true
+		}
+		if accessBlock.RestrictPublicBuckets != nil && *accessBlock.RestrictPublicBuckets {
+			notPublic = true
+		}
+	}
+	if notPublic {
+		return false, nil // Public access is restricted
+	}
+
+	// Then, use GetBucketPolicyStatus to determine public access
+	statusOutput, err := svc.GetBucketPolicyStatus(ctx, &s3.GetBucketPolicyStatusInput{
+		Bucket: &bucketname,
+	})
+	if err != nil && !isNotFoundForS3(err) {
+		return false, err
+	}
+	if statusOutput != nil &&
+		statusOutput.PolicyStatus != nil &&
+		statusOutput.PolicyStatus.IsPublic != nil {
+		return *statusOutput.PolicyStatus.IsPublic, nil
+	}
+
+	// If that didn't work, fetch the bucket policy manually and parse it
+	bucketPolicyResource := a.GetPolicy()
+	if bucketPolicyResource.State == plugin.StateIsSet {
+		bucketPolicy, err := bucketPolicyResource.Data.parsePolicyDocument()
+		if err != nil {
+			return false, err
+		}
+
+		for _, statement := range bucketPolicy.Statements {
+			if statement.Effect != "Allow" {
+				continue
+			}
+			if awsPrincipal, ok := statement.Principal["AWS"]; ok {
+				if slices.Contains(awsPrincipal, "*") {
+					return true, nil
+				}
+			}
+		}
+	}
+
+	// Finally check for bucket ACLs
 	acl, err := a.gatherAcl()
 	if err != nil {
 		return false, err
@@ -403,7 +499,7 @@ func (a *mqlAwsS3Bucket) public() (bool, error) {
 
 	for i := range acl.Grants {
 		grant := acl.Grants[i]
-		if grant.Grantee.Type == s3types.TypeGroup && (convert.ToString(grant.Grantee.URI) == s3AuthenticatedUsersGroup || convert.ToString(grant.Grantee.URI) == s3AllUsersGroup) {
+		if grant.Grantee.Type == s3types.TypeGroup && (convert.ToValue(grant.Grantee.URI) == s3AuthenticatedUsersGroup || convert.ToValue(grant.Grantee.URI) == s3AllUsersGroup) {
 			return true, nil
 		}
 	}
@@ -470,11 +566,11 @@ func (a *mqlAwsS3Bucket) logging() (map[string]interface{}, error) {
 
 	if logging != nil && logging.LoggingEnabled != nil {
 		if logging.LoggingEnabled.TargetPrefix != nil {
-			res["TargetPrefix"] = convert.ToString(logging.LoggingEnabled.TargetPrefix)
+			res["TargetPrefix"] = convert.ToValue(logging.LoggingEnabled.TargetPrefix)
 		}
 
 		if logging.LoggingEnabled.TargetBucket != nil {
-			res["TargetBucket"] = convert.ToString(logging.LoggingEnabled.TargetBucket)
+			res["TargetBucket"] = convert.ToValue(logging.LoggingEnabled.TargetBucket)
 		}
 
 		// it is becoming a more complex object similar to aws.s3.bucket.grant
@@ -604,11 +700,11 @@ func (a *mqlAwsS3Bucket) staticWebsiteHosting() (map[string]interface{}, error) 
 
 	if website != nil {
 		if website.ErrorDocument != nil {
-			res["ErrorDocument"] = convert.ToString(website.ErrorDocument.Key)
+			res["ErrorDocument"] = convert.ToValue(website.ErrorDocument.Key)
 		}
 
 		if website.IndexDocument != nil {
-			res["IndexDocument"] = convert.ToString(website.IndexDocument.Suffix)
+			res["IndexDocument"] = convert.ToValue(website.IndexDocument.Suffix)
 		}
 	}
 
@@ -624,25 +720,20 @@ func (a *mqlAwsS3BucketCorsrule) id() (string, error) {
 }
 
 func (a *mqlAwsS3BucketPolicy) id() (string, error) {
-	policy, err := a.parsePolicyDocument()
-	if err != nil || policy == nil {
-		return "none", err
-	}
-
-	a.Id = plugin.TValue[string]{Data: policy.Id, State: plugin.StateIsSet}
-	return policy.Id, nil
+	// NOTE that `policy.Id` might or might not exist and,
+	// it is NOT unique for s3 bucket policies. what we need
+	// here is the bucket name, which is unique globally.
+	return fmt.Sprintf("aws.s3.bucket/%s/policy", a.BucketName.Data), nil
 }
 
 func (a *mqlAwsS3BucketPolicy) parsePolicyDocument() (*awspolicy.S3BucketPolicy, error) {
-	data := a.Document.Data
+	return parseS3BucketPolicy(a.Document.Data)
+}
 
+func parseS3BucketPolicy(document string) (*awspolicy.S3BucketPolicy, error) {
 	var policy awspolicy.S3BucketPolicy
-	err := json.Unmarshal([]byte(data), &policy)
-	if err != nil {
-		return nil, err
-	}
-
-	return &policy, nil
+	err := json.Unmarshal([]byte(document), &policy)
+	return &policy, err
 }
 
 func (a *mqlAwsS3BucketPolicy) version() (string, error) {

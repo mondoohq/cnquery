@@ -45,8 +45,11 @@ func TestRawData_String(t *testing.T) {
 		{DictData(string("yo")), "\"yo\""},
 		{DictData([]interface{}{int64(1)}), "[1]"},
 		{DictData(map[string]interface{}{"a": "b"}), "{\"a\":\"b\"}"},
+		{VersionData("1.2.3"), "1.2.3"},
 		{ArrayData([]interface{}{"a", "b"}, types.String), "[\"a\",\"b\"]"},
 		{MapData(map[string]interface{}{"a": "b"}, types.String), "{\"a\":\"b\"}"},
+		{IPData(ParseIP("1.2.3.4")), "1.2.3.4/8"},
+		{IPData(ParseIP("")), "<null>"},
 		// implicit nil:
 		{&RawData{types.String, nil, nil}, "<null>"},
 	}
@@ -80,6 +83,8 @@ func TestTruthy(t *testing.T) {
 		{TimeData(testTime), true},
 		{TimeDataPtr(nil), false},
 		{TimeDataPtr(&testTime), true},
+		{VersionData("1.2.3"), true},
+		{VersionData(""), false},
 		{ArrayData([]interface{}{}, types.Any), false},
 		{ArrayData([]interface{}{false}, types.Bool), false},
 		{ArrayData([]interface{}{true}, types.Bool), true},
@@ -120,6 +125,9 @@ func TestSuccess(t *testing.T) {
 		{TimeData(time.Time{}), false, false},
 		{TimeDataPtr(nil), false, false},
 		{TimeData(testTime), false, false},
+		{VersionData("1.2.3"), false, false},
+		{IPData(ParseIP("192.168.0.1")), false, false},
+		{IPData(ParseIP("")), false, false},
 		{ArrayData([]interface{}{}, types.Any), false, false},
 		{ArrayData([]interface{}{true, false, true}, types.Bool), false, true},
 		{ArrayData([]interface{}{true, true}, types.Bool), true, true},
@@ -194,6 +202,12 @@ func TestRawData_JSON(t *testing.T) {
 		TimeData(NeverPastTime),
 		// TODO: the raw comparison here does not come out right, because of nano time
 		// TimeData(now),
+		VersionData("1.2.3"),
+		IPData(ParseIP("192.168.0.1/13")),
+		IPData(ParseIP("")),
+		IPData(ParseIntIP(0)),
+		IPData(ParseIntIP(1<<33 - 1)),
+		IPData(ParseIP("2001:db8:3c4d:15::1a2f:1a2b/64")),
 		ArrayData([]interface{}{"a", "b"}, types.String),
 		MapData(map[string]interface{}{"a": "b"}, types.String),
 		{Error: errors.New("test")},
@@ -210,11 +224,4 @@ func TestRawData_JSON(t *testing.T) {
 			assert.Equal(t, o, &res)
 		})
 	}
-}
-
-func TestRawData_Semver_Result(t *testing.T) {
-	d := &RawData{Type: types.Semver, Value: "1.2.3"}
-	r := d.Result()
-	assert.Equal(t, string(types.Semver), r.Data.Type)
-	assert.EqualValues(t, "1.2.3", r.Data.Value)
 }

@@ -49,6 +49,85 @@ private gcp.folders {
   children() []gcp.folder
 }
 
+// Google Cloud (GCP) Redis
+private gcp.project.redisService {
+  // Project ID
+  projectId string
+  // List all redis instances
+  instances() []gcp.project.redisService.instance
+}
+
+// Google Cloud (GCP) Redis instance
+private gcp.project.redisService.instance @defaults("name") {
+  // Unique name of the resource in this scope including project and location
+  name string
+  // Project ID
+  projectId string
+  // An arbitrary and optional user-provided name for the instance
+  displayName string
+  // Resource labels to represent user provided metadata
+  labels map[string]string
+  // The zone where the instance will be provisioned
+  locationId string
+  // The version of Redis software
+  redisVersion string
+  // The CIDR range of internal addresses that are reserved for this instance
+  reservedIpRange string
+  // Additional IP range for node placement
+  secondaryIpRange string
+  // Hostname or IP address of the exposed Redis endpoint used by clients to connect to the service
+  host string
+  // The port number of the exposed Redis endpoint
+  port int
+  // The current zone where the Redis primary node is located
+  currentLocationId string
+  // The time the instance was created
+  createTime time
+  // The current state of this instance
+  state string
+  // Additional information about the current status of this instance, if available
+  statusMessage string
+  // Redis configuration parameters, according to http://redis.io/topics/config
+  redisConfigs map[string]string
+  // Redis memory size in GiB
+  memorySizeGb int
+  // The full name of the Google Compute Engine
+  // [network](https://cloud.google.com/vpc/docs/vpc) to which the
+  // instance is connected. If left unspecified, the `default` network
+  // will be used
+  AuthorizedNetwork string
+  // Cloud IAM identity used by import / export operations to transfer data to/from Cloud Storage
+  persistenceIamIdentity string
+  // The network connect mode of the Redis instance
+  connectMode string
+  // Redis AUTH is enabled or not for the instance. If set to "true" AUTH is enabled on the instance
+  authEnabled bool
+  // The number of replica nodes
+  replicaCount int
+  // Info per node
+  nodes []gcp.project.redisService.instance.nodeInfo
+  // Hostname or IP address of the exposed readonly Redis endpoint
+  readEndpoint string
+  // The port number of the exposed readonly redis endpoint
+  readEndpointPort int
+  // The KMS key reference that the customer provides when trying to create the instance
+  customerManagedKey string
+  // The self service update maintenance version
+  maintenanceVersion string
+  // The available maintenance versions that an instance could update to
+  availableMaintenanceVersions []string
+}
+
+// Google Cloud (GCP) Redis instance node information
+private gcp.project.redisService.instance.nodeInfo @defaults("id zone") {
+  // Project ID
+  projectId string
+  // Node identifying string (e.g. `node-0`, `node-1`)
+  id string
+  // Location of the node
+  zone string
+}
+
 // Google Cloud (GCP) folder
 private gcp.folder @defaults("name") {
   // Folder ID
@@ -140,6 +219,8 @@ gcp.project @defaults("name") {
   monitoring() gcp.project.monitoringService
   // Binary Authorization resources
   binaryAuthorization() gcp.project.binaryAuthorizationControl
+  // GCP Redis resources
+  redis() gcp.project.redisService
 }
 
 // Google Cloud (GCP) service
@@ -432,7 +513,7 @@ private gcp.project.computeService.instance @defaults("name") {
   minCpuPlatform string
   // Network configurations for the instance
   networkInterfaces []dict
-  // private IPv6 google access type for the VM
+  // Private IPv6 google access type for the VM
   privateIpv6GoogleAccess string
   // Reservations from which this instance can consume
   reservationAffinity dict
@@ -934,6 +1015,82 @@ private gcp.project.storageService.bucket @defaults("id") {
   iamConfiguration dict
   // Retention policy
   retentionPolicy dict
+  // Encryption
+  encryption dict
+  // Lifecycle configuration
+  lifecycle []gcp.project.storageService.bucket.lifecycleRule
+}
+
+// Google Cloud bucket's lifecycle configuration
+private gcp.project.storageService.bucket.lifecycleRule {
+  // The action to take
+  action gcp.project.storageService.bucket.lifecycleRuleAction
+  // The condition(s) under which the action will be taken
+  condition gcp.project.storageService.bucket.lifecycleRuleCondition
+}
+
+// A lifecycle management rule, which is made of an action to take and
+// the condition(s) under which the action will be taken
+private gcp.project.storageService.bucket.lifecycleRuleAction @defaults("type storageClass") {
+  // Target storage class. Required iff the type of the action is SetStorageClass
+  storageClass string
+  // Type of the action. Currently, only Delete, SetStorageClass, and
+  // AbortIncompleteMultipartUpload are supported
+  type string
+}
+
+// The condition(s) under which the action will be taken
+private gcp.project.storageService.bucket.lifecycleRuleCondition @defaults("age numNewerVersions") {
+  // Age of an object (in days). This condition is satisfied when an object
+  // reaches the specified age
+  age int
+  // CreatedBefore: A date in RFC 3339 format with only the date part (for
+  // instance, "2013-01-15"). This condition is satisfied when an object is
+  // created before midnight of the specified date in UTC
+  createdBefore string
+  // CustomTimeBefore: A date in RFC 3339 format with only the date part (for
+  // instance, "2013-01-15"). This condition is satisfied when the custom time on
+  // an object is before this date in UTC
+  customTimeBefore string
+  // DaysSinceCustomTime: Number of days elapsed since the user-specified
+  // timestamp set on an object. The condition is satisfied if the days elapsed
+  // is at least this number. If no custom timestamp is specified on an object,
+  // the condition does not apply
+  daysSinceCustomTime int
+  // DaysSinceNoncurrentTime: Number of days elapsed since the noncurrent
+  // timestamp of an object. The condition is satisfied if the days elapsed is at
+  // least this number. This condition is relevant only for versioned objects.
+  // The value of the field must be a nonnegative integer. If it's zero, the
+  // object version will become eligible for Lifecycle action as soon as it
+  // becomes noncurrent
+  daysSinceNoncurrentTime int
+  // IsLive: Relevant only for versioned objects. If the value is true, this
+  // condition matches live objects; if the value is false, it matches archived
+  // objects
+  isLive bool
+  // MatchesPattern: A regular expression that satisfies the RE2 syntax. This
+  // condition is satisfied when the name of the object matches the RE2 pattern
+  matchesPattern string
+  // MatchesPrefix: List of object name prefixes. This condition will be
+  // satisfied when at least one of the prefixes exactly matches the beginning of
+  // the object name
+  matchesPrefix []string
+  // MatchesStorageClass: Objects having any of the storage classes specified by
+  // this condition will be matched
+  matchesStorageClass []string
+  // MatchesSuffix: List of object name suffixes. This condition will be
+  // satisfied when at least one of the suffixes exactly matches the end of the
+  // object name
+  matchesSuffix []string
+  // NoncurrentTimeBefore: A date in RFC 3339 format with only the date part (for
+  // instance, "2013-01-15"). This condition is satisfied when the noncurrent
+  // time on an object is before this date in UTC. This condition is relevant
+  // only for versioned objects
+  noncurrentTimeBefore string
+  // NumNewerVersions: Relevant only for versioned objects. If the value is N,
+  // this condition is satisfied when there are at least N versions (including
+  // the live version) newer than this version of the object
+  numNewerVersions int
 }
 
 // Google Cloud (GCP) SQL resources
@@ -1488,6 +1645,8 @@ private gcp.project.gkeService.cluster @defaults("name description zone status c
   identityServiceConfig dict
   // Configuration options for the NetworkPolicy feature
   networkPolicyConfig dict
+  // The release channel that the cluster is subscribed to
+  releaseChannel string
 }
 
 // Google Kubernetes Engine (GKE) cluster addons config
@@ -1606,6 +1765,31 @@ private gcp.project.gkeService.cluster.nodepool @defaults("name") {
   status string
   // Node management configuration
   management dict
+  // Autoscaler configuration for this NodePool
+  autoscaling gcp.project.gkeService.cluster.nodepool.autoscaling
+}
+
+private gcp.project.gkeService.cluster.nodepool.autoscaling @defaults( "enabled" ) {
+  // Is autoscaling enabled for this node pool.
+  enabled bool
+  // Minimum number of nodes for one location in the node pool. Must be greater
+  // than or equal to 0 and less than or equal to max_node_count.
+  minNodeCount int
+  // Maximum number of nodes for one location in the node pool. Must be >=
+  // min_node_count. There has to be enough quota to scale up the cluster.
+  maxNodeCount int
+  // Can this node pool be deleted automatically.
+  autoprovisioned bool
+  // Minimum number of nodes in the node pool. Must be greater than or equal
+  // to 0 and less than or equal to total_max_node_count.
+  // The total_*_node_count fields are mutually exclusive with the *_node_count
+  // fields.
+  totalMinNodeCount int
+  // Maximum number of nodes in the node pool. Must be greater than or equal to
+  // total_min_node_count. There has to be enough quota to scale up the cluster.
+  // The total_*_node_count fields are mutually exclusive with the *_node_count
+  // fields.
+  totalMaxNodeCount int
 }
 
 // Google Kubernetes Engine (GKE) node pool-Level network configuration
@@ -2623,6 +2807,7 @@ private gcp.project.cloudRunService.container @defaults("name image") {
   // Compute resource requirements by the container
   resources dict
   // List of ports to expose from the container
+  // @afiune Fix issue int32 not parse as dict
   ports []dict
   // Volumes to mount into the container's file system
   volumeMounts []dict

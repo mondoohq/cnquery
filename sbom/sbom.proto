@@ -236,6 +236,8 @@ message Package {
   string origin = 22;
   // Package Vendor/Publisher
   string vendor = 23;
+  // Status of the package
+  string status = 24;
 }
 
 enum EvidenceType {

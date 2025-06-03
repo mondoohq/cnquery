@@ -12,7 +12,8 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/id/aws"
 	"go.mondoo.com/cnquery/v11/providers/os/id/azure"
 	"go.mondoo.com/cnquery/v11/providers/os/id/gcp"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/smbios"
+	"go.mondoo.com/cnquery/v11/providers/os/id/ibm"
+	"go.mondoo.com/cnquery/v11/providers/os/id/vmware"
 )
 
 type (
@@ -21,43 +22,58 @@ type (
 	PlatformID        = string
 )
 
-type detectorFunc func(conn shared.Connection, p *inventory.Platform, smbiosMgr smbios.SmBiosManager) (PlatformID, PlatformName, []RelatedPlatformID)
+type detectorFunc func(conn shared.Connection, p *inventory.Platform) (PlatformID, PlatformName, []RelatedPlatformID)
 
-var detectors = []detectorFunc{
-	aws.Detect,
-	azure.Detect,
-	gcp.Detect,
+// CloudProviderType is the type of cloud provider that the cloud detect detected
+type CloudProviderType string
+
+var (
+	UNKNOWN CloudProviderType = "UNKNOWN"
+	AWS     CloudProviderType = "AWS"
+	GCP     CloudProviderType = "GCP"
+	AZURE   CloudProviderType = "AZURE"
+	VMWARE  CloudProviderType = "VMWARE"
+	IBM     CloudProviderType = "IBM"
+)
+
+var detectors = map[CloudProviderType]detectorFunc{
+	AWS:    aws.Detect,
+	GCP:    gcp.Detect,
+	AZURE:  azure.Detect,
+	VMWARE: vmware.Detect,
+	IBM:    ibm.Detect,
 }
 
-type detectResult struct {
-	platformId         string
-	platformName       string
-	relatedPlatformIds []string
+// PlatformInfo contains platform information gathered from one of our cloud detectors.
+type PlatformInfo struct {
+	ID                 string
+	Name               string
+	Kind               string
+	RelatedPlatformIDs []string
+	CloudProvider      CloudProviderType
 }
 
-func Detect(conn shared.Connection, p *inventory.Platform) (PlatformID, PlatformName, []RelatedPlatformID) {
-	mgr, err := smbios.ResolveManager(conn, p)
-	if err != nil {
-		return "", "", nil
-	}
-
+// Detect tried to detect if we are running on a cloud asset, and if so, it returns
+// the platform information, otherwise it returns a `nil` pointer.
+func Detect(conn shared.Connection, p *inventory.Platform) *PlatformInfo {
 	wg := sync.WaitGroup{}
 	wg.Add(len(detectors))
 
-	valChan := make(chan detectResult, len(detectors))
+	valChan := make(chan PlatformInfo, len(detectors))
 	for i := range detectors {
-		go func(f detectorFunc) {
+		go func(provider CloudProviderType, f detectorFunc) {
 			defer wg.Done()
 
-			v, name, related := f(conn, p, mgr)
-			if v != "" {
-				valChan <- detectResult{
-					platformName:       name,
-					platformId:         v,
-					relatedPlatformIds: related,
+			id, name, related := f(conn, p)
+			if id != "" {
+				valChan <- PlatformInfo{
+					ID:                 id,
+					Name:               name,
+					CloudProvider:      provider,
+					RelatedPlatformIDs: related,
 				}
 			}
-		}(detectors[i])
+		}(i, detectors[i])
 	}
 
 	wg.Wait()
@@ -65,19 +81,27 @@ func Detect(conn shared.Connection, p *inventory.Platform) (PlatformID, Platform
 
 	platformIds := []string{}
 	relatedPlatformIds := []string{}
+	cloudProvider := UNKNOWN
 	var name string
 	for v := range valChan {
-		platformIds = append(platformIds, v.platformId)
-		name = v.platformName
-		relatedPlatformIds = append(relatedPlatformIds, v.relatedPlatformIds...)
+		platformIds = append(platformIds, v.ID)
+		name = v.Name
+		cloudProvider = v.CloudProvider
+		relatedPlatformIds = append(relatedPlatformIds, v.RelatedPlatformIDs...)
 	}
 
 	if len(platformIds) == 0 {
-		return "", "", nil
+		return nil
 	} else if len(platformIds) > 1 {
 		log.Error().Strs("detected", platformIds).Msg("multiple cloud platform ids detected")
-		return "", "", nil
+		return nil
 	}
 
-	return platformIds[0], name, relatedPlatformIds
+	return &PlatformInfo{
+		ID:                 platformIds[0],
+		Name:               name,
+		CloudProvider:      cloudProvider,
+		Kind:               inventory.AssetKindCloudVM,
+		RelatedPlatformIDs: relatedPlatformIds,
+	}
 }

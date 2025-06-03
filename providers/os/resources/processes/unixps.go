@@ -77,7 +77,7 @@ func ParseLinuxPsResult(input io.Reader) ([]*ProcessEntry, error) {
 
 		m := LINUX_PS_REGEX.FindStringSubmatch(line)
 		if len(m) != 12 {
-			log.Fatal().Str("psoutput", line).Msg("unexpected result while trying to parse process output")
+			return nil, &ErrorParsingPs{Line: line}
 		}
 		if m[1] == "PID" {
 			// header
@@ -122,7 +122,7 @@ func ParseUnixPsResult(input io.Reader) ([]*ProcessEntry, error) {
 		line := scanner.Text()
 		m := UNIX_PS_REGEX.FindStringSubmatch(line)
 		if len(m) != 11 {
-			log.Fatal().Str("psoutput", line).Msg("unexpected result while trying to parse process output")
+			return nil, &ErrorParsingPs{Line: line}
 		}
 		if m[1] == "PID" {
 			// header
@@ -171,7 +171,11 @@ func ParseAixPsResult(input io.Reader) ([]*ProcessEntry, error) {
 
 		m := AIX_PS_REGEX.FindStringSubmatch(line)
 		if len(m) != 9 {
-			log.Fatal().Str("psoutput", line).Msg("unexpected result while trying to parse process output")
+			if strings.Contains(line, "<idle>") || strings.Contains(line, "<kproc>") {
+				// skip idle and kernel processes
+				continue
+			}
+			return nil, &ErrorParsingPs{Line: line}
 		}
 		if m[1] == "PID" {
 			// header
@@ -358,4 +362,19 @@ func ParseLinuxFindLine(line string) (int64, int64, error) {
 	}
 
 	return pid, inode, nil
+}
+
+type ErrorParsingPs struct {
+	Line string
+}
+
+func (e *ErrorParsingPs) Error() string {
+	return fmt.Sprintf("error parsing ps output: %s", e.Line)
+}
+
+func (e *ErrorParsingPs) Is(target error) bool {
+	if _, ok := target.(*ErrorParsingPs); ok {
+		return true
+	}
+	return false
 }

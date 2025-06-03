@@ -567,6 +567,7 @@ func (g *mqlGcpProjectGkeService) clusters() ([]interface{}, error) {
 			"confidentialNodesConfig":        llx.DictData(confidentialNodesConfig),
 			"identityServiceConfig":          llx.DictData(identityServiceConfig),
 			"networkPolicyConfig":            llx.DictData(networkPolicyConfig),
+			"releaseChannel":                 llx.StringData(strings.ToLower(c.ReleaseChannel.GetChannel().String())),
 		})
 		if err != nil {
 			return nil, err
@@ -588,7 +589,7 @@ func (g *mqlGcpProjectGkeServiceClusterNodepoolConfig) serviceAccount() (*mqlGcp
 	}
 	email := g.ServiceAccountEmail.Data
 
-	res, err := CreateResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount", map[string]*llx.RawData{
+	res, err := NewResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount", map[string]*llx.RawData{
 		"projectId": llx.StringData(projectId),
 		"email":     llx.StringData(email),
 	})
@@ -608,6 +609,11 @@ func createMqlNodePool(runtime *plugin.Runtime, np *containerpb.NodePool, cluste
 	}
 
 	mqlPoolNetworkConfig, err := createMqlNodePoolNetworkConfig(runtime, np, nodePoolId)
+	if err != nil {
+		return nil, err
+	}
+
+	mqlPoolAutoscaling, err := createMqlNodePoolAutoscaling(runtime, np, nodePoolId)
 	if err != nil {
 		return nil, err
 	}
@@ -639,6 +645,7 @@ func createMqlNodePool(runtime *plugin.Runtime, np *containerpb.NodePool, cluste
 		"instanceGroupUrls": llx.ArrayData(convert.SliceAnyToInterface(np.InstanceGroupUrls), types.String),
 		"status":            llx.StringData(np.Status.String()),
 		"management":        llx.DictData(management),
+		"autoscaling":       llx.ResourceData(mqlPoolAutoscaling, "gcp.project.gkeService.cluster.nodepool.autoscaling"),
 	})
 }
 
@@ -730,7 +737,7 @@ func createMqlNodePoolConfig(runtime *plugin.Runtime, np *containerpb.NodePool, 
 	if cfg.AdvancedMachineFeatures != nil {
 		mqlAdvancedMachineFeatures, err = CreateResource(runtime, "gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures", map[string]*llx.RawData{
 			"id":             llx.StringData(fmt.Sprintf("%s/advancedMachineFeatures", nodePoolId)),
-			"threadsPerCore": llx.BoolData(cfg.Gvnic.Enabled),
+			"threadsPerCore": llx.IntDataPtr(cfg.AdvancedMachineFeatures.ThreadsPerCore),
 		})
 		if err != nil {
 			return nil, err
@@ -820,6 +827,25 @@ func createMqlNodePoolNetworkConfig(runtime *plugin.Runtime, np *containerpb.Nod
 		"podRange":          llx.StringData(netCfg.PodRange),
 		"podIpv4CidrBlock":  llx.StringData(netCfg.PodIpv4CidrBlock),
 		"performanceConfig": llx.ResourceData(performanceConfig, "gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig"),
+	})
+}
+
+func createMqlNodePoolAutoscaling(runtime *plugin.Runtime, nodepool *containerpb.NodePool, nodePoolId string) (plugin.Resource, error) {
+	autoscalingCfg := nodepool.Autoscaling
+	if autoscalingCfg == nil {
+		return nil, nil
+	}
+
+	autoscalingId := fmt.Sprintf("gcp.project.gkeService.cluster.nodepool.autoscaling/%s", nodePoolId)
+
+	return CreateResource(runtime, "gcp.project.gkeService.cluster.nodepool.autoscaling", map[string]*llx.RawData{
+		"__id":              llx.StringData(autoscalingId),
+		"minNodeCount":      llx.IntData(autoscalingCfg.MinNodeCount),
+		"maxNodeCount":      llx.IntData(autoscalingCfg.MaxNodeCount),
+		"autoprovisioned":   llx.BoolData(autoscalingCfg.Autoprovisioned),
+		"enabled":           llx.BoolData(autoscalingCfg.Enabled),
+		"totalMinNodeCount": llx.IntData(autoscalingCfg.TotalMinNodeCount),
+		"totalMaxNodeCount": llx.IntData(autoscalingCfg.TotalMaxNodeCount),
 	})
 }
 

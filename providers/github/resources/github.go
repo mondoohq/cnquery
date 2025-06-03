@@ -7,7 +7,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/google/go-github/v67/github"
+	"github.com/google/go-github/v72/github"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
@@ -19,7 +19,7 @@ import (
 // In this way we can cache requests for things that aren't directly attached to an MQL resource.
 // For example, we don't want to fetch the same users multiple times, for that we can use the memoizer.
 type mqlGithubInternal struct {
-	memoize *memoize.Memoizer
+	memoize memoize.Memoizer
 }
 
 var (
@@ -34,10 +34,10 @@ func getUser(ctx context.Context, runtime *plugin.Runtime, conn *connection.Gith
 	}
 	g := obj.(*mqlGithub)
 	if g.memoize == nil {
-		g.memoize = memoize.NewMemoizer(cacheExpirationTime, cacheCleanupTime)
+		g.memoize = memoize.New(cacheExpirationTime, cacheCleanupTime)
 	}
 
-	res, err, _ := g.memoize.Memoize("user-"+user, func() (interface{}, error) {
+	res, _, err := g.memoize.Memoize("user-"+user, func() (interface{}, error) {
 		log.Debug().Msgf("fetching user %s", user)
 		user, _, err := conn.Client().Users.Get(ctx, user)
 		return user, err
@@ -55,9 +55,9 @@ func getOrg(ctx context.Context, runtime *plugin.Runtime, conn *connection.Githu
 	}
 	g := obj.(*mqlGithub)
 	if g.memoize == nil {
-		g.memoize = memoize.NewMemoizer(cacheExpirationTime, cacheCleanupTime)
+		g.memoize = memoize.New(cacheExpirationTime, cacheCleanupTime)
 	}
-	res, err, _ := g.memoize.Memoize("org-"+name, func() (interface{}, error) {
+	res, _, err := g.memoize.Memoize("org-"+name, func() (interface{}, error) {
 		log.Debug().Msgf("fetching organization %s", name)
 		org, _, err := conn.Client().Organizations.Get(ctx, name)
 		return org, err
@@ -77,4 +77,5 @@ func githubTimestamp(ts *github.Timestamp) *time.Time {
 
 const (
 	paginationPerPage = 100
+	workers           = 10
 )

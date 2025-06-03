@@ -226,9 +226,17 @@ func init() {
 			Init: initAzureSubscriptionWebService,
 			Create: createAzureSubscriptionWebService,
 		},
+		"azure.subscription.webService.appRuntimeStack": {
+			// to override args, implement: initAzureSubscriptionWebServiceAppRuntimeStack(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionWebServiceAppRuntimeStack,
+		},
 		"azure.subscription.webService.appsite": {
 			// to override args, implement: initAzureSubscriptionWebServiceAppsite(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionWebServiceAppsite,
+		},
+		"azure.subscription.webService.appsite.basicPublishingCredentialsPolicies": {
+			// to override args, implement: initAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies,
 		},
 		"azure.subscription.webService.appsiteauthsettings": {
 			// to override args, implement: initAzureSubscriptionWebServiceAppsiteauthsettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -377,6 +385,10 @@ func init() {
 		"azure.subscription.cloudDefenderService": {
 			Init: initAzureSubscriptionCloudDefenderService,
 			Create: createAzureSubscriptionCloudDefenderService,
+		},
+		"azure.subscription.cloudDefenderService.settings": {
+			// to override args, implement: initAzureSubscriptionCloudDefenderServiceSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCloudDefenderServiceSettings,
 		},
 		"azure.subscription.cloudDefenderService.securityContact": {
 			// to override args, implement: initAzureSubscriptionCloudDefenderServiceSecurityContact(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1732,7 +1744,34 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAzureSubscriptionWebService).GetApps()).ToDataRes(types.Array(types.Resource("azure.subscription.webService.appsite")))
 	},
 	"azure.subscription.webService.availableRuntimes": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebService).GetAvailableRuntimes()).ToDataRes(types.Array(types.Dict))
+		return (r.(*mqlAzureSubscriptionWebService).GetAvailableRuntimes()).ToDataRes(types.Array(types.Resource("azure.subscription.webService.appRuntimeStack")))
+	},
+	"azure.subscription.webService.appRuntimeStack.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appRuntimeStack.preferredOs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).GetPreferredOs()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appRuntimeStack.runtimeVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).GetRuntimeVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appRuntimeStack.majorVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).GetMajorVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appRuntimeStack.minorVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).GetMinorVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appRuntimeStack.autoUpdate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).GetAutoUpdate()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.webService.appRuntimeStack.deprecated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).GetDeprecated()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.webService.appRuntimeStack.hidden": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).GetHidden()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.webService.appRuntimeStack.endOfLifeDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).GetEndOfLifeDate()).ToDataRes(types.Time)
 	},
 	"azure.subscription.webService.appsite.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetId()).ToDataRes(types.String)
@@ -1781,6 +1820,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.webService.appsite.functions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetFunctions()).ToDataRes(types.Array(types.Resource("azure.subscription.webService.function")))
+	},
+	"azure.subscription.webService.appsite.ftp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetFtp()).ToDataRes(types.Resource("azure.subscription.webService.appsite.basicPublishingCredentialsPolicies"))
+	},
+	"azure.subscription.webService.appsite.scm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetScm()).ToDataRes(types.Resource("azure.subscription.webService.appsite.basicPublishingCredentialsPolicies"))
+	},
+	"azure.subscription.webService.appsite.basicPublishingCredentialsPolicies.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsite.basicPublishingCredentialsPolicies.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsite.basicPublishingCredentialsPolicies.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsite.basicPublishingCredentialsPolicies.allow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies).GetAllow()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.webService.appsiteauthsettings.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettings).GetId()).ToDataRes(types.String)
@@ -2619,6 +2676,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cloudDefenderService.securityContacts": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetSecurityContacts()).ToDataRes(types.Array(types.Resource("azure.subscription.cloudDefenderService.securityContact")))
 	},
+	"azure.subscription.cloudDefenderService.settingsMCAS": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetSettingsMCAS()).ToDataRes(types.Resource("azure.subscription.cloudDefenderService.settings"))
+	},
+	"azure.subscription.cloudDefenderService.settingsWDATP": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetSettingsWDATP()).ToDataRes(types.Resource("azure.subscription.cloudDefenderService.settings"))
+	},
+	"azure.subscription.cloudDefenderService.settingsSentinel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetSettingsSentinel()).ToDataRes(types.Resource("azure.subscription.cloudDefenderService.settings"))
+	},
+	"azure.subscription.cloudDefenderService.settings.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSettings).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.settings.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSettings).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.settings.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSettings).GetKind()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.settings.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSettings).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.settings.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSettings).GetProperties()).ToDataRes(types.Dict)
+	},
 	"azure.subscription.cloudDefenderService.securityContact.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityContact).GetId()).ToDataRes(types.String)
 	},
@@ -2630,6 +2711,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.cloudDefenderService.securityContact.alertNotifications": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityContact).GetAlertNotifications()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.cloudDefenderService.securityContact.notificationSources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityContact).GetNotificationSources()).ToDataRes(types.Dict)
 	},
 	"azure.subscription.cloudDefenderService.securityContact.notificationsByRole": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityContact).GetNotificationsByRole()).ToDataRes(types.Dict)
@@ -2906,6 +2990,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.policy.assignment.enforcementMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionPolicyAssignment).GetEnforcementMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.assignment.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyAssignment).GetParameters()).ToDataRes(types.Dict)
 	},
 	"azure.subscription.iotService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionIotService).GetSubscriptionId()).ToDataRes(types.String)
@@ -4765,6 +4852,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAzureSubscriptionWebService).AvailableRuntimes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.webService.appRuntimeStack.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).__id, ok = v.Value.(string)
+			return
+		},
+	"azure.subscription.webService.appRuntimeStack.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appRuntimeStack.preferredOs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).PreferredOs, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appRuntimeStack.runtimeVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).RuntimeVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appRuntimeStack.majorVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).MajorVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appRuntimeStack.minorVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).MinorVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appRuntimeStack.autoUpdate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).AutoUpdate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appRuntimeStack.deprecated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).Deprecated, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appRuntimeStack.hidden": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).Hidden, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appRuntimeStack.endOfLifeDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).EndOfLifeDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.webService.appsite.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAzureSubscriptionWebServiceAppsite).__id, ok = v.Value.(string)
 			return
@@ -4831,6 +4958,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"azure.subscription.webService.appsite.functions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionWebServiceAppsite).Functions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.ftp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsite).Ftp, ok = plugin.RawToTValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.scm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsite).Scm, ok = plugin.RawToTValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.basicPublishingCredentialsPolicies.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies).__id, ok = v.Value.(string)
+			return
+		},
+	"azure.subscription.webService.appsite.basicPublishingCredentialsPolicies.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.basicPublishingCredentialsPolicies.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.basicPublishingCredentialsPolicies.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.basicPublishingCredentialsPolicies.allow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies).Allow, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.webService.appsiteauthsettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6097,6 +6252,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAzureSubscriptionCloudDefenderService).SecurityContacts, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.cloudDefenderService.settingsMCAS": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderService).SettingsMCAS, ok = plugin.RawToTValue[*mqlAzureSubscriptionCloudDefenderServiceSettings](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.settingsWDATP": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderService).SettingsWDATP, ok = plugin.RawToTValue[*mqlAzureSubscriptionCloudDefenderServiceSettings](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.settingsSentinel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderService).SettingsSentinel, ok = plugin.RawToTValue[*mqlAzureSubscriptionCloudDefenderServiceSettings](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.settings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAzureSubscriptionCloudDefenderServiceSettings).__id, ok = v.Value.(string)
+			return
+		},
+	"azure.subscription.cloudDefenderService.settings.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSettings).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.settings.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSettings).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.settings.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSettings).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.settings.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSettings).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.settings.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSettings).Properties, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.cloudDefenderService.securityContact.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityContact).__id, ok = v.Value.(string)
 			return
@@ -6115,6 +6306,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"azure.subscription.cloudDefenderService.securityContact.alertNotifications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityContact).AlertNotifications, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.securityContact.notificationSources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityContact).NotificationSources, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cloudDefenderService.securityContact.notificationsByRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6539,6 +6734,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"azure.subscription.policy.assignment.enforcementMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionPolicyAssignment).EnforcementMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.assignment.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyAssignment).Parameters, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.iotService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11638,8 +11837,102 @@ func (c *mqlAzureSubscriptionWebService) GetApps() *plugin.TValue[[]interface{}]
 
 func (c *mqlAzureSubscriptionWebService) GetAvailableRuntimes() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.AvailableRuntimes, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.webService", c.__id, "availableRuntimes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
 		return c.availableRuntimes()
 	})
+}
+
+// mqlAzureSubscriptionWebServiceAppRuntimeStack for the azure.subscription.webService.appRuntimeStack resource
+type mqlAzureSubscriptionWebServiceAppRuntimeStack struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAzureSubscriptionWebServiceAppRuntimeStackInternal it will be used here
+	Name plugin.TValue[string]
+	PreferredOs plugin.TValue[string]
+	RuntimeVersion plugin.TValue[string]
+	MajorVersion plugin.TValue[string]
+	MinorVersion plugin.TValue[string]
+	AutoUpdate plugin.TValue[bool]
+	Deprecated plugin.TValue[bool]
+	Hidden plugin.TValue[bool]
+	EndOfLifeDate plugin.TValue[*time.Time]
+}
+
+// createAzureSubscriptionWebServiceAppRuntimeStack creates a new instance of this resource
+func createAzureSubscriptionWebServiceAppRuntimeStack(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionWebServiceAppRuntimeStack{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.webService.appRuntimeStack", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppRuntimeStack) MqlName() string {
+	return "azure.subscription.webService.appRuntimeStack"
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppRuntimeStack) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppRuntimeStack) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppRuntimeStack) GetPreferredOs() *plugin.TValue[string] {
+	return &c.PreferredOs
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppRuntimeStack) GetRuntimeVersion() *plugin.TValue[string] {
+	return &c.RuntimeVersion
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppRuntimeStack) GetMajorVersion() *plugin.TValue[string] {
+	return &c.MajorVersion
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppRuntimeStack) GetMinorVersion() *plugin.TValue[string] {
+	return &c.MinorVersion
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppRuntimeStack) GetAutoUpdate() *plugin.TValue[bool] {
+	return &c.AutoUpdate
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppRuntimeStack) GetDeprecated() *plugin.TValue[bool] {
+	return &c.Deprecated
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppRuntimeStack) GetHidden() *plugin.TValue[bool] {
+	return &c.Hidden
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppRuntimeStack) GetEndOfLifeDate() *plugin.TValue[*time.Time] {
+	return &c.EndOfLifeDate
 }
 
 // mqlAzureSubscriptionWebServiceAppsite for the azure.subscription.webService.appsite resource
@@ -11663,6 +11956,8 @@ type mqlAzureSubscriptionWebServiceAppsite struct {
 	Stack plugin.TValue[interface{}]
 	DiagnosticSettings plugin.TValue[[]interface{}]
 	Functions plugin.TValue[[]interface{}]
+	Ftp plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies]
+	Scm plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies]
 }
 
 // createAzureSubscriptionWebServiceAppsite creates a new instance of this resource
@@ -11820,6 +12115,102 @@ func (c *mqlAzureSubscriptionWebServiceAppsite) GetFunctions() *plugin.TValue[[]
 
 		return c.functions()
 	})
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsite) GetFtp() *plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies](&c.Ftp, func() (*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.webService.appsite", c.__id, "ftp")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies), nil
+			}
+		}
+
+		return c.ftp()
+	})
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsite) GetScm() *plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies](&c.Scm, func() (*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.webService.appsite", c.__id, "scm")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies), nil
+			}
+		}
+
+		return c.scm()
+	})
+}
+
+// mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies for the azure.subscription.webService.appsite.basicPublishingCredentialsPolicies resource
+type mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPoliciesInternal it will be used here
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	Type plugin.TValue[string]
+	Allow plugin.TValue[bool]
+}
+
+// createAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies creates a new instance of this resource
+func createAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.webService.appsite.basicPublishingCredentialsPolicies", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies) MqlName() string {
+	return "azure.subscription.webService.appsite.basicPublishingCredentialsPolicies"
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies) GetAllow() *plugin.TValue[bool] {
+	return &c.Allow
 }
 
 // mqlAzureSubscriptionWebServiceAppsiteauthsettings for the azure.subscription.webService.appsiteauthsettings resource
@@ -15315,6 +15706,9 @@ type mqlAzureSubscriptionCloudDefenderService struct {
 	DefenderForResourceManager plugin.TValue[interface{}]
 	DefenderForContainers plugin.TValue[interface{}]
 	SecurityContacts plugin.TValue[[]interface{}]
+	SettingsMCAS plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceSettings]
+	SettingsWDATP plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceSettings]
+	SettingsSentinel plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceSettings]
 }
 
 // createAzureSubscriptionCloudDefenderService creates a new instance of this resource
@@ -15440,6 +15834,123 @@ func (c *mqlAzureSubscriptionCloudDefenderService) GetSecurityContacts() *plugin
 	})
 }
 
+func (c *mqlAzureSubscriptionCloudDefenderService) GetSettingsMCAS() *plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceSettings] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionCloudDefenderServiceSettings](&c.SettingsMCAS, func() (*mqlAzureSubscriptionCloudDefenderServiceSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService", c.__id, "settingsMCAS")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionCloudDefenderServiceSettings), nil
+			}
+		}
+
+		return c.settingsMCAS()
+	})
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderService) GetSettingsWDATP() *plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceSettings] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionCloudDefenderServiceSettings](&c.SettingsWDATP, func() (*mqlAzureSubscriptionCloudDefenderServiceSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService", c.__id, "settingsWDATP")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionCloudDefenderServiceSettings), nil
+			}
+		}
+
+		return c.settingsWDATP()
+	})
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderService) GetSettingsSentinel() *plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceSettings] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionCloudDefenderServiceSettings](&c.SettingsSentinel, func() (*mqlAzureSubscriptionCloudDefenderServiceSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService", c.__id, "settingsSentinel")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionCloudDefenderServiceSettings), nil
+			}
+		}
+
+		return c.settingsSentinel()
+	})
+}
+
+// mqlAzureSubscriptionCloudDefenderServiceSettings for the azure.subscription.cloudDefenderService.settings resource
+type mqlAzureSubscriptionCloudDefenderServiceSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAzureSubscriptionCloudDefenderServiceSettingsInternal it will be used here
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	Kind plugin.TValue[string]
+	Type plugin.TValue[string]
+	Properties plugin.TValue[interface{}]
+}
+
+// createAzureSubscriptionCloudDefenderServiceSettings creates a new instance of this resource
+func createAzureSubscriptionCloudDefenderServiceSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCloudDefenderServiceSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cloudDefenderService.settings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSettings) MqlName() string {
+	return "azure.subscription.cloudDefenderService.settings"
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSettings) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSettings) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSettings) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSettings) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSettings) GetProperties() *plugin.TValue[interface{}] {
+	return &c.Properties
+}
+
 // mqlAzureSubscriptionCloudDefenderServiceSecurityContact for the azure.subscription.cloudDefenderService.securityContact resource
 type mqlAzureSubscriptionCloudDefenderServiceSecurityContact struct {
 	MqlRuntime *plugin.Runtime
@@ -15449,6 +15960,7 @@ type mqlAzureSubscriptionCloudDefenderServiceSecurityContact struct {
 	Name plugin.TValue[string]
 	Emails plugin.TValue[[]interface{}]
 	AlertNotifications plugin.TValue[interface{}]
+	NotificationSources plugin.TValue[interface{}]
 	NotificationsByRole plugin.TValue[interface{}]
 }
 
@@ -15503,6 +16015,10 @@ func (c *mqlAzureSubscriptionCloudDefenderServiceSecurityContact) GetEmails() *p
 
 func (c *mqlAzureSubscriptionCloudDefenderServiceSecurityContact) GetAlertNotifications() *plugin.TValue[interface{}] {
 	return &c.AlertNotifications
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecurityContact) GetNotificationSources() *plugin.TValue[interface{}] {
+	return &c.NotificationSources
 }
 
 func (c *mqlAzureSubscriptionCloudDefenderServiceSecurityContact) GetNotificationsByRole() *plugin.TValue[interface{}] {
@@ -16613,6 +17129,7 @@ type mqlAzureSubscriptionPolicyAssignment struct {
 	Scope plugin.TValue[string]
 	Description plugin.TValue[string]
 	EnforcementMode plugin.TValue[string]
+	Parameters plugin.TValue[interface{}]
 }
 
 // createAzureSubscriptionPolicyAssignment creates a new instance of this resource
@@ -16626,7 +17143,12 @@ func createAzureSubscriptionPolicyAssignment(runtime *plugin.Runtime, args map[s
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("azure.subscription.policy.assignment", res.__id)
@@ -16665,6 +17187,10 @@ func (c *mqlAzureSubscriptionPolicyAssignment) GetDescription() *plugin.TValue[s
 
 func (c *mqlAzureSubscriptionPolicyAssignment) GetEnforcementMode() *plugin.TValue[string] {
 	return &c.EnforcementMode
+}
+
+func (c *mqlAzureSubscriptionPolicyAssignment) GetParameters() *plugin.TValue[interface{}] {
+	return &c.Parameters
 }
 
 // mqlAzureSubscriptionIotService for the azure.subscription.iotService resource

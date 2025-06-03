@@ -18,9 +18,9 @@ const (
 	azureIdentifierFileLinux = "/sys/class/dmi/id/sys_vendor"
 )
 
-func Detect(conn shared.Connection, pf *inventory.Platform, smbiosMgr smbios.SmBiosManager) (string, string, []string) {
+func Detect(conn shared.Connection, pf *inventory.Platform) (string, string, []string) {
 	sysVendor := ""
-	if pf.IsFamily("linux") {
+	if pf.IsFamily(inventory.FAMILY_LINUX) {
 		// Fetching the product version from the smbios manager is slow
 		// because it iterates through files we don't need to check. This
 		// is an optimization for our sshfs. Also, be aware that on linux,
@@ -33,6 +33,12 @@ func Detect(conn shared.Connection, pf *inventory.Platform, smbiosMgr smbios.SmB
 		}
 		sysVendor = string(content)
 	} else {
+		smbiosMgr, err := smbios.ResolveManager(conn, pf)
+		if err != nil {
+			log.Debug().Err(err).Msg("failed to resolve smbios manager")
+			return "", "", nil
+		}
+
 		info, err := smbiosMgr.Info()
 		if err != nil {
 			log.Debug().Err(err).Msg("failed to query smbios")
@@ -48,13 +54,12 @@ func Detect(conn shared.Connection, pf *inventory.Platform, smbiosMgr smbios.SmB
 			return "", "", nil
 		}
 		id, err := mdsvc.Identify()
-		if err != nil {
-			log.Debug().Err(err).
-				Strs("platform", pf.GetFamily()).
-				Msg("failed to get Azure platform id")
-			return "", "", nil
+		if err == nil {
+			return id.InstanceID, "", []string{id.AccountID}
 		}
-		return id.InstanceID, "", []string{id.AccountID}
+		log.Debug().Err(err).
+			Strs("platform", pf.GetFamily()).
+			Msg("failed to get Azure platform id")
 	}
 
 	return "", "", nil

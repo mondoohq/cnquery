@@ -189,4 +189,160 @@ space_mrn: //captain.api.mondoo.app/spaces/musing-saha-952142
 		assert.Equal(t, "//captain.api.mondoo.app/spaces/my-space-id", cfg.GetScopeMrn())
 		assert.Equal(t, "//captain.api.mondoo.app/spaces/my-space-id", cfg.GetParentMrn())
 	})
+
+	t.Run("test WIF config format", func(t *testing.T) {
+		data := `
+{
+    "universeDomain": "https://api.example.com",
+    "scopes": [
+        "//iam.api.mondoo.app/roles/agent"
+    ],
+    "type": "external_account",
+    "audience": "//captain.api.mondoo.app/spaces/test-space-id",
+    "subjectTokenType": "urn:ietf:params:oauth:token-type:jwt",
+    "issuerUri": "https://accounts.google.com"
+}
+`
+		viper.SetConfigType("json")
+		err := viper.ReadConfig(strings.NewReader(data))
+		require.NoError(t, err)
+
+		if viper.GetString("type") == "external_account" {
+			viper.Set("auth", map[string]string{"method": "wif"})
+
+			if audience := viper.GetString("audience"); audience != "" {
+				viper.Set("audience", audience)
+			}
+
+			if issuerUri := viper.GetString("issuerUri"); issuerUri != "" {
+				viper.Set("issuer_uri", issuerUri)
+			}
+
+			if universeDomain := viper.GetString("universeDomain"); universeDomain != "" {
+				viper.Set("api_endpoint", universeDomain)
+			}
+		}
+
+		cfg, err := Read()
+		require.NoError(t, err)
+
+		assert.Equal(t, "wif", cfg.Authentication.Method)
+		assert.Equal(t, "//captain.api.mondoo.app/spaces/test-space-id", cfg.Audience)
+		assert.Equal(t, "https://accounts.google.com", cfg.IssuerURI)
+		assert.Equal(t, "https://api.example.com", cfg.APIEndpoint)
+	})
+}
+
+func TestIsWifConfigFormat(t *testing.T) {
+	resetAppFsToMemFs(t)
+
+	t.Run("valid WIF config", func(t *testing.T) {
+		wifConfig := `{
+			"universeDomain": "https://api.example.com",
+			"scopes": ["//iam.api.mondoo.app/roles/agent"],
+			"type": "external_account",
+			"audience": "//captain.api.mondoo.app/spaces/test-space-id",
+			"subjectTokenType": "urn:ietf:params:oauth:token-type:jwt",
+			"issuerUri": "https://accounts.google.com"
+		}`
+		configPath := filepath.Join(homeConfigDir, "wif_config.json")
+		require.NoError(t, afero.WriteFile(AppFs, configPath, []byte(wifConfig), 0o644))
+
+		isWif := IsWifConfigFormat(configPath)
+		assert.True(t, isWif)
+	})
+
+	t.Run("invalid JSON file", func(t *testing.T) {
+		invalidJSON := `{ "this is not valid JSON`
+		configPath := filepath.Join(homeConfigDir, "invalid.json")
+		require.NoError(t, afero.WriteFile(AppFs, configPath, []byte(invalidJSON), 0o644))
+
+		isWif := IsWifConfigFormat(configPath)
+		assert.False(t, isWif)
+	})
+
+	t.Run("non-WIF JSON config", func(t *testing.T) {
+		nonWifConfig := `{
+			"api_endpoint": "https://us.api.mondoo.com",
+			"mrn": "//agents.api.mondoo.app/spaces/my-space-id/serviceaccounts/abc123",
+			"private_key": "-----BEGIN PRIVATE KEY-----\\nkey content\\n-----END PRIVATE KEY-----\\n"
+		}`
+		configPath := filepath.Join(homeConfigDir, "non_wif.json")
+		require.NoError(t, afero.WriteFile(AppFs, configPath, []byte(nonWifConfig), 0o644))
+
+		isWif := IsWifConfigFormat(configPath)
+		assert.False(t, isWif)
+	})
+
+	t.Run("WIF config missing required fields", func(t *testing.T) {
+		missingFields := `{
+			"type": "external_account",
+			"subjectTokenType": "urn:ietf:params:oauth:token-type:jwt"
+		}`
+		configPath := filepath.Join(homeConfigDir, "missing_fields.json")
+		require.NoError(t, afero.WriteFile(AppFs, configPath, []byte(missingFields), 0o644))
+
+		isWif := IsWifConfigFormat(configPath)
+		assert.False(t, isWif)
+	})
+}
+
+func TestConvertWifConfig(t *testing.T) {
+	resetAppFsToMemFs(t)
+
+	t.Run("successful conversion", func(t *testing.T) {
+		wifConfig := `{
+			"universeDomain": "https://api.example.com",
+			"scopes": ["//iam.api.mondoo.app/roles/agent"],
+			"type": "external_account",
+			"audience": "//captain.api.mondoo.app/spaces/test-space-id",
+			"subjectTokenType": "urn:ietf:params:oauth:token-type:jwt",
+			"issuerUri": "https://accounts.google.com"
+		}`
+		configPath := filepath.Join(homeConfigDir, "wif_config.json")
+		require.NoError(t, afero.WriteFile(AppFs, configPath, []byte(wifConfig), 0o644))
+
+		v := viper.New()
+		err := ConvertWifConfig(configPath, v)
+		require.NoError(t, err)
+
+		assert.Equal(t, "wif", v.GetStringMapString("auth")["method"])
+		assert.Equal(t, "//captain.api.mondoo.app/spaces/test-space-id", v.GetString("audience"))
+		assert.Equal(t, "https://accounts.google.com", v.GetString("issuer_uri"))
+		assert.Equal(t, "https://api.example.com", v.GetString("api_endpoint"))
+		assert.Equal(t, "https://api.example.com", v.GetString("universeDomain"))
+		assert.Equal(t, "external_account", v.GetString("type"))
+	})
+
+	t.Run("missing universeDomain", func(t *testing.T) {
+		missingDomain := `{
+			"type": "external_account",
+			"audience": "//captain.api.mondoo.app/spaces/test-space-id",
+			"subjectTokenType": "urn:ietf:params:oauth:token-type:jwt",
+			"issuerUri": "https://accounts.google.com"
+		}`
+		configPath := filepath.Join(homeConfigDir, "missing_domain.json")
+		require.NoError(t, afero.WriteFile(AppFs, configPath, []byte(missingDomain), 0o644))
+
+		v := viper.New()
+		err := ConvertWifConfig(configPath, v)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "missing required 'universeDomain' field")
+	})
+
+	t.Run("missing audience", func(t *testing.T) {
+		missingAudience := `{
+			"universeDomain": "https://api.example.com",
+			"type": "external_account",
+			"subjectTokenType": "urn:ietf:params:oauth:token-type:jwt",
+			"issuerUri": "https://accounts.google.com"
+		}`
+		configPath := filepath.Join(homeConfigDir, "missing_audience.json")
+		require.NoError(t, afero.WriteFile(AppFs, configPath, []byte(missingAudience), 0o644))
+
+		v := viper.New()
+		err := ConvertWifConfig(configPath, v)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "missing required 'audience' field")
+	})
 }

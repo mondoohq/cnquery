@@ -85,6 +85,20 @@ func (lpm *LinuxProcManager) Process(pid int64) (*OSProcess, error) {
 		return nil, err
 	}
 
+	// If cmdline is empty (likely a kernel thread), read from /proc/<pid>/comm instead
+	if cmdline == "" {
+		commf, err := lpm.conn.FileSystem().Open(filepath.Join(pidPath, "comm"))
+		if err != nil {
+			return nil, err
+		}
+		defer commf.Close()
+
+		cmdline, err = procfs.ParseProcessCmdline(commf)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	statusf, err := lpm.conn.FileSystem().Open(filepath.Join(pidPath, "status"))
 	if err != nil {
 		return nil, err

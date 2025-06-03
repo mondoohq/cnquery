@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
+	"github.com/spf13/viper"
 	"github.com/ulikunitz/xz"
 	"go.mondoo.com/cnquery/v11/cli/config"
 	"go.mondoo.com/cnquery/v11/logger/zerologadapter"
@@ -61,9 +62,24 @@ func init() {
 
 	LastProviderInstall = time.Now().Unix()
 
-	// Initialize the global coordinator instance
-	coordinator := newCoordinator()
-	Coordinator = coordinator
+	viper.SetEnvPrefix("mondoo")
+	viper.AutomaticEnv()
+
+	autoUpdateEnabled := true
+	config.InitViperConfig()
+	if viper.IsSet("auto_update") {
+		autoUpdateEnabled = viper.GetBool("auto_update")
+	}
+
+	log.Info().
+		Bool("autoUpdateEnabled", autoUpdateEnabled).
+		Msg("cnquery.providers.init(): initializing global Coordinator from ENV.")
+
+	coordinatorCfg := UpdateProvidersConfig{
+		Enabled:         autoUpdateEnabled,
+		RefreshInterval: 60 * 60,
+	}
+	Coordinator = newCoordinator(coordinatorCfg)
 }
 
 type ProviderLookup struct {
@@ -166,7 +182,7 @@ func (p Providers) Add(nu *Provider) {
 
 type Provider struct {
 	*plugin.Provider
-	Schema    *resources.Schema
+	Schema    resources.ResourcesSchema
 	Path      string
 	HasBinary bool
 }
@@ -289,6 +305,7 @@ func ListAll() ([]*Provider, error) {
 	for _, x := range builtinProviders {
 		all = append(all, &Provider{
 			Provider: x.Config,
+			Schema:   x.Runtime.Schema,
 		})
 	}
 
@@ -309,9 +326,18 @@ func ListAll() ([]*Provider, error) {
 				Str("provider", provider.Name).
 				Str("path", provider.Path).
 				Msg("failed to load provider")
-		} else {
-			res = append(res, provider)
+			continue
 		}
+
+		if err := provider.LoadResources(); err != nil {
+			log.Error().Err(err).
+				Str("provider", provider.Name).
+				Str("path", provider.Path).
+				Msg("failed to load provider resources")
+			continue
+		}
+
+		res = append(res, provider)
 	}
 
 	CachedProviders = res
@@ -348,6 +374,13 @@ func EnsureProvider(search ProviderLookup, autoUpdate bool, existing Providers) 
 
 	provider := existing.Lookup(search)
 	if provider != nil {
+		// For already installed providers, ensure all dependencies are installed
+		if autoUpdate {
+			err := installDependencies(provider, existing)
+			if err != nil {
+				return nil, err
+			}
+		}
 		return provider, nil
 	}
 
@@ -379,6 +412,13 @@ func EnsureProvider(search ProviderLookup, autoUpdate bool, existing Providers) 
 
 	existing.Add(nu)
 	PrintInstallResults([]*Provider{nu})
+
+	// Check for and install any dependencies this provider requires
+	err = installDependencies(nu, existing)
+	if err != nil {
+		return nil, err
+	}
+
 	return nu, nil
 }
 
@@ -460,6 +500,44 @@ func installVersion(name string, version string) (*Provider, error) {
 	}
 
 	return installed[0], nil
+}
+
+// installDependencies ensures all dependencies of a provider are installed
+func installDependencies(provider *Provider, existing Providers) error {
+	if provider.Schema == nil {
+		// every provider must have a schema but, instead of throwing a panic here
+		// let's print a helpful message to the user and continue execution
+		log.Error().Str("provider", provider.Name).Msg("provider without schema, unable to look up dependencies")
+		return nil
+	}
+
+	for _, dependency := range provider.Schema.AllDependencies() {
+		dependencyLookup := ProviderLookup{
+			ID:           dependency.Id,
+			ProviderName: dependency.Name,
+		}
+
+		// Check if dependency is already installed
+		depProvider := existing.Lookup(dependencyLookup)
+		if depProvider != nil {
+			continue // exist
+		}
+
+		upstreamDep := DefaultProviders.Lookup(dependencyLookup)
+		if upstreamDep == nil {
+			return &ProviderNotFoundError{lookup: dependencyLookup}
+		}
+
+		depProvider, err := Install(upstreamDep.Name, "")
+		if err != nil {
+			return err
+		}
+
+		existing.Add(depProvider)
+		PrintInstallResults([]*Provider{depProvider})
+	}
+
+	return nil
 }
 
 func LatestVersion(name string) (string, error) {
@@ -696,6 +774,11 @@ func InstallIO(reader io.ReadCloser, conf InstallConf) ([]*Provider, error) {
 			continue
 		}
 
+		if err := provider.LoadResources(); err != nil {
+			log.Error().Err(err).Str("path", pdir).Msg("failed to read provider resources, please remove or fix it")
+			continue
+		}
+
 		res = append(res, provider)
 	}
 
@@ -812,6 +895,7 @@ func readProviderDir(pdir string) (*Provider, error) {
 		Provider: &plugin.Provider{
 			Name: name,
 		},
+		Schema:    MustLoadSchemaFromFile(name, resources),
 		Path:      pdir,
 		HasBinary: config.ProbeFile(bin),
 	}, nil
@@ -855,13 +939,22 @@ func TryProviderUpdate(provider *Provider, update UpdateProvidersConfig) (*Provi
 		return nil, err
 	}
 	if diff >= 0 {
+		// Even if the provider doesn't need updating, we should check for any missing dependencies
+		if providers, err := ListActive(); err == nil {
+			err := installDependencies(provider, providers)
+			if err != nil {
+				return nil, err
+			}
+		}
 		return provider, nil
 	}
 
 	log.Info().
 		Str("installed", provider.Version).
 		Str("latest", latest).
+		Bool("update is enabled", update.Enabled).
 		Msg("found a new version for '" + provider.Name + "' provider")
+
 	provider, err = installVersion(provider.Name, latest)
 	if err != nil {
 		return nil, err
@@ -872,6 +965,14 @@ func TryProviderUpdate(provider *Provider, update UpdateProvidersConfig) (*Provi
 		log.Warn().
 			Str("provider", provider.Name).
 			Msg("failed to update refresh time on provider")
+	}
+
+	// After updating the provider, also install any dependencies it requires
+	if providers, err := ListActive(); err == nil {
+		err := installDependencies(provider, providers)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return provider, nil

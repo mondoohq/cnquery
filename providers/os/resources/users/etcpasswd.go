@@ -73,10 +73,29 @@ func (s *UnixUserManager) User(id string) (*User, error) {
 }
 
 func (s *UnixUserManager) List() ([]*User, error) {
+	users, err := s.listGetentPasswd()
+	if err == nil && len(users) != 0 {
+		return users, nil
+	}
+	// fallback to /etc/passwd
+	return s.listEtcPasswd()
+}
+
+func (s *UnixUserManager) listEtcPasswd() ([]*User, error) {
 	f, err := s.conn.FileSystem().Open("/etc/passwd")
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
 	return ParseEtcPasswd(f)
+}
+
+// https://man7.org/linux/man-pages/man1/getent.1.html
+func (s *UnixUserManager) listGetentPasswd() ([]*User, error) {
+	getent, err := s.conn.RunCommand("getent passwd")
+	if err != nil {
+		return nil, err
+	}
+
+	return ParseEtcPasswd(getent.Stdout)
 }

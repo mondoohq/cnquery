@@ -186,7 +186,7 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.OciConnection)
 		Runtime:               "oci",
 		Kind:                  "api",
 		Family:                []string{"oci"},
-		TechnologyUrlSegments: []string{"saas", "oci", "tenancy"},
+		TechnologyUrlSegments: []string{"oci", "tenancy"},
 	}
 
 	platformID := "//platformid.api.mondoo.app/runtime/oci/" + conn.TenantID()

@@ -105,7 +105,7 @@ func checkStatus() (Status, error) {
 
 	latestVersion, err := cnquery.GetLatestVersion(httpClient)
 	if err != nil {
-		return s, cli_errors.NewCommandError(errors.Wrap(err, "failed to get latest version"), 1)
+		log.Warn().Err(err).Msg("Failed to get latest version")
 	}
 
 	s.Client.LatestVersion = latestVersion

@@ -3,41 +3,28 @@
 
 package convert
 
-func ToBool(ptr *bool) bool {
+// ToPtr returns a pointer to the given value.
+func ToPtr[T any](v T) *T {
+	return &v
+}
+
+// ToValue returns the value of the given pointer.
+// If the pointer is `nil`, an empty value is returned.
+func ToValue[V any](ptr *V) V {
 	if ptr == nil {
-		return false
+		return *new(V)
 	}
 	return *ptr
 }
 
-func ToIntFrom32(ptr *int32) int {
-	if ptr == nil {
-		return 0
-	}
-	return int(*ptr)
-}
-
-func ToString(ptr *string) string {
-	if ptr == nil {
-		return ""
-	}
-	return *ptr
-}
-
-func ToFloat64(ptr *float64) float64 {
-	if ptr == nil {
-		return 0
-	}
-	return *ptr
-}
-
-func ToListFromPtrs(ptrs []*string) []string {
+// ToListFromPtrs returns a list of values of the given list of pointers.
+func ToListFromPtrs[V any](ptrs []*V) []V {
 	if ptrs == nil {
 		return nil
 	}
-	list := make([]string, len(ptrs))
+	list := make([]V, len(ptrs))
 	for i, ptr := range ptrs {
-		list[i] = ToString(ptr)
+		list[i] = ToValue(ptr)
 	}
 	return list
 }

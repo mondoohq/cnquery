@@ -131,10 +131,10 @@ func discoverDatacenter(conn *connection.VsphereConnection, datacenterResource *
 					Name:                  connection.EsxiPlatform,
 					Version:               esxiVersion.Version,
 					Build:                 esxiVersion.Build,
-					Kind:                  "baremetal",
+					Kind:                  inventory.AssetKindBaremetal,
 					Runtime:               "vsphere-host",
 					Family:                []string{connection.Family},
-					TechnologyUrlSegments: []string{"vsphere", "esxi", esxiVersion.Version + "-" + esxiVersion.Build},
+					TechnologyUrlSegments: []string{"vmware", "esxi", esxiVersion.Version + "-" + esxiVersion.Build},
 				},
 				Connections: []*inventory.Config{clonedConfig}, // pass-in the parent connection config
 				Labels: map[string]string{

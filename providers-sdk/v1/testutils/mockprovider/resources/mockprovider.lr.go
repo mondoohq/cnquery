@@ -25,6 +25,14 @@ func init() {
 			// to override args, implement: initMgroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMgroup,
 		},
+		"mos": {
+			// to override args, implement: initMos(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMos,
+		},
+		"customGroups": {
+			// to override args, implement: initCustomGroups(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCustomGroups,
+		},
 	}
 }
 
@@ -114,6 +122,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"mgroup.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMgroup).GetName()).ToDataRes(types.String)
 	},
+	"mos.groups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMos).GetGroups()).ToDataRes(types.Resource("customGroups"))
+	},
+	"customGroups.length": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCustomGroups).GetLength()).ToDataRes(types.Int)
+	},
+	"customGroups.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCustomGroups).GetList()).ToDataRes(types.Array(types.Resource("mgroup")))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -160,6 +177,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		},
 	"mgroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMgroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mos.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMos).__id, ok = v.Value.(string)
+			return
+		},
+	"mos.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMos).Groups, ok = plugin.RawToTValue[*mqlCustomGroups](v.Value, v.Error)
+		return
+	},
+	"customGroups.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlCustomGroups).__id, ok = v.Value.(string)
+			return
+		},
+	"customGroups.length": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCustomGroups).Length, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"customGroups.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCustomGroups).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 }
@@ -347,4 +384,123 @@ func (c *mqlMgroup) MqlID() string {
 
 func (c *mqlMgroup) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+// mqlMos for the mos resource
+type mqlMos struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMosInternal it will be used here
+	Groups plugin.TValue[*mqlCustomGroups]
+}
+
+// createMos creates a new instance of this resource
+func createMos(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMos{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mos", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMos) MqlName() string {
+	return "mos"
+}
+
+func (c *mqlMos) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMos) GetGroups() *plugin.TValue[*mqlCustomGroups] {
+	return plugin.GetOrCompute[*mqlCustomGroups](&c.Groups, func() (*mqlCustomGroups, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mos", c.__id, "groups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlCustomGroups), nil
+			}
+		}
+
+		return c.groups()
+	})
+}
+
+// mqlCustomGroups for the customGroups resource
+type mqlCustomGroups struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlCustomGroupsInternal it will be used here
+	Length plugin.TValue[int64]
+	List plugin.TValue[[]interface{}]
+}
+
+// createCustomGroups creates a new instance of this resource
+func createCustomGroups(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCustomGroups{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("customGroups", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCustomGroups) MqlName() string {
+	return "customGroups"
+}
+
+func (c *mqlCustomGroups) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCustomGroups) GetLength() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Length, func() (int64, error) {
+		return c.length()
+	})
+}
+
+func (c *mqlCustomGroups) GetList() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("customGroups", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.list()
+	})
 }

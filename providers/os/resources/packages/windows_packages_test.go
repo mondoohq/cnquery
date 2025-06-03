@@ -22,7 +22,13 @@ func TestWindowsAppPackagesParser(t *testing.T) {
 	require.NoError(t, err)
 	defer f.Close()
 
-	pkgs, err := ParseWindowsAppPackages(f)
+	pf := &inventory.Platform{
+		Name:    "windows",
+		Version: "10.0.18363",
+		Arch:    "x86",
+		Family:  []string{"windows"},
+	}
+	pkgs, err := ParseWindowsAppPackages(pf, f)
 	assert.Nil(t, err)
 	assert.Equal(t, 19, len(pkgs), "detected the right amount of packages")
 
@@ -30,8 +36,9 @@ func TestWindowsAppPackagesParser(t *testing.T) {
 	assert.Equal(t, Package{
 		Name:    "Microsoft Visual C++ 2015-2019 Redistributable (x86) - 14.28.29913",
 		Version: "14.28.29913.0",
-		Arch:    "",
+		Arch:    "x86",
 		Format:  "windows/app",
+		PUrl:    `pkg:windows/windows/Microsoft%20Visual%20C%2B%2B%202015-2019%20Redistributable%20%28x86%29%20-%2014.28.29913@14.28.29913.0?arch=x86`,
 		CPEs: []string{
 			"cpe:2.3:a:microsoft_corporation:microsoft_visual_c\\+\\+_2015-2019_redistributable_\\(x86\\)_-_14.28.29913:14.28.29913.0:*:*:*:*:*:*:*",
 			"cpe:2.3:a:microsoft:microsoft_visual_c\\+\\+_2015-2019_redistributable_\\(x86\\)_-_14.28.29913:14.28.29913.0:*:*:*:*:*:*:*",
@@ -41,7 +48,7 @@ func TestWindowsAppPackagesParser(t *testing.T) {
 	}, p)
 
 	// check empty return
-	pkgs, err = ParseWindowsAppxPackages(strings.NewReader(""))
+	pkgs, err = ParseWindowsAppxPackages(pf, strings.NewReader(""))
 	assert.Nil(t, err)
 	assert.Equal(t, 0, len(pkgs), "detected the right amount of packages")
 }
@@ -61,7 +68,14 @@ func TestWindowsAppxPackagesParser(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	pkgs, err := ParseWindowsAppxPackages(c.Stdout)
+	pf := &inventory.Platform{
+		Name:    "windows",
+		Version: "10.0.18363",
+		Arch:    "x86",
+		Family:  []string{"windows"},
+	}
+
+	pkgs, err := ParseWindowsAppxPackages(pf, c.Stdout)
 	assert.Nil(t, err)
 	assert.Equal(t, 28, len(pkgs), "detected the right amount of packages")
 
@@ -71,6 +85,7 @@ func TestWindowsAppxPackagesParser(t *testing.T) {
 		Version: "1.11.5.17763",
 		Arch:    "neutral",
 		Format:  "windows/appx",
+		PUrl:    "pkg:appx/windows/Microsoft.Windows.Cortana@1.11.5.17763?arch=x86",
 		// TODO: this is a bug in the CPE generation, we need to extract the publisher from the package
 		CPEs: []string{
 			"cpe:2.3:a:cn\\=microsoft_corporation\\,_o\\=microsoft_corporation\\,_l\\=redmond\\,_s\\=washington\\,_c\\=us:microsoft.windows.cortana:1.11.5.17763:*:*:*:*:*:*:*",
@@ -80,7 +95,7 @@ func TestWindowsAppxPackagesParser(t *testing.T) {
 	}, p)
 
 	// check empty return
-	pkgs, err = ParseWindowsAppxPackages(strings.NewReader(""))
+	pkgs, err = ParseWindowsAppxPackages(pf, strings.NewReader(""))
 	assert.Nil(t, err)
 	assert.Equal(t, 0, len(pkgs), "detected the right amount of packages")
 }
@@ -124,7 +139,9 @@ func TestWindowsHotFixParser(t *testing.T) {
 func TestGetPackageFromRegistryKeyItems(t *testing.T) {
 	t.Run("get package from registry key items that are empty", func(t *testing.T) {
 		items := []registry.RegistryKeyItem{}
-		p := getPackageFromRegistryKeyItems(items)
+		p := getPackageFromRegistryKeyItems(items, &inventory.Platform{
+			Family: []string{"windows"},
+		})
 		assert.Nil(t, p)
 	})
 	t.Run("get package from registry key items with missing required values", func(t *testing.T) {
@@ -137,7 +154,9 @@ func TestGetPackageFromRegistryKeyItems(t *testing.T) {
 				},
 			},
 		}
-		p := getPackageFromRegistryKeyItems(items)
+		p := getPackageFromRegistryKeyItems(items, &inventory.Platform{
+			Family: []string{"windows"},
+		})
 		assert.Nil(t, p)
 	})
 
@@ -172,7 +191,11 @@ func TestGetPackageFromRegistryKeyItems(t *testing.T) {
 				},
 			},
 		}
-		p := getPackageFromRegistryKeyItems(items)
+		p := getPackageFromRegistryKeyItems(items, &inventory.Platform{
+			Name:   "windows",
+			Arch:   "x86",
+			Family: []string{"windows"},
+		})
 		CPEs, err := cpe.NewPackage2Cpe(
 			"Microsoft Corporation",
 			"Microsoft Visual C++ 2015-2019 Redistributable (x86) - 14.28.29913",
@@ -185,10 +208,11 @@ func TestGetPackageFromRegistryKeyItems(t *testing.T) {
 		expected := &Package{
 			Name:    "Microsoft Visual C++ 2015-2019 Redistributable (x86) - 14.28.29913",
 			Version: "14.28.29913.0",
-			Arch:    "",
+			Arch:    "x86",
 			Format:  "windows/app",
 			CPEs:    CPEs,
 			Vendor:  "Microsoft Corporation",
+			PUrl:    "pkg:windows/windows/Microsoft%20Visual%20C%2B%2B%202015-2019%20Redistributable%20%28x86%29%20-%2014.28.29913@14.28.29913.0?arch=x86",
 		}
 		assert.NotNil(t, p)
 		assert.Equal(t, expected, p)
@@ -203,13 +227,21 @@ func TestToPackage(t *testing.T) {
 		Architecture: 0,
 	}
 
-	pkg := winAppxPkg.toPackage()
+	pf := &inventory.Platform{
+		Name:    "windows",
+		Version: "10.0.18363",
+		Arch:    "x86",
+		Family:  []string{"windows"},
+	}
+
+	pkg := winAppxPkg.toPackage(pf)
 
 	expected := Package{
 		Name:    "Microsoft.Windows.Cortana",
 		Version: "1.11.5.17763",
 		Arch:    "x86",
 		Format:  "windows/appx",
+		PUrl:    "pkg:appx/windows/Microsoft.Windows.Cortana@1.11.5.17763?arch=x86",
 		Vendor:  "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US",
 		CPEs: []string{
 			"cpe:2.3:a:cn\\=microsoft_corporation\\,_o\\=microsoft_corporation\\,_l\\=redmond\\,_s\\=washington\\,_c\\=us:microsoft.windows.cortana:1.11.5.17763:*:*:*:*:*:*:*",
@@ -218,4 +250,70 @@ func TestToPackage(t *testing.T) {
 	}
 
 	assert.Equal(t, expected, pkg)
+}
+
+func findPkgByName(pkgs []Package, name string) *Package {
+	for i := range pkgs {
+		if pkgs[i].Name == name {
+			return &pkgs[i]
+		}
+	}
+	return nil
+}
+
+func TestFindAndUpdateMsSqlHotfixes(t *testing.T) {
+	// Setup: create a list of packages with SQL Server hotfixes and SQL Server packages
+	packages := []Package{
+		{Name: "SQL Server 2019 Database Engine Services", Version: "15.0.2000.5", PUrl: "pkg:windows/windows/SQL%20Server%202019%20Database%20Engine%20Services@15.0.2000.5?arch=x86"},
+		{Name: "SQL Server 2019 Shared Management Objects", Version: "15.0.2000.5", PUrl: "pkg:windows/windows/SQL%20Server%202019%20Shared%20Management%20Objects@15.0.2000.5?arch=x86"},
+		// We should not update the setup package
+		{Name: "Microsoft SQL Server 2019 Setup (English)", Version: "15.0.2123.5", PUrl: "pkg:windows/windows/Microsoft%20SQL%20Server%202019%20Setup%20%28English%29@15.0.2123.5?arch=x86"},
+		{Name: "Hotfix KB5001090 SQL Server", Version: "15.0.4102.2", PUrl: "pkg:windows/windows/Hotfix%20KB5001090%20SQL%20Server@15.0.4102.2?arch=x86"},
+		{Name: "Hotfix KB5001091 SQL Server", Version: "15.0.4123.1", PUrl: "pkg:windows/windows/Hotfix%20KB5001091%20SQL%20Server@15.0.4123.1?arch=x86"},
+		{Name: "Not a hotfix", Version: "1.0.0", PUrl: "pkg:windows/windows/Not%20a%20hotfix@1.0.0?arch=x86"},
+	}
+
+	// Step 1: Find SQL Server hotfixes
+	hotfixes := findMsSqlHotfixes(packages)
+	require.Len(t, hotfixes, 2, "expected 2 hotfixes")
+
+	// Step 2: Get the latest hotfix (should be the last one after sorting)
+	latestHotfix := hotfixes[len(hotfixes)-1]
+	expectedLatestVersion := "15.0.4123.1"
+	require.Equal(t, expectedLatestVersion, latestHotfix.Version, "expected latest hotfix version")
+
+	// Step 3: Update SQL Server packages with the latest hotfix version
+	updated := updateMsSqlPackages(packages, latestHotfix)
+
+	// Step 4: Check that all SQL Server packages have the updated version
+	pkg := findPkgByName(updated, "SQL Server 2019 Database Engine Services")
+	require.NotNil(t, pkg, "SQL Server 2019 Database Engine Services package should exist")
+	require.Equal(t, expectedLatestVersion, pkg.Version, "expected SQL Server 2019 Database Engine Services to have updated version")
+	assert.Equal(t, "pkg:windows/windows/SQL%20Server%202019%20Database%20Engine%20Services@15.0.4123.1?arch=x86", pkg.PUrl)
+
+	pkg = findPkgByName(updated, "SQL Server 2019 Shared Management Objects")
+	require.NotNil(t, pkg, "SQL Server 2019 Shared Management Objects package should exist")
+	require.Equal(t, expectedLatestVersion, pkg.Version, "expected SQL Server 2019 Shared Management Objects to have updated version")
+	assert.Equal(t, "pkg:windows/windows/SQL%20Server%202019%20Shared%20Management%20Objects@15.0.4123.1?arch=x86", pkg.PUrl)
+
+	pkg = findPkgByName(updated, "Microsoft SQL Server 2019 Setup (English)")
+	require.NotNil(t, pkg, "Microsoft SQL Server 2019 Setup (English) package should exist")
+	require.Equal(t, "15.0.2123.5", pkg.Version, "expected Microsoft SQL Server 2019 Setup (English) to remain unchanged")
+	assert.Equal(t, "pkg:windows/windows/Microsoft%20SQL%20Server%202019%20Setup%20%28English%29@15.0.2123.5?arch=x86", pkg.PUrl)
+
+	pkg = findPkgByName(updated, "Hotfix KB5001090 SQL Server")
+	require.NotNil(t, pkg, "Hotfix KB5001090 SQL Server package should exist")
+	require.Equal(t, "15.0.4102.2", pkg.Version, "expected Hotfix KB5001090 SQL Server to remain unchanged")
+	assert.Equal(t, "pkg:windows/windows/Hotfix%20KB5001090%20SQL%20Server@15.0.4102.2?arch=x86", pkg.PUrl)
+
+	pkg = findPkgByName(updated, "Hotfix KB5001091 SQL Server")
+	require.NotNil(t, pkg, "Hotfix KB5001091 SQL Server package should exist")
+	require.Equal(t, "15.0.4123.1", pkg.Version, "expected Hotfix KB5001091 SQL Server to remain unchanged")
+	assert.Equal(t, "pkg:windows/windows/Hotfix%20KB5001091%20SQL%20Server@15.0.4123.1?arch=x86", pkg.PUrl)
+
+	// Step 5: Ensure non-SQL Server packages are unchanged
+	pkg = findPkgByName(updated, "Not a hotfix")
+	require.NotNil(t, pkg, "Not a hotfix package should exist")
+	require.Equal(t, "1.0.0", pkg.Version, "expected non-SQL Server package to remain unchanged")
+	assert.Equal(t, "pkg:windows/windows/Not%20a%20hotfix@1.0.0?arch=x86", pkg.PUrl)
 }

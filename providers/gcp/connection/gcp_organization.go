@@ -30,7 +30,7 @@ func (c *GcpConnection) OrganizationID() (string, error) {
 		}
 
 		// TODO: GetAncestry is not available in v3 anymore, we need to find an alternative approach
-		ancest, err := svc.Projects.GetAncestry(c.resourceID, &v1cloudresourcemanager.GetAncestryRequest{}).Do()
+		ancest, err := svc.Projects.GetAncestry(c.ResourceID(), &v1cloudresourcemanager.GetAncestryRequest{}).Do()
 		if err != nil {
 			return "", err
 		}
@@ -42,7 +42,7 @@ func (c *GcpConnection) OrganizationID() (string, error) {
 			}
 		}
 	case Organization:
-		return c.resourceID, nil
+		return c.ResourceID(), nil
 	}
 
 	return "", errors.New("could not find the organization")

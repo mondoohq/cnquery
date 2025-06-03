@@ -62,6 +62,7 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 	if optsErr != nil {
 		log.Fatal().Err(optsErr).Msg("could not load configuration")
 	}
+	conf.Features = opts.GetFeatures()
 
 	config.DisplayUsedConfig()
 

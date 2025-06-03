@@ -2,93 +2,6 @@
 # SPDX-License-Identifier: BUSL-1.1
 
 resources:
-  gcloud.compute:
-    fields:
-      instances: {}
-    min_mondoo_version: 5.15.0
-  gcloud.compute.instance:
-    fields:
-      cpuPlatform: {}
-      deletionProtection: {}
-      description: {}
-      hostname: {}
-      id: {}
-      labels: {}
-      metadata: {}
-      name: {}
-      serviceAccounts: {}
-      status: {}
-      statusMessage: {}
-      tags: {}
-    min_mondoo_version: 5.15.0
-  gcloud.compute.serviceaccount:
-    fields:
-      email: {}
-      scopes: {}
-    min_mondoo_version: 5.15.0
-  gcloud.organization:
-    fields:
-      iamPolicy: {}
-      id: {}
-      lifecycleState: {}
-      name: {}
-    min_mondoo_version: 5.15.0
-  gcloud.project:
-    fields:
-      createTime: {}
-      iamPolicy: {}
-      id: {}
-      labels: {}
-      lifecycleState: {}
-      name: {}
-      number: {}
-    min_mondoo_version: 5.15.0
-  gcloud.resourcemanager.binding:
-    fields:
-      id: {}
-      members: {}
-      role: {}
-    min_mondoo_version: 5.15.0
-  gcloud.sql:
-    fields:
-      instances: {}
-    min_mondoo_version: 5.15.0
-  gcloud.sql.instance:
-    fields:
-      backendType: {}
-      connectionName: {}
-      currentDiskSize: {}
-      databaseVersion: {}
-      gceZone: {}
-      instanceType: {}
-      kind: {}
-      maxDiskSize: {}
-      name: {}
-      project: {}
-      region: {}
-      serviceAccountEmailAddress: {}
-      settings: {}
-      state: {}
-    min_mondoo_version: 5.15.0
-  gcloud.storage:
-    fields:
-      buckets: {}
-    min_mondoo_version: 5.15.0
-  gcloud.storage.bucket:
-    fields:
-      created: {}
-      iamConfiguration: {}
-      iamPolicy: {}
-      id: {}
-      kind: {}
-      labels: {}
-      location: {}
-      locationType: {}
-      name: {}
-      projectNumber: {}
-      storageClass: {}
-      updated: {}
-    min_mondoo_version: 5.15.0
   gcp.accessApprovalSettings:
     fields:
       activeKeyVersion: {}
@@ -198,6 +111,8 @@ resources:
       parentId: {}
       pubsub: {}
       recommendations: {}
+      redis:
+        min_mondoo_version: 9.0.0
       services: {}
       sql: {}
       state: {}
@@ -1531,6 +1446,7 @@ resources:
       nodePools: {}
       privateClusterConfig: {}
       projectId: {}
+      releaseChannel: {}
       resourceLabels: {}
       shieldedNodesConfig: {}
       status: {}
@@ -1615,6 +1531,8 @@ resources:
       url: https://cloud.google.com/kubernetes-engine/docs/best-practices/networking
   gcp.project.gkeService.cluster.nodepool:
     fields:
+      autoscaling:
+        min_mondoo_version: 9.0.0
       config: {}
       id: {}
       initialNodeCount: {}
@@ -1633,6 +1551,19 @@ resources:
     refs:
     - title: About node pools
       url: https://cloud.google.com/kubernetes-engine/docs/concepts/node-pools
+  gcp.project.gkeService.cluster.nodepool.autoscaling:
+    fields:
+      autoprovisioned: {}
+      enabled: {}
+      maxNodeCount: {}
+      minNodeCount: {}
+      totalMaxNodeCount: {}
+      totalMinNodeCount: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - gcp
   gcp.project.gkeService.cluster.nodepool.config:
     fields:
       accelerators: {}
@@ -2232,6 +2163,60 @@ resources:
     refs:
     - title: Monitor topics within Pub/Sub
       url: https://cloud.google.com/pubsub/docs/monitor-topic
+  gcp.project.redisService:
+    fields:
+      instances: {}
+      projectId: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - gcp
+  gcp.project.redisService.instance:
+    fields:
+      AuthorizedNetwork: {}
+      Labels: {}
+      authEnabled: {}
+      availableMaintenanceVersions: {}
+      connectMode: {}
+      createTime: {}
+      currentLocationId: {}
+      customerManagedKey: {}
+      displayName: {}
+      host: {}
+      labels: {}
+      locationId: {}
+      maintenanceVersion: {}
+      memorySizeGb: {}
+      name: {}
+      nodes: {}
+      persistenceIamIdentity: {}
+      port: {}
+      projectId: {}
+      readEndpoint: {}
+      readEndpointPort: {}
+      redisConfigs: {}
+      redisVersion: {}
+      replicaCount: {}
+      reservedIpRange: {}
+      secondaryIpRange: {}
+      state: {}
+      statusMessage: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - gcp
+  gcp.project.redisService.instance.nodeInfo:
+    fields:
+      id: {}
+      projectId: {}
+      zone: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - gcp
   gcp.project.sqlService:
     fields:
       instances: {}
@@ -2441,10 +2426,14 @@ resources:
   gcp.project.storageService.bucket:
     fields:
       created: {}
+      encryption:
+        min_mondoo_version: 9.0.0
       iamConfiguration: {}
       iamPolicy: {}
       id: {}
       labels: {}
+      lifecycle:
+        min_mondoo_version: 9.0.0
       location: {}
       locationType: {}
       name: {}
@@ -2461,6 +2450,55 @@ resources:
     refs:
     - title: About Cloud Storage buckets
       url: https://cloud.google.com/storage/docs/buckets
+  gcp.project.storageService.bucket.lifecycleRule:
+    fields:
+      action: {}
+      condition: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - gcp
+  gcp.project.storageService.bucket.lifecycleRuleAction:
+    fields:
+      storageClass: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - gcp
+  gcp.project.storageService.bucket.lifecycleRuleCondition:
+    fields:
+      Age: {}
+      CreatedBefore: {}
+      CustomTimeBefore: {}
+      DaysSinceCustomTime: {}
+      DaysSinceNoncurrentTime: {}
+      IsLive: {}
+      MatchesPattern: {}
+      MatchesPrefix: {}
+      MatchesStorageClass: {}
+      MatchesSuffix: {}
+      NoncurrentTimeBefore: {}
+      NumNewerVersions: {}
+      age: {}
+      createdBefore: {}
+      customTimeBefore: {}
+      daysSinceCustomTime: {}
+      daysSinceNoncurrentTime: {}
+      isLive: {}
+      matchesPattern: {}
+      matchesPrefix: {}
+      matchesStorageClass: {}
+      matchesSuffix: {}
+      noncurrentTimeBefore: {}
+      numNewerVersions: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - gcp
   gcp.projects:
     fields:
       children: {}
@@ -2495,6 +2533,12 @@ resources:
     refs:
     - title: Recommendations
       url: https://cloud.google.com/recommender/docs/key-concepts
+  gcp.redis:
+    fields: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - gcp
   gcp.resourcemanager.binding:
     fields:
       id: {}

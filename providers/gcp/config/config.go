@@ -14,16 +14,29 @@ import (
 var Config = plugin.Provider{
 	Name:    "gcp",
 	ID:      "go.mondoo.com/cnquery/v9/providers/gcp",
-	Version: "11.0.50",
+	Version: "11.0.94",
 	ConnectionTypes: []string{
 		provider.ConnectionType,
 		string(gcpinstancesnapshot.SnapshotConnectionType),
 	},
 	Connectors: []plugin.Connector{
 		{
-			Name:    "gcp",
-			Use:     "gcp",
-			Short:   "a Google Cloud project or folder",
+			Name:  "gcp",
+			Use:   "gcp",
+			Short: "a Google Cloud project or folder",
+			Long: `Use the gcp provider to query resources within Google Cloud Platform (GCP), including databases, services, instances, containers, and more.
+
+Examples without logging into and configuring GCP:
+  cnquery shell gcp org <ORGANIZATION-ID> --credentials-path <PATH-TO-YOUR-SERVICE-ACCT>
+  cnspec scan gcp project <PROJECT-ID> --credentials-path <PATH-TO-YOUR-SERVICE-ACCT>
+
+Note:
+  If you log into GCP and configure the project you want to query or scan, you can omit credentials. To learn how, read https://mondoo.com/docs/cnspec/cloud/gcp/.
+
+Examples with the GCP project configured:
+  cnspec scan gcp folder <FOLDER-ID>
+  cnquery shell gcp project
+`,
 			MaxArgs: 2,
 			Discovery: []string{
 				resources.DiscoveryOrganization,

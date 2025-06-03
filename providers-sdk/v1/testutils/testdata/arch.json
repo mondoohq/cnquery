@@ -16,7 +16,8 @@
           "os"
         ],
         "build": "rolling",
-        "version": "rolling"
+        "version": "rolling",
+        "labels":{"distro-id":"arch"}
       },
       "connections": [
         {
@@ -133,7 +134,7 @@
           "Fields": {
             "content": {
               "type": "\u0007",
-              "value": "{\n  \"_\": null,\n  \"true\": true,\n  \"1\": 1,\n  \"1.0\": 1.0,\n  \"int-array\": [1,2,3],\n  \"dict\": {\n    \"ee\": 3,\n    \"ej\": 4,\n    \"ek\": 5\n  },\n  \"f\": [{\"ff\": 3}],\n  \"string-array\": [\"a\", \"b\", \"c\"],\n  \"hello\": \"hello\",\n  \"date\": \"2016-01-28T23:02:24Z\",\n  \"aoa\": [[1, 2], 3],\n  \"users\": [\n    {\n      \"name\": \"yor\",\n      \"children\": [\n        {\"name\": \"anya\"}\n      ]\n    },\n    {\"name\": \"loid\"}\n  ],\n  \"zzzlast\": \"🌒\"}\n"
+              "value": "{\n  \"_\": null,\n  \"true\": true,\n  \"1\": 1,\n  \"1.0\": 1.0,\n  \"e\": {\"1\": 1, \"hi\": \"hello\"},\n  \"eins\": \"1\",\n  \"int-array\": [1,2,3],\n  \"dict\": {\n    \"ee\": 3,\n    \"ej\": 4,\n    \"ek\": 5\n  },\n  \"f\": [{\"ff\": 3}],\n  \"string-array\": [\"a\", \"b\", \"c\"],\n  \"hello\": \"hello\",\n  \"date\": \"2016-01-28T23:02:24Z\",\n  \"aoa\": [[1, 2], 3],\n  \"users\": [\n    {\n      \"name\": \"yor\",\n      \"children\": [\n        {\"name\": \"anya\"}\n      ]\n    },\n    {\"name\": \"loid\"}\n  ],\n  \"zzzlast\": \"🌒\"}\n"
             },
             "path": {
               "type": "\u0007",
@@ -148,7 +149,32 @@
             },
             "size": {
               "type": "\u0005",
-              "value": 266
+              "value": 439
+            }
+          }
+        },
+        {
+          "Resource": "file",
+          "ID": "/dummy.xml",
+          "Fields": {
+            "content": {
+              "type": "\u0007",
+              "value": "\u003croot\u003e\n  \u003cbox\u003e\n    \u003chello a=\"1\"/\u003e\n  \u003c/box\u003e\n  \u003cbox\u003e\n    \u003cworld b=\"2\"\u003e\n      \u003cc\u003e3\u003c/c\u003e\n      4\n    \u003c/world\u003e\n  \u003c/box\u003e\n  \u003cbox\u003e🌎\u003c/box\u003e\n\u003c/root\u003e\n\n"
+            },
+            "path": {
+              "type": "\u0007",
+              "value": "/dummy.xml"
+            },
+            "permissions": {
+              "type": "\u001bfile.permissions",
+              "value": {
+                "Name": "file.permissions",
+                "ID": "-rw-r--r--"
+              }
+            },
+            "size": {
+              "type": "\u0005",
+              "value": 141
             }
           }
         },
@@ -1085,6 +1111,35 @@
                   "ID": "/etc/ssh/sshd_config"
                 }
               ]
+            }
+          }
+        },
+        {
+          "Resource": "file",
+          "ID": "/etc/audit/auditd.conf",
+          "Fields": {
+            "content": {
+              "type": "\u0007",
+              "value": "#\n# This file controls the configuration of the audit daemon\n#\n\nlocal_events = yes\nwrite_logs = yes\nLOG_FILE = /var/log/audit/AuDiT.log\nlog_group = root\nLOG_FORMAT = ENRICHED\nflush = INCREMENTAL_ASYNC\nfreq = 50\nmax_log_file = 8\nnum_logs = 5\npriority_boost = 4\nname_format = NONE\n##name = mydomain\nmax_log_file_action = ROTATE\nspace_left = 75\nspace_left_action = SYSLOG\nverify_email = yes\naction_mail_acct = root\nadmin_space_left = 50\nadmin_space_left_action = SUSPEND\ndisk_full_action = SUSPEND\ndisk_error_action = SUSPEND\nuse_libwrap = yes\n##tcp_listen_port = 60\ntcp_listen_queue = 5\ntcp_max_per_addr = 1\n##tcp_client_ports = 1024-65535\ntcp_client_max_idle = 0\ntransport = TCP\nkrb5_principal = auditd\n##krb5_key_file = /etc/audit/audit.key\ndistribute_network = no\nq_depth = 2000\noverflow_action = SYSLOG\nmax_restarts = 10\nplugin_dir = /etc/audit/plugins.d\nend_of_event_timeout = 2\n"
+            },
+            "exists": {
+              "type": "\u0004",
+              "value": true
+            },
+            "path": {
+              "type": "\u0007",
+              "value": "/etc/audit/auditd.conf"
+            },
+            "permissions": {
+              "type": "\u001bfile.permissions",
+              "value": {
+                "Name": "file.permissions",
+                "ID": "-rw-r--r--"
+              }
+            },
+            "size": {
+              "type": "\u0005",
+              "value": 882
             }
           }
         },

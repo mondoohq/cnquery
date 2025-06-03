@@ -15,6 +15,9 @@ import (
 )
 
 func (c *AwsEbsConnection) DetachVolumeFromInstance(ctx context.Context, volume *awsec2ebstypes.VolumeInfo) error {
+	if volume == nil {
+		return nil // no-op
+	}
 	log.Info().Msg("detach volume")
 	deviceName := c.deviceLocation
 	res, err := c.scannerRegionEc2svc.DetachVolume(ctx, &ec2.DetachVolumeInput{

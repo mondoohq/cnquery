@@ -13,6 +13,7 @@ import (
 
 	llx "go.mondoo.com/cnquery/v11/llx"
 	inventory "go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/memoize"
 )
 
 const DISABLE_DELAYED_DISCOVERY_OPTION = "disable-delayed-discovery"
@@ -24,11 +25,19 @@ type Service struct {
 
 	lastHeartbeat int64
 	heartbeatLock sync.Mutex
+
+	memoize.Memoizer
 }
+
+var (
+	cacheExpirationTime = 3 * time.Hour
+	cacheCleanupTime    = 6 * time.Hour
+)
 
 func NewService() *Service {
 	return &Service{
 		runtimes: make(map[uint32]*Runtime),
+		Memoizer: memoize.New(cacheExpirationTime, cacheCleanupTime),
 	}
 }
 
@@ -51,11 +60,8 @@ func (s *Service) AddRuntime(conf *inventory.Config, createRuntime func(connId u
 	}
 	// ^^
 
-	s.runtimesLock.Lock()
-	defer s.runtimesLock.Unlock()
-
 	// If a runtime with this ID already exists, then return that
-	if runtime, ok := s.runtimes[conf.Id]; ok {
+	if runtime, err := s.GetRuntime(conf.Id); err == nil {
 		return runtime, nil
 	}
 
@@ -66,7 +72,7 @@ func (s *Service) AddRuntime(conf *inventory.Config, createRuntime func(connId u
 
 	if runtime.Connection != nil {
 		if parentId := runtime.Connection.ParentID(); parentId > 0 {
-			parentRuntime, err := s.doGetRuntime(parentId)
+			parentRuntime, err := s.GetRuntime(parentId)
 			if err != nil {
 				return nil, errors.New("parent connection " + strconv.FormatUint(uint64(parentId), 10) + " not found")
 			}
@@ -74,8 +80,17 @@ func (s *Service) AddRuntime(conf *inventory.Config, createRuntime func(connId u
 
 		}
 	}
-	s.runtimes[conf.Id] = runtime
+
+	// store the new runtime
+	s.addRuntime(conf.Id, runtime)
+
 	return runtime, nil
+}
+
+func (s *Service) addRuntime(id uint32, runtime *Runtime) {
+	s.runtimesLock.Lock()
+	defer s.runtimesLock.Unlock()
+	s.runtimes[id] = runtime
 }
 
 // FIXME: DEPRECATED, remove in v12.0 vv
@@ -126,6 +141,10 @@ func (s *Service) Disconnect(req *DisconnectReq) (*DisconnectRes, error) {
 	s.runtimesLock.Lock()
 	defer s.runtimesLock.Unlock()
 	s.doDisconnect(req.Connection)
+	if len(s.runtimes) == 0 {
+		// flush our memoizer when there are no more connected runtimes
+		s.Flush()
+	}
 	return &DisconnectRes{}, nil
 }
 
@@ -262,5 +281,7 @@ func (s *Service) Shutdown(req *ShutdownReq) (*ShutdownRes, error) {
 	for id := range s.runtimes {
 		s.doDisconnect(id)
 	}
+
+	s.Flush() // flush our Memoizer
 	return &ShutdownRes{}, nil
 }

@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/mitchellh/hashstructure/v2"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11"
 	"go.mondoo.com/cnquery/v11/utils/multierr"
@@ -53,6 +54,15 @@ type UpstreamClient struct {
 	UpstreamConfig
 	Plugins    []ranger.ClientPlugin
 	HttpClient *http.Client
+}
+
+// Hash generates a hash of the upstream config used to avoid creating multiple clients
+func (c *UpstreamConfig) Hash() uint64 {
+	hash, err := hashstructure.Hash(c.Creds, hashstructure.FormatV2, nil)
+	if err != nil {
+		log.Error().Err(err).Msg("unable to hash upstream config")
+	}
+	return hash
 }
 
 func (c *UpstreamConfig) InitClient(ctx context.Context) (*UpstreamClient, error) {

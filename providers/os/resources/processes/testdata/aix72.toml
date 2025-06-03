@@ -9,6 +9,7 @@ stdout = """     PID  %CPU  %MEM   VSZ     TT        TIME UID COMMAND
  1638768   0.0   0.0   448      -    00:00:00   0 lbp_kproc
  1704266   0.0   0.0   448      -    00:00:00   0 lvmbb
  1769796                             00:00:00     <defunct>
+ 18875522                                       - <idle>
  1835362   0.0   0.0  1216      -    00:00:00   0 kpkcs11
  2687322   0.0   0.0   448      -    00:00:00   0 pofCmdProc
  3473870   0.0   0.0   488      -    00:00:00   0 /opt/rsct/bin/trspoolmgr

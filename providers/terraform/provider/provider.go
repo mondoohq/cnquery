@@ -9,7 +9,6 @@ import (
 	"strconv"
 
 	"github.com/rs/zerolog/log"
-
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
@@ -166,7 +165,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			}
 
 		default:
-			return nil, errors.New("cannot find connection type " + conf.Type)
+			return nil, plugin.ErrUnsupportedProvider
 		}
 
 		var upstream *upstream.UpstreamClient

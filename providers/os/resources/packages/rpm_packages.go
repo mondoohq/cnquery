@@ -13,7 +13,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/package-url/packageurl-go"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/cpe"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/purl"
 
@@ -94,9 +93,12 @@ func newRpmPackage(pf *inventory.Platform, name, version, arch, epoch, vendor, d
 		Arch:        arch,
 		Description: description,
 		Format:      RpmPkgFormat,
-		PUrl:        purl.NewPackageUrl(pf, name, version, arch, epoch, packageurl.TypeRPM),
 		CPEs:        cpes,
 		Vendor:      vendor,
+		PUrl: purl.NewPackageURL(pf, purl.TypeRPM, name, version,
+			purl.WithArch(arch),
+			purl.WithEpoch(epoch),
+		).String(),
 	}
 }
 

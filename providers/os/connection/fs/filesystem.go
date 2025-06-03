@@ -21,7 +21,7 @@ var (
 )
 
 func NewFileSystemConnectionWithClose(id uint32, conf *inventory.Config, asset *inventory.Asset, closeFN func()) (*FileSystemConnection, error) {
-	path, ok := conf.Options["path"]
+	path, ok := conf.GetOptions()["path"]
 	if !ok {
 		// fallback to host + path option
 		path = conf.Host + conf.Path
@@ -33,6 +33,10 @@ func NewFileSystemConnectionWithClose(id uint32, conf *inventory.Config, asset *
 
 	log.Debug().Str("path", path).Msg("load filesystem")
 
+	return NewFileSystemConnectionWithFs(id, conf, asset, path, closeFN, fs.NewMountedFs(path))
+}
+
+func NewFileSystemConnectionWithFs(id uint32, conf *inventory.Config, asset *inventory.Asset, path string, closeFN func(), fs afero.Fs) (*FileSystemConnection, error) {
 	return &FileSystemConnection{
 		Connection:   plugin.NewConnection(id, asset),
 		Conf:         conf,
@@ -40,7 +44,7 @@ func NewFileSystemConnectionWithClose(id uint32, conf *inventory.Config, asset *
 		MountedDir:   path,
 		closeFN:      closeFN,
 		tcPlatformId: conf.PlatformId,
-		fs:           fs.NewMountedFs(path),
+		fs:           fs,
 	}, nil
 }
 

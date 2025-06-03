@@ -18,7 +18,6 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
-	"flag"
 	"fmt"
 	"io"
 	"log"
@@ -94,20 +93,7 @@ func (ctx *SftpFsContext) Disconnect() error {
 }
 
 // TODO for such a weird reason rootpath is "." when writing "file1" with afero sftp backend
-func RunSftpServer(rootpath string) {
-	var (
-		readOnly      bool
-		debugLevelStr string
-		debugStderr   bool
-		rootDir       string
-	)
-
-	flag.BoolVar(&readOnly, "R", false, "read-only server")
-	flag.BoolVar(&debugStderr, "e", true, "debug to stderr")
-	flag.StringVar(&debugLevelStr, "l", "none", "debug level")
-	flag.StringVar(&rootDir, "root", rootpath, "root directory")
-	flag.Parse()
-
+func RunSftpServer() {
 	debugStream := io.Discard
 
 	// An SSH server is represented by a ServerConfig, which holds
@@ -238,7 +224,7 @@ func TestSftpCreate(t *testing.T) {
 	os.Mkdir("./testdata", 0o777)
 	MakeSSHKeyPair(1024, "./testdata/id_rsa.pub", "./testdata/id_rsa")
 
-	go RunSftpServer("./testdata/")
+	go RunSftpServer()
 	time.Sleep(5 * time.Second)
 
 	ctx, err := SftpConnect("test", "test", "localhost:2022")

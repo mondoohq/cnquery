@@ -5,12 +5,14 @@ package lsof
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"io"
+	"net"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/cockroachdb/errors"
 )
 
 func init() {
@@ -113,7 +115,6 @@ type FileDescriptor struct {
 
 // n127.0.0.1:3000->127.0.0.1:54335
 var networkNameRegexp = regexp.MustCompile(`(.*):(.*)->(.*):(.*)`)
-var networkLoopbackRegexp = regexp.MustCompile(`(.*):(.*)`)
 
 // local and remote Internet addresses of a network file
 func (f *FileDescriptor) NetworkFile() (string, int64, string, int64, error) {
@@ -144,20 +145,20 @@ func (f *FileDescriptor) NetworkFile() (string, int64, string, int64, error) {
 	}
 
 	// loop-back address [::1]:17223 or *:56863
-	address := networkLoopbackRegexp.FindStringSubmatch(f.Name)
-	if len(address) < 3 {
-		return "", 0, "", 0, errors.New("network name not supported: " + f.Name)
+	host, port, err := net.SplitHostPort(f.Name)
+	if err != nil {
+		return "", 0, "", 0, errors.Wrapf(err, "network name not supported: %s", f.Name)
 	}
+
 	localPort := 0
-	var err error
-	if address[2] != "*" {
-		localPort, err = strconv.Atoi(address[2])
+	if port != "*" {
+		localPort, err = strconv.Atoi(port)
 		if err != nil {
 			return "", 0, "", 0, errors.New("network name not supported: " + f.Name)
 		}
 	}
 
-	return address[1], int64(localPort), "", 0, nil
+	return host, int64(localPort), "", 0, nil
 }
 
 // maps lsof state to tcp states

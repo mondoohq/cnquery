@@ -27,7 +27,7 @@ terraform {
 }
 
 // Terraform configuration file (.tf or .tf.json file)
-terraform.file @defaults("path") {
+private terraform.file @defaults("path") {
   // Terraform (.tf or tf.json file)
   path string
   // All blocks within the file
@@ -47,7 +47,7 @@ terraform.fileposition {
 }
 
 // Terraform resource block
-terraform.block @defaults("type labels") {
+private terraform.block @defaults("type labels") {
   // Block type
   type string
   // Block Labels
@@ -105,7 +105,7 @@ terraform.state {
   outputs() []terraform.state.output
   // Root module which consists resources defined in .tf files
   rootModule() terraform.state.module
-  // flat list of all modules
+  // Flat list of all modules
   modules() []terraform.state.module
   // A flat list of all resources across all modules
   resources() []terraform.state.resource
@@ -167,6 +167,12 @@ terraform.plan {
   terraformVersion string
   // Resource changes
   resourceChanges() []terraform.plan.resourceChange
+  // Variables used to generate the Terraform plan
+  variables []terraform.plan.variable
+  // Whether `apply` is valid for the plan
+  applyable bool
+  // Whether the plan errored
+  errored bool
 }
 
 // Terraform plan configuration
@@ -175,6 +181,14 @@ terraform.plan.configuration {
   providerConfig() []dict
   // Root module resource configuration
   resources() []dict
+}
+
+// Terraform plan variable
+terraform.plan.variable @defaults("name value") {
+  // Variable name
+  name string
+  // Variable value
+  value dict
 }
 
 // Terraform plan resource change

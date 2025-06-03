@@ -12,10 +12,14 @@ import (
 
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/mqlc"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v11/utils/multierr"
 	"go.mondoo.com/cnquery/v11/utils/sortx"
 	"golang.org/x/exp/slices"
 )
+
+const MsgUnsupported = "unsupported platform"
 
 func (print *Printer) Datas(bundle *llx.CodeBundle, results map[string]*llx.RawResult) string {
 	var res strings.Builder
@@ -360,6 +364,10 @@ func (print *Printer) refMap(typ types.Type, data map[string]interface{}, codeID
 		label := print.defaultLabel(k, bundle)
 		val := v.(*llx.RawData)
 
+		if plugin.IsUnsupportedProviderError(val.Error) {
+			res.WriteString("  " + label + print.Disabled(MsgUnsupported) + "\n")
+			continue
+		}
 		if val.Error != nil {
 			res.WriteString("  " + label + print.Error(val.Error.Error()) + " ")
 			continue
@@ -380,6 +388,10 @@ func (print *Printer) refMap(typ types.Type, data map[string]interface{}, codeID
 			label := print.label(k, bundle, true)
 			val := v.(*llx.RawData)
 
+			if plugin.IsUnsupportedProviderError(val.Error) {
+				res.WriteString(indent + "  " + label + print.Disabled(MsgUnsupported) + "\n")
+				continue
+			}
 			if val.Error != nil {
 				res.WriteString(indent + "  " + label + print.Error(val.Error.Error()) + "\n")
 				continue
@@ -515,6 +527,68 @@ func isCodeBlock(codeID string, bundle *llx.CodeBundle) bool {
 	return ok
 }
 
+func (print *Printer) resourceContext(data any, checksum string, bundle *llx.CodeBundle, indent string) (string, bool) {
+	m, ok := data.(map[string]any)
+	if !ok {
+		return "", false
+	}
+
+	var path string
+	var rnge llx.Range
+	var content string
+
+	for k, v := range m {
+		label, ok := bundle.Labels.Labels[k]
+		if !ok {
+			continue
+		}
+		vv, ok := v.(*llx.RawData)
+		if !ok {
+			continue
+		}
+
+		switch label {
+		case "content":
+			if vv.Type == types.String {
+				content, _ = vv.Value.(string)
+			}
+		case "range":
+			if vv.Type == types.Range {
+				rnge, _ = vv.Value.(llx.Range)
+			}
+		case "path", "file.path":
+			if vv.Type == types.String {
+				path, _ = vv.Value.(string)
+			}
+		}
+	}
+
+	var res strings.Builder
+	if path == "" {
+		if !rnge.IsEmpty() {
+			res.WriteString("<unknown>:")
+			res.WriteString(rnge.String())
+		}
+	} else {
+		res.WriteString(path)
+		if !rnge.IsEmpty() {
+			res.WriteByte(':')
+			res.WriteString(rnge.String())
+		}
+	}
+	if content != "" {
+		res.WriteByte('\n')
+		res.WriteString(indent)
+		res.WriteString(indentBlock(content, indent))
+	}
+
+	r := res.String()
+	if r == "" {
+		return "", false
+	}
+	return r, true
+}
+
 func (print *Printer) autoExpand(blockRef uint64, data interface{}, bundle *llx.CodeBundle, indent string) string {
 	var res strings.Builder
 
@@ -526,9 +600,11 @@ func (print *Printer) autoExpand(blockRef uint64, data interface{}, bundle *llx.
 		prefix := indent + "  "
 		res.WriteString("[\n")
 		for i := range arr {
-			c := print.autoExpand(blockRef, arr[i], bundle, prefix)
+			num := strconv.Itoa(i)
+			autoIndent := prefix + strings.Repeat(" ", len(num)+2)
+			c := print.autoExpand(blockRef, arr[i], bundle, autoIndent)
 			res.WriteString(prefix)
-			res.WriteString(strconv.Itoa(i))
+			res.WriteString(num)
 			res.WriteString(": ")
 			res.WriteString(c)
 			res.WriteByte('\n')
@@ -565,6 +641,12 @@ func (print *Printer) autoExpand(blockRef uint64, data interface{}, bundle *llx.
 
 	res.WriteString(name)
 
+	// hasContext := false
+	// resourceInfo := print.schema.Lookup(name)
+	// if resourceInfo != nil && resourceInfo.Context != "" {
+	// 	hasContext = true
+	// }
+
 	if block != nil {
 		// important to process them in this order
 		for _, ref := range block.Entrypoints {
@@ -579,6 +661,21 @@ func (print *Printer) autoExpand(blockRef uint64, data interface{}, bundle *llx.
 			}
 
 			label := bundle.Labels.Labels[checksum]
+
+			// Note (Dom): We don't have precise matching on the resource context
+			// just yet. Here we handle it via best-effort, i.e. if it's called
+			// context, a block, and it's part of the resource's auto-expand, then we
+			// treat it as a kind of resource context.
+			if label == "context" && types.Type(vv.Type) == types.Block {
+				if data, ok := print.resourceContext(vv.Value, checksum, bundle, indent); ok {
+					res.WriteByte('\n')
+					res.WriteString(indent)
+					res.WriteString("in ")
+					res.WriteString(data)
+					continue
+				}
+			}
+
 			val := print.Data(vv.Type, vv.Value, checksum, bundle, indent)
 			res.WriteByte(' ')
 			res.WriteString(label)
@@ -698,8 +795,14 @@ func (print *Printer) Data(typ types.Type, data interface{}, codeID string, bund
 	case types.Block:
 		return print.refMap(typ, data.(map[string]interface{}), codeID, bundle, indent)
 
-	case types.Semver:
+	case types.Version:
 		return print.Secondary(data.(string))
+
+	case types.IP:
+		if data == nil {
+			return print.Secondary("null")
+		}
+		return print.Secondary(data.(llx.RawIP).String())
 
 	case types.ArrayLike:
 		if data == nil {
@@ -731,22 +834,55 @@ func (print *Printer) Data(typ types.Type, data interface{}, codeID string, bund
 		}
 
 		return idline
+
 	case types.FunctionLike:
 		if d, ok := data.(uint64); ok {
 			return indent + fmt.Sprintf("=> <%d,0>", d>>32)
 		} else {
 			return indent + fmt.Sprintf("=> %#v", data)
 		}
+
+	case types.Range:
+		if d, ok := data.(llx.Range); ok {
+			return indent + d.String()
+		} else {
+			return indent + "<bad range>"
+		}
+
 	default:
 		return indent + fmt.Sprintf("🤷 %#v", data)
 	}
 }
 
+// For the printer we want to filter out UnsupportedProvider errors,
+// since they are just reporting ignored bits.
+func filterErrors(e error) error {
+	if e == nil {
+		return nil
+	}
+	if plugin.IsUnsupportedProviderError(e) {
+		return nil
+	}
+	merr, ok := e.(*multierr.Errors)
+	if !ok {
+		return e
+	}
+
+	filtered := merr.Filter(func(e error) bool {
+		return plugin.IsUnsupportedProviderError(e)
+	})
+	if len(filtered.Errors) == 0 {
+		return nil
+	}
+	return filtered
+}
+
 // DataWithLabel prints RawData into a string
 func (print *Printer) DataWithLabel(r *llx.RawData, codeID string, bundle *llx.CodeBundle, indent string) string {
 	b := strings.Builder{}
-	if r.Error != nil {
-		b.WriteString(print.Error(strings.TrimSpace(r.Error.Error())))
+	errs := filterErrors(r.Error)
+	if errs != nil {
+		b.WriteString(print.Error(strings.TrimSpace(errs.Error())))
 		b.WriteByte('\n')
 	}
 

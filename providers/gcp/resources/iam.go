@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/gcp/connection"
@@ -74,7 +75,15 @@ func initGcpProjectIamServiceServiceAccount(runtime *plugin.Runtime, args map[st
 			return args, sa, nil
 		}
 	}
-	return nil, nil, errors.New("service account not found")
+
+	args["name"] = llx.NilData
+	args["uniqueId"] = llx.NilData
+	args["displayName"] = llx.NilData
+	args["description"] = llx.NilData
+	args["oauth2ClientId"] = llx.NilData
+	args["disabled"] = llx.NilData
+	log.Error().Interface("email", args["email"].Value).Err(errors.New("service account not found")).Send()
+	return args, nil, nil
 }
 
 func (g *mqlGcpProjectIamService) serviceAccounts() ([]interface{}, error) {
@@ -136,6 +145,13 @@ func (g *mqlGcpProjectIamServiceServiceAccount) keys() ([]interface{}, error) {
 		return nil, g.Email.Error
 	}
 	email := g.Email.Data
+
+	// if the unique id is null, we were not able to find a record of this service account
+	// so skip the keys discovery
+	if g.UniqueId.IsNull() {
+		g.Keys.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
 
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 

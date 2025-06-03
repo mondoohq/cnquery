@@ -7,9 +7,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/rs/zerolog/log"
@@ -26,31 +28,39 @@ import (
 var majorVersionRegex = regexp.MustCompile(`^(\d+)`)
 
 func isPlatformEol(platform string, version string) bool {
+	if version == "" {
+		return false
+	}
+	if platform != "node" {
+		return false
+	}
 	m := majorVersionRegex.FindString(version)
-	if platform == "node" {
+	val, err := strconv.Atoi(m)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Str("platform", platform).
+			Str("version", version).
+			Msg("could not parse the azure webapp version")
+		return false
+	}
 
-		val, err := strconv.Atoi(m)
-		if err != nil {
-			log.Error().Err(err).Str("platform", platform).Str("version", version).Msg("could not parse the azure webapp version")
-			return false
-		}
-
-		if val < 10 || val == 11 {
-			return true
-		}
+	if val < 10 || val == 11 {
+		return true
 	}
 	return false
 }
 
 type AzureWebAppStackRuntime struct {
-	Name         string `json:"name,omitempty"`
-	ID           string `json:"id,omitempty"`
-	Os           string `json:"os,omitempty"`
-	MajorVersion string `json:"majorVersion,omitempty"`
-	MinorVersion string `json:"minorVersion,omitempty"`
-	IsDeprecated bool   `json:"isDeprecated,omitempty"`
-	IsHidden     bool   `json:"isHidden,omitempty"`
-	IsDefault    bool   `json:"isDefault,omitempty"`
+	Name          string    `json:"name,omitempty"`
+	ID            string    `json:"id,omitempty"`
+	Os            string    `json:"os,omitempty"`
+	MajorVersion  string    `json:"majorVersion,omitempty"`
+	MinorVersion  string    `json:"minorVersion,omitempty"`
+	IsDeprecated  bool      `json:"isDeprecated,omitempty"`
+	IsHidden      bool      `json:"isHidden,omitempty"`
+	IsDefault     bool      `json:"isDefault,omitempty"`
+	EndOfLifeDate time.Time `json:"endOfLifeDate,omitempty"`
 }
 
 func (a *mqlAzureSubscriptionWebService) id() (string, error) {
@@ -151,108 +161,96 @@ func (a *mqlAzureSubscriptionWebService) availableRuntimes() ([]interface{}, err
 	}
 
 	res := []interface{}{}
-	windows := web.Enum15Windows
-	// NOTE: we do not return MQL resource since stacks do not have their own proper id in azure
-	windowsPager := client.NewGetAvailableStacksPager(&web.ProviderClientGetAvailableStacksOptions{OSTypeSelected: &windows})
-	for windowsPager.More() {
-		page, err := windowsPager.NextPage(ctx)
+	mapIDs := map[string]struct{}{}
+	pager := client.NewGetWebAppStacksPager(&web.ProviderClientGetWebAppStacksOptions{
+		StackOsType: convert.ToPtr(web.Enum19All),
+	})
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
 		for _, entry := range page.Value {
-
 			majorVersions := entry.Properties.MajorVersions
-			for j := range majorVersions {
-				majorVersion := majorVersions[j]
-
-				// NOTE: yes, not all major versions include minor versions
-				minorVersions := majorVersion.MinorVersions
-
-				// special handling for dotnet and aspdotnet
-				if len(minorVersions) == 0 {
-
-					// NOTE: for dotnet, it seems the runtime is using the display version to create a stack
-					// BUT: the stack itself reports the runtime version, therefore we need it to match the stacks
-					runtimeVersion := convert.ToString(majorVersion.RuntimeVersion)
-					// for dotnet, no runtime version is returned, therefore we need to use the display version
-					if len(runtimeVersion) == 0 {
-						runtimeVersion = convert.ToString(majorVersion.DisplayVersion)
+			stackName := convert.ToValue(entry.Name)
+			for _, major := range majorVersions {
+				majorText := convert.ToValue(major.DisplayText)
+				for _, minor := range major.MinorVersions {
+					minorText := convert.ToValue(minor.DisplayText)
+					if minor.StackSettings == nil {
+						log.Debug().
+							Str("stack_name", stackName).
+							Str("major_version", majorText).
+							Str("minor_version", minorText).
+							Msg("no stack settings, skipping")
+						continue
 					}
 
-					runtime := AzureWebAppStackRuntime{
-						Name: convert.ToString(entry.Name),
-
-						ID:           strings.ToUpper(convert.ToString(entry.Name)) + "|" + runtimeVersion,
-						Os:           "windows",
-						MajorVersion: convert.ToString(majorVersion.DisplayVersion),
-						IsDeprecated: convert.ToBool(majorVersion.IsDeprecated),
-						IsHidden:     convert.ToBool(majorVersion.IsHidden),
-						IsDefault:    convert.ToBool(majorVersion.IsDefault),
+					var os string
+					var settings *web.WebAppRuntimeSettings
+					switch convert.ToValue(entry.Properties.PreferredOs) {
+					case "linux":
+						settings = minor.StackSettings.LinuxRuntimeSettings
+						os = "linux"
+					case "windows":
+						settings = minor.StackSettings.WindowsRuntimeSettings
+						os = "windows"
 					}
-					properties, err := convert.JsonToDict(runtime)
+
+					if settings == nil {
+						log.Debug().
+							Str("stack_name", stackName).
+							Str("major_version", majorText).
+							Str("preferred_os", string(convert.ToValue(entry.Properties.PreferredOs))).
+							Interface("stack_settings", minor.StackSettings).
+							Msg("unknown runtime settings, skipping")
+						continue
+					}
+
+					runtimeVersion := convert.ToValue(settings.RuntimeVersion)
+					if runtimeVersion == "" {
+						// some app runtimes like java doesn't return a runtime version, so we try
+						// to build it like "stackName|minorVersion"
+						runtimeVersion = strings.ToUpper(stackName + "|" + convert.ToValue(minor.Value))
+					} else if stackName == "dotnet" {
+						// dotnet doesn't format the runtime the same way like the rest of the runtimes
+						// so we try to format it to match what the Azure portal shows
+						dotNet := ".NET"
+						if strings.Contains(convert.ToValue(major.Value), "asp") {
+							dotNet = "ASP.NET"
+						}
+						runtimeVersion = strings.ToUpper(dotNet + "|" + convert.ToValue(minor.Value))
+					}
+
+					deprecated := convert.ToValue(settings.IsDeprecated) ||
+						isPlatformEol(convert.ToValue(entry.Name), convert.ToValue(major.Value))
+
+					id := strings.Join([]string{"azure.subscription", subId,
+						"webService.appRuntimeStack", os, runtimeVersion,
+					}, "/")
+
+					if _, exist := mapIDs[id]; exist {
+						continue
+					}
+					mapIDs[id] = struct{}{}
+
+					resource, err := NewResource(a.MqlRuntime, "azure.subscription.webService.appRuntimeStack",
+						map[string]*llx.RawData{
+							"__id":           llx.StringData(id),
+							"name":           llx.StringData(stackName),
+							"preferredOs":    llx.StringData(os),
+							"runtimeVersion": llx.StringData(runtimeVersion),
+							"deprecated":     llx.BoolData(deprecated),
+							"autoUpdate":     llx.BoolDataPtr(settings.IsAutoUpdate),
+							"hidden":         llx.BoolDataPtr(settings.IsHidden),
+							"endOfLifeDate":  llx.TimeDataPtr(settings.EndOfLifeDate),
+							"majorVersion":   llx.StringDataPtr(major.Value),
+							"minorVersion":   llx.StringDataPtr(minor.Value),
+						})
 					if err != nil {
 						return nil, err
 					}
-					res = append(res, properties)
-				}
-
-				for l := range minorVersions {
-					minorVersion := minorVersions[l]
-
-					runtime := AzureWebAppStackRuntime{
-						Name:         convert.ToString(entry.Name),
-						ID:           strings.ToUpper(convert.ToString(entry.Name)) + "|" + convert.ToString(minorVersion.RuntimeVersion),
-						Os:           "windows",
-						MinorVersion: convert.ToString(minorVersion.DisplayVersion),
-						MajorVersion: convert.ToString(majorVersion.DisplayVersion),
-						IsDeprecated: convert.ToBool(majorVersion.IsDeprecated) || isPlatformEol(convert.ToString(entry.Name), convert.ToString(minorVersion.RuntimeVersion)),
-						IsHidden:     convert.ToBool(majorVersion.IsHidden),
-						IsDefault:    convert.ToBool(majorVersion.IsDefault),
-					}
-
-					properties, err := convert.JsonToDict(runtime)
-					if err != nil {
-						return nil, err
-					}
-					res = append(res, properties)
-				}
-			}
-		}
-	}
-
-	linux := web.Enum15Linux
-	// fetch all linux stacks
-	linuxPager := client.NewGetAvailableStacksPager(&web.ProviderClientGetAvailableStacksOptions{OSTypeSelected: &linux})
-	for linuxPager.More() {
-		page, err := linuxPager.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-		for _, entry := range page.Value {
-
-			majorVersions := entry.Properties.MajorVersions
-			for j := range majorVersions {
-				majorVersion := majorVersions[j]
-
-				minorVersions := majorVersion.MinorVersions
-				for l := range minorVersions {
-					minorVersion := minorVersions[l]
-					runtime := AzureWebAppStackRuntime{
-						Name:         convert.ToString(entry.Name),
-						ID:           convert.ToString(minorVersion.RuntimeVersion),
-						Os:           "linux",
-						MinorVersion: convert.ToString(minorVersion.DisplayVersion),
-						MajorVersion: convert.ToString(majorVersion.DisplayVersion),
-						IsDeprecated: convert.ToBool(majorVersion.IsDeprecated),
-						IsHidden:     convert.ToBool(majorVersion.IsHidden),
-						IsDefault:    convert.ToBool(majorVersion.IsDefault),
-					}
-
-					properties, err := convert.JsonToDict(runtime)
-					if err != nil {
-						return nil, err
-					}
-					res = append(res, properties)
+					res = append(res, resource)
 				}
 			}
 		}
@@ -388,10 +386,96 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) metadata() (interface{}, error) 
 	res := make(map[string]interface{})
 
 	for k := range metadata.Properties {
-		res[k] = convert.ToString(metadata.Properties[k])
+		res[k] = convert.ToValue(metadata.Properties[k])
 	}
 
 	return res, nil
+}
+
+func (a *mqlAzureSubscriptionWebServiceAppsite) ftp() (*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	id := a.Id.Data
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+	client, err := web.NewWebAppsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	site, err := resourceID.Component("sites")
+	if err != nil {
+		return nil, err
+	}
+
+	response, err := client.GetFtpAllowed(ctx, resourceID.ResourceGroup, site, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	args := map[string]*llx.RawData{
+		"id":   llx.StringDataPtr(response.ID),
+		"name": llx.StringDataPtr(response.Name),
+		"type": llx.StringDataPtr(response.Type),
+	}
+	if response.Properties != nil {
+		args["allow"] = llx.BoolDataPtr(response.Properties.Allow)
+	}
+	mqlResource, err := CreateResource(a.MqlRuntime, "azure.subscription.webService.appsite.basicPublishingCredentialsPolicies", args)
+	if err != nil {
+		return nil, err
+	}
+	return mqlResource.(*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies), nil
+}
+
+func (a *mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies) id() (string, error) {
+	return fmt.Sprintf("%s/%s", a.Id.Data, a.Name.Data), nil
+}
+
+func (a *mqlAzureSubscriptionWebServiceAppsite) scm() (*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	id := a.Id.Data
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+	client, err := web.NewWebAppsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	site, err := resourceID.Component("sites")
+	if err != nil {
+		return nil, err
+	}
+
+	response, err := client.GetScmAllowed(ctx, resourceID.ResourceGroup, site, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	args := map[string]*llx.RawData{
+		"id":   llx.StringDataPtr(response.ID),
+		"name": llx.StringDataPtr(response.Name),
+		"type": llx.StringDataPtr(response.Type),
+	}
+	if response.Properties != nil {
+		args["allow"] = llx.BoolDataPtr(response.Properties.Allow)
+	}
+	mqlResource, err := CreateResource(a.MqlRuntime, "azure.subscription.webService.appsite.basicPublishingCredentialsPolicies", args)
+	if err != nil {
+		return nil, err
+	}
+	return mqlResource.(*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies), nil
 }
 
 func (a *mqlAzureSubscriptionWebServiceAppsite) functions() ([]interface{}, error) {
@@ -554,24 +638,24 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) stack() (interface{}, error) {
 		switch stack {
 		case "dotnet":
 			stack = "aspnet" // needs to be overwritten (do not ask)
-			version = convert.ToString(properties.NetFrameworkVersion)
+			version = convert.ToValue(properties.NetFrameworkVersion)
 		case "dotnetcore":
 			// NOTE: this will always return v4.0 no matter what you set (which is definitely wrong for dotnetcore)
 			// The UI let you select different version, but in configure it does not show the version again
 			// therefore we have no way than to hardcode the value for now
 			version = "3.1"
 		case "php":
-			version = convert.ToString(properties.PhpVersion)
+			version = convert.ToValue(properties.PhpVersion)
 		case "python":
-			version = convert.ToString(properties.PythonVersion)
+			version = convert.ToValue(properties.PythonVersion)
 		case "node":
-			version = convert.ToString(properties.NodeVersion)
+			version = convert.ToValue(properties.NodeVersion)
 		case "powershell":
-			version = convert.ToString(properties.PowerShellVersion)
+			version = convert.ToValue(properties.PowerShellVersion)
 		case "java":
-			version = convert.ToString(properties.JavaVersion)
+			version = convert.ToValue(properties.JavaVersion)
 		case "javaContainer":
-			version = convert.ToString(properties.JavaContainerVersion)
+			version = convert.ToValue(properties.JavaContainerVersion)
 		}
 
 		runtime.Name = strings.ToLower(stack)
@@ -651,7 +735,7 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) applicationSettings() (interface
 	res := make(map[string]interface{})
 
 	for k := range settings.Properties {
-		res[k] = convert.ToString(settings.Properties[k])
+		res[k] = convert.ToValue(settings.Properties[k])
 	}
 
 	return res, nil

@@ -8,9 +8,11 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"net/url"
 	"time"
+
+	abstractions "github.com/microsoft/kiota-abstractions-go"
+	"github.com/rs/zerolog/log"
 
 	"github.com/microsoftgraph/msgraph-sdk-go/applications"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
@@ -22,26 +24,37 @@ import (
 	"go.mondoo.com/cnquery/v11/types"
 )
 
-func (a *mqlMicrosoft) applications() ([]interface{}, error) {
+func (a *mqlMicrosoft) applications() (*mqlMicrosoftApplications, error) {
+	mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.applications", map[string]*llx.RawData{})
+	return mqlResource.(*mqlMicrosoftApplications), err
+}
+
+func (a *mqlMicrosoftApplications) list() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
 		return nil, err
 	}
 	ctx := context.Background()
-	top := int32(999)
-	resp, err := graphClient.Applications().Get(ctx, &applications.ApplicationsRequestBuilderGetRequestConfiguration{
+
+	top := int32(500)
+	opts := &applications.ApplicationsRequestBuilderGetRequestConfiguration{
 		QueryParameters: &applications.ApplicationsRequestBuilderGetQueryParameters{
 			Top: &top,
 		},
-	})
+	}
+	resp, err := graphClient.Applications().Get(ctx, opts)
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	allApps, err := iterate[*models.Application](ctx, resp, graphClient.GetAdapter(), applications.CreateDeltaGetResponseFromDiscriminatorValue)
 	if err != nil {
 		return nil, transformError(err)
 	}
 
 	res := []interface{}{}
-	apps := resp.GetValue()
-	for _, app := range apps {
+	for _, app := range allApps {
 		mqlResource, err := newMqlMicrosoftApplication(a.MqlRuntime, app)
 		if err != nil {
 			return nil, err
@@ -50,6 +63,27 @@ func (a *mqlMicrosoft) applications() ([]interface{}, error) {
 	}
 
 	return res, nil
+}
+
+func (a *mqlMicrosoftApplications) length() (int64, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return 0, err
+	}
+
+	opts := &applications.CountRequestBuilderGetRequestConfiguration{Headers: abstractions.NewRequestHeaders()}
+	opts.Headers.Add("ConsistencyLevel", "eventual")
+	length, err := graphClient.Applications().Count().Get(context.Background(), opts)
+	if err != nil {
+		return 0, err
+	}
+	if length == nil {
+		// This should never happen, but we better check
+		return 0, errors.New("unable to count applications, counter parameter API returned nil")
+	}
+
+	return int64(*length), nil
 }
 
 // newMqlMicrosoftApplication creates a new mqlMicrosoftApplication resource
@@ -171,17 +205,53 @@ func newMqlMicrosoftApplication(runtime *plugin.Runtime, app models.Applicationa
 }
 
 func initMicrosoftApplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	// we only look up the application if we have been supplied by its name and nothing else
-	raw, ok := args["name"]
-	if !ok || len(args) != 1 {
-		return args, nil, nil
+	var appId string
+
+	raw, ok := args["id"]
+	if ok && len(args) < 3 {
+		appId = raw.Value.(string)
 	}
-	name := raw.Value.(string)
+	if appId == "" {
+		// lookup by name
+		raw, ok := args["name"]
+		if ok && len(args) == 1 {
+			name := raw.Value.(string)
+			id, err := fetchApplicationIdByName(runtime, name)
+			if err != nil {
+				return nil, nil, err
+			}
+			appId = *id
+		}
+	}
+	if appId == "" {
+		return nil, nil, errors.New("need name or id to fetch application")
+	}
+
+	ctx := context.Background()
 
 	conn := runtime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
 		return nil, nil, err
+	}
+	// https://graph.microsoft.com/v1.0/applications/{application-id}
+	app, err := graphClient.Applications().ByApplicationId(appId).Get(ctx, &applications.ApplicationItemRequestBuilderGetRequestConfiguration{})
+	if err != nil {
+		return nil, nil, transformError(err)
+	}
+	mqlMsApp, err := newMqlMicrosoftApplication(runtime, app)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return nil, mqlMsApp, nil
+}
+
+func fetchApplicationIdByName(runtime *plugin.Runtime, name string) (*string, error) {
+	conn := runtime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, err
 	}
 
 	// https://graph.microsoft.com/v1.0/servicePrincipals?$count=true&$search="displayName:teams"&$select=id,displayName
@@ -193,30 +263,35 @@ func initMicrosoftApplication(runtime *plugin.Runtime, args map[string]*llx.RawD
 		},
 	})
 	if err != nil {
-		return nil, nil, transformError(err)
+		return nil, transformError(err)
 	}
 
 	val := resp.GetValue()
 	if len(val) == 0 {
-		return nil, nil, errors.New("application not found")
+		return nil, errors.New("application not found")
 	}
 
 	applicationId := val[0].GetId()
 	if applicationId == nil {
-		return nil, nil, errors.New("application id not found")
+		return nil, errors.New("application id not found")
+	}
+	return applicationId, nil
+}
+
+func fetchApplicationById(runtime *plugin.Runtime, id string) (models.Applicationable, error) {
+	conn := runtime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, err
 	}
 
+	ctx := context.Background()
 	// https://graph.microsoft.com/v1.0/applications/{application-id}
-	app, err := graphClient.Applications().ByApplicationId(*applicationId).Get(ctx, &applications.ApplicationItemRequestBuilderGetRequestConfiguration{})
+	app, err := graphClient.Applications().ByApplicationId(id).Get(ctx, &applications.ApplicationItemRequestBuilderGetRequestConfiguration{})
 	if err != nil {
-		return nil, nil, transformError(err)
+		return nil, transformError(err)
 	}
-	mqlMsApp, err := newMqlMicrosoftApplication(runtime, app)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return nil, mqlMsApp, nil
+	return app, nil
 }
 
 // hasExpiredCredentials returns true if any of the credentials of the application are expired
@@ -253,6 +328,10 @@ func (a *mqlMicrosoftApplication) servicePrincipal() (*mqlMicrosoftServiceprinci
 			Filter: &filter,
 		},
 	})
+	if err != nil {
+		return nil, err
+	}
+
 	servicePrincipals := resp.GetValue()
 	if len(servicePrincipals) == 0 {
 		return nil, errors.New("service principal not found")
@@ -308,7 +387,7 @@ func (a *mqlMicrosoftApplication) owners() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		mqlMicrsoftResource.index(newUserResource.(*mqlMicrosoftUser))
+		mqlMicrsoftResource.indexUser(newUserResource.(*mqlMicrosoftUser))
 		res = append(res, newUserResource)
 	}
 	return res, nil

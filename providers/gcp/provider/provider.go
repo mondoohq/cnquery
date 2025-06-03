@@ -6,26 +6,31 @@ package provider
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
+	"time"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 
 	"go.mondoo.com/cnquery/v11"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
-
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/v11/providers/gcp/connection"
 	"go.mondoo.com/cnquery/v11/providers/gcp/connection/gcpinstancesnapshot"
 	"go.mondoo.com/cnquery/v11/providers/gcp/connection/shared"
 	"go.mondoo.com/cnquery/v11/providers/gcp/resources"
 )
 
-const (
-	ConnectionType = "gcp"
+const ConnectionType = "gcp"
+
+var (
+	cacheExpirationTime = 3 * time.Hour
+	cacheCleanupTime    = 6 * time.Hour
 )
 
 type Service struct {
@@ -34,7 +39,7 @@ type Service struct {
 
 func Init() *Service {
 	return &Service{
-		Service: plugin.NewService(),
+		plugin.NewService(),
 	}
 }
 
@@ -237,12 +242,26 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			return nil, err
 		}
 
-		var upstream *upstream.UpstreamClient
+		// verify the connection only once
+		_, _, err = s.Memoize(fmt.Sprintf("conn_%d", conn.Hash()), func() (any, error) {
+			log.Trace().Str("type", string(conn.Type())).Msg("verifying connection client")
+			return nil, conn.Verify()
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		var upstreamClient *upstream.UpstreamClient
 		if req.Upstream != nil && !req.Upstream.Incognito {
-			upstream, err = req.Upstream.InitClient(context.Background())
+			data, _, err := s.Memoize(
+				fmt.Sprintf("upstream_%d", req.Upstream.Hash()), func() (any, error) {
+					return req.Upstream.InitClient(context.Background())
+				})
 			if err != nil {
 				return nil, err
+
 			}
+			upstreamClient = data.(*upstream.UpstreamClient)
 		}
 
 		asset.Connections[0].Id = conn.ID()
@@ -254,7 +273,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			resources.NewResource,
 			resources.GetData,
 			resources.SetData,
-			upstream), nil
+			upstreamClient), nil
 	})
 	if err != nil {
 		return nil, err

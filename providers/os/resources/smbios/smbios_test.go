@@ -83,6 +83,52 @@ func Test_WindowsSmbiosChassis_AdHoc(t *testing.T) {
 	require.Equal(t, []string{""}, chassis[4].GetChassisTypes().Value())
 }
 
+func TestManagerUnixFamily(t *testing.T) {
+	// special case where we detect a unix system other than darwin
+	// use centos and change the platform family
+	conn, err := mock.New(0, "./testdata/centos.toml", &inventory.Asset{})
+	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
+	platform.Family = []string{"unix"}
+
+	mm, err := ResolveManager(conn, platform)
+	require.NoError(t, err)
+	biosInfo, err := mm.Info()
+	require.NoError(t, err)
+	assert.Equal(t, &SmBiosInfo{
+		BIOS: BiosInfo{
+			Vendor:      "innotek GmbH",
+			Version:     "VirtualBox",
+			ReleaseDate: "12/01/2006",
+		},
+		SysInfo: SysInfo{
+			Vendor:       "innotek GmbH",
+			Model:        "VirtualBox",
+			Version:      "1.2",
+			SerialNumber: "0",
+			UUID:         "64f118d3-0060-4a4c-bf1f-a11d655c4d6f",
+			Family:       "Virtual Machine",
+			SKU:          "",
+		},
+		BaseBoardInfo: BaseBoardInfo{
+			Vendor:       "Oracle Corporation",
+			Model:        "VirtualBox",
+			Version:      "1.2",
+			SerialNumber: "0",
+			AssetTag:     "",
+		},
+		ChassisInfo: ChassisInfo{
+			Vendor:       "Oracle Corporation",
+			Model:        "",
+			Version:      "",
+			SerialNumber: "",
+			AssetTag:     "",
+			Type:         "1",
+		},
+	}, biosInfo)
+}
+
 func TestManagerCentos(t *testing.T) {
 	conn, err := mock.New(0, "./testdata/centos.toml", &inventory.Asset{})
 	require.NoError(t, err)
@@ -208,6 +254,33 @@ func TestManagerWindows(t *testing.T) {
 			SerialNumber: "None",
 			AssetTag:     "",
 			Type:         "1",
+		},
+	}, biosInfo)
+}
+
+func TestManagerAIX(t *testing.T) {
+	conn, err := mock.New(0, "./testdata/aix.toml", &inventory.Asset{})
+	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
+
+	mm, err := ResolveManager(conn, platform)
+	require.NoError(t, err)
+	biosInfo, err := mm.Info()
+	require.NoError(t, err)
+	assert.Equal(t, &SmBiosInfo{
+		SysInfo: SysInfo{
+			Vendor:       "IBM",
+			Model:        "IBM,9009-22A",
+			Version:      "IBM,FW950.D0 (VL950_175)",
+			SerialNumber: "7835450",
+			Family:       "IBM Power Systems",
+		},
+		BaseBoardInfo: BaseBoardInfo{
+			Vendor:       "IBM",
+			Model:        "IBM,9009-22A",
+			Version:      "IBM,FW950.D0 (VL950_175)",
+			SerialNumber: "7835450",
 		},
 	}, biosInfo)
 }

@@ -6,8 +6,11 @@ package provider
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
+	"time"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
@@ -15,12 +18,15 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/v11/providers/aws/connection"
 	"go.mondoo.com/cnquery/v11/providers/aws/connection/awsec2ebsconn"
+	"go.mondoo.com/cnquery/v11/providers/aws/connection/shared"
 	"go.mondoo.com/cnquery/v11/providers/aws/resources"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 )
 
-const (
-	DefaultConnectionType = "aws"
+const DefaultConnectionType = "aws"
+
+var (
+	cacheExpirationTime = 3 * time.Hour
+	cacheCleanupTime    = 6 * time.Hour
 )
 
 type Service struct {
@@ -29,7 +35,7 @@ type Service struct {
 
 func Init() *Service {
 	return &Service{
-		Service: plugin.NewService(),
+		plugin.NewService(),
 	}
 }
 
@@ -42,7 +48,11 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 
 	// handle aws subcommands
 	if len(req.Args) >= 3 && req.Args[0] == "ec2" {
-		return &plugin.ParseCLIRes{Asset: handleAwsEc2Subcommands(req.Args, opts)}, nil
+		asset, err := handleAwsEc2Subcommands(req.Args, opts)
+		if err != nil {
+			return nil, err
+		}
+		return &plugin.ParseCLIRes{Asset: asset}, nil
 	}
 
 	inventoryConfig := &inventory.Config{
@@ -66,7 +76,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	return &plugin.ParseCLIRes{Asset: &asset}, nil
 }
 
-func handleAwsEc2Subcommands(args []string, opts map[string]string) *inventory.Asset {
+func handleAwsEc2Subcommands(args []string, opts map[string]string) (*inventory.Asset, error) {
 	asset := &inventory.Asset{}
 	switch args[1] {
 	case "instance-connect":
@@ -76,7 +86,7 @@ func handleAwsEc2Subcommands(args []string, opts map[string]string) *inventory.A
 	case "ebs":
 		return resources.EbsConnectAsset(args, opts)
 	}
-	return asset
+	return asset, nil
 }
 
 func parseFlagsToFiltersOpts(m map[string]*llx.Primitive) map[string]string {
@@ -232,12 +242,26 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			return nil, err
 		}
 
-		var upstream *upstream.UpstreamClient
+		// verify the connection only once
+		accountId, _, err := s.Memoize(fmt.Sprintf("conn_%d", conn.Hash()), func() (any, error) {
+			log.Info().Str("type", string(conn.Type())).Msg("verifying connection client")
+			return conn.Verify()
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		conn.SetAccountId(accountId.(string))
+
+		var upstreamClient *upstream.UpstreamClient
 		if req.Upstream != nil && !req.Upstream.Incognito {
-			upstream, err = req.Upstream.InitClient(context.Background())
+			data, _, err := s.Memoize(fmt.Sprintf("upstream_%d", req.Upstream.Hash()), func() (any, error) {
+				return req.Upstream.InitClient(context.Background())
+			})
 			if err != nil {
 				return nil, err
 			}
+			upstreamClient = data.(*upstream.UpstreamClient)
 		}
 
 		asset.Connections[0].Id = connId
@@ -249,7 +273,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			resources.NewResource,
 			resources.GetData,
 			resources.SetData,
-			upstream), nil
+			upstreamClient), nil
 	})
 	if err != nil {
 		return nil, err

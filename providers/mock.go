@@ -94,7 +94,7 @@ func assetinfo2providerName(asset *inventory.Asset) (string, error) {
 	}
 
 	switch asset.Platform.Kind {
-	case "container-image", "baremetal":
+	case "container-image", inventory.AssetKindBaremetal:
 		return "os", nil
 	}
 

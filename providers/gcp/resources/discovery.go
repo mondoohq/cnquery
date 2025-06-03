@@ -184,7 +184,7 @@ func discoverOrganization(conn *connection.GcpConnection, gcpOrg *mqlGcpOrganiza
 					Family:                []string{"google"},
 					TechnologyUrlSegments: []string{"gcp", project.Id.Data, "project"},
 				},
-				Labels:      map[string]string{},
+				Labels:      mapStrInterfaceToMapStrStr(project.GetLabels().Data),
 				Connections: []*inventory.Config{projectConf}, // pass-in the parent connection config
 			})
 
@@ -273,7 +273,7 @@ func discoverFolder(conn *connection.GcpConnection, gcpFolder *mqlGcpFolder) ([]
 					Family:                []string{"google"},
 					TechnologyUrlSegments: []string{"gcp", project.Id.Data, "project"},
 				},
-				Labels:      map[string]string{},
+				Labels:      mapStrInterfaceToMapStrStr(project.GetLabels().Data),
 				Connections: []*inventory.Config{projectConf}, // pass-in the parent connection config
 			})
 		}
@@ -484,7 +484,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 					Family:                []string{"google"},
 					TechnologyUrlSegments: connection.ResourceTechnologyUrl("gke", gcpProject.Id.Data, cluster.GetLocation().Data, "cluster", cluster.Name.Data),
 				},
-				Labels:      map[string]string{},
+				Labels:      mapStrInterfaceToMapStrStr(cluster.GetResourceLabels().Data),
 				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))}, // pass-in the parent connection config
 			})
 		}
@@ -513,7 +513,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 					Family:                []string{"google"},
 					TechnologyUrlSegments: connection.ResourceTechnologyUrl("storage", gcpProject.Id.Data, bucket.GetLocation().Data, "bucket", bucket.Name.Data),
 				},
-				Labels:      map[string]string{},
+				Labels:      mapStrInterfaceToMapStrStr(bucket.GetLabels().Data),
 				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))}, // pass-in the parent connection config
 			})
 		}
@@ -542,7 +542,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 					Family:                []string{"google"},
 					TechnologyUrlSegments: connection.ResourceTechnologyUrl("bigquery", gcpProject.Id.Data, dataset.GetLocation().Data, "dataset", dataset.Id.Data),
 				},
-				Labels:      map[string]string{},
+				Labels:      mapStrInterfaceToMapStrStr(dataset.GetLabels().Data),
 				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))}, // pass-in the parent connection config
 			})
 		}
@@ -673,4 +673,14 @@ func (a *GcrImages) List() ([]*inventory.Asset, error) {
 
 	wg.Wait()
 	return assets, nil
+}
+
+func mapStrInterfaceToMapStrStr(m map[string]interface{}) map[string]string {
+	strMap := make(map[string]string)
+	for k, v := range m {
+		if v != nil {
+			strMap[k] = v.(string)
+		}
+	}
+	return strMap
 }

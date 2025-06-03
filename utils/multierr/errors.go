@@ -42,6 +42,17 @@ func (m *Errors) Add(err ...error) {
 	}
 }
 
+func (m *Errors) Filter(f func(e error) bool) *Errors {
+	res := Errors{}
+	for i := range m.Errors {
+		cur := m.Errors[i]
+		if !f(cur) {
+			res.Errors = append(res.Errors, cur)
+		}
+	}
+	return &res
+}
+
 func (m *Errors) Error() string {
 	var res strings.Builder
 

@@ -130,6 +130,10 @@ func init() {
 			// to override args, implement: initFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createFile,
 		},
+		"file.context": {
+			// to override args, implement: initFileContext(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFileContext,
+		},
 		"file.permissions": {
 			// to override args, implement: initFilePermissions(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createFilePermissions,
@@ -149,6 +153,10 @@ func init() {
 		"parse.json": {
 			Init: initParseJson,
 			Create: createParseJson,
+		},
+		"parse.xml": {
+			Init: initParseXml,
+			Create: createParseXml,
 		},
 		"parse.plist": {
 			Init: initParsePlist,
@@ -225,6 +233,10 @@ func init() {
 		"sshd.config.matchBlock": {
 			// to override args, implement: initSshdConfigMatchBlock(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createSshdConfigMatchBlock,
+		},
+		"auditd.config": {
+			Init: initAuditdConfig,
+			Create: createAuditdConfig,
 		},
 		"service": {
 			Init: initService,
@@ -485,6 +497,34 @@ func init() {
 		"windows.security.health": {
 			Init: initWindowsSecurityHealth,
 			Create: createWindowsSecurityHealth,
+		},
+		"cloud": {
+			// to override args, implement: initCloud(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCloud,
+		},
+		"cloudInstance": {
+			// to override args, implement: initCloudInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCloudInstance,
+		},
+		"ipAddress": {
+			// to override args, implement: initIpAddress(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createIpAddress,
+		},
+		"network": {
+			// to override args, implement: initNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNetwork,
+		},
+		"networkInterface": {
+			// to override args, implement: initNetworkInterface(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNetworkInterface,
+		},
+		"usb": {
+			// to override args, implement: initUsb(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createUsb,
+		},
+		"usb.device": {
+			// to override args, implement: initUsbDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createUsbDevice,
 		},
 	}
 }
@@ -806,6 +846,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"os.hostname": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOs).GetHostname()).ToDataRes(types.String)
 	},
+	"os.hypervisor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOs).GetHypervisor()).ToDataRes(types.String)
+	},
 	"os.machineid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOs).GetMachineid()).ToDataRes(types.String)
 	},
@@ -932,6 +975,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"file.empty": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFile).GetEmpty()).ToDataRes(types.Bool)
 	},
+	"file.context.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFileContext).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"file.context.range": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFileContext).GetRange()).ToDataRes(types.Range)
+	},
+	"file.context.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFileContext).GetContent()).ToDataRes(types.String)
+	},
 	"file.permissions.mode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFilePermissions).GetMode()).ToDataRes(types.Int)
 	},
@@ -1030,6 +1082,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"parse.json.params": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlParseJson).GetParams()).ToDataRes(types.Dict)
+	},
+	"parse.xml.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlParseXml).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"parse.xml.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlParseXml).GetContent()).ToDataRes(types.String)
+	},
+	"parse.xml.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlParseXml).GetParams()).ToDataRes(types.Dict)
 	},
 	"parse.plist.file": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlParsePlist).GetFile()).ToDataRes(types.Resource("file"))
@@ -1280,6 +1341,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"sshd.config.matchBlock.params": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSshdConfigMatchBlock).GetParams()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"sshd.config.matchBlock.ciphers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSshdConfigMatchBlock).GetCiphers()).ToDataRes(types.Array(types.String))
+	},
+	"sshd.config.matchBlock.macs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSshdConfigMatchBlock).GetMacs()).ToDataRes(types.Array(types.String))
+	},
+	"sshd.config.matchBlock.kexs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSshdConfigMatchBlock).GetKexs()).ToDataRes(types.Array(types.String))
+	},
+	"sshd.config.matchBlock.hostkeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSshdConfigMatchBlock).GetHostkeys()).ToDataRes(types.Array(types.String))
+	},
+	"sshd.config.matchBlock.permitRootLogin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSshdConfigMatchBlock).GetPermitRootLogin()).ToDataRes(types.Array(types.String))
+	},
+	"sshd.config.matchBlock.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSshdConfigMatchBlock).GetContext()).ToDataRes(types.Resource("file.context"))
+	},
+	"auditd.config.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditdConfig).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"auditd.config.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditdConfig).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"service.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlService).GetName()).ToDataRes(types.String)
 	},
@@ -1468,6 +1553,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"docker.container.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerContainer).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"docker.container.hostConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerContainer).GetHostConfig()).ToDataRes(types.Dict)
 	},
 	"iptables.input": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIptables).GetInput()).ToDataRes(types.Array(types.Resource("iptables.entry")))
@@ -2318,6 +2406,108 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.security.health.securityCenterService": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsSecurityHealth).GetSecurityCenterService()).ToDataRes(types.Dict)
 	},
+	"cloud.provider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloud).GetProvider()).ToDataRes(types.String)
+	},
+	"cloud.instance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloud).GetInstance()).ToDataRes(types.Resource("cloudInstance"))
+	},
+	"cloudInstance.publicHostname": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudInstance).GetPublicHostname()).ToDataRes(types.String)
+	},
+	"cloudInstance.publicIpv4": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudInstance).GetPublicIpv4()).ToDataRes(types.Array(types.Resource("ipAddress")))
+	},
+	"cloudInstance.privateHostname": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudInstance).GetPrivateHostname()).ToDataRes(types.String)
+	},
+	"cloudInstance.privateIpv4": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudInstance).GetPrivateIpv4()).ToDataRes(types.Array(types.Resource("ipAddress")))
+	},
+	"cloudInstance.metadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudInstance).GetMetadata()).ToDataRes(types.Dict)
+	},
+	"ipAddress.ip": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIpAddress).GetIp()).ToDataRes(types.IP)
+	},
+	"ipAddress.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIpAddress).GetSubnet()).ToDataRes(types.IP)
+	},
+	"ipAddress.cidr": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIpAddress).GetCidr()).ToDataRes(types.IP)
+	},
+	"ipAddress.broadcast": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIpAddress).GetBroadcast()).ToDataRes(types.IP)
+	},
+	"ipAddress.gateway": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIpAddress).GetGateway()).ToDataRes(types.IP)
+	},
+	"network.interfaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetwork).GetInterfaces()).ToDataRes(types.Array(types.Resource("networkInterface")))
+	},
+	"networkInterface.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkInterface).GetName()).ToDataRes(types.String)
+	},
+	"networkInterface.mac": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkInterface).GetMac()).ToDataRes(types.String)
+	},
+	"networkInterface.vendor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkInterface).GetVendor()).ToDataRes(types.String)
+	},
+	"networkInterface.ips": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkInterface).GetIps()).ToDataRes(types.Array(types.Resource("ipAddress")))
+	},
+	"networkInterface.mtu": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkInterface).GetMtu()).ToDataRes(types.Int)
+	},
+	"networkInterface.flags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkInterface).GetFlags()).ToDataRes(types.Array(types.String))
+	},
+	"networkInterface.active": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkInterface).GetActive()).ToDataRes(types.Bool)
+	},
+	"networkInterface.virtual": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkInterface).GetVirtual()).ToDataRes(types.Bool)
+	},
+	"usb.devices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUsb).GetDevices()).ToDataRes(types.Array(types.Resource("usb.device")))
+	},
+	"usb.device.vendorId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUsbDevice).GetVendorId()).ToDataRes(types.String)
+	},
+	"usb.device.manufacturer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUsbDevice).GetManufacturer()).ToDataRes(types.String)
+	},
+	"usb.device.productId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUsbDevice).GetProductId()).ToDataRes(types.String)
+	},
+	"usb.device.serial": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUsbDevice).GetSerial()).ToDataRes(types.String)
+	},
+	"usb.device.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUsbDevice).GetName()).ToDataRes(types.String)
+	},
+	"usb.device.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUsbDevice).GetVersion()).ToDataRes(types.String)
+	},
+	"usb.device.speed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUsbDevice).GetSpeed()).ToDataRes(types.String)
+	},
+	"usb.device.class": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUsbDevice).GetClass()).ToDataRes(types.String)
+	},
+	"usb.device.className": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUsbDevice).GetClassName()).ToDataRes(types.String)
+	},
+	"usb.device.subclass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUsbDevice).GetSubclass()).ToDataRes(types.String)
+	},
+	"usb.device.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUsbDevice).GetProtocol()).ToDataRes(types.String)
+	},
+	"usb.device.isRemovable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUsbDevice).GetIsRemovable()).ToDataRes(types.Bool)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -2746,6 +2936,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlOs).Hostname, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"os.hypervisor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOs).Hypervisor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"os.machineid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOs).Machineid, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2946,6 +3140,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlFile).Empty, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"file.context.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlFileContext).__id, ok = v.Value.(string)
+			return
+		},
+	"file.context.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFileContext).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"file.context.range": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFileContext).Range, ok = plugin.RawToTValue[llx.Range](v.Value, v.Error)
+		return
+	},
+	"file.context.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFileContext).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"file.permissions.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlFilePermissions).__id, ok = v.Value.(string)
 			return
@@ -3096,6 +3306,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"parse.json.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlParseJson).Params, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"parse.xml.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlParseXml).__id, ok = v.Value.(string)
+			return
+		},
+	"parse.xml.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlParseXml).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"parse.xml.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlParseXml).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"parse.xml.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlParseXml).Params, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"parse.plist.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3506,6 +3732,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlSshdConfigMatchBlock).Params, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
 		return
 	},
+	"sshd.config.matchBlock.ciphers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSshdConfigMatchBlock).Ciphers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"sshd.config.matchBlock.macs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSshdConfigMatchBlock).Macs, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"sshd.config.matchBlock.kexs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSshdConfigMatchBlock).Kexs, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"sshd.config.matchBlock.hostkeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSshdConfigMatchBlock).Hostkeys, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"sshd.config.matchBlock.permitRootLogin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSshdConfigMatchBlock).PermitRootLogin, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"sshd.config.matchBlock.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSshdConfigMatchBlock).Context, ok = plugin.RawToTValue[*mqlFileContext](v.Value, v.Error)
+		return
+	},
+	"auditd.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAuditdConfig).__id, ok = v.Value.(string)
+			return
+		},
+	"auditd.config.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditdConfig).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"auditd.config.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditdConfig).Params, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
 	"service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlService).__id, ok = v.Value.(string)
 			return
@@ -3816,6 +4078,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"docker.container.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDockerContainer).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"docker.container.hostConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerContainer).HostConfig, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"iptables.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5150,6 +5416,170 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlWindowsSecurityHealth).SecurityCenterService, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
+	"cloud.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlCloud).__id, ok = v.Value.(string)
+			return
+		},
+	"cloud.provider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloud).Provider, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloud.instance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloud).Instance, ok = plugin.RawToTValue[*mqlCloudInstance](v.Value, v.Error)
+		return
+	},
+	"cloudInstance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlCloudInstance).__id, ok = v.Value.(string)
+			return
+		},
+	"cloudInstance.publicHostname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudInstance).PublicHostname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudInstance.publicIpv4": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudInstance).PublicIpv4, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"cloudInstance.privateHostname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudInstance).PrivateHostname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudInstance.privateIpv4": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudInstance).PrivateIpv4, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"cloudInstance.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudInstance).Metadata, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"ipAddress.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlIpAddress).__id, ok = v.Value.(string)
+			return
+		},
+	"ipAddress.ip": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIpAddress).Ip, ok = plugin.RawToTValue[llx.RawIP](v.Value, v.Error)
+		return
+	},
+	"ipAddress.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIpAddress).Subnet, ok = plugin.RawToTValue[llx.RawIP](v.Value, v.Error)
+		return
+	},
+	"ipAddress.cidr": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIpAddress).Cidr, ok = plugin.RawToTValue[llx.RawIP](v.Value, v.Error)
+		return
+	},
+	"ipAddress.broadcast": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIpAddress).Broadcast, ok = plugin.RawToTValue[llx.RawIP](v.Value, v.Error)
+		return
+	},
+	"ipAddress.gateway": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIpAddress).Gateway, ok = plugin.RawToTValue[llx.RawIP](v.Value, v.Error)
+		return
+	},
+	"network.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlNetwork).__id, ok = v.Value.(string)
+			return
+		},
+	"network.interfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetwork).Interfaces, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"networkInterface.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlNetworkInterface).__id, ok = v.Value.(string)
+			return
+		},
+	"networkInterface.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkInterface).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"networkInterface.mac": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkInterface).Mac, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"networkInterface.vendor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkInterface).Vendor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"networkInterface.ips": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkInterface).Ips, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"networkInterface.mtu": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkInterface).Mtu, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"networkInterface.flags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkInterface).Flags, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"networkInterface.active": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkInterface).Active, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"networkInterface.virtual": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkInterface).Virtual, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"usb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlUsb).__id, ok = v.Value.(string)
+			return
+		},
+	"usb.devices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUsb).Devices, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"usb.device.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlUsbDevice).__id, ok = v.Value.(string)
+			return
+		},
+	"usb.device.vendorId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUsbDevice).VendorId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"usb.device.manufacturer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUsbDevice).Manufacturer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"usb.device.productId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUsbDevice).ProductId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"usb.device.serial": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUsbDevice).Serial, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"usb.device.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUsbDevice).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"usb.device.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUsbDevice).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"usb.device.speed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUsbDevice).Speed, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"usb.device.class": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUsbDevice).Class, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"usb.device.className": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUsbDevice).ClassName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"usb.device.subclass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUsbDevice).Subclass, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"usb.device.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUsbDevice).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"usb.device.isRemovable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUsbDevice).IsRemovable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -6464,6 +6894,7 @@ type mqlOs struct {
 	Updates plugin.TValue[[]interface{}]
 	Rebootpending plugin.TValue[bool]
 	Hostname plugin.TValue[string]
+	Hypervisor plugin.TValue[string]
 	Machineid plugin.TValue[string]
 }
 
@@ -6553,6 +6984,12 @@ func (c *mqlOs) GetRebootpending() *plugin.TValue[bool] {
 func (c *mqlOs) GetHostname() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Hostname, func() (string, error) {
 		return c.hostname()
+	})
+}
+
+func (c *mqlOs) GetHypervisor() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Hypervisor, func() (string, error) {
+		return c.hypervisor()
 	})
 }
 
@@ -7383,6 +7820,77 @@ func (c *mqlFile) GetEmpty() *plugin.TValue[bool] {
 	})
 }
 
+// mqlFileContext for the file.context resource
+type mqlFileContext struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlFileContextInternal it will be used here
+	File plugin.TValue[*mqlFile]
+	Range plugin.TValue[llx.Range]
+	Content plugin.TValue[string]
+}
+
+// createFileContext creates a new instance of this resource
+func createFileContext(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFileContext{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("file.context", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFileContext) MqlName() string {
+	return "file.context"
+}
+
+func (c *mqlFileContext) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFileContext) GetFile() *plugin.TValue[*mqlFile] {
+	return &c.File
+}
+
+func (c *mqlFileContext) GetRange() *plugin.TValue[llx.Range] {
+	return &c.Range
+}
+
+func (c *mqlFileContext) GetContent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		vargRange := c.GetRange()
+		if vargRange.Error != nil {
+			return "", vargRange.Error
+		}
+
+		return c.content(vargFile.Data, vargRange.Data)
+	})
+}
+
 // mqlFilePermissions for the file.permissions resource
 type mqlFilePermissions struct {
 	MqlRuntime *plugin.Runtime
@@ -7807,6 +8315,79 @@ func (c *mqlParseJson) GetContent() *plugin.TValue[string] {
 }
 
 func (c *mqlParseJson) GetParams() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.Params, func() (interface{}, error) {
+		vargContent := c.GetContent()
+		if vargContent.Error != nil {
+			return nil, vargContent.Error
+		}
+
+		return c.params(vargContent.Data)
+	})
+}
+
+// mqlParseXml for the parse.xml resource
+type mqlParseXml struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlParseXmlInternal it will be used here
+	File plugin.TValue[*mqlFile]
+	Content plugin.TValue[string]
+	Params plugin.TValue[interface{}]
+}
+
+// createParseXml creates a new instance of this resource
+func createParseXml(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlParseXml{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("parse.xml", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlParseXml) MqlName() string {
+	return "parse.xml"
+}
+
+func (c *mqlParseXml) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlParseXml) GetFile() *plugin.TValue[*mqlFile] {
+	return &c.File
+}
+
+func (c *mqlParseXml) GetContent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.content(vargFile.Data)
+	})
+}
+
+func (c *mqlParseXml) GetParams() *plugin.TValue[interface{}] {
 	return plugin.GetOrCompute[interface{}](&c.Params, func() (interface{}, error) {
 		vargContent := c.GetContent()
 		if vargContent.Error != nil {
@@ -9373,6 +9954,12 @@ type mqlSshdConfigMatchBlock struct {
 	// optional: if you define mqlSshdConfigMatchBlockInternal it will be used here
 	Criteria plugin.TValue[string]
 	Params plugin.TValue[map[string]interface{}]
+	Ciphers plugin.TValue[[]interface{}]
+	Macs plugin.TValue[[]interface{}]
+	Kexs plugin.TValue[[]interface{}]
+	Hostkeys plugin.TValue[[]interface{}]
+	PermitRootLogin plugin.TValue[[]interface{}]
+	Context plugin.TValue[*mqlFileContext]
 }
 
 // createSshdConfigMatchBlock creates a new instance of this resource
@@ -9413,6 +10000,150 @@ func (c *mqlSshdConfigMatchBlock) GetCriteria() *plugin.TValue[string] {
 
 func (c *mqlSshdConfigMatchBlock) GetParams() *plugin.TValue[map[string]interface{}] {
 	return &c.Params
+}
+
+func (c *mqlSshdConfigMatchBlock) GetCiphers() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Ciphers, func() ([]interface{}, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.ciphers(vargParams.Data)
+	})
+}
+
+func (c *mqlSshdConfigMatchBlock) GetMacs() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Macs, func() ([]interface{}, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.macs(vargParams.Data)
+	})
+}
+
+func (c *mqlSshdConfigMatchBlock) GetKexs() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Kexs, func() ([]interface{}, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.kexs(vargParams.Data)
+	})
+}
+
+func (c *mqlSshdConfigMatchBlock) GetHostkeys() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Hostkeys, func() ([]interface{}, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.hostkeys(vargParams.Data)
+	})
+}
+
+func (c *mqlSshdConfigMatchBlock) GetPermitRootLogin() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.PermitRootLogin, func() ([]interface{}, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.permitRootLogin(vargParams.Data)
+	})
+}
+
+func (c *mqlSshdConfigMatchBlock) GetContext() *plugin.TValue[*mqlFileContext] {
+	return plugin.GetOrCompute[*mqlFileContext](&c.Context, func() (*mqlFileContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("sshd.config.matchBlock", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFileContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
+// mqlAuditdConfig for the auditd.config resource
+type mqlAuditdConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlAuditdConfigInternal
+	File plugin.TValue[*mqlFile]
+	Params plugin.TValue[map[string]interface{}]
+}
+
+// createAuditdConfig creates a new instance of this resource
+func createAuditdConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAuditdConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("auditd.config", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAuditdConfig) MqlName() string {
+	return "auditd.config"
+}
+
+func (c *mqlAuditdConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAuditdConfig) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("auditd.config", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlAuditdConfig) GetParams() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Params, func() (map[string]interface{}, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.params(vargFile.Data)
+	})
 }
 
 // mqlService for the service resource
@@ -10355,6 +11086,7 @@ type mqlDockerContainer struct {
 	State plugin.TValue[string]
 	Status plugin.TValue[string]
 	Labels plugin.TValue[map[string]interface{}]
+	HostConfig plugin.TValue[interface{}]
 }
 
 // createDockerContainer creates a new instance of this resource
@@ -10440,6 +11172,12 @@ func (c *mqlDockerContainer) GetStatus() *plugin.TValue[string] {
 
 func (c *mqlDockerContainer) GetLabels() *plugin.TValue[map[string]interface{}] {
 	return &c.Labels
+}
+
+func (c *mqlDockerContainer) GetHostConfig() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.HostConfig, func() (interface{}, error) {
+		return c.hostConfig()
+	})
 }
 
 // mqlIptables for the iptables resource
@@ -12702,7 +13440,7 @@ func (c *mqlPython) GetToplevel() *plugin.TValue[[]interface{}] {
 type mqlPythonPackage struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlPythonPackageInternal it will be used here
+	mqlPythonPackageInternal
 	Id plugin.TValue[string]
 	Name plugin.TValue[string]
 	File plugin.TValue[*mqlFile]
@@ -14630,4 +15368,520 @@ func (c *mqlWindowsSecurityHealth) GetUac() *plugin.TValue[interface{}] {
 
 func (c *mqlWindowsSecurityHealth) GetSecurityCenterService() *plugin.TValue[interface{}] {
 	return &c.SecurityCenterService
+}
+
+// mqlCloud for the cloud resource
+type mqlCloud struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlCloudInternal it will be used here
+	Provider plugin.TValue[string]
+	Instance plugin.TValue[*mqlCloudInstance]
+}
+
+// createCloud creates a new instance of this resource
+func createCloud(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloud{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloud", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloud) MqlName() string {
+	return "cloud"
+}
+
+func (c *mqlCloud) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloud) GetProvider() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Provider, func() (string, error) {
+		return c.provider()
+	})
+}
+
+func (c *mqlCloud) GetInstance() *plugin.TValue[*mqlCloudInstance] {
+	return plugin.GetOrCompute[*mqlCloudInstance](&c.Instance, func() (*mqlCloudInstance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloud", c.__id, "instance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlCloudInstance), nil
+			}
+		}
+
+		return c.instance()
+	})
+}
+
+// mqlCloudInstance for the cloudInstance resource
+type mqlCloudInstance struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlCloudInstanceInternal
+	PublicHostname plugin.TValue[string]
+	PublicIpv4 plugin.TValue[[]interface{}]
+	PrivateHostname plugin.TValue[string]
+	PrivateIpv4 plugin.TValue[[]interface{}]
+	Metadata plugin.TValue[interface{}]
+}
+
+// createCloudInstance creates a new instance of this resource
+func createCloudInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloudInstance{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloudInstance", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloudInstance) MqlName() string {
+	return "cloudInstance"
+}
+
+func (c *mqlCloudInstance) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloudInstance) GetPublicHostname() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PublicHostname, func() (string, error) {
+		return c.publicHostname()
+	})
+}
+
+func (c *mqlCloudInstance) GetPublicIpv4() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.PublicIpv4, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudInstance", c.__id, "publicIpv4")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.publicIpv4()
+	})
+}
+
+func (c *mqlCloudInstance) GetPrivateHostname() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PrivateHostname, func() (string, error) {
+		return c.privateHostname()
+	})
+}
+
+func (c *mqlCloudInstance) GetPrivateIpv4() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.PrivateIpv4, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudInstance", c.__id, "privateIpv4")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.privateIpv4()
+	})
+}
+
+func (c *mqlCloudInstance) GetMetadata() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.Metadata, func() (interface{}, error) {
+		return c.metadata()
+	})
+}
+
+// mqlIpAddress for the ipAddress resource
+type mqlIpAddress struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlIpAddressInternal it will be used here
+	Ip plugin.TValue[llx.RawIP]
+	Subnet plugin.TValue[llx.RawIP]
+	Cidr plugin.TValue[llx.RawIP]
+	Broadcast plugin.TValue[llx.RawIP]
+	Gateway plugin.TValue[llx.RawIP]
+}
+
+// createIpAddress creates a new instance of this resource
+func createIpAddress(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlIpAddress{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ipAddress", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlIpAddress) MqlName() string {
+	return "ipAddress"
+}
+
+func (c *mqlIpAddress) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlIpAddress) GetIp() *plugin.TValue[llx.RawIP] {
+	return &c.Ip
+}
+
+func (c *mqlIpAddress) GetSubnet() *plugin.TValue[llx.RawIP] {
+	return &c.Subnet
+}
+
+func (c *mqlIpAddress) GetCidr() *plugin.TValue[llx.RawIP] {
+	return &c.Cidr
+}
+
+func (c *mqlIpAddress) GetBroadcast() *plugin.TValue[llx.RawIP] {
+	return &c.Broadcast
+}
+
+func (c *mqlIpAddress) GetGateway() *plugin.TValue[llx.RawIP] {
+	return &c.Gateway
+}
+
+// mqlNetwork for the network resource
+type mqlNetwork struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlNetworkInternal it will be used here
+	Interfaces plugin.TValue[[]interface{}]
+}
+
+// createNetwork creates a new instance of this resource
+func createNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNetwork{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("network", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNetwork) MqlName() string {
+	return "network"
+}
+
+func (c *mqlNetwork) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNetwork) GetInterfaces() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Interfaces, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("network", c.__id, "interfaces")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.interfaces()
+	})
+}
+
+// mqlNetworkInterface for the networkInterface resource
+type mqlNetworkInterface struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlNetworkInterfaceInternal it will be used here
+	Name plugin.TValue[string]
+	Mac plugin.TValue[string]
+	Vendor plugin.TValue[string]
+	Ips plugin.TValue[[]interface{}]
+	Mtu plugin.TValue[int64]
+	Flags plugin.TValue[[]interface{}]
+	Active plugin.TValue[bool]
+	Virtual plugin.TValue[bool]
+}
+
+// createNetworkInterface creates a new instance of this resource
+func createNetworkInterface(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNetworkInterface{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("networkInterface", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNetworkInterface) MqlName() string {
+	return "networkInterface"
+}
+
+func (c *mqlNetworkInterface) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNetworkInterface) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlNetworkInterface) GetMac() *plugin.TValue[string] {
+	return &c.Mac
+}
+
+func (c *mqlNetworkInterface) GetVendor() *plugin.TValue[string] {
+	return &c.Vendor
+}
+
+func (c *mqlNetworkInterface) GetIps() *plugin.TValue[[]interface{}] {
+	return &c.Ips
+}
+
+func (c *mqlNetworkInterface) GetMtu() *plugin.TValue[int64] {
+	return &c.Mtu
+}
+
+func (c *mqlNetworkInterface) GetFlags() *plugin.TValue[[]interface{}] {
+	return &c.Flags
+}
+
+func (c *mqlNetworkInterface) GetActive() *plugin.TValue[bool] {
+	return &c.Active
+}
+
+func (c *mqlNetworkInterface) GetVirtual() *plugin.TValue[bool] {
+	return &c.Virtual
+}
+
+// mqlUsb for the usb resource
+type mqlUsb struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlUsbInternal it will be used here
+	Devices plugin.TValue[[]interface{}]
+}
+
+// createUsb creates a new instance of this resource
+func createUsb(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlUsb{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("usb", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlUsb) MqlName() string {
+	return "usb"
+}
+
+func (c *mqlUsb) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlUsb) GetDevices() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Devices, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("usb", c.__id, "devices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.devices()
+	})
+}
+
+// mqlUsbDevice for the usb.device resource
+type mqlUsbDevice struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlUsbDeviceInternal it will be used here
+	VendorId plugin.TValue[string]
+	Manufacturer plugin.TValue[string]
+	ProductId plugin.TValue[string]
+	Serial plugin.TValue[string]
+	Name plugin.TValue[string]
+	Version plugin.TValue[string]
+	Speed plugin.TValue[string]
+	Class plugin.TValue[string]
+	ClassName plugin.TValue[string]
+	Subclass plugin.TValue[string]
+	Protocol plugin.TValue[string]
+	IsRemovable plugin.TValue[bool]
+}
+
+// createUsbDevice creates a new instance of this resource
+func createUsbDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlUsbDevice{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("usb.device", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlUsbDevice) MqlName() string {
+	return "usb.device"
+}
+
+func (c *mqlUsbDevice) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlUsbDevice) GetVendorId() *plugin.TValue[string] {
+	return &c.VendorId
+}
+
+func (c *mqlUsbDevice) GetManufacturer() *plugin.TValue[string] {
+	return &c.Manufacturer
+}
+
+func (c *mqlUsbDevice) GetProductId() *plugin.TValue[string] {
+	return &c.ProductId
+}
+
+func (c *mqlUsbDevice) GetSerial() *plugin.TValue[string] {
+	return &c.Serial
+}
+
+func (c *mqlUsbDevice) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlUsbDevice) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlUsbDevice) GetSpeed() *plugin.TValue[string] {
+	return &c.Speed
+}
+
+func (c *mqlUsbDevice) GetClass() *plugin.TValue[string] {
+	return &c.Class
+}
+
+func (c *mqlUsbDevice) GetClassName() *plugin.TValue[string] {
+	return &c.ClassName
+}
+
+func (c *mqlUsbDevice) GetSubclass() *plugin.TValue[string] {
+	return &c.Subclass
+}
+
+func (c *mqlUsbDevice) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlUsbDevice) GetIsRemovable() *plugin.TValue[bool] {
+	return &c.IsRemovable
 }

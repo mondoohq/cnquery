@@ -174,24 +174,45 @@ jobs:
           name: ${{ matrix.provider }}
           path: dist
 
-      - uses: sarisia/actions-status-discord@v1
-        if: ${{ steps.build-providers.outcome != 'success' }}
+      - name: Send Slack notification on failure
+        uses: slackapi/slack-github-action@v2.1.0
+        if: ${{ always() && steps.build-providers.outcome != 'success' }}
         with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK }}
-          status: ${{ steps.build-providers.outcome }}
-          url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          description: Workflow ${{ github.workflow }} for commit ${{ github.sha }} on ${{ github.ref_name }} failed
-          color: 0xff4d4d
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            {
+              "channel": "C07QZDJFF89",
+              "text": "⚠️ Provider Build failed for ${{ matrix.provider }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":x: *Provider Build failed for ${{ matrix.provider }}*:  <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View GitHub Action Run>"
+                  }
+                }
+              ]
+            }
 
   provider-index:
     needs: [provider-build, scoping]
     runs-on: ubuntu-latest
     if: ${{ ! inputs.skip_publish }}
     steps:
+      - name: Generate token
+        id: generate-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.MONDOO_MERGEBOT_APP_ID }}
+          private-key: ${{ secrets.MONDOO_MERGEBOT_APP_PRIVATE_KEY }}
+          owner: mondoohq
+          repositories: |
+            releasr
       - name: Trigger Reindex of releases.mondoo.com
         uses: peter-evans/repository-dispatch@v3
         with:
-          token: ${{ secrets.RELEASR_ACTION_TOKEN }}
+          token: ${{ steps.generate-token.outputs.token }}
           repository: "mondoohq/releasr"
           event-type: reindex
           client-payload: '{ }'

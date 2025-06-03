@@ -12,7 +12,7 @@ import (
 )
 
 func TestResource_Python(t *testing.T) {
-	x := testutils.InitTester(testutils.RecordingMock("./python/testdata/linux.json"))
+	x := testutils.InitTester(testutils.RecordingMock("./languages/python/testdata/linux.json"))
 
 	t.Run("parse all packages", func(t *testing.T) {
 		res := x.TestQuery(t, "python.packages")
@@ -34,7 +34,7 @@ func TestResource_Python(t *testing.T) {
 }
 
 func TestResource_PythonPackage(t *testing.T) {
-	x := testutils.InitTester(testutils.RecordingMock("./python/testdata/rhel.json"))
+	x := testutils.InitTester(testutils.RecordingMock("./languages/python/testdata/rhel.json"))
 
 	t.Run("parse python pkg info", func(t *testing.T) {
 		res := x.TestQuery(t, "python.package(\"/usr/lib/python3.6/site-packages/python_dateutil-2.6.1-py3.6.egg-info/PKG-INFO\").name")

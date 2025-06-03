@@ -6,7 +6,6 @@ package ssh
 import (
 	"bytes"
 	"context"
-	"errors"
 	"io"
 	"net"
 	"os"
@@ -16,6 +15,7 @@ import (
 	"time"
 
 	awsconf "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/cockroachdb/errors"
 	"github.com/kevinburke/ssh_config"
 	"github.com/mitchellh/go-homedir"
 	rawsftp "github.com/pkg/sftp"
@@ -33,7 +33,6 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/connection/ssh/signers"
 	"go.mondoo.com/cnquery/v11/utils/multierr"
 	"golang.org/x/crypto/ssh"
-	"golang.org/x/crypto/ssh/agent"
 	"golang.org/x/crypto/ssh/knownhosts"
 )
 
@@ -493,27 +492,60 @@ func establishClientConnection(pCfg *inventory.Config, hostKeyCallback ssh.HostK
 		}
 	}
 
-	log.Debug().Int("methods", len(authMethods)).Str("user", user).Msg("connect to remote ssh")
-	conn, err := ssh.Dial("tcp", pCfg.Host+":"+strconv.Itoa(int(pCfg.Port)), &ssh.ClientConfig{
+	addr := pCfg.Host + ":" + strconv.Itoa(int(pCfg.Port))
+	sshClientConfig := &ssh.ClientConfig{
 		User:            user,
 		Auth:            authMethods,
 		HostKeyCallback: hostKeyCallback,
-	})
+	}
+
+	supportsHybrid, err := serverSupportsHybridKEX(addr)
+	if err == nil && supportsHybrid {
+		// force the Key Exchange Algorithm to a compatible one
+		sshClientConfig.Config = ssh.Config{
+			KeyExchanges: []string{
+				"curve25519-sha256",
+				"curve25519-sha256@libssh.org",
+				"ecdh-sha2-nistp256",
+				"diffie-hellman-group14-sha1",
+			},
+		}
+	}
+
+	log.Debug().
+		Int("methods", len(authMethods)).
+		Str("user", user).
+		Bool("hybrid_key_exchange", supportsHybrid).
+		Msg("connect to remote ssh")
+	conn, err := ssh.Dial("tcp", addr, sshClientConfig)
 	return conn, closer, err
 }
 
-// hasAgentLoadedKey returns if the ssh agent has loaded the key file
-// This may not be 100% accurate. The key can be stored in multiple locations with the
-// same fingerprint. We cannot determine the fingerprint without decoding the encrypted
-// key, `ssh-keygen -lf /Users/chartmann/.ssh/id_rsa` seems to use the ssh agent to
-// determine the fingerprint without prompting for the password
-func hasAgentLoadedKey(list []*agent.Key, filename string) bool {
-	for i := range list {
-		if list[i].Comment == filename {
-			return true
-		}
+// Detects if the remote server offers hybrid PQ KEX algorithms
+func serverSupportsHybridKEX(addr string) (bool, error) {
+	conn, err := net.DialTimeout("tcp", addr, 5*time.Second)
+	if err != nil {
+		log.Debug().Err(err).Msg("fail to verify KEX algorithms")
+		return false, err
 	}
-	return false
+	defer conn.Close()
+
+	// Read the server's version string
+	var buf [256]byte
+	n, err := conn.Read(buf[:])
+	if err != nil {
+		return false, errors.Wrap(err, "failed to read banner")
+	}
+	banner := string(buf[:n])
+
+	// We'll stop here. Full KEXINIT parsing requires building a custom packet reader.
+	// For now, assume OpenSSH 9.9+ includes PQ KEX unless we detect otherwise.
+	if strings.Contains(banner, "OpenSSH_9.9") {
+		// Naively assume 9.9+ offers hybrid KEX
+		return true, nil
+	}
+
+	return false, nil
 }
 
 // prepareConnection determines the auth methods required for a ssh connection and also prepares any other

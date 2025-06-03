@@ -155,3 +155,9 @@ message Assessment {
   bool is_assertion = 3;
   repeated AssessmentItem results = 4;
 }
+
+message IP {
+  bytes address = 1;
+  bool has_prefix = 2;
+  int32 prefix_length = 3;
+}

@@ -3,10 +3,16 @@
 
 package resources
 
+import (
+	"go.mondoo.com/cnquery/v11/types"
+)
+
 type ResourcesSchema interface {
 	Lookup(resource string) *ResourceInfo
 	LookupField(resource string, field string) (*ResourceInfo, *Field)
+	FindField(resource *ResourceInfo, field string) (FieldPath, []*Field, bool)
 	AllResources() map[string]*ResourceInfo
+	AllDependencies() map[string]*ProviderInfo
 }
 
 // Add another schema and return yourself. other may be nil.
@@ -57,6 +63,9 @@ func (s *Schema) Add(other ResourcesSchema) ResourcesSchema {
 			if v.Defaults != "" {
 				existing.Defaults = v.Defaults
 			}
+			if v.Context != "" {
+				existing.Context = v.Context
+			}
 
 			if existing.Fields == nil {
 				existing.Fields = map[string]*Field{}
@@ -83,12 +92,27 @@ func (s *Schema) Add(other ResourcesSchema) ResourcesSchema {
 				IsExtension:      v.IsExtension,
 				MinMondooVersion: v.MinMondooVersion,
 				Defaults:         v.Defaults,
+				Context:          v.Context,
 				Provider:         v.Provider,
 			}
 			for k, v := range v.Fields {
 				ri.Fields[k] = v
 			}
 			s.Resources[k] = ri
+		}
+	}
+
+	for k, v := range other.AllDependencies() {
+		if existing, ok := s.Dependencies[k]; ok {
+			if v.Name != "" {
+				existing.Name = v.Name
+			}
+		} else {
+			pi := &ProviderInfo{
+				Id:   v.Id,
+				Name: v.Name,
+			}
+			s.Dependencies[k] = pi
 		}
 	}
 
@@ -117,6 +141,44 @@ func (s *Schema) LookupField(resource string, field string) (*ResourceInfo, *Fie
 	return res, res.Fields[field]
 }
 
+type FieldPath []string
+
+func (s *Schema) FindField(resource *ResourceInfo, field string) (FieldPath, []*Field, bool) {
+	fieldInfo, ok := resource.Fields[field]
+	if ok {
+		return FieldPath{field}, []*Field{fieldInfo}, true
+	}
+
+	for _, f := range resource.Fields {
+		if f.IsEmbedded {
+			typ := types.Type(f.Type)
+			nextResource := s.Lookup(typ.ResourceName())
+			if nextResource == nil {
+				continue
+			}
+			childFieldPath, childFieldInfos, ok := s.FindField(nextResource, field)
+			if ok {
+				fp := make(FieldPath, len(childFieldPath)+1)
+				fieldInfos := make([]*Field, len(childFieldPath)+1)
+				fp[0] = f.Name
+				fieldInfos[0] = f
+				for i, n := range childFieldPath {
+					fp[i+1] = n
+				}
+				for i, f := range childFieldInfos {
+					fieldInfos[i+1] = f
+				}
+				return fp, fieldInfos, true
+			}
+		}
+	}
+	return nil, nil, false
+}
+
 func (s *Schema) AllResources() map[string]*ResourceInfo {
 	return s.Resources
+}
+
+func (s *Schema) AllDependencies() map[string]*ProviderInfo {
+	return s.Dependencies
 }

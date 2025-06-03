@@ -24,6 +24,10 @@ ifndef TARGETOS
 	TARGETOS = $(shell go env GOOS)
 endif
 
+ifndef TARGETARCH
+	TARGETARCH = $(shell go env GOARCH)
+endif
+
 BIN_SUFFIX = ""
 ifeq ($(TARGETOS),windows)
 	BIN_SUFFIX=".exe"
@@ -94,7 +98,7 @@ define buildProvider
 		echo "--> [${$@_NAME}] skipping compile"; \
 	else \
 		echo "--> [${$@_NAME}] creating ${$@_BIN}"; \
-		cd ${$@_HOME} && GOOS=${TARGETOS} go build -o ${$@_DIST_BIN}${BIN_SUFFIX} ./main.go; \
+		cd ${$@_HOME} && GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -o ${$@_DIST_BIN}${BIN_SUFFIX} ./main.go; \
 	fi
 endef
 
@@ -111,7 +115,7 @@ define buildProviderDist
 	echo "--> [${$@_NAME}] generate CLI json"
 	cd ${$@_HOME} && go run ./gen/main.go .
 	echo "--> [${$@_NAME}] creating ${$@_BIN}"
-	cd ${$@_HOME} && CGO_ENABLED=0 GOOS=${TARGETOS} go build ${LDFLAGSDIST} -o ${$@_DIST_BIN}${BIN_SUFFIX} ./main.go
+	cd ${$@_HOME} && CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build ${LDFLAGSDIST} -o ${$@_DIST_BIN}${BIN_SUFFIX} ./main.go
 endef
 
 define installProvider
@@ -213,7 +217,9 @@ providers/build: \
 	providers/build/ansible \
 	providers/build/snowflake \
 	providers/build/mondoo \
-	providers/build/cloudflare
+	providers/build/cloudflare \
+	providers/build/nmap \
+	providers/build/tailscale
 
 .PHONY: providers/install
 # Note we need \ to escape the target line into multiple lines
@@ -244,7 +250,9 @@ providers/install: \
 	providers/install/ansible \
 	providers/install/snowflake \
 	providers/install/mondoo \
-	providers/install/cloudflare
+	providers/install/cloudflare \
+	providers/install/nmap \
+	providers/install/tailscale
 
 providers/build/mock: providers/lr
 	./lr go providers-sdk/v1/testutils/mockprovider/resources/mockprovider.lr
@@ -387,6 +395,16 @@ providers/build/mondoo: providers/lr
 providers/install/mondoo:
 	@$(call installProvider, providers/mondoo)
 
+providers/build/nmap: providers/lr
+	@$(call buildProvider, providers/nmap)
+providers/install/nmap:
+	@$(call installProvider, providers/nmap)
+
+providers/build/tailscale: providers/lr
+	@$(call buildProvider, providers/tailscale)
+providers/install/tailscale:
+	@$(call installProvider, providers/tailscale)
+
 providers/dist:
 	@$(call buildProviderDist, providers/network)
 	@$(call buildProviderDist, providers/os)
@@ -414,6 +432,8 @@ providers/dist:
 	@$(call buildProviderDist, providers/ansible)
 	@$(call buildProviderDist, providers/snowflake)
 	@$(call buildProviderDist, providers/mondoo)
+	@$(call buildProviderDist, providers/nmap)
+	@$(call buildProviderDist, providers/tailscale)
 
 providers/bundle:
 	@$(call bundleProvider, providers/network)
@@ -442,6 +462,8 @@ providers/bundle:
 	@$(call bundleProvider, providers/ansible)
 	@$(call bundleProvider, providers/snowflake)
 	@$(call bundleProvider, providers/mondoo)
+	@$(call bundleProvider, providers/nmap)
+	@$(call bundleProvider, providers/tailscale)
 
 providers/test:
 	@$(call testProvider, providers/core)
@@ -471,9 +493,11 @@ providers/test:
 	@$(call testGoModProvider, providers/ansible)
 	@$(call testGoModProvider, providers/snowflake)
 	@$(call testGoModProvider, providers/mondoo)
+	@$(call testGoModProvider, providers/nmap)
+	@$(call testGoModProvider, providers/tailscale)
 
 lr/test:
-	go test ./resources/lr/...
+	go test ./providers-sdk/v1/lr/...
 
 # TODO: migrate
 .PHONY: lr/docs/serve
@@ -564,6 +588,11 @@ lr/docs/markdown: providers/lr
 		--description "The Network resource pack lets you use MQL to query and assess the security of domains and network services." \
 		--docs-file providers/network/resources/network.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/network-pack
+	./lr markdown providers/network/resources/nmap.lr \
+		--pack-name "nmap" \
+		--description "The Nmap resource pack lets you use MQL to query and assess Nmap data." \
+		--docs-file providers/network/resources/nmap.lr.manifest.yaml \
+		--output ../docs/docs/mql/resources/nmap-pack
 	./lr markdown providers/oci/resources/oci.lr \
 		--pack-name "Oracle Cloud Infrastructure (OCI)" \
 		--description "The Oracle Cloud Infrastructure (OCI) resource pack lets you use MQL to query and assess the security of your OCI services." \
@@ -615,7 +644,7 @@ lr/docs/markdown: providers/lr
 		--docs-file providers/snowflake/resources/snowflake.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/snowflake-pack
 	./lr markdown providers/mondoo/resources/mondoo.lr \
-		--pack-name "Mondoo" \
+		--pack-name "Mondoo Platform" \
 		--description "The Mondoo resource pack lets you interact with Mondoo Platform and its assets and resources." \
 		--docs-file providers/mondoo/resources/mondoo.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/mondoo-pack
@@ -624,6 +653,17 @@ lr/docs/markdown: providers/lr
 		--description "The Cloudflare resource pack lets you use MQL to query and assess the security of your Cloudflare configuration." \
 		--docs-file providers/cloudflare/resources/cloudflare.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/cloudflare-pack
+	./lr markdown providers/nmap/resources/nmap.lr \
+		--pack-name "Nmap" \
+		--description "The Nmap resource pack lets you use MQL to query and assess the network devices with Nmap." \
+		--docs-file providers/nmap/resources/nmap.lr.manifest.yaml \
+		--output ../docs/docs/mql/resources/nmap-pack
+	./lr markdown providers/tailscale/resources/tailscale.lr \
+		--pack-name "Tailscale" \
+		--description "The Tailscale resource pack lets you use MQL to query devices, users, DNS nameservers, and more information about a Tailscale network." \
+		--docs-file providers/tailscale/resources/tailscale.lr.manifest.yaml \
+		--output ../docs/docs/mql/resources/tailscale-pack
+
 
 lr/docs/stats:
 	@echo "Please remember to re-run before using this:"
@@ -690,6 +730,7 @@ shared/generate:
 	go generate ./providers-sdk/v1/upstream/health
 	go generate ./providers-sdk/v1/upstream/mvd/cvss
 	go generate ./providers-sdk/v1/upstream/mvd
+	go generate ./providers-sdk/v1/upstream/etl
 
 #   ⛹🏽‍ Testing   #
 
@@ -700,8 +741,12 @@ test: test/go test/lint
 benchmark/go:
 	go test -bench=. -benchmem go.mondoo.com/cnquery/v11/explorer/scan/benchmark
 
+race/go:
+	go test -race go.mondoo.com/cnquery/v11/internal/workerpool
+	go test -race go.mondoo.com/cnquery/v11/explorer/scan
+
 test/generate: prep/tools/mockgen
-	go generate ./providers
+	go generate ./providers/...
 
 test/go: cnquery/generate test/generate test/go/plain
 
@@ -743,3 +788,18 @@ license/headers/check:
 
 license/headers/apply:
 	copywrite headers
+
+#   📈 METRICS       #
+
+metrics/start: metrics/grafana/start metrics/prometheus/start
+
+metrics/prometheus/start:
+	APP_NAME=cnquery VERSION=${VERSION} BUILD=${TAG} prometheus --config.file=prometheus.yml
+
+metrics/grafana/start:
+	docker run -d --name=grafana \
+		-p 3000:3000               \
+		grafana/grafana
+
+metrics/grafana/stop:
+	docker stop grafana

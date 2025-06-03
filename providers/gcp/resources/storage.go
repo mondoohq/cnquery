@@ -100,6 +100,10 @@ func (g *mqlGcpProjectStorageService) buckets() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
+		enc, err := convert.JsonToDict(bucket.Encryption)
+		if err != nil {
+			return nil, err
+		}
 
 		mqlInstance, err := CreateResource(g.MqlRuntime, "gcp.project.storageService.bucket", map[string]*llx.RawData{
 			"id":               llx.StringData(bucket.Id),
@@ -114,6 +118,11 @@ func (g *mqlGcpProjectStorageService) buckets() ([]interface{}, error) {
 			"updated":          llx.TimeDataPtr(updated),
 			"iamConfiguration": llx.DictData(iamConfigurationDict),
 			"retentionPolicy":  llx.DictData(retentionPolicy),
+			"encryption":       llx.DictData(enc),
+			"lifecycle": llx.ArrayData(
+				storageLifecycleRulesToArrayInterface(g.MqlRuntime, bucket.Id, bucket.Lifecycle),
+				types.Resource("gcp.project.storageService.bucket.lifecycleRule"),
+			),
 		})
 		if err != nil {
 			return nil, err
@@ -121,6 +130,85 @@ func (g *mqlGcpProjectStorageService) buckets() ([]interface{}, error) {
 		res = append(res, mqlInstance)
 	}
 	return res, nil
+}
+
+func storageLifecycleRulesToArrayInterface(runtime *plugin.Runtime, bucketId string, lifecycle *storage.BucketLifecycle) (list []any) {
+	if lifecycle == nil {
+		return
+	}
+	for i, rule := range lifecycle.Rule {
+		if rule == nil {
+			continue
+		}
+
+		var (
+			action      plugin.Resource
+			condition   plugin.Resource
+			err         error
+			skip        = true
+			ruleRawData = map[string]*llx.RawData{}
+		)
+
+		// create rule action resource
+		if rule.Action != nil {
+			action, err = CreateResource(runtime, "gcp.project.storageService.bucket.lifecycleRuleAction", map[string]*llx.RawData{
+				"__id": llx.StringData(
+					fmt.Sprintf("gcp.project.storageService.bucket.lifecycleRuleAction/%s/%d", bucketId, i),
+				),
+				"storageClass": llx.StringData(rule.Action.StorageClass),
+				"type":         llx.StringData(rule.Action.Type),
+			})
+			if err != nil {
+				continue
+			}
+			ruleRawData["action"] = llx.ResourceData(action, action.MqlName())
+			skip = true
+		}
+
+		// create rule condition resource
+		if rule.Condition != nil {
+			condition, err = CreateResource(runtime, "gcp.project.storageService.bucket.lifecycleRuleCondition", map[string]*llx.RawData{
+				"__id": llx.StringData(
+					fmt.Sprintf("gcp.project.storageService.bucket.lifecycleRuleCondition/%s/%d", bucketId, i),
+				),
+				"age":                     llx.IntDataPtr(rule.Condition.Age),
+				"daysSinceCustomTime":     llx.IntData(rule.Condition.DaysSinceCustomTime),
+				"daysSinceNoncurrentTime": llx.IntData(rule.Condition.DaysSinceNoncurrentTime),
+				"numNewerVersions":        llx.IntData(rule.Condition.NumNewerVersions),
+				"isLive":                  llx.BoolDataPtr(rule.Condition.IsLive),
+				"createdBefore":           llx.StringData(rule.Condition.CreatedBefore),
+				"customTimeBefore":        llx.StringData(rule.Condition.CustomTimeBefore),
+				"matchesPattern":          llx.StringData(rule.Condition.MatchesPattern),
+				"noncurrentTimeBefore":    llx.StringData(rule.Condition.NoncurrentTimeBefore),
+				"matchesPrefix":           llx.ArrayData(convert.SliceAnyToInterface(rule.Condition.MatchesPrefix), types.String),
+				"matchesStorageClass":     llx.ArrayData(convert.SliceAnyToInterface(rule.Condition.MatchesStorageClass), types.String),
+				"matchesSuffix":           llx.ArrayData(convert.SliceAnyToInterface(rule.Condition.MatchesSuffix), types.String),
+			})
+			if err != nil {
+				continue
+			}
+			ruleRawData["condition"] = llx.ResourceData(condition, condition.MqlName())
+			skip = false
+		}
+
+		// if the rule doesn't have an action or a condition, skip it
+		if skip {
+			continue
+		}
+
+		// add the rule id
+		ruleRawData["__id"] = llx.StringData(
+			fmt.Sprintf("gcp.project.storageService.bucket.lifecycleRule/%s/%d", bucketId, i),
+		)
+
+		r, err := CreateResource(runtime, "gcp.project.storageService.bucket.lifecycleRule", ruleRawData)
+		if err != nil {
+			continue
+		}
+		list = append(list, r)
+	}
+
+	return
 }
 
 func (g *mqlGcpProjectStorageServiceBucket) id() (string, error) {

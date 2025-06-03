@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/google/go-github/v67/github"
+	"github.com/google/go-github/v72/github"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
@@ -112,7 +112,7 @@ func newMqlGithubPackages(runtime *plugin.Runtime, visibility *string) ([]any, e
 			// NOTE: we need to fetch repo separately because the Github repo object is not complete, instead of
 			// call the repo fetching all the time, we make this lazy loading
 			if p.Repository != nil && p.Repository.Name != nil {
-				pkg.packageRepository = convert.ToString(p.Repository.Name)
+				pkg.packageRepository = convert.ToValue(p.Repository.Name)
 			}
 			res = append(res, pkg)
 		}

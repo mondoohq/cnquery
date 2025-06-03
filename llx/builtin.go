@@ -182,6 +182,8 @@ func init() {
 			// == / !=
 			string("==" + types.Nil):                 {f: floatCmpNilV2, Label: "=="},
 			string("!=" + types.Nil):                 {f: floatNotNilV2, Label: "!="},
+			string("==" + types.Int):                 {f: floatCmpIntV2, Label: "=="},
+			string("!=" + types.Int):                 {f: floatNotIntV2, Label: "!="},
 			string("==" + types.Float):               {f: floatCmpFloatV2, Label: "=="},
 			string("!=" + types.Float):               {f: floatNotFloatV2, Label: "!="},
 			string("==" + types.String):              {f: floatCmpStringV2, Label: "=="},
@@ -267,8 +269,10 @@ func init() {
 			string("!=" + types.Float):               {f: stringNotFloatV2, Label: "!="},
 			string("==" + types.Dict):                {f: stringCmpDictV2, Label: "=="},
 			string("!=" + types.Dict):                {f: stringNotDictV2, Label: "!="},
-			string("==" + types.Semver):              {f: semverCmpSemver, Label: "=="},
-			string("!=" + types.Semver):              {f: semverNotSemver, Label: "!="},
+			string("==" + types.Version):             {f: versionCmpVersion, Label: "=="},
+			string("!=" + types.Version):             {f: versionNotVersion, Label: "!="},
+			string("==" + types.IP):                  {f: ipCmpIP, Label: "=="},
+			string("!=" + types.IP):                  {f: ipNotIP, Label: "!="},
 			string("==" + types.ArrayLike):           {f: chunkEqFalseV2, Label: "=="},
 			string("!=" + types.ArrayLike):           {f: chunkNeqTrueV2, Label: "!="},
 			string("==" + types.Array(types.String)): {f: stringCmpStringarrayV2, Label: "=="},
@@ -295,10 +299,10 @@ func init() {
 			string("<=" + types.Dict):                {f: stringLTEDictV2, Label: "<="},
 			string(">" + types.Dict):                 {f: stringGTDictV2, Label: ">"},
 			string(">=" + types.Dict):                {f: stringGTEDictV2, Label: ">="},
-			string("<" + types.Semver):               {f: semverLTsemver, Label: "<"},
-			string(">" + types.Semver):               {f: semverGTsemver, Label: ">"},
-			string("<=" + types.Semver):              {f: semverLTEsemver, Label: "<="},
-			string(">=" + types.Semver):              {f: semverGTEsemver, Label: ">="},
+			string("<" + types.Version):              {f: versionLTversion, Label: "<"},
+			string(">" + types.Version):              {f: versionGTversion, Label: ">"},
+			string("<=" + types.Version):             {f: versionLTEversion, Label: "<="},
+			string(">=" + types.Version):             {f: versionGTEversion, Label: ">="},
 			string("&&" + types.Bool):                {f: stringAndBoolV2, Label: "&&"},
 			string("||" + types.Bool):                {f: stringOrBoolV2, Label: "||"},
 			string("&&" + types.Int):                 {f: stringAndIntV2, Label: "&&"},
@@ -319,13 +323,17 @@ func init() {
 			string("||" + types.MapLike):             {f: stringOrMapV2, Label: "&&"},
 			string("+" + types.String):               {f: stringPlusStringV2, Label: "+"},
 			// fields
-			string("contains" + types.String):              {f: stringContainsStringV2, Label: "contains"},
-			string("contains" + types.Array(types.String)): {f: stringContainsArrayStringV2, Label: "contains"},
-			string("contains" + types.Int):                 {f: stringContainsIntV2, Label: "contains"},
-			string("contains" + types.Array(types.Int)):    {f: stringContainsArrayIntV2, Label: "contains"},
+			string("contains" + types.String):              {f: stringContainsString, Label: "contains"},
+			string("contains" + types.Array(types.String)): {f: stringContainsArrayString, Label: "contains"},
+			string("contains" + types.Dict):                {f: stringContainsDict, Label: "contains"},
+			string("contains" + types.Array(types.Dict)):   {f: stringContainsArrayDict, Label: "contains"},
+			string("contains" + types.Int):                 {f: stringContainsInt, Label: "contains"},
+			string("contains" + types.Array(types.Int)):    {f: stringContainsArrayInt, Label: "contains"},
 			string("contains" + types.Regex):               {f: stringContainsRegex, Label: "contains"},
 			string("contains" + types.Array(types.Regex)):  {f: stringContainsArrayRegex, Label: "contains"},
 			string("in"):        {f: stringInArray, Label: "in"},
+			string("notIn"):     {f: stringNotInArray, Label: "in"},
+			string("inRange"):   {f: stringInRange, Label: "inRange"},
 			string("find"):      {f: stringFindV2, Label: "find"},
 			string("camelcase"): {f: stringCamelcaseV2, Label: "camelcase"},
 			string("downcase"):  {f: stringDowncaseV2, Label: "downcase"},
@@ -349,7 +357,7 @@ func init() {
 			// string("!=" + types.Int):                 {f: stringNotIntV2, Label: "!="},
 			// string("==" + types.Float):               {f: stringCmpFloatV2, Label: "=="},
 			// string("!=" + types.Float):               {f: stringNotFloatV2, Label: "!="},
-			// string("==" + types.Dict):                {f: stringCmpDictV2, Label: "=="},
+			string("==" + types.Dict): {f: stringsliceEqDict, Label: "=="},
 			// string("!=" + types.Dict):                {f: stringNotDictV2, Label: "!="},
 			string("==" + types.Array(types.String)): {f: stringsliceEqArrayString, Label: "=="},
 		},
@@ -459,8 +467,10 @@ func init() {
 			string("!=" + types.String):              {f: dictNotStringV2, Label: "!="},
 			string("==" + types.Regex):               {f: dictCmpRegexV2, Label: "=="},
 			string("!=" + types.Regex):               {f: dictNotRegexV2, Label: "!="},
-			string("==" + types.Semver):              {f: semverCmpSemver, Label: "=="},
-			string("!=" + types.Semver):              {f: semverNotSemver, Label: "!="},
+			string("==" + types.Version):             {f: versionCmpVersion, Label: "=="},
+			string("!=" + types.Version):             {f: versionNotVersion, Label: "!="},
+			string("==" + types.IP):                  {f: ipCmpIP, Label: "=="},
+			string("!=" + types.IP):                  {f: ipNotIP, Label: "!="},
 			string("==" + types.ArrayLike):           {f: dictCmpArrayV2, Label: "=="},
 			string("!=" + types.ArrayLike):           {f: dictNotArrayV2, Label: "!="},
 			string("==" + types.Array(types.String)): {f: dictCmpStringarrayV2, Label: "=="},
@@ -489,10 +499,10 @@ func init() {
 			string("<=" + types.Dict):                {f: dictLTEDictV2, Label: "<="},
 			string(">" + types.Dict):                 {f: dictGTDictV2, Label: ">"},
 			string(">=" + types.Dict):                {f: dictGTEDictV2, Label: ">="},
-			string("<" + types.Semver):               {f: semverLTsemver, Label: "<"},
-			string(">" + types.Semver):               {f: semverGTsemver, Label: ">"},
-			string("<=" + types.Semver):              {f: semverLTEsemver, Label: "<="},
-			string(">=" + types.Semver):              {f: semverGTEsemver, Label: ">="},
+			string("<" + types.Version):              {f: versionLTversion, Label: "<"},
+			string(">" + types.Version):              {f: versionGTversion, Label: ">"},
+			string("<=" + types.Version):             {f: versionLTEversion, Label: "<="},
+			string(">=" + types.Version):             {f: versionGTEversion, Label: ">="},
 			string("&&" + types.Bool):                {f: dictAndBoolV2, Label: "&&"},
 			string("||" + types.Bool):                {f: dictOrBoolV2, Label: "||"},
 			string("&&" + types.Int):                 {f: dictAndIntV2, Label: "&&"},
@@ -551,33 +561,55 @@ func init() {
 			"containsNone":                    {f: dictContainsNone},
 			string("contains" + types.String): {f: dictContainsStringV2, Label: "contains"},
 			string("contains" + types.Array(types.String)): {f: dictContainsArrayStringV2, Label: "contains"},
+			string("contains" + types.Dict):                {f: dictContainsDict, Label: "contains"},
+			string("contains" + types.Array(types.Dict)):   {f: dictContainsArrayDict, Label: "contains"},
 			string("contains" + types.Int):                 {f: dictContainsIntV2, Label: "contains"},
 			string("contains" + types.Array(types.Int)):    {f: dictContainsArrayIntV2, Label: "contains"},
 			string("contains" + types.Regex):               {f: dictContainsRegex, Label: "contains"},
 			string("contains" + types.Array(types.Regex)):  {f: dictContainsArrayRegex, Label: "contains"},
 			"in":           {f: dictIn, Label: "in"},
+			"notIn":        {f: dictNotIn, Label: "notIn"},
 			string("find"): {f: dictFindV2, Label: "find"},
 			// NOTE: the following functions are internal ONLY!
 			// We have not yet decided if and how these may be exposed to users
 			"notEmpty": {f: dictNotEmptyV2},
 		},
-		types.Semver: {
-			string("==" + types.Nil):    {f: stringCmpNilV2, Label: "=="},
-			string("!=" + types.Nil):    {f: stringNotNilV2, Label: "!="},
-			string("==" + types.Empty):  {f: stringCmpEmptyV2, Label: "=="},
-			string("!=" + types.Empty):  {f: stringNotEmptyV2, Label: "!="},
-			string("==" + types.Semver): {f: semverCmpSemver, Label: "=="},
-			string("!=" + types.Semver): {f: semverNotSemver, Label: "!="},
-			string("<" + types.Semver):  {f: semverLTsemver, Label: "<"},
-			string(">" + types.Semver):  {f: semverGTsemver, Label: ">"},
-			string("<=" + types.Semver): {f: semverLTEsemver, Label: "<="},
-			string(">=" + types.Semver): {f: semverGTEsemver, Label: ">="},
-			string("==" + types.String): {f: semverCmpSemver, Label: "=="},
-			string("!=" + types.String): {f: semverNotSemver, Label: "!="},
-			string("<" + types.String):  {f: semverLTsemver, Label: "<"},
-			string(">" + types.String):  {f: semverGTsemver, Label: ">"},
-			string("<=" + types.String): {f: semverLTEsemver, Label: "<="},
-			string(">=" + types.String): {f: semverGTEsemver, Label: ">="},
+		types.Version: {
+			string("==" + types.Nil):     {f: stringCmpNilV2, Label: "=="},
+			string("!=" + types.Nil):     {f: stringNotNilV2, Label: "!="},
+			string("==" + types.Empty):   {f: stringCmpEmptyV2, Label: "=="},
+			string("!=" + types.Empty):   {f: stringNotEmptyV2, Label: "!="},
+			string("==" + types.Version): {f: versionCmpVersion, Label: "=="},
+			string("!=" + types.Version): {f: versionNotVersion, Label: "!="},
+			string("<" + types.Version):  {f: versionLTversion, Label: "<"},
+			string(">" + types.Version):  {f: versionGTversion, Label: ">"},
+			string("<=" + types.Version): {f: versionLTEversion, Label: "<="},
+			string(">=" + types.Version): {f: versionGTEversion, Label: ">="},
+			string("==" + types.String):  {f: versionCmpVersion, Label: "=="},
+			string("!=" + types.String):  {f: versionNotVersion, Label: "!="},
+			string("<" + types.String):   {f: versionLTversion, Label: "<"},
+			string(">" + types.String):   {f: versionGTversion, Label: ">"},
+			string("<=" + types.String):  {f: versionLTEversion, Label: "<="},
+			string(">=" + types.String):  {f: versionGTEversion, Label: ">="},
+			"epoch":                      {f: versionEpoch},
+			"inRange":                    {f: versionInRange, Label: "inRange"},
+		},
+		types.IP: {
+			string("==" + types.Nil):   {f: stringCmpNilV2, Label: "=="},
+			string("!=" + types.Nil):   {f: stringNotNilV2, Label: "!="},
+			string("==" + types.Empty): {f: stringCmpEmptyV2, Label: "=="},
+			string("!=" + types.Empty): {f: stringNotEmptyV2, Label: "!="},
+			string("==" + types.IP):    {f: ipCmpIP, Label: "=="},
+			string("!=" + types.IP):    {f: ipNotIP, Label: "!="},
+			"address":                  {f: ipAddress},
+			"cidr":                     {f: ipCIDR},
+			"inRange":                  {f: ipInRange},
+			"isUnspecified":            {f: ipUnspecified},
+			"prefix":                   {f: ipPrefix},
+			"prefixLength":             {f: ipPrefixLength},
+			"subnet":                   {f: ipSubnet},
+			"suffix":                   {f: ipSuffix},
+			"version":                  {f: ipVersion},
 		},
 		types.ArrayLike: {
 			"[]":                       {f: arrayGetIndexV2},
@@ -600,6 +632,7 @@ func init() {
 			"unique":                   {f: arrayUniqueV2},
 			"difference":               {f: arrayDifferenceV2},
 			"in":                       {f: anyArrayInStringArray},
+			"notIn":                    {f: anyArrayNotInStringArray},
 			"containsAll":              {f: arrayContainsAll},
 			"containsNone":             {f: arrayContainsNone},
 			"==":                       {Compiler: compileArrayOpArray("=="), f: tarrayCmpTarrayV2, Label: "=="},
@@ -856,6 +889,17 @@ func BuiltinFunctionV2(typ types.Type, name string) (*chunkHandlerV2, error) {
 func (e *blockExecutor) runBoundFunction(bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	log.Trace().Uint64("ref", ref).Str("id", chunk.Id).Msg("exec> run bound function")
 
+	// check if the resource defines the function to allow providers to override
+	// builtin functions like `length` or any other function
+	if bind.Type.IsResource() && bind.Value != nil {
+		rr := bind.Value.(Resource)
+		resource := e.ctx.runtime.Schema().Lookup(rr.MqlName())
+		_, _, override := e.ctx.runtime.Schema().FindField(resource, chunk.Id)
+		if override {
+			return runResourceFunction(e, bind, chunk, ref)
+		}
+	}
+
 	fh, err := BuiltinFunctionV2(bind.Type, chunk.Id)
 	if err == nil {
 		res, dref, err := fh.f(e, bind, chunk, ref)
@@ -873,5 +917,6 @@ func (e *blockExecutor) runBoundFunction(bind *RawData, chunk *Chunk, ref uint64
 	if bind.Type.IsResource() {
 		return runResourceFunction(e, bind, chunk, ref)
 	}
+
 	return nil, 0, err
 }

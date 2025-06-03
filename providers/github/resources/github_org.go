@@ -4,12 +4,15 @@
 package resources
 
 import (
-	"errors"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/google/go-github/v67/github"
+	"github.com/cockroachdb/errors"
+	"github.com/google/go-github/v72/github"
+	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/v11/internal/workerpool"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/logger"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
@@ -70,6 +73,7 @@ func initGithubOrganization(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	args["createdAt"] = llx.TimeDataPtr(githubTimestamp(org.CreatedAt))
 	args["updatedAt"] = llx.TimeDataPtr(githubTimestamp(org.UpdatedAt))
 	args["totalPrivateRepos"] = llx.IntDataPtr(org.TotalPrivateRepos)
+	args["totalPublicRepos"] = llx.IntDataPtr(org.PublicRepos)
 	args["ownedPrivateRepos"] = llx.IntDataPtr(org.OwnedPrivateRepos)
 	args["privateGists"] = llx.IntDataDefault(org.PrivateGists, 0)
 	args["diskUsage"] = llx.IntDataDefault(org.DiskUsage, 0)
@@ -79,23 +83,63 @@ func initGithubOrganization(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	plan, _ := convert.JsonToDict(org.Plan)
 	args["plan"] = llx.MapData(plan, types.Any)
 
-	args["twoFactorRequirementEnabled"] = llx.BoolData(convert.ToBool(org.TwoFactorRequirementEnabled))
-	args["isVerified"] = llx.BoolData(convert.ToBool(org.IsVerified))
+	args["twoFactorRequirementEnabled"] = llx.BoolData(convert.ToValue(org.TwoFactorRequirementEnabled))
+	args["isVerified"] = llx.BoolData(convert.ToValue(org.IsVerified))
 
-	args["hasOrganizationProjects"] = llx.BoolData(convert.ToBool(org.HasOrganizationProjects))
-	args["hasRepositoryProjects"] = llx.BoolData(convert.ToBool(org.HasRepositoryProjects))
+	args["hasOrganizationProjects"] = llx.BoolData(convert.ToValue(org.HasOrganizationProjects))
+	args["hasRepositoryProjects"] = llx.BoolData(convert.ToValue(org.HasRepositoryProjects))
 
 	args["defaultRepositoryPermission"] = llx.StringDataPtr(org.DefaultRepoPermission)
-	args["membersCanCreateRepositories"] = llx.BoolData(convert.ToBool(org.MembersCanCreateRepos))
-	args["membersCanCreatePublicRepositories"] = llx.BoolData(convert.ToBool(org.MembersCanCreatePublicRepos))
-	args["membersCanCreatePrivateRepositories"] = llx.BoolData(convert.ToBool(org.MembersCanCreatePrivateRepos))
-	args["membersCanCreateInternalRepositories"] = llx.BoolData(convert.ToBool(org.MembersCanCreateInternalRepos))
-	args["membersCanCreatePages"] = llx.BoolData(convert.ToBool(org.MembersCanCreatePages))
-	args["membersCanCreatePublicPages"] = llx.BoolData(convert.ToBool(org.MembersCanCreatePublicPages))
-	args["membersCanCreatePrivatePages"] = llx.BoolData(convert.ToBool(org.MembersCanCreatePrivateRepos))
-	args["membersCanForkPrivateRepos"] = llx.BoolData(convert.ToBool(org.MembersCanForkPrivateRepos))
+	args["membersCanCreateRepositories"] = llx.BoolData(convert.ToValue(org.MembersCanCreateRepos))
+	args["membersCanCreatePublicRepositories"] = llx.BoolData(convert.ToValue(org.MembersCanCreatePublicRepos))
+	args["membersCanCreatePrivateRepositories"] = llx.BoolData(convert.ToValue(org.MembersCanCreatePrivateRepos))
+	args["membersCanCreateInternalRepositories"] = llx.BoolData(convert.ToValue(org.MembersCanCreateInternalRepos))
+	args["membersCanCreatePages"] = llx.BoolData(convert.ToValue(org.MembersCanCreatePages))
+	args["membersCanCreatePublicPages"] = llx.BoolData(convert.ToValue(org.MembersCanCreatePublicPages))
+	args["membersCanCreatePrivatePages"] = llx.BoolData(convert.ToValue(org.MembersCanCreatePrivateRepos))
+	args["membersCanForkPrivateRepos"] = llx.BoolData(convert.ToValue(org.MembersCanForkPrivateRepos))
 
 	return args, nil, nil
+}
+
+func (g *mqlGithubOrganizationCustomProperty) id() (string, error) {
+	return "github.organization.customProperty/" + g.Name.Data, nil
+}
+
+func (g *mqlGithubOrganization) customProperties() ([]interface{}, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+	if g.Login.Error != nil {
+		return nil, g.Login.Error
+	}
+	orgLogin := g.Login.Data
+
+	// API doesn't have pagination:
+	//
+	// https://docs.github.com/en/rest/orgs/custom-properties?apiVersion=2022-11-28#get-all-custom-properties-for-an-organization--parameters
+	customProperties, _, err := conn.Client().Organizations.GetAllCustomProperties(conn.Context(), orgLogin)
+	if err != nil {
+		return nil, err
+	}
+
+	resources := []interface{}{}
+	for _, property := range customProperties {
+		r, err := CreateResource(g.MqlRuntime, "github.organization.customProperty", map[string]*llx.RawData{
+			"name":             llx.StringDataPtr(property.PropertyName),
+			"description":      llx.StringDataPtr(property.Description),
+			"sourceType":       llx.StringDataPtr(property.SourceType),
+			"valueType":        llx.StringData(property.ValueType),
+			"required":         llx.BoolDataPtr(property.Required),
+			"defaultValue":     llx.StringDataPtr(property.DefaultValue),
+			"allowedValues":    llx.ArrayData(convert.SliceAnyToInterface[string](property.AllowedValues), types.String),
+			"valuesEditableBy": llx.StringDataPtr(property.ValuesEditableBy),
+		})
+		if err != nil {
+			return nil, err
+		}
+		resources = append(resources, r)
+	}
+
+	return resources, nil
 }
 
 func (g *mqlGithubOrganization) members() ([]interface{}, error) {
@@ -262,26 +306,51 @@ func (g *mqlGithubOrganization) repositories() ([]interface{}, error) {
 		return nil, g.Login.Error
 	}
 	orgLogin := g.Login.Data
-
-	listOpts := &github.RepositoryListByOrgOptions{
-		ListOptions: github.ListOptions{PerPage: paginationPerPage},
-		Type:        "all",
+	listOpts := github.RepositoryListByOrgOptions{
+		ListOptions: github.ListOptions{
+			PerPage: paginationPerPage,
+			Page:    1,
+		},
+		Type: "all",
 	}
 
-	var allRepos []*github.Repository
+	repoCount := g.TotalPrivateRepos.Data + g.TotalPublicRepos.Data
+	workerPool := workerpool.New[[]*github.Repository](workers)
+	workerPool.Start()
+	defer workerPool.Close()
+
+	log.Debug().
+		Int("workers", workers).
+		Int64("total_repos", repoCount).
+		Str("organization", g.Name.Data).
+		Msg("list repositories")
+
 	for {
-		repos, resp, err := conn.Client().Repositories.ListByOrg(conn.Context(), orgLogin, listOpts)
-		if err != nil {
-			if strings.Contains(err.Error(), "404") {
-				return nil, nil
-			}
-			return nil, err
-		}
-		allRepos = append(allRepos, repos...)
-		if resp.NextPage == 0 {
+		// exit as soon as we collect all repositories
+		reposLen := len(slices.Concat(workerPool.GetValues()...))
+		if reposLen >= int(repoCount) {
 			break
 		}
-		listOpts.Page = resp.NextPage
+
+		// send requests to workers
+		opts := listOpts
+		workerPool.Submit(func() ([]*github.Repository, error) {
+			repos, _, err := conn.Client().Repositories.ListByOrg(conn.Context(), orgLogin, &opts)
+			return repos, err
+		})
+
+		// next page
+		listOpts.Page++
+
+		// check if any request failed
+		if errs := workerPool.GetErrors(); len(errs) != 0 {
+			if err := errors.Join(errs...); err != nil {
+				if strings.Contains(err.Error(), "404") {
+					return nil, nil
+				}
+				return nil, err
+			}
+		}
 	}
 
 	if g.repoCacheMap == nil {
@@ -289,15 +358,17 @@ func (g *mqlGithubOrganization) repositories() ([]interface{}, error) {
 	}
 
 	res := []interface{}{}
-	for i := range allRepos {
-		repo := allRepos[i]
+	for _, repos := range workerPool.GetValues() {
+		for i := range repos {
+			repo := repos[i]
 
-		r, err := newMqlGithubRepository(g.MqlRuntime, repo)
-		if err != nil {
-			return nil, err
+			r, err := newMqlGithubRepository(g.MqlRuntime, repo)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, r)
+			g.repoCacheMap[repo.GetName()] = r
 		}
-		res = append(res, r)
-		g.repoCacheMap[repo.GetName()] = r
 	}
 
 	return res, nil
@@ -423,7 +494,7 @@ func (g *mqlGithubOrganization) packages() ([]interface{}, error) {
 			// NOTE: we need to fetch repo separately because the Github repo object is not complete, instead of
 			// call the repo fetching all the time, we make this lazy loading
 			if p.Repository != nil && p.Repository.Name != nil {
-				pkg.packageRepository = convert.ToString(p.Repository.Name)
+				pkg.packageRepository = convert.ToValue(p.Repository.Name)
 			}
 			res = append(res, pkg)
 		}

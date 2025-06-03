@@ -91,6 +91,7 @@ resources:
   http.get:
     fields:
       body: {}
+      followRedirects: {}
       header: {}
       statusCode: {}
       url: {}

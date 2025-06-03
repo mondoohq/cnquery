@@ -7,37 +7,63 @@
 package memoize
 
 import (
+	"runtime"
+	"sync"
 	"time"
 
 	"github.com/patrickmn/go-cache"
 	"golang.org/x/sync/singleflight"
 )
 
-// Memoizer allows you to memoize function calls. Memoizer is safe for concurrent use by multiple goroutines.
-type Memoizer struct {
-	// Storage exposes the underlying cache of memoized results to manipulate as desired - for example, to Flush().
-	Storage *cache.Cache
+const NoExpiration time.Duration = -1
 
-	group singleflight.Group
+// Memoizer allows you to memoize function calls. Implementations should be safe
+// for concurrent use by multiple goroutines.
+type Memoizer interface {
+	Memoize(key string, fn func() (any, error)) (any, bool, error)
+	Flush()
 }
 
-// NewMemoizer creates a new Memoizer with the configured expiry and cleanup policies.
-// If desired, use cache.NoExpiration to cache values forever.
-func NewMemoizer(defaultExpiration, cleanupInterval time.Duration) *Memoizer {
-	return &Memoizer{
-		Storage: cache.New(defaultExpiration, cleanupInterval),
-		group:   singleflight.Group{},
+// cache implements Memoizer using the `go-cache` package
+//
+// @afiune we could explore using this other package https://github.com/go-pkgz/expirable-cache
+type goCache struct {
+	// how long items are cached for
+	defaultExpiration time.Duration
+
+	// how often the cleanup process should run
+	cleanupInterval time.Duration
+
+	// storage is the underlying cache of memoized results
+	storage *cache.Cache
+
+	// group makes sure that only one execution is in-flight for a given cache key
+	group singleflight.Group
+
+	// lock is used to delay the underlying cache initialization
+	lock sync.Mutex
+}
+
+// New creates a new Memoizer with the configured expiry and cleanup policies.
+// If desired, use memoize.NoExpiration to cache values forever.
+func New(defaultExpiration, cleanupInterval time.Duration) Memoizer {
+	return &goCache{
+		defaultExpiration: defaultExpiration,
+		cleanupInterval:   cleanupInterval,
+		group:             singleflight.Group{},
 	}
 }
 
 // Memoize executes and returns the results of the given function, unless there was a cached value of the same key.
 // Only one execution is in-flight for a given key at a time.
 // The boolean return value indicates whether v was previously stored.
-func (m *Memoizer) Memoize(key string, fn func() (interface{}, error)) (interface{}, error, bool) {
+func (m *goCache) Memoize(key string, fn func() (interface{}, error)) (interface{}, bool, error) {
+	m.init()
+
 	// Check cache
-	value, found := m.Storage.Get(key)
+	value, found := m.storage.Get(key)
 	if found {
-		return value, nil, true
+		return value, true, nil
 	}
 
 	// Combine memoized function with a cache store
@@ -45,10 +71,33 @@ func (m *Memoizer) Memoize(key string, fn func() (interface{}, error)) (interfac
 		data, innerErr := fn()
 
 		if innerErr == nil {
-			m.Storage.Set(key, data, cache.DefaultExpiration)
+			m.storage.Set(key, data, cache.DefaultExpiration)
 		}
 
 		return data, innerErr
 	})
-	return value, err, false
+	return value, false, err
+}
+
+// Flush will remove all items from the cache, set `storage` to `nil` and
+// run the garbage collector to release long running goroutines.
+func (m *goCache) Flush() {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
+	if m.storage != nil {
+		m.storage.Flush()
+		m.storage = nil
+		runtime.GC()
+	}
+}
+
+// init delays the cache initialization to when it is first used
+func (m *goCache) init() {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
+	if m.storage == nil {
+		m.storage = cache.New(m.defaultExpiration, m.cleanupInterval)
+	}
 }

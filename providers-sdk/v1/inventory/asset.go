@@ -19,6 +19,7 @@ var assetPrintableKeys = []string{"name", "platform-id"}
 func (a *Asset) PrintableKeys() []string {
 	return assetPrintableKeys
 }
+
 func (a *Asset) PrintableValue(index int) string {
 	switch assetPrintableKeys[index] {
 	case "name":
@@ -41,7 +42,7 @@ func (a *Asset) HumanName() string {
 	}
 
 	if a.Platform != nil {
-		return fmt.Sprintf(a.Name + " (" + a.Platform.Title + ")")
+		return fmt.Sprint(a.Name + " (" + a.Platform.Title + ")")
 	}
 
 	return a.Name
@@ -176,5 +177,15 @@ func (a *Asset) AddMondooLabels(root *Asset) {
 		if mondooLabelRegex.MatchString(k) {
 			a.Labels[k] = v
 		}
+	}
+}
+
+// MergePlatform merges the provided platform into the asset's platform.
+// If the asset's platform is `nil`, the provided platform is set.
+func (a *Asset) MergePlatform(pf *Platform) {
+	if a.Platform == nil {
+		a.Platform = pf
+	} else {
+		a.Platform.Merge(pf)
 	}
 }

@@ -27,7 +27,7 @@ asset @defaults("name platform version") {
   // Platform for this asset (redhat, windows, k8s-pod)
   platform string
   // Kind of platform, for example:
-  // api, baremetal, vm, vm-image, container, container-image, network, ...
+  // api, baremetal, virtualmachine, container, container-image, network, ...
   kind string
   // Runtime is the specific kind of the platform. Examples include:
   // docker-container, podman-container, aws-ec2-instance, ...
@@ -44,6 +44,8 @@ asset @defaults("name platform version") {
   fqdn string
   // Build version of the platform (optional)
   build string
+  // Platform Metadata (e.g. key values from /etc/os/release)
+  platformMetadata map[string]string
   // Optional platform information
   labels map[string]string
   // Custom annotations (tags) on the asset
@@ -179,4 +181,12 @@ private product.releaseCycleInformation {
   endOfExtendedSupport time
   // Release link
   link string
+}
+
+// Experimental: Vulnerability Exchange information
+vulnerability.exchange @defaults("id source") {
+  // Vulnerability ID, eg. CVE-2025-12345
+  id string
+  // Vulnerability source
+  source string  
 }

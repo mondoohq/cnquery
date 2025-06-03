@@ -28,7 +28,7 @@ const (
 	OpRemainder
 )
 
-var operatorsMap = map[string]Operator{
+var Operators = map[string]Operator{
 	"=":  OpAssignment,
 	"&&": OpAnd,
 	"||": OpOr,
@@ -51,7 +51,7 @@ var operatorsStrings map[Operator]string
 
 func init() {
 	operatorsStrings = make(map[Operator]string)
-	for k, v := range operatorsMap {
+	for k, v := range Operators {
 		operatorsStrings[v] = k
 	}
 }
@@ -64,7 +64,7 @@ func (o *Operator) Capture(s []string) error {
 		sop += s[1]
 	}
 
-	*o = operatorsMap[sop]
+	*o = Operators[sop]
 	return nil
 }
 

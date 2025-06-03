@@ -557,17 +557,19 @@ func ComparableLabel(label string) (string, bool) {
 		}
 	}
 
+	if len(label)-start >= 2 {
+		x := label[start : start+2]
+		if _, ok := comparableOperations[x]; ok {
+			return x, true
+		}
+	}
+
 	x := label[start : start+1]
 	if _, ok := comparableOperations[x]; ok {
 		return x, true
 	}
 	if len(label) == 1 {
 		return "", false
-	}
-
-	x = label[start : start+2]
-	if _, ok := comparableOperations[x]; ok {
-		return x, true
 	}
 
 	return "", false

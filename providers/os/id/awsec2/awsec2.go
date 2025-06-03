@@ -6,6 +6,7 @@ package awsec2
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/cockroachdb/errors"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
@@ -18,12 +19,14 @@ type Identity struct {
 	InstanceName string
 	AccountID    string
 }
+
 type InstanceIdentifier interface {
 	Identify() (Identity, error)
+	RawMetadata() (any, error)
 }
 
 func Resolve(conn shared.Connection, pf *inventory.Platform) (InstanceIdentifier, error) {
-	cfg, err := config.LoadDefaultConfig(context.Background())
+	cfg, err := awsConfig(conn)
 	if err != nil {
 		// for local environments we must have a config, or it won't work
 		if conn.Type() == shared.Type_Local {
@@ -44,4 +47,23 @@ func Resolve(conn shared.Connection, pf *inventory.Platform) (InstanceIdentifier
 		}
 	}
 	return NewCommandInstanceMetadata(conn, pf, &cfg), nil
+}
+
+// awsConfig looks at the connection to see if it has additional options that need
+// to be used to create an AWS configuration.
+func awsConfig(conn shared.Connection) (aws.Config, error) {
+	awsConfigOptions := []func(*config.LoadOptions) error{}
+
+	if asset := conn.Asset(); asset != nil && len(asset.Connections) != 0 {
+		for key, value := range asset.Connections[0].Options {
+			switch key {
+			case "region":
+				awsConfigOptions = append(awsConfigOptions, config.WithRegion(value))
+			case "profile":
+				awsConfigOptions = append(awsConfigOptions, config.WithSharedConfigProfile(value))
+			}
+		}
+	}
+
+	return config.LoadDefaultConfig(context.Background(), awsConfigOptions...)
 }

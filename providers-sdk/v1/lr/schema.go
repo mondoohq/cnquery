@@ -18,7 +18,17 @@ func Schema(ast *LR) (*resources.Schema, error) {
 	}
 
 	res := &resources.Schema{
-		Resources: make(map[string]*resources.ResourceInfo, len(ast.Resources)),
+		Resources:    make(map[string]*resources.ResourceInfo, len(ast.Resources)),
+		Dependencies: make(map[string]*resources.ProviderInfo, 0),
+	}
+
+	for dep := range ast.imports {
+		if !strings.HasSuffix(provider, dep) && dep != "core" {
+			res.Dependencies[dep] = &resources.ProviderInfo{
+				Id:   strings.TrimSuffix(ast.packPaths[dep], "/resources"),
+				Name: dep,
+			}
+		}
 	}
 
 	for i := range ast.Resources {
@@ -150,7 +160,7 @@ func resourceInit(r *Resource, fields map[string]*resources.Field, ast *LR) (*re
 	return &resources.Init{Args: args}, nil
 }
 
-func resourceFields(r *Resource, ast *LR) map[string]*resources.Field {
+func resourceFields(r *Resource, ast *LR) (map[string]*resources.Field, error) {
 	fields := make(map[string]*resources.Field)
 
 	for _, f := range r.Body.Fields {
@@ -178,11 +188,15 @@ func resourceFields(r *Resource, ast *LR) map[string]*resources.Field {
 		}
 	}
 
-	return fields
+	return fields, nil
 }
 
 func resourceSchema(r *Resource, ast *LR) (*resources.ResourceInfo, error) {
-	fields := resourceFields(r, ast)
+	fields, err := resourceFields(r, ast)
+	if err != nil {
+		return nil, err
+	}
+
 	init, err := resourceInit(r, fields, ast)
 	if err != nil {
 		return nil, err
@@ -202,6 +216,7 @@ func resourceSchema(r *Resource, ast *LR) (*resources.ResourceInfo, error) {
 		IsExtension: r.IsExtension,
 		Fields:      fields,
 		Defaults:    r.Defaults,
+		Context:     r.Context,
 	}
 
 	if r.ListType != nil {

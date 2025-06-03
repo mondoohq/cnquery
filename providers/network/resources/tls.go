@@ -13,8 +13,10 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v11/providers/core/resources/regex"
 	"go.mondoo.com/cnquery/v11/providers/network/connection"
 	"go.mondoo.com/cnquery/v11/providers/network/resources/certificates"
@@ -25,6 +27,8 @@ import (
 var reTarget = regexp.MustCompile("([^/:]+?)(:\\d+)?$")
 
 var rexUrlDomain = regexp.MustCompile(regex.UrlDomain)
+
+var DefaultDialerTimeout = time.Minute * 1
 
 // Returns the connection's port adjusted for TLS.
 // If no port is set, we estimate what it might be from the scheme.
@@ -108,7 +112,15 @@ func initTls(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]
 }
 
 type mqlTlsInternal struct {
+	// This mutex is used to protect the tls resource from doing multiple dections at once
 	lock sync.Mutex
+	// we only detect once if the a socket is running on TLS or not, once the detection runs,
+	// this boolean gets set and tells other functions if the socket has tls enabled or not
+	tlsEnabled *bool
+	// if the socket has TLS enabled, this tester will have findings, ciphers and versions
+	tester *tlsshake.Tester
+	// during TLS detection, if we find any issue, we record it here
+	Error error
 }
 
 func (s *mqlTls) id() (string, error) {
@@ -185,24 +197,20 @@ func parseCertificates(runtime *plugin.Runtime, domainName string, certificateLi
 }
 
 func (s *mqlTls) params(socket *mqlSocket, domainName string) (map[string]interface{}, error) {
-	s.lock.Lock()
-	defer s.lock.Unlock()
-
-	host := socket.Address.Data
-	port := socket.Port.Data
-	proto := socket.Protocol.Data
-
-	tester := tlsshake.New(proto, domainName, host, int(port))
-	if err := tester.Test(tlsshake.DefaultScanConfig()); err != nil {
-		if errors.Is(err, tlsshake.ErrFailedToConnect) || errors.Is(err, tlsshake.ErrFailedToTlsResponse) {
-			s.Params.State = plugin.StateIsSet | plugin.StateIsNull
-			return nil, nil
-		}
+	enabled, err := s.TLSEnabled(socket, domainName)
+	if err != nil {
 		return nil, err
 	}
 
+	if !enabled {
+		return nil, nil
+	}
+
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
 	res := map[string]interface{}{}
-	findings := tester.Findings
+	findings := s.tester.Findings
 
 	lists := map[string][]string{
 		"errors": findings.Errors,
@@ -303,9 +311,16 @@ func (s *mqlTls) extensions(params interface{}) ([]interface{}, error) {
 	return res, nil
 }
 
-func gatherTlsCertificates(host, port, domainName string) ([]*x509.Certificate, []*x509.Certificate, error) {
+func gatherTlsCertificates(proto, host, port, domainName string) ([]*x509.Certificate, []*x509.Certificate, error) {
 	isSNIcert := map[string]struct{}{}
-	conn, err := tls.Dial("tcp", net.JoinHostPort(host, port), &tls.Config{
+	dialer := &net.Dialer{Timeout: DefaultDialerTimeout}
+	addr := net.JoinHostPort(host, port)
+	log.Trace().
+		Str("address", addr).
+		Str("domain_name", domainName).
+		Dur("timeout", DefaultDialerTimeout).
+		Msg("network.tls> gathering tls certificates")
+	conn, err := tls.DialWithDialer(dialer, proto, addr, &tls.Config{
 		InsecureSkipVerify: true,
 		ServerName:         domainName,
 	})
@@ -321,7 +336,7 @@ func gatherTlsCertificates(host, port, domainName string) ([]*x509.Certificate, 
 	}
 
 	nonSniCerts := []*x509.Certificate{}
-	nonSniConn, err := tls.Dial("tcp", net.JoinHostPort(host, port), &tls.Config{
+	nonSniConn, err := tls.DialWithDialer(dialer, proto, addr, &tls.Config{
 		InsecureSkipVerify: true,
 	})
 	if err != nil {
@@ -338,11 +353,93 @@ func gatherTlsCertificates(host, port, domainName string) ([]*x509.Certificate, 
 	return sniCerts, nonSniCerts, nil
 }
 
-func (s *mqlTls) populateCertificates(socket *mqlSocket, domainName string) error {
+// we should only detect once if the socket is running on TLS or not, if we have already detected it and, it
+// is NOT a TLS connection, we should exit fast.
+//
+// NOTE that this method should be called by functions once they have locked the Mutex inside `mqlTlsInternal`
+func (s *mqlTls) unsafeTLSTest(socket *mqlSocket, domainName string) error {
+	if s.tlsEnabled != nil {
+		return s.Error
+	}
+
 	host := socket.Address.Data
 	port := socket.Port.Data
+	proto := socket.Protocol.Data
 
-	certs, nonSniCerts, err := gatherTlsCertificates(host, strconv.FormatInt(port, 10), domainName)
+	s.tester = tlsshake.New(proto, domainName, host, int(port))
+	if err := s.tester.Test(tlsshake.DefaultScanConfig()); err != nil {
+
+		log.Debug().
+			Str("host", host).
+			Str("proto", proto).
+			Int64("port", port).
+			Interface("findings", s.tester.Findings).
+			Bool("tls_enabled", false).
+			Msg("network.tls> detection")
+		s.tlsEnabled = convert.ToPtr(false)
+
+		if errors.Is(err, tlsshake.ErrFailedToConnect) ||
+			errors.Is(err, tlsshake.ErrFailedToWrite) ||
+			errors.Is(err, tlsshake.ErrTimeout) ||
+			errors.Is(err, tlsshake.ErrFailedToTlsResponse) {
+
+			s.Params.State = plugin.StateIsSet | plugin.StateIsNull
+			s.Certificates.State = plugin.StateIsSet | plugin.StateIsNull
+			s.NonSniCertificates.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil
+		}
+
+		s.Error = err
+		return s.Error
+	}
+
+	s.tlsEnabled = convert.ToPtr(len(s.tester.Findings.Versions) != 0)
+
+	log.Debug().
+		Str("host", host).
+		Str("proto", proto).
+		Int64("port", port).
+		Strs("versions", s.tester.Findings.Errors).
+		Interface("versions", s.tester.Findings.Versions).
+		Bool("tls_enabled", *s.tlsEnabled).
+		Msg("network.tls> detection")
+	return nil
+}
+
+// TLSEnabled checks if the provider socket speaks TLS or plain text (like HTTP)
+func (s *mqlTls) TLSEnabled(socket *mqlSocket, domainName string) (enabled bool, err error) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	if s.tlsEnabled == nil {
+		// we only detect once
+		err = s.unsafeTLSTest(socket, domainName)
+	} else {
+		err = s.Error
+	}
+
+	enabled = *s.tlsEnabled
+
+	return
+}
+func (s *mqlTls) populateCertificates(socket *mqlSocket, domainName string) error {
+	enabled, err := s.TLSEnabled(socket, domainName)
+	if err != nil {
+		return err
+	}
+
+	if !enabled {
+		return nil
+	}
+
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	host := socket.Address.Data
+	port := socket.Port.Data
+	proto := socket.Protocol.Data
+
+	certs, nonSniCerts, err := gatherTlsCertificates(proto, host, strconv.FormatInt(port, 10), domainName)
 	if err != nil {
 		s.Certificates = plugin.TValue[[]interface{}]{Error: err, State: plugin.StateIsSet}
 		s.NonSniCertificates = plugin.TValue[[]interface{}]{Error: err, State: plugin.StateIsSet}

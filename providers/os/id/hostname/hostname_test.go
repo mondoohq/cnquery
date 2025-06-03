@@ -50,6 +50,30 @@ func TestHostnameLinuxFqdn(t *testing.T) {
 	assert.Equal(t, "myhost.example.com", hostame)
 }
 
+func TestHostnameLinuxGetentIPv4(t *testing.T) {
+	conn, err := mock.New(0, "./testdata/hostname_getent_hosts_ipv4.toml", &inventory.Asset{})
+	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
+
+	hostame, ok := hostname.Hostname(conn, platform)
+	require.True(t, ok)
+
+	assert.Equal(t, "myhost.example.com", hostame)
+}
+
+func TestHostnameLinuxGetentIPv6(t *testing.T) {
+	conn, err := mock.New(0, "./testdata/hostname_getent_hosts_ipv6.toml", &inventory.Asset{})
+	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
+
+	hostame, ok := hostname.Hostname(conn, platform)
+	require.True(t, ok)
+
+	assert.Equal(t, "myhost.example.com", hostame)
+}
+
 func TestHostnameWindows(t *testing.T) {
 	conn, err := mock.New(0, "./testdata/hostname_windows.toml", &inventory.Asset{})
 	require.NoError(t, err)

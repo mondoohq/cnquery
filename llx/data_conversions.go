@@ -39,11 +39,13 @@ func init() {
 		types.Score:        score2result,
 		types.Empty:        empty2result,
 		types.Block:        block2result,
-		types.Semver:       string2result,
+		types.Version:      version2result,
+		types.IP:           ip2result,
 		types.ArrayLike:    array2result,
 		types.MapLike:      map2result,
 		types.ResourceLike: resource2result,
 		types.FunctionLike: function2result,
+		types.Range:        range2result,
 	}
 
 	primitiveConverters = map[types.Type]primitiveConverter{
@@ -59,12 +61,14 @@ func init() {
 		types.Score:        pscore2raw,
 		types.Empty:        pempty2raw,
 		types.Block:        pblock2rawV2,
-		types.Semver:       pscore2raw,
+		types.Version:      pversion2raw,
+		types.IP:           pip2raw,
 		types.ArrayLike:    parray2raw,
 		types.MapLike:      pmap2raw,
 		types.ResourceLike: presource2raw,
 		types.FunctionLike: pfunction2raw,
 		types.Ref:          pref2raw,
+		types.Range:        prange2raw,
 	}
 }
 
@@ -187,7 +191,7 @@ func string2result(value interface{}, typ types.Type) (*Primitive, error) {
 		return nil, errInvalidConversion(value, typ)
 	}
 	p := StringPrimitive(v)
-	// special case for semver
+	// special case for version
 	p.Type = string(typ)
 	return p, nil
 }
@@ -252,6 +256,27 @@ func block2result(value interface{}, typ types.Type) (*Primitive, error) {
 		res[k] = raw.Result().Data
 	}
 	return &Primitive{Type: string(typ), Map: res}, nil
+}
+
+func version2result(value interface{}, typ types.Type) (*Primitive, error) {
+	v, ok := value.(string)
+	if !ok {
+		return nil, errInvalidConversion(value, typ)
+	}
+	p := StringPrimitive(v)
+	// special case for version
+	p.Type = string(typ)
+	return p, nil
+}
+
+func ip2result(value any, typ types.Type) (*Primitive, error) {
+	m, ok := value.(RawIP)
+	if !ok {
+		return nil, errInvalidConversion(value, typ)
+	}
+
+	res, err := m.Marshal()
+	return &Primitive{Type: string(typ), Value: res}, err
 }
 
 func array2result(value interface{}, typ types.Type) (*Primitive, error) {
@@ -330,6 +355,14 @@ func function2result(value interface{}, typ types.Type) (*Primitive, error) {
 		return FunctionPrimitive(v), nil
 	}
 	return nil, errInvalidConversion(value, typ)
+}
+
+func range2result(value any, typ types.Type) (*Primitive, error) {
+	v, ok := value.(Range)
+	if !ok {
+		return nil, errInvalidConversion(value, typ)
+	}
+	return RangePrimitive(v), nil
 }
 
 func raw2primitive(value interface{}, typ types.Type) (*Primitive, error) {
@@ -582,6 +615,18 @@ func pblock2rawV2(p *Primitive) *RawData {
 	return &RawData{Value: d, Error: err, Type: types.Type(p.Type)}
 }
 
+func pversion2raw(p *Primitive) *RawData {
+	return VersionData(string(p.Value))
+}
+
+func pip2raw(p *Primitive) *RawData {
+	ip, err := UnmarshalIP(p.Value)
+	if err != nil || ip == nil {
+		return &RawData{Error: err, Type: types.IP}
+	}
+	return IPData(*ip)
+}
+
 func parray2raw(p *Primitive) *RawData {
 	// Note: We don't hand over the compiler here. Reason is that if you have
 	// primitives that have refs in them, you should properly resolve them
@@ -626,6 +671,10 @@ func pref2raw(p *Primitive) *RawData {
 	} else {
 		return &RawData{Value: int32(bytes2int(p.Value)), Type: types.Type(p.Type)}
 	}
+}
+
+func prange2raw(p *Primitive) *RawData {
+	return RangeData(p.Value)
 }
 
 // Tries to resolve primitives; returns refs if they don't exist yet.

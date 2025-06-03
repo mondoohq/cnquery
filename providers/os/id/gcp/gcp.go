@@ -18,9 +18,9 @@ const (
 	gceIdentifierFileLinux = "/sys/class/dmi/id/product_name"
 )
 
-func Detect(conn shared.Connection, p *inventory.Platform, smbiosMgr smbios.SmBiosManager) (string, string, []string) {
+func Detect(conn shared.Connection, p *inventory.Platform) (string, string, []string) {
 	productName := ""
-	if p.IsFamily("linux") {
+	if p.IsFamily(inventory.FAMILY_LINUX) {
 		// Fetching the product version from the smbios manager is slow
 		// because it iterates through files we don't need to check. This
 		// is an optimization for our sshfs. Also, be aware that on linux,
@@ -33,6 +33,11 @@ func Detect(conn shared.Connection, p *inventory.Platform, smbiosMgr smbios.SmBi
 		}
 		productName = string(content)
 	} else {
+		smbiosMgr, err := smbios.ResolveManager(conn, p)
+		if err != nil {
+			log.Debug().Err(err).Msg("failed to resolve smbios manager")
+			return "", "", nil
+		}
 		info, err := smbiosMgr.Info()
 		if err != nil {
 			log.Debug().Err(err).Msg("failed to query smbios")

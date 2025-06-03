@@ -209,6 +209,7 @@ use (
    ./cnquery/providers/snowflake
    ./cnquery/providers/slack
    ./cnquery/providers/terraform
+   ./cnquery/providers/tailscale
    ./cnquery/providers/vcd
    ./cnquery/providers/vsphere
    ./cnspec
@@ -336,6 +337,30 @@ func (g *mqlGcpProjectComputeServiceAddress) network() (*mqlGcpProjectComputeSer
 }
 
 ```
+
+## Metrics (Prometheus + Grafana)
+
+When debugging `cnquery`, you can monitor and profile memory and CPU usage using [Prometheus](https://prometheus.io/) and [Grafana](https://grafana.com/). The setup provides visibility into application performance metrics and allows us to diagnose bottlenecks, memory leaks, and high CPU usage.
+
+**How it works?**
+
+* Prometheus: Scrapes and stores time series metrics from your application.
+* Grafana: Visualizes the metrics and allows creating dashboards and alerts.
+* `cnquery` in `DEBUG` mode: Exposes basic metrics
+
+### Setup
+
+1. Install `prometheus` from https://prometheus.io/download/ (macOS: `brew install prometheus`)
+1. Start both, Prometheus and Grafana with `make metrics/start`
+1. **(one time only)** Create a Grafana Dashboard
+    1. Open Grafana at <!-- markdown-link-check-disable --> http://localhost:3000 <!-- markdown-link-check-enable -->
+    1. Add Prometheus as a data source (URL: `http://host.docker.internal:9009`)
+    1. Use an existing Go profiling dashboard from [Grafana](https://grafana.com/grafana/dashboards/) dashboards e.g. [10826](https://grafana.com/grafana/dashboards/10826-go-metrics/)
+1. Run `cnquery` with `DEBUG=1` e.g. `DEBUG=1 cnquery scan local`
+
+You should start seeing data in Grafana!
+
+![Grafana_dashboard](images/Grafana-dashboard.png)
 
 ## Contribute changes
 

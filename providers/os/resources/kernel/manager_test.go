@@ -123,3 +123,27 @@ func TestManagerFreebsd(t *testing.T) {
 
 	assert.Equal(t, 4, len(mounts))
 }
+
+func TestManagerAIX(t *testing.T) {
+	mock, err := mock.New(0, "./testdata/aix.toml", &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:   "aix",
+			Family: []string{"unix"},
+		},
+	})
+	require.NoError(t, err)
+
+	mm, err := ResolveManager(mock)
+	require.NoError(t, err)
+	modules, err := mm.Modules()
+	require.NoError(t, err)
+	require.Equal(t, []*KernelModule{
+		{Name: "bpf", Size: "d000"},
+		{Name: "autofs.ext", Size: "36000"},
+		{Name: "ahafs.ext", Size: "1d000"},
+	}, modules)
+
+	info, err := mm.Info()
+	require.NoError(t, err)
+	assert.Equal(t, "7300-03-00-2446", info.Version)
+}

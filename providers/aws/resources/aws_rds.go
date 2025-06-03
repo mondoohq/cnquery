@@ -54,6 +54,143 @@ func (a *mqlAwsRds) instances() ([]interface{}, error) {
 	return res, nil
 }
 
+func (a *mqlAwsRds) clusterParameterGroups() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []interface{}{}
+	poolOfJobs := jobpool.CreatePool(a.getClusterParameterGroups(conn), 5)
+	poolOfJobs.Run()
+
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsRds) parameterGroups() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []interface{}{}
+	poolOfJobs := jobpool.CreatePool(a.getParameterGroups(conn), 5)
+	poolOfJobs.Run()
+
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsRds) getClusterParameterGroups(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	for _, region := range regions {
+		regionVal := region
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("rds>getClusterParameterGroup>calling aws with region %s", regionVal)
+			res := []interface{}{}
+			svc := conn.Rds(regionVal)
+			ctx := context.Background()
+
+			var marker *string
+			for {
+				DBClusterParameterGroups, err := svc.DescribeDBClusterParameterGroups(ctx, &rds.DescribeDBClusterParameterGroupsInput{Marker: marker})
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, dbClusterParameterGroup := range DBClusterParameterGroups.DBClusterParameterGroups {
+					mqlParameterGroup, err := newMqlAwsRdsClusterParameterGroup(a.MqlRuntime, region, dbClusterParameterGroup)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlParameterGroup)
+				}
+				if marker == nil {
+					break
+				}
+				marker = DBClusterParameterGroups.Marker
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func newMqlAwsRdsClusterParameterGroup(runtime *plugin.Runtime, region string, parameterGroup rds_types.DBClusterParameterGroup) (*mqlAwsRdsClusterParameterGroup, error) {
+	resource, err := CreateResource(runtime, "aws.rds.clusterParameterGroup",
+		map[string]*llx.RawData{
+			"__id":        llx.StringData(fmt.Sprintf("%s/%s", *parameterGroup.DBClusterParameterGroupArn, *parameterGroup.DBClusterParameterGroupName)),
+			"arn":         llx.StringDataPtr(parameterGroup.DBClusterParameterGroupArn),
+			"family":      llx.StringDataPtr(parameterGroup.DBParameterGroupFamily),
+			"name":        llx.StringDataPtr(parameterGroup.DBClusterParameterGroupName),
+			"description": llx.StringDataPtr(parameterGroup.Description),
+			"region":      llx.StringData(region),
+		})
+	if err != nil {
+		return nil, err
+	}
+	mqlParameterGroup := resource.(*mqlAwsRdsClusterParameterGroup)
+	return mqlParameterGroup, nil
+}
+
+func (a *mqlAwsRds) getParameterGroups(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	for _, region := range regions {
+		regionVal := region
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("rds>getParameterGroup>calling aws with region %s", regionVal)
+			res := []interface{}{}
+			svc := conn.Rds(regionVal)
+			ctx := context.Background()
+
+			var marker *string
+			for {
+				DBParameterGroups, err := svc.DescribeDBParameterGroups(ctx, &rds.DescribeDBParameterGroupsInput{Marker: marker})
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, dbParameterGroup := range DBParameterGroups.DBParameterGroups {
+					mqlParameterGroup, err := newMqlAwsParameterGroup(a.MqlRuntime, region, dbParameterGroup)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlParameterGroup)
+				}
+				if marker == nil {
+					break
+				}
+				marker = DBParameterGroups.Marker
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
 func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := conn.Regions()
@@ -154,7 +291,7 @@ func (a *mqlAwsRds) getPendingMaintenanceActions(conn *connection.AwsConnection)
 					}
 					for _, action := range resp.PendingMaintenanceActionDetails {
 						resourceArn := *resp.ResourceIdentifier
-						mqlPendingAction, err := newMqlAwsPendingMaintenanceAction(a.MqlRuntime, region, resourceArn, action)
+						mqlPendingAction, err := newMqlAwsPendingMaintenanceAction(a.MqlRuntime, resourceArn, action)
 						if err != nil {
 							return nil, err
 						}
@@ -183,6 +320,111 @@ type mqlAwsRdsDbinstanceInternal struct {
 	region       string
 }
 
+func newMqlAwsParameterGroup(runtime *plugin.Runtime, region string, parameterGroup rds_types.DBParameterGroup) (*mqlAwsRdsParameterGroup, error) {
+	resource, err := CreateResource(runtime, "aws.rds.parameterGroup",
+		map[string]*llx.RawData{
+			"__id":        llx.StringData(fmt.Sprintf("%s/%s", *parameterGroup.DBParameterGroupArn, *parameterGroup.DBParameterGroupName)),
+			"arn":         llx.StringDataPtr(parameterGroup.DBParameterGroupArn),
+			"family":      llx.StringDataPtr(parameterGroup.DBParameterGroupFamily),
+			"name":        llx.StringDataPtr(parameterGroup.DBParameterGroupName),
+			"description": llx.StringDataPtr(parameterGroup.Description),
+			"region":      llx.StringData(region),
+		})
+	if err != nil {
+		return nil, err
+	}
+	mqlParameterGroup := resource.(*mqlAwsRdsParameterGroup)
+	return mqlParameterGroup, nil
+}
+
+func (a mqlAwsRdsClusterParameterGroup) parameters() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []interface{}{}
+	svc := conn.Rds(a.Region.Data)
+	ctx := context.Background()
+
+	var marker *string
+	for {
+		parameters, err := svc.DescribeDBClusterParameters(ctx, &rds.DescribeDBClusterParametersInput{
+			DBClusterParameterGroupName: &a.Name.Data,
+			Marker:                      marker,
+		})
+		if err != nil {
+			return nil, err
+		}
+		for _, parameter := range parameters.Parameters {
+			mqlParameter, err := newMqlAwsRdsParameterGroupParameter(a.MqlRuntime, parameter)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlParameter)
+		}
+		if parameters.Marker == nil {
+			break
+		}
+		marker = parameters.Marker
+	}
+	return res, nil
+}
+
+func (a *mqlAwsRdsParameterGroup) parameters() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []interface{}{}
+	svc := conn.Rds(a.Region.Data)
+	ctx := context.Background()
+
+	var marker *string
+	for {
+		parameters, err := svc.DescribeDBParameters(ctx, &rds.DescribeDBParametersInput{
+			DBParameterGroupName: &a.Name.Data,
+			Marker:               marker,
+		})
+		if err != nil {
+			return nil, err
+		}
+		for _, parameter := range parameters.Parameters {
+			mqlParameter, err := newMqlAwsRdsParameterGroupParameter(a.MqlRuntime, parameter)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlParameter)
+		}
+		if parameters.Marker == nil {
+			break
+		}
+		marker = parameters.Marker
+	}
+	return res, nil
+}
+
+func newMqlAwsRdsParameterGroupParameter(runtime *plugin.Runtime, parameter rds_types.Parameter) (*mqlAwsRdsParameterGroupParameter, error) {
+	engineModes := []interface{}{}
+	for _, engineMode := range parameter.SupportedEngineModes {
+		engineModes = append(engineModes, engineMode)
+	}
+
+	resource, err := CreateResource(runtime, "aws.rds.parameterGroup.parameter",
+		map[string]*llx.RawData{
+			"__id":                 llx.StringDataPtr(parameter.ParameterName),
+			"name":                 llx.StringDataPtr(parameter.ParameterName),
+			"value":                llx.StringDataPtr(parameter.ParameterValue),
+			"allowedValues":        llx.StringDataPtr(parameter.AllowedValues),
+			"applyType":            llx.StringDataPtr(parameter.ApplyType),
+			"applyMethod":          llx.StringData(string(parameter.ApplyMethod)),
+			"dataType":             llx.StringDataPtr(parameter.DataType),
+			"description":          llx.StringDataPtr(parameter.Description),
+			"isModifiable":         llx.BoolDataPtr(parameter.IsModifiable),
+			"source":               llx.StringDataPtr(parameter.Source),
+			"minimumEngineVersion": llx.StringDataPtr(parameter.MinimumEngineVersion),
+			"supportedEngineModes": llx.ArrayData(engineModes, types.String),
+		})
+	if err != nil {
+		return nil, err
+	}
+	mqlParameter := resource.(*mqlAwsRdsParameterGroupParameter)
+	return mqlParameter, nil
+}
+
 func newMqlAwsRdsInstance(runtime *plugin.Runtime, region string, accountID string, dbInstance rds_types.DBInstance) (*mqlAwsRdsDbinstance, error) {
 	stringSliceInterface := []interface{}{}
 	for _, logExport := range dbInstance.EnabledCloudwatchLogsExports {
@@ -190,7 +432,7 @@ func newMqlAwsRdsInstance(runtime *plugin.Runtime, region string, accountID stri
 	}
 	sgsArn := []string{}
 	for i := range dbInstance.VpcSecurityGroups {
-		sgsArn = append(sgsArn, NewSecurityGroupArn(region, accountID, convert.ToString(dbInstance.VpcSecurityGroups[i].VpcSecurityGroupId)))
+		sgsArn = append(sgsArn, NewSecurityGroupArn(region, accountID, convert.ToValue(dbInstance.VpcSecurityGroups[i].VpcSecurityGroupId)))
 	}
 	var endpointAddress *string
 	if dbInstance.Endpoint != nil {
@@ -209,6 +451,7 @@ func newMqlAwsRdsInstance(runtime *plugin.Runtime, region string, accountID stri
 			"availabilityZone":              llx.StringDataPtr(dbInstance.AvailabilityZone),
 			"backupRetentionPeriod":         llx.IntDataDefault(dbInstance.BackupRetentionPeriod, 0),
 			"createdTime":                   llx.TimeDataPtr(dbInstance.InstanceCreateTime),
+			"createdAt":                     llx.TimeDataPtr(dbInstance.InstanceCreateTime),
 			"dbInstanceClass":               llx.StringDataPtr(dbInstance.DBInstanceClass),
 			"dbInstanceIdentifier":          llx.StringDataPtr(dbInstance.DBInstanceIdentifier),
 			"deletionProtection":            llx.BoolDataPtr(dbInstance.DeletionProtection),
@@ -251,6 +494,44 @@ func newMqlAwsRdsInstance(runtime *plugin.Runtime, region string, accountID stri
 	mqlDBInstance.cacheSubnets = dbInstance.DBSubnetGroup
 	mqlDBInstance.setSecurityGroupArns(sgsArn)
 	return mqlDBInstance, nil
+}
+
+func initAwsRdsDbcluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
+
+	if args["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch rds db cluster")
+	}
+
+	// load all rds db clusters
+	obj, err := CreateResource(runtime, "aws.rds", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	rds := obj.(*mqlAwsRds)
+
+	rawResources := rds.GetDbClusters()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	arnVal := args["arn"].Value.(string)
+	for i := range rawResources.Data {
+		dbInstance := rawResources.Data[i].(*mqlAwsRdsDbcluster)
+		if dbInstance.Arn.Data == arnVal {
+			return args, dbInstance, nil
+		}
+	}
+	return nil, nil, errors.New("rds db cluster does not exist")
 }
 
 func initAwsRdsDbinstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -297,7 +578,7 @@ func (a *mqlAwsRdsDbinstance) subnets() ([]interface{}, error) {
 		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 		for i := range a.cacheSubnets.Subnets {
 			subnet := a.cacheSubnets.Subnets[i]
-			sub, err := NewResource(a.MqlRuntime, "aws.vpc.subnet", map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(subnetArnPattern, a.region, conn.AccountId(), convert.ToString(subnet.SubnetIdentifier)))})
+			sub, err := NewResource(a.MqlRuntime, "aws.vpc.subnet", map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(subnetArnPattern, a.region, conn.AccountId(), convert.ToValue(subnet.SubnetIdentifier)))})
 			if err != nil {
 				a.Subnets.State = plugin.StateIsNull | plugin.StateIsSet
 				return nil, err
@@ -368,7 +649,7 @@ func (a *mqlAwsRdsDbinstance) pendingMaintenanceActions() ([]interface{}, error)
 			}
 			for _, action := range resp.PendingMaintenanceActionDetails {
 				resourceArn := *resp.ResourceIdentifier
-				mqlDbSnapshot, err := newMqlAwsPendingMaintenanceAction(a.MqlRuntime, region, resourceArn, action)
+				mqlDbSnapshot, err := newMqlAwsPendingMaintenanceAction(a.MqlRuntime, resourceArn, action)
 				if err != nil {
 					return nil, err
 				}
@@ -384,7 +665,7 @@ func (a *mqlAwsRdsDbinstance) pendingMaintenanceActions() ([]interface{}, error)
 }
 
 // newMqlAwsPendingMaintenanceAction creates a new mqlAwsRdsPendingMaintenanceActions from a rds_types.PendingMaintenanceAction
-func newMqlAwsPendingMaintenanceAction(runtime *plugin.Runtime, region string, resourceArn string, maintenanceAction rds_types.PendingMaintenanceAction) (*mqlAwsRdsPendingMaintenanceAction, error) {
+func newMqlAwsPendingMaintenanceAction(runtime *plugin.Runtime, resourceArn string, maintenanceAction rds_types.PendingMaintenanceAction) (*mqlAwsRdsPendingMaintenanceAction, error) {
 	action := ""
 	if maintenanceAction.Action != nil {
 		action = *maintenanceAction.Action
@@ -413,7 +694,7 @@ func rdsTagsToMap(tags []rds_types.Tag) map[string]interface{} {
 	if len(tags) > 0 {
 		for i := range tags {
 			tag := tags[i]
-			tagsMap[convert.ToString(tag.Key)] = convert.ToString(tag.Value)
+			tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
 		}
 	}
 
@@ -509,7 +790,7 @@ func newMqlAwsRdsCluster(runtime *plugin.Runtime, region string, accountID strin
 	for _, instance := range cluster.DBClusterMembers {
 		mqlInstance, err := NewResource(runtime, "aws.rds.dbinstance",
 			map[string]*llx.RawData{
-				"arn": llx.StringData(fmt.Sprintf(rdsInstanceArnPattern, region, accountID, convert.ToString(instance.DBInstanceIdentifier))),
+				"arn": llx.StringData(fmt.Sprintf(rdsInstanceArnPattern, region, accountID, convert.ToValue(instance.DBInstanceIdentifier))),
 			})
 		if err != nil {
 			return nil, err
@@ -518,7 +799,7 @@ func newMqlAwsRdsCluster(runtime *plugin.Runtime, region string, accountID strin
 	}
 	sgsArns := []string{}
 	for i := range cluster.VpcSecurityGroups {
-		sgsArns = append(sgsArns, NewSecurityGroupArn(region, accountID, convert.ToString(cluster.VpcSecurityGroups[i].VpcSecurityGroupId)))
+		sgsArns = append(sgsArns, NewSecurityGroupArn(region, accountID, convert.ToValue(cluster.VpcSecurityGroups[i].VpcSecurityGroupId)))
 	}
 	stringSliceAZs := []interface{}{}
 	for _, zone := range cluster.AvailabilityZones {
@@ -534,11 +815,16 @@ func newMqlAwsRdsCluster(runtime *plugin.Runtime, region string, accountID strin
 
 	resource, err := CreateResource(runtime, "aws.rds.dbcluster",
 		map[string]*llx.RawData{
+			"activityStreamMode":         llx.StringData(string(cluster.ActivityStreamMode)),
+			"activityStreamStatus":       llx.StringData(string(cluster.ActivityStreamStatus)),
 			"arn":                        llx.StringDataPtr(cluster.DBClusterArn),
 			"autoMinorVersionUpgrade":    llx.BoolDataPtr(cluster.AutoMinorVersionUpgrade),
 			"availabilityZones":          llx.ArrayData(stringSliceAZs, types.String),
 			"backupRetentionPeriod":      llx.IntDataDefault(cluster.BackupRetentionPeriod, 0),
+			"certificateAuthority":       llx.StringDataPtr(caIdentifier),
+			"certificateExpiresAt":       llx.TimeDataPtr(certificateExpiration),
 			"clusterDbInstanceClass":     llx.StringDataPtr(cluster.DBClusterInstanceClass),
+			"createdAt":                  llx.TimeDataPtr(cluster.ClusterCreateTime),
 			"createdTime":                llx.TimeDataPtr(cluster.ClusterCreateTime),
 			"deletionProtection":         llx.BoolDataPtr(cluster.DeletionProtection),
 			"endpoint":                   llx.StringDataPtr(cluster.Endpoint),
@@ -546,13 +832,20 @@ func newMqlAwsRdsCluster(runtime *plugin.Runtime, region string, accountID strin
 			"engineLifecycleSupport":     llx.StringDataPtr(cluster.EngineLifecycleSupport),
 			"engineVersion":              llx.StringDataPtr(cluster.EngineVersion),
 			"hostedZoneId":               llx.StringDataPtr(cluster.HostedZoneId),
+			"httpEndpointEnabled":        llx.BoolDataPtr(cluster.HttpEndpointEnabled),
+			"iamDatabaseAuthentication":  llx.BoolDataPtr(cluster.IAMDatabaseAuthenticationEnabled),
 			"id":                         llx.StringDataPtr(cluster.DBClusterIdentifier),
 			"latestRestorableTime":       llx.TimeDataPtr(cluster.LatestRestorableTime),
 			"masterUsername":             llx.StringDataPtr(cluster.MasterUsername),
 			"members":                    llx.ArrayData(mqlRdsDbInstances, types.Resource("aws.rds.dbinstance")),
+			"monitoringInterval":         llx.IntDataPtr(cluster.MonitoringInterval),
 			"multiAZ":                    llx.BoolDataPtr(cluster.MultiAZ),
+			"networkType":                llx.StringDataPtr(cluster.NetworkType),
 			"port":                       llx.IntDataDefault(cluster.Port, -1),
+			"preferredBackupWindow":      llx.StringDataPtr(cluster.PreferredBackupWindow),
+			"preferredMaintenanceWindow": llx.StringDataPtr(cluster.PreferredMaintenanceWindow),
 			"publiclyAccessible":         llx.BoolDataPtr(cluster.PubliclyAccessible),
+			"parameterGroupName":         llx.StringDataPtr(cluster.DBClusterParameterGroup),
 			"region":                     llx.StringData(region),
 			"status":                     llx.StringDataPtr(cluster.Status),
 			"storageAllocated":           llx.IntDataDefault(cluster.AllocatedStorage, 0),
@@ -560,15 +853,6 @@ func newMqlAwsRdsCluster(runtime *plugin.Runtime, region string, accountID strin
 			"storageIops":                llx.IntDataDefault(cluster.Iops, 0),
 			"storageType":                llx.StringDataPtr(cluster.StorageType),
 			"tags":                       llx.MapData(rdsTagsToMap(cluster.TagList), types.String),
-			"certificateExpiresAt":       llx.TimeDataPtr(certificateExpiration),
-			"certificateAuthority":       llx.StringDataPtr(caIdentifier),
-			"iamDatabaseAuthentication":  llx.BoolDataPtr(cluster.IAMDatabaseAuthenticationEnabled),
-			"activityStreamMode":         llx.StringData(string(cluster.ActivityStreamMode)),
-			"activityStreamStatus":       llx.StringData(string(cluster.ActivityStreamStatus)),
-			"monitoringInterval":         llx.IntDataPtr(cluster.MonitoringInterval),
-			"networkType":                llx.StringDataPtr(cluster.NetworkType),
-			"preferredMaintenanceWindow": llx.StringDataPtr(cluster.PreferredMaintenanceWindow),
-			"preferredBackupWindow":      llx.StringDataPtr(cluster.PreferredBackupWindow),
 		})
 	if err != nil {
 		return nil, err

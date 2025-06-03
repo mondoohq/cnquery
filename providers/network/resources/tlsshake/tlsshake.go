@@ -46,7 +46,11 @@ const DefaultTimeout = 2 * time.Second
 
 var ErrFailedToConnect = errors.New("failed to connect")
 
+var ErrFailedToWrite = errors.New("failed to write")
+
 var ErrFailedToTlsResponse = errors.New("failed to get a TLS response")
+
+var ErrTimeout = errors.New("timeout failure")
 
 func DefaultScanConfig() ScanConfig {
 	return ScanConfig{
@@ -231,8 +235,15 @@ func (s *Tester) testTLS(proto string, target string, conf *ScanConfig) (int, er
 	if err != nil {
 		return 0, multierr.Wrap(err, "failed to connect to target")
 	}
+	if err := conn.SetReadDeadline(time.Now().Add(5 * time.Second)); err != nil {
+		return 0, err
+	}
 	defer conn.Close()
 
+	return s.testTLSWithConn(conn, conf)
+}
+
+func (s *Tester) testTLSWithConn(conn net.Conn, conf *ScanConfig) (int, error) {
 	msg, cipherCount, err := s.helloTLSMsg(conf)
 	if err != nil {
 		return 0, err
@@ -240,7 +251,7 @@ func (s *Tester) testTLS(proto string, target string, conf *ScanConfig) (int, er
 
 	_, err = conn.Write(msg)
 	if err != nil {
-		return 0, multierr.Wrap(err, "failed to send TLS hello")
+		return 0, ErrFailedToWrite
 	}
 
 	success, err := s.parseHello(conn, conf)
@@ -487,26 +498,26 @@ func (s *Tester) parseCertificate(data []byte, conf *ScanConfig) error {
 //     If we do, we might as well be done at this stage, no need to read more
 //   - There are a few other responses that also signal that we are done
 //     processing handshake responses, like ServerHelloDone or Finished
-func (s *Tester) parseHandshake(data []byte, version string, conf *ScanConfig) (bool, error) {
+func (s *Tester) parseHandshake(data []byte, version string, conf *ScanConfig) (bool, int, error) {
 	handshakeType := data[0]
 	handshakeLen := bytes3int(data[1:4])
 
 	switch handshakeType {
 	case HANDSHAKE_TYPE_ServerHello:
 		err := s.parseServerHello(data[4:4+handshakeLen], version, conf)
-		return false, err
+		return false, handshakeLen, err
 	case HANDSHAKE_TYPE_Certificate:
-		return true, s.parseCertificate(data[4:4+handshakeLen], conf)
+		return true, handshakeLen, s.parseCertificate(data[4:4+handshakeLen], conf)
 	case HANDSHAKE_TYPE_ServerKeyExchange:
-		return false, nil
+		return false, handshakeLen, nil
 	case HANDSHAKE_TYPE_ServerHelloDone:
-		return true, nil
+		return true, handshakeLen, nil
 	case HANDSHAKE_TYPE_Finished:
-		return true, nil
+		return true, handshakeLen, nil
 	default:
 		typ := "0x" + hex.EncodeToString([]byte{handshakeType})
 		s.addError("Unhandled TLS/SSL handshake: '" + typ + "'")
-		return false, nil
+		return false, handshakeLen, nil
 	}
 }
 
@@ -538,6 +549,8 @@ func (s *Tester) parseHello(conn net.Conn, conf *ScanConfig) (bool, error) {
 					s.sync.Unlock()
 				}
 				return false, nil
+			} else if strings.Contains(err.Error(), "i/o timeout") {
+				return false, ErrTimeout
 			}
 			return false, err
 		}
@@ -572,9 +585,21 @@ func (s *Tester) parseHello(conn net.Conn, conf *ScanConfig) (bool, error) {
 			}
 
 		case CONTENT_TYPE_Handshake:
-			handshakeDone, err := s.parseHandshake(msg, headerVersion, conf)
-			if err != nil {
-				return false, err
+			var handshakeDone bool
+			var handshakeLen int
+			for !handshakeDone {
+				handshakeDone, handshakeLen, err = s.parseHandshake(msg, headerVersion, conf)
+				if err != nil {
+					return false, err
+				}
+				if !handshakeDone {
+					// If we are at the end of the msg, then we break out of the loop
+					if handshakeLen+4 >= len(msg) {
+						break
+					}
+					// this is the handshake type (1) and the length (3)
+					msg = msg[handshakeLen+4:]
+				}
 			}
 			success = true
 			done = handshakeDone

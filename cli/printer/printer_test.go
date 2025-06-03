@@ -176,6 +176,20 @@ func TestPrinter(t *testing.T) {
 					"]",
 			},
 		},
+		{
+			"ip(\"\")",
+			"", // ignore
+			[]string{
+				"ip: null",
+			},
+		},
+		{
+			"ip(\"1.2.3.4\")",
+			"", // ignore
+			[]string{
+				"ip: 1.2.3.4",
+			},
+		},
 	})
 }
 

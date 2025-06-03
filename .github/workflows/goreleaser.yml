@@ -120,7 +120,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
-          version: latest
+          version: v2.5.1
           args: release --clean --timeout 120m
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -161,16 +161,18 @@ jobs:
             cat $f
           done
 
-      - name: Publish Release to releases.mondoo.com
+      # At this point we know the docker container is published.
+      # We can now trigger the cnquery bump in cnspec, which will also trigger the release of cnspec.
+      # The docker container is a pre-requisite for cnspec release.
+      - name: Trigger cnquery bump in cnspec
         if: ${{ ! steps.skip-publish.outputs.skip-publish }}
         uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.RELEASR_ACTION_TOKEN }}
-          repository: "mondoohq/releasr"
-          event-type: publish-release
+          repository: "mondoohq/cnspec"
+          event-type: update-cnquery
           client-payload: '{
-              "repository": "${{ github.event.repository.name }}",
-              "version":  "${{  github.ref_name }}"
+              "version": "${{  github.ref_name }}"
             }'
 
       - name: Cleanup

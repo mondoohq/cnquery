@@ -1,0 +1,29 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
+syntax = "proto3";
+
+package cnquery.etl.v1;
+
+option go_package = "go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream/etl";
+
+// VulnerabilityExchange are used for sharing information about vulnerabilities
+// across systems. Cnquery uses this format as a main mean to store detected
+// vulnerability information. The same document is generated independently from
+// the source.
+message VulnerabilityExchange {
+  // Required. CVE or Advisory ID
+  string id = 2;
+  // Required. Summary of the vulnerability
+  string summary = 4;
+  // Required. Source of the vulnerability
+  Source source = 7;
+}
+
+// Source is used to identify the source of the vulnerability.
+message Source {
+  // Required. Name of the source
+  string name = 1;
+  // Optional. URL of the source
+  string url = 2;
+}

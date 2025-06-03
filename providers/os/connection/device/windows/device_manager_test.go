@@ -18,6 +18,14 @@ func TestValidateOpts(t *testing.T) {
 		require.NoError(t, err)
 	})
 
+	t.Run("valid (only LUNS)", func(t *testing.T) {
+		opts := map[string]string{
+			LunsOption: "0,1,2",
+		}
+		err := validateOpts(opts)
+		require.NoError(t, err)
+	})
+
 	t.Run("valid (only serial number)", func(t *testing.T) {
 		opts := map[string]string{
 			SerialNumberOption: "0",
@@ -29,7 +37,7 @@ func TestValidateOpts(t *testing.T) {
 	t.Run("invalid (both LUN and serial number are provided", func(t *testing.T) {
 		opts := map[string]string{
 			SerialNumberOption: "1234",
-			LunOption:          "1",
+			LunsOption:         "1",
 		}
 		err := validateOpts(opts)
 		require.Error(t, err)

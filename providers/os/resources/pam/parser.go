@@ -37,7 +37,7 @@ func ParseLine(line string) (*PamLine, error) {
 	}
 
 	if len(fields) < 3 {
-		return &PamLine{}, fmt.Errorf("Invalid pam entry" + line)
+		return &PamLine{}, fmt.Errorf("Invalid pam entry: %s", line)
 	}
 
 	// parse modules

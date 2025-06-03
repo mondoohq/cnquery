@@ -26,6 +26,18 @@ func init() {
 			// to override args, implement: initGcpFolders(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpFolders,
 		},
+		"gcp.project.redisService": {
+			// to override args, implement: initGcpProjectRedisService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectRedisService,
+		},
+		"gcp.project.redisService.instance": {
+			// to override args, implement: initGcpProjectRedisServiceInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectRedisServiceInstance,
+		},
+		"gcp.project.redisService.instance.nodeInfo": {
+			// to override args, implement: initGcpProjectRedisServiceInstanceNodeInfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectRedisServiceInstanceNodeInfo,
+		},
 		"gcp.folder": {
 			Init: initGcpFolder,
 			Create: createGcpFolder,
@@ -138,6 +150,18 @@ func init() {
 			Init: initGcpProjectStorageServiceBucket,
 			Create: createGcpProjectStorageServiceBucket,
 		},
+		"gcp.project.storageService.bucket.lifecycleRule": {
+			// to override args, implement: initGcpProjectStorageServiceBucketLifecycleRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectStorageServiceBucketLifecycleRule,
+		},
+		"gcp.project.storageService.bucket.lifecycleRuleAction": {
+			// to override args, implement: initGcpProjectStorageServiceBucketLifecycleRuleAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectStorageServiceBucketLifecycleRuleAction,
+		},
+		"gcp.project.storageService.bucket.lifecycleRuleCondition": {
+			// to override args, implement: initGcpProjectStorageServiceBucketLifecycleRuleCondition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectStorageServiceBucketLifecycleRuleCondition,
+		},
 		"gcp.project.sqlService": {
 			// to override args, implement: initGcpProjectSqlService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectSqlService,
@@ -241,6 +265,10 @@ func init() {
 		"gcp.project.gkeService.cluster.nodepool": {
 			// to override args, implement: initGcpProjectGkeServiceClusterNodepool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectGkeServiceClusterNodepool,
+		},
+		"gcp.project.gkeService.cluster.nodepool.autoscaling": {
+			// to override args, implement: initGcpProjectGkeServiceClusterNodepoolAutoscaling(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectGkeServiceClusterNodepoolAutoscaling,
 		},
 		"gcp.project.gkeService.cluster.nodepool.networkConfig": {
 			// to override args, implement: initGcpProjectGkeServiceClusterNodepoolNetworkConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -619,6 +647,102 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.folders.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpFolders).GetList()).ToDataRes(types.Array(types.Resource("gcp.folder")))
 	},
+	"gcp.project.redisService.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisService).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.instances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisService).GetInstances()).ToDataRes(types.Array(types.Resource("gcp.project.redisService.instance")))
+	},
+	"gcp.project.redisService.instance.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.instance.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.instance.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.instance.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.redisService.instance.locationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetLocationId()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.instance.redisVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetRedisVersion()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.instance.reservedIpRange": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetReservedIpRange()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.instance.secondaryIpRange": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetSecondaryIpRange()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.instance.host": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetHost()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.instance.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetPort()).ToDataRes(types.Int)
+	},
+	"gcp.project.redisService.instance.currentLocationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetCurrentLocationId()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.instance.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.redisService.instance.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.instance.statusMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetStatusMessage()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.instance.redisConfigs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetRedisConfigs()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.redisService.instance.memorySizeGb": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetMemorySizeGb()).ToDataRes(types.Int)
+	},
+	"gcp.project.redisService.instance.AuthorizedNetwork": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetAuthorizedNetwork()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.instance.persistenceIamIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetPersistenceIamIdentity()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.instance.connectMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetConnectMode()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.instance.authEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetAuthEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.redisService.instance.replicaCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetReplicaCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.redisService.instance.nodes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetNodes()).ToDataRes(types.Array(types.Resource("gcp.project.redisService.instance.nodeInfo")))
+	},
+	"gcp.project.redisService.instance.readEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetReadEndpoint()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.instance.readEndpointPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetReadEndpointPort()).ToDataRes(types.Int)
+	},
+	"gcp.project.redisService.instance.customerManagedKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetCustomerManagedKey()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.instance.maintenanceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetMaintenanceVersion()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.instance.availableMaintenanceVersions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetAvailableMaintenanceVersions()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.redisService.instance.nodeInfo.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstanceNodeInfo).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.instance.nodeInfo.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstanceNodeInfo).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.instance.nodeInfo.zone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstanceNodeInfo).GetZone()).ToDataRes(types.String)
+	},
 	"gcp.folder.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpFolder).GetId()).ToDataRes(types.String)
 	},
@@ -741,6 +865,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.binaryAuthorization": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetBinaryAuthorization()).ToDataRes(types.Resource("gcp.project.binaryAuthorizationControl"))
+	},
+	"gcp.project.redis": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetRedis()).ToDataRes(types.Resource("gcp.project.redisService"))
 	},
 	"gcp.service.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpService).GetProjectId()).ToDataRes(types.String)
@@ -1783,6 +1910,60 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.storageService.bucket.retentionPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectStorageServiceBucket).GetRetentionPolicy()).ToDataRes(types.Dict)
 	},
+	"gcp.project.storageService.bucket.encryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucket).GetEncryption()).ToDataRes(types.Dict)
+	},
+	"gcp.project.storageService.bucket.lifecycle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucket).GetLifecycle()).ToDataRes(types.Array(types.Resource("gcp.project.storageService.bucket.lifecycleRule")))
+	},
+	"gcp.project.storageService.bucket.lifecycleRule.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRule).GetAction()).ToDataRes(types.Resource("gcp.project.storageService.bucket.lifecycleRuleAction"))
+	},
+	"gcp.project.storageService.bucket.lifecycleRule.condition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRule).GetCondition()).ToDataRes(types.Resource("gcp.project.storageService.bucket.lifecycleRuleCondition"))
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleAction.storageClass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleAction).GetStorageClass()).ToDataRes(types.String)
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleAction.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleAction).GetType()).ToDataRes(types.String)
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.age": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).GetAge()).ToDataRes(types.Int)
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.createdBefore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).GetCreatedBefore()).ToDataRes(types.String)
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.customTimeBefore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).GetCustomTimeBefore()).ToDataRes(types.String)
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.daysSinceCustomTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).GetDaysSinceCustomTime()).ToDataRes(types.Int)
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.daysSinceNoncurrentTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).GetDaysSinceNoncurrentTime()).ToDataRes(types.Int)
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.isLive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).GetIsLive()).ToDataRes(types.Bool)
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.matchesPattern": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).GetMatchesPattern()).ToDataRes(types.String)
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.matchesPrefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).GetMatchesPrefix()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.matchesStorageClass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).GetMatchesStorageClass()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.matchesSuffix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).GetMatchesSuffix()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.noncurrentTimeBefore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).GetNoncurrentTimeBefore()).ToDataRes(types.String)
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.numNewerVersions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).GetNumNewerVersions()).ToDataRes(types.Int)
+	},
 	"gcp.project.sqlService.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlService).GetProjectId()).ToDataRes(types.String)
 	},
@@ -2482,6 +2663,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.gkeService.cluster.networkPolicyConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceCluster).GetNetworkPolicyConfig()).ToDataRes(types.Dict)
 	},
+	"gcp.project.gkeService.cluster.releaseChannel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetReleaseChannel()).ToDataRes(types.String)
+	},
 	"gcp.project.gkeService.cluster.addonsConfig.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GetId()).ToDataRes(types.String)
 	},
@@ -2634,6 +2818,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.gkeService.cluster.nodepool.management": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceClusterNodepool).GetManagement()).ToDataRes(types.Dict)
+	},
+	"gcp.project.gkeService.cluster.nodepool.autoscaling": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterNodepool).GetAutoscaling()).ToDataRes(types.Resource("gcp.project.gkeService.cluster.nodepool.autoscaling"))
+	},
+	"gcp.project.gkeService.cluster.nodepool.autoscaling.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.gkeService.cluster.nodepool.autoscaling.minNodeCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling).GetMinNodeCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.gkeService.cluster.nodepool.autoscaling.maxNodeCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling).GetMaxNodeCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.gkeService.cluster.nodepool.autoscaling.autoprovisioned": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling).GetAutoprovisioned()).ToDataRes(types.Bool)
+	},
+	"gcp.project.gkeService.cluster.nodepool.autoscaling.totalMinNodeCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling).GetTotalMinNodeCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.gkeService.cluster.nodepool.autoscaling.totalMaxNodeCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling).GetTotalMaxNodeCount()).ToDataRes(types.Int)
 	},
 	"gcp.project.gkeService.cluster.nodepool.networkConfig.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceClusterNodepoolNetworkConfig).GetId()).ToDataRes(types.String)
@@ -4163,6 +4368,146 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlGcpFolders).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"gcp.project.redisService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGcpProjectRedisService).__id, ok = v.Value.(string)
+			return
+		},
+	"gcp.project.redisService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisService).Instances, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGcpProjectRedisServiceInstance).__id, ok = v.Value.(string)
+			return
+		},
+	"gcp.project.redisService.instance.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.locationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).LocationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.redisVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).RedisVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.reservedIpRange": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).ReservedIpRange, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.secondaryIpRange": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).SecondaryIpRange, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.host": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).Host, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.currentLocationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).CurrentLocationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.statusMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).StatusMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.redisConfigs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).RedisConfigs, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.memorySizeGb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).MemorySizeGb, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.AuthorizedNetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).AuthorizedNetwork, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.persistenceIamIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).PersistenceIamIdentity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.connectMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).ConnectMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.authEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).AuthEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.replicaCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).ReplicaCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.nodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).Nodes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.readEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).ReadEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.readEndpointPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).ReadEndpointPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.customerManagedKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).CustomerManagedKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.maintenanceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).MaintenanceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.availableMaintenanceVersions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).AvailableMaintenanceVersions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.nodeInfo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGcpProjectRedisServiceInstanceNodeInfo).__id, ok = v.Value.(string)
+			return
+		},
+	"gcp.project.redisService.instance.nodeInfo.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstanceNodeInfo).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.nodeInfo.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstanceNodeInfo).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.nodeInfo.zone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstanceNodeInfo).Zone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.folder.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlGcpFolder).__id, ok = v.Value.(string)
 			return
@@ -4337,6 +4682,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"gcp.project.binaryAuthorization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProject).BinaryAuthorization, ok = plugin.RawToTValue[*mqlGcpProjectBinaryAuthorizationControl](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redis": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).Redis, ok = plugin.RawToTValue[*mqlGcpProjectRedisService](v.Value, v.Error)
 		return
 	},
 	"gcp.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5827,6 +6176,90 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlGcpProjectStorageServiceBucket).RetentionPolicy, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
+	"gcp.project.storageService.bucket.encryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucket).Encryption, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.lifecycle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucket).Lifecycle, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.lifecycleRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGcpProjectStorageServiceBucketLifecycleRule).__id, ok = v.Value.(string)
+			return
+		},
+	"gcp.project.storageService.bucket.lifecycleRule.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketLifecycleRule).Action, ok = plugin.RawToTValue[*mqlGcpProjectStorageServiceBucketLifecycleRuleAction](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.lifecycleRule.condition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketLifecycleRule).Condition, ok = plugin.RawToTValue[*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleAction.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleAction).__id, ok = v.Value.(string)
+			return
+		},
+	"gcp.project.storageService.bucket.lifecycleRuleAction.storageClass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleAction).StorageClass, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleAction.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleAction).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).__id, ok = v.Value.(string)
+			return
+		},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.age": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).Age, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.createdBefore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).CreatedBefore, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.customTimeBefore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).CustomTimeBefore, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.daysSinceCustomTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).DaysSinceCustomTime, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.daysSinceNoncurrentTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).DaysSinceNoncurrentTime, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.isLive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).IsLive, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.matchesPattern": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).MatchesPattern, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.matchesPrefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).MatchesPrefix, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.matchesStorageClass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).MatchesStorageClass, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.matchesSuffix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).MatchesSuffix, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.noncurrentTimeBefore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).NoncurrentTimeBefore, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.lifecycleRuleCondition.numNewerVersions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).NumNewerVersions, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"gcp.project.sqlService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlGcpProjectSqlService).__id, ok = v.Value.(string)
 			return
@@ -6847,6 +7280,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlGcpProjectGkeServiceCluster).NetworkPolicyConfig, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
+	"gcp.project.gkeService.cluster.releaseChannel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).ReleaseChannel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.gkeService.cluster.addonsConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).__id, ok = v.Value.(string)
 			return
@@ -7065,6 +7502,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"gcp.project.gkeService.cluster.nodepool.management": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceClusterNodepool).Management, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.nodepool.autoscaling": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterNodepool).Autoscaling, ok = plugin.RawToTValue[*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.nodepool.autoscaling.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling).__id, ok = v.Value.(string)
+			return
+		},
+	"gcp.project.gkeService.cluster.nodepool.autoscaling.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.nodepool.autoscaling.minNodeCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling).MinNodeCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.nodepool.autoscaling.maxNodeCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling).MaxNodeCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.nodepool.autoscaling.autoprovisioned": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling).Autoprovisioned, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.nodepool.autoscaling.totalMinNodeCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling).TotalMinNodeCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.nodepool.autoscaling.totalMaxNodeCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling).TotalMaxNodeCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"gcp.project.gkeService.cluster.nodepool.networkConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9540,6 +10009,310 @@ func (c *mqlGcpFolders) GetList() *plugin.TValue[[]interface{}] {
 	})
 }
 
+// mqlGcpProjectRedisService for the gcp.project.redisService resource
+type mqlGcpProjectRedisService struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlGcpProjectRedisServiceInternal it will be used here
+	ProjectId plugin.TValue[string]
+	Instances plugin.TValue[[]interface{}]
+}
+
+// createGcpProjectRedisService creates a new instance of this resource
+func createGcpProjectRedisService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectRedisService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.redisService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectRedisService) MqlName() string {
+	return "gcp.project.redisService"
+}
+
+func (c *mqlGcpProjectRedisService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectRedisService) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectRedisService) GetInstances() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Instances, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.redisService", c.__id, "instances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.instances()
+	})
+}
+
+// mqlGcpProjectRedisServiceInstance for the gcp.project.redisService.instance resource
+type mqlGcpProjectRedisServiceInstance struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlGcpProjectRedisServiceInstanceInternal it will be used here
+	Name plugin.TValue[string]
+	ProjectId plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	Labels plugin.TValue[map[string]interface{}]
+	LocationId plugin.TValue[string]
+	RedisVersion plugin.TValue[string]
+	ReservedIpRange plugin.TValue[string]
+	SecondaryIpRange plugin.TValue[string]
+	Host plugin.TValue[string]
+	Port plugin.TValue[int64]
+	CurrentLocationId plugin.TValue[string]
+	CreateTime plugin.TValue[*time.Time]
+	State plugin.TValue[string]
+	StatusMessage plugin.TValue[string]
+	RedisConfigs plugin.TValue[map[string]interface{}]
+	MemorySizeGb plugin.TValue[int64]
+	AuthorizedNetwork plugin.TValue[string]
+	PersistenceIamIdentity plugin.TValue[string]
+	ConnectMode plugin.TValue[string]
+	AuthEnabled plugin.TValue[bool]
+	ReplicaCount plugin.TValue[int64]
+	Nodes plugin.TValue[[]interface{}]
+	ReadEndpoint plugin.TValue[string]
+	ReadEndpointPort plugin.TValue[int64]
+	CustomerManagedKey plugin.TValue[string]
+	MaintenanceVersion plugin.TValue[string]
+	AvailableMaintenanceVersions plugin.TValue[[]interface{}]
+}
+
+// createGcpProjectRedisServiceInstance creates a new instance of this resource
+func createGcpProjectRedisServiceInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectRedisServiceInstance{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.redisService.instance", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) MqlName() string {
+	return "gcp.project.redisService.instance"
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetLabels() *plugin.TValue[map[string]interface{}] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetLocationId() *plugin.TValue[string] {
+	return &c.LocationId
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetRedisVersion() *plugin.TValue[string] {
+	return &c.RedisVersion
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetReservedIpRange() *plugin.TValue[string] {
+	return &c.ReservedIpRange
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetSecondaryIpRange() *plugin.TValue[string] {
+	return &c.SecondaryIpRange
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetHost() *plugin.TValue[string] {
+	return &c.Host
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetCurrentLocationId() *plugin.TValue[string] {
+	return &c.CurrentLocationId
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetStatusMessage() *plugin.TValue[string] {
+	return &c.StatusMessage
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetRedisConfigs() *plugin.TValue[map[string]interface{}] {
+	return &c.RedisConfigs
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetMemorySizeGb() *plugin.TValue[int64] {
+	return &c.MemorySizeGb
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetAuthorizedNetwork() *plugin.TValue[string] {
+	return &c.AuthorizedNetwork
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetPersistenceIamIdentity() *plugin.TValue[string] {
+	return &c.PersistenceIamIdentity
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetConnectMode() *plugin.TValue[string] {
+	return &c.ConnectMode
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetAuthEnabled() *plugin.TValue[bool] {
+	return &c.AuthEnabled
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetReplicaCount() *plugin.TValue[int64] {
+	return &c.ReplicaCount
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetNodes() *plugin.TValue[[]interface{}] {
+	return &c.Nodes
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetReadEndpoint() *plugin.TValue[string] {
+	return &c.ReadEndpoint
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetReadEndpointPort() *plugin.TValue[int64] {
+	return &c.ReadEndpointPort
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetCustomerManagedKey() *plugin.TValue[string] {
+	return &c.CustomerManagedKey
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetMaintenanceVersion() *plugin.TValue[string] {
+	return &c.MaintenanceVersion
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetAvailableMaintenanceVersions() *plugin.TValue[[]interface{}] {
+	return &c.AvailableMaintenanceVersions
+}
+
+// mqlGcpProjectRedisServiceInstanceNodeInfo for the gcp.project.redisService.instance.nodeInfo resource
+type mqlGcpProjectRedisServiceInstanceNodeInfo struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlGcpProjectRedisServiceInstanceNodeInfoInternal it will be used here
+	ProjectId plugin.TValue[string]
+	Id plugin.TValue[string]
+	Zone plugin.TValue[string]
+}
+
+// createGcpProjectRedisServiceInstanceNodeInfo creates a new instance of this resource
+func createGcpProjectRedisServiceInstanceNodeInfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectRedisServiceInstanceNodeInfo{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.redisService.instance.nodeInfo", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectRedisServiceInstanceNodeInfo) MqlName() string {
+	return "gcp.project.redisService.instance.nodeInfo"
+}
+
+func (c *mqlGcpProjectRedisServiceInstanceNodeInfo) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectRedisServiceInstanceNodeInfo) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectRedisServiceInstanceNodeInfo) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectRedisServiceInstanceNodeInfo) GetZone() *plugin.TValue[string] {
+	return &c.Zone
+}
+
 // mqlGcpFolder for the gcp.folder resource
 type mqlGcpFolder struct {
 	MqlRuntime *plugin.Runtime
@@ -9766,6 +10539,7 @@ type mqlGcpProject struct {
 	Storage plugin.TValue[*mqlGcpProjectStorageService]
 	Monitoring plugin.TValue[*mqlGcpProjectMonitoringService]
 	BinaryAuthorization plugin.TValue[*mqlGcpProjectBinaryAuthorizationControl]
+	Redis plugin.TValue[*mqlGcpProjectRedisService]
 }
 
 // createGcpProject creates a new instance of this resource
@@ -10190,6 +10964,22 @@ func (c *mqlGcpProject) GetBinaryAuthorization() *plugin.TValue[*mqlGcpProjectBi
 		}
 
 		return c.binaryAuthorization()
+	})
+}
+
+func (c *mqlGcpProject) GetRedis() *plugin.TValue[*mqlGcpProjectRedisService] {
+	return plugin.GetOrCompute[*mqlGcpProjectRedisService](&c.Redis, func() (*mqlGcpProjectRedisService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project", c.__id, "redis")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectRedisService), nil
+			}
+		}
+
+		return c.redis()
 	})
 }
 
@@ -13217,6 +14007,8 @@ type mqlGcpProjectStorageServiceBucket struct {
 	IamPolicy plugin.TValue[[]interface{}]
 	IamConfiguration plugin.TValue[interface{}]
 	RetentionPolicy plugin.TValue[interface{}]
+	Encryption plugin.TValue[interface{}]
+	Lifecycle plugin.TValue[[]interface{}]
 }
 
 // createGcpProjectStorageServiceBucket creates a new instance of this resource
@@ -13318,6 +14110,211 @@ func (c *mqlGcpProjectStorageServiceBucket) GetIamConfiguration() *plugin.TValue
 
 func (c *mqlGcpProjectStorageServiceBucket) GetRetentionPolicy() *plugin.TValue[interface{}] {
 	return &c.RetentionPolicy
+}
+
+func (c *mqlGcpProjectStorageServiceBucket) GetEncryption() *plugin.TValue[interface{}] {
+	return &c.Encryption
+}
+
+func (c *mqlGcpProjectStorageServiceBucket) GetLifecycle() *plugin.TValue[[]interface{}] {
+	return &c.Lifecycle
+}
+
+// mqlGcpProjectStorageServiceBucketLifecycleRule for the gcp.project.storageService.bucket.lifecycleRule resource
+type mqlGcpProjectStorageServiceBucketLifecycleRule struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlGcpProjectStorageServiceBucketLifecycleRuleInternal it will be used here
+	Action plugin.TValue[*mqlGcpProjectStorageServiceBucketLifecycleRuleAction]
+	Condition plugin.TValue[*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition]
+}
+
+// createGcpProjectStorageServiceBucketLifecycleRule creates a new instance of this resource
+func createGcpProjectStorageServiceBucketLifecycleRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectStorageServiceBucketLifecycleRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.storageService.bucket.lifecycleRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRule) MqlName() string {
+	return "gcp.project.storageService.bucket.lifecycleRule"
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRule) GetAction() *plugin.TValue[*mqlGcpProjectStorageServiceBucketLifecycleRuleAction] {
+	return &c.Action
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRule) GetCondition() *plugin.TValue[*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition] {
+	return &c.Condition
+}
+
+// mqlGcpProjectStorageServiceBucketLifecycleRuleAction for the gcp.project.storageService.bucket.lifecycleRuleAction resource
+type mqlGcpProjectStorageServiceBucketLifecycleRuleAction struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlGcpProjectStorageServiceBucketLifecycleRuleActionInternal it will be used here
+	StorageClass plugin.TValue[string]
+	Type plugin.TValue[string]
+}
+
+// createGcpProjectStorageServiceBucketLifecycleRuleAction creates a new instance of this resource
+func createGcpProjectStorageServiceBucketLifecycleRuleAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectStorageServiceBucketLifecycleRuleAction{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.storageService.bucket.lifecycleRuleAction", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleAction) MqlName() string {
+	return "gcp.project.storageService.bucket.lifecycleRuleAction"
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleAction) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleAction) GetStorageClass() *plugin.TValue[string] {
+	return &c.StorageClass
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleAction) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+// mqlGcpProjectStorageServiceBucketLifecycleRuleCondition for the gcp.project.storageService.bucket.lifecycleRuleCondition resource
+type mqlGcpProjectStorageServiceBucketLifecycleRuleCondition struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlGcpProjectStorageServiceBucketLifecycleRuleConditionInternal it will be used here
+	Age plugin.TValue[int64]
+	CreatedBefore plugin.TValue[string]
+	CustomTimeBefore plugin.TValue[string]
+	DaysSinceCustomTime plugin.TValue[int64]
+	DaysSinceNoncurrentTime plugin.TValue[int64]
+	IsLive plugin.TValue[bool]
+	MatchesPattern plugin.TValue[string]
+	MatchesPrefix plugin.TValue[[]interface{}]
+	MatchesStorageClass plugin.TValue[[]interface{}]
+	MatchesSuffix plugin.TValue[[]interface{}]
+	NoncurrentTimeBefore plugin.TValue[string]
+	NumNewerVersions plugin.TValue[int64]
+}
+
+// createGcpProjectStorageServiceBucketLifecycleRuleCondition creates a new instance of this resource
+func createGcpProjectStorageServiceBucketLifecycleRuleCondition(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectStorageServiceBucketLifecycleRuleCondition{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.storageService.bucket.lifecycleRuleCondition", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleCondition) MqlName() string {
+	return "gcp.project.storageService.bucket.lifecycleRuleCondition"
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleCondition) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleCondition) GetAge() *plugin.TValue[int64] {
+	return &c.Age
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleCondition) GetCreatedBefore() *plugin.TValue[string] {
+	return &c.CreatedBefore
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleCondition) GetCustomTimeBefore() *plugin.TValue[string] {
+	return &c.CustomTimeBefore
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleCondition) GetDaysSinceCustomTime() *plugin.TValue[int64] {
+	return &c.DaysSinceCustomTime
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleCondition) GetDaysSinceNoncurrentTime() *plugin.TValue[int64] {
+	return &c.DaysSinceNoncurrentTime
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleCondition) GetIsLive() *plugin.TValue[bool] {
+	return &c.IsLive
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleCondition) GetMatchesPattern() *plugin.TValue[string] {
+	return &c.MatchesPattern
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleCondition) GetMatchesPrefix() *plugin.TValue[[]interface{}] {
+	return &c.MatchesPrefix
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleCondition) GetMatchesStorageClass() *plugin.TValue[[]interface{}] {
+	return &c.MatchesStorageClass
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleCondition) GetMatchesSuffix() *plugin.TValue[[]interface{}] {
+	return &c.MatchesSuffix
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleCondition) GetNoncurrentTimeBefore() *plugin.TValue[string] {
+	return &c.NoncurrentTimeBefore
+}
+
+func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleCondition) GetNumNewerVersions() *plugin.TValue[int64] {
+	return &c.NumNewerVersions
 }
 
 // mqlGcpProjectSqlService for the gcp.project.sqlService resource
@@ -15398,6 +16395,7 @@ type mqlGcpProjectGkeServiceCluster struct {
 	ConfidentialNodesConfig plugin.TValue[interface{}]
 	IdentityServiceConfig plugin.TValue[interface{}]
 	NetworkPolicyConfig plugin.TValue[interface{}]
+	ReleaseChannel plugin.TValue[string]
 }
 
 // createGcpProjectGkeServiceCluster creates a new instance of this resource
@@ -15583,6 +16581,10 @@ func (c *mqlGcpProjectGkeServiceCluster) GetIdentityServiceConfig() *plugin.TVal
 
 func (c *mqlGcpProjectGkeServiceCluster) GetNetworkPolicyConfig() *plugin.TValue[interface{}] {
 	return &c.NetworkPolicyConfig
+}
+
+func (c *mqlGcpProjectGkeServiceCluster) GetReleaseChannel() *plugin.TValue[string] {
+	return &c.ReleaseChannel
 }
 
 // mqlGcpProjectGkeServiceClusterAddonsConfig for the gcp.project.gkeService.cluster.addonsConfig resource
@@ -15961,6 +16963,7 @@ type mqlGcpProjectGkeServiceClusterNodepool struct {
 	InstanceGroupUrls plugin.TValue[[]interface{}]
 	Status plugin.TValue[string]
 	Management plugin.TValue[interface{}]
+	Autoscaling plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling]
 }
 
 // createGcpProjectGkeServiceClusterNodepool creates a new instance of this resource
@@ -16038,6 +17041,79 @@ func (c *mqlGcpProjectGkeServiceClusterNodepool) GetStatus() *plugin.TValue[stri
 
 func (c *mqlGcpProjectGkeServiceClusterNodepool) GetManagement() *plugin.TValue[interface{}] {
 	return &c.Management
+}
+
+func (c *mqlGcpProjectGkeServiceClusterNodepool) GetAutoscaling() *plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling] {
+	return &c.Autoscaling
+}
+
+// mqlGcpProjectGkeServiceClusterNodepoolAutoscaling for the gcp.project.gkeService.cluster.nodepool.autoscaling resource
+type mqlGcpProjectGkeServiceClusterNodepoolAutoscaling struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlGcpProjectGkeServiceClusterNodepoolAutoscalingInternal it will be used here
+	Enabled plugin.TValue[bool]
+	MinNodeCount plugin.TValue[int64]
+	MaxNodeCount plugin.TValue[int64]
+	Autoprovisioned plugin.TValue[bool]
+	TotalMinNodeCount plugin.TValue[int64]
+	TotalMaxNodeCount plugin.TValue[int64]
+}
+
+// createGcpProjectGkeServiceClusterNodepoolAutoscaling creates a new instance of this resource
+func createGcpProjectGkeServiceClusterNodepoolAutoscaling(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectGkeServiceClusterNodepoolAutoscaling{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.gkeService.cluster.nodepool.autoscaling", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectGkeServiceClusterNodepoolAutoscaling) MqlName() string {
+	return "gcp.project.gkeService.cluster.nodepool.autoscaling"
+}
+
+func (c *mqlGcpProjectGkeServiceClusterNodepoolAutoscaling) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectGkeServiceClusterNodepoolAutoscaling) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlGcpProjectGkeServiceClusterNodepoolAutoscaling) GetMinNodeCount() *plugin.TValue[int64] {
+	return &c.MinNodeCount
+}
+
+func (c *mqlGcpProjectGkeServiceClusterNodepoolAutoscaling) GetMaxNodeCount() *plugin.TValue[int64] {
+	return &c.MaxNodeCount
+}
+
+func (c *mqlGcpProjectGkeServiceClusterNodepoolAutoscaling) GetAutoprovisioned() *plugin.TValue[bool] {
+	return &c.Autoprovisioned
+}
+
+func (c *mqlGcpProjectGkeServiceClusterNodepoolAutoscaling) GetTotalMinNodeCount() *plugin.TValue[int64] {
+	return &c.TotalMinNodeCount
+}
+
+func (c *mqlGcpProjectGkeServiceClusterNodepoolAutoscaling) GetTotalMaxNodeCount() *plugin.TValue[int64] {
+	return &c.TotalMaxNodeCount
 }
 
 // mqlGcpProjectGkeServiceClusterNodepoolNetworkConfig for the gcp.project.gkeService.cluster.nodepool.networkConfig resource

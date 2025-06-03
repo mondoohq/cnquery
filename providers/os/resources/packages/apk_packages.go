@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"github.com/package-url/packageurl-go"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	cpe2 "go.mondoo.com/cnquery/v11/providers/os/resources/cpe"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/purl"
@@ -44,7 +43,10 @@ func ParseApkDbPackages(pf *inventory.Platform, input io.Reader) []Package {
 		}
 
 		pkg.Format = AlpinePkgFormat
-		pkg.PUrl = purl.NewPackageUrl(pf, pkg.Name, pkg.Version, pkg.Arch, pkg.Epoch, packageurl.TypeApk)
+		pkg.PUrl = purl.NewPackageURL(pf, purl.TypeApk, pkg.Name, pkg.Version,
+			purl.WithArch(pkg.Arch),
+			purl.WithEpoch(pkg.Epoch),
+		).String()
 
 		cpes, _ := cpe2.NewPackage2Cpe(pkg.Vendor, pkg.Name, pkg.Version, "", pf.Arch)
 		pkg.CPEs = cpes

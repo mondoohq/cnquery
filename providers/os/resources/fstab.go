@@ -63,7 +63,7 @@ func (f *mqlFstab) entries() ([]any, error) {
 			"device":     llx.StringData(entry.Device),
 			"mountpoint": llx.StringData(entry.Mountpoint),
 			"fstype":     llx.StringData(entry.Fstype),
-			"options":    llx.StringData(entry.Options),
+			"options":    llx.StringData(strings.Join(entry.Options, ",")),
 			"dump":       llx.IntDataPtr(entry.Dump),
 			"fsck":       llx.IntDataPtr(entry.Fsck),
 		})
@@ -80,7 +80,7 @@ type FstabEntry struct {
 	Device     string
 	Mountpoint string
 	Fstype     string
-	Options    string
+	Options    []string
 	Dump       *int
 	Fsck       *int
 }
@@ -124,7 +124,7 @@ func ParseFstab(file io.Reader) ([]FstabEntry, error) {
 			Device:     record[0],
 			Mountpoint: record[1],
 			Fstype:     record[2],
-			Options:    record[3],
+			Options:    strings.Split(record[3], ","),
 			Dump:       dump,
 			Fsck:       fsck,
 		}

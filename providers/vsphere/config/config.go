@@ -13,13 +13,19 @@ import (
 var Config = plugin.Provider{
 	Name:            "vsphere",
 	ID:              "go.mondoo.com/cnquery/v9/providers/vsphere",
-	Version:         "11.0.44",
+	Version:         "11.0.82",
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
 		{
 			Name:  "vsphere",
 			Use:   "vsphere user@host",
 			Short: "a VMware vSphere installation",
+			Long: `Use the vsphere provider to query VMware vSphere installations. 
+
+Examples:
+  cnspec scan vsphere <USER>@<HOST> --askpass
+	cnquery shell vsphere <USER>@<HOST> --password <YOUR-PASSWORD>
+`,
 			Discovery: []string{
 				resources.DiscoveryApi,
 				resources.DiscoveryInstances,
@@ -49,7 +55,7 @@ var Config = plugin.Provider{
 	},
 	AssetUrlTrees: []*inventory.AssetUrlBranch{
 		{
-			PathSegments: []string{"technology=vsphere"},
+			PathSegments: []string{"technology=vmware"},
 			Key:          "platform",
 			Title:        "Platform",
 			Values: map[string]*inventory.AssetUrlBranch{

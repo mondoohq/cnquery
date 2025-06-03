@@ -4,6 +4,7 @@
 package lr
 
 import (
+	"bytes"
 	"os"
 	"testing"
 
@@ -43,6 +44,16 @@ func TestParse(t *testing.T) {
 			{
 				ID:       "name",
 				Defaults: "id group=group.name",
+			},
+		}, res.Resources)
+	})
+
+	t.Run("context", func(t *testing.T) {
+		res := parse(t, "name @context(\"file.context\")")
+		assert.Equal(t, []*Resource{
+			{
+				ID:      "name",
+				Context: "file.context",
 			},
 		}, res.Resources)
 	})
@@ -230,6 +241,34 @@ func TestParse(t *testing.T) {
 		assert.Equal(t, true, res.Resources[0].IsPrivate)
 		assert.Equal(t, fields, res.Resources[0].Body.Fields)
 	})
+
+	t.Run("file context", func(t *testing.T) {
+		res := parse(t, `
+	sth @context("file.context") {
+		field map[string]int
+	}`)
+
+		fields := []*Field{
+			{
+				BasicField: &BasicField{
+					ID:   "field",
+					Type: Type{MapType: &MapType{Key: SimpleType{"string"}, Value: Type{SimpleType: &SimpleType{"int"}}}},
+				},
+			},
+			{
+				BasicField: &BasicField{
+					ID:   "context",
+					Type: Type{SimpleType: &SimpleType{"file.context"}},
+					Args: &FieldArgs{},
+				},
+				Comments: []string{"# Contextual info, where this resource is located and defined"},
+			},
+		}
+		require.NotEmpty(t, res.Resources)
+		assert.Equal(t, "sth", res.Resources[0].ID)
+		assert.Equal(t, "file.context", res.Resources[0].Context)
+		assert.Equal(t, fields, res.Resources[0].Body.Fields)
+	})
 }
 
 func TestParseLR(t *testing.T) {
@@ -243,10 +282,14 @@ func TestParseLR(t *testing.T) {
 		absPath := "../../../providers/" + lrPath
 
 		t.Run(lrPath, func(t *testing.T) {
+			hasImports := false
 			res, err := Resolve(absPath, func(path string) ([]byte, error) {
 				raw, err := os.ReadFile(path)
 				if err != nil {
 					t.Fatal("failed to load " + path + ":" + err.Error())
+				}
+				if bytes.Contains(raw, []byte("import \"")) {
+					hasImports = true
 				}
 				return raw, err
 			})
@@ -267,6 +310,11 @@ func TestParseLR(t *testing.T) {
 				t.Fatal("failed to generate schema for " + lrPath + ":" + err.Error())
 			}
 			assert.NotEmpty(t, schema)
+			assert.NotEmpty(t, schema.Resources)
+
+			if hasImports {
+				assert.NotEmpty(t, schema.Dependencies)
+			}
 		})
 	}
 }

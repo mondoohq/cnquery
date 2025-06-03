@@ -6,10 +6,12 @@ package provider
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/logger"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
@@ -22,13 +24,18 @@ import (
 
 const ConnectionType = "github"
 
+var (
+	cacheExpirationTime = 24 * time.Hour
+	cacheCleanupTime    = 48 * time.Hour
+)
+
 type Service struct {
 	*plugin.Service
 }
 
 func Init() *Service {
 	return &Service{
-		Service: plugin.NewService(),
+		plugin.NewService(),
 	}
 }
 
@@ -52,8 +59,16 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Options[connection.OPTION_ENTERPRISE_URL] = string(x.Value)
 	}
 
+	// Github provide has two authentication methods.
+	//
+	// 1. Application credentials
+	// 2. Personal access token
+	//
+	// We give precedence to the former and, if both auth methods are provided,
+	// we will output a warning.
 	isAppAuth := false
-	if appId, ok := req.Flags[connection.OPTION_APP_ID]; ok && len(appId.Value) > 0 {
+	appId, ok := flags[connection.OPTION_APP_ID]
+	if ok && len(appId.Value) > 0 {
 		conf.Options[connection.OPTION_APP_ID] = string(appId.Value)
 
 		installId := req.Flags[connection.OPTION_APP_INSTALLATION_ID]
@@ -62,20 +77,28 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		pk := req.Flags[connection.OPTION_APP_PRIVATE_KEY]
 		conf.Options[connection.OPTION_APP_PRIVATE_KEY] = string(pk.Value)
 		isAppAuth = true
+		log.Debug().Msg("application credentials provided")
 	}
 
 	token := ""
 	if x, ok := flags["token"]; ok && len(x.Value) != 0 {
 		token = string(x.Value)
+		log.Debug().Msg("loaded token from flag")
 	}
-	if token == "" {
+	if token == "" && len(os.Getenv("GITHUB_TOKEN")) != 0 {
 		token = os.Getenv("GITHUB_TOKEN")
+		log.Debug().Msg("loaded token from GITHUB_TOKEN env variable")
 	}
 	if token == "" && !isAppAuth {
-		return nil, errors.New("a valid GitHub authentication is required, pass --token '<yourtoken>', set GITHUB_TOKEN environment variable or provide GitHub App credentials")
+		return nil, errors.New("a valid GitHub authentication is required, pass --token '<yourtoken>', " +
+			"set GITHUB_TOKEN environment variable or provide GitHub App credentials")
 	}
 	if token != "" {
-		conf.Credentials = append(conf.Credentials, vault.NewPasswordCredential("", token))
+		if isAppAuth {
+			log.Warn().Msg("both authentication methods provided, using application credentials")
+		} else {
+			conf.Credentials = append(conf.Credentials, vault.NewPasswordCredential("", token))
+		}
 	}
 
 	// discovery flags
@@ -162,12 +185,27 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			return nil, err
 		}
 
-		var upstream *upstream.UpstreamClient
+		// verify the connection only once
+		_, _, err = s.Memoize(fmt.Sprintf("conn_%d", conn.Hash), func() (any, error) {
+			log.Debug().Msg("verifying github connection client")
+			err := conn.Verify()
+			return nil, err
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		// create an upstream client only once
+		var upstreamClient *upstream.UpstreamClient
 		if req.Upstream != nil && !req.Upstream.Incognito {
-			upstream, err = req.Upstream.InitClient(context.Background())
+			data, _, err := s.Memoize(
+				fmt.Sprintf("upstream_%d", req.Upstream.Hash()), func() (any, error) {
+					return req.Upstream.InitClient(context.Background())
+				})
 			if err != nil {
 				return nil, err
 			}
+			upstreamClient = data.(*upstream.UpstreamClient)
 		}
 
 		asset.Connections[0].Id = connId
@@ -179,7 +217,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			resources.NewResource,
 			resources.GetData,
 			resources.SetData,
-			upstream), nil
+			upstreamClient), nil
 	})
 	if err != nil {
 		return nil, err

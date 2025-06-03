@@ -39,6 +39,9 @@ type Runtime struct {
 	isClosed        bool
 	close           sync.Once
 	shutdownTimeout time.Duration
+
+	// used to lock unsafe tasks
+	mu sync.Mutex
 }
 
 type ConnectedProvider struct {
@@ -118,15 +121,31 @@ func (r *Runtime) UseProvider(id string) error {
 		return err
 	}
 
+	r.mu.Lock()
 	r.Provider = res
+	r.mu.Unlock()
 	return nil
 }
 
 func (r *Runtime) AddConnectedProvider(c *ConnectedProvider) {
+	r.mu.Lock()
 	r.providers[c.Instance.ID] = c
+	r.mu.Unlock()
+}
+
+func (r *Runtime) setProviderConnection(c *plugin.ConnectRes, err error) {
+	r.mu.Lock()
+	r.Provider.Connection = c
+	r.Provider.ConnectionError = err
+	r.mu.Unlock()
 }
 
 func (r *Runtime) addProvider(id string) (*ConnectedProvider, error) {
+	log.Debug().
+		Str("id", id).
+		Bool("update is enabled", r.AutoUpdate.Enabled).
+		Msg("Runtime.addProvider() is called")
+
 	// TODO: we need to detect only the shared running providers
 	running, err := r.coordinator.GetRunningProvider(id, r.AutoUpdate)
 	if err != nil {
@@ -167,7 +186,7 @@ func (r *Runtime) providerForAsset(asset *inventory.Asset) (*Provider, error) {
 			conn.Type = inventory.ConnBackendToType(conn.Backend)
 		}
 
-		provider, err := EnsureProvider(ProviderLookup{ConnType: conn.Type}, true, r.coordinator.Providers())
+		provider, err := EnsureProvider(ProviderLookup{ConnType: conn.Type}, r.AutoUpdate.Enabled, r.coordinator.Providers())
 		if err != nil {
 			errs.Add(err)
 			continue
@@ -232,9 +251,10 @@ func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 
 	// }
 
-	r.Provider.Connection, r.Provider.ConnectionError = r.Provider.Instance.Plugin.Connect(req, &callbacks)
-	if r.Provider.ConnectionError != nil {
-		return r.Provider.ConnectionError
+	conn, err := r.Provider.Instance.Plugin.Connect(req, &callbacks)
+	r.setProviderConnection(conn, err)
+	if err != nil {
+		return err
 	}
 
 	// TODO: This is a stopgap that detects if the connect call returned an asset
@@ -256,9 +276,10 @@ func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 	if postProvider.ID != r.Provider.Instance.ID {
 		req.Asset = r.Provider.Connection.Asset
 		r.UseProvider(postProvider.ID)
-		r.Provider.Connection, r.Provider.ConnectionError = r.Provider.Instance.Plugin.Connect(req, &callbacks)
-		if r.Provider.ConnectionError != nil {
-			return r.Provider.ConnectionError
+		conn, err := r.Provider.Instance.Plugin.Connect(req, &callbacks)
+		r.setProviderConnection(conn, err)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -747,6 +768,9 @@ func (r *Runtime) Schema() resources.ResourcesSchema {
 }
 
 func (r *Runtime) asset() *inventory.Asset {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
 	if r.Provider == nil || r.Provider.Connection == nil {
 		return nil
 	}

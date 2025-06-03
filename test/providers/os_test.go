@@ -20,7 +20,7 @@ var once sync.Once
 
 // setup builds cnquery locally
 func setup() {
-	// build cnspec
+	// build cnquery
 	if err := exec.Command("go", "build", "../../apps/cnquery/cnquery.go").Run(); err != nil {
 		log.Fatalf("building cnquery: %v", err)
 	}

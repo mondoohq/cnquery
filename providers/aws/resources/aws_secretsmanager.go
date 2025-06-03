@@ -82,7 +82,7 @@ func (a *mqlAwsSecretsmanager) getSecrets(conn *connection.AwsConnection) []*job
 							"name":             llx.StringDataPtr(secret.Name),
 							"nextRotationDate": llx.TimeDataPtr(secret.NextRotationDate),
 							"primaryRegion":    llx.StringDataPtr(secret.PrimaryRegion),
-							"rotationEnabled":  llx.BoolData(convert.ToBool(secret.RotationEnabled)),
+							"rotationEnabled":  llx.BoolData(convert.ToValue(secret.RotationEnabled)),
 							"tags":             llx.MapData(secretTagsToMap(secret.Tags), types.String),
 						})
 					if err != nil {
@@ -108,7 +108,7 @@ func secretTagsToMap(tags []secretstypes.Tag) map[string]interface{} {
 	if len(tags) > 0 {
 		for i := range tags {
 			tag := tags[i]
-			tagsMap[convert.ToString(tag.Key)] = convert.ToString(tag.Value)
+			tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
 		}
 	}
 

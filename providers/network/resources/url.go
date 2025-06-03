@@ -82,7 +82,8 @@ func (x *mqlUrl) string() (string, error) {
 	}
 
 	host := x.Host.Data
-	if x.Port.Data != 0 {
+	isStandardPort := x.Port.Data == 80 && x.Scheme.Data == "http" || x.Port.Data == 443 && x.Scheme.Data == "https"
+	if x.Port.Data != 0 && !isStandardPort {
 		host += ":" + strconv.Itoa(int(x.Port.Data))
 	}
 

@@ -80,6 +80,8 @@ private aws.vpc @defaults("id isDefault cidrBlock region") {
   serviceEndpoints() []aws.vpc.serviceEndpoint
   // List of peering connections associated with the VPC
   peeringConnections() []aws.vpc.peeringConnection
+  // Internet gateway blocking mode: block-bidirectional, block-ingress, or off
+  internetGatewayBlockMode string
 }
 
 // Amazon Virtual Private Cloud (VPC) route table
@@ -130,6 +132,10 @@ private aws.vpc.subnet @defaults("id cidrs region availabilityZone defaultForAva
   state string
   // Region in which the VPC subnet exists
   region string
+  // The number of available IP addresses in the subnet
+  availableIpAddressCount int
+  // Internet gateway blocking mode: block-bidirectional, block-ingress, or off
+  internetGatewayBlockMode string
 }
 
 // Amazon Virtual Private Cloud (VPC) endpoint
@@ -309,7 +315,7 @@ private aws.waf.rule.statement.ipsetreferencestatement {
   ruleName string
   // ID of the statement
   statementID string
-  // arn of the ipset
+  // ARN of the ipset
   arn string
   // ipSetForwardedIPConfig
   ipSetForwardedIPConfig aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig
@@ -633,7 +639,7 @@ private aws.waf.ipset @defaults("name") {
   description string
   // Address type: ipv4 or ipv6
   addressType string
-  // list of IP addresses
+  // List of IP addresses
   addresses dict
 }
 
@@ -717,7 +723,7 @@ aws.iam {
 // Entry in AWS IAM credential report
 private aws.iam.usercredentialreportentry @defaults("arn") {
   init(properties map[string]string)
-  // properties on the IAM user credential report
+  // Properties on the IAM user credential report
   properties map[string]string
 
   // ARN for the credential report
@@ -768,20 +774,24 @@ private aws.iam.usercredentialreportentry @defaults("arn") {
 
   // IAM user
   user() aws.iam.user
-  // Time when user was created
+  // Time when user was created: deprecated, use createdAt
   userCreationTime() time
+  // Time when user was created
+  createdAt() time
 }
 
 // AWS IAM user
-private aws.iam.user @defaults("arn name") {
+private aws.iam.user @defaults("arn name createdAt") {
   // ARN of the IAM user
   arn string
   // ID of the IAM user
   id string
   // Name of the user
   name string
-  // Time when user was created
+  // Time when user was created: deprecated, use createdAt
   createDate time
+  // Time when user was created
+  createdAt time
   // Time when password was last used
   passwordLastUsed time
   // Tags for the IAM user
@@ -802,15 +812,17 @@ private aws.iam.user @defaults("arn name") {
 private aws.iam.instanceProfile @defaults("arn instanceProfileId") {
   // ARN of the instance profile
   arn string
-  // Time when the instance profile was created
+  // Time when the instance profile was created: deprecated, use createdAt
   createDate time
+  // Time when the instance profile was created
+  createdAt time
   // ID of the IAM instance profile
   instanceProfileId string
   // Name of the instance profile
   instanceProfileName string
   // Tags for the instance profile
   tags map[string]string
-  // role attached to the instanceProfile
+  // Role attached to the instanceProfile
   iamRoles() []aws.iam.role
 }
 
@@ -836,8 +848,10 @@ private aws.iam.policy @defaults("arn name") {
   isAttachable() bool
   // Number of principal entities (users, groups, and roles) that the policy is attached to
   attachmentCount() int
-  // Time when the policy was created
+  // Time when the policy was created: deprecated, use createdAt
   createDate() time
+  // Time when the policy was created
+  createdAt() time
   // Time when the policy was updated
   updateDate() time
   // Scope of the policy
@@ -856,7 +870,7 @@ private aws.iam.policy @defaults("arn name") {
 }
 
 // AWS IAM policy version
-private aws.iam.policyversion @defaults("arn isDefaultVersion") {
+private aws.iam.policyversion @defaults("arn isDefaultVersion createdAt") {
   // ARN of the policy version
   arn string
   // Version ID
@@ -865,8 +879,10 @@ private aws.iam.policyversion @defaults("arn isDefaultVersion") {
   isDefaultVersion bool
   // JSON statements for this policy version
   document() dict
-  // Time when this policy version was created
+  // Time when this policy version was created: deprecated, use createdAt
   createDate time
+  // Time when this policy version was created
+  createdAt time
 }
 
 // AWS IAM role
@@ -881,8 +897,10 @@ private aws.iam.role @defaults("arn name") {
   description string
   // Tags associated with the role
   tags map[string]string
-  // Time when the role was created
+  // Time when the role was created: deprecated, use createdAt
   createDate time
+  // Time when the role was created
+  createdAt time
   // Policy document that grants an entity permission to assume the role
   assumeRolePolicyDocument dict
 }
@@ -895,8 +913,10 @@ private aws.iam.group @defaults("arn name") {
   id string
   // Name of the group
   name string
-  // Time when the group was created
+  // Time when the group was created: deprecated, use createdAt
   createDate time
+  // Time when the group was created
+  createdAt time
   // List of usernames that belong to the group
   usernames []string
 }
@@ -1221,8 +1241,10 @@ private aws.elb.loadbalancer @defaults("name region elbType scheme vpcId dnsName
   attributes() []dict
   // Deprecated: Use `vpc` instead
   vpcId string
-  // Date and time when the load balancer was created
+  // Deprecated (use `createdAt` instead)
   createdTime time
+  // Date and time the load balancer was created
+  createdAt time
   // Availability zone where the load balancer runs
   availabilityZones []string
   // VPC security groups for the load balancer
@@ -1671,8 +1693,10 @@ private aws.cloudfront.function @defaults("name status") {
   arn string
   // Date and time when the function was last updated
   lastModifiedTime time
-  // Date and time when the function was created
+  // Deprecated (use `createdAt` instead)
   createdTime time
+  // Date and time the function was created
+  createdAt time
   // Stage that the function is in
   stage string
   // Comment to describe the function
@@ -1769,8 +1793,10 @@ private aws.s3.bucket @defaults("name location public") {
   publicAccessBlock() dict
   // Whether the bucket still exists (stale reference)
   exists bool
-  // Date the bucket was created
+  // Deprecated (use `createdAt` instead)
   createdTime time
+  // Date and time the bucket was created
+  createdAt time
 }
 
 // Amazon S3 bucket grant
@@ -1802,11 +1828,13 @@ private aws.s3.bucket.corsrule @defaults("name") {
 }
 
 // Amazon S3 bucket policy
-private aws.s3.bucket.policy @defaults("name version") {
+private aws.s3.bucket.policy @defaults("bucketName version") {
   // Unique ID for the policy
   id string
-  // Name for the policy
+  // Deprecated. Use `bucketName` instead
   name string
+  // Bucket name that this policy belongs
+  bucketName string
   // Document for the policy
   document string
   // Version of the policy
@@ -1814,7 +1842,6 @@ private aws.s3.bucket.policy @defaults("name version") {
   // List of statements for the policy
   statements() []dict
 }
-
 
 // AWS Application Auto Scaling
 aws.applicationAutoscaling @defaults("namespace") {
@@ -1977,8 +2004,10 @@ private aws.dynamodb.table @defaults("name region") {
   continuousBackups() dict
   // Tags for the table
   tags() map[string]string
-  // Creation time of the table
+  // Deprecated (use `createdAt` instead)
   createdTime time
+  // Date and time the table was created
+  createdAt time
   // Whether deletion protection is enabled
   deletionProtectionEnabled bool
   // Global table version
@@ -2045,6 +2074,10 @@ aws.rds {
   clusters() []aws.rds.dbcluster
   // List of all pending maintenance actions for the database instance
   allPendingMaintenanceActions() []aws.rds.pendingMaintenanceAction
+  // List of all parameter groups
+  parameterGroups() []aws.rds.parameterGroup
+  // List of all cluster parameter groups
+  clusterParameterGroups() []aws.rds.clusterParameterGroup
 }
 
 // Amazon RDS Backup Setting
@@ -2072,7 +2105,7 @@ private aws.rds.backupsetting {
 }
 
 // Amazon RDS database cluster
-private aws.rds.dbcluster @defaults("id region") {
+aws.rds.dbcluster @defaults("id region engine engineVersion") {
   // ARN for the database cluster
   arn string
   // Region where the database cluster exists
@@ -2095,8 +2128,10 @@ private aws.rds.dbcluster @defaults("id region") {
   storageType string
   // Current state of the cluster
   status string
-  // Creation date of the RDS cluster
+  // Deprecated (use `createdAt` instead)
   createdTime time
+  // Date and time the RDS cluster was created
+  createdAt time
   // Number of days automated snapshots are retained
   backupRetentionPeriod int
   // Whether minor version patches are applied automatically
@@ -2149,6 +2184,10 @@ private aws.rds.dbcluster @defaults("id region") {
   preferredMaintenanceWindow string
   // Preferred backup window for the database cluster
   preferredBackupWindow string
+  // Whether the HTTP API endpoint is enabled
+  httpEndpointEnabled bool
+  // Container for engine configuration values
+  parameterGroupName string
 }
 
 // Amazon RDS snapshot
@@ -2184,7 +2223,7 @@ private aws.rds.snapshot @defaults("id region type encrypted createdAt") {
 }
 
 // Amazon RDS database instance
-private aws.rds.dbinstance @defaults("id region engine engineVersion") {
+aws.rds.dbinstance @defaults("id region engine engineVersion") {
   // ARN for the database instance
   arn string
   // Identifier for the database instance
@@ -2207,7 +2246,7 @@ private aws.rds.dbinstance @defaults("id region engine engineVersion") {
   region string
   // Availability zone where the instance exists
   availabilityZone string
-  // Whether the instance is publicly accessible
+  // Whether the instance is publicly accessible. Note: This will only return a value for non-Aurora Multi-AZ DB clusters
   publiclyAccessible bool
   // List of log types the instance is configured to export to CloudWatch logs
   enabledCloudwatchLogsExports []string
@@ -2235,8 +2274,10 @@ private aws.rds.dbinstance @defaults("id region engine engineVersion") {
   status string
   // Whether minor version patches are applied automatically
   autoMinorVersionUpgrade bool
-  // Creation date of the RDS instance
+  // Deprecated (use `createdAt` instead)
   createdTime time
+  // Date and time the RDS instance was created
+  createdAt time
   // Port that the database instance listens on. If the database instance is part of a DB cluster, this can be a different port than the DB cluster port.
   port int
   // Connection endpoint for the database instance
@@ -2291,9 +2332,66 @@ private aws.rds.pendingMaintenanceAction {
   optInStatus string
 }
 
+// Amazon RDS cluster parameter groups
+aws.rds.clusterParameterGroup @defaults("name family region arn") {
+  // ARN for resource
+  arn string
+  // Family of the parameter group
+  family string
+  // Name of the parameter group
+  name string
+  // Description of the parameter group
+  description string
+  // Region of the parameters
+  region string
+  parameters() []aws.rds.parameterGroup.parameter
+}
+
+// Amazon RDS parameter groups
+aws.rds.parameterGroup @defaults("name family region arn") {
+  // ARN for resource
+  arn string
+  // Family of the parameter group
+  family string
+  // Name of the parameter group
+  name string
+  // Description of the parameter group
+  description string
+  // Region of the parameters
+  region string
+  // The parameters of the group
+  parameters() []aws.rds.parameterGroup.parameter
+}
+
+aws.rds.parameterGroup.parameter @defaults("name value") {
+  // Specifies the valid range of values for the parameter
+  allowedValues string
+  // When to apply parameter updates
+  applyMethod string
+  // Specifies the engine specific parameters type
+  applyType string
+  // Specifies the valid data type for the parameter
+  dataType string
+  // Provides a description of the parameter
+  description string
+  // being changed
+  isModifiable bool
+  // The earliest engine version to which the parameter can apply
+  minimumEngineVersion string
+  // The name of the parameter
+  name string
+  // The value of the parameter
+  value string
+  // The source of the parameter value
+  source string
+  // The valid DB engine modes
+  supportedEngineModes []string
+}
+
+
 // Amazon ElastiCache
 aws.elasticache @defaults("cacheClusters") {
-    // Deprecated: Use `cacheClusters` instead.
+  // Deprecated: Use `cacheClusters` instead.
   clusters() []dict
   // List of cache clusters
   cacheClusters() []aws.elasticache.cluster
@@ -2495,7 +2593,7 @@ private aws.ecr.image @defaults("uri region") {
   region string
   // ARN for the image
   arn string
-  // uri for the image repository
+  // URI for the image repository
   uri string
   // Time the image was pushed
   pushedAt time
@@ -2663,12 +2761,12 @@ aws.ec2 {
 }
 
 // Amazon Elastic IP (EIP)
-private aws.ec2.eip {
+private aws.ec2.eip @defaults("publicIp attached privateIpAddress") {
   // Public IP address of the EIP
   publicIp string
   // Whether the Elastic IP is associated with an instance (false if no allocationId is present)
   attached bool
-  // Ec2 instance associated with the EIP
+  // EC2 instance associated with the EIP
   instance() aws.ec2.instance
   // ID of the network interface
   networkInterfaceId string
@@ -2719,31 +2817,31 @@ private aws.vpc.natgateway.address {
 // Amazon VPC Service Endpoint
 private aws.vpc.serviceEndpoint {
   // Whether acceptance is required
-  acceptanceRequired bool
+  acceptanceRequired() bool
   // List of availability zones for the service endpoint
-  availabilityZones []string
+  availabilityZones() []string
   // List of base endpoint DNS names for the service endpoint
   dnsNames []string
   // Service ID
   id string
   // Whether the service endpoint manages VPC endpoints
-  managesVpcEndpoints bool
+  managesVpcEndpoints() bool
   // Service name
   name string
   // Service owner
   owner string
   // Service payer responsibility
-  payerResponsibility string
+  payerResponsibility() string
   // Service private DNS name verification state
-  privateDnsNameVerificationState string
+  privateDnsNameVerificationState() string
   // List of service private DNS names
-  privateDnsNames []string
+  privateDnsNames() []string
   // Tags for the service endpoint
   tags map[string]string
   // Service type
   type string
   // Whether the service supports VPC endpoint policy
-  vpcEndpointPolicySupported bool
+  vpcEndpointPolicySupported() bool
 }
 
 // Amazon VPC Peering Connection
@@ -2879,8 +2977,10 @@ private aws.ec2.snapshot @defaults("id region volumeSize state") {
   createVolumePermission() []dict
   // ID of the volume used to create the snapshot
   volumeId string
-  // Time when the snapshot was initiated
+  // Time when the snapshot began
   startTime time
+  // Time when the snapshot completed
+  completionTime time
   // Tags for the snapshot
   tags map[string]string
   // State of the snapshot: pending, completed, error, recoverable, or recovering
@@ -2891,6 +2991,8 @@ private aws.ec2.snapshot @defaults("id region volumeSize state") {
   description string
   // Whether the snapshot is encrypted
   encrypted bool
+  // The storage tier in which the snapshot is stored
+  storageTier string
 }
 
 // Amazon EC2 (EBS) volume
@@ -3137,6 +3239,10 @@ private aws.ec2.image @defaults("ownerAlias id name") {
   createdAt time
   // Date the image was deprecated
   deprecatedAt time
+  // Whether enhanced networking with ENA is enabled
+  enaSupport bool
+  // The supported TPM version. If the image is configured for NitroTPM support, the value is v2.0
+  tpmSupport string
 }
 
 // Amazon EC2 instance block device
@@ -3177,7 +3283,7 @@ private aws.ec2.securitygroup @defaults("id name region vpc.id") {
 
 // Amazon EC2 security group IP permission
 private aws.ec2.securitygroup.ippermission @defaults("id toPort fromPort ipProtocol ipRanges ipv6Ranges") {
-  // Unique ID for the IP permission
+  // AWS ID of the security group
   id string
   // Start of port range for TCP/UDP protocols
   fromPort int
@@ -3185,11 +3291,11 @@ private aws.ec2.securitygroup.ippermission @defaults("id toPort fromPort ipProto
   toPort int
   // IP protocol name
   ipProtocol string
-  // IPv4 ranges
+  // IPv4 address ranges
   ipRanges []string
-  // IPv6 ranges
+  // IPv6 address ranges
   ipv6Ranges []string
-  // List of Prefix IDs
+  // List of prefix IDs
   prefixListIds []dict
   // List of user ID group pairs
   userIdGroupPairs []dict
@@ -3322,7 +3428,7 @@ private aws.eks.addon @defaults("name addonVersion status") {
 }
 
 // Amazon EKS cluster
-private aws.eks.cluster @defaults("arn version status") {
+aws.eks.cluster @defaults("arn version status") {
   // Name of the cluster
   name string
   // ARN of the cluster
@@ -3541,4 +3647,114 @@ private aws.timestream.liveanalytics.table @defaults("name region") {
   magneticStoreWriteProperties dict
   // Retention duration properties for the table
   retentionProperties dict
+}
+
+// AWS CodeDeploy
+aws.codedeploy {
+  // List of CodeDeploy applications across all enabled regions
+  applications() []aws.codedeploy.application
+}
+
+// AWS CodeDeploy Application
+private aws.codedeploy.application @defaults("applicationName computePlatform createdAt region") {
+  // ARN of the application
+  arn string
+  // ID of the application
+  applicationId string
+  // Name of the application
+  applicationName string
+  // Compute platform of the application (Server, Lambda, or ECS)
+  computePlatform string
+  // Time the application was created
+  createdAt time
+  // Whether the application is linked to a GitHub account
+  linkedToGitHub bool
+  // Tags for the application
+  tags() map[string]string
+  // List of deployment groups for this application
+  deploymentGroups() []aws.codedeploy.deploymentGroup
+  // List of deployments for this application
+  deployments() []aws.codedeploy.deployment
+  // Region of the application
+  region string
+}
+
+// AWS CodeDeploy Deployment Group
+private aws.codedeploy.deploymentGroup @defaults("deploymentGroupName computePlatform deploymentGroupId region") {
+  // Application name this deployment group belongs to
+  applicationName string
+  // ARN of the deployment group
+  arn string
+  // ID of the deployment group
+  deploymentGroupId string
+  // Name of the deployment group
+  deploymentGroupName string
+  // Compute platform of the deployment group (Server, Lambda, or ECS)
+  computePlatform string
+  // Service role ARN for the deployment group
+  serviceRoleArn string
+  // Target revision for the deployment group (includes type, location, etc.)
+  targetRevision() dict
+  // Tags for the deployment group
+  tags() map[string]string
+  // Region of the deployment group
+  region string
+  // List of deployments for this deployment group
+  deployments() []aws.codedeploy.deployment
+  // Auto scaling groups associated with the deployment group
+  autoScalingGroups() []aws.autoscaling.group
+  // EC2 tag filters for the deployment group
+  ec2TagFilters() []dict
+  // On-premises instance tag filters for the deployment group
+  onPremisesInstanceTagFilters() []dict
+  // Last successful deployment information
+  lastSuccessfulDeployment() aws.codedeploy.deployment
+  // Last attempted deployment information
+  lastAttemptedDeployment() aws.codedeploy.deployment
+  // Deployment style (BLUE_GREEN or IN_PLACE)
+  deploymentStyle() dict
+  // Blue/green deployment configuration
+  blueGreenDeploymentConfiguration() dict
+  // Load balancer info
+  loadBalancerInfo() dict
+}
+
+// AWS CodeDeploy Deployment
+private aws.codedeploy.deployment @defaults("deploymentId status applicationName deploymentGroupName createdAt region") {
+  // Application name for the deployment
+  applicationName string
+  // Deployment ID
+  deploymentId string
+  // ARN of the deployment (Note: Deployments themselves don't have ARNs, this will be a synthetic ID or the deploymentId itself)
+  arn string
+  // Status of the deployment (Created, Queued, InProgress, Succeeded, Failed, Stopped, Ready)
+  status string
+  // Deployment group name
+  deploymentGroupName string
+  // Deployment configuration name
+  deploymentConfigName string
+  // Time the deployment was created
+  createdAt time
+  // Time the deployment was completed
+  compleatedAt time
+  // Description of the deployment
+  description string
+  // Creator of the deployment (user, autoscaling, codeDeployRollback, etc.)
+  creator string
+  // Whether to ignore application stop failures
+  ignoreApplicationStopFailures bool
+  // Information about the instances targeted by the deployment (complex structure, represented as dict)
+  targetInstances() dict
+  // Revision information for the deployment (S3 location, GitHub location, etc.)
+  revision() dict
+  // Region of the deployment
+  region string
+  // Error information, if any
+  errorInformation() dict
+  // Deployment overview (counts for Pending, InProgress, Succeeded, Failed, Skipped, Ready)
+  deploymentOverview() dict
+  // Whether this deployment is a rollback
+  isRollback() bool
+  // Rollback information if this deployment is a rollback or was rolled back
+  rollbackInfo() dict
 }

@@ -17,7 +17,7 @@ import (
 	"go.mondoo.com/cnquery/v11/utils/urlx"
 )
 
-func (s *Service) detect(asset *inventory.Asset, conn *connection.Connection) error {
+func (s *Service) detect(asset *inventory.Asset, _ *connection.Connection) error {
 	var p *inventory.Platform
 	connType := asset.Connections[0].Type
 	switch connType {
@@ -51,7 +51,7 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.Connection) er
 			TechnologyUrlSegments: []string{"iac", "terraform", "hcl"},
 		}
 	}
-	asset.Platform = p
+	asset.MergePlatform(p)
 
 	// we always prefer the git url since it is more reliable
 	url, ok := asset.Connections[0].Options["ssh-url"]

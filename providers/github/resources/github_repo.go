@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/go-github/v67/github"
+	"github.com/google/go-github/v72/github"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/logger"
@@ -72,6 +72,7 @@ func newMqlGithubRepository(runtime *plugin.Runtime, repo *github.Repository) (*
 		"cloneUrl":          llx.StringData(repo.GetCloneURL()),
 		"sshUrl":            llx.StringData(repo.GetSSHURL()),
 		"owner":             llx.ResourceData(owner, owner.MqlName()),
+		"customProperties":  llx.DictData(repo.CustomProperties),
 	})
 	if err != nil {
 		return nil, err
@@ -1234,8 +1235,8 @@ func (g *mqlGithubRepository) workflows() ([]interface{}, error) {
 
 func newMqlGithubFile(runtime *plugin.Runtime, ownerName string, repoName string, content *github.RepositoryContent) (*mqlGithubFile, error) {
 	isBinary := false
-	if convert.ToString(content.Type) == "file" {
-		file := strings.Split(convert.ToString(content.Path), ".")
+	if convert.ToValue(content.Type) == "file" {
+		file := strings.Split(convert.ToValue(content.Path), ".")
 		if len(file) == 2 {
 			isBinary = binaryFileTypes[file[1]]
 		}
@@ -1388,8 +1389,8 @@ func (g *mqlGithubFile) files() ([]interface{}, error) {
 	res := []interface{}{}
 	for i := range dirContent {
 		isBinary := false
-		if convert.ToString(dirContent[i].Type) == "file" {
-			file := strings.Split(convert.ToString(dirContent[i].Path), ".")
+		if convert.ToValue(dirContent[i].Type) == "file" {
+			file := strings.Split(convert.ToValue(dirContent[i].Path), ".")
 			if len(file) == 2 {
 				isBinary = binaryFileTypes[file[1]]
 			}
@@ -1610,7 +1611,7 @@ func (g *mqlGithubRepository) getIssues(state string) ([]interface{}, error) {
 		if resp.NextPage == 0 {
 			break
 		}
-		listOpts.Page = resp.NextPage
+		listOpts.ListOptions.Page = resp.NextPage
 	}
 
 	res := []interface{}{}

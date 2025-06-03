@@ -1,9 +1,6 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-//go:build debugtest
-// +build debugtest
-
 package gcpberglas
 
 import (
@@ -17,6 +14,8 @@ import (
 )
 
 func TestGcpBerglas(t *testing.T) {
+	t.Skip("Skip test as it requires actual GCP project and bucket")
+
 	// replace with actual values to test this
 	projectID := "project-id-here"
 	bucketName := " bucket-name"

@@ -1,0 +1,34 @@
+[commands."uname -s"]
+stdout = "AIX"
+
+[commands."uname -m"]
+stdout = "00CC00A04B00"
+
+[commands."uname -rvp"]
+stdout = "3 7 powerpc"
+
+[commands."oslevel -s"]
+stdout = "7300-03-00-2446"
+
+[commands."prtconf"]
+stdout = """
+System Model: IBM,9009-22A
+Machine Serial Number: 78C00A0
+Processor Type: PowerPC_POWER9
+Processor Implementation Mode: POWER 9
+Processor Version: PV_9_Compat
+Number Of Processors: 1
+Processor Clock Speed: 2500 MHz
+CPU Type: 64-bit
+Kernel Type: 64-bit
+LPAR Info: 37 ans-4-51e59a83-000373d8
+Memory Size: 2048 MB
+Good Memory Size: 2048 MB
+Platform Firmware level: VL950_168
+Firmware Version: IBM,FW950.C1 (VL950_168)
+Console Login: enable
+Auto Restart: true
+Full Core: false
+NX Crypto Acceleration: Capable and Enabled
+In-Core Crypto Acceleration: Capable, but not Enabled
+"""

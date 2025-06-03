@@ -85,6 +85,10 @@ func TestCore_If(t *testing.T) {
 			Expectation: int64(789),
 		},
 		{
+			Code:        "if (1.0 == 1) { return 123 } return 456",
+			Expectation: int64(123),
+		},
+		{
 			// This test comes out from an issue we had where return was not
 			// generating a single entrypoint, causing the first reported
 			// value to be used as the return value.
@@ -370,6 +374,12 @@ func TestNumber_Methods(t *testing.T) {
 		{
 			Code: "3.0.inRange(1.0,2)", Expectation: false,
 		},
+		{
+			Code: "4.inRange('-4', '4')", Expectation: true,
+		},
+		{
+			Code: "5.inRange('-4', '4')", Expectation: false,
+		},
 	})
 }
 
@@ -437,6 +447,14 @@ func TestString_Methods(t *testing.T) {
 			Expectation: false,
 		},
 		{
+			Code:        "'hiya'.notIn(['one', 'hiya'])",
+			Expectation: false,
+		},
+		{
+			Code:        "'hiya'.notIn(['one', 'two'])",
+			Expectation: true,
+		},
+		{
 			Code:        "'oh-hello-world!'.camelcase",
 			Expectation: "ohHelloWorld!",
 		},
@@ -467,6 +485,10 @@ func TestString_Methods(t *testing.T) {
 		{
 			Code:        "'hello ' + 'world'",
 			Expectation: "hello world",
+		},
+		{
+			Code:        "'23'.inRange(1,23)",
+			Expectation: true,
 		},
 	})
 }
@@ -779,6 +801,15 @@ func TestMap(t *testing.T) {
 			Code:        m + ".c",
 			ResultIndex: 0, Expectation: int64(2),
 		},
+		{
+			Code:        m + ".c.inRange(0,3)",
+			ResultIndex: 0, Expectation: true,
+		},
+		{
+			// works with nil value
+			Code:        m + ".d.inRange(0,3)",
+			ResultIndex: 0, Expectation: false,
+		},
 		// contains
 		{
 			Code:        m + ".contains(key == 'a')",
@@ -863,28 +894,337 @@ func TestTime(t *testing.T) {
 	})
 }
 
-func TestSemver(t *testing.T) {
-	x.TestSimple(t, []testutils.SimpleTest{
-		{
-			Code:        "semver('1.2.3') == semver('1.2.3')",
-			ResultIndex: 2, Expectation: true,
-		},
-		{
-			Code:        "semver('1.2.3') == semver('1.2')",
-			ResultIndex: 2, Expectation: false,
-		},
-		{
-			Code:        "semver('1.2') < semver('1.10.2')",
-			ResultIndex: 2, Expectation: true,
-		},
-		{
-			Code:        "semver('1.10') >= semver('1.2.3')",
-			ResultIndex: 2, Expectation: true,
-		},
-		{
-			Code:        "semver('1.10') >= '1.2'",
-			ResultIndex: 2, Expectation: true,
-		},
+func TestVersion(t *testing.T) {
+	t.Run("regular version", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{
+				Code:        "version('1.2.3') == version('1.2.3')",
+				ResultIndex: 2, Expectation: true,
+			},
+			{
+				Code:        "version('1.2.3') == version('1.2')",
+				ResultIndex: 2, Expectation: false,
+			},
+			{
+				Code:        "version('1.2') < version('1.10.2')",
+				ResultIndex: 2, Expectation: true,
+			},
+			{
+				Code:        "version('1.10') >= version('1.2.3')",
+				ResultIndex: 2, Expectation: true,
+			},
+			{
+				Code:        "version('1.10') >= '1.2'",
+				ResultIndex: 2, Expectation: true,
+			},
+		})
+	})
+
+	t.Run("one-sided epoch", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{
+				Code:        "version('1.2.3') == version('1:1.2.3')",
+				ResultIndex: 2, Expectation: false,
+			},
+			{
+				Code:        "version('2:1.2.3') == version('1.2.3')",
+				ResultIndex: 2, Expectation: false,
+			},
+			{
+				Code:        "version('3:1.2') < version('1.10.2')",
+				ResultIndex: 2, Expectation: false,
+			},
+			{
+				Code:        "version('1.10') >= version('4:1.2.3')",
+				ResultIndex: 2, Expectation: false,
+			},
+			{
+				Code:        "version('1.2') <= version('3:1.10.2')",
+				ResultIndex: 2, Expectation: true,
+			},
+			{
+				Code:        "version('4:1.10') > version('1.2.3')",
+				ResultIndex: 2, Expectation: true,
+			},
+		})
+	})
+
+	t.Run("deb/rpm epochs", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{
+				Code:        "version('1.2.3').epoch",
+				ResultIndex: 0, Expectation: int64(0),
+			},
+			{
+				Code:        "version('7:1.2.3').epoch",
+				ResultIndex: 0, Expectation: int64(7),
+			},
+		})
+	})
+
+	t.Run("python epochs", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{
+				Code:        "version('1.2.3').epoch",
+				ResultIndex: 0, Expectation: int64(0),
+			},
+			{
+				Code:        "version('5!1.2.3').epoch",
+				ResultIndex: 0, Expectation: int64(5),
+			},
+		})
+	})
+
+	t.Run("different epochs", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{
+				Code:        "version('2:1.2.3') == version('1:1.2.3')",
+				ResultIndex: 2, Expectation: false,
+			},
+			{
+				Code:        "version('2:1.2.3') == version('3:1.2.3')",
+				ResultIndex: 2, Expectation: false,
+			},
+			{
+				Code:        "version('3:1.2') < version('1:1.10.2')",
+				ResultIndex: 2, Expectation: false,
+			},
+			{
+				Code:        "version('2:1.10') >= version('4:1.2.3')",
+				ResultIndex: 2, Expectation: false,
+			},
+			{
+				Code:        "version('2:1.2') <= version('3:1.0.2')",
+				ResultIndex: 2, Expectation: true,
+			},
+			{
+				Code:        "version('4:1.1') > version('1:1.2.3')",
+				ResultIndex: 2, Expectation: true,
+			},
+		})
+	})
+
+	t.Run("version with equal epochs", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{
+				Code:        "version('1:1.2.3') == version('1:1.2.3')",
+				ResultIndex: 2, Expectation: true,
+			},
+			{
+				Code:        "version('2:1.2.3') == version('2:1.2')",
+				ResultIndex: 2, Expectation: false,
+			},
+			{
+				Code:        "version('3:1.2') < version('3:1.10.2')",
+				ResultIndex: 2, Expectation: true,
+			},
+			{
+				Code:        "version('4:1.10') >= version('4:1.2.3')",
+				ResultIndex: 2, Expectation: true,
+			},
+			{
+				Code:        "version('5:1.10') >= '5:1.2'",
+				ResultIndex: 2, Expectation: true,
+			},
+		})
+	})
+
+	t.Run("version type set to semver", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{
+				Code:        "version('1.2.3', type: 'semver')",
+				ResultIndex: 0, Expectation: "1.2.3",
+			},
+		})
+		x.TestSimpleErrors(t, []testutils.SimpleTest{
+			{
+				Code:        "version('1:1.2.3', type: 'semver')",
+				ResultIndex: 1, Expectation: "version '1:1.2.3' is not a semantic version",
+			},
+		})
+	})
+
+	t.Run("version inRange", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "version('1.2.3').inRange('>= 1.0.0', '< 2.0.0')", ResultIndex: 0, Expectation: true},
+			{Code: "version('1.2.3').inRange('>= 1.0.0', '< 1.2.0')", ResultIndex: 0, Expectation: false},
+			{Code: "version('1.2.3').inRange('>= 1.0.0', '<= 1.2.3')", ResultIndex: 0, Expectation: true},
+			{Code: "version('1.2.3').inRange('>= 1.0.0', '< 1.2.3')", ResultIndex: 0, Expectation: false},
+			{Code: "version('1.2.3').inRange('>= 1.2.3', '< 2.0.0')", ResultIndex: 0, Expectation: true},
+			{Code: "version('1.2.3').inRange('> 1.2.3', '< 2.0.0')", ResultIndex: 0, Expectation: false},
+			{Code: "version('1.2.3').inRange('1.0.0', '1.2.3')", ResultIndex: 0, Expectation: true},
+			{Code: "version('1.2.3').inRange('1.2.3', '2.0.0')", ResultIndex: 0, Expectation: true},
+			{Code: "version('1.2.3').inRange('1.2.3', '1.2.3')", ResultIndex: 0, Expectation: true},
+		})
+
+		x.TestSimpleErrors(t, []testutils.SimpleTest{
+			{Code: "version('1:1.2.3').inRange('>= 1.0.0', '< 2.0.0')", ResultIndex: 0, Expectation: "inRange is only supported on comparable versions (epoch doesn't work yet)"},
+			{Code: "version('1.2.3.4.5').inRange('>= 1.0.0', '< 2.0.0')", ResultIndex: 0, Expectation: "inRange is only supported on comparable versions (semver or similar)"},
+		})
+	})
+}
+
+func TestIP(t *testing.T) {
+	t.Run("ipv4", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "ip('1.2.3.4').version", Expectation: int64(4)},
+			{Code: "ip('1.2.3.4').isUnspecified", Expectation: false},
+			{Code: "ip('0.0.0.0').isUnspecified", Expectation: true},
+			{Code: "ip('1.2.3.4').prefixLength", Expectation: int64(8)},
+			{Code: "ip('128.2.3.4').prefixLength", Expectation: int64(16)},
+			{Code: "ip('192.2.3.4').prefixLength", Expectation: int64(24)},
+			{Code: "ip(2885681153) == ip('172.0.0.1')", Expectation: true, ResultIndex: 2},
+		})
+	})
+
+	t.Run("ipv6", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "ip('2001:db8:3c4d:15::1a2f:1a2b').version", Expectation: int64(6)},
+			{Code: "ip('2001:db8:3c4d:15::1a2f:1a2b').isUnspecified", Expectation: false},
+			{Code: "ip('0:0:0:0:0:0:0:0').isUnspecified", Expectation: true},
+			{Code: "ip('::').isUnspecified", Expectation: true},
+			{Code: "ip('::/128').isUnspecified", Expectation: true},
+		})
+	})
+
+	t.Run("ip.address", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "ip('1.2.3.4').address", Expectation: "1.2.3.4"},
+			{Code: "ip('1.2.3.4/24').address", Expectation: "1.2.3.4"},
+			{Code: "ip('192.168.0.0').address", Expectation: "192.168.0.0"},
+			{Code: "ip('2001:db8:3c4d:0015:0000:0000:1a2f:1a2b').address", Expectation: "2001:db8:3c4d:15::1a2f:1a2b"},
+		})
+	})
+
+	t.Run("ip.cidr", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "ip('1.2.3.4').cidr", Expectation: "1.2.3.4/8"},
+			{Code: "ip('1.2.3.4/24').cidr", Expectation: "1.2.3.4/24"},
+			{Code: "ip('192.168.0.0').cidr", Expectation: "192.168.0.0/24"},
+			{Code: "ip('2001:db8:3c4d:0015:0000:0000:1a2f:1a2b').cidr", Expectation: "2001:db8:3c4d:15::1a2f:1a2b/64"},
+		})
+	})
+
+	t.Run("ipv4 mask+prefix", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "ip('1.2.3.4/32').prefix", Expectation: "1.2.3.4"},
+			{Code: "ip('1.2.3.4/24').prefix", Expectation: "1.2.3.0"},
+			{Code: "ip('1.2.3.4/16').prefix", Expectation: "1.2.0.0"},
+			{Code: "ip('1.2.3.4/8').prefix", Expectation: "1.0.0.0"},
+			// edge-cases
+			{Code: "ip('1.2.3.4/0').prefix", Expectation: "0.0.0.0"},
+			{Code: "ip('1.2.3.4/40').prefix", Expectation: "1.2.3.4"},
+			// precision
+			{Code: "ip('255.2.3.4/1').prefix", Expectation: "128.0.0.0"},
+			{Code: "ip('1.255.3.4/9').prefix", Expectation: "1.128.0.0"},
+			{Code: "ip('1.255.3.4/10').prefix", Expectation: "1.192.0.0"},
+			{Code: "ip('1.255.3.4/11').prefix", Expectation: "1.224.0.0"},
+			{Code: "ip('1.255.3.4/12').prefix", Expectation: "1.240.0.0"},
+			{Code: "ip('1.255.3.4/13').prefix", Expectation: "1.248.0.0"},
+			{Code: "ip('1.255.3.4/14').prefix", Expectation: "1.252.0.0"},
+			{Code: "ip('1.255.3.4/15').prefix", Expectation: "1.254.0.0"},
+			{Code: "ip('1.255.3.4/16').prefix", Expectation: "1.255.0.0"},
+		})
+	})
+
+	t.Run("ipv6 mask+prefix", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "ip('2001:db8:3c4d:15::1a2f:1a2b').prefix", Expectation: "2001:db8:3c4d:15::"},
+			{Code: "ip('2001:db8:3c4d:15::1a2f:1a2b/48').prefix", Expectation: "2001:db8:3c4d::"},
+			{Code: "ip('::/128').prefix", Expectation: "::"},
+		})
+	})
+
+	t.Run("ipv4 mask+suffix", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "ip('1.2.3.4/32').suffix", Expectation: "0.0.0.0"},
+			{Code: "ip('1.2.3.4/24').suffix", Expectation: "0.0.0.4"},
+			{Code: "ip('1.2.3.4/16').suffix", Expectation: "0.0.3.4"},
+			{Code: "ip('1.2.3.4/8').suffix", Expectation: "0.2.3.4"},
+			// edge-cases
+			{Code: "ip('1.2.3.4/0').suffix", Expectation: "1.2.3.4"},
+			{Code: "ip('1.2.3.4/40').suffix", Expectation: "0.0.0.0"},
+			// precision
+			{Code: "ip('1.2.3.255/31').suffix", Expectation: "0.0.0.1"},
+			{Code: "ip('1.255.3.4/9').suffix", Expectation: "0.127.3.4"},
+			{Code: "ip('1.255.3.4/10').suffix", Expectation: "0.63.3.4"},
+			{Code: "ip('1.255.3.4/11').suffix", Expectation: "0.31.3.4"},
+			{Code: "ip('1.255.3.4/12').suffix", Expectation: "0.15.3.4"},
+			{Code: "ip('1.255.3.4/13').suffix", Expectation: "0.7.3.4"},
+			{Code: "ip('1.255.3.4/14').suffix", Expectation: "0.3.3.4"},
+			{Code: "ip('1.255.3.4/15').suffix", Expectation: "0.1.3.4"},
+			{Code: "ip('1.255.3.4/16').suffix", Expectation: "0.0.3.4"},
+		})
+	})
+
+	t.Run("ipv6 mask+suffix", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "ip('2001:db8:3c4d:15::1a2f:1a2b').suffix", Expectation: "::1a2f:1a2b"},
+			{Code: "ip('2001:db8:3c4d:15::1a2f:1a2b/48').suffix", Expectation: "::1a2f:1a2b"},
+			{Code: "ip('2001:db8:3c4d:15::1a2f:1a2b/112').suffix", Expectation: "::1a2b"},
+			{Code: "ip('2001:db8:3c4d:15::1a2f:1a2b/128').suffix", Expectation: "::"},
+			{Code: "ip('::/128').suffix", Expectation: "::"},
+		})
+	})
+
+	t.Run("ipv4 subnet", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "ip('1.2.3.4/32').subnet", Expectation: "255.255.255.255"},
+			{Code: "ip('1.2.3.4/24').subnet", Expectation: "255.255.255.0"},
+			{Code: "ip('1.2.3.4/16').subnet", Expectation: "255.255.0.0"},
+			{Code: "ip('1.2.3.4/8').subnet", Expectation: "255.0.0.0"},
+			{Code: "ip('1.2.3.4/0').subnet", Expectation: "0.0.0.0"},
+			// edge-cases
+			{Code: "ip('1.2.3.4/40').subnet", Expectation: "255.255.255.255"},
+			// bitwise
+			{Code: "ip('1.2.3.4/9').subnet", Expectation: "255.128.0.0"},
+			{Code: "ip('1.2.3.4/10').subnet", Expectation: "255.192.0.0"},
+			{Code: "ip('1.2.3.4/11').subnet", Expectation: "255.224.0.0"},
+			{Code: "ip('1.2.3.4/12').subnet", Expectation: "255.240.0.0"},
+			{Code: "ip('1.2.3.4/13').subnet", Expectation: "255.248.0.0"},
+			{Code: "ip('1.2.3.4/14').subnet", Expectation: "255.252.0.0"},
+			{Code: "ip('1.2.3.4/15').subnet", Expectation: "255.254.0.0"},
+		})
+	})
+
+	t.Run("ipv6 subnet", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "ip('2001:db8:3c4d:15::1a2f:1a2b/64').subnet", Expectation: ""},
+			{Code: "ip('2001:db8:3c4d:15::1a2f:1a2b/48').subnet", Expectation: "15"},
+			{Code: "ip('2001:db8:3c4d:15::1a2f:1a2b/40').subnet", Expectation: "4d:15"},
+			{Code: "ip('2001:db8:3c4d:15::1a2f:1a2b/32').subnet", Expectation: "3c4d:15"},
+		})
+	})
+
+	t.Run("ipv4 inRange with subnet", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "ip('192.2.3.4').inRange('192.2.3.0')", Expectation: true},
+			{Code: "ip('192.2.4.4').inRange('192.2.3.0')", Expectation: false},
+			{Code: "ip('192.2.3.4').inRange('192.2.3.0/24')", Expectation: true},
+			{Code: "ip('192.2.3.4').inRange('192.2.3.128/30')", Expectation: false},
+			{Code: "ip('192.2.3.4').inRange(ip('192.2.3.0/24'))", Expectation: true},
+			{Code: "ip('192.2.3.4').inRange('192.2.3.255/24')", Expectation: true},
+			{Code: "ip('192.2.3.4').inRange('192.2.3.0/16')", Expectation: false},
+			{Code: "ip('10.0.0.5').inRange(167772160)", Expectation: true},
+		})
+	})
+
+	t.Run("ipv4 inRange with two IPs", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "ip('192.2.3.4').inRange('192.2.3.0', '192.2.3.5')", Expectation: true},
+			{Code: "ip('192.2.3.4').inRange(ip('192.2.3.3'), ip('192.2.3.5'))", Expectation: true},
+			{Code: "ip('192.2.3.4').inRange('192.2.3.4', '192.2.3.4')", Expectation: true},
+			{Code: "ip('192.2.3.4').inRange('192.2.3.5', '192.2.3.255')", Expectation: false},
+			{Code: "ip('192.2.3.4').inRange(1, 3238002688)", Expectation: true},
+			{Code: "ip('192.2.3.4').inRange(3238001688, 3238002688)", Expectation: false},
+		})
+	})
+
+	t.Run("ipv6 inRange with two IPs", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{Code: "ip('2001:db8:3c4d:15::1a2f:1a2b').inRange('2001:db8:3c4d::', '2001:db8:3c4e::')", Expectation: true},
+			{Code: "ip('2001:db8:3c4d:15::1a2f:1a2b').inRange('2001:db8:3c4e::', '2001:db8:3c4f::')", Expectation: false},
+		})
 	})
 }
 

@@ -66,8 +66,12 @@ func ResolveManager(conn shared.Connection, pf *inventory.Platform) (SmBiosManag
 	// check darwin before unix since darwin is also a unix
 	if pf.IsFamily("darwin") {
 		biosM = &OSXSmbiosManager{provider: conn, platform: pf}
-	} else if pf.IsFamily("linux") {
-		biosM = &LinuxSmbiosManager{provider: conn}
+	} else if pf.IsFamily(inventory.FAMILY_UNIX) {
+		if pf.Name == "aix" {
+			biosM = &AIXSmbiosManager{provider: conn}
+		} else {
+			biosM = &LinuxSmbiosManager{provider: conn}
+		}
 	} else if pf.IsFamily("windows") {
 		biosM = &WindowsSmbiosManager{provider: conn}
 	}

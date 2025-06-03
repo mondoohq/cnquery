@@ -19,9 +19,11 @@ http {}
 
 // HTTP GET requests
 http.get @defaults("url statusCode") {
-  init(rawUrl string)
+  init(rawUrl string, followRedirects bool)
   // URL for this request
   url url
+  // Follow redirects
+  followRedirects bool
   // Header returned from this request
   header() http.header
   // Status returned from this request

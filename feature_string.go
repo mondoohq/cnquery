@@ -17,11 +17,13 @@ func _() {
 	_ = x[StoreResourcesData-7]
 	_ = x[FineGrainedAssets-8]
 	_ = x[SerialNumberAsID-9]
+	_ = x[ForceShellCompletion-10]
+	_ = x[ResourceContext-11]
 }
 
-const _Feature_name = "MassQueriesPiperCodeBoolAssertionsK8sNodeDiscoveryMQLAssetContextErrorsAsFailuresStoreResourcesDataFineGrainedAssetsSerialNumberAsID"
+const _Feature_name = "MassQueriesPiperCodeBoolAssertionsK8sNodeDiscoveryMQLAssetContextErrorsAsFailuresStoreResourcesDataFineGrainedAssetsSerialNumberAsIDForceShellCompletionResourceContext"
 
-var _Feature_index = [...]uint8{0, 11, 20, 34, 50, 65, 81, 99, 116, 132}
+var _Feature_index = [...]uint8{0, 11, 20, 34, 50, 65, 81, 99, 116, 132, 152, 167}
 
 func (i Feature) String() string {
 	i -= 1

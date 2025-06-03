@@ -22,9 +22,21 @@ func init() {
 			// to override args, implement: initMicrosoft(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoft,
 		},
+		"microsoft.groups": {
+			Init: initMicrosoftGroups,
+			Create: createMicrosoftGroups,
+		},
+		"microsoft.applications": {
+			// to override args, implement: initMicrosoftApplications(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftApplications,
+		},
 		"microsoft.tenant": {
 			Init: initMicrosoftTenant,
 			Create: createMicrosoftTenant,
+		},
+		"microsoft.users": {
+			Init: initMicrosoftUsers,
+			Create: createMicrosoftUsers,
 		},
 		"microsoft.conditionalAccess": {
 			// to override args, implement: initMicrosoftConditionalAccess(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -65,6 +77,14 @@ func init() {
 		"microsoft.group": {
 			// to override args, implement: initMicrosoftGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftGroup,
+		},
+		"microsoft.devices": {
+			Init: initMicrosoftDevices,
+			Create: createMicrosoftDevices,
+		},
+		"microsoft.device": {
+			Init: initMicrosoftDevice,
+			Create: createMicrosoftDevice,
 		},
 		"microsoft.domain": {
 			// to override args, implement: initMicrosoftDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -117,6 +137,10 @@ func init() {
 		"microsoft.policies": {
 			// to override args, implement: initMicrosoftPolicies(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftPolicies,
+		},
+		"microsoft.roles": {
+			Init: initMicrosoftRoles,
+			Create: createMicrosoftRoles,
 		},
 		"microsoft.rolemanagement": {
 			// to override args, implement: initMicrosoftRolemanagement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -258,16 +282,16 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlMicrosoft).GetOrganizations()).ToDataRes(types.Array(types.Resource("microsoft.tenant")))
 	},
 	"microsoft.users": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoft).GetUsers()).ToDataRes(types.Array(types.Resource("microsoft.user")))
+		return (r.(*mqlMicrosoft).GetUsers()).ToDataRes(types.Resource("microsoft.users"))
 	},
 	"microsoft.groups": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoft).GetGroups()).ToDataRes(types.Array(types.Resource("microsoft.group")))
+		return (r.(*mqlMicrosoft).GetGroups()).ToDataRes(types.Resource("microsoft.groups"))
 	},
 	"microsoft.domains": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoft).GetDomains()).ToDataRes(types.Array(types.Resource("microsoft.domain")))
 	},
 	"microsoft.applications": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoft).GetApplications()).ToDataRes(types.Array(types.Resource("microsoft.application")))
+		return (r.(*mqlMicrosoft).GetApplications()).ToDataRes(types.Resource("microsoft.applications"))
 	},
 	"microsoft.serviceprincipals": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoft).GetServiceprincipals()).ToDataRes(types.Array(types.Resource("microsoft.serviceprincipal")))
@@ -276,13 +300,25 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlMicrosoft).GetEnterpriseApplications()).ToDataRes(types.Array(types.Resource("microsoft.serviceprincipal")))
 	},
 	"microsoft.roles": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoft).GetRoles()).ToDataRes(types.Array(types.Resource("microsoft.rolemanagement.roledefinition")))
+		return (r.(*mqlMicrosoft).GetRoles()).ToDataRes(types.Resource("microsoft.roles"))
 	},
 	"microsoft.settings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoft).GetSettings()).ToDataRes(types.Dict)
 	},
 	"microsoft.tenantDomainName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoft).GetTenantDomainName()).ToDataRes(types.String)
+	},
+	"microsoft.groups.length": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftGroups).GetLength()).ToDataRes(types.Int)
+	},
+	"microsoft.groups.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftGroups).GetList()).ToDataRes(types.Array(types.Resource("microsoft.group")))
+	},
+	"microsoft.applications.length": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplications).GetLength()).ToDataRes(types.Int)
+	},
+	"microsoft.applications.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplications).GetList()).ToDataRes(types.Array(types.Resource("microsoft.application")))
 	},
 	"microsoft.tenant.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenant).GetId()).ToDataRes(types.String)
@@ -316,6 +352,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.tenant.subscriptions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenant).GetSubscriptions()).ToDataRes(types.Array(types.Dict))
+	},
+	"microsoft.users.filter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUsers).GetFilter()).ToDataRes(types.String)
+	},
+	"microsoft.users.search": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUsers).GetSearch()).ToDataRes(types.String)
+	},
+	"microsoft.users.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUsers).GetList()).ToDataRes(types.Array(types.Resource("microsoft.user")))
 	},
 	"microsoft.conditionalAccess.namedLocations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftConditionalAccess).GetNamedLocations()).ToDataRes(types.Resource("microsoft.conditionalAccess.namedLocations"))
@@ -529,6 +574,69 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.group.membershipRuleProcessingState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftGroup).GetMembershipRuleProcessingState()).ToDataRes(types.String)
+	},
+	"microsoft.devices.filter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevices).GetFilter()).ToDataRes(types.String)
+	},
+	"microsoft.devices.search": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevices).GetSearch()).ToDataRes(types.String)
+	},
+	"microsoft.devices.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevices).GetList()).ToDataRes(types.Array(types.Resource("microsoft.device")))
+	},
+	"microsoft.device.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.device.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.device.deviceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetDeviceId()).ToDataRes(types.String)
+	},
+	"microsoft.device.deviceCategory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetDeviceCategory()).ToDataRes(types.String)
+	},
+	"microsoft.device.enrollmentProfileName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetEnrollmentProfileName()).ToDataRes(types.String)
+	},
+	"microsoft.device.enrollmentType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetEnrollmentType()).ToDataRes(types.String)
+	},
+	"microsoft.device.isCompliant": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetIsCompliant()).ToDataRes(types.Bool)
+	},
+	"microsoft.device.isManaged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetIsManaged()).ToDataRes(types.Bool)
+	},
+	"microsoft.device.manufacturer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetManufacturer()).ToDataRes(types.String)
+	},
+	"microsoft.device.isRooted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetIsRooted()).ToDataRes(types.Bool)
+	},
+	"microsoft.device.mdmAppId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetMdmAppId()).ToDataRes(types.String)
+	},
+	"microsoft.device.model": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetModel()).ToDataRes(types.String)
+	},
+	"microsoft.device.operatingSystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetOperatingSystem()).ToDataRes(types.String)
+	},
+	"microsoft.device.operatingSystemVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetOperatingSystemVersion()).ToDataRes(types.String)
+	},
+	"microsoft.device.physicalIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetPhysicalIds()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.device.registrationDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetRegistrationDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.device.systemLabels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetSystemLabels()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.device.trustType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetTrustType()).ToDataRes(types.String)
 	},
 	"microsoft.domain.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDomain).GetId()).ToDataRes(types.String)
@@ -950,8 +1058,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.policies.consentPolicySettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftPolicies).GetConsentPolicySettings()).ToDataRes(types.Dict)
 	},
+	"microsoft.roles.filter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftRoles).GetFilter()).ToDataRes(types.String)
+	},
+	"microsoft.roles.search": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftRoles).GetSearch()).ToDataRes(types.String)
+	},
+	"microsoft.roles.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftRoles).GetList()).ToDataRes(types.Array(types.Resource("microsoft.rolemanagement.roledefinition")))
+	},
 	"microsoft.rolemanagement.roleDefinitions": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftRolemanagement).GetRoleDefinitions()).ToDataRes(types.Array(types.Resource("microsoft.rolemanagement.roledefinition")))
+		return (r.(*mqlMicrosoftRolemanagement).GetRoleDefinitions()).ToDataRes(types.Resource("microsoft.roles"))
 	},
 	"microsoft.rolemanagement.roledefinition.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftRolemanagementRoledefinition).GetId()).ToDataRes(types.String)
@@ -1259,11 +1376,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoft).Users, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlMicrosoft).Users, ok = plugin.RawToTValue[*mqlMicrosoftUsers](v.Value, v.Error)
 		return
 	},
 	"microsoft.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoft).Groups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlMicrosoft).Groups, ok = plugin.RawToTValue[*mqlMicrosoftGroups](v.Value, v.Error)
 		return
 	},
 	"microsoft.domains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1271,7 +1388,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.applications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoft).Applications, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlMicrosoft).Applications, ok = plugin.RawToTValue[*mqlMicrosoftApplications](v.Value, v.Error)
 		return
 	},
 	"microsoft.serviceprincipals": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1283,7 +1400,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoft).Roles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlMicrosoft).Roles, ok = plugin.RawToTValue[*mqlMicrosoftRoles](v.Value, v.Error)
 		return
 	},
 	"microsoft.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1292,6 +1409,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.tenantDomainName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoft).TenantDomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.groups.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftGroups).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.groups.length": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftGroups).Length, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"microsoft.groups.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftGroups).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.applications.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftApplications).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.applications.length": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplications).Length, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"microsoft.applications.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplications).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"microsoft.tenant.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1340,6 +1481,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.tenant.subscriptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftTenant).Subscriptions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.users.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftUsers).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.users.filter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUsers).Filter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.users.search": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUsers).Search, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.users.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUsers).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"microsoft.conditionalAccess.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1664,6 +1821,98 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.group.membershipRuleProcessingState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftGroup).MembershipRuleProcessingState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devices.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftDevices).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.devices.filter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevices).Filter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devices.search": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevices).Search, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devices.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevices).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftDevice).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.device.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.deviceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).DeviceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.deviceCategory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).DeviceCategory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.enrollmentProfileName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).EnrollmentProfileName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.enrollmentType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).EnrollmentType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.isCompliant": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).IsCompliant, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.isManaged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).IsManaged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.manufacturer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).Manufacturer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.isRooted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).IsRooted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.mdmAppId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).MdmAppId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.model": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).Model, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.operatingSystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).OperatingSystem, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.operatingSystemVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).OperatingSystemVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.physicalIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).PhysicalIds, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.registrationDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).RegistrationDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.systemLabels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).SystemLabels, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.trustType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).TrustType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.domain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2278,12 +2527,28 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMicrosoftPolicies).ConsentPolicySettings, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
+	"microsoft.roles.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftRoles).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.roles.filter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftRoles).Filter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.roles.search": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftRoles).Search, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.roles.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftRoles).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"microsoft.rolemanagement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlMicrosoftRolemanagement).__id, ok = v.Value.(string)
 			return
 		},
 	"microsoft.rolemanagement.roleDefinitions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftRolemanagement).RoleDefinitions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlMicrosoftRolemanagement).RoleDefinitions, ok = plugin.RawToTValue[*mqlMicrosoftRoles](v.Value, v.Error)
 		return
 	},
 	"microsoft.rolemanagement.roledefinition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2760,13 +3025,13 @@ type mqlMicrosoft struct {
 	__id string
 	mqlMicrosoftInternal
 	Organizations plugin.TValue[[]interface{}]
-	Users plugin.TValue[[]interface{}]
-	Groups plugin.TValue[[]interface{}]
+	Users plugin.TValue[*mqlMicrosoftUsers]
+	Groups plugin.TValue[*mqlMicrosoftGroups]
 	Domains plugin.TValue[[]interface{}]
-	Applications plugin.TValue[[]interface{}]
+	Applications plugin.TValue[*mqlMicrosoftApplications]
 	Serviceprincipals plugin.TValue[[]interface{}]
 	EnterpriseApplications plugin.TValue[[]interface{}]
-	Roles plugin.TValue[[]interface{}]
+	Roles plugin.TValue[*mqlMicrosoftRoles]
 	Settings plugin.TValue[interface{}]
 	TenantDomainName plugin.TValue[string]
 }
@@ -2819,15 +3084,15 @@ func (c *mqlMicrosoft) GetOrganizations() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlMicrosoft) GetUsers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Users, func() ([]interface{}, error) {
+func (c *mqlMicrosoft) GetUsers() *plugin.TValue[*mqlMicrosoftUsers] {
+	return plugin.GetOrCompute[*mqlMicrosoftUsers](&c.Users, func() (*mqlMicrosoftUsers, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft", c.__id, "users")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.(*mqlMicrosoftUsers), nil
 			}
 		}
 
@@ -2835,15 +3100,15 @@ func (c *mqlMicrosoft) GetUsers() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlMicrosoft) GetGroups() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Groups, func() ([]interface{}, error) {
+func (c *mqlMicrosoft) GetGroups() *plugin.TValue[*mqlMicrosoftGroups] {
+	return plugin.GetOrCompute[*mqlMicrosoftGroups](&c.Groups, func() (*mqlMicrosoftGroups, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft", c.__id, "groups")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.(*mqlMicrosoftGroups), nil
 			}
 		}
 
@@ -2867,15 +3132,15 @@ func (c *mqlMicrosoft) GetDomains() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlMicrosoft) GetApplications() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Applications, func() ([]interface{}, error) {
+func (c *mqlMicrosoft) GetApplications() *plugin.TValue[*mqlMicrosoftApplications] {
+	return plugin.GetOrCompute[*mqlMicrosoftApplications](&c.Applications, func() (*mqlMicrosoftApplications, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft", c.__id, "applications")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.(*mqlMicrosoftApplications), nil
 			}
 		}
 
@@ -2915,15 +3180,15 @@ func (c *mqlMicrosoft) GetEnterpriseApplications() *plugin.TValue[[]interface{}]
 	})
 }
 
-func (c *mqlMicrosoft) GetRoles() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Roles, func() ([]interface{}, error) {
+func (c *mqlMicrosoft) GetRoles() *plugin.TValue[*mqlMicrosoftRoles] {
+	return plugin.GetOrCompute[*mqlMicrosoftRoles](&c.Roles, func() (*mqlMicrosoftRoles, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft", c.__id, "roles")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.(*mqlMicrosoftRoles), nil
 			}
 		}
 
@@ -2940,6 +3205,132 @@ func (c *mqlMicrosoft) GetSettings() *plugin.TValue[interface{}] {
 func (c *mqlMicrosoft) GetTenantDomainName() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.TenantDomainName, func() (string, error) {
 		return c.tenantDomainName()
+	})
+}
+
+// mqlMicrosoftGroups for the microsoft.groups resource
+type mqlMicrosoftGroups struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftGroupsInternal it will be used here
+	Length plugin.TValue[int64]
+	List plugin.TValue[[]interface{}]
+}
+
+// createMicrosoftGroups creates a new instance of this resource
+func createMicrosoftGroups(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftGroups{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.groups", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftGroups) MqlName() string {
+	return "microsoft.groups"
+}
+
+func (c *mqlMicrosoftGroups) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftGroups) GetLength() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Length, func() (int64, error) {
+		return c.length()
+	})
+}
+
+func (c *mqlMicrosoftGroups) GetList() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.groups", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlMicrosoftApplications for the microsoft.applications resource
+type mqlMicrosoftApplications struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftApplicationsInternal it will be used here
+	Length plugin.TValue[int64]
+	List plugin.TValue[[]interface{}]
+}
+
+// createMicrosoftApplications creates a new instance of this resource
+func createMicrosoftApplications(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftApplications{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.applications", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftApplications) MqlName() string {
+	return "microsoft.applications"
+}
+
+func (c *mqlMicrosoftApplications) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftApplications) GetLength() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Length, func() (int64, error) {
+		return c.length()
+	})
+}
+
+func (c *mqlMicrosoftApplications) GetList() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.applications", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.list()
 	})
 }
 
@@ -3041,6 +3432,72 @@ func (c *mqlMicrosoftTenant) GetType() *plugin.TValue[string] {
 func (c *mqlMicrosoftTenant) GetSubscriptions() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.Subscriptions, func() ([]interface{}, error) {
 		return c.subscriptions()
+	})
+}
+
+// mqlMicrosoftUsers for the microsoft.users resource
+type mqlMicrosoftUsers struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftUsersInternal it will be used here
+	Filter plugin.TValue[string]
+	Search plugin.TValue[string]
+	List plugin.TValue[[]interface{}]
+}
+
+// createMicrosoftUsers creates a new instance of this resource
+func createMicrosoftUsers(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftUsers{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.users", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftUsers) MqlName() string {
+	return "microsoft.users"
+}
+
+func (c *mqlMicrosoftUsers) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftUsers) GetFilter() *plugin.TValue[string] {
+	return &c.Filter
+}
+
+func (c *mqlMicrosoftUsers) GetSearch() *plugin.TValue[string] {
+	return &c.Search
+}
+
+func (c *mqlMicrosoftUsers) GetList() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.users", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.list()
 	})
 }
 
@@ -3906,6 +4363,201 @@ func (c *mqlMicrosoftGroup) GetMembershipRule() *plugin.TValue[string] {
 
 func (c *mqlMicrosoftGroup) GetMembershipRuleProcessingState() *plugin.TValue[string] {
 	return &c.MembershipRuleProcessingState
+}
+
+// mqlMicrosoftDevices for the microsoft.devices resource
+type mqlMicrosoftDevices struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftDevicesInternal it will be used here
+	Filter plugin.TValue[string]
+	Search plugin.TValue[string]
+	List plugin.TValue[[]interface{}]
+}
+
+// createMicrosoftDevices creates a new instance of this resource
+func createMicrosoftDevices(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftDevices{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.devices", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftDevices) MqlName() string {
+	return "microsoft.devices"
+}
+
+func (c *mqlMicrosoftDevices) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftDevices) GetFilter() *plugin.TValue[string] {
+	return &c.Filter
+}
+
+func (c *mqlMicrosoftDevices) GetSearch() *plugin.TValue[string] {
+	return &c.Search
+}
+
+func (c *mqlMicrosoftDevices) GetList() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.devices", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlMicrosoftDevice for the microsoft.device resource
+type mqlMicrosoftDevice struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftDeviceInternal it will be used here
+	Id plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	DeviceId plugin.TValue[string]
+	DeviceCategory plugin.TValue[string]
+	EnrollmentProfileName plugin.TValue[string]
+	EnrollmentType plugin.TValue[string]
+	IsCompliant plugin.TValue[bool]
+	IsManaged plugin.TValue[bool]
+	Manufacturer plugin.TValue[string]
+	IsRooted plugin.TValue[bool]
+	MdmAppId plugin.TValue[string]
+	Model plugin.TValue[string]
+	OperatingSystem plugin.TValue[string]
+	OperatingSystemVersion plugin.TValue[string]
+	PhysicalIds plugin.TValue[[]interface{}]
+	RegistrationDateTime plugin.TValue[*time.Time]
+	SystemLabels plugin.TValue[[]interface{}]
+	TrustType plugin.TValue[string]
+}
+
+// createMicrosoftDevice creates a new instance of this resource
+func createMicrosoftDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftDevice{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.device", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftDevice) MqlName() string {
+	return "microsoft.device"
+}
+
+func (c *mqlMicrosoftDevice) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftDevice) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftDevice) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftDevice) GetDeviceId() *plugin.TValue[string] {
+	return &c.DeviceId
+}
+
+func (c *mqlMicrosoftDevice) GetDeviceCategory() *plugin.TValue[string] {
+	return &c.DeviceCategory
+}
+
+func (c *mqlMicrosoftDevice) GetEnrollmentProfileName() *plugin.TValue[string] {
+	return &c.EnrollmentProfileName
+}
+
+func (c *mqlMicrosoftDevice) GetEnrollmentType() *plugin.TValue[string] {
+	return &c.EnrollmentType
+}
+
+func (c *mqlMicrosoftDevice) GetIsCompliant() *plugin.TValue[bool] {
+	return &c.IsCompliant
+}
+
+func (c *mqlMicrosoftDevice) GetIsManaged() *plugin.TValue[bool] {
+	return &c.IsManaged
+}
+
+func (c *mqlMicrosoftDevice) GetManufacturer() *plugin.TValue[string] {
+	return &c.Manufacturer
+}
+
+func (c *mqlMicrosoftDevice) GetIsRooted() *plugin.TValue[bool] {
+	return &c.IsRooted
+}
+
+func (c *mqlMicrosoftDevice) GetMdmAppId() *plugin.TValue[string] {
+	return &c.MdmAppId
+}
+
+func (c *mqlMicrosoftDevice) GetModel() *plugin.TValue[string] {
+	return &c.Model
+}
+
+func (c *mqlMicrosoftDevice) GetOperatingSystem() *plugin.TValue[string] {
+	return &c.OperatingSystem
+}
+
+func (c *mqlMicrosoftDevice) GetOperatingSystemVersion() *plugin.TValue[string] {
+	return &c.OperatingSystemVersion
+}
+
+func (c *mqlMicrosoftDevice) GetPhysicalIds() *plugin.TValue[[]interface{}] {
+	return &c.PhysicalIds
+}
+
+func (c *mqlMicrosoftDevice) GetRegistrationDateTime() *plugin.TValue[*time.Time] {
+	return &c.RegistrationDateTime
+}
+
+func (c *mqlMicrosoftDevice) GetSystemLabels() *plugin.TValue[[]interface{}] {
+	return &c.SystemLabels
+}
+
+func (c *mqlMicrosoftDevice) GetTrustType() *plugin.TValue[string] {
+	return &c.TrustType
 }
 
 // mqlMicrosoftDomain for the microsoft.domain resource
@@ -5250,12 +5902,78 @@ func (c *mqlMicrosoftPolicies) GetConsentPolicySettings() *plugin.TValue[interfa
 	})
 }
 
+// mqlMicrosoftRoles for the microsoft.roles resource
+type mqlMicrosoftRoles struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftRolesInternal it will be used here
+	Filter plugin.TValue[string]
+	Search plugin.TValue[string]
+	List plugin.TValue[[]interface{}]
+}
+
+// createMicrosoftRoles creates a new instance of this resource
+func createMicrosoftRoles(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftRoles{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.roles", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftRoles) MqlName() string {
+	return "microsoft.roles"
+}
+
+func (c *mqlMicrosoftRoles) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftRoles) GetFilter() *plugin.TValue[string] {
+	return &c.Filter
+}
+
+func (c *mqlMicrosoftRoles) GetSearch() *plugin.TValue[string] {
+	return &c.Search
+}
+
+func (c *mqlMicrosoftRoles) GetList() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.roles", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
 // mqlMicrosoftRolemanagement for the microsoft.rolemanagement resource
 type mqlMicrosoftRolemanagement struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlMicrosoftRolemanagementInternal it will be used here
-	RoleDefinitions plugin.TValue[[]interface{}]
+	RoleDefinitions plugin.TValue[*mqlMicrosoftRoles]
 }
 
 // createMicrosoftRolemanagement creates a new instance of this resource
@@ -5290,15 +6008,15 @@ func (c *mqlMicrosoftRolemanagement) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMicrosoftRolemanagement) GetRoleDefinitions() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.RoleDefinitions, func() ([]interface{}, error) {
+func (c *mqlMicrosoftRolemanagement) GetRoleDefinitions() *plugin.TValue[*mqlMicrosoftRoles] {
+	return plugin.GetOrCompute[*mqlMicrosoftRoles](&c.RoleDefinitions, func() (*mqlMicrosoftRoles, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.rolemanagement", c.__id, "roleDefinitions")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.(*mqlMicrosoftRoles), nil
 			}
 		}
 

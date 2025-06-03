@@ -152,7 +152,7 @@ arista.eos.stp.mst @defaults("instanceId name") {
   rootBridge dict
   // Regional root bridge information
   regionalRootBridge dict
-  // interfaces on the specified MST instances
+  // Interfaces on the specified MST instances
   interfaces []arista.eos.spt.mstInterface
 }
 

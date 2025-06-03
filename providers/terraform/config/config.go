@@ -12,7 +12,7 @@ import (
 var Config = plugin.Provider{
 	Name:    "terraform",
 	ID:      "go.mondoo.com/cnquery/v9/providers/terraform",
-	Version: "11.0.44",
+	Version: "11.1.30",
 	ConnectionTypes: []string{
 		provider.StateConnectionType,
 		provider.PlanConnectionType,
@@ -21,10 +21,16 @@ var Config = plugin.Provider{
 	},
 	Connectors: []plugin.Connector{
 		{
-			Name:      "terraform",
-			Aliases:   []string{},
-			Use:       "terraform PATH",
-			Short:     "a Terraform HCL file or directory",
+			Name:    "terraform",
+			Aliases: []string{},
+			Use:     "terraform PATH",
+			Short:   "a Terraform HCL file or directory",
+			Long: `Use the terraform provider to query Terraform HCL files and directories. 
+
+Examples:
+  cnspec scan terraform <PATH-TO-HCL-FILE>
+	cnquery shell terraform <PATH-TO-DIRECTORY>
+`,
 			MinArgs:   1,
 			MaxArgs:   2,
 			Discovery: []string{},

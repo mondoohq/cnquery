@@ -6,6 +6,7 @@ package resources
 import (
 	"encoding/json"
 	"errors"
+	"slices"
 
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/types"
@@ -34,7 +35,6 @@ func (l *mqlLsblk) list() ([]interface{}, error) {
 		d := blockEntries.Blockdevices[i]
 		for i := range d.Children {
 			entry := d.Children[i]
-			entry.Mountpoints = append(entry.Mountpoints, entry.Mountpoint)
 			mqlLsblkEntry, err := CreateResource(l.MqlRuntime, "lsblk.entry", map[string]*llx.RawData{
 				"name":        llx.StringData(entry.Name),
 				"fstype":      llx.StringData(entry.Fstype),
@@ -56,6 +56,27 @@ func parseBlockEntries(data []byte) (blockdevices, error) {
 	if err := json.Unmarshal(data, &blockEntries); err != nil {
 		return blockEntries, err
 	}
+
+	for i := range blockEntries.Blockdevices {
+		d := blockEntries.Blockdevices[i]
+		for j := range d.Children {
+			entry := d.Children[j]
+			// Some versions of the lsblk return [null] instead of empty array
+			entry.Mountpoints = slices.Collect(func(yield func(interface{}) bool) {
+				for _, m := range entry.Mountpoints {
+					if m != nil && !yield(m) {
+						return
+					}
+				}
+			})
+			// Some versions of the lsblk return the mountpoint instead of the mountpoints array
+			if len(entry.Mountpoints) == 0 && entry.Mountpoint != "" {
+				entry.Mountpoints = append(entry.Mountpoints, entry.Mountpoint)
+			}
+			blockEntries.Blockdevices[i].Children[j] = entry
+		}
+	}
+
 	return blockEntries, nil
 }
 

@@ -394,6 +394,8 @@ resources:
     fields:
       arn: {}
       comment: {}
+      createdAt:
+        min_mondoo_version: 9.0.0
       createdTime: {}
       lastModifiedTime: {}
       name: {}
@@ -647,14 +649,110 @@ resources:
     platform:
       name:
       - aws
+  aws.codedeploy:
+    fields:
+      applications: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.codedeploy.application:
+    fields:
+      applicationId: {}
+      applicationName: {}
+      arn: {}
+      computePlatform: {}
+      createdAt: {}
+      deploymentGroups: {}
+      deployments: {}
+      linkedToGitHub: {}
+      region: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.codedeploy.deployment:
+    fields:
+      applicationName: {}
+      arn: {}
+      compleatedAt: {}
+      createdAt: {}
+      creator: {}
+      deploymentConfigName: {}
+      deploymentGroupName: {}
+      deploymentId: {}
+      deploymentOverview: {}
+      description: {}
+      errorInformation: {}
+      ignoreApplicationStopFailures: {}
+      isRollback: {}
+      region: {}
+      revision: {}
+      rollbackInfo: {}
+      status: {}
+      targetInstances: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.codedeploy.deploymentGroup:
+    fields:
+      applicationName: {}
+      arn: {}
+      autoScalingGroups: {}
+      blueGreenDeploymentConfiguration: {}
+      computePlatform: {}
+      deploymentGroupId: {}
+      deploymentGroupName: {}
+      deploymentStyle: {}
+      deployments: {}
+      ec2TagFilters: {}
+      lastAttemptedDeployment: {}
+      lastSuccessfulDeployment: {}
+      loadBalancerInfo: {}
+      onPremisesInstanceTagFilters: {}
+      region: {}
+      serviceRoleArn: {}
+      tags: {}
+      targetRevision: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.codedeploy.deploymentgroup:
+    fields:
+      applicationName: {}
+      arn: {}
+      autoScalingGroups: {}
+      blueGreenDeploymentConfiguration: {}
+      computePlatform: {}
+      deploymentGroupId: {}
+      deploymentGroupName: {}
+      deploymentStyle: {}
+      deployments: {}
+      ec2TagFilters: {}
+      lastAttemptedDeployment: {}
+      lastSuccessfulDeployment: {}
+      loadBalancerInfo: {}
+      onPremisesInstanceTagFilters: {}
+      region: {}
+      serviceRoleArn: {}
+      tags: {}
+      targetRevision: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
   aws.config:
     docs:
       desc: |
         Use the `aws.config` resource to assess the configuration of the AWS Config service. The resource provides the `.recorders` field, which returns a list of `aws.config.recorder` resources representing all AWS Config recorders configured across all enabled regions, as well as the `.rules` field, which returns a list of `aws.config.rule` resources representing all AWS Config rules configured across all enabled regions in the account.
     fields:
       deliveryChannels:
-        min_mondoo_version: 9.0.0
-      deliverychannels:
         min_mondoo_version: 9.0.0
       recorders: {}
       rules: {}
@@ -850,6 +948,8 @@ resources:
       arn: {}
       backups: {}
       continuousBackups: {}
+      createdAt:
+        min_mondoo_version: 9.0.0
       createdTime:
         min_mondoo_version: 9.0.0
       deletionProtectionEnabled:
@@ -954,11 +1054,15 @@ resources:
         min_mondoo_version: 9.0.0
       deprecatedAt:
         min_mondoo_version: 9.0.0
+      enaSupport:
+        min_mondoo_version: 9.0.0
       id: {}
       name: {}
       ownerAlias:
         min_mondoo_version: 5.22.0
       ownerId: {}
+      tpmSupport:
+        min_mondoo_version: 9.0.0
     is_private: true
     min_mondoo_version: 5.15.0
     platform:
@@ -1196,6 +1300,8 @@ resources:
         The `aws.ec2.snapshot` resource provides fields for assessing the configuration of EBS snapshots within an AWS account. For usage, see `aws.ec2` resource documentation.
     fields:
       arn: {}
+      completionTime:
+        min_mondoo_version: 9.0.0
       createVolumePermission: {}
       description:
         min_mondoo_version: 9.0.0
@@ -1205,6 +1311,8 @@ resources:
       region: {}
       startTime: {}
       state: {}
+      storageTier:
+        min_mondoo_version: 9.0.0
       tags: {}
       volumeId: {}
       volumeSize:
@@ -1475,8 +1583,6 @@ resources:
         Use the `aws.eks` resource to assess the configuration of Amazon Elastic Kubernetes Service (EKS).
     fields:
       clusters: {}
-      nodeGroups:
-        min_mondoo_version: 9.0.0
     min_mondoo_version: 5.31.0
     platform:
       name:
@@ -1526,7 +1632,6 @@ resources:
         min_mondoo_version: 9.0.0
       tags: {}
       version: {}
-    is_private: true
     min_mondoo_version: 5.31.0
     platform:
       name:
@@ -1684,6 +1789,8 @@ resources:
       arn: {}
       attributes: {}
       availabilityZones:
+        min_mondoo_version: 9.0.0
+      createdAt:
         min_mondoo_version: 9.0.0
       createdTime:
         min_mondoo_version: 9.0.0
@@ -2004,6 +2111,8 @@ resources:
     fields:
       arn: {}
       createDate: {}
+      createdAt:
+        min_mondoo_version: 9.0.0
       id: {}
       name: {}
       usernames: {}
@@ -2016,6 +2125,7 @@ resources:
     fields:
       arn: {}
       createDate: {}
+      createdAt: {}
       iamRoles: {}
       instanceProfileId: {}
       instanceProfileName: {}
@@ -2044,6 +2154,8 @@ resources:
       attachedUsers: {}
       attachmentCount: {}
       createDate: {}
+      createdAt:
+        min_mondoo_version: 9.0.0
       defaultVersion: {}
       description: {}
       id: {}
@@ -2066,6 +2178,8 @@ resources:
     fields:
       arn: {}
       createDate: {}
+      createdAt:
+        min_mondoo_version: 9.0.0
       document: {}
       isDefaultVersion: {}
       versionId: {}
@@ -2082,6 +2196,8 @@ resources:
       arn: {}
       assumeRolePolicyDocument: {}
       createDate: {}
+      createdAt:
+        min_mondoo_version: 9.0.0
       description: {}
       id: {}
       name: {}
@@ -2100,6 +2216,8 @@ resources:
       arn: {}
       attachedPolicies: {}
       createDate: {}
+      createdAt:
+        min_mondoo_version: 9.0.0
       groups: {}
       id: {}
       loginProfile:
@@ -2133,6 +2251,8 @@ resources:
       cert1LastRotated: {}
       cert2Active: {}
       cert2LastRotated: {}
+      createdAt:
+        min_mondoo_version: 9.0.0
       mfaActive: {}
       passwordEnabled: {}
       passwordLastChanged: {}
@@ -2164,7 +2284,6 @@ resources:
       desc: |
         The `aws.inspector` resource provides fields for assessing the configuration of Amazon Inspector.
     fields:
-      coverage: {}
       coverages: {}
     min_mondoo_version: 9.0.0
     platform:
@@ -2179,18 +2298,13 @@ resources:
     fields:
       accountId: {}
       ec2Instance: {}
-      ec2Instances: {}
       ecrImage: {}
-      ecrImages: {}
       ecrRepo: {}
-      ecrRepos: {}
       lambda: {}
-      lambdas: {}
       lastScannedAt: {}
       region: {}
       resourceId: {}
       resourceType: {}
-      scanStatus: {}
       scanType: {}
       statusCode: {}
       statusReason: {}
@@ -2391,11 +2505,15 @@ resources:
     fields:
       allPendingMaintenanceActions:
         min_mondoo_version: 9.0.0
+      clusterParameterGroups:
+        min_mondoo_version: 9.0.0
       clusters:
         min_mondoo_version: 9.0.0
       dbClusters: {}
       dbInstances: {}
       instances:
+        min_mondoo_version: 9.0.0
+      parameterGroups:
         min_mondoo_version: 9.0.0
     min_mondoo_version: 5.15.0
     platform:
@@ -2430,6 +2548,18 @@ resources:
     platform:
       name:
       - aws
+  aws.rds.clusterParameterGroup:
+    fields:
+      arn: {}
+      description: {}
+      family: {}
+      name: {}
+      parameters: {}
+      region: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
   aws.rds.dbcluster:
     docs:
       desc: |
@@ -2454,6 +2584,8 @@ resources:
         min_mondoo_version: latest
       clusterDbInstanceClass:
         min_mondoo_version: 9.0.0
+      createdAt:
+        min_mondoo_version: 9.0.0
       createdTime:
         min_mondoo_version: 9.0.0
       deletionProtection:
@@ -2468,6 +2600,8 @@ resources:
         min_mondoo_version: 9.0.0
       hostedZoneId:
         min_mondoo_version: 9.0.0
+      httpEndpointEnabled:
+        min_mondoo_version: 9.0.0
       iamDatabaseAuthentication:
         min_mondoo_version: latest
       id: {}
@@ -2481,6 +2615,8 @@ resources:
       multiAZ:
         min_mondoo_version: 9.0.0
       networkType:
+        min_mondoo_version: 9.0.0
+      parameterGroupName:
         min_mondoo_version: 9.0.0
       port:
         min_mondoo_version: 9.0.0
@@ -2505,7 +2641,6 @@ resources:
       storageType:
         min_mondoo_version: 9.0.0
       tags: {}
-    is_private: true
     min_mondoo_version: 5.15.0
     platform:
       name:
@@ -2531,6 +2666,8 @@ resources:
         min_mondoo_version: latest
       certificateExpiresAt:
         min_mondoo_version: latest
+      createdAt:
+        min_mondoo_version: 9.0.0
       createdTime:
         min_mondoo_version: 9.0.0
       customIamInstanceProfile:
@@ -2588,8 +2725,38 @@ resources:
       subnets:
         min_mondoo_version: 9.0.0
       tags: {}
-    is_private: true
     min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - aws
+  aws.rds.parameterGroup:
+    fields:
+      arn: {}
+      description: {}
+      family: {}
+      id: {}
+      name: {}
+      parameters: {}
+      region:
+        min_mondoo_version: 9.0.0
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - aws
+  aws.rds.parameterGroup.parameter:
+    fields:
+      allowedValues: {}
+      applyMethod: {}
+      applyType: {}
+      dataType: {}
+      description: {}
+      isModifiable: {}
+      minimumEngineVersion: {}
+      name: {}
+      source: {}
+      supportedEngineModes: {}
+      value: {}
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - aws
@@ -2775,6 +2942,8 @@ resources:
       acl: {}
       arn: {}
       cors: {}
+      createdAt:
+        min_mondoo_version: 9.0.0
       createdTime:
         min_mondoo_version: 9.0.0
       defaultLock: {}
@@ -2830,7 +2999,11 @@ resources:
       desc: |
         Bucket policies grant permission to your Amazon S3 resources
     fields:
+      bucketName:
+        min_mondoo_version: 9.0.0
       document: {}
+      exists:
+        min_mondoo_version: 9.0.0
       id: {}
       name: {}
       statements: {}
@@ -2878,15 +3051,6 @@ resources:
       region: {}
       tags: {}
     is_private: true
-    min_mondoo_version: 5.15.0
-    platform:
-      name:
-      - aws
-  aws.sagemaker.notebookinstance.details:
-    fields:
-      arn: {}
-      directInternetAccess: {}
-      kmsKey: {}
     min_mondoo_version: 5.15.0
     platform:
       name:
@@ -2998,9 +3162,7 @@ resources:
       receiveMessageWaitTimeSeconds: {}
       region: {}
       sqsManagedSseEnabled: {}
-      sseEnabled: {}
       tags: {}
-      type: {}
       url: {}
       visibilityTimeoutSeconds: {}
     is_private: true
@@ -3034,7 +3196,6 @@ resources:
       - aws
   aws.ssm.parameter:
     fields:
-      LastModifiedDate: {}
       allowedPattern: {}
       arn: {}
       dataType: {}
@@ -3098,6 +3259,8 @@ resources:
       flowLogs: {}
       id: {}
       instanceTenancy:
+        min_mondoo_version: 9.0.0
+      internetGatewayBlockMode:
         min_mondoo_version: 9.0.0
       isDefault: {}
       name:
@@ -3216,33 +3379,6 @@ resources:
     platform:
       name:
       - aws
-  aws.vpc.peeringconnection:
-    fields:
-      acceptorVpc: {}
-      expirationTime: {}
-      id: {}
-      requestorVpc: {}
-      status: {}
-      tags: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.vpc.peeringconnection.peeringvpc:
-    fields:
-      allowDnsResolutionFromRemoteVpc: {}
-      allowEgressFromLocalClassicLinkToRemoteVpc: {}
-      allowEgressFromLocalVpcToRemoteClassicLink: {}
-      ipv4CiderBlocks: {}
-      ipv6CiderBlocks: {}
-      ownerID: {}
-      region: {}
-      vpc: {}
-      vpcId: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
   aws.vpc.routetable:
     fields:
       associations:
@@ -3289,33 +3425,16 @@ resources:
     platform:
       name:
       - aws
-  aws.vpc.serviceendpoint:
-    fields:
-      acceptanceRequired: {}
-      availabilityZones: {}
-      dnsNames: {}
-      id: {}
-      managesVpcEndpoints: {}
-      name: {}
-      owner: {}
-      payerResponsibility: {}
-      privateDnsNameVerificationState: {}
-      privateDnsNames: {}
-      tags: {}
-      type: {}
-      vpcEndpointPolicySupported: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
   aws.vpc.subnet:
     fields:
       arn: {}
       assignIpv6AddressOnCreation: {}
       availabilityZone: {}
+      availableIpAddressCount: {}
       cidrs: {}
       defaultForAvailabilityZone: {}
       id: {}
+      internetGatewayBlockMode: {}
       mapPublicIpOnLaunch: {}
       region: {}
       state: {}
@@ -3327,15 +3446,9 @@ resources:
   aws.waf:
     fields:
       acls: {}
-      arn: {}
-      id: {}
       ipSets: {}
-      region: {}
       ruleGroups: {}
-      rules: {}
       scope: {}
-      subnets: {}
-      tags: {}
     min_mondoo_version: 9.0.0
     platform:
       name:
@@ -3371,14 +3484,11 @@ resources:
   aws.waf.rule:
     fields:
       action: {}
-      arn: {}
       belongsTo: {}
-      description: {}
       id: {}
       name: {}
       priority: {}
       statement: {}
-      statementJson: {}
     is_private: true
     min_mondoo_version: 9.0.0
     platform:
@@ -3386,39 +3496,10 @@ resources:
       - aws
   aws.waf.rule.action:
     fields:
-      RuleName: {}
       action: {}
-      allow: {}
-      block: {}
-      captcha: {}
-      count: {}
       responseCode: {}
       ruleName: {}
     is_private: true
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.action.allow:
-    fields: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.action.block:
-    fields: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.action.captcha:
-    fields: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.action.count:
-    fields: {}
     min_mondoo_version: 9.0.0
     platform:
       name:
@@ -3564,7 +3645,6 @@ resources:
       kind: {}
       labelMatchStatement: {}
       managedRuleGroupStatement: {}
-      name: {}
       notStatement: {}
       orStatement: {}
       rateBasedStatement: {}
@@ -3581,7 +3661,6 @@ resources:
       - aws
   aws.waf.rule.statement.andstatement:
     fields:
-      name: {}
       ruleName: {}
       statementID: {}
       statements: {}
@@ -3601,42 +3680,8 @@ resources:
     platform:
       name:
       - aws
-  aws.waf.rule.statement.bytematchstatement.fieldtomatch:
-    fields:
-      allQueryArguments: {}
-      body: {}
-      cookie: {}
-      headerOrder: {}
-      headers: {}
-      ja3Fingerprint: {}
-      jsonBody: {}
-      method: {}
-      queryString: {}
-      ruleName: {}
-      singleHeader: {}
-      singleQueryArgument: {}
-      uriPath: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.statement.bytematchstatement.fieldtomatch.singleheader:
-    fields:
-      name: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.statement.bytematchstatement.fieldtomatch.singlequeryargument:
-    fields:
-      name: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
   aws.waf.rule.statement.geomatchstatement:
     fields:
-      countryCode: {}
       countryCodes: {}
       ruleName: {}
       statementID: {}
@@ -3681,8 +3726,6 @@ resources:
       - aws
   aws.waf.rule.statement.managedrulegroupstatement:
     fields:
-      Name: {}
-      VendorName: {}
       name: {}
       ruleName: {}
       statementID: {}
@@ -3730,102 +3773,6 @@ resources:
     platform:
       name:
       - aws
-  aws.waf.rule.statement.regexmatchstatement.fieldtomatch:
-    fields:
-      allQueryArguments: {}
-      body: {}
-      cookie: {}
-      headerOrder: {}
-      headers: {}
-      ja3Fingerprint: {}
-      jsonBody: {}
-      method: {}
-      queryString: {}
-      singleHeader: {}
-      singleQueryArgument: {}
-      uriPath: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.statement.regexmatchstatement.fieldtomatch.body:
-    fields:
-      overSizeHandling: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.statement.regexmatchstatement.fieldtomatch.cookie:
-    fields:
-      overSizeHandling: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.statement.regexmatchstatement.fieldtomatch.headerorder:
-    fields:
-      overSizeHandling: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.statement.regexmatchstatement.fieldtomatch.headers:
-    fields:
-      matchPattern: {}
-      matchScope: {}
-      overSizeHandling: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.statement.regexmatchstatement.fieldtomatch.headers.matchpattern:
-    fields:
-      all: {}
-      excludeHeaders: {}
-      includeHeaders: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.statement.regexmatchstatement.fieldtomatch.ja3fingerprint:
-    fields:
-      fallbackBehavior: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.statement.regexmatchstatement.fieldtomatch.jsonbody:
-    fields:
-      invalidFallbackBehavior: {}
-      matchPattern: {}
-      matchScope: {}
-      overSizeHandling: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.statement.regexmatchstatement.fieldtomatch.jsonbody.matchpattern:
-    fields:
-      all: {}
-      includePaths: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.statement.regexmatchstatement.fieldtomatch.singleheader:
-    fields:
-      name: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.statement.regexmatchstatement.fieldtomatch.singlequeryargument:
-    fields:
-      name: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
   aws.waf.rule.statement.regexpatternsetreferencestatement:
     fields:
       arn: {}
@@ -3839,12 +3786,10 @@ resources:
       - aws
   aws.waf.rule.statement.rulegroupreferencestatement:
     fields:
-      "": {}
       arn: {}
       excludeRules: {}
       ruleName: {}
       statementID: {}
-      string: {}
     is_private: true
     min_mondoo_version: 9.0.0
     platform:
@@ -3862,183 +3807,13 @@ resources:
     platform:
       name:
       - aws
-  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch:
-    fields:
-      allQueryArguments: {}
-      body: {}
-      cookie: {}
-      headerOrder: {}
-      headers: {}
-      ja3Fingerprint: {}
-      jsonBody: {}
-      method: {}
-      queryString: {}
-      ruleName: {}
-      singleHeader: {}
-      singleQueryArgument: {}
-      uriPath: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.allqueryarguments:
-    fields: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.body:
-    fields:
-      overSizeHandling: {}
-      ruleName: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.cookie:
-    fields:
-      overSizeHandling: {}
-      ruleName: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headerorder:
-    fields:
-      overSizeHandling: {}
-      ruleName: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headers:
-    fields:
-      matchPattern: {}
-      matchScope: {}
-      overSizeHandling: {}
-      ruleName: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headers.matchpattern:
-    fields:
-      all: {}
-      excludeHeaders: {}
-      includeHeaders: {}
-      ruleName: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.ja3fingerprint:
-    fields:
-      fallbackBehavior: {}
-      ruleName: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody:
-    fields:
-      invalidFallbackBehavior: {}
-      matchPattern: {}
-      matchScope: {}
-      overSizeHandling: {}
-      ruleName: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody.matchpattern:
-    fields:
-      all: {}
-      includePaths: {}
-      ruleName: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.querystring:
-    fields: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singleHeader:
-    fields:
-      name: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singleheader:
-    fields:
-      name: {}
-      ruleName: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singlequeryargument:
-    fields:
-      name: {}
-      ruleName: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.uripath:
-    fields: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
   aws.waf.rule.statement.sqlimatchstatement:
     fields:
       fieldToMatch: {}
-      name: {}
       ruleName: {}
       sensitivityLevel: {}
       statementID: {}
     is_private: true
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.statement.sqlimatchstatement.fieldToMatch:
-    fields:
-      singleHeader: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.statement.sqlimatchstatement.fieldToMatch.singleheader:
-    fields:
-      name: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.statement.sqlimatchstatement.fieldtomatch:
-    fields:
-      queryString: {}
-      singleHeader: {}
-      singleQueryArgument: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader:
-    fields:
-      name: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singlequeryargument:
-    fields:
-      name: {}
     min_mondoo_version: 9.0.0
     platform:
       name:
@@ -4049,32 +3824,6 @@ resources:
       ruleName: {}
       statementID: {}
     is_private: true
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.statement.xssmatchstatement.fieldtomatch:
-    fields:
-      queryString: {}
-      ruleName: {}
-      singleHeader: {}
-      singleQueryArgument: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singleheader:
-    fields:
-      name: {}
-      ruleName: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
-  aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singlequeryargument:
-    fields:
-      name: {}
-      ruleName: {}
     min_mondoo_version: 9.0.0
     platform:
       name:

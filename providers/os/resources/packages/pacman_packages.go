@@ -6,11 +6,11 @@ package packages
 import (
 	"bufio"
 	"fmt"
-	"github.com/package-url/packageurl-go"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/purl"
 	"io"
 	"regexp"
+
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v11/providers/os/resources/purl"
 
 	"github.com/cockroachdb/errors"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
@@ -35,7 +35,7 @@ func ParsePacmanPackages(pf *inventory.Platform, input io.Reader) []Package {
 				Name:    name,
 				Version: version,
 				Format:  PacmanPkgFormat,
-				PUrl:    purl.NewPackageUrl(pf, name, version, "", "", packageurl.TypeAlpm),
+				PUrl:    purl.NewPackageURL(pf, purl.TypeAlpm, name, version).String(),
 			})
 		}
 	}
