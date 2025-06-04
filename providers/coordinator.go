@@ -46,12 +46,11 @@ var BuiltinCoreID = coreconf.Config.ID
 
 var Coordinator ProvidersCoordinator
 
-func newCoordinator(globalAutoUpdateCfg UpdateProvidersConfig) *coordinator {
+func newCoordinator() *coordinator {
 	c := &coordinator{
-		runningByID:      map[string]*RunningProvider{},
-		runtimes:         map[string]*Runtime{},
-		schema:           newExtensibleSchema(),
-		autoUpdateConfig: globalAutoUpdateCfg,
+		runningByID: map[string]*RunningProvider{},
+		runtimes:    map[string]*Runtime{},
+		schema:      newExtensibleSchema(),
 	}
 	c.schema.coordinator = c
 	return c
@@ -69,7 +68,6 @@ type coordinator struct {
 	runtimeCnt          int
 	mutex               sync.Mutex
 	schema              extensibleSchema
-	autoUpdateConfig    UpdateProvidersConfig
 }
 
 type builtinProvider struct {
@@ -110,7 +108,9 @@ func (c *coordinator) newRuntime() *Runtime {
 		providers:       map[string]*ConnectedProvider{},
 		recording:       recording.Null{},
 		shutdownTimeout: defaultShutdownTimeout,
-		AutoUpdate:      c.autoUpdateConfig,
+		AutoUpdate: UpdateProvidersConfig{
+			Enabled: true,
+		},
 	}
 
 	c.mutex.Lock()
