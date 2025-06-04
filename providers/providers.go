@@ -71,10 +71,6 @@ func init() {
 		autoUpdateEnabled = viper.GetBool("auto_update")
 	}
 
-	log.Info().
-		Bool("autoUpdateEnabled", autoUpdateEnabled).
-		Msg("cnquery.providers.init(): initializing global Coordinator from ENV.")
-
 	coordinatorCfg := UpdateProvidersConfig{
 		Enabled:         autoUpdateEnabled,
 		RefreshInterval: 60 * 60,

@@ -47,10 +47,6 @@ var BuiltinCoreID = coreconf.Config.ID
 var Coordinator ProvidersCoordinator
 
 func newCoordinator(globalAutoUpdateCfg UpdateProvidersConfig) *coordinator {
-	log.Debug().
-		Bool("global auto-update is enabled", globalAutoUpdateCfg.Enabled).
-		Msg("providers.newCoordinator() is called")
-
 	c := &coordinator{
 		runningByID:      map[string]*RunningProvider{},
 		runtimes:         map[string]*Runtime{},
@@ -249,11 +245,6 @@ func (c *coordinator) RemoveRuntime(runtime *Runtime) {
 }
 
 func (c *coordinator) GetRunningProvider(id string, update UpdateProvidersConfig) (*RunningProvider, error) {
-	log.Debug().
-		Str("id", id).
-		Bool("update is enabled", update.Enabled).
-		Msg("coordinator.GetRunningProvider() is called")
-
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	running := c.runningByID[id]

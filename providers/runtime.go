@@ -141,11 +141,6 @@ func (r *Runtime) setProviderConnection(c *plugin.ConnectRes, err error) {
 }
 
 func (r *Runtime) addProvider(id string) (*ConnectedProvider, error) {
-	log.Debug().
-		Str("id", id).
-		Bool("update is enabled", r.AutoUpdate.Enabled).
-		Msg("Runtime.addProvider() is called")
-
 	// TODO: we need to detect only the shared running providers
 	running, err := r.coordinator.GetRunningProvider(id, r.AutoUpdate)
 	if err != nil {
