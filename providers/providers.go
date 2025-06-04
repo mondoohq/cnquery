@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"github.com/spf13/viper"
 	"github.com/ulikunitz/xz"
 	"go.mondoo.com/cnquery/v11/cli/config"
 	"go.mondoo.com/cnquery/v11/logger/zerologadapter"
@@ -62,20 +61,9 @@ func init() {
 
 	LastProviderInstall = time.Now().Unix()
 
-	viper.SetEnvPrefix("mondoo")
-	viper.AutomaticEnv()
-
-	autoUpdateEnabled := true
-	config.InitViperConfig()
-	if viper.IsSet("auto_update") {
-		autoUpdateEnabled = viper.GetBool("auto_update")
-	}
-
-	coordinatorCfg := UpdateProvidersConfig{
-		Enabled:         autoUpdateEnabled,
-		RefreshInterval: 60 * 60,
-	}
-	Coordinator = newCoordinator(coordinatorCfg)
+	// Initialize the global coordinator instance
+	coordinator := newCoordinator()
+	Coordinator = coordinator
 }
 
 type ProviderLookup struct {
@@ -948,9 +936,7 @@ func TryProviderUpdate(provider *Provider, update UpdateProvidersConfig) (*Provi
 	log.Info().
 		Str("installed", provider.Version).
 		Str("latest", latest).
-		Bool("update is enabled", update.Enabled).
 		Msg("found a new version for '" + provider.Name + "' provider")
-
 	provider, err = installVersion(provider.Name, latest)
 	if err != nil {
 		return nil, err
