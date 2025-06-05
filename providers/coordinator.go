@@ -56,17 +56,6 @@ func newCoordinator() *coordinator {
 	return c
 }
 
-func newCoordinatorWithUpdateProvidersConfig(updateCfg UpdateProvidersConfig) *coordinator {
-	c := &coordinator{
-		runningByID:      map[string]*RunningProvider{},
-		runtimes:         map[string]*Runtime{},
-		schema:           newExtensibleSchema(),
-		autoUpdateConfig: updateCfg,
-	}
-	c.schema.coordinator = c
-	return c
-}
-
 type coordinator struct {
 	lastConnectionID uint32
 	connectionsLock  sync.Mutex
