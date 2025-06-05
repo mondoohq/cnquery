@@ -56,6 +56,17 @@ func newCoordinator() *coordinator {
 	return c
 }
 
+func newCoordinatorWithUpdateProvidersConfig(updateCfg UpdateProvidersConfig) *coordinator {
+	c := &coordinator{
+		runningByID:      map[string]*RunningProvider{},
+		runtimes:         map[string]*Runtime{},
+		schema:           newExtensibleSchema(),
+		autoUpdateConfig: updateCfg,
+	}
+	c.schema.coordinator = c
+	return c
+}
+
 type coordinator struct {
 	lastConnectionID uint32
 	connectionsLock  sync.Mutex
@@ -68,6 +79,7 @@ type coordinator struct {
 	runtimeCnt          int
 	mutex               sync.Mutex
 	schema              extensibleSchema
+	autoUpdateConfig    UpdateProvidersConfig
 }
 
 type builtinProvider struct {
@@ -108,9 +120,7 @@ func (c *coordinator) newRuntime() *Runtime {
 		providers:       map[string]*ConnectedProvider{},
 		recording:       recording.Null{},
 		shutdownTimeout: defaultShutdownTimeout,
-		AutoUpdate: UpdateProvidersConfig{
-			Enabled: true,
-		},
+		AutoUpdate:      c.autoUpdateConfig,
 	}
 
 	c.mutex.Lock()
