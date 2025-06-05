@@ -228,7 +228,7 @@ func getCobraScanConfig(cmd *cobra.Command, runtime *providers.Runtime, cliRes *
 
 	platformID := viper.GetString("platform-id")
 	if platformID != "" && cliRes.Asset != nil {
-		cliRes.Asset.PlatformIds = append(cliRes.Asset.PlatformIds, platformID)
+		cliRes.Asset.AddPlatformID(platformID)
 	}
 
 	traceId := viper.GetString("trace-id")
