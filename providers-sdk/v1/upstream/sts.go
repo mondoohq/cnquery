@@ -60,11 +60,23 @@ func ExchangeSSHKey(apiEndpoint string, identityMrn string, resourceMrn string) 
 	}, nil
 }
 
-func ExchangeExternalToken(apiEndpoint string, audience string, issuerURI string) (*ServiceAccountCredentials, error) {
-	// Fetch the identity token from the cloud provider
-	jsonToken, err := fetchIdentityToken(audience)
-	if err != nil {
-		return nil, err
+func ExchangeExternalToken(apiEndpoint, audience, issuerURI, jwtToken string) (*ServiceAccountCredentials, error) {
+	if jwtToken == "" {
+		// Try to fetch the token from an environment variable
+		jwtToken = os.Getenv("JWT_TOKEN")
+	}
+
+	if jwtToken == "" {
+		// Try to fetch the identity token from the cloud provider
+		jsonToken, err := fetchIdentityToken(audience)
+		if err != nil {
+			return nil, err
+		}
+		jwtToken = jsonToken
+	}
+
+	if jwtToken == "" {
+		return nil, fmt.Errorf("no identity token to use for an external exchange")
 	}
 
 	stsClient, err := NewSecureTokenServiceClient(apiEndpoint, ranger.DefaultHttpClient())
@@ -75,7 +87,7 @@ func ExchangeExternalToken(apiEndpoint string, audience string, issuerURI string
 	request := &ExchangeExternalTokenRequest{
 		Audience:  audience,
 		IssuerUri: issuerURI,
-		JwtToken:  jsonToken,
+		JwtToken:  jwtToken,
 	}
 	resp, err := stsClient.ExchangeExternalToken(context.Background(), request)
 	if err != nil {
