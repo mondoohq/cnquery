@@ -10,12 +10,6 @@ ifndef MANIFEST_VERSION
 MANIFEST_VERSION=$(shell git describe --abbrev=0 --tags)
 endif
 
-# The build in the Makefile is hardcoded to be "dev" for development
-# purposes like avoid sending alerts from our development environemnts.
-#
-# The real build tag is being set by our release pipelines.
-BUILD=dev
-
 ifndef VERSION
 # echo "read VERSION from git"
 VERSION=${LATEST_VERSION_TAG}+$(shell git rev-list --count HEAD)
@@ -34,8 +28,8 @@ ifeq ($(TARGETOS),windows)
 	BIN_SUFFIX=".exe"
 endif
 
-LDFLAGS=-ldflags "-s -w -X go.mondoo.com/cnquery/v11.Version=${VERSION} -X go.mondoo.com/cnquery/v11.Build=${BUILD}" # -linkmode external -extldflags=-static
-LDFLAGSDIST=-tags production -ldflags "-s -w -X go.mondoo.com/cnquery/v11.Version=${LATEST_VERSION_TAG} -X go.mondoo.com/cnquery/v11.Build=${BUILD} -s -w"
+LDFLAGS=-ldflags "-s -w -X go.mondoo.com/cnquery/v11.Version=${VERSION}" # -linkmode external -extldflags=-static
+LDFLAGSDIST=-tags production -ldflags "-s -w -X go.mondoo.com/cnquery/v11.Version=${LATEST_VERSION_TAG} -s -w"
 
 .PHONY: info/ldflags
 info/ldflags:
@@ -795,7 +789,7 @@ license/headers/apply:
 metrics/start: metrics/grafana/start metrics/prometheus/start
 
 metrics/prometheus/start:
-	APP_NAME=cnquery VERSION=${VERSION} BUILD=${BUILD} prometheus --config.file=prometheus.yml
+	APP_NAME=cnquery VERSION=${VERSION} prometheus --config.file=prometheus.yml
 
 metrics/grafana/start:
 	docker run -d --name=grafana \
