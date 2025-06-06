@@ -77,7 +77,7 @@
 \bDevops\b
 
 # s.b. SaaS
-\b[Ss]aas\b
+# \b[Ss]aas\b # false positives in query packs
 
 # s.b. Docker Hub
 \bDocker[Hh]ub\b
