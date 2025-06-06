@@ -1,0 +1,32 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+packs:
+  - uid: mondoo-windows-incident-response
+    name: Windows Incident Response Pack
+    version: 1.2.0
+    license: BUSL-1.1
+    authors:
+      - name: Mondoo, Inc
+        email: hello@mondoo.com
+    tags:
+      mondoo.com/platform: windows
+      mondoo.com/category: security
+    filters:
+      - asset.platform == "windows"
+    queries:
+      - uid: mondoo-windows-incident-response-installed-hotfixes
+        title: Installed hotfixes
+        mql: windows.hotfixes { hotfixId installedOn }
+      - uid: mondoo-windows-incident-response-uptime
+        title: Operating system uptime
+        mql: os.uptime
+      - uid: mondoo-windows-incident-response-installed-packages
+        title: Installed packages
+        mql: packages
+      - uid: mondoo-windows-incident-response-interface-configuration
+        title: Windows Computer/System information
+        mql: windows.computerInfo
+      - uid: mondoo-windows-incident-response-running-services
+        title: Running services
+        mql: services.where(running == true)

@@ -781,6 +781,9 @@ test/lint/extended: prep/tools test/generate
 test/lint/proto: prep/tools/protolint
 	protolint lint .
 
+test/lint/packs:
+	cnquery bundle validate ./contenet
+
 license: license/headers/check
 
 license/headers/check:
@@ -803,3 +806,4 @@ metrics/grafana/start:
 
 metrics/grafana/stop:
 	docker stop grafana
+

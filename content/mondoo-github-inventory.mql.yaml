@@ -1,0 +1,251 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+packs:
+  - uid: mondoo-github-inventory-org
+    name: GitHub Organization Inventory Pack
+    version: 1.1.0
+    license: BUSL-1.1
+    authors:
+      - name: Mondoo, Inc
+        email: hello@mondoo.com
+    tags:
+      mondoo.com/platform: github,saas
+      mondoo.com/category: best-practices
+    docs:
+      desc: |
+        ### Overview
+
+        The GitHub Organization Inventory Pack by Mondoo query pack retrieves configuration data about GitHub organizations.
+
+        ### Prerequisites
+
+        To run this query pack, you will need a [GitHub personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) with read access to the GitHub organization you are scanning.
+
+        ### Run query pack
+
+        To run this query pack against a GitHub organization:
+
+        ```bash
+        export GITHUB_TOKEN=<your personal access token>
+        cnquery scan github org <org_name> -f mondoo-github-inventory.mq.yaml
+        ```
+    filters:
+      - asset.platform == "github-org"
+    queries:
+      - uid: mondoo-github-inventory-org-login
+        title: GitHub organization login
+        mql: github.organization.login
+      - uid: mondoo-github-inventory-org-id
+        title: GitHub organization ID
+        mql: github.organization.id
+      - uid: mondoo-github-inventory-org-profile-photo
+        title: GitHub organization profile photo
+        mql: github.organization.avatarUrl
+      - uid: mondoo-github-inventory-org-email
+        title: GitHub organization email
+        mql: github.organization.email
+      - uid: mondoo-github-inventory-org-desc
+        title: GitHub organization description
+        mql: github.organization.description
+      - uid: mondoo-github-inventory-org-blog
+        title: GitHub organization blog
+        mql: github.organization.blog
+      - uid: mondoo-github-inventory-org-location
+        title: GitHub organization location
+        mql: github.organization.location
+      - uid: mondoo-github-inventory-org-followers
+        title: GitHub organization followers
+        mql: github.organization.followers
+      - uid: mondoo-github-inventory-org-following
+        title: GitHub organization following
+        mql: github.organization.following
+      - uid: mondoo-github-inventory-org-twitter
+        title: GitHub organization twitter handle
+        mql: github.organization.twitterUsername
+      - uid: mondoo-github-inventory-org-number-repositories
+        title: GitHub organization repositories
+        mql: github.organization.repositories.length
+      - uid: mondoo-github-inventory-org-created
+        title: GitHub organization created
+        mql: github.organization.createdAt
+      - uid: mondoo-github-inventory-org-updated
+        title: GitHub organization updated
+        mql: github.organization.updatedAt
+  - uid: mondoo-github-inventory-user
+    name: GitHub User Inventory Pack
+    version: 1.0.0
+    authors:
+      - name: Mondoo, Inc
+        email: hello@mondoo.com
+    tags:
+      mondoo.com/platform: github,saas
+      mondoo.com/category: best-practices
+    docs:
+      desc: |
+        ### Overview
+
+        The Mondoo GitHub User Inventory query pack retrieves configuration data about GitHub users.
+
+        ### Prerequisites
+
+        To run this query pack, you will need a [GitHub personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) with read access to the GitHub organization you are scanning.
+
+        ### Run query pack
+
+        To run this query pack against a GitHub user:
+
+        ```bash
+        export GITHUB_TOKEN=<your personal access token>
+        cnquery scan github user <user_name> -f mondoo-github-inventory.mq.yaml
+        ```
+    filters:
+      - asset.platform == "github-user"
+    queries:
+      - uid: mondoo-github-inventory-user-login
+        title: GitHub user login
+        mql: github.user.login
+      - uid: mondoo-github-inventory-user-id
+        title: GitHub user ID
+        mql: github.user.id
+      - uid: mondoo-github-inventory-user-profile-photo
+        title: GitHub user profile photo
+        mql: github.user.avatarUrl
+      - uid: mondoo-github-inventory-user-email
+        title: GitHub user email
+        mql: github.user.email
+      - uid: mondoo-github-inventory-user-bio
+        title: GitHub user bio
+        mql: github.user.bio
+      - uid: mondoo-github-inventory-user-blog
+        title: GitHub user blog
+        mql: github.user.blog
+      - uid: mondoo-github-inventory-user-location
+        title: GitHub user location
+        mql: github.user.location
+      - uid: mondoo-github-inventory-user-followers
+        title: GitHub user followers
+        mql: github.user.followers
+      - uid: mondoo-github-inventory-user-following
+        title: GitHub user following
+        mql: github.user.following
+      - uid: mondoo-github-inventory-user-twitter
+        title: GitHub user twitter handle
+        mql: github.user.twitterUsername
+      - uid: mondoo-github-inventory-user-number-repositories
+        title: GitHub user repositories
+        mql: github.user.repositories.length
+      - uid: mondoo-github-inventory-user-created
+        title: GitHub user created
+        mql: github.user.createdAt
+      - uid: mondoo-github-inventory-user-updated
+        title: GitHub user updated
+        mql: github.user.updatedAt
+  - uid: mondoo-github-inventory-repo
+    name: GitHub Repository Inventory Pack
+    version: 1.0.0
+    authors:
+      - name: Mondoo, Inc
+        email: hello@mondoo.com
+    tags:
+      mondoo.com/platform: github,saas
+      mondoo.com/category: best-practices
+    docs:
+      desc: |
+        ### Overview
+
+        The Mondoo GitHub Repository Inventory query pack retrieves configuration data about GitHub repositories.
+
+        ### Prerequisites
+
+        To run this query pack, you will need a [GitHub personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) with read access to the GitHub organization you are scanning.
+
+        ### Run query pack
+
+        To run this query pack against a GitHub repository:
+
+        ```bash
+        export GITHUB_TOKEN=<your personal access token>
+        cnquery scan github repo <owner>/<repo> -f mondoo-github-inventory.mq.yaml
+        ```
+    filters:
+      - asset.platform == "github-repo"
+    queries:
+      - uid: mondoo-github-inventory-repo-id
+        title: GitHub repository ID
+        mql: github.repository.id
+      - uid: mondoo-github-inventory-repo-description
+        title: GitHub repository description
+        mql: github.repository.description
+      - uid: mondoo-github-inventory-repo-forks
+        title: Number GitHub repository forks
+        mql: github.repository.forksCount
+      - uid: mondoo-github-inventory-repo-stargazers
+        title: Number GitHub repository stargazers
+        mql: github.repository.stargazersCount
+      - uid: mondoo-github-inventory-repo-watchers
+        title: Number GitHub repository watchers
+        mql: github.repository.watchersCount
+      - uid: mondoo-github-inventory-repo-license
+        title: GitHub repository license
+        mql: github.repository.license.spdxId
+      - uid: mondoo-github-inventory-repo-default-branch
+        title: GitHub repo default branch
+        mql: github.repository.defaultBranchName
+      - uid: mondoo-github-inventory-repo-visibility
+        title: GitHub repository visibility
+        mql: github.repository.visibility
+      - uid: mondoo-github-inventory-repo-languages
+        title: GitHub repository languages
+        mql: github.repository.language
+      - uid: mondoo-github-inventory-repo-open-issues
+        title: GitHub repository open issues
+        mql: github.repository.openIssuesCount
+      - uid: mondoo-github-inventory-repo-topics
+        title: GitHub repository topics
+        mql: github.repository.topics
+      - uid: mondoo-github-inventory-repo-homepage
+        title: GitHub repository homepage
+        mql: github.repository.homepage
+      - uid: mondoo-github-inventory-repo-clone-url
+        title: GitHub repository Clone URL
+        mql: github.repository.cloneUrl
+      - uid: mondoo-github-inventory-repo-ssl-url
+        title: GitHub repository SSH URL
+        mql: github.repository.sshUrl
+      - uid: mondoo-github-inventory-repo-is-fork
+        title: Is fork
+        mql: github.repository.isFork
+      - uid: mondoo-github-inventory-repo-is-forkable
+        title: Is forkable
+        mql: github.repository.allowForking
+      - uid: mondoo-github-inventory-repo-is-private
+        title: Is private
+        mql: github.repository.private
+      - uid: mondoo-github-inventory-repo-is-archived
+        title: Is archived
+        mql: github.repository.archived
+      - uid: mondoo-github-inventory-repo-has-downloads
+        title: Has downloads
+        mql: github.repository.hasDownloads
+      - uid: mondoo-github-inventory-repo-has-issues
+        title: Has issues
+        mql: github.repository.hasIssues
+      - uid: mondoo-github-inventory-repo-has-pages
+        title: Has pages
+        mql: github.repository.hasPages
+      - uid: mondoo-github-inventory-repo-has-projects
+        title: Has projects
+        mql: github.repository.hasProjects
+      - uid: mondoo-github-inventory-repo-has-wiki
+        title: Has wiki
+        mql: github.repository.hasWiki
+      - uid: mondoo-github-inventory-repo-pushed-at
+        title: Pushed at
+        mql: github.repository.pushedAt
+      - uid: mondoo-github-inventory-repo-created-at
+        title: Created at
+        mql: github.repository.createdAt
+      - uid: mondoo-github-inventory-repo-updated-at
+        title: Updated at
+        mql: github.repository.updatedAt

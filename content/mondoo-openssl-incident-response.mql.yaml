@@ -1,0 +1,38 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+packs:
+  - uid: mondoo-openssl-incident-response
+    name: OpenSSL Incident Response Pack
+    version: 1.1.0
+    license: BUSL-1.1
+    authors:
+      - name: Mondoo, Inc
+        email: hello@mondoo.com
+    tags:
+      mondoo.com/platform: linux
+      mondoo.com/category: security
+    filters:
+      - asset.family.contains("linux")
+    queries:
+      - uid: mondoo-openssl-incident-response-platform
+        title: Platform details
+        mql: |
+          asset {
+            platform
+            version
+            arch
+          }
+      - uid: mondoo-openssl-incident-response-installed-version
+        title: Installed ssl libraries
+        mql: packages.where(name == /ssl/)
+      - uid: mondoo-openssl-incident-response-listening-ports
+        title: Listening ports for running systems
+        mql: |
+          if ( mondoo.capabilities.contains('run-command') ) {
+            ports.listening { 
+              protocol
+              address
+              port
+            }
+          }

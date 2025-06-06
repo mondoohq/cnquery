@@ -1,0 +1,169 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+packs:
+  - uid: mondoo-linux-inventory
+    name: Linux Inventory Pack
+    version: 1.7.2
+    license: BUSL-1.1
+    authors:
+      - name: Mondoo, Inc
+        email: hello@mondoo.com
+    tags:
+      mondoo.com/platform: linux
+      mondoo.com/category: best-practices
+    docs:
+      desc: |
+        The Linux Inventory Pack by Mondoo retrieves data about Linux hosts for asset inventory.
+
+        ## Local scan
+        To run this pack locally on a Linux host:
+
+        ```bash
+        cnquery scan local -f mondoo-linux-inventory.mql.yaml
+        ```
+
+        ## Remote scan
+        To run this pack against a remote Linux host using SSH:
+
+        ```bash
+        cnquery scan ssh <user>@<ip_address> -i <identity_file> -f mondoo-linux-inventory.mql.yaml
+        ```
+
+        ## Join the community!
+        Our goal is to build query packs that are simple to deploy and provide accurate and useful data.
+
+        If you have any suggestions for improving this query pack, or if you need support, [join the Mondoo community](https://github.com/orgs/mondoohq/discussions) in GitHub Discussions.
+    filters:
+      - asset.family.contains("linux")
+    queries:
+      - uid: mondoo-linux-asset-info
+        title: Asset information
+        mql: asset { kind title platform name arch runtime version }
+      - uid: mondoo-linux-hostname
+        title: Hostname
+        mql: os.hostname
+      - uid: mondoo-linux-platform
+        title: Platform
+        mql: asset.platform
+      - uid: mondoo-linux-users
+        title: Regular users with shell access
+        mql: users.where(shell != "/sbin/nologin" && uid >= 1000 && name != "root") { name sid uid gid shell authorizedkeys.list sshkeys home group }
+      - uid: mondoo-linux-groups-wheel
+        title: Members of the wheel group
+        mql: groups.where(name == "wheel") { members }
+      - uid: mondoo-linux-installed-kernel
+        title: Installed kernels
+        filters: mondoo.capabilities.contains("run-command")
+        mql: kernel.installed
+      - uid: mondoo-linux-kernel-info
+        title: Running kernel versions
+        filters: mondoo.capabilities.contains("run-command")
+        mql: kernel.info
+      - uid: mondoo-linux-kernel-modules
+        title: Kernel modules
+        filters: mondoo.capabilities.contains("run-command")
+        mql: kernel.modules { name loaded }
+      - uid: mondoo-linux-kernel-parameters
+        title: Kernel parameters
+        filters: mondoo.capabilities.contains("run-command")
+        mql: kernel.parameters
+      - uid: mondoo-linux-processes
+        title: Running processes
+        filters: mondoo.capabilities.contains("run-command")
+        mql: processes { pid command flags }
+      - uid: mondoo-linux-mounts
+        title: Mounted devices
+        mql: mount.list { path fstype device options }
+      - uid: mondoo-linux-listening-ports
+        title: Listening ports
+        filters: mondoo.capabilities.contains("run-command")
+        mql: ports.listening { user state port address protocol process remoteAddress remotePort }
+      - uid: mondoo-linux-active-connections
+        title: Active network connections
+        filters: mondoo.capabilities.contains("run-command")
+        mql: ports.where(state != "close") { user state port address protocol process remoteAddress remotePort }
+      - uid: mondoo-linux-uptime
+        title: Operating system uptime
+        filters: mondoo.capabilities.contains("run-command")
+        mql: os.uptime
+      - uid: mondoo-linux-installed-packages
+        title: Installed packages
+        mql: packages { name version arch installed }
+      - uid: mondoo-linux-running-services
+        title: Running services
+        filters: mondoo.capabilities.contains("run-command")
+        mql: services.where(running == true) { name running enabled masked type }
+      - uid: mondoo-linux-interface-configuration
+        title: Network interface configuration
+        filters: mondoo.capabilities.contains("run-command")
+        mql: |
+          parse.json(content: command('ip -j a').stdout).params
+      - uid: mondoo-sshd-interface-configuration
+        title: sshd configuration
+        filters: package('openssh-server').installed || package('openssh').installed
+        mql: sshd.config.params
+      - uid: mondoo-linux-system-manufacturer
+        title: System manufacturer
+        mql: machine.baseboard.manufacturer
+      - uid: mondoo-linux-system-product-name
+        title: System product name
+        mql: machine.baseboard.product
+      - uid: mondoo-linux-cpu-type
+        title: CPU type
+        mql: |
+          file("/proc/cpuinfo").content.lines.where(_.contains("model name")).first().split(":").last().trim()
+      - uid: mondoo-linux-root-volume
+        title: Root volume size and filesystem type
+        mql: |
+          command("df -TH / | awk '{ print $3 "+'" "'+" $2 }'").stdout.trim
+      - uid: mondoo-linux-physical-memory
+        title: Physical memory size
+        mql: |
+          file("/proc/meminfo").content.lines.where(_.contains("MemTotal")).first().split(":").last().trim()
+      - uid: mondoo-linux-smbios-baseboard
+        title: SMBIOS baseboard (or module) information
+        mql: machine.baseboard { manufacturer version serial assetTag product }
+      - uid: mondoo-linux-smbios-bios
+        title: SMBIOS BIOS information
+        mql: machine.bios { vendor version releaseDate }
+      - uid: mondoo-linux-smbios-system
+        title: SMBIOS System information
+        mql: machine.system { sku serial family version product uuid manufacturer }
+      - uid: mondoo-linux-smbios-chassis
+        title: SMBIOS Chassis information
+        mql: machine.chassis { manufacturer serial version assetTag }
+      - uid: mondoo-linux-workstation-security-permissions-on-bootloader-config-metadata
+        title: Bootloader configuration metadata
+        filters: |
+          asset.family.contains('linux')
+          packages.where(name == /xorg|xserver|wayland/i).any(installed)
+        mql: |
+          if (file("/boot/grub/grub.cfg").exists) {file("/boot/grub/grub.cfg") {dirname basename permissions}}
+          if (file("/boot/grub2/grub.cfg").exists) {file("/boot/grub2/grub.cfg") {dirname basename permissions}}
+          if (file("/boot/grub/user.cfg").exists) {file("/boot/grub/user.cfg") {dirname basename permissions}}
+          if (file("/boot/grub2/user.cfg").exists) {file("/boot/grub2/user.cfg") {dirname basename permissions}}
+      - uid: mondoo-linux-workstation-security-secure-boot-is-enabled-metadata
+        title: Secure Boot status
+        filters: |
+          asset.family.contains('linux')
+          packages.where(name == /xorg|xserver|wayland/i).any(installed)
+        mql: |
+          command('mokutil --sb-state').stdout
+      - uid: mondoo-linux-workstation-security-aes-encryption-algo-metadata
+        title: Disk encryption cipher suite
+        filters: |
+          asset.family.contains('linux')
+          packages.where(name == /xorg|xserver|wayland/i).any(installed)
+        mql: |
+          lsblk.list.where(fstype == /crypt/) {parse.json(content: command('cryptsetup --dump-json-metadata luksDump /dev/' + name).stdout).params}
+      - uid: mondoo-linux-workstation-security-disk-encryption-metadata
+        title: Disk encryption metadata
+        filters: |
+          asset.family.contains('linux')
+          packages.where(name == /xorg|xserver|wayland/i).any(installed)
+        mql: |
+          lsblk { name label uuid fstype mountpoints }
+      - uid: mondoo-linux-logged-in-users
+        title: Logged-in users
+        mql: command('w -h').stdout

@@ -1,0 +1,477 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+packs:
+  - uid: mondoo-asset-count
+    name: Asset Count Query Pack
+    version: 1.2.0
+    license: BUSL-1.1
+    authors:
+      - name: Mondoo, Inc
+        email: hello@mondoo.com
+    tags:
+      mondoo.com/category: best-practices
+    groups:
+      - title: ESXi asset counts
+        filters: asset.platform == 'vmware-vsphere'
+        queries:
+          - uid: mondoo-asset-count-on-vsphere-cluster-esxi
+          - uid: mondoo-asset-count-on-vsphere-cluster-vms
+      - title: Microsoft 365 asset counts
+        filters: asset.platform == 'microsoft365'
+        queries:
+          - uid: mondoo-count-users-in-entra-id
+      - title: Azure asset counts
+        filters: asset.platform == 'azure'
+        queries:
+          - uid: mondoo-asset-count-azure-resource-groups
+          - uid: mondoo-asset-count-azure-vms
+          - uid: mondoo-asset-count-azure-subscription-name
+          - uid: mondoo-asset-count-azure-cosmosdb-accounts
+          - uid: mondoo-asset-count-azure-vaults
+          - uid: mondoo-asset-count-azure-mariaDb-servers
+          - uid: mondoo-asset-count-azure-mySql-servers
+          - uid: mondoo-asset-count-azure-postgreSql-servers
+          - uid: mondoo-asset-count-azure-application-gateways
+          - uid: mondoo-asset-count-azure-bastion-hosts
+          - uid: mondoo-asset-count-azure-firewalls
+          - uid: mondoo-asset-count-azure-loadbalancers
+          - uid: mondoo-asset-count-azure-natgateways
+          - uid: mondoo-asset-count-azure-public-addresses
+          - uid: mondoo-asset-count-azure-security-groups
+          - uid: mondoo-asset-count-azure-virtual-network-gateways
+          - uid: mondoo-asset-count-azure-virtual-networks
+          - uid: mondoo-asset-count-azure-aks-clusters
+          - uid: mondoo-asset-count-azure-aks-agent-pools
+      - title: Windows Active Directory asset counts
+        filters: asset.platform == "windows"
+        queries:
+          - uid: mondoo-asset-count-in-windows-domain
+      - title: AWS asset counts
+        filters: asset.platform == "aws"
+        queries:
+          - uid: mondoo-asset-count-aws-acm-certificates
+          - uid: mondoo-asset-count-aws-api-gateways
+          - uid: mondoo-asset-count-aws-active-regions
+          - uid: mondoo-asset-count-aws-autoscaling-groups
+          - uid: mondoo-asset-count-aws-cloudtrails
+          - uid: mondoo-asset-count-aws-dynamodb-tables
+          - uid: mondoo-asset-count-aws-dynamodb-global-tables
+          - uid: mondoo-asset-count-aws-ec2-instances
+          - uid: mondoo-asset-count-aws-ecr-container-images
+          - uid: mondoo-asset-count-aws-ecs-clusters
+          - uid: mondoo-asset-count-aws-ecs-container-instances
+          - uid: mondoo-asset-count-aws-ecs-containers
+          - uid: mondoo-asset-count-aws-efs-filesystems
+          - uid: mondoo-asset-count-aws-eks-clusters
+          - uid: mondoo-asset-count-aws-elasticache-cache-clusters
+          - uid: mondoo-asset-count-aws-elb-application
+          - uid: mondoo-asset-count-aws-elb-classic
+          - uid: mondoo-asset-count-aws-emr-clusters
+          - uid: mondoo-asset-count-aws-es-domains
+          - uid: mondoo-asset-count-aws-guardduty-detectors
+          - uid: mondoo-asset-count-aws-iam-groups
+          - uid: mondoo-asset-count-aws-iam-policies
+          - uid: mondoo-asset-count-aws-iam-users
+          - uid: mondoo-asset-count-aws-kms-keys
+          - uid: mondoo-asset-count-aws-private-ecr-container-registries
+          - uid: mondoo-asset-count-aws-public-ecr-container-registries
+          - uid: mondoo-asset-count-aws-rds-dbclusters
+          - uid: mondoo-asset-count-aws-redshift-clusters
+          - uid: mondoo-asset-count-aws-s3-buckets
+          - uid: mondoo-asset-count-aws-sagemaker-endpoints
+          - uid: mondoo-asset-count-aws-sagemaker-notebook-instances
+          - uid: mondoo-asset-count-aws-secrets-manager-secrets
+          - uid: mondoo-asset-count-aws-security-groups
+          - uid: mondoo-asset-count-aws-security-hub
+          - uid: mondoo-asset-count-aws-sns-topics
+          - uid: mondoo-asset-count-aws-vpcs
+      - title: GCP Project Asset Count
+        filters: asset.platform == "gcp-project"
+        queries:
+          - uid: mondoo-asset-count-gcp-storage-buckets
+          - uid: mondoo-asset-count-gcp-compute-instances
+          - uid: mondoo-asset-count-gcp-service-accounts
+          - uid: mondoo-asset-count-gcp-gke-clusters
+          - uid: mondoo-asset-count-gcp-bigquery-datasets
+          - uid: mondoo-asset-count-gcp-storage-buckets
+          - uid: mondoo-asset-count-gcp-compute-instances
+          - uid: mondoo-asset-count-gcp-service-accounts
+          - uid: mondoo-asset-count-gcp-gke-clusters
+          - uid: mondoo-asset-count-gcp-bigquery-datasets
+          - uid: mondoo-asset-count-gcp-cloudfunctions
+          - uid: mondoo-asset-count-gcp-cloudrun-jobs
+          - uid: mondoo-asset-count-gcp-cloudrun-services
+          - uid: mondoo-asset-count-gcp-cloudrun-operations
+          - uid: mondoo-asset-count-gcp-dns-managed-zones
+          - uid: mondoo-asset-count-gcp-iam-policies
+          - uid: mondoo-asset-count-gcp-kms-keyrings
+          - uid: mondoo-asset-count-gcp-sql-instances
+          - uid: mondoo-asset-count-gcp-services
+      - title: GitLab Asset Counts
+        filters: asset.platform == "gitlab-group"
+        queries:
+          - uid: mondoo-asset-count-gitlab-group-projects
+      - title: K8s Asset Counts
+        filters: asset.platform == "k8s-cluster"
+        queries:
+          - uid: mondoo-asset-count-k8s-nodes
+          - uid: mondoo-asset-count-k8s-daemonsets
+          - uid: mondoo-asset-count-k8s-cronjobs
+          - uid: mondoo-asset-count-k8s-jobs
+          - uid: mondoo-asset-count-k8s-deployments
+          - uid: mondoo-asset-count-k8s-replicasets
+          - uid: mondoo-asset-count-k8s-pods
+queries:
+  - uid: mondoo-asset-count-on-vsphere-cluster-esxi
+    title: ESXi hosts
+    mql: |
+      vsphere.datacenters { hosts.length }
+
+  - uid: mondoo-asset-count-on-vsphere-cluster-vms
+    title: VMs in vSphere cluster
+    mql: |
+     vsphere.datacenters { vms.length }
+
+  - uid: mondoo-asset-count-azure-resource-groups
+    title: Azure Resource Groups count
+    mql: |
+      azure.subscription.resourceGroups.length
+
+  - uid: mondoo-asset-count-azure-vms
+    title: Azure virtual machine count
+    mql: |
+      azure.subscription.computeService.vms.length
+
+  - uid: mondoo-asset-count-azure-subscription-name
+    title: Azure subscription name
+    mql: |
+      azure.subscription.name
+
+  - uid: mondoo-asset-count-azure-cosmosdb-accounts
+    title: Azure cosmosDB accounts
+    mql: |
+      azure.subscription.cosmosDb.accounts.length
+
+  - uid: mondoo-asset-count-azure-vaults
+    title: Azure key vaults
+    mql: |
+      azure.subscription.keyVault.vaults.length
+
+  - uid: mondoo-asset-count-azure-mariaDb-servers
+    title: Azure MariaDB servers
+    mql: |
+      azure.subscription.mariaDb.servers.length
+
+  - uid: mondoo-asset-count-azure-mySql-servers
+    title: Azure MySQL servers
+    mql: |
+      azure.subscription.mySql.servers.length
+
+  - uid: mondoo-asset-count-azure-postgreSql-servers
+    title: Azure PostgreSQL servers
+    mql: |
+      azure.subscription.postgreSql.servers.length
+
+  - uid: mondoo-asset-count-azure-application-gateways
+    title: Azure Application Gateways
+    mql: |
+      azure.subscription.network.applicationGateways.length
+
+  - uid: mondoo-asset-count-azure-bastion-hosts
+    title: Azure Bastion Hosts
+    mql: |
+      azure.subscription.network.bastionHosts.length
+
+  - uid: mondoo-asset-count-azure-firewalls
+    title: Azure Firewalls
+    mql: |
+      azure.subscription.network.firewalls.length
+
+  - uid: mondoo-asset-count-azure-loadbalancers
+    title: Azure Load Balancers
+    mql: |
+      azure.subscription.network.loadBalancers.length
+
+  - uid: mondoo-asset-count-azure-natgateways
+    title: Azure NAT Gateways
+    mql: |
+      azure.subscription.network.natGateways.length
+
+  - uid: mondoo-asset-count-azure-public-addresses
+    title: Azure Public Addresses
+    mql: |
+      azure.subscription.network.publicIpAddresses.length
+
+  - uid: mondoo-asset-count-azure-security-groups
+    title: Azure Security Groups
+    mql: |
+      azure.subscription.network.securityGroups.length
+
+  - uid: mondoo-asset-count-azure-virtual-network-gateways
+    title: Azure virtual Network Security Gateways
+    mql: |
+      azure.subscription.network.virtualNetworkGateways.length
+
+  - uid: mondoo-asset-count-azure-virtual-networks
+    title: Azure virtual Networks
+    mql: |
+      azure.subscription.network.virtualNetworks.length
+
+  - uid: mondoo-asset-count-azure-aks-clusters
+    title: Azure AKS Clusters
+    mql: |
+      azure.subscription.aks.clusters.length
+
+  - uid: mondoo-asset-count-azure-aks-agent-pools
+    title: Azure AKS Cluster Agent Pool Count
+    mql: |
+      azure.subscription.aks.clusters { agentPoolProfiles.length }
+
+  - uid: mondoo-count-users-in-entra-id
+    title: Entra ID user count
+    mql: |
+      microsoft.users.length
+
+  - uid: mondoo-asset-count-aws-account-id
+    title: AWS account ID
+    mql: aws.account.id
+
+  - uid: mondoo-asset-count-aws-acm-certificates
+    title: AWS ACM Certificates
+    mql: aws.acm.certificates.length
+
+  - uid: mondoo-asset-count-aws-api-gateways
+    title: AWS API Gateways
+    mql: aws.apigateway.restApis.length
+
+  - uid: mondoo-asset-count-aws-autoscaling-groups
+    title: AWS Autoscaling Groups (not created by Mondoo)
+    mql: aws.autoscaling.groups.where( name != "mondoo-scanning-asg" ).length
+
+  - uid: mondoo-asset-count-aws-iam-users
+    title: AWS IAM users
+    mql: aws.iam.users.length
+
+  - uid: mondoo-asset-count-aws-iam-groups
+    title: AWS IAM groups
+    mql: aws.iam.groups.length
+
+  - uid: mondoo-asset-count-aws-iam-policies
+    title: AWS IAM custom policies
+    mql: |
+      aws_account = aws.account.id
+      aws.iam.policies.where( arn.contains(aws_account)).length
+
+  - uid: mondoo-asset-count-aws-active-regions
+    title: AWS Regions Active
+    mql: aws.regions.length
+
+  - uid: mondoo-asset-count-aws-ec2-instances
+    title: AWS EC2 Instances
+    mql: aws.ec2.instances.length
+
+  - uid: mondoo-asset-count-aws-s3-buckets
+    title: AWS S3 Buckets
+    mql: aws.s3.buckets.length
+
+  - uid: mondoo-asset-count-aws-vpcs
+    title: AWS VPCs
+    mql: aws.vpcs.length
+
+  - uid: mondoo-asset-count-aws-security-groups
+    title: AWS Security Groups
+    mql: aws.ec2.securityGroups.length
+
+  - uid: mondoo-asset-count-aws-eks-clusters
+    title: AWS Elastic Kubernetes Clusters (EKS)
+    mql: aws.eks.clusters.length
+
+  - uid: mondoo-asset-count-aws-private-ecr-container-registries
+    title: AWS Private Elastic Container Registries (ECR)
+    mql: aws.ecr.privateRepositories.length
+
+  - uid: mondoo-asset-count-aws-public-ecr-container-registries
+    title: AWS Public Elastic Container Registries (ECR)
+    mql: aws.ecr.publicRepositories.length
+
+  - uid: mondoo-asset-count-aws-ecr-container-images
+    title: AWS Elastic Container Images (ECR)
+    mql: aws.ecr.images.length
+
+  - uid: mondoo-asset-count-aws-rds-dbclusters
+    title: AWS RDS Database Clusters
+    mql: aws.rds.clusters.length
+
+  - uid: mondoo-asset-count-aws-cloudtrails
+    title: AWS CloudTrails
+    mql: aws.cloudtrail.trails.length
+
+  - uid: mondoo-asset-count-aws-dynamodb-tables
+    title: AWS DynamoDB Tables
+    mql: aws.dynamodb.tables.length
+
+  - uid: mondoo-asset-count-aws-dynamodb-global-tables
+    title: AWS DynamoDB Global Tables
+    mql: aws.dynamodb.globalTables.length
+
+  - uid: mondoo-asset-count-aws-ecs-clusters
+    title: AWS ECS Clusters
+    mql: aws.ecs.clusters.length
+
+  - uid: mondoo-asset-count-aws-ecs-container-instances
+    title: AWS ECS Container Instances
+    mql: aws.ecs.containerInstances.length
+
+  - uid: mondoo-asset-count-aws-ecs-containers
+    title: AWS ECS Containers
+    mql: aws.ecs.containers.length
+
+  - uid: mondoo-asset-count-aws-efs-filesystems
+    title: AWS EFS Filesystems
+    mql: aws.efs.filesystems.length
+
+  - uid: mondoo-asset-count-aws-elasticache-cache-clusters
+    title: AWS ElastiCache Cache Clusters
+    mql: aws.elasticache.cacheClusters.length
+
+  - uid: mondoo-asset-count-aws-elb-application
+    title: AWS Elastic Application Load Balancers
+    mql: aws.elb.loadBalancers.length
+
+  - uid: mondoo-asset-count-aws-elb-classic
+    title: AWS Elastic Classic Load Balancers
+    mql: aws.elb.classicLoadBalancers.length
+
+  - uid: mondoo-asset-count-aws-emr-clusters
+    title: AWS Elastic Map Reduce Clusters
+    mql: aws.emr.clusters.length
+
+  - uid: mondoo-asset-count-aws-es-domains
+    title: AWS Elasticsearch Service Domain
+    mql: aws.es.domains.length
+
+  - uid: mondoo-asset-count-aws-guardduty-detectors
+    title: AWS Guard Duty Detectors
+    mql: aws.guardduty.detectors.length
+
+  - uid: mondoo-asset-count-aws-kms-keys
+    title: AWS KMS Keys
+    mql: aws.kms.keys.length
+
+  - uid: mondoo-asset-count-aws-redshift-clusters
+    title: AWS Redshift Clusters
+    mql: aws.redshift.clusters.length
+
+  - uid: mondoo-asset-count-aws-sagemaker-endpoints
+    title: AWS SageMaker Endpoints
+    mql: aws.sagemaker.endpoints.length
+
+  - uid: mondoo-asset-count-aws-sagemaker-notebook-instances
+    title: AWS SageMaker Notebook Instances
+    mql: aws.sagemaker.notebookInstances.length
+
+  - uid: mondoo-asset-count-aws-secrets-manager-secrets
+    title: AWS Secrets Manager Secrets
+    mql: aws.secretsmanager.secrets.length
+
+  - uid: mondoo-asset-count-aws-security-hub
+    title: AWS Security Hub
+    mql: aws.securityhub.hubs.length
+
+  - uid: mondoo-asset-count-aws-sns-topics
+    title: AWS SNS Topics
+    mql: aws.sns.topics.length
+
+  - uid: mondoo-asset-count-in-windows-domain
+    title: All computer objects in the Windows domain
+    mql: |
+      parse.json(content: powershell('$time = (Get-Date).Adddays(-(180));Get-ADComputer -Filter {LastLogonTimeStamp -ge $time} -properties * | select Name,Enabled,OperatingSystem,OperatingSystemVersion,LastLogonDate | ConvertTo-Json').stdout).params
+
+  - uid: mondoo-asset-count-gcp-storage-buckets
+    title: GCP Project Storage Buckets
+    mql: gcp.project.storage.buckets.length
+
+  - uid: mondoo-asset-count-gcp-compute-instances
+    title: GCP Project Compute Instances
+    mql: gcp.project.compute.instances.length
+
+  - uid: mondoo-asset-count-gcp-service-accounts
+    title: GCP Project Service Accounts
+    mql: gcp.project.iam.serviceAccounts.length
+
+  - uid: mondoo-asset-count-gcp-gke-clusters
+    title: GCP Project GKE Clusters
+    mql: gcp.project.gke.clusters.length
+
+  - uid: mondoo-asset-count-gcp-bigquery-datasets
+    title: GCP Project BigQuery Datasets
+    mql: gcp.project.bigquery.datasets.length
+
+  - uid: mondoo-asset-count-gcp-cloudfunctions
+    title: GCP Project CloudFunctions
+    mql: gcp.project.cloudFunctions.length
+
+  - uid: mondoo-asset-count-gcp-cloudrun-jobs
+    title: GCP Project Cloud Run Jobs
+    mql: gcp.project.cloudRun.jobs.length
+
+  - uid: mondoo-asset-count-gcp-cloudrun-services
+    title: GCP Project Cloud Run Services
+    mql: gcp.project.cloudRun.services.length
+
+  - uid: mondoo-asset-count-gcp-cloudrun-operations
+    title: GCP Project Cloud Run Operations
+    mql: gcp.project.cloudRun.operations.length
+
+  - uid: mondoo-asset-count-gcp-dns-managed-zones
+    title: GCP Project DNS Managed Zones
+    mql: gcp.project.dns.managedZones.length
+
+  - uid: mondoo-asset-count-gcp-iam-policies
+    title: GCP Project IAM Policies
+    mql: gcp.project.iamPolicy.length
+
+  - uid: mondoo-asset-count-gcp-kms-keyrings
+    title: GCP Project KMS Keyrings
+    mql: gcp.project.kms.keyrings.length
+
+  - uid: mondoo-asset-count-gcp-sql-instances
+    title: GCP Project SQL Instances
+    mql: gcp.project.sql.instances.length
+
+  - uid: mondoo-asset-count-gcp-services
+    title: GCP Project Services Enabled
+    mql: gcp.project.services.where( enabled ).length
+
+  - uid: mondoo-asset-count-gitlab-group-projects
+    title: GitLab Group Projects
+    mql: gitlab.group.projects.length
+
+  - uid: mondoo-asset-count-k8s-nodes
+    title: K8s Nodes count
+    mql: k8s.nodes.length
+
+  - uid: mondoo-asset-count-k8s-daemonsets
+    title: K8s Daemon Sets count
+    mql: k8s.daemonsets.length
+
+  - uid: mondoo-asset-count-k8s-cronjobs
+    title: K8s Cronjobs count
+    mql: k8s.cronjobs.length
+
+  - uid: mondoo-asset-count-k8s-jobs
+    title: K8s Jobs count
+    mql: k8s.jobs.length
+
+  - uid: mondoo-asset-count-k8s-deployments
+    title: K8s Deployments count
+    mql: k8s.deployments.length
+
+  - uid: mondoo-asset-count-k8s-replicasets
+    title: K8s Replicasets count
+    mql: k8s.replicasets.length
+
+  - uid: mondoo-asset-count-k8s-pods
+    title: K8s PODs count
+    mql: k8s.pods.length

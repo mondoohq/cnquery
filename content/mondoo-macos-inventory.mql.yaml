@@ -1,0 +1,137 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+packs:
+  - uid: mondoo-macos-inventory
+    name: macOS Inventory Pack
+    version: 1.6.0
+    license: BUSL-1.1
+    authors:
+      - name: Mondoo, Inc
+        email: hello@mondoo.com
+    tags:
+      mondoo.com/platform: macos
+      mondoo.com/category: best-practices
+    docs:
+      desc: |
+        The macOS Inventory Pack by Mondoo retrieves data about macOS hosts for asset inventory.
+
+        ## Local scan
+        To run this pack locally on a macOS host:
+
+        ```bash
+        cnquery scan local -f mondoo-macos-inventory.mql.yaml
+        ```
+
+        ## Remote scan
+        To run this pack against a remote macOS host using SSH (requires Remote Management is activated in System Preferences):
+
+        ```bash
+        cnquery scan ssh <user>@<ip_address> -i <identity_file> -f mondoo-macos-inventory.mql.yaml
+        ```
+
+        ## Join the community!
+        Our goal is to build query packs that are simple to deploy and provide accurate and useful data.
+
+        If you have any suggestions for improving this query pack, or if you need support, [join the Mondoo community](https://github.com/orgs/mondoohq/discussions) in GitHub Discussions.
+    filters:
+      - asset.platform == "macos"
+    queries:
+      - uid: mondoo-macos-machine-model-identifier
+        title: Machine model identifier
+        mql: |
+          parse.json(content: command('system_profiler SPHardwareDataType -json').stdout).params['SPHardwareDataType'].first['machine_model']
+      - uid: mondoo-macos-machine-model-name
+        title: Machine model name
+        mql: |
+          parse.json(content: command('system_profiler SPHardwareDataType -json').stdout).params['SPHardwareDataType'].first['machine_name']
+      - uid: mondoo-macos-model-part-number
+        title: Model part number
+        mql: |
+          parse.json(content: command('system_profiler SPHardwareDataType -json').stdout).params['SPHardwareDataType'].first['model_number']
+      - uid: mondoo-macos-serial-number
+        title: System serial number
+        mql: |
+          parse.json(content: command('system_profiler SPHardwareDataType -json').stdout).params['SPHardwareDataType'].first['serial_number']
+      - uid: mondoo-macos-cpu-type
+        title: CPU type
+        mql: |
+          parse.json(content: command('system_profiler SPHardwareDataType -json').stdout).params['SPHardwareDataType'].first['chip_type']
+      - uid: mondoo-macos-physical-memory
+        title: Physical memory size
+        mql: |
+          parse.json(content: command('system_profiler SPHardwareDataType -json').stdout).params['SPHardwareDataType'].first['physical_memory']
+      - uid: mondoo-asset-info
+        title: Asset information
+        mql: asset { kind title platform name arch runtime version }
+      - uid: mondoo-hostname
+        title: Hostname
+        mql: os.hostname
+      - uid: mondoo-macos-uptime
+        title: Operating system uptime
+        filters: mondoo.capabilities.contains("run-command")
+        mql: os.uptime
+      - uid: mondoo-macos-processes
+        title: Running processes
+        filters: mondoo.capabilities.contains("run-command")
+        mql: processes { pid command flags }
+      - uid: mondoo-macos-kernel-modules
+        title: Kernel modules
+        filters: mondoo.capabilities.contains("run-command")
+        mql: kernel.modules { name loaded }
+      - uid: mondoo-macos-mounts
+        title: Mounted devices
+        mql: mount.list { path fstype device options }
+      - uid: mondoo-macos-users
+        title: Regular users
+        mql: users.where( name != /^_/ && shell != "/usr/bin/false" && name != "root")
+      - uid: mondoo-macos-packages
+        title: Installed packages
+        mql: packages { name version arch installed }
+      - uid: mondoo-macos-running-services
+        title: Running services
+        filters: mondoo.capabilities.contains("run-command")
+        mql: services.where(running == true) { name running enabled masked type }
+      - uid: mondoo-macos-ports-listening
+        title: Listening ports
+        filters: mondoo.capabilities.contains("run-command")
+        mql: ports.where(state != "close") { user state port address protocol process remoteAddress remotePort }
+      - uid: mondoo-macos-active-connections
+        title: Active network connections
+        filters: mondoo.capabilities.contains("run-command")
+        mql: ports.where(state != "close") { user state port address protocol process remoteAddress remotePort }
+      - uid: mondoo-macos-interface-configuration
+        title: Network interface configuration
+        filters: mondoo.capabilities.contains("run-command")
+        mql: command("ifconfig").stdout
+      - uid: mondoo-macos-sshd-interface-configuration
+        title: sshd configuration
+        mql: sshd.config.params
+      - uid: mondoo-macos-recommended-software-updates
+        title: Recommended software updates
+        mql: parse.plist('/Library/Preferences/com.apple.SoftwareUpdate.plist').params['RecommendedUpdates']
+      - uid: mondoo-macos-smbios-system
+        title: SMBIOS System information
+        mql: machine.system { sku serial family version product uuid manufacturer }
+      - uid: mondoo-macos-storage
+        title: Storage Data
+        mql: |
+          parse.json(content: command('system_profiler SPStorageDataType -json').stdout).params
+      - uid: mondoo-macos-power
+        title: Power Data
+        mql: |
+          parse.json(content: command('system_profiler SPPowerDataType -json').stdout).params
+      - uid: mondoo-macos-network
+        title: Network Data
+        mql: |
+          parse.json(content: command('system_profiler SPNetworkDataType -json').stdout).params
+      - uid: mondoo-macos-profile
+        title: Configuration Profile Data
+        mql: |
+          parse.json(content: command('system_profiler SPConfigurationProfileDataType -json').stdout).params
+      - uid: mondoo-macos-logged-in-users
+        title: Logged-in users
+        mql: command('w -h').stdout
+      - uid: mondoo-macos-system-extensions
+        title: macOS System Extensions
+        mql: macos.systemExtensions { active enabled identifier state version }
