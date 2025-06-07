@@ -85,6 +85,8 @@ microsoft.users {
 microsoft.conditionalAccess {
   // Named locations container
   namedLocations microsoft.conditionalAccess.namedLocations
+  // Policies collection
+  policies microsoft.conditionalAccess.policies
 }
 
 // Container for Microsoft Conditional Access Named Locations
@@ -93,6 +95,156 @@ microsoft.conditionalAccess.namedLocations {
   ipLocations() []microsoft.conditionalAccess.ipNamedLocation
   // Country-based named locations
   countryLocations() []microsoft.conditionalAccess.countryNamedLocation
+}
+
+ // Container for Microsoft Conditional Access Policies (Collection Resource)
+microsoft.conditionalAccess.policies {
+  []microsoft.conditionalAccess.policy
+  // init(filter? string, search? string)  
+  // filter string
+  // search string
+}
+
+// Microsoft Conditional Access Policy
+microsoft.conditionalAccess.policy @defaults("id displayName state") {
+  // Policy ID
+  id string
+  // Policy display name
+  displayName string
+  // Policy state (enabled, disabled, enabledForReportingButNotEnforced)
+  state string
+  // Policy creation date
+  createdDateTime time
+  // Policy last modified date
+  modifiedDateTime time
+  // Policy conditions
+  conditions microsoft.conditionalAccess.policy.conditions // Now a specific resource
+  // Policy grant controls
+  grantControls microsoft.conditionalAccess.policy.grantControls // Now a specific resource
+  // Policy session controls
+  sessionControls microsoft.conditionalAccess.policy.sessionControls // Now a specific resource
+  // Template ID (if created from template)
+  templateId string
+}
+
+// Microsoft Conditional Access Policy Conditions
+private microsoft.conditionalAccess.policy.conditions {
+  // Internal ID based on policy ID
+  id string
+  // Users affected by the policy
+  users microsoft.conditionalAccess.policy.conditions.users
+  // Applications affected by the policy
+  applications microsoft.conditionalAccess.policy.conditions.applications
+  // Client app types affected by the policy
+  clientAppTypes []string
+  // User risk levels affected by the policy
+  userRiskLevels []string
+  // Sign-in risk levels affected by the policy
+  signInRiskLevels []string
+  // service principal risk levels affected by the policy
+  servicePrincipalRiskLevels []string
+  // Locations affected by the policy
+  locations microsoft.conditionalAccess.policy.conditions.locations
+  // Device platforms affected by the policy
+  platforms microsoft.conditionalAccess.policy.conditions.platforms
+  // Client applications affected by the policy
+  clientApplications microsoft.conditionalAccess.policy.conditions.clientApplications
+  // insider risk levels
+  insiderRiskLevels string
+}
+
+private microsoft.conditionalAccess.policy.grantControls.authenticationStrength {
+  id string
+  displayName string
+  description string
+  policyType string
+  requirementsSatisfied string
+  allowedCombinations []string
+  createdDateTime time
+  modifiedDateTime time
+}
+
+private microsoft.conditionalAccess.policy.sessionControls.signInFrequency {
+  authenticationType string
+  frequencyInterval string
+  isEnabled bool
+}
+
+private microsoft.conditionalAccess.policy.sessionControls.cloudAppSecurity {
+  cloudAppSecurityType string
+  isEnabled bool
+}
+
+private microsoft.conditionalAccess.policy.sessionControls.persistentBrowser {
+  mode string
+  isEnabled bool
+}
+
+private microsoft.conditionalAccess.policy.sessionControls.applicationEnforcedRestrictions {
+  isEnabled bool
+}
+
+private microsoft.conditionalAccess.policy.conditions.clientApplications {
+  includeServicePrincipals []string
+  excludeServicePrincipals []string
+}
+
+private microsoft.conditionalAccess.policy.conditions.platforms {
+  includePlatforms []string
+  excludePlatforms []string
+}
+
+private microsoft.conditionalAccess.policy.conditions.applications {
+  includeApplications []string
+  excludeApplications []string
+  includeUserActions []string
+  includeAuthenticationContextClassReferences []string
+}
+
+private microsoft.conditionalAccess.policy.conditions.users {
+  includeUsers []string
+  excludeUsers []string
+  includeGroups []string
+  excludeGroups []string
+  includeRoles []string
+  excludeRoles []string
+}
+
+private microsoft.conditionalAccess.policy.conditions.locations {
+  includeLocations []string
+  excludeLocations []string
+}
+
+// Microsoft Conditional Access Policy Grant Controls
+private microsoft.conditionalAccess.policy.grantControls {
+  // Internal ID based on policy ID
+  id string
+  // Operator (AND/OR) for combining controls
+  operator string
+  // Built-in controls
+  builtInControls []string
+  // Authentication strength
+  authenticationStrength microsoft.conditionalAccess.policy.grantControls.authenticationStrength
+  // Custom controls
+  customAuthenticationFactors []string
+  // Terms of use
+  termsOfUse []string
+}
+
+// Microsoft Conditional Access Policy Session Controls
+private microsoft.conditionalAccess.policy.sessionControls {
+  // Internal ID based on policy ID
+  id string
+  // Sign-in frequency
+  signInFrequency microsoft.conditionalAccess.policy.sessionControls.signInFrequency
+  // Cloud App Security (MCAS)
+  cloudAppSecurity microsoft.conditionalAccess.policy.sessionControls.cloudAppSecurity
+  // Persistent browser session
+  persistentBrowser dict
+  // Application enforced restrictions
+  applicationEnforcedRestrictions microsoft.conditionalAccess.policy.sessionControls.applicationEnforcedRestrictions
+  // Secure application model for continuous access evaluation
+  secureSignInSession dict
 }
 
 // Microsoft Conditional Access IP named location
