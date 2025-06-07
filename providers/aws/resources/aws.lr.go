@@ -470,9 +470,9 @@ func init() {
 			// to override args, implement: initAwsApplicationAutoscaling(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsApplicationAutoscaling,
 		},
-		"aws.applicationautoscaling.target": {
-			// to override args, implement: initAwsApplicationautoscalingTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createAwsApplicationautoscalingTarget,
+		"aws.applicationAutoscaling.target": {
+			// to override args, implement: initAwsApplicationAutoscalingTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsApplicationAutoscalingTarget,
 		},
 		"aws.backup": {
 			// to override args, implement: initAwsBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2935,28 +2935,28 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsApplicationAutoscaling).GetNamespace()).ToDataRes(types.String)
 	},
 	"aws.applicationAutoscaling.scalableTargets": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsApplicationAutoscaling).GetScalableTargets()).ToDataRes(types.Array(types.Resource("aws.applicationautoscaling.target")))
+		return (r.(*mqlAwsApplicationAutoscaling).GetScalableTargets()).ToDataRes(types.Array(types.Resource("aws.applicationAutoscaling.target")))
 	},
-	"aws.applicationautoscaling.target.namespace": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsApplicationautoscalingTarget).GetNamespace()).ToDataRes(types.String)
+	"aws.applicationAutoscaling.target.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApplicationAutoscalingTarget).GetNamespace()).ToDataRes(types.String)
 	},
-	"aws.applicationautoscaling.target.arn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsApplicationautoscalingTarget).GetArn()).ToDataRes(types.String)
+	"aws.applicationAutoscaling.target.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApplicationAutoscalingTarget).GetArn()).ToDataRes(types.String)
 	},
-	"aws.applicationautoscaling.target.scalableDimension": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsApplicationautoscalingTarget).GetScalableDimension()).ToDataRes(types.String)
+	"aws.applicationAutoscaling.target.scalableDimension": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApplicationAutoscalingTarget).GetScalableDimension()).ToDataRes(types.String)
 	},
-	"aws.applicationautoscaling.target.minCapacity": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsApplicationautoscalingTarget).GetMinCapacity()).ToDataRes(types.Int)
+	"aws.applicationAutoscaling.target.minCapacity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApplicationAutoscalingTarget).GetMinCapacity()).ToDataRes(types.Int)
 	},
-	"aws.applicationautoscaling.target.maxCapacity": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsApplicationautoscalingTarget).GetMaxCapacity()).ToDataRes(types.Int)
+	"aws.applicationAutoscaling.target.maxCapacity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApplicationAutoscalingTarget).GetMaxCapacity()).ToDataRes(types.Int)
 	},
-	"aws.applicationautoscaling.target.suspendedState": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsApplicationautoscalingTarget).GetSuspendedState()).ToDataRes(types.Dict)
+	"aws.applicationAutoscaling.target.suspendedState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApplicationAutoscalingTarget).GetSuspendedState()).ToDataRes(types.Dict)
 	},
-	"aws.applicationautoscaling.target.createdAt": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsApplicationautoscalingTarget).GetCreatedAt()).ToDataRes(types.Time)
+	"aws.applicationAutoscaling.target.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApplicationAutoscalingTarget).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"aws.backup.vaults": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBackup).GetVaults()).ToDataRes(types.Array(types.Resource("aws.backup.vault")))
@@ -8521,36 +8521,36 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsApplicationAutoscaling).ScalableTargets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
-	"aws.applicationautoscaling.target.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAwsApplicationautoscalingTarget).__id, ok = v.Value.(string)
+	"aws.applicationAutoscaling.target.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsApplicationAutoscalingTarget).__id, ok = v.Value.(string)
 			return
 		},
-	"aws.applicationautoscaling.target.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsApplicationautoscalingTarget).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.applicationAutoscaling.target.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApplicationAutoscalingTarget).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.applicationautoscaling.target.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsApplicationautoscalingTarget).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.applicationAutoscaling.target.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApplicationAutoscalingTarget).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.applicationautoscaling.target.scalableDimension": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsApplicationautoscalingTarget).ScalableDimension, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.applicationAutoscaling.target.scalableDimension": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApplicationAutoscalingTarget).ScalableDimension, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.applicationautoscaling.target.minCapacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsApplicationautoscalingTarget).MinCapacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"aws.applicationAutoscaling.target.minCapacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApplicationAutoscalingTarget).MinCapacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"aws.applicationautoscaling.target.maxCapacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsApplicationautoscalingTarget).MaxCapacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"aws.applicationAutoscaling.target.maxCapacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApplicationAutoscalingTarget).MaxCapacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"aws.applicationautoscaling.target.suspendedState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsApplicationautoscalingTarget).SuspendedState, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+	"aws.applicationAutoscaling.target.suspendedState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApplicationAutoscalingTarget).SuspendedState, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
-	"aws.applicationautoscaling.target.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsApplicationautoscalingTarget).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"aws.applicationAutoscaling.target.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApplicationAutoscalingTarget).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.backup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21613,11 +21613,11 @@ func (c *mqlAwsApplicationAutoscaling) GetScalableTargets() *plugin.TValue[[]int
 	})
 }
 
-// mqlAwsApplicationautoscalingTarget for the aws.applicationautoscaling.target resource
-type mqlAwsApplicationautoscalingTarget struct {
+// mqlAwsApplicationAutoscalingTarget for the aws.applicationAutoscaling.target resource
+type mqlAwsApplicationAutoscalingTarget struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlAwsApplicationautoscalingTargetInternal it will be used here
+	// optional: if you define mqlAwsApplicationAutoscalingTargetInternal it will be used here
 	Namespace plugin.TValue[string]
 	Arn plugin.TValue[string]
 	ScalableDimension plugin.TValue[string]
@@ -21627,9 +21627,9 @@ type mqlAwsApplicationautoscalingTarget struct {
 	CreatedAt plugin.TValue[*time.Time]
 }
 
-// createAwsApplicationautoscalingTarget creates a new instance of this resource
-func createAwsApplicationautoscalingTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlAwsApplicationautoscalingTarget{
+// createAwsApplicationAutoscalingTarget creates a new instance of this resource
+func createAwsApplicationAutoscalingTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsApplicationAutoscalingTarget{
 		MqlRuntime: runtime,
 	}
 
@@ -21646,7 +21646,7 @@ func createAwsApplicationautoscalingTarget(runtime *plugin.Runtime, args map[str
 	}
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("aws.applicationautoscaling.target", res.__id)
+		args, err = runtime.ResourceFromRecording("aws.applicationAutoscaling.target", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -21656,39 +21656,39 @@ func createAwsApplicationautoscalingTarget(runtime *plugin.Runtime, args map[str
 	return res, nil
 }
 
-func (c *mqlAwsApplicationautoscalingTarget) MqlName() string {
-	return "aws.applicationautoscaling.target"
+func (c *mqlAwsApplicationAutoscalingTarget) MqlName() string {
+	return "aws.applicationAutoscaling.target"
 }
 
-func (c *mqlAwsApplicationautoscalingTarget) MqlID() string {
+func (c *mqlAwsApplicationAutoscalingTarget) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsApplicationautoscalingTarget) GetNamespace() *plugin.TValue[string] {
+func (c *mqlAwsApplicationAutoscalingTarget) GetNamespace() *plugin.TValue[string] {
 	return &c.Namespace
 }
 
-func (c *mqlAwsApplicationautoscalingTarget) GetArn() *plugin.TValue[string] {
+func (c *mqlAwsApplicationAutoscalingTarget) GetArn() *plugin.TValue[string] {
 	return &c.Arn
 }
 
-func (c *mqlAwsApplicationautoscalingTarget) GetScalableDimension() *plugin.TValue[string] {
+func (c *mqlAwsApplicationAutoscalingTarget) GetScalableDimension() *plugin.TValue[string] {
 	return &c.ScalableDimension
 }
 
-func (c *mqlAwsApplicationautoscalingTarget) GetMinCapacity() *plugin.TValue[int64] {
+func (c *mqlAwsApplicationAutoscalingTarget) GetMinCapacity() *plugin.TValue[int64] {
 	return &c.MinCapacity
 }
 
-func (c *mqlAwsApplicationautoscalingTarget) GetMaxCapacity() *plugin.TValue[int64] {
+func (c *mqlAwsApplicationAutoscalingTarget) GetMaxCapacity() *plugin.TValue[int64] {
 	return &c.MaxCapacity
 }
 
-func (c *mqlAwsApplicationautoscalingTarget) GetSuspendedState() *plugin.TValue[interface{}] {
+func (c *mqlAwsApplicationAutoscalingTarget) GetSuspendedState() *plugin.TValue[interface{}] {
 	return &c.SuspendedState
 }
 
-func (c *mqlAwsApplicationautoscalingTarget) GetCreatedAt() *plugin.TValue[*time.Time] {
+func (c *mqlAwsApplicationAutoscalingTarget) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
 

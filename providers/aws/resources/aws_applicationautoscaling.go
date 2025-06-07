@@ -23,7 +23,7 @@ func (a *mqlAwsApplicationAutoscaling) id() (string, error) {
 	return "aws.applicationAutoscaling." + a.Namespace.Data, nil
 }
 
-func (a *mqlAwsApplicationautoscalingTarget) id() (string, error) {
+func (a *mqlAwsApplicationAutoscalingTarget) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
@@ -83,7 +83,7 @@ func (a *mqlAwsApplicationAutoscaling) getTargets(conn *connection.AwsConnection
 					if err != nil {
 						return nil, err
 					}
-					mqlSTarget, err := CreateResource(a.MqlRuntime, "aws.applicationautoscaling.target",
+					mqlSTarget, err := CreateResource(a.MqlRuntime, "aws.applicationAutoscaling.target",
 						map[string]*llx.RawData{
 							"arn":               llx.StringData(fmt.Sprintf("arn:aws:application-autoscaling:%s:%s:%s/%s", regionVal, conn.AccountId(), namespace, convert.ToValue(target.ResourceId))),
 							"namespace":         llx.StringData(string(target.ServiceNamespace)),
