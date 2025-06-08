@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"io"
 	"strings"
 
@@ -341,18 +342,71 @@ func (s *mqlParseYaml) content(file *mqlFile) (string, error) {
 }
 
 func (s *mqlParseYaml) params(content string) (map[string]interface{}, error) {
-	res := make(map[string](interface{}))
-
 	if content == "" {
-		return nil, nil
+		return map[string]interface{}{}, nil
 	}
 
-	err := yaml.Unmarshal([]byte(content), &res)
+	// Check if we have multiple documents by analyzing separator positions
+	hasMultipleDocuments := false
+
+	if strings.Contains(content, "---") {
+		// Split and filter out empty documents
+		yamlDocs := strings.Split(content, "---")
+		nonEmptyDocs := 0
+
+		for _, doc := range yamlDocs {
+			doc = strings.TrimSpace(doc)
+			if doc != "" {
+				nonEmptyDocs++
+			}
+		}
+
+		// If we have more than 1 non-empty document, it's multi-document
+		hasMultipleDocuments = nonEmptyDocs > 1
+	}
+
+	if hasMultipleDocuments {
+		// Split content by YAML document separator
+		yamlDocs := strings.Split(content, "---")
+		var documents []map[string]interface{}
+
+		for _, doc := range yamlDocs {
+			doc = strings.TrimSpace(doc)
+			if doc == "" {
+				continue
+			}
+
+			var parsed map[string]interface{}
+			err := yaml.Unmarshal([]byte(doc), &parsed)
+			if err != nil {
+				return nil, err
+			}
+
+			if parsed != nil && len(parsed) > 0 {
+				documents = append(documents, parsed)
+			}
+		}
+
+		// Return documents as a map with indexed keys for multi-document YAML
+		result := make(map[string]interface{})
+		for i, doc := range documents {
+			result[fmt.Sprintf("%d", i)] = doc
+		}
+		return result, nil
+	}
+
+	// Single document - parse as-is
+	var result map[string]interface{}
+	err := yaml.Unmarshal([]byte(content), &result)
 	if err != nil {
 		return nil, err
 	}
 
-	return res, nil
+	if result == nil {
+		return map[string]interface{}{}, nil
+	}
+
+	return result, nil
 }
 
 func initParsePlist(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
