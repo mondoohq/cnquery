@@ -2188,6 +2188,10 @@ aws.rds.dbcluster @defaults("id region engine engineVersion") {
   httpEndpointEnabled bool
   // Container for engine configuration values
   parameterGroupName string
+  // Global cluster identifier if the cluster is a global cluster member
+  globalClusterIdentifier string
+  // CloudWatch Database Insights mode. Possible values are `standard` and `advanced`
+  databaseInsightsMode string
 }
 
 // Amazon RDS snapshot

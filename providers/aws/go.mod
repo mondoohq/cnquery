@@ -45,7 +45,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.71.2
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.38.3
-	github.com/aws/aws-sdk-go-v2/service/rds v1.96.0
+	github.com/aws/aws-sdk-go-v2/service/rds v1.97.0
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.54.3
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.79.4
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.58.0
