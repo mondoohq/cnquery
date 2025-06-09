@@ -2588,6 +2588,8 @@ resources:
         min_mondoo_version: 9.0.0
       createdTime:
         min_mondoo_version: 9.0.0
+      databaseInsightsMode:
+        min_mondoo_version: 9.0.0
       deletionProtection:
         min_mondoo_version: 9.0.0
       endpoint:
@@ -2597,6 +2599,8 @@ resources:
       engineLifecycleSupport:
         min_mondoo_version: 9.0.0
       engineVersion:
+        min_mondoo_version: 9.0.0
+      globalClusterIdentifier:
         min_mondoo_version: 9.0.0
       hostedZoneId:
         min_mondoo_version: 9.0.0

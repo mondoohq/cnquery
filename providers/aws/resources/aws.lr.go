@@ -3360,6 +3360,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.dbcluster.parameterGroupName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbcluster).GetParameterGroupName()).ToDataRes(types.String)
 	},
+	"aws.rds.dbcluster.globalClusterIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetGlobalClusterIdentifier()).ToDataRes(types.String)
+	},
+	"aws.rds.dbcluster.databaseInsightsMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetDatabaseInsightsMode()).ToDataRes(types.String)
+	},
 	"aws.rds.snapshot.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsSnapshot).GetArn()).ToDataRes(types.String)
 	},
@@ -9139,6 +9145,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.rds.dbcluster.parameterGroupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbcluster).ParameterGroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.globalClusterIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).GlobalClusterIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.databaseInsightsMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).DatabaseInsightsMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.rds.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -23015,6 +23029,8 @@ type mqlAwsRdsDbcluster struct {
 	PreferredBackupWindow plugin.TValue[string]
 	HttpEndpointEnabled plugin.TValue[bool]
 	ParameterGroupName plugin.TValue[string]
+	GlobalClusterIdentifier plugin.TValue[string]
+	DatabaseInsightsMode plugin.TValue[string]
 }
 
 // createAwsRdsDbcluster creates a new instance of this resource
@@ -23252,6 +23268,14 @@ func (c *mqlAwsRdsDbcluster) GetHttpEndpointEnabled() *plugin.TValue[bool] {
 
 func (c *mqlAwsRdsDbcluster) GetParameterGroupName() *plugin.TValue[string] {
 	return &c.ParameterGroupName
+}
+
+func (c *mqlAwsRdsDbcluster) GetGlobalClusterIdentifier() *plugin.TValue[string] {
+	return &c.GlobalClusterIdentifier
+}
+
+func (c *mqlAwsRdsDbcluster) GetDatabaseInsightsMode() *plugin.TValue[string] {
+	return &c.DatabaseInsightsMode
 }
 
 // mqlAwsRdsSnapshot for the aws.rds.snapshot resource
