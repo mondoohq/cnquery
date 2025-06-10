@@ -528,6 +528,11 @@ lr/docs/markdown: providers/lr
 		--description "The Azure resource pack lets you use MQL to query and assess the security of your Azure cloud services." \
 		--docs-file providers/azure/resources/azure.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/azure-pack
+	./lr markdown providers/cloudflare/resources/cloudflare.lr \
+		--pack-name "Cloudflare" \
+		--description "The Cloudflare resource pack lets you use MQL to query and assess the security of your Cloudflare configuration." \
+		--docs-file providers/cloudflare/resources/cloudflare.lr.manifest.yaml \
+		--output ../docs/docs/mql/resources/cloudflare-pack
 	./lr markdown providers/cloudformation/resources/cloudformation.lr \
 		--pack-name "AWS CloudFormation" \
 		--description "The AWS CloudFormation resource pack lets you use MQL to query and assess the security of your AWS CloudFormation." \
@@ -539,8 +544,8 @@ lr/docs/markdown: providers/lr
 		--docs-file providers/core/resources/core.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/core-pack
 	./lr markdown providers/equinix/resources/equinix.lr \
-		--pack-name "Equinix" \
-		--description "The Equinix resource pack lets you use MQL to query and assess the security of your Equinix Metal assets." \
+		--pack-name "Equinix Metal" \
+		--description "The Equinix Metal resource pack lets you use MQL to query and assess the security of your Equinix Metal assets." \
 		--docs-file providers/equinix/resources/equinix.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/equinix-pack
 	./lr markdown providers/gcp/resources/gcp.lr \
@@ -573,6 +578,11 @@ lr/docs/markdown: providers/lr
 		--description "The Kubernetes resource pack lets you use MQL to query and assess the security of your Kubernetes clusters and workloads." \
 		--docs-file providers/k8s/resources/k8s.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/k8s-pack
+	./lr markdown providers/mondoo/resources/mondoo.lr \
+		--pack-name "Mondoo Platform" \
+		--description "The Mondoo resource pack lets you interact with Mondoo Platform and its assets and resources." \
+		--docs-file providers/mondoo/resources/mondoo.lr.manifest.yaml \
+		--output ../docs/docs/mql/resources/mondoo-pack
 	./lr markdown providers/ms365/resources/ms365.lr \
 		--pack-name "Microsoft 365 (MS365)" \
 		--description "The Microsoft 365 (MS365) resource pack lets you use MQL to query and assess the security of your Microsoft 365 identities and configuration." \
@@ -583,10 +593,10 @@ lr/docs/markdown: providers/lr
 		--description "The Network resource pack lets you use MQL to query and assess the security of domains and network services." \
 		--docs-file providers/network/resources/network.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/network-pack
-	./lr markdown providers/network/resources/nmap.lr \
-		--pack-name "nmap" \
-		--description "The Nmap resource pack lets you use MQL to query and assess Nmap data." \
-		--docs-file providers/network/resources/nmap.lr.manifest.yaml \
+	./lr markdown providers/nmap/resources/nmap.lr \
+		--pack-name "Nmap" \
+		--description "The Nmap resource pack lets you use MQL to query and assess the network devices with Nmap." \
+		--docs-file providers/nmap/resources/nmap.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/nmap-pack
 	./lr markdown providers/oci/resources/oci.lr \
 		--pack-name "Oracle Cloud Infrastructure (OCI)" \
@@ -618,6 +628,16 @@ lr/docs/markdown: providers/lr
 		--description "The Slack resource pack lets you use MQL to query and assess the security of your Slack identities and configuration." \
 		--docs-file providers/slack/resources/slack.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/slack-pack
+	./lr markdown providers/snowflake/resources/snowflake.lr \
+		--pack-name "Snowflake" \
+		--description "The Snowflake resource pack lets you use MQL to query and assess the security of your Snowflake identities and configuration." \
+		--docs-file providers/snowflake/resources/snowflake.lr.manifest.yaml \
+		--output ../docs/docs/mql/resources/snowflake-pack
+	./lr markdown providers/tailscale/resources/tailscale.lr \
+		--pack-name "Tailscale" \
+		--description "The Tailscale resource pack lets you use MQL to query devices, users, DNS nameservers, and more information about a Tailscale network." \
+		--docs-file providers/tailscale/resources/tailscale.lr.manifest.yaml \
+		--output ../docs/docs/mql/resources/tailscale-pack
 	./lr markdown providers/terraform/resources/terraform.lr \
 		--pack-name "Terraform IaC" \
 		--description "The Terraform IaC resource pack lets you use MQL to query and assess the security of your Terraform HCL, plan, and state resources." \
@@ -633,32 +653,6 @@ lr/docs/markdown: providers/lr
 		--description "The VMware vSphere resource pack lets you use MQL to query and assess the security of your VMware vSphere hosts and services." \
 		--docs-file providers/vsphere/resources/vsphere.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/vsphere-pack
-	./lr markdown providers/snowflake/resources/snowflake.lr \
-		--pack-name "Snowflake" \
-		--description "The Snowflake resource pack lets you use MQL to query and assess the security of your Snowflake identities and configuration." \
-		--docs-file providers/snowflake/resources/snowflake.lr.manifest.yaml \
-		--output ../docs/docs/mql/resources/snowflake-pack
-	./lr markdown providers/mondoo/resources/mondoo.lr \
-		--pack-name "Mondoo Platform" \
-		--description "The Mondoo resource pack lets you interact with Mondoo Platform and its assets and resources." \
-		--docs-file providers/mondoo/resources/mondoo.lr.manifest.yaml \
-		--output ../docs/docs/mql/resources/mondoo-pack
-	./lr markdown providers/cloudflare/resources/cloudflare.lr \
-		--pack-name "Cloudflare" \
-		--description "The Cloudflare resource pack lets you use MQL to query and assess the security of your Cloudflare configuration." \
-		--docs-file providers/cloudflare/resources/cloudflare.lr.manifest.yaml \
-		--output ../docs/docs/mql/resources/cloudflare-pack
-	./lr markdown providers/nmap/resources/nmap.lr \
-		--pack-name "Nmap" \
-		--description "The Nmap resource pack lets you use MQL to query and assess the network devices with Nmap." \
-		--docs-file providers/nmap/resources/nmap.lr.manifest.yaml \
-		--output ../docs/docs/mql/resources/nmap-pack
-	./lr markdown providers/tailscale/resources/tailscale.lr \
-		--pack-name "Tailscale" \
-		--description "The Tailscale resource pack lets you use MQL to query devices, users, DNS nameservers, and more information about a Tailscale network." \
-		--docs-file providers/tailscale/resources/tailscale.lr.manifest.yaml \
-		--output ../docs/docs/mql/resources/tailscale-pack
-
 
 lr/docs/stats:
 	@echo "Please remember to re-run before using this:"
