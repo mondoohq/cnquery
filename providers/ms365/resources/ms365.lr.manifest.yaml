@@ -102,11 +102,6 @@ resources:
       countryLocations: {}
       ipLocations: {}
     min_mondoo_version: 9.0.0
-  microsoft.conditionalAccess.policies:
-    fields:
-      list: {}
-      policies: {}
-    min_mondoo_version: 9.0.0
   microsoft.conditionalAccess.policy:
     fields:
       conditions: {}
@@ -125,14 +120,11 @@ resources:
       authenticationFlows: {}
       clientAppTypes: {}
       clientApplications: {}
-      devicePlatforms: {}
-      deviceStates: {}
       id: {}
       insiderRiskLevels: {}
       locations: {}
       platforms: {}
       servicePrincipalRiskLevels: {}
-      servicePrincipals: {}
       signInRiskLevels: {}
       userRiskLevels: {}
       users: {}
@@ -142,7 +134,6 @@ resources:
     fields:
       excludeApplications: {}
       includeApplications: {}
-      includeAuthenticationContextClassReferences: {}
       includeUserActions: {}
     is_private: true
     min_mondoo_version: 9.0.0
@@ -183,11 +174,9 @@ resources:
     fields:
       authenticationStrength: {}
       builtInControls: {}
-      builtInControlsX: {}
       customAuthenticationFactors: {}
       id: {}
       operator: {}
-      operatorX: {}
       termsOfUse: {}
     is_private: true
     min_mondoo_version: 9.0.0
@@ -207,7 +196,6 @@ resources:
     fields:
       applicationEnforcedRestrictions: {}
       cloudAppSecurity: {}
-      gcpCloudServices: {}
       id: {}
       persistentBrowser: {}
       secureSignInSession: {}
@@ -236,8 +224,6 @@ resources:
       authenticationType: {}
       frequencyInterval: {}
       isEnabled: {}
-      type: {}
-      value: {}
     is_private: true
     min_mondoo_version: 9.0.0
   microsoft.device:
