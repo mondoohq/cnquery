@@ -131,7 +131,7 @@ func (m *mqlMicrosoftConditionalAccessPolicySessionControls) id() (string, error
 }
 
 // Conditional Access Policies
-func (a *mqlMicrosoftConditionalAccessPolicies) list() ([]interface{}, error) {
+func (a *mqlMicrosoftConditionalAccess) policies() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -162,7 +162,7 @@ func (a *mqlMicrosoftConditionalAccessPolicies) list() ([]interface{}, error) {
 }
 
 // Helper methods for creating policy sub-resources
-func (a *mqlMicrosoftConditionalAccessPolicies) createPolicyResource(policy models.ConditionalAccessPolicyable) (interface{}, error) {
+func (a *mqlMicrosoftConditionalAccess) createPolicyResource(policy models.ConditionalAccessPolicyable) (interface{}, error) {
 	id := policy.GetId()
 	if id == nil {
 		return nil, fmt.Errorf("policy ID cannot be nil")
@@ -205,7 +205,7 @@ func (a *mqlMicrosoftConditionalAccessPolicies) createPolicyResource(policy mode
 	return policyInfo, nil
 }
 
-func (a *mqlMicrosoftConditionalAccessPolicies) createConditionsResource(
+func (a *mqlMicrosoftConditionalAccess) createConditionsResource(
 	policyId string,
 	conditions models.ConditionalAccessConditionSetable,
 ) (plugin.Resource, error) {
@@ -338,7 +338,7 @@ func (a *mqlMicrosoftConditionalAccessPolicies) createConditionsResource(
 	return conditionsResource, err
 }
 
-func (a *mqlMicrosoftConditionalAccessPolicies) createGrantControlsResource(
+func (a *mqlMicrosoftConditionalAccess) createGrantControlsResource(
 	policyId string,
 	grantControls models.ConditionalAccessGrantControlsable,
 ) (plugin.Resource, error) {
@@ -382,7 +382,7 @@ func (a *mqlMicrosoftConditionalAccessPolicies) createGrantControlsResource(
 		})
 }
 
-func (a *mqlMicrosoftConditionalAccessPolicies) createSessionControlsResource(
+func (a *mqlMicrosoftConditionalAccess) createSessionControlsResource(
 	policyId string,
 	sessionControls models.ConditionalAccessSessionControlsable,
 ) (plugin.Resource, error) {

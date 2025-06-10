@@ -46,10 +46,6 @@ func init() {
 			// to override args, implement: initMicrosoftConditionalAccessNamedLocations(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftConditionalAccessNamedLocations,
 		},
-		"microsoft.conditionalAccess.policies": {
-			// to override args, implement: initMicrosoftConditionalAccessPolicies(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createMicrosoftConditionalAccessPolicies,
-		},
 		"microsoft.conditionalAccess.policy": {
 			// to override args, implement: initMicrosoftConditionalAccessPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftConditionalAccessPolicy,
@@ -430,16 +426,13 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlMicrosoftConditionalAccess).GetNamedLocations()).ToDataRes(types.Resource("microsoft.conditionalAccess.namedLocations"))
 	},
 	"microsoft.conditionalAccess.policies": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftConditionalAccess).GetPolicies()).ToDataRes(types.Resource("microsoft.conditionalAccess.policies"))
+		return (r.(*mqlMicrosoftConditionalAccess).GetPolicies()).ToDataRes(types.Array(types.Resource("microsoft.conditionalAccess.policy")))
 	},
 	"microsoft.conditionalAccess.namedLocations.ipLocations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftConditionalAccessNamedLocations).GetIpLocations()).ToDataRes(types.Array(types.Resource("microsoft.conditionalAccess.ipNamedLocation")))
 	},
 	"microsoft.conditionalAccess.namedLocations.countryLocations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftConditionalAccessNamedLocations).GetCountryLocations()).ToDataRes(types.Array(types.Resource("microsoft.conditionalAccess.countryNamedLocation")))
-	},
-	"microsoft.conditionalAccess.policies.list": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftConditionalAccessPolicies).GetList()).ToDataRes(types.Array(types.Resource("microsoft.conditionalAccess.policy")))
 	},
 	"microsoft.conditionalAccess.policy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftConditionalAccessPolicy).GetId()).ToDataRes(types.String)
@@ -1773,7 +1766,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.conditionalAccess.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftConditionalAccess).Policies, ok = plugin.RawToTValue[*mqlMicrosoftConditionalAccessPolicies](v.Value, v.Error)
+		r.(*mqlMicrosoftConditionalAccess).Policies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"microsoft.conditionalAccess.namedLocations.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1786,14 +1779,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.conditionalAccess.namedLocations.countryLocations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftConditionalAccessNamedLocations).CountryLocations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
-		return
-	},
-	"microsoft.conditionalAccess.policies.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftConditionalAccessPolicies).__id, ok = v.Value.(string)
-			return
-		},
-	"microsoft.conditionalAccess.policies.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftConditionalAccessPolicies).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"microsoft.conditionalAccess.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4104,7 +4089,7 @@ type mqlMicrosoftConditionalAccess struct {
 	__id string
 	// optional: if you define mqlMicrosoftConditionalAccessInternal it will be used here
 	NamedLocations plugin.TValue[*mqlMicrosoftConditionalAccessNamedLocations]
-	Policies plugin.TValue[*mqlMicrosoftConditionalAccessPolicies]
+	Policies plugin.TValue[[]interface{}]
 }
 
 // createMicrosoftConditionalAccess creates a new instance of this resource
@@ -4143,8 +4128,20 @@ func (c *mqlMicrosoftConditionalAccess) GetNamedLocations() *plugin.TValue[*mqlM
 	return &c.NamedLocations
 }
 
-func (c *mqlMicrosoftConditionalAccess) GetPolicies() *plugin.TValue[*mqlMicrosoftConditionalAccessPolicies] {
-	return &c.Policies
+func (c *mqlMicrosoftConditionalAccess) GetPolicies() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Policies, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.conditionalAccess", c.__id, "policies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.policies()
+	})
 }
 
 // mqlMicrosoftConditionalAccessNamedLocations for the microsoft.conditionalAccess.namedLocations resource
@@ -4217,62 +4214,6 @@ func (c *mqlMicrosoftConditionalAccessNamedLocations) GetCountryLocations() *plu
 		}
 
 		return c.countryLocations()
-	})
-}
-
-// mqlMicrosoftConditionalAccessPolicies for the microsoft.conditionalAccess.policies resource
-type mqlMicrosoftConditionalAccessPolicies struct {
-	MqlRuntime *plugin.Runtime
-	__id string
-	// optional: if you define mqlMicrosoftConditionalAccessPoliciesInternal it will be used here
-	List plugin.TValue[[]interface{}]
-}
-
-// createMicrosoftConditionalAccessPolicies creates a new instance of this resource
-func createMicrosoftConditionalAccessPolicies(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlMicrosoftConditionalAccessPolicies{
-		MqlRuntime: runtime,
-	}
-
-	err := SetAllData(res, args)
-	if err != nil {
-		return res, err
-	}
-
-	// to override __id implement: id() (string, error)
-
-	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("microsoft.conditionalAccess.policies", res.__id)
-		if err != nil || args == nil {
-			return res, err
-		}
-		return res, SetAllData(res, args)
-	}
-
-	return res, nil
-}
-
-func (c *mqlMicrosoftConditionalAccessPolicies) MqlName() string {
-	return "microsoft.conditionalAccess.policies"
-}
-
-func (c *mqlMicrosoftConditionalAccessPolicies) MqlID() string {
-	return c.__id
-}
-
-func (c *mqlMicrosoftConditionalAccessPolicies) GetList() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.conditionalAccess.policies", c.__id, "list")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.([]interface{}), nil
-			}
-		}
-
-		return c.list()
 	})
 }
 

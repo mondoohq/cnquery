@@ -86,7 +86,7 @@ microsoft.conditionalAccess {
   // Named locations container
   namedLocations microsoft.conditionalAccess.namedLocations
   // Policies collection
-  policies microsoft.conditionalAccess.policies
+  policies() []microsoft.conditionalAccess.policy
 }
 
 // Container for Microsoft Conditional Access Named Locations
@@ -95,11 +95,6 @@ microsoft.conditionalAccess.namedLocations {
   ipLocations() []microsoft.conditionalAccess.ipNamedLocation
   // Country-based named locations
   countryLocations() []microsoft.conditionalAccess.countryNamedLocation
-}
-
- // Represents a list pf Microsoft Entra Conditional Access policies.
-microsoft.conditionalAccess.policies {
-  []microsoft.conditionalAccess.policy
 }
 
 //Represents a Microsoft Entra Conditional Access policy. Conditional access policies are custom rules that define an access scenario. 
