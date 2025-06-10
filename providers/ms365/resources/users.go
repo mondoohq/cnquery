@@ -28,6 +28,7 @@ var userSelectFields = []string{
 	"department", "displayName", "employeeId", "givenName", "jobTitle", "mail",
 	"mobilePhone", "otherMails", "officeLocation", "postalCode", "state", "identities",
 	"streetAddress", "surname", "userPrincipalName", "userType", "creationType",
+	"assignedLicenses",
 }
 
 func (a *mqlMicrosoft) users() (*mqlMicrosoftUsers, error) {
@@ -252,6 +253,34 @@ func newMqlMicrosoftUser(runtime *plugin.Runtime, u models.Userable) (*mqlMicros
 		identities = append(identities, identity)
 	}
 
+	mqlAssignedLicensesList := []interface{}{}
+
+	if u.GetAssignedLicenses() != nil {
+		for _, license := range u.GetAssignedLicenses() {
+			if license == nil {
+				continue
+			}
+
+			var disabledPlanStrings []string
+			if license.GetDisabledPlans() != nil {
+				for _, planUUID := range license.GetDisabledPlans() {
+					disabledPlanStrings = append(disabledPlanStrings, planUUID.String())
+				}
+			}
+
+			mqlAssignedLicenses, err := CreateResource(runtime, "microsoft.user.assignedLicense",
+				map[string]*llx.RawData{
+					"__id":          llx.StringData(license.GetSkuId().String()),
+					"disabledPlans": llx.ArrayData(convert.SliceAnyToInterface(disabledPlanStrings), types.String),
+					"skuId":         llx.StringData(license.GetSkuId().String()),
+				})
+			if err != nil {
+				return nil, err
+			}
+			mqlAssignedLicensesList = append(mqlAssignedLicensesList, mqlAssignedLicenses)
+		}
+	}
+
 	graphUser, err := CreateResource(runtime, "microsoft.user",
 		map[string]*llx.RawData{
 			"__id":              llx.StringDataPtr(u.GetId()),
@@ -278,6 +307,7 @@ func newMqlMicrosoftUser(runtime *plugin.Runtime, u models.Userable) (*mqlMicros
 			"userType":          llx.StringDataPtr(u.GetUserType()),
 			"creationType":      llx.StringDataPtr(u.GetCreationType()),
 			"identities":        llx.ArrayData(identities, types.ResourceLike),
+			"assignedLicenses":  llx.ArrayData(mqlAssignedLicensesList, types.ResourceLike),
 		})
 	if err != nil {
 		return nil, err

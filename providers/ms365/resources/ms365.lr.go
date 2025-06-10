@@ -38,6 +38,10 @@ func init() {
 			Init: initMicrosoftUsers,
 			Create: createMicrosoftUsers,
 		},
+		"microsoft.user.assignedLicense": {
+			// to override args, implement: initMicrosoftUserAssignedLicense(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftUserAssignedLicense,
+		},
 		"microsoft.conditionalAccess": {
 			// to override args, implement: initMicrosoftConditionalAccess(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftConditionalAccess,
@@ -422,6 +426,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.users.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUsers).GetList()).ToDataRes(types.Array(types.Resource("microsoft.user")))
 	},
+	"microsoft.user.assignedLicense.disabledPlans": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserAssignedLicense).GetDisabledPlans()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.user.assignedLicense.skuId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserAssignedLicense).GetSkuId()).ToDataRes(types.String)
+	},
 	"microsoft.conditionalAccess.namedLocations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftConditionalAccess).GetNamedLocations()).ToDataRes(types.Resource("microsoft.conditionalAccess.namedLocations"))
 	},
@@ -727,6 +737,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.user.auditlog": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUser).GetAuditlog()).ToDataRes(types.Resource("microsoft.user.auditlog"))
+	},
+	"microsoft.user.assignedLicenses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUser).GetAssignedLicenses()).ToDataRes(types.Array(types.Resource("microsoft.user.assignedLicense")))
 	},
 	"microsoft.user.auditlog.userId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUserAuditlog).GetUserId()).ToDataRes(types.String)
@@ -1757,6 +1770,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMicrosoftUsers).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"microsoft.user.assignedLicense.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftUserAssignedLicense).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.user.assignedLicense.disabledPlans": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserAssignedLicense).DisabledPlans, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.assignedLicense.skuId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserAssignedLicense).SkuId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"microsoft.conditionalAccess.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlMicrosoftConditionalAccess).__id, ok = v.Value.(string)
 			return
@@ -2243,6 +2268,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.user.auditlog": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftUser).Auditlog, ok = plugin.RawToTValue[*mqlMicrosoftUserAuditlog](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.assignedLicenses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUser).AssignedLicenses, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"microsoft.user.auditlog.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4083,6 +4112,55 @@ func (c *mqlMicrosoftUsers) GetList() *plugin.TValue[[]interface{}] {
 	})
 }
 
+// mqlMicrosoftUserAssignedLicense for the microsoft.user.assignedLicense resource
+type mqlMicrosoftUserAssignedLicense struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftUserAssignedLicenseInternal it will be used here
+	DisabledPlans plugin.TValue[[]interface{}]
+	SkuId plugin.TValue[string]
+}
+
+// createMicrosoftUserAssignedLicense creates a new instance of this resource
+func createMicrosoftUserAssignedLicense(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftUserAssignedLicense{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.user.assignedLicense", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftUserAssignedLicense) MqlName() string {
+	return "microsoft.user.assignedLicense"
+}
+
+func (c *mqlMicrosoftUserAssignedLicense) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftUserAssignedLicense) GetDisabledPlans() *plugin.TValue[[]interface{}] {
+	return &c.DisabledPlans
+}
+
+func (c *mqlMicrosoftUserAssignedLicense) GetSkuId() *plugin.TValue[string] {
+	return &c.SkuId
+}
+
 // mqlMicrosoftConditionalAccess for the microsoft.conditionalAccess resource
 type mqlMicrosoftConditionalAccess struct {
 	MqlRuntime *plugin.Runtime
@@ -5289,6 +5367,7 @@ type mqlMicrosoftUser struct {
 	CreationType plugin.TValue[string]
 	Identities plugin.TValue[[]interface{}]
 	Auditlog plugin.TValue[*mqlMicrosoftUserAuditlog]
+	AssignedLicenses plugin.TValue[[]interface{}]
 }
 
 // createMicrosoftUser creates a new instance of this resource
@@ -5469,6 +5548,10 @@ func (c *mqlMicrosoftUser) GetAuditlog() *plugin.TValue[*mqlMicrosoftUserAuditlo
 
 		return c.auditlog()
 	})
+}
+
+func (c *mqlMicrosoftUser) GetAssignedLicenses() *plugin.TValue[[]interface{}] {
+	return &c.AssignedLicenses
 }
 
 // mqlMicrosoftUserAuditlog for the microsoft.user.auditlog resource
