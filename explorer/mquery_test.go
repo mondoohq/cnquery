@@ -34,6 +34,34 @@ func TestMquery_RefreshAsAssetFilterStableChecksum(t *testing.T) {
 	assert.Equal(t, cs, m.Checksum)
 }
 
+func TestMqueryWithTags_RefreshChecksum(t *testing.T) {
+	x := testutils.LinuxMock()
+
+	conf := mqlc.NewConfig(x.Schema(), cnquery.DefaultFeatures)
+
+	m := &Mquery{
+		Mql: "true",
+		Uid: "my-id0",
+		Tags: map[string]string{
+			"tag1": "value1",
+		},
+	}
+
+	getQuery := func(ctx context.Context, mrn string) (*Mquery, error) {
+		return &Mquery{}, nil
+
+	}
+
+	err := m.RefreshChecksum(context.Background(), conf, getQuery)
+	require.NoError(t, err)
+	initialChecksum := m.Checksum
+
+	m.Tags["tag2"] = "value2"
+	err = m.RefreshChecksum(context.Background(), conf, getQuery)
+	require.NoError(t, err)
+	assert.NotEqual(t, initialChecksum, m.Checksum, "Checksum should change when tags are modified")
+}
+
 func TestMquery_Refresh(t *testing.T) {
 	a := &Mquery{
 		Mql:   "mondoo.version != props.world",
