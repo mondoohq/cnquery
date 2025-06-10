@@ -18,15 +18,10 @@ resources:
   googleworkspace.calendar:
     fields:
       acl: {}
-      name: {}
       primary: {}
       summary: {}
       summaryOverride: {}
     is_private: true
-    min_mondoo_version: latest
-  googleworkspace.calendar.acl:
-    fields:
-      role: {}
     min_mondoo_version: latest
   googleworkspace.calendar.aclRule:
     fields:
@@ -42,15 +37,11 @@ resources:
     min_mondoo_version: latest
   googleworkspace.connectedApp:
     fields:
-      access: {}
       clientId: {}
-      id: {}
       name: {}
       scopes: {}
       tokens: {}
-      type: {}
       users: {}
-      verified: {}
     is_private: true
     min_mondoo_version: latest
   googleworkspace.domain:

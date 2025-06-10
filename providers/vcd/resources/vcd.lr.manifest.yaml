@@ -6,7 +6,6 @@ resources:
     fields:
       externalNetworks: {}
       networkPools: {}
-      nsxtAlbs: {}
       organizations: {}
       providerVDCs: {}
       serverInstances: {}
@@ -15,29 +14,16 @@ resources:
     fields:
       configuration: {}
       description: {}
-      gateway: {}
-      href: {}
       id: {}
       name: {}
-      netmask: {}
-      operationKey: {}
-      type: {}
       urn: {}
     is_private: true
     min_mondoo_version: latest
   vcd.networkPool:
     fields:
-      href: {}
       isBusy: {}
       name: {}
       networkPoolType: {}
-    min_mondoo_version: latest
-  vcd.nsxtEdgeGateway:
-    fields:
-      description: {}
-      edgeClusterConfig: {}
-      id: {}
-      name: {}
     min_mondoo_version: latest
   vcd.organization:
     fields:
@@ -47,7 +33,6 @@ resources:
       isEnabled: {}
       ldapConfiguration: {}
       name: {}
-      nsxtEdgeGateway: {}
       rights: {}
       roles: {}
       settings: {}
@@ -93,18 +78,6 @@ resources:
       vcVersion: {}
       vsmIP: {}
     min_mondoo_version: latest
-  vcd.vcd.nsxtAlb:
-    fields: {}
-    min_mondoo_version: latest
-  vcd.vcdGroup:
-    fields:
-      description: {}
-      localEgress: {}
-      name: {}
-      status: {}
-      universalNetworkingEnabled: {}
-      vdcs: {}
-    min_mondoo_version: latest
   vcd.vdc:
     fields:
       allocationModel: {}
@@ -114,7 +87,6 @@ resources:
       name: {}
       networkQuota: {}
       nicQuota: {}
-      nsxtEdgeGateway: {}
       status: {}
       usedNetworkCount: {}
       vmQuota: {}
@@ -128,7 +100,6 @@ resources:
       status: {}
       type: {}
       universalNetworkingEnabled: {}
-      vdcs: {}
     min_mondoo_version: latest
   vcd.vdcProvider:
     fields:
@@ -136,7 +107,6 @@ resources:
       cpuLimitMhz: {}
       cpuOverheadMhz: {}
       cpuUsedMhz: {}
-      href: {}
       isBusy: {}
       isDeleted: {}
       isEnabled: {}

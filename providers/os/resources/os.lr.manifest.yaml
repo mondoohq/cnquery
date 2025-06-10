@@ -4,7 +4,6 @@
 resources:
   asset:
     fields:
-      cpe: {}
       cpes: {}
       purl:
         min_mondoo_version: 9.0.0
@@ -45,11 +44,6 @@ resources:
       vector: {}
     is_private: true
     min_mondoo_version: 5.15.0
-  auditd.conf:
-    fields:
-      file: {}
-      params: {}
-    min_mondoo_version: 9.0.0
   auditd.config:
     fields:
       file: {}
@@ -166,7 +160,6 @@ resources:
     fields:
       file: {}
       instructions: {}
-      os: {}
       stages: {}
     min_mondoo_version: 9.0.0
     refs:
@@ -492,20 +485,14 @@ resources:
       stealthEnabled: {}
       version: {}
     min_mondoo_version: 5.15.0
-  macos.security:
-    fields:
-      authorizationDB: {}
-    min_mondoo_version: 5.15.0
   macos.systemExtension:
     fields:
       active: {}
-      bundleID: {}
       bundlePath: {}
       categories: {}
       enabled: {}
       identifier: {}
       mdmManaged: {}
-      name: {}
       state: {}
       teamID: {}
       uuid: {}
@@ -583,16 +570,11 @@ resources:
   networkInterface:
     fields:
       active: {}
-      driver: {}
-      firmware: {}
       flags: {}
       ips: {}
       mac: {}
-      manufacturer: {}
-      model: {}
       mtu: {}
       name: {}
-      status: {}
       vendor: {}
       virtual: {}
     is_private: true
@@ -600,7 +582,6 @@ resources:
   npm.package:
     fields:
       cpes: {}
-      dependencies: {}
       files: {}
       id: {}
       name: {}
@@ -609,13 +590,11 @@ resources:
     min_mondoo_version: latest
   npm.packages:
     fields:
-      "": {}
       directDependencies: {}
       files: {}
       list: {}
       path: {}
       root: {}
-      transitive: {}
     min_mondoo_version: latest
   ntp.conf:
     fields:
@@ -884,16 +863,12 @@ resources:
     fields:
       author: {}
       authorEmail: {}
-      cpe: {}
       cpes: {}
       dependencies: {}
       file: {}
       id: {}
-      licences: {}
       license: {}
-      licenses: {}
       name: {}
-      path: {}
       purl: {}
       summary: {}
       version: {}
@@ -1034,14 +1009,11 @@ resources:
       isRemovable: {}
       manufacturer: {}
       name: {}
-      product: {}
       productId: {}
       protocol: {}
-      removable: {}
       serial: {}
       speed: {}
       subclass: {}
-      vendor: {}
       vendorId: {}
       version: {}
     is_private: true
@@ -1081,22 +1053,16 @@ resources:
       title: Search for a specific SID and check for its values
   vuln.advisory:
     fields:
-      cve: {}
-      cvss: {}
-      cvssVector: {}
       description: {}
       id: {}
       modified: {}
       published: {}
-      severity: {}
       title: {}
       worstScore: {}
     is_private: true
     min_mondoo_version: latest
   vuln.cve:
     fields:
-      cvss: {}
-      cvssVector: {}
       id: {}
       modified: {}
       published: {}

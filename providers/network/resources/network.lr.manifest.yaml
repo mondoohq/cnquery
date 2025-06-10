@@ -23,8 +23,6 @@ resources:
       pem: {}
       policyIdentifier: {}
       revokedAt: {}
-      san:
-        min_mondoo_version: latest
       sanExtension:
         min_mondoo_version: latest
       serial: {}
@@ -238,13 +236,6 @@ resources:
       ipAddresses: {}
       uris: {}
     is_private: true
-    min_mondoo_version: latest
-  sanExtensionParams:
-    fields:
-      dnsNames: {}
-      emailAddresses: {}
-      extension: {}
-      ipAddresses: {}
     min_mondoo_version: latest
   socket:
     fields:

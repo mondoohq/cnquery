@@ -20,8 +20,6 @@ resources:
       cloudDefender: {}
       compute: {}
       cosmosDb: {}
-      functions:
-        min_mondoo_version: 9.0.0
       iam:
         min_mondoo_version: 9.0.0
       id: {}
@@ -125,10 +123,8 @@ resources:
   azure.subscription.advisorService.score:
     fields:
       currentScore: {}
-      date: {}
       id: {}
       name: {}
-      score: {}
       timeSeries: {}
       type: {}
     is_private: true
@@ -143,7 +139,6 @@ resources:
       date: {}
       id: {}
       impactedResourcesCount: {}
-      lastRefreshedDate: {}
       potentialScoreIncrease: {}
       score: {}
     is_private: true
@@ -155,7 +150,6 @@ resources:
     fields:
       aggregationLevel: {}
       id: {}
-      score: {}
       scores: {}
     is_private: true
     min_mondoo_version: latest
