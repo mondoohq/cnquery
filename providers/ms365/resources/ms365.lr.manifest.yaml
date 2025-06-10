@@ -85,6 +85,7 @@ resources:
   microsoft.conditionalAccess:
     fields:
       namedLocations: {}
+      policies: {}
     min_mondoo_version: 9.0.0
   microsoft.conditionalAccess.countryNamedLocation:
     fields:
@@ -100,6 +101,144 @@ resources:
     fields:
       countryLocations: {}
       ipLocations: {}
+    min_mondoo_version: 9.0.0
+  microsoft.conditionalAccess.policies:
+    fields:
+      list: {}
+      policies: {}
+    min_mondoo_version: 9.0.0
+  microsoft.conditionalAccess.policy:
+    fields:
+      conditions: {}
+      createdDateTime: {}
+      displayName: {}
+      grantControls: {}
+      id: {}
+      modifiedDateTime: {}
+      sessionControls: {}
+      state: {}
+      templateId: {}
+    min_mondoo_version: 9.0.0
+  microsoft.conditionalAccess.policy.conditions:
+    fields:
+      applications: {}
+      authenticationFlows: {}
+      clientAppTypes: {}
+      clientApplications: {}
+      devicePlatforms: {}
+      deviceStates: {}
+      id: {}
+      insiderRiskLevels: {}
+      locations: {}
+      platforms: {}
+      servicePrincipalRiskLevels: {}
+      servicePrincipals: {}
+      signInRiskLevels: {}
+      userRiskLevels: {}
+      users: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.conditionalAccess.policy.conditions.applications:
+    fields:
+      excludeApplications: {}
+      includeApplications: {}
+      includeAuthenticationContextClassReferences: {}
+      includeUserActions: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.conditionalAccess.policy.conditions.authenticationFlows:
+    fields:
+      transferMethods: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.conditionalAccess.policy.conditions.clientApplications:
+    fields:
+      excludeServicePrincipals: {}
+      includeServicePrincipals: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.conditionalAccess.policy.conditions.locations:
+    fields:
+      excludeLocations: {}
+      includeLocations: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.conditionalAccess.policy.conditions.platforms:
+    fields:
+      excludePlatforms: {}
+      includePlatforms: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.conditionalAccess.policy.conditions.users:
+    fields:
+      excludeGroups: {}
+      excludeRoles: {}
+      excludeUsers: {}
+      includeGroups: {}
+      includeRoles: {}
+      includeUsers: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.conditionalAccess.policy.grantControls:
+    fields:
+      authenticationStrength: {}
+      builtInControls: {}
+      builtInControlsX: {}
+      customAuthenticationFactors: {}
+      id: {}
+      operator: {}
+      operatorX: {}
+      termsOfUse: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.conditionalAccess.policy.grantControls.authenticationStrength:
+    fields:
+      allowedCombinations: {}
+      createdDateTime: {}
+      description: {}
+      displayName: {}
+      id: {}
+      modifiedDateTime: {}
+      policyType: {}
+      requirementsSatisfied: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.conditionalAccess.policy.sessionControls:
+    fields:
+      applicationEnforcedRestrictions: {}
+      cloudAppSecurity: {}
+      gcpCloudServices: {}
+      id: {}
+      persistentBrowser: {}
+      secureSignInSession: {}
+      signInFrequency: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.conditionalAccess.policy.sessionControls.applicationEnforcedRestrictions:
+    fields:
+      isEnabled: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.conditionalAccess.policy.sessionControls.cloudAppSecurity:
+    fields:
+      cloudAppSecurityType: {}
+      isEnabled: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.conditionalAccess.policy.sessionControls.persistentBrowser:
+    fields:
+      isEnabled: {}
+      mode: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.conditionalAccess.policy.sessionControls.signInFrequency:
+    fields:
+      authenticationType: {}
+      frequencyInterval: {}
+      isEnabled: {}
+      type: {}
+      value: {}
+    is_private: true
     min_mondoo_version: 9.0.0
   microsoft.device:
     fields:

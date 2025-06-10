@@ -46,6 +46,66 @@ func init() {
 			// to override args, implement: initMicrosoftConditionalAccessNamedLocations(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftConditionalAccessNamedLocations,
 		},
+		"microsoft.conditionalAccess.policy": {
+			// to override args, implement: initMicrosoftConditionalAccessPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftConditionalAccessPolicy,
+		},
+		"microsoft.conditionalAccess.policy.conditions": {
+			// to override args, implement: initMicrosoftConditionalAccessPolicyConditions(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftConditionalAccessPolicyConditions,
+		},
+		"microsoft.conditionalAccess.policy.conditions.authenticationFlows": {
+			// to override args, implement: initMicrosoftConditionalAccessPolicyConditionsAuthenticationFlows(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftConditionalAccessPolicyConditionsAuthenticationFlows,
+		},
+		"microsoft.conditionalAccess.policy.grantControls.authenticationStrength": {
+			// to override args, implement: initMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength,
+		},
+		"microsoft.conditionalAccess.policy.sessionControls.signInFrequency": {
+			// to override args, implement: initMicrosoftConditionalAccessPolicySessionControlsSignInFrequency(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftConditionalAccessPolicySessionControlsSignInFrequency,
+		},
+		"microsoft.conditionalAccess.policy.sessionControls.cloudAppSecurity": {
+			// to override args, implement: initMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity,
+		},
+		"microsoft.conditionalAccess.policy.sessionControls.persistentBrowser": {
+			// to override args, implement: initMicrosoftConditionalAccessPolicySessionControlsPersistentBrowser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftConditionalAccessPolicySessionControlsPersistentBrowser,
+		},
+		"microsoft.conditionalAccess.policy.sessionControls.applicationEnforcedRestrictions": {
+			// to override args, implement: initMicrosoftConditionalAccessPolicySessionControlsApplicationEnforcedRestrictions(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftConditionalAccessPolicySessionControlsApplicationEnforcedRestrictions,
+		},
+		"microsoft.conditionalAccess.policy.conditions.clientApplications": {
+			// to override args, implement: initMicrosoftConditionalAccessPolicyConditionsClientApplications(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftConditionalAccessPolicyConditionsClientApplications,
+		},
+		"microsoft.conditionalAccess.policy.conditions.platforms": {
+			// to override args, implement: initMicrosoftConditionalAccessPolicyConditionsPlatforms(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftConditionalAccessPolicyConditionsPlatforms,
+		},
+		"microsoft.conditionalAccess.policy.conditions.applications": {
+			// to override args, implement: initMicrosoftConditionalAccessPolicyConditionsApplications(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftConditionalAccessPolicyConditionsApplications,
+		},
+		"microsoft.conditionalAccess.policy.conditions.users": {
+			// to override args, implement: initMicrosoftConditionalAccessPolicyConditionsUsers(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftConditionalAccessPolicyConditionsUsers,
+		},
+		"microsoft.conditionalAccess.policy.conditions.locations": {
+			// to override args, implement: initMicrosoftConditionalAccessPolicyConditionsLocations(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftConditionalAccessPolicyConditionsLocations,
+		},
+		"microsoft.conditionalAccess.policy.grantControls": {
+			// to override args, implement: initMicrosoftConditionalAccessPolicyGrantControls(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftConditionalAccessPolicyGrantControls,
+		},
+		"microsoft.conditionalAccess.policy.sessionControls": {
+			// to override args, implement: initMicrosoftConditionalAccessPolicySessionControls(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftConditionalAccessPolicySessionControls,
+		},
 		"microsoft.conditionalAccess.ipNamedLocation": {
 			// to override args, implement: initMicrosoftConditionalAccessIpNamedLocation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftConditionalAccessIpNamedLocation,
@@ -365,11 +425,209 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.conditionalAccess.namedLocations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftConditionalAccess).GetNamedLocations()).ToDataRes(types.Resource("microsoft.conditionalAccess.namedLocations"))
 	},
+	"microsoft.conditionalAccess.policies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccess).GetPolicies()).ToDataRes(types.Array(types.Resource("microsoft.conditionalAccess.policy")))
+	},
 	"microsoft.conditionalAccess.namedLocations.ipLocations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftConditionalAccessNamedLocations).GetIpLocations()).ToDataRes(types.Array(types.Resource("microsoft.conditionalAccess.ipNamedLocation")))
 	},
 	"microsoft.conditionalAccess.namedLocations.countryLocations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftConditionalAccessNamedLocations).GetCountryLocations()).ToDataRes(types.Array(types.Resource("microsoft.conditionalAccess.countryNamedLocation")))
+	},
+	"microsoft.conditionalAccess.policy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicy).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.conditionalAccess.policy.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicy).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.conditionalAccess.policy.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicy).GetState()).ToDataRes(types.String)
+	},
+	"microsoft.conditionalAccess.policy.createdDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicy).GetCreatedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.conditionalAccess.policy.modifiedDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicy).GetModifiedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.conditionalAccess.policy.conditions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicy).GetConditions()).ToDataRes(types.Resource("microsoft.conditionalAccess.policy.conditions"))
+	},
+	"microsoft.conditionalAccess.policy.grantControls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicy).GetGrantControls()).ToDataRes(types.Resource("microsoft.conditionalAccess.policy.grantControls"))
+	},
+	"microsoft.conditionalAccess.policy.sessionControls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicy).GetSessionControls()).ToDataRes(types.Resource("microsoft.conditionalAccess.policy.sessionControls"))
+	},
+	"microsoft.conditionalAccess.policy.templateId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicy).GetTemplateId()).ToDataRes(types.String)
+	},
+	"microsoft.conditionalAccess.policy.conditions.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditions).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.conditionalAccess.policy.conditions.applications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditions).GetApplications()).ToDataRes(types.Resource("microsoft.conditionalAccess.policy.conditions.applications"))
+	},
+	"microsoft.conditionalAccess.policy.conditions.authenticationFlows": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditions).GetAuthenticationFlows()).ToDataRes(types.Resource("microsoft.conditionalAccess.policy.conditions.authenticationFlows"))
+	},
+	"microsoft.conditionalAccess.policy.conditions.clientApplications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditions).GetClientApplications()).ToDataRes(types.Resource("microsoft.conditionalAccess.policy.conditions.clientApplications"))
+	},
+	"microsoft.conditionalAccess.policy.conditions.clientAppTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditions).GetClientAppTypes()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.conditionalAccess.policy.conditions.locations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditions).GetLocations()).ToDataRes(types.Resource("microsoft.conditionalAccess.policy.conditions.locations"))
+	},
+	"microsoft.conditionalAccess.policy.conditions.platforms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditions).GetPlatforms()).ToDataRes(types.Resource("microsoft.conditionalAccess.policy.conditions.platforms"))
+	},
+	"microsoft.conditionalAccess.policy.conditions.servicePrincipalRiskLevels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditions).GetServicePrincipalRiskLevels()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.conditionalAccess.policy.conditions.signInRiskLevels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditions).GetSignInRiskLevels()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.conditionalAccess.policy.conditions.userRiskLevels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditions).GetUserRiskLevels()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.conditionalAccess.policy.conditions.users": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditions).GetUsers()).ToDataRes(types.Resource("microsoft.conditionalAccess.policy.conditions.users"))
+	},
+	"microsoft.conditionalAccess.policy.conditions.insiderRiskLevels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditions).GetInsiderRiskLevels()).ToDataRes(types.String)
+	},
+	"microsoft.conditionalAccess.policy.conditions.authenticationFlows.transferMethods": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditionsAuthenticationFlows).GetTransferMethods()).ToDataRes(types.String)
+	},
+	"microsoft.conditionalAccess.policy.grantControls.authenticationStrength.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.conditionalAccess.policy.grantControls.authenticationStrength.allowedCombinations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength).GetAllowedCombinations()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.conditionalAccess.policy.grantControls.authenticationStrength.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.conditionalAccess.policy.grantControls.authenticationStrength.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength).GetDescription()).ToDataRes(types.String)
+	},
+	"microsoft.conditionalAccess.policy.grantControls.authenticationStrength.policyType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength).GetPolicyType()).ToDataRes(types.String)
+	},
+	"microsoft.conditionalAccess.policy.grantControls.authenticationStrength.requirementsSatisfied": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength).GetRequirementsSatisfied()).ToDataRes(types.String)
+	},
+	"microsoft.conditionalAccess.policy.grantControls.authenticationStrength.createdDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength).GetCreatedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.conditionalAccess.policy.grantControls.authenticationStrength.modifiedDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength).GetModifiedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.conditionalAccess.policy.sessionControls.signInFrequency.authenticationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency).GetAuthenticationType()).ToDataRes(types.String)
+	},
+	"microsoft.conditionalAccess.policy.sessionControls.signInFrequency.frequencyInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency).GetFrequencyInterval()).ToDataRes(types.String)
+	},
+	"microsoft.conditionalAccess.policy.sessionControls.signInFrequency.isEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency).GetIsEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.conditionalAccess.policy.sessionControls.cloudAppSecurity.cloudAppSecurityType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity).GetCloudAppSecurityType()).ToDataRes(types.String)
+	},
+	"microsoft.conditionalAccess.policy.sessionControls.cloudAppSecurity.isEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity).GetIsEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.conditionalAccess.policy.sessionControls.persistentBrowser.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicySessionControlsPersistentBrowser).GetMode()).ToDataRes(types.String)
+	},
+	"microsoft.conditionalAccess.policy.sessionControls.persistentBrowser.isEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicySessionControlsPersistentBrowser).GetIsEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.conditionalAccess.policy.sessionControls.applicationEnforcedRestrictions.isEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicySessionControlsApplicationEnforcedRestrictions).GetIsEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.conditionalAccess.policy.conditions.clientApplications.excludeServicePrincipals": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditionsClientApplications).GetExcludeServicePrincipals()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.conditionalAccess.policy.conditions.clientApplications.includeServicePrincipals": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditionsClientApplications).GetIncludeServicePrincipals()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.conditionalAccess.policy.conditions.platforms.excludePlatforms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditionsPlatforms).GetExcludePlatforms()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.conditionalAccess.policy.conditions.platforms.includePlatforms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditionsPlatforms).GetIncludePlatforms()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.conditionalAccess.policy.conditions.applications.includeApplications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditionsApplications).GetIncludeApplications()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.conditionalAccess.policy.conditions.applications.excludeApplications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditionsApplications).GetExcludeApplications()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.conditionalAccess.policy.conditions.applications.includeUserActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditionsApplications).GetIncludeUserActions()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.conditionalAccess.policy.conditions.users.includeUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditionsUsers).GetIncludeUsers()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.conditionalAccess.policy.conditions.users.excludeUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditionsUsers).GetExcludeUsers()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.conditionalAccess.policy.conditions.users.includeGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditionsUsers).GetIncludeGroups()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.conditionalAccess.policy.conditions.users.excludeGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditionsUsers).GetExcludeGroups()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.conditionalAccess.policy.conditions.users.includeRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditionsUsers).GetIncludeRoles()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.conditionalAccess.policy.conditions.users.excludeRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditionsUsers).GetExcludeRoles()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.conditionalAccess.policy.conditions.locations.includeLocations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditionsLocations).GetIncludeLocations()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.conditionalAccess.policy.conditions.locations.excludeLocations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditionsLocations).GetExcludeLocations()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.conditionalAccess.policy.grantControls.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyGrantControls).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.conditionalAccess.policy.grantControls.operator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyGrantControls).GetOperator()).ToDataRes(types.String)
+	},
+	"microsoft.conditionalAccess.policy.grantControls.builtInControls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyGrantControls).GetBuiltInControls()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.conditionalAccess.policy.grantControls.authenticationStrength": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyGrantControls).GetAuthenticationStrength()).ToDataRes(types.Resource("microsoft.conditionalAccess.policy.grantControls.authenticationStrength"))
+	},
+	"microsoft.conditionalAccess.policy.grantControls.customAuthenticationFactors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyGrantControls).GetCustomAuthenticationFactors()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.conditionalAccess.policy.grantControls.termsOfUse": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyGrantControls).GetTermsOfUse()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.conditionalAccess.policy.sessionControls.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicySessionControls).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.conditionalAccess.policy.sessionControls.signInFrequency": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicySessionControls).GetSignInFrequency()).ToDataRes(types.Resource("microsoft.conditionalAccess.policy.sessionControls.signInFrequency"))
+	},
+	"microsoft.conditionalAccess.policy.sessionControls.cloudAppSecurity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicySessionControls).GetCloudAppSecurity()).ToDataRes(types.Resource("microsoft.conditionalAccess.policy.sessionControls.cloudAppSecurity"))
+	},
+	"microsoft.conditionalAccess.policy.sessionControls.persistentBrowser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicySessionControls).GetPersistentBrowser()).ToDataRes(types.Dict)
+	},
+	"microsoft.conditionalAccess.policy.sessionControls.applicationEnforcedRestrictions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicySessionControls).GetApplicationEnforcedRestrictions()).ToDataRes(types.Resource("microsoft.conditionalAccess.policy.sessionControls.applicationEnforcedRestrictions"))
+	},
+	"microsoft.conditionalAccess.policy.sessionControls.secureSignInSession": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicySessionControls).GetSecureSignInSession()).ToDataRes(types.Dict)
 	},
 	"microsoft.conditionalAccess.ipNamedLocation.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftConditionalAccessIpNamedLocation).GetName()).ToDataRes(types.String)
@@ -1507,6 +1765,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMicrosoftConditionalAccess).NamedLocations, ok = plugin.RawToTValue[*mqlMicrosoftConditionalAccessNamedLocations](v.Value, v.Error)
 		return
 	},
+	"microsoft.conditionalAccess.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccess).Policies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"microsoft.conditionalAccess.namedLocations.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlMicrosoftConditionalAccessNamedLocations).__id, ok = v.Value.(string)
 			return
@@ -1517,6 +1779,326 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.conditionalAccess.namedLocations.countryLocations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftConditionalAccessNamedLocations).CountryLocations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftConditionalAccessPolicy).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.conditionalAccess.policy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicy).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicy).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.createdDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicy).CreatedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.modifiedDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicy).ModifiedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicy).Conditions, ok = plugin.RawToTValue[*mqlMicrosoftConditionalAccessPolicyConditions](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.grantControls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicy).GrantControls, ok = plugin.RawToTValue[*mqlMicrosoftConditionalAccessPolicyGrantControls](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.sessionControls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicy).SessionControls, ok = plugin.RawToTValue[*mqlMicrosoftConditionalAccessPolicySessionControls](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.templateId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicy).TemplateId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftConditionalAccessPolicyConditions).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.conditionalAccess.policy.conditions.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditions).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions.applications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditions).Applications, ok = plugin.RawToTValue[*mqlMicrosoftConditionalAccessPolicyConditionsApplications](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions.authenticationFlows": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditions).AuthenticationFlows, ok = plugin.RawToTValue[*mqlMicrosoftConditionalAccessPolicyConditionsAuthenticationFlows](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions.clientApplications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditions).ClientApplications, ok = plugin.RawToTValue[*mqlMicrosoftConditionalAccessPolicyConditionsClientApplications](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions.clientAppTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditions).ClientAppTypes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions.locations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditions).Locations, ok = plugin.RawToTValue[*mqlMicrosoftConditionalAccessPolicyConditionsLocations](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions.platforms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditions).Platforms, ok = plugin.RawToTValue[*mqlMicrosoftConditionalAccessPolicyConditionsPlatforms](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions.servicePrincipalRiskLevels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditions).ServicePrincipalRiskLevels, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions.signInRiskLevels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditions).SignInRiskLevels, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions.userRiskLevels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditions).UserRiskLevels, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditions).Users, ok = plugin.RawToTValue[*mqlMicrosoftConditionalAccessPolicyConditionsUsers](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions.insiderRiskLevels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditions).InsiderRiskLevels, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions.authenticationFlows.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftConditionalAccessPolicyConditionsAuthenticationFlows).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.conditionalAccess.policy.conditions.authenticationFlows.transferMethods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditionsAuthenticationFlows).TransferMethods, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.grantControls.authenticationStrength.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.conditionalAccess.policy.grantControls.authenticationStrength.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.grantControls.authenticationStrength.allowedCombinations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength).AllowedCombinations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.grantControls.authenticationStrength.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.grantControls.authenticationStrength.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.grantControls.authenticationStrength.policyType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength).PolicyType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.grantControls.authenticationStrength.requirementsSatisfied": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength).RequirementsSatisfied, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.grantControls.authenticationStrength.createdDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength).CreatedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.grantControls.authenticationStrength.modifiedDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength).ModifiedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.sessionControls.signInFrequency.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.conditionalAccess.policy.sessionControls.signInFrequency.authenticationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency).AuthenticationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.sessionControls.signInFrequency.frequencyInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency).FrequencyInterval, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.sessionControls.signInFrequency.isEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency).IsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.sessionControls.cloudAppSecurity.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.conditionalAccess.policy.sessionControls.cloudAppSecurity.cloudAppSecurityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity).CloudAppSecurityType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.sessionControls.cloudAppSecurity.isEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity).IsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.sessionControls.persistentBrowser.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftConditionalAccessPolicySessionControlsPersistentBrowser).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.conditionalAccess.policy.sessionControls.persistentBrowser.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicySessionControlsPersistentBrowser).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.sessionControls.persistentBrowser.isEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicySessionControlsPersistentBrowser).IsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.sessionControls.applicationEnforcedRestrictions.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftConditionalAccessPolicySessionControlsApplicationEnforcedRestrictions).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.conditionalAccess.policy.sessionControls.applicationEnforcedRestrictions.isEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicySessionControlsApplicationEnforcedRestrictions).IsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions.clientApplications.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftConditionalAccessPolicyConditionsClientApplications).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.conditionalAccess.policy.conditions.clientApplications.excludeServicePrincipals": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditionsClientApplications).ExcludeServicePrincipals, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions.clientApplications.includeServicePrincipals": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditionsClientApplications).IncludeServicePrincipals, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions.platforms.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftConditionalAccessPolicyConditionsPlatforms).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.conditionalAccess.policy.conditions.platforms.excludePlatforms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditionsPlatforms).ExcludePlatforms, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions.platforms.includePlatforms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditionsPlatforms).IncludePlatforms, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions.applications.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftConditionalAccessPolicyConditionsApplications).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.conditionalAccess.policy.conditions.applications.includeApplications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditionsApplications).IncludeApplications, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions.applications.excludeApplications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditionsApplications).ExcludeApplications, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions.applications.includeUserActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditionsApplications).IncludeUserActions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions.users.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftConditionalAccessPolicyConditionsUsers).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.conditionalAccess.policy.conditions.users.includeUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditionsUsers).IncludeUsers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions.users.excludeUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditionsUsers).ExcludeUsers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions.users.includeGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditionsUsers).IncludeGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions.users.excludeGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditionsUsers).ExcludeGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions.users.includeRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditionsUsers).IncludeRoles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions.users.excludeRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditionsUsers).ExcludeRoles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions.locations.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftConditionalAccessPolicyConditionsLocations).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.conditionalAccess.policy.conditions.locations.includeLocations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditionsLocations).IncludeLocations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions.locations.excludeLocations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditionsLocations).ExcludeLocations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.grantControls.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftConditionalAccessPolicyGrantControls).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.conditionalAccess.policy.grantControls.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyGrantControls).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.grantControls.operator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyGrantControls).Operator, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.grantControls.builtInControls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyGrantControls).BuiltInControls, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.grantControls.authenticationStrength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyGrantControls).AuthenticationStrength, ok = plugin.RawToTValue[*mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.grantControls.customAuthenticationFactors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyGrantControls).CustomAuthenticationFactors, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.grantControls.termsOfUse": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyGrantControls).TermsOfUse, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.sessionControls.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftConditionalAccessPolicySessionControls).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.conditionalAccess.policy.sessionControls.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicySessionControls).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.sessionControls.signInFrequency": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicySessionControls).SignInFrequency, ok = plugin.RawToTValue[*mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.sessionControls.cloudAppSecurity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicySessionControls).CloudAppSecurity, ok = plugin.RawToTValue[*mqlMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.sessionControls.persistentBrowser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicySessionControls).PersistentBrowser, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.sessionControls.applicationEnforcedRestrictions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicySessionControls).ApplicationEnforcedRestrictions, ok = plugin.RawToTValue[*mqlMicrosoftConditionalAccessPolicySessionControlsApplicationEnforcedRestrictions](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.sessionControls.secureSignInSession": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicySessionControls).SecureSignInSession, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"microsoft.conditionalAccess.ipNamedLocation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3507,6 +4089,7 @@ type mqlMicrosoftConditionalAccess struct {
 	__id string
 	// optional: if you define mqlMicrosoftConditionalAccessInternal it will be used here
 	NamedLocations plugin.TValue[*mqlMicrosoftConditionalAccessNamedLocations]
+	Policies plugin.TValue[[]interface{}]
 }
 
 // createMicrosoftConditionalAccess creates a new instance of this resource
@@ -3543,6 +4126,22 @@ func (c *mqlMicrosoftConditionalAccess) MqlID() string {
 
 func (c *mqlMicrosoftConditionalAccess) GetNamedLocations() *plugin.TValue[*mqlMicrosoftConditionalAccessNamedLocations] {
 	return &c.NamedLocations
+}
+
+func (c *mqlMicrosoftConditionalAccess) GetPolicies() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Policies, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.conditionalAccess", c.__id, "policies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.policies()
+	})
 }
 
 // mqlMicrosoftConditionalAccessNamedLocations for the microsoft.conditionalAccess.namedLocations resource
@@ -3616,6 +4215,936 @@ func (c *mqlMicrosoftConditionalAccessNamedLocations) GetCountryLocations() *plu
 
 		return c.countryLocations()
 	})
+}
+
+// mqlMicrosoftConditionalAccessPolicy for the microsoft.conditionalAccess.policy resource
+type mqlMicrosoftConditionalAccessPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftConditionalAccessPolicyInternal it will be used here
+	Id plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	State plugin.TValue[string]
+	CreatedDateTime plugin.TValue[*time.Time]
+	ModifiedDateTime plugin.TValue[*time.Time]
+	Conditions plugin.TValue[*mqlMicrosoftConditionalAccessPolicyConditions]
+	GrantControls plugin.TValue[*mqlMicrosoftConditionalAccessPolicyGrantControls]
+	SessionControls plugin.TValue[*mqlMicrosoftConditionalAccessPolicySessionControls]
+	TemplateId plugin.TValue[string]
+}
+
+// createMicrosoftConditionalAccessPolicy creates a new instance of this resource
+func createMicrosoftConditionalAccessPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftConditionalAccessPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.conditionalAccess.policy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicy) MqlName() string {
+	return "microsoft.conditionalAccess.policy"
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicy) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicy) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicy) GetCreatedDateTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedDateTime
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicy) GetModifiedDateTime() *plugin.TValue[*time.Time] {
+	return &c.ModifiedDateTime
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicy) GetConditions() *plugin.TValue[*mqlMicrosoftConditionalAccessPolicyConditions] {
+	return &c.Conditions
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicy) GetGrantControls() *plugin.TValue[*mqlMicrosoftConditionalAccessPolicyGrantControls] {
+	return &c.GrantControls
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicy) GetSessionControls() *plugin.TValue[*mqlMicrosoftConditionalAccessPolicySessionControls] {
+	return &c.SessionControls
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicy) GetTemplateId() *plugin.TValue[string] {
+	return &c.TemplateId
+}
+
+// mqlMicrosoftConditionalAccessPolicyConditions for the microsoft.conditionalAccess.policy.conditions resource
+type mqlMicrosoftConditionalAccessPolicyConditions struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftConditionalAccessPolicyConditionsInternal it will be used here
+	Id plugin.TValue[string]
+	Applications plugin.TValue[*mqlMicrosoftConditionalAccessPolicyConditionsApplications]
+	AuthenticationFlows plugin.TValue[*mqlMicrosoftConditionalAccessPolicyConditionsAuthenticationFlows]
+	ClientApplications plugin.TValue[*mqlMicrosoftConditionalAccessPolicyConditionsClientApplications]
+	ClientAppTypes plugin.TValue[[]interface{}]
+	Locations plugin.TValue[*mqlMicrosoftConditionalAccessPolicyConditionsLocations]
+	Platforms plugin.TValue[*mqlMicrosoftConditionalAccessPolicyConditionsPlatforms]
+	ServicePrincipalRiskLevels plugin.TValue[[]interface{}]
+	SignInRiskLevels plugin.TValue[[]interface{}]
+	UserRiskLevels plugin.TValue[[]interface{}]
+	Users plugin.TValue[*mqlMicrosoftConditionalAccessPolicyConditionsUsers]
+	InsiderRiskLevels plugin.TValue[string]
+}
+
+// createMicrosoftConditionalAccessPolicyConditions creates a new instance of this resource
+func createMicrosoftConditionalAccessPolicyConditions(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftConditionalAccessPolicyConditions{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.conditionalAccess.policy.conditions", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditions) MqlName() string {
+	return "microsoft.conditionalAccess.policy.conditions"
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditions) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditions) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditions) GetApplications() *plugin.TValue[*mqlMicrosoftConditionalAccessPolicyConditionsApplications] {
+	return &c.Applications
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditions) GetAuthenticationFlows() *plugin.TValue[*mqlMicrosoftConditionalAccessPolicyConditionsAuthenticationFlows] {
+	return &c.AuthenticationFlows
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditions) GetClientApplications() *plugin.TValue[*mqlMicrosoftConditionalAccessPolicyConditionsClientApplications] {
+	return &c.ClientApplications
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditions) GetClientAppTypes() *plugin.TValue[[]interface{}] {
+	return &c.ClientAppTypes
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditions) GetLocations() *plugin.TValue[*mqlMicrosoftConditionalAccessPolicyConditionsLocations] {
+	return &c.Locations
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditions) GetPlatforms() *plugin.TValue[*mqlMicrosoftConditionalAccessPolicyConditionsPlatforms] {
+	return &c.Platforms
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditions) GetServicePrincipalRiskLevels() *plugin.TValue[[]interface{}] {
+	return &c.ServicePrincipalRiskLevels
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditions) GetSignInRiskLevels() *plugin.TValue[[]interface{}] {
+	return &c.SignInRiskLevels
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditions) GetUserRiskLevels() *plugin.TValue[[]interface{}] {
+	return &c.UserRiskLevels
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditions) GetUsers() *plugin.TValue[*mqlMicrosoftConditionalAccessPolicyConditionsUsers] {
+	return &c.Users
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditions) GetInsiderRiskLevels() *plugin.TValue[string] {
+	return &c.InsiderRiskLevels
+}
+
+// mqlMicrosoftConditionalAccessPolicyConditionsAuthenticationFlows for the microsoft.conditionalAccess.policy.conditions.authenticationFlows resource
+type mqlMicrosoftConditionalAccessPolicyConditionsAuthenticationFlows struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftConditionalAccessPolicyConditionsAuthenticationFlowsInternal it will be used here
+	TransferMethods plugin.TValue[string]
+}
+
+// createMicrosoftConditionalAccessPolicyConditionsAuthenticationFlows creates a new instance of this resource
+func createMicrosoftConditionalAccessPolicyConditionsAuthenticationFlows(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftConditionalAccessPolicyConditionsAuthenticationFlows{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.conditionalAccess.policy.conditions.authenticationFlows", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsAuthenticationFlows) MqlName() string {
+	return "microsoft.conditionalAccess.policy.conditions.authenticationFlows"
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsAuthenticationFlows) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsAuthenticationFlows) GetTransferMethods() *plugin.TValue[string] {
+	return &c.TransferMethods
+}
+
+// mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength for the microsoft.conditionalAccess.policy.grantControls.authenticationStrength resource
+type mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrengthInternal it will be used here
+	Id plugin.TValue[string]
+	AllowedCombinations plugin.TValue[[]interface{}]
+	DisplayName plugin.TValue[string]
+	Description plugin.TValue[string]
+	PolicyType plugin.TValue[string]
+	RequirementsSatisfied plugin.TValue[string]
+	CreatedDateTime plugin.TValue[*time.Time]
+	ModifiedDateTime plugin.TValue[*time.Time]
+}
+
+// createMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength creates a new instance of this resource
+func createMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.conditionalAccess.policy.grantControls.authenticationStrength", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength) MqlName() string {
+	return "microsoft.conditionalAccess.policy.grantControls.authenticationStrength"
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength) GetAllowedCombinations() *plugin.TValue[[]interface{}] {
+	return &c.AllowedCombinations
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength) GetPolicyType() *plugin.TValue[string] {
+	return &c.PolicyType
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength) GetRequirementsSatisfied() *plugin.TValue[string] {
+	return &c.RequirementsSatisfied
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength) GetCreatedDateTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedDateTime
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength) GetModifiedDateTime() *plugin.TValue[*time.Time] {
+	return &c.ModifiedDateTime
+}
+
+// mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency for the microsoft.conditionalAccess.policy.sessionControls.signInFrequency resource
+type mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequencyInternal it will be used here
+	AuthenticationType plugin.TValue[string]
+	FrequencyInterval plugin.TValue[string]
+	IsEnabled plugin.TValue[bool]
+}
+
+// createMicrosoftConditionalAccessPolicySessionControlsSignInFrequency creates a new instance of this resource
+func createMicrosoftConditionalAccessPolicySessionControlsSignInFrequency(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.conditionalAccess.policy.sessionControls.signInFrequency", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency) MqlName() string {
+	return "microsoft.conditionalAccess.policy.sessionControls.signInFrequency"
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency) GetAuthenticationType() *plugin.TValue[string] {
+	return &c.AuthenticationType
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency) GetFrequencyInterval() *plugin.TValue[string] {
+	return &c.FrequencyInterval
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency) GetIsEnabled() *plugin.TValue[bool] {
+	return &c.IsEnabled
+}
+
+// mqlMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity for the microsoft.conditionalAccess.policy.sessionControls.cloudAppSecurity resource
+type mqlMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurityInternal it will be used here
+	CloudAppSecurityType plugin.TValue[string]
+	IsEnabled plugin.TValue[bool]
+}
+
+// createMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity creates a new instance of this resource
+func createMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.conditionalAccess.policy.sessionControls.cloudAppSecurity", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity) MqlName() string {
+	return "microsoft.conditionalAccess.policy.sessionControls.cloudAppSecurity"
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity) GetCloudAppSecurityType() *plugin.TValue[string] {
+	return &c.CloudAppSecurityType
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity) GetIsEnabled() *plugin.TValue[bool] {
+	return &c.IsEnabled
+}
+
+// mqlMicrosoftConditionalAccessPolicySessionControlsPersistentBrowser for the microsoft.conditionalAccess.policy.sessionControls.persistentBrowser resource
+type mqlMicrosoftConditionalAccessPolicySessionControlsPersistentBrowser struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftConditionalAccessPolicySessionControlsPersistentBrowserInternal it will be used here
+	Mode plugin.TValue[string]
+	IsEnabled plugin.TValue[bool]
+}
+
+// createMicrosoftConditionalAccessPolicySessionControlsPersistentBrowser creates a new instance of this resource
+func createMicrosoftConditionalAccessPolicySessionControlsPersistentBrowser(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftConditionalAccessPolicySessionControlsPersistentBrowser{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.conditionalAccess.policy.sessionControls.persistentBrowser", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicySessionControlsPersistentBrowser) MqlName() string {
+	return "microsoft.conditionalAccess.policy.sessionControls.persistentBrowser"
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicySessionControlsPersistentBrowser) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicySessionControlsPersistentBrowser) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicySessionControlsPersistentBrowser) GetIsEnabled() *plugin.TValue[bool] {
+	return &c.IsEnabled
+}
+
+// mqlMicrosoftConditionalAccessPolicySessionControlsApplicationEnforcedRestrictions for the microsoft.conditionalAccess.policy.sessionControls.applicationEnforcedRestrictions resource
+type mqlMicrosoftConditionalAccessPolicySessionControlsApplicationEnforcedRestrictions struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftConditionalAccessPolicySessionControlsApplicationEnforcedRestrictionsInternal it will be used here
+	IsEnabled plugin.TValue[bool]
+}
+
+// createMicrosoftConditionalAccessPolicySessionControlsApplicationEnforcedRestrictions creates a new instance of this resource
+func createMicrosoftConditionalAccessPolicySessionControlsApplicationEnforcedRestrictions(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftConditionalAccessPolicySessionControlsApplicationEnforcedRestrictions{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.conditionalAccess.policy.sessionControls.applicationEnforcedRestrictions", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicySessionControlsApplicationEnforcedRestrictions) MqlName() string {
+	return "microsoft.conditionalAccess.policy.sessionControls.applicationEnforcedRestrictions"
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicySessionControlsApplicationEnforcedRestrictions) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicySessionControlsApplicationEnforcedRestrictions) GetIsEnabled() *plugin.TValue[bool] {
+	return &c.IsEnabled
+}
+
+// mqlMicrosoftConditionalAccessPolicyConditionsClientApplications for the microsoft.conditionalAccess.policy.conditions.clientApplications resource
+type mqlMicrosoftConditionalAccessPolicyConditionsClientApplications struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftConditionalAccessPolicyConditionsClientApplicationsInternal it will be used here
+	ExcludeServicePrincipals plugin.TValue[[]interface{}]
+	IncludeServicePrincipals plugin.TValue[[]interface{}]
+}
+
+// createMicrosoftConditionalAccessPolicyConditionsClientApplications creates a new instance of this resource
+func createMicrosoftConditionalAccessPolicyConditionsClientApplications(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftConditionalAccessPolicyConditionsClientApplications{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.conditionalAccess.policy.conditions.clientApplications", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsClientApplications) MqlName() string {
+	return "microsoft.conditionalAccess.policy.conditions.clientApplications"
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsClientApplications) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsClientApplications) GetExcludeServicePrincipals() *plugin.TValue[[]interface{}] {
+	return &c.ExcludeServicePrincipals
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsClientApplications) GetIncludeServicePrincipals() *plugin.TValue[[]interface{}] {
+	return &c.IncludeServicePrincipals
+}
+
+// mqlMicrosoftConditionalAccessPolicyConditionsPlatforms for the microsoft.conditionalAccess.policy.conditions.platforms resource
+type mqlMicrosoftConditionalAccessPolicyConditionsPlatforms struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftConditionalAccessPolicyConditionsPlatformsInternal it will be used here
+	ExcludePlatforms plugin.TValue[[]interface{}]
+	IncludePlatforms plugin.TValue[[]interface{}]
+}
+
+// createMicrosoftConditionalAccessPolicyConditionsPlatforms creates a new instance of this resource
+func createMicrosoftConditionalAccessPolicyConditionsPlatforms(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftConditionalAccessPolicyConditionsPlatforms{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.conditionalAccess.policy.conditions.platforms", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsPlatforms) MqlName() string {
+	return "microsoft.conditionalAccess.policy.conditions.platforms"
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsPlatforms) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsPlatforms) GetExcludePlatforms() *plugin.TValue[[]interface{}] {
+	return &c.ExcludePlatforms
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsPlatforms) GetIncludePlatforms() *plugin.TValue[[]interface{}] {
+	return &c.IncludePlatforms
+}
+
+// mqlMicrosoftConditionalAccessPolicyConditionsApplications for the microsoft.conditionalAccess.policy.conditions.applications resource
+type mqlMicrosoftConditionalAccessPolicyConditionsApplications struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftConditionalAccessPolicyConditionsApplicationsInternal it will be used here
+	IncludeApplications plugin.TValue[[]interface{}]
+	ExcludeApplications plugin.TValue[[]interface{}]
+	IncludeUserActions plugin.TValue[[]interface{}]
+}
+
+// createMicrosoftConditionalAccessPolicyConditionsApplications creates a new instance of this resource
+func createMicrosoftConditionalAccessPolicyConditionsApplications(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftConditionalAccessPolicyConditionsApplications{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.conditionalAccess.policy.conditions.applications", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsApplications) MqlName() string {
+	return "microsoft.conditionalAccess.policy.conditions.applications"
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsApplications) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsApplications) GetIncludeApplications() *plugin.TValue[[]interface{}] {
+	return &c.IncludeApplications
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsApplications) GetExcludeApplications() *plugin.TValue[[]interface{}] {
+	return &c.ExcludeApplications
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsApplications) GetIncludeUserActions() *plugin.TValue[[]interface{}] {
+	return &c.IncludeUserActions
+}
+
+// mqlMicrosoftConditionalAccessPolicyConditionsUsers for the microsoft.conditionalAccess.policy.conditions.users resource
+type mqlMicrosoftConditionalAccessPolicyConditionsUsers struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftConditionalAccessPolicyConditionsUsersInternal it will be used here
+	IncludeUsers plugin.TValue[[]interface{}]
+	ExcludeUsers plugin.TValue[[]interface{}]
+	IncludeGroups plugin.TValue[[]interface{}]
+	ExcludeGroups plugin.TValue[[]interface{}]
+	IncludeRoles plugin.TValue[[]interface{}]
+	ExcludeRoles plugin.TValue[[]interface{}]
+}
+
+// createMicrosoftConditionalAccessPolicyConditionsUsers creates a new instance of this resource
+func createMicrosoftConditionalAccessPolicyConditionsUsers(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftConditionalAccessPolicyConditionsUsers{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.conditionalAccess.policy.conditions.users", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsUsers) MqlName() string {
+	return "microsoft.conditionalAccess.policy.conditions.users"
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsUsers) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsUsers) GetIncludeUsers() *plugin.TValue[[]interface{}] {
+	return &c.IncludeUsers
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsUsers) GetExcludeUsers() *plugin.TValue[[]interface{}] {
+	return &c.ExcludeUsers
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsUsers) GetIncludeGroups() *plugin.TValue[[]interface{}] {
+	return &c.IncludeGroups
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsUsers) GetExcludeGroups() *plugin.TValue[[]interface{}] {
+	return &c.ExcludeGroups
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsUsers) GetIncludeRoles() *plugin.TValue[[]interface{}] {
+	return &c.IncludeRoles
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsUsers) GetExcludeRoles() *plugin.TValue[[]interface{}] {
+	return &c.ExcludeRoles
+}
+
+// mqlMicrosoftConditionalAccessPolicyConditionsLocations for the microsoft.conditionalAccess.policy.conditions.locations resource
+type mqlMicrosoftConditionalAccessPolicyConditionsLocations struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftConditionalAccessPolicyConditionsLocationsInternal it will be used here
+	IncludeLocations plugin.TValue[[]interface{}]
+	ExcludeLocations plugin.TValue[[]interface{}]
+}
+
+// createMicrosoftConditionalAccessPolicyConditionsLocations creates a new instance of this resource
+func createMicrosoftConditionalAccessPolicyConditionsLocations(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftConditionalAccessPolicyConditionsLocations{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.conditionalAccess.policy.conditions.locations", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsLocations) MqlName() string {
+	return "microsoft.conditionalAccess.policy.conditions.locations"
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsLocations) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsLocations) GetIncludeLocations() *plugin.TValue[[]interface{}] {
+	return &c.IncludeLocations
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsLocations) GetExcludeLocations() *plugin.TValue[[]interface{}] {
+	return &c.ExcludeLocations
+}
+
+// mqlMicrosoftConditionalAccessPolicyGrantControls for the microsoft.conditionalAccess.policy.grantControls resource
+type mqlMicrosoftConditionalAccessPolicyGrantControls struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftConditionalAccessPolicyGrantControlsInternal it will be used here
+	Id plugin.TValue[string]
+	Operator plugin.TValue[string]
+	BuiltInControls plugin.TValue[[]interface{}]
+	AuthenticationStrength plugin.TValue[*mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength]
+	CustomAuthenticationFactors plugin.TValue[[]interface{}]
+	TermsOfUse plugin.TValue[[]interface{}]
+}
+
+// createMicrosoftConditionalAccessPolicyGrantControls creates a new instance of this resource
+func createMicrosoftConditionalAccessPolicyGrantControls(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftConditionalAccessPolicyGrantControls{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.conditionalAccess.policy.grantControls", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyGrantControls) MqlName() string {
+	return "microsoft.conditionalAccess.policy.grantControls"
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyGrantControls) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyGrantControls) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyGrantControls) GetOperator() *plugin.TValue[string] {
+	return &c.Operator
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyGrantControls) GetBuiltInControls() *plugin.TValue[[]interface{}] {
+	return &c.BuiltInControls
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyGrantControls) GetAuthenticationStrength() *plugin.TValue[*mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength] {
+	return &c.AuthenticationStrength
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyGrantControls) GetCustomAuthenticationFactors() *plugin.TValue[[]interface{}] {
+	return &c.CustomAuthenticationFactors
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyGrantControls) GetTermsOfUse() *plugin.TValue[[]interface{}] {
+	return &c.TermsOfUse
+}
+
+// mqlMicrosoftConditionalAccessPolicySessionControls for the microsoft.conditionalAccess.policy.sessionControls resource
+type mqlMicrosoftConditionalAccessPolicySessionControls struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftConditionalAccessPolicySessionControlsInternal it will be used here
+	Id plugin.TValue[string]
+	SignInFrequency plugin.TValue[*mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency]
+	CloudAppSecurity plugin.TValue[*mqlMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity]
+	PersistentBrowser plugin.TValue[interface{}]
+	ApplicationEnforcedRestrictions plugin.TValue[*mqlMicrosoftConditionalAccessPolicySessionControlsApplicationEnforcedRestrictions]
+	SecureSignInSession plugin.TValue[interface{}]
+}
+
+// createMicrosoftConditionalAccessPolicySessionControls creates a new instance of this resource
+func createMicrosoftConditionalAccessPolicySessionControls(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftConditionalAccessPolicySessionControls{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.conditionalAccess.policy.sessionControls", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicySessionControls) MqlName() string {
+	return "microsoft.conditionalAccess.policy.sessionControls"
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicySessionControls) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicySessionControls) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicySessionControls) GetSignInFrequency() *plugin.TValue[*mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency] {
+	return &c.SignInFrequency
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicySessionControls) GetCloudAppSecurity() *plugin.TValue[*mqlMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity] {
+	return &c.CloudAppSecurity
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicySessionControls) GetPersistentBrowser() *plugin.TValue[interface{}] {
+	return &c.PersistentBrowser
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicySessionControls) GetApplicationEnforcedRestrictions() *plugin.TValue[*mqlMicrosoftConditionalAccessPolicySessionControlsApplicationEnforcedRestrictions] {
+	return &c.ApplicationEnforcedRestrictions
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicySessionControls) GetSecureSignInSession() *plugin.TValue[interface{}] {
+	return &c.SecureSignInSession
 }
 
 // mqlMicrosoftConditionalAccessIpNamedLocation for the microsoft.conditionalAccess.ipNamedLocation resource
