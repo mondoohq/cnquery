@@ -8,9 +8,8 @@ import (
 	"errors"
 	"strings"
 
-	"go.mondoo.com/cnquery/v11/llx"
-
 	"github.com/shadowscatcher/shodan/search"
+	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v11/providers/shodan/connection"
