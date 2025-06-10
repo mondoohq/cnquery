@@ -26,7 +26,6 @@ resources:
       min: {}
       name: {}
       namespace: {}
-      nodeid: {}
       organizes: {}
       properties: {}
       unit: {}

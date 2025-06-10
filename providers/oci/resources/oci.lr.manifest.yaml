@@ -12,7 +12,6 @@ resources:
       created: {}
       description: {}
       id: {}
-      lifecycleState: {}
       name: {}
       state: {}
     is_private: true
@@ -32,7 +31,6 @@ resources:
     fields:
       created: {}
       id: {}
-      lifecycleState: {}
       name: {}
       region: {}
       state: {}
@@ -45,7 +43,6 @@ resources:
     fields:
       created: {}
       id: {}
-      lifecycleState: {}
       name: {}
       region: {}
       state: {}
@@ -65,18 +62,9 @@ resources:
       created: {}
       fingerprint: {}
       id: {}
-      lifecycleState: {}
       state: {}
       value: {}
     is_private: true
-    min_mondoo_version: 8.10.0
-  oci.identity.apikey:
-    fields:
-      created: {}
-      fingerprint: {}
-      id: {}
-      lifecycleState: {}
-      value: {}
     min_mondoo_version: 8.10.0
   oci.identity.authToken:
     fields:
@@ -84,17 +72,13 @@ resources:
       description: {}
       expires: {}
       id: {}
-      lifecycleState: {}
       state: {}
     is_private: true
     min_mondoo_version: 8.10.0
   oci.identity.customerSecretKey:
     fields:
       created: {}
-      description: {}
-      expires: {}
       id: {}
-      lifecycleState: {}
       name: {}
       state: {}
     is_private: true
@@ -105,7 +89,6 @@ resources:
       created: {}
       description: {}
       id: {}
-      lifecycleState: {}
       name: {}
       state: {}
     is_private: true
@@ -119,7 +102,6 @@ resources:
       created: {}
       description: {}
       id: {}
-      lifecycleState: {}
       name: {}
       state: {}
       statements: {}
@@ -141,9 +123,7 @@ resources:
       emailVerified: {}
       groups: {}
       id: {}
-      isMfaActivated: {}
       lastLogin: {}
-      lifecycleState: {}
       mfaActivated: {}
       name: {}
       previousLogin: {}
@@ -168,7 +148,6 @@ resources:
       egressSecurityRules: {}
       id: {}
       ingressSecurityRules: {}
-      lifecycleState: {}
       name: {}
       state: {}
     is_private: true
@@ -183,9 +162,7 @@ resources:
       compartmentID: {}
       created: {}
       id: {}
-      lifecycleState: {}
       name: {}
-      securityLists: {}
       state: {}
     is_private: true
     min_mondoo_version: 8.10.0

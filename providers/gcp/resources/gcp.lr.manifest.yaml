@@ -289,43 +289,6 @@ resources:
     refs:
     - title: Introduction to tables
       url: https://cloud.google.com/bigquery/docs/tables-intro
-  gcp.project.binaryAuthorization:
-    fields:
-      admissionWhitelistPatterns: {}
-      clusterAdmissionRules: {}
-      defaultAdmissionRule: {}
-      globalPolicyEvaluationMode: {}
-      istioServiceIdentityAdmissionRules: {}
-      kubernetesNamespaceAdmissionRules: {}
-      kubernetesServiceAccountAdmissionRules: {}
-      name: {}
-      policy: {}
-      updated: {}
-    min_mondoo_version: latest
-    platform:
-      name:
-      - gcp
-  gcp.project.binaryAuthorization.admissionRule:
-    fields:
-      enforcementMode: {}
-      evaluationMode: {}
-      requireAttestationsBy: {}
-    min_mondoo_version: latest
-    platform:
-      name:
-      - gcp
-  gcp.project.binaryAuthorization.policy:
-    fields:
-      admissionWhitelistPatterns: {}
-      clusterAdmissionRules: {}
-      defaultAdmissionRule: {}
-      globalPolicyEvaluationMode: {}
-      istioServiceIdentityAdmissionRules: {}
-      kubernetesNamespaceAdmissionRules: {}
-      kubernetesServiceAccountAdmissionRules: {}
-      name: {}
-      updated: {}
-    min_mondoo_version: latest
     platform:
       name:
       - gcp
@@ -2470,18 +2433,6 @@ resources:
       - gcp
   gcp.project.storageService.bucket.lifecycleRuleCondition:
     fields:
-      Age: {}
-      CreatedBefore: {}
-      CustomTimeBefore: {}
-      DaysSinceCustomTime: {}
-      DaysSinceNoncurrentTime: {}
-      IsLive: {}
-      MatchesPattern: {}
-      MatchesPrefix: {}
-      MatchesStorageClass: {}
-      MatchesSuffix: {}
-      NoncurrentTimeBefore: {}
-      NumNewerVersions: {}
       age: {}
       createdBefore: {}
       customTimeBefore: {}
@@ -2533,12 +2484,6 @@ resources:
     refs:
     - title: Recommendations
       url: https://cloud.google.com/recommender/docs/key-concepts
-  gcp.redis:
-    fields: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - gcp
   gcp.resourcemanager.binding:
     fields:
       id: {}
