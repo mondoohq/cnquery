@@ -6,10 +6,10 @@ package resources
 import (
 	"context"
 	"errors"
-	"go.mondoo.com/cnquery/v11/llx"
 	"strings"
 
 	"github.com/shadowscatcher/shodan/search"
+	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v11/providers/shodan/connection"
@@ -47,6 +47,8 @@ func (r *mqlShodanHost) fetchBaseInformation() error {
 	r.Org = plugin.TValue[string]{Data: "", Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
 	r.Isp = plugin.TValue[string]{Data: "", Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
 	r.Asn = plugin.TValue[string]{Data: "", Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
+	r.Country = plugin.TValue[string]{Data: "", Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
+	r.City = plugin.TValue[string]{Data: "", Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
 	r.Tags = plugin.TValue[[]interface{}]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
 	r.Hostnames = plugin.TValue[[]interface{}]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
 	r.Ports = plugin.TValue[[]interface{}]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
@@ -78,6 +80,14 @@ func (r *mqlShodanHost) fetchBaseInformation() error {
 
 	if host.ASN != nil {
 		r.Asn = plugin.TValue[string]{Data: *host.ASN, Error: nil, State: plugin.StateIsSet}
+	}
+
+	if host.Location.City != nil {
+		r.City = plugin.TValue[string]{Data: *host.Location.City, Error: nil, State: plugin.StateIsSet}
+	}
+
+	if host.Location.CountryName != nil {
+		r.Country = plugin.TValue[string]{Data: *host.Location.CountryName, Error: nil, State: plugin.StateIsSet}
 	}
 
 	if host.Tags != nil {
@@ -134,4 +144,12 @@ func (r *mqlShodanHost) ports() ([]interface{}, error) {
 
 func (r *mqlShodanHost) vulnerabilities() ([]interface{}, error) {
 	return nil, r.fetchBaseInformation()
+}
+
+func (r *mqlShodanHost) city() (string, error) {
+	return "", r.fetchBaseInformation()
+}
+
+func (r *mqlShodanHost) country() (string, error) {
+	return "", r.fetchBaseInformation()
 }
