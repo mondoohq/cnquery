@@ -144,13 +144,13 @@ func (m *Mquery) RefreshChecksum(
 				return errors.New("referenced query '" + ref.Mrn + "'checksum is empty")
 			}
 			c = c.Add(q.Checksum)
-			c = c.Add("tag").AddUint(uint64(len(q.Tags)))
-			sortedKeys := sortx.Keys(q.Tags)
-			for _, k := range sortedKeys {
-				c = c.Add(k).Add(q.Tags[k])
-			}
 		} else {
 			return errors.New("cannot find dependent composed query '" + ref.Mrn + "'")
+		}
+		c = c.Add("tag").AddUint(uint64(len(ref.Tags)))
+		sortedKeys := sortx.Keys(ref.Tags)
+		for _, k := range sortedKeys {
+			c = c.Add(k).Add(ref.Tags[k])
 		}
 	}
 
