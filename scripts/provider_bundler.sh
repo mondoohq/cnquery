@@ -103,6 +103,7 @@ build_bundle linux arm64
 build_bundle linux arm 6
 build_bundle linux arm 7
 build_bundle linux ppc64le
+build_bundle linux s390x
 
 # Build Windows Architectures
 build_bundle windows amd64
