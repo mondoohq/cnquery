@@ -1,1 +1,2 @@
 golang-version=1.23.4
+protoc-version=31.x

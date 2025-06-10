@@ -36,6 +36,7 @@ jobs:
         uses: arduino/setup-protoc@v3
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
+          version: ${{ env.protoc-version }}
 
       - name: Check for provider updates
         id: update-providers
