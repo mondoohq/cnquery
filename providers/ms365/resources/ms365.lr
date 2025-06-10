@@ -81,6 +81,14 @@ microsoft.users {
   search string
 }
 
+// This type represents a single license assigned to a user.
+private microsoft.user.assignedLicense @defaults("skuId") {
+  // A collection of the unique identifiers for plans that have been disabled.
+  disabledPlans []string
+  // The unique identifier for the SKU.
+  skuId string
+}
+
 // Microsoft Conditional Access Policies
 microsoft.conditionalAccess {
   // Named locations container
@@ -367,6 +375,8 @@ private microsoft.user @defaults("id displayName userPrincipalName") {
   identities []microsoft.user.identity
   // The user's audit log
   auditlog() microsoft.user.auditlog
+  // The licenses that are assigned to the user, including inherited (group-based) licenses
+  assignedLicenses []microsoft.user.assignedLicense
 }
 
 // Microsoft user audit log

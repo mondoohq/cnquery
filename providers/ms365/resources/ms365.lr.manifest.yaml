@@ -478,6 +478,7 @@ resources:
   microsoft.user:
     fields:
       accountEnabled: {}
+      assignedLicenses: {}
       auditlog: {}
       authMethods: {}
       city: {}
@@ -506,6 +507,12 @@ resources:
       surname: {}
       userPrincipalName: {}
       userType: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.user.assignedLicense:
+    fields:
+      disabledPlans: {}
+      skuId: {}
     is_private: true
     min_mondoo_version: 9.0.0
   microsoft.user.auditlog:
@@ -550,6 +557,7 @@ resources:
     min_mondoo_version: 9.0.0
   microsoft.users:
     fields:
+      assignedLicenses: {}
       filter: {}
       list: {}
       search: {}
