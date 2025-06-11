@@ -786,6 +786,8 @@ resources:
   parse.yaml:
     fields:
       content: {}
+      documents:
+        min_mondoo_version: 9.0.0
       file: {}
       params: {}
     min_mondoo_version: 5.15.0

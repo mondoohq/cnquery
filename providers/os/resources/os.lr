@@ -501,6 +501,8 @@ parse.yaml {
   content(file) string
   // The parsed parameters that are defined in this file
   params(content) dict
+  // Parsed yaml documents
+  documents(content) []dict
 }
 
 // Parse certificates from files

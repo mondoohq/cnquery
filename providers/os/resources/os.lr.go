@@ -1110,6 +1110,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"parse.yaml.params": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlParseYaml).GetParams()).ToDataRes(types.Dict)
 	},
+	"parse.yaml.documents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlParseYaml).GetDocuments()).ToDataRes(types.Array(types.Dict))
+	},
 	"parse.certificates.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlParseCertificates).GetPath()).ToDataRes(types.String)
 	},
@@ -3354,6 +3357,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"parse.yaml.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlParseYaml).Params, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"parse.yaml.documents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlParseYaml).Documents, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"parse.certificates.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8479,6 +8486,7 @@ type mqlParseYaml struct {
 	File plugin.TValue[*mqlFile]
 	Content plugin.TValue[string]
 	Params plugin.TValue[interface{}]
+	Documents plugin.TValue[[]interface{}]
 }
 
 // createParseYaml creates a new instance of this resource
@@ -8541,6 +8549,17 @@ func (c *mqlParseYaml) GetParams() *plugin.TValue[interface{}] {
 		}
 
 		return c.params(vargContent.Data)
+	})
+}
+
+func (c *mqlParseYaml) GetDocuments() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Documents, func() ([]interface{}, error) {
+		vargContent := c.GetContent()
+		if vargContent.Error != nil {
+			return nil, vargContent.Error
+		}
+
+		return c.documents(vargContent.Data)
 	})
 }
 
