@@ -26,22 +26,23 @@ const (
 )
 
 type RunQueryConfig struct {
-	state          protoimpl.MessageState `protogen:"open.v1"`
-	Command        string                 `protobuf:"bytes,1,opt,name=command,proto3" json:"command,omitempty"`
-	CallbackServer uint32                 `protobuf:"varint,2,opt,name=callback_server,json=callbackServer,proto3" json:"callback_server,omitempty"`
-	Inventory      *inventory.Inventory   `protobuf:"bytes,3,opt,name=inventory,proto3" json:"inventory,omitempty"`
-	Features       []byte                 `protobuf:"bytes,4,opt,name=features,proto3" json:"features,omitempty"`
-	DoParse        bool                   `protobuf:"varint,5,opt,name=do_parse,json=doParse,proto3" json:"do_parse,omitempty"`
-	DoAst          bool                   `protobuf:"varint,6,opt,name=do_ast,json=doAst,proto3" json:"do_ast,omitempty"`
-	DoInfo         bool                   `protobuf:"varint,13,opt,name=do_info,json=doInfo,proto3" json:"do_info,omitempty"`
-	DoRecord       bool                   `protobuf:"varint,7,opt,name=do_record,json=doRecord,proto3" json:"do_record,omitempty"`
-	Format         string                 `protobuf:"bytes,8,opt,name=format,proto3" json:"format,omitempty"`
-	PlatformId     string                 `protobuf:"bytes,9,opt,name=platform_id,json=platformId,proto3" json:"platform_id,omitempty"`
-	Incognito      bool                   `protobuf:"varint,10,opt,name=incognito,proto3" json:"incognito,omitempty"`
-	Output         string                 `protobuf:"bytes,11,opt,name=output,proto3" json:"output,omitempty"`
-	Input          string                 `protobuf:"bytes,12,opt,name=input,proto3" json:"input,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Command         string                 `protobuf:"bytes,1,opt,name=command,proto3" json:"command,omitempty"`
+	CallbackServer  uint32                 `protobuf:"varint,2,opt,name=callback_server,json=callbackServer,proto3" json:"callback_server,omitempty"`
+	Inventory       *inventory.Inventory   `protobuf:"bytes,3,opt,name=inventory,proto3" json:"inventory,omitempty"`
+	Features        []byte                 `protobuf:"bytes,4,opt,name=features,proto3" json:"features,omitempty"`
+	DoParse         bool                   `protobuf:"varint,5,opt,name=do_parse,json=doParse,proto3" json:"do_parse,omitempty"`
+	DoAst           bool                   `protobuf:"varint,6,opt,name=do_ast,json=doAst,proto3" json:"do_ast,omitempty"`
+	DoInfo          bool                   `protobuf:"varint,13,opt,name=do_info,json=doInfo,proto3" json:"do_info,omitempty"`
+	DoRecord        bool                   `protobuf:"varint,7,opt,name=do_record,json=doRecord,proto3" json:"do_record,omitempty"`
+	Format          string                 `protobuf:"bytes,8,opt,name=format,proto3" json:"format,omitempty"`
+	PlatformId      string                 `protobuf:"bytes,9,opt,name=platform_id,json=platformId,proto3" json:"platform_id,omitempty"`
+	Incognito       bool                   `protobuf:"varint,10,opt,name=incognito,proto3" json:"incognito,omitempty"`
+	Output          string                 `protobuf:"bytes,11,opt,name=output,proto3" json:"output,omitempty"`
+	Input           string                 `protobuf:"bytes,12,opt,name=input,proto3" json:"input,omitempty"`
+	Exit_1OnFailure bool                   `protobuf:"varint,14,opt,name=exit_1_on_failure,json=exit1OnFailure,proto3" json:"exit_1_on_failure,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *RunQueryConfig) Reset() {
@@ -165,6 +166,13 @@ func (x *RunQueryConfig) GetInput() string {
 	return ""
 }
 
+func (x *RunQueryConfig) GetExit_1OnFailure() bool {
+	if x != nil {
+		return x.Exit_1OnFailure
+	}
+	return false
+}
+
 type Empty struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -249,7 +257,7 @@ var File_cnquery_proto protoreflect.FileDescriptor
 
 const file_cnquery_proto_rawDesc = "" +
 	"\n" +
-	"\rcnquery.proto\x12\x05proto\x1a*providers-sdk/v1/inventory/inventory.proto\"\x9b\x03\n" +
+	"\rcnquery.proto\x12\x05proto\x1a*providers-sdk/v1/inventory/inventory.proto\"\xc6\x03\n" +
 	"\x0eRunQueryConfig\x12\x18\n" +
 	"\acommand\x18\x01 \x01(\tR\acommand\x12'\n" +
 	"\x0fcallback_server\x18\x02 \x01(\rR\x0ecallbackServer\x12=\n" +
@@ -265,7 +273,8 @@ const file_cnquery_proto_rawDesc = "" +
 	"\tincognito\x18\n" +
 	" \x01(\bR\tincognito\x12\x16\n" +
 	"\x06output\x18\v \x01(\tR\x06output\x12\x14\n" +
-	"\x05input\x18\f \x01(\tR\x05input\"\a\n" +
+	"\x05input\x18\f \x01(\tR\x05input\x12)\n" +
+	"\x11exit_1_on_failure\x18\x0e \x01(\bR\x0eexit1OnFailure\"\a\n" +
 	"\x05Empty\"\x1c\n" +
 	"\x06String\x12\x12\n" +
 	"\x04data\x18\x01 \x01(\tR\x04data2:\n" +
