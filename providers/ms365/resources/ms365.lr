@@ -851,6 +851,34 @@ microsoft.policies {
   permissionGrantPolicies() []dict
   // Consent policy settings
   consentPolicySettings() dict
+  // Authentication methods policy
+  authenticationMethodsPolicy() microsoft.policies.authenticationMethodsPolicy
+}
+
+// The tenant-wide policy that controls which authentication methods are allowed.
+private microsoft.policies.authenticationMethodsPolicy @defaults("displayName") {
+  // Policy ID
+  id string
+  // Policy display name.
+  displayName string
+  // Policy description.
+  description string
+  // The date and time the policy was last modified.
+  lastModifiedDateTime time
+  // The version of the policy.
+  policyVersion string
+  // Configurations for specific authentication methods.
+  authenticationMethodConfigurations []microsoft.policies.authenticationMethodConfiguration
+}
+
+// Configuration for a specific authentication method.
+private microsoft.policies.authenticationMethodConfiguration @defaults("state") {
+  // The policy name.
+  id string
+  // The state of the policy. Possible values are: enabled, disabled.
+  state string
+  // Groups of users that are excluded from a policy.
+  excludeTargets []dict
 }
 
 // List of Microsoft Entra role definitions with optional filters

@@ -318,15 +318,12 @@ resources:
       mailEnabled: {}
       mailNickname: {}
       members: {}
-      membershipRule:
-        min_mondoo_version: 9.0.0
-      membershipRuleProcessingState:
-        min_mondoo_version: 9.0.0
+      membershipRule: {}
+      membershipRuleProcessingState: {}
       securityEnabled: {}
-      visibility:
-        min_mondoo_version: 9.0.0
+      visibility: {}
     is_private: true
-    min_mondoo_version: 5.15.0
+    min_mondoo_version: 9.0.0
   microsoft.groups:
     fields:
       length: {}
@@ -355,10 +352,28 @@ resources:
   microsoft.policies:
     fields:
       adminConsentRequestPolicy: {}
+      authenticationMethodsPolicy: {}
       authorizationPolicy: {}
       consentPolicySettings: {}
       identitySecurityDefaultsEnforcementPolicy: {}
       permissionGrantPolicies: {}
+    min_mondoo_version: 9.0.0
+  microsoft.policies.authenticationMethodConfiguration:
+    fields:
+      excludeTargets: {}
+      id: {}
+      state: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.policies.authenticationMethodsPolicy:
+    fields:
+      authenticationMethodConfigurations: {}
+      description: {}
+      displayName: {}
+      id: {}
+      lastModifiedDateTime: {}
+      policyVersion: {}
+    is_private: true
     min_mondoo_version: 9.0.0
   microsoft.rolemanagement:
     fields:
@@ -557,7 +572,6 @@ resources:
     min_mondoo_version: 9.0.0
   microsoft.users:
     fields:
-      assignedLicenses: {}
       filter: {}
       list: {}
       search: {}

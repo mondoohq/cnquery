@@ -6,9 +6,13 @@ package resources
 import (
 	"context"
 
+	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/policies"
+	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
+	"go.mondoo.com/cnquery/v11/types"
 )
 
 func (a *mqlMicrosoftPolicies) authorizationPolicy() (interface{}, error) {
@@ -109,4 +113,74 @@ func (a *mqlMicrosoftPolicies) consentPolicySettings() (interface{}, error) {
 	}
 
 	return convert.JsonToDict(actualSettingsMap)
+}
+
+func (a *mqlMicrosoftPolicies) authenticationMethodsPolicy() (*mqlMicrosoftPoliciesAuthenticationMethodsPolicy, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	// expand authenticationMethodConfigurations to get all the details in one call
+	requestConfiguration := &policies.AuthenticationMethodsPolicyRequestBuilderGetRequestConfiguration{
+		QueryParameters: &policies.AuthenticationMethodsPolicyRequestBuilderGetQueryParameters{
+			Expand: []string{"authenticationMethodConfigurations"},
+		},
+	}
+
+	resp, err := graphClient.Policies().AuthenticationMethodsPolicy().Get(ctx, requestConfiguration)
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	return newAuthenticationMethodsPolicy(a.MqlRuntime, resp)
+}
+
+func newAuthenticationMethodsPolicy(runtime *plugin.Runtime, policy models.AuthenticationMethodsPolicyable) (*mqlMicrosoftPoliciesAuthenticationMethodsPolicy, error) {
+	authMethodConfigs, err := newAuthenticationMethodConfigurations(runtime, policy.GetAuthenticationMethodConfigurations())
+	if err != nil {
+		return nil, err
+	}
+
+	mqlAuthenticationMethodsPolicy, err := CreateResource(runtime, "microsoft.policies.authenticationMethodsPolicy",
+		map[string]*llx.RawData{
+			"description":                        llx.StringDataPtr(policy.GetDescription()),
+			"displayName":                        llx.StringDataPtr(policy.GetDisplayName()),
+			"id":                                 llx.StringDataPtr(policy.GetId()),
+			"lastModifiedDateTime":               llx.TimeDataPtr(policy.GetLastModifiedDateTime()),
+			"policyVersion":                      llx.StringDataPtr(policy.GetPolicyVersion()),
+			"authenticationMethodConfigurations": llx.ArrayData(authMethodConfigs, "microsoft.policies.authenticationMethodConfiguration"),
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	return mqlAuthenticationMethodsPolicy.(*mqlMicrosoftPoliciesAuthenticationMethodsPolicy), nil
+}
+
+func newAuthenticationMethodConfigurations(runtime *plugin.Runtime, configs []models.AuthenticationMethodConfigurationable) ([]interface{}, error) {
+	var configResources []interface{}
+	for _, config := range configs {
+		excludeTargets, err := convert.JsonToDictSlice(config.GetExcludeTargets())
+		if err != nil {
+			return nil, err
+		}
+
+		configData := map[string]*llx.RawData{
+			"id":             llx.StringDataPtr(config.GetId()),
+			"state":          llx.StringData(config.GetState().String()),
+			"excludeTargets": llx.ArrayData(excludeTargets, types.Dict),
+		}
+
+		mqlConfig, err := CreateResource(runtime, "microsoft.policies.authenticationMethodConfiguration", configData)
+		if err != nil {
+			return nil, err
+		}
+
+		configResources = append(configResources, mqlConfig)
+	}
+
+	return configResources, nil
 }
