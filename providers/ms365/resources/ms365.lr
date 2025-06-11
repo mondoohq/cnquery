@@ -68,6 +68,18 @@ microsoft.tenant @defaults("name") {
   type string
   // Commercial subscription
   subscriptions() []dict
+  // Company-wide settings for apps and services.
+  settings() microsoft.tenant.settings
+}
+
+// Company-wide configuration for apps and services.
+private microsoft.tenant.settings @defaults("isAppAndServicesTrialEnabled isOfficeStoreEnabled") {
+  // Unique synthetic ID based on the parent tenant.
+  id string
+  // Controls whether users can start trial subscriptions for apps and services in your organization.
+  isAppAndServicesTrialEnabled bool
+  // Controls whether users can access the Microsoft Store.
+  isOfficeStoreEnabled bool
 }
 
 // List of Microsoft Entra users with optional filters
