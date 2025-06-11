@@ -216,4 +216,4 @@ jobs:
           token: ${{ steps.generate-token.outputs.token }}
           repository: "mondoohq/releasr"
           event-type: reindex
-          client-payload: '{ }'
+          client-payload: '{ "reindex-path": "providers" }'
