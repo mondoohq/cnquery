@@ -371,6 +371,7 @@ func (g *mqlGcpProjectSqlService) instances() ([]interface{}, error) {
 			"settings":                   llx.ResourceData(mqlSettings, "gcp.project.sqlService.instance.settings"),
 			"serviceAccountEmailAddress": llx.StringData(instance.ServiceAccountEmailAddress),
 			"state":                      llx.StringData(instance.State),
+			"selfLink":                   llx.StringData(instance.SelfLink),
 		})
 		if err != nil {
 			return nil, err

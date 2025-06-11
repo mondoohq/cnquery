@@ -351,6 +351,8 @@ private gcp.project.computeService.address @defaults("name address addressType")
   subnetwork() gcp.project.computeService.subnetwork
   // URLs of the resources that are using this address
   resourceUrls []string
+  // Link to the object in the GCP console
+  selfLink string
 }
 
 // Google Cloud (GCP) Compute forwarding rules
@@ -409,6 +411,8 @@ private gcp.project.computeService.forwardingRule {
   subnetwork() gcp.project.computeService.subnetwork
   // URL of the target resource to receive the matched traffic
   targetUrl string
+  // Link to the object in the GCP console
+  selfLink string
 }
 
 // Google Cloud (GCP) Compute region
@@ -427,6 +431,8 @@ private gcp.project.computeService.region @defaults("name") {
   quotas map[string]float
   // Deprecation status
   deprecated dict
+  // Link to the object in the GCP console
+  selfLink string
 }
 
 // Google Cloud (GCP) Compute zone
@@ -441,6 +447,8 @@ private gcp.project.computeService.zone @defaults("name") {
   status string
   // Creation timestamp
   created time
+  // Link to the object in the GCP console
+  selfLink string
 }
 
 // Google Cloud (GCP) machine type
@@ -467,6 +475,8 @@ private gcp.project.computeService.machineType @defaults("name") {
   created time
   // The zone where the machine type resides
   zone gcp.project.computeService.zone
+  // Link to the object in the GCP console
+  selfLink string
 }
 
 // Google Cloud (GCP) Compute instances
@@ -549,6 +559,8 @@ private gcp.project.computeService.instance @defaults("name") {
   machineType() gcp.project.computeService.machineType
   // Instance zone
   zone gcp.project.computeService.zone
+  // Link to the object in the GCP console
+  selfLink string
 }
 
 // Google Cloud (GCP) Compute service account
@@ -595,6 +607,8 @@ private gcp.project.computeService.disk @defaults("name") {
   created time
   // Disk encryption key
   diskEncryptionKey dict
+  // Link to the object in the GCP console
+  selfLink string
 }
 
 // Google Cloud (GCP) Compute attached disk
@@ -665,6 +679,8 @@ private gcp.project.computeService.snapshot @defaults("name") {
   created time
   // The status of the snapshot
   status string
+  // Link to the object in the GCP console
+  selfLink string
 }
 
 // Google Cloud (GCP) Compute
@@ -693,6 +709,8 @@ private gcp.project.computeService.image @defaults("id name") {
   created time
   // The status of the image
   status string
+  // Link to the object in the GCP console
+  selfLink string
 }
 
 // Google Cloud (GCP) Compute firewall
@@ -727,6 +745,8 @@ private gcp.project.computeService.firewall @defaults("name") {
   allowed []dict
   // List of DENY rules specified by this firewall
   denied []dict
+  // Link to the object in the GCP console
+  selfLink string
 }
 
 // Google Cloud (GCP) Compute VPC network resource
@@ -761,6 +781,8 @@ private gcp.project.computeService.network @defaults("name") {
   subnetworkUrls []string
   // Subnetworks in the network
   subnetworks() []gcp.project.computeService.subnetwork
+  // Link to the object in the GCP console
+  selfLink string
 }
 
 // Google Cloud (GCP) Compute VPC network partitioning
@@ -809,6 +831,8 @@ private gcp.project.computeService.subnetwork @defaults("name") {
   state string
   // Creation timestamp
   created time
+  // Link to the object in the GCP console
+  selfLink string
 }
 
 // Google Cloud (GCP) Compute VPC network partitioning log configuration
@@ -847,6 +871,8 @@ private gcp.project.computeService.router @defaults("name")  {
   nats []dict
   // Creation timestamp
   created time
+  // Link to the object in the GCP console
+  selfLink string
 }
 
 // Google Cloud (GCP) Compute backend service
@@ -917,6 +943,8 @@ private gcp.project.computeService.backendService @defaults("name") {
   sessionAffinity string
   // Backend service timeout in settings
   timeoutSec int
+  // Link to the object in the GCP console
+  selfLink string
 }
 
 // Google Cloud (GCP) Compute backend service backend
@@ -1153,6 +1181,8 @@ private gcp.project.sqlService.instance @defaults("name") {
   state string
   // List of the databases in the current SQL instance
   databases() []gcp.project.sqlService.instance.database
+  // Link to the object in the GCP console
+  selfLink string
 }
 
 // Google Cloud (GCP) SQL instance database

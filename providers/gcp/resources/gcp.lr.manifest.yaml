@@ -659,6 +659,8 @@ resources:
       purpose: {}
       regionUrl: {}
       resourceUrls: {}
+      selfLink:
+        min_mondoo_version: 9.0.0
       status: {}
       subnetwork: {}
       subnetworkUrl: {}
@@ -727,6 +729,8 @@ resources:
       regionUrl: {}
       securityPolicyUrl: {}
       securitySettings: {}
+      selfLink:
+        min_mondoo_version: 9.0.0
       serviceBindingUrls: {}
       sessionAffinity: {}
       timeoutSec: {}
@@ -800,6 +804,8 @@ resources:
       name: {}
       physicalBlockSizeBytes: {}
       provisionedIops: {}
+      selfLink:
+        min_mondoo_version: 9.0.0
       sizeGb: {}
       status: {}
       zone: {}
@@ -824,6 +830,8 @@ resources:
       name: {}
       priority: {}
       projectId: {}
+      selfLink:
+        min_mondoo_version: 9.0.0
       sourceRanges: {}
       sourceServiceAccounts: {}
       sourceTags: {}
@@ -859,6 +867,8 @@ resources:
       portRange: {}
       ports: {}
       regionUrl: {}
+      selfLink:
+        min_mondoo_version: 9.0.0
       serviceDirectoryRegistrations: {}
       serviceLabel: {}
       serviceName: {}
@@ -886,6 +896,8 @@ resources:
       licenses: {}
       name: {}
       projectId: {}
+      selfLink:
+        min_mondoo_version: 9.0.0
       status: {}
     is_private: true
     min_mondoo_version: latest
@@ -928,6 +940,8 @@ resources:
       reservationAffinity: {}
       resourcePolicies: {}
       scheduling: {}
+      selfLink:
+        min_mondoo_version: 9.0.0
       serviceAccounts: {}
       sourceMachineImage: {}
       startRestricted: {}
@@ -956,6 +970,8 @@ resources:
       memoryMb: {}
       name: {}
       projectId: {}
+      selfLink:
+        min_mondoo_version: 9.0.0
       zone: {}
     is_private: true
     min_mondoo_version: latest
@@ -980,6 +996,8 @@ resources:
       peerings: {}
       projectId: {}
       routingMode: {}
+      selfLink:
+        min_mondoo_version: 9.0.0
       subnetworkUrls: {}
       subnetworks: {}
     is_private: true
@@ -998,6 +1016,8 @@ resources:
       id: {}
       name: {}
       quotas: {}
+      selfLink:
+        min_mondoo_version: 9.0.0
       status: {}
     is_private: true
     min_mondoo_version: latest
@@ -1017,6 +1037,8 @@ resources:
       id: {}
       name: {}
       nats: {}
+      selfLink:
+        min_mondoo_version: 9.0.0
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -1051,6 +1073,8 @@ resources:
       labels: {}
       licenses: {}
       name: {}
+      selfLink:
+        min_mondoo_version: 9.0.0
       snapshotType: {}
       status: {}
       storageBytes: {}
@@ -1085,6 +1109,8 @@ resources:
       region: {}
       regionUrl: {}
       role: {}
+      selfLink:
+        min_mondoo_version: 9.0.0
       stackType: {}
       state: {}
     is_private: true
@@ -1118,6 +1144,8 @@ resources:
       description: {}
       id: {}
       name: {}
+      selfLink:
+        min_mondoo_version: 9.0.0
       status: {}
     is_private: true
     min_mondoo_version: latest
@@ -2253,6 +2281,8 @@ resources:
       projectId: {}
       region: {}
       replicaNames: {}
+      selfLink:
+        min_mondoo_version: 9.0.0
       serviceAccountEmailAddress: {}
       settings: {}
       state: {}

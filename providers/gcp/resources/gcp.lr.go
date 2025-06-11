@@ -1034,6 +1034,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.address.resourceUrls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceAddress).GetResourceUrls()).ToDataRes(types.Array(types.String))
 	},
+	"gcp.project.computeService.address.selfLink": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceAddress).GetSelfLink()).ToDataRes(types.String)
+	},
 	"gcp.project.computeService.forwardingRule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceForwardingRule).GetId()).ToDataRes(types.String)
 	},
@@ -1115,6 +1118,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.forwardingRule.targetUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceForwardingRule).GetTargetUrl()).ToDataRes(types.String)
 	},
+	"gcp.project.computeService.forwardingRule.selfLink": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceForwardingRule).GetSelfLink()).ToDataRes(types.String)
+	},
 	"gcp.project.computeService.region.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceRegion).GetId()).ToDataRes(types.String)
 	},
@@ -1136,6 +1142,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.region.deprecated": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceRegion).GetDeprecated()).ToDataRes(types.Dict)
 	},
+	"gcp.project.computeService.region.selfLink": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceRegion).GetSelfLink()).ToDataRes(types.String)
+	},
 	"gcp.project.computeService.zone.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceZone).GetId()).ToDataRes(types.String)
 	},
@@ -1150,6 +1159,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.zone.created": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceZone).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.computeService.zone.selfLink": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceZone).GetSelfLink()).ToDataRes(types.String)
 	},
 	"gcp.project.computeService.machineType.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceMachineType).GetId()).ToDataRes(types.String)
@@ -1183,6 +1195,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.machineType.zone": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceMachineType).GetZone()).ToDataRes(types.Resource("gcp.project.computeService.zone"))
+	},
+	"gcp.project.computeService.machineType.selfLink": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceMachineType).GetSelfLink()).ToDataRes(types.String)
 	},
 	"gcp.project.computeService.instance.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstance).GetId()).ToDataRes(types.String)
@@ -1301,6 +1316,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.instance.zone": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstance).GetZone()).ToDataRes(types.Resource("gcp.project.computeService.zone"))
 	},
+	"gcp.project.computeService.instance.selfLink": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetSelfLink()).ToDataRes(types.String)
+	},
 	"gcp.project.computeService.serviceaccount.email": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceServiceaccount).GetEmail()).ToDataRes(types.String)
 	},
@@ -1357,6 +1375,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.disk.diskEncryptionKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceDisk).GetDiskEncryptionKey()).ToDataRes(types.Dict)
+	},
+	"gcp.project.computeService.disk.selfLink": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceDisk).GetSelfLink()).ToDataRes(types.String)
 	},
 	"gcp.project.computeService.attachedDisk.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceAttachedDisk).GetId()).ToDataRes(types.String)
@@ -1451,6 +1472,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.snapshot.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSnapshot).GetStatus()).ToDataRes(types.String)
 	},
+	"gcp.project.computeService.snapshot.selfLink": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSnapshot).GetSelfLink()).ToDataRes(types.String)
+	},
 	"gcp.project.computeService.image.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceImage).GetId()).ToDataRes(types.String)
 	},
@@ -1486,6 +1510,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.image.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceImage).GetStatus()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.image.selfLink": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceImage).GetSelfLink()).ToDataRes(types.String)
 	},
 	"gcp.project.computeService.firewall.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceFirewall).GetId()).ToDataRes(types.String)
@@ -1532,6 +1559,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.firewall.denied": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceFirewall).GetDenied()).ToDataRes(types.Array(types.Dict))
 	},
+	"gcp.project.computeService.firewall.selfLink": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewall).GetSelfLink()).ToDataRes(types.String)
+	},
 	"gcp.project.computeService.network.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceNetwork).GetId()).ToDataRes(types.String)
 	},
@@ -1576,6 +1606,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.network.subnetworks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceNetwork).GetSubnetworks()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.subnetwork")))
+	},
+	"gcp.project.computeService.network.selfLink": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceNetwork).GetSelfLink()).ToDataRes(types.String)
 	},
 	"gcp.project.computeService.subnetwork.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSubnetwork).GetId()).ToDataRes(types.String)
@@ -1643,6 +1676,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.subnetwork.created": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSubnetwork).GetCreated()).ToDataRes(types.Time)
 	},
+	"gcp.project.computeService.subnetwork.selfLink": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSubnetwork).GetSelfLink()).ToDataRes(types.String)
+	},
 	"gcp.project.computeService.subnetwork.logConfig.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSubnetworkLogConfig).GetId()).ToDataRes(types.String)
 	},
@@ -1687,6 +1723,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.router.created": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceRouter).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.computeService.router.selfLink": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceRouter).GetSelfLink()).ToDataRes(types.String)
 	},
 	"gcp.project.computeService.backendService.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceBackendService).GetId()).ToDataRes(types.String)
@@ -1786,6 +1825,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.backendService.timeoutSec": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceBackendService).GetTimeoutSec()).ToDataRes(types.Int)
+	},
+	"gcp.project.computeService.backendService.selfLink": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceBackendService).GetSelfLink()).ToDataRes(types.String)
 	},
 	"gcp.project.computeService.backendService.backend.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceBackendServiceBackend).GetId()).ToDataRes(types.String)
@@ -2044,6 +2086,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.sqlService.instance.databases": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstance).GetDatabases()).ToDataRes(types.Array(types.Resource("gcp.project.sqlService.instance.database")))
+	},
+	"gcp.project.sqlService.instance.selfLink": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstance).GetSelfLink()).ToDataRes(types.String)
 	},
 	"gcp.project.sqlService.instance.database.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstanceDatabase).GetProjectId()).ToDataRes(types.String)
@@ -4928,6 +4973,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlGcpProjectComputeServiceAddress).ResourceUrls, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.address.selfLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceAddress).SelfLink, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.forwardingRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlGcpProjectComputeServiceForwardingRule).__id, ok = v.Value.(string)
 			return
@@ -5040,6 +5089,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlGcpProjectComputeServiceForwardingRule).TargetUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.forwardingRule.selfLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceForwardingRule).SelfLink, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.region.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlGcpProjectComputeServiceRegion).__id, ok = v.Value.(string)
 			return
@@ -5072,6 +5125,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlGcpProjectComputeServiceRegion).Deprecated, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.region.selfLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceRegion).SelfLink, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.zone.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlGcpProjectComputeServiceZone).__id, ok = v.Value.(string)
 			return
@@ -5094,6 +5151,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"gcp.project.computeService.zone.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceZone).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.zone.selfLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceZone).SelfLink, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.machineType.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5142,6 +5203,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"gcp.project.computeService.machineType.zone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceMachineType).Zone, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceZone](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.machineType.selfLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceMachineType).SelfLink, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5304,6 +5369,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlGcpProjectComputeServiceInstance).Zone, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceZone](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.instance.selfLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).SelfLink, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.serviceaccount.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlGcpProjectComputeServiceServiceaccount).__id, ok = v.Value.(string)
 			return
@@ -5386,6 +5455,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"gcp.project.computeService.disk.diskEncryptionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceDisk).DiskEncryptionKey, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.disk.selfLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceDisk).SelfLink, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.attachedDisk.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5520,6 +5593,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlGcpProjectComputeServiceSnapshot).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.snapshot.selfLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSnapshot).SelfLink, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.image.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlGcpProjectComputeServiceImage).__id, ok = v.Value.(string)
 			return
@@ -5570,6 +5647,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"gcp.project.computeService.image.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceImage).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.image.selfLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceImage).SelfLink, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.firewall.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5636,6 +5717,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlGcpProjectComputeServiceFirewall).Denied, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.firewall.selfLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewall).SelfLink, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.network.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlGcpProjectComputeServiceNetwork).__id, ok = v.Value.(string)
 			return
@@ -5698,6 +5783,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"gcp.project.computeService.network.subnetworks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceNetwork).Subnetworks, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.network.selfLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceNetwork).SelfLink, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.subnetwork.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5792,6 +5881,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlGcpProjectComputeServiceSubnetwork).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.subnetwork.selfLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSubnetwork).SelfLink, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.subnetwork.logConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlGcpProjectComputeServiceSubnetworkLogConfig).__id, ok = v.Value.(string)
 			return
@@ -5858,6 +5951,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"gcp.project.computeService.router.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceRouter).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.router.selfLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceRouter).SelfLink, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.backendService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5994,6 +6091,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"gcp.project.computeService.backendService.timeoutSec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceBackendService).TimeoutSec, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.backendService.selfLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceBackendService).SelfLink, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.backendService.backend.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6374,6 +6475,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"gcp.project.sqlService.instance.databases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSqlServiceInstance).Databases, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.selfLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstance).SelfLink, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.sqlService.instance.database.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11539,6 +11644,7 @@ type mqlGcpProjectComputeServiceAddress struct {
 	SubnetworkUrl plugin.TValue[string]
 	Subnetwork plugin.TValue[*mqlGcpProjectComputeServiceSubnetwork]
 	ResourceUrls plugin.TValue[[]interface{}]
+	SelfLink plugin.TValue[string]
 }
 
 // createGcpProjectComputeServiceAddress creates a new instance of this resource
@@ -11674,6 +11780,10 @@ func (c *mqlGcpProjectComputeServiceAddress) GetResourceUrls() *plugin.TValue[[]
 	return &c.ResourceUrls
 }
 
+func (c *mqlGcpProjectComputeServiceAddress) GetSelfLink() *plugin.TValue[string] {
+	return &c.SelfLink
+}
+
 // mqlGcpProjectComputeServiceForwardingRule for the gcp.project.computeService.forwardingRule resource
 type mqlGcpProjectComputeServiceForwardingRule struct {
 	MqlRuntime *plugin.Runtime
@@ -11706,6 +11816,7 @@ type mqlGcpProjectComputeServiceForwardingRule struct {
 	SubnetworkUrl plugin.TValue[string]
 	Subnetwork plugin.TValue[*mqlGcpProjectComputeServiceSubnetwork]
 	TargetUrl plugin.TValue[string]
+	SelfLink plugin.TValue[string]
 }
 
 // createGcpProjectComputeServiceForwardingRule creates a new instance of this resource
@@ -11877,6 +11988,10 @@ func (c *mqlGcpProjectComputeServiceForwardingRule) GetTargetUrl() *plugin.TValu
 	return &c.TargetUrl
 }
 
+func (c *mqlGcpProjectComputeServiceForwardingRule) GetSelfLink() *plugin.TValue[string] {
+	return &c.SelfLink
+}
+
 // mqlGcpProjectComputeServiceRegion for the gcp.project.computeService.region resource
 type mqlGcpProjectComputeServiceRegion struct {
 	MqlRuntime *plugin.Runtime
@@ -11889,6 +12004,7 @@ type mqlGcpProjectComputeServiceRegion struct {
 	Created plugin.TValue[*time.Time]
 	Quotas plugin.TValue[map[string]interface{}]
 	Deprecated plugin.TValue[interface{}]
+	SelfLink plugin.TValue[string]
 }
 
 // createGcpProjectComputeServiceRegion creates a new instance of this resource
@@ -11956,6 +12072,10 @@ func (c *mqlGcpProjectComputeServiceRegion) GetDeprecated() *plugin.TValue[inter
 	return &c.Deprecated
 }
 
+func (c *mqlGcpProjectComputeServiceRegion) GetSelfLink() *plugin.TValue[string] {
+	return &c.SelfLink
+}
+
 // mqlGcpProjectComputeServiceZone for the gcp.project.computeService.zone resource
 type mqlGcpProjectComputeServiceZone struct {
 	MqlRuntime *plugin.Runtime
@@ -11966,6 +12086,7 @@ type mqlGcpProjectComputeServiceZone struct {
 	Description plugin.TValue[string]
 	Status plugin.TValue[string]
 	Created plugin.TValue[*time.Time]
+	SelfLink plugin.TValue[string]
 }
 
 // createGcpProjectComputeServiceZone creates a new instance of this resource
@@ -12025,6 +12146,10 @@ func (c *mqlGcpProjectComputeServiceZone) GetCreated() *plugin.TValue[*time.Time
 	return &c.Created
 }
 
+func (c *mqlGcpProjectComputeServiceZone) GetSelfLink() *plugin.TValue[string] {
+	return &c.SelfLink
+}
+
 // mqlGcpProjectComputeServiceMachineType for the gcp.project.computeService.machineType resource
 type mqlGcpProjectComputeServiceMachineType struct {
 	MqlRuntime *plugin.Runtime
@@ -12041,6 +12166,7 @@ type mqlGcpProjectComputeServiceMachineType struct {
 	MemoryMb plugin.TValue[int64]
 	Created plugin.TValue[*time.Time]
 	Zone plugin.TValue[*mqlGcpProjectComputeServiceZone]
+	SelfLink plugin.TValue[string]
 }
 
 // createGcpProjectComputeServiceMachineType creates a new instance of this resource
@@ -12124,6 +12250,10 @@ func (c *mqlGcpProjectComputeServiceMachineType) GetZone() *plugin.TValue[*mqlGc
 	return &c.Zone
 }
 
+func (c *mqlGcpProjectComputeServiceMachineType) GetSelfLink() *plugin.TValue[string] {
+	return &c.SelfLink
+}
+
 // mqlGcpProjectComputeServiceInstance for the gcp.project.computeService.instance resource
 type mqlGcpProjectComputeServiceInstance struct {
 	MqlRuntime *plugin.Runtime
@@ -12168,6 +12298,7 @@ type mqlGcpProjectComputeServiceInstance struct {
 	Disks plugin.TValue[[]interface{}]
 	MachineType plugin.TValue[*mqlGcpProjectComputeServiceMachineType]
 	Zone plugin.TValue[*mqlGcpProjectComputeServiceZone]
+	SelfLink plugin.TValue[string]
 }
 
 // createGcpProjectComputeServiceInstance creates a new instance of this resource
@@ -12375,6 +12506,10 @@ func (c *mqlGcpProjectComputeServiceInstance) GetZone() *plugin.TValue[*mqlGcpPr
 	return &c.Zone
 }
 
+func (c *mqlGcpProjectComputeServiceInstance) GetSelfLink() *plugin.TValue[string] {
+	return &c.SelfLink
+}
+
 // mqlGcpProjectComputeServiceServiceaccount for the gcp.project.computeService.serviceaccount resource
 type mqlGcpProjectComputeServiceServiceaccount struct {
 	MqlRuntime *plugin.Runtime
@@ -12451,6 +12586,7 @@ type mqlGcpProjectComputeServiceDisk struct {
 	Zone plugin.TValue[*mqlGcpProjectComputeServiceZone]
 	Created plugin.TValue[*time.Time]
 	DiskEncryptionKey plugin.TValue[interface{}]
+	SelfLink plugin.TValue[string]
 }
 
 // createGcpProjectComputeServiceDisk creates a new instance of this resource
@@ -12556,6 +12692,10 @@ func (c *mqlGcpProjectComputeServiceDisk) GetCreated() *plugin.TValue[*time.Time
 
 func (c *mqlGcpProjectComputeServiceDisk) GetDiskEncryptionKey() *plugin.TValue[interface{}] {
 	return &c.DiskEncryptionKey
+}
+
+func (c *mqlGcpProjectComputeServiceDisk) GetSelfLink() *plugin.TValue[string] {
+	return &c.SelfLink
 }
 
 // mqlGcpProjectComputeServiceAttachedDisk for the gcp.project.computeService.attachedDisk resource
@@ -12710,6 +12850,7 @@ type mqlGcpProjectComputeServiceSnapshot struct {
 	Labels plugin.TValue[map[string]interface{}]
 	Created plugin.TValue[*time.Time]
 	Status plugin.TValue[string]
+	SelfLink plugin.TValue[string]
 }
 
 // createGcpProjectComputeServiceSnapshot creates a new instance of this resource
@@ -12813,6 +12954,10 @@ func (c *mqlGcpProjectComputeServiceSnapshot) GetStatus() *plugin.TValue[string]
 	return &c.Status
 }
 
+func (c *mqlGcpProjectComputeServiceSnapshot) GetSelfLink() *plugin.TValue[string] {
+	return &c.SelfLink
+}
+
 // mqlGcpProjectComputeServiceImage for the gcp.project.computeService.image resource
 type mqlGcpProjectComputeServiceImage struct {
 	MqlRuntime *plugin.Runtime
@@ -12830,6 +12975,7 @@ type mqlGcpProjectComputeServiceImage struct {
 	Labels plugin.TValue[map[string]interface{}]
 	Created plugin.TValue[*time.Time]
 	Status plugin.TValue[string]
+	SelfLink plugin.TValue[string]
 }
 
 // createGcpProjectComputeServiceImage creates a new instance of this resource
@@ -12917,6 +13063,10 @@ func (c *mqlGcpProjectComputeServiceImage) GetStatus() *plugin.TValue[string] {
 	return &c.Status
 }
 
+func (c *mqlGcpProjectComputeServiceImage) GetSelfLink() *plugin.TValue[string] {
+	return &c.SelfLink
+}
+
 // mqlGcpProjectComputeServiceFirewall for the gcp.project.computeService.firewall resource
 type mqlGcpProjectComputeServiceFirewall struct {
 	MqlRuntime *plugin.Runtime
@@ -12937,6 +13087,7 @@ type mqlGcpProjectComputeServiceFirewall struct {
 	Created plugin.TValue[*time.Time]
 	Allowed plugin.TValue[[]interface{}]
 	Denied plugin.TValue[[]interface{}]
+	SelfLink plugin.TValue[string]
 }
 
 // createGcpProjectComputeServiceFirewall creates a new instance of this resource
@@ -13036,6 +13187,10 @@ func (c *mqlGcpProjectComputeServiceFirewall) GetDenied() *plugin.TValue[[]inter
 	return &c.Denied
 }
 
+func (c *mqlGcpProjectComputeServiceFirewall) GetSelfLink() *plugin.TValue[string] {
+	return &c.SelfLink
+}
+
 // mqlGcpProjectComputeServiceNetwork for the gcp.project.computeService.network resource
 type mqlGcpProjectComputeServiceNetwork struct {
 	MqlRuntime *plugin.Runtime
@@ -13056,6 +13211,7 @@ type mqlGcpProjectComputeServiceNetwork struct {
 	Mode plugin.TValue[string]
 	SubnetworkUrls plugin.TValue[[]interface{}]
 	Subnetworks plugin.TValue[[]interface{}]
+	SelfLink plugin.TValue[string]
 }
 
 // createGcpProjectComputeServiceNetwork creates a new instance of this resource
@@ -13167,6 +13323,10 @@ func (c *mqlGcpProjectComputeServiceNetwork) GetSubnetworks() *plugin.TValue[[]i
 	})
 }
 
+func (c *mqlGcpProjectComputeServiceNetwork) GetSelfLink() *plugin.TValue[string] {
+	return &c.SelfLink
+}
+
 // mqlGcpProjectComputeServiceSubnetwork for the gcp.project.computeService.subnetwork resource
 type mqlGcpProjectComputeServiceSubnetwork struct {
 	MqlRuntime *plugin.Runtime
@@ -13194,6 +13354,7 @@ type mqlGcpProjectComputeServiceSubnetwork struct {
 	StackType plugin.TValue[string]
 	State plugin.TValue[string]
 	Created plugin.TValue[*time.Time]
+	SelfLink plugin.TValue[string]
 }
 
 // createGcpProjectComputeServiceSubnetwork creates a new instance of this resource
@@ -13333,6 +13494,10 @@ func (c *mqlGcpProjectComputeServiceSubnetwork) GetCreated() *plugin.TValue[*tim
 	return &c.Created
 }
 
+func (c *mqlGcpProjectComputeServiceSubnetwork) GetSelfLink() *plugin.TValue[string] {
+	return &c.SelfLink
+}
+
 // mqlGcpProjectComputeServiceSubnetworkLogConfig for the gcp.project.computeService.subnetwork.logConfig resource
 type mqlGcpProjectComputeServiceSubnetworkLogConfig struct {
 	MqlRuntime *plugin.Runtime
@@ -13425,6 +13590,7 @@ type mqlGcpProjectComputeServiceRouter struct {
 	EncryptedInterconnectRouter plugin.TValue[bool]
 	Nats plugin.TValue[[]interface{}]
 	Created plugin.TValue[*time.Time]
+	SelfLink plugin.TValue[string]
 }
 
 // createGcpProjectComputeServiceRouter creates a new instance of this resource
@@ -13496,6 +13662,10 @@ func (c *mqlGcpProjectComputeServiceRouter) GetCreated() *plugin.TValue[*time.Ti
 	return &c.Created
 }
 
+func (c *mqlGcpProjectComputeServiceRouter) GetSelfLink() *plugin.TValue[string] {
+	return &c.SelfLink
+}
+
 // mqlGcpProjectComputeServiceBackendService for the gcp.project.computeService.backendService resource
 type mqlGcpProjectComputeServiceBackendService struct {
 	MqlRuntime *plugin.Runtime
@@ -13534,6 +13704,7 @@ type mqlGcpProjectComputeServiceBackendService struct {
 	ServiceBindingUrls plugin.TValue[[]interface{}]
 	SessionAffinity plugin.TValue[string]
 	TimeoutSec plugin.TValue[int64]
+	SelfLink plugin.TValue[string]
 }
 
 // createGcpProjectComputeServiceBackendService creates a new instance of this resource
@@ -13703,6 +13874,10 @@ func (c *mqlGcpProjectComputeServiceBackendService) GetSessionAffinity() *plugin
 
 func (c *mqlGcpProjectComputeServiceBackendService) GetTimeoutSec() *plugin.TValue[int64] {
 	return &c.TimeoutSec
+}
+
+func (c *mqlGcpProjectComputeServiceBackendService) GetSelfLink() *plugin.TValue[string] {
+	return &c.SelfLink
 }
 
 // mqlGcpProjectComputeServiceBackendServiceBackend for the gcp.project.computeService.backendService.backend resource
@@ -14413,6 +14588,7 @@ type mqlGcpProjectSqlServiceInstance struct {
 	ServiceAccountEmailAddress plugin.TValue[string]
 	State plugin.TValue[string]
 	Databases plugin.TValue[[]interface{}]
+	SelfLink plugin.TValue[string]
 }
 
 // createGcpProjectSqlServiceInstance creates a new instance of this resource
@@ -14562,6 +14738,10 @@ func (c *mqlGcpProjectSqlServiceInstance) GetDatabases() *plugin.TValue[[]interf
 
 		return c.databases()
 	})
+}
+
+func (c *mqlGcpProjectSqlServiceInstance) GetSelfLink() *plugin.TValue[string] {
+	return &c.SelfLink
 }
 
 // mqlGcpProjectSqlServiceInstanceDatabase for the gcp.project.sqlService.instance.database resource

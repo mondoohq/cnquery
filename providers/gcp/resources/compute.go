@@ -196,6 +196,7 @@ func (g *mqlGcpProjectComputeService) zones() ([]interface{}, error) {
 				"description": llx.StringData(zone.Description),
 				"status":      llx.StringData(zone.Status),
 				"created":     llx.TimeDataPtr(parseTime(zone.CreationTimestamp)),
+				"selfLink":    llx.StringData(zone.SelfLink),
 			})
 			if err != nil {
 				return err
@@ -242,6 +243,7 @@ func newMqlMachineType(runtime *plugin.Runtime, entry *compute.MachineType, proj
 		"memoryMb":                     llx.IntData(entry.MemoryMb),
 		"created":                      llx.TimeDataPtr(parseTime(entry.CreationTimestamp)),
 		"zone":                         llx.ResourceData(zone, "gcp.project.computeService.zone"),
+		"selfLink":                     llx.StringData(entry.SelfLink),
 	})
 	if err != nil {
 		return nil, err
@@ -642,6 +644,7 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 		"serviceAccounts":            llx.ArrayData(mqlServiceAccounts, types.Resource("gcp.project.computeService.serviceaccount")),
 		"disks":                      llx.ArrayData(attachedDisks, types.Resource("gcp.project.computeService.attachedDisk")),
 		"zone":                       llx.ResourceData(zone, "gcp.project.computeService.zone"),
+		"selfLink":                   llx.StringData(instance.SelfLink),
 	})
 	if err != nil {
 		return nil, err
@@ -831,6 +834,7 @@ func (g *mqlGcpProjectComputeService) disks() ([]interface{}, error) {
 						"zone":              llx.ResourceData(zone, "gcp.project.computeService.zone"),
 						"created":           llx.TimeDataPtr(parseTime(disk.CreationTimestamp)),
 						"diskEncryptionKey": llx.DictData(mqlDiskEnc),
+						"selfLink":          llx.StringData(disk.SelfLink),
 					})
 					if err != nil {
 						return err
@@ -978,6 +982,7 @@ func (g *mqlGcpProjectComputeService) firewalls() ([]interface{}, error) {
 				"created":               llx.TimeDataPtr(parseTime(firewall.CreationTimestamp)),
 				"allowed":               llx.ArrayData(allowedDict, types.Dict),
 				"denied":                llx.ArrayData(deniedDict, types.Dict),
+				"selfLink":              llx.StringData(firewall.SelfLink),
 			})
 			if err != nil {
 				return err
@@ -1320,6 +1325,7 @@ func (g *mqlGcpProjectComputeService) networks() ([]interface{}, error) {
 				"routingMode":                           llx.StringData(routingMode),
 				"mode":                                  llx.StringData(networkMode(network)),
 				"subnetworkUrls":                        llx.ArrayData(convert.SliceAnyToInterface(network.Subnetworks), types.String),
+				"selfLink":                              llx.StringData(network.SelfLink),
 			})
 			if err != nil {
 				return err
@@ -1515,6 +1521,7 @@ func newMqlSubnetwork(projectId string, runtime *plugin.Runtime, subnetwork *com
 		"stackType":               llx.StringData(subnetwork.GetStackType()),
 		"state":                   llx.StringData(subnetwork.GetState()),
 		"created":                 llx.TimeDataPtr(parseTime(subnetwork.GetCreationTimestamp())),
+		"selfLink":                llx.StringData(subnetwork.GetSelfLink()),
 	}
 	if region != nil {
 		args["region"] = llx.ResourceData(region, "gcp.project.computeService.region")
@@ -1926,6 +1933,7 @@ func (g *mqlGcpProjectComputeService) backendServices() ([]interface{}, error) {
 				"serviceBindingUrls":       llx.ArrayData(convert.SliceAnyToInterface(b.ServiceBindings), types.String),
 				"sessionAffinity":          llx.StringData(b.SessionAffinity),
 				"timeoutSec":               llx.IntData(b.TimeoutSec),
+				"selfLink":                 llx.StringData(b.SelfLink),
 			})
 			if err != nil {
 				return nil, err
@@ -2010,6 +2018,7 @@ func (g *mqlGcpProjectComputeService) addresses() ([]interface{}, error) {
 				"status":           llx.StringData(a.Status),
 				"subnetworkUrl":    llx.StringData(a.Subnetwork),
 				"resourceUrls":     llx.ArrayData(convert.SliceAnyToInterface(a.Users), types.String),
+				"selfLink":         llx.StringData(a.SelfLink),
 			})
 			if err != nil {
 				return nil, err
@@ -2069,6 +2078,7 @@ func (g *mqlGcpProjectComputeService) forwardingRules() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		for _, fwr := range resp.Value.ForwardingRules {
 			metadataFilters := make([]interface{}, 0, len(fwr.GetMetadataFilters()))
 			for _, m := range fwr.GetMetadataFilters() {
@@ -2119,6 +2129,7 @@ func (g *mqlGcpProjectComputeService) forwardingRules() ([]interface{}, error) {
 				"serviceName":                   llx.StringData(fwr.GetServiceName()),
 				"subnetworkUrl":                 llx.StringData(fwr.GetSubnetwork()),
 				"targetUrl":                     llx.StringData(fwr.GetTarget()),
+				"selfLink":                      llx.StringData(fwr.GetSelfLink()),
 			})
 			if err != nil {
 				return nil, err
