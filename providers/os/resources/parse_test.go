@@ -90,3 +90,224 @@ func TestParseXML(t *testing.T) {
 		},
 	})
 }
+
+func TestParseYamlParams(t *testing.T) {
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:        `parse.yaml(content: "simple: test").params`,
+			ResultIndex: 0,
+			Expectation: map[string]interface{}{
+				"simple": "test",
+			},
+		},
+		{
+			Code:        `parse.yaml(content: "number: 42").params`,
+			ResultIndex: 0,
+			Expectation: map[string]interface{}{
+				"number": float64(42),
+			},
+		},
+		{
+			Code:        `parse.yaml(content: "enabled: true").params`,
+			ResultIndex: 0,
+			Expectation: map[string]interface{}{
+				"enabled": true,
+			},
+		},
+		{
+			Code:        `parse.yaml(content: "parent:\n  child: value").params`,
+			ResultIndex: 0,
+			Expectation: map[string]interface{}{
+				"parent": map[string]interface{}{
+					"child": "value",
+				},
+			},
+		},
+		{
+			Code:        `parse.yaml(content: "").params`,
+			ResultIndex: 0,
+			Expectation: map[string]interface{}{},
+		},
+		{
+			Code:        `parse.yaml(content: "---\nname: single-doc\nversion: 1.2").params`,
+			ResultIndex: 0,
+			Expectation: map[string]interface{}{
+				"name":    "single-doc",
+				"version": float64(1.2),
+			},
+		},
+		{
+			Code:        `parse.yaml(content: "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: test\ndata:\n  key1: value1\n  key2: value2").params`,
+			ResultIndex: 0,
+			Expectation: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name": "test",
+				},
+				"data": map[string]interface{}{
+					"key1": "value1",
+					"key2": "value2",
+				},
+			},
+		},
+		{
+			Code:        `parse.yaml(content: "items:\n  - name: item1\n  - name: item2").params`,
+			ResultIndex: 0,
+			Expectation: map[string]interface{}{
+				"items": []interface{}{
+					map[string]interface{}{"name": "item1"},
+					map[string]interface{}{"name": "item2"},
+				},
+			},
+		},
+		{
+			Code:        `parse.yaml(content: "---\napiVersion: v1\nkind: Pod\nmetadata:\n  name: test-pod\nspec:\n  containers:\n  - name: test\n    image: nginx").params`,
+			ResultIndex: 0,
+			Expectation: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Pod",
+				"metadata": map[string]interface{}{
+					"name": "test-pod",
+				},
+				"spec": map[string]interface{}{
+					"containers": []interface{}{
+						map[string]interface{}{
+							"name":  "test",
+							"image": "nginx",
+						},
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestParseYamlDocuments(t *testing.T) {
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:        `parse.yaml(content: "").documents`,
+			ResultIndex: 0,
+			Expectation: []interface{}{},
+		},
+		{
+			Code:        `parse.yaml(content: "simple: test").documents`,
+			ResultIndex: 0,
+			Expectation: []interface{}{
+				map[string]interface{}{
+					"simple": "test",
+				},
+			},
+		},
+		{
+			Code:        `parse.yaml(content: "---\nname: single-doc\nversion: 1.2").documents`,
+			ResultIndex: 0,
+			Expectation: []interface{}{
+				map[string]interface{}{
+					"name":    "single-doc",
+					"version": float64(1.2),
+				},
+			},
+		},
+		{
+			Code:        `parse.yaml(content: "name: trailing-doc\nversion: 1.2\n---").documents`,
+			ResultIndex: 0,
+			Expectation: []interface{}{
+				map[string]interface{}{
+					"name":    "trailing-doc",
+					"version": float64(1.2),
+				},
+			},
+		},
+		{
+			Code:        `parse.yaml(content: "---\nname: wrapped-doc\nversion: 1.2\n---").documents`,
+			ResultIndex: 0,
+			Expectation: []interface{}{
+				map[string]interface{}{
+					"name":    "wrapped-doc",
+					"version": float64(1.2),
+				},
+			},
+		},
+		{
+			Code:        `parse.yaml(content: "name: doc1\n---\nname: doc2").documents`,
+			ResultIndex: 0,
+			Expectation: []interface{}{
+				map[string]interface{}{"name": "doc1"},
+				map[string]interface{}{"name": "doc2"},
+			},
+		},
+		{
+			Code:        `parse.yaml(content: "---\nname: doc1\n---\nname: doc2").documents`,
+			ResultIndex: 0,
+			Expectation: []interface{}{
+				map[string]interface{}{"name": "doc1"},
+				map[string]interface{}{"name": "doc2"},
+			},
+		},
+		{
+			Code:        `parse.yaml(content: "name: doc1\n---\nname: doc2\n---").documents`,
+			ResultIndex: 0,
+			Expectation: []interface{}{
+				map[string]interface{}{"name": "doc1"},
+				map[string]interface{}{"name": "doc2"},
+			},
+		},
+		{
+			Code:        `parse.yaml(content: "name: doc1\n---\nname: doc2\n---\nname: doc3").documents`,
+			ResultIndex: 0,
+			Expectation: []interface{}{
+				map[string]interface{}{"name": "doc1"},
+				map[string]interface{}{"name": "doc2"},
+				map[string]interface{}{"name": "doc3"},
+			},
+		},
+		{
+			Code:        `parse.yaml(content: "name: doc1\n---\nname: doc2").documents[0]`,
+			ResultIndex: 0,
+			Expectation: map[string]interface{}{"name": "doc1"},
+		},
+		{
+			Code:        `parse.yaml(content: "name: doc1\n---\nname: doc2").documents[1]`,
+			ResultIndex: 0,
+			Expectation: map[string]interface{}{"name": "doc2"},
+		},
+		{
+			Code:        `parse.yaml(content: "name: doc1\n---\n\n---\nname: doc2").documents`,
+			ResultIndex: 0,
+			Expectation: []interface{}{
+				map[string]interface{}{"name": "doc1"},
+				map[string]interface{}{"name": "doc2"},
+			},
+		},
+		{
+			Code:        `parse.yaml(content: "apiVersion: v1\nkind: Service\n---\napiVersion: apps/v1\nkind: Deployment").documents`,
+			ResultIndex: 0,
+			Expectation: []interface{}{
+				map[string]interface{}{
+					"apiVersion": "v1",
+					"kind":       "Service",
+				},
+				map[string]interface{}{
+					"apiVersion": "apps/v1",
+					"kind":       "Deployment",
+				},
+			},
+		},
+		{
+			Code:        `parse.yaml(content: "---").documents`,
+			ResultIndex: 0,
+			Expectation: []interface{}{},
+		},
+		{
+			Code:        `parse.yaml(content: "---\n---").documents`,
+			ResultIndex: 0,
+			Expectation: []interface{}{},
+		},
+		{
+			Code:        `parse.yaml(content: "name: doc1\n---\nname: doc2\n---\nname: doc3").documents.length`,
+			ResultIndex: 0,
+			Expectation: int64(3),
+		},
+	})
+}

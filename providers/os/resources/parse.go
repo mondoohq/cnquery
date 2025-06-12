@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"io"
 	"strings"
 
@@ -353,6 +354,36 @@ func (s *mqlParseYaml) params(content string) (map[string]interface{}, error) {
 	}
 
 	return res, nil
+}
+
+func (s *mqlParseYaml) documents(content string) ([]interface{}, error) {
+	if content == "" {
+		return []interface{}{}, nil
+	}
+
+	var documents []interface{}
+
+	// Split content by YAML document separator
+	yamlDocs := strings.Split(content, "---")
+
+	for _, doc := range yamlDocs {
+		doc = strings.TrimSpace(doc)
+		if doc == "" {
+			continue
+		}
+
+		var parsed interface{}
+		err := yaml.Unmarshal([]byte(doc), &parsed)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse YAML document: %w", err)
+		}
+
+		if parsed != nil {
+			documents = append(documents, parsed)
+		}
+	}
+
+	return documents, nil
 }
 
 func initParsePlist(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
