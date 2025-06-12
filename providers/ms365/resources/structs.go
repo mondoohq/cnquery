@@ -354,7 +354,7 @@ func newSecurityVendorInformation(p models.SecurityVendorInformationable) *Secur
 
 type IdentitySecurityDefaultsEnforcementPolicy struct {
 	PolicyBase
-	// If set to true, Azure Active Directory security defaults is enabled for the tenant.
+	// If set to true, Azure Entra ID security defaults is enabled for the tenant.
 	IsEnabled *bool `json:"isEnabled"`
 }
 
@@ -517,7 +517,7 @@ type PermissionGrantConditionSet struct {
 	ClientApplicationPublisherIds []string `json:"clientApplicationPublisherIds"`
 	// Set to true to only match on client applications with a verified publisher. Set to false to match on any client app, even if it does not have a verified publisher. Default is false.
 	ClientApplicationsFromVerifiedPublisherOnly *bool `json:"clientApplicationsFromVerifiedPublisherOnly"`
-	// A list of Azure Active Directory tenant IDs in which the client application is registered, or a list with the single value all to match with client apps registered in any tenant. Default is the single value all.
+	// A list of Azure Entra ID tenant IDs in which the client application is registered, or a list with the single value all to match with client apps registered in any tenant. Default is the single value all.
 	ClientApplicationTenantIds []string `json:"clientApplicationTenantIds"`
 	// The permission classification for the permission being granted, or all to match with any permission classification (including permissions which are not classified). Default is all.
 	PermissionClassification *string `json:"permissionClassification"`

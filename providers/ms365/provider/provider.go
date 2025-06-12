@@ -154,7 +154,7 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.Ms365Connectio
 		Runtime:               "ms365",
 		Family:                []string{""},
 		Kind:                  "api",
-		Title:                 "Microsoft Azure",
+		Title:                 "Microsoft 365",
 		TechnologyUrlSegments: []string{"saas", "ms365"},
 	}
 
