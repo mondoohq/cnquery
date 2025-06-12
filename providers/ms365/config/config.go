@@ -18,11 +18,11 @@ var Config = plugin.Provider{
 		{
 			Name:  "ms365",
 			Use:   "ms365",
-			Short: "a Microsoft 365 account",
+			Short: "a Microsoft 365 tenant",
 			Long: `Use the ms365 provider to query resources within Microsoft 365, including organizations, users, roles, SharePoint sites, and more.
 
 Examples:
-  cnquery shell  ms365 --certificate-path <PATH-TO-YOUR-PEM> --tenant-id <YOUR-TENANT-ID> --client-id <YOUR-CLIENT-ID>
+  cnquery shell ms365 --certificate-path <PATH-TO-YOUR-PEM> --tenant-id <YOUR-TENANT-ID> --client-id <YOUR-CLIENT-ID>
   cnspec scan ms365 --certificate-path <PATH-TO-YOUR-PEM> --tenant-id <YOUR-TENANT-ID> --client-id <YOUR-CLIENT-ID>
 
 Notes:
