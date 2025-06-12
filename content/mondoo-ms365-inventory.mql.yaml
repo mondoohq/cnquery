@@ -1,0 +1,200 @@
+packs:
+  - uid: mondoo-ms365-inventory
+    name: Microsoft 365 Inventory Pack
+    version: 1.0.0
+    license: BUSL-1.1
+    authors:
+      - name: Mondoo, Inc
+        email: hello@mondoo.com
+    tags:
+      mondoo.com/platform: ms365,saas
+      mondoo.com/category: best-practices
+    docs:
+      desc: |
+        The Microsoft 365 Asset Inventory Pack by Mondoo retrieves data about Microsoft 365 ressources for asset inventory.
+
+        To run this pack for an Microsoft 365 Tenant:
+
+        ```bash
+        cnspec scan ms365 --certificate-path certificate.combo.pem --tenant-id YOUR-TENANT-ID --client-id YOUR-CLIENT-ID --policy-bundle mondoo-ms365-inventory.mql.yaml
+        ```
+
+        ## Join the community!
+        Our goal is to build query packs that are simple to deploy and provide accurate and useful data.
+
+        If you have any suggestions for improving this query pack, or if you need support, [join the Mondoo community](https://github.com/orgs/mondoohq/discussions) in GitHub Discussions.
+    groups:
+      - title: Organization
+        filters:
+          - asset.platform == "microsoft365" || asset.runtime == "ms-graph"
+        queries:
+        - uid: mondoo-asset-inventory-ms365-organization-id
+          title: Organization ID
+          mql: |
+            microsoft.organizations.first.id
+        - uid: mondoo-asset-inventory-ms365-organization-name
+          title: Organization Name
+          mql: |
+            microsoft.organizations.first.name
+        - uid: mondoo-asset-inventory-ms365-tenant-doamin-name
+          title: Organization Tenant Domain Name
+          mql: |
+            microsoft.tenantDomainName
+        - uid: mondoo-asset-inventory-ms365-organization-assigned-plans
+          title: Organization Assigned Plans
+          mql: |
+            microsoft.organizations.first.assignedPlans
+        - uid: mondoo-asset-inventory-ms365-organization-provisioned-plans
+          title: Organization Provisioned Plans
+          mql: |
+            microsoft.organizations.first.provisionedPlans
+        - uid: mondoo-asset-inventory-ms365-organization-created
+          title: Organization Created
+          mql: |
+            microsoft.organizations.first.createdAt
+        - uid: mondoo-asset-inventory-ms365-organization-subscriptions
+          title: Organization Subscriptions
+          mql: |
+            microsoft.tenant.subscriptions
+
+      - title: Groups
+        filters:
+          - asset.platform == "microsoft365" || asset.runtime == "ms-graph"
+        queries:
+        - uid: mondoo-asset-inventory-ms365-groups
+          title: Groups
+          mql: |
+            microsoft.groups
+        - uid: mondoo-asset-inventory-ms365-groups-public
+          title: Public Groups and their Members
+          mql: |
+            microsoft.groups.where (visibility == "Public") {id displayName securityEnabled members}
+        - uid: mondoo-asset-inventory-ms365-groups-security-enabled
+          title: Groups no Security enabled
+          mql: |
+            microsoft.groups.where (securityEnabled == false) {id displayName securityEnabled members}
+
+      - title: Applications
+        filters:
+          - asset.platform == "microsoft365" || asset.runtime == "ms-graph"
+        queries:
+        - uid: mondoo-asset-inventory-ms365-applications
+          title: Applications
+          mql: |
+            microsoft.applications
+        - uid: mondoo-asset-inventory-ms365-applications-expired-credentials
+          title: Applications with expired credentials
+          mql: |
+            microsoft.applications.where(hasExpiredCredentials == true) {appId displayName owners createdAt servicePrincipal}
+        - uid: mondoo-asset-inventory-ms365-enterprise-applications
+          title: Enterprise Applications
+          mql: |
+            microsoft.enterpriseApplications
+
+      - title: Device Management
+        filters:
+          - asset.platform == "microsoft365" || asset.runtime == "ms-graph"
+        queries:
+        - uid: mondoo-asset-inventory-ms365-device-management-device-compliance-policy
+          title: Device Compliance Policy
+          mql: |
+            microsoft.devicemanagement.deviceCompliancePolicies
+        - uid: mondoo-asset-inventory-ms365-device-management-device-configurations
+          title: Device Configurations
+          mql: |
+            microsoft.devicemanagement.deviceConfigurations
+
+      - title: Domains
+        filters:
+          - asset.platform == "microsoft365" || asset.runtime == "ms-graph"
+        queries:
+        - uid: mondoo-asset-inventory-ms365-domains
+          title: Domains
+          mql: |
+            microsoft.domains
+
+      - title: Users
+        filters:
+          - asset.platform == "microsoft365" || asset.runtime == "ms-graph"
+        queries:
+        - uid: mondoo-asset-inventory-ms365-users
+          title: Users
+          mql: |
+            microsoft.users
+        - uid: mondoo-asset-inventory-ms365-users-account-enabled
+          title: Users account enabled
+          mql: |
+            microsoft.users.where(accountEnabled == true) {id givenName surname userPrincipalName}
+        - uid: mondoo-asset-inventory-ms365-users-mfa
+          title: Users with no MFA enabled
+          mql: |
+            microsoft.users.where(mfaEnabled == false) {id givenName surname userPrincipalName}
+
+      - title: Policies
+        filters:
+          - asset.platform == "microsoft365" || asset.runtime == "ms-graph"
+        queries:
+        - uid: mondoo-asset-inventory-ms365-policies-admin-consent-request-policy
+          title: Admin Consent Request Policy
+          mql: |
+            microsoft.policies.adminConsentRequestPolicy
+        - uid: mondoo-asset-inventory-ms365-policies-authorization-policy
+          title: Authorization Policy 
+          mql: |
+            microsoft.policies.authorizationPolicy
+        - uid: mondoo-asset-inventory-ms365-policies-consent-policy-settings
+          title: Consent Policy Settings  
+          mql: |
+            microsoft.policies.consentPolicySettings
+        - uid: mondoo-asset-inventory-ms365-policies-identity-security-defaults-enforcement-policy
+          title: Identity Security Defaults Enforcement Policy
+          mql: |
+            microsoft.policies.identitySecurityDefaultsEnforcementPolicy
+        - uid: mondoo-asset-inventory-ms365-policies-permission-grant-policies
+          title: Permission Grant Policies
+          mql: |
+            microsoft.policies.permissionGrantPolicies
+
+      - title: Roles
+        filters:
+          - asset.platform == "microsoft365" || asset.runtime == "ms-graph"
+        queries:
+        - uid: mondoo-asset-inventory-ms365-roles
+          title: Roles
+          mql: |
+            microsoft.roles
+
+      - title: Security
+        filters:
+          - asset.platform == "microsoft365" || asset.runtime == "ms-graph"
+        queries:
+        - uid: mondoo-asset-inventory-ms365-security-latest-secure-scores
+          title: Latest Security Score
+          mql: |
+            microsoft.security.latestSecureScores {maxScore currentScore azureTenantId vendorInformation averageComparativeScores activeUserCount}
+        - uid: mondoo-asset-inventory-ms365-security-risky-users
+          title: Risky Users
+          mql: |
+            microsoft.security.riskyUsers
+
+      - title: Service Principals
+        filters:
+          - asset.platform == "microsoft365" || asset.runtime == "ms-graph"
+        queries:
+        - uid: mondoo-asset-inventory-ms365-service-principals
+          title: Service Principals
+          mql: |
+            microsoft.serviceprincipals
+        - uid: mondoo-asset-inventory-ms365-service-principals-enabled
+          title: Enabled Service Principals
+          mql: |
+            microsoft.serviceprincipals.where(enabled == true) {id name servicePrincipalNames assignments signInAudience permissions}
+
+      - title: Settings
+        filters:
+          - asset.platform == "microsoft365" || asset.runtime == "ms-graph"
+        queries:
+        - uid: mondoo-asset-inventory-ms365-settings
+          title: Settings
+          mql: |
+            microsoft.settings
