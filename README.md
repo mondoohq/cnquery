@@ -149,7 +149,7 @@ cnquery bundle upload mypack.mql.yaml
 ## Supported targets
 
 | Target                        | Provider                   | Example                                                                                                                                                     |
-|-------------------------------|----------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ----------------------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Ansible playbooks             | `ansible`                  | `cnquery shell ansible YOUR_PLAYBOOK.yml`                                                                                                                   |
 | Arista network devices        | `arista`                   | `cnquery shell arista DEVICE_PUBLIC_IP --ask-pass`                                                                                                          |
 | Atlassian organizations       | `atlassian`                | `cnquery shell atlassian --host YOUR_HOST_URL --admin-token YOUR_TOKEN`                                                                                     |
@@ -177,7 +177,7 @@ cnquery bundle upload mypack.mql.yaml
 | Kubernetes workloads          | `k8s`                      | `cnquery shell k8s --discover pods,deployments`                                                                                                             |
 | Linux hosts                   | `local`, `ssh`             | `cnquery shell local` or<br></br>`cnquery shell ssh user@host`                                                                                              |
 | macOS hosts                   | `local`, `ssh`             | `cnquery shell local` or<br></br>`cnquery shell ssh user@IP_ADDRESS`                                                                                        |
-| Microsoft 365 accounts        | `ms365`                    | `cnquery shell ms365 --tenant-id TENANT_ID --client-id CLIENT_ID --certificate-path PFX_FILE`                                                               |
+| Microsoft 365 tenants         | `ms365`                    | `cnquery shell ms365 --tenant-id TENANT_ID --client-id CLIENT_ID --certificate-path PFX_FILE`                                                               |
 | Microsoft Azure instances     | `ssh`                      | `cnquery shell ssh user@host`                                                                                                                               |
 | Microsoft Azure subscriptions | `azure`                    | `cnquery shell azure --subscription SUBSCRIPTION_ID`                                                                                                        |
 | Okta org                      | `okta`                     | `cnquery shell okta --token TOKEN --organization ORGANIZATION`                                                                                              |
