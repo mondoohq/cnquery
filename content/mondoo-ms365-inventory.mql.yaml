@@ -1,3 +1,6 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
 packs:
   - uid: mondoo-ms365-inventory
     name: Microsoft 365 Inventory Pack
@@ -11,7 +14,7 @@ packs:
       mondoo.com/category: best-practices
     docs:
       desc: |
-        The Microsoft 365 Asset Inventory Pack by Mondoo retrieves data about Microsoft 365 ressources for asset inventory.
+        The Microsoft 365 Asset Inventory Pack by Mondoo retrieves data about Microsoft 365 resources for asset inventory.
 
         To run this pack for an Microsoft 365 Tenant:
 
