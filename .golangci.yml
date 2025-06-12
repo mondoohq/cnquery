@@ -33,6 +33,16 @@ linters-settings:
 
   depguard:
     rules:
+      prevent-viper-in-internal-packages:
+        files:
+          - "$all"
+          - "!$test"
+          - "!**/cmd/**"
+          - "!**/cli/**"
+          - "!**/local_scanner.go"
+        deny:
+          - pkg: "github.com/spf13/viper"
+            desc: "viper should only be used in CLI packages (under cmd/ or cli/)"
       denied-packages:
         deny:
           - pkg: "gotest.tools"
