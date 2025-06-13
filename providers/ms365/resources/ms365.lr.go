@@ -202,6 +202,14 @@ func init() {
 			// to override args, implement: initMicrosoftPolicies(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftPolicies,
 		},
+		"microsoft.policies.authenticationMethodsPolicy": {
+			// to override args, implement: initMicrosoftPoliciesAuthenticationMethodsPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftPoliciesAuthenticationMethodsPolicy,
+		},
+		"microsoft.policies.authenticationMethodConfiguration": {
+			// to override args, implement: initMicrosoftPoliciesAuthenticationMethodConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftPoliciesAuthenticationMethodConfiguration,
+		},
 		"microsoft.roles": {
 			Init: initMicrosoftRoles,
 			Create: createMicrosoftRoles,
@@ -1328,6 +1336,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.policies.consentPolicySettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftPolicies).GetConsentPolicySettings()).ToDataRes(types.Dict)
+	},
+	"microsoft.policies.authenticationMethodsPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPolicies).GetAuthenticationMethodsPolicy()).ToDataRes(types.Resource("microsoft.policies.authenticationMethodsPolicy"))
+	},
+	"microsoft.policies.authenticationMethodsPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesAuthenticationMethodsPolicy).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.policies.authenticationMethodsPolicy.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesAuthenticationMethodsPolicy).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.policies.authenticationMethodsPolicy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesAuthenticationMethodsPolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"microsoft.policies.authenticationMethodsPolicy.lastModifiedDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesAuthenticationMethodsPolicy).GetLastModifiedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.policies.authenticationMethodsPolicy.policyVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesAuthenticationMethodsPolicy).GetPolicyVersion()).ToDataRes(types.String)
+	},
+	"microsoft.policies.authenticationMethodsPolicy.authenticationMethodConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesAuthenticationMethodsPolicy).GetAuthenticationMethodConfigurations()).ToDataRes(types.Array(types.Resource("microsoft.policies.authenticationMethodConfiguration")))
+	},
+	"microsoft.policies.authenticationMethodConfiguration.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesAuthenticationMethodConfiguration).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.policies.authenticationMethodConfiguration.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesAuthenticationMethodConfiguration).GetState()).ToDataRes(types.String)
+	},
+	"microsoft.policies.authenticationMethodConfiguration.excludeTargets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesAuthenticationMethodConfiguration).GetExcludeTargets()).ToDataRes(types.Array(types.Dict))
 	},
 	"microsoft.roles.filter": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftRoles).GetFilter()).ToDataRes(types.String)
@@ -3136,6 +3174,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.policies.consentPolicySettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftPolicies).ConsentPolicySettings, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.policies.authenticationMethodsPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPolicies).AuthenticationMethodsPolicy, ok = plugin.RawToTValue[*mqlMicrosoftPoliciesAuthenticationMethodsPolicy](v.Value, v.Error)
+		return
+	},
+	"microsoft.policies.authenticationMethodsPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftPoliciesAuthenticationMethodsPolicy).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.policies.authenticationMethodsPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesAuthenticationMethodsPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.policies.authenticationMethodsPolicy.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesAuthenticationMethodsPolicy).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.policies.authenticationMethodsPolicy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesAuthenticationMethodsPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.policies.authenticationMethodsPolicy.lastModifiedDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesAuthenticationMethodsPolicy).LastModifiedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.policies.authenticationMethodsPolicy.policyVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesAuthenticationMethodsPolicy).PolicyVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.policies.authenticationMethodsPolicy.authenticationMethodConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesAuthenticationMethodsPolicy).AuthenticationMethodConfigurations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.policies.authenticationMethodConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftPoliciesAuthenticationMethodConfiguration).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.policies.authenticationMethodConfiguration.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesAuthenticationMethodConfiguration).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.policies.authenticationMethodConfiguration.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesAuthenticationMethodConfiguration).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.policies.authenticationMethodConfiguration.excludeTargets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesAuthenticationMethodConfiguration).ExcludeTargets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"microsoft.roles.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7450,6 +7536,7 @@ type mqlMicrosoftPolicies struct {
 	AdminConsentRequestPolicy plugin.TValue[interface{}]
 	PermissionGrantPolicies plugin.TValue[[]interface{}]
 	ConsentPolicySettings plugin.TValue[interface{}]
+	AuthenticationMethodsPolicy plugin.TValue[*mqlMicrosoftPoliciesAuthenticationMethodsPolicy]
 }
 
 // createMicrosoftPolicies creates a new instance of this resource
@@ -7512,6 +7599,145 @@ func (c *mqlMicrosoftPolicies) GetConsentPolicySettings() *plugin.TValue[interfa
 	return plugin.GetOrCompute[interface{}](&c.ConsentPolicySettings, func() (interface{}, error) {
 		return c.consentPolicySettings()
 	})
+}
+
+func (c *mqlMicrosoftPolicies) GetAuthenticationMethodsPolicy() *plugin.TValue[*mqlMicrosoftPoliciesAuthenticationMethodsPolicy] {
+	return plugin.GetOrCompute[*mqlMicrosoftPoliciesAuthenticationMethodsPolicy](&c.AuthenticationMethodsPolicy, func() (*mqlMicrosoftPoliciesAuthenticationMethodsPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.policies", c.__id, "authenticationMethodsPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftPoliciesAuthenticationMethodsPolicy), nil
+			}
+		}
+
+		return c.authenticationMethodsPolicy()
+	})
+}
+
+// mqlMicrosoftPoliciesAuthenticationMethodsPolicy for the microsoft.policies.authenticationMethodsPolicy resource
+type mqlMicrosoftPoliciesAuthenticationMethodsPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftPoliciesAuthenticationMethodsPolicyInternal it will be used here
+	Id plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	Description plugin.TValue[string]
+	LastModifiedDateTime plugin.TValue[*time.Time]
+	PolicyVersion plugin.TValue[string]
+	AuthenticationMethodConfigurations plugin.TValue[[]interface{}]
+}
+
+// createMicrosoftPoliciesAuthenticationMethodsPolicy creates a new instance of this resource
+func createMicrosoftPoliciesAuthenticationMethodsPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftPoliciesAuthenticationMethodsPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.policies.authenticationMethodsPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftPoliciesAuthenticationMethodsPolicy) MqlName() string {
+	return "microsoft.policies.authenticationMethodsPolicy"
+}
+
+func (c *mqlMicrosoftPoliciesAuthenticationMethodsPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftPoliciesAuthenticationMethodsPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftPoliciesAuthenticationMethodsPolicy) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftPoliciesAuthenticationMethodsPolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMicrosoftPoliciesAuthenticationMethodsPolicy) GetLastModifiedDateTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedDateTime
+}
+
+func (c *mqlMicrosoftPoliciesAuthenticationMethodsPolicy) GetPolicyVersion() *plugin.TValue[string] {
+	return &c.PolicyVersion
+}
+
+func (c *mqlMicrosoftPoliciesAuthenticationMethodsPolicy) GetAuthenticationMethodConfigurations() *plugin.TValue[[]interface{}] {
+	return &c.AuthenticationMethodConfigurations
+}
+
+// mqlMicrosoftPoliciesAuthenticationMethodConfiguration for the microsoft.policies.authenticationMethodConfiguration resource
+type mqlMicrosoftPoliciesAuthenticationMethodConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftPoliciesAuthenticationMethodConfigurationInternal it will be used here
+	Id plugin.TValue[string]
+	State plugin.TValue[string]
+	ExcludeTargets plugin.TValue[[]interface{}]
+}
+
+// createMicrosoftPoliciesAuthenticationMethodConfiguration creates a new instance of this resource
+func createMicrosoftPoliciesAuthenticationMethodConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftPoliciesAuthenticationMethodConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.policies.authenticationMethodConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftPoliciesAuthenticationMethodConfiguration) MqlName() string {
+	return "microsoft.policies.authenticationMethodConfiguration"
+}
+
+func (c *mqlMicrosoftPoliciesAuthenticationMethodConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftPoliciesAuthenticationMethodConfiguration) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftPoliciesAuthenticationMethodConfiguration) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlMicrosoftPoliciesAuthenticationMethodConfiguration) GetExcludeTargets() *plugin.TValue[[]interface{}] {
+	return &c.ExcludeTargets
 }
 
 // mqlMicrosoftRoles for the microsoft.roles resource
