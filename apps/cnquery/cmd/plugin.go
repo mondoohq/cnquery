@@ -123,6 +123,17 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 		out.WriteString("[")
 	}
 
+	// anyResultFailed is a flag that will be switched on if any query result failed,
+	// if the flag `exit-1-on-failure` is provided and anyResultFailed is true, we
+	// will exit the program with the exit code `1`
+	var anyResultFailed = false
+	// we defer this check since we want it to be the last thing to be evaluated
+	defer func() {
+		if conf.GetExit_1OnFailure() && anyResultFailed {
+			os.Exit(1)
+		}
+	}()
+
 	for i := range discoveredAssets.Assets {
 		asset := discoveredAssets.Assets[i]
 
@@ -184,6 +195,17 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 			return errors.Wrap(err, "failed to run")
 		}
 
+		// check if any result failed
+		for _, result := range results {
+			if result == nil || result.Data == nil {
+				continue
+			}
+
+			if truthy, ok := result.Data.IsTruthy(); ok && !truthy {
+				anyResultFailed = true
+			}
+		}
+
 		if conf.Format == "llx" && conf.Output != "" {
 			out, err := proto.Marshal(code)
 			if err != nil {
@@ -204,7 +226,6 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 				out.WriteString(",")
 			}
 		}
-
 	}
 
 	if conf.Format == "json" {

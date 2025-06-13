@@ -24,6 +24,7 @@ message RunQueryConfig {
   bool incognito = 10;
   string output = 11;
   string input = 12;
+  bool exit_1_on_failure = 14;
 }
 
 message Empty {

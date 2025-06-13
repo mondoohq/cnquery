@@ -32,6 +32,7 @@ func init() {
 	_ = RunCmd.Flags().MarkHidden("use-llx")
 	RunCmd.Flags().StringToString("annotations", nil, "Specify annotations for this run")
 	_ = RunCmd.Flags().MarkHidden("annotations")
+	RunCmd.Flags().Bool("exit-1-on-failure", false, "Exit with error code 1 if one or more query results fail")
 }
 
 var RunCmd = &cobra.Command{
@@ -53,6 +54,7 @@ var RunCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plu
 	conf.DoAst, _ = cmd.Flags().GetBool("ast")
 	conf.DoInfo, _ = cmd.Flags().GetBool("info")
 	conf.DoParse, _ = cmd.Flags().GetBool("parse")
+	conf.Exit_1OnFailure, _ = cmd.Flags().GetBool("exit-1-on-failure")
 	if doJSON, _ := cmd.Flags().GetBool("json"); doJSON {
 		conf.Format = "json"
 	}

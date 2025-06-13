@@ -4,24 +4,55 @@
 package commands
 
 import (
+	"log"
 	"os"
+	"os/exec"
+	"path"
+	"path/filepath"
 	"sync"
 	"testing"
 
 	cmdtest "github.com/google/go-cmdtest"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v11/apps/cnquery/cmd"
 )
 
 var once sync.Once
+var testDir string
 var cnqueryCmd *cobra.Command
 
 func setup() {
-	var err error
-	cnqueryCmd, err = cmd.BuildRootCmd()
+	// build cnquery
+	if err := exec.Command("go", "build", "../../apps/cnquery/cnquery.go").Run(); err != nil {
+		log.Fatalf("building cnquery: %v", err)
+	}
+
+	// install local provider
+	if err := exec.Command("bash", "-c", "cd ../.. && make providers/build/os providers/install/os").Run(); err != nil {
+		log.Fatalf("building os provider: %v", err)
+	}
+
+	// create a fake directory to use for testing purposes (providers, config, etc.)
+	dir, err := os.MkdirTemp("", "mondoo")
 	if err != nil {
-		panic(err)
+		log.Fatalf("creating directory: %v", err)
+	}
+	testDir = dir
+
+	// provider install places the provider in the "$(HOME)/.config/mondoo/providers/${$@_NAME}") but we
+	// want to test it in isolation. Therefore, we copy the provider to the current directory .providers
+	osProviderPath := filepath.Join(testDir, "os")
+	if err := os.MkdirAll(osProviderPath, 0755); err != nil {
+		log.Fatalf("creating directory: %v", err)
+	}
+
+	distPath, err := filepath.Abs("../../providers/os/dist")
+	if err != nil {
+		log.Fatalf("unable to expand dist path: %v", err)
+	}
+
+	if err := os.CopyFS(osProviderPath, os.DirFS(distPath)); err != nil {
+		log.Fatalf("copying provider: %v", err)
 	}
 }
 
@@ -35,13 +66,15 @@ func TestCompare(t *testing.T) {
 	ts, err := cmdtest.Read("testdata")
 	require.NoError(t, err)
 
+	// Set a fake config path to avoid loading the real configuration
+	// file from the system running this tests
+	os.Setenv("MONDOO_CONFIG_PATH", path.Join(testDir, "foo"))
+	// Override providers path with the fake test directory
+	os.Setenv("PROVIDERS_PATH", testDir)
+	// Disable auto-update to avoid installing providers
+	os.Setenv("MONDOO_AUTO_UPDATE", "false")
+
 	ts.DisableLogging = true
-	ts.Commands["cnquery"] = cmdtest.InProcessProgram("cnquery", func() int {
-		err := cnqueryCmd.Execute()
-		if err != nil {
-			return 1
-		}
-		return 0
-	})
+	ts.Commands["cnquery"] = cmdtest.Program("cnquery")
 	ts.Run(t, false) // set to true to update test files
 }
