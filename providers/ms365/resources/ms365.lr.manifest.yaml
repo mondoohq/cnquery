@@ -481,6 +481,7 @@ resources:
       assignedLicenses: {}
       auditlog: {}
       authMethods: {}
+      authenticationRequirements: {}
       city: {}
       companyName: {}
       contact: {}
@@ -534,6 +535,11 @@ resources:
       softwareMethods: {}
       temporaryAccessPassMethods: {}
       windowsHelloMethods: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.user.authenticationRequirements:
+    fields:
+      perUserMfaState: {}
     is_private: true
     min_mondoo_version: 9.0.0
   microsoft.user.identity:
