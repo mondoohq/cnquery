@@ -20,9 +20,11 @@ import (
 var ENABLE_FINE_GRAINED_ASSETS = false
 
 const (
-	SubscriptionLabel = "azure.mondoo.com/subscription"
-	LocationLabel     = "mondoo.com/location"
-	InstanceLabel     = "mondoo.com/instance"
+	SubscriptionLabel  = "azure.mondoo.com/subscription"
+	ResourceGroupLabel = "azure.mondoo.com/resourcegroup"
+
+	LocationLabel = "mondoo.com/location"
+	InstanceLabel = "mondoo.com/instance"
 
 	DiscoveryAuto          = "auto"
 	DiscoveryAll           = "all"
@@ -865,6 +867,10 @@ func addInformationalLabels(l map[string]string, o mqlObject) map[string]string 
 	}
 	l[LocationLabel] = o.azureObject.location
 	l[SubscriptionLabel] = o.azureObject.subscription
+	resourceID, err := ParseResourceID(o.azureObject.id)
+	if err == nil {
+		l[ResourceGroupLabel] = resourceID.ResourceGroup
+	}
 	return l
 }
 
