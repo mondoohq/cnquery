@@ -215,7 +215,7 @@ resources:
     platform:
       name:
       - aws
-  aws.applicationautoscaling.target:
+  aws.applicationAutoscaling.target:
     fields:
       arn: {}
       createdAt:

@@ -1849,11 +1849,11 @@ aws.applicationAutoscaling @defaults("namespace") {
   // Service namespace to query for application auto scaling: comprehend, rds, sagemaker, appstream, elasticmapreduce, dynamodb, lambda, ecs, cassandra, ec2, neptune, kafka, custom-resource, or elasticache
   namespace string
   // List of scalable targets belonging to the service namespace
-  scalableTargets() []aws.applicationautoscaling.target
+  scalableTargets() []aws.applicationAutoscaling.target
 }
 
 // AWS Application Auto Scaling target
-private aws.applicationautoscaling.target @defaults("arn") {
+private aws.applicationAutoscaling.target @defaults("arn") {
   // Namespace for the target
   namespace string
   // ARN of the auto scaling target
