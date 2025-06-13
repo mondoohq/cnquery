@@ -377,6 +377,14 @@ private microsoft.user @defaults("id displayName userPrincipalName") {
   auditlog() microsoft.user.auditlog
   // The licenses that are assigned to the user, including inherited (group-based) licenses
   assignedLicenses []microsoft.user.assignedLicense
+  // Authentication requirements information
+  authenticationRequirements() microsoft.user.authenticationRequirements
+}
+
+// Microsoft user authentication method states
+private microsoft.user.authenticationRequirements {
+  // user's MFA state
+  perUserMfaState string
 }
 
 // Microsoft user audit log

@@ -811,3 +811,28 @@ func newMqlMicrosoftUserAuthentication(runtime *plugin.Runtime, u userAuthentica
 	}
 	return graphUser.(*mqlMicrosoftUserAuthenticationMethods), nil
 }
+
+func (a *mqlMicrosoftUser) authenticationRequirements() (*mqlMicrosoftUserAuthenticationRequirements, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.BetaGraphClient()
+	if err != nil {
+		return nil, err
+	}
+
+	userID := a.Id.Data
+
+	authRequirements, err := graphClient.Users().ByUserId(userID).Authentication().Requirements().Get(context.Background(), nil)
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	mqlAuthRequirements, err := CreateResource(a.MqlRuntime, "microsoft.user.authenticationRequirements",
+		map[string]*llx.RawData{
+			"perUserMfaState": llx.StringData(authRequirements.GetPerUserMfaState().String()),
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	return mqlAuthRequirements.(*mqlMicrosoftUserAuthenticationRequirements), nil
+}

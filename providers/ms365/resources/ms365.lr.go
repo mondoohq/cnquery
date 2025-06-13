@@ -122,6 +122,10 @@ func init() {
 			Init: initMicrosoftUser,
 			Create: createMicrosoftUser,
 		},
+		"microsoft.user.authenticationRequirements": {
+			// to override args, implement: initMicrosoftUserAuthenticationRequirements(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftUserAuthenticationRequirements,
+		},
 		"microsoft.user.auditlog": {
 			// to override args, implement: initMicrosoftUserAuditlog(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftUserAuditlog,
@@ -748,6 +752,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.user.assignedLicenses": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUser).GetAssignedLicenses()).ToDataRes(types.Array(types.Resource("microsoft.user.assignedLicense")))
+	},
+	"microsoft.user.authenticationRequirements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUser).GetAuthenticationRequirements()).ToDataRes(types.Resource("microsoft.user.authenticationRequirements"))
+	},
+	"microsoft.user.authenticationRequirements.perUserMfaState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserAuthenticationRequirements).GetPerUserMfaState()).ToDataRes(types.String)
 	},
 	"microsoft.user.auditlog.userId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUserAuditlog).GetUserId()).ToDataRes(types.String)
@@ -2310,6 +2320,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.user.assignedLicenses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftUser).AssignedLicenses, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.authenticationRequirements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUser).AuthenticationRequirements, ok = plugin.RawToTValue[*mqlMicrosoftUserAuthenticationRequirements](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.authenticationRequirements.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftUserAuthenticationRequirements).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.user.authenticationRequirements.perUserMfaState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserAuthenticationRequirements).PerUserMfaState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.user.auditlog.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5454,6 +5476,7 @@ type mqlMicrosoftUser struct {
 	Identities plugin.TValue[[]interface{}]
 	Auditlog plugin.TValue[*mqlMicrosoftUserAuditlog]
 	AssignedLicenses plugin.TValue[[]interface{}]
+	AuthenticationRequirements plugin.TValue[*mqlMicrosoftUserAuthenticationRequirements]
 }
 
 // createMicrosoftUser creates a new instance of this resource
@@ -5638,6 +5661,66 @@ func (c *mqlMicrosoftUser) GetAuditlog() *plugin.TValue[*mqlMicrosoftUserAuditlo
 
 func (c *mqlMicrosoftUser) GetAssignedLicenses() *plugin.TValue[[]interface{}] {
 	return &c.AssignedLicenses
+}
+
+func (c *mqlMicrosoftUser) GetAuthenticationRequirements() *plugin.TValue[*mqlMicrosoftUserAuthenticationRequirements] {
+	return plugin.GetOrCompute[*mqlMicrosoftUserAuthenticationRequirements](&c.AuthenticationRequirements, func() (*mqlMicrosoftUserAuthenticationRequirements, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.user", c.__id, "authenticationRequirements")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftUserAuthenticationRequirements), nil
+			}
+		}
+
+		return c.authenticationRequirements()
+	})
+}
+
+// mqlMicrosoftUserAuthenticationRequirements for the microsoft.user.authenticationRequirements resource
+type mqlMicrosoftUserAuthenticationRequirements struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftUserAuthenticationRequirementsInternal it will be used here
+	PerUserMfaState plugin.TValue[string]
+}
+
+// createMicrosoftUserAuthenticationRequirements creates a new instance of this resource
+func createMicrosoftUserAuthenticationRequirements(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftUserAuthenticationRequirements{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.user.authenticationRequirements", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftUserAuthenticationRequirements) MqlName() string {
+	return "microsoft.user.authenticationRequirements"
+}
+
+func (c *mqlMicrosoftUserAuthenticationRequirements) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftUserAuthenticationRequirements) GetPerUserMfaState() *plugin.TValue[string] {
+	return &c.PerUserMfaState
 }
 
 // mqlMicrosoftUserAuditlog for the microsoft.user.auditlog resource
