@@ -486,9 +486,17 @@ resources:
       name: {}
       onPremisesSyncEnabled: {}
       provisionedPlans: {}
+      settings: {}
       subscriptions: {}
       type: {}
       verifiedDomains: {}
+    min_mondoo_version: 9.0.0
+  microsoft.tenant.settings:
+    fields:
+      id: {}
+      isAppAndServicesTrialEnabled: {}
+      isOfficeStoreEnabled: {}
+    is_private: true
     min_mondoo_version: 9.0.0
   microsoft.user:
     fields:

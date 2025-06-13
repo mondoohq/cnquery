@@ -5,6 +5,8 @@ package resources
 
 import (
 	"context"
+	"fmt"
+
 	"github.com/microsoftgraph/msgraph-sdk-go/directory"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/organization"
@@ -157,4 +159,48 @@ func (a *mqlMicrosoft) tenantDomainName() (string, error) {
 	}
 
 	return tenantDomainName, nil
+}
+
+func (m *mqlMicrosoftTenantSettings) id() (string, error) {
+	return m.Id.Data, nil
+}
+
+func (a *mqlMicrosoftTenant) settings() (*mqlMicrosoftTenantSettings, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.BetaGraphClient()
+	if err != nil {
+		return nil, err
+	}
+
+	appsAndServicesConfig, err := graphClient.Admin().AppsAndServices().Get(context.Background(), nil)
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	settingsId := fmt.Sprintf("%s-settings", a.Id.Data)
+
+	if appsAndServicesConfig == nil || appsAndServicesConfig.GetSettings() == nil {
+		mqlSettings, err := CreateResource(a.MqlRuntime, "microsoft.tenant.settings",
+			map[string]*llx.RawData{
+				"id":                           llx.StringData(settingsId),
+				"isAppAndServicesTrialEnabled": llx.BoolData(false),
+				"isOfficeStoreEnabled":         llx.BoolData(false),
+			})
+		if err != nil {
+			return nil, err
+		}
+		return mqlSettings.(*mqlMicrosoftTenantSettings), nil
+	}
+
+	mqlSettings, err := CreateResource(a.MqlRuntime, "microsoft.tenant.settings",
+		map[string]*llx.RawData{
+			"id":                           llx.StringData(settingsId),
+			"isAppAndServicesTrialEnabled": llx.BoolDataPtr(appsAndServicesConfig.GetSettings().GetIsAppAndServicesTrialEnabled()),
+			"isOfficeStoreEnabled":         llx.BoolDataPtr(appsAndServicesConfig.GetSettings().GetIsOfficeStoreEnabled()),
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	return mqlSettings.(*mqlMicrosoftTenantSettings), nil
 }

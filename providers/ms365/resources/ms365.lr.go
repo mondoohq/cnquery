@@ -34,6 +34,10 @@ func init() {
 			Init: initMicrosoftTenant,
 			Create: createMicrosoftTenant,
 		},
+		"microsoft.tenant.settings": {
+			// to override args, implement: initMicrosoftTenantSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftTenantSettings,
+		},
 		"microsoft.users": {
 			Init: initMicrosoftUsers,
 			Create: createMicrosoftUsers,
@@ -428,6 +432,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.tenant.subscriptions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenant).GetSubscriptions()).ToDataRes(types.Array(types.Dict))
+	},
+	"microsoft.tenant.settings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenant).GetSettings()).ToDataRes(types.Resource("microsoft.tenant.settings"))
+	},
+	"microsoft.tenant.settings.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenantSettings).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.tenant.settings.isAppAndServicesTrialEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenantSettings).GetIsAppAndServicesTrialEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.tenant.settings.isOfficeStoreEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenantSettings).GetIsOfficeStoreEnabled()).ToDataRes(types.Bool)
 	},
 	"microsoft.users.filter": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUsers).GetFilter()).ToDataRes(types.String)
@@ -1800,6 +1816,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.tenant.subscriptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftTenant).Subscriptions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.tenant.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenant).Settings, ok = plugin.RawToTValue[*mqlMicrosoftTenantSettings](v.Value, v.Error)
+		return
+	},
+	"microsoft.tenant.settings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftTenantSettings).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.tenant.settings.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenantSettings).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.tenant.settings.isAppAndServicesTrialEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenantSettings).IsAppAndServicesTrialEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.tenant.settings.isOfficeStoreEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenantSettings).IsOfficeStoreEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"microsoft.users.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4069,6 +4105,7 @@ type mqlMicrosoftTenant struct {
 	CreatedAt plugin.TValue[*time.Time]
 	Type plugin.TValue[string]
 	Subscriptions plugin.TValue[[]interface{}]
+	Settings plugin.TValue[*mqlMicrosoftTenantSettings]
 }
 
 // createMicrosoftTenant creates a new instance of this resource
@@ -4152,6 +4189,81 @@ func (c *mqlMicrosoftTenant) GetSubscriptions() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.Subscriptions, func() ([]interface{}, error) {
 		return c.subscriptions()
 	})
+}
+
+func (c *mqlMicrosoftTenant) GetSettings() *plugin.TValue[*mqlMicrosoftTenantSettings] {
+	return plugin.GetOrCompute[*mqlMicrosoftTenantSettings](&c.Settings, func() (*mqlMicrosoftTenantSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.tenant", c.__id, "settings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftTenantSettings), nil
+			}
+		}
+
+		return c.settings()
+	})
+}
+
+// mqlMicrosoftTenantSettings for the microsoft.tenant.settings resource
+type mqlMicrosoftTenantSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftTenantSettingsInternal it will be used here
+	Id plugin.TValue[string]
+	IsAppAndServicesTrialEnabled plugin.TValue[bool]
+	IsOfficeStoreEnabled plugin.TValue[bool]
+}
+
+// createMicrosoftTenantSettings creates a new instance of this resource
+func createMicrosoftTenantSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftTenantSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.tenant.settings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftTenantSettings) MqlName() string {
+	return "microsoft.tenant.settings"
+}
+
+func (c *mqlMicrosoftTenantSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftTenantSettings) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftTenantSettings) GetIsAppAndServicesTrialEnabled() *plugin.TValue[bool] {
+	return &c.IsAppAndServicesTrialEnabled
+}
+
+func (c *mqlMicrosoftTenantSettings) GetIsOfficeStoreEnabled() *plugin.TValue[bool] {
+	return &c.IsOfficeStoreEnabled
 }
 
 // mqlMicrosoftUsers for the microsoft.users resource
