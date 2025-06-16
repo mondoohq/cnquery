@@ -379,9 +379,19 @@ func rawDataJSON(typ types.Type, data interface{}, codeID string, bundle *CodeBu
 			return nil
 		}
 
-		b, err := time.MarshalJSON()
-		buf.Write(b)
-		return err
+		if time.Unix() > 0 {
+			b, err := time.MarshalJSON()
+			if err != nil {
+				return err
+			}
+			buf.Write(b)
+		} else {
+			buf.WriteByte('"')
+			buf.WriteString(TimeToDurationString(*time))
+			buf.WriteByte('"')
+		}
+
+		return nil
 
 	case types.Dict:
 		return rawDictJSON(typ, data, buf)

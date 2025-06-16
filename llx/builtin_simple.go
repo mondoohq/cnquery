@@ -5,6 +5,7 @@ package llx
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"regexp"
 	"strconv"
@@ -2532,6 +2533,31 @@ func TimeToDuration(t *time.Time) int64 {
 // DurationToTime takes a duration in seconds and turns it into a time object
 func DurationToTime(i int64) time.Time {
 	return time.Unix(i+zeroTimeOffset, 0)
+}
+
+func TimeToDurationString(t time.Time) string {
+	seconds := TimeToDuration(&t)
+	minutes := seconds / 60
+	hours := minutes / 60
+	days := hours / 24
+
+	var res strings.Builder
+	if days > 0 {
+		res.WriteString(fmt.Sprintf("%d days ", days))
+	}
+	if hours%24 != 0 {
+		res.WriteString(fmt.Sprintf("%d hours ", hours%24))
+	}
+	if minutes%60 != 0 {
+		res.WriteString(fmt.Sprintf("%d minutes ", minutes%60))
+	}
+	// if we haven't printed any of the other pieces (days/hours/minutes) then print this
+	// if we have, then check if this is non-zero
+	if minutes == 0 || seconds%60 != 0 {
+		res.WriteString(fmt.Sprintf("%d seconds", seconds%60))
+	}
+
+	return strings.TrimSpace(res.String())
 }
 
 func timeSecondsV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
