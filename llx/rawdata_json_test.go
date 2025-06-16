@@ -56,6 +56,17 @@ func TestRawDataJson_nevertime(t *testing.T) {
 	require.True(t, json.Valid(res.Bytes()))
 }
 
+func TestRawDataJson_duration(t *testing.T) {
+	const mins = 60         // 1 minute in seconds
+	const hours = 60 * mins // 1 hour in seconds
+	const days = 24 * hours // 24 hours in seconds
+	dur := DurationToTime(4*days + 13*hours + 42*mins)
+	var res bytes.Buffer
+	require.NoError(t, rawDataJSON(types.Time, &dur, "", &CodeBundle{}, &res))
+	require.Equal(t, res.String(), "\"4 days 13 hours 42 minutes\"")
+	require.True(t, json.Valid(res.Bytes()))
+}
+
 func TestRawDataJson_Umlauts(t *testing.T) {
 	var res bytes.Buffer
 	require.NoError(t, rawDataJSON(types.String, "Systemintegrit\x84t", "blfbjef", &CodeBundle{}, &res))

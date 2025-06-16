@@ -764,28 +764,9 @@ func (print *Printer) Data(typ types.Type, data interface{}, codeID string, bund
 			return print.Secondary(time.String())
 		}
 
-		seconds := llx.TimeToDuration(time)
-		minutes := seconds / 60
-		hours := minutes / 60
-		days := hours / 24
+		durationStr := llx.TimeToDurationString(*time)
 
-		var res strings.Builder
-		if days > 0 {
-			res.WriteString(fmt.Sprintf("%d days ", days))
-		}
-		if hours%24 != 0 {
-			res.WriteString(fmt.Sprintf("%d hours ", hours%24))
-		}
-		if minutes%24 != 0 {
-			res.WriteString(fmt.Sprintf("%d minutes ", minutes%60))
-		}
-		// if we haven't printed any of the other pieces (days/hours/minutes) then print this
-		// if we have, then check if this is non-zero
-		if minutes == 0 || seconds%60 != 0 {
-			res.WriteString(fmt.Sprintf("%d seconds", seconds%60))
-		}
-
-		return print.Secondary(res.String())
+		return print.Secondary(durationStr)
 	case types.Dict:
 		return print.dict(typ, data, codeID, bundle, indent)
 
