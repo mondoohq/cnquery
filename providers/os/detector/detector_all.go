@@ -420,6 +420,10 @@ var sles = &PlatformResolver{
 	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		if pf.Name == "sles" {
+			// SLES can have various modules/repos activated, identify them via filesystem
+			modules := getActivatedSlesModules(conn)
+			pf.Metadata["suse/modules"] = strings.Join(modules, ",")
+
 			return true, nil
 		}
 		return false, nil
