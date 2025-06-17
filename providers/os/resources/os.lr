@@ -767,7 +767,7 @@ auditd.rules {
   syscalls(path) []auditd.rule.syscall
 }
 
-// audtid (Linux Audit Daemon) rule
+// auditd (Linux Audit Daemon) rule
 private auditd.rule {}
 
 // auditd (Linux Audit Daemon) rule for a control
@@ -783,8 +783,8 @@ private auditd.rule.control @defaults("flag value") {
 }
 
 // auditd (Linux Audit Daemon) rule for a file
-// eg: -w /etc/shadow -p rwa -k shadow_access
-//  => {path: "/etc/shadow", permissions: "rwa", keyname: "shadow_access"}
+// eg: -w /etc/shadow -p rw -k shadow_access
+//  => {path: "/etc/shadow", permissions: "rw", keyname: "shadow_access"}
 private auditd.rule.file @defaults("path permissions") {
   // the path this rule matches as specified by -w
   path string
