@@ -17,7 +17,9 @@
         ],
         "build": "rolling",
         "version": "rolling",
-        "labels":{"distro-id":"arch"}
+        "labels": {
+          "distro-id": "arch"
+        }
       },
       "connections": [
         {
@@ -155,31 +157,6 @@
         },
         {
           "Resource": "file",
-          "ID": "/dummy.xml",
-          "Fields": {
-            "content": {
-              "type": "\u0007",
-              "value": "\u003croot\u003e\n  \u003cbox\u003e\n    \u003chello a=\"1\"/\u003e\n  \u003c/box\u003e\n  \u003cbox\u003e\n    \u003cworld b=\"2\"\u003e\n      \u003cc\u003e3\u003c/c\u003e\n      4\n    \u003c/world\u003e\n  \u003c/box\u003e\n  \u003cbox\u003e🌎\u003c/box\u003e\n\u003c/root\u003e\n\n"
-            },
-            "path": {
-              "type": "\u0007",
-              "value": "/dummy.xml"
-            },
-            "permissions": {
-              "type": "\u001bfile.permissions",
-              "value": {
-                "Name": "file.permissions",
-                "ID": "-rw-r--r--"
-              }
-            },
-            "size": {
-              "type": "\u0005",
-              "value": 141
-            }
-          }
-        },
-        {
-          "Resource": "file",
           "ID": "/dummy.null.json",
           "Fields": {
             "content": {
@@ -305,6 +282,31 @@
         },
         {
           "Resource": "file",
+          "ID": "/dummy.xml",
+          "Fields": {
+            "content": {
+              "type": "\u0007",
+              "value": "\u003croot\u003e\n  \u003cbox\u003e\n    \u003chello a=\"1\"/\u003e\n  \u003c/box\u003e\n  \u003cbox\u003e\n    \u003cworld b=\"2\"\u003e\n      \u003cc\u003e3\u003c/c\u003e\n      4\n    \u003c/world\u003e\n  \u003c/box\u003e\n  \u003cbox\u003e🌎\u003c/box\u003e\n\u003c/root\u003e\n\n"
+            },
+            "path": {
+              "type": "\u0007",
+              "value": "/dummy.xml"
+            },
+            "permissions": {
+              "type": "\u001bfile.permissions",
+              "value": {
+                "Name": "file.permissions",
+                "ID": "-rw-r--r--"
+              }
+            },
+            "size": {
+              "type": "\u0005",
+              "value": 141
+            }
+          }
+        },
+        {
+          "Resource": "file",
           "ID": "/etc",
           "Fields": {
             "path": {
@@ -405,6 +407,35 @@
             "size": {
               "type": "\u0005",
               "value": 4096
+            }
+          }
+        },
+        {
+          "Resource": "file",
+          "ID": "/etc/audit/auditd.conf",
+          "Fields": {
+            "content": {
+              "type": "\u0007",
+              "value": "#\n# This file controls the configuration of the audit daemon\n#\n\nlocal_events = yes\nwrite_logs = yes\nLOG_FILE = /var/log/audit/AuDiT.log\nlog_group = root\nLOG_FORMAT = ENRICHED\nflush = INCREMENTAL_ASYNC\nfreq = 50\nmax_log_file = 8\nnum_logs = 5\npriority_boost = 4\nname_format = NONE\n##name = mydomain\nmax_log_file_action = ROTATE\nspace_left = 75\nspace_left_action = SYSLOG\nverify_email = yes\naction_mail_acct = root\nadmin_space_left = 50\nadmin_space_left_action = SUSPEND\ndisk_full_action = SUSPEND\ndisk_error_action = SUSPEND\nuse_libwrap = yes\n##tcp_listen_port = 60\ntcp_listen_queue = 5\ntcp_max_per_addr = 1\n##tcp_client_ports = 1024-65535\ntcp_client_max_idle = 0\ntransport = TCP\nkrb5_principal = auditd\n##krb5_key_file = /etc/audit/audit.key\ndistribute_network = no\nq_depth = 2000\noverflow_action = SYSLOG\nmax_restarts = 10\nplugin_dir = /etc/audit/plugins.d\nend_of_event_timeout = 2\n"
+            },
+            "exists": {
+              "type": "\u0004",
+              "value": true
+            },
+            "path": {
+              "type": "\u0007",
+              "value": "/etc/audit/auditd.conf"
+            },
+            "permissions": {
+              "type": "\u001bfile.permissions",
+              "value": {
+                "Name": "file.permissions",
+                "ID": "-rw-r--r--"
+              }
+            },
+            "size": {
+              "type": "\u0005",
+              "value": 882
             }
           }
         },
@@ -1115,35 +1146,6 @@
           }
         },
         {
-          "Resource": "file",
-          "ID": "/etc/audit/auditd.conf",
-          "Fields": {
-            "content": {
-              "type": "\u0007",
-              "value": "#\n# This file controls the configuration of the audit daemon\n#\n\nlocal_events = yes\nwrite_logs = yes\nLOG_FILE = /var/log/audit/AuDiT.log\nlog_group = root\nLOG_FORMAT = ENRICHED\nflush = INCREMENTAL_ASYNC\nfreq = 50\nmax_log_file = 8\nnum_logs = 5\npriority_boost = 4\nname_format = NONE\n##name = mydomain\nmax_log_file_action = ROTATE\nspace_left = 75\nspace_left_action = SYSLOG\nverify_email = yes\naction_mail_acct = root\nadmin_space_left = 50\nadmin_space_left_action = SUSPEND\ndisk_full_action = SUSPEND\ndisk_error_action = SUSPEND\nuse_libwrap = yes\n##tcp_listen_port = 60\ntcp_listen_queue = 5\ntcp_max_per_addr = 1\n##tcp_client_ports = 1024-65535\ntcp_client_max_idle = 0\ntransport = TCP\nkrb5_principal = auditd\n##krb5_key_file = /etc/audit/audit.key\ndistribute_network = no\nq_depth = 2000\noverflow_action = SYSLOG\nmax_restarts = 10\nplugin_dir = /etc/audit/plugins.d\nend_of_event_timeout = 2\n"
-            },
-            "exists": {
-              "type": "\u0004",
-              "value": true
-            },
-            "path": {
-              "type": "\u0007",
-              "value": "/etc/audit/auditd.conf"
-            },
-            "permissions": {
-              "type": "\u001bfile.permissions",
-              "value": {
-                "Name": "file.permissions",
-                "ID": "-rw-r--r--"
-              }
-            },
-            "size": {
-              "type": "\u0005",
-              "value": 882
-            }
-          }
-        },
-        {
           "Resource": "user",
           "ID": "user/0/root",
           "Fields": {
@@ -1289,6 +1291,212 @@
                 {
                   "Name": "user",
                   "ID": "user/1001/christopher"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Resource": "auditd.rule.syscall",
+          "ID": "6JNdSppd/FM=",
+          "Fields": {
+            "action": {
+              "type": "\u0007",
+              "value": "always"
+            },
+            "fields": {
+              "type": "\u0019\n",
+              "value": [
+                {
+                  "key": "arch",
+                  "op": "=",
+                  "value": "b32"
+                },
+                {
+                  "key": "path",
+                  "op": "=",
+                  "value": "/usr/bin/systemd-run"
+                },
+                {
+                  "key": "perm",
+                  "op": "=",
+                  "value": "x"
+                },
+                {
+                  "key": "auid",
+                  "op": "!=",
+                  "value": "unset"
+                },
+                {
+                  "key": "key",
+                  "op": "=",
+                  "value": "maybe-escalation"
+                }
+              ]
+            },
+            "keyname": {
+              "type": "\u0007",
+              "value": ""
+            },
+            "list": {
+              "type": "\u0007",
+              "value": "exit"
+            },
+            "syscalls": {
+              "type": "\u0019\u0007",
+              "value": []
+            }
+          }
+        },
+        {
+          "Resource": "auditd.rule.syscall",
+          "ID": "BxTvA29Akcg=",
+          "Fields": {
+            "action": {
+              "type": "\u0007",
+              "value": "always"
+            },
+            "fields": {
+              "type": "\u0019\n",
+              "value": [
+                {
+                  "key": "arch",
+                  "op": "=",
+                  "value": "b64"
+                },
+                {
+                  "key": "path",
+                  "op": "=",
+                  "value": "/usr/bin/systemd-run"
+                },
+                {
+                  "key": "perm",
+                  "op": "=",
+                  "value": "x"
+                },
+                {
+                  "key": "auid",
+                  "op": "!=",
+                  "value": "unset"
+                },
+                {
+                  "key": "key",
+                  "op": "=",
+                  "value": "maybe-escalation"
+                }
+              ]
+            },
+            "keyname": {
+              "type": "\u0007",
+              "value": ""
+            },
+            "list": {
+              "type": "\u0007",
+              "value": "exit"
+            },
+            "syscalls": {
+              "type": "\u0019\u0007",
+              "value": []
+            }
+          }
+        },
+        {
+          "Resource": "auditd.rule.syscall",
+          "ID": "CQdwgOphN0c=",
+          "Fields": {
+            "action": {
+              "type": "\u0007",
+              "value": "always"
+            },
+            "fields": {
+              "type": "\u0019\n",
+              "value": [
+                {
+                  "key": "arch",
+                  "op": "=",
+                  "value": "b64"
+                },
+                {
+                  "key": "a0",
+                  "op": "=",
+                  "value": "0"
+                },
+                {
+                  "key": "exe",
+                  "op": "=",
+                  "value": "/usr/bin/sudo"
+                },
+                {
+                  "key": "key",
+                  "op": "=",
+                  "value": "10.2.5.b-elevated-privs-session"
+                }
+              ]
+            },
+            "keyname": {
+              "type": "\u0007",
+              "value": ""
+            },
+            "list": {
+              "type": "\u0007",
+              "value": "exit"
+            },
+            "syscalls": {
+              "type": "\u0019\u0007",
+              "value": [
+                "setresuid"
+              ]
+            }
+          }
+        },
+        {
+          "Resource": "auditd.rules",
+          "ID": "",
+          "Fields": {
+            "controls": {
+              "type": "\u0019\u001bauditd.rule.control",
+              "value": [
+                {
+                  "Name": "auditd.rule.control",
+                  "ID": "qXqBAACqmAA="
+                },
+                {
+                  "Name": "auditd.rule.control",
+                  "ID": "rDyk2wBvc4Q="
+                }
+              ]
+            },
+            "files": {
+              "type": "\u0019\u001bauditd.rule.file",
+              "value": [
+                {
+                  "Name": "auditd.rule.file",
+                  "ID": "V/gmH1AFY1s="
+                },
+                {
+                  "Name": "auditd.rule.file",
+                  "ID": "7aB2oOdN/Xg="
+                }
+              ]
+            },
+            "path": {
+              "type": "\u0007",
+              "value": "/etc/audit/rules.d"
+            },
+            "syscalls": {
+              "type": "\u0019\u001bauditd.rule.syscall",
+              "value": [
+                {
+                  "Name": "auditd.rule.syscall",
+                  "ID": "6JNdSppd/FM="
+                },
+                {
+                  "Name": "auditd.rule.syscall",
+                  "ID": "BxTvA29Akcg="
+                },
+                {
+                  "Name": "auditd.rule.syscall",
+                  "ID": "CQdwgOphN0c="
                 }
               ]
             }

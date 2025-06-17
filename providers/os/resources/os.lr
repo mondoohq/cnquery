@@ -767,6 +767,9 @@ auditd.rules {
   syscalls(path) []auditd.rule.syscall
 }
 
+// audtid (Linux Audit Daemon) rule
+private auditd.rule {}
+
 // auditd (Linux Audit Daemon) rule for a control
 // We translate these into simple key-value pairs consisting of a flag and a value
 // eg: --backlog_wait_time 60000  =>  {flag: "--backlog_wait_time", value: "60000"}
@@ -792,17 +795,15 @@ private auditd.rule.file @defaults("path permissions") {
 }
 
 // auditd (Linux Audit Daemon) rule for a syscall
-// eg: -a always,exit -F arch=b32 -F dir=/var/log/audit/ -F perm=r -F auid>=1000 -F auid!=unset
+// eg: -a always,exit -F arch=b32 -F auid>=1000 -F auid!=unset
 //  => {
 //    action: "always",
 //    list: "exit",
 //    syscalls: [],
 //    field_entries: [
-//      "arch=b32",
-//      "dir=/var/log/audit/",
-//      "perm=r",
-//      "auid>=1000",
-//      "auid!=unset"
+//      key="arch" op="=" value="b32"
+//      key="auid" op=">=" value="1000"
+//      key="auid" op="!=" value="unset"
 //    ],
 //    keyname: nil,
 // }
@@ -814,7 +815,7 @@ private auditd.rule.syscall @defaults("action list") {
   // the list of syscalls that this rule matches specified by -S
   syscalls []string
   // all field entries as raw values as specified by -F
-  fieldEntries []string
+  fields []dict
   // the key name for related rules as specified by -k
   keyname string
 }

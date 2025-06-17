@@ -242,6 +242,10 @@ func init() {
 			// to override args, implement: initAuditdRules(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAuditdRules,
 		},
+		"auditd.rule": {
+			// to override args, implement: initAuditdRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAuditdRule,
+		},
 		"auditd.rule.control": {
 			// to override args, implement: initAuditdRuleControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAuditdRuleControl,
@@ -1420,8 +1424,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"auditd.rule.syscall.syscalls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAuditdRuleSyscall).GetSyscalls()).ToDataRes(types.Array(types.String))
 	},
-	"auditd.rule.syscall.fieldEntries": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAuditdRuleSyscall).GetFieldEntries()).ToDataRes(types.Array(types.String))
+	"auditd.rule.syscall.fields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditdRuleSyscall).GetFields()).ToDataRes(types.Array(types.Dict))
 	},
 	"auditd.rule.syscall.keyname": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAuditdRuleSyscall).GetKeyname()).ToDataRes(types.String)
@@ -3853,6 +3857,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAuditdRules).Syscalls, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"auditd.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAuditdRule).__id, ok = v.Value.(string)
+			return
+		},
 	"auditd.rule.control.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAuditdRuleControl).__id, ok = v.Value.(string)
 			return
@@ -3897,8 +3905,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAuditdRuleSyscall).Syscalls, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
-	"auditd.rule.syscall.fieldEntries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAuditdRuleSyscall).FieldEntries, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+	"auditd.rule.syscall.fields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditdRuleSyscall).Fields, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"auditd.rule.syscall.keyname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10412,6 +10420,45 @@ func (c *mqlAuditdRules) GetSyscalls() *plugin.TValue[[]interface{}] {
 	})
 }
 
+// mqlAuditdRule for the auditd.rule resource
+type mqlAuditdRule struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAuditdRuleInternal it will be used here
+}
+
+// createAuditdRule creates a new instance of this resource
+func createAuditdRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAuditdRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("auditd.rule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAuditdRule) MqlName() string {
+	return "auditd.rule"
+}
+
+func (c *mqlAuditdRule) MqlID() string {
+	return c.__id
+}
+
 // mqlAuditdRuleControl for the auditd.rule.control resource
 type mqlAuditdRuleControl struct {
 	MqlRuntime *plugin.Runtime
@@ -10533,7 +10580,7 @@ type mqlAuditdRuleSyscall struct {
 	Action plugin.TValue[string]
 	List plugin.TValue[string]
 	Syscalls plugin.TValue[[]interface{}]
-	FieldEntries plugin.TValue[[]interface{}]
+	Fields plugin.TValue[[]interface{}]
 	Keyname plugin.TValue[string]
 }
 
@@ -10586,8 +10633,8 @@ func (c *mqlAuditdRuleSyscall) GetSyscalls() *plugin.TValue[[]interface{}] {
 	return &c.Syscalls
 }
 
-func (c *mqlAuditdRuleSyscall) GetFieldEntries() *plugin.TValue[[]interface{}] {
-	return &c.FieldEntries
+func (c *mqlAuditdRuleSyscall) GetFields() *plugin.TValue[[]interface{}] {
+	return &c.Fields
 }
 
 func (c *mqlAuditdRuleSyscall) GetKeyname() *plugin.TValue[string] {

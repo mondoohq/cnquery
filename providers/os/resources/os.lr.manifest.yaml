@@ -49,6 +49,10 @@ resources:
       file: {}
       params: {}
     min_mondoo_version: 9.0.0
+  auditd.rule:
+    fields: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   auditd.rule.control:
     fields:
       flag: {}
@@ -65,11 +69,17 @@ resources:
   auditd.rule.syscall:
     fields:
       action: {}
-      fieldEntries: {}
+      fields: {}
       keyname: {}
       list: {}
       syscalls: {}
     is_private: true
+    min_mondoo_version: 9.0.0
+  auditd.rule.syscall.field:
+    fields:
+      key: {}
+      op: {}
+      value: {}
     min_mondoo_version: 9.0.0
   auditd.rules:
     fields:

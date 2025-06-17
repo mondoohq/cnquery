@@ -7,6 +7,7 @@ package resources
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"slices"
 	"strings"
 	"sync"
@@ -256,6 +257,8 @@ func parseKeyVal(line string) (string, string, int) {
 	return line[:keyend], line[valstart:valend], i
 }
 
+var reOperator = regexp.MustCompile(`(=|!=|<|<=|>|>=)`)
+
 func (s *mqlAuditdRules) parse(content string, errors *multierr.Errors) {
 	s.Syscalls.State = plugin.StateIsSet
 	s.Files.State = plugin.StateIsSet
@@ -270,7 +273,7 @@ func (s *mqlAuditdRules) parse(content string, errors *multierr.Errors) {
 
 		resourceName := "auditd.rule.control"
 		args := map[string]*llx.RawData{}
-		fields := []any{}
+		rawFields := []string{}
 		syscalls := []any{}
 		other := [][2]string{}
 
@@ -286,7 +289,7 @@ func (s *mqlAuditdRules) parse(content string, errors *multierr.Errors) {
 				args["list"] = llx.StringData(arr[1])
 
 			case "-F":
-				fields = append(fields, v)
+				rawFields = append(rawFields, v)
 
 			case "-w":
 				resourceName = "auditd.rule.file"
@@ -321,7 +324,24 @@ func (s *mqlAuditdRules) parse(content string, errors *multierr.Errors) {
 
 		case "auditd.rule.syscall":
 			args["syscalls"] = llx.ArrayData(syscalls, types.String)
-			args["fieldEntries"] = llx.ArrayData(fields, types.String)
+
+			fields := make([]any, len(rawFields))
+			for i, raw := range rawFields {
+				op := reOperator.FindString(raw)
+				if op == "" {
+					fields[i] = map[string]any{"key": raw}
+					continue
+				}
+				// it must exist according to the preceding statement
+				idx := strings.Index(raw, op)
+				fields[i] = map[string]any{
+					"key":   raw[0:idx],
+					"op":    raw[idx : idx+len(op)],
+					"value": raw[idx+len(op):],
+				}
+			}
+			args["fields"] = llx.ArrayData(fields, types.Dict)
+
 			if _, ok := args["keyname"]; !ok {
 				args["keyname"] = llx.StringData("")
 			}
@@ -387,8 +407,11 @@ func (s *mqlAuditdRuleSyscall) id() (string, error) {
 	for i := range s.Syscalls.Data {
 		f = f.Add(s.Syscalls.Data[i].(string))
 	}
-	for i := range s.FieldEntries.Data {
-		f = f.Add(s.FieldEntries.Data[i].(string))
+	for i := range s.Fields.Data {
+		c := s.Fields.Data[i].(map[string]any)
+		for k, v := range c {
+			f = f.Add(k).Add(v.(string))
+		}
 	}
 
 	return f.String(), nil
