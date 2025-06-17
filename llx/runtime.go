@@ -21,6 +21,7 @@ type Runtime interface {
 	Recording() Recording
 	SetRecording(recording Recording) error
 	AssetUpdated(asset *inventory.Asset)
+	SetProviderAutoUpdate(enabled bool)
 }
 
 type Recording interface {

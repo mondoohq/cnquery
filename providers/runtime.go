@@ -289,6 +289,10 @@ func (r *Runtime) AssetUpdated(asset *inventory.Asset) {
 	r.Recording().EnsureAsset(r.Provider.Connection.Asset, r.Provider.Instance.ID, r.Provider.Connection.Id, asset.Connections[0])
 }
 
+func (r *Runtime) SetProviderAutoUpdate(enabled bool) {
+	r.AutoUpdate.Enabled = enabled
+}
+
 func (r *Runtime) CreateResource(name string, args map[string]*llx.Primitive) (llx.Resource, error) {
 	provider, info, err := r.lookupResourceProvider(name)
 	if err != nil {
