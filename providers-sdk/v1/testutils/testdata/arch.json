@@ -1450,6 +1450,62 @@
           }
         },
         {
+          "Resource": "auditd.rule.control",
+          "ID": "qXqBAACqmAA=",
+          "Fields": {
+            "flag": {
+              "type": "\u0007",
+              "value": "-D"
+            },
+            "value": {
+              "type": "\u0007",
+              "value": ""
+            }
+          }
+        },
+        {
+          "Resource": "auditd.rule.control",
+          "ID": "rDyk2wBvc4Q=",
+          "Fields": {
+            "flag": {
+              "type": "\u0007",
+              "value": "-e"
+            },
+            "value": {
+              "type": "\u0007",
+              "value": "2"
+            }
+          }
+        },
+        {
+          "Resource": "auditd.rule.file",
+          "ID": "7aB2oOdN/Xg=",
+          "Fields": {
+            "path": {
+              "type": "\u0007",
+              "value": "/etc/sudoers.d"
+            },
+            "permissions": {
+              "type": "\u0007",
+              "value": "wa"
+            }
+          }
+        },
+        {
+          "Resource": "auditd.rule.file",
+          "ID": "V/gmH1AFY1s=",
+          "Fields": {
+            "path": {
+              "type": "\u0007",
+              "value": "/etc/sudoers"
+            },
+            "permissions": {
+              "type": "\u0007",
+              "value": "wa"
+            }
+          }
+        },
+        {
           "Resource": "auditd.rules",
           "ID": "",
           "Fields": {
