@@ -422,7 +422,7 @@ var sles = &PlatformResolver{
 		if pf.Name == "sles" {
 			// SLES can have various modules/repos activated, identify them via filesystem
 			modules := getActivatedSlesModules(conn)
-			pf.Metadata["activated_modules"] = strings.Join(modules, ", ")
+			pf.Metadata["suse/modules"] = strings.Join(modules, ",")
 
 			return true, nil
 		}
