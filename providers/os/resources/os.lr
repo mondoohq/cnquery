@@ -754,6 +754,72 @@ auditd.config {
   params(file) map[string]string
 }
 
+// auditd (Linux Audit Daemon) rules aggregated on disk
+// via /etc/audit/audit.rules by default
+auditd.rules {
+  // path to folder to look up rules
+  path() string
+  // all controls for auditd
+  controls(path) []auditd.rule.control
+  // all file rules
+  files(path) []auditd.rule.file
+  // all syscall rules
+  syscalls(path) []auditd.rule.syscall
+}
+
+// auditd (Linux Audit Daemon) rule
+private auditd.rule {}
+
+// auditd (Linux Audit Daemon) rule for a control
+// We translate these into simple key-value pairs consisting of a flag and a value
+// eg: --backlog_wait_time 60000  =>  {flag: "--backlog_wait_time", value: "60000"}
+// eg: -b 8192                    =>  {flag: "-b", value: "8192"}
+// eg: -D                         =>  {flag: "-D", value: nil}
+private auditd.rule.control @defaults("flag value") {
+  // the flag used for this control, i.e. the first part of the control including any leading `-`
+  flag string
+  // the value of the control which may be specified
+  value string
+}
+
+// auditd (Linux Audit Daemon) rule for a file
+// eg: -w /etc/shadow -p rw -k shadow_access
+//  => {path: "/etc/shadow", permissions: "rw", keyname: "shadow_access"}
+private auditd.rule.file @defaults("path permissions") {
+  // the path this rule matches as specified by -w
+  path string
+  // the permissions specified by this rule via -p
+  permissions string
+  // the key name for related rules as specified by -k
+  keyname string
+}
+
+// auditd (Linux Audit Daemon) rule for a syscall
+// eg: -a always,exit -F arch=b32 -F auid>=1000 -F auid!=unset
+//  => {
+//    action: "always",
+//    list: "exit",
+//    syscalls: [],
+//    field_entries: [
+//      key="arch" op="=" value="b32"
+//      key="auid" op=">=" value="1000"
+//      key="auid" op="!=" value="unset"
+//    ],
+//    keyname: nil,
+// }
+private auditd.rule.syscall @defaults("action list") {
+  // the action specified by -a
+  action string
+  // the list, the second value specified by -a
+  list string
+  // the list of syscalls that this rule matches specified by -S
+  syscalls []string
+  // all field entries as raw values as specified by -F
+  fields []dict
+  // the key name for related rules as specified by -k
+  keyname string
+}
+
 // Service on this system
 service @defaults("name running enabled type") {
   init(name string)

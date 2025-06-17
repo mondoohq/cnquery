@@ -45,3 +45,30 @@ func TestResource_AuditdConfig(t *testing.T) {
 		assert.Equal(t, "/var/log/audit/AuDiT.log", res[0].Data.Value)
 	})
 }
+
+func TestResource_AuditdRules(t *testing.T) {
+	t.Run("auditd rules path", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{
+				Code:        "auditd.rules.path",
+				ResultIndex: 0,
+				Expectation: "/etc/audit/rules.d",
+			},
+			{
+				Code:        "auditd.rules.files.first.path",
+				ResultIndex: 0,
+				Expectation: "/etc/sudoers",
+			},
+			{
+				Code:        "auditd.rules.controls[0].flag",
+				ResultIndex: 0,
+				Expectation: "-D",
+			},
+			{
+				Code:        "auditd.rules.syscalls.where(action==\"always\" && fields.contains(key==\"path\" && value==\"/usr/bin/systemd-run\")).length",
+				ResultIndex: 0,
+				Expectation: int64(2),
+			},
+		})
+	})
+}

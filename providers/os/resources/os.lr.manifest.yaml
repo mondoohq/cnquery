@@ -49,6 +49,45 @@ resources:
       file: {}
       params: {}
     min_mondoo_version: 9.0.0
+  auditd.rule:
+    fields: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  auditd.rule.control:
+    fields:
+      flag: {}
+      value: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  auditd.rule.file:
+    fields:
+      keyname: {}
+      path: {}
+      permissions: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  auditd.rule.syscall:
+    fields:
+      action: {}
+      fields: {}
+      keyname: {}
+      list: {}
+      syscalls: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  auditd.rule.syscall.field:
+    fields:
+      key: {}
+      op: {}
+      value: {}
+    min_mondoo_version: 9.0.0
+  auditd.rules:
+    fields:
+      controls: {}
+      files: {}
+      path: {}
+      syscalls: {}
+    min_mondoo_version: 9.0.0
   auditpol:
     fields:
       list:

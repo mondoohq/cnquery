@@ -238,6 +238,26 @@ func init() {
 			Init: initAuditdConfig,
 			Create: createAuditdConfig,
 		},
+		"auditd.rules": {
+			// to override args, implement: initAuditdRules(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAuditdRules,
+		},
+		"auditd.rule": {
+			// to override args, implement: initAuditdRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAuditdRule,
+		},
+		"auditd.rule.control": {
+			// to override args, implement: initAuditdRuleControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAuditdRuleControl,
+		},
+		"auditd.rule.file": {
+			// to override args, implement: initAuditdRuleFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAuditdRuleFile,
+		},
+		"auditd.rule.syscall": {
+			// to override args, implement: initAuditdRuleSyscall(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAuditdRuleSyscall,
+		},
 		"service": {
 			Init: initService,
 			Create: createService,
@@ -1367,6 +1387,48 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"auditd.config.params": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAuditdConfig).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"auditd.rules.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditdRules).GetPath()).ToDataRes(types.String)
+	},
+	"auditd.rules.controls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditdRules).GetControls()).ToDataRes(types.Array(types.Resource("auditd.rule.control")))
+	},
+	"auditd.rules.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditdRules).GetFiles()).ToDataRes(types.Array(types.Resource("auditd.rule.file")))
+	},
+	"auditd.rules.syscalls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditdRules).GetSyscalls()).ToDataRes(types.Array(types.Resource("auditd.rule.syscall")))
+	},
+	"auditd.rule.control.flag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditdRuleControl).GetFlag()).ToDataRes(types.String)
+	},
+	"auditd.rule.control.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditdRuleControl).GetValue()).ToDataRes(types.String)
+	},
+	"auditd.rule.file.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditdRuleFile).GetPath()).ToDataRes(types.String)
+	},
+	"auditd.rule.file.permissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditdRuleFile).GetPermissions()).ToDataRes(types.String)
+	},
+	"auditd.rule.file.keyname": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditdRuleFile).GetKeyname()).ToDataRes(types.String)
+	},
+	"auditd.rule.syscall.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditdRuleSyscall).GetAction()).ToDataRes(types.String)
+	},
+	"auditd.rule.syscall.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditdRuleSyscall).GetList()).ToDataRes(types.String)
+	},
+	"auditd.rule.syscall.syscalls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditdRuleSyscall).GetSyscalls()).ToDataRes(types.Array(types.String))
+	},
+	"auditd.rule.syscall.fields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditdRuleSyscall).GetFields()).ToDataRes(types.Array(types.Dict))
+	},
+	"auditd.rule.syscall.keyname": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditdRuleSyscall).GetKeyname()).ToDataRes(types.String)
 	},
 	"service.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlService).GetName()).ToDataRes(types.String)
@@ -3773,6 +3835,82 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"auditd.config.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAuditdConfig).Params, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"auditd.rules.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAuditdRules).__id, ok = v.Value.(string)
+			return
+		},
+	"auditd.rules.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditdRules).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"auditd.rules.controls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditdRules).Controls, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"auditd.rules.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditdRules).Files, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"auditd.rules.syscalls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditdRules).Syscalls, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"auditd.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAuditdRule).__id, ok = v.Value.(string)
+			return
+		},
+	"auditd.rule.control.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAuditdRuleControl).__id, ok = v.Value.(string)
+			return
+		},
+	"auditd.rule.control.flag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditdRuleControl).Flag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"auditd.rule.control.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditdRuleControl).Value, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"auditd.rule.file.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAuditdRuleFile).__id, ok = v.Value.(string)
+			return
+		},
+	"auditd.rule.file.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditdRuleFile).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"auditd.rule.file.permissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditdRuleFile).Permissions, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"auditd.rule.file.keyname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditdRuleFile).Keyname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"auditd.rule.syscall.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAuditdRuleSyscall).__id, ok = v.Value.(string)
+			return
+		},
+	"auditd.rule.syscall.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditdRuleSyscall).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"auditd.rule.syscall.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditdRuleSyscall).List, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"auditd.rule.syscall.syscalls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditdRuleSyscall).Syscalls, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"auditd.rule.syscall.fields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditdRuleSyscall).Fields, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"auditd.rule.syscall.keyname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditdRuleSyscall).Keyname, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10163,6 +10301,344 @@ func (c *mqlAuditdConfig) GetParams() *plugin.TValue[map[string]interface{}] {
 
 		return c.params(vargFile.Data)
 	})
+}
+
+// mqlAuditdRules for the auditd.rules resource
+type mqlAuditdRules struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlAuditdRulesInternal
+	Path plugin.TValue[string]
+	Controls plugin.TValue[[]interface{}]
+	Files plugin.TValue[[]interface{}]
+	Syscalls plugin.TValue[[]interface{}]
+}
+
+// createAuditdRules creates a new instance of this resource
+func createAuditdRules(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAuditdRules{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("auditd.rules", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAuditdRules) MqlName() string {
+	return "auditd.rules"
+}
+
+func (c *mqlAuditdRules) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAuditdRules) GetPath() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Path, func() (string, error) {
+		return c.path()
+	})
+}
+
+func (c *mqlAuditdRules) GetControls() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Controls, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("auditd.rules", c.__id, "controls")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		vargPath := c.GetPath()
+		if vargPath.Error != nil {
+			return nil, vargPath.Error
+		}
+
+		return c.controls(vargPath.Data)
+	})
+}
+
+func (c *mqlAuditdRules) GetFiles() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Files, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("auditd.rules", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		vargPath := c.GetPath()
+		if vargPath.Error != nil {
+			return nil, vargPath.Error
+		}
+
+		return c.files(vargPath.Data)
+	})
+}
+
+func (c *mqlAuditdRules) GetSyscalls() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Syscalls, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("auditd.rules", c.__id, "syscalls")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		vargPath := c.GetPath()
+		if vargPath.Error != nil {
+			return nil, vargPath.Error
+		}
+
+		return c.syscalls(vargPath.Data)
+	})
+}
+
+// mqlAuditdRule for the auditd.rule resource
+type mqlAuditdRule struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAuditdRuleInternal it will be used here
+}
+
+// createAuditdRule creates a new instance of this resource
+func createAuditdRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAuditdRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("auditd.rule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAuditdRule) MqlName() string {
+	return "auditd.rule"
+}
+
+func (c *mqlAuditdRule) MqlID() string {
+	return c.__id
+}
+
+// mqlAuditdRuleControl for the auditd.rule.control resource
+type mqlAuditdRuleControl struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAuditdRuleControlInternal it will be used here
+	Flag plugin.TValue[string]
+	Value plugin.TValue[string]
+}
+
+// createAuditdRuleControl creates a new instance of this resource
+func createAuditdRuleControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAuditdRuleControl{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("auditd.rule.control", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAuditdRuleControl) MqlName() string {
+	return "auditd.rule.control"
+}
+
+func (c *mqlAuditdRuleControl) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAuditdRuleControl) GetFlag() *plugin.TValue[string] {
+	return &c.Flag
+}
+
+func (c *mqlAuditdRuleControl) GetValue() *plugin.TValue[string] {
+	return &c.Value
+}
+
+// mqlAuditdRuleFile for the auditd.rule.file resource
+type mqlAuditdRuleFile struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAuditdRuleFileInternal it will be used here
+	Path plugin.TValue[string]
+	Permissions plugin.TValue[string]
+	Keyname plugin.TValue[string]
+}
+
+// createAuditdRuleFile creates a new instance of this resource
+func createAuditdRuleFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAuditdRuleFile{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("auditd.rule.file", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAuditdRuleFile) MqlName() string {
+	return "auditd.rule.file"
+}
+
+func (c *mqlAuditdRuleFile) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAuditdRuleFile) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlAuditdRuleFile) GetPermissions() *plugin.TValue[string] {
+	return &c.Permissions
+}
+
+func (c *mqlAuditdRuleFile) GetKeyname() *plugin.TValue[string] {
+	return &c.Keyname
+}
+
+// mqlAuditdRuleSyscall for the auditd.rule.syscall resource
+type mqlAuditdRuleSyscall struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAuditdRuleSyscallInternal it will be used here
+	Action plugin.TValue[string]
+	List plugin.TValue[string]
+	Syscalls plugin.TValue[[]interface{}]
+	Fields plugin.TValue[[]interface{}]
+	Keyname plugin.TValue[string]
+}
+
+// createAuditdRuleSyscall creates a new instance of this resource
+func createAuditdRuleSyscall(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAuditdRuleSyscall{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("auditd.rule.syscall", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAuditdRuleSyscall) MqlName() string {
+	return "auditd.rule.syscall"
+}
+
+func (c *mqlAuditdRuleSyscall) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAuditdRuleSyscall) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlAuditdRuleSyscall) GetList() *plugin.TValue[string] {
+	return &c.List
+}
+
+func (c *mqlAuditdRuleSyscall) GetSyscalls() *plugin.TValue[[]interface{}] {
+	return &c.Syscalls
+}
+
+func (c *mqlAuditdRuleSyscall) GetFields() *plugin.TValue[[]interface{}] {
+	return &c.Fields
+}
+
+func (c *mqlAuditdRuleSyscall) GetKeyname() *plugin.TValue[string] {
+	return &c.Keyname
 }
 
 // mqlService for the service resource
