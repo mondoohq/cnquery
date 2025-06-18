@@ -965,25 +965,25 @@ microsoft.devicemanagement {
 private microsoft.devicemanagement.manageddevice {
   // Managed device ID
   id string
-  // Unique Identifier for the user associated with the device
+  // Unique identifier for the user associated with the device
   userId string
   // Name of the device
   name string
   // Operating system of the device
   operatingSystem string
-  // Whether the device is jail broken or rooted.
+  // Whether the device is jail broken or rooted
   jailBroken string
   // Operating system version of the device
   osVersion string
   // Whether the device is Exchange ActiveSync activated
   easActivated bool
-  // Exchange ActiveSync Id of the device.
+  // Exchange ActiveSync Id of the device
   easDeviceId string
-  // Whether the device is Azure Active Directory registered
+  // Whether the device is Entra ID (previously Azure AD) registered
   azureADRegistered bool
   // Email(s) for the user associated with the device
   emailAddress string
-  // The unique identifier for the Azure Active Directory device
+  // The unique identifier for the Entra ID (previously Azure AD) device
   azureActiveDirectoryDeviceId string
   // Device category display name
   deviceCategoryDisplayName string
@@ -991,13 +991,13 @@ private microsoft.devicemanagement.manageddevice {
   isSupervised bool
   // Device encryption status
   isEncrypted bool
-  // Device user principal name.
+  // Device user principal name
   userPrincipalName string
-  // Model of the device
+  // Device model
   model string
-  // Manufacturer of the device
+  // Device manufacturer
   manufacturer string
-  // IMEI
+  // International Mobile Equipment Identity (IMEI)
   imei string
   // Serial number of the device
   serialNumber string
@@ -1005,17 +1005,17 @@ private microsoft.devicemanagement.manageddevice {
   androidSecurityPatchLevel string
   // User display name
   userDisplayName string
-  // Wi-Fi MAC
+  // Wi-Fi MAC address
   wiFiMacAddress string
-  // MEID
+  // Mobile Equipment Identifier (MEID)
   meid string
-  // Integrated Circuit Card Identifier
+  // Integrated Circuit Card Identifier (ICCID)
   iccid string
-  // Unique Device Identifier for iOS and macOS devices
+  // Unique Device Identifier (UDID) for iOS and macOS devices
   udid string
   // Notes on the device created by IT
   notes string
-  // Indicates Ethernet MAC Address of the device
+  // Ethernet MAC address of the device
   ethernetMacAddress string
   // Name of the enrollment profile assigned to the device
   enrollmentProfileName string
