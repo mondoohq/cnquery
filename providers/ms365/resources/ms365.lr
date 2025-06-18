@@ -954,10 +954,73 @@ private microsoft.rolemanagement.roleassignment @defaults("id principalId") {
 
 // Microsoft device management
 microsoft.devicemanagement {
+  managedDevices() []microsoft.devicemanagement.manageddevice
   // List of device configurations
   deviceConfigurations() []microsoft.devicemanagement.deviceconfiguration
   // List of device compliance policies
   deviceCompliancePolicies() []microsoft.devicemanagement.devicecompliancepolicy
+}
+
+// Microsoft managed device
+private microsoft.devicemanagement.manageddevice {
+  // Managed device ID
+  id string
+  // Unique Identifier for the user associated with the device
+  userId string
+  // Name of the device
+  name string
+  // Operating system of the device
+  operatingSystem string
+  // Whether the device is jail broken or rooted.
+  jailBroken string
+  // Operating system version of the device
+  osVersion string
+  // Whether the device is Exchange ActiveSync activated
+  easActivated bool
+  // Exchange ActiveSync Id of the device.
+  easDeviceId string
+  // Whether the device is Azure Active Directory registered
+  azureADRegistered bool
+  // Email(s) for the user associated with the device
+  emailAddress string
+  // The unique identifier for the Azure Active Directory device
+  azureActiveDirectoryDeviceId string
+  // Device category display name
+  deviceCategoryDisplayName string
+  // Device supervised status
+  isSupervised bool
+  // Device encryption status
+  isEncrypted bool
+  // Device user principal name.
+  userPrincipalName string
+  // Model of the device
+  model string
+  // Manufacturer of the device
+  manufacturer string
+  // IMEI
+  imei string
+  // Serial number of the device
+  serialNumber string
+  // Android security patch level
+  androidSecurityPatchLevel string
+  // User display name
+  userDisplayName string
+  // Wi-Fi MAC
+  wiFiMacAddress string
+  // MEID
+  meid string
+  // Integrated Circuit Card Identifier
+  iccid string
+  // Unique Device Identifier for iOS and macOS devices
+  udid string
+  // Notes on the device created by IT
+  notes string
+  // Indicates Ethernet MAC Address of the device
+  ethernetMacAddress string
+  // Name of the enrollment profile assigned to the device
+  enrollmentProfileName string
+  // Protection state of the device
+  windowsProtectionState dict
 }
 
 // Microsoft device configuration
