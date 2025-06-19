@@ -9,6 +9,7 @@ import (
 	"github.com/microsoftgraph/msgraph-sdk-go/devicemanagement"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
 	"go.mondoo.com/cnquery/v11/types"
@@ -20,6 +21,107 @@ func (m *mqlMicrosoftDevicemanagementDeviceconfiguration) id() (string, error) {
 
 func (m *mqlMicrosoftDevicemanagementDevicecompliancepolicy) id() (string, error) {
 	return m.Id.Data, nil
+}
+
+// requires DeviceManagementManagedDevices.Read.All permission
+// see https://learn.microsoft.com/en-us/graph/api/intune-devices-manageddevice-list?view=graph-rest-1.0
+func (a *mqlMicrosoftDevicemanagement) managedDevices() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	resp, err := graphClient.DeviceManagement().ManagedDevices().Get(ctx, &devicemanagement.ManagedDevicesRequestBuilderGetRequestConfiguration{
+		QueryParameters: &devicemanagement.ManagedDevicesRequestBuilderGetQueryParameters{
+			Expand: []string{"windowsProtectionState"},
+		},
+	})
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	var allDevices []models.ManagedDeviceable
+
+	// Add first page results
+	if resp.GetValue() != nil {
+		allDevices = append(allDevices, resp.GetValue()...)
+	}
+
+	// Handle pagination
+	for resp.GetOdataNextLink() != nil {
+		nextLink := *resp.GetOdataNextLink()
+
+		// Create request from next link
+		nextResp, err := graphClient.DeviceManagement().ManagedDevices().WithUrl(nextLink).Get(ctx, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		// Add results from this page
+		if nextResp.GetValue() != nil {
+			allDevices = append(allDevices, nextResp.GetValue()...)
+		}
+
+		resp = nextResp
+	}
+
+	res := []interface{}{}
+	for _, device := range allDevices {
+		device, err := newMqlMicrosoftManagedDevice(a.MqlRuntime, device)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, device)
+	}
+	return res, nil
+}
+
+func newMqlMicrosoftManagedDevice(runtime *plugin.Runtime, u models.ManagedDeviceable) (*mqlMicrosoftDevicemanagementManageddevice, error) {
+
+	protectionState, err := convert.JsonToDict(newWindowsProtectionState(u.GetWindowsProtectionState()))
+	if err != nil {
+		return nil, err
+	}
+
+	graphDevice, err := CreateResource(runtime, "microsoft.devicemanagement.manageddevice",
+		map[string]*llx.RawData{
+			"__id":                         llx.StringDataPtr(u.GetId()),
+			"id":                           llx.StringDataPtr(u.GetId()),
+			"userId":                       llx.StringDataPtr(u.GetUserId()),
+			"name":                         llx.StringDataPtr(u.GetDeviceName()),
+			"operatingSystem":              llx.StringDataPtr(u.GetOperatingSystem()),
+			"jailBroken":                   llx.StringDataPtr(u.GetJailBroken()),
+			"osVersion":                    llx.StringDataPtr(u.GetOsVersion()),
+			"easActivated":                 llx.BoolDataPtr(u.GetEasActivated()),
+			"easDeviceId":                  llx.StringDataPtr(u.GetEasDeviceId()),
+			"azureADRegistered":            llx.BoolDataPtr(u.GetAzureADRegistered()),
+			"azureActiveDirectoryDeviceId": llx.StringDataPtr(u.GetAzureADDeviceId()),
+			"emailAddress":                 llx.StringDataPtr(u.GetEmailAddress()),
+			"deviceCategoryDisplayName":    llx.StringDataPtr(u.GetDeviceCategoryDisplayName()),
+			"isSupervised":                 llx.BoolDataPtr(u.GetIsSupervised()),
+			"isEncrypted":                  llx.BoolDataPtr(u.GetIsEncrypted()),
+			"userPrincipalName":            llx.StringDataPtr(u.GetUserPrincipalName()),
+			"model":                        llx.StringDataPtr(u.GetModel()),
+			"manufacturer":                 llx.StringDataPtr(u.GetManufacturer()),
+			"imei":                         llx.StringDataPtr(u.GetImei()),
+			"serialNumber":                 llx.StringDataPtr(u.GetSerialNumber()),
+			"androidSecurityPatchLevel":    llx.StringDataPtr(u.GetAndroidSecurityPatchLevel()),
+			"userDisplayName":              llx.StringDataPtr(u.GetUserDisplayName()),
+			"wiFiMacAddress":               llx.StringDataPtr(u.GetWiFiMacAddress()),
+			"meid":                         llx.StringDataPtr(u.GetMeid()),
+			"iccid":                        llx.StringDataPtr(u.GetIccid()),
+			"udid":                         llx.StringDataPtr(u.GetUdid()),
+			"notes":                        llx.StringDataPtr(u.GetNotes()),
+			"ethernetMacAddress":           llx.StringDataPtr(u.GetEthernetMacAddress()),
+			"enrollmentProfileName":        llx.StringDataPtr(u.GetEnrollmentProfileName()),
+			"windowsProtectionState":       llx.DictData(protectionState),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return graphDevice.(*mqlMicrosoftDevicemanagementManageddevice), nil
 }
 
 func (a *mqlMicrosoftDevicemanagement) deviceConfigurations() ([]interface{}, error) {

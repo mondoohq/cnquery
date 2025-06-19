@@ -954,10 +954,73 @@ private microsoft.rolemanagement.roleassignment @defaults("id principalId") {
 
 // Microsoft device management
 microsoft.devicemanagement {
+  managedDevices() []microsoft.devicemanagement.manageddevice
   // List of device configurations
   deviceConfigurations() []microsoft.devicemanagement.deviceconfiguration
   // List of device compliance policies
   deviceCompliancePolicies() []microsoft.devicemanagement.devicecompliancepolicy
+}
+
+// Microsoft managed device
+private microsoft.devicemanagement.manageddevice {
+  // Managed device ID
+  id string
+  // Unique identifier for the user associated with the device
+  userId string
+  // Name of the device
+  name string
+  // Operating system of the device
+  operatingSystem string
+  // Whether the device is jail broken or rooted
+  jailBroken string
+  // Operating system version of the device
+  osVersion string
+  // Whether the device is Exchange ActiveSync activated
+  easActivated bool
+  // Exchange ActiveSync Id of the device
+  easDeviceId string
+  // Whether the device is Entra ID (previously Azure AD) registered
+  azureADRegistered bool
+  // Email(s) for the user associated with the device
+  emailAddress string
+  // The unique identifier for the Entra ID (previously Azure AD) device
+  azureActiveDirectoryDeviceId string
+  // Device category display name
+  deviceCategoryDisplayName string
+  // Device supervised status
+  isSupervised bool
+  // Device encryption status
+  isEncrypted bool
+  // Device user principal name
+  userPrincipalName string
+  // Device model
+  model string
+  // Device manufacturer
+  manufacturer string
+  // International Mobile Equipment Identity (IMEI)
+  imei string
+  // Serial number of the device
+  serialNumber string
+  // Android security patch level
+  androidSecurityPatchLevel string
+  // User display name
+  userDisplayName string
+  // Wi-Fi MAC address
+  wiFiMacAddress string
+  // Mobile Equipment Identifier (MEID)
+  meid string
+  // Integrated Circuit Card Identifier (ICCID)
+  iccid string
+  // Unique Device Identifier (UDID) for iOS and macOS devices
+  udid string
+  // Notes on the device created by IT
+  notes string
+  // Ethernet MAC address of the device
+  ethernetMacAddress string
+  // Name of the enrollment profile assigned to the device
+  enrollmentProfileName string
+  // Protection state of the device
+  windowsProtectionState dict
 }
 
 // Microsoft device configuration

@@ -252,6 +252,7 @@ resources:
     fields:
       deviceCompliancePolicies: {}
       deviceConfigurations: {}
+      managedDevices: {}
     min_mondoo_version: 9.0.0
   microsoft.devicemanagement.devicecompliancepolicy:
     fields:
@@ -274,6 +275,40 @@ resources:
       lastModifiedDateTime: {}
       properties: {}
       version: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.devicemanagement.manageddevice:
+    fields:
+      androidSecurityPatchLevel: {}
+      azureADRegistered: {}
+      azureActiveDirectoryDeviceId: {}
+      deviceCategoryDisplayName: {}
+      easActivated: {}
+      easDeviceId: {}
+      emailAddress: {}
+      enrollmentProfileName: {}
+      ethernetMacAddress: {}
+      iccid: {}
+      id: {}
+      imei: {}
+      isEncrypted: {}
+      isSupervised: {}
+      jailBroken: {}
+      manufacturer: {}
+      meid: {}
+      model: {}
+      name: {}
+      notes: {}
+      operatingSystem: {}
+      osVersion: {}
+      protectionState: {}
+      serialNumber: {}
+      udid: {}
+      userDisplayName: {}
+      userId: {}
+      userPrincipalName: {}
+      wiFiMacAddress: {}
+      windowsProtectionState: {}
     is_private: true
     min_mondoo_version: 9.0.0
   microsoft.devices:

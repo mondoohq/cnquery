@@ -238,6 +238,10 @@ func init() {
 			// to override args, implement: initMicrosoftDevicemanagement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftDevicemanagement,
 		},
+		"microsoft.devicemanagement.manageddevice": {
+			// to override args, implement: initMicrosoftDevicemanagementManageddevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftDevicemanagementManageddevice,
+		},
 		"microsoft.devicemanagement.deviceconfiguration": {
 			// to override args, implement: initMicrosoftDevicemanagementDeviceconfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftDevicemanagementDeviceconfiguration,
@@ -1444,11 +1448,101 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.rolemanagement.roleassignment.principal": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftRolemanagementRoleassignment).GetPrincipal()).ToDataRes(types.Dict)
 	},
+	"microsoft.devicemanagement.managedDevices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagement).GetManagedDevices()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.manageddevice")))
+	},
 	"microsoft.devicemanagement.deviceConfigurations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagement).GetDeviceConfigurations()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.deviceconfiguration")))
 	},
 	"microsoft.devicemanagement.deviceCompliancePolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagement).GetDeviceCompliancePolicies()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.devicecompliancepolicy")))
+	},
+	"microsoft.devicemanagement.manageddevice.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.userId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetUserId()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetName()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.operatingSystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetOperatingSystem()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.jailBroken": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetJailBroken()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.osVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetOsVersion()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.easActivated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetEasActivated()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.manageddevice.easDeviceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetEasDeviceId()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.azureADRegistered": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetAzureADRegistered()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.manageddevice.emailAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetEmailAddress()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.azureActiveDirectoryDeviceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetAzureActiveDirectoryDeviceId()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.deviceCategoryDisplayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetDeviceCategoryDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.isSupervised": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetIsSupervised()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.manageddevice.isEncrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetIsEncrypted()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.manageddevice.userPrincipalName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetUserPrincipalName()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.model": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetModel()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.manufacturer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetManufacturer()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.imei": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetImei()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.serialNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetSerialNumber()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.androidSecurityPatchLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetAndroidSecurityPatchLevel()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.userDisplayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetUserDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.wiFiMacAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetWiFiMacAddress()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.meid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetMeid()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.iccid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetIccid()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.udid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetUdid()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.notes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetNotes()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.ethernetMacAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetEthernetMacAddress()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.enrollmentProfileName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetEnrollmentProfileName()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.windowsProtectionState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetWindowsProtectionState()).ToDataRes(types.Dict)
 	},
 	"microsoft.devicemanagement.deviceconfiguration.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementDeviceconfiguration).GetId()).ToDataRes(types.String)
@@ -3370,12 +3464,136 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlMicrosoftDevicemanagement).__id, ok = v.Value.(string)
 			return
 		},
+	"microsoft.devicemanagement.managedDevices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagement).ManagedDevices, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"microsoft.devicemanagement.deviceConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDevicemanagement).DeviceConfigurations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"microsoft.devicemanagement.deviceCompliancePolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDevicemanagement).DeviceCompliancePolicies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftDevicemanagementManageddevice).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.devicemanagement.manageddevice.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.userId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).UserId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.operatingSystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).OperatingSystem, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.jailBroken": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).JailBroken, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.osVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).OsVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.easActivated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).EasActivated, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.easDeviceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).EasDeviceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.azureADRegistered": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).AzureADRegistered, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.emailAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).EmailAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.azureActiveDirectoryDeviceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).AzureActiveDirectoryDeviceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.deviceCategoryDisplayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).DeviceCategoryDisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.isSupervised": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).IsSupervised, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.isEncrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).IsEncrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.userPrincipalName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).UserPrincipalName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.model": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).Model, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.manufacturer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).Manufacturer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.imei": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).Imei, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.serialNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).SerialNumber, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.androidSecurityPatchLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).AndroidSecurityPatchLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.userDisplayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).UserDisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.wiFiMacAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).WiFiMacAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.meid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).Meid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.iccid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).Iccid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.udid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).Udid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.notes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).Notes, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.ethernetMacAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).EthernetMacAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.enrollmentProfileName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).EnrollmentProfileName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.windowsProtectionState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).WindowsProtectionState, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"microsoft.devicemanagement.deviceconfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8227,6 +8445,7 @@ type mqlMicrosoftDevicemanagement struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlMicrosoftDevicemanagementInternal it will be used here
+	ManagedDevices plugin.TValue[[]interface{}]
 	DeviceConfigurations plugin.TValue[[]interface{}]
 	DeviceCompliancePolicies plugin.TValue[[]interface{}]
 }
@@ -8263,6 +8482,22 @@ func (c *mqlMicrosoftDevicemanagement) MqlID() string {
 	return c.__id
 }
 
+func (c *mqlMicrosoftDevicemanagement) GetManagedDevices() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.ManagedDevices, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.devicemanagement", c.__id, "managedDevices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.managedDevices()
+	})
+}
+
 func (c *mqlMicrosoftDevicemanagement) GetDeviceConfigurations() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.DeviceConfigurations, func() ([]interface{}, error) {
 		if c.MqlRuntime.HasRecording {
@@ -8293,6 +8528,190 @@ func (c *mqlMicrosoftDevicemanagement) GetDeviceCompliancePolicies() *plugin.TVa
 
 		return c.deviceCompliancePolicies()
 	})
+}
+
+// mqlMicrosoftDevicemanagementManageddevice for the microsoft.devicemanagement.manageddevice resource
+type mqlMicrosoftDevicemanagementManageddevice struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftDevicemanagementManageddeviceInternal it will be used here
+	Id plugin.TValue[string]
+	UserId plugin.TValue[string]
+	Name plugin.TValue[string]
+	OperatingSystem plugin.TValue[string]
+	JailBroken plugin.TValue[string]
+	OsVersion plugin.TValue[string]
+	EasActivated plugin.TValue[bool]
+	EasDeviceId plugin.TValue[string]
+	AzureADRegistered plugin.TValue[bool]
+	EmailAddress plugin.TValue[string]
+	AzureActiveDirectoryDeviceId plugin.TValue[string]
+	DeviceCategoryDisplayName plugin.TValue[string]
+	IsSupervised plugin.TValue[bool]
+	IsEncrypted plugin.TValue[bool]
+	UserPrincipalName plugin.TValue[string]
+	Model plugin.TValue[string]
+	Manufacturer plugin.TValue[string]
+	Imei plugin.TValue[string]
+	SerialNumber plugin.TValue[string]
+	AndroidSecurityPatchLevel plugin.TValue[string]
+	UserDisplayName plugin.TValue[string]
+	WiFiMacAddress plugin.TValue[string]
+	Meid plugin.TValue[string]
+	Iccid plugin.TValue[string]
+	Udid plugin.TValue[string]
+	Notes plugin.TValue[string]
+	EthernetMacAddress plugin.TValue[string]
+	EnrollmentProfileName plugin.TValue[string]
+	WindowsProtectionState plugin.TValue[interface{}]
+}
+
+// createMicrosoftDevicemanagementManageddevice creates a new instance of this resource
+func createMicrosoftDevicemanagementManageddevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftDevicemanagementManageddevice{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.devicemanagement.manageddevice", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) MqlName() string {
+	return "microsoft.devicemanagement.manageddevice"
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetUserId() *plugin.TValue[string] {
+	return &c.UserId
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetOperatingSystem() *plugin.TValue[string] {
+	return &c.OperatingSystem
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetJailBroken() *plugin.TValue[string] {
+	return &c.JailBroken
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetOsVersion() *plugin.TValue[string] {
+	return &c.OsVersion
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetEasActivated() *plugin.TValue[bool] {
+	return &c.EasActivated
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetEasDeviceId() *plugin.TValue[string] {
+	return &c.EasDeviceId
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetAzureADRegistered() *plugin.TValue[bool] {
+	return &c.AzureADRegistered
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetEmailAddress() *plugin.TValue[string] {
+	return &c.EmailAddress
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetAzureActiveDirectoryDeviceId() *plugin.TValue[string] {
+	return &c.AzureActiveDirectoryDeviceId
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetDeviceCategoryDisplayName() *plugin.TValue[string] {
+	return &c.DeviceCategoryDisplayName
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetIsSupervised() *plugin.TValue[bool] {
+	return &c.IsSupervised
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetIsEncrypted() *plugin.TValue[bool] {
+	return &c.IsEncrypted
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetUserPrincipalName() *plugin.TValue[string] {
+	return &c.UserPrincipalName
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetModel() *plugin.TValue[string] {
+	return &c.Model
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetManufacturer() *plugin.TValue[string] {
+	return &c.Manufacturer
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetImei() *plugin.TValue[string] {
+	return &c.Imei
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetSerialNumber() *plugin.TValue[string] {
+	return &c.SerialNumber
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetAndroidSecurityPatchLevel() *plugin.TValue[string] {
+	return &c.AndroidSecurityPatchLevel
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetUserDisplayName() *plugin.TValue[string] {
+	return &c.UserDisplayName
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetWiFiMacAddress() *plugin.TValue[string] {
+	return &c.WiFiMacAddress
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetMeid() *plugin.TValue[string] {
+	return &c.Meid
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetIccid() *plugin.TValue[string] {
+	return &c.Iccid
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetUdid() *plugin.TValue[string] {
+	return &c.Udid
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetNotes() *plugin.TValue[string] {
+	return &c.Notes
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetEthernetMacAddress() *plugin.TValue[string] {
+	return &c.EthernetMacAddress
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetEnrollmentProfileName() *plugin.TValue[string] {
+	return &c.EnrollmentProfileName
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetWindowsProtectionState() *plugin.TValue[interface{}] {
+	return &c.WindowsProtectionState
 }
 
 // mqlMicrosoftDevicemanagementDeviceconfiguration for the microsoft.devicemanagement.deviceconfiguration resource

@@ -1011,3 +1011,161 @@ func newCompanySubscription(p models.CompanySubscriptionable) companySubscriptio
 	}
 	return sub
 }
+
+type WindowsProtectionState struct {
+	ID                             *string                     `json:"id,omitempty"`
+	AntiMalwareVersion             *string                     `json:"antiMalwareVersion,omitempty"`
+	DetectedMalwareState           []WindowsDeviceMalwareState `json:"detectedMalwareState,omitempty"`
+	DeviceState                    *string                     `json:"deviceState,omitempty"` // WindowsDeviceHealthState enum
+	EngineVersion                  *string                     `json:"engineVersion,omitempty"`
+	FullScanOverdue                *bool                       `json:"fullScanOverdue,omitempty"`
+	FullScanRequired               *bool                       `json:"fullScanRequired,omitempty"`
+	IsVirtualMachine               *bool                       `json:"isVirtualMachine,omitempty"`
+	LastFullScanDateTime           *time.Time                  `json:"lastFullScanDateTime,omitempty"`
+	LastFullScanSignatureVersion   *string                     `json:"lastFullScanSignatureVersion,omitempty"`
+	LastQuickScanDateTime          *time.Time                  `json:"lastQuickScanDateTime,omitempty"`
+	LastQuickScanSignatureVersion  *string                     `json:"lastQuickScanSignatureVersion,omitempty"`
+	LastReportedDateTime           *time.Time                  `json:"lastReportedDateTime,omitempty"`
+	MalwareProtectionEnabled       *bool                       `json:"malwareProtectionEnabled,omitempty"`
+	NetworkInspectionSystemEnabled *bool                       `json:"networkInspectionSystemEnabled,omitempty"`
+	ProductStatus                  *string                     `json:"productStatus,omitempty"` // WindowsDefenderProductStatus enum
+	QuickScanOverdue               *bool                       `json:"quickScanOverdue,omitempty"`
+	RealTimeProtectionEnabled      *bool                       `json:"realTimeProtectionEnabled,omitempty"`
+	RebootRequired                 *bool                       `json:"rebootRequired,omitempty"`
+	SignatureUpdateOverdue         *bool                       `json:"signatureUpdateOverdue,omitempty"`
+	SignatureVersion               *string                     `json:"signatureVersion,omitempty"`
+	TamperProtectionEnabled        *bool                       `json:"tamperProtectionEnabled,omitempty"`
+}
+
+type WindowsDeviceMalwareState struct {
+	ID                       *string    `json:"id,omitempty"`
+	AdditionalInformation    *string    `json:"additionalInformation,omitempty"`
+	Category                 *string    `json:"category,omitempty"`
+	DisplayName              *string    `json:"displayName,omitempty"`
+	ExecutionState           *string    `json:"executionState,omitempty"`
+	InitialDetectionDateTime *time.Time `json:"initialDetectionDateTime,omitempty"`
+	LastStateChangeDateTime  *time.Time `json:"lastStateChangeDateTime,omitempty"`
+	Severity                 *string    `json:"severity,omitempty"`
+	State                    *string    `json:"state,omitempty"`
+	ThreatState              *string    `json:"threatState,omitempty"`
+}
+
+func newWindowsProtectionState(p models.WindowsProtectionStateable) *WindowsProtectionState {
+	if p == nil {
+		return nil
+	}
+
+	result := &WindowsProtectionState{
+		AntiMalwareVersion:             p.GetAntiMalwareVersion(),
+		EngineVersion:                  p.GetEngineVersion(),
+		FullScanOverdue:                p.GetFullScanOverdue(),
+		FullScanRequired:               p.GetFullScanRequired(),
+		IsVirtualMachine:               p.GetIsVirtualMachine(),
+		LastFullScanSignatureVersion:   p.GetLastFullScanSignatureVersion(),
+		LastQuickScanSignatureVersion:  p.GetLastQuickScanSignatureVersion(),
+		MalwareProtectionEnabled:       p.GetMalwareProtectionEnabled(),
+		NetworkInspectionSystemEnabled: p.GetNetworkInspectionSystemEnabled(),
+		QuickScanOverdue:               p.GetQuickScanOverdue(),
+		RealTimeProtectionEnabled:      p.GetRealTimeProtectionEnabled(),
+		RebootRequired:                 p.GetRebootRequired(),
+		SignatureUpdateOverdue:         p.GetSignatureUpdateOverdue(),
+		SignatureVersion:               p.GetSignatureVersion(),
+		TamperProtectionEnabled:        p.GetTamperProtectionEnabled(),
+	}
+
+	// Handle the ID from the base Entity interface
+	if entity, ok := p.(models.Entityable); ok {
+		result.ID = entity.GetId()
+	}
+
+	// Convert enum values to strings
+	if deviceState := p.GetDeviceState(); deviceState != nil {
+		deviceStateStr := deviceState.String()
+		result.DeviceState = &deviceStateStr
+	}
+
+	if productStatus := p.GetProductStatus(); productStatus != nil {
+		productStatusStr := productStatus.String()
+		result.ProductStatus = &productStatusStr
+	}
+
+	// Convert time pointers
+	if lastFullScan := p.GetLastFullScanDateTime(); lastFullScan != nil {
+		converted := time.Time(*lastFullScan)
+		result.LastFullScanDateTime = &converted
+	}
+
+	if lastQuickScan := p.GetLastQuickScanDateTime(); lastQuickScan != nil {
+		converted := time.Time(*lastQuickScan)
+		result.LastQuickScanDateTime = &converted
+	}
+
+	if lastReported := p.GetLastReportedDateTime(); lastReported != nil {
+		converted := time.Time(*lastReported)
+		result.LastReportedDateTime = &converted
+	}
+
+	// Convert detected malware states
+	if malwareStates := p.GetDetectedMalwareState(); malwareStates != nil {
+		result.DetectedMalwareState = make([]WindowsDeviceMalwareState, len(malwareStates))
+		for i, state := range malwareStates {
+			result.DetectedMalwareState[i] = *newWindowsDeviceMalwareState(state)
+		}
+	}
+
+	return result
+}
+
+func newWindowsDeviceMalwareState(m models.WindowsDeviceMalwareStateable) *WindowsDeviceMalwareState {
+	if m == nil {
+		return nil
+	}
+
+	result := &WindowsDeviceMalwareState{
+		DisplayName: m.GetDisplayName(),
+	}
+
+	// Handle the ID from the base Entity interface
+	if entity, ok := m.(models.Entityable); ok {
+		result.ID = entity.GetId()
+	}
+
+	// Convert enum fields to strings (adjust based on actual enum types)
+	if category := m.GetCategory(); category != nil {
+		categoryStr := category.String()
+		result.Category = &categoryStr
+	}
+
+	if execState := m.GetExecutionState(); execState != nil {
+		execStateStr := execState.String()
+		result.ExecutionState = &execStateStr
+	}
+
+	if severity := m.GetSeverity(); severity != nil {
+		severityStr := severity.String()
+		result.Severity = &severityStr
+	}
+
+	if state := m.GetState(); state != nil {
+		stateStr := state.String()
+		result.State = &stateStr
+	}
+
+	if threatState := m.GetThreatState(); threatState != nil {
+		threatStateStr := threatState.String()
+		result.ThreatState = &threatStateStr
+	}
+
+	// Convert time fields
+	if initialDetection := m.GetInitialDetectionDateTime(); initialDetection != nil {
+		converted := time.Time(*initialDetection)
+		result.InitialDetectionDateTime = &converted
+	}
+
+	if lastStateChange := m.GetLastStateChangeDateTime(); lastStateChange != nil {
+		converted := time.Time(*lastStateChange)
+		result.LastStateChangeDateTime = &converted
+	}
+
+	return result
+}
