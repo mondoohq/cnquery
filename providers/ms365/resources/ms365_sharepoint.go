@@ -30,7 +30,7 @@ Import-Module PnP.PowerShell
 Connect-PnPOnline -AccessToken $token -Url $url
 
 $SPOTenant = (Get-PnPTenant)
-$DefaultLinkPermission = (Get-PnPTenant -DefaultLinkPermission)
+$DefaultLinkPermission = (Get-PnPTenant | Select-Object DefaultLinkPermission)
 $SPOTenantSyncClientRestriction = (Get-PnPTenantSyncClientRestriction)
 $SPOSite = (Get-PnPTenantSite)
 
