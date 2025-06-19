@@ -28,6 +28,8 @@ microsoft {
   settings() dict
   // The connected tenant's default domain name
   tenantDomainName() string
+  // Identity and Access policies.
+  identityAndAccess() microsoft.identityAndAccess
 }
 
 // Microsoft groups
@@ -91,6 +93,59 @@ microsoft.users {
   filter string
   // Search users by search phrases
   search string
+}
+
+// A container resource for identity and access policies that can be filtered.
+microsoft.identityAndAccess {
+  []microsoft.identityAndAccess.policy
+  init(filter? string)
+  // filter by scopeId and scopeType
+  // scopeId eq '/' and scopeType eq 'Directory'
+  filter string
+}
+
+// A PIM role management policy for Microsoft Entra roles.
+private microsoft.identityAndAccess.policy @defaults("id displayName scopeType") {
+  // Policy ID.
+  id string
+  // Policy display name.
+  displayName string
+  // Policy description.
+  description string
+  // Indicates if this policy is the default organization policy.
+  isOrganizationDefault bool
+  // The identifier of the scope where the policy is defined.
+  scopeId string
+  // The type of the scope where the policy is defined.
+  scopeType string
+  // The time when this policy was last modified.
+  lastModifiedDateTime time
+  // The identity of the user who last modified the policy.
+  lastModifiedBy dict
+  // The collection of rules that are part of the policy.
+  rules() []microsoft.identityAndAccess.policy.rule
+}
+
+
+// A rule defined for a PIM role management policy.
+private microsoft.identityAndAccess.policy.rule {
+  // The unique identifier for the rule.
+  id string
+  // Defines details of scope that's targeted by role management policy rule
+  target microsoft.identityAndAccess.policy.rule.target
+}
+
+private microsoft.identityAndAccess.policy.rule.target {
+  // The type of caller that's the target of the policy rule. Allowed values are: None, Admin, EndUser
+  caller string
+  // The list of role settings that are enforced and cannot be overridden by child scopes.
+  enforcedSettings []string
+  // The list of role settings that can be inherited by child scopes. 
+  inheritableSettings []string
+  // The role assignment type that's the target of policy rule
+  level string
+  // The role management operations that are the target of the policy rule.
+  operations []string
 }
 
 // A single license assigned to a user
@@ -183,10 +238,10 @@ private microsoft.conditionalAccess.policy.grantControls.authenticationStrength 
   displayName string
   // The human-readable description of this policy.
   description string
-  // A descriptor of whether this policy is built into Microsoft Entra ID or created by an admin for the tenant.
+  // A descriptor if this policy is built into Microsoft Entra ID or created by an admin for the tenant.
   // The possible values are: builtIn, custom, unknownFutureValue.
   policyType string
-  // A descriptor of whether this authentication strength grants the MFA claim upon successful satisfaction.
+  // A descriptor if this authentication strength grants the MFA claim upon successful satisfaction.
   // The possible values are: none, mfa, unknownFutureValue.
   requirementsSatisfied string
   // The time when this policy was created.

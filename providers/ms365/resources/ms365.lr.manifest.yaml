@@ -8,6 +8,7 @@ resources:
       domains: {}
       enterpriseApplications: {}
       groups: {}
+      identityAndAccess: {}
       organizations: {}
       roles: {}
       serviceprincipals: {}
@@ -328,6 +329,39 @@ resources:
     fields:
       length: {}
       list: {}
+    min_mondoo_version: 9.0.0
+  microsoft.identityAndAccess:
+    fields:
+      filter: {}
+      list: {}
+    min_mondoo_version: 9.0.0
+  microsoft.identityAndAccess.policy:
+    fields:
+      description: {}
+      displayName: {}
+      id: {}
+      isOrganizationDefault: {}
+      lastModifiedBy: {}
+      lastModifiedDateTime: {}
+      rules: {}
+      scopeId: {}
+      scopeType: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.identityAndAccess.policy.rule:
+    fields:
+      id: {}
+      target: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.identityAndAccess.policy.rule.target:
+    fields:
+      caller: {}
+      enforcedSettings: {}
+      inheritableSettings: {}
+      level: {}
+      operations: {}
+    is_private: true
     min_mondoo_version: 9.0.0
   microsoft.keyCredential:
     fields:
