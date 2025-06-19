@@ -635,6 +635,7 @@ resources:
       externalInOutlook: {}
       hostedOutboundSpamFilterPolicy: {}
       mailbox: {}
+      mailboxesWithAudit: {}
       malwareFilterPolicy: {}
       organizationConfig: {}
       owaMailboxPolicy: {}
@@ -667,6 +668,22 @@ resources:
       allowList: {}
       enabled: {}
       identity: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - microsoft365
+  ms365.exchangeonline.mailbox:
+    fields:
+      auditAdmin: {}
+      auditDelegate: {}
+      auditEnabled: {}
+      auditLogAgeLimit: {}
+      auditOwner: {}
+      displayName: {}
+      identity: {}
+      primarySmtpAddress: {}
+      recipientTypeDetails: {}
     is_private: true
     min_mondoo_version: 9.0.0
     platform:

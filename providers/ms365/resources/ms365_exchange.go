@@ -47,7 +47,7 @@ $DkimSigningConfig = (Get-DkimSigningConfig)
 $OwaMailboxPolicy = (Get-OwaMailboxPolicy)
 $AdminAuditLogConfig = (Get-AdminAuditLogConfig)
 $PhishFilterPolicy = (Get-PhishFilterPolicy)
-$Mailbox = (Get-Mailbox -ResultSize Unlimited)
+$Mailbox = (Get-Mailbox -ResultSize Unlimited | Select-Object Identity, DisplayName, PrimarySmtpAddress, RecipientTypeDetails, AuditEnabled, AuditAdmin, AuditDelegate, AuditOwner, AuditLogAgeLimit)
 $AtpPolicyForO365 = (Get-AtpPolicyForO365)
 $SharingPolicy = (Get-SharingPolicy)
 $RoleAssignmentPolicy = (Get-RoleAssignmentPolicy)
@@ -85,28 +85,41 @@ ConvertTo-Json -Depth 4 $exchangeOnline
 `
 
 type ExchangeOnlineReport struct {
-	MalwareFilterPolicy            []interface{}     `json:"MalwareFilterPolicy"`
-	HostedOutboundSpamFilterPolicy []interface{}     `json:"HostedOutboundSpamFilterPolicy"`
-	TransportRule                  []interface{}     `json:"TransportRule"`
-	RemoteDomain                   []interface{}     `json:"RemoteDomain"`
-	SafeLinksPolicy                []interface{}     `json:"SafeLinksPolicy"`
-	SafeAttachmentPolicy           []interface{}     `json:"SafeAttachmentPolicy"`
-	OrganizationConfig             interface{}       `json:"OrganizationConfig"`
-	AuthenticationPolicy           interface{}       `json:"AuthenticationPolicy"`
-	AntiPhishPolicy                []interface{}     `json:"AntiPhishPolicy"`
-	DkimSigningConfig              interface{}       `json:"DkimSigningConfig"`
-	OwaMailboxPolicy               interface{}       `json:"OwaMailboxPolicy"`
-	AdminAuditLogConfig            interface{}       `json:"AdminAuditLogConfig"`
-	PhishFilterPolicy              []interface{}     `json:"PhishFilterPolicy"`
-	Mailbox                        []interface{}     `json:"Mailbox"`
-	AtpPolicyForO365               []interface{}     `json:"AtpPolicyForO365"`
-	SharingPolicy                  []interface{}     `json:"SharingPolicy"`
-	RoleAssignmentPolicy           []interface{}     `json:"RoleAssignmentPolicy"`
-	ExternalInOutlook              []*ExternalSender `json:"ExternalInOutlook"`
+	MalwareFilterPolicy            []interface{} `json:"MalwareFilterPolicy"`
+	HostedOutboundSpamFilterPolicy []interface{} `json:"HostedOutboundSpamFilterPolicy"`
+	TransportRule                  []interface{} `json:"TransportRule"`
+	RemoteDomain                   []interface{} `json:"RemoteDomain"`
+	SafeLinksPolicy                []interface{} `json:"SafeLinksPolicy"`
+	SafeAttachmentPolicy           []interface{} `json:"SafeAttachmentPolicy"`
+	OrganizationConfig             interface{}   `json:"OrganizationConfig"`
+	AuthenticationPolicy           interface{}   `json:"AuthenticationPolicy"`
+	AntiPhishPolicy                []interface{} `json:"AntiPhishPolicy"`
+	DkimSigningConfig              interface{}   `json:"DkimSigningConfig"`
+	OwaMailboxPolicy               interface{}   `json:"OwaMailboxPolicy"`
+	AdminAuditLogConfig            interface{}   `json:"AdminAuditLogConfig"`
+	PhishFilterPolicy              []interface{} `json:"PhishFilterPolicy"`
+	// Mailbox                        []interface{}     `json:"Mailbox"`
+	AtpPolicyForO365     []interface{}     `json:"AtpPolicyForO365"`
+	SharingPolicy        []interface{}     `json:"SharingPolicy"`
+	RoleAssignmentPolicy []interface{}     `json:"RoleAssignmentPolicy"`
+	ExternalInOutlook    []*ExternalSender `json:"ExternalInOutlook"`
 	// note: this only contains shared mailboxes
 	ExoMailbox             []*ExoMailbox             `json:"ExoMailbox"`
 	TeamsProtectionPolicy  []*TeamsProtectionPolicy  `json:"TeamsProtectionPolicy"`
 	ReportSubmissionPolicy []*ReportSubmissionPolicy `json:"ReportSubmissionPolicy"`
+	Mailbox                []MailboxWithAudit        `json:"Mailbox"`
+}
+
+type MailboxWithAudit struct {
+	Identity             string   `json:"Identity"`
+	DisplayName          string   `json:"DisplayName"`
+	PrimarySmtpAddress   string   `json:"PrimarySmtpAddress"`
+	RecipientTypeDetails string   `json:"RecipientTypeDetails"`
+	AuditEnabled         bool     `json:"AuditEnabled"`
+	AuditAdmin           []string `json:"AuditAdmin"`
+	AuditDelegate        []string `json:"AuditDelegate"`
+	AuditOwner           []string `json:"AuditOwner"`
+	AuditLogAgeLimit     string   `json:"AuditLogAgeLimit"`
 }
 
 type ExternalSender struct {
@@ -286,6 +299,30 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 		err = fmt.Errorf("failed to generate exchange online report (exit code %d): %s", res.ExitStatus, string(data))
 		return errHandler(err)
 	}
+
+	// Process enhanced mailbox data
+	mailboxesWithAudit := []interface{}{}
+	var mailboxesWithAuditErr error
+	for _, m := range report.Mailbox {
+		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.mailbox",
+			map[string]*llx.RawData{
+				"identity":             llx.StringData(m.Identity),
+				"displayName":          llx.StringData(m.DisplayName),
+				"primarySmtpAddress":   llx.StringData(m.PrimarySmtpAddress),
+				"recipientTypeDetails": llx.StringData(m.RecipientTypeDetails),
+				"auditEnabled":         llx.BoolData(m.AuditEnabled),
+				"auditAdmin":           llx.ArrayData(llx.TArr2Raw(m.AuditAdmin), types.String),
+				"auditDelegate":        llx.ArrayData(llx.TArr2Raw(m.AuditDelegate), types.String),
+				"auditOwner":           llx.ArrayData(llx.TArr2Raw(m.AuditOwner), types.String),
+				"auditLogAgeLimit":     llx.StringData(m.AuditLogAgeLimit),
+			})
+		if err != nil {
+			mailboxesWithAuditErr = err
+			break
+		}
+		mailboxesWithAudit = append(mailboxesWithAudit, mql)
+	}
+	r.MailboxesWithAudit = plugin.TValue[[]interface{}]{Data: mailboxesWithAudit, State: plugin.StateIsSet, Error: mailboxesWithAuditErr}
 
 	malwareFilterPolicy, malwareFilterPolicyErr := convert.JsonToDictSlice(report.MalwareFilterPolicy)
 	r.MalwareFilterPolicy = plugin.TValue[[]interface{}]{Data: malwareFilterPolicy, State: plugin.StateIsSet, Error: malwareFilterPolicyErr}
@@ -510,4 +547,8 @@ func (m *mqlMs365ExchangeonlineExoMailbox) user() (*mqlMicrosoftUser, error) {
 		}
 	}
 	return nil, errors.New("cannot find user for exchange mailbox")
+}
+
+func (r *mqlMs365Exchangeonline) mailboxesWithAudit() ([]interface{}, error) {
+	return nil, r.getExchangeReport()
 }
