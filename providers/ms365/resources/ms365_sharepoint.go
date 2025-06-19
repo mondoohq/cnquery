@@ -30,6 +30,7 @@ Import-Module PnP.PowerShell
 Connect-PnPOnline -AccessToken $token -Url $url
 
 $SPOTenant = (Get-PnPTenant)
+$DefaultLinkPermission = (Get-PnPTenant -DefaultLinkPermission)
 $SPOTenantSyncClientRestriction = (Get-PnPTenantSyncClientRestriction)
 $SPOSite = (Get-PnPTenantSite)
 
@@ -37,6 +38,7 @@ $sharepoint = New-Object PSObject
 Add-Member -InputObject $sharepoint -MemberType NoteProperty -Name SPOTenant -Value $SPOTenant
 Add-Member -InputObject $sharepoint -MemberType NoteProperty -Name SPOTenantSyncClientRestriction -Value $SPOTenantSyncClientRestriction
 Add-Member -InputObject $sharepoint -MemberType NoteProperty -Name SPOSite -Value $SPOSite
+Add-Member -InputObject $sharepoint -MemberType NoteProperty -Name DefaultLinkPermission -Value $DefaultLinkPermissio
 
 Disconnect-PnPOnline
 
@@ -44,9 +46,10 @@ ConvertTo-Json -Depth 4 $sharepoint -EnumsAsStrings
 `
 
 type SharepointOnlineReport struct {
-	SpoTenant                      interface{} `json:"SPOTenant"`
-	SpoTenantSyncClientRestriction interface{} `json:"SPOTenantSyncClientRestriction"`
-	SpoSite                        []*SpoSite  `json:"SPOSite"`
+	SpoTenant                      interface{}   `json:"SPOTenant"`
+	SpoTenantSyncClientRestriction interface{}   `json:"SPOTenantSyncClientRestriction"`
+	SpoSite                        []*SpoSite    `json:"SPOSite"`
+	DefaultLinkPermission          []interface{} `json:"DefaultLinkPermission"`
 }
 
 type SpoSite struct {
@@ -59,9 +62,10 @@ func (m *mqlMs365SharepointonlineSite) id() (string, error) {
 }
 
 type mqlMs365SharepointonlineInternal struct {
-	sharepointLock sync.Mutex
-	fetched        bool
-	fetchErr       error
+	sharepointLock        sync.Mutex
+	fetched               bool
+	fetchErr              error
+	DefaultLinkPermission plugin.TValue[[]interface{}]
 }
 
 func (r *mqlMs365Sharepointonline) getTenant() (string, error) {
@@ -192,6 +196,9 @@ func (r *mqlMs365Sharepointonline) getSharepointOnlineReport() error {
 		sites = append(sites, mqlSpoSite)
 	}
 	r.SpoSites = plugin.TValue[[]interface{}]{Data: sites, State: plugin.StateIsSet, Error: sitesErr}
+	
+	r.DefaultLinkPermission = plugin.TValue[[]interface{}]{Data: report.DefaultLinkPermission, State: plugin.StateIsSet}
+
 	return nil
 }
 
@@ -204,5 +211,9 @@ func (r *mqlMs365Sharepointonline) spoTenantSyncClientRestriction() (interface{}
 }
 
 func (r *mqlMs365Sharepointonline) spoSites() ([]interface{}, error) {
+	return nil, r.getSharepointOnlineReport()
+}
+
+func (r *mqlMs365Sharepointonline) defaultLinkPermission() ([]interface{}, error) {
 	return nil, r.getSharepointOnlineReport()
 }
