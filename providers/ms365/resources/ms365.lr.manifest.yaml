@@ -253,7 +253,19 @@ resources:
     fields:
       deviceCompliancePolicies: {}
       deviceConfigurations: {}
+      deviceEnrollmentConfigurations: {}
       managedDevices: {}
+    min_mondoo_version: 9.0.0
+  microsoft.devicemanagement.deviceEnrollmentConfiguration:
+    fields:
+      createdDateTime: {}
+      description: {}
+      displayName: {}
+      id: {}
+      lastModifiedDateTime: {}
+      priority: {}
+      version: {}
+    is_private: true
     min_mondoo_version: 9.0.0
   microsoft.devicemanagement.devicecompliancepolicy:
     fields:
@@ -302,7 +314,6 @@ resources:
       notes: {}
       operatingSystem: {}
       osVersion: {}
-      protectionState: {}
       serialNumber: {}
       udid: {}
       userDisplayName: {}

@@ -1014,6 +1014,26 @@ microsoft.devicemanagement {
   deviceConfigurations() []microsoft.devicemanagement.deviceconfiguration
   // List of device compliance policies
   deviceCompliancePolicies() []microsoft.devicemanagement.devicecompliancepolicy
+  // Device Enrollment Configuration
+  deviceEnrollmentConfigurations() []microsoft.devicemanagement.deviceEnrollmentConfiguration
+}
+
+// The Base Class of Device Enrollment Configuration
+private microsoft.devicemanagement.deviceEnrollmentConfiguration {
+  // Unique Identifier for the account
+  id string
+  // The display name of the device enrollment configuration
+  displayName string
+  // The description of the device enrollment configuration
+  description string
+  // Priority is used when a user exists in multiple groups that are assigned enrollment configuration. 
+  priority int
+  // Created date time in UTC of the device enrollment configuration
+  createdDateTime time
+  // Last modified date time in UTC of the device enrollment configuration
+  lastModifiedDateTime time
+  // The version of the device enrollment configuration
+  version int
 }
 
 // Microsoft managed device
