@@ -90,7 +90,7 @@ You can then pipe the output to [jq](https://jqlang.github.io/jq/) or other appl
 
 ## Query packs
 
-You can combine multiple queries into query packs, which can run together. cnquery comes with default [query packs](https://github.com/mondoohq/cnquery-packs) out of the box for most systems. You can run:
+You can combine multiple queries into query packs, which can run together. cnquery comes with default query packs out of the box for most systems. You can run:
 
 ```bash
 cnquery scan
@@ -201,7 +201,6 @@ There are so many things cnquery can do! Gather information about your infrastru
 Explore:
 
 - [cnquery docs](https://mondoo.com/docs/cnquery/home/)
-- [Query packs](https://github.com/mondoohq/cnquery-packs)
 - [MQL introduction](https://mondoohq.github.io/mql-intro/index.html)
 - [MQL language reference](https://mondoo.com/docs/mql/resources/)
 - [cnspec](https://github.com/mondoohq/cnspec), our open source, cloud-native security scanner
