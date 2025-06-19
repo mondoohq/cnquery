@@ -112,7 +112,7 @@ private microsoft.identityAndAccess.policy @defaults("id displayName scopeType")
   displayName string
   // Policy description.
   description string
-  // Indicates if this policy is the default organization policy.
+  // True if this policy is the default organization policy.
   isOrganizationDefault bool
   // The identifier of the scope where the policy is defined.
   scopeId string
