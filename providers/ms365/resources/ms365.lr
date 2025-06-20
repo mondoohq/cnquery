@@ -104,25 +104,25 @@ microsoft.identityAndAccess {
   filter string
 }
 
-// A PIM role management policy for Microsoft Entra roles.
+// A PIM role management policy for Microsoft Entra ID roles.
 private microsoft.identityAndAccess.policy @defaults("id displayName scopeType") {
-  // Policy ID.
+  // Policy ID
   id string
-  // Policy display name.
+  // Policy display name
   displayName string
-  // Policy description.
+  // Policy description
   description string
-  // True if this policy is the default organization policy.
+  // True if this policy is the default organization policy
   isOrganizationDefault bool
-  // The identifier of the scope where the policy is defined.
+  // The identifier of the scope where the policy is defined
   scopeId string
-  // The type of the scope where the policy is defined.
+  // The type of the scope where the policy is defined
   scopeType string
-  // The time when this policy was last modified.
+  // The time when this policy was last modified
   lastModifiedDateTime time
-  // The identity of the user who last modified the policy.
+  // The identity of the user who last modified the policy
   lastModifiedBy dict
-  // The collection of rules that are part of the policy.
+  // The collection of rules that are part of the policy
   rules() []microsoft.identityAndAccess.policy.rule
 }
 
