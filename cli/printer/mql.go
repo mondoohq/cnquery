@@ -551,20 +551,6 @@ func (print *Printer) intMap(typ types.Type, data map[int]interface{}, indent st
 	return res.String()
 }
 
-var codeBlockIds = map[string]struct{}{
-	"{}": {},
-	"if": {},
-}
-
-func isCodeBlock(checksum string, bundle *llx.CodeBundle) bool {
-	if bundle == nil {
-		return false
-	}
-
-	_, ok := bundle.Labels.Labels[checksum]
-	return ok
-}
-
 func (print *Printer) resourceContext(data any, checksum string, indent string, cache *printCache) (string, bool) {
 	m, ok := data.(map[string]any)
 	if !ok {
