@@ -181,6 +181,7 @@ func newMqlRoleManagementPolicyRule(runtime *plugin.Runtime, rule models.Unified
 
 	resource, err := CreateResource(runtime, "microsoft.identityAndAccess.policy.rule",
 		map[string]*llx.RawData{
+			"__id":   llx.StringDataPtr(rule.GetId()),
 			"id":     llx.StringDataPtr(rule.GetId()),
 			"target": llx.ResourceData(mqlPolicyRuleTarget, "microsoft.identityAndAccess.policy.rule.target"),
 		})

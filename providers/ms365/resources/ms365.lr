@@ -126,25 +126,25 @@ private microsoft.identityAndAccess.policy @defaults("id displayName scopeType")
   rules() []microsoft.identityAndAccess.policy.rule
 }
 
-
 // A rule defined for a PIM role management policy.
-private microsoft.identityAndAccess.policy.rule {
-  // The unique identifier for the rule.
+private microsoft.identityAndAccess.policy.rule @defaults("id") {
+  // The unique identifier for the rule
   id string
   // Defines details of scope that's targeted by role management policy rule
   target microsoft.identityAndAccess.policy.rule.target
 }
 
+// Defines details of the scope that's targeted by role management policy rule.
 private microsoft.identityAndAccess.policy.rule.target {
   // The type of caller that's the target of the policy rule. Allowed values are: None, Admin, EndUser
   caller string
-  // The list of role settings that are enforced and cannot be overridden by child scopes.
+  // The list of role settings that are enforced and cannot be overridden by child scopes
   enforcedSettings []string
-  // The list of role settings that can be inherited by child scopes. 
+  // The list of role settings that can be inherited by child scopes
   inheritableSettings []string
   // The role assignment type that's the target of policy rule
   level string
-  // The role management operations that are the target of the policy rule.
+  // The role management operations that are the target of the policy rule
   operations []string
 }
 
