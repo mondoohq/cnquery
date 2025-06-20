@@ -30,7 +30,7 @@ Import-Module PnP.PowerShell
 Connect-PnPOnline -AccessToken $token -Url $url
 
 $SPOTenant = (Get-PnPTenant)
-$DefaultLinkPermission = (Get-PnPTenant | Select-Object DefaultLinkPermission)
+$DefaultLinkPermission = (Get-PnPTenant | Select-Object -ExpandProperty DefaultLinkPermission)
 $SPOTenantSyncClientRestriction = (Get-PnPTenantSyncClientRestriction)
 $SPOSite = (Get-PnPTenantSite)
 
@@ -38,7 +38,7 @@ $sharepoint = New-Object PSObject
 Add-Member -InputObject $sharepoint -MemberType NoteProperty -Name SPOTenant -Value $SPOTenant
 Add-Member -InputObject $sharepoint -MemberType NoteProperty -Name SPOTenantSyncClientRestriction -Value $SPOTenantSyncClientRestriction
 Add-Member -InputObject $sharepoint -MemberType NoteProperty -Name SPOSite -Value $SPOSite
-Add-Member -InputObject $sharepoint -MemberType NoteProperty -Name DefaultLinkPermission -Value $DefaultLinkPermissio
+Add-Member -InputObject $sharepoint -MemberType NoteProperty -Name DefaultLinkPermission -Value $DefaultLinkPermission
 
 Disconnect-PnPOnline
 
@@ -46,10 +46,10 @@ ConvertTo-Json -Depth 4 $sharepoint -EnumsAsStrings
 `
 
 type SharepointOnlineReport struct {
-	SpoTenant                      interface{}   `json:"SPOTenant"`
-	SpoTenantSyncClientRestriction interface{}   `json:"SPOTenantSyncClientRestriction"`
-	SpoSite                        []*SpoSite    `json:"SPOSite"`
-	DefaultLinkPermission          []interface{} `json:"DefaultLinkPermission"`
+	SpoTenant                      interface{} `json:"SPOTenant"`
+	SpoTenantSyncClientRestriction interface{} `json:"SPOTenantSyncClientRestriction"`
+	SpoSite                        []*SpoSite  `json:"SPOSite"`
+	DefaultLinkPermission          string      `json:"DefaultLinkPermission"`
 }
 
 type SpoSite struct {
@@ -197,7 +197,8 @@ func (r *mqlMs365Sharepointonline) getSharepointOnlineReport() error {
 	}
 	r.SpoSites = plugin.TValue[[]interface{}]{Data: sites, State: plugin.StateIsSet, Error: sitesErr}
 	
-	r.DefaultLinkPermission = plugin.TValue[[]interface{}]{Data: report.DefaultLinkPermission, State: plugin.StateIsSet}
+	defaultLinkPermissionSlice := []interface{}{report.DefaultLinkPermission}
+	r.DefaultLinkPermission = plugin.TValue[[]interface{}]{Data: defaultLinkPermissionSlice, State: plugin.StateIsSet}
 
 	return nil
 }
