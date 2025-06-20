@@ -280,15 +280,12 @@ func (print *Printer) array(typ types.Type, data []interface{}, checksum string,
 			}
 		}
 	} else {
-		inlinePrint := *cache
-		inlinePrint.isInline = true
-
 		for i := range data {
 			res.WriteString(fmt.Sprintf(
 				indent+"  %d: %s%s\n",
 				i,
 				listType,
-				print.data(typ.Child(), data[i], checksum, indent+"  ", &inlinePrint),
+				print.data(typ.Child(), data[i], checksum, indent+"  ", cache),
 			))
 		}
 	}
@@ -388,6 +385,8 @@ func (print *Printer) refMap(data map[string]any, checksum string, indent string
 		}
 	}
 
+	inlineCache := *cache
+	inlineCache.isInline = true
 	for _, k := range labeledKeys {
 		if k == "_" {
 			continue
@@ -412,7 +411,7 @@ func (print *Printer) refMap(data map[string]any, checksum string, indent string
 			continue
 		}
 
-		data := print.data(val.Type, val.Value, k, "", cache)
+		data := print.data(val.Type, val.Value, k, "", &inlineCache)
 		res.WriteString(label + data + " ")
 	}
 
