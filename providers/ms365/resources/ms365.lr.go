@@ -1616,7 +1616,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlMs365Sharepointonline).GetSpoSites()).ToDataRes(types.Array(types.Resource("ms365.sharepointonline.site")))
 	},
 	"ms365.sharepointonline.defaultLinkPermission": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365Sharepointonline).GetDefaultLinkPermission()).ToDataRes(types.Array(types.String))
+		return (r.(*mqlMs365Sharepointonline).GetDefaultLinkPermission()).ToDataRes(types.String)
 	},
 	"ms365.sharepointonline.site.url": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365SharepointonlineSite).GetUrl()).ToDataRes(types.String)
@@ -3634,7 +3634,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"ms365.sharepointonline.defaultLinkPermission": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365Sharepointonline).DefaultLinkPermission, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlMs365Sharepointonline).DefaultLinkPermission, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"ms365.sharepointonline.site.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8957,7 +8957,7 @@ type mqlMs365Sharepointonline struct {
 	SpoTenant plugin.TValue[interface{}]
 	SpoTenantSyncClientRestriction plugin.TValue[interface{}]
 	SpoSites plugin.TValue[[]interface{}]
-	DefaultLinkPermission plugin.TValue[[]interface{}]
+	DefaultLinkPermission plugin.TValue[string]
 }
 
 // createMs365Sharepointonline creates a new instance of this resource
@@ -9020,8 +9020,8 @@ func (c *mqlMs365Sharepointonline) GetSpoSites() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlMs365Sharepointonline) GetDefaultLinkPermission() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.DefaultLinkPermission, func() ([]interface{}, error) {
+func (c *mqlMs365Sharepointonline) GetDefaultLinkPermission() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DefaultLinkPermission, func() (string, error) {
 		return c.defaultLinkPermission()
 	})
 }

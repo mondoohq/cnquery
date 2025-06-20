@@ -65,7 +65,7 @@ type mqlMs365SharepointonlineInternal struct {
 	sharepointLock        sync.Mutex
 	fetched               bool
 	fetchErr              error
-	DefaultLinkPermission plugin.TValue[[]interface{}]
+	DefaultLinkPermission plugin.TValue[string]
 }
 
 func (r *mqlMs365Sharepointonline) getTenant() (string, error) {
@@ -196,9 +196,8 @@ func (r *mqlMs365Sharepointonline) getSharepointOnlineReport() error {
 		sites = append(sites, mqlSpoSite)
 	}
 	r.SpoSites = plugin.TValue[[]interface{}]{Data: sites, State: plugin.StateIsSet, Error: sitesErr}
-	
-	defaultLinkPermissionSlice := []interface{}{report.DefaultLinkPermission}
-	r.DefaultLinkPermission = plugin.TValue[[]interface{}]{Data: defaultLinkPermissionSlice, State: plugin.StateIsSet}
+
+	r.DefaultLinkPermission = plugin.TValue[string]{Data: report.DefaultLinkPermission, State: plugin.StateIsSet}
 
 	return nil
 }
@@ -215,6 +214,6 @@ func (r *mqlMs365Sharepointonline) spoSites() ([]interface{}, error) {
 	return nil, r.getSharepointOnlineReport()
 }
 
-func (r *mqlMs365Sharepointonline) defaultLinkPermission() ([]interface{}, error) {
-	return nil, r.getSharepointOnlineReport()
+func (r *mqlMs365Sharepointonline) defaultLinkPermission() (string, error) {
+	return "", r.getSharepointOnlineReport()
 }
