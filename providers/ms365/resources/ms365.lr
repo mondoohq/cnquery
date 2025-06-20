@@ -28,7 +28,7 @@ microsoft {
   settings() dict
   // The connected tenant's default domain name
   tenantDomainName() string
-  // Identity and Access policies.
+  // Identity and Access policies
   identityAndAccess() microsoft.identityAndAccess
 }
 
