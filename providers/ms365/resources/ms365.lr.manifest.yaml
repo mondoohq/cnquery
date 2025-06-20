@@ -635,9 +635,30 @@ resources:
       microsoftAuthenticator: {}
       passwordMethods: {}
       phoneMethods: {}
+      registrationDetails: {}
       softwareMethods: {}
       temporaryAccessPassMethods: {}
       windowsHelloMethods: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.user.authenticationMethods.userRegistrationDetails:
+    fields:
+      id: {}
+      isAdmin: {}
+      isMfaCapable: {}
+      isMfaRegistered: {}
+      isPasswordlessCapable: {}
+      isSsprCapable: {}
+      isSsprEnabled: {}
+      isSsprRegistered: {}
+      isSystemPreferredAuthenticationMethodEnabled: {}
+      lastUpdatedDateTime: {}
+      methodsRegistered: {}
+      systemPreferredAuthenticationMethods: {}
+      userDisplayName: {}
+      userPreferredMethodForSecondaryAuthentication: {}
+      userPrincipalName: {}
+      userType: {}
     is_private: true
     min_mondoo_version: 9.0.0
   microsoft.user.authenticationRequirements:

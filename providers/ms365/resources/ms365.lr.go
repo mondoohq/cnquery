@@ -162,6 +162,10 @@ func init() {
 			// to override args, implement: initMicrosoftUserAuthenticationMethods(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftUserAuthenticationMethods,
 		},
+		"microsoft.user.authenticationMethods.userRegistrationDetails": {
+			// to override args, implement: initMicrosoftUserAuthenticationMethodsUserRegistrationDetails(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftUserAuthenticationMethodsUserRegistrationDetails,
+		},
 		"microsoft.group": {
 			// to override args, implement: initMicrosoftGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftGroup,
@@ -927,6 +931,57 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.user.authenticationMethods.windowsHelloMethods": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUserAuthenticationMethods).GetWindowsHelloMethods()).ToDataRes(types.Array(types.Dict))
+	},
+	"microsoft.user.authenticationMethods.registrationDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserAuthenticationMethods).GetRegistrationDetails()).ToDataRes(types.Resource("microsoft.user.authenticationMethods.userRegistrationDetails"))
+	},
+	"microsoft.user.authenticationMethods.userRegistrationDetails.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.user.authenticationMethods.userRegistrationDetails.isAdmin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).GetIsAdmin()).ToDataRes(types.Bool)
+	},
+	"microsoft.user.authenticationMethods.userRegistrationDetails.isMfaCapable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).GetIsMfaCapable()).ToDataRes(types.Bool)
+	},
+	"microsoft.user.authenticationMethods.userRegistrationDetails.isMfaRegistered": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).GetIsMfaRegistered()).ToDataRes(types.Bool)
+	},
+	"microsoft.user.authenticationMethods.userRegistrationDetails.isPasswordlessCapable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).GetIsPasswordlessCapable()).ToDataRes(types.Bool)
+	},
+	"microsoft.user.authenticationMethods.userRegistrationDetails.isSsprCapable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).GetIsSsprCapable()).ToDataRes(types.Bool)
+	},
+	"microsoft.user.authenticationMethods.userRegistrationDetails.isSsprEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).GetIsSsprEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.user.authenticationMethods.userRegistrationDetails.isSsprRegistered": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).GetIsSsprRegistered()).ToDataRes(types.Bool)
+	},
+	"microsoft.user.authenticationMethods.userRegistrationDetails.isSystemPreferredAuthenticationMethodEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).GetIsSystemPreferredAuthenticationMethodEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.user.authenticationMethods.userRegistrationDetails.lastUpdatedDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).GetLastUpdatedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.user.authenticationMethods.userRegistrationDetails.methodsRegistered": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).GetMethodsRegistered()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.user.authenticationMethods.userRegistrationDetails.systemPreferredAuthenticationMethods": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).GetSystemPreferredAuthenticationMethods()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.user.authenticationMethods.userRegistrationDetails.userDisplayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).GetUserDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.user.authenticationMethods.userRegistrationDetails.userPreferredMethodForSecondaryAuthentication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).GetUserPreferredMethodForSecondaryAuthentication()).ToDataRes(types.String)
+	},
+	"microsoft.user.authenticationMethods.userRegistrationDetails.userPrincipalName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).GetUserPrincipalName()).ToDataRes(types.String)
+	},
+	"microsoft.user.authenticationMethods.userRegistrationDetails.userType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).GetUserType()).ToDataRes(types.String)
 	},
 	"microsoft.group.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftGroup).GetId()).ToDataRes(types.String)
@@ -2767,6 +2822,78 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.user.authenticationMethods.windowsHelloMethods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftUserAuthenticationMethods).WindowsHelloMethods, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.authenticationMethods.registrationDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserAuthenticationMethods).RegistrationDetails, ok = plugin.RawToTValue[*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.authenticationMethods.userRegistrationDetails.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.user.authenticationMethods.userRegistrationDetails.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.authenticationMethods.userRegistrationDetails.isAdmin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).IsAdmin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.authenticationMethods.userRegistrationDetails.isMfaCapable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).IsMfaCapable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.authenticationMethods.userRegistrationDetails.isMfaRegistered": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).IsMfaRegistered, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.authenticationMethods.userRegistrationDetails.isPasswordlessCapable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).IsPasswordlessCapable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.authenticationMethods.userRegistrationDetails.isSsprCapable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).IsSsprCapable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.authenticationMethods.userRegistrationDetails.isSsprEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).IsSsprEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.authenticationMethods.userRegistrationDetails.isSsprRegistered": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).IsSsprRegistered, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.authenticationMethods.userRegistrationDetails.isSystemPreferredAuthenticationMethodEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).IsSystemPreferredAuthenticationMethodEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.authenticationMethods.userRegistrationDetails.lastUpdatedDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).LastUpdatedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.authenticationMethods.userRegistrationDetails.methodsRegistered": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).MethodsRegistered, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.authenticationMethods.userRegistrationDetails.systemPreferredAuthenticationMethods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).SystemPreferredAuthenticationMethods, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.authenticationMethods.userRegistrationDetails.userDisplayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).UserDisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.authenticationMethods.userRegistrationDetails.userPreferredMethodForSecondaryAuthentication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).UserPreferredMethodForSecondaryAuthentication, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.authenticationMethods.userRegistrationDetails.userPrincipalName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).UserPrincipalName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.authenticationMethods.userRegistrationDetails.userType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).UserType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6811,6 +6938,7 @@ type mqlMicrosoftUserAuthenticationMethods struct {
 	PasswordMethods plugin.TValue[[]interface{}]
 	TemporaryAccessPassMethods plugin.TValue[[]interface{}]
 	WindowsHelloMethods plugin.TValue[[]interface{}]
+	RegistrationDetails plugin.TValue[*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails]
 }
 
 // createMicrosoftUserAuthenticationMethods creates a new instance of this resource
@@ -6879,6 +7007,141 @@ func (c *mqlMicrosoftUserAuthenticationMethods) GetTemporaryAccessPassMethods() 
 
 func (c *mqlMicrosoftUserAuthenticationMethods) GetWindowsHelloMethods() *plugin.TValue[[]interface{}] {
 	return &c.WindowsHelloMethods
+}
+
+func (c *mqlMicrosoftUserAuthenticationMethods) GetRegistrationDetails() *plugin.TValue[*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails] {
+	return plugin.GetOrCompute[*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails](&c.RegistrationDetails, func() (*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.user.authenticationMethods", c.__id, "registrationDetails")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails), nil
+			}
+		}
+
+		return c.registrationDetails()
+	})
+}
+
+// mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails for the microsoft.user.authenticationMethods.userRegistrationDetails resource
+type mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetailsInternal it will be used here
+	Id plugin.TValue[string]
+	IsAdmin plugin.TValue[bool]
+	IsMfaCapable plugin.TValue[bool]
+	IsMfaRegistered plugin.TValue[bool]
+	IsPasswordlessCapable plugin.TValue[bool]
+	IsSsprCapable plugin.TValue[bool]
+	IsSsprEnabled plugin.TValue[bool]
+	IsSsprRegistered plugin.TValue[bool]
+	IsSystemPreferredAuthenticationMethodEnabled plugin.TValue[bool]
+	LastUpdatedDateTime plugin.TValue[*time.Time]
+	MethodsRegistered plugin.TValue[[]interface{}]
+	SystemPreferredAuthenticationMethods plugin.TValue[[]interface{}]
+	UserDisplayName plugin.TValue[string]
+	UserPreferredMethodForSecondaryAuthentication plugin.TValue[string]
+	UserPrincipalName plugin.TValue[string]
+	UserType plugin.TValue[string]
+}
+
+// createMicrosoftUserAuthenticationMethodsUserRegistrationDetails creates a new instance of this resource
+func createMicrosoftUserAuthenticationMethodsUserRegistrationDetails(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.user.authenticationMethods.userRegistrationDetails", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails) MqlName() string {
+	return "microsoft.user.authenticationMethods.userRegistrationDetails"
+}
+
+func (c *mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails) GetIsAdmin() *plugin.TValue[bool] {
+	return &c.IsAdmin
+}
+
+func (c *mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails) GetIsMfaCapable() *plugin.TValue[bool] {
+	return &c.IsMfaCapable
+}
+
+func (c *mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails) GetIsMfaRegistered() *plugin.TValue[bool] {
+	return &c.IsMfaRegistered
+}
+
+func (c *mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails) GetIsPasswordlessCapable() *plugin.TValue[bool] {
+	return &c.IsPasswordlessCapable
+}
+
+func (c *mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails) GetIsSsprCapable() *plugin.TValue[bool] {
+	return &c.IsSsprCapable
+}
+
+func (c *mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails) GetIsSsprEnabled() *plugin.TValue[bool] {
+	return &c.IsSsprEnabled
+}
+
+func (c *mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails) GetIsSsprRegistered() *plugin.TValue[bool] {
+	return &c.IsSsprRegistered
+}
+
+func (c *mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails) GetIsSystemPreferredAuthenticationMethodEnabled() *plugin.TValue[bool] {
+	return &c.IsSystemPreferredAuthenticationMethodEnabled
+}
+
+func (c *mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails) GetLastUpdatedDateTime() *plugin.TValue[*time.Time] {
+	return &c.LastUpdatedDateTime
+}
+
+func (c *mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails) GetMethodsRegistered() *plugin.TValue[[]interface{}] {
+	return &c.MethodsRegistered
+}
+
+func (c *mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails) GetSystemPreferredAuthenticationMethods() *plugin.TValue[[]interface{}] {
+	return &c.SystemPreferredAuthenticationMethods
+}
+
+func (c *mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails) GetUserDisplayName() *plugin.TValue[string] {
+	return &c.UserDisplayName
+}
+
+func (c *mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails) GetUserPreferredMethodForSecondaryAuthentication() *plugin.TValue[string] {
+	return &c.UserPreferredMethodForSecondaryAuthentication
+}
+
+func (c *mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails) GetUserPrincipalName() *plugin.TValue[string] {
+	return &c.UserPrincipalName
+}
+
+func (c *mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails) GetUserType() *plugin.TValue[string] {
+	return &c.UserType
 }
 
 // mqlMicrosoftGroup for the microsoft.group resource
