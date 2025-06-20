@@ -14446,12 +14446,7 @@ func createAzureSubscriptionCosmosDbServiceAccount(runtime *plugin.Runtime, args
 		return res, err
 	}
 
-	if res.__id == "" {
-	res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("azure.subscription.cosmosDbService.account", res.__id)

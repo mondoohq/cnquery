@@ -17,6 +17,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	cosmosdb "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos"
 	armresources "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmosforpostgresql/armcosmosforpostgresql"
 )
 
 func (a *mqlAzureSubscriptionCosmosDbService) id() (string, error) {
@@ -35,10 +36,6 @@ func initAzureSubscriptionCosmosDbService(runtime *plugin.Runtime, args map[stri
 	args["subscriptionId"] = llx.StringData(conn.SubId())
 
 	return args, nil, nil
-}
-
-func (a *mqlAzureSubscriptionCosmosDbServiceAccount) id() (string, error) {
-	return a.Id.Data, nil
 }
 
 func (a *mqlAzureSubscriptionCosmosDbService) accounts() ([]interface{}, error) {
@@ -61,7 +58,7 @@ func (a *mqlAzureSubscriptionCosmosDbService) accounts() ([]interface{}, error) 
 	}
 	res = append(res, mongoAccounts...)
 
-	postgresAccounts, err := fetchDbAccountsByType(ctx, a.MqlRuntime, conn, subId, "Microsoft.DBforPostgreSQL/serverGroupsv2")
+	postgresAccounts, err := fetchCosmosForPostgres(ctx, a.MqlRuntime, conn, subId)
 	if err != nil {
 		return nil, err
 	}
@@ -93,6 +90,7 @@ func fetchCosmosDBAccounts(ctx context.Context, runtime *plugin.Runtime, conn *c
 
 			mqlCosmosDbAccount, err := CreateResource(runtime, "azure.subscription.cosmosDbService.account",
 				map[string]*llx.RawData{
+					"__id":       llx.StringDataPtr(account.ID),
 					"id":         llx.StringDataPtr(account.ID),
 					"name":       llx.StringDataPtr(account.Name),
 					"tags":       llx.MapData(convert.PtrMapStrToInterface(account.Tags), types.String),
@@ -136,11 +134,54 @@ func fetchDbAccountsByType(ctx context.Context, runtime *plugin.Runtime, conn *c
 
 			mqlResource, err := CreateResource(runtime, "azure.subscription.cosmosDbService.account",
 				map[string]*llx.RawData{
+					"__id":       llx.StringDataPtr(account.ID),
 					"id":         llx.StringDataPtr(account.ID),
 					"name":       llx.StringDataPtr(account.Name),
 					"tags":       llx.MapData(convert.PtrMapStrToInterface(account.Tags), types.String),
 					"location":   llx.StringDataPtr(account.Location),
 					"kind":       llx.StringDataPtr(account.Kind),
+					"type":       llx.StringDataPtr(account.Type),
+					"properties": llx.DictData(properties),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlResource)
+		}
+	}
+	return res, nil
+}
+
+// fetches resources of type "Microsoft.DBforPostgreSQL/serverGroupsv2"
+func fetchCosmosForPostgres(ctx context.Context, runtime *plugin.Runtime, conn *connection.AzureConnection, subId string) ([]interface{}, error) {
+	resClient, err := armcosmosforpostgresql.NewClustersClient(subId, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res := []interface{}{}
+	pager := resClient.NewListPager(&armcosmosforpostgresql.ClustersClientListOptions{})
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, account := range page.Value {
+			properties, err := convert.JsonToDict(account.Properties)
+			if err != nil {
+				return nil, err
+			}
+
+			mqlResource, err := CreateResource(runtime, "azure.subscription.cosmosDbService.account",
+				map[string]*llx.RawData{
+					"__id":       llx.StringDataPtr(account.ID),
+					"id":         llx.StringDataPtr(account.ID),
+					"name":       llx.StringDataPtr(account.Name),
+					"tags":       llx.MapData(convert.PtrMapStrToInterface(account.Tags), types.String),
+					"location":   llx.StringDataPtr(account.Location),
+					"kind":       llx.StringDataPtr(nil),
 					"type":       llx.StringDataPtr(account.Type),
 					"properties": llx.DictData(properties),
 				})
