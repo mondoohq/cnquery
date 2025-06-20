@@ -80,7 +80,7 @@ private microsoft.tenant.settings @defaults("isAppAndServicesTrialEnabled isOffi
   id string
   // Controls whether users can start trial subscriptions for apps and services in your organization.
   isAppAndServicesTrialEnabled bool
-  // Controls whether users can access the Microsoft Store.
+  // Controls whether users can access the Microsoft Store
   isOfficeStoreEnabled bool
 }
 
