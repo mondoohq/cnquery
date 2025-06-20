@@ -1018,8 +1018,8 @@ microsoft.devicemanagement {
   deviceEnrollmentConfigurations() []microsoft.devicemanagement.deviceEnrollmentConfiguration
 }
 
-// The Base Class of Device Enrollment Configuration
-private microsoft.devicemanagement.deviceEnrollmentConfiguration {
+// Microsoft Device Enrollment Configuration
+private microsoft.devicemanagement.deviceEnrollmentConfiguration @defaults("id displayName") {
   // Unique identifier for the account
   id string
   // The display name of the device enrollment configuration

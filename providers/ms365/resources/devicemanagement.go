@@ -176,6 +176,7 @@ func (a *mqlMicrosoftDevicemanagement) deviceEnrollmentConfigurations() ([]inter
 	for _, config := range configs {
 		mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.devicemanagement.deviceEnrollmentConfiguration",
 			map[string]*llx.RawData{
+				"__id":                 llx.StringDataPtr(config.GetId()),
 				"id":                   llx.StringDataPtr(config.GetId()),
 				"displayName":          llx.StringDataPtr(config.GetDisplayName()),
 				"description":          llx.StringDataPtr(config.GetDescription()),
