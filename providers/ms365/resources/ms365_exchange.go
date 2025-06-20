@@ -85,24 +85,23 @@ ConvertTo-Json -Depth 4 $exchangeOnline
 `
 
 type ExchangeOnlineReport struct {
-	MalwareFilterPolicy            []interface{} `json:"MalwareFilterPolicy"`
-	HostedOutboundSpamFilterPolicy []interface{} `json:"HostedOutboundSpamFilterPolicy"`
-	TransportRule                  []interface{} `json:"TransportRule"`
-	RemoteDomain                   []interface{} `json:"RemoteDomain"`
-	SafeLinksPolicy                []interface{} `json:"SafeLinksPolicy"`
-	SafeAttachmentPolicy           []interface{} `json:"SafeAttachmentPolicy"`
-	OrganizationConfig             interface{}   `json:"OrganizationConfig"`
-	AuthenticationPolicy           interface{}   `json:"AuthenticationPolicy"`
-	AntiPhishPolicy                []interface{} `json:"AntiPhishPolicy"`
-	DkimSigningConfig              interface{}   `json:"DkimSigningConfig"`
-	OwaMailboxPolicy               interface{}   `json:"OwaMailboxPolicy"`
-	AdminAuditLogConfig            interface{}   `json:"AdminAuditLogConfig"`
-	PhishFilterPolicy              []interface{} `json:"PhishFilterPolicy"`
-	// Mailbox                        []interface{}     `json:"Mailbox"`
-	AtpPolicyForO365     []interface{}     `json:"AtpPolicyForO365"`
-	SharingPolicy        []interface{}     `json:"SharingPolicy"`
-	RoleAssignmentPolicy []interface{}     `json:"RoleAssignmentPolicy"`
-	ExternalInOutlook    []*ExternalSender `json:"ExternalInOutlook"`
+	MalwareFilterPolicy            []interface{}     `json:"MalwareFilterPolicy"`
+	HostedOutboundSpamFilterPolicy []interface{}     `json:"HostedOutboundSpamFilterPolicy"`
+	TransportRule                  []interface{}     `json:"TransportRule"`
+	RemoteDomain                   []interface{}     `json:"RemoteDomain"`
+	SafeLinksPolicy                []interface{}     `json:"SafeLinksPolicy"`
+	SafeAttachmentPolicy           []interface{}     `json:"SafeAttachmentPolicy"`
+	OrganizationConfig             interface{}       `json:"OrganizationConfig"`
+	AuthenticationPolicy           interface{}       `json:"AuthenticationPolicy"`
+	AntiPhishPolicy                []interface{}     `json:"AntiPhishPolicy"`
+	DkimSigningConfig              interface{}       `json:"DkimSigningConfig"`
+	OwaMailboxPolicy               interface{}       `json:"OwaMailboxPolicy"`
+	AdminAuditLogConfig            interface{}       `json:"AdminAuditLogConfig"`
+	PhishFilterPolicy              []interface{}     `json:"PhishFilterPolicy"`
+	AtpPolicyForO365               []interface{}     `json:"AtpPolicyForO365"`
+	SharingPolicy                  []interface{}     `json:"SharingPolicy"`
+	RoleAssignmentPolicy           []interface{}     `json:"RoleAssignmentPolicy"`
+	ExternalInOutlook              []*ExternalSender `json:"ExternalInOutlook"`
 	// note: this only contains shared mailboxes
 	ExoMailbox             []*ExoMailbox             `json:"ExoMailbox"`
 	TeamsProtectionPolicy  []*TeamsProtectionPolicy  `json:"TeamsProtectionPolicy"`
