@@ -126,3 +126,5 @@ imei
 manageddevice
 meid
 udid
+Passwordless
+Sspr

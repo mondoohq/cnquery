@@ -837,3 +837,70 @@ func (a *mqlMicrosoftUser) authenticationRequirements() (*mqlMicrosoftUserAuthen
 
 	return mqlAuthRequirements.(*mqlMicrosoftUserAuthenticationRequirements), nil
 }
+
+// Needs the permission AuditLog.Read.All
+func (a *mqlMicrosoftUserAuthenticationMethods) registrationDetails() (*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, err
+	}
+
+	userID := a.__id
+	if userID == "" {
+		return nil, errors.New("cannot fetch user registration details without a user ID")
+	}
+
+	ctx := context.Background()
+	userRegistrationDetails, err := graphClient.Reports().
+		AuthenticationMethods().
+		UserRegistrationDetails().
+		ByUserRegistrationDetailsId(userID).
+		Get(ctx, nil)
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	return newMqlUserRegistrationDetails(a.MqlRuntime, userRegistrationDetails)
+}
+
+func newMqlUserRegistrationDetails(runtime *plugin.Runtime, details models.UserRegistrationDetailsable) (*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails, error) {
+	if details.GetId() == nil {
+		return nil, errors.New("user registration details response is missing an ID")
+	}
+
+	var userPrefMethodStr, userTypeStr string
+	if details.GetUserPreferredMethodForSecondaryAuthentication() != nil {
+		userPrefMethodStr = details.GetUserPreferredMethodForSecondaryAuthentication().String()
+	}
+	if details.GetUserType() != nil {
+		userTypeStr = details.GetUserType().String()
+	}
+
+	data := map[string]*llx.RawData{
+		"__id":                  llx.StringDataPtr(details.GetId()),
+		"id":                    llx.StringDataPtr(details.GetId()),
+		"isAdmin":               llx.BoolDataPtr(details.GetIsAdmin()),
+		"isMfaCapable":          llx.BoolDataPtr(details.GetIsMfaCapable()),
+		"isMfaRegistered":       llx.BoolDataPtr(details.GetIsMfaRegistered()),
+		"isPasswordlessCapable": llx.BoolDataPtr(details.GetIsPasswordlessCapable()),
+		"isSsprCapable":         llx.BoolDataPtr(details.GetIsSsprCapable()),
+		"isSsprEnabled":         llx.BoolDataPtr(details.GetIsSsprEnabled()),
+		"isSsprRegistered":      llx.BoolDataPtr(details.GetIsSsprRegistered()),
+		"isSystemPreferredAuthenticationMethodEnabled":  llx.BoolDataPtr(details.GetIsSystemPreferredAuthenticationMethodEnabled()),
+		"lastUpdatedDateTime":                           llx.TimeDataPtr(details.GetLastUpdatedDateTime()),
+		"methodsRegistered":                             llx.ArrayData(convert.SliceAnyToInterface(details.GetMethodsRegistered()), types.String),
+		"systemPreferredAuthenticationMethods":          llx.ArrayData(convert.SliceAnyToInterface(details.GetSystemPreferredAuthenticationMethods()), types.String),
+		"userDisplayName":                               llx.StringDataPtr(details.GetUserDisplayName()),
+		"userPreferredMethodForSecondaryAuthentication": llx.StringData(userPrefMethodStr),
+		"userPrincipalName":                             llx.StringDataPtr(details.GetUserPrincipalName()),
+		"userType":                                      llx.StringData(userTypeStr),
+	}
+
+	resource, err := CreateResource(runtime, "microsoft.user.authenticationMethods.userRegistrationDetails", data)
+	if err != nil {
+		return nil, err
+	}
+
+	return resource.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails), nil
+}
