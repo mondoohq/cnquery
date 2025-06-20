@@ -306,6 +306,7 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 	for _, m := range report.Mailbox {
 		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.mailbox",
 			map[string]*llx.RawData{
+				"__id":                 llx.StringData(m.Identity),
 				"identity":             llx.StringData(m.Identity),
 				"displayName":          llx.StringData(m.DisplayName),
 				"primarySmtpAddress":   llx.StringData(m.PrimarySmtpAddress),
