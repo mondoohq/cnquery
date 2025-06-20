@@ -301,7 +301,6 @@ resources:
       notes: {}
       operatingSystem: {}
       osVersion: {}
-      protectionState: {}
       serialNumber: {}
       udid: {}
       userDisplayName: {}
