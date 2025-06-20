@@ -79,7 +79,6 @@ func (a *mqlMicrosoftDevicemanagement) managedDevices() ([]interface{}, error) {
 }
 
 func newMqlMicrosoftManagedDevice(runtime *plugin.Runtime, u models.ManagedDeviceable) (*mqlMicrosoftDevicemanagementManageddevice, error) {
-
 	protectionState, err := convert.JsonToDict(newWindowsProtectionState(u.GetWindowsProtectionState()))
 	if err != nil {
 		return nil, err
@@ -156,6 +155,42 @@ func (a *mqlMicrosoftDevicemanagement) deviceConfigurations() ([]interface{}, er
 		}
 		res = append(res, mqlResource)
 	}
+	return res, nil
+}
+
+func (a *mqlMicrosoftDevicemanagement) deviceEnrollmentConfigurations() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	deviceEnrollmentConfigurations, err := graphClient.DeviceManagement().DeviceEnrollmentConfigurations().Get(ctx, nil)
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	configs := deviceEnrollmentConfigurations.GetValue()
+	res := []interface{}{}
+	for _, config := range configs {
+		mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.devicemanagement.deviceEnrollmentConfiguration",
+			map[string]*llx.RawData{
+				"__id":                 llx.StringDataPtr(config.GetId()),
+				"id":                   llx.StringDataPtr(config.GetId()),
+				"displayName":          llx.StringDataPtr(config.GetDisplayName()),
+				"description":          llx.StringDataPtr(config.GetDescription()),
+				"createdDateTime":      llx.TimeDataPtr(config.GetCreatedDateTime()),
+				"lastModifiedDateTime": llx.TimeDataPtr(config.GetLastModifiedDateTime()),
+				"priority":             llx.IntDataDefault(config.GetPriority(), 0),
+				"version":              llx.IntDataDefault(config.GetVersion(), 0),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlResource)
+	}
+
 	return res, nil
 }
 

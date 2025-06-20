@@ -254,6 +254,10 @@ func init() {
 			// to override args, implement: initMicrosoftDevicemanagement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftDevicemanagement,
 		},
+		"microsoft.devicemanagement.deviceEnrollmentConfiguration": {
+			// to override args, implement: initMicrosoftDevicemanagementDeviceEnrollmentConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftDevicemanagementDeviceEnrollmentConfiguration,
+		},
 		"microsoft.devicemanagement.manageddevice": {
 			// to override args, implement: initMicrosoftDevicemanagementManageddevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftDevicemanagementManageddevice,
@@ -1529,6 +1533,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.devicemanagement.deviceCompliancePolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagement).GetDeviceCompliancePolicies()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.devicecompliancepolicy")))
+	},
+	"microsoft.devicemanagement.deviceEnrollmentConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagement).GetDeviceEnrollmentConfigurations()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.deviceEnrollmentConfiguration")))
+	},
+	"microsoft.devicemanagement.deviceEnrollmentConfiguration.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.deviceEnrollmentConfiguration.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.deviceEnrollmentConfiguration.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration).GetDescription()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.deviceEnrollmentConfiguration.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration).GetPriority()).ToDataRes(types.Int)
+	},
+	"microsoft.devicemanagement.deviceEnrollmentConfiguration.createdDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration).GetCreatedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.devicemanagement.deviceEnrollmentConfiguration.lastModifiedDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration).GetLastModifiedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.devicemanagement.deviceEnrollmentConfiguration.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration).GetVersion()).ToDataRes(types.Int)
 	},
 	"microsoft.devicemanagement.manageddevice.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetId()).ToDataRes(types.String)
@@ -3639,6 +3667,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.devicemanagement.deviceCompliancePolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDevicemanagement).DeviceCompliancePolicies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.deviceEnrollmentConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagement).DeviceEnrollmentConfigurations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.deviceEnrollmentConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.devicemanagement.deviceEnrollmentConfiguration.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.deviceEnrollmentConfiguration.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.deviceEnrollmentConfiguration.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.deviceEnrollmentConfiguration.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.deviceEnrollmentConfiguration.createdDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration).CreatedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.deviceEnrollmentConfiguration.lastModifiedDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration).LastModifiedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.deviceEnrollmentConfiguration.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"microsoft.devicemanagement.manageddevice.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8900,6 +8964,7 @@ type mqlMicrosoftDevicemanagement struct {
 	ManagedDevices plugin.TValue[[]interface{}]
 	DeviceConfigurations plugin.TValue[[]interface{}]
 	DeviceCompliancePolicies plugin.TValue[[]interface{}]
+	DeviceEnrollmentConfigurations plugin.TValue[[]interface{}]
 }
 
 // createMicrosoftDevicemanagement creates a new instance of this resource
@@ -8980,6 +9045,96 @@ func (c *mqlMicrosoftDevicemanagement) GetDeviceCompliancePolicies() *plugin.TVa
 
 		return c.deviceCompliancePolicies()
 	})
+}
+
+func (c *mqlMicrosoftDevicemanagement) GetDeviceEnrollmentConfigurations() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.DeviceEnrollmentConfigurations, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.devicemanagement", c.__id, "deviceEnrollmentConfigurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.deviceEnrollmentConfigurations()
+	})
+}
+
+// mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration for the microsoft.devicemanagement.deviceEnrollmentConfiguration resource
+type mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftDevicemanagementDeviceEnrollmentConfigurationInternal it will be used here
+	Id plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	Description plugin.TValue[string]
+	Priority plugin.TValue[int64]
+	CreatedDateTime plugin.TValue[*time.Time]
+	LastModifiedDateTime plugin.TValue[*time.Time]
+	Version plugin.TValue[int64]
+}
+
+// createMicrosoftDevicemanagementDeviceEnrollmentConfiguration creates a new instance of this resource
+func createMicrosoftDevicemanagementDeviceEnrollmentConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.devicemanagement.deviceEnrollmentConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration) MqlName() string {
+	return "microsoft.devicemanagement.deviceEnrollmentConfiguration"
+}
+
+func (c *mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration) GetPriority() *plugin.TValue[int64] {
+	return &c.Priority
+}
+
+func (c *mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration) GetCreatedDateTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedDateTime
+}
+
+func (c *mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration) GetLastModifiedDateTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedDateTime
+}
+
+func (c *mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration) GetVersion() *plugin.TValue[int64] {
+	return &c.Version
 }
 
 // mqlMicrosoftDevicemanagementManageddevice for the microsoft.devicemanagement.manageddevice resource
