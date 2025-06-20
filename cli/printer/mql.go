@@ -21,6 +21,27 @@ import (
 
 const MsgUnsupported = "unsupported platform"
 
+type printCache struct {
+	bundle         *llx.CodeBundle
+	checksumLookup map[string]uint64
+	isInline       bool
+}
+
+func newPrintCache(bundle *llx.CodeBundle) *printCache {
+	res := &printCache{
+		bundle: bundle,
+	}
+
+	code := bundle.CodeV2
+	lookup := make(map[string]uint64, len(code.Checksums))
+	for k, v := range code.Checksums {
+		lookup[v] = k
+	}
+	res.checksumLookup = lookup
+
+	return res
+}
+
 func (print *Printer) Datas(bundle *llx.CodeBundle, results map[string]*llx.RawResult) string {
 	var res strings.Builder
 	i := 0
@@ -63,9 +84,11 @@ func (print *Printer) Assessment(bundle *llx.CodeBundle, assessment *llx.Assessm
 		indent = "  "
 	}
 
+	cache := newPrintCache(bundle)
+
 	// indent all sub-results
 	for i := range assessment.Results {
-		cur := print.assessment(bundle, assessment.Results[i], indent)
+		cur := print.assessment(assessment.Results[i], indent, cache)
 		res.WriteString(indent)
 		res.WriteString(cur)
 		res.WriteString("\n")
@@ -78,20 +101,16 @@ func isBooleanOp(op string) bool {
 	return op == "&&" || op == "||"
 }
 
-func (print *Printer) assessment(bundle *llx.CodeBundle, assessment *llx.AssessmentItem, indent string) string {
-	var codeID string
-	if bundle.CodeV2 != nil {
-		codeID = bundle.CodeV2.Id
-	} else {
-		return "error: no code id"
-	}
-
+func (print *Printer) assessment(assessment *llx.AssessmentItem, indent string, cache *printCache) string {
+	bundle := cache.bundle
 	nextIndent := indent + "  "
+	checksum := assessment.Checksum
+
 	if assessment.Error != "" {
 		var res strings.Builder
 		res.WriteString(print.Failed("[failed] "))
 		if bundle != nil && bundle.Labels != nil {
-			label := bundle.Labels.Labels[assessment.Checksum]
+			label := bundle.Labels.Labels[checksum]
 			res.WriteString(label)
 		}
 		res.WriteString("\n")
@@ -108,7 +127,7 @@ func (print *Printer) assessment(bundle *llx.CodeBundle, assessment *llx.Assessm
 
 		data := make([]string, len(assessment.Data))
 		for i := range assessment.Data {
-			data[i] = print.Primitive(assessment.Data[i], codeID, bundle, indent)
+			data[i] = print.primitive(assessment.Data[i], "", indent, cache)
 		}
 		res := print.Failed("[failed] ") +
 			print.assessmentTemplate(assessment.Template, data)
@@ -122,9 +141,9 @@ func (print *Printer) assessment(bundle *llx.CodeBundle, assessment *llx.Assessm
 
 		var res strings.Builder
 		res.WriteString(print.Secondary("[failed] "))
-		res.WriteString(print.Primitive(assessment.Actual, codeID, bundle, nextIndent))
+		res.WriteString(print.primitive(assessment.Actual, "", nextIndent, cache))
 		res.WriteString(" " + assessment.Operation + " ")
-		res.WriteString(print.Primitive(assessment.Expected, codeID, bundle, nextIndent))
+		res.WriteString(print.primitive(assessment.Expected, "", nextIndent, cache))
 		return res.String()
 	}
 
@@ -135,13 +154,13 @@ func (print *Printer) assessment(bundle *llx.CodeBundle, assessment *llx.Assessm
 
 		return print.Secondary("[ok]") +
 			" value: " +
-			print.Primitive(assessment.Actual, codeID, bundle, indent)
+			print.primitive(assessment.Actual, "", indent, cache)
 	}
 
 	var res strings.Builder
 	res.WriteString(print.Failed("[failed] "))
 	if bundle != nil && bundle.Labels != nil {
-		label, ok := bundle.Labels.Labels[assessment.Checksum]
+		label, ok := bundle.Labels.Labels[checksum]
 		if ok {
 			res.WriteString(label)
 		}
@@ -151,14 +170,14 @@ func (print *Printer) assessment(bundle *llx.CodeBundle, assessment *llx.Assessm
 	if assessment.Expected != nil {
 		res.WriteString(nextIndent)
 		res.WriteString("expected: " + assessment.Operation + " ")
-		res.WriteString(print.Primitive(assessment.Expected, codeID, bundle, nextIndent))
+		res.WriteString(print.primitive(assessment.Expected, "", nextIndent, cache))
 		res.WriteString("\n")
 	}
 
 	if assessment.Actual != nil {
 		res.WriteString(nextIndent)
 		res.WriteString("actual:   ")
-		res.WriteString(print.Primitive(assessment.Actual, codeID, bundle, nextIndent))
+		res.WriteString(print.primitive(assessment.Actual, checksum, nextIndent, cache))
 	}
 
 	return res.String()
@@ -173,7 +192,7 @@ func (print *Printer) Result(result *llx.RawResult, bundle *llx.CodeBundle) stri
 	return print.DataWithLabel(result.Data, result.CodeID, bundle, "")
 }
 
-func (print *Printer) label(ref string, bundle *llx.CodeBundle, isResource bool) string {
+func (print *Printer) label(ref string, bundle *llx.CodeBundle) string {
 	if bundle == nil {
 		return ""
 	}
@@ -227,33 +246,51 @@ func isDefaultField(ref string, bundle *llx.CodeBundle, defaultFields []string) 
 	return slices.Contains(defaultFields, label)
 }
 
-func (print *Printer) array(typ types.Type, data []interface{}, codeID string, bundle *llx.CodeBundle, indent string) string {
+func (print *Printer) array(typ types.Type, data []interface{}, checksum string, indent string, cache *printCache) string {
 	if len(data) == 0 {
 		return "[]"
 	}
 
 	var res strings.Builder
-	res.WriteString("[\n")
-
-	code := bundle.CodeV2
-	ep := code.Blocks[0].Entrypoints[0]
-	chunk := code.Chunk(ep)
-	listType := ""
-	switch chunk.Id {
-	case "$one", "$all", "$none", "$any":
-		ref := chunk.Function.Binding
-		listChunk := code.Chunk(ref)
-		listType = types.Type(listChunk.Type()).Child().Label()
-		listType += " "
+	if cache.isInline {
+		res.WriteString("[")
+	} else {
+		res.WriteString("[\n")
 	}
 
-	for i := range data {
-		res.WriteString(fmt.Sprintf(
-			indent+"  %d: %s%s\n",
-			i,
-			listType,
-			print.Data(typ.Child(), data[i], codeID, bundle, indent+"  "),
-		))
+	ep := cache.checksumLookup[checksum]
+	listType := ""
+	if ep != 0 {
+		code := cache.bundle.CodeV2
+		chunk := code.Chunk(ep)
+		switch chunk.Id {
+		case "$one", "$all", "$none", "$any":
+			ref := chunk.Function.Binding
+			listChunk := code.Chunk(ref)
+			listType = types.Type(listChunk.Type()).Child().Label()
+			listType += " "
+		}
+	}
+
+	if cache.isInline {
+		for i := range data {
+			res.WriteString(print.data(typ.Child(), data[i], checksum, indent, cache))
+			if len(data) != i+1 {
+				res.WriteString(", ")
+			}
+		}
+	} else {
+		inlinePrint := *cache
+		inlinePrint.isInline = true
+
+		for i := range data {
+			res.WriteString(fmt.Sprintf(
+				indent+"  %d: %s%s\n",
+				i,
+				listType,
+				print.data(typ.Child(), data[i], checksum, indent+"  ", &inlinePrint),
+			))
+		}
 	}
 
 	res.WriteString(indent + "]")
@@ -313,7 +350,7 @@ func (print *Printer) dataAssessment(codeID string, data map[string]interface{},
 	return print.assessmentTemplate(assertion.Template, fields)
 }
 
-func (print *Printer) refMap(typ types.Type, data map[string]interface{}, codeID string, bundle *llx.CodeBundle, indent string) string {
+func (print *Printer) refMap(data map[string]any, checksum string, indent string, cache *printCache) string {
 	if len(data) == 0 {
 		return "{}"
 	}
@@ -324,20 +361,22 @@ func (print *Printer) refMap(typ types.Type, data map[string]interface{}, codeID
 	labeledKeys := []string{}
 	keys := sortx.Keys(data)
 	for i := range keys {
-		if _, ok := bundle.Labels.Labels[keys[i]]; ok {
+		if _, ok := cache.bundle.Labels.Labels[keys[i]]; ok {
 			labeledKeys = append(labeledKeys, keys[i])
 		}
 	}
 
-	code := bundle.CodeV2
-	ep := code.Blocks[0].Entrypoints[0]
-	chunk := code.Chunk(ep)
+	ep := cache.checksumLookup[checksum]
 	listType := ""
-	switch chunk.Id {
-	case "$one", "$all", "$none", "$any":
-		ref := chunk.Function.Binding
-		listChunk := code.Chunk(ref)
-		listType = types.Type(listChunk.Type()).Child().Label()
+	if ep != 0 {
+		code := cache.bundle.CodeV2
+		chunk := code.Chunk(ep)
+		switch chunk.Id {
+		case "$one", "$all", "$none", "$any":
+			ref := chunk.Function.Binding
+			listChunk := code.Chunk(ref)
+			listType = types.Type(listChunk.Type()).Child().Label()
+		}
 	}
 
 	nonDefaultFields := []string{}
@@ -354,14 +393,14 @@ func (print *Printer) refMap(typ types.Type, data map[string]interface{}, codeID
 			continue
 		}
 
-		if !isDefaultField(k, bundle, defaultFields) {
+		if !isDefaultField(k, cache.bundle, defaultFields) {
 			// save for later output after we wrote all the default fields
 			nonDefaultFields = append(nonDefaultFields, k)
 			continue
 		}
 
 		v := data[k]
-		label := print.defaultLabel(k, bundle)
+		label := print.defaultLabel(k, cache.bundle)
 		val := v.(*llx.RawData)
 
 		if plugin.IsUnsupportedProviderError(val.Error) {
@@ -373,7 +412,7 @@ func (print *Printer) refMap(typ types.Type, data map[string]interface{}, codeID
 			continue
 		}
 
-		data := print.Data(val.Type, val.Value, k, bundle, "")
+		data := print.data(val.Type, val.Value, k, "", cache)
 		res.WriteString(label + data + " ")
 	}
 
@@ -385,7 +424,7 @@ func (print *Printer) refMap(typ types.Type, data map[string]interface{}, codeID
 			}
 
 			v := data[k]
-			label := print.label(k, bundle, true)
+			label := print.label(k, cache.bundle)
 			val := v.(*llx.RawData)
 
 			if plugin.IsUnsupportedProviderError(val.Error) {
@@ -398,7 +437,7 @@ func (print *Printer) refMap(typ types.Type, data map[string]interface{}, codeID
 			}
 
 			if truthy, _ := val.IsTruthy(); !truthy {
-				assertion := print.dataAssessment(k, data, bundle)
+				assertion := print.dataAssessment(k, data, cache.bundle)
 				if assertion != "" {
 					assertion = print.Failed("[failed]") + " " + strings.Trim(assertion, "\n\t ")
 					assertion = indentBlock(assertion, indent+"  ")
@@ -407,7 +446,7 @@ func (print *Printer) refMap(typ types.Type, data map[string]interface{}, codeID
 				}
 			}
 
-			data := print.Data(val.Type, val.Value, k, bundle, indent+"  ")
+			data := print.data(val.Type, val.Value, k, indent+"  ", cache)
 			res.WriteString(indent + "  " + label + data + "\n")
 		}
 
@@ -416,7 +455,7 @@ func (print *Printer) refMap(typ types.Type, data map[string]interface{}, codeID
 	return res.String()
 }
 
-func (print *Printer) stringMap(typ types.Type, data map[string]interface{}, codeID string, bundle *llx.CodeBundle, indent string) string {
+func (print *Printer) stringMap(typ types.Type, data map[string]interface{}, indent string, cache *printCache) string {
 	if len(data) == 0 {
 		return "{}"
 	}
@@ -427,7 +466,7 @@ func (print *Printer) stringMap(typ types.Type, data map[string]interface{}, cod
 	keys := sortx.Keys(data)
 	for _, k := range keys {
 		v := data[k]
-		val := print.Data(typ.Child(), v, k, bundle, indent+"  ")
+		val := print.data(typ.Child(), v, k, indent+"  ", cache)
 		res.WriteString(fmt.Sprintf(indent+"  %s: %s\n", k, val))
 	}
 
@@ -435,7 +474,7 @@ func (print *Printer) stringMap(typ types.Type, data map[string]interface{}, cod
 	return res.String()
 }
 
-func (print *Printer) dict(typ types.Type, raw interface{}, codeID string, bundle *llx.CodeBundle, indent string) string {
+func (print *Printer) dict(typ types.Type, raw interface{}, indent string, cache *printCache) string {
 	if raw == nil {
 		return print.Secondary("null")
 	}
@@ -471,7 +510,7 @@ func (print *Printer) dict(typ types.Type, raw interface{}, codeID string, bundl
 			res.WriteString(fmt.Sprintf(
 				indent+"  %d: %s\n",
 				i,
-				print.dict(typ, data[i], "", bundle, indent+"  "),
+				print.dict(typ, data[i], indent+"  ", cache),
 			))
 		}
 
@@ -488,7 +527,7 @@ func (print *Printer) dict(typ types.Type, raw interface{}, codeID string, bundl
 
 		keys := sortx.Keys(data)
 		for _, k := range keys {
-			s := print.dict(typ, data[k], "", bundle, indent+"  ")
+			s := print.dict(typ, data[k], indent+"  ", cache)
 			res.WriteString(fmt.Sprintf(indent+"  %s: %s\n", k, s))
 		}
 
@@ -500,7 +539,7 @@ func (print *Printer) dict(typ types.Type, raw interface{}, codeID string, bundl
 	}
 }
 
-func (print *Printer) intMap(typ types.Type, data map[int]interface{}, codeID string, bundle *llx.CodeBundle, indent string) string {
+func (print *Printer) intMap(typ types.Type, data map[int]interface{}, indent string, cache *printCache) string {
 	var res strings.Builder
 	res.WriteString("{\n")
 
@@ -518,16 +557,16 @@ var codeBlockIds = map[string]struct{}{
 	"if": {},
 }
 
-func isCodeBlock(codeID string, bundle *llx.CodeBundle) bool {
+func isCodeBlock(checksum string, bundle *llx.CodeBundle) bool {
 	if bundle == nil {
 		return false
 	}
 
-	_, ok := bundle.Labels.Labels[codeID]
+	_, ok := bundle.Labels.Labels[checksum]
 	return ok
 }
 
-func (print *Printer) resourceContext(data any, checksum string, bundle *llx.CodeBundle, indent string) (string, bool) {
+func (print *Printer) resourceContext(data any, checksum string, indent string, cache *printCache) (string, bool) {
 	m, ok := data.(map[string]any)
 	if !ok {
 		return "", false
@@ -538,7 +577,7 @@ func (print *Printer) resourceContext(data any, checksum string, bundle *llx.Cod
 	var content string
 
 	for k, v := range m {
-		label, ok := bundle.Labels.Labels[k]
+		label, ok := cache.bundle.Labels.Labels[k]
 		if !ok {
 			continue
 		}
@@ -589,7 +628,7 @@ func (print *Printer) resourceContext(data any, checksum string, bundle *llx.Cod
 	return r, true
 }
 
-func (print *Printer) autoExpand(blockRef uint64, data interface{}, bundle *llx.CodeBundle, indent string) string {
+func (print *Printer) autoExpand(blockRef uint64, data interface{}, indent string, cache *printCache) string {
 	var res strings.Builder
 
 	if arr, ok := data.([]interface{}); ok {
@@ -602,7 +641,7 @@ func (print *Printer) autoExpand(blockRef uint64, data interface{}, bundle *llx.
 		for i := range arr {
 			num := strconv.Itoa(i)
 			autoIndent := prefix + strings.Repeat(" ", len(num)+2)
-			c := print.autoExpand(blockRef, arr[i], bundle, autoIndent)
+			c := print.autoExpand(blockRef, arr[i], autoIndent, cache)
 			res.WriteString(prefix)
 			res.WriteString(num)
 			res.WriteString(": ")
@@ -622,7 +661,7 @@ func (print *Printer) autoExpand(blockRef uint64, data interface{}, bundle *llx.
 		return "data is not a map to auto-expand"
 	}
 
-	block := bundle.CodeV2.Block(blockRef)
+	block := cache.bundle.CodeV2.Block(blockRef)
 	var name string
 
 	self, ok := m["_"].(*llx.RawData)
@@ -650,7 +689,7 @@ func (print *Printer) autoExpand(blockRef uint64, data interface{}, bundle *llx.
 	if block != nil {
 		// important to process them in this order
 		for _, ref := range block.Entrypoints {
-			checksum := bundle.CodeV2.Checksums[ref]
+			checksum := cache.bundle.CodeV2.Checksums[ref]
 			v, ok := m[checksum]
 			if !ok {
 				continue
@@ -660,14 +699,14 @@ func (print *Printer) autoExpand(blockRef uint64, data interface{}, bundle *llx.
 				continue
 			}
 
-			label := bundle.Labels.Labels[checksum]
+			label := cache.bundle.Labels.Labels[checksum]
 
 			// Note (Dom): We don't have precise matching on the resource context
 			// just yet. Here we handle it via best-effort, i.e. if it's called
 			// context, a block, and it's part of the resource's auto-expand, then we
 			// treat it as a kind of resource context.
 			if label == "context" && types.Type(vv.Type) == types.Block {
-				if data, ok := print.resourceContext(vv.Value, checksum, bundle, indent); ok {
+				if data, ok := print.resourceContext(vv.Value, checksum, indent, cache); ok {
 					res.WriteByte('\n')
 					res.WriteString(indent)
 					res.WriteString("in ")
@@ -676,7 +715,7 @@ func (print *Printer) autoExpand(blockRef uint64, data interface{}, bundle *llx.
 				}
 			}
 
-			val := print.Data(vv.Type, vv.Value, checksum, bundle, indent)
+			val := print.data(vv.Type, vv.Value, checksum, indent, cache)
 			res.WriteByte(' ')
 			res.WriteString(label)
 			res.WriteByte('=')
@@ -687,13 +726,17 @@ func (print *Printer) autoExpand(blockRef uint64, data interface{}, bundle *llx.
 	return res.String()
 }
 
-func (print *Printer) Data(typ types.Type, data interface{}, codeID string, bundle *llx.CodeBundle, indent string) string {
+func (print *Printer) Data(typ types.Type, data interface{}, checksum string, bundle *llx.CodeBundle, indent string) string {
+	return print.data(typ, data, checksum, indent, newPrintCache(bundle))
+}
+
+func (print *Printer) data(typ types.Type, data any, checksum string, indent string, cache *printCache) string {
 	if typ.NotSet() {
 		return "no data available"
 	}
 
-	if blockRef, ok := bundle.AutoExpand[codeID]; ok {
-		return print.autoExpand(blockRef, data, bundle, indent)
+	if blockRef, ok := cache.bundle.AutoExpand[checksum]; ok {
+		return print.autoExpand(blockRef, data, indent, cache)
 	}
 
 	switch typ.Underlying() {
@@ -768,13 +811,13 @@ func (print *Printer) Data(typ types.Type, data interface{}, codeID string, bund
 
 		return print.Secondary(durationStr)
 	case types.Dict:
-		return print.dict(typ, data, codeID, bundle, indent)
+		return print.dict(typ, data, indent, cache)
 
 	case types.Score:
 		return llx.ScoreString(data.([]byte))
 
 	case types.Block:
-		return print.refMap(typ, data.(map[string]interface{}), codeID, bundle, indent)
+		return print.refMap(data.(map[string]interface{}), checksum, indent, cache)
 
 	case types.Version:
 		return print.Secondary(data.(string))
@@ -789,17 +832,17 @@ func (print *Printer) Data(typ types.Type, data interface{}, codeID string, bund
 		if data == nil {
 			return print.Secondary("null")
 		}
-		return print.array(typ, data.([]interface{}), codeID, bundle, indent)
+		return print.array(typ, data.([]interface{}), checksum, indent, cache)
 
 	case types.MapLike:
 		if data == nil {
 			return print.Secondary("null")
 		}
 		if typ.Key() == types.String {
-			return print.stringMap(typ, data.(map[string]interface{}), codeID, bundle, indent)
+			return print.stringMap(typ, data.(map[string]interface{}), indent, cache)
 		}
 		if typ.Key() == types.Int {
-			return print.intMap(typ, data.(map[int]interface{}), codeID, bundle, indent)
+			return print.intMap(typ, data.(map[int]interface{}), indent, cache)
 		}
 		return "unable to render map, its type is not supported: " + typ.Label() + ", raw: " + fmt.Sprintf("%#v", data)
 
@@ -859,7 +902,7 @@ func filterErrors(e error) error {
 }
 
 // DataWithLabel prints RawData into a string
-func (print *Printer) DataWithLabel(r *llx.RawData, codeID string, bundle *llx.CodeBundle, indent string) string {
+func (print *Printer) DataWithLabel(r *llx.RawData, checksum string, bundle *llx.CodeBundle, indent string) string {
 	b := strings.Builder{}
 	errs := filterErrors(r.Error)
 	if errs != nil {
@@ -867,8 +910,8 @@ func (print *Printer) DataWithLabel(r *llx.RawData, codeID string, bundle *llx.C
 		b.WriteByte('\n')
 	}
 
-	b.WriteString(print.label(codeID, bundle, r.Type.IsResource()))
-	b.WriteString(print.Data(r.Type, r.Value, codeID, bundle, indent))
+	b.WriteString(print.label(checksum, bundle))
+	b.WriteString(print.Data(r.Type, r.Value, checksum, bundle, indent))
 	return b.String()
 }
 
@@ -910,6 +953,7 @@ func (print *Printer) CodeBundle(bundle *llx.CodeBundle) string {
 func (print *Printer) CodeV2(code *llx.CodeV2, bundle *llx.CodeBundle, indent string) string {
 	var res strings.Builder
 	indent += "   "
+	cache := newPrintCache(bundle)
 
 	for i := range code.Blocks {
 		block := code.Blocks[i]
@@ -928,14 +972,14 @@ func (print *Printer) CodeV2(code *llx.CodeV2, bundle *llx.CodeBundle, indent st
 
 		for j := range block.Chunks {
 			res.WriteString("   ")
-			print.chunkV2(j, block.Chunks[j], block, bundle, indent, &res)
+			print.chunkV2(j, block.Chunks[j], block, indent, cache, &res)
 		}
 	}
 
 	return res.String()
 }
 
-func (print *Printer) chunkV2(idx int, chunk *llx.Chunk, block *llx.Block, bundle *llx.CodeBundle, indent string, w *strings.Builder) {
+func (print *Printer) chunkV2(idx int, chunk *llx.Chunk, block *llx.Block, indent string, cache *printCache, w *strings.Builder) {
 	sidx := strconv.Itoa(idx+1) + ": "
 
 	switch chunk.Call {
@@ -961,20 +1005,20 @@ func (print *Printer) chunkV2(idx int, chunk *llx.Chunk, block *llx.Block, bundl
 		}
 
 		// FIXME: this is definitely the wrong ID
-		w.WriteString(print.Primitive(primitive, bundle.CodeV2.Id, bundle, indent))
+		w.WriteString(print.primitive(primitive, "", indent, cache))
 	}
 
 	if chunk.Function != nil {
-		w.WriteString(print.functionV2(chunk.Function, bundle.CodeV2.Id, bundle, indent))
+		w.WriteString(print.functionV2(chunk.Function, "", indent, cache))
 	}
 
 	w.WriteString("\n")
 }
 
-func (print *Printer) functionV2(f *llx.Function, codeID string, bundle *llx.CodeBundle, indent string) string {
+func (print *Printer) functionV2(f *llx.Function, checksum string, indent string, cache *printCache) string {
 	argsStr := ""
 	if len(f.Args) > 0 {
-		argsStr = " (" + strings.TrimSpace(print.primitives(f.Args, codeID, bundle, indent)) + ")"
+		argsStr = " (" + strings.TrimSpace(print.primitives(f.Args, checksum, indent, cache)) + ")"
 	}
 
 	return "bind: <" + strconv.Itoa(int(f.Binding>>32)) + "," +
@@ -983,25 +1027,30 @@ func (print *Printer) functionV2(f *llx.Function, codeID string, bundle *llx.Cod
 		argsStr
 }
 
-func (print *Printer) primitives(list []*llx.Primitive, codeID string, bundle *llx.CodeBundle, indent string) string {
+func (print *Printer) primitives(list []*llx.Primitive, checksum string, indent string, cache *printCache) string {
 	if len(list) == 0 {
 		return ""
 	}
 	var res strings.Builder
 
 	if len(list) >= 1 {
-		res.WriteString(print.Primitive(list[0], codeID, bundle, indent))
+		res.WriteString(print.primitive(list[0], checksum, indent, cache))
 	}
 
 	for i := 1; i < len(list); i++ {
 		res.WriteString(", ")
-		res.WriteString(strings.TrimLeft(print.Primitive(list[i], codeID, bundle, indent), " "))
+		res.WriteString(strings.TrimLeft(print.primitive(list[i], checksum, indent, cache), " "))
 	}
 	return res.String()
 }
 
 // Primitive prints the llx primitive to a string
-func (print *Printer) Primitive(primitive *llx.Primitive, codeID string, bundle *llx.CodeBundle, indent string) string {
+func (print *Printer) Primitive(primitive *llx.Primitive, checksum string, bundle *llx.CodeBundle, indent string) string {
+	return print.primitive(primitive, checksum, indent, newPrintCache(bundle))
+}
+
+// Primitive prints the llx primitive to a string
+func (print *Printer) primitive(primitive *llx.Primitive, checksum string, indent string, cache *printCache) string {
 	if primitive == nil {
 		return "?"
 	}
@@ -1010,7 +1059,7 @@ func (print *Printer) Primitive(primitive *llx.Primitive, codeID string, bundle 
 		return "_"
 	}
 	raw := primitive.RawData()
-	return print.Data(raw.Type, raw.Value, codeID, bundle, indent)
+	return print.data(raw.Type, raw.Value, checksum, indent, cache)
 }
 
 func indentBlock(text string, indent string) string {
