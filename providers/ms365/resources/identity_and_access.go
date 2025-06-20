@@ -51,23 +51,22 @@ func (a *mqlMicrosoftIdentityAndAccess) list() ([]interface{}, error) {
 		requestFilter = defaultRequestFilterDirectoryRole
 	}
 
-	filterStr := requestFilter
 	requestParameters := &graphpolicies.RoleManagementPoliciesRequestBuilderGetQueryParameters{}
 
 	switch {
-	case strings.Contains(filterStr, "scopeType eq 'DirectoryRole'"):
+	case strings.Contains(requestFilter, "scopeType eq 'DirectoryRole'"):
 		requestParameters = &graphpolicies.RoleManagementPoliciesRequestBuilderGetQueryParameters{
-			Filter: &filterStr,
+			Filter: &requestFilter,
 		}
 	// we can only get rules if scopeType set to 'Directory'
-	case strings.Contains(filterStr, "scopeType eq 'Directory'"):
+	case strings.Contains(requestFilter, "scopeType eq 'Directory'"):
 		requestParameters = &graphpolicies.RoleManagementPoliciesRequestBuilderGetQueryParameters{
-			Filter: &filterStr,
+			Filter: &requestFilter,
 			Expand: []string{"rules"},
 		}
 
 	default:
-		return nil, fmt.Errorf("scopeType in the filter needs to equal to 'Directory' or 'DirectoryRole', got %q", filterStr)
+		return nil, fmt.Errorf("scopeType in the filter needs to equal to 'Directory' or 'DirectoryRole', got %q", requestFilter)
 	}
 
 	configuration := &graphpolicies.RoleManagementPoliciesRequestBuilderGetRequestConfiguration{
@@ -161,7 +160,7 @@ func (m *mqlMicrosoftIdentityAndAccessPolicy) rules() ([]interface{}, error) {
 	return ruleResources, nil
 }
 
-func newMqlRoleManagementPolicyRule(runtime *plugin.Runtime, rule models.UnifiedRoleManagementPolicyRuleable) (plugin.Resource, error) {
+func newMqlRoleManagementPolicyRule(runtime *plugin.Runtime, rule models.UnifiedRoleManagementPolicyRuleable) (*mqlMicrosoftIdentityAndAccessPolicyRule, error) {
 	var mqlPolicyRuleTarget plugin.Resource
 	var err error
 
@@ -180,9 +179,14 @@ func newMqlRoleManagementPolicyRule(runtime *plugin.Runtime, rule models.Unified
 		}
 	}
 
-	return CreateResource(runtime, "microsoft.identityAndAccess.policy.rule",
+	resource, err := CreateResource(runtime, "microsoft.identityAndAccess.policy.rule",
 		map[string]*llx.RawData{
 			"id":     llx.StringDataPtr(rule.GetId()),
 			"target": llx.ResourceData(mqlPolicyRuleTarget, "microsoft.identityAndAccess.policy.rule.target"),
 		})
+	if err != nil {
+		return nil, err
+	}
+
+	return resource.(*mqlMicrosoftIdentityAndAccessPolicyRule), nil
 }
