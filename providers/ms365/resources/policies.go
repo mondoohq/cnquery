@@ -146,9 +146,10 @@ func newAuthenticationMethodsPolicy(runtime *plugin.Runtime, policy models.Authe
 
 	mqlAuthenticationMethodsPolicy, err := CreateResource(runtime, "microsoft.policies.authenticationMethodsPolicy",
 		map[string]*llx.RawData{
+			"__id":                               llx.StringDataPtr(policy.GetId()),
+			"id":                                 llx.StringDataPtr(policy.GetId()),
 			"description":                        llx.StringDataPtr(policy.GetDescription()),
 			"displayName":                        llx.StringDataPtr(policy.GetDisplayName()),
-			"id":                                 llx.StringDataPtr(policy.GetId()),
 			"lastModifiedDateTime":               llx.TimeDataPtr(policy.GetLastModifiedDateTime()),
 			"policyVersion":                      llx.StringDataPtr(policy.GetPolicyVersion()),
 			"authenticationMethodConfigurations": llx.ArrayData(authMethodConfigs, "microsoft.policies.authenticationMethodConfiguration"),
@@ -169,6 +170,7 @@ func newAuthenticationMethodConfigurations(runtime *plugin.Runtime, configs []mo
 		}
 
 		configData := map[string]*llx.RawData{
+			"__id":           llx.StringDataPtr(config.GetId()),
 			"id":             llx.StringDataPtr(config.GetId()),
 			"state":          llx.StringData(config.GetState().String()),
 			"excludeTargets": llx.ArrayData(excludeTargets, types.Dict),
