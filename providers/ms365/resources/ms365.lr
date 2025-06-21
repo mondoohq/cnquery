@@ -230,23 +230,21 @@ private microsoft.conditionalAccess.policy.conditions.authenticationFlows @defau
 
 // A collection of settings that define specific combinations of authentication methods and metadata.
 private microsoft.conditionalAccess.policy.grantControls.authenticationStrength @defaults("id displayName allowedCombinations") {
-  // The system-generated identifier for this mode.
+  // The system-generated identifier for this mode
   id string
-  // A collection of authentication method modes that are required be used to satisfy this authentication strength.
+  // A collection of authentication method modes that are required be used to satisfy this authentication strength
   allowedCombinations []string
-  // The human-readable display name of this policy.
+  // The human-readable display name of this policy
   displayName string
-  // The human-readable description of this policy.
+  // The human-readable description of this policy
   description string
-  // A descriptor if this policy is built into Microsoft Entra ID or created by an admin for the tenant.
-  // The possible values are: builtIn, custom, unknownFutureValue.
+  // A descriptor if this policy is built into Microsoft Entra ID or created by an admin for the tenant. The possible values are: builtIn, custom, unknownFutureValue.
   policyType string
-  // A descriptor if this authentication strength grants the MFA claim upon successful satisfaction.
-  // The possible values are: none, mfa, unknownFutureValue.
+  // A descriptor if this authentication strength grants the MFA claim upon successful satisfaction. The possible values are: none, mfa, unknownFutureValue.
   requirementsSatisfied string
-  // The time when this policy was created.
+  // The time when this policy was created
   createdDateTime time
-  // The time when this policy was last modified.
+  // The time when this policy was last modified
   modifiedDateTime time
 }
 
@@ -338,8 +336,7 @@ private microsoft.conditionalAccess.policy.grantControls @defaults("id") {
   id string
   // Defines the relationship of the grant controls. Possible values: AND, OR.
   operator string
-  // List of values of built-in controls required by the policy
-  // Possible values: block, mfa, compliantDevice, domainJoinedDevice, approvedApplication, compliantApplication, passwordChange, unknownFutureValue.
+  // List of values of built-in controls required by the policy. Possible values: block, mfa, compliantDevice, domainJoinedDevice, approvedApplication, compliantApplication, passwordChange, unknownFutureValue.
   builtInControls []string
   // The authentication strength required by the conditional access policy (Optional)
   authenticationStrength microsoft.conditionalAccess.policy.grantControls.authenticationStrength
@@ -359,8 +356,7 @@ private microsoft.conditionalAccess.policy.sessionControls @defaults("id") {
   cloudAppSecurity microsoft.conditionalAccess.policy.sessionControls.cloudAppSecurity
   // Session control to define whether to persist cookies or not. All apps should be selected for this session control to work correctly.
   persistentBrowser dict
-  // Session control to enforce application restrictions.
-  // Only Exchange Online and SharePoint Online support this session control
+  // Session control to enforce application restrictions. Only Exchange Online and SharePoint Online support this session control
   applicationEnforcedRestrictions microsoft.conditionalAccess.policy.sessionControls.applicationEnforcedRestrictions
   // Secure application model for continuous access evaluation
   secureSignInSession dict
@@ -532,17 +528,13 @@ private microsoft.user.authenticationMethods.userRegistrationDetails @defaults("
   isMfaRegistered bool
   // True if the user has registered a strong authentication method that doesn't require a password and is enabled by policy
   isPasswordlessCapable bool
-  // True if the user is capable of self-service password reset by having registered the required
-  // number of methods and being included in the policy
+  // True if the user is capable of self-service password reset by having registered the required number of methods and being included in the policy
   isSsprCapable bool
-  // True if the user is allowed to perform self-service password reset by policy,
-  // even if they have not yet registered the required number of methods
+  // True if the user is allowed to perform self-service password reset by policy, even if they have not yet registered the required number of methods
   isSsprEnabled bool
-  // True if the user has registered the required number of authentication methods for self-service password reset,
-  // regardless of whether they are enabled for by policy
+  // True if the user has registered the required number of authentication methods for self-service password reset, regardless of whether they are enabled for by policy
   isSsprRegistered bool
-  // True if system-preferred authentication is enabled, which allows the system to
-  // dynamically determine the most secure authentication method for the user
+  // True if system-preferred authentication is enabled, which allows the system to dynamically determine the most secure authentication method for the user
   isSystemPreferredAuthenticationMethodEnabled bool
   // The date and time when the user's registration details were last updated
   lastUpdatedDateTime time
