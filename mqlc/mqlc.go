@@ -2014,10 +2014,8 @@ func (c *compiler) updateEntrypoints(collectRefDatapoints bool) {
 	// 3. resolve operators
 	for ref := range entrypoints {
 		dps := code.RefDatapoints(ref)
-		if dps != nil {
-			for i := range dps {
-				datapoints[dps[i]] = struct{}{}
-			}
+		for i := range dps {
+			datapoints[dps[i]] = struct{}{}
 		}
 	}
 
