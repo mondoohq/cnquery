@@ -30,6 +30,7 @@ type assetInfo struct {
 	Kind        string            `json:"kind,omitempty"`
 	Runtime     string            `json:"runtime,omitempty"`
 	Labels      map[string]string `json:"labels,omitempty"`
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 type connection struct {
