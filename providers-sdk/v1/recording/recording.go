@@ -38,6 +38,7 @@ func NewAssetRecording(asset *inventory.Asset) *Asset {
 		ID:          id,
 		Name:        asset.Name,
 		PlatformIDs: asset.PlatformIds,
+		Annotations: asset.Annotations,
 	}
 
 	if asset.Platform != nil {
@@ -546,6 +547,7 @@ func (a assetInfo) ToInventory() *inventory.Asset {
 		Name:        a.Name,
 		Labels:      a.Labels,
 		PlatformIds: a.PlatformIDs,
+		Annotations: a.Annotations,
 		Platform: &inventory.Platform{
 			Name:    a.Name,
 			Arch:    a.Arch,
