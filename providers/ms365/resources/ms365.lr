@@ -1380,6 +1380,8 @@ private ms365.teams.teamsMeetingPolicyConfig {
   allowExternalParticipantGiveRequestControl bool
   // Whether users can report security concerns
   allowSecurityEndUserReporting bool
+  // Whether cloud recording is allowed
+  allowCloudRecordingForCalls bool
 }
 
 // Teams meeting policy configuration

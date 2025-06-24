@@ -33,10 +33,14 @@ Install-Module -Name MicrosoftTeams -Scope CurrentUser -Force
 Import-Module MicrosoftTeams
 Connect-MicrosoftTeams -AccessTokens @("$graphToken", "$teamsToken")
 
+# Fetch all the necessary policies
 $CsTeamsClientConfiguration = (Get-CsTeamsClientConfiguration)
 $CsTenantFederationConfiguration = (Get-CsTenantFederationConfiguration)
 $CsTeamsMeetingPolicy = (Get-CsTeamsMeetingPolicy -Identity Global)
 $CsTeamsMessagingPolicy = (Get-CsTeamsMessagingPolicy -Identity Global)
+# Fetch the calling policy to get the cloud recording setting
+$callingPolicy = (Get-CsTeamsCallingPolicy -Identity Global)
+$CsTeamsMeetingPolicy | Add-Member -NotePropertyName "AllowCloudRecordingForCalls" -NotePropertyValue $callingPolicy.AllowCloudRecordingForCalls
 
 $msteams = New-Object PSObject
 Add-Member -InputObject $msteams -MemberType NoteProperty -Name CsTeamsClientConfiguration -Value $CsTeamsClientConfiguration
@@ -80,6 +84,7 @@ type CsTeamsMeetingPolicy struct {
 	DesignatedPresenterRoleMode                string `json:"DesignatedPresenterRoleMode"`
 	AllowExternalParticipantGiveRequestControl bool   `json:"AllowExternalParticipantGiveRequestControl"`
 	AllowSecurityEndUserReporting              bool   `json:"AllowSecurityEndUserReporting"`
+	AllowCloudRecordingForCalls                bool   `json:"AllowCloudRecordingForCalls"`
 }
 
 type CsTeamsMessagingPolicy struct {
@@ -204,6 +209,7 @@ func (r *mqlMs365Teams) gatherTeamsReport() error {
 				"designatedPresenterRoleMode":                llx.StringData(teamsPolicy.DesignatedPresenterRoleMode),
 				"allowExternalParticipantGiveRequestControl": llx.BoolData(teamsPolicy.AllowExternalParticipantGiveRequestControl),
 				"allowSecurityEndUserReporting":              llx.BoolData(teamsPolicy.AllowSecurityEndUserReporting),
+				"allowCloudRecordingForCalls":                llx.BoolData(teamsPolicy.AllowCloudRecordingForCalls),
 			})
 		if mqlTeamsPolicyErr != nil {
 			r.CsTeamsMeetingPolicy = plugin.TValue[*mqlMs365TeamsTeamsMeetingPolicyConfig]{State: plugin.StateIsSet, Error: mqlTeamsPolicyErr}
