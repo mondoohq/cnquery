@@ -953,6 +953,15 @@ func (print *Printer) CodeV2(code *llx.CodeV2, bundle *llx.CodeBundle, indent st
 				res.WriteString(" ")
 			}
 		}
+		if len(block.Datapoints) != 0 {
+			res.WriteString("] datapoints: [")
+			for idx, ep := range block.Datapoints {
+				res.WriteString(fmt.Sprintf("<%d,%d>", ep>>32, ep&0xFFFFFFFF))
+				if idx != len(block.Datapoints)-1 {
+					res.WriteString(" ")
+				}
+			}
+		}
 		res.WriteString("]\n")
 
 		for j := range block.Chunks {
