@@ -98,10 +98,13 @@ func (a *mqlMicrosoftIdentityAndAccess) list() ([]interface{}, error) {
 
 func newMqlRoleManagementPolicy(runtime *plugin.Runtime, u models.UnifiedRoleManagementPolicyable) (*mqlMicrosoftIdentityAndAccessPolicy, error) {
 	lastModifiedByDict := map[string]interface{}{}
+	var err error
 
 	if u.GetLastModifiedBy() != nil {
-		lastModifiedByDict["id"] = llx.StringDataPtr(u.GetLastModifiedBy().GetId())
-		lastModifiedByDict["displayName"] = llx.StringDataPtr(u.GetLastModifiedBy().GetDisplayName())
+		lastModifiedByDict, err = convert.JsonToDict(newLastModifiedBy(u.GetLastModifiedBy()))
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	resource, err := CreateResource(runtime, "microsoft.identityAndAccess.policy",
