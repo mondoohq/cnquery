@@ -38,6 +38,10 @@ func init() {
 			// to override args, implement: initMicrosoftTenantSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftTenantSettings,
 		},
+		"microsoft.tenant.formsSettings": {
+			// to override args, implement: initMicrosoftTenantFormsSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftTenantFormsSettings,
+		},
 		"microsoft.users": {
 			Init: initMicrosoftUsers,
 			Create: createMicrosoftUsers,
@@ -467,14 +471,35 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.tenant.settings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenant).GetSettings()).ToDataRes(types.Resource("microsoft.tenant.settings"))
 	},
-	"microsoft.tenant.settings.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftTenantSettings).GetId()).ToDataRes(types.String)
+	"microsoft.tenant.formsSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenant).GetFormsSettings()).ToDataRes(types.Resource("microsoft.tenant.formsSettings"))
 	},
 	"microsoft.tenant.settings.isAppAndServicesTrialEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenantSettings).GetIsAppAndServicesTrialEnabled()).ToDataRes(types.Bool)
 	},
 	"microsoft.tenant.settings.isOfficeStoreEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenantSettings).GetIsOfficeStoreEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.tenant.formsSettings.isExternalSendFormEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenantFormsSettings).GetIsExternalSendFormEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.tenant.formsSettings.isExternalShareCollaborationEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenantFormsSettings).GetIsExternalShareCollaborationEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.tenant.formsSettings.isExternalShareResultEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenantFormsSettings).GetIsExternalShareResultEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.tenant.formsSettings.isExternalShareTemplateEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenantFormsSettings).GetIsExternalShareTemplateEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.tenant.formsSettings.isRecordIdentityByDefaultEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenantFormsSettings).GetIsRecordIdentityByDefaultEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.tenant.formsSettings.isBingImageSearchEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenantFormsSettings).GetIsBingImageSearchEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.tenant.formsSettings.isInOrgFormsPhishingScanEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenantFormsSettings).GetIsInOrgFormsPhishingScanEnabled()).ToDataRes(types.Bool)
 	},
 	"microsoft.users.filter": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUsers).GetFilter()).ToDataRes(types.String)
@@ -2076,20 +2101,52 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMicrosoftTenant).Settings, ok = plugin.RawToTValue[*mqlMicrosoftTenantSettings](v.Value, v.Error)
 		return
 	},
+	"microsoft.tenant.formsSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenant).FormsSettings, ok = plugin.RawToTValue[*mqlMicrosoftTenantFormsSettings](v.Value, v.Error)
+		return
+	},
 	"microsoft.tenant.settings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlMicrosoftTenantSettings).__id, ok = v.Value.(string)
 			return
 		},
-	"microsoft.tenant.settings.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftTenantSettings).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"microsoft.tenant.settings.isAppAndServicesTrialEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftTenantSettings).IsAppAndServicesTrialEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"microsoft.tenant.settings.isOfficeStoreEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftTenantSettings).IsOfficeStoreEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.tenant.formsSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftTenantFormsSettings).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.tenant.formsSettings.isExternalSendFormEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenantFormsSettings).IsExternalSendFormEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.tenant.formsSettings.isExternalShareCollaborationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenantFormsSettings).IsExternalShareCollaborationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.tenant.formsSettings.isExternalShareResultEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenantFormsSettings).IsExternalShareResultEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.tenant.formsSettings.isExternalShareTemplateEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenantFormsSettings).IsExternalShareTemplateEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.tenant.formsSettings.isRecordIdentityByDefaultEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenantFormsSettings).IsRecordIdentityByDefaultEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.tenant.formsSettings.isBingImageSearchEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenantFormsSettings).IsBingImageSearchEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.tenant.formsSettings.isInOrgFormsPhishingScanEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenantFormsSettings).IsInOrgFormsPhishingScanEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"microsoft.users.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4697,6 +4754,7 @@ type mqlMicrosoftTenant struct {
 	Type plugin.TValue[string]
 	Subscriptions plugin.TValue[[]interface{}]
 	Settings plugin.TValue[*mqlMicrosoftTenantSettings]
+	FormsSettings plugin.TValue[*mqlMicrosoftTenantFormsSettings]
 }
 
 // createMicrosoftTenant creates a new instance of this resource
@@ -4798,12 +4856,27 @@ func (c *mqlMicrosoftTenant) GetSettings() *plugin.TValue[*mqlMicrosoftTenantSet
 	})
 }
 
+func (c *mqlMicrosoftTenant) GetFormsSettings() *plugin.TValue[*mqlMicrosoftTenantFormsSettings] {
+	return plugin.GetOrCompute[*mqlMicrosoftTenantFormsSettings](&c.FormsSettings, func() (*mqlMicrosoftTenantFormsSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.tenant", c.__id, "formsSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftTenantFormsSettings), nil
+			}
+		}
+
+		return c.formsSettings()
+	})
+}
+
 // mqlMicrosoftTenantSettings for the microsoft.tenant.settings resource
 type mqlMicrosoftTenantSettings struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlMicrosoftTenantSettingsInternal it will be used here
-	Id plugin.TValue[string]
 	IsAppAndServicesTrialEnabled plugin.TValue[bool]
 	IsOfficeStoreEnabled plugin.TValue[bool]
 }
@@ -4819,12 +4892,7 @@ func createMicrosoftTenantSettings(runtime *plugin.Runtime, args map[string]*llx
 		return res, err
 	}
 
-	if res.__id == "" {
-	res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("microsoft.tenant.settings", res.__id)
@@ -4845,16 +4913,86 @@ func (c *mqlMicrosoftTenantSettings) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMicrosoftTenantSettings) GetId() *plugin.TValue[string] {
-	return &c.Id
-}
-
 func (c *mqlMicrosoftTenantSettings) GetIsAppAndServicesTrialEnabled() *plugin.TValue[bool] {
 	return &c.IsAppAndServicesTrialEnabled
 }
 
 func (c *mqlMicrosoftTenantSettings) GetIsOfficeStoreEnabled() *plugin.TValue[bool] {
 	return &c.IsOfficeStoreEnabled
+}
+
+// mqlMicrosoftTenantFormsSettings for the microsoft.tenant.formsSettings resource
+type mqlMicrosoftTenantFormsSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftTenantFormsSettingsInternal it will be used here
+	IsExternalSendFormEnabled plugin.TValue[bool]
+	IsExternalShareCollaborationEnabled plugin.TValue[bool]
+	IsExternalShareResultEnabled plugin.TValue[bool]
+	IsExternalShareTemplateEnabled plugin.TValue[bool]
+	IsRecordIdentityByDefaultEnabled plugin.TValue[bool]
+	IsBingImageSearchEnabled plugin.TValue[bool]
+	IsInOrgFormsPhishingScanEnabled plugin.TValue[bool]
+}
+
+// createMicrosoftTenantFormsSettings creates a new instance of this resource
+func createMicrosoftTenantFormsSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftTenantFormsSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.tenant.formsSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftTenantFormsSettings) MqlName() string {
+	return "microsoft.tenant.formsSettings"
+}
+
+func (c *mqlMicrosoftTenantFormsSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftTenantFormsSettings) GetIsExternalSendFormEnabled() *plugin.TValue[bool] {
+	return &c.IsExternalSendFormEnabled
+}
+
+func (c *mqlMicrosoftTenantFormsSettings) GetIsExternalShareCollaborationEnabled() *plugin.TValue[bool] {
+	return &c.IsExternalShareCollaborationEnabled
+}
+
+func (c *mqlMicrosoftTenantFormsSettings) GetIsExternalShareResultEnabled() *plugin.TValue[bool] {
+	return &c.IsExternalShareResultEnabled
+}
+
+func (c *mqlMicrosoftTenantFormsSettings) GetIsExternalShareTemplateEnabled() *plugin.TValue[bool] {
+	return &c.IsExternalShareTemplateEnabled
+}
+
+func (c *mqlMicrosoftTenantFormsSettings) GetIsRecordIdentityByDefaultEnabled() *plugin.TValue[bool] {
+	return &c.IsRecordIdentityByDefaultEnabled
+}
+
+func (c *mqlMicrosoftTenantFormsSettings) GetIsBingImageSearchEnabled() *plugin.TValue[bool] {
+	return &c.IsBingImageSearchEnabled
+}
+
+func (c *mqlMicrosoftTenantFormsSettings) GetIsInOrgFormsPhishingScanEnabled() *plugin.TValue[bool] {
+	return &c.IsInOrgFormsPhishingScanEnabled
 }
 
 // mqlMicrosoftUsers for the microsoft.users resource
