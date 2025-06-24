@@ -1937,6 +1937,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.teams.teamsMeetingPolicyConfig.allowSecurityEndUserReporting": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).GetAllowSecurityEndUserReporting()).ToDataRes(types.Bool)
 	},
+	"ms365.teams.teamsMeetingPolicyConfig.allowCloudRecordingForCalls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).GetAllowCloudRecordingForCalls()).ToDataRes(types.Bool)
+	},
 	"ms365.teams.teamsMessagingPolicyConfig.allowSecurityEndUserReporting": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365TeamsTeamsMessagingPolicyConfig).GetAllowSecurityEndUserReporting()).ToDataRes(types.Bool)
 	},
@@ -4314,6 +4317,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"ms365.teams.teamsMeetingPolicyConfig.allowSecurityEndUserReporting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).AllowSecurityEndUserReporting, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsMeetingPolicyConfig.allowCloudRecordingForCalls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).AllowCloudRecordingForCalls, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"ms365.teams.teamsMessagingPolicyConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10550,6 +10557,7 @@ type mqlMs365TeamsTeamsMeetingPolicyConfig struct {
 	DesignatedPresenterRoleMode plugin.TValue[string]
 	AllowExternalParticipantGiveRequestControl plugin.TValue[bool]
 	AllowSecurityEndUserReporting plugin.TValue[bool]
+	AllowCloudRecordingForCalls plugin.TValue[bool]
 }
 
 // createMs365TeamsTeamsMeetingPolicyConfig creates a new instance of this resource
@@ -10618,6 +10626,10 @@ func (c *mqlMs365TeamsTeamsMeetingPolicyConfig) GetAllowExternalParticipantGiveR
 
 func (c *mqlMs365TeamsTeamsMeetingPolicyConfig) GetAllowSecurityEndUserReporting() *plugin.TValue[bool] {
 	return &c.AllowSecurityEndUserReporting
+}
+
+func (c *mqlMs365TeamsTeamsMeetingPolicyConfig) GetAllowCloudRecordingForCalls() *plugin.TValue[bool] {
+	return &c.AllowCloudRecordingForCalls
 }
 
 // mqlMs365TeamsTeamsMessagingPolicyConfig for the ms365.teams.teamsMessagingPolicyConfig resource
