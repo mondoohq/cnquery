@@ -92,6 +92,11 @@ type VerifiedDomain struct {
 	Type         string `json:"type"`
 }
 
+type LastModifiedBy struct {
+	Id          string `json:"id"`
+	DisplayName string `json:"displayName"`
+}
+
 func newVerifiedDomains(p []models.VerifiedDomainable) []VerifiedDomain {
 	res := []VerifiedDomain{}
 	for i := range p {
@@ -107,6 +112,13 @@ func newVerifiedDomain(p models.VerifiedDomainable) VerifiedDomain {
 		IsInitial:    convert.ToValue(p.GetIsInitial()),
 		Name:         convert.ToValue(p.GetName()),
 		Type:         convert.ToValue(p.GetTypeEscaped()),
+	}
+}
+
+func newLastModifiedBy(p models.Identityable) LastModifiedBy {
+	return LastModifiedBy{
+		Id:          convert.ToValue(p.GetId()),
+		DisplayName: convert.ToValue(p.GetDisplayName()),
 	}
 }
 
