@@ -80,6 +80,7 @@ type CsTeamsMeetingPolicy struct {
 	DesignatedPresenterRoleMode                string `json:"DesignatedPresenterRoleMode"`
 	AllowExternalParticipantGiveRequestControl bool   `json:"AllowExternalParticipantGiveRequestControl"`
 	AllowSecurityEndUserReporting              bool   `json:"AllowSecurityEndUserReporting"`
+	AllowCloudRecording                        bool   `json:"AllowCloudRecording"`
 }
 
 type CsTeamsMessagingPolicy struct {
@@ -204,6 +205,7 @@ func (r *mqlMs365Teams) gatherTeamsReport() error {
 				"designatedPresenterRoleMode":                llx.StringData(teamsPolicy.DesignatedPresenterRoleMode),
 				"allowExternalParticipantGiveRequestControl": llx.BoolData(teamsPolicy.AllowExternalParticipantGiveRequestControl),
 				"allowSecurityEndUserReporting":              llx.BoolData(teamsPolicy.AllowSecurityEndUserReporting),
+				"allowCloudRecording":                        llx.BoolData(teamsPolicy.AllowCloudRecording),
 			})
 		if mqlTeamsPolicyErr != nil {
 			r.CsTeamsMeetingPolicy = plugin.TValue[*mqlMs365TeamsTeamsMeetingPolicyConfig]{State: plugin.StateIsSet, Error: mqlTeamsPolicyErr}
