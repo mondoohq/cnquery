@@ -200,7 +200,7 @@ private microsoft.conditionalAccess.authenticationMethodsPolicy @defaults("id di
   authenticationMethodConfigurations []microsoft.conditionalAccess.authenticationMethodConfiguration
 }
 
-// Configuration for a specific authentication method.
+// Configuration for a specific authentication method
 private microsoft.conditionalAccess.authenticationMethodConfiguration @defaults("id state") {
   // The policy name
   id string
@@ -218,41 +218,41 @@ microsoft.conditionalAccess.namedLocations {
 
 //Represents a Microsoft Entra Conditional Access policy. Conditional access policies are custom rules that define an access scenario.
 microsoft.conditionalAccess.policy @defaults("id displayName state") {
-  // Specifies the identifier of a conditionalAccessPolicy object.
+  // Specifies the identifier of a conditionalAccessPolicy object
   id string
-  // Specifies a display name for the conditionalAccessPolicy object.
+  // Specifies a display name for the conditionalAccessPolicy object
   displayName string
   // Specifies the state of the conditionalAccessPolicy object. Possible values are: enabled, disabled, enabledForReportingButNotEnforced.
   state string
-  // The Timestamp type represents date and time information using ISO 8601 format and is always in UTC time.
+  // The Timestamp type represents date and time information using ISO 8601 format and is always in UTC time
   createdDateTime time
-  // The Timestamp type represents date and time information using ISO 8601 format and is always in UTC time.
+  // The Timestamp type represents date and time information using ISO 8601 format and is always in UTC time
   modifiedDateTime time
   // Policy conditions
   conditions microsoft.conditionalAccess.policy.conditions
-  // Specifies the grant controls that must be fulfilled to pass the policy.
+  // Specifies the grant controls that must be fulfilled to pass the policy
   grantControls microsoft.conditionalAccess.policy.grantControls
-  // Specifies the session controls that are enforced after sign-in.
+  // Specifies the session controls that are enforced after sign-in
   sessionControls microsoft.conditionalAccess.policy.sessionControls
   // Template ID (if created from template)
   templateId string
 }
 
-// Represents the type of conditions that govern when the policy applies.
+// Represents the type of conditions that govern when the policy applies
 private microsoft.conditionalAccess.policy.conditions @defaults("id applications platforms") {
   // Internal ID based on policy ID
   id string
-  // Applications and user actions included in and excluded from the policy.
+  // Applications and user actions included in and excluded from the policy
   applications microsoft.conditionalAccess.policy.conditions.applications
-  // Authentication flows included in the policy scope.
+  // Authentication flows included in the policy scope
   authenticationFlows microsoft.conditionalAccess.policy.conditions.authenticationFlows
   // Client applications (service principals and workload identities) included in and excluded from the policy. Either users or clientApplications is required.
   clientApplications microsoft.conditionalAccess.policy.conditions.clientApplications
-  // Client application types included in the policy.
+  // Client application types included in the policy
   clientAppTypes []string
-  // Locations included in and excluded from the policy.
+  // Locations included in and excluded from the policy
   locations microsoft.conditionalAccess.policy.conditions.locations
-  // Platforms included in and excluded from the policy.
+  // Platforms included in and excluded from the policy
   platforms microsoft.conditionalAccess.policy.conditions.platforms
   // Service principal risk levels included in the policy. Possible values are: low, medium, high, none, unknownFutureValue.
   servicePrincipalRiskLevels []string
@@ -266,13 +266,13 @@ private microsoft.conditionalAccess.policy.conditions @defaults("id applications
   insiderRiskLevels string
 }
 
-// Represents the authentication flows in scope for the policy.
+// Represents the authentication flows in scope for the policy
 private microsoft.conditionalAccess.policy.conditions.authenticationFlows @defaults("transferMethods") {
   // Represents the transfer methods in scope for the policy. The possible values are: none, deviceCodeFlow, authenticationTransfer, unknownFutureValue.
   transferMethods string
 }
 
-// A collection of settings that define specific combinations of authentication methods and metadata.
+// A collection of settings that define specific combinations of authentication methods and metadata
 private microsoft.conditionalAccess.policy.grantControls.authenticationStrength @defaults("id displayName allowedCombinations") {
   // The system-generated identifier for this mode
   id string
@@ -332,7 +332,7 @@ private microsoft.conditionalAccess.policy.conditions.clientApplications @defaul
   includeServicePrincipals []string
 }
 
-// Platforms included in and excluded from the policy scope.
+// Platforms included in and excluded from the policy scope
 private microsoft.conditionalAccess.policy.conditions.platforms @defaults("excludePlatforms includePlatforms") {
   // Possible values are: android, iOS, windows, windowsPhone, macOS, linux, all, unknownFutureValue
   excludePlatforms []string
@@ -340,7 +340,7 @@ private microsoft.conditionalAccess.policy.conditions.platforms @defaults("exclu
   includePlatforms []string
 }
 
-// Represents the applications and user actions included in and excluded from the conditional access policy.
+// Represents the applications and user actions included in and excluded from the conditional access policy
 private microsoft.conditionalAccess.policy.conditions.applications @defaults("includeApplications excludeApplications includeUserActions") {
   // Can be one of the following: appId, All, Office365, MicrosoftAdminPortals
   includeApplications []string
@@ -374,7 +374,7 @@ private microsoft.conditionalAccess.policy.conditions.locations @defaults("inclu
   excludeLocations []string
 }
 
-// Represents grant controls that must be fulfilled to pass the policy.
+// Represents grant controls that must be fulfilled to pass the policy
 private microsoft.conditionalAccess.policy.grantControls @defaults("id") {
   // Internal ID based on policy ID
   id string
