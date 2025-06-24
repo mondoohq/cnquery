@@ -500,3 +500,65 @@ func convertEnumCollectionToStrings[T fmt.Stringer](enums []T) []string {
 	}
 	return result
 }
+
+func (a *mqlMicrosoftConditionalAccess) authenticationMethodsPolicy() (*mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, err
+	}
+
+	policy, err := graphClient.Policies().AuthenticationMethodsPolicy().Get(context.Background(), nil)
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	if policy == nil {
+		return nil, nil
+	}
+
+	return newMqlAuthenticationMethodsPolicy(a.MqlRuntime, policy)
+}
+
+func newMqlAuthenticationMethodsPolicy(runtime *plugin.Runtime, policy models.AuthenticationMethodsPolicyable) (*mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy, error) {
+	if policy.GetId() == nil {
+		return nil, fmt.Errorf("authentication methods policy has a nil ID")
+	}
+
+	var authMethodConfigs []interface{}
+	for _, config := range policy.GetAuthenticationMethodConfigurations() {
+		mqlConfig, err := newMqlAuthenticationMethodConfiguration(runtime, config)
+		if err != nil {
+			return nil, err
+		}
+		authMethodConfigs = append(authMethodConfigs, mqlConfig)
+	}
+
+	resource, err := CreateResource(runtime, "microsoft.conditionalAccess.authenticationMethodsPolicy", map[string]*llx.RawData{
+		"__id":                               llx.StringDataPtr(policy.GetId()),
+		"id":                                 llx.StringDataPtr(policy.GetId()),
+		"displayName":                        llx.StringDataPtr(policy.GetDisplayName()),
+		"description":                        llx.StringDataPtr(policy.GetDescription()),
+		"lastModifiedDateTime":               llx.TimeDataPtr(policy.GetLastModifiedDateTime()),
+		"policyVersion":                      llx.StringDataPtr(policy.GetPolicyVersion()),
+		"authenticationMethodConfigurations": llx.ArrayData(llx.TArr2Raw(authMethodConfigs), types.Resource("microsoft.conditionalAccess.authenticationMethodConfiguration")),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return resource.(*mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy), nil
+}
+
+func newMqlAuthenticationMethodConfiguration(runtime *plugin.Runtime, config models.AuthenticationMethodConfigurationable) (*mqlMicrosoftConditionalAccessAuthenticationMethodConfiguration, error) {
+	resource, err := CreateResource(runtime, "microsoft.conditionalAccess.authenticationMethodConfiguration", map[string]*llx.RawData{
+		"__id":  llx.StringDataPtr(config.GetId()),
+		"id":    llx.StringDataPtr(config.GetId()),
+		"state": llx.StringData(config.GetState().String()),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return resource.(*mqlMicrosoftConditionalAccessAuthenticationMethodConfiguration), nil
+}

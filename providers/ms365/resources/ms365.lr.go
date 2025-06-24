@@ -70,6 +70,14 @@ func init() {
 			// to override args, implement: initMicrosoftConditionalAccess(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftConditionalAccess,
 		},
+		"microsoft.conditionalAccess.authenticationMethodsPolicy": {
+			// to override args, implement: initMicrosoftConditionalAccessAuthenticationMethodsPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftConditionalAccessAuthenticationMethodsPolicy,
+		},
+		"microsoft.conditionalAccess.authenticationMethodConfiguration": {
+			// to override args, implement: initMicrosoftConditionalAccessAuthenticationMethodConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftConditionalAccessAuthenticationMethodConfiguration,
+		},
 		"microsoft.conditionalAccess.namedLocations": {
 			// to override args, implement: initMicrosoftConditionalAccessNamedLocations(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftConditionalAccessNamedLocations,
@@ -575,6 +583,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.conditionalAccess.policies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftConditionalAccess).GetPolicies()).ToDataRes(types.Array(types.Resource("microsoft.conditionalAccess.policy")))
+	},
+	"microsoft.conditionalAccess.authenticationMethodsPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccess).GetAuthenticationMethodsPolicy()).ToDataRes(types.Resource("microsoft.conditionalAccess.authenticationMethodsPolicy"))
+	},
+	"microsoft.conditionalAccess.authenticationMethodsPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.conditionalAccess.authenticationMethodsPolicy.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.conditionalAccess.authenticationMethodsPolicy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"microsoft.conditionalAccess.authenticationMethodsPolicy.lastModifiedDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy).GetLastModifiedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.conditionalAccess.authenticationMethodsPolicy.policyVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy).GetPolicyVersion()).ToDataRes(types.String)
+	},
+	"microsoft.conditionalAccess.authenticationMethodsPolicy.authenticationMethodConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy).GetAuthenticationMethodConfigurations()).ToDataRes(types.Array(types.Resource("microsoft.conditionalAccess.authenticationMethodConfiguration")))
+	},
+	"microsoft.conditionalAccess.authenticationMethodConfiguration.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessAuthenticationMethodConfiguration).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.conditionalAccess.authenticationMethodConfiguration.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessAuthenticationMethodConfiguration).GetState()).ToDataRes(types.String)
 	},
 	"microsoft.conditionalAccess.namedLocations.ipLocations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftConditionalAccessNamedLocations).GetIpLocations()).ToDataRes(types.Array(types.Resource("microsoft.conditionalAccess.ipNamedLocation")))
@@ -2275,6 +2310,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.conditionalAccess.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftConditionalAccess).Policies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.authenticationMethodsPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccess).AuthenticationMethodsPolicy, ok = plugin.RawToTValue[*mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.authenticationMethodsPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.conditionalAccess.authenticationMethodsPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.authenticationMethodsPolicy.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.authenticationMethodsPolicy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.authenticationMethodsPolicy.lastModifiedDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy).LastModifiedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.authenticationMethodsPolicy.policyVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy).PolicyVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.authenticationMethodsPolicy.authenticationMethodConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy).AuthenticationMethodConfigurations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.authenticationMethodConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftConditionalAccessAuthenticationMethodConfiguration).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.conditionalAccess.authenticationMethodConfiguration.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessAuthenticationMethodConfiguration).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.authenticationMethodConfiguration.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessAuthenticationMethodConfiguration).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.conditionalAccess.namedLocations.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5387,6 +5466,7 @@ type mqlMicrosoftConditionalAccess struct {
 	// optional: if you define mqlMicrosoftConditionalAccessInternal it will be used here
 	NamedLocations plugin.TValue[*mqlMicrosoftConditionalAccessNamedLocations]
 	Policies plugin.TValue[[]interface{}]
+	AuthenticationMethodsPolicy plugin.TValue[*mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy]
 }
 
 // createMicrosoftConditionalAccess creates a new instance of this resource
@@ -5439,6 +5519,140 @@ func (c *mqlMicrosoftConditionalAccess) GetPolicies() *plugin.TValue[[]interface
 
 		return c.policies()
 	})
+}
+
+func (c *mqlMicrosoftConditionalAccess) GetAuthenticationMethodsPolicy() *plugin.TValue[*mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy] {
+	return plugin.GetOrCompute[*mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy](&c.AuthenticationMethodsPolicy, func() (*mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.conditionalAccess", c.__id, "authenticationMethodsPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy), nil
+			}
+		}
+
+		return c.authenticationMethodsPolicy()
+	})
+}
+
+// mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy for the microsoft.conditionalAccess.authenticationMethodsPolicy resource
+type mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftConditionalAccessAuthenticationMethodsPolicyInternal it will be used here
+	Id plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	Description plugin.TValue[string]
+	LastModifiedDateTime plugin.TValue[*time.Time]
+	PolicyVersion plugin.TValue[string]
+	AuthenticationMethodConfigurations plugin.TValue[[]interface{}]
+}
+
+// createMicrosoftConditionalAccessAuthenticationMethodsPolicy creates a new instance of this resource
+func createMicrosoftConditionalAccessAuthenticationMethodsPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.conditionalAccess.authenticationMethodsPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy) MqlName() string {
+	return "microsoft.conditionalAccess.authenticationMethodsPolicy"
+}
+
+func (c *mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy) GetLastModifiedDateTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedDateTime
+}
+
+func (c *mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy) GetPolicyVersion() *plugin.TValue[string] {
+	return &c.PolicyVersion
+}
+
+func (c *mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy) GetAuthenticationMethodConfigurations() *plugin.TValue[[]interface{}] {
+	return &c.AuthenticationMethodConfigurations
+}
+
+// mqlMicrosoftConditionalAccessAuthenticationMethodConfiguration for the microsoft.conditionalAccess.authenticationMethodConfiguration resource
+type mqlMicrosoftConditionalAccessAuthenticationMethodConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftConditionalAccessAuthenticationMethodConfigurationInternal it will be used here
+	Id plugin.TValue[string]
+	State plugin.TValue[string]
+}
+
+// createMicrosoftConditionalAccessAuthenticationMethodConfiguration creates a new instance of this resource
+func createMicrosoftConditionalAccessAuthenticationMethodConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftConditionalAccessAuthenticationMethodConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.conditionalAccess.authenticationMethodConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftConditionalAccessAuthenticationMethodConfiguration) MqlName() string {
+	return "microsoft.conditionalAccess.authenticationMethodConfiguration"
+}
+
+func (c *mqlMicrosoftConditionalAccessAuthenticationMethodConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftConditionalAccessAuthenticationMethodConfiguration) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftConditionalAccessAuthenticationMethodConfiguration) GetState() *plugin.TValue[string] {
+	return &c.State
 }
 
 // mqlMicrosoftConditionalAccessNamedLocations for the microsoft.conditionalAccess.namedLocations resource

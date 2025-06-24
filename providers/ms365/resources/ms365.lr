@@ -180,6 +180,32 @@ microsoft.conditionalAccess {
   namedLocations microsoft.conditionalAccess.namedLocations
   // Policies collection
   policies() []microsoft.conditionalAccess.policy
+  // Tenant-wide authentication methods policy
+  authenticationMethodsPolicy() microsoft.conditionalAccess.authenticationMethodsPolicy
+}
+
+// The tenant-wide policy that controls which authentication methods are allowed
+private microsoft.conditionalAccess.authenticationMethodsPolicy @defaults("id displayName") {
+  // The identifier of the policy
+  id string
+  // The name of the policy
+  displayName string
+  // A description of the policy
+  description string
+  // The date and time of the last update to the policy
+  lastModifiedDateTime time
+  // The version of the policy in use
+  policyVersion string
+  // Represents the settings for each authentication method
+  authenticationMethodConfigurations []microsoft.conditionalAccess.authenticationMethodConfiguration
+}
+
+// Configuration for a specific authentication method.
+private microsoft.conditionalAccess.authenticationMethodConfiguration @defaults("id state") {
+  // The policy name
+  id string
+  // The policy name
+  state string
 }
 
 // Container for Microsoft Conditional Access Named Locations
@@ -982,7 +1008,7 @@ microsoft.policies {
   authenticationMethodsPolicy() microsoft.policies.authenticationMethodsPolicy
 }
 
-// The tenant-wide policy that controls which authentication methods are allowed.
+// The tenant-wide policy that controls which authentication methods are allowed
 private microsoft.policies.authenticationMethodsPolicy @defaults("displayName") {
   // Policy ID
   id string
@@ -998,9 +1024,9 @@ private microsoft.policies.authenticationMethodsPolicy @defaults("displayName") 
   authenticationMethodConfigurations []microsoft.policies.authenticationMethodConfiguration
 }
 
-// Configuration for a specific authentication method.
+// Configuration for a specific authentication method
 private microsoft.policies.authenticationMethodConfiguration @defaults("state") {
-  // The policy name.
+  // The policy name
   id string
   // The state of the policy. Possible values are: enabled, disabled.
   state string
