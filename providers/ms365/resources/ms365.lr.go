@@ -474,17 +474,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.tenant.formsSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenant).GetFormsSettings()).ToDataRes(types.Resource("microsoft.tenant.formsSettings"))
 	},
-	"microsoft.tenant.settings.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftTenantSettings).GetId()).ToDataRes(types.String)
-	},
 	"microsoft.tenant.settings.isAppAndServicesTrialEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenantSettings).GetIsAppAndServicesTrialEnabled()).ToDataRes(types.Bool)
 	},
 	"microsoft.tenant.settings.isOfficeStoreEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenantSettings).GetIsOfficeStoreEnabled()).ToDataRes(types.Bool)
-	},
-	"microsoft.tenant.formsSettings.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftTenantFormsSettings).GetId()).ToDataRes(types.String)
 	},
 	"microsoft.tenant.formsSettings.isExternalSendFormEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenantFormsSettings).GetIsExternalSendFormEnabled()).ToDataRes(types.Bool)
@@ -2115,10 +2109,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlMicrosoftTenantSettings).__id, ok = v.Value.(string)
 			return
 		},
-	"microsoft.tenant.settings.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftTenantSettings).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"microsoft.tenant.settings.isAppAndServicesTrialEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftTenantSettings).IsAppAndServicesTrialEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -2131,10 +2121,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlMicrosoftTenantFormsSettings).__id, ok = v.Value.(string)
 			return
 		},
-	"microsoft.tenant.formsSettings.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftTenantFormsSettings).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"microsoft.tenant.formsSettings.isExternalSendFormEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftTenantFormsSettings).IsExternalSendFormEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -4891,7 +4877,6 @@ type mqlMicrosoftTenantSettings struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlMicrosoftTenantSettingsInternal it will be used here
-	Id plugin.TValue[string]
 	IsAppAndServicesTrialEnabled plugin.TValue[bool]
 	IsOfficeStoreEnabled plugin.TValue[bool]
 }
@@ -4907,12 +4892,7 @@ func createMicrosoftTenantSettings(runtime *plugin.Runtime, args map[string]*llx
 		return res, err
 	}
 
-	if res.__id == "" {
-	res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("microsoft.tenant.settings", res.__id)
@@ -4933,10 +4913,6 @@ func (c *mqlMicrosoftTenantSettings) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMicrosoftTenantSettings) GetId() *plugin.TValue[string] {
-	return &c.Id
-}
-
 func (c *mqlMicrosoftTenantSettings) GetIsAppAndServicesTrialEnabled() *plugin.TValue[bool] {
 	return &c.IsAppAndServicesTrialEnabled
 }
@@ -4950,7 +4926,6 @@ type mqlMicrosoftTenantFormsSettings struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlMicrosoftTenantFormsSettingsInternal it will be used here
-	Id plugin.TValue[string]
 	IsExternalSendFormEnabled plugin.TValue[bool]
 	IsExternalShareCollaborationEnabled plugin.TValue[bool]
 	IsExternalShareResultEnabled plugin.TValue[bool]
@@ -4971,12 +4946,7 @@ func createMicrosoftTenantFormsSettings(runtime *plugin.Runtime, args map[string
 		return res, err
 	}
 
-	if res.__id == "" {
-	res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("microsoft.tenant.formsSettings", res.__id)
@@ -4995,10 +4965,6 @@ func (c *mqlMicrosoftTenantFormsSettings) MqlName() string {
 
 func (c *mqlMicrosoftTenantFormsSettings) MqlID() string {
 	return c.__id
-}
-
-func (c *mqlMicrosoftTenantFormsSettings) GetId() *plugin.TValue[string] {
-	return &c.Id
 }
 
 func (c *mqlMicrosoftTenantFormsSettings) GetIsExternalSendFormEnabled() *plugin.TValue[bool] {

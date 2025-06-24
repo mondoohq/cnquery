@@ -574,7 +574,6 @@ resources:
     min_mondoo_version: 9.0.0
   microsoft.tenant.formsSettings:
     fields:
-      id: {}
       isBingImageSearchEnabled: {}
       isExternalSendFormEnabled: {}
       isExternalShareCollaborationEnabled: {}
@@ -586,7 +585,6 @@ resources:
     min_mondoo_version: 9.0.0
   microsoft.tenant.settings:
     fields:
-      id: {}
       isAppAndServicesTrialEnabled: {}
       isOfficeStoreEnabled: {}
     is_private: true

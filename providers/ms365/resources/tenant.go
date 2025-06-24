@@ -161,10 +161,6 @@ func (a *mqlMicrosoft) tenantDomainName() (string, error) {
 	return tenantDomainName, nil
 }
 
-func (m *mqlMicrosoftTenantSettings) id() (string, error) {
-	return m.Id.Data, nil
-}
-
 func (a *mqlMicrosoftTenant) settings() (*mqlMicrosoftTenantSettings, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.BetaGraphClient()
@@ -182,7 +178,7 @@ func (a *mqlMicrosoftTenant) settings() (*mqlMicrosoftTenantSettings, error) {
 	if appsAndServicesConfig == nil || appsAndServicesConfig.GetSettings() == nil {
 		mqlSettings, err := CreateResource(a.MqlRuntime, "microsoft.tenant.settings",
 			map[string]*llx.RawData{
-				"id":                           llx.StringData(settingsId),
+				"__id":                         llx.StringData(settingsId),
 				"isAppAndServicesTrialEnabled": llx.BoolData(false),
 				"isOfficeStoreEnabled":         llx.BoolData(false),
 			})
@@ -194,7 +190,7 @@ func (a *mqlMicrosoftTenant) settings() (*mqlMicrosoftTenantSettings, error) {
 
 	mqlSettings, err := CreateResource(a.MqlRuntime, "microsoft.tenant.settings",
 		map[string]*llx.RawData{
-			"id":                           llx.StringData(settingsId),
+			"__id":                         llx.StringData(settingsId),
 			"isAppAndServicesTrialEnabled": llx.BoolDataPtr(appsAndServicesConfig.GetSettings().GetIsAppAndServicesTrialEnabled()),
 			"isOfficeStoreEnabled":         llx.BoolDataPtr(appsAndServicesConfig.GetSettings().GetIsOfficeStoreEnabled()),
 		})
@@ -203,10 +199,6 @@ func (a *mqlMicrosoftTenant) settings() (*mqlMicrosoftTenantSettings, error) {
 	}
 
 	return mqlSettings.(*mqlMicrosoftTenantSettings), nil
-}
-
-func (m *mqlMicrosoftTenantFormsSettings) id() (string, error) {
-	return m.Id.Data, nil
 }
 
 // Least privileged permissions: OrgSettings-Forms.Read.All
@@ -235,7 +227,7 @@ func (a *mqlMicrosoftTenant) formsSettings() (*mqlMicrosoftTenantFormsSettings, 
 
 	formSetting, err := CreateResource(a.MqlRuntime, "microsoft.tenant.formsSettings",
 		map[string]*llx.RawData{
-			"id":                                  llx.StringData(formsSettingId),
+			"__id":                                llx.StringData(formsSettingId),
 			"isExternalSendFormEnabled":           llx.BoolDataPtr(settings.GetIsExternalSendFormEnabled()),
 			"isExternalShareCollaborationEnabled": llx.BoolDataPtr(settings.GetIsExternalShareCollaborationEnabled()),
 			"isExternalShareResultEnabled":        llx.BoolDataPtr(settings.GetIsExternalShareResultEnabled()),

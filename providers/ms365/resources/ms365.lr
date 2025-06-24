@@ -78,8 +78,6 @@ microsoft.tenant @defaults("name") {
 
 // Company-wide configuration for apps and services.
 private microsoft.tenant.settings @defaults("isAppAndServicesTrialEnabled isOfficeStoreEnabled") {
-  // Unique synthetic ID based on the parent tenant.
-  id string
   // Controls whether users can start trial subscriptions for apps and services in your organization.
   isAppAndServicesTrialEnabled bool
   // Controls whether users can access the Microsoft Store
@@ -87,9 +85,7 @@ private microsoft.tenant.settings @defaults("isAppAndServicesTrialEnabled isOffi
 }
 
 // Company-wide settings for Microsoft Forms
-private microsoft.tenant.formsSettings @defaults("id isExternalSendFormEnabled isBingImageSearchEnabled") {
-  // Unique synthetic ID based on the parent tenant settings
-  id string
+private microsoft.tenant.formsSettings @defaults("isExternalSendFormEnabled isBingImageSearchEnabled") {
   // Controls whether users can send a link to a form to an external user
   isExternalSendFormEnabled bool
   // Controls whether users can collaborate on a form layout and structure with an external user
