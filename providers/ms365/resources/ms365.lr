@@ -72,6 +72,8 @@ microsoft.tenant @defaults("name") {
   subscriptions() []dict
   // Company-wide settings for apps and services.
   settings() microsoft.tenant.settings
+  // Company-wide settings for Microsoft Forms
+  formsSettings() microsoft.tenant.formsSettings
 }
 
 // Company-wide configuration for apps and services.
@@ -82,6 +84,26 @@ private microsoft.tenant.settings @defaults("isAppAndServicesTrialEnabled isOffi
   isAppAndServicesTrialEnabled bool
   // Controls whether users can access the Microsoft Store
   isOfficeStoreEnabled bool
+}
+
+// Company-wide settings for Microsoft Forms
+private microsoft.tenant.formsSettings @defaults("id isExternalSendFormEnabled isBingImageSearchEnabled") {
+  // Unique synthetic ID based on the parent tenant settings
+  id string
+  // Controls whether users can send a link to a form to an external user
+  isExternalSendFormEnabled bool
+  // Controls whether users can collaborate on a form layout and structure with an external user
+  isExternalShareCollaborationEnabled bool
+  // Controls whether users can share form results with external users
+  isExternalShareResultEnabled bool
+  // Controls whether users can share form templates with external users
+  isExternalShareTemplateEnabled bool
+  // Controls whether the names of users who fill out forms are recorded
+  isRecordIdentityByDefaultEnabled bool
+  // Controls whether users can add images from Bing to forms
+  isBingImageSearchEnabled bool
+  // Controls whether phishing protection is run on forms created by users
+  isInOrgFormsPhishingScanEnabled bool
 }
 
 // List of Microsoft Entra users with optional filters

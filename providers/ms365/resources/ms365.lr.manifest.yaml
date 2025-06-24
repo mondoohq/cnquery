@@ -562,6 +562,7 @@ resources:
       createdAt: {}
       createdDateTime: {}
       displayName: {}
+      formsSettings: {}
       id: {}
       name: {}
       onPremisesSyncEnabled: {}
@@ -570,6 +571,18 @@ resources:
       subscriptions: {}
       type: {}
       verifiedDomains: {}
+    min_mondoo_version: 9.0.0
+  microsoft.tenant.formsSettings:
+    fields:
+      id: {}
+      isBingImageSearchEnabled: {}
+      isExternalSendFormEnabled: {}
+      isExternalShareCollaborationEnabled: {}
+      isExternalShareResultEnabled: {}
+      isExternalShareTemplateEnabled: {}
+      isInOrgFormsPhishingScanEnabled: {}
+      isRecordIdentityByDefaultEnabled: {}
+    is_private: true
     min_mondoo_version: 9.0.0
   microsoft.tenant.settings:
     fields:

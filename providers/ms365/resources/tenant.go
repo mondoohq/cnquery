@@ -204,3 +204,49 @@ func (a *mqlMicrosoftTenant) settings() (*mqlMicrosoftTenantSettings, error) {
 
 	return mqlSettings.(*mqlMicrosoftTenantSettings), nil
 }
+
+func (m *mqlMicrosoftTenantFormsSettings) id() (string, error) {
+	return m.Id.Data, nil
+}
+
+// Least privileged permissions: OrgSettings-Forms.Read.All
+func (a *mqlMicrosoftTenant) formsSettings() (*mqlMicrosoftTenantFormsSettings, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	beatGraphClient, err := conn.BetaGraphClient()
+	if err != nil {
+		return nil, err
+	}
+
+	formsSetting, err := beatGraphClient.Admin().Forms().Get(context.Background(), nil)
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	if formsSetting == nil {
+		return nil, nil
+	}
+
+	settings := formsSetting.GetSettings()
+	if settings == nil {
+		return nil, nil
+	}
+
+	formsSettingId := fmt.Sprintf("%s-forms-settings", a.Id.Data)
+
+	formSetting, err := CreateResource(a.MqlRuntime, "microsoft.tenant.formsSettings",
+		map[string]*llx.RawData{
+			"id":                                  llx.StringData(formsSettingId),
+			"isExternalSendFormEnabled":           llx.BoolDataPtr(settings.GetIsExternalSendFormEnabled()),
+			"isExternalShareCollaborationEnabled": llx.BoolDataPtr(settings.GetIsExternalShareCollaborationEnabled()),
+			"isExternalShareResultEnabled":        llx.BoolDataPtr(settings.GetIsExternalShareResultEnabled()),
+			"isExternalShareTemplateEnabled":      llx.BoolDataPtr(settings.GetIsExternalShareTemplateEnabled()),
+			"isRecordIdentityByDefaultEnabled":    llx.BoolDataPtr(settings.GetIsRecordIdentityByDefaultEnabled()),
+			"isBingImageSearchEnabled":            llx.BoolDataPtr(settings.GetIsBingImageSearchEnabled()),
+			"isInOrgFormsPhishingScanEnabled":     llx.BoolDataPtr(settings.GetIsInOrgFormsPhishingScanEnabled()),
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	return formSetting.(*mqlMicrosoftTenantFormsSettings), nil
+}
