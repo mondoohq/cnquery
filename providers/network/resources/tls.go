@@ -28,7 +28,7 @@ var reTarget = regexp.MustCompile("([^/:]+?)(:\\d+)?$")
 
 var rexUrlDomain = regexp.MustCompile(regex.UrlDomain)
 
-var DefaultDialerTimeout = time.Minute * 1
+var DefaultDialerTimeout = tlsshake.DefaultTimeout
 
 // Returns the connection's port adjusted for TLS.
 // If no port is set, we estimate what it might be from the scheme.
