@@ -50,6 +50,10 @@ func init() {
 			Init: initMicrosoftIdentityAndAccess,
 			Create: createMicrosoftIdentityAndAccess,
 		},
+		"microsoft.identityAndAccess.roleEligibilityScheduleInstance": {
+			// to override args, implement: initMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance,
+		},
 		"microsoft.identityAndAccess.policy": {
 			// to override args, implement: initMicrosoftIdentityAndAccessPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftIdentityAndAccessPolicy,
@@ -521,8 +525,38 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.identityAndAccess.filter": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccess).GetFilter()).ToDataRes(types.String)
 	},
+	"microsoft.identityAndAccess.roleEligibilityScheduleInstances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccess).GetRoleEligibilityScheduleInstances()).ToDataRes(types.Array(types.Resource("microsoft.identityAndAccess.roleEligibilityScheduleInstance")))
+	},
 	"microsoft.identityAndAccess.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccess).GetList()).ToDataRes(types.Array(types.Resource("microsoft.identityAndAccess.policy")))
+	},
+	"microsoft.identityAndAccess.roleEligibilityScheduleInstance.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.roleEligibilityScheduleInstance.principalId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance).GetPrincipalId()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.roleEligibilityScheduleInstance.roleDefinitionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance).GetRoleDefinitionId()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.roleEligibilityScheduleInstance.directoryScopeId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance).GetDirectoryScopeId()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.roleEligibilityScheduleInstance.appScopeId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance).GetAppScopeId()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.roleEligibilityScheduleInstance.startDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance).GetStartDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.identityAndAccess.roleEligibilityScheduleInstance.endDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance).GetEndDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.identityAndAccess.roleEligibilityScheduleInstance.memberType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance).GetMemberType()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.roleEligibilityScheduleInstance.roleEligibilityScheduleId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance).GetRoleEligibilityScheduleId()).ToDataRes(types.String)
 	},
 	"microsoft.identityAndAccess.policy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccessPolicy).GetId()).ToDataRes(types.String)
@@ -2211,8 +2245,52 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMicrosoftIdentityAndAccess).Filter, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"microsoft.identityAndAccess.roleEligibilityScheduleInstances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccess).RoleEligibilityScheduleInstances, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"microsoft.identityAndAccess.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftIdentityAndAccess).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.roleEligibilityScheduleInstance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.identityAndAccess.roleEligibilityScheduleInstance.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.roleEligibilityScheduleInstance.principalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance).PrincipalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.roleEligibilityScheduleInstance.roleDefinitionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance).RoleDefinitionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.roleEligibilityScheduleInstance.directoryScopeId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance).DirectoryScopeId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.roleEligibilityScheduleInstance.appScopeId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance).AppScopeId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.roleEligibilityScheduleInstance.startDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance).StartDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.roleEligibilityScheduleInstance.endDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance).EndDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.roleEligibilityScheduleInstance.memberType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance).MemberType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.roleEligibilityScheduleInstance.roleEligibilityScheduleId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance).RoleEligibilityScheduleId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.identityAndAccess.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5153,6 +5231,7 @@ type mqlMicrosoftIdentityAndAccess struct {
 	__id string
 	// optional: if you define mqlMicrosoftIdentityAndAccessInternal it will be used here
 	Filter plugin.TValue[string]
+	RoleEligibilityScheduleInstances plugin.TValue[[]interface{}]
 	List plugin.TValue[[]interface{}]
 }
 
@@ -5192,6 +5271,22 @@ func (c *mqlMicrosoftIdentityAndAccess) GetFilter() *plugin.TValue[string] {
 	return &c.Filter
 }
 
+func (c *mqlMicrosoftIdentityAndAccess) GetRoleEligibilityScheduleInstances() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.RoleEligibilityScheduleInstances, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.identityAndAccess", c.__id, "roleEligibilityScheduleInstances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.roleEligibilityScheduleInstances()
+	})
+}
+
 func (c *mqlMicrosoftIdentityAndAccess) GetList() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
 		if c.MqlRuntime.HasRecording {
@@ -5206,6 +5301,90 @@ func (c *mqlMicrosoftIdentityAndAccess) GetList() *plugin.TValue[[]interface{}] 
 
 		return c.list()
 	})
+}
+
+// mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance for the microsoft.identityAndAccess.roleEligibilityScheduleInstance resource
+type mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstanceInternal it will be used here
+	Id plugin.TValue[string]
+	PrincipalId plugin.TValue[string]
+	RoleDefinitionId plugin.TValue[string]
+	DirectoryScopeId plugin.TValue[string]
+	AppScopeId plugin.TValue[string]
+	StartDateTime plugin.TValue[*time.Time]
+	EndDateTime plugin.TValue[*time.Time]
+	MemberType plugin.TValue[string]
+	RoleEligibilityScheduleId plugin.TValue[string]
+}
+
+// createMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance creates a new instance of this resource
+func createMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.identityAndAccess.roleEligibilityScheduleInstance", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance) MqlName() string {
+	return "microsoft.identityAndAccess.roleEligibilityScheduleInstance"
+}
+
+func (c *mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance) GetPrincipalId() *plugin.TValue[string] {
+	return &c.PrincipalId
+}
+
+func (c *mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance) GetRoleDefinitionId() *plugin.TValue[string] {
+	return &c.RoleDefinitionId
+}
+
+func (c *mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance) GetDirectoryScopeId() *plugin.TValue[string] {
+	return &c.DirectoryScopeId
+}
+
+func (c *mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance) GetAppScopeId() *plugin.TValue[string] {
+	return &c.AppScopeId
+}
+
+func (c *mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance) GetStartDateTime() *plugin.TValue[*time.Time] {
+	return &c.StartDateTime
+}
+
+func (c *mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance) GetEndDateTime() *plugin.TValue[*time.Time] {
+	return &c.EndDateTime
+}
+
+func (c *mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance) GetMemberType() *plugin.TValue[string] {
+	return &c.MemberType
+}
+
+func (c *mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance) GetRoleEligibilityScheduleId() *plugin.TValue[string] {
+	return &c.RoleEligibilityScheduleId
 }
 
 // mqlMicrosoftIdentityAndAccessPolicy for the microsoft.identityAndAccess.policy resource

@@ -113,13 +113,38 @@ microsoft.users {
   search string
 }
 
-// A container resource for identity and access policies that can be filtered.
+// A container resource for identity and access policies that can be filtered
 microsoft.identityAndAccess {
   []microsoft.identityAndAccess.policy
   init(filter? string)
   // filter by scopeId and scopeType
   // scopeId eq '/' and scopeType eq 'Directory'
   filter string
+
+  // Get the instances of role eligibilities
+  roleEligibilityScheduleInstances() []microsoft.identityAndAccess.roleEligibilityScheduleInstance
+}
+
+// Represents an instance of a role eligibility in PIM.
+private microsoft.identityAndAccess.roleEligibilityScheduleInstance @defaults("memberType principalId roleDefinitionId") {
+  // The unique identifier of the role eligibility schedule instance
+  id string
+  // The identifier of the principal (user, group, or service principal) that has the role eligibility
+  principalId string
+  // The identifier of the role definition that the eligibility is for
+  roleDefinitionId string
+  // The identifier of the directory object representing the scope of the role eligibility
+  directoryScopeId string
+  // The identifier of the app-specific scope of the role eligibility
+  appScopeId string
+  // The start time of the role eligibility
+  startDateTime time
+  // The end time of the role eligibility
+  endDateTime time
+  // The type of member, either 'Direct' or 'Inherited'.
+  memberType string
+  // The identifier of the role eligibility schedule from which this instance is created
+  roleEligibilityScheduleId string
 }
 
 // A PIM role management policy for Microsoft Entra ID roles.

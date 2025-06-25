@@ -10,6 +10,7 @@ resources:
       groups: {}
       identityAndAccess: {}
       organizations: {}
+      roleEligibilityScheduleInstances: {}
       roles: {}
       serviceprincipals: {}
       settings: {}
@@ -397,6 +398,7 @@ resources:
     fields:
       filter: {}
       list: {}
+      roleEligibilityScheduleInstances: {}
     min_mondoo_version: 9.0.0
   microsoft.identityAndAccess.policy:
     fields:
@@ -424,6 +426,19 @@ resources:
       inheritableSettings: {}
       level: {}
       operations: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.identityAndAccess.roleEligibilityScheduleInstance:
+    fields:
+      appScopeId: {}
+      directoryScopeId: {}
+      endDateTime: {}
+      id: {}
+      memberType: {}
+      principalId: {}
+      roleDefinitionId: {}
+      roleEligibilityScheduleId: {}
+      startDateTime: {}
     is_private: true
     min_mondoo_version: 9.0.0
   microsoft.keyCredential:

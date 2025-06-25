@@ -194,3 +194,54 @@ func newMqlRoleManagementPolicyRule(runtime *plugin.Runtime, rule models.Unified
 
 	return resource.(*mqlMicrosoftIdentityAndAccessPolicyRule), nil
 }
+
+// Least privileged permissions: RoleEligibilitySchedule.Read.Directory
+func (a *mqlMicrosoftIdentityAndAccess) roleEligibilityScheduleInstances() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, err
+	}
+
+	roleEligibilityScheduleInstances, err := graphClient.RoleManagement().Directory().RoleEligibilityScheduleInstances().Get(context.Background(), nil)
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	if roleEligibilityScheduleInstances == nil {
+		return nil, nil
+	}
+
+	var instances []interface{}
+	for _, inst := range roleEligibilityScheduleInstances.GetValue() {
+		if inst.GetId() == nil {
+			continue
+		}
+		instanceResource, err := newMqlRoleEligibilityScheduleInstance(a.MqlRuntime, inst)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create MQL resource for rule ID %s: %w", *inst.GetId(), err)
+		}
+		instances = append(instances, instanceResource)
+	}
+
+	return instances, nil
+}
+
+func newMqlRoleEligibilityScheduleInstance(runtime *plugin.Runtime, inst models.UnifiedRoleEligibilityScheduleInstanceable) (*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance, error) {
+	resource, err := CreateResource(runtime, "microsoft.identityAndAccess.roleEligibilityScheduleInstance", map[string]*llx.RawData{
+		"id":                        llx.StringDataPtr(inst.GetId()),
+		"__id":                      llx.StringDataPtr(inst.GetId()),
+		"principalId":               llx.StringDataPtr(inst.GetPrincipalId()),
+		"roleDefinitionId":          llx.StringDataPtr(inst.GetRoleDefinitionId()),
+		"directoryScopeId":          llx.StringDataPtr(inst.GetDirectoryScopeId()),
+		"appScopeId":                llx.StringDataPtr(inst.GetAppScopeId()),
+		"startDateTime":             llx.TimeDataPtr(inst.GetStartDateTime()),
+		"endDateTime":               llx.TimeDataPtr(inst.GetEndDateTime()),
+		"memberType":                llx.StringDataPtr(inst.GetMemberType()),
+		"roleEligibilityScheduleId": llx.StringDataPtr(inst.GetRoleEligibilityScheduleId()),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance), nil
+}
