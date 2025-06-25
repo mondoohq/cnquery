@@ -1258,6 +1258,8 @@ ms365.exchangeonline {
   teamsProtectionPolicies() []ms365.exchangeonline.teamsProtectionPolicy
   // List of report submission policies
   reportSubmissionPolicies() []ms365.exchangeonline.reportSubmissionPolicy
+  // List of mailboxes with audit settings
+  mailboxesWithAudit() []ms365.exchangeonline.mailbox
 }
 
 // Teams Protection Policy configuration
@@ -1306,6 +1308,28 @@ private ms365.exchangeonline.exoMailbox {
   user() microsoft.user
   // The identity of the external object linked to this mailbox
   externalDirectoryObjectId string
+}
+
+// Microsoft 365 Exchange Online Mailbox with Audit Settings
+private ms365.exchangeonline.mailbox @defaults("identity displayName auditEnabled") {
+  // Mailbox identity
+  identity string
+  // Display name
+  displayName string
+  // Primary SMTP address
+  primarySmtpAddress string
+  // Recipient type details
+  recipientTypeDetails string
+  // Whether audit logging is enabled
+  auditEnabled bool
+  // Admin audit actions
+  auditAdmin []string
+  // Delegate audit actions
+  auditDelegate []string
+  // Owner audit actions
+  auditOwner []string
+  // Audit log age limit
+  auditLogAgeLimit string
 }
 
 // Microsoft 365 SharePoint Online
