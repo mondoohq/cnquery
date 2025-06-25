@@ -54,6 +54,18 @@ func init() {
 			// to override args, implement: initMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance,
 		},
+		"microsoft.identityAndAccess.accessReviews": {
+			// to override args, implement: initMicrosoftIdentityAndAccessAccessReviews(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftIdentityAndAccessAccessReviews,
+		},
+		"microsoft.identityAndAccess.accessReviewDefinition": {
+			// to override args, implement: initMicrosoftIdentityAndAccessAccessReviewDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftIdentityAndAccessAccessReviewDefinition,
+		},
+		"microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings": {
+			// to override args, implement: initMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings,
+		},
 		"microsoft.identityAndAccess.policy": {
 			// to override args, implement: initMicrosoftIdentityAndAccessPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftIdentityAndAccessPolicy,
@@ -439,6 +451,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.identityAndAccess": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoft).GetIdentityAndAccess()).ToDataRes(types.Resource("microsoft.identityAndAccess"))
 	},
+	"microsoft.accessReviews": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoft).GetAccessReviews()).ToDataRes(types.Resource("microsoft.identityAndAccess.accessReviews"))
+	},
 	"microsoft.groups.length": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftGroups).GetLength()).ToDataRes(types.Int)
 	},
@@ -561,6 +576,57 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.identityAndAccess.roleEligibilityScheduleInstance.roleEligibilityScheduleId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance).GetRoleEligibilityScheduleId()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.accessReviews.filter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviews).GetFilter()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.accessReviews.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviews).GetList()).ToDataRes(types.Array(types.Resource("microsoft.identityAndAccess.accessReviewDefinition")))
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).GetStatus()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.reviewers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).GetReviewers()).ToDataRes(types.Dict)
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.settings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).GetSettings()).ToDataRes(types.Resource("microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings"))
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings.autoApplyDecisionsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings).GetAutoApplyDecisionsEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings.decisionHistoriesForReviewersEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings).GetDecisionHistoriesForReviewersEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings.defaultDecision": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings).GetDefaultDecision()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings.defaultDecisionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings).GetDefaultDecisionEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings.instanceDurationInDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings).GetInstanceDurationInDays()).ToDataRes(types.Int)
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings.reminderNotificationsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings).GetReminderNotificationsEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings.justificationRequiredOnApproval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings).GetJustificationRequiredOnApproval()).ToDataRes(types.Bool)
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings.mailNotificationsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings).GetMailNotificationsEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings.recommendationsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings).GetRecommendationsEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings.recurrence": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings).GetRecurrence()).ToDataRes(types.Dict)
 	},
 	"microsoft.identityAndAccess.policy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccessPolicy).GetId()).ToDataRes(types.String)
@@ -2134,6 +2200,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMicrosoft).IdentityAndAccess, ok = plugin.RawToTValue[*mqlMicrosoftIdentityAndAccess](v.Value, v.Error)
 		return
 	},
+	"microsoft.accessReviews": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoft).AccessReviews, ok = plugin.RawToTValue[*mqlMicrosoftIdentityAndAccessAccessReviews](v.Value, v.Error)
+		return
+	},
 	"microsoft.groups.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlMicrosoftGroups).__id, ok = v.Value.(string)
 			return
@@ -2328,6 +2398,86 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.identityAndAccess.roleEligibilityScheduleInstance.roleEligibilityScheduleId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance).RoleEligibilityScheduleId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.accessReviews.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftIdentityAndAccessAccessReviews).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.identityAndAccess.accessReviews.filter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviews).Filter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.accessReviews.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviews).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.identityAndAccess.accessReviewDefinition.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.reviewers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).Reviewers, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).Settings, ok = plugin.RawToTValue[*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings.autoApplyDecisionsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings).AutoApplyDecisionsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings.decisionHistoriesForReviewersEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings).DecisionHistoriesForReviewersEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings.defaultDecision": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings).DefaultDecision, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings.defaultDecisionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings).DefaultDecisionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings.instanceDurationInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings).InstanceDurationInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings.reminderNotificationsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings).ReminderNotificationsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings.justificationRequiredOnApproval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings).JustificationRequiredOnApproval, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings.mailNotificationsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings).MailNotificationsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings.recommendationsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings).RecommendationsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings.recurrence": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings).Recurrence, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"microsoft.identityAndAccess.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4670,6 +4820,7 @@ type mqlMicrosoft struct {
 	Settings plugin.TValue[interface{}]
 	TenantDomainName plugin.TValue[string]
 	IdentityAndAccess plugin.TValue[*mqlMicrosoftIdentityAndAccess]
+	AccessReviews plugin.TValue[*mqlMicrosoftIdentityAndAccessAccessReviews]
 }
 
 // createMicrosoft creates a new instance of this resource
@@ -4857,6 +5008,22 @@ func (c *mqlMicrosoft) GetIdentityAndAccess() *plugin.TValue[*mqlMicrosoftIdenti
 		}
 
 		return c.identityAndAccess()
+	})
+}
+
+func (c *mqlMicrosoft) GetAccessReviews() *plugin.TValue[*mqlMicrosoftIdentityAndAccessAccessReviews] {
+	return plugin.GetOrCompute[*mqlMicrosoftIdentityAndAccessAccessReviews](&c.AccessReviews, func() (*mqlMicrosoftIdentityAndAccessAccessReviews, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft", c.__id, "accessReviews")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftIdentityAndAccessAccessReviews), nil
+			}
+		}
+
+		return c.accessReviews()
 	})
 }
 
@@ -5470,6 +5637,220 @@ func (c *mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance) GetMember
 
 func (c *mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance) GetRoleEligibilityScheduleId() *plugin.TValue[string] {
 	return &c.RoleEligibilityScheduleId
+}
+
+// mqlMicrosoftIdentityAndAccessAccessReviews for the microsoft.identityAndAccess.accessReviews resource
+type mqlMicrosoftIdentityAndAccessAccessReviews struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftIdentityAndAccessAccessReviewsInternal it will be used here
+	Filter plugin.TValue[string]
+	List plugin.TValue[[]interface{}]
+}
+
+// createMicrosoftIdentityAndAccessAccessReviews creates a new instance of this resource
+func createMicrosoftIdentityAndAccessAccessReviews(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftIdentityAndAccessAccessReviews{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.identityAndAccess.accessReviews", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviews) MqlName() string {
+	return "microsoft.identityAndAccess.accessReviews"
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviews) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviews) GetFilter() *plugin.TValue[string] {
+	return &c.Filter
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviews) GetList() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.identityAndAccess.accessReviews", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlMicrosoftIdentityAndAccessAccessReviewDefinition for the microsoft.identityAndAccess.accessReviewDefinition resource
+type mqlMicrosoftIdentityAndAccessAccessReviewDefinition struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftIdentityAndAccessAccessReviewDefinitionInternal it will be used here
+	Id plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	Status plugin.TValue[string]
+	Reviewers plugin.TValue[interface{}]
+	Settings plugin.TValue[*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings]
+}
+
+// createMicrosoftIdentityAndAccessAccessReviewDefinition creates a new instance of this resource
+func createMicrosoftIdentityAndAccessAccessReviewDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftIdentityAndAccessAccessReviewDefinition{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.identityAndAccess.accessReviewDefinition", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinition) MqlName() string {
+	return "microsoft.identityAndAccess.accessReviewDefinition"
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinition) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinition) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinition) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinition) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinition) GetReviewers() *plugin.TValue[interface{}] {
+	return &c.Reviewers
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinition) GetSettings() *plugin.TValue[*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings] {
+	return &c.Settings
+}
+
+// mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings for the microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings resource
+type mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettingsInternal it will be used here
+	AutoApplyDecisionsEnabled plugin.TValue[bool]
+	DecisionHistoriesForReviewersEnabled plugin.TValue[bool]
+	DefaultDecision plugin.TValue[string]
+	DefaultDecisionEnabled plugin.TValue[bool]
+	InstanceDurationInDays plugin.TValue[int64]
+	ReminderNotificationsEnabled plugin.TValue[bool]
+	JustificationRequiredOnApproval plugin.TValue[bool]
+	MailNotificationsEnabled plugin.TValue[bool]
+	RecommendationsEnabled plugin.TValue[bool]
+	Recurrence plugin.TValue[interface{}]
+}
+
+// createMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings creates a new instance of this resource
+func createMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings) MqlName() string {
+	return "microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings"
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings) GetAutoApplyDecisionsEnabled() *plugin.TValue[bool] {
+	return &c.AutoApplyDecisionsEnabled
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings) GetDecisionHistoriesForReviewersEnabled() *plugin.TValue[bool] {
+	return &c.DecisionHistoriesForReviewersEnabled
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings) GetDefaultDecision() *plugin.TValue[string] {
+	return &c.DefaultDecision
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings) GetDefaultDecisionEnabled() *plugin.TValue[bool] {
+	return &c.DefaultDecisionEnabled
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings) GetInstanceDurationInDays() *plugin.TValue[int64] {
+	return &c.InstanceDurationInDays
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings) GetReminderNotificationsEnabled() *plugin.TValue[bool] {
+	return &c.ReminderNotificationsEnabled
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings) GetJustificationRequiredOnApproval() *plugin.TValue[bool] {
+	return &c.JustificationRequiredOnApproval
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings) GetMailNotificationsEnabled() *plugin.TValue[bool] {
+	return &c.MailNotificationsEnabled
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings) GetRecommendationsEnabled() *plugin.TValue[bool] {
+	return &c.RecommendationsEnabled
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings) GetRecurrence() *plugin.TValue[interface{}] {
+	return &c.Recurrence
 }
 
 // mqlMicrosoftIdentityAndAccessPolicy for the microsoft.identityAndAccess.policy resource

@@ -4,6 +4,7 @@
 resources:
   microsoft:
     fields:
+      accessReviews: {}
       applications: {}
       domains: {}
       enterpriseApplications: {}
@@ -399,6 +400,34 @@ resources:
       filter: {}
       list: {}
       roleEligibilityScheduleInstances: {}
+    min_mondoo_version: 9.0.0
+  microsoft.identityAndAccess.accessReviewDefinition:
+    fields:
+      displayName: {}
+      id: {}
+      reviewers: {}
+      settings: {}
+      status: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings:
+    fields:
+      autoApplyDecisionsEnabled: {}
+      decisionHistoriesForReviewersEnabled: {}
+      defaultDecision: {}
+      defaultDecisionEnabled: {}
+      instanceDurationInDays: {}
+      justificationRequiredOnApproval: {}
+      mailNotificationsEnabled: {}
+      recommendationsEnabled: {}
+      recurrence: {}
+      reminderNotificationsEnabled: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.identityAndAccess.accessReviews:
+    fields:
+      filter: {}
+      list: {}
     min_mondoo_version: 9.0.0
   microsoft.identityAndAccess.policy:
     fields:

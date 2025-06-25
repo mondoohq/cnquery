@@ -8,8 +8,10 @@ import (
 	"fmt"
 	"strings"
 
+	graphidentitygovernance "github.com/microsoftgraph/msgraph-sdk-go/identitygovernance"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	graphpolicies "github.com/microsoftgraph/msgraph-sdk-go/policies"
+
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
@@ -244,4 +246,144 @@ func newMqlRoleEligibilityScheduleInstance(runtime *plugin.Runtime, inst models.
 		return nil, err
 	}
 	return resource.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance), nil
+}
+
+// Needs the permission AccessReview.Read.All
+func (a *mqlMicrosoft) accessReviews() (*mqlMicrosoftIdentityAndAccessAccessReviews, error) {
+	mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.identityAndAccess.accessReviews", map[string]*llx.RawData{})
+	return mqlResource.(*mqlMicrosoftIdentityAndAccessAccessReviews), err
+}
+
+// The $filter query parameter with the contains operator is supported on
+// the scope property of accessReviewScheduleDefinition. Use the following format for the request:
+// filter=contains(scope/microsoft.graph.accessReviewQueryScope/query, '{object}')
+// The {object} can have one of the following values:
+// /groups: List every accessReviewScheduleDefinition on individual groups (excludes definitions scoped to all Microsoft 365 groups with guests).
+// /groups/{group_id}:	List every accessReviewScheduleDefinition on a specific group (excludes definitions scoped to all Microsoft 365 groups with guests).
+// ./members: List every accessReviewScheduleDefinition scoped to all Microsoft 365 groups with guests.
+// accessPackageAssignments:	List every accessReviewScheduleDefinition on an access package.
+// roleAssignmentScheduleInstances:	List every accessReviewScheduleDefinition for principals that are assigned to a privileged role.
+func (a *mqlMicrosoftIdentityAndAccessAccessReviews) list() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, err
+	}
+
+	configuration := &graphidentitygovernance.AccessReviewsDefinitionsRequestBuilderGetRequestConfiguration{}
+
+	requestFilter := a.Filter.Data
+	if requestFilter != "" {
+		requestParameters := &graphidentitygovernance.AccessReviewsDefinitionsRequestBuilderGetQueryParameters{
+			Filter: &requestFilter,
+		}
+		configuration = &graphidentitygovernance.AccessReviewsDefinitionsRequestBuilderGetRequestConfiguration{
+			QueryParameters: requestParameters,
+		}
+	}
+
+	definitions, err := graphClient.
+		IdentityGovernance().
+		AccessReviews().
+		Definitions().
+		Get(context.Background(), configuration)
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	if definitions == nil {
+		return nil, nil
+	}
+
+	var accessReviewResources []interface{}
+	for _, accessReviewSchedule := range definitions.GetValue() {
+		if accessReviewSchedule.GetId() != nil {
+			reviewResource, err := newMqlAccessReviewDefinition(a.MqlRuntime, accessReviewSchedule)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create MQL resource for access review ID %s: %w", *accessReviewSchedule.GetId(), err)
+			}
+			accessReviewResources = append(accessReviewResources, reviewResource)
+		}
+	}
+
+	return accessReviewResources, nil
+}
+
+func newMqlAccessReviewDefinition(runtime *plugin.Runtime, d models.AccessReviewScheduleDefinitionable) (*mqlMicrosoftIdentityAndAccessAccessReviewDefinition, error) {
+	reviewersDict := []interface{}{}
+	if d.GetReviewers() != nil {
+		for _, reviewer := range d.GetReviewers() {
+			reviewerDict := map[string]*llx.RawData{
+				"reviewer":  llx.StringDataPtr(reviewer.GetQuery()),
+				"queryType": llx.StringDataPtr(reviewer.GetQueryType()),
+				"queryRoot": llx.StringDataPtr(reviewer.GetQueryRoot()),
+			}
+
+			reviewersDict = append(reviewersDict, reviewerDict)
+		}
+	}
+
+	var mqlAccessReviewScheduleSettings plugin.Resource
+	var err error
+
+	if d.GetSettings() != nil {
+		settingsId := *d.GetId() + "_settings"
+
+		var patternDict map[string]interface{}
+		var rangeDict map[string]interface{}
+
+		if recurrence := d.GetSettings().GetRecurrence(); recurrence != nil {
+			if pattern := recurrence.GetPattern(); pattern != nil {
+				patternDict, err = convert.JsonToDict(pattern)
+				if err != nil {
+					return nil, err
+				}
+			}
+
+			if recurrenceRange := recurrence.GetRangeEscaped(); recurrenceRange != nil {
+				rangeDict, err = convert.JsonToDict(recurrenceRange)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
+
+		recurrenceDict := map[string]*llx.RawData{
+			"pattern": llx.DictData(patternDict),
+			"range":   llx.DictData(rangeDict),
+		}
+
+		targetData := map[string]*llx.RawData{
+			"__id":                                 llx.StringData(settingsId),
+			"autoApplyDecisionsEnabled":            llx.BoolDataPtr(d.GetSettings().GetAutoApplyDecisionsEnabled()),
+			"decisionHistoriesForReviewersEnabled": llx.BoolDataPtr(d.GetSettings().GetDecisionHistoriesForReviewersEnabled()),
+			"defaultDecision":                      llx.StringDataPtr(d.GetSettings().GetDefaultDecision()),
+			"defaultDecisionEnabled":               llx.BoolDataPtr(d.GetSettings().GetDefaultDecisionEnabled()),
+			"instanceDurationInDays":               llx.IntDataPtr(d.GetSettings().GetInstanceDurationInDays()),
+			"justificationRequiredOnApproval":      llx.BoolDataPtr(d.GetSettings().GetJustificationRequiredOnApproval()),
+			"mailNotificationsEnabled":             llx.BoolDataPtr(d.GetSettings().GetMailNotificationsEnabled()),
+			"recommendationsEnabled":               llx.BoolDataPtr(d.GetSettings().GetRecommendationsEnabled()),
+			"recurrence":                           llx.DictData(recurrenceDict),
+		}
+
+		mqlAccessReviewScheduleSettings, err = CreateResource(runtime, "microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings", targetData)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	resource, err := CreateResource(runtime, "microsoft.identityAndAccess.accessReviewDefinition",
+		map[string]*llx.RawData{
+			"__id":        llx.StringDataPtr(d.GetId()),
+			"id":          llx.StringDataPtr(d.GetId()),
+			"displayName": llx.StringDataPtr(d.GetDisplayName()),
+			"status":      llx.StringDataPtr(d.GetStatus()),
+			"reviewers":   llx.DictData(reviewersDict),
+			"settings":    llx.ResourceData(mqlAccessReviewScheduleSettings, "microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings"),
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	return resource.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition), nil
 }
