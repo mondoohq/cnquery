@@ -1909,6 +1909,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.exchangeonline.mailboxesWithAudit": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetMailboxesWithAudit()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.mailbox")))
 	},
+	"ms365.exchangeonline.transportConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365Exchangeonline).GetTransportConfig()).ToDataRes(types.Dict)
+	},
 	"ms365.exchangeonline.teamsProtectionPolicy.zapEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineTeamsProtectionPolicy).GetZapEnabled()).ToDataRes(types.Bool)
 	},
@@ -4364,6 +4367,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"ms365.exchangeonline.mailboxesWithAudit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365Exchangeonline).MailboxesWithAudit, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.transportConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365Exchangeonline).TransportConfig, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"ms365.exchangeonline.teamsProtectionPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10397,6 +10404,7 @@ type mqlMs365Exchangeonline struct {
 	TeamsProtectionPolicies plugin.TValue[[]interface{}]
 	ReportSubmissionPolicies plugin.TValue[[]interface{}]
 	MailboxesWithAudit plugin.TValue[[]interface{}]
+	TransportConfig plugin.TValue[interface{}]
 }
 
 // createMs365Exchangeonline creates a new instance of this resource
@@ -10610,6 +10618,12 @@ func (c *mqlMs365Exchangeonline) GetMailboxesWithAudit() *plugin.TValue[[]interf
 		}
 
 		return c.mailboxesWithAudit()
+	})
+}
+
+func (c *mqlMs365Exchangeonline) GetTransportConfig() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.TransportConfig, func() (interface{}, error) {
+		return c.transportConfig()
 	})
 }
 
