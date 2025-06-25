@@ -809,6 +809,7 @@ resources:
       - microsoft365
   ms365.sharepointonline:
     fields:
+      defaultLinkPermission: {}
       spoSites: {}
       spoTenant: {}
       spoTenantSyncClientRestriction: {}
