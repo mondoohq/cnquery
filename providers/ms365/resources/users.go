@@ -904,3 +904,78 @@ func newMqlUserRegistrationDetails(runtime *plugin.Runtime, details models.UserR
 
 	return resource.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails), nil
 }
+
+func (a *mqlMicrosoftUser) licenseDetails() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, err
+	}
+
+	userID := a.Id.Data
+	ctx := context.Background()
+
+	// Permissions: User.Read.All, Directory.Read.All
+	details, err := graphClient.Users().ByUserId(userID).LicenseDetails().Get(ctx, nil)
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	results := []interface{}{}
+	for _, d := range details.GetValue() {
+		mqlDetail, err := newMqlMicrosoftUserLicenseDetail(a.MqlRuntime, d)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, mqlDetail)
+	}
+
+	return results, nil
+}
+
+func newMqlMicrosoftUserLicenseDetail(runtime *plugin.Runtime, d models.LicenseDetailsable) (*mqlMicrosoftUserLicenseDetail, error) {
+	if d.GetId() == nil {
+		return nil, errors.New("license detail response is missing an ID")
+	}
+
+	var skuId, skuPartNumber string
+	if d.GetSkuId() != nil {
+		skuId = d.GetSkuId().String()
+	}
+	if d.GetSkuPartNumber() != nil {
+		skuPartNumber = *d.GetSkuPartNumber()
+	}
+
+	servicePlans := []interface{}{}
+	for i, sp := range d.GetServicePlans() {
+		planId := fmt.Sprintf("%s-service-plans-%d", *d.GetId(), +i)
+
+		servicePlan, err := CreateResource(runtime, "microsoft.user.licenseDetail.servicePlanInfo",
+			map[string]*llx.RawData{
+				"__id":               llx.StringData(planId),
+				"appliesTo":          llx.StringDataPtr(sp.GetAppliesTo()),
+				"provisioningStatus": llx.StringDataPtr(sp.GetProvisioningStatus()),
+				"servicePlanId":      llx.StringData(sp.GetServicePlanId().String()),
+				"servicePlanName":    llx.StringDataPtr(sp.GetServicePlanName()),
+			})
+		if err != nil {
+			return nil, err
+		}
+		servicePlans = append(servicePlans, servicePlan)
+	}
+
+	data := map[string]*llx.RawData{
+		"__id":          llx.StringDataPtr(d.GetId()),
+		"id":            llx.StringDataPtr(d.GetId()),
+		"skuId":         llx.StringData(skuId),
+		"skuPartNumber": llx.StringData(skuPartNumber),
+		"servicePlans":  llx.ArrayData(servicePlans, types.ResourceLike),
+	}
+
+	resource, err := CreateResource(runtime, "microsoft.user.licenseDetail", data)
+	if err != nil {
+		return nil, err
+	}
+
+	return resource.(*mqlMicrosoftUserLicenseDetail), nil
+}
