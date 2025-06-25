@@ -490,6 +490,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.tenant.formsSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenant).GetFormsSettings()).ToDataRes(types.Resource("microsoft.tenant.formsSettings"))
 	},
+	"microsoft.tenant.privacyProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenant).GetPrivacyProfile()).ToDataRes(types.Dict)
+	},
+	"microsoft.tenant.technicalNotificationMails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenant).GetTechnicalNotificationMails()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.tenant.preferredLanguage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenant).GetPreferredLanguage()).ToDataRes(types.String)
+	},
 	"microsoft.tenant.settings.isAppAndServicesTrialEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenantSettings).GetIsAppAndServicesTrialEnabled()).ToDataRes(types.Bool)
 	},
@@ -2212,6 +2221,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.tenant.formsSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftTenant).FormsSettings, ok = plugin.RawToTValue[*mqlMicrosoftTenantFormsSettings](v.Value, v.Error)
+		return
+	},
+	"microsoft.tenant.privacyProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenant).PrivacyProfile, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.tenant.technicalNotificationMails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenant).TechnicalNotificationMails, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.tenant.preferredLanguage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenant).PreferredLanguage, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.tenant.settings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5004,6 +5025,9 @@ type mqlMicrosoftTenant struct {
 	Subscriptions plugin.TValue[[]interface{}]
 	Settings plugin.TValue[*mqlMicrosoftTenantSettings]
 	FormsSettings plugin.TValue[*mqlMicrosoftTenantFormsSettings]
+	PrivacyProfile plugin.TValue[interface{}]
+	TechnicalNotificationMails plugin.TValue[[]interface{}]
+	PreferredLanguage plugin.TValue[string]
 }
 
 // createMicrosoftTenant creates a new instance of this resource
@@ -5119,6 +5143,18 @@ func (c *mqlMicrosoftTenant) GetFormsSettings() *plugin.TValue[*mqlMicrosoftTena
 
 		return c.formsSettings()
 	})
+}
+
+func (c *mqlMicrosoftTenant) GetPrivacyProfile() *plugin.TValue[interface{}] {
+	return &c.PrivacyProfile
+}
+
+func (c *mqlMicrosoftTenant) GetTechnicalNotificationMails() *plugin.TValue[[]interface{}] {
+	return &c.TechnicalNotificationMails
+}
+
+func (c *mqlMicrosoftTenant) GetPreferredLanguage() *plugin.TValue[string] {
+	return &c.PreferredLanguage
 }
 
 // mqlMicrosoftTenantSettings for the microsoft.tenant.settings resource

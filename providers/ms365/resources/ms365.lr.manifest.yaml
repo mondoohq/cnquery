@@ -598,9 +598,12 @@ resources:
       id: {}
       name: {}
       onPremisesSyncEnabled: {}
+      preferredLanguage: {}
+      privacyProfile: {}
       provisionedPlans: {}
       settings: {}
       subscriptions: {}
+      technicalNotificationMails: {}
       type: {}
       verifiedDomains: {}
     min_mondoo_version: 9.0.0

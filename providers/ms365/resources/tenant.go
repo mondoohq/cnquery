@@ -14,6 +14,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
+	"go.mondoo.com/cnquery/v11/types"
 )
 
 func (m *mqlMicrosoftTenant) id() (string, error) {
@@ -57,6 +58,9 @@ var tenantFields = []string{
 	"onPremisesSyncEnabled",
 	"tenantType",
 	"provisionedPlans",
+	"privacyProfile",
+	"technicalNotificationMails",
+	"preferredLanguage",
 }
 
 func initMicrosoftTenant(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -98,18 +102,29 @@ func newMicrosoftTenant(runtime *plugin.Runtime, org models.Organizationable) (*
 		return nil, err
 	}
 
+	privacyProfileDict := map[string]interface{}{}
+	if org.GetPrivacyProfile() != nil {
+		privacyProfileDict, err = convert.JsonToDict(newPrivacyProfile(org.GetPrivacyProfile()))
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	mqlResource, err := CreateResource(runtime, "microsoft.tenant",
 		map[string]*llx.RawData{
-			"id":                    llx.StringDataPtr(org.GetId()),
-			"assignedPlans":         llx.DictData(assignedPlans),
-			"createdDateTime":       llx.TimeDataPtr(org.GetCreatedDateTime()), // deprecated
-			"name":                  llx.StringDataPtr(org.GetDisplayName()),
-			"displayName":           llx.StringDataPtr(org.GetDisplayName()), // deprecated
-			"verifiedDomains":       llx.DictData(verifiedDomains),
-			"onPremisesSyncEnabled": llx.BoolDataPtr(org.GetOnPremisesSyncEnabled()),
-			"createdAt":             llx.TimeDataPtr(org.GetCreatedDateTime()),
-			"type":                  llx.StringDataPtr(org.GetTenantType()),
-			"provisionedPlans":      llx.DictData(provisionedPlans),
+			"id":                         llx.StringDataPtr(org.GetId()),
+			"assignedPlans":              llx.DictData(assignedPlans),
+			"createdDateTime":            llx.TimeDataPtr(org.GetCreatedDateTime()), // deprecated
+			"name":                       llx.StringDataPtr(org.GetDisplayName()),
+			"displayName":                llx.StringDataPtr(org.GetDisplayName()), // deprecated
+			"verifiedDomains":            llx.DictData(verifiedDomains),
+			"onPremisesSyncEnabled":      llx.BoolDataPtr(org.GetOnPremisesSyncEnabled()),
+			"createdAt":                  llx.TimeDataPtr(org.GetCreatedDateTime()),
+			"type":                       llx.StringDataPtr(org.GetTenantType()),
+			"provisionedPlans":           llx.DictData(provisionedPlans),
+			"technicalNotificationMails": llx.ArrayData(convert.SliceAnyToInterface(org.GetTechnicalNotificationMails()), types.String),
+			"preferredLanguage":          llx.StringDataPtr(org.GetPreferredLanguage()),
+			"privacyProfile":             llx.DictData(privacyProfileDict),
 		})
 	if err != nil {
 		return nil, err
