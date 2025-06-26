@@ -6,6 +6,7 @@ package detector
 import (
 	"bufio"
 	"bytes"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/afero"
@@ -39,7 +40,7 @@ func getActivatedRhelModules(conn shared.Connection) []string {
 			continue
 		}
 
-		content, err := afs.ReadFile(modulesDir + "/" + file.Name())
+		content, err := afs.ReadFile(filepath.Join(modulesDir, file.Name()))
 		if err != nil {
 			continue
 		}
