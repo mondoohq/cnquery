@@ -217,6 +217,7 @@ private microsoft.user.licenseDetail @defaults("skuId skuPartNumber") {
   servicePlans []microsoft.user.licenseDetail.servicePlanInfo
 }
 
+// Contains information about a service plan associated with a subscribed SKU
 private microsoft.user.licenseDetail.servicePlanInfo @defaults("appliesTo provisioningStatus servicePlanName") {
   // The object the service plan can be assigned to. The possible values are: User or Company
   appliesTo string
