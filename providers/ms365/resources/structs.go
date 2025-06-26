@@ -128,12 +128,24 @@ type UnifiedRolePermission struct {
 	ExcludedResourceActions []string `json:"excludedResourceActions"`
 }
 
+type PrivacyProfileable struct {
+	ContactEmail string `json:"contactEmail"`
+	StatementUrl string `json:"statementUrl"`
+}
+
 func newUnifiedRolePermissions(p []models.UnifiedRolePermissionable) []UnifiedRolePermission {
 	res := []UnifiedRolePermission{}
 	for i := range p {
 		res = append(res, newUnifiedRolePermission(p[i]))
 	}
 	return res
+}
+
+func newPrivacyProfile(p models.PrivacyProfileable) PrivacyProfileable {
+	return PrivacyProfileable{
+		ContactEmail: convert.ToValue(p.GetContactEmail()),
+		StatementUrl: convert.ToValue(p.GetStatementUrl()),
+	}
 }
 
 func newUnifiedRolePermission(p models.UnifiedRolePermissionable) UnifiedRolePermission {

@@ -74,6 +74,12 @@ microsoft.tenant @defaults("name") {
   settings() microsoft.tenant.settings
   // Company-wide settings for Microsoft Forms
   formsSettings() microsoft.tenant.formsSettings
+  // Privacy profile data with contact email and statement URL
+  privacyProfile dict
+  // List of technical notification mails
+  technicalNotificationMails []string
+  // Preferred language
+  preferredLanguage string
 }
 
 // Company-wide configuration for apps and services.
