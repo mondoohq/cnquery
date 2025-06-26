@@ -55,6 +55,7 @@ $ExternalInOutlook = (Get-ExternalInOutlook)
 $ExoMailbox = (Get-EXOMailbox -RecipientTypeDetails SharedMailbox)
 $TeamsProtectionPolicy = (Get-TeamsProtectionPolicy)
 $ReportSubmissionPolicy = (Get-ReportSubmissionPolicy)
+$TransportConfig = (Get-TransportConfig)
 
 $exchangeOnline = New-Object PSObject
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name MalwareFilterPolicy -Value @($MalwareFilterPolicy)
@@ -78,6 +79,7 @@ Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name ExternalI
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name ExoMailbox -Value @($ExoMailbox)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name TeamsProtectionPolicy -Value @($TeamsProtectionPolicy)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name ReportSubmissionPolicy -Value @($ReportSubmissionPolicy)
+Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name TransportConfig -Value $TransportConfig
 
 Disconnect-ExchangeOnline -Confirm:$false
 
@@ -106,6 +108,7 @@ type ExchangeOnlineReport struct {
 	ExoMailbox             []*ExoMailbox             `json:"ExoMailbox"`
 	TeamsProtectionPolicy  []*TeamsProtectionPolicy  `json:"TeamsProtectionPolicy"`
 	ReportSubmissionPolicy []*ReportSubmissionPolicy `json:"ReportSubmissionPolicy"`
+	TransportConfig        *TransportConfig          `json:"TransportConfig"`
 	Mailbox                []MailboxWithAudit        `json:"Mailbox"`
 }
 
@@ -159,6 +162,10 @@ type ReportSubmissionPolicy struct {
 	ReportPhishAddresses                        []string `json:"ReportPhishAddresses"`
 	ReportChatMessageEnabled                    bool     `json:"ReportChatMessageEnabled"`
 	ReportChatMessageToCustomizedAddressEnabled bool     `json:"ReportChatMessageToCustomizedAddressEnabled"`
+}
+
+type TransportConfig struct {
+	SmtpClientAuthenticationDisabled bool `json:"SmtpClientAuthenticationDisabled"`
 }
 
 type mqlMs365ExchangeonlineInternal struct {
@@ -431,6 +438,9 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 	} else {
 		r.ReportSubmissionPolicies = plugin.TValue[[]interface{}]{State: plugin.StateIsSet | plugin.StateIsNull}
 	}
+
+	transportConfig, transportConfigErr := convert.JsonToDict(report.TransportConfig)
+	r.TransportConfig = plugin.TValue[interface{}]{Data: transportConfig, State: plugin.StateIsSet, Error: transportConfigErr}
 	return nil
 }
 
@@ -550,5 +560,9 @@ func (m *mqlMs365ExchangeonlineExoMailbox) user() (*mqlMicrosoftUser, error) {
 }
 
 func (r *mqlMs365Exchangeonline) mailboxesWithAudit() ([]interface{}, error) {
+	return nil, r.getExchangeReport()
+}
+
+func (r *mqlMs365Exchangeonline) transportConfig() (interface{}, error) {
 	return nil, r.getExchangeReport()
 }

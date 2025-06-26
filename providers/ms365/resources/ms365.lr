@@ -1317,6 +1317,8 @@ ms365.exchangeonline {
   reportSubmissionPolicies() []ms365.exchangeonline.reportSubmissionPolicy
   // List of mailboxes with audit settings
   mailboxesWithAudit() []ms365.exchangeonline.mailbox
+  // Transport configuration settings
+  transportConfig() dict
 }
 
 // Teams Protection Policy configuration

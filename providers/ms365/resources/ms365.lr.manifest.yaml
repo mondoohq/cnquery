@@ -776,6 +776,7 @@ resources:
       sharedMailboxes: {}
       sharingPolicy: {}
       teamsProtectionPolicies: {}
+      transportConfig: {}
       transportRule: {}
     min_mondoo_version: 9.0.0
     platform:
