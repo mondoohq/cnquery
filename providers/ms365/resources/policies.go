@@ -164,7 +164,6 @@ func newAuthenticationMethodsPolicy(runtime *plugin.Runtime, policy models.Authe
 func newAuthenticationMethodConfigurations(runtime *plugin.Runtime, configs []models.AuthenticationMethodConfigurationable) ([]interface{}, error) {
 	var configResources []interface{}
 	for _, config := range configs {
-		// Extract exclude targets properly
 		excludeTargets := []interface{}{}
 		for _, target := range config.GetExcludeTargets() {
 			targetDict := map[string]interface{}{}
