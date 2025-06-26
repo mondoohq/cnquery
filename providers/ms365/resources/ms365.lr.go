@@ -70,6 +70,14 @@ func init() {
 			// to override args, implement: initMicrosoftUserAssignedLicense(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftUserAssignedLicense,
 		},
+		"microsoft.user.licenseDetail": {
+			// to override args, implement: initMicrosoftUserLicenseDetail(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftUserLicenseDetail,
+		},
+		"microsoft.user.licenseDetail.servicePlanInfo": {
+			// to override args, implement: initMicrosoftUserLicenseDetailServicePlanInfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftUserLicenseDetailServicePlanInfo,
+		},
 		"microsoft.conditionalAccess": {
 			// to override args, implement: initMicrosoftConditionalAccess(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftConditionalAccess,
@@ -625,6 +633,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.user.assignedLicense.skuId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUserAssignedLicense).GetSkuId()).ToDataRes(types.String)
 	},
+	"microsoft.user.licenseDetail.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserLicenseDetail).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.user.licenseDetail.skuId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserLicenseDetail).GetSkuId()).ToDataRes(types.String)
+	},
+	"microsoft.user.licenseDetail.skuPartNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserLicenseDetail).GetSkuPartNumber()).ToDataRes(types.String)
+	},
+	"microsoft.user.licenseDetail.servicePlans": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserLicenseDetail).GetServicePlans()).ToDataRes(types.Array(types.Resource("microsoft.user.licenseDetail.servicePlanInfo")))
+	},
+	"microsoft.user.licenseDetail.servicePlanInfo.appliesTo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserLicenseDetailServicePlanInfo).GetAppliesTo()).ToDataRes(types.String)
+	},
+	"microsoft.user.licenseDetail.servicePlanInfo.provisioningStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserLicenseDetailServicePlanInfo).GetProvisioningStatus()).ToDataRes(types.String)
+	},
+	"microsoft.user.licenseDetail.servicePlanInfo.servicePlanId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserLicenseDetailServicePlanInfo).GetServicePlanId()).ToDataRes(types.String)
+	},
+	"microsoft.user.licenseDetail.servicePlanInfo.servicePlanName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserLicenseDetailServicePlanInfo).GetServicePlanName()).ToDataRes(types.String)
+	},
 	"microsoft.conditionalAccess.namedLocations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftConditionalAccess).GetNamedLocations()).ToDataRes(types.Resource("microsoft.conditionalAccess.namedLocations"))
 	},
@@ -960,6 +992,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.user.assignedLicenses": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUser).GetAssignedLicenses()).ToDataRes(types.Array(types.Resource("microsoft.user.assignedLicense")))
+	},
+	"microsoft.user.licenseDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUser).GetLicenseDetails()).ToDataRes(types.Array(types.Resource("microsoft.user.licenseDetail")))
 	},
 	"microsoft.user.authenticationRequirements": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUser).GetAuthenticationRequirements()).ToDataRes(types.Resource("microsoft.user.authenticationRequirements"))
@@ -2439,6 +2474,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMicrosoftUserAssignedLicense).SkuId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"microsoft.user.licenseDetail.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftUserLicenseDetail).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.user.licenseDetail.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserLicenseDetail).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.licenseDetail.skuId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserLicenseDetail).SkuId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.licenseDetail.skuPartNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserLicenseDetail).SkuPartNumber, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.licenseDetail.servicePlans": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserLicenseDetail).ServicePlans, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.licenseDetail.servicePlanInfo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftUserLicenseDetailServicePlanInfo).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.user.licenseDetail.servicePlanInfo.appliesTo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserLicenseDetailServicePlanInfo).AppliesTo, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.licenseDetail.servicePlanInfo.provisioningStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserLicenseDetailServicePlanInfo).ProvisioningStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.licenseDetail.servicePlanInfo.servicePlanId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserLicenseDetailServicePlanInfo).ServicePlanId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.licenseDetail.servicePlanInfo.servicePlanName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserLicenseDetailServicePlanInfo).ServicePlanName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"microsoft.conditionalAccess.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlMicrosoftConditionalAccess).__id, ok = v.Value.(string)
 			return
@@ -2973,6 +3048,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.user.assignedLicenses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftUser).AssignedLicenses, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.licenseDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUser).LicenseDetails, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"microsoft.user.authenticationRequirements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5766,6 +5845,124 @@ func (c *mqlMicrosoftUserAssignedLicense) GetSkuId() *plugin.TValue[string] {
 	return &c.SkuId
 }
 
+// mqlMicrosoftUserLicenseDetail for the microsoft.user.licenseDetail resource
+type mqlMicrosoftUserLicenseDetail struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftUserLicenseDetailInternal it will be used here
+	Id plugin.TValue[string]
+	SkuId plugin.TValue[string]
+	SkuPartNumber plugin.TValue[string]
+	ServicePlans plugin.TValue[[]interface{}]
+}
+
+// createMicrosoftUserLicenseDetail creates a new instance of this resource
+func createMicrosoftUserLicenseDetail(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftUserLicenseDetail{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.user.licenseDetail", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftUserLicenseDetail) MqlName() string {
+	return "microsoft.user.licenseDetail"
+}
+
+func (c *mqlMicrosoftUserLicenseDetail) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftUserLicenseDetail) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftUserLicenseDetail) GetSkuId() *plugin.TValue[string] {
+	return &c.SkuId
+}
+
+func (c *mqlMicrosoftUserLicenseDetail) GetSkuPartNumber() *plugin.TValue[string] {
+	return &c.SkuPartNumber
+}
+
+func (c *mqlMicrosoftUserLicenseDetail) GetServicePlans() *plugin.TValue[[]interface{}] {
+	return &c.ServicePlans
+}
+
+// mqlMicrosoftUserLicenseDetailServicePlanInfo for the microsoft.user.licenseDetail.servicePlanInfo resource
+type mqlMicrosoftUserLicenseDetailServicePlanInfo struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftUserLicenseDetailServicePlanInfoInternal it will be used here
+	AppliesTo plugin.TValue[string]
+	ProvisioningStatus plugin.TValue[string]
+	ServicePlanId plugin.TValue[string]
+	ServicePlanName plugin.TValue[string]
+}
+
+// createMicrosoftUserLicenseDetailServicePlanInfo creates a new instance of this resource
+func createMicrosoftUserLicenseDetailServicePlanInfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftUserLicenseDetailServicePlanInfo{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.user.licenseDetail.servicePlanInfo", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftUserLicenseDetailServicePlanInfo) MqlName() string {
+	return "microsoft.user.licenseDetail.servicePlanInfo"
+}
+
+func (c *mqlMicrosoftUserLicenseDetailServicePlanInfo) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftUserLicenseDetailServicePlanInfo) GetAppliesTo() *plugin.TValue[string] {
+	return &c.AppliesTo
+}
+
+func (c *mqlMicrosoftUserLicenseDetailServicePlanInfo) GetProvisioningStatus() *plugin.TValue[string] {
+	return &c.ProvisioningStatus
+}
+
+func (c *mqlMicrosoftUserLicenseDetailServicePlanInfo) GetServicePlanId() *plugin.TValue[string] {
+	return &c.ServicePlanId
+}
+
+func (c *mqlMicrosoftUserLicenseDetailServicePlanInfo) GetServicePlanName() *plugin.TValue[string] {
+	return &c.ServicePlanName
+}
+
 // mqlMicrosoftConditionalAccess for the microsoft.conditionalAccess resource
 type mqlMicrosoftConditionalAccess struct {
 	MqlRuntime *plugin.Runtime
@@ -7108,6 +7305,7 @@ type mqlMicrosoftUser struct {
 	Identities plugin.TValue[[]interface{}]
 	Auditlog plugin.TValue[*mqlMicrosoftUserAuditlog]
 	AssignedLicenses plugin.TValue[[]interface{}]
+	LicenseDetails plugin.TValue[[]interface{}]
 	AuthenticationRequirements plugin.TValue[*mqlMicrosoftUserAuthenticationRequirements]
 }
 
@@ -7293,6 +7491,22 @@ func (c *mqlMicrosoftUser) GetAuditlog() *plugin.TValue[*mqlMicrosoftUserAuditlo
 
 func (c *mqlMicrosoftUser) GetAssignedLicenses() *plugin.TValue[[]interface{}] {
 	return &c.AssignedLicenses
+}
+
+func (c *mqlMicrosoftUser) GetLicenseDetails() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.LicenseDetails, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.user", c.__id, "licenseDetails")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.licenseDetails()
+	})
 }
 
 func (c *mqlMicrosoftUser) GetAuthenticationRequirements() *plugin.TValue[*mqlMicrosoftUserAuthenticationRequirements] {

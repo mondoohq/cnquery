@@ -10,7 +10,6 @@ resources:
       groups: {}
       identityAndAccess: {}
       organizations: {}
-      roleEligibilityScheduleInstances: {}
       roles: {}
       serviceprincipals: {}
       settings: {}
@@ -645,6 +644,7 @@ resources:
       identities: {}
       job: {}
       jobTitle: {}
+      licenseDetails: {}
       mail: {}
       mfaEnabled: {}
       mobilePhone: {}
@@ -717,6 +717,22 @@ resources:
       issuer: {}
       issuerAssignedId: {}
       signInType: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.user.licenseDetail:
+    fields:
+      id: {}
+      servicePlans: {}
+      skuId: {}
+      skuPartNumber: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.user.licenseDetail.servicePlanInfo:
+    fields:
+      appliesTo: {}
+      provisioningStatus: {}
+      servicePlanId: {}
+      servicePlanName: {}
     is_private: true
     min_mondoo_version: 9.0.0
   microsoft.user.signin:

@@ -205,6 +205,30 @@ private microsoft.user.assignedLicense @defaults("skuId") {
   skuId string
 }
 
+// Details of a single license assigned to a user
+private microsoft.user.licenseDetail @defaults("skuId skuPartNumber") {
+  // The unique identifier for the license detail object
+  id string
+  // The unique identifier for the SKU.
+  skuId string
+  // The unique, friendly name for the product.
+  skuPartNumber string
+  // A collection of the service plans that are provided with the SKU.
+  servicePlans []microsoft.user.licenseDetail.servicePlanInfo
+}
+
+private microsoft.user.licenseDetail.servicePlanInfo @defaults("appliesTo provisioningStatus servicePlanName") {
+  // The object the service plan can be assigned to. The possible values are: User or Company
+  appliesTo string
+  // The provisioning status of the service plan. The possible values are:
+  // Success, Disabled, Error, PendingInput, PendingActivation, PendingProvisioning
+  provisioningStatus string
+  // The unique identifier of the service plan
+  servicePlanId string
+  // The name of the service plan.
+  servicePlanName string
+}
+
 // Microsoft Conditional Access Policies
 microsoft.conditionalAccess {
   // Named locations container
@@ -515,6 +539,8 @@ private microsoft.user @defaults("id displayName userPrincipalName") {
   auditlog() microsoft.user.auditlog
   // The licenses that are assigned to the user, including inherited (group-based) licenses
   assignedLicenses []microsoft.user.assignedLicense
+  // A collection of this user's license details
+  licenseDetails() []microsoft.user.licenseDetail
   // Authentication requirements information
   authenticationRequirements() microsoft.user.authenticationRequirements
 }
