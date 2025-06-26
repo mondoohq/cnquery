@@ -16,6 +16,16 @@ resources:
       tenantDomainName: {}
       users: {}
     min_mondoo_version: 9.0.0
+  microsoft.adminConsentRequestPolicy:
+    fields:
+      isEnabled: {}
+      notifyReviewers: {}
+      remindersEnabled: {}
+      requestDurationInDays: {}
+      reviewers: {}
+      version: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   microsoft.application:
     fields:
       api: {}
@@ -371,6 +381,13 @@ resources:
       recordType: {}
       supportedService: {}
       ttl: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.graph.accessReviewReviewerScope:
+    fields:
+      query: {}
+      queryRoot: {}
+      queryType: {}
     is_private: true
     min_mondoo_version: 9.0.0
   microsoft.group:

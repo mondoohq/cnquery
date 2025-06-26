@@ -254,6 +254,14 @@ func init() {
 			// to override args, implement: initMicrosoftPolicies(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftPolicies,
 		},
+		"microsoft.adminConsentRequestPolicy": {
+			// to override args, implement: initMicrosoftAdminConsentRequestPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftAdminConsentRequestPolicy,
+		},
+		"microsoft.graph.accessReviewReviewerScope": {
+			// to override args, implement: initMicrosoftGraphAccessReviewReviewerScope(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftGraphAccessReviewReviewerScope,
+		},
 		"microsoft.policies.authenticationMethodsPolicy": {
 			// to override args, implement: initMicrosoftPoliciesAuthenticationMethodsPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftPoliciesAuthenticationMethodsPolicy,
@@ -1633,7 +1641,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlMicrosoftPolicies).GetIdentitySecurityDefaultsEnforcementPolicy()).ToDataRes(types.Dict)
 	},
 	"microsoft.policies.adminConsentRequestPolicy": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftPolicies).GetAdminConsentRequestPolicy()).ToDataRes(types.Dict)
+		return (r.(*mqlMicrosoftPolicies).GetAdminConsentRequestPolicy()).ToDataRes(types.Resource("microsoft.adminConsentRequestPolicy"))
 	},
 	"microsoft.policies.permissionGrantPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftPolicies).GetPermissionGrantPolicies()).ToDataRes(types.Array(types.Dict))
@@ -1643,6 +1651,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.policies.authenticationMethodsPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftPolicies).GetAuthenticationMethodsPolicy()).ToDataRes(types.Resource("microsoft.policies.authenticationMethodsPolicy"))
+	},
+	"microsoft.adminConsentRequestPolicy.isEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftAdminConsentRequestPolicy).GetIsEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.adminConsentRequestPolicy.notifyReviewers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftAdminConsentRequestPolicy).GetNotifyReviewers()).ToDataRes(types.Bool)
+	},
+	"microsoft.adminConsentRequestPolicy.remindersEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftAdminConsentRequestPolicy).GetRemindersEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.adminConsentRequestPolicy.requestDurationInDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftAdminConsentRequestPolicy).GetRequestDurationInDays()).ToDataRes(types.Int)
+	},
+	"microsoft.adminConsentRequestPolicy.reviewers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftAdminConsentRequestPolicy).GetReviewers()).ToDataRes(types.Array(types.Resource("microsoft.graph.accessReviewReviewerScope")))
+	},
+	"microsoft.adminConsentRequestPolicy.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftAdminConsentRequestPolicy).GetVersion()).ToDataRes(types.Int)
+	},
+	"microsoft.graph.accessReviewReviewerScope.query": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftGraphAccessReviewReviewerScope).GetQuery()).ToDataRes(types.String)
+	},
+	"microsoft.graph.accessReviewReviewerScope.queryRoot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftGraphAccessReviewReviewerScope).GetQueryRoot()).ToDataRes(types.String)
+	},
+	"microsoft.graph.accessReviewReviewerScope.queryType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftGraphAccessReviewReviewerScope).GetQueryType()).ToDataRes(types.String)
 	},
 	"microsoft.policies.authenticationMethodsPolicy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftPoliciesAuthenticationMethodsPolicy).GetId()).ToDataRes(types.String)
@@ -3994,7 +4029,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.policies.adminConsentRequestPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPolicies).AdminConsentRequestPolicy, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlMicrosoftPolicies).AdminConsentRequestPolicy, ok = plugin.RawToTValue[*mqlMicrosoftAdminConsentRequestPolicy](v.Value, v.Error)
 		return
 	},
 	"microsoft.policies.permissionGrantPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4007,6 +4042,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.policies.authenticationMethodsPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftPolicies).AuthenticationMethodsPolicy, ok = plugin.RawToTValue[*mqlMicrosoftPoliciesAuthenticationMethodsPolicy](v.Value, v.Error)
+		return
+	},
+	"microsoft.adminConsentRequestPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftAdminConsentRequestPolicy).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.adminConsentRequestPolicy.isEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftAdminConsentRequestPolicy).IsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.adminConsentRequestPolicy.notifyReviewers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftAdminConsentRequestPolicy).NotifyReviewers, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.adminConsentRequestPolicy.remindersEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftAdminConsentRequestPolicy).RemindersEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.adminConsentRequestPolicy.requestDurationInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftAdminConsentRequestPolicy).RequestDurationInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"microsoft.adminConsentRequestPolicy.reviewers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftAdminConsentRequestPolicy).Reviewers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.adminConsentRequestPolicy.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftAdminConsentRequestPolicy).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"microsoft.graph.accessReviewReviewerScope.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftGraphAccessReviewReviewerScope).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.graph.accessReviewReviewerScope.query": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftGraphAccessReviewReviewerScope).Query, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.graph.accessReviewReviewerScope.queryRoot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftGraphAccessReviewReviewerScope).QueryRoot, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.graph.accessReviewReviewerScope.queryType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftGraphAccessReviewReviewerScope).QueryType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.policies.authenticationMethodsPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9605,7 +9684,7 @@ type mqlMicrosoftPolicies struct {
 	// optional: if you define mqlMicrosoftPoliciesInternal it will be used here
 	AuthorizationPolicy plugin.TValue[interface{}]
 	IdentitySecurityDefaultsEnforcementPolicy plugin.TValue[interface{}]
-	AdminConsentRequestPolicy plugin.TValue[interface{}]
+	AdminConsentRequestPolicy plugin.TValue[*mqlMicrosoftAdminConsentRequestPolicy]
 	PermissionGrantPolicies plugin.TValue[[]interface{}]
 	ConsentPolicySettings plugin.TValue[interface{}]
 	AuthenticationMethodsPolicy plugin.TValue[*mqlMicrosoftPoliciesAuthenticationMethodsPolicy]
@@ -9655,8 +9734,18 @@ func (c *mqlMicrosoftPolicies) GetIdentitySecurityDefaultsEnforcementPolicy() *p
 	})
 }
 
-func (c *mqlMicrosoftPolicies) GetAdminConsentRequestPolicy() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.AdminConsentRequestPolicy, func() (interface{}, error) {
+func (c *mqlMicrosoftPolicies) GetAdminConsentRequestPolicy() *plugin.TValue[*mqlMicrosoftAdminConsentRequestPolicy] {
+	return plugin.GetOrCompute[*mqlMicrosoftAdminConsentRequestPolicy](&c.AdminConsentRequestPolicy, func() (*mqlMicrosoftAdminConsentRequestPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.policies", c.__id, "adminConsentRequestPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftAdminConsentRequestPolicy), nil
+			}
+		}
+
 		return c.adminConsentRequestPolicy()
 	})
 }
@@ -9687,6 +9776,129 @@ func (c *mqlMicrosoftPolicies) GetAuthenticationMethodsPolicy() *plugin.TValue[*
 
 		return c.authenticationMethodsPolicy()
 	})
+}
+
+// mqlMicrosoftAdminConsentRequestPolicy for the microsoft.adminConsentRequestPolicy resource
+type mqlMicrosoftAdminConsentRequestPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftAdminConsentRequestPolicyInternal it will be used here
+	IsEnabled plugin.TValue[bool]
+	NotifyReviewers plugin.TValue[bool]
+	RemindersEnabled plugin.TValue[bool]
+	RequestDurationInDays plugin.TValue[int64]
+	Reviewers plugin.TValue[[]interface{}]
+	Version plugin.TValue[int64]
+}
+
+// createMicrosoftAdminConsentRequestPolicy creates a new instance of this resource
+func createMicrosoftAdminConsentRequestPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftAdminConsentRequestPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.adminConsentRequestPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftAdminConsentRequestPolicy) MqlName() string {
+	return "microsoft.adminConsentRequestPolicy"
+}
+
+func (c *mqlMicrosoftAdminConsentRequestPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftAdminConsentRequestPolicy) GetIsEnabled() *plugin.TValue[bool] {
+	return &c.IsEnabled
+}
+
+func (c *mqlMicrosoftAdminConsentRequestPolicy) GetNotifyReviewers() *plugin.TValue[bool] {
+	return &c.NotifyReviewers
+}
+
+func (c *mqlMicrosoftAdminConsentRequestPolicy) GetRemindersEnabled() *plugin.TValue[bool] {
+	return &c.RemindersEnabled
+}
+
+func (c *mqlMicrosoftAdminConsentRequestPolicy) GetRequestDurationInDays() *plugin.TValue[int64] {
+	return &c.RequestDurationInDays
+}
+
+func (c *mqlMicrosoftAdminConsentRequestPolicy) GetReviewers() *plugin.TValue[[]interface{}] {
+	return &c.Reviewers
+}
+
+func (c *mqlMicrosoftAdminConsentRequestPolicy) GetVersion() *plugin.TValue[int64] {
+	return &c.Version
+}
+
+// mqlMicrosoftGraphAccessReviewReviewerScope for the microsoft.graph.accessReviewReviewerScope resource
+type mqlMicrosoftGraphAccessReviewReviewerScope struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftGraphAccessReviewReviewerScopeInternal it will be used here
+	Query plugin.TValue[string]
+	QueryRoot plugin.TValue[string]
+	QueryType plugin.TValue[string]
+}
+
+// createMicrosoftGraphAccessReviewReviewerScope creates a new instance of this resource
+func createMicrosoftGraphAccessReviewReviewerScope(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftGraphAccessReviewReviewerScope{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.graph.accessReviewReviewerScope", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftGraphAccessReviewReviewerScope) MqlName() string {
+	return "microsoft.graph.accessReviewReviewerScope"
+}
+
+func (c *mqlMicrosoftGraphAccessReviewReviewerScope) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftGraphAccessReviewReviewerScope) GetQuery() *plugin.TValue[string] {
+	return &c.Query
+}
+
+func (c *mqlMicrosoftGraphAccessReviewReviewerScope) GetQueryRoot() *plugin.TValue[string] {
+	return &c.QueryRoot
+}
+
+func (c *mqlMicrosoftGraphAccessReviewReviewerScope) GetQueryType() *plugin.TValue[string] {
+	return &c.QueryType
 }
 
 // mqlMicrosoftPoliciesAuthenticationMethodsPolicy for the microsoft.policies.authenticationMethodsPolicy resource

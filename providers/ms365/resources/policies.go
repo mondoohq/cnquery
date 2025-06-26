@@ -5,7 +5,9 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/policies"
 	"go.mondoo.com/cnquery/v11/llx"
@@ -43,22 +45,6 @@ func (a *mqlMicrosoftPolicies) identitySecurityDefaultsEnforcementPolicy() (inte
 	}
 
 	return convert.JsonToDict(newIdentitySecurityDefaultsEnforcementPolicy(policy))
-}
-
-// https://docs.microsoft.com/en-us/graph/api/adminconsentrequestpolicy-get?view=graph-rest-
-func (a *mqlMicrosoftPolicies) adminConsentRequestPolicy() (interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
-	graphClient, err := conn.GraphClient()
-	if err != nil {
-		return nil, err
-	}
-
-	ctx := context.Background()
-	policy, err := graphClient.Policies().AdminConsentRequestPolicy().Get(ctx, &policies.AdminConsentRequestPolicyRequestBuilderGetRequestConfiguration{})
-	if err != nil {
-		return nil, transformError(err)
-	}
-	return convert.JsonToDict(newAdminConsentRequestPolicy(policy))
 }
 
 // https://docs.microsoft.com/en-us/azure/active-directory/manage-apps/configure-user-consent?tabs=azure-powershell
@@ -185,4 +171,60 @@ func newAuthenticationMethodConfigurations(runtime *plugin.Runtime, configs []mo
 	}
 
 	return configResources, nil
+}
+
+// https://docs.microsoft.com/en-us/graph/api/adminconsentrequestpolicy-get?view=graph-rest-
+func (a *mqlMicrosoftPolicies) adminConsentRequestPolicy() (*mqlMicrosoftAdminConsentRequestPolicy, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, err
+	}
+
+	adminConsentRequestPolicy, err := graphClient.Policies().AdminConsentRequestPolicy().Get(context.Background(), nil)
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	if adminConsentRequestPolicy == nil {
+		return nil, nil
+	}
+
+	pId := uuid.NewString()
+
+	var reviewers []interface{}
+	if adminConsentRequestPolicy.GetReviewers() != nil {
+		for i, reviewer := range adminConsentRequestPolicy.GetReviewers() {
+			revId := fmt.Sprintf("%s-reviewer-scope-%d", pId, i)
+			resource, err := CreateResource(a.MqlRuntime, "microsoft.graph.accessReviewReviewerScope",
+				map[string]*llx.RawData{
+					"__id":      llx.StringData(revId),
+					"query":     llx.StringDataPtr(reviewer.GetQuery()),
+					"queryRoot": llx.StringDataPtr(reviewer.GetQueryRoot()),
+					"queryType": llx.StringDataPtr(reviewer.GetQueryType()),
+				})
+			if err != nil {
+				return nil, err
+			}
+
+			reviewers = append(reviewers, resource)
+		}
+	}
+
+	data := map[string]*llx.RawData{
+		"__id":                  llx.StringData(pId),
+		"reviewers":             llx.ArrayData(reviewers, "microsoft.graph.accessReviewReviewerScope"),
+		"isEnabled":             llx.BoolDataPtr(adminConsentRequestPolicy.GetIsEnabled()),
+		"notifyReviewers":       llx.BoolDataPtr(adminConsentRequestPolicy.GetNotifyReviewers()),
+		"remindersEnabled":      llx.BoolDataPtr(adminConsentRequestPolicy.GetRemindersEnabled()),
+		"requestDurationInDays": llx.IntDataPtr(adminConsentRequestPolicy.GetRequestDurationInDays()),
+		"version":               llx.IntDataPtr(adminConsentRequestPolicy.GetVersion()),
+	}
+
+	resource, err := CreateResource(a.MqlRuntime, "microsoft.adminConsentRequestPolicy", data)
+	if err != nil {
+		return nil, err
+	}
+
+	return resource.(*mqlMicrosoftAdminConsentRequestPolicy), nil
 }
