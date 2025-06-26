@@ -112,6 +112,9 @@ func (s *Schema) Add(other ResourcesSchema) ResourcesSchema {
 				Id:   v.Id,
 				Name: v.Name,
 			}
+			if s.Dependencies == nil {
+				s.Dependencies = make(map[string]*ProviderInfo)
+			}
 			s.Dependencies[k] = pi
 		}
 	}
