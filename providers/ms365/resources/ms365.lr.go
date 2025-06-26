@@ -302,6 +302,10 @@ func init() {
 			// to override args, implement: initMs365Exchangeonline(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMs365Exchangeonline,
 		},
+		"ms365.exchangeonline.securityAndCompliance": {
+			// to override args, implement: initMs365ExchangeonlineSecurityAndCompliance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMs365ExchangeonlineSecurityAndCompliance,
+		},
 		"ms365.exchangeonline.teamsProtectionPolicy": {
 			// to override args, implement: initMs365ExchangeonlineTeamsProtectionPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMs365ExchangeonlineTeamsProtectionPolicy,
@@ -1955,6 +1959,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ms365.exchangeonline.transportConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetTransportConfig()).ToDataRes(types.Dict)
+	},
+	"ms365.exchangeonline.securityAndCompliance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365Exchangeonline).GetSecurityAndCompliance()).ToDataRes(types.Resource("ms365.exchangeonline.securityAndCompliance"))
+	},
+	"ms365.exchangeonline.securityAndCompliance.dlpCompliancePolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineSecurityAndCompliance).GetDlpCompliancePolicies()).ToDataRes(types.Array(types.Dict))
 	},
 	"ms365.exchangeonline.teamsProtectionPolicy.zapEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineTeamsProtectionPolicy).GetZapEnabled()).ToDataRes(types.Bool)
@@ -4471,6 +4481,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"ms365.exchangeonline.transportConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365Exchangeonline).TransportConfig, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.securityAndCompliance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365Exchangeonline).SecurityAndCompliance, ok = plugin.RawToTValue[*mqlMs365ExchangeonlineSecurityAndCompliance](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.securityAndCompliance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMs365ExchangeonlineSecurityAndCompliance).__id, ok = v.Value.(string)
+			return
+		},
+	"ms365.exchangeonline.securityAndCompliance.dlpCompliancePolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineSecurityAndCompliance).DlpCompliancePolicies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"ms365.exchangeonline.teamsProtectionPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10655,6 +10677,7 @@ type mqlMs365Exchangeonline struct {
 	ReportSubmissionPolicies plugin.TValue[[]interface{}]
 	MailboxesWithAudit plugin.TValue[[]interface{}]
 	TransportConfig plugin.TValue[interface{}]
+	SecurityAndCompliance plugin.TValue[*mqlMs365ExchangeonlineSecurityAndCompliance]
 }
 
 // createMs365Exchangeonline creates a new instance of this resource
@@ -10874,6 +10897,68 @@ func (c *mqlMs365Exchangeonline) GetMailboxesWithAudit() *plugin.TValue[[]interf
 func (c *mqlMs365Exchangeonline) GetTransportConfig() *plugin.TValue[interface{}] {
 	return plugin.GetOrCompute[interface{}](&c.TransportConfig, func() (interface{}, error) {
 		return c.transportConfig()
+	})
+}
+
+func (c *mqlMs365Exchangeonline) GetSecurityAndCompliance() *plugin.TValue[*mqlMs365ExchangeonlineSecurityAndCompliance] {
+	return plugin.GetOrCompute[*mqlMs365ExchangeonlineSecurityAndCompliance](&c.SecurityAndCompliance, func() (*mqlMs365ExchangeonlineSecurityAndCompliance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ms365.exchangeonline", c.__id, "securityAndCompliance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMs365ExchangeonlineSecurityAndCompliance), nil
+			}
+		}
+
+		return c.securityAndCompliance()
+	})
+}
+
+// mqlMs365ExchangeonlineSecurityAndCompliance for the ms365.exchangeonline.securityAndCompliance resource
+type mqlMs365ExchangeonlineSecurityAndCompliance struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlMs365ExchangeonlineSecurityAndComplianceInternal
+	DlpCompliancePolicies plugin.TValue[[]interface{}]
+}
+
+// createMs365ExchangeonlineSecurityAndCompliance creates a new instance of this resource
+func createMs365ExchangeonlineSecurityAndCompliance(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMs365ExchangeonlineSecurityAndCompliance{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.securityAndCompliance", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMs365ExchangeonlineSecurityAndCompliance) MqlName() string {
+	return "ms365.exchangeonline.securityAndCompliance"
+}
+
+func (c *mqlMs365ExchangeonlineSecurityAndCompliance) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMs365ExchangeonlineSecurityAndCompliance) GetDlpCompliancePolicies() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.DlpCompliancePolicies, func() ([]interface{}, error) {
+		return c.dlpCompliancePolicies()
 	})
 }
 

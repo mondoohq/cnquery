@@ -22,7 +22,25 @@ import (
 	"go.mondoo.com/cnquery/v11/types"
 )
 
-const outlookScope = "https://outlook.office.com/.default"
+const (
+	outlookScope    = "https://outlook.office.com/.default"
+	complianceScope = "https://ps.compliance.protection.outlook.com/.default"
+)
+
+var securityAndComplianceReport = `
+$appId = '%s'
+$organization = '%s'
+$tenantId = '%s'
+$complianceToken = '%s'
+
+Install-Module -Name ExchangeOnlineManagement -Scope CurrentUser -Force
+Import-Module ExchangeOnlineManagement
+Connect-IPPSSession -AccessToken $complianceToken -AppID $appId -Organization $organization -ShowBanner:$false
+$DlpCompliancePolicy = @(Get-DlpCompliancePolicy)
+$securityAndCompliance = @{ DlpCompliancePolicy = $DlpCompliancePolicy}
+
+ConvertTo-Json -Depth 4 $securityAndCompliance
+`
 
 var exchangeReport = `
 $appId = '%s'
@@ -110,6 +128,10 @@ type ExchangeOnlineReport struct {
 	ReportSubmissionPolicy []*ReportSubmissionPolicy `json:"ReportSubmissionPolicy"`
 	TransportConfig        *TransportConfig          `json:"TransportConfig"`
 	Mailbox                []MailboxWithAudit        `json:"Mailbox"`
+}
+
+type SecurityAndComplianceReport struct {
+	DlpCompliancePolicy []interface{} `json:"DlpCompliancePolicy"`
 }
 
 type MailboxWithAudit struct {
@@ -565,4 +587,89 @@ func (r *mqlMs365Exchangeonline) mailboxesWithAudit() ([]interface{}, error) {
 
 func (r *mqlMs365Exchangeonline) transportConfig() (interface{}, error) {
 	return nil, r.getExchangeReport()
+}
+
+type mqlMs365ExchangeonlineSecurityAndComplianceInternal struct {
+	scReportLock sync.Mutex
+	fetched      bool
+	fetchErr     error
+	report       *SecurityAndComplianceReport
+}
+
+func (r *mqlMs365ExchangeonlineSecurityAndCompliance) getSecurityAndComplianceReport() (*SecurityAndComplianceReport, error) {
+	r.scReportLock.Lock()
+	defer r.scReportLock.Unlock()
+
+	if r.fetched {
+		return r.report, r.fetchErr
+	}
+
+	r.fetched = true
+
+	errHandler := func(err error) (*SecurityAndComplianceReport, error) {
+		r.fetchErr = err
+		return nil, err
+	}
+
+	parent, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline", nil)
+	if err != nil {
+		return errHandler(err)
+	}
+	exchangeOnline := parent.(*mqlMs365Exchangeonline)
+	conn := exchangeOnline.MqlRuntime.Connection.(*connection.Ms365Connection)
+
+	organization, err := exchangeOnline.getOrg()
+	if organization == "" || err != nil {
+		return errHandler(errors.New("no organization provided, unable to fetch security and compliance report"))
+	}
+
+	ctx := context.Background()
+	token := conn.Token()
+	complianceToken, err := token.GetToken(ctx, policy.TokenRequestOptions{
+		Scopes: []string{complianceScope},
+	})
+	if err != nil {
+		return errHandler(err)
+	}
+
+	fmtScript := fmt.Sprintf(securityAndComplianceReport, conn.ClientId(), organization, conn.TenantId(), complianceToken.Token)
+	res, err := conn.CheckAndRunPowershellScript(fmtScript)
+	if err != nil {
+		return errHandler(err)
+	}
+
+	report := &SecurityAndComplianceReport{}
+	if res.ExitStatus != 0 {
+		data, _ := io.ReadAll(res.Stderr)
+		return errHandler(fmt.Errorf("failed to generate security and compliance report (exit code %d): %s", res.ExitStatus, string(data)))
+	}
+
+	data, err := io.ReadAll(res.Stdout)
+	if err != nil {
+		return errHandler(err)
+	}
+	logger.DebugDumpJSON("security-and-compliance-report", data)
+
+	if err := json.Unmarshal(data, report); err != nil {
+		return errHandler(err)
+	}
+
+	r.report = report
+	return r.report, nil
+}
+
+func (r *mqlMs365Exchangeonline) securityAndCompliance() (*mqlMs365ExchangeonlineSecurityAndCompliance, error) {
+	resource, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.securityAndCompliance", nil)
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlMs365ExchangeonlineSecurityAndCompliance), nil
+}
+
+func (r *mqlMs365ExchangeonlineSecurityAndCompliance) dlpCompliancePolicies() ([]interface{}, error) {
+	report, err := r.getSecurityAndComplianceReport()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDictSlice(report.DlpCompliancePolicy)
 }

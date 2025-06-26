@@ -1319,6 +1319,14 @@ ms365.exchangeonline {
   mailboxesWithAudit() []ms365.exchangeonline.mailbox
   // Transport configuration settings
   transportConfig() dict
+  // Security and Compliance policies
+  securityAndCompliance() ms365.exchangeonline.securityAndCompliance
+}
+
+// Microsoft 365 Exchange Online Security and Compliance
+private ms365.exchangeonline.securityAndCompliance {
+  // List of Data Loss Prevention (DLP) compliance policies
+  dlpCompliancePolicies() []dict
 }
 
 // Teams Protection Policy configuration
