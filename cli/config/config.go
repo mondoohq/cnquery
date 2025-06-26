@@ -192,6 +192,11 @@ func InitViperConfig() {
 			viper.Set("issuer_uri", issuerUri)
 		}
 
+		// Set the jwt token if available
+		if jwtToken := viper.GetString("jwtToken"); jwtToken != "" {
+			viper.Set("jwt_token", jwtToken)
+		}
+
 		// Set the API endpoint from universeDomain if available
 		if universeDomain := viper.GetString("universeDomain"); universeDomain != "" {
 			viper.Set("api_endpoint", universeDomain)
@@ -261,6 +266,7 @@ type CommonOpts struct {
 	// Workload Identity Federation fields
 	Audience  string `json:"audience,omitempty" mapstructure:"audience"`
 	IssuerURI string `json:"issuer_uri,omitempty" mapstructure:"issuer_uri"`
+	JWTToken  string `json:"jwt_token,omitempty" mapstructure:"jwt_token"`
 
 	// client features
 	Features []string `json:"features,omitempty" mapstructure:"features"`
@@ -322,7 +328,7 @@ func (c *CommonOpts) GetServiceCredential() *upstream.ServiceAccountCredentials 
 		case "wif":
 			log.Info().Msg("using wif authentication method, generate temporary credentials")
 
-			serviceAccount, err := upstream.ExchangeExternalToken(c.UpstreamApiEndpoint(), c.Audience, c.IssuerURI)
+			serviceAccount, err := upstream.ExchangeExternalToken(c.UpstreamApiEndpoint(), c.Audience, c.IssuerURI, c.JWTToken)
 			if err != nil {
 				log.Error().Err(err).Msg("could not exchange external (wif) token")
 				return nil
@@ -451,6 +457,11 @@ func ConvertWifConfig(filePath string, v *viper.Viper) error {
 		v.Set("issuer_uri", issuerURI)
 	} else {
 		return errors.New("WIF config missing required 'issuerUri' field")
+	}
+
+	if jwtToken, ok := wifConfig["jwtToken"].(string); ok {
+		// optional: if the customer provides it
+		v.Set("jwt_token", jwtToken)
 	}
 
 	// Copy all other fields for consistency
