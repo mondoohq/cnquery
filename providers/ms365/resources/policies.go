@@ -164,9 +164,17 @@ func newAuthenticationMethodsPolicy(runtime *plugin.Runtime, policy models.Authe
 func newAuthenticationMethodConfigurations(runtime *plugin.Runtime, configs []models.AuthenticationMethodConfigurationable) ([]interface{}, error) {
 	var configResources []interface{}
 	for _, config := range configs {
-		excludeTargets, err := convert.JsonToDictSlice(config.GetExcludeTargets())
-		if err != nil {
-			return nil, err
+		// Extract exclude targets properly
+		excludeTargets := []interface{}{}
+		for _, target := range config.GetExcludeTargets() {
+			targetDict := map[string]interface{}{}
+			if target.GetId() != nil {
+				targetDict["id"] = *target.GetId()
+			}
+			if target.GetTargetType() != nil {
+				targetDict["targetType"] = target.GetTargetType().String()
+			}
+			excludeTargets = append(excludeTargets, targetDict)
 		}
 
 		configData := map[string]*llx.RawData{
