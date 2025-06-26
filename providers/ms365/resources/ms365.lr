@@ -222,11 +222,11 @@ private microsoft.user.licenseDetail.servicePlanInfo @defaults("appliesTo provis
   appliesTo string
   // The provisioning status of the service plan. The possible values are:
   // Success, Disabled, Error, PendingInput, PendingActivation, PendingProvisioning
-	provisioningStatus string
+  provisioningStatus string
   // The unique identifier of the service plan
-	servicePlanId string
+  servicePlanId string
   // The name of the service plan.
-	servicePlanName string
+  servicePlanName string
 }
 
 // Microsoft Conditional Access Policies
