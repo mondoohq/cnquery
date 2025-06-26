@@ -131,7 +131,7 @@ microsoft.identityAndAccess {
   roleEligibilityScheduleInstances() []microsoft.identityAndAccess.roleEligibilityScheduleInstance
 }
 
-// Represents an instance of a role eligibility in PIM.
+// Represents an instance of a role eligibility in PIM
 private microsoft.identityAndAccess.roleEligibilityScheduleInstance @defaults("memberType principalId roleDefinitionId") {
   // The unique identifier of the role eligibility schedule instance
   id string
@@ -153,7 +153,7 @@ private microsoft.identityAndAccess.roleEligibilityScheduleInstance @defaults("m
   roleEligibilityScheduleId string
 }
 
-// A PIM role management policy for Microsoft Entra ID roles.
+// A PIM role management policy for Microsoft Entra ID roles
 private microsoft.identityAndAccess.policy @defaults("id displayName scopeType") {
   // Policy ID
   id string
@@ -175,7 +175,7 @@ private microsoft.identityAndAccess.policy @defaults("id displayName scopeType")
   rules() []microsoft.identityAndAccess.policy.rule
 }
 
-// A rule defined for a PIM role management policy.
+// A rule defined for a PIM role management policy
 private microsoft.identityAndAccess.policy.rule @defaults("id") {
   // The unique identifier for the rule
   id string
@@ -183,7 +183,7 @@ private microsoft.identityAndAccess.policy.rule @defaults("id") {
   target microsoft.identityAndAccess.policy.rule.target
 }
 
-// Defines details of the scope that's targeted by role management policy rule.
+// Defines details of the scope that's targeted by role management policy rule
 private microsoft.identityAndAccess.policy.rule.target {
   // The type of caller that's the target of the policy rule. Allowed values are: None, Admin, EndUser
   caller string
@@ -229,7 +229,7 @@ private microsoft.user.licenseDetail.servicePlanInfo @defaults("appliesTo provis
   servicePlanName string
 }
 
-// Microsoft Conditional Access Policies
+// Microsoft Entra Conditional Access Policies
 microsoft.conditionalAccess {
   // Named locations container
   namedLocations microsoft.conditionalAccess.namedLocations
@@ -263,7 +263,7 @@ private microsoft.conditionalAccess.authenticationMethodConfiguration @defaults(
   state string
 }
 
-// Container for Microsoft Conditional Access Named Locations
+// Container for Microsoft Entra Conditional Access Named Locations
 microsoft.conditionalAccess.namedLocations {
   // IP-based named locations
   ipLocations() []microsoft.conditionalAccess.ipNamedLocation
@@ -271,7 +271,7 @@ microsoft.conditionalAccess.namedLocations {
   countryLocations() []microsoft.conditionalAccess.countryNamedLocation
 }
 
-//Represents a Microsoft Entra Conditional Access policy. Conditional access policies are custom rules that define an access scenario.
+// A Microsoft Entra Conditional Access policy. Conditional access policies are custom rules that define an access scenario.
 microsoft.conditionalAccess.policy @defaults("id displayName state") {
   // Specifies the identifier of a conditionalAccessPolicy object
   id string
@@ -321,7 +321,7 @@ private microsoft.conditionalAccess.policy.conditions @defaults("id applications
   insiderRiskLevels string
 }
 
-// Represents the authentication flows in scope for the policy
+// The authentication flows in scope for a Microsoft Entra Conditional Access policy
 private microsoft.conditionalAccess.policy.conditions.authenticationFlows @defaults("transferMethods") {
   // Represents the transfer methods in scope for the policy. The possible values are: none, deviceCodeFlow, authenticationTransfer, unknownFutureValue.
   transferMethods string
@@ -405,7 +405,7 @@ private microsoft.conditionalAccess.policy.conditions.applications @defaults("in
   includeUserActions []string
 }
 
-// Represents users, groups, and roles included in and excluded from the policy scope.
+// Users, groups, and roles included in and excluded from a Microsoft Entra Conditional Access policy scope
 private microsoft.conditionalAccess.policy.conditions.users @defaults("includeUsers excludeUsers") {
   // User IDs in scope of policy unless explicitly excluded, None, All, or GuestsOrExternalUsers
   includeUsers []string
@@ -421,7 +421,7 @@ private microsoft.conditionalAccess.policy.conditions.users @defaults("includeUs
   excludeRoles []string
 }
 
-// Represents locations included in and excluded from the scope of a conditional access policy. Locations can be countries and regions or IP addresses.
+// Locations included in and excluded from the scope of a Microsoft Entra Conditional Access policy. Locations can be countries and regions or IP addresses.
 private microsoft.conditionalAccess.policy.conditions.locations @defaults("includeLocations excludeLocations") {
   // Location IDs in scope of policy unless explicitly excluded, All, or AllTrusted
   includeLocations []string
@@ -445,7 +445,7 @@ private microsoft.conditionalAccess.policy.grantControls @defaults("id") {
   termsOfUse []string
 }
 
-// Microsoft Conditional Access Policy Session Controls
+// Microsoft Entra Conditional Access Policy Session Controls
 private microsoft.conditionalAccess.policy.sessionControls @defaults("id") {
   // Internal ID based on policy ID
   id string
@@ -461,7 +461,7 @@ private microsoft.conditionalAccess.policy.sessionControls @defaults("id") {
   secureSignInSession dict
 }
 
-// Microsoft Conditional Access IP named location
+// Microsoft Entra Conditional Access IP named location
 microsoft.conditionalAccess.ipNamedLocation @defaults("name trusted") {
   // Named location name
   name string
@@ -469,7 +469,7 @@ microsoft.conditionalAccess.ipNamedLocation @defaults("name trusted") {
   trusted bool
 }
 
-// Microsoft Conditional Access Country named location
+// Microsoft Entra Conditional Access Country named location
 microsoft.conditionalAccess.countryNamedLocation @defaults("name lookupMethod") {
   // Named location name
   name string
