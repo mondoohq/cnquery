@@ -821,6 +821,10 @@ var redhatFamily = &PlatformResolver{
 				pf.Version = release
 			}
 
+			// RHEL can have various modules activated, identify them via filesystem
+			modules := getActivatedRhelModules(conn)
+			pf.Metadata["redhat/modules"] = strings.Join(modules, ",")
+
 			return true, nil
 		}
 
