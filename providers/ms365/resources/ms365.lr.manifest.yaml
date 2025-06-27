@@ -490,7 +490,6 @@ resources:
     fields:
       excludeTargets: {}
       id: {}
-      includeTargets: {}
       state: {}
     is_private: true
     min_mondoo_version: 9.0.0
@@ -781,6 +780,7 @@ resources:
       externalInOutlook: {}
       hostedOutboundSpamFilterPolicy: {}
       mailbox: {}
+      mailboxAuditBypassAssociation: {}
       mailboxesWithAudit: {}
       malwareFilterPolicy: {}
       organizationConfig: {}
@@ -832,6 +832,15 @@ resources:
       identity: {}
       primarySmtpAddress: {}
       recipientTypeDetails: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - microsoft365
+  ms365.exchangeonline.mailboxAuditBypassAssociation:
+    fields:
+      auditBypassEnabled: {}
+      name: {}
     is_private: true
     min_mondoo_version: 9.0.0
     platform:
