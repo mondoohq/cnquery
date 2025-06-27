@@ -6,13 +6,11 @@ package config
 import (
 	"bytes"
 	"encoding/base64"
-	"encoding/json"
 	"os"
 	"strings"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery/v11"
@@ -34,6 +32,9 @@ var (
 const (
 	configSourceBase64 = "$MONDOO_CONFIG_BASE64"
 	defaultAPIendpoint = "https://us.api.mondoo.com"
+
+	AUTH_METHOD_SSH = "ssh"
+	AUTH_METHOD_WIF = "wif"
 )
 
 // Init initializes and loads the mondoo config
@@ -119,29 +120,11 @@ func InitViperConfig() {
 		_, err := AppFs.Stat(Path)
 		if err == nil {
 			log.Debug().Str("configfile", viper.ConfigFileUsed()).Msg("try to load local config file")
-
-			// Check if this is a WIF config file
-			isWif := IsWifConfigFormat(Path)
-
-			if isWif {
-				log.Debug().Msg("detected WIF config file format")
-
-				// Convert the WIF config to Viper format
-				if err := ConvertWifConfig(Path, viper.GetViper()); err != nil {
-					LoadedConfig = false
-					log.Error().Err(err).Str("path", Path).Msg("could not convert WIF config file")
-				} else {
-					LoadedConfig = true
-					log.Debug().Msg("successfully converted WIF config")
-				}
+			if err := viper.ReadInConfig(); err == nil {
+				LoadedConfig = true
 			} else {
-				// Regular config file - load it normally
-				if err := viper.ReadInConfig(); err == nil {
-					LoadedConfig = true
-				} else {
-					LoadedConfig = false
-					log.Error().Err(err).Str("path", Path).Msg("could not read config file")
-				}
+				LoadedConfig = false
+				log.Error().Err(err).Str("path", Path).Msg("could not read config file")
 			}
 		}
 	}
@@ -167,37 +150,21 @@ func InitViperConfig() {
 	viper.AutomaticEnv()
 
 	// Check if this is a WIF config file
-	// This detects the new format: {"type": "external_account", "audience": "...", "issuerUri": "..."}
 	if viper.GetString("type") == "external_account" {
 		log.Debug().Msg("detected WIF config format")
 
 		// Configure authentication method
 		if !viper.IsSet("auth") {
-			viper.Set("auth", map[string]string{"method": "wif"})
+			viper.Set("auth", map[string]string{"method": AUTH_METHOD_WIF})
 		} else {
 			// If auth exists but method isn't set, set it to wif
 			authMap := viper.GetStringMap("auth")
 			if _, exists := authMap["method"]; !exists {
-				viper.Set("auth.method", "wif")
+				viper.Set("auth.method", AUTH_METHOD_WIF)
 			}
 		}
 
-		// Set the audience if available
-		if audience := viper.GetString("audience"); audience != "" {
-			viper.Set("audience", audience)
-		}
-
-		// Set the issuer URI if available
-		if issuerUri := viper.GetString("issuerUri"); issuerUri != "" {
-			viper.Set("issuer_uri", issuerUri)
-		}
-
-		// Set the jwt token if available
-		if jwtToken := viper.GetString("jwtToken"); jwtToken != "" {
-			viper.Set("jwt_token", jwtToken)
-		}
-
-		// Set the API endpoint from universeDomain if available
+		// // Set the API endpoint from universeDomain if available
 		if universeDomain := viper.GetString("universeDomain"); universeDomain != "" {
 			viper.Set("api_endpoint", universeDomain)
 		}
@@ -205,8 +172,8 @@ func InitViperConfig() {
 		// Log the detected configuration
 		log.Debug().
 			Str("audience", viper.GetString("audience")).
-			Str("issuerUri", viper.GetString("issuer_uri")).
-			Str("apiEndpoint", viper.GetString("api_endpoint")).
+			Str("issuerUri", viper.GetString("issuerUri")).
+			Str("apiEndpoint", viper.GetString("apiEndpoint")).
 			Msg("configured WIF authentication from config file")
 	}
 }
@@ -260,13 +227,11 @@ type CommonOpts struct {
 	Certificate string `json:"certificate,omitempty" mapstructure:"certificate"`
 	APIEndpoint string `json:"api_endpoint,omitempty" mapstructure:"api_endpoint"`
 
+	// Workload Identity Federation
+	WIF `mapstructure:",squash"`
+
 	// authentication
 	Authentication *CliConfigAuthentication `json:"auth,omitempty" mapstructure:"auth"`
-
-	// Workload Identity Federation fields
-	Audience  string `json:"audience,omitempty" mapstructure:"audience"`
-	IssuerURI string `json:"issuer_uri,omitempty" mapstructure:"issuer_uri"`
-	JWTToken  string `json:"jwt_token,omitempty" mapstructure:"jwt_token"`
 
 	// client features
 	Features []string `json:"features,omitempty" mapstructure:"features"`
@@ -279,6 +244,17 @@ type CommonOpts struct {
 
 	// annotations that will be applied to all assets
 	Annotations map[string]string `json:"annotations,omitempty" mapstructure:"annotations"`
+}
+
+// Workload Identity Federation
+type WIF struct {
+	Audience         string   `json:"audience,omitempty" mapstructure:"audience"`
+	IssuerURI        string   `json:"issuerUri,omitempty" mapstructure:"issuerUri"`
+	JWTToken         string   `json:"jwtToken,omitempty" mapstructure:"jwtToken"`
+	UniverseDomain   string   `json:"universeDomain,omitempty" mapstructure:"universeDomain"`
+	Scopes           []string `json:"scopes,omitempty" mapstructure:"scopes"`
+	Type             string   `json:"type,omitempty" mapstructure:"type"`
+	SubjectTokenType string   `json:"subjectTokenType,omitempty" mapstructure:"subjectTokenType"`
 }
 
 type CliConfigAuthentication struct {
@@ -317,7 +293,7 @@ func (c *CommonOpts) GetServiceCredential() *upstream.ServiceAccountCredentials 
 	// If we have an authentication method defined, use it
 	if c.Authentication != nil {
 		switch c.Authentication.Method {
-		case "ssh":
+		case AUTH_METHOD_SSH:
 			log.Info().Msg("using ssh authentication method, generate temporary credentials")
 			serviceAccount, err := upstream.ExchangeSSHKey(c.UpstreamApiEndpoint(), c.ServiceAccountMrn, c.GetParentMrn())
 			if err != nil {
@@ -325,7 +301,7 @@ func (c *CommonOpts) GetServiceCredential() *upstream.ServiceAccountCredentials 
 				return nil
 			}
 			return serviceAccount
-		case "wif":
+		case AUTH_METHOD_WIF:
 			log.Info().Msg("using wif authentication method, generate temporary credentials")
 
 			serviceAccount, err := upstream.ExchangeExternalToken(c.UpstreamApiEndpoint(), c.Audience, c.IssuerURI, c.JWTToken)
@@ -386,90 +362,4 @@ func (c *CommonOpts) UpstreamApiEndpoint() string {
 	}
 
 	return apiEndpoint
-}
-
-// IsWifConfigFormat determines if a file is in the WIF config format
-func IsWifConfigFormat(filePath string) bool {
-	// Read the file
-	data, err := afero.ReadFile(AppFs, filePath)
-	if err != nil {
-		return false
-	}
-
-	// Try to parse it as JSON
-	var config map[string]interface{}
-	if err := json.Unmarshal(data, &config); err != nil {
-		return false
-	}
-
-	// Check if it has the required fields for WIF format
-	accountType, hasType := config["type"]
-	if !hasType {
-		return false
-	}
-
-	// Check if it's an external account config
-	typeStr, ok := accountType.(string)
-	if !ok || typeStr != "external_account" {
-		return false
-	}
-
-	// Check for audience
-	_, hasAudience := config["audience"]
-
-	return hasAudience
-}
-
-// ConvertWifConfig reads a WIF config file and converts it to a Viper-compatible format
-func ConvertWifConfig(filePath string, v *viper.Viper) error {
-	// Read the file
-	data, err := afero.ReadFile(AppFs, filePath)
-	if err != nil {
-		return err
-	}
-
-	// Parse it as JSON
-	var wifConfig map[string]interface{}
-	if err := json.Unmarshal(data, &wifConfig); err != nil {
-		return errors.Wrap(err, "failed to parse WIF config as JSON")
-	}
-
-	// Set the authentication method
-	v.Set("auth", map[string]string{"method": "wif"})
-
-	// Set the required fields
-	if audience, ok := wifConfig["audience"].(string); ok {
-		v.Set("audience", audience)
-	} else {
-		return errors.New("WIF config missing required 'audience' field")
-	}
-
-	// Check for universeDomain (required for API endpoint)
-	if universeDomain, ok := wifConfig["universeDomain"].(string); ok {
-		v.Set("universeDomain", universeDomain)
-		v.Set("api_endpoint", universeDomain)
-		log.Debug().Str("universeDomain", universeDomain).Msg("setting API endpoint from universeDomain")
-	} else {
-		return errors.New("WIF config missing required 'universeDomain' field")
-	}
-
-	if issuerURI, ok := wifConfig["issuerUri"].(string); ok {
-		v.Set("issuer_uri", issuerURI)
-	} else {
-		return errors.New("WIF config missing required 'issuerUri' field")
-	}
-
-	if jwtToken, ok := wifConfig["jwtToken"].(string); ok {
-		// optional: if the customer provides it
-		v.Set("jwt_token", jwtToken)
-	}
-
-	// Copy all other fields for consistency
-	for key, value := range wifConfig {
-		if key != "auth" && key != "audience" && key != "issuer_uri" && key != "api_endpoint" && key != "universeDomain" {
-			v.Set(key, value)
-		}
-	}
-
-	return nil
 }
