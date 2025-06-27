@@ -929,6 +929,7 @@ resources:
       allowPublicUsers: {}
       allowTeamsConsumer: {}
       allowTeamsConsumerInbound: {}
+      allowedDomains: {}
       blockedDomains: {}
       identity: {}
       restrictTeamsConsumerToExternalUserProfiles: {}

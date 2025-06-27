@@ -2112,6 +2112,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.teams.tenantFederationConfig.blockedDomains": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365TeamsTenantFederationConfig).GetBlockedDomains()).ToDataRes(types.Dict)
 	},
+	"ms365.teams.tenantFederationConfig.allowedDomains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTenantFederationConfig).GetAllowedDomains()).ToDataRes(types.Array(types.String))
+	},
 	"ms365.teams.tenantFederationConfig.allowFederatedUsers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365TeamsTenantFederationConfig).GetAllowFederatedUsers()).ToDataRes(types.Bool)
 	},
@@ -4756,6 +4759,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"ms365.teams.tenantFederationConfig.blockedDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365TeamsTenantFederationConfig).BlockedDomains, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.tenantFederationConfig.allowedDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTenantFederationConfig).AllowedDomains, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"ms365.teams.tenantFederationConfig.allowFederatedUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11751,6 +11758,7 @@ type mqlMs365TeamsTenantFederationConfig struct {
 	// optional: if you define mqlMs365TeamsTenantFederationConfigInternal it will be used here
 	Identity plugin.TValue[string]
 	BlockedDomains plugin.TValue[interface{}]
+	AllowedDomains plugin.TValue[[]interface{}]
 	AllowFederatedUsers plugin.TValue[bool]
 	AllowPublicUsers plugin.TValue[bool]
 	AllowTeamsConsumer plugin.TValue[bool]
@@ -11798,6 +11806,10 @@ func (c *mqlMs365TeamsTenantFederationConfig) GetIdentity() *plugin.TValue[strin
 
 func (c *mqlMs365TeamsTenantFederationConfig) GetBlockedDomains() *plugin.TValue[interface{}] {
 	return &c.BlockedDomains
+}
+
+func (c *mqlMs365TeamsTenantFederationConfig) GetAllowedDomains() *plugin.TValue[[]interface{}] {
+	return &c.AllowedDomains
 }
 
 func (c *mqlMs365TeamsTenantFederationConfig) GetAllowFederatedUsers() *plugin.TValue[bool] {
