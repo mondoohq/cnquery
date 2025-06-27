@@ -51,6 +51,7 @@ $outlookToken= '%s'
 Install-Module -Name ExchangeOnlineManagement -Scope CurrentUser -Force
 Import-Module ExchangeOnlineManagement
 Connect-ExchangeOnline -AccessToken $outlookToken -AppID $appId -Organization $organization -ShowBanner:$false -ShowProgress:$false
+$MailboxAuditBypassAssociation = (Get-MailboxAuditBypassAssociation -ResultSize Unlimited)
 
 $MalwareFilterPolicy = (Get-MalwareFilterPolicy)
 $HostedOutboundSpamFilterPolicy = (Get-HostedOutboundSpamFilterPolicy)
@@ -98,6 +99,7 @@ Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name ExoMailbo
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name TeamsProtectionPolicy -Value @($TeamsProtectionPolicy)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name ReportSubmissionPolicy -Value @($ReportSubmissionPolicy)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name TransportConfig -Value $TransportConfig
+Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name MailboxAuditBypassAssociation -Value @($MailboxAuditBypassAssociation)
 
 Disconnect-ExchangeOnline -Confirm:$false
 
@@ -128,6 +130,13 @@ type ExchangeOnlineReport struct {
 	ReportSubmissionPolicy []*ReportSubmissionPolicy `json:"ReportSubmissionPolicy"`
 	TransportConfig        *TransportConfig          `json:"TransportConfig"`
 	Mailbox                []MailboxWithAudit        `json:"Mailbox"`
+
+	MailboxAuditBypassAssociation []MailboxAuditBypassAssociation `json:"MailboxAuditBypassAssociation"`
+}
+
+type MailboxAuditBypassAssociation struct {
+	Name               string `json:"Name"`
+	AuditBypassEnabled bool   `json:"AuditBypassEnabled"`
 }
 
 type SecurityAndComplianceReport struct {
@@ -463,6 +472,23 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 
 	transportConfig, transportConfigErr := convert.JsonToDict(report.TransportConfig)
 	r.TransportConfig = plugin.TValue[interface{}]{Data: transportConfig, State: plugin.StateIsSet, Error: transportConfigErr}
+
+	mailboxAuditBypassAssociations := []interface{}{}
+	var mailboxAuditBypassAssociationErr error
+	for _, assoc := range report.MailboxAuditBypassAssociation {
+		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.mailboxAuditBypassAssociation",
+			map[string]*llx.RawData{
+				"name":               llx.StringData(assoc.Name),
+				"auditBypassEnabled": llx.BoolData(assoc.AuditBypassEnabled),
+			})
+		if err != nil {
+			mailboxAuditBypassAssociationErr = err
+			break
+		}
+		mailboxAuditBypassAssociations = append(mailboxAuditBypassAssociations, mql)
+	}
+	r.MailboxAuditBypassAssociation = plugin.TValue[[]interface{}]{Data: mailboxAuditBypassAssociations, State: plugin.StateIsSet, Error: mailboxAuditBypassAssociationErr}
+	
 	return nil
 }
 
@@ -672,4 +698,8 @@ func (r *mqlMs365ExchangeonlineSecurityAndCompliance) dlpCompliancePolicies() ([
 		return nil, err
 	}
 	return convert.JsonToDictSlice(report.DlpCompliancePolicy)
+}
+
+func (r *mqlMs365Exchangeonline) mailboxAuditBypassAssociation() ([]interface{}, error) {
+	return nil, r.getExchangeReport()
 }

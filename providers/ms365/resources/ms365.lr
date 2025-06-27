@@ -1346,6 +1346,16 @@ ms365.exchangeonline {
   transportConfig() dict
   // Security and Compliance policies
   securityAndCompliance() ms365.exchangeonline.securityAndCompliance
+  // List of mailbox audit bypass associations
+  mailboxAuditBypassAssociation() []ms365.exchangeonline.mailboxAuditBypassAssociation
+}
+
+// Mailbox Audit Bypass Association configuration
+private ms365.exchangeonline.mailboxAuditBypassAssociation @defaults("name auditBypassEnabled") {
+  // The name of the user or computer account
+  name string
+  // Whether mailbox audit logging is bypassed for this account
+  auditBypassEnabled bool
 }
 
 // Microsoft 365 Exchange Online Security and Compliance
