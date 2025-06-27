@@ -18,6 +18,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
+	"go.mondoo.com/cnquery/v11/types"
 )
 
 const (
@@ -42,6 +43,18 @@ $CsTeamsMessagingPolicy = (Get-CsTeamsMessagingPolicy -Identity Global)
 $callingPolicy = (Get-CsTeamsCallingPolicy -Identity Global)
 $CsTeamsMeetingPolicy | Add-Member -NotePropertyName "AllowCloudRecordingForCalls" -NotePropertyValue $callingPolicy.AllowCloudRecordingForCalls
 
+$allowedList = New-Object System.Collections.Generic.List[string]
+if ($null -ne $CsTenantFederationConfiguration.AllowedDomains) {
+  foreach ($item in $CsTenantFederationConfiguration.AllowedDomains) {
+    $itemAsString = $item.ToString()
+    $domainValue = ($itemAsString -split '=')[1]
+    $allowedList.Add($domainValue)
+  }
+}
+$CsTenantFederationConfiguration.AllowedDomains = $allowedList
+
+$CsTenantFederationConfiguration | Add-Member -MemberType NoteProperty -Name "AllowedDomainsClean" -Value $allowedList
+
 $msteams = New-Object PSObject
 Add-Member -InputObject $msteams -MemberType NoteProperty -Name CsTeamsClientConfiguration -Value $CsTeamsClientConfiguration
 Add-Member -InputObject $msteams -MemberType NoteProperty -Name CsTenantFederationConfiguration -Value $CsTenantFederationConfiguration
@@ -60,17 +73,17 @@ type MsTeamsReport struct {
 }
 
 type CsTenantFederationConfiguration struct {
-	Identity                                    string `json:"Identity"`
-	AllowFederatedUsers                         bool   `json:"AllowFederatedUsers"`
-	AllowPublicUsers                            bool   `json:"AllowPublicUsers"`
-	AllowTeamsConsumer                          bool   `json:"AllowTeamsConsumer"`
-	AllowTeamsConsumerInbound                   bool   `json:"AllowTeamsConsumerInbound"`
-	TreatDiscoveredPartnersAsUnverified         bool   `json:"TreatDiscoveredPartnersAsUnverified"`
-	SharedSipAddressSpace                       bool   `json:"SharedSipAddressSpace"`
-	RestrictTeamsConsumerToExternalUserProfiles bool   `json:"RestrictTeamsConsumerToExternalUserProfiles"`
+	Identity                                    string   `json:"Identity"`
+	AllowFederatedUsers                         bool     `json:"AllowFederatedUsers"`
+	AllowPublicUsers                            bool     `json:"AllowPublicUsers"`
+	AllowTeamsConsumer                          bool     `json:"AllowTeamsConsumer"`
+	AllowTeamsConsumerInbound                   bool     `json:"AllowTeamsConsumerInbound"`
+	TreatDiscoveredPartnersAsUnverified         bool     `json:"TreatDiscoveredPartnersAsUnverified"`
+	SharedSipAddressSpace                       bool     `json:"SharedSipAddressSpace"`
+	RestrictTeamsConsumerToExternalUserProfiles bool     `json:"RestrictTeamsConsumerToExternalUserProfiles"`
+	AllowedDomains                              []string `json:"AllowedDomains"`
 	// TODO: we need to figure out how to get this right when using Convert-ToJson
 	// it currently comes back as an empty json object {} but the pwsh cmdlet spits out a string-looking value
-	AllowedDomains interface{} `json:"AllowedDomains"`
 	BlockedDomains interface{} `json:"BlockedDomains"`
 }
 
@@ -179,6 +192,7 @@ func (r *mqlMs365Teams) gatherTeamsReport() error {
 			map[string]*llx.RawData{
 				"identity":                                    llx.StringData(tenantConfig.Identity),
 				"blockedDomains":                              llx.DictData(tenantConfigBlockedDomains),
+				"allowedDomains":                              llx.ArrayData(convert.SliceAnyToInterface(tenantConfig.AllowedDomains), types.String),
 				"allowFederatedUsers":                         llx.BoolData(tenantConfig.AllowFederatedUsers),
 				"allowPublicUsers":                            llx.BoolData(tenantConfig.AllowPublicUsers),
 				"allowTeamsConsumer":                          llx.BoolData(tenantConfig.AllowTeamsConsumer),

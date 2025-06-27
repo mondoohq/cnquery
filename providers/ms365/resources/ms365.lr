@@ -1462,6 +1462,8 @@ private ms365.teams.tenantFederationConfig {
   identity string
   // Blocked domains
   blockedDomains dict
+  // Allowed domains
+  allowedDomains []string
   // Whether federated users are allowed
   allowFederatedUsers bool
   // Whether public users are allowed
