@@ -10,6 +10,7 @@ import (
 
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	graphpolicies "github.com/microsoftgraph/msgraph-sdk-go/policies"
+	"github.com/microsoftgraph/msgraph-sdk-go/organization"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
@@ -29,7 +30,47 @@ func (a *mqlMicrosoft) identityAndAccess() (*mqlMicrosoftIdentityAndAccess, erro
 	return resource.(*mqlMicrosoftIdentityAndAccess), nil
 }
 
-func initMicrosoftIdentityAndAccess(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+func (a *mqlMicrosoftIdentityAndAccess) privilegedIdentityManagement() (*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagement, error) {
+	resource, err := CreateResource(a.MqlRuntime, "microsoft.identityAndAccess.privilegedIdentityManagement", nil)
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagement), nil
+}
+
+func (a *mqlMicrosoftIdentityAndAccess) organization() (*mqlMicrosoftTenant, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	resp, err := graphClient.Organization().ByOrganizationId(conn.TenantId()).Get(ctx, &organization.OrganizationItemRequestBuilderGetRequestConfiguration{
+		QueryParameters: &organization.OrganizationItemRequestBuilderGetQueryParameters{
+			Select: tenantFields,
+		},
+	})
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	tenant, err := newMicrosoftTenant(a.MqlRuntime, resp)
+	if err != nil {
+		return nil, err
+	}
+	return tenant, nil
+}
+
+func (a *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagement) policies() (*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies, error) {
+	resource, err := CreateResource(a.MqlRuntime, "microsoft.identityAndAccess.privilegedIdentityManagement.policies", nil)
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies), nil
+}
+
+func initMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if filter, ok := args["filter"]; ok {
 		args["filter"] = filter
 	}
@@ -37,8 +78,7 @@ func initMicrosoftIdentityAndAccess(runtime *plugin.Runtime, args map[string]*ll
 	return args, nil, nil
 }
 
-// The data-fetching logic is now in the list() method of the new resource.
-func (a *mqlMicrosoftIdentityAndAccess) list() ([]interface{}, error) {
+func (a *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies) list() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -96,7 +136,7 @@ func (a *mqlMicrosoftIdentityAndAccess) list() ([]interface{}, error) {
 	return policyResources, nil
 }
 
-func newMqlRoleManagementPolicy(runtime *plugin.Runtime, u models.UnifiedRoleManagementPolicyable) (*mqlMicrosoftIdentityAndAccessPolicy, error) {
+func newMqlRoleManagementPolicy(runtime *plugin.Runtime, u models.UnifiedRoleManagementPolicyable) (*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy, error) {
 	lastModifiedByDict := map[string]interface{}{}
 	var err error
 
@@ -107,7 +147,7 @@ func newMqlRoleManagementPolicy(runtime *plugin.Runtime, u models.UnifiedRoleMan
 		}
 	}
 
-	resource, err := CreateResource(runtime, "microsoft.identityAndAccess.policy",
+	resource, err := CreateResource(runtime, "microsoft.identityAndAccess.privilegedIdentityManagement.policy",
 		map[string]*llx.RawData{
 			"__id":                  llx.StringDataPtr(u.GetId()),
 			"id":                    llx.StringDataPtr(u.GetId()),
@@ -122,10 +162,10 @@ func newMqlRoleManagementPolicy(runtime *plugin.Runtime, u models.UnifiedRoleMan
 	if err != nil {
 		return nil, err
 	}
-	return resource.(*mqlMicrosoftIdentityAndAccessPolicy), nil
+	return resource.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy), nil
 }
 
-func (m *mqlMicrosoftIdentityAndAccessPolicy) rules() ([]interface{}, error) {
+func (m *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy) rules() ([]interface{}, error) {
 	conn := m.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -163,7 +203,7 @@ func (m *mqlMicrosoftIdentityAndAccessPolicy) rules() ([]interface{}, error) {
 	return ruleResources, nil
 }
 
-func newMqlRoleManagementPolicyRule(runtime *plugin.Runtime, rule models.UnifiedRoleManagementPolicyRuleable) (*mqlMicrosoftIdentityAndAccessPolicyRule, error) {
+func newMqlRoleManagementPolicyRule(runtime *plugin.Runtime, rule models.UnifiedRoleManagementPolicyRuleable) (*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRule, error) {
 	var mqlPolicyRuleTarget plugin.Resource
 	var err error
 
@@ -176,23 +216,23 @@ func newMqlRoleManagementPolicyRule(runtime *plugin.Runtime, rule models.Unified
 			"operations":          llx.ArrayData(convert.SliceAnyToInterface(convertEnumCollectionToStrings(rule.GetTarget().GetOperations())), types.String),
 		}
 
-		mqlPolicyRuleTarget, err = CreateResource(runtime, "microsoft.identityAndAccess.policy.rule.target", targetData)
+		mqlPolicyRuleTarget, err = CreateResource(runtime, "microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule.target", targetData)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	resource, err := CreateResource(runtime, "microsoft.identityAndAccess.policy.rule",
+	resource, err := CreateResource(runtime, "microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule",
 		map[string]*llx.RawData{
 			"__id":   llx.StringDataPtr(rule.GetId()),
 			"id":     llx.StringDataPtr(rule.GetId()),
-			"target": llx.ResourceData(mqlPolicyRuleTarget, "microsoft.identityAndAccess.policy.rule.target"),
+			"target": llx.ResourceData(mqlPolicyRuleTarget, "microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule.target"),
 		})
 	if err != nil {
 		return nil, err
 	}
 
-	return resource.(*mqlMicrosoftIdentityAndAccessPolicyRule), nil
+	return resource.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRule), nil
 }
 
 // Least privileged permissions: RoleEligibilitySchedule.Read.Directory
