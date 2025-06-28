@@ -569,6 +569,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.identityAndAccess.privilegedIdentityManagement": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccess).GetPrivilegedIdentityManagement()).ToDataRes(types.Resource("microsoft.identityAndAccess.privilegedIdentityManagement"))
 	},
+	"microsoft.identityAndAccess.organization": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccess).GetOrganization()).ToDataRes(types.Resource("microsoft.tenant"))
+	},
 	"microsoft.identityAndAccess.privilegedIdentityManagement.policies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagement).GetPolicies()).ToDataRes(types.Resource("microsoft.identityAndAccess.privilegedIdentityManagement.policies"))
 	},
@@ -2405,6 +2408,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.identityAndAccess.privilegedIdentityManagement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftIdentityAndAccess).PrivilegedIdentityManagement, ok = plugin.RawToTValue[*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagement](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.organization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccess).Organization, ok = plugin.RawToTValue[*mqlMicrosoftTenant](v.Value, v.Error)
 		return
 	},
 	"microsoft.identityAndAccess.privilegedIdentityManagement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5577,6 +5584,7 @@ type mqlMicrosoftIdentityAndAccess struct {
 	// optional: if you define mqlMicrosoftIdentityAndAccessInternal it will be used here
 	RoleEligibilityScheduleInstances plugin.TValue[[]interface{}]
 	PrivilegedIdentityManagement plugin.TValue[*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagement]
+	Organization plugin.TValue[*mqlMicrosoftTenant]
 }
 
 // createMicrosoftIdentityAndAccess creates a new instance of this resource
@@ -5640,6 +5648,22 @@ func (c *mqlMicrosoftIdentityAndAccess) GetPrivilegedIdentityManagement() *plugi
 		}
 
 		return c.privilegedIdentityManagement()
+	})
+}
+
+func (c *mqlMicrosoftIdentityAndAccess) GetOrganization() *plugin.TValue[*mqlMicrosoftTenant] {
+	return plugin.GetOrCompute[*mqlMicrosoftTenant](&c.Organization, func() (*mqlMicrosoftTenant, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.identityAndAccess", c.__id, "organization")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftTenant), nil
+			}
+		}
+
+		return c.organization()
 	})
 }
 

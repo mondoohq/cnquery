@@ -125,6 +125,8 @@ microsoft.identityAndAccess {
   roleEligibilityScheduleInstances() []microsoft.identityAndAccess.roleEligibilityScheduleInstance
   // Privileged Identity Management resources
   privilegedIdentityManagement() microsoft.identityAndAccess.privilegedIdentityManagement
+  // Organization information
+  organization() microsoft.tenant
 }
 
 // Privileged Identity Management container resource
