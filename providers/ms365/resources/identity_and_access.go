@@ -10,6 +10,7 @@ import (
 
 	graphidentitygovernance "github.com/microsoftgraph/msgraph-sdk-go/identitygovernance"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
+	"github.com/microsoftgraph/msgraph-sdk-go/organization"
 	graphpolicies "github.com/microsoftgraph/msgraph-sdk-go/policies"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -36,6 +37,30 @@ func (a *mqlMicrosoftIdentityAndAccess) privilegedIdentityManagement() (*mqlMicr
 		return nil, err
 	}
 	return resource.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagement), nil
+}
+
+func (a *mqlMicrosoftIdentityAndAccess) organization() (*mqlMicrosoftTenant, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	resp, err := graphClient.Organization().ByOrganizationId(conn.TenantId()).Get(ctx, &organization.OrganizationItemRequestBuilderGetRequestConfiguration{
+		QueryParameters: &organization.OrganizationItemRequestBuilderGetQueryParameters{
+			Select: tenantFields,
+		},
+	})
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	tenant, err := newMicrosoftTenant(a.MqlRuntime, resp)
+	if err != nil {
+		return nil, err
+	}
+	return tenant, nil
 }
 
 func (a *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagement) policies() (*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies, error) {

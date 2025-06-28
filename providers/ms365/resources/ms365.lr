@@ -244,6 +244,8 @@ microsoft.identityAndAccess {
   privilegedIdentityManagement() microsoft.identityAndAccess.privilegedIdentityManagement
   // Identity and sign-in policies
   identityAndSignIn() microsoft.identityAndAccess.identityAndSignIn
+  // Organization information
+  organization() microsoft.tenant
 }
 
 // Privileged Identity Management container resource
