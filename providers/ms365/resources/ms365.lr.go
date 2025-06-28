@@ -250,6 +250,18 @@ func init() {
 			// to override args, implement: initMicrosoftSecurityRiskyUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftSecurityRiskyUser,
 		},
+		"microsoft.security.exchange": {
+			// to override args, implement: initMicrosoftSecurityExchange(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftSecurityExchange,
+		},
+		"microsoft.security.exchange.antispam": {
+			// to override args, implement: initMicrosoftSecurityExchangeAntispam(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftSecurityExchangeAntispam,
+		},
+		"microsoft.security.exchange.antispam.hostedConnectionFilterPolicy": {
+			// to override args, implement: initMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy,
+		},
 		"microsoft.policies": {
 			// to override args, implement: initMicrosoftPolicies(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftPolicies,
@@ -1581,6 +1593,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.security.riskyUsers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftSecurity).GetRiskyUsers()).ToDataRes(types.Array(types.Resource("microsoft.security.riskyUser")))
 	},
+	"microsoft.security.exchange": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurity).GetExchange()).ToDataRes(types.Resource("microsoft.security.exchange"))
+	},
 	"microsoft.security.securityscore.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftSecuritySecurityscore).GetId()).ToDataRes(types.String)
 	},
@@ -1637,6 +1652,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.security.riskyUser.lastUpdatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftSecurityRiskyUser).GetLastUpdatedAt()).ToDataRes(types.Time)
+	},
+	"microsoft.security.exchange.antispam": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityExchange).GetAntispam()).ToDataRes(types.Resource("microsoft.security.exchange.antispam"))
+	},
+	"microsoft.security.exchange.antispam.hostedConnectionFilterPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityExchangeAntispam).GetHostedConnectionFilterPolicy()).ToDataRes(types.Resource("microsoft.security.exchange.antispam.hostedConnectionFilterPolicy"))
+	},
+	"microsoft.security.exchange.antispam.hostedConnectionFilterPolicy.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy).GetIdentity()).ToDataRes(types.String)
+	},
+	"microsoft.security.exchange.antispam.hostedConnectionFilterPolicy.adminDisplayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy).GetAdminDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.security.exchange.antispam.hostedConnectionFilterPolicy.ipAllowList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy).GetIpAllowList()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.security.exchange.antispam.hostedConnectionFilterPolicy.ipBlockList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy).GetIpBlockList()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.security.exchange.antispam.hostedConnectionFilterPolicy.enableSafeList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy).GetEnableSafeList()).ToDataRes(types.Bool)
 	},
 	"microsoft.policies.authorizationPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftPolicies).GetAuthorizationPolicy()).ToDataRes(types.Dict)
@@ -3945,6 +3981,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMicrosoftSecurity).RiskyUsers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"microsoft.security.exchange": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurity).Exchange, ok = plugin.RawToTValue[*mqlMicrosoftSecurityExchange](v.Value, v.Error)
+		return
+	},
 	"microsoft.security.securityscore.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlMicrosoftSecuritySecurityscore).__id, ok = v.Value.(string)
 			return
@@ -4027,6 +4067,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.security.riskyUser.lastUpdatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftSecurityRiskyUser).LastUpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.exchange.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftSecurityExchange).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.security.exchange.antispam": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityExchange).Antispam, ok = plugin.RawToTValue[*mqlMicrosoftSecurityExchangeAntispam](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.exchange.antispam.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftSecurityExchangeAntispam).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.security.exchange.antispam.hostedConnectionFilterPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityExchangeAntispam).HostedConnectionFilterPolicy, ok = plugin.RawToTValue[*mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.exchange.antispam.hostedConnectionFilterPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.security.exchange.antispam.hostedConnectionFilterPolicy.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.exchange.antispam.hostedConnectionFilterPolicy.adminDisplayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy).AdminDisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.exchange.antispam.hostedConnectionFilterPolicy.ipAllowList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy).IpAllowList, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.exchange.antispam.hostedConnectionFilterPolicy.ipBlockList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy).IpBlockList, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.exchange.antispam.hostedConnectionFilterPolicy.enableSafeList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy).EnableSafeList, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"microsoft.policies.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9434,6 +9514,7 @@ type mqlMicrosoftSecurity struct {
 	SecureScores plugin.TValue[[]interface{}]
 	LatestSecureScores plugin.TValue[*mqlMicrosoftSecuritySecurityscore]
 	RiskyUsers plugin.TValue[[]interface{}]
+	Exchange plugin.TValue[*mqlMicrosoftSecurityExchange]
 }
 
 // createMicrosoftSecurity creates a new instance of this resource
@@ -9513,6 +9594,22 @@ func (c *mqlMicrosoftSecurity) GetRiskyUsers() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.riskyUsers()
+	})
+}
+
+func (c *mqlMicrosoftSecurity) GetExchange() *plugin.TValue[*mqlMicrosoftSecurityExchange] {
+	return plugin.GetOrCompute[*mqlMicrosoftSecurityExchange](&c.Exchange, func() (*mqlMicrosoftSecurityExchange, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.security", c.__id, "exchange")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftSecurityExchange), nil
+			}
+		}
+
+		return c.exchange()
 	})
 }
 
@@ -9704,6 +9801,182 @@ func (c *mqlMicrosoftSecurityRiskyUser) GetRiskState() *plugin.TValue[string] {
 
 func (c *mqlMicrosoftSecurityRiskyUser) GetLastUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.LastUpdatedAt
+}
+
+// mqlMicrosoftSecurityExchange for the microsoft.security.exchange resource
+type mqlMicrosoftSecurityExchange struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlMicrosoftSecurityExchangeInternal
+	Antispam plugin.TValue[*mqlMicrosoftSecurityExchangeAntispam]
+}
+
+// createMicrosoftSecurityExchange creates a new instance of this resource
+func createMicrosoftSecurityExchange(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftSecurityExchange{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.security.exchange", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftSecurityExchange) MqlName() string {
+	return "microsoft.security.exchange"
+}
+
+func (c *mqlMicrosoftSecurityExchange) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftSecurityExchange) GetAntispam() *plugin.TValue[*mqlMicrosoftSecurityExchangeAntispam] {
+	return plugin.GetOrCompute[*mqlMicrosoftSecurityExchangeAntispam](&c.Antispam, func() (*mqlMicrosoftSecurityExchangeAntispam, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.security.exchange", c.__id, "antispam")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftSecurityExchangeAntispam), nil
+			}
+		}
+
+		return c.antispam()
+	})
+}
+
+// mqlMicrosoftSecurityExchangeAntispam for the microsoft.security.exchange.antispam resource
+type mqlMicrosoftSecurityExchangeAntispam struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlMicrosoftSecurityExchangeAntispamInternal
+	HostedConnectionFilterPolicy plugin.TValue[*mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy]
+}
+
+// createMicrosoftSecurityExchangeAntispam creates a new instance of this resource
+func createMicrosoftSecurityExchangeAntispam(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftSecurityExchangeAntispam{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.security.exchange.antispam", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftSecurityExchangeAntispam) MqlName() string {
+	return "microsoft.security.exchange.antispam"
+}
+
+func (c *mqlMicrosoftSecurityExchangeAntispam) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftSecurityExchangeAntispam) GetHostedConnectionFilterPolicy() *plugin.TValue[*mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy] {
+	return plugin.GetOrCompute[*mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy](&c.HostedConnectionFilterPolicy, func() (*mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.security.exchange.antispam", c.__id, "hostedConnectionFilterPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy), nil
+			}
+		}
+
+		return c.hostedConnectionFilterPolicy()
+	})
+}
+
+// mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy for the microsoft.security.exchange.antispam.hostedConnectionFilterPolicy resource
+type mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicyInternal
+	Identity plugin.TValue[string]
+	AdminDisplayName plugin.TValue[string]
+	IpAllowList plugin.TValue[[]interface{}]
+	IpBlockList plugin.TValue[[]interface{}]
+	EnableSafeList plugin.TValue[bool]
+}
+
+// createMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy creates a new instance of this resource
+func createMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.security.exchange.antispam.hostedConnectionFilterPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy) MqlName() string {
+	return "microsoft.security.exchange.antispam.hostedConnectionFilterPolicy"
+}
+
+func (c *mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy) GetIdentity() *plugin.TValue[string] {
+	return &c.Identity
+}
+
+func (c *mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy) GetAdminDisplayName() *plugin.TValue[string] {
+	return &c.AdminDisplayName
+}
+
+func (c *mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy) GetIpAllowList() *plugin.TValue[[]interface{}] {
+	return &c.IpAllowList
+}
+
+func (c *mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy) GetIpBlockList() *plugin.TValue[[]interface{}] {
+	return &c.IpBlockList
+}
+
+func (c *mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy) GetEnableSafeList() *plugin.TValue[bool] {
+	return &c.EnableSafeList
 }
 
 // mqlMicrosoftPolicies for the microsoft.policies resource

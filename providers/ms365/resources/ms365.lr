@@ -1002,6 +1002,8 @@ microsoft.security {
   latestSecureScores() microsoft.security.securityscore
   // List Microsoft Entra users who are at risk
   riskyUsers() []microsoft.security.riskyUser
+  // Exchange security settings
+  exchange() microsoft.security.exchange
 }
 
 // Microsoft Secure Score
@@ -1048,6 +1050,32 @@ microsoft.security.riskyUser @defaults("principalName riskLevel riskState lastUp
   riskState string
   // Risk last updated
   lastUpdatedAt time
+}
+
+// Microsoft Security Exchange
+microsoft.security.exchange {
+  // Exchange antispam settings
+  antispam() microsoft.security.exchange.antispam
+}
+
+// Microsoft Security Exchange Antispam
+microsoft.security.exchange.antispam {
+  // Hosted connection filter policy
+  hostedConnectionFilterPolicy() microsoft.security.exchange.antispam.hostedConnectionFilterPolicy
+}
+
+// Microsoft Security Exchange Antispam Hosted Connection Filter Policy
+microsoft.security.exchange.antispam.hostedConnectionFilterPolicy @defaults("identity enableSafeList") {
+  // Policy identity
+  identity string
+  // Admin display name for the policy
+  adminDisplayName string
+  // IP addresses that are always allowed
+  ipAllowList []string
+  // IP addresses that are always blocked
+  ipBlockList []string
+  // Whether to use the safe list
+  enableSafeList bool
 }
 
 // Microsoft policies
