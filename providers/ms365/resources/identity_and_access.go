@@ -245,3 +245,77 @@ func newMqlRoleEligibilityScheduleInstance(runtime *plugin.Runtime, inst models.
 	}
 	return resource.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance), nil
 }
+
+// Implementation for the new identityAndSignIn resource
+func (a *mqlMicrosoftIdentityAndAccess) identityAndSignIn() (*mqlMicrosoftIdentityAndAccessIdentityAndSignIn, error) {
+	resource, err := CreateResource(a.MqlRuntime, "microsoft.identityAndAccess.identityAndSignIn", map[string]*llx.RawData{
+		"__id": llx.StringData("identityAndSignIn"),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlMicrosoftIdentityAndAccessIdentityAndSignIn), nil
+}
+
+// Implementation for the policies resource
+func (a *mqlMicrosoftIdentityAndAccessIdentityAndSignIn) policies() (*mqlMicrosoftIdentityAndAccessIdentityAndSignInPolicies, error) {
+	resource, err := CreateResource(a.MqlRuntime, "microsoft.identityAndAccess.identityAndSignIn.policies", map[string]*llx.RawData{
+		"__id": llx.StringData("policies"),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlMicrosoftIdentityAndAccessIdentityAndSignInPolicies), nil
+}
+
+// Implementation for the identitySecurityDefaultsEnforcementPolicy resource
+func (a *mqlMicrosoftIdentityAndAccessIdentityAndSignInPolicies) identitySecurityDefaultsEnforcementPolicy() (*mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	policy, err := graphClient.Policies().IdentitySecurityDefaultsEnforcementPolicy().Get(ctx, &graphpolicies.IdentitySecurityDefaultsEnforcementPolicyRequestBuilderGetRequestConfiguration{})
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	if policy == nil {
+		return nil, fmt.Errorf("identity security defaults enforcement policy not found")
+	}
+
+	// Extract the policy data
+	policyId := ""
+	if policy.GetId() != nil {
+		policyId = *policy.GetId()
+	}
+
+	displayName := ""
+	if policy.GetDisplayName() != nil {
+		displayName = *policy.GetDisplayName()
+	}
+
+	description := ""
+	if policy.GetDescription() != nil {
+		description = *policy.GetDescription()
+	}
+
+	isEnabled := false
+	if policy.GetIsEnabled() != nil {
+		isEnabled = *policy.GetIsEnabled()
+	}
+
+	resource, err := CreateResource(a.MqlRuntime, "microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy", map[string]*llx.RawData{
+		"__id":        llx.StringData(policyId),
+		"id":          llx.StringData(policyId),
+		"displayName": llx.StringData(displayName),
+		"description": llx.StringData(description),
+		"isEnabled":   llx.BoolData(isEnabled),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy), nil
+}
