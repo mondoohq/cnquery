@@ -1,0 +1,24 @@
+# Example: Query MS365 Identity Security Defaults Enforcement Policy
+# This example shows how to use the new microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy resource
+
+# Access the identity security defaults enforcement policy
+microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy {
+  id
+  displayName
+  description
+  isEnabled
+}
+
+# Check if security defaults are enabled
+microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy.isEnabled
+
+# Get policy details
+microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy {
+  id
+  displayName
+  description
+  isEnabled
+}
+
+# Example policy check: Ensure security defaults are enabled
+microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy.isEnabled == true

@@ -66,6 +66,18 @@ func init() {
 			// to override args, implement: initMicrosoftIdentityAndAccessPolicyRuleTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftIdentityAndAccessPolicyRuleTarget,
 		},
+		"microsoft.identityAndAccess.identityAndSignIn": {
+			// to override args, implement: initMicrosoftIdentityAndAccessIdentityAndSignIn(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftIdentityAndAccessIdentityAndSignIn,
+		},
+		"microsoft.identityAndAccess.identityAndSignIn.policies": {
+			// to override args, implement: initMicrosoftIdentityAndAccessIdentityAndSignInPolicies(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftIdentityAndAccessIdentityAndSignInPolicies,
+		},
+		"microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy": {
+			// to override args, implement: initMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy,
+		},
 		"microsoft.user.assignedLicense": {
 			// to override args, implement: initMicrosoftUserAssignedLicense(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftUserAssignedLicense,
@@ -561,6 +573,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.identityAndAccess.roleEligibilityScheduleInstances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccess).GetRoleEligibilityScheduleInstances()).ToDataRes(types.Array(types.Resource("microsoft.identityAndAccess.roleEligibilityScheduleInstance")))
 	},
+	"microsoft.identityAndAccess.identityAndSignIn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccess).GetIdentityAndSignIn()).ToDataRes(types.Resource("microsoft.identityAndAccess.identityAndSignIn"))
+	},
 	"microsoft.identityAndAccess.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccess).GetList()).ToDataRes(types.Array(types.Resource("microsoft.identityAndAccess.policy")))
 	},
@@ -638,6 +653,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.identityAndAccess.policy.rule.target.operations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccessPolicyRuleTarget).GetOperations()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.identityAndAccess.identityAndSignIn.policies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessIdentityAndSignIn).GetPolicies()).ToDataRes(types.Resource("microsoft.identityAndAccess.identityAndSignIn.policies"))
+	},
+	"microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessIdentityAndSignInPolicies).GetIdentitySecurityDefaultsEnforcementPolicy()).ToDataRes(types.Resource("microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy"))
+	},
+	"microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy.isEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy).GetIsEnabled()).ToDataRes(types.Bool)
 	},
 	"microsoft.user.assignedLicense.disabledPlans": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUserAssignedLicense).GetDisabledPlans()).ToDataRes(types.Array(types.String))
@@ -2393,6 +2426,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMicrosoftIdentityAndAccess).RoleEligibilityScheduleInstances, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"microsoft.identityAndAccess.identityAndSignIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccess).IdentityAndSignIn, ok = plugin.RawToTValue[*mqlMicrosoftIdentityAndAccessIdentityAndSignIn](v.Value, v.Error)
+		return
+	},
 	"microsoft.identityAndAccess.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftIdentityAndAccess).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
@@ -2511,6 +2548,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.identityAndAccess.policy.rule.target.operations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftIdentityAndAccessPolicyRuleTarget).Operations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.identityAndSignIn.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftIdentityAndAccessIdentityAndSignIn).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.identityAndAccess.identityAndSignIn.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessIdentityAndSignIn).Policies, ok = plugin.RawToTValue[*mqlMicrosoftIdentityAndAccessIdentityAndSignInPolicies](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.identityAndSignIn.policies.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftIdentityAndAccessIdentityAndSignInPolicies).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessIdentityAndSignInPolicies).IdentitySecurityDefaultsEnforcementPolicy, ok = plugin.RawToTValue[*mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy.isEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy).IsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"microsoft.user.assignedLicense.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5547,6 +5620,7 @@ type mqlMicrosoftIdentityAndAccess struct {
 	// optional: if you define mqlMicrosoftIdentityAndAccessInternal it will be used here
 	Filter plugin.TValue[string]
 	RoleEligibilityScheduleInstances plugin.TValue[[]interface{}]
+	IdentityAndSignIn plugin.TValue[*mqlMicrosoftIdentityAndAccessIdentityAndSignIn]
 	List plugin.TValue[[]interface{}]
 }
 
@@ -5599,6 +5673,22 @@ func (c *mqlMicrosoftIdentityAndAccess) GetRoleEligibilityScheduleInstances() *p
 		}
 
 		return c.roleEligibilityScheduleInstances()
+	})
+}
+
+func (c *mqlMicrosoftIdentityAndAccess) GetIdentityAndSignIn() *plugin.TValue[*mqlMicrosoftIdentityAndAccessIdentityAndSignIn] {
+	return plugin.GetOrCompute[*mqlMicrosoftIdentityAndAccessIdentityAndSignIn](&c.IdentityAndSignIn, func() (*mqlMicrosoftIdentityAndAccessIdentityAndSignIn, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.identityAndAccess", c.__id, "identityAndSignIn")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftIdentityAndAccessIdentityAndSignIn), nil
+			}
+		}
+
+		return c.identityAndSignIn()
 	})
 }
 
@@ -5909,6 +5999,177 @@ func (c *mqlMicrosoftIdentityAndAccessPolicyRuleTarget) GetLevel() *plugin.TValu
 
 func (c *mqlMicrosoftIdentityAndAccessPolicyRuleTarget) GetOperations() *plugin.TValue[[]interface{}] {
 	return &c.Operations
+}
+
+// mqlMicrosoftIdentityAndAccessIdentityAndSignIn for the microsoft.identityAndAccess.identityAndSignIn resource
+type mqlMicrosoftIdentityAndAccessIdentityAndSignIn struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftIdentityAndAccessIdentityAndSignInInternal it will be used here
+	Policies plugin.TValue[*mqlMicrosoftIdentityAndAccessIdentityAndSignInPolicies]
+}
+
+// createMicrosoftIdentityAndAccessIdentityAndSignIn creates a new instance of this resource
+func createMicrosoftIdentityAndAccessIdentityAndSignIn(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftIdentityAndAccessIdentityAndSignIn{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.identityAndAccess.identityAndSignIn", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftIdentityAndAccessIdentityAndSignIn) MqlName() string {
+	return "microsoft.identityAndAccess.identityAndSignIn"
+}
+
+func (c *mqlMicrosoftIdentityAndAccessIdentityAndSignIn) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftIdentityAndAccessIdentityAndSignIn) GetPolicies() *plugin.TValue[*mqlMicrosoftIdentityAndAccessIdentityAndSignInPolicies] {
+	return plugin.GetOrCompute[*mqlMicrosoftIdentityAndAccessIdentityAndSignInPolicies](&c.Policies, func() (*mqlMicrosoftIdentityAndAccessIdentityAndSignInPolicies, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.identityAndAccess.identityAndSignIn", c.__id, "policies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftIdentityAndAccessIdentityAndSignInPolicies), nil
+			}
+		}
+
+		return c.policies()
+	})
+}
+
+// mqlMicrosoftIdentityAndAccessIdentityAndSignInPolicies for the microsoft.identityAndAccess.identityAndSignIn.policies resource
+type mqlMicrosoftIdentityAndAccessIdentityAndSignInPolicies struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesInternal it will be used here
+	IdentitySecurityDefaultsEnforcementPolicy plugin.TValue[*mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy]
+}
+
+// createMicrosoftIdentityAndAccessIdentityAndSignInPolicies creates a new instance of this resource
+func createMicrosoftIdentityAndAccessIdentityAndSignInPolicies(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftIdentityAndAccessIdentityAndSignInPolicies{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.identityAndAccess.identityAndSignIn.policies", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftIdentityAndAccessIdentityAndSignInPolicies) MqlName() string {
+	return "microsoft.identityAndAccess.identityAndSignIn.policies"
+}
+
+func (c *mqlMicrosoftIdentityAndAccessIdentityAndSignInPolicies) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftIdentityAndAccessIdentityAndSignInPolicies) GetIdentitySecurityDefaultsEnforcementPolicy() *plugin.TValue[*mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy] {
+	return plugin.GetOrCompute[*mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy](&c.IdentitySecurityDefaultsEnforcementPolicy, func() (*mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.identityAndAccess.identityAndSignIn.policies", c.__id, "identitySecurityDefaultsEnforcementPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy), nil
+			}
+		}
+
+		return c.identitySecurityDefaultsEnforcementPolicy()
+	})
+}
+
+// mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy for the microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy resource
+type mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicyInternal it will be used here
+	Id plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	Description plugin.TValue[string]
+	IsEnabled plugin.TValue[bool]
+}
+
+// createMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy creates a new instance of this resource
+func createMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy) MqlName() string {
+	return "microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy"
+}
+
+func (c *mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy) GetIsEnabled() *plugin.TValue[bool] {
+	return &c.IsEnabled
 }
 
 // mqlMicrosoftUserAssignedLicense for the microsoft.user.assignedLicense resource

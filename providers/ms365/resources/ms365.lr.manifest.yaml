@@ -413,8 +413,25 @@ resources:
   microsoft.identityAndAccess:
     fields:
       filter: {}
+      identityAndSignIn: {}
       list: {}
       roleEligibilityScheduleInstances: {}
+    min_mondoo_version: 9.0.0
+  microsoft.identityAndAccess.identityAndSignIn:
+    fields:
+      policies: {}
+    min_mondoo_version: 9.0.0
+  microsoft.identityAndAccess.identityAndSignIn.policies:
+    fields:
+      identitySecurityDefaultsEnforcementPolicy: {}
+    min_mondoo_version: 9.0.0
+  microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy:
+    fields:
+      description: {}
+      displayName: {}
+      id: {}
+      isEnabled: {}
+    is_private: true
     min_mondoo_version: 9.0.0
   microsoft.identityAndAccess.policy:
     fields:
