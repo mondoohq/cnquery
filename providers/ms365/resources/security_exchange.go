@@ -68,7 +68,7 @@ type mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicyInternal st
 }
 
 func (r *mqlMicrosoftSecurity) exchange() (*mqlMicrosoftSecurityExchange, error) {
-	resource, err := CreateResource(r.MqlRuntime, "microsoft.security.exchange", nil)
+	resource, err := CreateResource(r.MqlRuntime, "microsoft.security.exchange", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func (r *mqlMicrosoftSecurity) exchange() (*mqlMicrosoftSecurityExchange, error)
 }
 
 func (r *mqlMicrosoftSecurityExchange) antispam() (*mqlMicrosoftSecurityExchangeAntispam, error) {
-	resource, err := CreateResource(r.MqlRuntime, "microsoft.security.exchange.antispam", nil)
+	resource, err := CreateResource(r.MqlRuntime, "microsoft.security.exchange.antispam", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func (r *mqlMicrosoftSecurityExchange) antispam() (*mqlMicrosoftSecurityExchange
 
 func (r *mqlMicrosoftSecurityExchangeAntispam) hostedConnectionFilterPolicy() (*mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy, error) {
 	// Create a new exchange resource to get the report
-	exchangeResource, err := CreateResource(r.MqlRuntime, "microsoft.security.exchange", nil)
+	exchangeResource, err := CreateResource(r.MqlRuntime, "microsoft.security.exchange", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
 	}
