@@ -119,16 +119,27 @@ microsoft.users {
   search string
 }
 
-// A container resource for identity and access policies that can be filtered
+// A container resource for identity and access management
 microsoft.identityAndAccess {
-  []microsoft.identityAndAccess.policy
+  // Get the instances of role eligibilities
+  roleEligibilityScheduleInstances() []microsoft.identityAndAccess.roleEligibilityScheduleInstance
+  // Privileged Identity Management resources
+  privilegedIdentityManagement() microsoft.identityAndAccess.privilegedIdentityManagement
+}
+
+// Privileged Identity Management container resource
+microsoft.identityAndAccess.privilegedIdentityManagement {
+  // Get PIM role management policies
+  policies() microsoft.identityAndAccess.privilegedIdentityManagement.policies
+}
+
+// A container resource for PIM role management policies that can be filtered
+microsoft.identityAndAccess.privilegedIdentityManagement.policies {
+  []microsoft.identityAndAccess.privilegedIdentityManagement.policy
   init(filter? string)
   // filter by scopeId and scopeType
   // scopeId eq '/' and scopeType eq 'Directory'
   filter string
-
-  // Get the instances of role eligibilities
-  roleEligibilityScheduleInstances() []microsoft.identityAndAccess.roleEligibilityScheduleInstance
 }
 
 // Represents an instance of a role eligibility in PIM
@@ -154,7 +165,7 @@ private microsoft.identityAndAccess.roleEligibilityScheduleInstance @defaults("m
 }
 
 // A PIM role management policy for Microsoft Entra ID roles
-private microsoft.identityAndAccess.policy @defaults("id displayName scopeType") {
+private microsoft.identityAndAccess.privilegedIdentityManagement.policy @defaults("id displayName scopeType") {
   // Policy ID
   id string
   // Policy display name
@@ -172,19 +183,19 @@ private microsoft.identityAndAccess.policy @defaults("id displayName scopeType")
   // The identity of the user who last modified the policy
   lastModifiedBy dict
   // The collection of rules that are part of the policy
-  rules() []microsoft.identityAndAccess.policy.rule
+  rules() []microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule
 }
 
 // A rule defined for a PIM role management policy
-private microsoft.identityAndAccess.policy.rule @defaults("id") {
+private microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule @defaults("id") {
   // The unique identifier for the rule
   id string
   // Defines details of scope that's targeted by role management policy rule
-  target microsoft.identityAndAccess.policy.rule.target
+  target microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule.target
 }
 
 // Defines details of the scope that's targeted by role management policy rule
-private microsoft.identityAndAccess.policy.rule.target {
+private microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule.target {
   // The type of caller that's the target of the policy rule. Allowed values are: None, Admin, EndUser
   caller string
   // The list of role settings that are enforced and cannot be overridden by child scopes

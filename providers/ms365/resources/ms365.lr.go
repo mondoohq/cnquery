@@ -47,24 +47,32 @@ func init() {
 			Create: createMicrosoftUsers,
 		},
 		"microsoft.identityAndAccess": {
-			Init: initMicrosoftIdentityAndAccess,
+			// to override args, implement: initMicrosoftIdentityAndAccess(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftIdentityAndAccess,
+		},
+		"microsoft.identityAndAccess.privilegedIdentityManagement": {
+			// to override args, implement: initMicrosoftIdentityAndAccessPrivilegedIdentityManagement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftIdentityAndAccessPrivilegedIdentityManagement,
+		},
+		"microsoft.identityAndAccess.privilegedIdentityManagement.policies": {
+			Init: initMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies,
+			Create: createMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies,
 		},
 		"microsoft.identityAndAccess.roleEligibilityScheduleInstance": {
 			// to override args, implement: initMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance,
 		},
-		"microsoft.identityAndAccess.policy": {
-			// to override args, implement: initMicrosoftIdentityAndAccessPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createMicrosoftIdentityAndAccessPolicy,
+		"microsoft.identityAndAccess.privilegedIdentityManagement.policy": {
+			// to override args, implement: initMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy,
 		},
-		"microsoft.identityAndAccess.policy.rule": {
-			// to override args, implement: initMicrosoftIdentityAndAccessPolicyRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createMicrosoftIdentityAndAccessPolicyRule,
+		"microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule": {
+			// to override args, implement: initMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRule,
 		},
-		"microsoft.identityAndAccess.policy.rule.target": {
-			// to override args, implement: initMicrosoftIdentityAndAccessPolicyRuleTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createMicrosoftIdentityAndAccessPolicyRuleTarget,
+		"microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule.target": {
+			// to override args, implement: initMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRuleTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRuleTarget,
 		},
 		"microsoft.user.assignedLicense": {
 			// to override args, implement: initMicrosoftUserAssignedLicense(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -555,14 +563,20 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.users.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUsers).GetList()).ToDataRes(types.Array(types.Resource("microsoft.user")))
 	},
-	"microsoft.identityAndAccess.filter": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftIdentityAndAccess).GetFilter()).ToDataRes(types.String)
-	},
 	"microsoft.identityAndAccess.roleEligibilityScheduleInstances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccess).GetRoleEligibilityScheduleInstances()).ToDataRes(types.Array(types.Resource("microsoft.identityAndAccess.roleEligibilityScheduleInstance")))
 	},
-	"microsoft.identityAndAccess.list": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftIdentityAndAccess).GetList()).ToDataRes(types.Array(types.Resource("microsoft.identityAndAccess.policy")))
+	"microsoft.identityAndAccess.privilegedIdentityManagement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccess).GetPrivilegedIdentityManagement()).ToDataRes(types.Resource("microsoft.identityAndAccess.privilegedIdentityManagement"))
+	},
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagement).GetPolicies()).ToDataRes(types.Resource("microsoft.identityAndAccess.privilegedIdentityManagement.policies"))
+	},
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policies.filter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies).GetFilter()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policies.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies).GetList()).ToDataRes(types.Array(types.Resource("microsoft.identityAndAccess.privilegedIdentityManagement.policy")))
 	},
 	"microsoft.identityAndAccess.roleEligibilityScheduleInstance.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance).GetId()).ToDataRes(types.String)
@@ -591,53 +605,53 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.identityAndAccess.roleEligibilityScheduleInstance.roleEligibilityScheduleId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance).GetRoleEligibilityScheduleId()).ToDataRes(types.String)
 	},
-	"microsoft.identityAndAccess.policy.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftIdentityAndAccessPolicy).GetId()).ToDataRes(types.String)
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy).GetId()).ToDataRes(types.String)
 	},
-	"microsoft.identityAndAccess.policy.displayName": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftIdentityAndAccessPolicy).GetDisplayName()).ToDataRes(types.String)
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policy.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy).GetDisplayName()).ToDataRes(types.String)
 	},
-	"microsoft.identityAndAccess.policy.description": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftIdentityAndAccessPolicy).GetDescription()).ToDataRes(types.String)
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy).GetDescription()).ToDataRes(types.String)
 	},
-	"microsoft.identityAndAccess.policy.isOrganizationDefault": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftIdentityAndAccessPolicy).GetIsOrganizationDefault()).ToDataRes(types.Bool)
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policy.isOrganizationDefault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy).GetIsOrganizationDefault()).ToDataRes(types.Bool)
 	},
-	"microsoft.identityAndAccess.policy.scopeId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftIdentityAndAccessPolicy).GetScopeId()).ToDataRes(types.String)
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policy.scopeId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy).GetScopeId()).ToDataRes(types.String)
 	},
-	"microsoft.identityAndAccess.policy.scopeType": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftIdentityAndAccessPolicy).GetScopeType()).ToDataRes(types.String)
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policy.scopeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy).GetScopeType()).ToDataRes(types.String)
 	},
-	"microsoft.identityAndAccess.policy.lastModifiedDateTime": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftIdentityAndAccessPolicy).GetLastModifiedDateTime()).ToDataRes(types.Time)
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policy.lastModifiedDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy).GetLastModifiedDateTime()).ToDataRes(types.Time)
 	},
-	"microsoft.identityAndAccess.policy.lastModifiedBy": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftIdentityAndAccessPolicy).GetLastModifiedBy()).ToDataRes(types.Dict)
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policy.lastModifiedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy).GetLastModifiedBy()).ToDataRes(types.Dict)
 	},
-	"microsoft.identityAndAccess.policy.rules": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftIdentityAndAccessPolicy).GetRules()).ToDataRes(types.Array(types.Resource("microsoft.identityAndAccess.policy.rule")))
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policy.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy).GetRules()).ToDataRes(types.Array(types.Resource("microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule")))
 	},
-	"microsoft.identityAndAccess.policy.rule.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftIdentityAndAccessPolicyRule).GetId()).ToDataRes(types.String)
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRule).GetId()).ToDataRes(types.String)
 	},
-	"microsoft.identityAndAccess.policy.rule.target": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftIdentityAndAccessPolicyRule).GetTarget()).ToDataRes(types.Resource("microsoft.identityAndAccess.policy.rule.target"))
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule.target": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRule).GetTarget()).ToDataRes(types.Resource("microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule.target"))
 	},
-	"microsoft.identityAndAccess.policy.rule.target.caller": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftIdentityAndAccessPolicyRuleTarget).GetCaller()).ToDataRes(types.String)
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule.target.caller": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRuleTarget).GetCaller()).ToDataRes(types.String)
 	},
-	"microsoft.identityAndAccess.policy.rule.target.enforcedSettings": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftIdentityAndAccessPolicyRuleTarget).GetEnforcedSettings()).ToDataRes(types.Array(types.String))
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule.target.enforcedSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRuleTarget).GetEnforcedSettings()).ToDataRes(types.Array(types.String))
 	},
-	"microsoft.identityAndAccess.policy.rule.target.inheritableSettings": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftIdentityAndAccessPolicyRuleTarget).GetInheritableSettings()).ToDataRes(types.Array(types.String))
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule.target.inheritableSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRuleTarget).GetInheritableSettings()).ToDataRes(types.Array(types.String))
 	},
-	"microsoft.identityAndAccess.policy.rule.target.level": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftIdentityAndAccessPolicyRuleTarget).GetLevel()).ToDataRes(types.String)
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule.target.level": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRuleTarget).GetLevel()).ToDataRes(types.String)
 	},
-	"microsoft.identityAndAccess.policy.rule.target.operations": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftIdentityAndAccessPolicyRuleTarget).GetOperations()).ToDataRes(types.Array(types.String))
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule.target.operations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRuleTarget).GetOperations()).ToDataRes(types.Array(types.String))
 	},
 	"microsoft.user.assignedLicense.disabledPlans": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUserAssignedLicense).GetDisabledPlans()).ToDataRes(types.Array(types.String))
@@ -2385,16 +2399,32 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlMicrosoftIdentityAndAccess).__id, ok = v.Value.(string)
 			return
 		},
-	"microsoft.identityAndAccess.filter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftIdentityAndAccess).Filter, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"microsoft.identityAndAccess.roleEligibilityScheduleInstances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftIdentityAndAccess).RoleEligibilityScheduleInstances, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
-	"microsoft.identityAndAccess.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftIdentityAndAccess).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+	"microsoft.identityAndAccess.privilegedIdentityManagement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccess).PrivilegedIdentityManagement, ok = plugin.RawToTValue[*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagement](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.privilegedIdentityManagement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagement).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagement).Policies, ok = plugin.RawToTValue[*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policies.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policies.filter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies).Filter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policies.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"microsoft.identityAndAccess.roleEligibilityScheduleInstance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2437,80 +2467,80 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance).RoleEligibilityScheduleId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"microsoft.identityAndAccess.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftIdentityAndAccessPolicy).__id, ok = v.Value.(string)
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy).__id, ok = v.Value.(string)
 			return
 		},
-	"microsoft.identityAndAccess.policy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftIdentityAndAccessPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"microsoft.identityAndAccess.policy.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftIdentityAndAccessPolicy).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policy.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"microsoft.identityAndAccess.policy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftIdentityAndAccessPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"microsoft.identityAndAccess.policy.isOrganizationDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftIdentityAndAccessPolicy).IsOrganizationDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policy.isOrganizationDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy).IsOrganizationDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"microsoft.identityAndAccess.policy.scopeId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftIdentityAndAccessPolicy).ScopeId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policy.scopeId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy).ScopeId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"microsoft.identityAndAccess.policy.scopeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftIdentityAndAccessPolicy).ScopeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policy.scopeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy).ScopeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"microsoft.identityAndAccess.policy.lastModifiedDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftIdentityAndAccessPolicy).LastModifiedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policy.lastModifiedDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy).LastModifiedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
-	"microsoft.identityAndAccess.policy.lastModifiedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftIdentityAndAccessPolicy).LastModifiedBy, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policy.lastModifiedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy).LastModifiedBy, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
-	"microsoft.identityAndAccess.policy.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftIdentityAndAccessPolicy).Rules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policy.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy).Rules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
-	"microsoft.identityAndAccess.policy.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftIdentityAndAccessPolicyRule).__id, ok = v.Value.(string)
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRule).__id, ok = v.Value.(string)
 			return
 		},
-	"microsoft.identityAndAccess.policy.rule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftIdentityAndAccessPolicyRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"microsoft.identityAndAccess.policy.rule.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftIdentityAndAccessPolicyRule).Target, ok = plugin.RawToTValue[*mqlMicrosoftIdentityAndAccessPolicyRuleTarget](v.Value, v.Error)
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRule).Target, ok = plugin.RawToTValue[*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRuleTarget](v.Value, v.Error)
 		return
 	},
-	"microsoft.identityAndAccess.policy.rule.target.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftIdentityAndAccessPolicyRuleTarget).__id, ok = v.Value.(string)
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule.target.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRuleTarget).__id, ok = v.Value.(string)
 			return
 		},
-	"microsoft.identityAndAccess.policy.rule.target.caller": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftIdentityAndAccessPolicyRuleTarget).Caller, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule.target.caller": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRuleTarget).Caller, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"microsoft.identityAndAccess.policy.rule.target.enforcedSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftIdentityAndAccessPolicyRuleTarget).EnforcedSettings, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule.target.enforcedSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRuleTarget).EnforcedSettings, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
-	"microsoft.identityAndAccess.policy.rule.target.inheritableSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftIdentityAndAccessPolicyRuleTarget).InheritableSettings, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule.target.inheritableSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRuleTarget).InheritableSettings, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
-	"microsoft.identityAndAccess.policy.rule.target.level": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftIdentityAndAccessPolicyRuleTarget).Level, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule.target.level": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRuleTarget).Level, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"microsoft.identityAndAccess.policy.rule.target.operations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftIdentityAndAccessPolicyRuleTarget).Operations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+	"microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule.target.operations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRuleTarget).Operations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"microsoft.user.assignedLicense.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5545,9 +5575,8 @@ type mqlMicrosoftIdentityAndAccess struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlMicrosoftIdentityAndAccessInternal it will be used here
-	Filter plugin.TValue[string]
 	RoleEligibilityScheduleInstances plugin.TValue[[]interface{}]
-	List plugin.TValue[[]interface{}]
+	PrivilegedIdentityManagement plugin.TValue[*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagement]
 }
 
 // createMicrosoftIdentityAndAccess creates a new instance of this resource
@@ -5582,10 +5611,6 @@ func (c *mqlMicrosoftIdentityAndAccess) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMicrosoftIdentityAndAccess) GetFilter() *plugin.TValue[string] {
-	return &c.Filter
-}
-
 func (c *mqlMicrosoftIdentityAndAccess) GetRoleEligibilityScheduleInstances() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.RoleEligibilityScheduleInstances, func() ([]interface{}, error) {
 		if c.MqlRuntime.HasRecording {
@@ -5602,10 +5627,127 @@ func (c *mqlMicrosoftIdentityAndAccess) GetRoleEligibilityScheduleInstances() *p
 	})
 }
 
-func (c *mqlMicrosoftIdentityAndAccess) GetList() *plugin.TValue[[]interface{}] {
+func (c *mqlMicrosoftIdentityAndAccess) GetPrivilegedIdentityManagement() *plugin.TValue[*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagement] {
+	return plugin.GetOrCompute[*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagement](&c.PrivilegedIdentityManagement, func() (*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagement, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.identityAndAccess", c.__id, "privilegedIdentityManagement")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagement), nil
+			}
+		}
+
+		return c.privilegedIdentityManagement()
+	})
+}
+
+// mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagement for the microsoft.identityAndAccess.privilegedIdentityManagement resource
+type mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagement struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementInternal it will be used here
+	Policies plugin.TValue[*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies]
+}
+
+// createMicrosoftIdentityAndAccessPrivilegedIdentityManagement creates a new instance of this resource
+func createMicrosoftIdentityAndAccessPrivilegedIdentityManagement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.identityAndAccess.privilegedIdentityManagement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagement) MqlName() string {
+	return "microsoft.identityAndAccess.privilegedIdentityManagement"
+}
+
+func (c *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagement) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagement) GetPolicies() *plugin.TValue[*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies] {
+	return plugin.GetOrCompute[*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies](&c.Policies, func() (*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.identityAndAccess.privilegedIdentityManagement", c.__id, "policies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies), nil
+			}
+		}
+
+		return c.policies()
+	})
+}
+
+// mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies for the microsoft.identityAndAccess.privilegedIdentityManagement.policies resource
+type mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPoliciesInternal it will be used here
+	Filter plugin.TValue[string]
+	List plugin.TValue[[]interface{}]
+}
+
+// createMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies creates a new instance of this resource
+func createMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.identityAndAccess.privilegedIdentityManagement.policies", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies) MqlName() string {
+	return "microsoft.identityAndAccess.privilegedIdentityManagement.policies"
+}
+
+func (c *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies) GetFilter() *plugin.TValue[string] {
+	return &c.Filter
+}
+
+func (c *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies) GetList() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.identityAndAccess", c.__id, "list")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.identityAndAccess.privilegedIdentityManagement.policies", c.__id, "list")
 			if err != nil {
 				return nil, err
 			}
@@ -5702,11 +5844,11 @@ func (c *mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance) GetRoleEl
 	return &c.RoleEligibilityScheduleId
 }
 
-// mqlMicrosoftIdentityAndAccessPolicy for the microsoft.identityAndAccess.policy resource
-type mqlMicrosoftIdentityAndAccessPolicy struct {
+// mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy for the microsoft.identityAndAccess.privilegedIdentityManagement.policy resource
+type mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlMicrosoftIdentityAndAccessPolicyInternal it will be used here
+	// optional: if you define mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyInternal it will be used here
 	Id plugin.TValue[string]
 	DisplayName plugin.TValue[string]
 	Description plugin.TValue[string]
@@ -5718,9 +5860,9 @@ type mqlMicrosoftIdentityAndAccessPolicy struct {
 	Rules plugin.TValue[[]interface{}]
 }
 
-// createMicrosoftIdentityAndAccessPolicy creates a new instance of this resource
-func createMicrosoftIdentityAndAccessPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlMicrosoftIdentityAndAccessPolicy{
+// createMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy creates a new instance of this resource
+func createMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy{
 		MqlRuntime: runtime,
 	}
 
@@ -5732,7 +5874,7 @@ func createMicrosoftIdentityAndAccessPolicy(runtime *plugin.Runtime, args map[st
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("microsoft.identityAndAccess.policy", res.__id)
+		args, err = runtime.ResourceFromRecording("microsoft.identityAndAccess.privilegedIdentityManagement.policy", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -5742,50 +5884,50 @@ func createMicrosoftIdentityAndAccessPolicy(runtime *plugin.Runtime, args map[st
 	return res, nil
 }
 
-func (c *mqlMicrosoftIdentityAndAccessPolicy) MqlName() string {
-	return "microsoft.identityAndAccess.policy"
+func (c *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy) MqlName() string {
+	return "microsoft.identityAndAccess.privilegedIdentityManagement.policy"
 }
 
-func (c *mqlMicrosoftIdentityAndAccessPolicy) MqlID() string {
+func (c *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMicrosoftIdentityAndAccessPolicy) GetId() *plugin.TValue[string] {
+func (c *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
-func (c *mqlMicrosoftIdentityAndAccessPolicy) GetDisplayName() *plugin.TValue[string] {
+func (c *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy) GetDisplayName() *plugin.TValue[string] {
 	return &c.DisplayName
 }
 
-func (c *mqlMicrosoftIdentityAndAccessPolicy) GetDescription() *plugin.TValue[string] {
+func (c *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy) GetDescription() *plugin.TValue[string] {
 	return &c.Description
 }
 
-func (c *mqlMicrosoftIdentityAndAccessPolicy) GetIsOrganizationDefault() *plugin.TValue[bool] {
+func (c *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy) GetIsOrganizationDefault() *plugin.TValue[bool] {
 	return &c.IsOrganizationDefault
 }
 
-func (c *mqlMicrosoftIdentityAndAccessPolicy) GetScopeId() *plugin.TValue[string] {
+func (c *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy) GetScopeId() *plugin.TValue[string] {
 	return &c.ScopeId
 }
 
-func (c *mqlMicrosoftIdentityAndAccessPolicy) GetScopeType() *plugin.TValue[string] {
+func (c *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy) GetScopeType() *plugin.TValue[string] {
 	return &c.ScopeType
 }
 
-func (c *mqlMicrosoftIdentityAndAccessPolicy) GetLastModifiedDateTime() *plugin.TValue[*time.Time] {
+func (c *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy) GetLastModifiedDateTime() *plugin.TValue[*time.Time] {
 	return &c.LastModifiedDateTime
 }
 
-func (c *mqlMicrosoftIdentityAndAccessPolicy) GetLastModifiedBy() *plugin.TValue[interface{}] {
+func (c *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy) GetLastModifiedBy() *plugin.TValue[interface{}] {
 	return &c.LastModifiedBy
 }
 
-func (c *mqlMicrosoftIdentityAndAccessPolicy) GetRules() *plugin.TValue[[]interface{}] {
+func (c *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy) GetRules() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.Rules, func() ([]interface{}, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.identityAndAccess.policy", c.__id, "rules")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.identityAndAccess.privilegedIdentityManagement.policy", c.__id, "rules")
 			if err != nil {
 				return nil, err
 			}
@@ -5798,18 +5940,18 @@ func (c *mqlMicrosoftIdentityAndAccessPolicy) GetRules() *plugin.TValue[[]interf
 	})
 }
 
-// mqlMicrosoftIdentityAndAccessPolicyRule for the microsoft.identityAndAccess.policy.rule resource
-type mqlMicrosoftIdentityAndAccessPolicyRule struct {
+// mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRule for the microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule resource
+type mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRule struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlMicrosoftIdentityAndAccessPolicyRuleInternal it will be used here
+	// optional: if you define mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRuleInternal it will be used here
 	Id plugin.TValue[string]
-	Target plugin.TValue[*mqlMicrosoftIdentityAndAccessPolicyRuleTarget]
+	Target plugin.TValue[*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRuleTarget]
 }
 
-// createMicrosoftIdentityAndAccessPolicyRule creates a new instance of this resource
-func createMicrosoftIdentityAndAccessPolicyRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlMicrosoftIdentityAndAccessPolicyRule{
+// createMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRule creates a new instance of this resource
+func createMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRule{
 		MqlRuntime: runtime,
 	}
 
@@ -5821,7 +5963,7 @@ func createMicrosoftIdentityAndAccessPolicyRule(runtime *plugin.Runtime, args ma
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("microsoft.identityAndAccess.policy.rule", res.__id)
+		args, err = runtime.ResourceFromRecording("microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -5831,27 +5973,27 @@ func createMicrosoftIdentityAndAccessPolicyRule(runtime *plugin.Runtime, args ma
 	return res, nil
 }
 
-func (c *mqlMicrosoftIdentityAndAccessPolicyRule) MqlName() string {
-	return "microsoft.identityAndAccess.policy.rule"
+func (c *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRule) MqlName() string {
+	return "microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule"
 }
 
-func (c *mqlMicrosoftIdentityAndAccessPolicyRule) MqlID() string {
+func (c *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRule) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMicrosoftIdentityAndAccessPolicyRule) GetId() *plugin.TValue[string] {
+func (c *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRule) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
-func (c *mqlMicrosoftIdentityAndAccessPolicyRule) GetTarget() *plugin.TValue[*mqlMicrosoftIdentityAndAccessPolicyRuleTarget] {
+func (c *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRule) GetTarget() *plugin.TValue[*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRuleTarget] {
 	return &c.Target
 }
 
-// mqlMicrosoftIdentityAndAccessPolicyRuleTarget for the microsoft.identityAndAccess.policy.rule.target resource
-type mqlMicrosoftIdentityAndAccessPolicyRuleTarget struct {
+// mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRuleTarget for the microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule.target resource
+type mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRuleTarget struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlMicrosoftIdentityAndAccessPolicyRuleTargetInternal it will be used here
+	// optional: if you define mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRuleTargetInternal it will be used here
 	Caller plugin.TValue[string]
 	EnforcedSettings plugin.TValue[[]interface{}]
 	InheritableSettings plugin.TValue[[]interface{}]
@@ -5859,9 +6001,9 @@ type mqlMicrosoftIdentityAndAccessPolicyRuleTarget struct {
 	Operations plugin.TValue[[]interface{}]
 }
 
-// createMicrosoftIdentityAndAccessPolicyRuleTarget creates a new instance of this resource
-func createMicrosoftIdentityAndAccessPolicyRuleTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlMicrosoftIdentityAndAccessPolicyRuleTarget{
+// createMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRuleTarget creates a new instance of this resource
+func createMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRuleTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRuleTarget{
 		MqlRuntime: runtime,
 	}
 
@@ -5873,7 +6015,7 @@ func createMicrosoftIdentityAndAccessPolicyRuleTarget(runtime *plugin.Runtime, a
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("microsoft.identityAndAccess.policy.rule.target", res.__id)
+		args, err = runtime.ResourceFromRecording("microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule.target", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -5883,31 +6025,31 @@ func createMicrosoftIdentityAndAccessPolicyRuleTarget(runtime *plugin.Runtime, a
 	return res, nil
 }
 
-func (c *mqlMicrosoftIdentityAndAccessPolicyRuleTarget) MqlName() string {
-	return "microsoft.identityAndAccess.policy.rule.target"
+func (c *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRuleTarget) MqlName() string {
+	return "microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule.target"
 }
 
-func (c *mqlMicrosoftIdentityAndAccessPolicyRuleTarget) MqlID() string {
+func (c *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRuleTarget) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMicrosoftIdentityAndAccessPolicyRuleTarget) GetCaller() *plugin.TValue[string] {
+func (c *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRuleTarget) GetCaller() *plugin.TValue[string] {
 	return &c.Caller
 }
 
-func (c *mqlMicrosoftIdentityAndAccessPolicyRuleTarget) GetEnforcedSettings() *plugin.TValue[[]interface{}] {
+func (c *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRuleTarget) GetEnforcedSettings() *plugin.TValue[[]interface{}] {
 	return &c.EnforcedSettings
 }
 
-func (c *mqlMicrosoftIdentityAndAccessPolicyRuleTarget) GetInheritableSettings() *plugin.TValue[[]interface{}] {
+func (c *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRuleTarget) GetInheritableSettings() *plugin.TValue[[]interface{}] {
 	return &c.InheritableSettings
 }
 
-func (c *mqlMicrosoftIdentityAndAccessPolicyRuleTarget) GetLevel() *plugin.TValue[string] {
+func (c *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRuleTarget) GetLevel() *plugin.TValue[string] {
 	return &c.Level
 }
 
-func (c *mqlMicrosoftIdentityAndAccessPolicyRuleTarget) GetOperations() *plugin.TValue[[]interface{}] {
+func (c *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRuleTarget) GetOperations() *plugin.TValue[[]interface{}] {
 	return &c.Operations
 }
 

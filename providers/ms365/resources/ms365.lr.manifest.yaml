@@ -412,11 +412,19 @@ resources:
     min_mondoo_version: 9.0.0
   microsoft.identityAndAccess:
     fields:
-      filter: {}
-      list: {}
+      privilegedIdentityManagement: {}
       roleEligibilityScheduleInstances: {}
     min_mondoo_version: 9.0.0
-  microsoft.identityAndAccess.policy:
+  microsoft.identityAndAccess.privilegedIdentityManagement:
+    fields:
+      policies: {}
+    min_mondoo_version: 9.0.0
+  microsoft.identityAndAccess.privilegedIdentityManagement.policies:
+    fields:
+      filter: {}
+      list: {}
+    min_mondoo_version: 9.0.0
+  microsoft.identityAndAccess.privilegedIdentityManagement.policy:
     fields:
       description: {}
       displayName: {}
@@ -429,13 +437,13 @@ resources:
       scopeType: {}
     is_private: true
     min_mondoo_version: 9.0.0
-  microsoft.identityAndAccess.policy.rule:
+  microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule:
     fields:
       id: {}
       target: {}
     is_private: true
     min_mondoo_version: 9.0.0
-  microsoft.identityAndAccess.policy.rule.target:
+  microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule.target:
     fields:
       caller: {}
       enforcedSettings: {}
