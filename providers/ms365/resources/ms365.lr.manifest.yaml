@@ -537,9 +537,26 @@ resources:
     min_mondoo_version: 9.0.0
   microsoft.security:
     fields:
+      exchange: {}
       latestSecureScores: {}
       riskyUsers: {}
       secureScores: {}
+    min_mondoo_version: 9.0.0
+  microsoft.security.exchange:
+    fields:
+      antispam: {}
+    min_mondoo_version: 9.0.0
+  microsoft.security.exchange.antispam:
+    fields:
+      hostedConnectionFilterPolicy: {}
+    min_mondoo_version: 9.0.0
+  microsoft.security.exchange.antispam.hostedConnectionFilterPolicy:
+    fields:
+      adminDisplayName: {}
+      enableSafeList: {}
+      identity: {}
+      ipAllowList: {}
+      ipBlockList: {}
     min_mondoo_version: 9.0.0
   microsoft.security.riskyUser:
     fields:
