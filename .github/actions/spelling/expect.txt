@@ -1,5 +1,6 @@
 ACCOUNTADMIN
 Adddays
+antispam
 atlassian
 auditlog
 Auths
@@ -25,8 +26,10 @@ DATAUSER
 Ddos
 deliverychannel
 dfw
+dlp
 dlq
 dlv
+eas
 eip
 ekm
 elbv
@@ -42,7 +45,9 @@ headerorder
 hostkeys
 iana
 iap
+iccid
 ilb
+imei
 ingresstls
 iotedge
 ipsetforwardedipconfig
@@ -54,9 +59,11 @@ kqueue
 labelmatchstatement
 liveanalytics
 loggingservice
+manageddevice
 managedrulegroupstatement
 managedzone
 mcr
+meid
 messagestoragepolicy
 mfs
 mgroup
@@ -104,6 +111,7 @@ spo
 sqli
 sqlimatchstatement
 sqlserver
+Sspr
 tailscale
 targetgroup
 tde
@@ -111,6 +119,7 @@ testutils
 timestream
 toplevel
 tpu
+udid
 usb
 vdcs
 virtualmachine
@@ -120,12 +129,3 @@ vulnmgmt
 wil
 xoxp
 xssmatchstatement
-eas
-iccid
-imei
-manageddevice
-meid
-udid
-Passwordless
-Sspr
-dlp

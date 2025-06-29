@@ -479,6 +479,7 @@ resources:
     min_mondoo_version: 9.0.0
   microsoft.policies:
     fields:
+      activityBasedTimeoutPolicies: {}
       adminConsentRequestPolicy: {}
       authenticationMethodsPolicy: {}
       authorizationPolicy: {}

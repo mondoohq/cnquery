@@ -1656,6 +1656,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.policies.authenticationMethodsPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftPolicies).GetAuthenticationMethodsPolicy()).ToDataRes(types.Resource("microsoft.policies.authenticationMethodsPolicy"))
 	},
+	"microsoft.policies.activityBasedTimeoutPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPolicies).GetActivityBasedTimeoutPolicies()).ToDataRes(types.Array(types.Dict))
+	},
 	"microsoft.adminConsentRequestPolicy.isEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftAdminConsentRequestPolicy).GetIsEnabled()).ToDataRes(types.Bool)
 	},
@@ -4055,6 +4058,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.policies.authenticationMethodsPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftPolicies).AuthenticationMethodsPolicy, ok = plugin.RawToTValue[*mqlMicrosoftPoliciesAuthenticationMethodsPolicy](v.Value, v.Error)
+		return
+	},
+	"microsoft.policies.activityBasedTimeoutPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPolicies).ActivityBasedTimeoutPolicies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"microsoft.adminConsentRequestPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9717,6 +9724,7 @@ type mqlMicrosoftPolicies struct {
 	PermissionGrantPolicies plugin.TValue[[]interface{}]
 	ConsentPolicySettings plugin.TValue[interface{}]
 	AuthenticationMethodsPolicy plugin.TValue[*mqlMicrosoftPoliciesAuthenticationMethodsPolicy]
+	ActivityBasedTimeoutPolicies plugin.TValue[[]interface{}]
 }
 
 // createMicrosoftPolicies creates a new instance of this resource
@@ -9804,6 +9812,12 @@ func (c *mqlMicrosoftPolicies) GetAuthenticationMethodsPolicy() *plugin.TValue[*
 		}
 
 		return c.authenticationMethodsPolicy()
+	})
+}
+
+func (c *mqlMicrosoftPolicies) GetActivityBasedTimeoutPolicies() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.ActivityBasedTimeoutPolicies, func() ([]interface{}, error) {
+		return c.activityBasedTimeoutPolicies()
 	})
 }
 
