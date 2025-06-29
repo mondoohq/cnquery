@@ -307,15 +307,30 @@ func (a *mqlMicrosoftPolicies) activityBasedTimeoutPolicies() ([]interface{}, er
 
 		// Extract JSON from the output (in case there are other messages)
 		outputStr := string(data)
-		jsonStart := strings.Index(outputStr, "{")
-		jsonEnd := strings.LastIndex(outputStr, "}")
 
-		if jsonStart == -1 || jsonEnd == -1 || jsonEnd <= jsonStart {
-			log.Error().Str("output", outputStr).Msg("activityBasedTimeoutPolicies: No valid JSON found in PowerShell output")
-			return nil, fmt.Errorf("no valid JSON found in PowerShell output")
+		// Look for our specific JSON structure containing "ActivityBasedTimeoutPolicies"
+		jsonStart := strings.Index(outputStr, `"ActivityBasedTimeoutPolicies"`)
+		if jsonStart == -1 {
+			log.Error().Str("output", outputStr).Msg("activityBasedTimeoutPolicies: No ActivityBasedTimeoutPolicies JSON found in PowerShell output")
+			return nil, fmt.Errorf("no ActivityBasedTimeoutPolicies JSON found in PowerShell output")
 		}
 
-		jsonData := outputStr[jsonStart : jsonEnd+1]
+		// Find the opening brace before "ActivityBasedTimeoutPolicies"
+		openBrace := strings.LastIndex(outputStr[:jsonStart], "{")
+		if openBrace == -1 {
+			log.Error().Str("output", outputStr).Msg("activityBasedTimeoutPolicies: No opening brace found before ActivityBasedTimeoutPolicies")
+			return nil, fmt.Errorf("no opening brace found before ActivityBasedTimeoutPolicies")
+		}
+
+		// Find the closing brace after "ActivityBasedTimeoutPolicies"
+		closeBrace := strings.Index(outputStr[jsonStart:], "}")
+		if closeBrace == -1 {
+			log.Error().Str("output", outputStr).Msg("activityBasedTimeoutPolicies: No closing brace found after ActivityBasedTimeoutPolicies")
+			return nil, fmt.Errorf("no closing brace found after ActivityBasedTimeoutPolicies")
+		}
+
+		// Extract the JSON object
+		jsonData := outputStr[openBrace : jsonStart+closeBrace+1]
 		log.Debug().Str("json", jsonData).Msg("activityBasedTimeoutPolicies: Extracted JSON from PowerShell output")
 
 		// Parse the JSON response
