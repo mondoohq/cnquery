@@ -39,14 +39,49 @@ $secureToken = ConvertTo-SecureString -String $graphToken -AsPlainText -Force
 Connect-MgGraph -AccessToken $secureToken -NoWelcome
 
 # Get activity-based timeout policies
-$policies = @(Get-MgPolicyActivityBasedTimeoutPolicy)
+$rawPolicies = @(Get-MgPolicyActivityBasedTimeoutPolicy)
+
+# Process policies to parse and flatten the Definition field
+$processedPolicies = @()
+foreach ($policy in $rawPolicies) {
+    $processedPolicy = @{
+        Id = $policy.Id
+        DisplayName = $policy.DisplayName
+        Description = $policy.Description
+        IsOrganizationDefault = $policy.IsOrganizationDefault
+        Definition = $null
+    }
+
+    # Parse and flatten the Definition field if it exists
+    if ($policy.Definition -and $policy.Definition.Count -gt 0) {
+        try {
+            # Parse the JSON string from the Definition array
+            $definitionJson = $policy.Definition[0]
+            $parsedDefinition = ConvertFrom-Json $definitionJson
+
+            # Extract and flatten the ActivityBasedTimeoutPolicy content
+            if ($parsedDefinition.ActivityBasedTimeoutPolicy) {
+                $processedPolicy.Definition = $parsedDefinition.ActivityBasedTimeoutPolicy
+            } else {
+                # If no ActivityBasedTimeoutPolicy wrapper, use the parsed content directly
+                $processedPolicy.Definition = $parsedDefinition
+            }
+        } catch {
+            # If parsing fails, keep the original Definition as-is for debugging
+            Write-Warning "Failed to parse Definition for policy $($policy.Id): $_"
+            $processedPolicy.Definition = $policy.Definition
+        }
+    }
+
+    $processedPolicies += $processedPolicy
+}
 
 # Disconnect from Microsoft Graph
 Disconnect-MgGraph
 
 # Convert to JSON output
 $result = @{
-    ActivityBasedTimeoutPolicies = $policies
+    ActivityBasedTimeoutPolicies = $processedPolicies
 }
 
 ConvertTo-Json -Depth 10 $result
