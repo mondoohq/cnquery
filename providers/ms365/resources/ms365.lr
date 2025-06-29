@@ -1176,6 +1176,8 @@ microsoft.devicemanagement {
   deviceCompliancePolicies() []microsoft.devicemanagement.devicecompliancepolicy
   // Device Enrollment Configuration
   deviceEnrollmentConfigurations() []microsoft.devicemanagement.deviceEnrollmentConfiguration
+  // Device management settings
+  settings() microsoft.devicemanagement.settings
 }
 
 // Microsoft Device Enrollment Configuration
@@ -1294,6 +1296,16 @@ private microsoft.devicemanagement.devicecompliancepolicy @defaults("id displayN
   assignments []dict
   // Deprecated; kept for backwards compatibility
   properties dict
+}
+
+// Microsoft device management settings
+private microsoft.devicemanagement.settings {
+  // Device should be noncompliant when there is no compliance policy targeted when this is true
+  secureByDefault bool
+  // Is feature enabled or not for scheduled action for rule
+  isScheduledActionEnabled bool
+  // The number of days a device is allowed to go without checking in to remain compliant
+  deviceComplianceCheckinThresholdDays int
 }
 
 // Microsoft 365 Exchange Online
