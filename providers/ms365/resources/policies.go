@@ -26,17 +26,20 @@ import (
 var activityBasedTimeoutPoliciesScript = `
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
+$InformationPreference = "SilentlyContinue"
+$VerbosePreference = "SilentlyContinue"
+$WarningPreference = "SilentlyContinue"
 $graphToken = '%s'
 
-# Install and import Microsoft Graph Identity SignIns module
-Install-Module -Name Microsoft.Graph.Identity.SignIns -Scope CurrentUser -Force -AllowClobber
-Import-Module Microsoft.Graph.Identity.SignIns
+# Suppress all output except our JSON result
+$null = Install-Module -Name Microsoft.Graph.Identity.SignIns -Scope CurrentUser -Force -AllowClobber
+$null = Import-Module Microsoft.Graph.Identity.SignIns
 
 # Convert the access token string to SecureString (required by Microsoft Graph PowerShell v2.0+)
 $secureToken = ConvertTo-SecureString -String $graphToken -AsPlainText -Force
 
-# Connect to Microsoft Graph using the secure access token (suppress welcome message)
-Connect-MgGraph -AccessToken $secureToken -NoWelcome
+# Connect to Microsoft Graph using the secure access token (suppress all output)
+$null = Connect-MgGraph -AccessToken $secureToken -NoWelcome
 
 # Get activity-based timeout policies
 $rawPolicies = @(Get-MgPolicyActivityBasedTimeoutPolicy)
@@ -68,7 +71,6 @@ foreach ($policy in $rawPolicies) {
             }
         } catch {
             # If parsing fails, keep the original Definition as-is for debugging
-            Write-Warning "Failed to parse Definition for policy $($policy.Id): $_"
             $processedPolicy.Definition = $policy.Definition
         }
     }
@@ -76,10 +78,10 @@ foreach ($policy in $rawPolicies) {
     $processedPolicies += $processedPolicy
 }
 
-# Disconnect from Microsoft Graph
-Disconnect-MgGraph
+# Disconnect from Microsoft Graph (suppress output)
+$null = Disconnect-MgGraph
 
-# Convert to JSON output
+# Convert to JSON output - this is the ONLY output from the script
 $result = @{
     ActivityBasedTimeoutPolicies = $processedPolicies
 }
@@ -340,56 +342,34 @@ func (a *mqlMicrosoftPolicies) activityBasedTimeoutPolicies() ([]interface{}, er
 
 		log.Debug().Msgf("activityBasedTimeoutPolicies: PowerShell script executed successfully, output length: %d", len(data))
 
-		// Extract JSON from the output (in case there are other messages)
-		outputStr := string(data)
-
-		// Look for our specific JSON structure containing "ActivityBasedTimeoutPolicies"
-		jsonStart := strings.Index(outputStr, `"ActivityBasedTimeoutPolicies"`)
-		if jsonStart == -1 {
-			log.Error().Str("output", outputStr).Msg("activityBasedTimeoutPolicies: No ActivityBasedTimeoutPolicies JSON found in PowerShell output")
-			return nil, fmt.Errorf("no ActivityBasedTimeoutPolicies JSON found in PowerShell output")
-		}
-
-		// Find the opening brace before "ActivityBasedTimeoutPolicies"
-		openBrace := strings.LastIndex(outputStr[:jsonStart], "{")
-		if openBrace == -1 {
-			log.Error().Str("output", outputStr).Msg("activityBasedTimeoutPolicies: No opening brace found before ActivityBasedTimeoutPolicies")
-			return nil, fmt.Errorf("no opening brace found before ActivityBasedTimeoutPolicies")
-		}
-
-		// Find the matching closing brace using proper brace counting
-		braceCount := 0
-		var closeBrace int = -1
-		for i := openBrace; i < len(outputStr); i++ {
-			if outputStr[i] == '{' {
-				braceCount++
-			} else if outputStr[i] == '}' {
-				braceCount--
-				if braceCount == 0 {
-					closeBrace = i
-					break
-				}
-			}
-		}
-
-		if closeBrace == -1 {
-			log.Error().Str("output", outputStr).Msg("activityBasedTimeoutPolicies: No matching closing brace found")
-			return nil, fmt.Errorf("no matching closing brace found")
-		}
-
-		// Extract the complete JSON object
-		jsonData := outputStr[openBrace : closeBrace+1]
-		log.Debug().Str("json", jsonData).Msg("activityBasedTimeoutPolicies: Extracted JSON from PowerShell output")
-
-		// Parse the JSON response
+		// Parse the clean JSON output directly (PowerShell script now produces only JSON)
 		var result struct {
 			ActivityBasedTimeoutPolicies []map[string]interface{} `json:"ActivityBasedTimeoutPolicies"`
 		}
 
-		err = json.Unmarshal([]byte(jsonData), &result)
+		err = json.Unmarshal(data, &result)
 		if err != nil {
-			log.Error().Err(err).Str("json", jsonData).Msg("activityBasedTimeoutPolicies: Failed to parse JSON response")
-			return nil, fmt.Errorf("failed to parse PowerShell JSON response: %w", err)
+			// If direct parsing fails, try to extract JSON from mixed output (fallback)
+			outputStr := string(data)
+			log.Debug().Str("output", outputStr).Msg("activityBasedTimeoutPolicies: Direct JSON parsing failed, attempting extraction")
+
+			// Find the JSON object in the output
+			jsonStart := strings.Index(outputStr, "{")
+			jsonEnd := strings.LastIndex(outputStr, "}")
+
+			if jsonStart != -1 && jsonEnd != -1 && jsonEnd > jsonStart {
+				jsonData := outputStr[jsonStart : jsonEnd+1]
+				log.Debug().Str("json", jsonData).Msg("activityBasedTimeoutPolicies: Extracted JSON from mixed output")
+
+				err = json.Unmarshal([]byte(jsonData), &result)
+				if err != nil {
+					log.Error().Err(err).Str("output", outputStr).Msg("activityBasedTimeoutPolicies: Failed to parse extracted JSON")
+					return nil, fmt.Errorf("failed to parse PowerShell JSON response: %w", err)
+				}
+			} else {
+				log.Error().Err(err).Str("output", outputStr).Msg("activityBasedTimeoutPolicies: Failed to parse JSON and no valid JSON found in output")
+				return nil, fmt.Errorf("failed to parse PowerShell JSON response: %w", err)
+			}
 		}
 
 		log.Debug().Msgf("activityBasedTimeoutPolicies: Successfully parsed %d policies from PowerShell output", len(result.ActivityBasedTimeoutPolicies))
