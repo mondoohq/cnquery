@@ -14,7 +14,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/policies"
-	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
@@ -318,7 +317,6 @@ func (a *mqlMicrosoftPolicies) activityBasedTimeoutPolicies() ([]interface{}, er
 		Scopes: []string{connection.DefaultMSGraphScope},
 	})
 	if err != nil {
-		log.Error().Err(err).Msg("activityBasedTimeoutPolicies: Failed to get Graph token")
 		return nil, err
 	}
 
@@ -328,7 +326,6 @@ func (a *mqlMicrosoftPolicies) activityBasedTimeoutPolicies() ([]interface{}, er
 	// Execute the PowerShell script
 	res, err := conn.CheckAndRunPowershellScript(fmtScript)
 	if err != nil {
-		log.Error().Err(err).Msg("activityBasedTimeoutPolicies: Failed to execute PowerShell script")
 		return nil, err
 	}
 
@@ -336,11 +333,8 @@ func (a *mqlMicrosoftPolicies) activityBasedTimeoutPolicies() ([]interface{}, er
 	if res.ExitStatus == 0 {
 		data, err := io.ReadAll(res.Stdout)
 		if err != nil {
-			log.Error().Err(err).Msg("activityBasedTimeoutPolicies: Failed to read PowerShell output")
 			return nil, err
 		}
-
-		log.Debug().Msgf("activityBasedTimeoutPolicies: PowerShell script executed successfully, output length: %d", len(data))
 
 		// Parse the clean JSON output directly (PowerShell script now produces only JSON)
 		var result struct {
@@ -351,7 +345,6 @@ func (a *mqlMicrosoftPolicies) activityBasedTimeoutPolicies() ([]interface{}, er
 		if err != nil {
 			// If direct parsing fails, try to extract JSON from mixed output (fallback)
 			outputStr := string(data)
-			log.Debug().Str("output", outputStr).Msg("activityBasedTimeoutPolicies: Direct JSON parsing failed, attempting extraction")
 
 			// Find the JSON object in the output
 			jsonStart := strings.Index(outputStr, "{")
@@ -359,27 +352,20 @@ func (a *mqlMicrosoftPolicies) activityBasedTimeoutPolicies() ([]interface{}, er
 
 			if jsonStart != -1 && jsonEnd != -1 && jsonEnd > jsonStart {
 				jsonData := outputStr[jsonStart : jsonEnd+1]
-				log.Debug().Str("json", jsonData).Msg("activityBasedTimeoutPolicies: Extracted JSON from mixed output")
 
 				err = json.Unmarshal([]byte(jsonData), &result)
 				if err != nil {
-					log.Error().Err(err).Str("output", outputStr).Msg("activityBasedTimeoutPolicies: Failed to parse extracted JSON")
 					return nil, fmt.Errorf("failed to parse PowerShell JSON response: %w", err)
 				}
 			} else {
-				log.Error().Err(err).Str("output", outputStr).Msg("activityBasedTimeoutPolicies: Failed to parse JSON and no valid JSON found in output")
 				return nil, fmt.Errorf("failed to parse PowerShell JSON response: %w", err)
 			}
 		}
-
-		log.Debug().Msgf("activityBasedTimeoutPolicies: Successfully parsed %d policies from PowerShell output", len(result.ActivityBasedTimeoutPolicies))
 
 		// Convert to []interface{} for MQL compatibility
 		policies := make([]interface{}, len(result.ActivityBasedTimeoutPolicies))
 		for i, policy := range result.ActivityBasedTimeoutPolicies {
 			policies[i] = policy
-			log.Debug().Msgf("activityBasedTimeoutPolicies: Policy %d - ID: %v, DisplayName: %v, IsOrganizationDefault: %v",
-				i, policy["Id"], policy["DisplayName"], policy["IsOrganizationDefault"])
 		}
 
 		return policies, nil
@@ -387,12 +373,10 @@ func (a *mqlMicrosoftPolicies) activityBasedTimeoutPolicies() ([]interface{}, er
 		// Handle PowerShell execution errors
 		data, err := io.ReadAll(res.Stderr)
 		if err != nil {
-			log.Error().Err(err).Msg("activityBasedTimeoutPolicies: Failed to read PowerShell error output")
 			return nil, fmt.Errorf("PowerShell script failed with exit code %d", res.ExitStatus)
 		}
 
 		errorOutput := string(data)
-		log.Error().Str("stderr", errorOutput).Int("exitCode", res.ExitStatus).Msg("activityBasedTimeoutPolicies: PowerShell script failed")
 		return nil, fmt.Errorf("PowerShell script failed (exit code %d): %s", res.ExitStatus, errorOutput)
 	}
 }
