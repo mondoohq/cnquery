@@ -1,6 +1,5 @@
 ACCOUNTADMIN
 Adddays
-antispam
 atlassian
 auditlog
 Auths
@@ -14,6 +13,7 @@ cavium
 cdn
 cea
 certificatechains
+Checkin
 cloudflare
 Clusterwide
 cmek
