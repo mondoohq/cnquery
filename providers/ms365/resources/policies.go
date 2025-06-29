@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/google/uuid"
@@ -24,6 +25,7 @@ import (
 // PowerShell script to get activity-based timeout policies using Microsoft Graph PowerShell SDK
 var activityBasedTimeoutPoliciesScript = `
 $ErrorActionPreference = "Stop"
+$ProgressPreference = "SilentlyContinue"
 $graphToken = '%s'
 
 # Install and import Microsoft Graph Identity SignIns module
@@ -33,8 +35,8 @@ Import-Module Microsoft.Graph.Identity.SignIns
 # Convert the access token string to SecureString (required by Microsoft Graph PowerShell v2.0+)
 $secureToken = ConvertTo-SecureString -String $graphToken -AsPlainText -Force
 
-# Connect to Microsoft Graph using the secure access token
-Connect-MgGraph -AccessToken $secureToken
+# Connect to Microsoft Graph using the secure access token (suppress welcome message)
+Connect-MgGraph -AccessToken $secureToken -NoWelcome
 
 # Get activity-based timeout policies
 $policies = @(Get-MgPolicyActivityBasedTimeoutPolicy)
@@ -303,14 +305,27 @@ func (a *mqlMicrosoftPolicies) activityBasedTimeoutPolicies() ([]interface{}, er
 
 		log.Debug().Msgf("activityBasedTimeoutPolicies: PowerShell script executed successfully, output length: %d", len(data))
 
+		// Extract JSON from the output (in case there are other messages)
+		outputStr := string(data)
+		jsonStart := strings.Index(outputStr, "{")
+		jsonEnd := strings.LastIndex(outputStr, "}")
+
+		if jsonStart == -1 || jsonEnd == -1 || jsonEnd <= jsonStart {
+			log.Error().Str("output", outputStr).Msg("activityBasedTimeoutPolicies: No valid JSON found in PowerShell output")
+			return nil, fmt.Errorf("no valid JSON found in PowerShell output")
+		}
+
+		jsonData := outputStr[jsonStart : jsonEnd+1]
+		log.Debug().Str("json", jsonData).Msg("activityBasedTimeoutPolicies: Extracted JSON from PowerShell output")
+
 		// Parse the JSON response
 		var result struct {
 			ActivityBasedTimeoutPolicies []map[string]interface{} `json:"ActivityBasedTimeoutPolicies"`
 		}
 
-		err = json.Unmarshal(data, &result)
+		err = json.Unmarshal([]byte(jsonData), &result)
 		if err != nil {
-			log.Error().Err(err).Str("output", string(data)).Msg("activityBasedTimeoutPolicies: Failed to parse JSON response")
+			log.Error().Err(err).Str("json", jsonData).Msg("activityBasedTimeoutPolicies: Failed to parse JSON response")
 			return nil, fmt.Errorf("failed to parse PowerShell JSON response: %w", err)
 		}
 
