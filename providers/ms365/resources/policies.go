@@ -30,11 +30,17 @@ $graphToken = '%s'
 Install-Module -Name Microsoft.Graph.Identity.SignIns -Scope CurrentUser -Force -AllowClobber
 Import-Module Microsoft.Graph.Identity.SignIns
 
-# Connect to Microsoft Graph using the access token
-Connect-MgGraph -AccessToken $graphToken
+# Convert the access token string to SecureString (required by Microsoft Graph PowerShell v2.0+)
+$secureToken = ConvertTo-SecureString -String $graphToken -AsPlainText -Force
+
+# Connect to Microsoft Graph using the secure access token
+Connect-MgGraph -AccessToken $secureToken
 
 # Get activity-based timeout policies
 $policies = @(Get-MgPolicyActivityBasedTimeoutPolicy)
+
+# Disconnect from Microsoft Graph
+Disconnect-MgGraph
 
 # Convert to JSON output
 $result = @{
