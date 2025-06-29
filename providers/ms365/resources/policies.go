@@ -322,15 +322,28 @@ func (a *mqlMicrosoftPolicies) activityBasedTimeoutPolicies() ([]interface{}, er
 			return nil, fmt.Errorf("no opening brace found before ActivityBasedTimeoutPolicies")
 		}
 
-		// Find the closing brace after "ActivityBasedTimeoutPolicies"
-		closeBrace := strings.Index(outputStr[jsonStart:], "}")
-		if closeBrace == -1 {
-			log.Error().Str("output", outputStr).Msg("activityBasedTimeoutPolicies: No closing brace found after ActivityBasedTimeoutPolicies")
-			return nil, fmt.Errorf("no closing brace found after ActivityBasedTimeoutPolicies")
+		// Find the matching closing brace using proper brace counting
+		braceCount := 0
+		var closeBrace int = -1
+		for i := openBrace; i < len(outputStr); i++ {
+			if outputStr[i] == '{' {
+				braceCount++
+			} else if outputStr[i] == '}' {
+				braceCount--
+				if braceCount == 0 {
+					closeBrace = i
+					break
+				}
+			}
 		}
 
-		// Extract the JSON object
-		jsonData := outputStr[openBrace : jsonStart+closeBrace+1]
+		if closeBrace == -1 {
+			log.Error().Str("output", outputStr).Msg("activityBasedTimeoutPolicies: No matching closing brace found")
+			return nil, fmt.Errorf("no matching closing brace found")
+		}
+
+		// Extract the complete JSON object
+		jsonData := outputStr[openBrace : closeBrace+1]
 		log.Debug().Str("json", jsonData).Msg("activityBasedTimeoutPolicies: Extracted JSON from PowerShell output")
 
 		// Parse the JSON response
