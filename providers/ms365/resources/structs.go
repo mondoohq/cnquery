@@ -615,41 +615,7 @@ func newPermissionGrantPolicies(policies []models.PermissionGrantPolicyable) []*
 	return res
 }
 
-type ActivityBasedTimeoutPolicy struct {
-	PolicyBase
-	// A string collection containing a JSON string that defines the rules and settings for this policy
-	Definition []string `json:"definition"`
-	// If set to true, activates this policy. There can be many policies for the same policy type, but only one can be activated as the organization default
-	IsOrganizationDefault *bool `json:"isOrganizationDefault"`
-}
 
-func newActivityBasedTimeoutPolicy(p models.ActivityBasedTimeoutPolicyable) *ActivityBasedTimeoutPolicy {
-	if p == nil {
-		return nil
-	}
-	return &ActivityBasedTimeoutPolicy{
-		PolicyBase: PolicyBase{
-			DirectoryObject: DirectoryObject{
-				Entity: Entity{
-					Id: p.GetId(),
-				},
-				DeletedDateTime: p.GetDeletedDateTime(),
-			},
-			DisplayName: p.GetDisplayName(),
-			Description: p.GetDescription(),
-		},
-		Definition:            p.GetDefinition(),
-		IsOrganizationDefault: p.GetIsOrganizationDefault(),
-	}
-}
-
-func newActivityBasedTimeoutPolicies(policies []models.ActivityBasedTimeoutPolicyable) []*ActivityBasedTimeoutPolicy {
-	res := []*ActivityBasedTimeoutPolicy{}
-	for i := range policies {
-		res = append(res, newActivityBasedTimeoutPolicy(policies[i]))
-	}
-	return res
-}
 
 type AccessReviewScope struct {
 	// Stores additional data not described in the OpenAPI description found when deserializing. Can be used for serialization as well.

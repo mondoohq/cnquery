@@ -5,8 +5,11 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/google/uuid"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/policies"
@@ -17,6 +20,29 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
 	"go.mondoo.com/cnquery/v11/types"
 )
+
+// PowerShell script to get activity-based timeout policies using Microsoft Graph PowerShell SDK
+var activityBasedTimeoutPoliciesScript = `
+$ErrorActionPreference = "Stop"
+$graphToken = '%s'
+
+# Install and import Microsoft Graph Identity SignIns module
+Install-Module -Name Microsoft.Graph.Identity.SignIns -Scope CurrentUser -Force -AllowClobber
+Import-Module Microsoft.Graph.Identity.SignIns
+
+# Connect to Microsoft Graph using the access token
+Connect-MgGraph -AccessToken $graphToken
+
+# Get activity-based timeout policies
+$policies = @(Get-MgPolicyActivityBasedTimeoutPolicy)
+
+# Convert to JSON output
+$result = @{
+    ActivityBasedTimeoutPolicies = $policies
+}
+
+ConvertTo-Json -Depth 10 $result
+`
 
 func (a *mqlMicrosoftPolicies) authorizationPolicy() (interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
@@ -239,30 +265,70 @@ func (a *mqlMicrosoftPolicies) adminConsentRequestPolicy() (*mqlMicrosoftAdminCo
 
 func (a *mqlMicrosoftPolicies) activityBasedTimeoutPolicies() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
-	graphClient, err := conn.GraphClient()
+
+	// Get Microsoft Graph token for PowerShell authentication
+	ctx := context.Background()
+	token := conn.Token()
+	graphToken, err := token.GetToken(ctx, policy.TokenRequestOptions{
+		Scopes: []string{connection.DefaultMSGraphScope},
+	})
 	if err != nil {
+		log.Error().Err(err).Msg("activityBasedTimeoutPolicies: Failed to get Graph token")
 		return nil, err
 	}
 
-	ctx := context.Background()
-	resp, err := graphClient.Policies().ActivityBasedTimeoutPolicies().Get(ctx, &policies.ActivityBasedTimeoutPoliciesRequestBuilderGetRequestConfiguration{})
+	// Format the PowerShell script with the access token
+	fmtScript := fmt.Sprintf(activityBasedTimeoutPoliciesScript, graphToken.Token)
+
+	// Execute the PowerShell script
+	res, err := conn.CheckAndRunPowershellScript(fmtScript)
 	if err != nil {
-		return nil, transformError(err)
+		log.Error().Err(err).Msg("activityBasedTimeoutPolicies: Failed to execute PowerShell script")
+		return nil, err
 	}
 
-	// Add comprehensive DBG logging for debugging Graph API responses
-	if resp != nil && resp.GetValue() != nil {
-		log.Debug().Msgf("activityBasedTimeoutPolicies: Retrieved %d policies from Graph API", len(resp.GetValue()))
-		for i, policy := range resp.GetValue() {
-			log.Debug().Msgf("activityBasedTimeoutPolicies: Policy %d - ID: %s, DisplayName: %s, IsOrganizationDefault: %v",
-				i, convert.ToValue(policy.GetId()), convert.ToValue(policy.GetDisplayName()), convert.ToValue(policy.GetIsOrganizationDefault()))
-			if policy.GetDefinition() != nil {
-				log.Debug().Msgf("activityBasedTimeoutPolicies: Policy %d - Definition: %v", i, policy.GetDefinition())
-			}
+	// Process the results
+	if res.ExitStatus == 0 {
+		data, err := io.ReadAll(res.Stdout)
+		if err != nil {
+			log.Error().Err(err).Msg("activityBasedTimeoutPolicies: Failed to read PowerShell output")
+			return nil, err
 		}
-	} else {
-		log.Debug().Msg("activityBasedTimeoutPolicies: No policies returned from Graph API")
-	}
 
-	return convert.JsonToDictSlice(newActivityBasedTimeoutPolicies(resp.GetValue()))
+		log.Debug().Msgf("activityBasedTimeoutPolicies: PowerShell script executed successfully, output length: %d", len(data))
+
+		// Parse the JSON response
+		var result struct {
+			ActivityBasedTimeoutPolicies []map[string]interface{} `json:"ActivityBasedTimeoutPolicies"`
+		}
+
+		err = json.Unmarshal(data, &result)
+		if err != nil {
+			log.Error().Err(err).Str("output", string(data)).Msg("activityBasedTimeoutPolicies: Failed to parse JSON response")
+			return nil, fmt.Errorf("failed to parse PowerShell JSON response: %w", err)
+		}
+
+		log.Debug().Msgf("activityBasedTimeoutPolicies: Successfully parsed %d policies from PowerShell output", len(result.ActivityBasedTimeoutPolicies))
+
+		// Convert to []interface{} for MQL compatibility
+		policies := make([]interface{}, len(result.ActivityBasedTimeoutPolicies))
+		for i, policy := range result.ActivityBasedTimeoutPolicies {
+			policies[i] = policy
+			log.Debug().Msgf("activityBasedTimeoutPolicies: Policy %d - ID: %v, DisplayName: %v, IsOrganizationDefault: %v",
+				i, policy["Id"], policy["DisplayName"], policy["IsOrganizationDefault"])
+		}
+
+		return policies, nil
+	} else {
+		// Handle PowerShell execution errors
+		data, err := io.ReadAll(res.Stderr)
+		if err != nil {
+			log.Error().Err(err).Msg("activityBasedTimeoutPolicies: Failed to read PowerShell error output")
+			return nil, fmt.Errorf("PowerShell script failed with exit code %d", res.ExitStatus)
+		}
+
+		errorOutput := string(data)
+		log.Error().Str("stderr", errorOutput).Int("exitCode", res.ExitStatus).Msg("activityBasedTimeoutPolicies: PowerShell script failed")
+		return nil, fmt.Errorf("PowerShell script failed (exit code %d): %s", res.ExitStatus, errorOutput)
+	}
 }
