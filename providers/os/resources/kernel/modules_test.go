@@ -166,8 +166,8 @@ func TestLinuxSysModuleParserMissingFiles(t *testing.T) {
 
 	module := entries[0]
 	assert.Equal(t, "minimal_module", module.Name)
-	assert.Equal(t, "0", module.Size)    // Default when coresize is missing
-	assert.Equal(t, "0", module.UsedBy)  // Default when refcnt is missing
+	assert.Equal(t, "0", module.Size)   // Default when coresize is missing
+	assert.Equal(t, "0", module.UsedBy) // Default when refcnt is missing
 }
 
 func TestLinuxSysModuleParserNoSysModule(t *testing.T) {
