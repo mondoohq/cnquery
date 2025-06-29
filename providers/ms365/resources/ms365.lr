@@ -1064,6 +1064,8 @@ microsoft.policies {
   consentPolicySettings() dict
   // Authentication methods policy
   authenticationMethodsPolicy() microsoft.policies.authenticationMethodsPolicy
+  // Activity-based timeout policies
+  activityBasedTimeoutPolicies() []dict
 }
 
 private microsoft.adminConsentRequestPolicy @defaults("isEnabled notifyReviewers") {

@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/policies"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
@@ -234,4 +235,34 @@ func (a *mqlMicrosoftPolicies) adminConsentRequestPolicy() (*mqlMicrosoftAdminCo
 	}
 
 	return resource.(*mqlMicrosoftAdminConsentRequestPolicy), nil
+}
+
+func (a *mqlMicrosoftPolicies) activityBasedTimeoutPolicies() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	resp, err := graphClient.Policies().ActivityBasedTimeoutPolicies().Get(ctx, &policies.ActivityBasedTimeoutPoliciesRequestBuilderGetRequestConfiguration{})
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	// Add comprehensive DBG logging for debugging Graph API responses
+	if resp != nil && resp.GetValue() != nil {
+		log.Debug().Msgf("activityBasedTimeoutPolicies: Retrieved %d policies from Graph API", len(resp.GetValue()))
+		for i, policy := range resp.GetValue() {
+			log.Debug().Msgf("activityBasedTimeoutPolicies: Policy %d - ID: %s, DisplayName: %s, IsOrganizationDefault: %v",
+				i, convert.ToValue(policy.GetId()), convert.ToValue(policy.GetDisplayName()), convert.ToValue(policy.GetIsOrganizationDefault()))
+			if policy.GetDefinition() != nil {
+				log.Debug().Msgf("activityBasedTimeoutPolicies: Policy %d - Definition: %v", i, policy.GetDefinition())
+			}
+		}
+	} else {
+		log.Debug().Msg("activityBasedTimeoutPolicies: No policies returned from Graph API")
+	}
+
+	return convert.JsonToDictSlice(newActivityBasedTimeoutPolicies(resp.GetValue()))
 }
