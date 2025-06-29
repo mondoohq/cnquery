@@ -147,3 +147,45 @@ func TestManagerAIX(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "7300-03-00-2446", info.Version)
 }
+
+func TestManagerLinuxFallbackToSysModule(t *testing.T) {
+	// Test fallback behavior when lsmod is not available but /sys/module is
+	mock, err := mock.New(0, "./testdata/linux_no_lsmod.toml", &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:    "ubuntu",
+			Version: "20.04",
+			Family:  []string{"debian", "linux"},
+		},
+	})
+	require.NoError(t, err)
+
+	mm, err := ResolveManager(mock)
+	require.NoError(t, err)
+
+	modules, err := mm.Modules()
+	require.NoError(t, err)
+
+	// Should find 2 live modules (cryptd and ext4, but not unloaded_module)
+	assert.Equal(t, 2, len(modules))
+
+	// Find and verify cryptd module
+	var cryptd *KernelModule
+	var ext4 *KernelModule
+	for _, mod := range modules {
+		if mod.Name == "cryptd" {
+			cryptd = mod
+		} else if mod.Name == "ext4" {
+			ext4 = mod
+		}
+	}
+
+	require.NotNil(t, cryptd, "cryptd module should be found")
+	assert.Equal(t, "cryptd", cryptd.Name)
+	assert.Equal(t, "24576", cryptd.Size)
+	assert.Equal(t, "3", cryptd.UsedBy)
+
+	require.NotNil(t, ext4, "ext4 module should be found")
+	assert.Equal(t, "ext4", ext4.Name)
+	assert.Equal(t, "589824", ext4.Size)
+	assert.Equal(t, "1", ext4.UsedBy)
+}

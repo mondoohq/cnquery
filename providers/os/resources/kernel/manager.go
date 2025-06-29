@@ -152,13 +152,35 @@ func (s *LinuxKernelManager) Parameters() (map[string]string, error) {
 }
 
 func (s *LinuxKernelManager) Modules() ([]*KernelModule, error) {
-	// TODO: use proc in future
-	cmd, err := s.conn.RunCommand("/sbin/lsmod")
-	if err != nil {
-		return nil, errors.Wrap(err, "could not read kernel modules")
+	// Try lsmod command first (preferred method)
+	if s.conn.Capabilities().Has(shared.Capability_RunCommand) {
+		cmd, err := s.conn.RunCommand("/sbin/lsmod")
+		if err == nil && cmd.ExitStatus == 0 {
+			log.Debug().Msg("using lsmod to read kernel modules")
+			return ParseLsmod(cmd.Stdout), nil
+		}
+		log.Debug().Err(err).Msg("lsmod command failed, trying fallback methods")
 	}
 
-	return ParseLsmod(cmd.Stdout), nil
+	// Fallback 1: Try reading /proc/modules
+	procModulesFile, err := s.conn.FileSystem().Open("/proc/modules")
+	if err == nil {
+		defer procModulesFile.Close()
+		log.Debug().Msg("using /proc/modules to read kernel modules")
+		return ParseLinuxProcModules(procModulesFile), nil
+	}
+	log.Debug().Err(err).Msg("/proc/modules not available, trying /sys/module")
+
+	// Fallback 2: Try reading from /sys/module directory
+	modules, err := ParseLinuxSysModule(s.conn.FileSystem())
+	if err == nil && len(modules) > 0 {
+		log.Debug().Msg("using /sys/module to read kernel modules")
+		return modules, nil
+	}
+	log.Debug().Err(err).Msg("/sys/module parsing failed")
+
+	// If all methods fail, return an error
+	return nil, errors.New("could not read kernel modules: lsmod command failed, /proc/modules not available, and /sys/module parsing failed")
 }
 
 type OSXKernelManager struct {
