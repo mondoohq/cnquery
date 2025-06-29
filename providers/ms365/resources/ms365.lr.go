@@ -358,6 +358,10 @@ func init() {
 			// to override args, implement: initMs365TeamsTeamsMessagingPolicyConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMs365TeamsTeamsMessagingPolicyConfig,
 		},
+		"ms365.teams.teamsClientConfig": {
+			// to override args, implement: initMs365TeamsTeamsClientConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMs365TeamsTeamsClientConfig,
+		},
 	}
 }
 
@@ -2095,7 +2099,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlMs365SharepointonlineSite).GetDenyAddAndCustomizePages()).ToDataRes(types.Bool)
 	},
 	"ms365.teams.csTeamsClientConfiguration": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365Teams).GetCsTeamsClientConfiguration()).ToDataRes(types.Dict)
+		return (r.(*mqlMs365Teams).GetCsTeamsClientConfiguration()).ToDataRes(types.Resource("ms365.teams.teamsClientConfig"))
 	},
 	"ms365.teams.csTenantFederationConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Teams).GetCsTenantFederationConfiguration()).ToDataRes(types.Resource("ms365.teams.tenantFederationConfig"))
@@ -2168,6 +2172,60 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ms365.teams.teamsMessagingPolicyConfig.allowSecurityEndUserReporting": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365TeamsTeamsMessagingPolicyConfig).GetAllowSecurityEndUserReporting()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.teamsClientConfig.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsClientConfig).GetIdentity()).ToDataRes(types.String)
+	},
+	"ms365.teams.teamsClientConfig.allowEmailIntoChannel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsClientConfig).GetAllowEmailIntoChannel()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.teamsClientConfig.restrictedSenderList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsClientConfig).GetRestrictedSenderList()).ToDataRes(types.String)
+	},
+	"ms365.teams.teamsClientConfig.allowDropBox": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsClientConfig).GetAllowDropBox()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.teamsClientConfig.allowEgnyte": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsClientConfig).GetAllowEgnyte()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.teamsClientConfig.allowBox": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsClientConfig).GetAllowBox()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.teamsClientConfig.allowGoogleDrive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsClientConfig).GetAllowGoogleDrive()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.teamsClientConfig.allowRoleBasedChatPermissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsClientConfig).GetAllowRoleBasedChatPermissions()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.teamsClientConfig.allowShareFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsClientConfig).GetAllowShareFile()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.teamsClientConfig.allowOrganizationTab": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsClientConfig).GetAllowOrganizationTab()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.teamsClientConfig.allowSkypeBusinessInterop": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsClientConfig).GetAllowSkypeBusinessInterop()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.teamsClientConfig.allowTBotProactiveMessaging": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsClientConfig).GetAllowTBotProactiveMessaging()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.teamsClientConfig.contentPin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsClientConfig).GetContentPin()).ToDataRes(types.String)
+	},
+	"ms365.teams.teamsClientConfig.allowResourceAccountSendMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsClientConfig).GetAllowResourceAccountSendMessage()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.teamsClientConfig.resourceAccountContentAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsClientConfig).GetResourceAccountContentAccess()).ToDataRes(types.String)
+	},
+	"ms365.teams.teamsClientConfig.allowGuestUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsClientConfig).GetAllowGuestUser()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.teamsClientConfig.allowScopedPeopleSearchandAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsClientConfig).GetAllowScopedPeopleSearchandAccess()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.teamsClientConfig.allowedDomains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsClientConfig).GetAllowedDomains()).ToDataRes(types.Array(types.String))
 	},
 }
 
@@ -4734,7 +4792,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"ms365.teams.csTeamsClientConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365Teams).CsTeamsClientConfiguration, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlMs365Teams).CsTeamsClientConfiguration, ok = plugin.RawToTValue[*mqlMs365TeamsTeamsClientConfig](v.Value, v.Error)
 		return
 	},
 	"ms365.teams.csTenantFederationConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4843,6 +4901,82 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		},
 	"ms365.teams.teamsMessagingPolicyConfig.allowSecurityEndUserReporting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365TeamsTeamsMessagingPolicyConfig).AllowSecurityEndUserReporting, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsClientConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMs365TeamsTeamsClientConfig).__id, ok = v.Value.(string)
+			return
+		},
+	"ms365.teams.teamsClientConfig.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsClientConfig).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsClientConfig.allowEmailIntoChannel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsClientConfig).AllowEmailIntoChannel, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsClientConfig.restrictedSenderList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsClientConfig).RestrictedSenderList, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsClientConfig.allowDropBox": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsClientConfig).AllowDropBox, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsClientConfig.allowEgnyte": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsClientConfig).AllowEgnyte, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsClientConfig.allowBox": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsClientConfig).AllowBox, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsClientConfig.allowGoogleDrive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsClientConfig).AllowGoogleDrive, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsClientConfig.allowRoleBasedChatPermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsClientConfig).AllowRoleBasedChatPermissions, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsClientConfig.allowShareFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsClientConfig).AllowShareFile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsClientConfig.allowOrganizationTab": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsClientConfig).AllowOrganizationTab, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsClientConfig.allowSkypeBusinessInterop": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsClientConfig).AllowSkypeBusinessInterop, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsClientConfig.allowTBotProactiveMessaging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsClientConfig).AllowTBotProactiveMessaging, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsClientConfig.contentPin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsClientConfig).ContentPin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsClientConfig.allowResourceAccountSendMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsClientConfig).AllowResourceAccountSendMessage, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsClientConfig.resourceAccountContentAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsClientConfig).ResourceAccountContentAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsClientConfig.allowGuestUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsClientConfig).AllowGuestUser, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsClientConfig.allowScopedPeopleSearchandAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsClientConfig).AllowScopedPeopleSearchandAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsClientConfig.allowedDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsClientConfig).AllowedDomains, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 }
@@ -11659,7 +11793,7 @@ type mqlMs365Teams struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	mqlMs365TeamsInternal
-	CsTeamsClientConfiguration plugin.TValue[interface{}]
+	CsTeamsClientConfiguration plugin.TValue[*mqlMs365TeamsTeamsClientConfig]
 	CsTenantFederationConfiguration plugin.TValue[*mqlMs365TeamsTenantFederationConfig]
 	CsTeamsMeetingPolicy plugin.TValue[*mqlMs365TeamsTeamsMeetingPolicyConfig]
 	CsTeamsMessagingPolicy plugin.TValue[*mqlMs365TeamsTeamsMessagingPolicyConfig]
@@ -11697,8 +11831,18 @@ func (c *mqlMs365Teams) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMs365Teams) GetCsTeamsClientConfiguration() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.CsTeamsClientConfiguration, func() (interface{}, error) {
+func (c *mqlMs365Teams) GetCsTeamsClientConfiguration() *plugin.TValue[*mqlMs365TeamsTeamsClientConfig] {
+	return plugin.GetOrCompute[*mqlMs365TeamsTeamsClientConfig](&c.CsTeamsClientConfiguration, func() (*mqlMs365TeamsTeamsClientConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ms365.teams", c.__id, "csTeamsClientConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMs365TeamsTeamsClientConfig), nil
+			}
+		}
+
 		return c.csTeamsClientConfiguration()
 	})
 }
@@ -11971,4 +12115,133 @@ func (c *mqlMs365TeamsTeamsMessagingPolicyConfig) MqlID() string {
 
 func (c *mqlMs365TeamsTeamsMessagingPolicyConfig) GetAllowSecurityEndUserReporting() *plugin.TValue[bool] {
 	return &c.AllowSecurityEndUserReporting
+}
+
+// mqlMs365TeamsTeamsClientConfig for the ms365.teams.teamsClientConfig resource
+type mqlMs365TeamsTeamsClientConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMs365TeamsTeamsClientConfigInternal it will be used here
+	Identity plugin.TValue[string]
+	AllowEmailIntoChannel plugin.TValue[bool]
+	RestrictedSenderList plugin.TValue[string]
+	AllowDropBox plugin.TValue[bool]
+	AllowEgnyte plugin.TValue[bool]
+	AllowBox plugin.TValue[bool]
+	AllowGoogleDrive plugin.TValue[bool]
+	AllowRoleBasedChatPermissions plugin.TValue[bool]
+	AllowShareFile plugin.TValue[bool]
+	AllowOrganizationTab plugin.TValue[bool]
+	AllowSkypeBusinessInterop plugin.TValue[bool]
+	AllowTBotProactiveMessaging plugin.TValue[bool]
+	ContentPin plugin.TValue[string]
+	AllowResourceAccountSendMessage plugin.TValue[bool]
+	ResourceAccountContentAccess plugin.TValue[string]
+	AllowGuestUser plugin.TValue[bool]
+	AllowScopedPeopleSearchandAccess plugin.TValue[bool]
+	AllowedDomains plugin.TValue[[]interface{}]
+}
+
+// createMs365TeamsTeamsClientConfig creates a new instance of this resource
+func createMs365TeamsTeamsClientConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMs365TeamsTeamsClientConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ms365.teams.teamsClientConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMs365TeamsTeamsClientConfig) MqlName() string {
+	return "ms365.teams.teamsClientConfig"
+}
+
+func (c *mqlMs365TeamsTeamsClientConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMs365TeamsTeamsClientConfig) GetIdentity() *plugin.TValue[string] {
+	return &c.Identity
+}
+
+func (c *mqlMs365TeamsTeamsClientConfig) GetAllowEmailIntoChannel() *plugin.TValue[bool] {
+	return &c.AllowEmailIntoChannel
+}
+
+func (c *mqlMs365TeamsTeamsClientConfig) GetRestrictedSenderList() *plugin.TValue[string] {
+	return &c.RestrictedSenderList
+}
+
+func (c *mqlMs365TeamsTeamsClientConfig) GetAllowDropBox() *plugin.TValue[bool] {
+	return &c.AllowDropBox
+}
+
+func (c *mqlMs365TeamsTeamsClientConfig) GetAllowEgnyte() *plugin.TValue[bool] {
+	return &c.AllowEgnyte
+}
+
+func (c *mqlMs365TeamsTeamsClientConfig) GetAllowBox() *plugin.TValue[bool] {
+	return &c.AllowBox
+}
+
+func (c *mqlMs365TeamsTeamsClientConfig) GetAllowGoogleDrive() *plugin.TValue[bool] {
+	return &c.AllowGoogleDrive
+}
+
+func (c *mqlMs365TeamsTeamsClientConfig) GetAllowRoleBasedChatPermissions() *plugin.TValue[bool] {
+	return &c.AllowRoleBasedChatPermissions
+}
+
+func (c *mqlMs365TeamsTeamsClientConfig) GetAllowShareFile() *plugin.TValue[bool] {
+	return &c.AllowShareFile
+}
+
+func (c *mqlMs365TeamsTeamsClientConfig) GetAllowOrganizationTab() *plugin.TValue[bool] {
+	return &c.AllowOrganizationTab
+}
+
+func (c *mqlMs365TeamsTeamsClientConfig) GetAllowSkypeBusinessInterop() *plugin.TValue[bool] {
+	return &c.AllowSkypeBusinessInterop
+}
+
+func (c *mqlMs365TeamsTeamsClientConfig) GetAllowTBotProactiveMessaging() *plugin.TValue[bool] {
+	return &c.AllowTBotProactiveMessaging
+}
+
+func (c *mqlMs365TeamsTeamsClientConfig) GetContentPin() *plugin.TValue[string] {
+	return &c.ContentPin
+}
+
+func (c *mqlMs365TeamsTeamsClientConfig) GetAllowResourceAccountSendMessage() *plugin.TValue[bool] {
+	return &c.AllowResourceAccountSendMessage
+}
+
+func (c *mqlMs365TeamsTeamsClientConfig) GetResourceAccountContentAccess() *plugin.TValue[string] {
+	return &c.ResourceAccountContentAccess
+}
+
+func (c *mqlMs365TeamsTeamsClientConfig) GetAllowGuestUser() *plugin.TValue[bool] {
+	return &c.AllowGuestUser
+}
+
+func (c *mqlMs365TeamsTeamsClientConfig) GetAllowScopedPeopleSearchandAccess() *plugin.TValue[bool] {
+	return &c.AllowScopedPeopleSearchandAccess
+}
+
+func (c *mqlMs365TeamsTeamsClientConfig) GetAllowedDomains() *plugin.TValue[[]interface{}] {
+	return &c.AllowedDomains
 }

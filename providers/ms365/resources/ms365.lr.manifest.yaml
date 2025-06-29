@@ -898,6 +898,31 @@ resources:
     platform:
       name:
       - microsoft365
+  ms365.teams.teamsClientConfig:
+    fields:
+      allowBox: {}
+      allowDropBox: {}
+      allowEgnyte: {}
+      allowEmailIntoChannel: {}
+      allowGoogleDrive: {}
+      allowGuestUser: {}
+      allowOrganizationTab: {}
+      allowResourceAccountSendMessage: {}
+      allowRoleBasedChatPermissions: {}
+      allowScopedPeopleSearchandAccess: {}
+      allowShareFile: {}
+      allowSkypeBusinessInterop: {}
+      allowTBotProactiveMessaging: {}
+      allowedDomains: {}
+      contentPin: {}
+      identity: {}
+      resourceAccountContentAccess: {}
+      restrictedSenderList: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - microsoft365
   ms365.teams.teamsMeetingPolicyConfig:
     fields:
       allowAnonymousUsersToJoinMeeting: {}

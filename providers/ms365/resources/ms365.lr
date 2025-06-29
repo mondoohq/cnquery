@@ -1447,7 +1447,7 @@ private ms365.sharepointonline.site {
 // Microsoft 365 Teams
 ms365.teams {
   // Teams client configuration
-  csTeamsClientConfiguration() dict
+  csTeamsClientConfiguration() ms365.teams.teamsClientConfig
   // Teams tenant federated configuration
   csTenantFederationConfiguration() ms365.teams.tenantFederationConfig
   // Teams meeting policy configuration
@@ -1508,4 +1508,44 @@ private ms365.teams.teamsMeetingPolicyConfig {
 private ms365.teams.teamsMessagingPolicyConfig {
   // Whether users can report security concerns
   allowSecurityEndUserReporting bool
+}
+
+// Microsoft 365 Teams client configuration
+private ms365.teams.teamsClientConfig {
+  // Configuration identity
+  identity string
+  // Whether email into channel is allowed
+  allowEmailIntoChannel bool
+  // Restricted sender list for email into channel
+  restrictedSenderList string
+  // Whether DropBox integration is allowed
+  allowDropBox bool
+  // Whether Egnyte integration is allowed
+  allowEgnyte bool
+  // Whether Box integration is allowed
+  allowBox bool
+  // Whether Google Drive integration is allowed
+  allowGoogleDrive bool
+  // Whether role-based chat permissions are enabled
+  allowRoleBasedChatPermissions bool
+  // Whether ShareFile integration is allowed
+  allowShareFile bool
+  // Whether organization tab is allowed
+  allowOrganizationTab bool
+  // Whether Skype for Business interop is allowed
+  allowSkypeBusinessInterop bool
+  // Whether T-Bot proactive messaging is allowed
+  allowTBotProactiveMessaging bool
+  // Content pin setting for resource accounts
+  contentPin string
+  // Whether resource accounts can send messages
+  allowResourceAccountSendMessage bool
+  // Resource account content access level
+  resourceAccountContentAccess string
+  // Whether guest users are allowed
+  allowGuestUser bool
+  // Whether scoped people search and access is allowed
+  allowScopedPeopleSearchandAccess bool
+  // Allowed domains for external communication (if available in client config)
+  allowedDomains []string
 }

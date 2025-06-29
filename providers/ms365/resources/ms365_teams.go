@@ -66,10 +66,31 @@ ConvertTo-Json -Depth 4 $msteams
 `
 
 type MsTeamsReport struct {
-	CsTeamsClientConfiguration      interface{}                      `json:"CsTeamsClientConfiguration"`
+	CsTeamsClientConfiguration      *CsTeamsClientConfiguration      `json:"CsTeamsClientConfiguration"`
 	CsTenantFederationConfiguration *CsTenantFederationConfiguration `json:"CsTenantFederationConfiguration"`
 	CsTeamsMeetingPolicy            *CsTeamsMeetingPolicy            `json:"CsTeamsMeetingPolicy"`
 	CsTeamsMessagingPolicy          *CsTeamsMessagingPolicy          `json:"CsTeamsMessagingPolicy"`
+}
+
+type CsTeamsClientConfiguration struct {
+	Identity                         string      `json:"Identity"`
+	AllowEmailIntoChannel            bool        `json:"AllowEmailIntoChannel"`
+	RestrictedSenderList             string      `json:"RestrictedSenderList"`
+	AllowDropBox                     bool        `json:"AllowDropBox"`
+	AllowEgnyte                      bool        `json:"AllowEgnyte"`
+	AllowBox                         bool        `json:"AllowBox"`
+	AllowGoogleDrive                 bool        `json:"AllowGoogleDrive"`
+	AllowRoleBasedChatPermissions    bool        `json:"AllowRoleBasedChatPermissions"`
+	AllowShareFile                   bool        `json:"AllowShareFile"`
+	AllowOrganizationTab             bool        `json:"AllowOrganizationTab"`
+	AllowSkypeBusinessInterop        bool        `json:"AllowSkypeBusinessInterop"`
+	AllowTBotProactiveMessaging      bool        `json:"AllowTBotProactiveMessaging"`
+	ContentPin                       string      `json:"ContentPin"`
+	AllowResourceAccountSendMessage  bool        `json:"AllowResourceAccountSendMessage"`
+	ResourceAccountContentAccess     string      `json:"ResourceAccountContentAccess"`
+	AllowGuestUser                   bool        `json:"AllowGuestUser"`
+	AllowScopedPeopleSearchandAccess bool        `json:"AllowScopedPeopleSearchandAccess"`
+	AllowedDomains                   []string    `json:"AllowedDomains"`
 }
 
 type CsTenantFederationConfiguration struct {
@@ -179,10 +200,37 @@ func (r *mqlMs365Teams) gatherTeamsReport() error {
 	}
 
 	if report.CsTeamsClientConfiguration != nil {
-		csTeamsConfiguration, csTeamsConfigurationErr := convert.JsonToDict(report.CsTeamsClientConfiguration)
-		r.CsTeamsClientConfiguration = plugin.TValue[interface{}]{Data: csTeamsConfiguration, State: plugin.StateIsSet, Error: csTeamsConfigurationErr}
+		clientConfig := report.CsTeamsClientConfiguration
+		logger.DebugDumpJSON("ms-teams-client-config", clientConfig)
+
+		mqlClientConfig, mqlClientConfigErr := CreateResource(r.MqlRuntime, "ms365.teams.teamsClientConfig",
+			map[string]*llx.RawData{
+				"identity":                         llx.StringData(clientConfig.Identity),
+				"allowEmailIntoChannel":            llx.BoolData(clientConfig.AllowEmailIntoChannel),
+				"restrictedSenderList":             llx.StringData(clientConfig.RestrictedSenderList),
+				"allowDropBox":                     llx.BoolData(clientConfig.AllowDropBox),
+				"allowEgnyte":                      llx.BoolData(clientConfig.AllowEgnyte),
+				"allowBox":                         llx.BoolData(clientConfig.AllowBox),
+				"allowGoogleDrive":                 llx.BoolData(clientConfig.AllowGoogleDrive),
+				"allowRoleBasedChatPermissions":    llx.BoolData(clientConfig.AllowRoleBasedChatPermissions),
+				"allowShareFile":                   llx.BoolData(clientConfig.AllowShareFile),
+				"allowOrganizationTab":             llx.BoolData(clientConfig.AllowOrganizationTab),
+				"allowSkypeBusinessInterop":        llx.BoolData(clientConfig.AllowSkypeBusinessInterop),
+				"allowTBotProactiveMessaging":      llx.BoolData(clientConfig.AllowTBotProactiveMessaging),
+				"contentPin":                       llx.StringData(clientConfig.ContentPin),
+				"allowResourceAccountSendMessage":  llx.BoolData(clientConfig.AllowResourceAccountSendMessage),
+				"resourceAccountContentAccess":     llx.StringData(clientConfig.ResourceAccountContentAccess),
+				"allowGuestUser":                   llx.BoolData(clientConfig.AllowGuestUser),
+				"allowScopedPeopleSearchandAccess": llx.BoolData(clientConfig.AllowScopedPeopleSearchandAccess),
+				"allowedDomains":                   llx.ArrayData(convert.SliceAnyToInterface(clientConfig.AllowedDomains), types.String),
+			})
+		if mqlClientConfigErr != nil {
+			r.CsTeamsClientConfiguration = plugin.TValue[*mqlMs365TeamsTeamsClientConfig]{State: plugin.StateIsSet, Error: mqlClientConfigErr}
+		} else {
+			r.CsTeamsClientConfiguration = plugin.TValue[*mqlMs365TeamsTeamsClientConfig]{Data: mqlClientConfig.(*mqlMs365TeamsTeamsClientConfig), State: plugin.StateIsSet}
+		}
 	} else {
-		r.CsTeamsClientConfiguration = plugin.TValue[interface{}]{State: plugin.StateIsSet, Error: errors.New("CsTeamsClientConfiguration is nil")}
+		r.CsTeamsClientConfiguration = plugin.TValue[*mqlMs365TeamsTeamsClientConfig]{State: plugin.StateIsSet, Error: errors.New("CsTeamsClientConfiguration is nil")}
 	}
 
 	if report.CsTenantFederationConfiguration != nil {
@@ -252,7 +300,7 @@ func (r *mqlMs365Teams) gatherTeamsReport() error {
 	return nil
 }
 
-func (r *mqlMs365Teams) csTeamsClientConfiguration() (interface{}, error) {
+func (r *mqlMs365Teams) csTeamsClientConfiguration() (*mqlMs365TeamsTeamsClientConfig, error) {
 	return nil, r.gatherTeamsReport()
 }
 
