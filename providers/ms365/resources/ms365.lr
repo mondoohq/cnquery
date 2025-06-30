@@ -14,6 +14,8 @@ microsoft {
   users() microsoft.users
   // List of groups
   groups() microsoft.groups
+  // Group lifecycle policies
+  groupLifecyclePolicies() []microsoft.groupLifecyclePolicy
   // List of domains
   domains() []microsoft.domain
   // List of applications
@@ -678,6 +680,18 @@ private microsoft.group @defaults("id displayName") {
   membershipRule string
   // State of the processing for the dynamic membership rule
   membershipRuleProcessingState string
+}
+
+// Microsoft group lifecycle policy
+private microsoft.groupLifecyclePolicy @defaults("groupLifetimeInDays managedGroupTypes alternateNotificationEmails") {
+  // Policy ID
+  id string
+  // Number of days before a group expires and is automatically deleted
+  groupLifetimeInDays int
+  // The group type for which the policies will apply
+  managedGroupTypes string
+  // List of email addresses to send notifications for groups without owners
+  alternateNotificationEmails string
 }
 
 // List of Microsoft Entra devices
