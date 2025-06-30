@@ -148,8 +148,8 @@ func ResourceTechnologyUrl(service, project, region, objectType, name string) []
 		}
 	case "cloud-sql":
 		switch objectType {
-		case "instance":
-			return []string{"gcp", project, "cloud-sql", region, "instance"}
+		case "mysql", "postgres", "sqlserver":
+			return []string{"gcp", project, "cloud-sql", region, objectType}
 		default:
 			return []string{"gcp", project, "cloud-sql", region, "other"}
 		}

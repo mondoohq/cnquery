@@ -6,6 +6,8 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/google/go-containerregistry/pkg/name"
@@ -444,18 +446,21 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 
 		for i := range sqlinstances.Data {
 			sqlinstance := sqlinstances.Data[i].(*mqlGcpProjectSqlServiceInstance)
+
+			sqlTypeVersion := strings.Split(sqlinstance.DatabaseInstalledVersion.Data, "_")
+			sqlType := strings.ToLower(sqlTypeVersion[0])
 			assetList = append(assetList, &inventory.Asset{
 				PlatformIds: []string{
-					connection.NewResourcePlatformID("cloud-sql", gcpProject.Id.Data, sqlinstance.Region.Data, "instance", sqlinstance.Name.Data),
+					connection.NewResourcePlatformID("cloud-sql", gcpProject.Id.Data, sqlinstance.Region.Data, sqlType, sqlinstance.Name.Data),
 				},
 				Name: sqlinstance.Name.Data,
 				Platform: &inventory.Platform{
-					Name:                  "gcp-sql-instance",
-					Title:                 "GCP Cloud SQL",
+					Name:                  fmt.Sprintf("gcp-sql-%s", sqlType),
+					Title:                 fmt.Sprintf("GCP Cloud SQL (%s)", sqlTypeVersion[0]),
 					Runtime:               "gcp",
 					Kind:                  "gcp-object",
 					Family:                []string{"google"},
-					TechnologyUrlSegments: connection.ResourceTechnologyUrl("cloud-sql", gcpProject.Id.Data, sqlinstance.Region.Data, "instance", sqlinstance.Name.Data),
+					TechnologyUrlSegments: connection.ResourceTechnologyUrl("cloud-sql", gcpProject.Id.Data, sqlinstance.Region.Data, sqlType, sqlinstance.Name.Data),
 				},
 				Labels:      map[string]string{},
 				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))}, // pass-in the parent connection config
