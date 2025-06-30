@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"sync"
 
@@ -37,10 +38,15 @@ const (
 	DiscoveryGkeClusters        = "gke-clusters"
 	DiscoveryStorageBuckets     = "storage-buckets"
 	DiscoveryBigQueryDatasets   = "bigquery-datasets"
-	DiscoverCloudSQLs           = "cloud-sqls"
+	DiscoverCloudSQLMySQL       = "cloud-sql-mysql"
+	DiscoverCloudSQLPostgres    = "cloud-sql-postgres"
+	DiscoverCloudSQLSQLServer   = "cloud-sql-sqlserver"
 	DiscoverCloudDNSZones       = "cloud-dns-zones"
 	DiscoverCloudKMSKeyrings    = "cloud-kms-keyrings"
 )
+
+// List of all CloudSQL types, this will be used during discovery
+var AllCloudSQLTypes = []string{DiscoverCloudSQLPostgres, DiscoverCloudSQLSQLServer, DiscoverCloudSQLMySQL}
 
 func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 	conn, ok := runtime.Connection.(*connection.GcpConnection)
@@ -434,7 +440,8 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 			})
 		}
 	}
-	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, append(targets, DiscoverCloudSQLs)...) {
+	// all Cloud SQL dicovery flags/types
+	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, append(targets, AllCloudSQLTypes...)...) {
 		sqlservice := gcpProject.GetSql()
 		if sqlservice.Error != nil {
 			return nil, sqlservice.Error
@@ -445,10 +452,19 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 		}
 
 		for i := range sqlinstances.Data {
-			sqlinstance := sqlinstances.Data[i].(*mqlGcpProjectSqlServiceInstance)
+			var (
+				sqlinstance    = sqlinstances.Data[i].(*mqlGcpProjectSqlServiceInstance)
+				sqlTypeVersion = strings.Split(sqlinstance.DatabaseInstalledVersion.Data, "_")
+				sqlType        = strings.ToLower(sqlTypeVersion[0])
+			)
 
-			sqlTypeVersion := strings.Split(sqlinstance.DatabaseInstalledVersion.Data, "_")
-			sqlType := strings.ToLower(sqlTypeVersion[0])
+			if !slices.Contains(conn.Conf.Discover.Targets, fmt.Sprintf("cloud-sql-%s", sqlType)) {
+				log.Debug().
+					Str("sql_type", sqlType).
+					Msg("gcp.discovery> skipping cloud sql instance")
+				continue // only discover known sql types
+			}
+
 			assetList = append(assetList, &inventory.Asset{
 				PlatformIds: []string{
 					connection.NewResourcePlatformID("cloud-sql", gcpProject.Id.Data, sqlinstance.Region.Data, sqlType, sqlinstance.Name.Data),

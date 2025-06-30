@@ -111,8 +111,12 @@ func getTitleForPlatformName(name string) string {
 		return "GCP Storage Bucket"
 	case "gcp-bigquery-dataset":
 		return "GCP BigQuery Dataset"
-	case "gcp-sql-instance":
-		return "GCP Cloud SQL"
+	case "gcp-sql-mysql":
+		return "GCP Cloud SQL MySQL"
+	case "gcp-sql-postgres":
+		return "GCP Cloud SQL Postgres"
+	case "gcp-sql-sqlserver":
+		return "GCP Cloud SQL SQL Server"
 	case "gcp-dns-zone":
 		return "GCP Cloud DNS Zone"
 	case "gcp-kms-keyring":
