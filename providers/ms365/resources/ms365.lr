@@ -129,6 +129,8 @@ microsoft.identityAndAccess {
 
   // Get the instances of role eligibilities
   roleEligibilityScheduleInstances() []microsoft.identityAndAccess.roleEligibilityScheduleInstance
+  // Identity and sign-in policies
+  identityAndSignIn() microsoft.identityAndAccess.identityAndSignIn
 }
 
 // Represents an instance of a role eligibility in PIM
@@ -195,6 +197,30 @@ private microsoft.identityAndAccess.policy.rule.target {
   level string
   // The role management operations that are the target of the policy rule
   operations []string
+}
+
+// Container for identity and sign-in policies
+microsoft.identityAndAccess.identityAndSignIn {
+  // Identity and sign-in policies
+  policies() microsoft.identityAndAccess.identityAndSignIn.policies
+}
+
+// Container for various identity and sign-in policies
+microsoft.identityAndAccess.identityAndSignIn.policies {
+  // Identity security defaults enforcement policy
+  identitySecurityDefaultsEnforcementPolicy() microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy
+}
+
+// Identity security defaults enforcement policy
+private microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy @defaults("id displayName isEnabled") {
+  // The unique identifier for the policy
+  id string
+  // The display name for the policy
+  displayName string
+  // The description for the policy
+  description string
+  // If set to true, Azure Entra ID security defaults is enabled for the tenant
+  isEnabled bool
 }
 
 // A single license assigned to a user
