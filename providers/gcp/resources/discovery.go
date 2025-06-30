@@ -36,7 +36,8 @@ const (
 	DiscoveryStorageBuckets     = "storage-buckets"
 	DiscoveryBigQueryDatasets   = "bigquery-datasets"
 	DiscoverCloudSQLs           = "cloud-sqls"
-	DiscoverCloudDNS            = "cloud-dns"
+	DiscoverCloudDNSZones       = "cloud-dns-zones"
+	DiscoverCloudKMSKeyrings    = "cloud-kms-keyrings"
 )
 
 func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
@@ -371,7 +372,37 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 			})
 		}
 	}
-	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, append(targets, DiscoverCloudDNS)...) {
+	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, append(targets, DiscoverCloudKMSKeyrings)...) {
+		kmsservice := gcpProject.GetKms()
+		if kmsservice.Error != nil {
+			return nil, kmsservice.Error
+		}
+		keyrings := kmsservice.Data.GetKeyrings()
+		if keyrings.Error != nil {
+			return nil, keyrings.Error
+		}
+
+		for i := range keyrings.Data {
+			keyring := keyrings.Data[i].(*mqlGcpProjectKmsServiceKeyring)
+			assetList = append(assetList, &inventory.Asset{
+				PlatformIds: []string{
+					connection.NewResourcePlatformID("cloud-kms", gcpProject.Id.Data, keyring.Location.Data, "keyring", keyring.Name.Data),
+				},
+				Name: keyring.Name.Data,
+				Platform: &inventory.Platform{
+					Name:                  "gcp-kms-keyring",
+					Title:                 "GCP Cloud KMS Keyring",
+					Runtime:               "gcp",
+					Kind:                  "gcp-object",
+					Family:                []string{"google"},
+					TechnologyUrlSegments: connection.ResourceTechnologyUrl("cloud-kms", gcpProject.Id.Data, keyring.Location.Data, "keyring", keyring.Name.Data),
+				},
+				Labels:      map[string]string{},
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))}, // pass-in the parent connection config
+			})
+		}
+	}
+	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, append(targets, DiscoverCloudDNSZones)...) {
 		dnsservice := gcpProject.GetDns()
 		if dnsservice.Error != nil {
 			return nil, dnsservice.Error
@@ -390,7 +421,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 				Name: managedzone.Name.Data,
 				Platform: &inventory.Platform{
 					Name:                  "gcp-dns-zone",
-					Title:                 "GCP Cloud DNS",
+					Title:                 "GCP Cloud DNS Zone",
 					Runtime:               "gcp",
 					Kind:                  "gcp-object",
 					Family:                []string{"google"},

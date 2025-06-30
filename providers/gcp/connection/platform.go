@@ -114,7 +114,9 @@ func getTitleForPlatformName(name string) string {
 	case "gcp-sql-instance":
 		return "GCP Cloud SQL"
 	case "gcp-dns-zone":
-		return "GCP Cloud DNS"
+		return "GCP Cloud DNS Zone"
+	case "gcp-kms-keyring":
+		return "GCP Cloud KMS Keyring"
 	}
 	return "Google Cloud Platform"
 }
@@ -157,6 +159,13 @@ func ResourceTechnologyUrl(service, project, region, objectType, name string) []
 			return []string{"gcp", project, "cloud-dns", region, "zone"}
 		default:
 			return []string{"gcp", project, "cloud-dns", region, "other"}
+		}
+	case "cloud-kms":
+		switch objectType {
+		case "keyring":
+			return []string{"gcp", project, "cloud-kms", region, "keyring"}
+		default:
+			return []string{"gcp", project, "cloud-kms", region, "other"}
 		}
 	default:
 		return []string{"gcp", project, "other"}
