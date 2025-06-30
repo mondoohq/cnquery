@@ -505,12 +505,20 @@ resources:
     min_mondoo_version: 9.0.0
   microsoft.policies:
     fields:
+      activityBasedTimeoutPolicies: {}
       adminConsentRequestPolicy: {}
       authenticationMethodsPolicy: {}
       authorizationPolicy: {}
       consentPolicySettings: {}
       identitySecurityDefaultsEnforcementPolicy: {}
       permissionGrantPolicies: {}
+    min_mondoo_version: 9.0.0
+  microsoft.policies.activityBasedTimeoutPolicy:
+    fields:
+      definition: {}
+      displayName: {}
+      id: {}
+      isOrganizationDefault: {}
     min_mondoo_version: 9.0.0
   microsoft.policies.authenticationMethodConfiguration:
     fields:

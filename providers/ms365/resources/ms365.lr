@@ -1104,6 +1104,21 @@ microsoft.policies {
   consentPolicySettings() dict
   // Authentication methods policy
   authenticationMethodsPolicy() microsoft.policies.authenticationMethodsPolicy
+  // Activity-based timeout policies
+  activityBasedTimeoutPolicies() []microsoft.policies.activityBasedTimeoutPolicy
+}
+
+// Activity-based timeout policy
+microsoft.policies.activityBasedTimeoutPolicy @defaults("displayName isOrganizationDefault") {
+  // Policy ID
+  id string
+  // Policy display name
+  displayName string
+  // Policy definition
+  definition []string
+  // If set to true, activates this policy. There can be many policies for the same policy 
+  // type, but only one can be activated as the organization default.
+  isOrganizationDefault bool
 }
 
 private microsoft.adminConsentRequestPolicy @defaults("isEnabled notifyReviewers") {
