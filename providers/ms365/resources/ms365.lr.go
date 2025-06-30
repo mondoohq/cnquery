@@ -270,6 +270,10 @@ func init() {
 			// to override args, implement: initMicrosoftPolicies(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftPolicies,
 		},
+		"microsoft.policies.activityBasedTimeoutPolicy": {
+			// to override args, implement: initMicrosoftPoliciesActivityBasedTimeoutPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftPoliciesActivityBasedTimeoutPolicy,
+		},
 		"microsoft.adminConsentRequestPolicy": {
 			// to override args, implement: initMicrosoftAdminConsentRequestPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftAdminConsentRequestPolicy,
@@ -1711,6 +1715,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.policies.authenticationMethodsPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftPolicies).GetAuthenticationMethodsPolicy()).ToDataRes(types.Resource("microsoft.policies.authenticationMethodsPolicy"))
+	},
+	"microsoft.policies.activityBasedTimeoutPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPolicies).GetActivityBasedTimeoutPolicies()).ToDataRes(types.Array(types.Resource("microsoft.policies.activityBasedTimeoutPolicy")))
+	},
+	"microsoft.policies.activityBasedTimeoutPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesActivityBasedTimeoutPolicy).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.policies.activityBasedTimeoutPolicy.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesActivityBasedTimeoutPolicy).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.policies.activityBasedTimeoutPolicy.definition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesActivityBasedTimeoutPolicy).GetDefinition()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.policies.activityBasedTimeoutPolicy.isOrganizationDefault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesActivityBasedTimeoutPolicy).GetIsOrganizationDefault()).ToDataRes(types.Bool)
 	},
 	"microsoft.adminConsentRequestPolicy.isEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftAdminConsentRequestPolicy).GetIsEnabled()).ToDataRes(types.Bool)
@@ -4184,6 +4203,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.policies.authenticationMethodsPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftPolicies).AuthenticationMethodsPolicy, ok = plugin.RawToTValue[*mqlMicrosoftPoliciesAuthenticationMethodsPolicy](v.Value, v.Error)
+		return
+	},
+	"microsoft.policies.activityBasedTimeoutPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPolicies).ActivityBasedTimeoutPolicies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.policies.activityBasedTimeoutPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftPoliciesActivityBasedTimeoutPolicy).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.policies.activityBasedTimeoutPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesActivityBasedTimeoutPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.policies.activityBasedTimeoutPolicy.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesActivityBasedTimeoutPolicy).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.policies.activityBasedTimeoutPolicy.definition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesActivityBasedTimeoutPolicy).Definition, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.policies.activityBasedTimeoutPolicy.isOrganizationDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesActivityBasedTimeoutPolicy).IsOrganizationDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"microsoft.adminConsentRequestPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10126,6 +10169,7 @@ type mqlMicrosoftPolicies struct {
 	PermissionGrantPolicies plugin.TValue[[]interface{}]
 	ConsentPolicySettings plugin.TValue[interface{}]
 	AuthenticationMethodsPolicy plugin.TValue[*mqlMicrosoftPoliciesAuthenticationMethodsPolicy]
+	ActivityBasedTimeoutPolicies plugin.TValue[[]interface{}]
 }
 
 // createMicrosoftPolicies creates a new instance of this resource
@@ -10214,6 +10258,81 @@ func (c *mqlMicrosoftPolicies) GetAuthenticationMethodsPolicy() *plugin.TValue[*
 
 		return c.authenticationMethodsPolicy()
 	})
+}
+
+func (c *mqlMicrosoftPolicies) GetActivityBasedTimeoutPolicies() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.ActivityBasedTimeoutPolicies, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.policies", c.__id, "activityBasedTimeoutPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.activityBasedTimeoutPolicies()
+	})
+}
+
+// mqlMicrosoftPoliciesActivityBasedTimeoutPolicy for the microsoft.policies.activityBasedTimeoutPolicy resource
+type mqlMicrosoftPoliciesActivityBasedTimeoutPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftPoliciesActivityBasedTimeoutPolicyInternal it will be used here
+	Id plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	Definition plugin.TValue[[]interface{}]
+	IsOrganizationDefault plugin.TValue[bool]
+}
+
+// createMicrosoftPoliciesActivityBasedTimeoutPolicy creates a new instance of this resource
+func createMicrosoftPoliciesActivityBasedTimeoutPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftPoliciesActivityBasedTimeoutPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.policies.activityBasedTimeoutPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftPoliciesActivityBasedTimeoutPolicy) MqlName() string {
+	return "microsoft.policies.activityBasedTimeoutPolicy"
+}
+
+func (c *mqlMicrosoftPoliciesActivityBasedTimeoutPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftPoliciesActivityBasedTimeoutPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftPoliciesActivityBasedTimeoutPolicy) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftPoliciesActivityBasedTimeoutPolicy) GetDefinition() *plugin.TValue[[]interface{}] {
+	return &c.Definition
+}
+
+func (c *mqlMicrosoftPoliciesActivityBasedTimeoutPolicy) GetIsOrganizationDefault() *plugin.TValue[bool] {
+	return &c.IsOrganizationDefault
 }
 
 // mqlMicrosoftAdminConsentRequestPolicy for the microsoft.adminConsentRequestPolicy resource

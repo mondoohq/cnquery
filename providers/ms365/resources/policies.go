@@ -124,6 +124,38 @@ func (a *mqlMicrosoftPolicies) authenticationMethodsPolicy() (*mqlMicrosoftPolic
 	return newAuthenticationMethodsPolicy(a.MqlRuntime, resp)
 }
 
+func (a *mqlMicrosoftPolicies) activityBasedTimeoutPolicies() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	resp, err := graphClient.Policies().ActivityBasedTimeoutPolicies().Get(ctx, nil)
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	var activityBasedTimeoutPolicies []interface{}
+	for _, policy := range resp.GetValue() {
+		mqlPolicy, err := CreateResource(a.MqlRuntime, "microsoft.policies.activityBasedTimeoutPolicy",
+			map[string]*llx.RawData{
+				"__id":                  llx.StringDataPtr(policy.GetId()),
+				"id":                    llx.StringDataPtr(policy.GetId()),
+				"definition":            llx.ArrayData(convert.SliceAnyToInterface(policy.GetDefinition()), types.String),
+				"displayName":           llx.StringDataPtr(policy.GetDisplayName()),
+				"isOrganizationDefault": llx.BoolDataPtr(policy.GetIsOrganizationDefault()),
+			})
+		if err != nil {
+			return nil, err
+		}
+		activityBasedTimeoutPolicies = append(activityBasedTimeoutPolicies, mqlPolicy)
+	}
+
+	return activityBasedTimeoutPolicies, nil
+}
+
 func newAuthenticationMethodsPolicy(runtime *plugin.Runtime, policy models.AuthenticationMethodsPolicyable) (*mqlMicrosoftPoliciesAuthenticationMethodsPolicy, error) {
 	authMethodConfigs, err := newAuthenticationMethodConfigurations(runtime, policy.GetAuthenticationMethodConfigurations())
 	if err != nil {
