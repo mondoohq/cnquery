@@ -111,6 +111,8 @@ func getTitleForPlatformName(name string) string {
 		return "GCP Storage Bucket"
 	case "gcp-bigquery-dataset":
 		return "GCP BigQuery Dataset"
+	case "gcp-sql-instance":
+		return "GCP Cloud SQL"
 	}
 	return "Google Cloud Platform"
 }
@@ -139,6 +141,13 @@ func ResourceTechnologyUrl(service, project, region, objectType, name string) []
 			return []string{"gcp", project, "gke", region, objectType}
 		default:
 			return []string{"gcp", project, "gke", region, "other"}
+		}
+	case "cloud-sql":
+		switch objectType {
+		case "instance":
+			return []string{"gcp", project, "cloud-sql", region, "instance"}
+		default:
+			return []string{"gcp", project, "cloud-sql", region, "other"}
 		}
 	default:
 		return []string{"gcp", project, "other"}

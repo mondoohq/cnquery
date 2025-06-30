@@ -35,6 +35,7 @@ const (
 	DiscoveryGkeClusters        = "gke-clusters"
 	DiscoveryStorageBuckets     = "storage-buckets"
 	DiscoveryBigQueryDatasets   = "bigquery-datasets"
+	DiscoverCloudSQLs           = "cloud-sqls"
 )
 
 func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
@@ -365,6 +366,36 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 					TechnologyUrlSegments: connection.ResourceTechnologyUrl("compute", gcpProject.Id.Data, "global", "image", image.Name.Data),
 				},
 				Labels:      labels,
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))}, // pass-in the parent connection config
+			})
+		}
+	}
+	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, append(targets, DiscoverCloudSQLs)...) {
+		sqlservice := gcpProject.GetSql()
+		if sqlservice.Error != nil {
+			return nil, sqlservice.Error
+		}
+		sqlinstances := sqlservice.Data.GetInstances()
+		if sqlinstances.Error != nil {
+			return nil, sqlinstances.Error
+		}
+
+		for i := range sqlinstances.Data {
+			sqlinstance := sqlinstances.Data[i].(*mqlGcpProjectSqlServiceInstance)
+			assetList = append(assetList, &inventory.Asset{
+				PlatformIds: []string{
+					connection.NewResourcePlatformID("cloud-sql", gcpProject.Id.Data, sqlinstance.Region.Data, "instance", sqlinstance.Name.Data),
+				},
+				Name: sqlinstance.Name.Data,
+				Platform: &inventory.Platform{
+					Name:                  "gcp-sql-instance",
+					Title:                 "GCP Cloud SQL",
+					Runtime:               "gcp",
+					Kind:                  "gcp-object",
+					Family:                []string{"google"},
+					TechnologyUrlSegments: connection.ResourceTechnologyUrl("cloud-sql", gcpProject.Id.Data, sqlinstance.Region.Data, "instance", sqlinstance.Name.Data),
+				},
+				Labels:      map[string]string{},
 				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))}, // pass-in the parent connection config
 			})
 		}
