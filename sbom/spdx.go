@@ -73,7 +73,7 @@ func (s *Spdx) convertToSpdx(bom *Sbom) *spdx.Document {
 		if pkg.Purl != "" {
 			refs = append(refs, &spdx.PackageExternalReference{
 				RefType:  spdx.PackageManagerPURL,
-				Category: spdx.CategorySecurity,
+				Category: spdx.CategoryPackageManager,
 				Locator:  pkg.Purl,
 			})
 		}

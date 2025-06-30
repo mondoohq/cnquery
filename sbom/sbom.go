@@ -3,7 +3,7 @@
 
 package sbom
 
-//go:generate protoc --proto_path=. --go_out=. --go_opt=paths=source_relative sbom.proto
+//go:generate protoc --proto_path=. --go_out=. --go_opt=paths=source_relative cnquery_sbom.proto
 
 import (
 	"cmp"

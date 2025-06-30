@@ -9,7 +9,7 @@
     "tools": {
       "components": [
         {
-          "type": "",
+          "type": "application",
           "author": "Mondoo, Inc.",
           "name": "cnquery",
           "version": "v11.3.1"
