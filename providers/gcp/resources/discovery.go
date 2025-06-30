@@ -36,6 +36,7 @@ const (
 	DiscoveryStorageBuckets     = "storage-buckets"
 	DiscoveryBigQueryDatasets   = "bigquery-datasets"
 	DiscoverCloudSQLs           = "cloud-sqls"
+	DiscoverCloudDNS            = "cloud-dns"
 )
 
 func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
@@ -366,6 +367,36 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 					TechnologyUrlSegments: connection.ResourceTechnologyUrl("compute", gcpProject.Id.Data, "global", "image", image.Name.Data),
 				},
 				Labels:      labels,
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))}, // pass-in the parent connection config
+			})
+		}
+	}
+	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, append(targets, DiscoverCloudDNS)...) {
+		dnsservice := gcpProject.GetDns()
+		if dnsservice.Error != nil {
+			return nil, dnsservice.Error
+		}
+		managedzones := dnsservice.Data.GetManagedZones()
+		if managedzones.Error != nil {
+			return nil, managedzones.Error
+		}
+
+		for i := range managedzones.Data {
+			managedzone := managedzones.Data[i].(*mqlGcpProjectDnsServiceManagedzone)
+			assetList = append(assetList, &inventory.Asset{
+				PlatformIds: []string{
+					connection.NewResourcePlatformID("cloud-dns", gcpProject.Id.Data, "global", "zone", managedzone.Id.Data),
+				},
+				Name: managedzone.Name.Data,
+				Platform: &inventory.Platform{
+					Name:                  "gcp-dns-zone",
+					Title:                 "GCP Cloud DNS",
+					Runtime:               "gcp",
+					Kind:                  "gcp-object",
+					Family:                []string{"google"},
+					TechnologyUrlSegments: connection.ResourceTechnologyUrl("cloud-dns", gcpProject.Id.Data, "global", "zone", managedzone.Name.Data),
+				},
+				Labels:      map[string]string{},
 				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))}, // pass-in the parent connection config
 			})
 		}

@@ -113,6 +113,8 @@ func getTitleForPlatformName(name string) string {
 		return "GCP BigQuery Dataset"
 	case "gcp-sql-instance":
 		return "GCP Cloud SQL"
+	case "gcp-dns-zone":
+		return "GCP Cloud DNS"
 	}
 	return "Google Cloud Platform"
 }
@@ -148,6 +150,13 @@ func ResourceTechnologyUrl(service, project, region, objectType, name string) []
 			return []string{"gcp", project, "cloud-sql", region, "instance"}
 		default:
 			return []string{"gcp", project, "cloud-sql", region, "other"}
+		}
+	case "cloud-dns":
+		switch objectType {
+		case "zone":
+			return []string{"gcp", project, "cloud-dns", region, "zone"}
+		default:
+			return []string{"gcp", project, "cloud-dns", region, "other"}
 		}
 	default:
 		return []string{"gcp", project, "other"}
