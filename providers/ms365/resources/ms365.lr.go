@@ -206,6 +206,10 @@ func init() {
 			// to override args, implement: initMicrosoftGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftGroup,
 		},
+		"microsoft.groupLifecyclePolicy": {
+			// to override args, implement: initMicrosoftGroupLifecyclePolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftGroupLifecyclePolicy,
+		},
 		"microsoft.devices": {
 			Init: initMicrosoftDevices,
 			Create: createMicrosoftDevices,
@@ -450,6 +454,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.groups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoft).GetGroups()).ToDataRes(types.Resource("microsoft.groups"))
+	},
+	"microsoft.groupLifecyclePolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoft).GetGroupLifecyclePolicies()).ToDataRes(types.Array(types.Resource("microsoft.groupLifecyclePolicy")))
 	},
 	"microsoft.domains": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoft).GetDomains()).ToDataRes(types.Array(types.Resource("microsoft.domain")))
@@ -1206,6 +1213,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.group.membershipRuleProcessingState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftGroup).GetMembershipRuleProcessingState()).ToDataRes(types.String)
+	},
+	"microsoft.groupLifecyclePolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftGroupLifecyclePolicy).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.groupLifecyclePolicy.groupLifetimeInDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftGroupLifecyclePolicy).GetGroupLifetimeInDays()).ToDataRes(types.Int)
+	},
+	"microsoft.groupLifecyclePolicy.managedGroupTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftGroupLifecyclePolicy).GetManagedGroupTypes()).ToDataRes(types.String)
+	},
+	"microsoft.groupLifecyclePolicy.alternateNotificationEmails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftGroupLifecyclePolicy).GetAlternateNotificationEmails()).ToDataRes(types.String)
 	},
 	"microsoft.devices.filter": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevices).GetFilter()).ToDataRes(types.String)
@@ -2241,6 +2260,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoft).Groups, ok = plugin.RawToTValue[*mqlMicrosoftGroups](v.Value, v.Error)
+		return
+	},
+	"microsoft.groupLifecyclePolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoft).GroupLifecyclePolicies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"microsoft.domains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3433,6 +3456,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.group.membershipRuleProcessingState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftGroup).MembershipRuleProcessingState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.groupLifecyclePolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftGroupLifecyclePolicy).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.groupLifecyclePolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftGroupLifecyclePolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.groupLifecyclePolicy.groupLifetimeInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftGroupLifecyclePolicy).GroupLifetimeInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"microsoft.groupLifecyclePolicy.managedGroupTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftGroupLifecyclePolicy).ManagedGroupTypes, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.groupLifecyclePolicy.alternateNotificationEmails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftGroupLifecyclePolicy).AlternateNotificationEmails, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.devices.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4979,6 +5022,7 @@ type mqlMicrosoft struct {
 	Organizations plugin.TValue[[]interface{}]
 	Users plugin.TValue[*mqlMicrosoftUsers]
 	Groups plugin.TValue[*mqlMicrosoftGroups]
+	GroupLifecyclePolicies plugin.TValue[[]interface{}]
 	Domains plugin.TValue[[]interface{}]
 	Applications plugin.TValue[*mqlMicrosoftApplications]
 	Serviceprincipals plugin.TValue[[]interface{}]
@@ -5066,6 +5110,22 @@ func (c *mqlMicrosoft) GetGroups() *plugin.TValue[*mqlMicrosoftGroups] {
 		}
 
 		return c.groups()
+	})
+}
+
+func (c *mqlMicrosoft) GetGroupLifecyclePolicies() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.GroupLifecyclePolicies, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft", c.__id, "groupLifecyclePolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.groupLifecyclePolicies()
 	})
 }
 
@@ -8531,6 +8591,65 @@ func (c *mqlMicrosoftGroup) GetMembershipRule() *plugin.TValue[string] {
 
 func (c *mqlMicrosoftGroup) GetMembershipRuleProcessingState() *plugin.TValue[string] {
 	return &c.MembershipRuleProcessingState
+}
+
+// mqlMicrosoftGroupLifecyclePolicy for the microsoft.groupLifecyclePolicy resource
+type mqlMicrosoftGroupLifecyclePolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftGroupLifecyclePolicyInternal it will be used here
+	Id plugin.TValue[string]
+	GroupLifetimeInDays plugin.TValue[int64]
+	ManagedGroupTypes plugin.TValue[string]
+	AlternateNotificationEmails plugin.TValue[string]
+}
+
+// createMicrosoftGroupLifecyclePolicy creates a new instance of this resource
+func createMicrosoftGroupLifecyclePolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftGroupLifecyclePolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.groupLifecyclePolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftGroupLifecyclePolicy) MqlName() string {
+	return "microsoft.groupLifecyclePolicy"
+}
+
+func (c *mqlMicrosoftGroupLifecyclePolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftGroupLifecyclePolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftGroupLifecyclePolicy) GetGroupLifetimeInDays() *plugin.TValue[int64] {
+	return &c.GroupLifetimeInDays
+}
+
+func (c *mqlMicrosoftGroupLifecyclePolicy) GetManagedGroupTypes() *plugin.TValue[string] {
+	return &c.ManagedGroupTypes
+}
+
+func (c *mqlMicrosoftGroupLifecyclePolicy) GetAlternateNotificationEmails() *plugin.TValue[string] {
+	return &c.AlternateNotificationEmails
 }
 
 // mqlMicrosoftDevices for the microsoft.devices resource

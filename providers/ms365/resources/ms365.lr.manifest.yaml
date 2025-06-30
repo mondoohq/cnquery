@@ -7,6 +7,7 @@ resources:
       applications: {}
       domains: {}
       enterpriseApplications: {}
+      groupLifecyclePolicies: {}
       groups: {}
       identityAndAccess: {}
       organizations: {}
@@ -403,6 +404,14 @@ resources:
       membershipRuleProcessingState: {}
       securityEnabled: {}
       visibility: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.groupLifecyclePolicy:
+    fields:
+      alternateNotificationEmails: {}
+      groupLifetimeInDays: {}
+      id: {}
+      managedGroupTypes: {}
     is_private: true
     min_mondoo_version: 9.0.0
   microsoft.groups:
