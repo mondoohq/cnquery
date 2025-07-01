@@ -510,6 +510,7 @@ resources:
       authenticationMethodsPolicy: {}
       authorizationPolicy: {}
       consentPolicySettings: {}
+      externalIdentitiesPolicy: {}
       identitySecurityDefaultsEnforcementPolicy: {}
       permissionGrantPolicies: {}
     min_mondoo_version: 9.0.0
@@ -535,6 +536,14 @@ resources:
       id: {}
       lastModifiedDateTime: {}
       policyVersion: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.policies.externalIdentitiesPolicy:
+    fields:
+      allowExternalIdentitiesToLeave: {}
+      description: {}
+      displayName: {}
+      id: {}
     is_private: true
     min_mondoo_version: 9.0.0
   microsoft.rolemanagement:

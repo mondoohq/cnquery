@@ -270,6 +270,10 @@ func init() {
 			// to override args, implement: initMicrosoftPolicies(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftPolicies,
 		},
+		"microsoft.policies.externalIdentitiesPolicy": {
+			// to override args, implement: initMicrosoftPoliciesExternalIdentitiesPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftPoliciesExternalIdentitiesPolicy,
+		},
 		"microsoft.policies.activityBasedTimeoutPolicy": {
 			// to override args, implement: initMicrosoftPoliciesActivityBasedTimeoutPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftPoliciesActivityBasedTimeoutPolicy,
@@ -1718,6 +1722,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.policies.activityBasedTimeoutPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftPolicies).GetActivityBasedTimeoutPolicies()).ToDataRes(types.Array(types.Resource("microsoft.policies.activityBasedTimeoutPolicy")))
+	},
+	"microsoft.policies.externalIdentitiesPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPolicies).GetExternalIdentitiesPolicy()).ToDataRes(types.Resource("microsoft.policies.externalIdentitiesPolicy"))
+	},
+	"microsoft.policies.externalIdentitiesPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesExternalIdentitiesPolicy).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.policies.externalIdentitiesPolicy.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesExternalIdentitiesPolicy).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.policies.externalIdentitiesPolicy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesExternalIdentitiesPolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"microsoft.policies.externalIdentitiesPolicy.allowExternalIdentitiesToLeave": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesExternalIdentitiesPolicy).GetAllowExternalIdentitiesToLeave()).ToDataRes(types.Bool)
 	},
 	"microsoft.policies.activityBasedTimeoutPolicy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftPoliciesActivityBasedTimeoutPolicy).GetId()).ToDataRes(types.String)
@@ -4207,6 +4226,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.policies.activityBasedTimeoutPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftPolicies).ActivityBasedTimeoutPolicies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.policies.externalIdentitiesPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPolicies).ExternalIdentitiesPolicy, ok = plugin.RawToTValue[*mqlMicrosoftPoliciesExternalIdentitiesPolicy](v.Value, v.Error)
+		return
+	},
+	"microsoft.policies.externalIdentitiesPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftPoliciesExternalIdentitiesPolicy).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.policies.externalIdentitiesPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesExternalIdentitiesPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.policies.externalIdentitiesPolicy.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesExternalIdentitiesPolicy).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.policies.externalIdentitiesPolicy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesExternalIdentitiesPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.policies.externalIdentitiesPolicy.allowExternalIdentitiesToLeave": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesExternalIdentitiesPolicy).AllowExternalIdentitiesToLeave, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"microsoft.policies.activityBasedTimeoutPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10170,6 +10213,7 @@ type mqlMicrosoftPolicies struct {
 	ConsentPolicySettings plugin.TValue[interface{}]
 	AuthenticationMethodsPolicy plugin.TValue[*mqlMicrosoftPoliciesAuthenticationMethodsPolicy]
 	ActivityBasedTimeoutPolicies plugin.TValue[[]interface{}]
+	ExternalIdentitiesPolicy plugin.TValue[*mqlMicrosoftPoliciesExternalIdentitiesPolicy]
 }
 
 // createMicrosoftPolicies creates a new instance of this resource
@@ -10274,6 +10318,81 @@ func (c *mqlMicrosoftPolicies) GetActivityBasedTimeoutPolicies() *plugin.TValue[
 
 		return c.activityBasedTimeoutPolicies()
 	})
+}
+
+func (c *mqlMicrosoftPolicies) GetExternalIdentitiesPolicy() *plugin.TValue[*mqlMicrosoftPoliciesExternalIdentitiesPolicy] {
+	return plugin.GetOrCompute[*mqlMicrosoftPoliciesExternalIdentitiesPolicy](&c.ExternalIdentitiesPolicy, func() (*mqlMicrosoftPoliciesExternalIdentitiesPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.policies", c.__id, "externalIdentitiesPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftPoliciesExternalIdentitiesPolicy), nil
+			}
+		}
+
+		return c.externalIdentitiesPolicy()
+	})
+}
+
+// mqlMicrosoftPoliciesExternalIdentitiesPolicy for the microsoft.policies.externalIdentitiesPolicy resource
+type mqlMicrosoftPoliciesExternalIdentitiesPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftPoliciesExternalIdentitiesPolicyInternal it will be used here
+	Id plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	Description plugin.TValue[string]
+	AllowExternalIdentitiesToLeave plugin.TValue[bool]
+}
+
+// createMicrosoftPoliciesExternalIdentitiesPolicy creates a new instance of this resource
+func createMicrosoftPoliciesExternalIdentitiesPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftPoliciesExternalIdentitiesPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.policies.externalIdentitiesPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftPoliciesExternalIdentitiesPolicy) MqlName() string {
+	return "microsoft.policies.externalIdentitiesPolicy"
+}
+
+func (c *mqlMicrosoftPoliciesExternalIdentitiesPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftPoliciesExternalIdentitiesPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftPoliciesExternalIdentitiesPolicy) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftPoliciesExternalIdentitiesPolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMicrosoftPoliciesExternalIdentitiesPolicy) GetAllowExternalIdentitiesToLeave() *plugin.TValue[bool] {
+	return &c.AllowExternalIdentitiesToLeave
 }
 
 // mqlMicrosoftPoliciesActivityBasedTimeoutPolicy for the microsoft.policies.activityBasedTimeoutPolicy resource
