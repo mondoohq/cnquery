@@ -238,6 +238,8 @@ message Package {
   string vendor = 23;
   // Status of the package
   string status = 24;
+  // Optional: Title of the package
+  string title = 25;
 }
 
 enum EvidenceType {
