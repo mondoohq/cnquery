@@ -164,7 +164,7 @@ func InitViperConfig() {
 			}
 		}
 
-		// // Set the API endpoint from universeDomain if available
+		// Set the API endpoint from universeDomain if available
 		if universeDomain := viper.GetString("universeDomain"); universeDomain != "" {
 			viper.Set("api_endpoint", universeDomain)
 		}
@@ -173,7 +173,7 @@ func InitViperConfig() {
 		log.Debug().
 			Str("audience", viper.GetString("audience")).
 			Str("issuerUri", viper.GetString("issuerUri")).
-			Str("apiEndpoint", viper.GetString("apiEndpoint")).
+			Str("universeDomain", viper.GetString("universeDomain")).
 			Msg("configured WIF authentication from config file")
 	}
 }
