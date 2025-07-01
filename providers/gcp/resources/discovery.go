@@ -39,14 +39,14 @@ const (
 	DiscoveryStorageBuckets     = "storage-buckets"
 	DiscoveryBigQueryDatasets   = "bigquery-datasets"
 	DiscoverCloudSQLMySQL       = "cloud-sql-mysql"
-	DiscoverCloudSQLPostgres    = "cloud-sql-postgres"
+	DiscoverCloudSQLPostgreSQL  = "cloud-sql-postgresql"
 	DiscoverCloudSQLSQLServer   = "cloud-sql-sqlserver"
 	DiscoverCloudDNSZones       = "cloud-dns-zones"
 	DiscoverCloudKMSKeyrings    = "cloud-kms-keyrings"
 )
 
 // List of all CloudSQL types, this will be used during discovery
-var AllCloudSQLTypes = []string{DiscoverCloudSQLPostgres, DiscoverCloudSQLSQLServer, DiscoverCloudSQLMySQL}
+var AllCloudSQLTypes = []string{DiscoverCloudSQLPostgreSQL, DiscoverCloudSQLSQLServer, DiscoverCloudSQLMySQL}
 
 func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 	conn, ok := runtime.Connection.(*connection.GcpConnection)
@@ -455,7 +455,8 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 			var (
 				sqlinstance    = sqlinstances.Data[i].(*mqlGcpProjectSqlServiceInstance)
 				sqlTypeVersion = strings.Split(sqlinstance.DatabaseInstalledVersion.Data, "_")
-				sqlType        = strings.ToLower(sqlTypeVersion[0])
+				sqlType        = connection.ParseCloudSQLType(sqlTypeVersion[0])
+				platformName   = fmt.Sprintf("gcp-sql-%s", sqlType)
 			)
 
 			if !slices.Contains(conn.Conf.Discover.Targets, fmt.Sprintf("cloud-sql-%s", sqlType)) {
@@ -471,8 +472,8 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 				},
 				Name: sqlinstance.Name.Data,
 				Platform: &inventory.Platform{
-					Name:                  fmt.Sprintf("gcp-sql-%s", sqlType),
-					Title:                 fmt.Sprintf("GCP Cloud SQL (%s)", sqlTypeVersion[0]),
+					Name:                  platformName,
+					Title:                 connection.GetTitleForPlatformName(platformName),
 					Runtime:               "gcp",
 					Kind:                  "gcp-object",
 					Family:                []string{"google"},

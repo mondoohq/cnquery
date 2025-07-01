@@ -51,7 +51,7 @@ Examples with the GCP project configured:
 				resources.DiscoveryStorageBuckets,
 				resources.DiscoveryBigQueryDatasets,
 				resources.DiscoverCloudSQLMySQL,
-				resources.DiscoverCloudSQLPostgres,
+				resources.DiscoverCloudSQLPostgreSQL,
 				resources.DiscoverCloudSQLSQLServer,
 				resources.DiscoverCloudDNSZones,
 				resources.DiscoverCloudKMSKeyrings,
