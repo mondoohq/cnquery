@@ -6,6 +6,7 @@ package connection
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 )
@@ -52,7 +53,7 @@ func (c *GcpConnection) PlatformInfo() (*inventory.Platform, error) {
 	if c.opts.platformOverride != "" && c.opts.platformOverride != "gcp" {
 		return &inventory.Platform{
 			Name:    c.opts.platformOverride,
-			Title:   getTitleForPlatformName(c.opts.platformOverride),
+			Title:   GetTitleForPlatformName(c.opts.platformOverride),
 			Family:  []string{"google"},
 			Kind:    "gcp-object",
 			Runtime: "gcp",
@@ -89,7 +90,7 @@ func (c *GcpConnection) PlatformInfo() (*inventory.Platform, error) {
 	return nil, errors.New("unsupported resource type")
 }
 
-func getTitleForPlatformName(name string) string {
+func GetTitleForPlatformName(name string) string {
 	switch name {
 	case "gcp-organization":
 		return "GCP Organization"
@@ -111,8 +112,27 @@ func getTitleForPlatformName(name string) string {
 		return "GCP Storage Bucket"
 	case "gcp-bigquery-dataset":
 		return "GCP BigQuery Dataset"
+	case "gcp-sql-mysql":
+		return "GCP Cloud SQL for MySQL"
+	case "gcp-sql-postgresql":
+		return "GCP Cloud SQL for PostgreSQL"
+	case "gcp-sql-sqlserver":
+		return "GCP Cloud SQL for SQL Server"
+	case "gcp-dns-zone":
+		return "GCP Cloud DNS Zone"
+	case "gcp-kms-keyring":
+		return "GCP Cloud KMS Keyring"
 	}
 	return "Google Cloud Platform"
+}
+
+func ParseCloudSQLType(googleType string) string {
+	switch lower := strings.ToLower(googleType); {
+	case lower == "postgres":
+		return "postgresql"
+	default:
+		return lower
+	}
 }
 
 func ResourceTechnologyUrl(service, project, region, objectType, name string) []string {
@@ -139,6 +159,27 @@ func ResourceTechnologyUrl(service, project, region, objectType, name string) []
 			return []string{"gcp", project, "gke", region, objectType}
 		default:
 			return []string{"gcp", project, "gke", region, "other"}
+		}
+	case "cloud-sql":
+		switch objectType {
+		case "mysql", "postgresql", "sqlserver":
+			return []string{"gcp", project, "cloud-sql", region, objectType}
+		default:
+			return []string{"gcp", project, "cloud-sql", region, "other"}
+		}
+	case "cloud-dns":
+		switch objectType {
+		case "zone":
+			return []string{"gcp", project, "cloud-dns", region, "zone"}
+		default:
+			return []string{"gcp", project, "cloud-dns", region, "other"}
+		}
+	case "cloud-kms":
+		switch objectType {
+		case "keyring":
+			return []string{"gcp", project, "cloud-kms", region, "keyring"}
+		default:
+			return []string{"gcp", project, "cloud-kms", region, "other"}
 		}
 	default:
 		return []string{"gcp", project, "other"}

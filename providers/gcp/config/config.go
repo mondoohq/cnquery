@@ -50,6 +50,11 @@ Examples with the GCP project configured:
 				resources.DiscoveryGkeClusters,
 				resources.DiscoveryStorageBuckets,
 				resources.DiscoveryBigQueryDatasets,
+				resources.DiscoverCloudSQLMySQL,
+				resources.DiscoverCloudSQLPostgreSQL,
+				resources.DiscoverCloudSQLSQLServer,
+				resources.DiscoverCloudDNSZones,
+				resources.DiscoverCloudKMSKeyrings,
 			},
 			Flags: []plugin.Flag{
 				{

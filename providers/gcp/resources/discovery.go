@@ -6,6 +6,9 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
+	"slices"
+	"strings"
 	"sync"
 
 	"github.com/google/go-containerregistry/pkg/name"
@@ -35,7 +38,15 @@ const (
 	DiscoveryGkeClusters        = "gke-clusters"
 	DiscoveryStorageBuckets     = "storage-buckets"
 	DiscoveryBigQueryDatasets   = "bigquery-datasets"
+	DiscoverCloudSQLMySQL       = "cloud-sql-mysql"
+	DiscoverCloudSQLPostgreSQL  = "cloud-sql-postgresql"
+	DiscoverCloudSQLSQLServer   = "cloud-sql-sqlserver"
+	DiscoverCloudDNSZones       = "cloud-dns-zones"
+	DiscoverCloudKMSKeyrings    = "cloud-kms-keyrings"
 )
+
+// List of all CloudSQL types, this will be used during discovery
+var AllCloudSQLTypes = []string{DiscoverCloudSQLPostgreSQL, DiscoverCloudSQLSQLServer, DiscoverCloudSQLMySQL}
 
 func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 	conn, ok := runtime.Connection.(*connection.GcpConnection)
@@ -365,6 +376,110 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 					TechnologyUrlSegments: connection.ResourceTechnologyUrl("compute", gcpProject.Id.Data, "global", "image", image.Name.Data),
 				},
 				Labels:      labels,
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))}, // pass-in the parent connection config
+			})
+		}
+	}
+	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, append(targets, DiscoverCloudKMSKeyrings)...) {
+		kmsservice := gcpProject.GetKms()
+		if kmsservice.Error != nil {
+			return nil, kmsservice.Error
+		}
+		keyrings := kmsservice.Data.GetKeyrings()
+		if keyrings.Error != nil {
+			return nil, keyrings.Error
+		}
+
+		for i := range keyrings.Data {
+			keyring := keyrings.Data[i].(*mqlGcpProjectKmsServiceKeyring)
+			assetList = append(assetList, &inventory.Asset{
+				PlatformIds: []string{
+					connection.NewResourcePlatformID("cloud-kms", gcpProject.Id.Data, keyring.Location.Data, "keyring", keyring.Name.Data),
+				},
+				Name: keyring.Name.Data,
+				Platform: &inventory.Platform{
+					Name:                  "gcp-kms-keyring",
+					Title:                 "GCP Cloud KMS Keyring",
+					Runtime:               "gcp",
+					Kind:                  "gcp-object",
+					Family:                []string{"google"},
+					TechnologyUrlSegments: connection.ResourceTechnologyUrl("cloud-kms", gcpProject.Id.Data, keyring.Location.Data, "keyring", keyring.Name.Data),
+				},
+				Labels:      map[string]string{},
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))}, // pass-in the parent connection config
+			})
+		}
+	}
+	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, append(targets, DiscoverCloudDNSZones)...) {
+		dnsservice := gcpProject.GetDns()
+		if dnsservice.Error != nil {
+			return nil, dnsservice.Error
+		}
+		managedzones := dnsservice.Data.GetManagedZones()
+		if managedzones.Error != nil {
+			return nil, managedzones.Error
+		}
+
+		for i := range managedzones.Data {
+			managedzone := managedzones.Data[i].(*mqlGcpProjectDnsServiceManagedzone)
+			assetList = append(assetList, &inventory.Asset{
+				PlatformIds: []string{
+					connection.NewResourcePlatformID("cloud-dns", gcpProject.Id.Data, "global", "zone", managedzone.Id.Data),
+				},
+				Name: managedzone.Name.Data,
+				Platform: &inventory.Platform{
+					Name:                  "gcp-dns-zone",
+					Title:                 "GCP Cloud DNS Zone",
+					Runtime:               "gcp",
+					Kind:                  "gcp-object",
+					Family:                []string{"google"},
+					TechnologyUrlSegments: connection.ResourceTechnologyUrl("cloud-dns", gcpProject.Id.Data, "global", "zone", managedzone.Name.Data),
+				},
+				Labels:      map[string]string{},
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))}, // pass-in the parent connection config
+			})
+		}
+	}
+	// all Cloud SQL dicovery flags/types
+	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, append(targets, AllCloudSQLTypes...)...) {
+		sqlservice := gcpProject.GetSql()
+		if sqlservice.Error != nil {
+			return nil, sqlservice.Error
+		}
+		sqlinstances := sqlservice.Data.GetInstances()
+		if sqlinstances.Error != nil {
+			return nil, sqlinstances.Error
+		}
+
+		for i := range sqlinstances.Data {
+			var (
+				sqlinstance    = sqlinstances.Data[i].(*mqlGcpProjectSqlServiceInstance)
+				sqlTypeVersion = strings.Split(sqlinstance.DatabaseInstalledVersion.Data, "_")
+				sqlType        = connection.ParseCloudSQLType(sqlTypeVersion[0])
+				platformName   = fmt.Sprintf("gcp-sql-%s", sqlType)
+			)
+
+			if !slices.Contains(conn.Conf.Discover.Targets, fmt.Sprintf("cloud-sql-%s", sqlType)) {
+				log.Debug().
+					Str("sql_type", sqlType).
+					Msg("gcp.discovery> skipping cloud sql instance")
+				continue // only discover known sql types
+			}
+
+			assetList = append(assetList, &inventory.Asset{
+				PlatformIds: []string{
+					connection.NewResourcePlatformID("cloud-sql", gcpProject.Id.Data, sqlinstance.Region.Data, sqlType, sqlinstance.Name.Data),
+				},
+				Name: sqlinstance.Name.Data,
+				Platform: &inventory.Platform{
+					Name:                  platformName,
+					Title:                 connection.GetTitleForPlatformName(platformName),
+					Runtime:               "gcp",
+					Kind:                  "gcp-object",
+					Family:                []string{"google"},
+					TechnologyUrlSegments: connection.ResourceTechnologyUrl("cloud-sql", gcpProject.Id.Data, sqlinstance.Region.Data, sqlType, sqlinstance.Name.Data),
+				},
+				Labels:      map[string]string{},
 				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))}, // pass-in the parent connection config
 			})
 		}
