@@ -267,3 +267,29 @@ func (a *mqlMicrosoftPolicies) adminConsentRequestPolicy() (*mqlMicrosoftAdminCo
 
 	return resource.(*mqlMicrosoftAdminConsentRequestPolicy), nil
 }
+
+func (a *mqlMicrosoftPolicies) externalIdentitiesPolicy() (*mqlMicrosoftPoliciesExternalIdentitiesPolicy, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	betaGraphClient, err := conn.BetaGraphClient()
+	if err != nil {
+		return nil, err
+	}
+	policy, err := betaGraphClient.Policies().ExternalIdentitiesPolicy().Get(context.Background(), nil)
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	mqlPolicy, err := CreateResource(a.MqlRuntime, "microsoft.policies.externalIdentitiesPolicy",
+		map[string]*llx.RawData{
+			"__id":                           llx.StringDataPtr(policy.GetId()),
+			"id":                             llx.StringDataPtr(policy.GetId()),
+			"displayName":                    llx.StringDataPtr(policy.GetDisplayName()),
+			"description":                    llx.StringDataPtr(policy.GetDescription()),
+			"allowExternalIdentitiesToLeave": llx.BoolDataPtr(policy.GetAllowExternalIdentitiesToLeave()),
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	return mqlPolicy.(*mqlMicrosoftPoliciesExternalIdentitiesPolicy), nil
+}

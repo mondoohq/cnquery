@@ -1106,6 +1106,21 @@ microsoft.policies {
   authenticationMethodsPolicy() microsoft.policies.authenticationMethodsPolicy
   // Activity-based timeout policies
   activityBasedTimeoutPolicies() []microsoft.policies.activityBasedTimeoutPolicy
+  // Tenant-wide policy that controls whether external users can leave a tenant
+  externalIdentitiesPolicy() microsoft.policies.externalIdentitiesPolicy
+}
+
+// Tenant-wide policy that controls whether external users can leave a tenant via self-service controls
+private microsoft.policies.externalIdentitiesPolicy @defaults("displayName allowExternalIdentitiesToLeave") {
+  // Policy ID
+  id string
+  // Policy display name
+  displayName string
+  // Policy description
+  description string
+  // Defines whether external users can leave the guest tenant. 
+  // If set to false, self-service controls are disabled, and the admin must manually remove the external user.
+  allowExternalIdentitiesToLeave bool
 }
 
 // Activity-based timeout policy
@@ -1121,6 +1136,7 @@ microsoft.policies.activityBasedTimeoutPolicy @defaults("displayName isOrganizat
   isOrganizationDefault bool
 }
 
+// Policy for enabling or disabling the Microsoft Entra admin consent workflow
 private microsoft.adminConsentRequestPolicy @defaults("isEnabled notifyReviewers") {
   // Specifies whether the admin consent request feature is enabled or disabled
   isEnabled bool
@@ -1136,6 +1152,7 @@ private microsoft.adminConsentRequestPolicy @defaults("isEnabled notifyReviewers
   version int
 }
 
+// List of reviewers for the admin consent
 private microsoft.graph.accessReviewReviewerScope @defaults("query queryType") {
   // The query specifying who will be the reviewer
   query string
