@@ -38,11 +38,18 @@ func SortFn(a, b *Package) int {
 type renderOption func(*renderOpts)
 
 type renderOpts struct {
-	RenderWithEvidence bool
+	IncludeEvidence bool
+	IncludeCPE      bool
 }
 
 func WithEvidence() renderOption {
 	return func(opts *renderOpts) {
-		opts.RenderWithEvidence = true
+		opts.IncludeEvidence = true
+	}
+}
+
+func WithCPE() renderOption {
+	return func(opts *renderOpts) {
+		opts.IncludeCPE = true
 	}
 }

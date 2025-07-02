@@ -68,7 +68,7 @@ func (s *TextList) Render(w io.Writer, bom *Sbom) error {
 			sb.WriteString(termenv.String(pkg.Location).Foreground(colors.DefaultColorTheme.Disabled).String())
 		}
 
-		if s.opts.RenderWithEvidence {
+		if s.opts.IncludeEvidence {
 			for i := range pkg.EvidenceList {
 				evidence := pkg.EvidenceList[i]
 				sb.WriteString("\n")

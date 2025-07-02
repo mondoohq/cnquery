@@ -24,10 +24,21 @@ func (ccx *CnqueryBOM) Convert(bom *Sbom) (interface{}, error) {
 }
 
 func (ccx *CnqueryBOM) Render(output io.Writer, bom *Sbom) error {
-	if ccx.opts.RenderWithEvidence == false {
-		// if we do not render with evidence, we remove all evidence from the BOM
+	if !ccx.opts.IncludeEvidence {
+		// if we do not include evidence, we remove all evidence from the BOM
 		for _, pkg := range bom.Packages {
 			pkg.EvidenceList = nil
+		}
+	}
+
+	if !ccx.opts.IncludeCPE {
+		// if we do not include CPE, we remove all CPE from the BOM
+		for _, pkg := range bom.Packages {
+			pkg.Cpes = nil
+		}
+
+		if bom.Asset != nil && bom.Asset.Platform != nil {
+			bom.Asset.Platform.Cpes = nil
 		}
 	}
 
@@ -41,13 +52,6 @@ func (ccx *CnqueryBOM) Parse(r io.Reader) (*Sbom, error) {
 	err := json.NewDecoder(r).Decode(&s)
 	if err != nil {
 		return nil, err
-	}
-
-	if ccx.opts.RenderWithEvidence == false {
-		// if we do not render with evidence, we remove all evidence from the BOM
-		for _, pkg := range s.Packages {
-			pkg.EvidenceList = nil
-		}
 	}
 
 	return &s, nil

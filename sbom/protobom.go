@@ -16,6 +16,7 @@ func NewProtobom() *Protobom {
 }
 
 type Protobom struct {
+	opts renderOpts
 }
 
 func (s *Protobom) Parse(f io.ReadSeeker) (*Sbom, error) {
@@ -66,6 +67,11 @@ func (s *Protobom) convertToSbom(doc *protobom_sbom.Document) *Sbom {
 			} else if key == int32(protobom_sbom.SoftwareIdentifierType_CPE22) {
 				pkg.Cpes = append(pkg.Cpes, identifier)
 			}
+		}
+
+		if !s.opts.IncludeCPE {
+			// if CPEs are not included, clear them
+			pkg.Cpes = nil
 		}
 
 		purposes := node.GetPrimaryPurpose()

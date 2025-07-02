@@ -240,7 +240,7 @@ func (s *Spdx) convertToSbom(doc *spdx.Document) *Sbom {
 			}
 		}
 
-		if pkg.PackageFileName != "" && s.opts.RenderWithEvidence {
+		if pkg.PackageFileName != "" && s.opts.IncludeEvidence {
 			bomPkg.EvidenceList = append(bomPkg.EvidenceList, &Evidence{
 				Type:  EvidenceType_EVIDENCE_TYPE_FILE,
 				Value: pkg.PackageFileName,
