@@ -54,8 +54,6 @@ func (p *enginesField) UnmarshalJSON(data []byte) error {
 				log.Warn().Msgf("invalid type for engines[%s]", key)
 			}
 		}
-	default:
-		log.Warn().Msgf("invalid engines field type: %T", v)
 	}
 
 	*p = n
