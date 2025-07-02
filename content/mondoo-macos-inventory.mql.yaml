@@ -87,7 +87,7 @@ packs:
         mql: users.where( name != /^_/ && shell != "/usr/bin/false" && name != "root")
       - uid: mondoo-macos-packages
         title: Installed packages
-        mql: packages { name version arch installed }
+        mql: packages { name version arch installed epoch origin purl }
       - uid: mondoo-macos-running-services
         title: Running services
         filters: mondoo.capabilities.contains("run-command")

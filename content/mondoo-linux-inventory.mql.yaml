@@ -89,7 +89,7 @@ packs:
         mql: os.uptime
       - uid: mondoo-linux-installed-packages
         title: Installed packages
-        mql: packages { name version arch installed }
+        mql: packages { name version arch installed epoch origin purl }
       - uid: mondoo-linux-running-services
         title: Running services
         filters: mondoo.capabilities.contains("run-command")

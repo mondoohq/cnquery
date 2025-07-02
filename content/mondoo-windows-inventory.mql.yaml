@@ -56,7 +56,7 @@ packs:
         mql: users
       - uid: mondoo-windows-packages
         title: Installed packages
-        mql: packages { name version arch installed }
+        mql: packages { name version arch installed epoch origin purl }
       - uid: mondoo-windows-hotfixes
         title: All installed Windows hotfixes
         mql: windows.hotfixes { hotfixId installedOn }
