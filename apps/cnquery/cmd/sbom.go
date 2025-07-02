@@ -28,7 +28,7 @@ func init() {
 	sbomCmd.Flags().StringP("output", "o", "list", "Set output format: "+sbom.AllFormats())
 	sbomCmd.Flags().String("output-target", "", "Set output target to which the SBOM report will be written")
 	sbomCmd.Flags().Bool("with-evidence", false, "Include evidence for each component")
-	sbomCmd.Flags().Bool("with-cpes", false, "Disable the generation of CPEs for each component")
+	sbomCmd.Flags().Bool("with-cpes", false, "Generate CPEs for each component")
 }
 
 var sbomCmd = &cobra.Command{

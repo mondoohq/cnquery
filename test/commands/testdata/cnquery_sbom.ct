@@ -36,7 +36,8 @@ Flags:
       --record string               Record all resource calls and use resources in the recording
       --sudo                        Elevate privileges with sudo
       --use-recording string        Use a recording to inject resource data (read-only)
-      --with-evidence               Display evidence for each component
+      --with-cpes                   Generate CPEs for each component
+      --with-evidence               Include evidence for each component
 
 Global Flags:
       --api-proxy string   Set proxy for communications with Mondoo Platform API
