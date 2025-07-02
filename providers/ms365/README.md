@@ -9,7 +9,7 @@
 
 __NOTE__
 
-At the moment some of the resources within this provider requires the use of PowerShell.  Please make sure you have `pwsh` is in your path. For example `pwsh -c 'Get-Date'` should return a timestamp.
+At the moment some of the resources within this provider require the use of PowerShell. Please ensure `pwsh` is in your PATH. For example, `pwsh -c 'Get-Date'` should return a timestamp.
 
 Also it's recommended that you use certificate based authentication with this provider, especially with the resources that need to use powershell, this is due to the way those cmdlets authenticate.  Certificate auth is more reliable when testing.
 
@@ -18,7 +18,7 @@ Also it's recommended that you use certificate based authentication with this pr
 brew install --cask powershell
 ```
 ### Linux
-Please refer to the [documentation](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-linux) based on your distrubution.
+Please refer to the [documentation](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-linux) based on your distribution.
 
 ## Authenticating
 You will need to provide your app's client and tenant id as well certificate.
@@ -44,7 +44,7 @@ microsoft.domains: [
 ```
 
 ### Get Information about the Azure Application Your Using
-Get the Intergration thumbprint
+Get the integration thumbprint
 ```shell
 MS365_THUMBPRINT=$(cnquery run local -c "parse.certificates('${MS365_CERTIFICATE_PATH}') { fingerprints.sha1 }" --json | jq -r '.[0]["parse.certificates.list"][0]["fingerprints[sha1]"]')
 ```
@@ -83,4 +83,4 @@ This is a catch all so start with double check your application permissions, for
 ```
 pkcs12: unknown digest algorithm: 2.16.840.1.101.3.4.2.1"
 ```
-Your certificate is probably in PFX format instead of PEM, double check
+Your certificate is probably in PFX format instead of PEM.
