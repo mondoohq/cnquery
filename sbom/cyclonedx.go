@@ -27,6 +27,7 @@ func NewCycloneDX(format string) *CycloneDX {
 }
 
 type CycloneDX struct {
+	opts   renderOpts
 	Format cyclonedx.BOMFileFormat
 }
 
@@ -123,6 +124,12 @@ func (ccx *CycloneDX) convertToCycloneDx(bom *Sbom) (*cyclonedx.BOM, error) {
 	return sbom, nil
 }
 
+func (s *CycloneDX) ApplyOptions(opts ...renderOption) {
+	for _, opt := range opts {
+		opt(&s.opts)
+	}
+}
+
 func (ccx *CycloneDX) Convert(bom *Sbom) (interface{}, error) {
 	return ccx.convertToCycloneDx(bom)
 }
@@ -198,7 +205,7 @@ func (ccx *CycloneDX) convertCycloneDxToSbom(bom *cyclonedx.BOM) (*Sbom, error) 
 			pkg.Cpes = []string{component.CPE}
 		}
 
-		if component.Evidence != nil && component.Evidence.Occurrences != nil {
+		if component.Evidence != nil && component.Evidence.Occurrences != nil && ccx.opts.RenderWithEvidence {
 			pkg.EvidenceList = make([]*Evidence, 0)
 			for i := range *component.Evidence.Occurrences {
 				e := (*component.Evidence.Occurrences)[i]

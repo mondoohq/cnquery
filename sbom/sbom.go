@@ -34,3 +34,15 @@ func SortFn(a, b *Package) int {
 	// if names are equal, order by version
 	return cmp.Compare(a.Version, b.Version)
 }
+
+type renderOption func(*renderOpts)
+
+type renderOpts struct {
+	RenderWithEvidence bool
+}
+
+func WithEvidence() renderOption {
+	return func(opts *renderOpts) {
+		opts.RenderWithEvidence = true
+	}
+}

@@ -105,10 +105,7 @@ var sbomCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *pl
 	}
 
 	if viper.GetBool("with-evidence") {
-		x, ok := exporter.(*sbom.TextList)
-		if ok {
-			x.ApplyOptions(sbom.WithEvidence())
-		}
+		exporter.ApplyOptions(sbom.WithEvidence())
 	}
 
 	outputTarget := viper.GetString("output-target")

@@ -12,24 +12,12 @@ import (
 	"go.mondoo.com/cnquery/v11/cli/theme/colors"
 )
 
-type cliOption func(*cLiOpts)
-
-type cLiOpts struct {
-	RenderWithEvidence bool
-}
-
-func WithEvidence() cliOption {
-	return func(opts *cLiOpts) {
-		opts.RenderWithEvidence = true
-	}
-}
-
 // TextList is a simple text list output format
 type TextList struct {
-	opts cLiOpts
+	opts renderOpts
 }
 
-func (s *TextList) ApplyOptions(opts ...cliOption) {
+func (s *TextList) ApplyOptions(opts ...renderOption) {
 	for _, opt := range opts {
 		opt(&s.opts)
 	}
