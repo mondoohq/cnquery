@@ -25,7 +25,8 @@ func TestSimpleBomOutput(t *testing.T) {
 	var exporter sbom.FormatSpecificationHandler
 
 	output := bytes.Buffer{}
-	exporter = &sbom.CnqueryBOM{}
+	exporter = sbom.New(sbom.FormatJson)
+	exporter.ApplyOptions(sbom.WithCPE(), sbom.WithEvidence())
 	err = exporter.Render(&output, selectedBom)
 	require.NoError(t, err)
 
