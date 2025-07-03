@@ -17,7 +17,7 @@ type Resolver interface {
 	GetCredential(cred *Credential) (*Credential, error)
 }
 
-//go:generate protoc --proto_path=../../../:. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. vault.proto
+//go:generate protoc --proto_path=../../../:. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. --go-vtproto_out=. --go-vtproto_opt=paths=source_relative --go-vtproto_opt=features=marshal+unmarshal+size+clone vault.proto
 
 func EscapeSecretID(key string) string {
 	return strings.TrimPrefix(key, "//")
@@ -63,7 +63,7 @@ func NewSecret(cred *Credential, encoding SecretEncoding) (*Secret, error) {
 	case SecretEncoding_encoding_json:
 		secretData, err = json.Marshal(cred)
 	case SecretEncoding_encoding_proto:
-		secretData, err = proto.Marshal(cred)
+		secretData, err = cred.MarshalVT()
 	default:
 		return nil, errors.New("unknown secret encoding")
 	}

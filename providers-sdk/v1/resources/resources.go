@@ -3,7 +3,7 @@
 
 package resources
 
-//go:generate protoc --proto_path=. --go_out=. --go_opt=paths=source_relative resources.proto
+//go:generate protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --go-vtproto_out=. --go-vtproto_opt=paths=source_relative --go-vtproto_opt=features=marshal+unmarshal+size resources.proto
 
 // NotReadyError indicates the results are not ready to be processed further
 type NotReadyError struct{}

@@ -35,7 +35,6 @@ import (
 	"go.mondoo.com/cnquery/v11/utils/slicesx"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
-	"google.golang.org/protobuf/proto"
 )
 
 type LocalScanner struct {
@@ -118,7 +117,7 @@ func (s *LocalScanner) Run(ctx context.Context, job *Job) (*explorer.ReportColle
 func (s *LocalScanner) getUpstreamConfig(inv *inventory.Inventory, incognito bool) (*upstream.UpstreamConfig, error) {
 	var res *upstream.UpstreamConfig
 	if s.upstream != nil {
-		res = proto.Clone(s.upstream).(*upstream.UpstreamConfig)
+		res = s.upstream.CloneVT()
 	} else {
 		res = &upstream.UpstreamConfig{}
 	}

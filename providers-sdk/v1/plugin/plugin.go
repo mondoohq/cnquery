@@ -5,7 +5,7 @@ package plugin
 
 import llx "go.mondoo.com/cnquery/v11/llx"
 
-//go:generate protoc --proto_path=../../../:. --go_out=. --go_opt=paths=source_relative  --go-grpc_out=. --go-grpc_opt=paths=source_relative plugin.proto
+//go:generate protoc --proto_path=../../../:. --go_out=. --go_opt=paths=source_relative  --go-grpc_out=. --go-grpc_opt=paths=source_relative --go-vtproto_opt=paths=source_relative --go-vtproto_out=. --go-vtproto_opt=features=marshal+unmarshal+size+clone plugin.proto
 
 // ParseArgsFun is a function to take a list of incoming arguments and parse
 // them. This is used for 3 possible use-cases:
