@@ -23,9 +23,11 @@ var dmiFilesSlice = []string{
 // detectLinuxHypervisor detects the hypervisor on Linux.
 func (h *hyper) detectLinuxHypervisor() (hypervisor string, ok bool) {
 	detectors := []func() (string, bool){
-		h.detectSystemdDetectVirt,
 		h.detectDMIVendor,
 		h.detectDMIDecode,
+		// systemd-detect-virt doesn't know about OpenShift Virtualization,
+		// we will leave this detector as our last resource
+		h.detectSystemdDetectVirt,
 	}
 	// check for CPU "hypervisor" flag
 	if h.detectLinuxCPUHypervisor() {

@@ -122,3 +122,15 @@ func TestHypervisorLinuxDMIProductName(t *testing.T) {
 
 	assert.Equal(t, "VMware", hypervisor)
 }
+
+func TestHypervisorLinuxOpenShiftVirtualization(t *testing.T) {
+	conn, err := mock.New(0, "./testdata/linux_openshift_virtualization.toml", &inventory.Asset{})
+	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
+
+	hypervisor, ok := subject.Hypervisor(conn, platform)
+	require.True(t, ok)
+
+	assert.Equal(t, "OpenShift Virtualization", hypervisor)
+}
