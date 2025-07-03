@@ -12,6 +12,7 @@ import (
 	"sync"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/logger"
 	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
@@ -100,17 +101,6 @@ func (r *mqlMicrosoftSecurityExchangeAntispam) hostedConnectionFilterPolicy() (*
 	}
 
 	policy := report.HostedConnectionFilterPolicy
-	
-	// Convert IPAllowList and IPBlockList to []interface{}
-	ipAllowList := make([]interface{}, len(policy.IPAllowList))
-	for i, ip := range policy.IPAllowList {
-		ipAllowList[i] = ip
-	}
-	
-	ipBlockList := make([]interface{}, len(policy.IPBlockList))
-	for i, ip := range policy.IPBlockList {
-		ipBlockList[i] = ip
-	}
 
 	resource, err := CreateResource(r.MqlRuntime, "microsoft.security.exchange.antispam.hostedConnectionFilterPolicy",
 		map[string]*llx.RawData{
