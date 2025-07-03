@@ -1,0 +1,71 @@
+# Test data for Linux system without lsmod command but with /sys/module
+# This simulates a minimal Linux system where lsmod is not available
+
+[commands."/sbin/lsmod"]
+# Simulate lsmod command not found
+exit_status = 127
+stderr = "/sbin/lsmod: command not found"
+stdout = ""
+
+[files."/proc/modules"]
+# Simulate /proc/modules not available
+enoent = true
+
+# Simulate /sys/module directory structure
+[files."/sys/module"]
+content = ""
+[files."/sys/module".stat]
+isdir = true
+mode = 0o755
+
+[files."/sys/module/cryptd"]
+content = ""
+[files."/sys/module/cryptd".stat]
+isdir = true
+mode = 0o755
+
+[files."/sys/module/cryptd/initstate"]
+content = "live"
+
+[files."/sys/module/cryptd/coresize"]
+content = "24576"
+
+[files."/sys/module/cryptd/refcnt"]
+content = "3"
+
+[files."/sys/module/ext4"]
+content = ""
+[files."/sys/module/ext4".stat]
+isdir = true
+mode = 0o755
+
+[files."/sys/module/ext4/initstate"]
+content = "live"
+
+[files."/sys/module/ext4/coresize"]
+content = "589824"
+
+[files."/sys/module/ext4/refcnt"]
+content = "1"
+
+[files."/sys/module/unloaded_module"]
+content = ""
+[files."/sys/module/unloaded_module".stat]
+isdir = true
+mode = 0o755
+
+[files."/sys/module/unloaded_module/initstate"]
+content = "going"
+
+[files."/sys/module/unloaded_module/coresize"]
+content = "16384"
+
+[files."/sys/module/unloaded_module/refcnt"]
+content = "0"
+
+# Basic system info
+[files."/proc/version"]
+content = "Linux version 5.4.0-74-generic (buildd@lcy01-amd64-030) (gcc version 9.4.0 (Ubuntu 9.4.0-1ubuntu1~20.04.1)) #83-Ubuntu SMP Sat May 8 02:35:39 UTC 2021"
+
+[files."/proc/cmdline"]
+content = "BOOT_IMAGE=/boot/vmlinuz-5.4.0-74-generic root=UUID=12345678-1234-1234-1234-123456789012 ro quiet splash"

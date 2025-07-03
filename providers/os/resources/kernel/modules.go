@@ -6,9 +6,14 @@ package kernel
 import (
 	"bufio"
 	"io"
+	"os"
 	"path"
+	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
+
+	"github.com/spf13/afero"
 )
 
 func ParseLsmod(r io.Reader) []*KernelModule {
@@ -131,4 +136,93 @@ func ParseGenkex(stdout io.Reader) ([]*KernelModule, error) {
 		return nil, err
 	}
 	return res, nil
+}
+
+// ParseLinuxSysModule parses kernel modules from /sys/module directory structure
+// This is used as a fallback when lsmod and /proc/modules are not available
+func ParseLinuxSysModule(fs afero.Fs) ([]*KernelModule, error) {
+	res := []*KernelModule{}
+
+	// Check if /sys/module exists
+	exists, err := afero.DirExists(fs, "/sys/module")
+	if err != nil || !exists {
+		return res, err
+	}
+
+	// Walk through /sys/module directory
+	err = afero.Walk(fs, "/sys/module", func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil // Continue walking even if there are errors
+		}
+
+		// We only care about directories that are direct children of /sys/module
+		if !info.IsDir() {
+			return nil
+		}
+
+		// Skip the root /sys/module directory itself
+		if path == "/sys/module" {
+			return nil
+		}
+
+		// Skip subdirectories (we only want direct module directories)
+		relPath, err := filepath.Rel("/sys/module", path)
+		if err != nil || strings.Contains(relPath, "/") {
+			return nil
+		}
+
+		moduleName := info.Name()
+
+		// Check if module is live by reading initstate file
+		initstatePath := filepath.Join(path, "initstate")
+		initstateFile, err := fs.Open(initstatePath)
+		if err != nil {
+			// If initstate doesn't exist, skip this module
+			return nil
+		}
+		defer initstateFile.Close()
+
+		initstateContent, err := io.ReadAll(initstateFile)
+		if err != nil {
+			return nil
+		}
+
+		initstate := strings.TrimSpace(string(initstateContent))
+		if initstate != "live" {
+			// Only include live modules
+			return nil
+		}
+
+		// Try to get module size from coresize file
+		size := "0"
+		coresizePath := filepath.Join(path, "coresize")
+		if coresizeFile, err := fs.Open(coresizePath); err == nil {
+			defer coresizeFile.Close()
+			if coresizeContent, err := io.ReadAll(coresizeFile); err == nil {
+				if coresize, err := strconv.Atoi(strings.TrimSpace(string(coresizeContent))); err == nil {
+					size = strconv.Itoa(coresize)
+				}
+			}
+		}
+
+		// Try to get reference count from refcnt file
+		usedBy := "0"
+		refcntPath := filepath.Join(path, "refcnt")
+		if refcntFile, err := fs.Open(refcntPath); err == nil {
+			defer refcntFile.Close()
+			if refcntContent, err := io.ReadAll(refcntFile); err == nil {
+				usedBy = strings.TrimSpace(string(refcntContent))
+			}
+		}
+
+		res = append(res, &KernelModule{
+			Name:   moduleName,
+			Size:   size,
+			UsedBy: usedBy,
+		})
+
+		return nil
+	})
+
+	return res, err
 }
