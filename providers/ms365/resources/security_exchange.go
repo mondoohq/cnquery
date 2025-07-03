@@ -116,8 +116,8 @@ func (r *mqlMicrosoftSecurityExchangeAntispam) hostedConnectionFilterPolicy() (*
 		map[string]*llx.RawData{
 			"identity":           llx.StringData(policy.Identity),
 			"adminDisplayName":   llx.StringData(policy.AdminDisplayName),
-			"ipAllowList":        llx.ArrayData(ipAllowList, types.String),
-			"ipBlockList":        llx.ArrayData(ipBlockList, types.String),
+			"ipAllowList":      	llx.ArrayData(convert.SliceAnyToInterface(policy.IPAllowList), types.String),
+			"ipBlockList":      	llx.ArrayData(convert.SliceAnyToInterface(policy.IPBlockList), types.String),
 			"enableSafeList":     llx.BoolData(policy.EnableSafeList),
 		})
 	if err != nil {
