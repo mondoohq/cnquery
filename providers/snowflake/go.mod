@@ -9,9 +9,9 @@ toolchain go1.24.3
 require (
 	// pin v0.92.0
 	github.com/Snowflake-Labs/terraform-provider-snowflake v0.92.0
-	github.com/jmoiron/sqlx v1.4.0 // indirect
+	github.com/jmoiron/sqlx v1.4.0
 	github.com/snowflakedb/gosnowflake v1.14.1
-	github.com/stretchr/testify v1.10.0 // indirect
+	github.com/stretchr/testify v1.10.0
 	go.mondoo.com/cnquery/v11 v11.60.0
 	go.mondoo.com/ranger-rpc v0.6.6
 	golang.org/x/crypto v0.39.0

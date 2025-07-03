@@ -24,12 +24,11 @@ func TestCycloneDxOutput(t *testing.T) {
 	// store bom in different formats
 	selectedBom := sboms[0]
 
-	formatHandler := &sbom.CycloneDX{
-		Format: cyclonedx.BOMFileFormatJSON,
-	}
+	exporter := sbom.New(sbom.FormatCycloneDxJSON)
+	exporter.ApplyOptions(sbom.WithCPE(), sbom.WithEvidence())
 
 	output := bytes.Buffer{}
-	err = formatHandler.Render(&output, selectedBom)
+	err = exporter.Render(&output, selectedBom)
 	require.NoError(t, err)
 	data := output.String()
 

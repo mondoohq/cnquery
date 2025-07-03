@@ -88,6 +88,7 @@ func GenerateBom(r *reporter.Report) []*sbom.Sbom {
 				bom.Asset.Platform.Cpes = rb.Asset.CPEs
 				bom.Asset.Platform.Labels = rb.Asset.Labels
 				bom.Asset.PlatformIds = enrichPlatformIds(rb.Asset.IDs)
+				bom.Asset.Platform.Title = rb.Asset.PlatformTitle
 			}
 
 			if bom.Asset == nil {

@@ -27,7 +27,8 @@ func init() {
 	sbomCmd.Flags().StringToString("annotation", nil, "Add an annotation to the asset") // user-added, editable
 	sbomCmd.Flags().StringP("output", "o", "list", "Set output format: "+sbom.AllFormats())
 	sbomCmd.Flags().String("output-target", "", "Set output target to which the SBOM report will be written")
-	sbomCmd.Flags().Bool("with-evidence", false, "Display evidence for each component")
+	sbomCmd.Flags().Bool("with-evidence", false, "Include evidence for each component")
+	sbomCmd.Flags().Bool("with-cpes", false, "Generate CPEs for each component")
 }
 
 var sbomCmd = &cobra.Command{
@@ -60,6 +61,11 @@ Note this command is experimental and may change in the future.
 		err = viper.BindPFlag("with-evidence", cmd.Flags().Lookup("with-evidence"))
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to bind with-evidence flag")
+		}
+
+		err = viper.BindPFlag("with-cpes", cmd.Flags().Lookup("with-cpes"))
+		if err != nil {
+			log.Fatal().Err(err).Msg("failed to bind with-cpes flag")
 		}
 	},
 	// we have to initialize an empty run so it shows up as a runnable command in --help
@@ -105,10 +111,11 @@ var sbomCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *pl
 	}
 
 	if viper.GetBool("with-evidence") {
-		x, ok := exporter.(*sbom.TextList)
-		if ok {
-			x.ApplyOptions(sbom.WithEvidence())
-		}
+		exporter.ApplyOptions(sbom.WithEvidence())
+	}
+
+	if viper.GetBool("with-cpes") {
+		exporter.ApplyOptions(sbom.WithCPE())
 	}
 
 	outputTarget := viper.GetString("output-target")

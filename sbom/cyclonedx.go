@@ -27,6 +27,7 @@ func NewCycloneDX(format string) *CycloneDX {
 }
 
 type CycloneDX struct {
+	opts   renderOpts
 	Format cyclonedx.BOMFileFormat
 }
 
@@ -74,7 +75,7 @@ func (ccx *CycloneDX) convertToCycloneDx(bom *Sbom) (*cyclonedx.BOM, error) {
 	for i := range bom.Packages {
 		pkg := bom.Packages[i]
 		cpe := ""
-		if len(pkg.Cpes) > 0 {
+		if len(pkg.Cpes) > 0 && ccx.opts.IncludeCPE {
 			cpe = pkg.Cpes[0]
 		}
 
@@ -87,7 +88,7 @@ func (ccx *CycloneDX) convertToCycloneDx(bom *Sbom) (*cyclonedx.BOM, error) {
 			})
 		}
 
-		if pkg.EvidenceList != nil {
+		if pkg.EvidenceList != nil && ccx.opts.IncludeEvidence {
 			for i := range pkg.EvidenceList {
 				e := pkg.EvidenceList[i]
 				if e.Type == EvidenceType_EVIDENCE_TYPE_FILE {
@@ -121,6 +122,12 @@ func (ccx *CycloneDX) convertToCycloneDx(bom *Sbom) (*cyclonedx.BOM, error) {
 	sbom.Components = &components
 
 	return sbom, nil
+}
+
+func (s *CycloneDX) ApplyOptions(opts ...renderOption) {
+	for _, opt := range opts {
+		opt(&s.opts)
+	}
 }
 
 func (ccx *CycloneDX) Convert(bom *Sbom) (interface{}, error) {
@@ -198,7 +205,7 @@ func (ccx *CycloneDX) convertCycloneDxToSbom(bom *cyclonedx.BOM) (*Sbom, error) 
 			pkg.Cpes = []string{component.CPE}
 		}
 
-		if component.Evidence != nil && component.Evidence.Occurrences != nil {
+		if component.Evidence != nil && component.Evidence.Occurrences != nil && ccx.opts.IncludeEvidence {
 			pkg.EvidenceList = make([]*Evidence, 0)
 			for i := range *component.Evidence.Occurrences {
 				e := (*component.Evidence.Occurrences)[i]

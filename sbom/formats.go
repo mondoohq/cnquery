@@ -30,6 +30,8 @@ type FormatSpecificationHandler interface {
 	Parse(r io.Reader) (*Sbom, error)
 	// Render writes the converted sbom to the writer in the desired format
 	Render(w io.Writer, bom *Sbom) error
+	// ApplyOptions applies render options to the handler
+	ApplyOptions(opts ...renderOption)
 }
 
 func AllFormats() string {

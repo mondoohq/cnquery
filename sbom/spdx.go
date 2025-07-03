@@ -29,8 +29,15 @@ func NewSPDX(format string) *Spdx {
 }
 
 type Spdx struct {
+	opts    renderOpts
 	Version string
 	Format  string
+}
+
+func (s *Spdx) ApplyOptions(opts ...renderOption) {
+	for _, opt := range opts {
+		opt(&s.opts)
+	}
 }
 
 func (s *Spdx) convertToSpdx(bom *Sbom) *spdx.Document {
@@ -73,7 +80,7 @@ func (s *Spdx) convertToSpdx(bom *Sbom) *spdx.Document {
 		if pkg.Purl != "" {
 			refs = append(refs, &spdx.PackageExternalReference{
 				RefType:  spdx.PackageManagerPURL,
-				Category: spdx.CategorySecurity,
+				Category: spdx.CategoryPackageManager,
 				Locator:  pkg.Purl,
 			})
 		}
@@ -233,7 +240,7 @@ func (s *Spdx) convertToSbom(doc *spdx.Document) *Sbom {
 			}
 		}
 
-		if pkg.PackageFileName != "" {
+		if pkg.PackageFileName != "" && s.opts.IncludeEvidence {
 			bomPkg.EvidenceList = append(bomPkg.EvidenceList, &Evidence{
 				Type:  EvidenceType_EVIDENCE_TYPE_FILE,
 				Value: pkg.PackageFileName,

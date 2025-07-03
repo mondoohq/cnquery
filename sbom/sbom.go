@@ -3,7 +3,7 @@
 
 package sbom
 
-//go:generate protoc --proto_path=. --go_out=. --go_opt=paths=source_relative sbom.proto
+//go:generate protoc --proto_path=. --go_out=. --go_opt=paths=source_relative cnquery_sbom.proto
 
 import (
 	"cmp"
@@ -33,4 +33,23 @@ func SortFn(a, b *Package) int {
 	}
 	// if names are equal, order by version
 	return cmp.Compare(a.Version, b.Version)
+}
+
+type renderOption func(*renderOpts)
+
+type renderOpts struct {
+	IncludeEvidence bool
+	IncludeCPE      bool
+}
+
+func WithEvidence() renderOption {
+	return func(opts *renderOpts) {
+		opts.IncludeEvidence = true
+	}
+}
+
+func WithCPE() renderOption {
+	return func(opts *renderOpts) {
+		opts.IncludeCPE = true
+	}
 }
