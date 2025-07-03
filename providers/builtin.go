@@ -13,6 +13,7 @@ package providers
 import (
 	_ "embed"
 
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/resources"
 	coreconf "go.mondoo.com/cnquery/v11/providers/core/config"
 	core "go.mondoo.com/cnquery/v11/providers/core/provider"
 )
@@ -45,6 +46,7 @@ var builtinProviders = map[string]*builtinProvider{
 			Name:     sbomProvider.Name,
 			ID:       sbomProvider.ID,
 			Plugin:   &sbomProviderService{},
+			Schema:   &resources.Schema{},
 			isClosed: false,
 		},
 		Config: sbomProvider.Provider,
