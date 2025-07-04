@@ -73,9 +73,9 @@ microsoft.tenant @defaults("name") {
   // Commercial subscription
   subscriptions() []dict
   // Company-wide settings for apps and services.
-  settings() microsoft.tenant.settings
+  settings() microsoft.tenantSettings
   // Company-wide settings for Microsoft Forms
-  formsSettings() microsoft.tenant.formsSettings
+  formsSettings() microsoft.tenantFormsSettings
   // Privacy profile data with contact email and statement URL
   privacyProfile dict
   // List of technical notification mails
@@ -85,7 +85,7 @@ microsoft.tenant @defaults("name") {
 }
 
 // Company-wide configuration for apps and services.
-private microsoft.tenant.settings @defaults("isAppAndServicesTrialEnabled isOfficeStoreEnabled") {
+private microsoft.tenantSettings @defaults("isAppAndServicesTrialEnabled isOfficeStoreEnabled") {
   // Controls whether users can start trial subscriptions for apps and services in your organization.
   isAppAndServicesTrialEnabled bool
   // Controls whether users can access the Microsoft Store
@@ -93,7 +93,7 @@ private microsoft.tenant.settings @defaults("isAppAndServicesTrialEnabled isOffi
 }
 
 // Company-wide settings for Microsoft Forms
-private microsoft.tenant.formsSettings @defaults("isExternalSendFormEnabled isBingImageSearchEnabled") {
+private microsoft.tenantFormsSettings @defaults("isExternalSendFormEnabled isBingImageSearchEnabled") {
   // Controls whether users can send a link to a form to an external user
   isExternalSendFormEnabled bool
   // Controls whether users can collaborate on a form layout and structure with an external user
@@ -184,11 +184,11 @@ private microsoft.identityAndAccess.policy.rule @defaults("id") {
   // The unique identifier for the rule
   id string
   // Defines details of scope that's targeted by role management policy rule
-  target microsoft.identityAndAccess.policy.rule.target
+  target microsoft.identityAndAccess.policy.ruleTarget
 }
 
 // Defines details of the scope that's targeted by role management policy rule
-private microsoft.identityAndAccess.policy.rule.target {
+private microsoft.identityAndAccess.policy.ruleTarget @defaults("caller level") {
   // The type of caller that's the target of the policy rule. Allowed values are: None, Admin, EndUser
   caller string
   // The list of role settings that are enforced and cannot be overridden by child scopes
@@ -1447,11 +1447,11 @@ ms365.exchangeonline {
   // Security and Compliance policies
   securityAndCompliance() ms365.exchangeonline.securityAndCompliance
   // List of mailbox audit bypass associations
-  mailboxAuditBypassAssociation() []ms365.exchangeonline.mailboxAuditBypassAssociation
+  mailboxAuditBypassAssociation() []ms365.exchangeonlineMailboxAuditBypassAssociation
 }
 
 // Mailbox Audit Bypass Association configuration
-private ms365.exchangeonline.mailboxAuditBypassAssociation @defaults("name auditBypassEnabled") {
+private ms365.exchangeonlineMailboxAuditBypassAssociation @defaults("name auditBypassEnabled") {
   // The name of the user or computer account
   name string
   // Whether mailbox audit logging is bypassed for this account

@@ -168,7 +168,9 @@ func newMqlRoleManagementPolicyRule(runtime *plugin.Runtime, rule models.Unified
 	var err error
 
 	if rule.GetTarget() != nil {
+		ruleTargetID := fmt.Sprintf("%s-ruleTarget", *rule.GetId())
 		targetData := map[string]*llx.RawData{
+			"__id":                llx.StringData(ruleTargetID),
 			"caller":              llx.StringDataPtr(rule.GetTarget().GetCaller()),
 			"enforcedSettings":    llx.ArrayData(convert.SliceAnyToInterface(rule.GetTarget().GetEnforcedSettings()), types.String),
 			"inheritableSettings": llx.ArrayData(convert.SliceAnyToInterface(rule.GetTarget().GetInheritableSettings()), types.String),
@@ -176,7 +178,7 @@ func newMqlRoleManagementPolicyRule(runtime *plugin.Runtime, rule models.Unified
 			"operations":          llx.ArrayData(convert.SliceAnyToInterface(convertEnumCollectionToStrings(rule.GetTarget().GetOperations())), types.String),
 		}
 
-		mqlPolicyRuleTarget, err = CreateResource(runtime, "microsoft.identityAndAccess.policy.rule.target", targetData)
+		mqlPolicyRuleTarget, err = CreateResource(runtime, "microsoft.identityAndAccess.policy.ruleTarget", targetData)
 		if err != nil {
 			return nil, err
 		}
@@ -186,7 +188,7 @@ func newMqlRoleManagementPolicyRule(runtime *plugin.Runtime, rule models.Unified
 		map[string]*llx.RawData{
 			"__id":   llx.StringDataPtr(rule.GetId()),
 			"id":     llx.StringDataPtr(rule.GetId()),
-			"target": llx.ResourceData(mqlPolicyRuleTarget, "microsoft.identityAndAccess.policy.rule.target"),
+			"target": llx.ResourceData(mqlPolicyRuleTarget, "microsoft.identityAndAccess.policy.ruleTarget"),
 		})
 	if err != nil {
 		return nil, err
