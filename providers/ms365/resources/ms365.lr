@@ -1447,11 +1447,11 @@ ms365.exchangeonline {
   // Security and Compliance policies
   securityAndCompliance() ms365.exchangeonline.securityAndCompliance
   // List of mailbox audit bypass associations
-  mailboxAuditBypassAssociation() []ms365.exchangeonline.mailboxAuditBypassAssociation
+  mailboxAuditBypassAssociation() []ms365.exchangeonlineMailboxAuditBypassAssociation
 }
 
 // Mailbox Audit Bypass Association configuration
-private ms365.exchangeonline.mailboxAuditBypassAssociation @defaults("name auditBypassEnabled") {
+private ms365.exchangeonlineMailboxAuditBypassAssociation @defaults("name auditBypassEnabled") {
   // The name of the user or computer account
   name string
   // Whether mailbox audit logging is bypassed for this account

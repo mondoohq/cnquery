@@ -476,7 +476,7 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 	mailboxAuditBypassAssociations := []interface{}{}
 	var mailboxAuditBypassAssociationErr error
 	for _, assoc := range report.MailboxAuditBypassAssociation {
-		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.mailboxAuditBypassAssociation",
+		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonlineMailboxAuditBypassAssociation",
 			map[string]*llx.RawData{
 				"name":               llx.StringData(assoc.Name),
 				"auditBypassEnabled": llx.BoolData(assoc.AuditBypassEnabled),
@@ -488,7 +488,7 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 		mailboxAuditBypassAssociations = append(mailboxAuditBypassAssociations, mql)
 	}
 	r.MailboxAuditBypassAssociation = plugin.TValue[[]interface{}]{Data: mailboxAuditBypassAssociations, State: plugin.StateIsSet, Error: mailboxAuditBypassAssociationErr}
-	
+
 	return nil
 }
 

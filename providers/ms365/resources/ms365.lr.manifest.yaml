@@ -913,11 +913,9 @@ resources:
     platform:
       name:
       - microsoft365
-  ms365.exchangeonline.mailboxAuditBypassAssociation:
     fields:
       auditBypassEnabled: {}
       name: {}
-    is_private: true
     min_mondoo_version: 9.0.0
     platform:
       name:
@@ -949,6 +947,15 @@ resources:
     fields:
       isValid: {}
       zapEnabled: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - microsoft365
+  ms365.exchangeonlineMailboxAuditBypassAssociation:
+    fields:
+      auditBypassEnabled: {}
+      name: {}
     is_private: true
     min_mondoo_version: 9.0.0
     platform:

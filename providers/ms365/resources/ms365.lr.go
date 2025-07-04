@@ -346,7 +346,7 @@ func init() {
 			// to override args, implement: initMs365Exchangeonline(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMs365Exchangeonline,
 		},
-		"ms365.exchangeonline.mailboxAuditBypassAssociation": {
+		"ms365.exchangeonlineMailboxAuditBypassAssociation": {
 			// to override args, implement: initMs365ExchangeonlineMailboxAuditBypassAssociation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMs365ExchangeonlineMailboxAuditBypassAssociation,
 		},
@@ -2129,12 +2129,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlMs365Exchangeonline).GetSecurityAndCompliance()).ToDataRes(types.Resource("ms365.exchangeonline.securityAndCompliance"))
 	},
 	"ms365.exchangeonline.mailboxAuditBypassAssociation": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365Exchangeonline).GetMailboxAuditBypassAssociation()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.mailboxAuditBypassAssociation")))
+		return (r.(*mqlMs365Exchangeonline).GetMailboxAuditBypassAssociation()).ToDataRes(types.Array(types.Resource("ms365.exchangeonlineMailboxAuditBypassAssociation")))
 	},
-	"ms365.exchangeonline.mailboxAuditBypassAssociation.name": func(r plugin.Resource) *plugin.DataRes {
+	"ms365.exchangeonlineMailboxAuditBypassAssociation.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineMailboxAuditBypassAssociation).GetName()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.mailboxAuditBypassAssociation.auditBypassEnabled": func(r plugin.Resource) *plugin.DataRes {
+	"ms365.exchangeonlineMailboxAuditBypassAssociation.auditBypassEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineMailboxAuditBypassAssociation).GetAuditBypassEnabled()).ToDataRes(types.Bool)
 	},
 	"ms365.exchangeonline.securityAndCompliance.dlpCompliancePolicies": func(r plugin.Resource) *plugin.DataRes {
@@ -4868,15 +4868,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMs365Exchangeonline).MailboxAuditBypassAssociation, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.mailboxAuditBypassAssociation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+	"ms365.exchangeonlineMailboxAuditBypassAssociation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlMs365ExchangeonlineMailboxAuditBypassAssociation).__id, ok = v.Value.(string)
 			return
 		},
-	"ms365.exchangeonline.mailboxAuditBypassAssociation.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+	"ms365.exchangeonlineMailboxAuditBypassAssociation.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365ExchangeonlineMailboxAuditBypassAssociation).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.mailboxAuditBypassAssociation.auditBypassEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+	"ms365.exchangeonlineMailboxAuditBypassAssociation.auditBypassEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365ExchangeonlineMailboxAuditBypassAssociation).AuditBypassEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
@@ -12072,7 +12072,7 @@ func (c *mqlMs365Exchangeonline) GetMailboxAuditBypassAssociation() *plugin.TVal
 	})
 }
 
-// mqlMs365ExchangeonlineMailboxAuditBypassAssociation for the ms365.exchangeonline.mailboxAuditBypassAssociation resource
+// mqlMs365ExchangeonlineMailboxAuditBypassAssociation for the ms365.exchangeonlineMailboxAuditBypassAssociation resource
 type mqlMs365ExchangeonlineMailboxAuditBypassAssociation struct {
 	MqlRuntime *plugin.Runtime
 	__id string
@@ -12095,7 +12095,7 @@ func createMs365ExchangeonlineMailboxAuditBypassAssociation(runtime *plugin.Runt
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.mailboxAuditBypassAssociation", res.__id)
+		args, err = runtime.ResourceFromRecording("ms365.exchangeonlineMailboxAuditBypassAssociation", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -12106,7 +12106,7 @@ func createMs365ExchangeonlineMailboxAuditBypassAssociation(runtime *plugin.Runt
 }
 
 func (c *mqlMs365ExchangeonlineMailboxAuditBypassAssociation) MqlName() string {
-	return "ms365.exchangeonline.mailboxAuditBypassAssociation"
+	return "ms365.exchangeonlineMailboxAuditBypassAssociation"
 }
 
 func (c *mqlMs365ExchangeonlineMailboxAuditBypassAssociation) MqlID() string {
