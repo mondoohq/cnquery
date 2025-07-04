@@ -457,11 +457,16 @@ resources:
     min_mondoo_version: 9.0.0
   microsoft.identityAndAccess.policy.rule:
     fields:
+      caller: {}
+      enforcedSettings: {}
       id: {}
+      inheritableSettings: {}
+      level: {}
+      operations: {}
       target: {}
     is_private: true
     min_mondoo_version: 9.0.0
-  microsoft.identityAndAccess.policy.rule.target:
+  microsoft.identityAndAccess.policy.ruleTarget:
     fields:
       caller: {}
       enforcedSettings: {}
@@ -672,6 +677,13 @@ resources:
       displayName: {}
       formsSettings: {}
       id: {}
+      isBingImageSearchEnabled: {}
+      isExternalSendFormEnabled: {}
+      isExternalShareCollaborationEnabled: {}
+      isExternalShareResultEnabled: {}
+      isExternalShareTemplateEnabled: {}
+      isInOrgFormsPhishingScanEnabled: {}
+      isRecordIdentityByDefaultEnabled: {}
       name: {}
       onPremisesSyncEnabled: {}
       preferredLanguage: {}
@@ -683,7 +695,7 @@ resources:
       type: {}
       verifiedDomains: {}
     min_mondoo_version: 9.0.0
-  microsoft.tenant.formsSettings:
+  microsoft.tenantFormsSettings:
     fields:
       isBingImageSearchEnabled: {}
       isExternalSendFormEnabled: {}
@@ -694,7 +706,7 @@ resources:
       isRecordIdentityByDefaultEnabled: {}
     is_private: true
     min_mondoo_version: 9.0.0
-  microsoft.tenant.settings:
+  microsoft.tenantSettings:
     fields:
       isAppAndServicesTrialEnabled: {}
       isOfficeStoreEnabled: {}
@@ -823,6 +835,10 @@ resources:
       userDisplayName: {}
       userId: {}
     is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.userAuthenticationRequirements:
+    fields:
+      perUserMfaState: {}
     min_mondoo_version: 9.0.0
   microsoft.users:
     fields:

@@ -191,7 +191,7 @@ func (a *mqlMicrosoftTenant) settings() (*mqlMicrosoftTenantSettings, error) {
 	settingsId := fmt.Sprintf("%s-settings", a.Id.Data)
 
 	if appsAndServicesConfig == nil || appsAndServicesConfig.GetSettings() == nil {
-		mqlSettings, err := CreateResource(a.MqlRuntime, "microsoft.tenant.settings",
+		mqlSettings, err := CreateResource(a.MqlRuntime, "microsoft.tenantSettings",
 			map[string]*llx.RawData{
 				"__id":                         llx.StringData(settingsId),
 				"isAppAndServicesTrialEnabled": llx.BoolData(false),
@@ -203,7 +203,7 @@ func (a *mqlMicrosoftTenant) settings() (*mqlMicrosoftTenantSettings, error) {
 		return mqlSettings.(*mqlMicrosoftTenantSettings), nil
 	}
 
-	mqlSettings, err := CreateResource(a.MqlRuntime, "microsoft.tenant.settings",
+	mqlSettings, err := CreateResource(a.MqlRuntime, "microsoft.tenantSettings",
 		map[string]*llx.RawData{
 			"__id":                         llx.StringData(settingsId),
 			"isAppAndServicesTrialEnabled": llx.BoolDataPtr(appsAndServicesConfig.GetSettings().GetIsAppAndServicesTrialEnabled()),
@@ -240,7 +240,7 @@ func (a *mqlMicrosoftTenant) formsSettings() (*mqlMicrosoftTenantFormsSettings, 
 
 	formsSettingId := fmt.Sprintf("%s-forms-settings", a.Id.Data)
 
-	formSetting, err := CreateResource(a.MqlRuntime, "microsoft.tenant.formsSettings",
+	formSetting, err := CreateResource(a.MqlRuntime, "microsoft.tenantFormsSettings",
 		map[string]*llx.RawData{
 			"__id":                                llx.StringData(formsSettingId),
 			"isExternalSendFormEnabled":           llx.BoolDataPtr(settings.GetIsExternalSendFormEnabled()),

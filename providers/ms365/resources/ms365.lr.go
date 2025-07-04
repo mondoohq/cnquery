@@ -34,11 +34,11 @@ func init() {
 			Init: initMicrosoftTenant,
 			Create: createMicrosoftTenant,
 		},
-		"microsoft.tenant.settings": {
+		"microsoft.tenantSettings": {
 			// to override args, implement: initMicrosoftTenantSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftTenantSettings,
 		},
-		"microsoft.tenant.formsSettings": {
+		"microsoft.tenantFormsSettings": {
 			// to override args, implement: initMicrosoftTenantFormsSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftTenantFormsSettings,
 		},
@@ -62,7 +62,7 @@ func init() {
 			// to override args, implement: initMicrosoftIdentityAndAccessPolicyRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftIdentityAndAccessPolicyRule,
 		},
-		"microsoft.identityAndAccess.policy.rule.target": {
+		"microsoft.identityAndAccess.policy.ruleTarget": {
 			// to override args, implement: initMicrosoftIdentityAndAccessPolicyRuleTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftIdentityAndAccessPolicyRuleTarget,
 		},
@@ -548,10 +548,10 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlMicrosoftTenant).GetSubscriptions()).ToDataRes(types.Array(types.Dict))
 	},
 	"microsoft.tenant.settings": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftTenant).GetSettings()).ToDataRes(types.Resource("microsoft.tenant.settings"))
+		return (r.(*mqlMicrosoftTenant).GetSettings()).ToDataRes(types.Resource("microsoft.tenantSettings"))
 	},
 	"microsoft.tenant.formsSettings": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftTenant).GetFormsSettings()).ToDataRes(types.Resource("microsoft.tenant.formsSettings"))
+		return (r.(*mqlMicrosoftTenant).GetFormsSettings()).ToDataRes(types.Resource("microsoft.tenantFormsSettings"))
 	},
 	"microsoft.tenant.privacyProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenant).GetPrivacyProfile()).ToDataRes(types.Dict)
@@ -562,31 +562,31 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.tenant.preferredLanguage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenant).GetPreferredLanguage()).ToDataRes(types.String)
 	},
-	"microsoft.tenant.settings.isAppAndServicesTrialEnabled": func(r plugin.Resource) *plugin.DataRes {
+	"microsoft.tenantSettings.isAppAndServicesTrialEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenantSettings).GetIsAppAndServicesTrialEnabled()).ToDataRes(types.Bool)
 	},
-	"microsoft.tenant.settings.isOfficeStoreEnabled": func(r plugin.Resource) *plugin.DataRes {
+	"microsoft.tenantSettings.isOfficeStoreEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenantSettings).GetIsOfficeStoreEnabled()).ToDataRes(types.Bool)
 	},
-	"microsoft.tenant.formsSettings.isExternalSendFormEnabled": func(r plugin.Resource) *plugin.DataRes {
+	"microsoft.tenantFormsSettings.isExternalSendFormEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenantFormsSettings).GetIsExternalSendFormEnabled()).ToDataRes(types.Bool)
 	},
-	"microsoft.tenant.formsSettings.isExternalShareCollaborationEnabled": func(r plugin.Resource) *plugin.DataRes {
+	"microsoft.tenantFormsSettings.isExternalShareCollaborationEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenantFormsSettings).GetIsExternalShareCollaborationEnabled()).ToDataRes(types.Bool)
 	},
-	"microsoft.tenant.formsSettings.isExternalShareResultEnabled": func(r plugin.Resource) *plugin.DataRes {
+	"microsoft.tenantFormsSettings.isExternalShareResultEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenantFormsSettings).GetIsExternalShareResultEnabled()).ToDataRes(types.Bool)
 	},
-	"microsoft.tenant.formsSettings.isExternalShareTemplateEnabled": func(r plugin.Resource) *plugin.DataRes {
+	"microsoft.tenantFormsSettings.isExternalShareTemplateEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenantFormsSettings).GetIsExternalShareTemplateEnabled()).ToDataRes(types.Bool)
 	},
-	"microsoft.tenant.formsSettings.isRecordIdentityByDefaultEnabled": func(r plugin.Resource) *plugin.DataRes {
+	"microsoft.tenantFormsSettings.isRecordIdentityByDefaultEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenantFormsSettings).GetIsRecordIdentityByDefaultEnabled()).ToDataRes(types.Bool)
 	},
-	"microsoft.tenant.formsSettings.isBingImageSearchEnabled": func(r plugin.Resource) *plugin.DataRes {
+	"microsoft.tenantFormsSettings.isBingImageSearchEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenantFormsSettings).GetIsBingImageSearchEnabled()).ToDataRes(types.Bool)
 	},
-	"microsoft.tenant.formsSettings.isInOrgFormsPhishingScanEnabled": func(r plugin.Resource) *plugin.DataRes {
+	"microsoft.tenantFormsSettings.isInOrgFormsPhishingScanEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenantFormsSettings).GetIsInOrgFormsPhishingScanEnabled()).ToDataRes(types.Bool)
 	},
 	"microsoft.users.filter": func(r plugin.Resource) *plugin.DataRes {
@@ -668,21 +668,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlMicrosoftIdentityAndAccessPolicyRule).GetId()).ToDataRes(types.String)
 	},
 	"microsoft.identityAndAccess.policy.rule.target": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftIdentityAndAccessPolicyRule).GetTarget()).ToDataRes(types.Resource("microsoft.identityAndAccess.policy.rule.target"))
+		return (r.(*mqlMicrosoftIdentityAndAccessPolicyRule).GetTarget()).ToDataRes(types.Resource("microsoft.identityAndAccess.policy.ruleTarget"))
 	},
-	"microsoft.identityAndAccess.policy.rule.target.caller": func(r plugin.Resource) *plugin.DataRes {
+	"microsoft.identityAndAccess.policy.ruleTarget.caller": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccessPolicyRuleTarget).GetCaller()).ToDataRes(types.String)
 	},
-	"microsoft.identityAndAccess.policy.rule.target.enforcedSettings": func(r plugin.Resource) *plugin.DataRes {
+	"microsoft.identityAndAccess.policy.ruleTarget.enforcedSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccessPolicyRuleTarget).GetEnforcedSettings()).ToDataRes(types.Array(types.String))
 	},
-	"microsoft.identityAndAccess.policy.rule.target.inheritableSettings": func(r plugin.Resource) *plugin.DataRes {
+	"microsoft.identityAndAccess.policy.ruleTarget.inheritableSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccessPolicyRuleTarget).GetInheritableSettings()).ToDataRes(types.Array(types.String))
 	},
-	"microsoft.identityAndAccess.policy.rule.target.level": func(r plugin.Resource) *plugin.DataRes {
+	"microsoft.identityAndAccess.policy.ruleTarget.level": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccessPolicyRuleTarget).GetLevel()).ToDataRes(types.String)
 	},
-	"microsoft.identityAndAccess.policy.rule.target.operations": func(r plugin.Resource) *plugin.DataRes {
+	"microsoft.identityAndAccess.policy.ruleTarget.operations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccessPolicyRuleTarget).GetOperations()).ToDataRes(types.Array(types.String))
 	},
 	"microsoft.identityAndAccess.identityAndSignIn.policies": func(r plugin.Resource) *plugin.DataRes {
@@ -2464,47 +2464,47 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMicrosoftTenant).PreferredLanguage, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"microsoft.tenant.settings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+	"microsoft.tenantSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlMicrosoftTenantSettings).__id, ok = v.Value.(string)
 			return
 		},
-	"microsoft.tenant.settings.isAppAndServicesTrialEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+	"microsoft.tenantSettings.isAppAndServicesTrialEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftTenantSettings).IsAppAndServicesTrialEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"microsoft.tenant.settings.isOfficeStoreEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+	"microsoft.tenantSettings.isOfficeStoreEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftTenantSettings).IsOfficeStoreEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"microsoft.tenant.formsSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+	"microsoft.tenantFormsSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlMicrosoftTenantFormsSettings).__id, ok = v.Value.(string)
 			return
 		},
-	"microsoft.tenant.formsSettings.isExternalSendFormEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+	"microsoft.tenantFormsSettings.isExternalSendFormEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftTenantFormsSettings).IsExternalSendFormEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"microsoft.tenant.formsSettings.isExternalShareCollaborationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+	"microsoft.tenantFormsSettings.isExternalShareCollaborationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftTenantFormsSettings).IsExternalShareCollaborationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"microsoft.tenant.formsSettings.isExternalShareResultEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+	"microsoft.tenantFormsSettings.isExternalShareResultEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftTenantFormsSettings).IsExternalShareResultEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"microsoft.tenant.formsSettings.isExternalShareTemplateEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+	"microsoft.tenantFormsSettings.isExternalShareTemplateEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftTenantFormsSettings).IsExternalShareTemplateEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"microsoft.tenant.formsSettings.isRecordIdentityByDefaultEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+	"microsoft.tenantFormsSettings.isRecordIdentityByDefaultEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftTenantFormsSettings).IsRecordIdentityByDefaultEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"microsoft.tenant.formsSettings.isBingImageSearchEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+	"microsoft.tenantFormsSettings.isBingImageSearchEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftTenantFormsSettings).IsBingImageSearchEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"microsoft.tenant.formsSettings.isInOrgFormsPhishingScanEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+	"microsoft.tenantFormsSettings.isInOrgFormsPhishingScanEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftTenantFormsSettings).IsInOrgFormsPhishingScanEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
@@ -2636,27 +2636,27 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMicrosoftIdentityAndAccessPolicyRule).Target, ok = plugin.RawToTValue[*mqlMicrosoftIdentityAndAccessPolicyRuleTarget](v.Value, v.Error)
 		return
 	},
-	"microsoft.identityAndAccess.policy.rule.target.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+	"microsoft.identityAndAccess.policy.ruleTarget.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlMicrosoftIdentityAndAccessPolicyRuleTarget).__id, ok = v.Value.(string)
 			return
 		},
-	"microsoft.identityAndAccess.policy.rule.target.caller": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+	"microsoft.identityAndAccess.policy.ruleTarget.caller": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftIdentityAndAccessPolicyRuleTarget).Caller, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"microsoft.identityAndAccess.policy.rule.target.enforcedSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+	"microsoft.identityAndAccess.policy.ruleTarget.enforcedSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftIdentityAndAccessPolicyRuleTarget).EnforcedSettings, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
-	"microsoft.identityAndAccess.policy.rule.target.inheritableSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+	"microsoft.identityAndAccess.policy.ruleTarget.inheritableSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftIdentityAndAccessPolicyRuleTarget).InheritableSettings, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
-	"microsoft.identityAndAccess.policy.rule.target.level": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+	"microsoft.identityAndAccess.policy.ruleTarget.level": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftIdentityAndAccessPolicyRuleTarget).Level, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"microsoft.identityAndAccess.policy.rule.target.operations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+	"microsoft.identityAndAccess.policy.ruleTarget.operations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftIdentityAndAccessPolicyRuleTarget).Operations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
@@ -5679,7 +5679,7 @@ func (c *mqlMicrosoftTenant) GetPreferredLanguage() *plugin.TValue[string] {
 	return &c.PreferredLanguage
 }
 
-// mqlMicrosoftTenantSettings for the microsoft.tenant.settings resource
+// mqlMicrosoftTenantSettings for the microsoft.tenantSettings resource
 type mqlMicrosoftTenantSettings struct {
 	MqlRuntime *plugin.Runtime
 	__id string
@@ -5702,7 +5702,7 @@ func createMicrosoftTenantSettings(runtime *plugin.Runtime, args map[string]*llx
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("microsoft.tenant.settings", res.__id)
+		args, err = runtime.ResourceFromRecording("microsoft.tenantSettings", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -5713,7 +5713,7 @@ func createMicrosoftTenantSettings(runtime *plugin.Runtime, args map[string]*llx
 }
 
 func (c *mqlMicrosoftTenantSettings) MqlName() string {
-	return "microsoft.tenant.settings"
+	return "microsoft.tenantSettings"
 }
 
 func (c *mqlMicrosoftTenantSettings) MqlID() string {
@@ -5728,7 +5728,7 @@ func (c *mqlMicrosoftTenantSettings) GetIsOfficeStoreEnabled() *plugin.TValue[bo
 	return &c.IsOfficeStoreEnabled
 }
 
-// mqlMicrosoftTenantFormsSettings for the microsoft.tenant.formsSettings resource
+// mqlMicrosoftTenantFormsSettings for the microsoft.tenantFormsSettings resource
 type mqlMicrosoftTenantFormsSettings struct {
 	MqlRuntime *plugin.Runtime
 	__id string
@@ -5756,7 +5756,7 @@ func createMicrosoftTenantFormsSettings(runtime *plugin.Runtime, args map[string
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("microsoft.tenant.formsSettings", res.__id)
+		args, err = runtime.ResourceFromRecording("microsoft.tenantFormsSettings", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -5767,7 +5767,7 @@ func createMicrosoftTenantFormsSettings(runtime *plugin.Runtime, args map[string
 }
 
 func (c *mqlMicrosoftTenantFormsSettings) MqlName() string {
-	return "microsoft.tenant.formsSettings"
+	return "microsoft.tenantFormsSettings"
 }
 
 func (c *mqlMicrosoftTenantFormsSettings) MqlID() string {
@@ -6192,7 +6192,7 @@ func (c *mqlMicrosoftIdentityAndAccessPolicyRule) GetTarget() *plugin.TValue[*mq
 	return &c.Target
 }
 
-// mqlMicrosoftIdentityAndAccessPolicyRuleTarget for the microsoft.identityAndAccess.policy.rule.target resource
+// mqlMicrosoftIdentityAndAccessPolicyRuleTarget for the microsoft.identityAndAccess.policy.ruleTarget resource
 type mqlMicrosoftIdentityAndAccessPolicyRuleTarget struct {
 	MqlRuntime *plugin.Runtime
 	__id string
@@ -6218,7 +6218,7 @@ func createMicrosoftIdentityAndAccessPolicyRuleTarget(runtime *plugin.Runtime, a
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("microsoft.identityAndAccess.policy.rule.target", res.__id)
+		args, err = runtime.ResourceFromRecording("microsoft.identityAndAccess.policy.ruleTarget", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -6229,7 +6229,7 @@ func createMicrosoftIdentityAndAccessPolicyRuleTarget(runtime *plugin.Runtime, a
 }
 
 func (c *mqlMicrosoftIdentityAndAccessPolicyRuleTarget) MqlName() string {
-	return "microsoft.identityAndAccess.policy.rule.target"
+	return "microsoft.identityAndAccess.policy.ruleTarget"
 }
 
 func (c *mqlMicrosoftIdentityAndAccessPolicyRuleTarget) MqlID() string {
