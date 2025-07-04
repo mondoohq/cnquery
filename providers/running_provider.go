@@ -15,7 +15,6 @@ import (
 	pp "go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/resources"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/proto"
 )
 
 // connectionGraphNode is a node in the connection graph. It represents a connection.
@@ -165,7 +164,7 @@ func (r *RestartableProvider) Client() *plugin.Client {
 // Connect implements plugin.ProviderPlugin.
 func (r *RestartableProvider) Connect(req *pp.ConnectReq, cb pp.ProviderCallback) (*pp.ConnectRes, error) {
 	if len(req.Asset.GetConnections()) > 0 {
-		reqClone := proto.Clone(req).(*pp.ConnectReq)
+		reqClone := req.CloneVT()
 		r.lock.Lock()
 		connectionId := req.Asset.Connections[0].Id
 		if _, ok := r.connectionGraph.getNode(connectionId); !ok {

@@ -15,7 +15,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream"
 )
 
-//go:generate protoc --proto_path=../../:. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. cnquery_explorer_scan.proto
+//go:generate protoc --proto_path=../../:. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. --go-vtproto_out=. --go-vtproto_opt=paths=source_relative --go-vtproto_opt=features=marshal+unmarshal+size cnquery_explorer_scan.proto
 
 func init() {
 	rand.Seed(time.Now().UnixNano())

@@ -16,11 +16,10 @@ import (
 	"github.com/segmentio/ksuid"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault/config"
-	"google.golang.org/protobuf/proto"
 	"sigs.k8s.io/yaml"
 )
 
-//go:generate protoc --proto_path=../../../:. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. inventory.proto
+//go:generate protoc --proto_path=../../../:. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. --go-vtproto_out=. --go-vtproto_opt=paths=source_relative --go-vtproto_opt=features=marshal+unmarshal+size+clone inventory.proto
 
 const (
 	InventoryFilePath = "mondoo.app/source-file"
@@ -238,8 +237,7 @@ func cleanSecrets(c *vault.Credential) {
 }
 
 func cloneCred(c *vault.Credential) *vault.Credential {
-	m := proto.Clone(c)
-	return m.(*vault.Credential)
+	return c.CloneVT()
 }
 
 // Validate ensures consistency within the inventory.
@@ -444,7 +442,7 @@ func (cfg *Config) Clone(opts ...CloneOption) *Config {
 		option.Apply(cloneSettings)
 	}
 
-	clonedObject := proto.Clone(cfg).(*Config)
+	clonedObject := cfg.CloneVT()
 	clonedObject.Id = 0
 	if cloneSettings.noDiscovery {
 		clonedObject.Discover = &Discovery{}

@@ -10,11 +10,16 @@ import (
 	plugin "github.com/hashicorp/go-plugin"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/encoding"
+	_ "google.golang.org/grpc/encoding/proto"
 )
 
 func init() {
 	var x ProviderPlugin = &GRPCClient{}
 	_ = x
+	encoding.RegisterCodecV2(&Codec{
+		fallback: encoding.GetCodecV2("proto"),
+	})
 }
 
 // GRPCClient is an implementation of KV that talks over RPC.

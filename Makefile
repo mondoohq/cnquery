@@ -67,6 +67,7 @@ prep/tools: prep/tools/protolint prep/tools/mockgen
 	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 	go install go.mondoo.com/ranger-rpc/protoc-gen-rangerrpc@latest
 	go install go.mondoo.com/ranger-rpc/protoc-gen-rangerrpc-swagger@latest
+	go install github.com/planetscale/vtprotobuf/cmd/protoc-gen-go-vtproto@latest
 
 prep/tools/mockgen:
 	go install go.uber.org/mock/mockgen@latest

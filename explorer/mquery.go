@@ -18,7 +18,6 @@ import (
 	"go.mondoo.com/cnquery/v11/types"
 	"go.mondoo.com/cnquery/v11/utils/multierr"
 	"go.mondoo.com/cnquery/v11/utils/sortx"
-	"google.golang.org/protobuf/proto"
 )
 
 // Compile a given query and return the bundle. Both v1 and v2 versions are compiled.
@@ -333,7 +332,7 @@ func (m *Mquery) Sanitize() {
 // result of it. Anything that is not set in the query, is pulled from the base.
 func (m *Mquery) Merge(base *Mquery) *Mquery {
 	// TODO: lots of potential to speed things up here
-	res := proto.Clone(m).(*Mquery)
+	res := m.CloneVT()
 	res.AddBase(base)
 	return res
 }

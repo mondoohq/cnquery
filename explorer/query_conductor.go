@@ -19,7 +19,6 @@ import (
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
-	"google.golang.org/protobuf/proto"
 )
 
 func (s *LocalServices) Assign(ctx context.Context, assignment *Assignment) (*Empty, error) {
@@ -298,7 +297,7 @@ func MatchFilters(entityMrn string, filters []*Mquery, packs []*QueryPack, schem
 		cur := filters[i]
 
 		if _, ok := supported[cur.CodeId]; ok {
-			curCopy := proto.Clone(cur).(*Mquery)
+			curCopy := cur.CloneVT()
 			curCopy.Mrn = entityMrn + "/assetfilter/" + cur.CodeId
 			curCopy.Title = curCopy.Mql
 			matching = append(matching, curCopy)

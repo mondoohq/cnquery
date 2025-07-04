@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"go.mondoo.com/cnquery/v11/types"
-	"google.golang.org/protobuf/proto"
 )
 
 type RawIP struct {
@@ -302,12 +301,12 @@ func (i RawIP) Marshal() ([]byte, error) {
 		PrefixLength: int32(i.PrefixLength),
 	}
 
-	return proto.Marshal(data)
+	return data.MarshalVT()
 }
 
 func UnmarshalIP(bytes []byte) (*RawIP, error) {
-	var data IP
-	if err := proto.Unmarshal(bytes, &data); err != nil {
+	data := &IP{}
+	if err := data.UnmarshalVT(bytes); err != nil {
 		return nil, err
 	}
 
