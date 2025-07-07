@@ -297,7 +297,10 @@ require (
 	github.com/moby/sys/mount v0.3.4
 )
 
-require go.uber.org/goleak v1.3.0
+require (
+	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10
+	go.uber.org/goleak v1.3.0
+)
 
 require (
 	cel.dev/expr v0.24.0 // indirect
@@ -329,7 +332,6 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/moby/sys/mountinfo v0.7.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
-	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/smarty/assertions v1.15.1 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.5.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect

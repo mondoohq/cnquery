@@ -126,7 +126,7 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 	// anyResultFailed is a flag that will be switched on if any query result failed,
 	// if the flag `exit-1-on-failure` is provided and anyResultFailed is true, we
 	// will exit the program with the exit code `1`
-	var anyResultFailed = false
+	anyResultFailed := false
 	// we defer this check since we want it to be the last thing to be evaluated
 	defer func() {
 		if conf.GetExit_1OnFailure() && anyResultFailed {
@@ -207,7 +207,7 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 		}
 
 		if conf.Format == "llx" && conf.Output != "" {
-			out, err := proto.Marshal(code)
+			out, err := code.MarshalVT()
 			if err != nil {
 				return errors.Wrap(err, "failed to marshal code bundle")
 			}

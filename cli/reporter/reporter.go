@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-//go:generate protoc --proto_path=../:. --go_out=. --go_opt=paths=source_relative cnquery_report.proto
+//go:generate protoc --proto_path=../:. --go_out=. --go_opt=paths=source_relative --go-vtproto_out=. --go-vtproto_opt=paths=source_relative --go-vtproto_opt=features=marshal+unmarshal+size cnquery_report.proto
 
 package reporter
 

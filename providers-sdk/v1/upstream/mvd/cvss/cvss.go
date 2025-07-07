@@ -12,7 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-//go:generate protoc --proto_path=. --go_out=. --go_opt=paths=source_relative cvss.proto
+//go:generate protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --go-vtproto_out=. --go-vtproto_opt=paths=source_relative --go-vtproto_opt=features=marshal+unmarshal+size cvss.proto
 //go:generate go run golang.org/x/tools/cmd/stringer -type=Severity
 
 var (

@@ -15,7 +15,7 @@ import (
 	"go.mondoo.com/ranger-rpc"
 )
 
-//go:generate protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. errors.proto
+//go:generate protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. --go-vtproto_out=. --go-vtproto_opt=paths=source_relative --go-vtproto_opt=features=marshal+unmarshal+size errors.proto
 
 type PanicReportFn func(product, version, build string, r any, stacktrace []byte)
 

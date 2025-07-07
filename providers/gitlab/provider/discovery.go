@@ -8,12 +8,11 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"gitlab.com/gitlab-org/api/client-go"
+	gitlab "gitlab.com/gitlab-org/api/client-go"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/v11/providers/gitlab/connection"
 	"golang.org/x/exp/slices"
-	"google.golang.org/protobuf/proto"
 )
 
 func (s *Service) discover(root *inventory.Asset, conn *connection.GitLabConnection) (*inventory.Inventory, error) {
@@ -288,7 +287,7 @@ func (s *Service) discoverTypes(targets []string, conn *connection.GitLabConnect
 	creds := make([]*vault.Credential, len(conn.Conf.Credentials))
 	for i := range conn.Conf.Credentials {
 		cred := conn.Conf.Credentials[i]
-		cc := proto.Clone(cred).(*vault.Credential)
+		cc := cred.CloneVT()
 		if cc.User == "" {
 			cc.User = "oauth2"
 		}

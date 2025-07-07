@@ -19,7 +19,6 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/v11/providers/github/connection"
 	"go.mondoo.com/cnquery/v11/utils/stringx"
-	"google.golang.org/protobuf/proto"
 )
 
 func Discover(runtime *plugin.Runtime, opts map[string]string) (*inventory.Inventory, error) {
@@ -328,7 +327,7 @@ func discoverTerraform(conn *connection.GithubConnection, repo *mqlGithubReposit
 	creds := make([]*vault.Credential, len(conf.Credentials))
 	for i := range conf.Credentials {
 		cred := conf.Credentials[i]
-		cc := proto.Clone(cred).(*vault.Credential)
+		cc := cred.CloneVT()
 		if cc.User == "" {
 			cc.User = "oauth2"
 		}
@@ -372,7 +371,7 @@ func discoverK8sManifests(conn *connection.GithubConnection, repo *mqlGithubRepo
 	creds := make([]*vault.Credential, len(conf.Credentials))
 	for i := range conf.Credentials {
 		cred := conf.Credentials[i]
-		cc := proto.Clone(cred).(*vault.Credential)
+		cc := cred.CloneVT()
 		if cc.User == "" {
 			cc.User = "oauth2"
 		}
