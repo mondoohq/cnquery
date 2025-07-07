@@ -9,11 +9,11 @@ toolchain go1.24.3
 require (
 	// pin v0.92.0
 	github.com/Snowflake-Labs/terraform-provider-snowflake v0.92.0
-	github.com/jmoiron/sqlx v1.4.0
-	github.com/snowflakedb/gosnowflake v1.14.1
-	github.com/stretchr/testify v1.10.0
-	go.mondoo.com/cnquery/v11 v11.60.0
-	go.mondoo.com/ranger-rpc v0.6.6
+	github.com/jmoiron/sqlx v1.4.0 // indirect
+	github.com/snowflakedb/gosnowflake v1.15.0
+	github.com/stretchr/testify v1.10.0 // indirect
+	go.mondoo.com/cnquery/v11 v11.61.0
+	go.mondoo.com/ranger-rpc v0.7.0
 	golang.org/x/crypto v0.39.0
 )
 
@@ -51,7 +51,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.29.17 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.70 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.32 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.82 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.83 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.36 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.36 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.3 // indirect
@@ -60,9 +60,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.7.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.18.17 // indirect
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.82.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.83.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.35.7 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.59.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.60.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.25.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.30.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.34.0 // indirect
@@ -187,7 +187,7 @@ require (
 	golang.org/x/time v0.12.0 // indirect
 	golang.org/x/tools v0.34.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
-	google.golang.org/api v0.239.0 // indirect
+	google.golang.org/api v0.240.0 // indirect
 	google.golang.org/genproto v0.0.0-20250603155806-513f23925822 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250603155806-513f23925822 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250603155806-513f23925822 // indirect

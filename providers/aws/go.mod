@@ -24,10 +24,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.51.0
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.61.2
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.30.6
-	github.com/aws/aws-sdk-go-v2/service/configservice v1.52.7
+	github.com/aws/aws-sdk-go-v2/service/configservice v1.53.0
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.53.0
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.43.4
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.227.0
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.44.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.230.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.45.1
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.33.2
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.58.1
@@ -39,26 +39,26 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.33.6
 	github.com/aws/aws-sdk-go-v2/service/emr v1.49.3
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.56.0
-	github.com/aws/aws-sdk-go-v2/service/iam v1.42.2
-	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.38.0
+	github.com/aws/aws-sdk-go-v2/service/iam v1.43.0
+	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.38.1
 	github.com/aws/aws-sdk-go-v2/service/kms v1.41.2
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.72.0
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.37.3
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.39.0
-	github.com/aws/aws-sdk-go-v2/service/rds v1.99.0
+	github.com/aws/aws-sdk-go-v2/service/rds v1.99.1
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.54.6
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.82.0
-	github.com/aws/aws-sdk-go-v2/service/s3control v1.59.0
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.198.0
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.83.0
+	github.com/aws/aws-sdk-go-v2/service/s3control v1.60.0
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.200.0
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.35.7
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.58.0
 	github.com/aws/aws-sdk-go-v2/service/sns v1.34.7
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.38.8
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.59.3
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.60.0
 	github.com/aws/aws-sdk-go-v2/service/sts v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.10.5
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.31.2
-	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.63.0
+	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.63.1
 	github.com/aws/smithy-go v1.22.4
 	github.com/cockroachdb/errors v1.12.0
 	github.com/google/uuid v1.6.0
@@ -67,7 +67,7 @@ require (
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/afero v1.14.0
 	github.com/stretchr/testify v1.10.0
-	go.mondoo.com/cnquery/v11 v11.60.0
+	go.mondoo.com/cnquery/v11 v11.61.0
 	golang.org/x/exp v0.0.0-20250620022241-b7579e27df2b
 	k8s.io/client-go v0.33.2
 )
@@ -135,9 +135,9 @@ require (
 	github.com/danieljoos/wincred v1.2.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/distribution/reference v0.6.0 // indirect
-	github.com/docker/cli v28.3.0+incompatible // indirect
+	github.com/docker/cli v28.3.1+incompatible // indirect
 	github.com/docker/distribution v2.8.3+incompatible // indirect
-	github.com/docker/docker v28.3.0+incompatible // indirect
+	github.com/docker/docker v28.3.1+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.9.3 // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
@@ -251,8 +251,8 @@ require (
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	github.com/zeebo/errs v1.4.0 // indirect
-	go.mondoo.com/mondoo-go v0.0.0-20250625000441-f66825318b05 // indirect
-	go.mondoo.com/ranger-rpc v0.6.6 // indirect
+	go.mondoo.com/mondoo-go v0.0.0-20250702005123-23558fe8001c // indirect
+	go.mondoo.com/ranger-rpc v0.7.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/contrib/detectors/gcp v1.37.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.62.0 // indirect
@@ -277,7 +277,7 @@ require (
 	golang.org/x/time v0.12.0 // indirect
 	golang.org/x/tools v0.34.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
-	google.golang.org/api v0.239.0 // indirect
+	google.golang.org/api v0.240.0 // indirect
 	google.golang.org/genproto v0.0.0-20250603155806-513f23925822 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250603155806-513f23925822 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250603155806-513f23925822 // indirect
