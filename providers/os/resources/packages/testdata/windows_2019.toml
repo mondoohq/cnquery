@@ -1,5 +1,5 @@
 # Packages
-[commands."powershell -c \"Get-AppxPackage -AllUsers | Select Name, PackageFullName, Architecture, Version, Publisher  | ConvertTo-Json\""]
+[commands."powershell -c \"Get-AppxPackage -AllUsers | Select Name, PackageFullName, Architecture, Version, Publisher, InstallLocation | ConvertTo-Json\""]
 stdout="""
 [
     {
@@ -197,6 +197,14 @@ stdout="""
         "Architecture":  11,
         "Version":  "6.2.1.0",
         "Publisher":  "CN=Microsoft Windows, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
+    },
+    {
+        "Name":  "Microsoft.MicrosoftEdge.Stable",
+        "PackageFullName":  "Microsoft.MicrosoftEdge.Stable_112.0.1722.39_neutral__8wekyb3d8bbwe",
+        "Architecture":  11,
+        "Version":  "112.0.1722.39",
+        "InstallLocation":  "C:\\\\Program Files\\\\WindowsApps\\\\Microsoft.MicrosoftEdge.Stable_112.0.1722.39_neutral__8wekyb3d8bbwe",
+        "Publisher":  "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
     }
 ]
 """

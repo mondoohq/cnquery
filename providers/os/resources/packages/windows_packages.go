@@ -101,20 +101,21 @@ Get-ItemProperty (@(
   'HKLM:\\SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*',
   'HKCU:\\SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*'
 ) | Where-Object { Test-Path $_ }) |
-Select-Object -Property DisplayName,DisplayVersion,Publisher,EstimatedSize,InstallSource,UninstallString | ConvertTo-Json -Compress
+Select-Object -Property DisplayName,DisplayVersion,Publisher,EstimatedSize,InstallSource,UninstallString,InstallLocation | ConvertTo-Json -Compress
 `
 
 var (
 	WINDOWS_QUERY_HOTFIXES      = `Get-HotFix | Select-Object -Property Status, Description, HotFixId, Caption, InstalledOn, InstalledBy | ConvertTo-Json`
-	WINDOWS_QUERY_APPX_PACKAGES = `Get-AppxPackage -AllUsers | Select Name, PackageFullName, Architecture, Version, Publisher  | ConvertTo-Json`
+	WINDOWS_QUERY_APPX_PACKAGES = `Get-AppxPackage -AllUsers | Select Name, PackageFullName, Architecture, Version, Publisher, InstallLocation | ConvertTo-Json`
 )
 
 type winAppxPackages struct {
-	Name         string `json:"Name"`
-	FullName     string `json:"PackageFullName"`
-	Architecture int    `json:"Architecture"`
-	Version      string `json:"Version"`
-	Publisher    string `json:"Publisher"`
+	Name            string `json:"Name"`
+	FullName        string `json:"PackageFullName"`
+	Architecture    int    `json:"Architecture"`
+	Version         string `json:"Version"`
+	Publisher       string `json:"Publisher"`
+	InstallLocation string `json:"InstallLocation"`
 	// can directly set it to the architecture string, the pwsh script returns it as int (Architecture)
 	arch string `json:"-"`
 }
@@ -136,6 +137,14 @@ func (p winAppxPackages) toPackage(platform *inventory.Platform) Package {
 		Format:  "windows/appx",
 		Vendor:  p.Publisher,
 		PUrl:    purl.NewPackageURL(platform, purl.TypeAppx, p.Name, p.Version).String(),
+	}
+	if p.InstallLocation != "" {
+		pkg.Files = []FileRecord{
+			{
+				Path: p.InstallLocation,
+			},
+		}
+		pkg.FilesAvailable = PkgFilesIncluded
 	}
 
 	if p.Version != "" {
@@ -452,6 +461,7 @@ func getPackageFromRegistryKeyItems(children []registry.RegistryKeyItem, platfor
 	var displayName string
 	var displayVersion string
 	var publisher string
+	var installLocation string
 
 	for _, i := range children {
 		switch i.Key {
@@ -463,6 +473,8 @@ func getPackageFromRegistryKeyItems(children []registry.RegistryKeyItem, platfor
 			displayVersion = i.Value.String
 		case "Publisher":
 			publisher = i.Value.String
+		case "InstallLocation":
+			installLocation = i.Value.String
 		}
 	}
 
@@ -487,6 +499,14 @@ func getPackageFromRegistryKeyItems(children []registry.RegistryKeyItem, platfor
 		PUrl: purl.NewPackageURL(
 			platform, purl.TypeWindows, displayName, displayVersion,
 		).String(),
+	}
+	if installLocation != "" {
+		pkg.Files = []FileRecord{
+			{
+				Path: installLocation,
+			},
+		}
+		pkg.FilesAvailable = PkgFilesIncluded
 	}
 
 	if displayVersion != "" {
@@ -561,6 +581,7 @@ func ParseWindowsAppPackages(platform *inventory.Platform, input io.Reader) ([]P
 		InstallSource   string `json:"InstallSource"`
 		EstimatedSize   int    `json:"EstimatedSize"`
 		UninstallString string `json:"UninstallString"`
+		InstallLocation string `json:"InstallLocation"`
 	}
 
 	var entries []powershellUninstallEntry
@@ -594,7 +615,7 @@ func ParseWindowsAppPackages(platform *inventory.Platform, input io.Reader) ([]P
 		} else {
 			log.Debug().Msg("ignored package since information is missing")
 		}
-		pkgs = append(pkgs, Package{
+		pkg := Package{
 			Name:    entry.DisplayName,
 			Version: entry.DisplayVersion,
 			Format:  "windows/app",
@@ -604,7 +625,15 @@ func ParseWindowsAppPackages(platform *inventory.Platform, input io.Reader) ([]P
 			PUrl: purl.NewPackageURL(
 				platform, purl.TypeWindows, entry.DisplayName, entry.DisplayVersion,
 			).String(),
-		})
+		}
+		if entry.InstallLocation != "" {
+			pkg.Files = []FileRecord{
+				{
+					Path: entry.InstallLocation,
+				},
+			}
+		}
+		pkgs = append(pkgs, pkg)
 	}
 
 	return pkgs, nil
