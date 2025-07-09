@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v11/utils/timex"
 )
 
 type Resource interface {
@@ -240,40 +241,6 @@ func resourceLengthV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 	return IntData(int64(len(list))), 0, nil
 }
 
-var timeFormats = map[string]string{
-	"ansic":    time.ANSIC,
-	"rfc822":   time.RFC822,
-	"rfc822z":  time.RFC822Z,
-	"rfc850":   time.RFC850,
-	"rfc1123":  time.RFC1123,
-	"rfc1123z": time.RFC1123Z,
-	"rfc3339":  time.RFC3339,
-	"kitchen":  time.Kitchen,
-	"stamp":    time.Stamp,
-	"datetime": time.DateTime,
-	"date":     time.DateOnly,
-	"time":     time.TimeOnly,
-}
-
-// Note: the list of recognized timeFormats is mutually exclusive.
-// This means that for any given timestamp for one format it won't
-// parse with any of the other formats. Should this ever change,
-// the order in which formats are parsed will play a more important role.
-var defaultTimeFormatsOrder = []string{
-	time.RFC3339,
-	time.DateTime,
-	time.DateOnly,
-	time.TimeOnly,
-	time.RFC1123,
-	time.RFC1123Z,
-	time.ANSIC,
-	time.RFC822,
-	time.RFC822Z,
-	time.RFC850,
-	time.Kitchen,
-	time.Stamp,
-}
-
 func resourceDateV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	args, rref, err := primitive2array(e, ref, chunk.Function.Args)
 	if err != nil || rref != 0 {
@@ -292,30 +259,13 @@ func resourceDateV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 			return nil, 0, errors.New("provided time format is not provided as string")
 		}
 		format = strings.ToLower(format)
-		if f, ok := timeFormats[format]; ok {
-			format = f
-		}
 	}
 
-	if format != "" {
-		parsed, err := time.Parse(format, timestamp)
-		if err != nil {
-			return nil, 0, errors.New("failed to parse time: " + err.Error())
-		}
-		return TimeData(parsed), 0, nil
+	res, err := timex.Parse(timestamp, format)
+	if err != nil {
+		return nil, 0, errors.New("failed to parse time: " + err.Error())
 	}
-
-	// Note: Yes, this approach is much slower than giving us a hint
-	// about which time format is used.
-	for _, format := range defaultTimeFormatsOrder {
-		parsed, err := time.Parse(format, timestamp)
-		if err != nil {
-			continue
-		}
-		return TimeData(parsed), 0, nil
-	}
-
-	return nil, 0, errors.New("failed to parse time")
+	return TimeData(res), 0, nil
 }
 
 var durationRegex = regexp.MustCompile(`^(\d+|[.])(\w*)$`)
