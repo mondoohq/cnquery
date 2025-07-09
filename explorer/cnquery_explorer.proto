@@ -477,3 +477,21 @@ message SynchronizeAssetsResp {
 message ImpactValue {
   int32 value = 1;
 }
+
+// HumanTime is used to represent a point in time. This
+// timestamp contains comprehensive marshal/unmarshal support
+// for human-readable representations, i.e. you can parse most
+// common time formats into a HumanTime, including:
+// - RFC3339 (e.g. "2006-01-02T15:04:05Z07:00")
+// - RFC1123 (e.g. "Mon, 02 Jan 2006 15:04:05 MST")
+// - RFC822 (e.g. "02 Jan 06 15:04 MST")
+// - RFC850 (e.g. "Monday, 02-Jan-06 15:04:05 MST")
+// - Kitchen (e.g. "3:04PM")
+// - DateTime (e.g. "2006-01-02 15:04:05")
+// - Date (e.g. "2006-01-02")
+// - Time (e.g. "15:04:05")
+// - ANSIC (e.g. "Mon Jan _2 15:04:05 2006")
+// - and int64 timestamps
+message HumanTime {
+  int64 seconds = 1;
+}

@@ -3036,6 +3036,64 @@ func (x *ImpactValue) GetValue() int32 {
 	return 0
 }
 
+// HumanTime is used to represent a point in time. This
+// timestamp contains comprehensive marshal/unmarshal support
+// for human-readable representations, i.e. you can parse most
+// common time formats into a HumanTime, including:
+// - RFC3339 (e.g. "2006-01-02T15:04:05Z07:00")
+// - RFC1123 (e.g. "Mon, 02 Jan 2006 15:04:05 MST")
+// - RFC822 (e.g. "02 Jan 06 15:04 MST")
+// - RFC850 (e.g. "Monday, 02-Jan-06 15:04:05 MST")
+// - Kitchen (e.g. "3:04PM")
+// - DateTime (e.g. "2006-01-02 15:04:05")
+// - Date (e.g. "2006-01-02")
+// - Time (e.g. "15:04:05")
+// - ANSIC (e.g. "Mon Jan _2 15:04:05 2006")
+// - and int64 timestamps
+type HumanTime struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Seconds       int64                  `protobuf:"varint,1,opt,name=seconds,proto3" json:"seconds,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *HumanTime) Reset() {
+	*x = HumanTime{}
+	mi := &file_cnquery_explorer_proto_msgTypes[42]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *HumanTime) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HumanTime) ProtoMessage() {}
+
+func (x *HumanTime) ProtoReflect() protoreflect.Message {
+	mi := &file_cnquery_explorer_proto_msgTypes[42]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HumanTime.ProtoReflect.Descriptor instead.
+func (*HumanTime) Descriptor() ([]byte, []int) {
+	return file_cnquery_explorer_proto_rawDescGZIP(), []int{42}
+}
+
+func (x *HumanTime) GetSeconds() int64 {
+	if x != nil {
+		return x.Seconds
+	}
+	return 0
+}
+
 var File_cnquery_explorer_proto protoreflect.FileDescriptor
 
 const file_cnquery_explorer_proto_rawDesc = "" +
@@ -3308,7 +3366,9 @@ const file_cnquery_explorer_proto_rawDesc = "" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12H\n" +
 	"\x05value\x18\x02 \x01(\v22.cnquery.explorer.SynchronizeAssetsRespAssetDetailR\x05value:\x028\x01\"#\n" +
 	"\vImpactValue\x12\x14\n" +
-	"\x05value\x18\x01 \x01(\x05R\x05value*a\n" +
+	"\x05value\x18\x01 \x01(\x05R\x05value\"%\n" +
+	"\tHumanTime\x12\x18\n" +
+	"\aseconds\x18\x01 \x01(\x03R\aseconds*a\n" +
 	"\x06Action\x12\x0f\n" +
 	"\vUNSPECIFIED\x10\x00\x12\n" +
 	"\n" +
@@ -3362,7 +3422,7 @@ func file_cnquery_explorer_proto_rawDescGZIP() []byte {
 }
 
 var file_cnquery_explorer_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_cnquery_explorer_proto_msgTypes = make([]protoimpl.MessageInfo, 60)
+var file_cnquery_explorer_proto_msgTypes = make([]protoimpl.MessageInfo, 61)
 var file_cnquery_explorer_proto_goTypes = []any{
 	(Action)(0),                              // 0: cnquery.explorer.Action
 	(ScoringSystem)(0),                       // 1: cnquery.explorer.ScoringSystem
@@ -3409,29 +3469,30 @@ var file_cnquery_explorer_proto_goTypes = []any{
 	(*SynchronizeAssetsRespAssetDetail)(nil), // 42: cnquery.explorer.SynchronizeAssetsRespAssetDetail
 	(*SynchronizeAssetsResp)(nil),            // 43: cnquery.explorer.SynchronizeAssetsResp
 	(*ImpactValue)(nil),                      // 44: cnquery.explorer.ImpactValue
-	nil,                                      // 45: cnquery.explorer.QueryPack.TagsEntry
-	nil,                                      // 46: cnquery.explorer.ObjectRef.TagsEntry
-	nil,                                      // 47: cnquery.explorer.Filters.ItemsEntry
-	nil,                                      // 48: cnquery.explorer.Mquery.TagsEntry
-	nil,                                      // 49: cnquery.explorer.TypedDoc.TagsEntry
-	nil,                                      // 50: cnquery.explorer.ExecutionJob.QueriesEntry
-	nil,                                      // 51: cnquery.explorer.ExecutionJob.DatapointsEntry
-	nil,                                      // 52: cnquery.explorer.ExecutionQuery.PropertiesEntry
-	nil,                                      // 53: cnquery.explorer.StoreResultsReq.DataEntry
-	nil,                                      // 54: cnquery.explorer.StoreResultsReq.ResourcesEntry
-	nil,                                      // 55: cnquery.explorer.Report.DataEntry
-	nil,                                      // 56: cnquery.explorer.Asset.LabelsEntry
-	nil,                                      // 57: cnquery.explorer.ReportCollection.AssetsEntry
-	nil,                                      // 58: cnquery.explorer.ReportCollection.ReportsEntry
-	nil,                                      // 59: cnquery.explorer.ReportCollection.ErrorsEntry
-	nil,                                      // 60: cnquery.explorer.ReportCollection.ResolvedEntry
-	nil,                                      // 61: cnquery.explorer.BundleMutationDelta.DeltasEntry
-	nil,                                      // 62: cnquery.explorer.SynchronizeAssetsResp.DetailsEntry
-	(*llx.CodeBundle)(nil),                   // 63: cnquery.llx.CodeBundle
-	(*anypb.Any)(nil),                        // 64: google.protobuf.Any
-	(*inventory.Asset)(nil),                  // 65: cnquery.providers.v1.Asset
-	(*llx.Result)(nil),                       // 66: cnquery.llx.Result
-	(*llx.ResourceRecording)(nil),            // 67: cnquery.llx.ResourceRecording
+	(*HumanTime)(nil),                        // 45: cnquery.explorer.HumanTime
+	nil,                                      // 46: cnquery.explorer.QueryPack.TagsEntry
+	nil,                                      // 47: cnquery.explorer.ObjectRef.TagsEntry
+	nil,                                      // 48: cnquery.explorer.Filters.ItemsEntry
+	nil,                                      // 49: cnquery.explorer.Mquery.TagsEntry
+	nil,                                      // 50: cnquery.explorer.TypedDoc.TagsEntry
+	nil,                                      // 51: cnquery.explorer.ExecutionJob.QueriesEntry
+	nil,                                      // 52: cnquery.explorer.ExecutionJob.DatapointsEntry
+	nil,                                      // 53: cnquery.explorer.ExecutionQuery.PropertiesEntry
+	nil,                                      // 54: cnquery.explorer.StoreResultsReq.DataEntry
+	nil,                                      // 55: cnquery.explorer.StoreResultsReq.ResourcesEntry
+	nil,                                      // 56: cnquery.explorer.Report.DataEntry
+	nil,                                      // 57: cnquery.explorer.Asset.LabelsEntry
+	nil,                                      // 58: cnquery.explorer.ReportCollection.AssetsEntry
+	nil,                                      // 59: cnquery.explorer.ReportCollection.ReportsEntry
+	nil,                                      // 60: cnquery.explorer.ReportCollection.ErrorsEntry
+	nil,                                      // 61: cnquery.explorer.ReportCollection.ResolvedEntry
+	nil,                                      // 62: cnquery.explorer.BundleMutationDelta.DeltasEntry
+	nil,                                      // 63: cnquery.explorer.SynchronizeAssetsResp.DetailsEntry
+	(*llx.CodeBundle)(nil),                   // 64: cnquery.llx.CodeBundle
+	(*anypb.Any)(nil),                        // 65: google.protobuf.Any
+	(*inventory.Asset)(nil),                  // 66: cnquery.providers.v1.Asset
+	(*llx.Result)(nil),                       // 67: cnquery.llx.Result
+	(*llx.ResourceRecording)(nil),            // 68: cnquery.llx.ResourceRecording
 }
 var file_cnquery_explorer_proto_depIdxs = []int32{
 	5,  // 0: cnquery.explorer.Bundle.packs:type_name -> cnquery.explorer.QueryPack
@@ -3446,16 +3507,16 @@ var file_cnquery_explorer_proto_depIdxs = []int32{
 	7,  // 9: cnquery.explorer.QueryPack.filters:type_name -> cnquery.explorer.Filters
 	13, // 10: cnquery.explorer.QueryPack.docs:type_name -> cnquery.explorer.QueryPackDocs
 	17, // 11: cnquery.explorer.QueryPack.authors:type_name -> cnquery.explorer.Author
-	45, // 12: cnquery.explorer.QueryPack.tags:type_name -> cnquery.explorer.QueryPack.TagsEntry
-	46, // 13: cnquery.explorer.ObjectRef.tags:type_name -> cnquery.explorer.ObjectRef.TagsEntry
-	47, // 14: cnquery.explorer.Filters.items:type_name -> cnquery.explorer.Filters.ItemsEntry
+	46, // 12: cnquery.explorer.QueryPack.tags:type_name -> cnquery.explorer.QueryPack.TagsEntry
+	47, // 13: cnquery.explorer.ObjectRef.tags:type_name -> cnquery.explorer.ObjectRef.TagsEntry
+	48, // 14: cnquery.explorer.Filters.items:type_name -> cnquery.explorer.Filters.ItemsEntry
 	5,  // 15: cnquery.explorer.QueryPacks.items:type_name -> cnquery.explorer.QueryPack
 	18, // 16: cnquery.explorer.Docs.refs:type_name -> cnquery.explorer.MqueryRef
 	6,  // 17: cnquery.explorer.Property.for:type_name -> cnquery.explorer.ObjectRef
 	18, // 18: cnquery.explorer.Mquery.refs:type_name -> cnquery.explorer.MqueryRef
 	14, // 19: cnquery.explorer.Mquery.docs:type_name -> cnquery.explorer.MqueryDocs
 	12, // 20: cnquery.explorer.Mquery.impact:type_name -> cnquery.explorer.Impact
-	48, // 21: cnquery.explorer.Mquery.tags:type_name -> cnquery.explorer.Mquery.TagsEntry
+	49, // 21: cnquery.explorer.Mquery.tags:type_name -> cnquery.explorer.Mquery.TagsEntry
 	7,  // 22: cnquery.explorer.Mquery.filters:type_name -> cnquery.explorer.Filters
 	10, // 23: cnquery.explorer.Mquery.props:type_name -> cnquery.explorer.Property
 	6,  // 24: cnquery.explorer.Mquery.variants:type_name -> cnquery.explorer.ObjectRef
@@ -3466,37 +3527,37 @@ var file_cnquery_explorer_proto_depIdxs = []int32{
 	18, // 29: cnquery.explorer.MqueryDocs.refs:type_name -> cnquery.explorer.MqueryRef
 	15, // 30: cnquery.explorer.MqueryDocs.remediation:type_name -> cnquery.explorer.Remediation
 	16, // 31: cnquery.explorer.Remediation.items:type_name -> cnquery.explorer.TypedDoc
-	49, // 32: cnquery.explorer.TypedDoc.tags:type_name -> cnquery.explorer.TypedDoc.TagsEntry
-	50, // 33: cnquery.explorer.ExecutionJob.queries:type_name -> cnquery.explorer.ExecutionJob.QueriesEntry
-	51, // 34: cnquery.explorer.ExecutionJob.datapoints:type_name -> cnquery.explorer.ExecutionJob.DatapointsEntry
-	52, // 35: cnquery.explorer.ExecutionQuery.properties:type_name -> cnquery.explorer.ExecutionQuery.PropertiesEntry
-	63, // 36: cnquery.explorer.ExecutionQuery.code:type_name -> cnquery.llx.CodeBundle
+	50, // 32: cnquery.explorer.TypedDoc.tags:type_name -> cnquery.explorer.TypedDoc.TagsEntry
+	51, // 33: cnquery.explorer.ExecutionJob.queries:type_name -> cnquery.explorer.ExecutionJob.QueriesEntry
+	52, // 34: cnquery.explorer.ExecutionJob.datapoints:type_name -> cnquery.explorer.ExecutionJob.DatapointsEntry
+	53, // 35: cnquery.explorer.ExecutionQuery.properties:type_name -> cnquery.explorer.ExecutionQuery.PropertiesEntry
+	64, // 36: cnquery.explorer.ExecutionQuery.code:type_name -> cnquery.llx.CodeBundle
 	11, // 37: cnquery.explorer.Mqueries.items:type_name -> cnquery.explorer.Mquery
 	10, // 38: cnquery.explorer.PropsReq.props:type_name -> cnquery.explorer.Property
 	11, // 39: cnquery.explorer.ResolveReq.asset_filters:type_name -> cnquery.explorer.Mquery
 	19, // 40: cnquery.explorer.ResolvedPack.execution_job:type_name -> cnquery.explorer.ExecutionJob
 	11, // 41: cnquery.explorer.ResolvedPack.filters:type_name -> cnquery.explorer.Mquery
 	11, // 42: cnquery.explorer.UpdateAssetJobsReq.asset_filters:type_name -> cnquery.explorer.Mquery
-	53, // 43: cnquery.explorer.StoreResultsReq.data:type_name -> cnquery.explorer.StoreResultsReq.DataEntry
-	54, // 44: cnquery.explorer.StoreResultsReq.resources:type_name -> cnquery.explorer.StoreResultsReq.ResourcesEntry
-	55, // 45: cnquery.explorer.Report.data:type_name -> cnquery.explorer.Report.DataEntry
-	56, // 46: cnquery.explorer.Asset.labels:type_name -> cnquery.explorer.Asset.LabelsEntry
-	57, // 47: cnquery.explorer.ReportCollection.assets:type_name -> cnquery.explorer.ReportCollection.AssetsEntry
+	54, // 43: cnquery.explorer.StoreResultsReq.data:type_name -> cnquery.explorer.StoreResultsReq.DataEntry
+	55, // 44: cnquery.explorer.StoreResultsReq.resources:type_name -> cnquery.explorer.StoreResultsReq.ResourcesEntry
+	56, // 45: cnquery.explorer.Report.data:type_name -> cnquery.explorer.Report.DataEntry
+	57, // 46: cnquery.explorer.Asset.labels:type_name -> cnquery.explorer.Asset.LabelsEntry
+	58, // 47: cnquery.explorer.ReportCollection.assets:type_name -> cnquery.explorer.ReportCollection.AssetsEntry
 	3,  // 48: cnquery.explorer.ReportCollection.bundle:type_name -> cnquery.explorer.Bundle
-	58, // 49: cnquery.explorer.ReportCollection.reports:type_name -> cnquery.explorer.ReportCollection.ReportsEntry
-	59, // 50: cnquery.explorer.ReportCollection.errors:type_name -> cnquery.explorer.ReportCollection.ErrorsEntry
-	60, // 51: cnquery.explorer.ReportCollection.resolved:type_name -> cnquery.explorer.ReportCollection.ResolvedEntry
-	64, // 52: cnquery.explorer.ErrorStatus.details:type_name -> google.protobuf.Any
+	59, // 49: cnquery.explorer.ReportCollection.reports:type_name -> cnquery.explorer.ReportCollection.ReportsEntry
+	60, // 50: cnquery.explorer.ReportCollection.errors:type_name -> cnquery.explorer.ReportCollection.ErrorsEntry
+	61, // 51: cnquery.explorer.ReportCollection.resolved:type_name -> cnquery.explorer.ReportCollection.ResolvedEntry
+	65, // 52: cnquery.explorer.ErrorStatus.details:type_name -> google.protobuf.Any
 	2,  // 53: cnquery.explorer.AssignmentDelta.action:type_name -> cnquery.explorer.AssignmentDelta.Action
-	61, // 54: cnquery.explorer.BundleMutationDelta.deltas:type_name -> cnquery.explorer.BundleMutationDelta.DeltasEntry
-	65, // 55: cnquery.explorer.SynchronizeAssetsReq.list:type_name -> cnquery.providers.v1.Asset
-	62, // 56: cnquery.explorer.SynchronizeAssetsResp.details:type_name -> cnquery.explorer.SynchronizeAssetsResp.DetailsEntry
+	62, // 54: cnquery.explorer.BundleMutationDelta.deltas:type_name -> cnquery.explorer.BundleMutationDelta.DeltasEntry
+	66, // 55: cnquery.explorer.SynchronizeAssetsReq.list:type_name -> cnquery.providers.v1.Asset
+	63, // 56: cnquery.explorer.SynchronizeAssetsResp.details:type_name -> cnquery.explorer.SynchronizeAssetsResp.DetailsEntry
 	11, // 57: cnquery.explorer.Filters.ItemsEntry.value:type_name -> cnquery.explorer.Mquery
 	21, // 58: cnquery.explorer.ExecutionJob.QueriesEntry.value:type_name -> cnquery.explorer.ExecutionQuery
 	20, // 59: cnquery.explorer.ExecutionJob.DatapointsEntry.value:type_name -> cnquery.explorer.DataQueryInfo
-	66, // 60: cnquery.explorer.StoreResultsReq.DataEntry.value:type_name -> cnquery.llx.Result
-	67, // 61: cnquery.explorer.StoreResultsReq.ResourcesEntry.value:type_name -> cnquery.llx.ResourceRecording
-	66, // 62: cnquery.explorer.Report.DataEntry.value:type_name -> cnquery.llx.Result
+	67, // 60: cnquery.explorer.StoreResultsReq.DataEntry.value:type_name -> cnquery.llx.Result
+	68, // 61: cnquery.explorer.StoreResultsReq.ResourcesEntry.value:type_name -> cnquery.llx.ResourceRecording
+	67, // 62: cnquery.explorer.Report.DataEntry.value:type_name -> cnquery.llx.Result
 	36, // 63: cnquery.explorer.ReportCollection.AssetsEntry.value:type_name -> cnquery.explorer.Asset
 	35, // 64: cnquery.explorer.ReportCollection.ReportsEntry.value:type_name -> cnquery.explorer.Report
 	38, // 65: cnquery.explorer.ReportCollection.ErrorsEntry.value:type_name -> cnquery.explorer.ErrorStatus
@@ -3551,7 +3612,7 @@ func file_cnquery_explorer_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_cnquery_explorer_proto_rawDesc), len(file_cnquery_explorer_proto_rawDesc)),
 			NumEnums:      3,
-			NumMessages:   60,
+			NumMessages:   61,
 			NumExtensions: 0,
 			NumServices:   2,
 		},
