@@ -14,6 +14,8 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
 )
 
+const GitUrlOptionKey = "git-http-url" // used for tracking the link to the git repo for later reference
+
 func NewGitClone(asset *inventory.Asset) (string, func(), error) {
 	cc := asset.Connections[0]
 
@@ -40,6 +42,7 @@ func NewGitClone(asset *inventory.Asset) (string, func(), error) {
 	// gitlab: git clone https://oauth2:ACCESS_TOKEN@somegitlab.com/vendor/package.git
 	// if sshUrl := cc.Options["ssh-url"]; sshUrl != "" { ... not doing ssh url right now
 	if httpUrl := cc.Options["http-url"]; httpUrl != "" {
+		cc.Options[GitUrlOptionKey] = httpUrl // stick this on the asset connection options so we can reference it later
 		u, err := url.Parse(httpUrl)
 		if err != nil {
 			return "", nil, errors.New("failed to parse url for git repo: " + httpUrl)
