@@ -95,6 +95,7 @@ func (s *sbomProviderService) Connect(req *plugin.ConnectReq, callback plugin.Pr
 		sbom.NewCycloneDX(sbom.FormatCycloneDxXML),
 		sbom.NewSPDX(sbom.FormatSpdxTagValue),
 		sbom.NewSPDX(sbom.FormatSpdxJSON),
+		sbom.New(sbom.FormatJson),
 	)
 
 	var sbomReport *sbom.Sbom
