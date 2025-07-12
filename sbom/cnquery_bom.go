@@ -5,6 +5,7 @@ package sbom
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 )
 
@@ -52,6 +53,11 @@ func (ccx *CnqueryBOM) Parse(r io.Reader) (*Sbom, error) {
 	err := json.NewDecoder(r).Decode(&s)
 	if err != nil {
 		return nil, err
+	}
+
+	// Test if the SBOM has a valid structure
+	if s.Asset == nil {
+		return nil, fmt.Errorf("unable to parse cnquery SBOM: missing asset information")
 	}
 
 	return &s, nil
