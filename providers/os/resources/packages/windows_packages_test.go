@@ -76,8 +76,8 @@ func TestWindowsAppxPackagesParser(t *testing.T) {
 	}
 
 	pkgs, err := ParseWindowsAppxPackages(pf, c.Stdout)
-	assert.Nil(t, err)
-	assert.Equal(t, 28, len(pkgs), "detected the right amount of packages")
+	require.NoError(t, err)
+	require.Equal(t, 29, len(pkgs), "detected the right amount of packages")
 
 	p := findPkg(pkgs, "Microsoft.Windows.Cortana")
 	assert.Equal(t, Package{
@@ -92,6 +92,27 @@ func TestWindowsAppxPackagesParser(t *testing.T) {
 			"cpe:2.3:a:cn\\=microsoft_corporation\\,_o\\=microsoft_corporation\\,_l\\=redmond\\,_s\\=washington\\,_c\\=us:microsoft.windows.cortana:1.11.5:*:*:*:*:*:*:*",
 		},
 		Vendor: "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US",
+	}, p)
+
+	p = findPkg(pkgs, "Microsoft.MicrosoftEdge.Stable")
+	assert.Equal(t, Package{
+		Name:    "Microsoft.MicrosoftEdge.Stable",
+		Version: "112.0.1722.39",
+		Arch:    "neutral",
+		Format:  "windows/appx",
+		PUrl:    "pkg:appx/windows/Microsoft.MicrosoftEdge.Stable@112.0.1722.39?arch=x86",
+		// TODO: this is a bug in the CPE generation, we need to extract the publisher from the package
+		CPEs: []string{
+			"cpe:2.3:a:cn\\=microsoft_corporation\\,_o\\=microsoft_corporation\\,_l\\=redmond\\,_s\\=washington\\,_c\\=us:microsoft.microsoftedge.stable:112.0.1722.39:*:*:*:*:*:*:*",
+			"cpe:2.3:a:cn\\=microsoft_corporation\\,_o\\=microsoft_corporation\\,_l\\=redmond\\,_s\\=washington\\,_c\\=us:microsoft.microsoftedge.stable:112.0.1722:*:*:*:*:*:*:*",
+		},
+		Vendor: "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US",
+		Files: []FileRecord{
+			{
+				Path: "C:\\Program Files\\WindowsApps\\Microsoft.MicrosoftEdge.Stable_112.0.1722.39_neutral__8wekyb3d8bbwe",
+			},
+		},
+		FilesAvailable: PkgFilesIncluded,
 	}, p)
 
 	// check empty return
