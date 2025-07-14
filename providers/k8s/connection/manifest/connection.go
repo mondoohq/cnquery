@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/pkg/errors"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
@@ -106,13 +107,24 @@ func NewConnection(id uint32, asset *inventory.Asset, opts ...Option) (shared.Co
 	if asset.Name == "" {
 		asset.Name = clusterName
 	}
-
+	if gitPath := asset.Connections[0].Options[plugin.GitUrlOptionKey]; gitPath != "" {
+		// if the GitUrlOptionKey is present, we want to sanitize the url and add it to the
+		// asset labels so that we can later reference the git url where this object was found
+		if asset.Labels == nil {
+			asset.Labels = make(map[string]string)
+		}
+		asset.Labels[plugin.GitUrlOptionKey] = trimGitPath(gitPath)
+	}
 	c.ManifestParser, err = shared.NewManifestParser(manifest, c.namespace, "")
 	if err != nil {
 		return nil, err
 	}
 
 	return c, nil
+}
+
+func trimGitPath(gitPath string) string {
+	return strings.TrimSuffix(gitPath, ".git")
 }
 
 func (c *Connection) Close() {
