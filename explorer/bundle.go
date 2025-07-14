@@ -25,6 +25,7 @@ const (
 	MRN_RESOURCE_QUERY     = "queries"
 	MRN_RESOURCE_QUERYPACK = "querypacks"
 	MRN_RESOURCE_ASSET     = "assets"
+	MRN_RESOURCE_PROPERTY  = "properties"
 )
 
 // BundleMap is a Bundle with easier access to its data
