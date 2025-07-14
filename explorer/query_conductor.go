@@ -153,8 +153,10 @@ func (s *LocalServices) Resolve(ctx context.Context, req *ResolveReq) (*Resolved
 
 		props := NewPropsCache()
 		props.Add(bundle.Props...)
+		props.Add(pack.Props...)
 
 		for i := range pack.Queries {
+			props.Add(pack.Queries[i].Props...)
 			err := s.addQueryToJob(ctx, pack.Queries[i], &job, props, supportedFilters, bundleMap)
 			if err != nil {
 				return nil, err
@@ -169,6 +171,7 @@ func (s *LocalServices) Resolve(ctx context.Context, req *ResolveReq) (*Resolved
 			}
 
 			for i := range group.Queries {
+				props.Add(group.Queries[i].Props...)
 				err := s.addQueryToJob(ctx, group.Queries[i], &job, props, supportedFilters, bundleMap)
 				if err != nil {
 					return nil, err

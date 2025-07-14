@@ -18,24 +18,13 @@ import (
 // RefreshMRN computes a MRN from the UID or validates the existing MRN.
 // Both of these need to fit the ownerMRN. It also removes the UID.
 func (p *Property) RefreshMRN(ownerMRN string) error {
-	nu, err := RefreshMRN(ownerMRN, p.Mrn, MRN_RESOURCE_QUERY, p.Uid)
+	nu, err := RefreshMRN(ownerMRN, p.Mrn, MRN_RESOURCE_PROPERTY, p.Uid)
 	if err != nil {
 		log.Error().Err(err).Str("owner", ownerMRN).Str("uid", p.Uid).Msg("failed to refresh mrn")
 		return multierr.Wrap(err, "failed to refresh mrn for query "+p.Title)
 	}
 	p.Mrn = nu
 	p.Uid = ""
-
-	for i := range p.For {
-		pfor := p.For[i]
-		pforNu, err := RefreshMRN(ownerMRN, pfor.Mrn, MRN_RESOURCE_QUERY, pfor.Uid)
-		if err != nil {
-			log.Error().Err(err).Str("owner", ownerMRN).Str("uid", p.Uid).Msg("failed to refresh mrn")
-			return multierr.Wrap(err, "failed to refresh mrn for query "+p.Title)
-		}
-		pfor.Mrn = pforNu
-		pfor.Uid = ""
-	}
 
 	return nil
 }
@@ -111,6 +100,7 @@ func (p *Property) RefreshChecksumAndType(conf mqlc.CompilerConfig) (*llx.CodeBu
 func (p *Property) Merge(base *Property) {
 	if p.Mql == "" {
 		p.Mql = base.Mql
+		p.CodeId = base.CodeId
 	}
 	if p.Type == "" {
 		p.Type = base.Type
@@ -184,7 +174,8 @@ func (c PropsCache) Add(props ...*Property) {
 		merged := base
 
 		if base.Mrn != "" {
-			name, _ := mrn.GetResource(base.Mrn, MRN_RESOURCE_QUERY)
+			var name string
+			name, _ = GetPropName(base.Mrn)
 			if uidProp, ok := c.uidOnlyProps[name]; ok {
 				p := uidProp.Clone()
 				p.Merge(base)
@@ -206,7 +197,7 @@ func (c PropsCache) Add(props ...*Property) {
 				if existingProp, ok := c.cache[pfor.Mrn]; ok {
 					existingProp.Merge(merged)
 				} else {
-					c.cache[pfor.Mrn] = merged
+					c.cache[pfor.Mrn] = merged.CloneVT()
 				}
 			}
 		}
@@ -217,7 +208,7 @@ func (c PropsCache) Add(props ...*Property) {
 // properties if they exist first
 func (c PropsCache) Get(propMrn string) (*Property, string, error) {
 	if res, ok := c.cache[propMrn]; ok {
-		name, err := mrn.GetResource(propMrn, MRN_RESOURCE_QUERY)
+		name, err := GetPropName(propMrn)
 		if err != nil {
 			return nil, "", errors.New("failed to get property name")
 		}
@@ -235,4 +226,16 @@ func (c PropsCache) Get(propMrn string) (*Property, string, error) {
 
 	// We currently don't grab properties from upstream. This requires further investigation.
 	return nil, "", errors.New("property " + propMrn + " not found")
+}
+
+func GetPropName(propMrn string) (string, error) {
+	name, err := mrn.GetResource(propMrn, MRN_RESOURCE_PROPERTY)
+	if err != nil {
+		name, err = mrn.GetResource(propMrn, MRN_RESOURCE_QUERY)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return name, nil
 }

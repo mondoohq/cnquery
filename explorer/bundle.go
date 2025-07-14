@@ -6,6 +6,7 @@ package explorer
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -25,6 +26,7 @@ const (
 	MRN_RESOURCE_QUERY     = "queries"
 	MRN_RESOURCE_QUERYPACK = "querypacks"
 	MRN_RESOURCE_ASSET     = "assets"
+	MRN_RESOURCE_PROPERTY  = "properties"
 )
 
 // BundleMap is a Bundle with easier access to its data
@@ -265,6 +267,12 @@ func (bundle *Bundle) CompileExt(ctx context.Context, conf BundleCompileConf) (*
 			return nil, err
 		}
 
+		for _, prop := range pack.Props {
+			if err := cache.compileProp(pack.Mrn, prop); err != nil {
+				return nil, err
+			}
+		}
+
 		if err = pack.Filters.Compile(ownerMrn, conf.CompilerConfig); err != nil {
 			return nil, multierr.Wrap(err, "failed to compile querypack filters")
 		}
@@ -286,6 +294,10 @@ func (bundle *Bundle) CompileExt(ctx context.Context, conf BundleCompileConf) (*
 			if err := cache.compileQueries(group.Queries, pack); err != nil {
 				return nil, err
 			}
+		}
+
+		if err := LiftPropertiesToPack(pack, cache.lookupQuery); err != nil {
+			return nil, err
 		}
 	}
 
@@ -414,7 +426,7 @@ func (c *bundleCache) precompileQuery(query *Mquery, pack *QueryPack) {
 
 	// ensure MRNs for properties
 	for i := range query.Props {
-		if err := c.compileProp(query.Props[i]); err != nil {
+		if err := c.compileProp(query.Mrn, query.Props[i]); err != nil {
 			c.errors = append(c.errors, errors.New("failed to compile properties for query "+query.Mrn))
 			return
 		}
@@ -462,12 +474,12 @@ func (c *bundleCache) compileQuery(query *Mquery) {
 	}
 }
 
-func (c *bundleCache) compileProp(prop *Property) error {
+func (c *bundleCache) compileProp(ownerMrn string, prop *Property) error {
 	var name string
 
 	if prop.Mrn == "" {
 		uid := prop.Uid
-		if err := prop.RefreshMRN(c.ownerMrn); err != nil {
+		if err := prop.RefreshMRN(ownerMrn); err != nil {
 			return err
 		}
 		if uid != "" {
@@ -485,8 +497,10 @@ func (c *bundleCache) compileProp(prop *Property) error {
 		name = m.Basename()
 	}
 
-	if _, err := prop.RefreshChecksumAndType(c.conf.CompilerConfig); err != nil {
-		return err
+	if prop.Mql != "" {
+		if _, err := prop.RefreshChecksumAndType(c.conf.CompilerConfig); err != nil {
+			return err
+		}
 	}
 
 	c.lookupProp[prop.Mrn] = PropertyRef{
@@ -568,4 +582,84 @@ func (p *Bundle) Filters() []*Mquery {
 	}
 
 	return res
+}
+
+func LiftPropertiesToPack(pack *QueryPack, lookupQuery map[string]*Mquery) error {
+	if len(pack.Props) != 0 {
+		// If these properties are defined by uid, we need to lift the MRNs
+		// into the for field of the property.
+		propsByUid := map[string][]string{}
+		for _, g := range pack.Groups {
+			for _, q := range g.Queries {
+				resolvedQuery := lookupQuery[q.Mrn]
+				if resolvedQuery == nil {
+					return fmt.Errorf("failed to resolve query %s in pack %s", q.Mrn, pack.Mrn)
+				}
+				for _, prop := range resolvedQuery.Props {
+					propUid, err := GetPropName(prop.Mrn)
+					if err != nil {
+						return fmt.Errorf("failed to get property name for property %s in pack %s: %w", prop.Mrn, pack.Mrn, err)
+					}
+					propsByUid[propUid] = append(propsByUid[propUid], prop.Mrn)
+				}
+			}
+
+		}
+		for _, prop := range pack.Props {
+			if len(prop.For) == 0 {
+				continue
+			}
+			newFor := []*ObjectRef{}
+			for _, pFor := range prop.For {
+				if pFor.Mrn != "" {
+					newFor = append(newFor, pFor)
+					continue
+				}
+
+				mrns := propsByUid[pFor.Uid]
+				for _, mrn := range mrns {
+					newFor = append(newFor, &ObjectRef{
+						Mrn: mrn,
+					})
+				}
+			}
+			prop.For = newFor
+		}
+		return nil
+	}
+	newPolicyProps := map[string]*Property{}
+	for _, g := range pack.Groups {
+		for _, q := range g.Queries {
+			resolvedQuery := lookupQuery[q.Mrn]
+			if resolvedQuery == nil {
+				return fmt.Errorf("failed to resolve query %s in pack %s", q.Mrn, pack.Mrn)
+			}
+			if len(resolvedQuery.Props) == 0 {
+				continue
+			}
+			for _, prop := range resolvedQuery.Props {
+				propUid, err := GetPropName(prop.Mrn)
+				if err != nil {
+					return fmt.Errorf("failed to get property name for query %s in pack %s: %w", resolvedQuery.Mrn, pack.Mrn, err)
+				}
+
+				policyProp := newPolicyProps[propUid]
+				if policyProp == nil {
+					policyProp = &Property{
+						Uid:  propUid,
+						Type: prop.Type,
+					}
+					newPolicyProps[propUid] = policyProp
+				}
+				policyProp.For = append(policyProp.For, &ObjectRef{
+					Mrn: prop.Mrn,
+				})
+			}
+		}
+	}
+	for _, prop := range newPolicyProps {
+		prop.RefreshMRN(pack.Mrn)
+		pack.Props = append(pack.Props, prop)
+	}
+	return nil
 }
