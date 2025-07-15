@@ -298,3 +298,19 @@ func TestMaxCvss2(t *testing.T) {
 	assert.Equal(t, float32(7.7), max.Score, "score properly detected")
 	assert.Equal(t, "High", max.Severity().String(), "severity properly extracted")
 }
+
+func TestMaxCvssWithEmptyList(t *testing.T) {
+	list := []*Cvss{{
+		Vector: "7.5/CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+		Source: "cve://nvd/2017",
+		Score:  7.5,
+	}, nil}
+
+	max, err := MaxScore(list)
+	assert.Nil(t, err, "could determine max cvss vector")
+	assert.Equal(t, &Cvss{
+		Vector: "7.5/CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+		Score:  7.5,
+		Source: "cve://nvd/2017",
+	}, max, "no max cvss vector")
+}
