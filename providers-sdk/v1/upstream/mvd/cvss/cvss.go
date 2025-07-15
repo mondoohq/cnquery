@@ -407,6 +407,11 @@ func MaxScore(cvsslist []*Cvss) (*Cvss, error) {
 
 	for i := 1; i < len(cvsslist); i++ {
 		entry := cvsslist[i]
+		if entry == nil {
+			log.Warn().Msg("nil cvss entry found in list")
+			continue
+		}
+
 		vector := entry.Vector
 		score, err := New(vector)
 		if err != nil {
