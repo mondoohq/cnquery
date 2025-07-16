@@ -5,7 +5,12 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/microsoftgraph/msgraph-sdk-go/devicemanagement"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"go.mondoo.com/cnquery/v11/llx"
@@ -405,4 +410,86 @@ func getComplianceProperties(compliance models.DeviceCompliancePolicyable) map[s
 		}
 	}
 	return props
+}
+
+func (m *mqlMicrosoftDevicemanagementSettings) id() (string, error) {
+	return "microsoft.devicemanagement.settings", nil
+}
+
+func (a *mqlMicrosoftDevicemanagement) settings() (*mqlMicrosoftDevicemanagementSettings, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+
+	ctx := context.Background()
+	token := conn.Token()
+	graphToken, err := token.GetToken(ctx, policy.TokenRequestOptions{
+		Scopes: []string{connection.DefaultMSGraphScope},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	url := "https://graph.microsoft.com/v1.0/deviceManagement/settings"
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", graphToken.Token))
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("HTTP request failed with status %d: %s", resp.StatusCode, string(body))
+	}
+
+	var settingsData map[string]interface{}
+	if err := json.Unmarshal(body, &settingsData); err != nil {
+		return nil, err
+	}
+
+	var secureByDefault bool
+	var isScheduledActionEnabled bool
+	var deviceComplianceCheckinThresholdDays int64
+
+	if val, ok := settingsData["secureByDefault"]; ok && val != nil {
+		if boolVal, ok := val.(bool); ok {
+			secureByDefault = boolVal
+		}
+	}
+
+	if val, ok := settingsData["isScheduledActionEnabled"]; ok && val != nil {
+		if boolVal, ok := val.(bool); ok {
+			isScheduledActionEnabled = boolVal
+		}
+	}
+
+	if val, ok := settingsData["deviceComplianceCheckinThresholdDays"]; ok && val != nil {
+		if intVal, ok := val.(float64); ok {
+			deviceComplianceCheckinThresholdDays = int64(intVal)
+		}
+	}
+
+	mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.devicemanagement.settings",
+		map[string]*llx.RawData{
+			"__id":                                   llx.StringData("microsoft.devicemanagement.settings"),
+			"secureByDefault":                        llx.BoolData(secureByDefault),
+			"isScheduledActionEnabled":               llx.BoolData(isScheduledActionEnabled),
+			"deviceComplianceCheckinThresholdDays":   llx.IntData(deviceComplianceCheckinThresholdDays),
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	return mqlResource.(*mqlMicrosoftDevicemanagementSettings), nil
 }

@@ -283,6 +283,7 @@ resources:
       deviceConfigurations: {}
       deviceEnrollmentConfigurations: {}
       managedDevices: {}
+      settings: {}
     min_mondoo_version: 9.0.0
   microsoft.devicemanagement.deviceEnrollmentConfiguration:
     fields:
@@ -349,6 +350,13 @@ resources:
       userPrincipalName: {}
       wiFiMacAddress: {}
       windowsProtectionState: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.devicemanagement.settings:
+    fields:
+      deviceComplianceCheckinThresholdDays: {}
+      isScheduledActionEnabled: {}
+      secureByDefault: {}
     is_private: true
     min_mondoo_version: 9.0.0
   microsoft.devices:
