@@ -32,6 +32,55 @@ microsoft {
   tenantDomainName() string
   // Identity and Access policies
   identityAndAccess() microsoft.identityAndAccess
+  // Access review definitions
+  accessReviews() microsoft.identityAndAccess.accessReviews
+}
+
+// A filterable list of access review definitions
+microsoft.identityAndAccess.accessReviews {
+  []microsoft.identityAndAccess.accessReviewDefinition
+  init(filter? string)
+  // filter access review definitions. e.g., "contains(scope/microsoft.graph.accessReviewQueryScope/query, './members')"
+  filter string
+}
+
+// Defines a recurring access review schedule and its properties in Microsoft Entra ID.
+private microsoft.identityAndAccess.accessReviewDefinition @defaults("id displayName status") {
+  // The unique identifier for the access review
+  id string
+  // The display name for the access review
+  displayName string
+  // The status of the access review. Possible values are:
+  // Initializing, NotStarted, Starting, InProgress, Completing, Completed, AutoReviewing, and AutoReviewed
+  status string
+  // This collection of access review scopes is used to define who are the reviewers
+  reviewers dict
+  // The settings for an access review series, see type definition below
+  settings microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings
+}
+
+// Configures the recurrence, notifications, and decision-handling for an access review series.
+private microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings @defaults("mailNotificationsEnabled reminderNotificationsEnabled defaultDecision defaultDecisionEnabled") {
+  // True if decisions are automatically applied
+  autoApplyDecisionsEnabled bool
+  // True if decisions on previous access review stages are available for reviewers on an accessReviewInstance with multiple subsequent stages
+  decisionHistoriesForReviewersEnabled bool
+  // Decision chosen if defaultDecisionEnabled is enabled. Can be one of Approve, Deny, or Recommendation
+  defaultDecision string
+  // True if the default decision is enabled or disabled when reviewers do not respond
+  defaultDecisionEnabled bool
+  // Duration of an access review instance in days
+  instanceDurationInDays int
+  // True if reminders are enabled or disabled
+  reminderNotificationsEnabled bool
+  // True if reviewers are required to provide justification with their decision
+  justificationRequiredOnApproval bool
+  // True if emails are enabled or disabled
+  mailNotificationsEnabled bool
+  // True if decision recommendations are enabled or disabled
+  recommendationsEnabled bool
+  // Detailed settings for recurrence using the standard Outlook recurrence object
+  recurrence dict
 }
 
 // Microsoft groups
