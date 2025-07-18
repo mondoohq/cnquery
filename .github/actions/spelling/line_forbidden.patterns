@@ -108,9 +108,26 @@
 # s.b. IaC
 \bIAC\b
 
+# s.b. Wi-Fi
+\bWi[Ff]i\b
+
+# s.b. screensaver
+\bscreen saver\b
+
+# s.b. SmartCard
+\bSmartcard\b
+\bSmart Card\b
+
 #
 # Product Names
 #
+
+# s.b. YubiKey
+\bYubikey\b
+\bYubi Key\b
+
+# s.b. ChatGPT
+\bChat GPT\b
 
 # s.b. Copilot
 \bCoPilot\b
@@ -154,6 +171,9 @@
 # s.b. systemd
 \bSystemd\b
 
+# s.b. journald
+\bJournald\b
+
 # s.b. OpenLDAP
 \bOpen LDAP\b
 
@@ -194,10 +214,14 @@
 \bCent OS\b
 \bcentOS\b
 
-# s.b. macOS
-\bOS X\b
-\bMacOS\b
-\bMac OS\b
+# s.b. Bluetooth
+\bBlueTooth\b
+
+# s.b. Jamf
+\bJAMF\b
+
+# s.b. POSIX
+\b[Pp]osix\b
 
 # s.b. Okta
 \bOcta\b
@@ -308,6 +332,41 @@
 # s.b. Nmap
 \b[Nn]Map\b
 
+
+#
+# Apple Terms
+#
+
+# s.b. macOS
+\bOS X\b
+\bMacOS\b
+\b[Mm]ac OS\b
+
+# s.b. AirDrop
+\bAirdrop\b
+
+# s.b. iPadOS
+\biPad OS\b
+
+# s.b. AppleScript
+\bApplescript\b
+
+# s.b. FileVault
+\bFilevault\b
+\bFile Vault\b
+
+# s.b. Apple Pay
+\bApplePay\b
+
+# s.b. Touch ID
+\bTouchID\b
+
+# s.b. AppleID
+\bAppleID\b
+
+# s.b. XProtect
+\bX Protect\b
+
 #
 # Kubernetes Terms
 #
@@ -348,6 +407,9 @@
 #
 # Microsoft Products
 #
+
+# s.b. M365
+\bMS365\b
 
 # s.b. Entra ID
 \bEntraID\b

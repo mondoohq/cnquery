@@ -277,7 +277,7 @@ func (a *mqlAzureSubscriptionAuthorizationService) managedIdentities() ([]interf
 
 	ctx := context.Background()
 
-	// list all role assignemnts since we need to attach them to the managed identities
+	// list all role assignments since we need to attach them to the managed identities
 	roleAssignments := a.GetRoleAssignments().Data
 
 	// list user assigned identities
