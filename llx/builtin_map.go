@@ -364,9 +364,17 @@ func dictGetIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 		if t != types.Int {
 			return nil, 0, errors.New("Called [] with wrong type " + t.Label())
 		}
-		// ^^ TODO
 
 		key := int(bytes2int(args[0].Value))
+		if key < 0 {
+			if -key > len(x) {
+				return nil, 0, errors.New("array index out of bound (trying to access element " + strconv.Itoa(key) + ", max: " + strconv.Itoa(len(x)-1) + ")")
+			}
+			key = len(x) + key
+		}
+		if key >= len(x) {
+			return nil, 0, errors.New("array index out of bound (trying to access element " + strconv.Itoa(key) + ", max: " + strconv.Itoa(len(x)-1) + ")")
+		}
 		return &RawData{
 			Value: x[key],
 			Type:  bind.Type,
