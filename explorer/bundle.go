@@ -10,6 +10,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -657,7 +658,13 @@ func LiftPropertiesToPack(pack *QueryPack, lookupQuery map[string]*Mquery) error
 			}
 		}
 	}
-	for _, prop := range newPolicyProps {
+	keys := make([]string, 0, len(newPolicyProps))
+	for k := range newPolicyProps {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		prop := newPolicyProps[k]
 		prop.RefreshMRN(pack.Mrn)
 		pack.Props = append(pack.Props, prop)
 	}
