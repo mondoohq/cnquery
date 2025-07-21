@@ -6,12 +6,14 @@ package lr
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"strings"
 	"text/scanner"
 
 	"github.com/alecthomas/participle"
 	"github.com/alecthomas/participle/lexer"
+	"github.com/rs/zerolog/log"
 )
 
 // Int number type
@@ -76,6 +78,23 @@ type Resource struct {
 	Body        *ResourceDef   `@@ '}' ]`
 	title       string
 	desc        string
+}
+
+// gets the path for the field of the resource, e.g
+// for resource Aand field B this would be A.B
+func (r Resource) GetFieldPaths() []string {
+	if r.Body == nil {
+		return nil
+	}
+	res := []string{}
+
+	for _, f := range r.Body.Fields {
+		if f.BasicField != nil {
+			fqf := fmt.Sprintf("%s.%s", r.ID, f.BasicField.ID)
+			res = append(res, fqf)
+		}
+	}
+	return res
 }
 
 // nolint: govet
@@ -230,10 +249,10 @@ func Parse(input string) (*LR, error) {
 
 	err := parser.Parse(strings.NewReader(input), res)
 
+	resourceIds := map[string]struct{}{}
 	// clean up the parsed results
 	for i := range res.Resources {
 		resource := res.Resources[i]
-
 		resource.Comments = SanitizeComments(resource.Comments)
 		resource.title, resource.desc = extractTitleAndDescription(resource.Comments)
 		resource.Comments = nil
@@ -318,6 +337,21 @@ func Parse(input string) (*LR, error) {
 				},
 			})
 		}
+
+		resourceIds[resource.ID] = struct{}{}
+	}
+
+	dups := []string{}
+	for _, r := range res.Resources {
+		fields := r.GetFieldPaths()
+		for _, f := range fields {
+			if _, ok := resourceIds[f]; ok {
+				dups = append(dups, f)
+			}
+		}
+	}
+	for _, d := range dups {
+		log.Warn().Msgf("found duplicate field %s in the resources", d)
 	}
 
 	return res, err
