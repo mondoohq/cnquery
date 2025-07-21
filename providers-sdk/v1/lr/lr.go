@@ -6,6 +6,7 @@ package lr
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"strings"
 	"text/scanner"
@@ -76,6 +77,24 @@ type Resource struct {
 	Body        *ResourceDef   `@@ '}' ]`
 	title       string
 	desc        string
+}
+
+// gets the path for the field of the resource, e.g
+// for resource A and field B this would be A.B
+func (r Resource) GetFieldPaths() []string {
+	if r.Body == nil {
+		return []string{}
+	}
+
+	res := []string{}
+
+	for _, f := range r.Body.Fields {
+		if f.BasicField != nil {
+			fullyQualifiedAccessor := fmt.Sprintf("%s.%s", r.ID, f.BasicField.ID)
+			res = append(res, fullyQualifiedAccessor)
+		}
+	}
+	return res
 }
 
 // nolint: govet
@@ -233,7 +252,6 @@ func Parse(input string) (*LR, error) {
 	// clean up the parsed results
 	for i := range res.Resources {
 		resource := res.Resources[i]
-
 		resource.Comments = SanitizeComments(resource.Comments)
 		resource.title, resource.desc = extractTitleAndDescription(resource.Comments)
 		resource.Comments = nil
@@ -321,4 +339,39 @@ func Parse(input string) (*LR, error) {
 	}
 
 	return res, err
+}
+
+// returns duplicate resources where duplicate means that one path leads to more than one field
+// causing ambiguity. An example minimal LR that would cause duplicates is:
+//
+//	A {
+//	  B A.B
+//	}
+//
+//	A.B {
+//	  value string
+//	}
+//
+// in the case above 'A.B` could be interpreted as accessing the property 'B' of the resource 'A'
+// or as accessing the resource 'A.B' directly.
+func (lr *LR) GetDuplicates() []string {
+	dups := []string{}
+	seen := map[string]struct{}{}
+	// first populate with the resource names (ids), so we don't have fields that
+	// are the same as resource names
+	for _, r := range lr.Resources {
+		seen[r.ID] = struct{}{}
+	}
+
+	for _, r := range lr.Resources {
+		fields := r.GetFieldPaths()
+		for _, f := range fields {
+			if _, ok := seen[f]; ok {
+				dups = append(dups, f)
+			}
+			seen[f] = struct{}{}
+		}
+	}
+
+	return dups
 }
