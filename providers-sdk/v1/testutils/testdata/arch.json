@@ -441,6 +441,35 @@
         },
         {
           "Resource": "file",
+          "ID": "/etc/systemd/journald.conf",
+          "Fields": {
+            "content": {
+              "type": "\u0007",
+              "value": "#\n# This file controls the configuration of the journald service\n#\n\n[Journal]\nStorage=persistent\nCompress=Yes\nSystemMaxUse=1G\nSystemKeepFree=100M\nSystemMaxFileSize=100M\nSystemMaxFiles=10\nMaxRetentionSec=1month\n\n[Service]\nExecStart=/usr/lib/systemd/systemd-journald\n"
+            },
+            "exists": {
+              "type": "\u0004",
+              "value": true
+            },
+            "path": {
+              "type": "\u0007",
+              "value": "/etc/systemd/journald.conf"
+            },
+            "permissions": {
+              "type": "\u001bfile.permissions",
+              "value": {
+                "Name": "file.permissions",
+                "ID": "-rw-r--r--"
+              }
+            },
+            "size": {
+              "type": "\u0005",
+              "value": 882
+            }
+          }
+        },
+        {
+          "Resource": "file",
           "ID": "/etc/login.defs",
           "Fields": {
             "content": {
