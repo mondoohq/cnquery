@@ -423,3 +423,44 @@ func TestBuiltinFunctionOverride(t *testing.T) {
 		},
 	})
 }
+
+func TestArrayConcat(t *testing.T) {
+	x := testutils.InitTester(testutils.LinuxMock())
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:        "[] + []",
+			ResultIndex: 0,
+			Expectation: []interface{}{},
+		},
+		{
+			Code:        "[] + ['a']",
+			ResultIndex: 0,
+			Expectation: []interface{}{"a"},
+		},
+		{
+			Code:        "['a'] + []",
+			ResultIndex: 0,
+			Expectation: []interface{}{"a"},
+		},
+		{
+			Code:        "['a'] + ['b']",
+			ResultIndex: 0,
+			Expectation: []interface{}{"a", "b"},
+		},
+		{
+			Code:        "['a'] + ['b', 'c']",
+			ResultIndex: 0,
+			Expectation: []interface{}{"a", "b", "c"},
+		},
+		{
+			Code:        "['a', 'b'] + ['c']",
+			ResultIndex: 0,
+			Expectation: []interface{}{"a", "b", "c"},
+		},
+		{
+			Code:        "['a', 'b'] + [] + ['c']",
+			ResultIndex: 0,
+			Expectation: []interface{}{"a", "b", "c"},
+		},
+	})
+}
