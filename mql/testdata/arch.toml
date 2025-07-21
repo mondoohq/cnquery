@@ -534,6 +534,14 @@ server 18.26.4.105
 server 128.249.1.10
 """
 
+[file."/etc/systemd/journald.conf"]
+content="""
+# Some random comment...
+[Journal]
+Storage=persistent
+Compress=yes
+"""
+
 [file."/etc/audit/auditd.conf"]
 content="""
 # Some random comment...
