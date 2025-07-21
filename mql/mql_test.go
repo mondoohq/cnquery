@@ -102,6 +102,40 @@ func TestCustomData(t *testing.T) {
 	assert.Equal(t, map[string]interface{}{"a": "valuea", "b": "valueb"}, value.Value)
 }
 
+func TestJsonArrayBounds(t *testing.T) {
+	t.Run("out of bounds", func(t *testing.T) {
+		query := `x = parse.json(content: '{"arr": []}').params
+	x['arr'][0]`
+		value, err := mql.Exec(query, runtime(), features, nil)
+		require.NoError(t, err)
+		require.Contains(t, value.Error.Error(), "array index out of bound")
+	})
+
+	t.Run("positive index", func(t *testing.T) {
+		query := `x = parse.json(content: '{"arr": [1, 2, 3]}').params
+x['arr'][1]`
+		value, err := mql.Exec(query, runtime(), features, nil)
+		require.NoError(t, err)
+		require.Equal(t, float64(2), value.Value)
+	})
+
+	t.Run("negative index", func(t *testing.T) {
+		query := `x = parse.json(content: '{"arr": [1, 2, 3]}').params
+x['arr'][-1]`
+		value, err := mql.Exec(query, runtime(), features, nil)
+		require.NoError(t, err)
+		require.Equal(t, float64(3), value.Value)
+	})
+
+	t.Run("negative index out of bounds", func(t *testing.T) {
+		query := `x = parse.json(content: '{"arr": [1, 2, 3]}').params
+x['arr'][-4]`
+		value, err := mql.Exec(query, runtime(), features, nil)
+		require.NoError(t, err)
+		require.Contains(t, value.Error.Error(), "array index out of bound")
+	})
+}
+
 func TestMqlProps(t *testing.T) {
 	query := "props.a + props.b"
 	props := map[string]*llx.Primitive{
