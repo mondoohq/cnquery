@@ -11,7 +11,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "cloudflare",
 	ID:              "go.mondoo.com/cnquery/v11/providers/cloudflare",
-	Version:         "11.0.49",
+	Version:         "11.0.50",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{
 		{
