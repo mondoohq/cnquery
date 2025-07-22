@@ -1041,7 +1041,7 @@ func tarrayConcatTarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uin
 
 	list := items.Value.([]interface{})
 	if len(list) == 0 {
-		return items, 0, nil
+		return bind, 0, nil
 	}
 
 	res := make([]interface{}, len(v)+len(list))
