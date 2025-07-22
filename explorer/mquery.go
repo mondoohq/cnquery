@@ -452,6 +452,26 @@ func (r *Remediation) MarshalJSON() ([]byte, error) {
 	return json.Marshal(r.Items)
 }
 
+func (a *Action) UnmarshalJSON(data []byte) error {
+	var res string
+	if err := json.Unmarshal(data, &res); err == nil {
+		capitalized := strings.ToUpper(res)
+		// FIXME: DEPRECATED, turn preview into the default in v12, deprecated ignore
+		if capitalized == "PREVIEW" {
+			capitalized = "IGNORE"
+		}
+		av, ok := Action_value[capitalized]
+		if !ok {
+			return errors.New("invalid action")
+		}
+		*a = Action(av)
+		return nil
+	}
+
+	type tmp Action
+	return json.Unmarshal(data, (*tmp)(a))
+}
+
 func ChecksumFilters(queries []*Mquery, conf mqlc.CompilerConfig) (string, error) {
 	for i := range queries {
 		if _, err := queries[i].refreshChecksumAndType(nil, nil, conf); err != nil {
