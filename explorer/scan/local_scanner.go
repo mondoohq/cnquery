@@ -591,7 +591,9 @@ func (s *localAssetScanner) mapPropOverrides() (*explorer.PropsReq, error) {
 				Mrn: propMrn,
 			})
 		}
-		newProp.RefreshMRN(s.job.Asset.Mrn)
+		if err := newProp.RefreshMRN(s.job.Asset.Mrn); err != nil {
+			return nil, err
+		}
 		propsReq.Props = append(propsReq.Props, newProp)
 	}
 

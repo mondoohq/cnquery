@@ -665,7 +665,9 @@ func LiftPropertiesToPack(pack *QueryPack, lookupQuery map[string]*Mquery) error
 	sort.Strings(keys)
 	for _, k := range keys {
 		prop := newPolicyProps[k]
-		prop.RefreshMRN(pack.Mrn)
+		if err := prop.RefreshMRN(pack.Mrn); err != nil {
+			return err
+		}
 		pack.Props = append(pack.Props, prop)
 	}
 	return nil
