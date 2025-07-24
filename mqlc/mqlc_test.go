@@ -237,6 +237,26 @@ func TestCompiler_Buggy(t *testing.T) {
 	}
 }
 
+func TestCompiler_FailIfNoEntrypoints(t *testing.T) {
+	data := []string{
+		"",
+		"// some comment",
+		"(asset.eol.date - time.now() > 90*time.day) && (asset.eol.date - time.now() < 180*time.day)",
+	}
+	for _, code := range data {
+		t.Run(code, func(t *testing.T) {
+			features := cnquery.Features{byte(cnquery.FailIfNoEntryPoints)}
+			conf := mqlc.NewConfig(
+				core_schema.Add(os_schema),
+				features,
+			)
+			_, err := mqlc.Compile(code, nil, conf)
+			assert.Error(t, err)
+			assert.EqualError(t, err, "failed to compile: received an empty code structure. this is a bug with the query compilation")
+		})
+	}
+}
+
 func TestCompiler_StructuredErrors(t *testing.T) {
 	data := []struct {
 		code string
