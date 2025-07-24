@@ -104,6 +104,10 @@ const (
 	// desc:  Automatically add resource context to results and prints it
 	// start: v11.x
 	ResourceContext
+
+	// FailIfNoEntryPoints feature flag
+	// desc:  Fail if no entrypoints or datapoints are found in the query.
+	FailIfNoEntryPoints
 )
 
 // FeaturesValue is a map from feature name to feature flag
@@ -118,6 +122,7 @@ var FeaturesValue = map[string]Feature{
 	SerialNumberAsID.String():     SerialNumberAsID,
 	ForceShellCompletion.String(): ForceShellCompletion,
 	ResourceContext.String():      ResourceContext,
+	FailIfNoEntryPoints.String():  FailIfNoEntryPoints,
 }
 
 // DefaultFeatures are a set of default flags that are active

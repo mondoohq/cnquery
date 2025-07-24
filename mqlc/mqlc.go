@@ -2067,6 +2067,17 @@ func (c *compiler) CompileParsed(ast *parser.AST) error {
 	c.updateEntrypoints(true)
 	c.updateLabels()
 
+	return c.failIfNoEntrypoints()
+}
+
+func (c *compiler) failIfNoEntrypoints() error {
+	if c.Features.IsActive(cnquery.FailIfNoEntryPoints) {
+		for _, b := range c.Result.CodeV2.Blocks {
+			if len(b.Datapoints) == 0 && len(b.Entrypoints) == 0 {
+				return errors.New("failed to compile: received an empty code structure. this is a bug with the query compilation")
+			}
+		}
+	}
 	return nil
 }
 
@@ -2179,6 +2190,7 @@ func compile(input string, props map[string]*llx.Primitive, compilerConf Compile
 	}
 
 	res.Source = input
+
 	return res, nil
 }
 
