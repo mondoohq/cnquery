@@ -125,8 +125,8 @@ func initAwsApigatewayRestapi(runtime *plugin.Runtime, args map[string]*llx.RawD
 	}
 
 	arnVal := args["arn"].Value.(string)
-	for i := range rawResources.Data {
-		restApi := rawResources.Data[i].(*mqlAwsApigatewayRestapi)
+	for _, rawResource := range rawResources.Data {
+		restApi := rawResource.(*mqlAwsApigatewayRestapi)
 		if restApi.Arn.Data == arnVal {
 			return args, restApi, nil
 		}

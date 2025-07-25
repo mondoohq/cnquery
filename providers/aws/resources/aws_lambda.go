@@ -166,8 +166,8 @@ func initAwsLambdaFunction(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return nil, nil, rawResources.Error
 	}
 
-	for i := range rawResources.Data {
-		dbInstance := rawResources.Data[i].(*mqlAwsLambdaFunction)
+	for _, rawResource := range rawResources.Data {
+		dbInstance := rawResource.(*mqlAwsLambdaFunction)
 		if dbInstance.Arn.Data == arnVal {
 			return args, dbInstance, nil
 		}

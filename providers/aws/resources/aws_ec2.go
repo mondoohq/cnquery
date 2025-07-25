@@ -1202,8 +1202,8 @@ func initAwsEc2Securitygroup(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		}
 	}
 
-	for i := range rawResources.Data {
-		securityGroup := rawResources.Data[i].(*mqlAwsEc2Securitygroup)
+	for _, rawResource := range rawResources.Data {
+		securityGroup := rawResource.(*mqlAwsEc2Securitygroup)
 		if match(securityGroup) {
 			return args, securityGroup, nil
 		}
@@ -1458,8 +1458,8 @@ func initAwsEc2Volume(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 		}
 	}
 
-	for i := range rawResources.Data {
-		volume := rawResources.Data[i].(*mqlAwsEc2Volume)
+	for _, rawResource := range rawResources.Data {
+		volume := rawResource.(*mqlAwsEc2Volume)
 		if match(volume) {
 			return args, volume, nil
 		}
@@ -1496,8 +1496,8 @@ func initAwsEc2Instance(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 
 	arnVal := args["arn"].Value.(string)
-	for i := range rawResources.Data {
-		instance := rawResources.Data[i].(*mqlAwsEc2Instance)
+	for _, rawResource := range rawResources.Data {
+		instance := rawResource.(*mqlAwsEc2Instance)
 		if instance.Arn.Data == arnVal {
 			return args, instance, nil
 		}
@@ -1547,8 +1547,8 @@ func initAwsEc2Snapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		}
 	}
 
-	for i := range rawResources.Data {
-		snapshot := rawResources.Data[i].(*mqlAwsEc2Snapshot)
+	for _, rawResource := range rawResources.Data {
+		snapshot := rawResource.(*mqlAwsEc2Snapshot)
 		if match(snapshot) {
 			return args, snapshot, nil
 		}

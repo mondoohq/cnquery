@@ -306,8 +306,8 @@ func initAwsDynamodbTable(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 
 	arnVal := args["arn"].Value.(string)
-	for i := range rawResources.Data {
-		dbInstance := rawResources.Data[i].(*mqlAwsDynamodbTable)
+	for _, rawResource := range rawResources.Data {
+		dbInstance := rawResource.(*mqlAwsDynamodbTable)
 		if dbInstance.Arn.Data == arnVal {
 			return args, dbInstance, nil
 		}
@@ -573,8 +573,8 @@ func initAwsDynamodbGlobaltable(runtime *plugin.Runtime, args map[string]*llx.Ra
 	}
 
 	arnVal := args["arn"].Value.(string)
-	for i := range rawResources.Data {
-		dbInstance := rawResources.Data[i].(*mqlAwsDynamodbGlobaltable)
+	for _, rawResource := range rawResources.Data {
+		dbInstance := rawResource.(*mqlAwsDynamodbGlobaltable)
 		if dbInstance.Arn.Data == arnVal {
 			return args, dbInstance, nil
 		}

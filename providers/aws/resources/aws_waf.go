@@ -58,7 +58,6 @@ func initAwsWaf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 	log.Debug().Msgf("AWS WAF using scope: %s", scope)
 
 	return args, nil, nil
-
 }
 
 func (a *mqlAwsWaf) acls() ([]interface{}, error) {
@@ -327,9 +326,6 @@ func (a *mqlAwsWaf) ipSets() ([]interface{}, error) {
 				return nil, err
 			}
 			ipsetAddresses := convert.SliceAnyToInterface(ipsetDetails.IPSet.Addresses)
-			if err != nil {
-				return nil, err
-			}
 			mqlIPSet, err := CreateResource(a.MqlRuntime, "aws.waf.ipset",
 				map[string]*llx.RawData{
 					"id":          llx.StringDataPtr(ipset.Id),

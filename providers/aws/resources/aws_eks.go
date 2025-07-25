@@ -161,16 +161,13 @@ func initAwsEksCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	if err != nil {
 		return nil, nil, err
 	}
-	eks := obj.(*mqlAwsEks)
 
+	eks := obj.(*mqlAwsEks)
 	rawResources := eks.GetClusters()
-	if err != nil {
-		return nil, nil, err
-	}
 
 	arnVal := args["arn"].Value.(string)
-	for i := range rawResources.Data {
-		cluster := rawResources.Data[i].(*mqlAwsEksCluster)
+	for _, rawResource := range rawResources.Data {
+		cluster := rawResource.(*mqlAwsEksCluster)
 		if cluster.Arn.Data == arnVal {
 			return args, cluster, nil
 		}

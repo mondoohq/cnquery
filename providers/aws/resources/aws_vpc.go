@@ -847,8 +847,8 @@ func initAwsVpc(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 		}
 	}
 
-	for i := range rawResources.Data {
-		volume := rawResources.Data[i].(*mqlAwsVpc)
+	for _, rawResource := range rawResources.Data {
+		volume := rawResource.(*mqlAwsVpc)
 		if match(volume) {
 			return args, volume, nil
 		}

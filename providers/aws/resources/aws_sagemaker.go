@@ -213,8 +213,8 @@ func initAwsSagemakerNotebookinstance(runtime *plugin.Runtime, args map[string]*
 	}
 
 	arnVal := args["arn"].Value.(string)
-	for i := range rawResources.Data {
-		ni := rawResources.Data[i].(*mqlAwsSagemakerNotebookinstance)
+	for _, rawResource := range rawResources.Data {
+		ni := rawResource.(*mqlAwsSagemakerNotebookinstance)
 		if ni.Arn.Data == arnVal {
 			return args, ni, nil
 		}

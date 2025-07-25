@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
@@ -90,18 +89,9 @@ func (a *mqlAwsIam) credentialReport() ([]interface{}, error) {
 		if errors.As(err, &ae) {
 			if ae.ErrorCode() == "ReportNotPresent" {
 				// generate a new report
-				gresp, err := svc.GenerateCredentialReport(ctx, &iam.GenerateCredentialReportInput{})
+				_, err := svc.GenerateCredentialReport(ctx, &iam.GenerateCredentialReportInput{})
 				if err != nil {
 					return nil, err
-				}
-
-				if gresp.State == iamtypes.ReportStateTypeStarted || gresp.State == iamtypes.ReportStateTypeInprogress {
-					// we need to wait
-				} else if gresp.State == iamtypes.ReportStateTypeComplete {
-					// we do not need do do anything
-				} else {
-					// unsupported report state
-					return nil, fmt.Errorf("aws iam credential report state is not supported: %s", gresp.State)
 				}
 			}
 		}
