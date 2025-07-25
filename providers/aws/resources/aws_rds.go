@@ -517,12 +517,9 @@ func initAwsRdsDbcluster(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	if err != nil {
 		return nil, nil, err
 	}
-	rds := obj.(*mqlAwsRds)
 
+	rds := obj.(*mqlAwsRds)
 	rawResources := rds.GetDbClusters()
-	if err != nil {
-		return nil, nil, err
-	}
 
 	arnVal := args["arn"].Value.(string)
 	for i := range rawResources.Data {
@@ -555,12 +552,9 @@ func initAwsRdsDbinstance(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	if err != nil {
 		return nil, nil, err
 	}
-	rds := obj.(*mqlAwsRds)
 
+	rds := obj.(*mqlAwsRds)
 	rawResources := rds.GetDbInstances()
-	if err != nil {
-		return nil, nil, err
-	}
 
 	arnVal := args["arn"].Value.(string)
 	for i := range rawResources.Data {

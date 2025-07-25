@@ -153,7 +153,7 @@ func initAwsCloudwatchMetric(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	}
 
 	regionRaw := args["region"]
-	if namespaceRaw == nil {
+	if regionRaw == nil {
 		return args, nil, nil
 	}
 
@@ -272,7 +272,7 @@ func initAwsCloudwatchMetricstatistics(runtime *plugin.Runtime, args map[string]
 	}
 
 	regionRaw := args["region"]
-	if namespaceRaw == nil {
+	if regionRaw == nil {
 		return args, nil, nil
 	}
 
@@ -315,10 +315,6 @@ func initAwsCloudwatchMetricstatistics(runtime *plugin.Runtime, args map[string]
 			return args, nil, err
 		}
 		datapoints = append(datapoints, mqlDatapoint)
-	}
-
-	if err != nil {
-		return args, nil, err
 	}
 
 	args["label"] = llx.StringDataPtr(statsResp.Label)

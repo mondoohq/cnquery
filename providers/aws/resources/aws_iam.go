@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -95,12 +96,8 @@ func (a *mqlAwsIam) credentialReport() ([]interface{}, error) {
 					return nil, err
 				}
 
-				if gresp.State == iamtypes.ReportStateTypeStarted || gresp.State == iamtypes.ReportStateTypeInprogress {
-					// we need to wait
-				} else if gresp.State == iamtypes.ReportStateTypeComplete {
-					// we do not need do do anything
-				} else {
-					// unsupported report state
+				validStates := gresp.State.Values()
+				if !slices.Contains(validStates, gresp.State) {
 					return nil, fmt.Errorf("aws iam credential report state is not supported: %s", gresp.State)
 				}
 			}
