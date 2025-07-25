@@ -166,8 +166,8 @@ func initAwsEksCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	rawResources := eks.GetClusters()
 
 	arnVal := args["arn"].Value.(string)
-	for i := range rawResources.Data {
-		cluster := rawResources.Data[i].(*mqlAwsEksCluster)
+	for _, rawResource := range rawResources.Data {
+		cluster := rawResource.(*mqlAwsEksCluster)
 		if cluster.Arn.Data == arnVal {
 			return args, cluster, nil
 		}

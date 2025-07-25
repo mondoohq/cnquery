@@ -247,9 +247,8 @@ func initAwsSsmInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 
 	arnVal := args["arn"].Value.(string)
-	for i := range rawResources.Data {
-		instance := rawResources.Data[i].(*mqlAwsSsmInstance)
-
+	for _, rawResource := range rawResources.Data {
+		instance := rawResource.(*mqlAwsSsmInstance)
 		if instance.Arn.Data == arnVal {
 			return args, instance, nil
 		}

@@ -180,8 +180,8 @@ func initAwsS3Bucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	}
 
 	// iterate over security groups and find the one with the arn
-	for i := range rawResources.Data {
-		bucket := rawResources.Data[i].(*mqlAwsS3Bucket)
+	for _, rawResource := range rawResources.Data {
+		bucket := rawResource.(*mqlAwsS3Bucket)
 		if bucket.Arn.Data == arn {
 			return args, bucket, nil
 		}

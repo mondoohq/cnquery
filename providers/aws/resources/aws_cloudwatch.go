@@ -662,12 +662,12 @@ func initAwsCloudwatchLoggroup(runtime *plugin.Runtime, args map[string]*llx.Raw
 	}
 
 	arnVal := args["arn"].Value.(string)
-	for i := range rawResources.Data {
-		loggroup := rawResources.Data[i].(*mqlAwsCloudwatchLoggroup)
-		mqlLgArn := loggroup.Arn.Data
+	for _, rawResource := range rawResources.Data {
+		logGroup := rawResource.(*mqlAwsCloudwatchLoggroup)
+		mqlLgArn := logGroup.Arn.Data
 
 		if mqlLgArn == arnVal {
-			return args, loggroup, nil
+			return args, logGroup, nil
 		}
 	}
 	return nil, nil, errors.New("cloudwatch log group does not exist")
@@ -772,8 +772,8 @@ func initAwsCloudwatchMetricsalarm(runtime *plugin.Runtime, args map[string]*llx
 	}
 
 	arnVal := args["arn"].Value.(string)
-	for i := range rawResources.Data {
-		alarm := rawResources.Data[i].(*mqlAwsCloudwatchMetricsalarm)
+	for _, rawResource := range rawResources.Data {
+		alarm := rawResource.(*mqlAwsCloudwatchMetricsalarm)
 		if alarm.Arn.Data == arnVal {
 			return args, alarm, nil
 		}

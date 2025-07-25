@@ -244,8 +244,8 @@ func initAwsElbLoadbalancer(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 
 	arnVal := args["arn"].Value.(string)
-	for i := range rawResources.Data {
-		lb := rawResources.Data[i].(*mqlAwsElbLoadbalancer)
+	for _, rawResource := range rawResources.Data {
+		lb := rawResource.(*mqlAwsElbLoadbalancer)
 		if lb.Arn.Data == arnVal {
 			return args, lb, nil
 		}

@@ -261,8 +261,8 @@ func initAwsEcrImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		return nil, nil, rawResources.Error
 	}
 	arnVal := args["arn"].Value.(string)
-	for i := range rawResources.Data {
-		image := rawResources.Data[i].(*mqlAwsEcrImage)
+	for _, rawResource := range rawResources.Data {
+		image := rawResource.(*mqlAwsEcrImage)
 		if image.Arn.Data == arnVal {
 			return args, image, nil
 		}
