@@ -104,10 +104,11 @@ jobs:
 #          echo "SM_CODE_SIGNING_CERT_SHA1_HASH=${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}" >> "$GITHUB_ENV"
 #          echo "SM_CERT_ALIAS=${{ secrets.SM_CERT_ALIAS }}" >> "$GITHUB_ENV"
 #
-      - name: Install the required version of jSign (Windows Signing Tool)
-        run: |
-          curl -LO https://github.com/ebourg/jsign/releases/download/7.1/jsign_7.1_all.deb
-          sudo dpkg -i ./jsign_7.1_all.deb
+      #  This is required but needs to installed already, it should be done my ansible and the private-runner repo
+      # - name: Install the required version of jSign (Windows Signing Tool)
+      #   run: |
+      #     curl -LO https://github.com/ebourg/jsign/releases/download/7.1/jsign_7.1_all.deb
+      #     sudo dpkg -i ./jsign_7.1_all.deb
 
       - name: Log in to Azure for Code Signing
         uses: azure/login@v1
