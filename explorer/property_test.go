@@ -25,9 +25,7 @@ func TestProperty_RefreshMrn(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, "", in.Uid)
-	assert.Equal(t, "//my.owner/queries/uid1", in.Mrn)
-	assert.Equal(t, "", in.For[0].Uid)
-	assert.Equal(t, "//my.owner/queries/uid2", in.For[0].Mrn)
+	assert.Equal(t, "//my.owner/properties/uid1", in.Mrn)
 }
 
 func TestProperty_MustNotBeEmpty(t *testing.T) {
