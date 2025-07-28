@@ -59,9 +59,10 @@ func (a *mqlAwsElb) getClassicLoadBalancers(conn *connection.AwsConnection) []*j
 			ctx := context.Background()
 			res := []interface{}{}
 
-			var marker *string
-			for {
-				lbs, err := svc.DescribeLoadBalancers(ctx, &elasticloadbalancing.DescribeLoadBalancersInput{Marker: marker})
+			params := &elasticloadbalancing.DescribeLoadBalancersInput{}
+			paginator := elasticloadbalancing.NewDescribeLoadBalancersPaginator(svc, params)
+			for paginator.HasMorePages() {
+				lbs, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -92,10 +93,6 @@ func (a *mqlAwsElb) getClassicLoadBalancers(conn *connection.AwsConnection) []*j
 					}
 					res = append(res, mqlLb)
 				}
-				if lbs.NextMarker == nil {
-					break
-				}
-				marker = lbs.NextMarker
 			}
 			return jobpool.JobResult(res), nil
 		}
@@ -141,9 +138,10 @@ func (a *mqlAwsElb) getLoadBalancers(conn *connection.AwsConnection) []*jobpool.
 			ctx := context.Background()
 			res := []interface{}{}
 
-			var marker *string
-			for {
-				lbs, err := svc.DescribeLoadBalancers(ctx, &elasticloadbalancingv2.DescribeLoadBalancersInput{Marker: marker})
+			params := &elasticloadbalancingv2.DescribeLoadBalancersInput{}
+			paginator := elasticloadbalancingv2.NewDescribeLoadBalancersPaginator(svc, params)
+			for paginator.HasMorePages() {
+				lbs, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -158,8 +156,7 @@ func (a *mqlAwsElb) getLoadBalancers(conn *connection.AwsConnection) []*jobpool.
 					}
 
 					sgs := []interface{}{}
-					for i := range lb.SecurityGroups {
-						sg := lb.SecurityGroups[i]
+					for _, sg := range lb.SecurityGroups {
 						mqlSg, err := NewResource(a.MqlRuntime, "aws.ec2.securitygroup",
 							map[string]*llx.RawData{
 								"arn": llx.StringData(fmt.Sprintf(securityGroupArnPattern, regionVal, conn.AccountId(), sg)),
@@ -204,10 +201,6 @@ func (a *mqlAwsElb) getLoadBalancers(conn *connection.AwsConnection) []*jobpool.
 					}
 					res = append(res, mqlLb)
 				}
-				if lbs.NextMarker == nil {
-					break
-				}
-				marker = lbs.NextMarker
 			}
 			return jobpool.JobResult(res), nil
 		}
@@ -328,9 +321,10 @@ func (a *mqlAwsElbLoadbalancer) targetGroups() ([]interface{}, error) {
 	ctx := context.Background()
 	res := []interface{}{}
 
-	var marker *string
-	for {
-		tgs, err := svc.DescribeTargetGroups(ctx, &elasticloadbalancingv2.DescribeTargetGroupsInput{LoadBalancerArn: aws.String(a.Arn.Data), Marker: marker})
+	params := &elasticloadbalancingv2.DescribeTargetGroupsInput{LoadBalancerArn: aws.String(a.Arn.Data)}
+	paginator := elasticloadbalancingv2.NewDescribeTargetGroupsPaginator(svc, params)
+	for paginator.HasMorePages() {
+		tgs, err := paginator.NextPage(ctx)
 		if err != nil {
 			if Is400AccessDeniedError(err) {
 				log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -364,10 +358,6 @@ func (a *mqlAwsElbLoadbalancer) targetGroups() ([]interface{}, error) {
 			mqlLb.(*mqlAwsElbTargetgroup).region = regionVal
 			res = append(res, mqlLb)
 		}
-		if tgs.NextMarker == nil {
-			break
-		}
-		marker = tgs.NextMarker
 	}
 	return res, nil
 }

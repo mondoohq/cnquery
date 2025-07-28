@@ -7,7 +7,6 @@ import (
 	"context"
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	"github.com/rs/zerolog/log"
@@ -107,16 +106,12 @@ func (a *mqlAwsBackupVault) recoveryPoints() ([]interface{}, error) {
 	res := []interface{}{}
 
 	name := strings.TrimPrefix(parsedArn.Resource, "backup-vault:")
-	nextToken := aws.String("no_token_to_start_with")
 	params := &backup.ListRecoveryPointsByBackupVaultInput{BackupVaultName: &name}
-	for nextToken != nil {
-		recovPoints, err := svc.ListRecoveryPointsByBackupVault(ctx, params)
+	paginator := backup.NewListRecoveryPointsByBackupVaultPaginator(svc, params)
+	for paginator.HasMorePages() {
+		recovPoints, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, err
-		}
-		nextToken = recovPoints.NextToken
-		if recovPoints.NextToken != nil {
-			params.NextToken = nextToken
 		}
 		for _, rp := range recovPoints.RecoveryPoints {
 			createdBy, err := convert.JsonToDict(rp.CreatedBy)

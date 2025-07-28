@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
 	aatypes "github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types"
@@ -46,10 +47,9 @@ func (a *mqlAwsIamAccessAnalyzer) getAnalyzers(conn *connection.AwsConnection) [
 		return []*jobpool.Job{{Err: err}}
 	}
 
-	for i := range regions {
-		regionVal := regions[i]
+	for _, region := range regions {
 		f := func() (jobpool.JobResult, error) {
-			svc := conn.AccessAnalyzer(regionVal)
+			svc := conn.AccessAnalyzer(region)
 			res := []interface{}{}
 
 			// we need to iterate over all the analyzers types in the account
@@ -58,16 +58,16 @@ func (a *mqlAwsIamAccessAnalyzer) getAnalyzers(conn *connection.AwsConnection) [
 				ctx := context.Background()
 
 				// query all the analyzers in the account / region
-				nextToken := aws.String("no_token_to_start_with")
 				params := &accessanalyzer.ListAnalyzersInput{Type: analyzerType}
-				for nextToken != nil {
-					analyzers, err := svc.ListAnalyzers(ctx, params)
+				paginator := accessanalyzer.NewListAnalyzersPaginator(svc, params)
+				for paginator.HasMorePages() {
+					analyzers, err := paginator.NextPage(ctx)
 					if err != nil {
 						if Is400AccessDeniedError(err) {
-							log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+							log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 							return res, nil
 						}
-						log.Error().Err(err).Str("region", regionVal).Msg("error listing analyzers")
+						log.Error().Err(err).Str("region", region).Msg("error listing analyzers")
 						return nil, err
 					}
 					for _, analyzer := range analyzers.Analyzers {
@@ -77,7 +77,7 @@ func (a *mqlAwsIamAccessAnalyzer) getAnalyzers(conn *connection.AwsConnection) [
 								"name":                   llx.StringDataPtr(analyzer.Name),
 								"status":                 llx.StringData(string(analyzer.Status)),
 								"type":                   llx.StringData(string(analyzer.Type)),
-								"region":                 llx.StringData(regionVal),
+								"region":                 llx.StringData(region),
 								"tags":                   llx.MapData(strMapToInterface(analyzer.Tags), types.String),
 								"createdAt":              llx.TimeDataPtr(analyzer.CreatedAt),
 								"lastResourceAnalyzed":   llx.StringDataPtr(analyzer.LastResourceAnalyzed),
@@ -87,10 +87,6 @@ func (a *mqlAwsIamAccessAnalyzer) getAnalyzers(conn *connection.AwsConnection) [
 							return nil, err
 						}
 						res = append(res, mqlAnalyzer)
-					}
-					nextToken = analyzers.NextToken
-					if analyzers.NextToken != nil {
-						params.NextToken = nextToken
 					}
 				}
 			}
@@ -159,7 +155,6 @@ func (a *mqlAwsIamAccessAnalyzer) listFindings(conn *connection.AwsConnection, a
 
 				ctx := context.Background()
 
-				nextToken := aws.String("no_token_to_start_with")
 				params := &accessanalyzer.ListFindingsV2Input{
 					AnalyzerArn: aws.String(analyzerArn),
 					Filter: map[string]aatypes.Criterion{
@@ -168,8 +163,9 @@ func (a *mqlAwsIamAccessAnalyzer) listFindings(conn *connection.AwsConnection, a
 						},
 					},
 				}
-				for nextToken != nil {
-					findings, err := svc.ListFindingsV2(ctx, params)
+				paginator := accessanalyzer.NewListFindingsV2Paginator(svc, params)
+				for paginator.HasMorePages() {
+					findings, err := paginator.NextPage(ctx)
 					if err != nil {
 						if Is400AccessDeniedError(err) {
 							log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -199,10 +195,6 @@ func (a *mqlAwsIamAccessAnalyzer) listFindings(conn *connection.AwsConnection, a
 							return nil, err
 						}
 						res = append(res, mqlIamAnalyzserFindings)
-					}
-					nextToken = findings.NextToken
-					if findings.NextToken != nil {
-						params.NextToken = nextToken
 					}
 				}
 			}

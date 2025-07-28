@@ -57,9 +57,10 @@ func (a *mqlAwsElasticache) getClusters(conn *connection.AwsConnection) []*jobpo
 			ctx := context.Background()
 			var res interface{}
 
-			var marker *string
-			for {
-				clusters, err := svc.DescribeCacheClusters(ctx, &elasticache.DescribeCacheClustersInput{Marker: marker})
+			params := &elasticache.DescribeCacheClustersInput{}
+			paginator := elasticache.NewDescribeCacheClustersPaginator(svc, params)
+			for paginator.HasMorePages() {
+				clusters, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -70,10 +71,6 @@ func (a *mqlAwsElasticache) getClusters(conn *connection.AwsConnection) []*jobpo
 				if len(clusters.CacheClusters) == 0 {
 					return nil, nil
 				}
-				if clusters.Marker == nil {
-					break
-				}
-				marker = clusters.Marker
 			}
 			jsonRes, err := convert.JsonToDictSlice(res)
 			if err != nil {
@@ -97,9 +94,9 @@ func (a *mqlAwsElasticache) cacheClusters() ([]interface{}, error) {
 		return nil, poolOfJobs.GetErrors()
 	}
 	// get all the results
-	for i := range poolOfJobs.Jobs {
-		if poolOfJobs.Jobs[i].Result != nil {
-			res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	for _, job := range poolOfJobs.Jobs {
+		if job.Result != nil {
+			res = append(res, job.Result.([]interface{})...)
 		}
 	}
 
@@ -122,9 +119,10 @@ func (a *mqlAwsElasticache) getCacheClusters(conn *connection.AwsConnection) []*
 			ctx := context.Background()
 			res := []interface{}{}
 
-			var marker *string
-			for {
-				clusters, err := svc.DescribeCacheClusters(ctx, &elasticache.DescribeCacheClustersInput{Marker: marker})
+			params := &elasticache.DescribeCacheClustersInput{}
+			paginator := elasticache.NewDescribeCacheClustersPaginator(svc, params)
+			for paginator.HasMorePages() {
+				clusters, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -135,19 +133,13 @@ func (a *mqlAwsElasticache) getCacheClusters(conn *connection.AwsConnection) []*
 				if len(clusters.CacheClusters) == 0 {
 					return nil, nil
 				}
-				for i := range clusters.CacheClusters {
-					cluster := clusters.CacheClusters[i]
-
+				for _, cluster := range clusters.CacheClusters {
 					mqlCluster, err := newMqlAwsElasticacheCluster(a.MqlRuntime, regionVal, conn.AccountId(), cluster)
 					if err != nil {
 						return nil, err
 					}
 					res = append(res, mqlCluster)
 				}
-				if clusters.Marker == nil {
-					break
-				}
-				marker = clusters.Marker
 			}
 			return jobpool.JobResult(res), nil
 		}
@@ -166,8 +158,8 @@ func newMqlAwsElasticacheCluster(runtime *plugin.Runtime, region string, account
 		cacheNodes = append(cacheNodes, convert.ToValue(cluster.CacheNodes[i].CacheNodeId))
 	}
 	cacheSecurityGroups := []interface{}{}
-	for i := range cluster.CacheSecurityGroups {
-		cacheSecurityGroups = append(cacheSecurityGroups, convert.ToValue(cluster.CacheSecurityGroups[i].CacheSecurityGroupName))
+	for _, sg := range cluster.CacheSecurityGroups {
+		cacheSecurityGroups = append(cacheSecurityGroups, convert.ToValue(sg.CacheSecurityGroupName))
 	}
 	logDeliveryConfigurations, err := convert.JsonToDictSlice(cluster.LogDeliveryConfigurations)
 	if err != nil {
@@ -179,8 +171,7 @@ func newMqlAwsElasticacheCluster(runtime *plugin.Runtime, region string, account
 	}
 
 	sgs := []string{}
-	for i := range cluster.SecurityGroups {
-		sg := cluster.SecurityGroups[i]
+	for _, sg := range cluster.SecurityGroups {
 		if sg.SecurityGroupId == nil {
 			log.Debug().Msgf("elasticache>newMqlAwsElasticacheCluster>missing security group id for cluster %s", *cluster.CacheClusterId)
 			continue
@@ -267,11 +258,10 @@ func (a *mqlAwsElasticache) getServerlessCaches(conn *connection.AwsConnection) 
 			ctx := context.Background()
 			res := []interface{}{}
 
-			var marker *string
-			for {
-				caches, err := svc.DescribeServerlessCaches(ctx, &elasticache.DescribeServerlessCachesInput{
-					NextToken: marker,
-				})
+			params := &elasticache.DescribeServerlessCachesInput{}
+			paginator := elasticache.NewDescribeServerlessCachesPaginator(svc, params)
+			for paginator.HasMorePages() {
+				caches, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -282,18 +272,13 @@ func (a *mqlAwsElasticache) getServerlessCaches(conn *connection.AwsConnection) 
 				if len(caches.ServerlessCaches) == 0 {
 					return nil, nil
 				}
-				for i := range caches.ServerlessCaches {
-					cache := caches.ServerlessCaches[i]
+				for _, cache := range caches.ServerlessCaches {
 					mqlCache, err := newMqlAwsElasticacheServerlessCache(a.MqlRuntime, regionVal, conn.AccountId(), cache)
 					if err != nil {
 						return nil, err
 					}
 					res = append(res, mqlCache)
 				}
-				if caches.NextToken == nil {
-					break
-				}
-				marker = caches.NextToken
 			}
 			return jobpool.JobResult(res), nil
 		}

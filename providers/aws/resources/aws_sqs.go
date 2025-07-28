@@ -62,10 +62,10 @@ func (a *mqlAwsSqs) getQueues(conn *connection.AwsConnection) []*jobpool.Job {
 			ctx := context.Background()
 			res := []interface{}{}
 
-			nextToken := aws.String("no_token_to_start_with")
 			params := &sqs.ListQueuesInput{}
-			for nextToken != nil {
-				qs, err := svc.ListQueues(ctx, params)
+			paginator := sqs.NewListQueuesPaginator(svc, params)
+			for paginator.HasMorePages() {
+				qs, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -84,10 +84,6 @@ func (a *mqlAwsSqs) getQueues(conn *connection.AwsConnection) []*jobpool.Job {
 						return nil, err
 					}
 					res = append(res, mqlTopic)
-				}
-				nextToken = qs.NextToken
-				if qs.NextToken != nil {
-					params.NextToken = nextToken
 				}
 			}
 			return jobpool.JobResult(res), nil

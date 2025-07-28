@@ -62,19 +62,15 @@ func (a *mqlAwsSsm) getParameters(conn *connection.AwsConnection) []*jobpool.Job
 			input := &ssm.DescribeParametersInput{
 				Filters: []types.ParametersFilter{},
 			}
-			nextToken := aws.String("no_token_to_start_with")
-			for nextToken != nil {
-				resp, err := ssmsvc.DescribeParameters(ctx, input)
+			paginator := ssm.NewDescribeParametersPaginator(ssmsvc, input)
+			for paginator.HasMorePages() {
+				resp, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, errors.Wrap(err, "could not gather ssm information")
-				}
-				nextToken = resp.NextToken
-				if resp.NextToken != nil {
-					input.NextToken = nextToken
 				}
 
 				for _, param := range resp.Parameters {
@@ -163,20 +159,16 @@ func (a *mqlAwsSsm) getInstances(conn *connection.AwsConnection) []*jobpool.Job 
 			input := &ssm.DescribeInstanceInformationInput{
 				Filters: []types.InstanceInformationStringFilter{},
 			}
-			nextToken := aws.String("no_token_to_start_with")
+			paginator := ssm.NewDescribeInstanceInformationPaginator(ssmsvc, input)
 			ssminstances := make([]types.InstanceInformation, 0)
-			for nextToken != nil {
-				isssmresp, err := ssmsvc.DescribeInstanceInformation(ctx, input)
+			for paginator.HasMorePages() {
+				isssmresp, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, errors.Wrap(err, "could not gather ssm information")
-				}
-				nextToken = isssmresp.NextToken
-				if isssmresp.NextToken != nil {
-					input.NextToken = nextToken
 				}
 				ssminstances = append(ssminstances, isssmresp.InstanceInformationList...)
 			}

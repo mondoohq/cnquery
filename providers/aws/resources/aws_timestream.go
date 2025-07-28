@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+
 	"github.com/aws/aws-sdk-go-v2/service/timestreamwrite"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/llx"
@@ -73,11 +74,10 @@ func (a *mqlAwsTimestreamLiveanalytics) getDatabases(conn *connection.AwsConnect
 			ctx := context.Background()
 			res := []interface{}{}
 
-			var marker *string
-			for {
-				resp, err := svc.ListDatabases(ctx, &timestreamwrite.ListDatabasesInput{
-					NextToken: marker,
-				})
+			params := &timestreamwrite.ListDatabasesInput{}
+			paginator := timestreamwrite.NewListDatabasesPaginator(svc, params)
+			for paginator.HasMorePages() {
+				resp, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -88,9 +88,7 @@ func (a *mqlAwsTimestreamLiveanalytics) getDatabases(conn *connection.AwsConnect
 				if len(resp.Databases) == 0 {
 					return nil, nil
 				}
-				for i := range resp.Databases {
-					database := resp.Databases[i]
-
+				for _, database := range resp.Databases {
 					mqlCluster, err := CreateResource(a.MqlRuntime, "aws.timestream.liveanalytics.database",
 						map[string]*llx.RawData{
 							"__id":       llx.StringDataPtr(database.Arn),
@@ -107,10 +105,6 @@ func (a *mqlAwsTimestreamLiveanalytics) getDatabases(conn *connection.AwsConnect
 					}
 					res = append(res, mqlCluster)
 				}
-				if resp.NextToken == nil || *resp.NextToken == "" {
-					break
-				}
-				marker = resp.NextToken
 			}
 			return jobpool.JobResult(res), nil
 		}
@@ -130,9 +124,9 @@ func (a *mqlAwsTimestreamLiveanalytics) tables() ([]interface{}, error) {
 		return nil, poolOfJobs.GetErrors()
 	}
 	// get all the results
-	for i := range poolOfJobs.Jobs {
-		if poolOfJobs.Jobs[i].Result != nil {
-			res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	for _, job := range poolOfJobs.Jobs {
+		if job.Result != nil {
+			res = append(res, job.Result.([]interface{})...)
 		}
 	}
 
@@ -147,26 +141,24 @@ func (a *mqlAwsTimestreamLiveanalytics) getTables(conn *connection.AwsConnection
 	}
 
 	for _, region := range regions {
-		regionVal := region
-		if !slices.Contains(timeStreamLiveRegions, regionVal) {
-			log.Debug().Str("region", regionVal).Msg("skipping region since timestream is not available in this region")
+		if !slices.Contains(timeStreamLiveRegions, region) {
+			log.Debug().Str("region", region).Msg("skipping region since timestream is not available in this region")
 			continue
 		}
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("timestream>getTables>calling aws with region %s", regionVal)
+			log.Debug().Msgf("timestream>getTables>calling aws with region %s", region)
 
-			svc := conn.TimestreamLiveAnalytics(regionVal)
+			svc := conn.TimestreamLiveAnalytics(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
-			var marker *string
-			for {
-				resp, err := svc.ListTables(ctx, &timestreamwrite.ListTablesInput{
-					NextToken: marker,
-				})
+			params := &timestreamwrite.ListTablesInput{}
+			paginator := timestreamwrite.NewListTablesPaginator(svc, params)
+			for paginator.HasMorePages() {
+				resp, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, err
@@ -174,9 +166,7 @@ func (a *mqlAwsTimestreamLiveanalytics) getTables(conn *connection.AwsConnection
 				if len(resp.Tables) == 0 {
 					return nil, nil
 				}
-				for i := range resp.Tables {
-					table := resp.Tables[i]
-
+				for _, table := range resp.Tables {
 					magneticStoreProperties, _ := convert.JsonToDictSlice(table.MagneticStoreWriteProperties)
 					retentionProperties, _ := convert.JsonToDictSlice(table.RetentionProperties)
 
@@ -190,17 +180,13 @@ func (a *mqlAwsTimestreamLiveanalytics) getTables(conn *connection.AwsConnection
 							"updatedAt":                    llx.TimeDataPtr(table.LastUpdatedTime),
 							"magneticStoreWriteProperties": llx.DictData(magneticStoreProperties),
 							"retentionProperties":          llx.DictData(retentionProperties),
-							"region":                       llx.StringData(regionVal),
+							"region":                       llx.StringData(region),
 						})
 					if err != nil {
 						return nil, err
 					}
 					res = append(res, mqlCluster)
 				}
-				if resp.NextToken == nil || *resp.NextToken == "" {
-					break
-				}
-				marker = resp.NextToken
 			}
 			return jobpool.JobResult(res), nil
 		}

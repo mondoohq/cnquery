@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
@@ -121,20 +120,16 @@ func (a *mqlAwsEcs) getECSClusters(conn *connection.AwsConnection) []*jobpool.Jo
 			ctx := context.Background()
 			res := []interface{}{}
 
-			nextToken := aws.String("no_token_to_start_with")
 			params := &ecsservice.ListClustersInput{}
-			for nextToken != nil {
-				resp, err := svc.ListClusters(ctx, params)
+			paginator := ecsservice.NewListClustersPaginator(svc, params)
+			for paginator.HasMorePages() {
+				resp, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, errors.Wrap(err, "could not gather ecs cluster information")
-				}
-				nextToken = resp.NextToken
-				if resp.NextToken != nil {
-					params.NextToken = nextToken
 				}
 				for _, clusterArn := range resp.ClusterArns {
 					mqlCluster, err := NewResource(a.MqlRuntime, "aws.ecs.cluster",
@@ -280,16 +275,12 @@ func (a *mqlAwsEcsCluster) tasks() ([]interface{}, error) {
 	ctx := context.Background()
 	res := []interface{}{}
 
-	nextToken := aws.String("no_token_to_start_with")
 	params := &ecsservice.ListTasksInput{Cluster: &clustera}
-	for nextToken != nil {
-		resp, err := svc.ListTasks(ctx, params)
+	paginator := ecsservice.NewListTasksPaginator(svc, params)
+	for paginator.HasMorePages() {
+		resp, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not gather ecs tasks information")
-		}
-		nextToken = resp.NextToken
-		if resp.NextToken != nil {
-			params.NextToken = nextToken
 		}
 		for _, taskArn := range resp.TaskArns {
 			mqlTask, err := NewResource(a.MqlRuntime, "aws.ecs.task",

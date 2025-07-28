@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	acmtypes "github.com/aws/aws-sdk-go-v2/service/acm/types"
 	"github.com/rs/zerolog/log"
@@ -49,19 +48,18 @@ func (a *mqlAwsAcm) getCertificates(conn *connection.AwsConnection) []*jobpool.J
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := conn.Acm(regionVal)
+			svc := conn.Acm(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
-			nextToken := aws.String("no_token_to_start_with")
 			params := &acm.ListCertificatesInput{}
-			for nextToken != nil {
-				certs, err := svc.ListCertificates(ctx, params)
+			paginator := acm.NewListCertificatesPaginator(svc, params)
+			for paginator.HasMorePages() {
+				certs, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, err
@@ -75,10 +73,6 @@ func (a *mqlAwsAcm) getCertificates(conn *connection.AwsConnection) []*jobpool.J
 					}
 
 					res = append(res, mqlCert)
-				}
-				nextToken = certs.NextToken
-				if certs.NextToken != nil {
-					params.NextToken = nextToken
 				}
 			}
 			return jobpool.JobResult(res), nil

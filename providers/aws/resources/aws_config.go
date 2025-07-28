@@ -30,8 +30,8 @@ func (a *mqlAwsConfig) recorders() ([]interface{}, error) {
 		return nil, poolOfJobs.GetErrors()
 	}
 	// get all the results
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	for _, job := range poolOfJobs.Jobs {
+		res = append(res, job.Result.([]interface{})...)
 	}
 	return res, nil
 }
@@ -44,11 +44,10 @@ func (a *mqlAwsConfig) getRecorders(conn *connection.AwsConnection) []*jobpool.J
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("config>getRecorders>calling aws with region %s", regionVal)
+			log.Debug().Msgf("config>getRecorders>calling aws with region %s", region)
 
-			svc := conn.ConfigService(regionVal)
+			svc := conn.ConfigService(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -56,19 +55,19 @@ func (a *mqlAwsConfig) getRecorders(conn *connection.AwsConnection) []*jobpool.J
 			configRecorders, err := svc.DescribeConfigurationRecorders(ctx, params)
 			if err != nil {
 				if Is400AccessDeniedError(err) {
-					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+					log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 					return res, nil
 				}
 				return nil, err
 			}
-			recorderStatusMap, err := a.describeConfigRecorderStatus(svc, regionVal)
+			recorderStatusMap, err := a.describeConfigRecorderStatus(svc, region)
 			if err != nil {
 				return nil, err
 			}
 			for _, r := range configRecorders.ConfigurationRecorders {
 				var recording bool
 				var lastStatus string
-				name := getName(convert.ToValue(r.Name), regionVal)
+				name := getName(convert.ToValue(r.Name), region)
 				if val, ok := recorderStatusMap[name]; ok {
 					recording = val.recording
 					lastStatus = val.lastStatus
@@ -85,7 +84,7 @@ func (a *mqlAwsConfig) getRecorders(conn *connection.AwsConnection) []*jobpool.J
 						"includeGlobalResourceTypes": llx.BoolData(r.RecordingGroup.IncludeGlobalResourceTypes),
 						"resourceTypes":              llx.ArrayData(resourceTypesInterface, types.String),
 						"recording":                  llx.BoolData(recording),
-						"region":                     llx.StringData(regionVal),
+						"region":                     llx.StringData(region),
 						"lastStatus":                 llx.StringData(lastStatus),
 					})
 				if err != nil {
@@ -110,8 +109,8 @@ func (a *mqlAwsConfig) deliveryChannels() ([]interface{}, error) {
 		return nil, poolOfJobs.GetErrors()
 	}
 
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	for _, job := range poolOfJobs.Jobs {
+		res = append(res, job.Result.([]interface{})...)
 	}
 	return res, nil
 }
@@ -124,11 +123,10 @@ func (a *mqlAwsConfig) getDeliveryChannels(conn *connection.AwsConnection) []*jo
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("config>getDeliveryChannels>calling aws with region %s", regionVal)
+			log.Debug().Msgf("config>getDeliveryChannels>calling aws with region %s", region)
 
-			svc := conn.ConfigService(regionVal)
+			svc := conn.ConfigService(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -145,7 +143,7 @@ func (a *mqlAwsConfig) getDeliveryChannels(conn *connection.AwsConnection) []*jo
 						"s3BucketName": llx.StringDataPtr(channel.S3BucketName),
 						"s3KeyPrefix":  llx.StringDataPtr(channel.S3KeyPrefix),
 						"snsTopicARN":  llx.StringDataPtr(channel.SnsTopicARN),
-						"region":       llx.StringData(regionVal),
+						"region":       llx.StringData(region),
 					})
 				if err != nil {
 					return nil, err
@@ -202,8 +200,8 @@ func (a *mqlAwsConfig) rules() ([]interface{}, error) {
 		return nil, poolOfJobs.GetErrors()
 	}
 	// get all the results
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	for _, job := range poolOfJobs.Jobs {
+		res = append(res, job.Result.([]interface{})...)
 	}
 	return res, nil
 }
@@ -216,11 +214,10 @@ func (a *mqlAwsConfig) getRules(conn *connection.AwsConnection) []*jobpool.Job {
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("config>getRules>calling aws with region %s", regionVal)
+			log.Debug().Msgf("config>getRules>calling aws with region %s", region)
 
-			svc := conn.ConfigService(regionVal)
+			svc := conn.ConfigService(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -242,7 +239,7 @@ func (a *mqlAwsConfig) getRules(conn *connection.AwsConnection) []*jobpool.Job {
 						"id":          llx.StringDataPtr(r.ConfigRuleId),
 						"source":      llx.MapData(jsonSource, types.Any),
 						"state":       llx.StringData(string(r.ConfigRuleState)),
-						"region":      llx.StringData(regionVal),
+						"region":      llx.StringData(region),
 					})
 				if err != nil {
 					return nil, err

@@ -59,10 +59,10 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 			svc := conn.Lambda(regionVal)
 			ctx := context.Background()
 			res := []interface{}{}
-
-			var marker *string
-			for {
-				functionsResp, err := svc.ListFunctions(ctx, &lambda.ListFunctionsInput{Marker: marker})
+			params := &lambda.ListFunctionsInput{}
+			paginator := lambda.NewListFunctionsPaginator(svc, params)
+			for paginator.HasMorePages() {
+				functionsResp, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -101,10 +101,6 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 					}
 					res = append(res, mqlFunc)
 				}
-				if functionsResp.NextMarker == nil {
-					break
-				}
-				marker = functionsResp.NextMarker
 			}
 			return jobpool.JobResult(res), nil
 		}

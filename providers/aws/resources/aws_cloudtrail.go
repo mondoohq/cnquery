@@ -102,11 +102,10 @@ func (a *mqlAwsCloudtrail) getTrails(conn *connection.AwsConnection) []*jobpool.
 		return []*jobpool.Job{{Err: err}}
 	}
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("cloudtrail>getTrails>calling aws with region %s", regionVal)
+			log.Debug().Msgf("cloudtrail>getTrails>calling aws with region %s", region)
 
-			svc := conn.Cloudtrail(regionVal)
+			svc := conn.Cloudtrail(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -114,17 +113,15 @@ func (a *mqlAwsCloudtrail) getTrails(conn *connection.AwsConnection) []*jobpool.
 			trailsResp, err := svc.DescribeTrails(ctx, &cloudtrail.DescribeTrailsInput{})
 			if err != nil {
 				if Is400AccessDeniedError(err) {
-					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+					log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 					return res, nil
 				}
 				return nil, errors.Wrap(err, "could not gather aws cloudtrail trails")
 			}
-			for i := range trailsResp.TrailList {
-				trail := trailsResp.TrailList[i]
-
+			for _, trail := range trailsResp.TrailList {
 				// only include trail if this region is the home region for the trail
 				// we do this to avoid getting duped results from multiregion trails
-				if regionVal != convert.ToValue(trail.HomeRegion) {
+				if region != convert.ToValue(trail.HomeRegion) {
 					continue
 				}
 				args := map[string]*llx.RawData{

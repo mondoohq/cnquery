@@ -63,10 +63,10 @@ func (c *mqlAwsCodedeploy) getApplicationResources(conn *connection.AwsConnectio
 			ctx := context.Background()
 			appResources := []interface{}{}
 
-			var nextToken *string
-			for {
-				input := &codedeploy.ListApplicationsInput{NextToken: nextToken}
-				output, err := svc.ListApplications(ctx, input)
+			params := &codedeploy.ListApplicationsInput{}
+			paginator := codedeploy.NewListApplicationsPaginator(svc, params)
+			for paginator.HasMorePages() {
+				output, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", reg).Msg("error accessing CodeDeploy applications in region")
@@ -100,11 +100,6 @@ func (c *mqlAwsCodedeploy) getApplicationResources(conn *connection.AwsConnectio
 						appResources = append(appResources, mqlApp)
 					}
 				}
-
-				if output.NextToken == nil {
-					break
-				}
-				nextToken = output.NextToken
 			}
 			return jobpool.JobResult(appResources), nil
 		}
@@ -140,13 +135,12 @@ func (a *mqlAwsCodedeployApplication) deploymentGroups() ([]interface{}, error) 
 	ctx := context.Background()
 	dgResources := []interface{}{}
 
-	var nextToken *string
-	for {
-		listInput := &codedeploy.ListDeploymentGroupsInput{
-			ApplicationName: aws.String(a.ApplicationName.Data),
-			NextToken:       nextToken,
-		}
-		listOutput, err := svc.ListDeploymentGroups(ctx, listInput)
+	params := &codedeploy.ListDeploymentGroupsInput{
+		ApplicationName: aws.String(a.ApplicationName.Data),
+	}
+	paginator := codedeploy.NewListDeploymentGroupsPaginator(svc, params)
+	for paginator.HasMorePages() {
+		listOutput, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, errors.Wrapf(err, "could not list deployment groups for application %s", a.ApplicationName.Data)
 		}
@@ -185,11 +179,6 @@ func (a *mqlAwsCodedeployApplication) deploymentGroups() ([]interface{}, error) 
 				dgResources = append(dgResources, mqlDg)
 			}
 		}
-
-		if listOutput.NextToken == nil {
-			break
-		}
-		nextToken = listOutput.NextToken
 	}
 	return dgResources, nil
 }
@@ -378,17 +367,15 @@ func listDeployments(runtime *plugin.Runtime, region string, appName, dgName *st
 	ctx := context.Background()
 	depResources := []interface{}{}
 
-	var nextToken *string
-	for {
-		listInput := &codedeploy.ListDeploymentsInput{
-			ApplicationName:     appName,
-			DeploymentGroupName: dgName,
-			NextToken:           nextToken,
-		}
+	params := &codedeploy.ListDeploymentsInput{
+		ApplicationName:     appName,
+		DeploymentGroupName: dgName,
 		// Potentially filter by IncludeOnlyStatuses for active ones if desired
-		// listInput.IncludeOnlyStatuses = []codedeploytypes.DeploymentStatus{DeploymentStatusInProgress, DeploymentStatusQueued, DeploymentStatusReady}
-
-		listOutput, err := svc.ListDeployments(ctx, listInput)
+		// IncludeOnlyStatuses: []codedeploytypes.DeploymentStatus{DeploymentStatusInProgress, DeploymentStatusQueued, DeploymentStatusReady}
+	}
+	paginator := codedeploy.NewListDeploymentsPaginator(svc, params)
+	for paginator.HasMorePages() {
+		listOutput, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, errors.Wrapf(err, "could not list deployments for app %s, group %s", aws.ToString(appName), aws.ToString(dgName))
 		}
@@ -430,11 +417,6 @@ func listDeployments(runtime *plugin.Runtime, region string, appName, dgName *st
 				depResources = append(depResources, mqlDep)
 			}
 		}
-
-		if listOutput.NextToken == nil {
-			break
-		}
-		nextToken = listOutput.NextToken
 	}
 	return depResources, nil
 }

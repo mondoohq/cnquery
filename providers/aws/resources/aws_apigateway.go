@@ -50,11 +50,10 @@ func (a *mqlAwsApigateway) getRestApis(conn *connection.AwsConnection) []*jobpoo
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("gateway>getRestApis>calling AWS with region %s", regionVal)
+			log.Debug().Msgf("gateway>getRestApis>calling AWS with region %s", region)
 
-			svc := conn.Apigateway(regionVal)
+			svc := conn.Apigateway(region)
 			ctx := context.Background()
 
 			res := []interface{}{}
@@ -63,7 +62,7 @@ func (a *mqlAwsApigateway) getRestApis(conn *connection.AwsConnection) []*jobpoo
 				restApisResp, err := svc.GetRestApis(ctx, &apigateway.GetRestApisInput{Position: position})
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, errors.Wrap(err, "could not gather AWS API Gateway REST APIs")
@@ -72,12 +71,12 @@ func (a *mqlAwsApigateway) getRestApis(conn *connection.AwsConnection) []*jobpoo
 				for _, restApi := range restApisResp.Items {
 					mqlRestApi, err := CreateResource(a.MqlRuntime, "aws.apigateway.restapi",
 						map[string]*llx.RawData{
-							"arn":         llx.StringData(fmt.Sprintf(apiArnPattern, regionVal, conn.AccountId(), convert.ToValue(restApi.Id))),
+							"arn":         llx.StringData(fmt.Sprintf(apiArnPattern, region, conn.AccountId(), convert.ToValue(restApi.Id))),
 							"id":          llx.StringData(convert.ToValue(restApi.Id)),
 							"name":        llx.StringData(convert.ToValue(restApi.Name)),
 							"description": llx.StringData(convert.ToValue(restApi.Description)),
 							"createdDate": llx.TimeDataPtr(restApi.CreatedDate),
-							"region":      llx.StringData(regionVal),
+							"region":      llx.StringData(region),
 							"tags":        llx.MapData(strMapToInterface(restApi.Tags), types.String),
 						})
 					if err != nil {

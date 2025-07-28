@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/smithy-go/transport/http"
@@ -76,19 +75,18 @@ func (a *mqlAwsSns) getTopics(conn *connection.AwsConnection) []*jobpool.Job {
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := conn.Sns(regionVal)
+			svc := conn.Sns(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
-			nextToken := aws.String("no_token_to_start_with")
 			params := &sns.ListTopicsInput{}
-			for nextToken != nil {
-				topics, err := svc.ListTopics(ctx, params)
+			paginator := sns.NewListTopicsPaginator(svc, params)
+			for paginator.HasMorePages() {
+				topics, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, err
@@ -97,17 +95,13 @@ func (a *mqlAwsSns) getTopics(conn *connection.AwsConnection) []*jobpool.Job {
 					mqlTopic, err := CreateResource(a.MqlRuntime, "aws.sns.topic",
 						map[string]*llx.RawData{
 							"arn":    llx.StringDataPtr(topic.TopicArn),
-							"region": llx.StringData(regionVal),
+							"region": llx.StringData(region),
 						},
 					)
 					if err != nil {
 						return nil, err
 					}
 					res = append(res, mqlTopic)
-				}
-				nextToken = topics.NextToken
-				if topics.NextToken != nil {
-					params.NextToken = nextToken
 				}
 			}
 			return jobpool.JobResult(res), nil
@@ -175,15 +169,11 @@ func (a *mqlAwsSnsTopic) subscriptions() ([]interface{}, error) {
 
 	mqlSubs := []interface{}{}
 	params := &sns.ListSubscriptionsByTopicInput{TopicArn: &arnValue}
-	nextToken := aws.String("no_token_to_start_with")
-	for nextToken != nil {
-		subsByTopic, err := svc.ListSubscriptionsByTopic(ctx, params)
+	paginator := sns.NewListSubscriptionsByTopicPaginator(svc, params)
+	for paginator.HasMorePages() {
+		subsByTopic, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, err
-		}
-		nextToken = subsByTopic.NextToken
-		if subsByTopic.NextToken != nil {
-			params.NextToken = nextToken
 		}
 		for _, sub := range subsByTopic.Subscriptions {
 			mqlSub, err := CreateResource(a.MqlRuntime, "aws.sns.subscription",
