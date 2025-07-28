@@ -276,7 +276,7 @@ func (a *mqlAwsEcr) publicRepositories() ([]interface{}, error) {
 	svc := conn.EcrPublic("us-east-1") // only supported for us-east-1
 	res := []interface{}{}
 
-	// TODO: @vasil - use pagination?
+	// TODO: consider using pagination here
 	repoResp, err := svc.DescribeRepositories(context.TODO(), &ecrpublic.DescribeRepositoriesInput{RegistryId: aws.String(conn.AccountId())})
 	if err != nil {
 		return nil, err

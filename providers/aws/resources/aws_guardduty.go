@@ -280,7 +280,6 @@ func fetchFindings(svc *guardduty.Client, detectorId string, regionVal string, p
 		findingIds = append(findingIds, detectors.FindingIds...)
 	}
 
-	// TODO: @vasil - is there a generic batching function for this?
 	// fetch all findings, we can only fetch 50 at a time
 	fetched := 0
 	for i := 0; i < len(findingIds); i += 50 {
