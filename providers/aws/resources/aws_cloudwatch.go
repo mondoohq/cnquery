@@ -62,10 +62,10 @@ func (a *mqlAwsCloudwatch) getMetrics(conn *connection.AwsConnection) []*jobpool
 			ctx := context.Background()
 
 			res := []interface{}{}
-			nextToken := aws.String("no_token_to_start_with")
 			params := &cloudwatch.ListMetricsInput{}
-			for nextToken != nil {
-				metrics, err := svc.ListMetrics(ctx, params)
+			paginator := cloudwatch.NewListMetricsPaginator(svc, params)
+			for paginator.HasMorePages() {
+				metrics, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -98,10 +98,6 @@ func (a *mqlAwsCloudwatch) getMetrics(conn *connection.AwsConnection) []*jobpool
 						return nil, err
 					}
 					res = append(res, mqlMetric)
-				}
-				nextToken = metrics.NextToken
-				if metrics.NextToken != nil {
-					params.NextToken = nextToken
 				}
 			}
 			return jobpool.JobResult(res), nil
@@ -469,11 +465,10 @@ func (a *mqlAwsCloudwatch) getAlarms(conn *connection.AwsConnection) []*jobpool.
 			ctx := context.Background()
 
 			res := []interface{}{}
-			nextToken := aws.String("no_token_to_start_with")
 			params := &cloudwatch.DescribeAlarmsInput{}
-			for nextToken != nil {
-
-				alarms, err := svc.DescribeAlarms(ctx, params)
+			paginator := cloudwatch.NewDescribeAlarmsPaginator(svc, params)
+			for paginator.HasMorePages() {
+				alarms, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -539,10 +534,6 @@ func (a *mqlAwsCloudwatch) getAlarms(conn *connection.AwsConnection) []*jobpool.
 					}
 					res = append(res, mqlAlarm)
 				}
-				nextToken = alarms.NextToken
-				if alarms.NextToken != nil {
-					params.NextToken = nextToken
-				}
 			}
 			return jobpool.JobResult(res), nil
 		}
@@ -583,21 +574,17 @@ func (a *mqlAwsCloudwatch) getLogGroups(conn *connection.AwsConnection) []*jobpo
 			svc := conn.CloudwatchLogs(regionVal)
 			ctx := context.Background()
 
-			nextToken := aws.String("no_token_to_start_with")
 			params := &cloudwatchlogs.DescribeLogGroupsInput{}
+			paginator := cloudwatchlogs.NewDescribeLogGroupsPaginator(svc, params)
 			res := []interface{}{}
-			for nextToken != nil {
-				logGroups, err := svc.DescribeLogGroups(ctx, params)
+			for paginator.HasMorePages() {
+				logGroups, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, errors.Wrap(err, "could not gather AWS CloudWatch log groups")
-				}
-				nextToken = logGroups.NextToken
-				if logGroups.NextToken != nil {
-					params.NextToken = nextToken
 				}
 				args := make(map[string]*llx.RawData)
 				for _, loggroup := range logGroups.LogGroups {
@@ -693,17 +680,13 @@ func (a *mqlAwsCloudwatchLoggroup) metricsFilters() ([]interface{}, error) {
 	svc := conn.CloudwatchLogs(region)
 	ctx := context.Background()
 
-	nextToken := aws.String("no_token_to_start_with")
 	params := &cloudwatchlogs.DescribeMetricFiltersInput{LogGroupName: &groupName}
+	paginator := cloudwatchlogs.NewDescribeMetricFiltersPaginator(svc, params)
 	metricFilters := []interface{}{}
-	for nextToken != nil {
-		metricsResp, err := svc.DescribeMetricFilters(ctx, params)
+	for paginator.HasMorePages() {
+		metricsResp, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not gather log metric filters")
-		}
-		nextToken = metricsResp.NextToken
-		if metricsResp.NextToken != nil {
-			params.NextToken = nextToken
 		}
 		for _, m := range metricsResp.MetricFilters {
 			mqlCloudwatchMetrics := []interface{}{}

@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
 	"github.com/rs/zerolog/log"
@@ -137,10 +136,10 @@ func (a *mqlAwsAutoscaling) getGroups(conn *connection.AwsConnection) []*jobpool
 			ctx := context.Background()
 			res := []interface{}{}
 
-			nextToken := aws.String("no_token_to_start_with")
 			params := &autoscaling.DescribeAutoScalingGroupsInput{}
-			for nextToken != nil {
-				groups, err := svc.DescribeAutoScalingGroups(ctx, params)
+			paginator := autoscaling.NewDescribeAutoScalingGroupsPaginator(svc, params)
+			for paginator.HasMorePages() {
+				groups, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -182,10 +181,6 @@ func (a *mqlAwsAutoscaling) getGroups(conn *connection.AwsConnection) []*jobpool
 						return nil, err
 					}
 					res = append(res, mqlGroup)
-				}
-				nextToken = groups.NextToken
-				if groups.NextToken != nil {
-					params.NextToken = nextToken
 				}
 			}
 			return jobpool.JobResult(res), nil

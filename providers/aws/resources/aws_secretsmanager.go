@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	secretstypes "github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
@@ -60,10 +59,10 @@ func (a *mqlAwsSecretsmanager) getSecrets(conn *connection.AwsConnection) []*job
 
 			res := []interface{}{}
 
-			nextToken := aws.String("no_token_to_start_with")
 			params := &secretsmanager.ListSecretsInput{}
-			for nextToken != nil {
-				secrets, err := svc.ListSecrets(ctx, params)
+			paginator := secretsmanager.NewListSecretsPaginator(svc, params)
+			for paginator.HasMorePages() {
+				secrets, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -89,10 +88,6 @@ func (a *mqlAwsSecretsmanager) getSecrets(conn *connection.AwsConnection) []*job
 						return nil, err
 					}
 					res = append(res, mqlSecret)
-				}
-				nextToken = secrets.NextToken
-				if secrets.NextToken != nil {
-					params.NextToken = nextToken
 				}
 			}
 			return jobpool.JobResult(res), nil

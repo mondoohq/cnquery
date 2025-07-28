@@ -35,9 +35,10 @@ func (a *mqlAwsDynamodb) exports() ([]interface{}, error) {
 	if poolOfJobs.HasErrors() {
 		return nil, poolOfJobs.GetErrors()
 	}
+
 	// get all the results
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	for _, job := range poolOfJobs.Jobs {
+		res = append(res, job.Result.([]interface{})...)
 	}
 
 	return res, nil
@@ -96,8 +97,7 @@ func (a *mqlAwsDynamodb) getExports(conn *connection.AwsConnection) []*jobpool.J
 				}
 				return nil, errors.Wrap(err, "could not gather aws dynamodb exports")
 			}
-			for i := range listExportsResp.ExportSummaries {
-				exp := listExportsResp.ExportSummaries[i]
+			for _, exp := range listExportsResp.ExportSummaries {
 				mqlExport, err := CreateResource(a.MqlRuntime, "aws.dynamodb.export",
 					map[string]*llx.RawData{
 						"arn":    llx.StringDataPtr(exp.ExportArn),
@@ -234,8 +234,8 @@ func (a *mqlAwsDynamodb) backups() ([]interface{}, error) {
 		return nil, poolOfJobs.GetErrors()
 	}
 	// get all the results
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	for _, job := range poolOfJobs.Jobs {
+		res = append(res, job.Result.([]interface{})...)
 	}
 
 	return res, nil
@@ -249,11 +249,10 @@ func (a *mqlAwsDynamodb) getBackups(conn *connection.AwsConnection) []*jobpool.J
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("dynamodb>getBackups>calling aws with region %s", regionVal)
+			log.Debug().Msgf("dynamodb>getBackups>calling aws with region %s", region)
 
-			svc := conn.Dynamodb(regionVal)
+			svc := conn.Dynamodb(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -261,7 +260,7 @@ func (a *mqlAwsDynamodb) getBackups(conn *connection.AwsConnection) []*jobpool.J
 			listBackupsResp, err := svc.ListBackups(ctx, &dynamodb.ListBackupsInput{})
 			if err != nil {
 				if Is400AccessDeniedError(err) {
-					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+					log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 					return res, nil
 				}
 				return nil, errors.Wrap(err, "could not gather aws dynamodb backups")
@@ -354,8 +353,8 @@ func (a *mqlAwsDynamodb) limits() ([]interface{}, error) {
 		return nil, poolOfJobs.GetErrors()
 	}
 	// get all the results
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.(interface{}))
+	for _, job := range poolOfJobs.Jobs {
+		res = append(res, job.Result.(interface{}))
 	}
 	return res, nil
 }
@@ -442,8 +441,8 @@ func (a *mqlAwsDynamodb) tables() ([]interface{}, error) {
 		return nil, poolOfJobs.GetErrors()
 	}
 	// get all the results
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	for _, job := range poolOfJobs.Jobs {
+		res = append(res, job.Result.([]interface{})...)
 	}
 
 	return res, nil
@@ -520,14 +519,9 @@ func (a *mqlAwsDynamodb) getTables(conn *connection.AwsConnection) []*jobpool.Jo
 
 func dynamoDBTagsToMap(tags []ddtypes.Tag) map[string]interface{} {
 	tagsMap := make(map[string]interface{})
-
-	if len(tags) > 0 {
-		for i := range tags {
-			tag := tags[i]
-			tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
-		}
+	for _, tag := range tags {
+		tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
 	}
-
 	return tagsMap
 }
 

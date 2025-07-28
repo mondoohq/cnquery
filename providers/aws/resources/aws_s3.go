@@ -67,7 +67,7 @@ func (a *mqlAwsS3) buckets() ([]interface{}, error) {
 		o.Limit = 100
 	})
 	for paginator.HasMorePages() {
-		output, err := paginator.NextPage(context.TODO())
+		output, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -75,9 +75,7 @@ func (a *mqlAwsS3) buckets() ([]interface{}, error) {
 	}
 
 	res := []interface{}{}
-	for i := range totalBuckets {
-		bucket := totalBuckets[i]
-
+	for _, bucket := range totalBuckets {
 		location, err := svc.GetBucketLocation(ctx, &s3.GetBucketLocationInput{
 			Bucket: bucket.Name,
 		})
@@ -338,9 +336,7 @@ func (a *mqlAwsS3Bucket) acl() ([]interface{}, error) {
 	}
 
 	res := []interface{}{}
-	for i := range acl.Grants {
-		grant := acl.Grants[i]
-
+	for _, grant := range acl.Grants {
 		// NOTE: not all grantees have URI and IDs, canonical users have id, groups have URIs and the
 		// display name may not be unique
 		if grant.Grantee == nil || (grant.Grantee.URI == nil && grant.Grantee.ID == nil) {

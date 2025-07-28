@@ -87,8 +87,9 @@ func (c *mqlAwsAccount) tags() (map[string]interface{}, error) {
 	// account or by a member account that is a delegated administrator for an
 	// Amazon Web Services service.
 	tags := make(map[string]interface{})
-	for {
-		res, err := client.ListTagsForResource(context.TODO(), input)
+	paginator := organizations.NewListTagsForResourcePaginator(client, input)
+	for paginator.HasMorePages() {
+		res, err := paginator.NextPage(context.Background())
 		if err != nil {
 			return nil, err
 		}
@@ -96,11 +97,6 @@ func (c *mqlAwsAccount) tags() (map[string]interface{}, error) {
 		for _, tag := range res.Tags {
 			tags[*tag.Key] = *tag.Value
 		}
-
-		if res.NextToken == nil {
-			break
-		}
-		input.NextToken = res.NextToken
 	}
 
 	return tags, nil

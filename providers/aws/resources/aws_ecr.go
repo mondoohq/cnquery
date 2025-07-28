@@ -276,13 +276,12 @@ func (a *mqlAwsEcr) publicRepositories() ([]interface{}, error) {
 	svc := conn.EcrPublic("us-east-1") // only supported for us-east-1
 	res := []interface{}{}
 
+	// TODO: @vasil - use pagination?
 	repoResp, err := svc.DescribeRepositories(context.TODO(), &ecrpublic.DescribeRepositoriesInput{RegistryId: aws.String(conn.AccountId())})
 	if err != nil {
 		return nil, err
 	}
-	for i := range repoResp.Repositories {
-		r := repoResp.Repositories[i]
-
+	for _, r := range repoResp.Repositories {
 		mqlRepoResource, err := CreateResource(a.MqlRuntime, "aws.ecr.repository",
 			map[string]*llx.RawData{
 				"arn":             llx.StringDataPtr(r.RepositoryArn),

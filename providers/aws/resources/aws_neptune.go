@@ -58,18 +58,18 @@ func (a *mqlAwsNeptune) getDbClusters(conn *connection.AwsConnection) []*jobpool
 			ctx := context.Background()
 			res := []interface{}{}
 
-			var marker *string
-			for {
-				cluster, err := svc.DescribeDBClusters(ctx, &neptune.DescribeDBClustersInput{
-					Marker: marker,
-					Filters: []neptune_types.Filter{
-						{
-							// we need to filter by engine since the neptune client also returns rds instances - rofl
-							Name:   aws.String("engine"),
-							Values: []string{"neptune"},
-						},
+			params := &neptune.DescribeDBClustersInput{
+				Filters: []neptune_types.Filter{
+					{
+						// we need to filter by engine since the neptune client also returns rds instances - rofl
+						Name:   aws.String("engine"),
+						Values: []string{"neptune"},
 					},
-				})
+				},
+			}
+			paginator := neptune.NewDescribeDBClustersPaginator(svc, params)
+			for paginator.HasMorePages() {
+				cluster, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -80,18 +80,13 @@ func (a *mqlAwsNeptune) getDbClusters(conn *connection.AwsConnection) []*jobpool
 				if len(cluster.DBClusters) == 0 {
 					return nil, nil
 				}
-				for i := range cluster.DBClusters {
-					cluster := cluster.DBClusters[i]
+				for _, cluster := range cluster.DBClusters {
 					mqlCluster, err := newMqlAwsNeptuneCluster(a.MqlRuntime, regionVal, cluster)
 					if err != nil {
 						return nil, err
 					}
 					res = append(res, mqlCluster)
 				}
-				if cluster.Marker == nil {
-					break
-				}
-				marker = cluster.Marker
 			}
 			return jobpool.JobResult(res), nil
 		}
@@ -177,18 +172,18 @@ func (a *mqlAwsNeptune) getDbInstances(conn *connection.AwsConnection) []*jobpoo
 			ctx := context.Background()
 			res := []interface{}{}
 
-			var marker *string
-			for {
-				cluster, err := svc.DescribeDBInstances(ctx, &neptune.DescribeDBInstancesInput{
-					Marker: marker,
-					Filters: []neptune_types.Filter{
-						{
-							// we need to filter by engine since the neptune client also returns rds instances - rofl
-							Name:   aws.String("engine"),
-							Values: []string{"neptune"},
-						},
+			params := &neptune.DescribeDBInstancesInput{
+				Filters: []neptune_types.Filter{
+					{
+						// we need to filter by engine since the neptune client also returns rds instances - rofl
+						Name:   aws.String("engine"),
+						Values: []string{"neptune"},
 					},
-				})
+				},
+			}
+			paginator := neptune.NewDescribeDBInstancesPaginator(svc, params)
+			for paginator.HasMorePages() {
+				cluster, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -199,18 +194,13 @@ func (a *mqlAwsNeptune) getDbInstances(conn *connection.AwsConnection) []*jobpoo
 				if len(cluster.DBInstances) == 0 {
 					return nil, nil
 				}
-				for i := range cluster.DBInstances {
-					instance := cluster.DBInstances[i]
+				for _, instance := range cluster.DBInstances {
 					mqlNeptuneInstance, err := newMqlAwsNeptuneInstance(a.MqlRuntime, regionVal, instance)
 					if err != nil {
 						return nil, err
 					}
 					res = append(res, mqlNeptuneInstance)
 				}
-				if cluster.Marker == nil {
-					break
-				}
-				marker = cluster.Marker
 			}
 			return jobpool.JobResult(res), nil
 		}

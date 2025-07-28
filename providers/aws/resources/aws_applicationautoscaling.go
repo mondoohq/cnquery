@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/applicationautoscaling"
 	aatypes "github.com/aws/aws-sdk-go-v2/service/applicationautoscaling/types"
 	"github.com/cockroachdb/errors"
@@ -66,10 +65,10 @@ func (a *mqlAwsApplicationAutoscaling) getTargets(conn *connection.AwsConnection
 			ctx := context.Background()
 
 			res := []interface{}{}
-			nextToken := aws.String("no_token_to_start_with")
 			params := &applicationautoscaling.DescribeScalableTargetsInput{ServiceNamespace: namespace}
-			for nextToken != nil {
-				resp, err := svc.DescribeScalableTargets(ctx, params)
+			paginator := applicationautoscaling.NewDescribeScalableTargetsPaginator(svc, params)
+			for paginator.HasMorePages() {
+				resp, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -97,10 +96,6 @@ func (a *mqlAwsApplicationAutoscaling) getTargets(conn *connection.AwsConnection
 						return nil, err
 					}
 					res = append(res, mqlSTarget)
-				}
-				nextToken = resp.NextToken
-				if resp.NextToken != nil {
-					params.NextToken = nextToken
 				}
 			}
 			return jobpool.JobResult(res), nil

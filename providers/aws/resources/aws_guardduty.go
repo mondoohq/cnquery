@@ -8,7 +8,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
 	"github.com/aws/aws-sdk-go-v2/service/guardduty/types"
 	"github.com/rs/zerolog/log"
@@ -60,10 +59,9 @@ func (a *mqlAwsGuardduty) getDetectors(conn *connection.AwsConnection) []*jobpoo
 
 			res := []interface{}{}
 			params := &guardduty.ListDetectorsInput{}
-
-			nextToken := aws.String("no_token_to_start_with")
-			for nextToken != nil {
-				detectors, err := svc.ListDetectors(ctx, params)
+			paginator := guardduty.NewListDetectorsPaginator(svc, params)
+			for paginator.HasMorePages() {
+				detectors, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -82,10 +80,6 @@ func (a *mqlAwsGuardduty) getDetectors(conn *connection.AwsConnection) []*jobpoo
 						return nil, err
 					}
 					res = append(res, mqlCluster)
-				}
-				nextToken = detectors.NextToken
-				if detectors.NextToken != nil {
-					params.NextToken = nextToken
 				}
 			}
 			return jobpool.JobResult(res), nil
@@ -114,7 +108,6 @@ func (a *mqlAwsGuarddutyDetector) populateData() error {
 		DetectorId: &detectorId,
 	})
 	if err != nil {
-
 		return err
 	}
 
@@ -272,10 +265,10 @@ func fetchFindings(svc *guardduty.Client, detectorId string, regionVal string, p
 	res := []interface{}{}
 	ctx := context.Background()
 	findingIds := []string{}
-	nextToken := aws.String("no_token_to_start_with")
-	for nextToken != nil {
+	paginator := guardduty.NewListFindingsPaginator(svc, params)
+	for paginator.HasMorePages() {
 		// fetch all finding ids, we can only fetch 50 at a time, that is the default
-		detectors, err := svc.ListFindings(ctx, params)
+		detectors, err := paginator.NextPage(ctx)
 		if err != nil {
 			if Is400AccessDeniedError(err) {
 				log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -285,15 +278,9 @@ func fetchFindings(svc *guardduty.Client, detectorId string, regionVal string, p
 		}
 
 		findingIds = append(findingIds, detectors.FindingIds...)
-		nextToken = detectors.NextToken
-		// AWS returns empty string as pointer :-)
-		if nextToken != nil && *nextToken != "" {
-			params.NextToken = nextToken
-		} else {
-			nextToken = nil
-		}
 	}
 
+	// TODO: @vasil - is there a generic batching function for this?
 	// fetch all findings, we can only fetch 50 at a time
 	fetched := 0
 	for i := 0; i < len(findingIds); i += 50 {

@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	"github.com/aws/smithy-go/transport/http"
 	"github.com/rs/zerolog/log"
@@ -57,10 +56,10 @@ func (a *mqlAwsSagemaker) getEndpoints(conn *connection.AwsConnection) []*jobpoo
 			ctx := context.Background()
 			res := []interface{}{}
 
-			nextToken := aws.String("no_token_to_start_with")
 			params := &sagemaker.ListEndpointsInput{}
-			for nextToken != nil {
-				endpoints, err := svc.ListEndpoints(ctx, params)
+			paginator := sagemaker.NewListEndpointsPaginator(svc, params)
+			for paginator.HasMorePages() {
+				endpoints, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -85,10 +84,6 @@ func (a *mqlAwsSagemaker) getEndpoints(conn *connection.AwsConnection) []*jobpoo
 						return nil, err
 					}
 					res = append(res, mqlEndpoint)
-				}
-				nextToken = endpoints.NextToken
-				if endpoints.NextToken != nil {
-					params.NextToken = nextToken
 				}
 			}
 			return jobpool.JobResult(res), nil
@@ -145,10 +140,10 @@ func (a *mqlAwsSagemaker) getNotebookInstances(conn *connection.AwsConnection) [
 			ctx := context.Background()
 			res := []interface{}{}
 
-			nextToken := aws.String("no_token_to_start_with")
 			params := &sagemaker.ListNotebookInstancesInput{}
-			for nextToken != nil {
-				notebookInstances, err := svc.ListNotebookInstances(ctx, &sagemaker.ListNotebookInstancesInput{})
+			paginator := sagemaker.NewListNotebookInstancesPaginator(svc, params)
+			for paginator.HasMorePages() {
+				notebookInstances, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -172,10 +167,6 @@ func (a *mqlAwsSagemaker) getNotebookInstances(conn *connection.AwsConnection) [
 						return nil, err
 					}
 					res = append(res, mqlEndpoint)
-				}
-				nextToken = notebookInstances.NextToken
-				if notebookInstances.NextToken != nil {
-					params.NextToken = nextToken
 				}
 			}
 			return jobpool.JobResult(res), nil

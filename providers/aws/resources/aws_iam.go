@@ -36,11 +36,11 @@ func (a *mqlAwsIam) serverCertificates() ([]interface{}, error) {
 
 	svc := conn.Iam("")
 	ctx := context.Background()
-	var marker *string
 	res := []interface{}{}
-
-	for {
-		certsResp, err := svc.ListServerCertificates(ctx, &iam.ListServerCertificatesInput{Marker: marker})
+	params := &iam.ListServerCertificatesInput{}
+	paginator := iam.NewListServerCertificatesPaginator(svc, params)
+	for paginator.HasMorePages() {
+		certsResp, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -51,10 +51,6 @@ func (a *mqlAwsIam) serverCertificates() ([]interface{}, error) {
 			}
 			res = append(res, certs)
 		}
-		if !certsResp.IsTruncated {
-			break
-		}
-		marker = certsResp.Marker
 	}
 	return res, nil
 }
@@ -219,27 +215,22 @@ func (a *mqlAwsIam) users() ([]interface{}, error) {
 	svc := conn.Iam("")
 	ctx := context.Background()
 
-	var marker *string
 	res := []interface{}{}
-	for {
-		usersResp, err := svc.ListUsers(ctx, &iam.ListUsersInput{Marker: marker})
+	params := &iam.ListUsersInput{}
+	paginator := iam.NewListUsersPaginator(svc, params)
+	for paginator.HasMorePages() {
+		usersResp, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not gather aws iam users")
 		}
-		for i := range usersResp.Users {
-			usr := usersResp.Users[i]
-
-			mqlAwsIamUser, err := a.createIamUser(&usr)
+		for _, user := range usersResp.Users {
+			mqlAwsIamUser, err := a.createIamUser(&user)
 			if err != nil {
 				return nil, err
 			}
 
 			res = append(res, mqlAwsIamUser)
 		}
-		if !usersResp.IsTruncated {
-			break
-		}
-		marker = usersResp.Marker
 	}
 	return res, nil
 }
@@ -264,16 +255,15 @@ func (a *mqlAwsIam) instanceProfiles() ([]interface{}, error) {
 	svc := conn.Iam("")
 	ctx := context.Background()
 
-	var marker *string
 	res := []interface{}{}
-	for {
-		instanceProfilesResp, err := svc.ListInstanceProfiles(ctx, &iam.ListInstanceProfilesInput{Marker: marker})
+	params := &iam.ListInstanceProfilesInput{}
+	paginator := iam.NewListInstanceProfilesPaginator(svc, params)
+	for paginator.HasMorePages() {
+		instanceProfilesResp, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not gather aws iam instance profiles")
 		}
-		for i := range instanceProfilesResp.InstanceProfiles {
-			itp := instanceProfilesResp.InstanceProfiles[i]
-
+		for _, itp := range instanceProfilesResp.InstanceProfiles {
 			mqlAwsIamUser, err := a.createInstanceProfile(&itp)
 			if err != nil {
 				return nil, err
@@ -281,10 +271,6 @@ func (a *mqlAwsIam) instanceProfiles() ([]interface{}, error) {
 
 			res = append(res, mqlAwsIamUser)
 		}
-		if !instanceProfilesResp.IsTruncated {
-			break
-		}
-		marker = instanceProfilesResp.Marker
 	}
 	return res, nil
 }
@@ -443,13 +429,13 @@ func (a *mqlAwsIam) attachedPolicies() ([]interface{}, error) {
 	ctx := context.Background()
 
 	res := []interface{}{}
-	var marker *string
-	for {
-		policiesResp, err := svc.ListPolicies(ctx, &iam.ListPoliciesInput{
-			// setting only attached ensures we only fetch policies attached to a user, group, or role
-			OnlyAttached: true,
-			Marker:       marker,
-		})
+	params := &iam.ListPoliciesInput{
+		// setting only attached ensures we only fetch policies attached to a user, group, or role
+		OnlyAttached: true,
+	}
+	paginator := iam.NewListPoliciesPaginator(svc, params)
+	for paginator.HasMorePages() {
+		policiesResp, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not gather aws iam policies")
 		}
@@ -459,11 +445,6 @@ func (a *mqlAwsIam) attachedPolicies() ([]interface{}, error) {
 			return nil, err
 		}
 		res = append(res, policies...)
-
-		if !policiesResp.IsTruncated {
-			break
-		}
-		marker = policiesResp.Marker
 	}
 
 	return res, nil
@@ -476,11 +457,10 @@ func (a *mqlAwsIam) policies() ([]interface{}, error) {
 	ctx := context.Background()
 
 	res := []interface{}{}
-	var marker *string
-	for {
-		policiesResp, err := svc.ListPolicies(ctx, &iam.ListPoliciesInput{
-			Marker: marker,
-		})
+	params := &iam.ListPoliciesInput{}
+	paginator := iam.NewListPoliciesPaginator(svc, params)
+	for paginator.HasMorePages() {
+		policiesResp, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not gather aws iam policies")
 		}
@@ -490,11 +470,6 @@ func (a *mqlAwsIam) policies() ([]interface{}, error) {
 			return nil, err
 		}
 		res = append(res, policies...)
-
-		if !policiesResp.IsTruncated {
-			break
-		}
-		marker = policiesResp.Marker
 	}
 
 	return res, nil
@@ -506,11 +481,10 @@ func (a *mqlAwsIam) roles() ([]interface{}, error) {
 	ctx := context.Background()
 
 	res := []interface{}{}
-	var marker *string
-	for {
-		rolesResp, err := svc.ListRoles(ctx, &iam.ListRolesInput{
-			Marker: marker,
-		})
+	params := &iam.ListRolesInput{}
+	paginator := iam.NewListRolesPaginator(svc, params)
+	for paginator.HasMorePages() {
+		rolesResp, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -544,11 +518,6 @@ func (a *mqlAwsIam) roles() ([]interface{}, error) {
 
 			res = append(res, mqlAwsIamRole)
 		}
-
-		if !rolesResp.IsTruncated {
-			break
-		}
-		marker = rolesResp.Marker
 	}
 
 	return res, nil
@@ -561,22 +530,19 @@ func (a *mqlAwsIam) groups() ([]interface{}, error) {
 	ctx := context.Background()
 
 	res := []interface{}{}
-	var marker *string
-	for {
-		groupsResp, err := svc.ListGroups(ctx, &iam.ListGroupsInput{
-			Marker: marker,
-		})
+	params := &iam.ListGroupsInput{}
+	paginator := iam.NewListGroupsPaginator(svc, params)
+	for paginator.HasMorePages() {
+		groupsResp, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
 
-		for i := range groupsResp.Groups {
-			grp := groupsResp.Groups[i]
-
+		for _, group := range groupsResp.Groups {
 			mqlAwsIamGroup, err := NewResource(a.MqlRuntime, "aws.iam.group",
 				map[string]*llx.RawData{
-					"arn":  llx.StringDataPtr(grp.Arn),
-					"name": llx.StringDataPtr(grp.GroupName),
+					"arn":  llx.StringDataPtr(group.Arn),
+					"name": llx.StringDataPtr(group.GroupName),
 				})
 			if err != nil {
 				return nil, err
@@ -584,11 +550,6 @@ func (a *mqlAwsIam) groups() ([]interface{}, error) {
 
 			res = append(res, mqlAwsIamGroup)
 		}
-
-		if !groupsResp.IsTruncated {
-			break
-		}
-		marker = groupsResp.Marker
 	}
 
 	return res, nil
@@ -858,13 +819,13 @@ func (a *mqlAwsIamUser) accessKeys() ([]interface{}, error) {
 
 	username := a.Name.Data
 
-	var marker *string
 	res := []interface{}{}
-	for {
-		keysResp, err := svc.ListAccessKeys(ctx, &iam.ListAccessKeysInput{
-			UserName: &username,
-			Marker:   marker,
-		})
+	params := &iam.ListAccessKeysInput{
+		UserName: &username,
+	}
+	paginator := iam.NewListAccessKeysPaginator(svc, params)
+	for paginator.HasMorePages() {
+		keysResp, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -873,10 +834,6 @@ func (a *mqlAwsIamUser) accessKeys() ([]interface{}, error) {
 			return nil, err
 		}
 		res = append(res, metadata)
-		if !keysResp.IsTruncated {
-			break
-		}
-		marker = keysResp.Marker
 	}
 
 	return res, nil
@@ -890,13 +847,13 @@ func (a *mqlAwsIamUser) policies() ([]interface{}, error) {
 
 	username := a.Name.Data
 
-	var marker *string
 	res := []interface{}{}
-	for {
-		userPolicies, err := svc.ListUserPolicies(ctx, &iam.ListUserPoliciesInput{
-			UserName: &username,
-			Marker:   marker,
-		})
+	params := &iam.ListUserPoliciesInput{
+		UserName: &username,
+	}
+	paginator := iam.NewListUserPoliciesPaginator(svc, params)
+	for paginator.HasMorePages() {
+		userPolicies, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -904,10 +861,6 @@ func (a *mqlAwsIamUser) policies() ([]interface{}, error) {
 		for i := range userPolicies.PolicyNames {
 			res = append(res, userPolicies.PolicyNames[i])
 		}
-		if !userPolicies.IsTruncated {
-			break
-		}
-		marker = userPolicies.Marker
 	}
 
 	return res, nil
@@ -921,19 +874,18 @@ func (a *mqlAwsIamUser) attachedPolicies() ([]interface{}, error) {
 
 	username := a.Name.Data
 
-	var marker *string
 	res := []interface{}{}
-	for {
-		userAttachedPolicies, err := svc.ListAttachedUserPolicies(ctx, &iam.ListAttachedUserPoliciesInput{
-			Marker:   marker,
-			UserName: &username,
-		})
+	params := &iam.ListAttachedUserPoliciesInput{
+		UserName: &username,
+	}
+	paginator := iam.NewListAttachedUserPoliciesPaginator(svc, params)
+	for paginator.HasMorePages() {
+		userAttachedPolicies, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
 
-		for i := range userAttachedPolicies.AttachedPolicies {
-			attachedPolicy := userAttachedPolicies.AttachedPolicies[i]
+		for _, attachedPolicy := range userAttachedPolicies.AttachedPolicies {
 			mqlAwsIamPolicy, err := CreateResource(a.MqlRuntime, "aws.iam.policy",
 				// this isn't correct for the id, this is the name. we need to remove "id" from the policy type.
 				// it is creating a conflict bc we cannot make it optional, as it then bumps up against the internal id
@@ -944,10 +896,6 @@ func (a *mqlAwsIamUser) attachedPolicies() ([]interface{}, error) {
 
 			res = append(res, mqlAwsIamPolicy)
 		}
-		if !userAttachedPolicies.IsTruncated {
-			break
-		}
-		marker = userAttachedPolicies.Marker
 	}
 
 	return res, nil
@@ -1099,12 +1047,12 @@ func (a *mqlAwsIamPolicy) listAttachedEntities(arn string) (attachedEntities, er
 	svc := conn.Iam("")
 	ctx := context.Background()
 
-	var marker *string
-	for {
-		entities, err := svc.ListEntitiesForPolicy(ctx, &iam.ListEntitiesForPolicyInput{
-			Marker:    marker,
-			PolicyArn: &arn,
-		})
+	params := &iam.ListEntitiesForPolicyInput{
+		PolicyArn: &arn,
+	}
+	paginator := iam.NewListEntitiesForPolicyPaginator(svc, params)
+	for paginator.HasMorePages() {
+		entities, err := paginator.NextPage(ctx)
 		if err != nil {
 			return res, err
 		}
@@ -1120,11 +1068,6 @@ func (a *mqlAwsIamPolicy) listAttachedEntities(arn string) (attachedEntities, er
 		if len(entities.PolicyUsers) > 0 {
 			res.PolicyUsers = append(res.PolicyUsers, entities.PolicyUsers...)
 		}
-
-		if entities.IsTruncated == false {
-			break
-		}
-		marker = entities.Marker
 	}
 
 	// cache the data
@@ -1140,8 +1083,7 @@ func (a *mqlAwsIamPolicy) attachedUsers() ([]interface{}, error) {
 		return nil, err
 	}
 	res := []interface{}{}
-	for i := range entities.PolicyUsers {
-		usr := entities.PolicyUsers[i]
+	for _, usr := range entities.PolicyUsers {
 		mqlUser, err := NewResource(a.MqlRuntime, "aws.iam.user",
 			map[string]*llx.RawData{
 				"name": llx.StringDataPtr(usr.UserName),
@@ -1163,9 +1105,7 @@ func (a *mqlAwsIamPolicy) attachedRoles() ([]interface{}, error) {
 	}
 
 	res := []interface{}{}
-	for i := range entities.PolicyRoles {
-		role := entities.PolicyRoles[i]
-
+	for _, role := range entities.PolicyRoles {
 		mqlUser, err := NewResource(a.MqlRuntime, "aws.iam.role",
 			map[string]*llx.RawData{"name": llx.StringDataPtr(role.RoleName)},
 		)
@@ -1435,24 +1375,20 @@ func (a *mqlAwsIamUser) groups() ([]interface{}, error) {
 
 	username := a.Name.Data
 
-	var marker *string
 	res := []interface{}{}
-	for {
-		userGroups, err := svc.ListGroupsForUser(ctx, &iam.ListGroupsForUserInput{
-			UserName: &username,
-			Marker:   marker,
-		})
+	params := &iam.ListGroupsForUserInput{
+		UserName: &username,
+	}
+	paginator := iam.NewListGroupsForUserPaginator(svc, params)
+	for paginator.HasMorePages() {
+		userGroups, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
 
-		for i := range userGroups.Groups {
-			res = append(res, convert.ToValue(userGroups.Groups[i].GroupName))
+		for _, group := range userGroups.Groups {
+			res = append(res, convert.ToValue(group.GroupName))
 		}
-		if !userGroups.IsTruncated {
-			break
-		}
-		marker = userGroups.Marker
 	}
 
 	return res, nil

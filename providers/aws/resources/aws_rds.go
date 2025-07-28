@@ -102,9 +102,10 @@ func (a *mqlAwsRds) getClusterParameterGroups(conn *connection.AwsConnection) []
 			svc := conn.Rds(regionVal)
 			ctx := context.Background()
 
-			var marker *string
-			for {
-				DBClusterParameterGroups, err := svc.DescribeDBClusterParameterGroups(ctx, &rds.DescribeDBClusterParameterGroupsInput{Marker: marker})
+			params := &rds.DescribeDBClusterParameterGroupsInput{}
+			paginator := rds.NewDescribeDBClusterParameterGroupsPaginator(svc, params)
+			for paginator.HasMorePages() {
+				DBClusterParameterGroups, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -119,10 +120,6 @@ func (a *mqlAwsRds) getClusterParameterGroups(conn *connection.AwsConnection) []
 					}
 					res = append(res, mqlParameterGroup)
 				}
-				if marker == nil {
-					break
-				}
-				marker = DBClusterParameterGroups.Marker
 			}
 			return jobpool.JobResult(res), nil
 		}
@@ -162,9 +159,10 @@ func (a *mqlAwsRds) getParameterGroups(conn *connection.AwsConnection) []*jobpoo
 			svc := conn.Rds(regionVal)
 			ctx := context.Background()
 
-			var marker *string
-			for {
-				DBParameterGroups, err := svc.DescribeDBParameterGroups(ctx, &rds.DescribeDBParameterGroupsInput{Marker: marker})
+			params := &rds.DescribeDBParameterGroupsInput{}
+			paginator := rds.NewDescribeDBParameterGroupsPaginator(svc, params)
+			for paginator.HasMorePages() {
+				dbParameterGroups, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -172,17 +170,13 @@ func (a *mqlAwsRds) getParameterGroups(conn *connection.AwsConnection) []*jobpoo
 					}
 					return nil, err
 				}
-				for _, dbParameterGroup := range DBParameterGroups.DBParameterGroups {
+				for _, dbParameterGroup := range dbParameterGroups.DBParameterGroups {
 					mqlParameterGroup, err := newMqlAwsParameterGroup(a.MqlRuntime, region, dbParameterGroup)
 					if err != nil {
 						return nil, err
 					}
 					res = append(res, mqlParameterGroup)
 				}
-				if marker == nil {
-					break
-				}
-				marker = DBParameterGroups.Marker
 			}
 			return jobpool.JobResult(res), nil
 		}
@@ -207,9 +201,10 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 			svc := conn.Rds(regionVal)
 			ctx := context.Background()
 
-			var marker *string
-			for {
-				dbInstances, err := svc.DescribeDBInstances(ctx, &rds.DescribeDBInstancesInput{Marker: marker})
+			params := &rds.DescribeDBInstancesInput{}
+			paginator := rds.NewDescribeDBInstancesPaginator(svc, params)
+			for paginator.HasMorePages() {
+				dbInstances, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -230,10 +225,6 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 					}
 					res = append(res, mqlDBInstance)
 				}
-				if dbInstances.Marker == nil {
-					break
-				}
-				marker = dbInstances.Marker
 			}
 			return jobpool.JobResult(res), nil
 		}
@@ -277,11 +268,10 @@ func (a *mqlAwsRds) getPendingMaintenanceActions(conn *connection.AwsConnection)
 			svc := conn.Rds(regionVal)
 			ctx := context.Background()
 
-			var marker *string
-			for {
-				pendingMaintainanceList, err := svc.DescribePendingMaintenanceActions(ctx, &rds.DescribePendingMaintenanceActionsInput{
-					Marker: marker,
-				})
+			params := &rds.DescribePendingMaintenanceActionsInput{}
+			paginator := rds.NewDescribePendingMaintenanceActionsPaginator(svc, params)
+			for paginator.HasMorePages() {
+				pendingMaintainanceList, err := paginator.NextPage(ctx)
 				if err != nil {
 					return nil, err
 				}
@@ -298,10 +288,6 @@ func (a *mqlAwsRds) getPendingMaintenanceActions(conn *connection.AwsConnection)
 						res = append(res, mqlPendingAction)
 					}
 				}
-				if pendingMaintainanceList.Marker == nil {
-					break
-				}
-				marker = pendingMaintainanceList.Marker
 			}
 			return jobpool.JobResult(res), nil
 		}
@@ -343,12 +329,12 @@ func (a mqlAwsRdsClusterParameterGroup) parameters() ([]interface{}, error) {
 	svc := conn.Rds(a.Region.Data)
 	ctx := context.Background()
 
-	var marker *string
-	for {
-		parameters, err := svc.DescribeDBClusterParameters(ctx, &rds.DescribeDBClusterParametersInput{
-			DBClusterParameterGroupName: &a.Name.Data,
-			Marker:                      marker,
-		})
+	params := &rds.DescribeDBClusterParametersInput{
+		DBClusterParameterGroupName: &a.Name.Data,
+	}
+	paginator := rds.NewDescribeDBClusterParametersPaginator(svc, params)
+	for paginator.HasMorePages() {
+		parameters, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -359,10 +345,6 @@ func (a mqlAwsRdsClusterParameterGroup) parameters() ([]interface{}, error) {
 			}
 			res = append(res, mqlParameter)
 		}
-		if parameters.Marker == nil {
-			break
-		}
-		marker = parameters.Marker
 	}
 	return res, nil
 }
@@ -373,12 +355,12 @@ func (a *mqlAwsRdsParameterGroup) parameters() ([]interface{}, error) {
 	svc := conn.Rds(a.Region.Data)
 	ctx := context.Background()
 
-	var marker *string
-	for {
-		parameters, err := svc.DescribeDBParameters(ctx, &rds.DescribeDBParametersInput{
-			DBParameterGroupName: &a.Name.Data,
-			Marker:               marker,
-		})
+	params := &rds.DescribeDBParametersInput{
+		DBParameterGroupName: &a.Name.Data,
+	}
+	paginator := rds.NewDescribeDBParametersPaginator(svc, params)
+	for paginator.HasMorePages() {
+		parameters, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -389,10 +371,6 @@ func (a *mqlAwsRdsParameterGroup) parameters() ([]interface{}, error) {
 			}
 			res = append(res, mqlParameter)
 		}
-		if parameters.Marker == nil {
-			break
-		}
-		marker = parameters.Marker
 	}
 	return res, nil
 }
@@ -597,9 +575,10 @@ func (a *mqlAwsRdsDbinstance) snapshots() ([]interface{}, error) {
 	ctx := context.Background()
 	res := []interface{}{}
 
-	var marker *string
-	for {
-		snapshots, err := svc.DescribeDBSnapshots(ctx, &rds.DescribeDBSnapshotsInput{DBInstanceIdentifier: &instanceId, Marker: marker})
+	params := &rds.DescribeDBSnapshotsInput{DBInstanceIdentifier: &instanceId}
+	paginator := rds.NewDescribeDBSnapshotsPaginator(svc, params)
+	for paginator.HasMorePages() {
+		snapshots, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -610,10 +589,6 @@ func (a *mqlAwsRdsDbinstance) snapshots() ([]interface{}, error) {
 			}
 			res = append(res, mqlDbSnapshot)
 		}
-		if snapshots.Marker == nil {
-			break
-		}
-		marker = snapshots.Marker
 	}
 	return res, nil
 }
@@ -628,12 +603,12 @@ func (a *mqlAwsRdsDbinstance) pendingMaintenanceActions() ([]interface{}, error)
 	ctx := context.Background()
 	res := []interface{}{}
 
-	var marker *string
-	for {
-		pendingMaintainanceList, err := svc.DescribePendingMaintenanceActions(ctx, &rds.DescribePendingMaintenanceActionsInput{
-			ResourceIdentifier: &instanceArn,
-			Marker:             marker,
-		})
+	params := &rds.DescribePendingMaintenanceActionsInput{
+		ResourceIdentifier: &instanceArn,
+	}
+	paginator := rds.NewDescribePendingMaintenanceActionsPaginator(svc, params)
+	for paginator.HasMorePages() {
+		pendingMaintainanceList, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -650,10 +625,6 @@ func (a *mqlAwsRdsDbinstance) pendingMaintenanceActions() ([]interface{}, error)
 				res = append(res, mqlDbSnapshot)
 			}
 		}
-		if pendingMaintainanceList.Marker == nil {
-			break
-		}
-		marker = pendingMaintainanceList.Marker
 	}
 	return res, nil
 }
@@ -734,9 +705,10 @@ func (a *mqlAwsRds) getDbClusters(conn *connection.AwsConnection) []*jobpool.Job
 			svc := conn.Rds(regionVal)
 			ctx := context.Background()
 
-			var marker *string
-			for {
-				dbClusters, err := svc.DescribeDBClusters(ctx, &rds.DescribeDBClustersInput{Marker: marker})
+			params := &rds.DescribeDBClustersInput{}
+			paginator := rds.NewDescribeDBClustersPaginator(svc, params)
+			for paginator.HasMorePages() {
+				dbClusters, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -758,11 +730,6 @@ func (a *mqlAwsRds) getDbClusters(conn *connection.AwsConnection) []*jobpool.Job
 					}
 					res = append(res, mqlDbCluster)
 				}
-
-				if dbClusters.Marker == nil {
-					break
-				}
-				marker = dbClusters.Marker
 			}
 			return jobpool.JobResult(res), nil
 		}
@@ -871,9 +838,10 @@ func (a *mqlAwsRdsDbcluster) snapshots() ([]interface{}, error) {
 	ctx := context.Background()
 	res := []interface{}{}
 
-	var marker *string
-	for {
-		snapshots, err := svc.DescribeDBClusterSnapshots(ctx, &rds.DescribeDBClusterSnapshotsInput{DBClusterIdentifier: &dbClusterId, Marker: marker})
+	params := &rds.DescribeDBClusterSnapshotsInput{DBClusterIdentifier: &dbClusterId}
+	paginator := rds.NewDescribeDBClusterSnapshotsPaginator(svc, params)
+	for paginator.HasMorePages() {
+		snapshots, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -884,10 +852,6 @@ func (a *mqlAwsRdsDbcluster) snapshots() ([]interface{}, error) {
 			}
 			res = append(res, mqlDbSnapshot)
 		}
-		if snapshots.Marker == nil {
-			break
-		}
-		marker = snapshots.Marker
 	}
 	return res, nil
 }
@@ -977,10 +941,10 @@ func (a *mqlAwsRdsDbinstance) backupSettings() ([]interface{}, error) {
 	svc := conn.Rds(region)
 	ctx := context.Background()
 	res := []interface{}{}
-
-	var marker *string
-	for {
-		resp, err := svc.DescribeDBInstanceAutomatedBackups(ctx, &rds.DescribeDBInstanceAutomatedBackupsInput{DBInstanceIdentifier: &instanceId, Marker: marker})
+	params := &rds.DescribeDBInstanceAutomatedBackupsInput{DBInstanceIdentifier: &instanceId}
+	paginator := rds.NewDescribeDBInstanceAutomatedBackupsPaginator(svc, params)
+	for paginator.HasMorePages() {
+		resp, err := paginator.NextPage(ctx)
 		var respErr *http.ResponseError
 		if err != nil {
 			if errors.As(err, &respErr) {
@@ -1015,10 +979,6 @@ func (a *mqlAwsRdsDbinstance) backupSettings() ([]interface{}, error) {
 			res = append(res, mqlRdsBackup)
 			mqlRdsBackup.(*mqlAwsRdsBackupsetting).kmsKeyId = backup.KmsKeyId
 		}
-		if resp.Marker == nil {
-			break
-		}
-		marker = resp.Marker
 	}
 	return res, nil
 }
@@ -1032,9 +992,10 @@ func (a *mqlAwsRdsDbcluster) backupSettings() ([]interface{}, error) {
 	ctx := context.Background()
 	res := []interface{}{}
 
-	var marker *string
-	for {
-		resp, err := svc.DescribeDBClusterAutomatedBackups(ctx, &rds.DescribeDBClusterAutomatedBackupsInput{DBClusterIdentifier: &clusterId, Marker: marker})
+	params := &rds.DescribeDBClusterAutomatedBackupsInput{DBClusterIdentifier: &clusterId}
+	paginator := rds.NewDescribeDBClusterAutomatedBackupsPaginator(svc, params)
+	for paginator.HasMorePages() {
+		resp, err := paginator.NextPage(ctx)
 		var respErr *http.ResponseError
 		if err != nil {
 			if errors.As(err, &respErr) {
@@ -1069,10 +1030,6 @@ func (a *mqlAwsRdsDbcluster) backupSettings() ([]interface{}, error) {
 			res = append(res, mqlRdsBackup)
 			mqlRdsBackup.(*mqlAwsRdsBackupsetting).kmsKeyId = backup.KmsKeyId
 		}
-		if resp.Marker == nil {
-			break
-		}
-		marker = resp.Marker
 	}
 	return res, nil
 }

@@ -222,10 +222,10 @@ func (a *mqlAwsEc2) getNetworkACLs(conn *connection.AwsConnection) []*jobpool.Jo
 			ctx := context.Background()
 			res := []interface{}{}
 
-			nextToken := aws.String("no_token_to_start_with")
 			params := &ec2.DescribeNetworkAclsInput{}
-			for nextToken != nil {
-				networkAcls, err := svc.DescribeNetworkAcls(ctx, params)
+			paginator := ec2.NewDescribeNetworkAclsPaginator(svc, params)
+			for paginator.HasMorePages() {
+				networkAcls, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -233,16 +233,10 @@ func (a *mqlAwsEc2) getNetworkACLs(conn *connection.AwsConnection) []*jobpool.Jo
 					}
 					return nil, err
 				}
-				nextToken = networkAcls.NextToken
-				if networkAcls.NextToken != nil {
-					params.NextToken = nextToken
-				}
 
-				for i := range networkAcls.NetworkAcls {
-					acl := networkAcls.NetworkAcls[i]
+				for _, acl := range networkAcls.NetworkAcls {
 					assoc := []interface{}{}
-					for i := range acl.Associations {
-						association := acl.Associations[i]
+					for _, association := range acl.Associations {
 						mqlNetworkAclAssoc, err := CreateResource(a.MqlRuntime, "aws.ec2.networkacl.association",
 							map[string]*llx.RawData{
 								"associationId": llx.StringDataPtr(association.NetworkAclAssociationId),
@@ -253,6 +247,7 @@ func (a *mqlAwsEc2) getNetworkACLs(conn *connection.AwsConnection) []*jobpool.Jo
 							assoc = append(assoc, mqlNetworkAclAssoc)
 						}
 					}
+
 					mqlNetworkAcl, err := CreateResource(a.MqlRuntime, "aws.ec2.networkacl",
 						map[string]*llx.RawData{
 							"arn":          llx.StringData(fmt.Sprintf(networkAclArnPattern, regionVal, conn.AccountId(), convert.ToValue(acl.NetworkAclId))),
@@ -389,10 +384,10 @@ func (a *mqlAwsEc2) getSecurityGroups(conn *connection.AwsConnection) []*jobpool
 			ctx := context.Background()
 			res := []interface{}{}
 
-			nextToken := aws.String("no_token_to_start_with")
 			params := &ec2.DescribeSecurityGroupsInput{}
-			for nextToken != nil {
-				securityGroups, err := svc.DescribeSecurityGroups(ctx, params)
+			paginator := ec2.NewDescribeSecurityGroupsPaginator(svc, params)
+			for paginator.HasMorePages() {
+				securityGroups, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -400,14 +395,8 @@ func (a *mqlAwsEc2) getSecurityGroups(conn *connection.AwsConnection) []*jobpool
 					}
 					return nil, err
 				}
-				nextToken = securityGroups.NextToken
-				if securityGroups.NextToken != nil {
-					params.NextToken = nextToken
-				}
 
-				for i := range securityGroups.SecurityGroups {
-					group := securityGroups.SecurityGroups[i]
-
+				for _, group := range securityGroups.SecurityGroups {
 					args := map[string]*llx.RawData{
 						"arn":         llx.StringData(fmt.Sprintf(securityGroupArnPattern, regionVal, conn.AccountId(), convert.ToValue(group.GroupId))),
 						"id":          llx.StringDataPtr(group.GroupId),
@@ -766,7 +755,6 @@ func (a *mqlAwsEc2) instances() ([]interface{}, error) {
 
 func (a *mqlAwsEc2) getEc2Instances(ctx context.Context, svc *ec2.Client, filters connection.DiscoveryFilters) ([]ec2types.Reservation, error) {
 	res := []ec2types.Reservation{}
-	nextToken := aws.String("no_token_to_start_with")
 	params := &ec2.DescribeInstancesInput{
 		Filters: []ec2types.Filter{},
 	}
@@ -780,14 +768,11 @@ func (a *mqlAwsEc2) getEc2Instances(ctx context.Context, svc *ec2.Client, filter
 		params.InstanceIds = filters.Ec2DiscoveryFilters.InstanceIds
 	}
 
-	for nextToken != nil {
-		instances, err := svc.DescribeInstances(ctx, params)
+	paginator := ec2.NewDescribeInstancesPaginator(svc, params)
+	for paginator.HasMorePages() {
+		instances, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, err
-		}
-		nextToken = instances.NextToken
-		if instances.NextToken != nil {
-			params.NextToken = nextToken
 		}
 		res = append(res, instances.Reservations...)
 	}
@@ -939,40 +924,35 @@ func (i *mqlAwsEc2Instance) networkInterfaces() ([]interface{}, error) {
 	conn := i.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.Ec2(i.Region.Data)
 	ctx := context.Background()
-	nextToken := aws.String("no_token_to_start_with")
 	params := &ec2.DescribeNetworkInterfacesInput{Filters: []ec2types.Filter{{Name: aws.String("attachment.instance-id"), Values: []string{i.InstanceId.Data}}}}
 	res := []interface{}{}
-	for nextToken != nil {
-		nis, err := svc.DescribeNetworkInterfaces(ctx, params)
+	paginator := ec2.NewDescribeNetworkInterfacesPaginator(svc, params)
+	for paginator.HasMorePages() {
+		nis, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
-		for ni := range nis.NetworkInterfaces {
-			n := nis.NetworkInterfaces[ni]
+		for _, networkingInterface := range nis.NetworkInterfaces {
 			args := map[string]*llx.RawData{
-				"availabilityZone": llx.StringDataPtr(n.AvailabilityZone),
-				"description":      llx.StringDataPtr(n.Description),
-				"id":               llx.StringDataPtr(n.NetworkInterfaceId),
-				"ipv6Native":       llx.BoolDataPtr(n.Ipv6Native),
-				"macAddress":       llx.StringDataPtr(n.MacAddress),
-				"privateDnsName":   llx.StringDataPtr(n.PrivateDnsName),
-				"privateIpAddress": llx.StringDataPtr(n.PrivateIpAddress),
-				"requesterManaged": llx.BoolDataPtr(n.RequesterManaged),
-				"sourceDestCheck":  llx.BoolDataPtr(n.SourceDestCheck),
-				"status":           llx.StringData(string(n.Status)),
-				"tags":             llx.MapData(Ec2TagsToMap(n.TagSet), types.String),
+				"availabilityZone": llx.StringDataPtr(networkingInterface.AvailabilityZone),
+				"description":      llx.StringDataPtr(networkingInterface.Description),
+				"id":               llx.StringDataPtr(networkingInterface.NetworkInterfaceId),
+				"ipv6Native":       llx.BoolDataPtr(networkingInterface.Ipv6Native),
+				"macAddress":       llx.StringDataPtr(networkingInterface.MacAddress),
+				"privateDnsName":   llx.StringDataPtr(networkingInterface.PrivateDnsName),
+				"privateIpAddress": llx.StringDataPtr(networkingInterface.PrivateIpAddress),
+				"requesterManaged": llx.BoolDataPtr(networkingInterface.RequesterManaged),
+				"sourceDestCheck":  llx.BoolDataPtr(networkingInterface.SourceDestCheck),
+				"status":           llx.StringData(string(networkingInterface.Status)),
+				"tags":             llx.MapData(Ec2TagsToMap(networkingInterface.TagSet), types.String),
 			}
 			mqlNetworkInterface, err := CreateResource(i.MqlRuntime, "aws.ec2.networkinterface", args)
 			if err != nil {
 				return nil, err
 			}
-			mqlNetworkInterface.(*mqlAwsEc2Networkinterface).networkInterfaceCache = n
+			mqlNetworkInterface.(*mqlAwsEc2Networkinterface).networkInterfaceCache = networkingInterface
 			mqlNetworkInterface.(*mqlAwsEc2Networkinterface).region = i.Region.Data
 			res = append(res, mqlNetworkInterface)
-		}
-		nextToken = nis.NextToken
-		if nis.NextToken != nil {
-			params.NextToken = nextToken
 		}
 	}
 	return res, nil
@@ -988,11 +968,9 @@ func (i *mqlAwsEc2Networkinterface) securityGroups() ([]interface{}, error) {
 		sgs := []interface{}{}
 		conn := i.MqlRuntime.Connection.(*connection.AwsConnection)
 
-		for nig := range i.networkInterfaceCache.Groups {
-			g := *i.networkInterfaceCache.Groups[nig].GroupId
-
+		for _, group := range i.networkInterfaceCache.Groups {
 			mqlSg, err := NewResource(i.MqlRuntime, "aws.ec2.securitygroup",
-				map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(securityGroupArnPattern, i.region, conn.AccountId(), g))})
+				map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(securityGroupArnPattern, i.region, conn.AccountId(), *group.GroupId))})
 			if err != nil {
 				return nil, err
 			}
@@ -1008,7 +986,6 @@ func (i *mqlAwsEc2Networkinterface) subnet() (*mqlAwsVpcSubnet, error) {
 	subn := i.networkInterfaceCache.SubnetId
 	conn := i.MqlRuntime.Connection.(*connection.AwsConnection)
 	if subn != nil {
-
 		arn := fmt.Sprintf(subnetArnPattern, i.region, conn.AccountId(), *subn)
 		res, err := NewResource(i.MqlRuntime, "aws.vpc.subnet", map[string]*llx.RawData{"arn": llx.StringData(arn)})
 		if err != nil {
@@ -1040,9 +1017,9 @@ func (i *mqlAwsEc2Instance) securityGroups() ([]interface{}, error) {
 		sgs := []interface{}{}
 		conn := i.MqlRuntime.Connection.(*connection.AwsConnection)
 
-		for j := range i.instanceCache.SecurityGroups {
+		for _, sg := range i.instanceCache.SecurityGroups {
 			mqlSg, err := NewResource(i.MqlRuntime, "aws.ec2.securitygroup",
-				map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(securityGroupArnPattern, i.Region.Data, conn.AccountId(), convert.ToValue(i.instanceCache.SecurityGroups[j].GroupId)))})
+				map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(securityGroupArnPattern, i.Region.Data, conn.AccountId(), convert.ToValue(sg.GroupId)))})
 			if err != nil {
 				return nil, err
 			}
@@ -1371,10 +1348,10 @@ func (a *mqlAwsEc2) getVolumes(conn *connection.AwsConnection) []*jobpool.Job {
 			ctx := context.Background()
 			res := []interface{}{}
 
-			nextToken := aws.String("no_token_to_start_with")
 			params := &ec2.DescribeVolumesInput{}
-			for nextToken != nil {
-				volumes, err := svc.DescribeVolumes(ctx, params)
+			paginator := ec2.NewDescribeVolumesPaginator(svc, params)
+			for paginator.HasMorePages() {
+				volumes, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -1408,10 +1385,6 @@ func (a *mqlAwsEc2) getVolumes(conn *connection.AwsConnection) []*jobpool.Job {
 						return nil, err
 					}
 					res = append(res, mqlVol)
-				}
-				nextToken = volumes.NextToken
-				if volumes.NextToken != nil {
-					params.NextToken = nextToken
 				}
 			}
 			return jobpool.JobResult(res), nil
@@ -1668,10 +1641,10 @@ func (a *mqlAwsEc2) getSnapshots(conn *connection.AwsConnection) []*jobpool.Job 
 			ctx := context.Background()
 			res := []interface{}{}
 
-			nextToken := aws.String("no_token_to_start_with")
 			params := &ec2.DescribeSnapshotsInput{Filters: []ec2types.Filter{{Name: aws.String("owner-id"), Values: []string{conn.AccountId()}}}}
-			for nextToken != nil {
-				snapshots, err := svc.DescribeSnapshots(ctx, params)
+			paginator := ec2.NewDescribeSnapshotsPaginator(svc, params)
+			for paginator.HasMorePages() {
+				snapshots, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -1699,10 +1672,6 @@ func (a *mqlAwsEc2) getSnapshots(conn *connection.AwsConnection) []*jobpool.Job 
 						return nil, err
 					}
 					res = append(res, mqlSnap)
-				}
-				nextToken = snapshots.NextToken
-				if snapshots.NextToken != nil {
-					params.NextToken = nextToken
 				}
 			}
 			return jobpool.JobResult(res), nil
@@ -1758,9 +1727,9 @@ func (a *mqlAwsEc2) getInternetGateways(conn *connection.AwsConnection) []*jobpo
 			ctx := context.Background()
 			params := &ec2.DescribeInternetGatewaysInput{}
 			res := []interface{}{}
-			nextToken := aws.String("no_token_to_start_with")
-			for nextToken != nil {
-				internetGws, err := svc.DescribeInternetGateways(ctx, params)
+			paginator := ec2.NewDescribeInternetGatewaysPaginator(svc, params)
+			for paginator.HasMorePages() {
+				internetGws, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -1783,11 +1752,6 @@ func (a *mqlAwsEc2) getInternetGateways(conn *connection.AwsConnection) []*jobpo
 						return nil, err
 					}
 					res = append(res, mqlInternetGw)
-				}
-
-				nextToken = internetGws.NextToken
-				if internetGws.NextToken != nil {
-					params.NextToken = nextToken
 				}
 			}
 			return jobpool.JobResult(res), nil

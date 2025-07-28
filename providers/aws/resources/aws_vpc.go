@@ -60,10 +60,10 @@ func (a *mqlAws) getVpcs(conn *connection.AwsConnection) []*jobpool.Job {
 			ctx := context.Background()
 			res := []interface{}{}
 
-			nextToken := aws.String("no_token_to_start_with")
 			params := &ec2.DescribeVpcsInput{}
-			for nextToken != nil {
-				vpcs, err := svc.DescribeVpcs(ctx, params)
+			paginator := ec2.NewDescribeVpcsPaginator(svc, params)
+			for paginator.HasMorePages() {
+				vpcs, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -71,16 +71,11 @@ func (a *mqlAws) getVpcs(conn *connection.AwsConnection) []*jobpool.Job {
 					}
 					return nil, err
 				}
-				nextToken = vpcs.NextToken
-				if vpcs.NextToken != nil {
-					params.NextToken = nextToken
-				}
 
-				for i := range vpcs.Vpcs {
-					v := vpcs.Vpcs[i]
+				for _, vpc := range vpcs.Vpcs {
 					name := ""
-					if v.Tags != nil {
-						for _, tag := range v.Tags {
+					if vpc.Tags != nil {
+						for _, tag := range vpc.Tags {
 							if tag.Key != nil && *tag.Key == "Name" && tag.Value != nil {
 								name = *tag.Value
 								break
@@ -89,16 +84,16 @@ func (a *mqlAws) getVpcs(conn *connection.AwsConnection) []*jobpool.Job {
 					}
 					mqlVpc, err := CreateResource(a.MqlRuntime, "aws.vpc",
 						map[string]*llx.RawData{
-							"arn":                      llx.StringData(fmt.Sprintf(vpcArnPattern, regionVal, conn.AccountId(), convert.ToValue(v.VpcId))),
-							"cidrBlock":                llx.StringDataPtr(v.CidrBlock),
-							"id":                       llx.StringDataPtr(v.VpcId),
-							"instanceTenancy":          llx.StringData(string(v.InstanceTenancy)),
-							"internetGatewayBlockMode": llx.StringData(string(v.BlockPublicAccessStates.InternetGatewayBlockMode)),
-							"isDefault":                llx.BoolData(convert.ToValue(v.IsDefault)),
+							"arn":                      llx.StringData(fmt.Sprintf(vpcArnPattern, regionVal, conn.AccountId(), convert.ToValue(vpc.VpcId))),
+							"cidrBlock":                llx.StringDataPtr(vpc.CidrBlock),
+							"id":                       llx.StringDataPtr(vpc.VpcId),
+							"instanceTenancy":          llx.StringData(string(vpc.InstanceTenancy)),
+							"internetGatewayBlockMode": llx.StringData(string(vpc.BlockPublicAccessStates.InternetGatewayBlockMode)),
+							"isDefault":                llx.BoolData(convert.ToValue(vpc.IsDefault)),
 							"name":                     llx.StringData(name),
 							"region":                   llx.StringData(regionVal),
-							"state":                    llx.StringData(string(v.State)),
-							"tags":                     llx.MapData(Ec2TagsToMap(v.Tags), types.String),
+							"state":                    llx.StringData(string(vpc.State)),
+							"tags":                     llx.MapData(Ec2TagsToMap(vpc.Tags), types.String),
 						})
 					if err != nil {
 						log.Error().Msg(err.Error())
@@ -179,33 +174,27 @@ func (a *mqlAwsVpc) natGateways() ([]interface{}, error) {
 	ctx := context.Background()
 	endpoints := []interface{}{}
 	filterKeyVal := "vpc-id"
-	nextToken := aws.String("no_token_to_start_with")
 	params := &ec2.DescribeNatGatewaysInput{Filter: []vpctypes.Filter{{Name: &filterKeyVal, Values: []string{vpc}}}}
-	for nextToken != nil {
-		natgateways, err := svc.DescribeNatGateways(ctx, params)
+	paginator := ec2.NewDescribeNatGatewaysPaginator(svc, params)
+	for paginator.HasMorePages() {
+		natgateways, err := paginator.NextPage(ctx)
 		if err != nil {
 			a.NatGateways.State = plugin.StateIsNull | plugin.StateIsSet
 			return nil, err
 		}
-		nextToken = natgateways.NextToken
-		if natgateways.NextToken != nil {
-			params.NextToken = nextToken
-		}
 
 		for _, gw := range natgateways.NatGateways {
 			addresses := []interface{}{}
-			for i := range gw.NatGatewayAddresses {
-				add := gw.NatGatewayAddresses[i]
-
+			for _, address := range gw.NatGatewayAddresses {
 				mqlNatGatewayAddress, err := CreateResource(a.MqlRuntime, "aws.vpc.natgateway.address",
 					map[string]*llx.RawData{
-						"allocationId":       llx.StringDataPtr(add.AllocationId),
-						"networkInterfaceId": llx.StringDataPtr(add.NetworkInterfaceId),
-						"privateIp":          llx.StringDataPtr(add.PrivateIp),
-						"isPrimary":          llx.BoolDataPtr(add.IsPrimary),
+						"allocationId":       llx.StringDataPtr(address.AllocationId),
+						"networkInterfaceId": llx.StringDataPtr(address.NetworkInterfaceId),
+						"privateIp":          llx.StringDataPtr(address.PrivateIp),
+						"isPrimary":          llx.BoolDataPtr(address.IsPrimary),
 					})
 				if err == nil {
-					mqlNatGatewayAddress.(*mqlAwsVpcNatgatewayAddress).natGatewayAddressCache = add
+					mqlNatGatewayAddress.(*mqlAwsVpcNatgatewayAddress).natGatewayAddressCache = address
 					mqlNatGatewayAddress.(*mqlAwsVpcNatgatewayAddress).region = a.Region.Data
 					addresses = append(addresses, mqlNatGatewayAddress)
 				} else {
@@ -240,22 +229,24 @@ func (a *mqlAwsVpcEndpoint) id() (string, error) {
 
 func (a *mqlAwsVpc) endpoints() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	vpc := a.Id.Data
+	vpcId := a.Id.Data
 
 	svc := conn.Ec2(a.Region.Data)
 	ctx := context.Background()
 	endpoints := []interface{}{}
-	filterKeyVal := "vpc-id"
-	nextToken := aws.String("no_token_to_start_with")
-	params := &ec2.DescribeVpcEndpointsInput{Filters: []vpctypes.Filter{{Name: &filterKeyVal, Values: []string{vpc}}}}
-	for nextToken != nil {
-		endpointsRes, err := svc.DescribeVpcEndpoints(ctx, params)
+	params := &ec2.DescribeVpcEndpointsInput{
+		Filters: []vpctypes.Filter{
+			{
+				Name:   aws.String("vpc-id"),
+				Values: []string{vpcId},
+			},
+		},
+	}
+	paginator := ec2.NewDescribeVpcEndpointsPaginator(svc, params)
+	for paginator.HasMorePages() {
+		endpointsRes, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, err
-		}
-		nextToken = endpointsRes.NextToken
-		if endpointsRes.NextToken != nil {
-			params.NextToken = nextToken
 		}
 
 		for _, endpoint := range endpointsRes.VpcEndpoints {
@@ -448,16 +439,12 @@ func (a *mqlAwsVpc) peeringConnections() ([]interface{}, error) {
 	filterKeyVal := "requester-vpc-info.vpc-id"
 	filterKeyVal2 := "accepter-vpc-info.vpc-id"
 
-	nextToken := aws.String("no_token_to_start_with")
 	params := &ec2.DescribeVpcPeeringConnectionsInput{Filters: []vpctypes.Filter{{Name: &filterKeyVal, Values: []string{vpc}}, {Name: &filterKeyVal2, Values: []string{vpc}}}}
-	for nextToken != nil {
-		res, err := svc.DescribeVpcPeeringConnections(ctx, params)
+	paginator := ec2.NewDescribeVpcPeeringConnectionsPaginator(svc, params)
+	for paginator.HasMorePages() {
+		res, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, err
-		}
-		nextToken = res.NextToken
-		if res.NextToken != nil {
-			params.NextToken = nextToken
 		}
 
 		for _, peerconn := range res.VpcPeeringConnections {
@@ -569,16 +556,12 @@ func (a *mqlAwsVpc) flowLogs() ([]interface{}, error) {
 	ctx := context.Background()
 	flowLogs := []interface{}{}
 	filterKeyVal := "resource-id"
-	nextToken := aws.String("no_token_to_start_with")
 	params := &ec2.DescribeFlowLogsInput{Filter: []vpctypes.Filter{{Name: &filterKeyVal, Values: []string{vpc}}}}
-	for nextToken != nil {
-		flowLogsRes, err := svc.DescribeFlowLogs(ctx, params)
+	paginator := ec2.NewDescribeFlowLogsPaginator(svc, params)
+	for paginator.HasMorePages() {
+		flowLogsRes, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, err
-		}
-		nextToken = flowLogsRes.NextToken
-		if flowLogsRes.NextToken != nil {
-			params.NextToken = nextToken
 		}
 
 		for _, flowLog := range flowLogsRes.FlowLogs {
@@ -618,17 +601,13 @@ func (a *mqlAwsVpc) routeTables() ([]interface{}, error) {
 	ctx := context.Background()
 	res := []interface{}{}
 
-	nextToken := aws.String("no_token_to_start_with")
 	filterName := "vpc-id"
 	params := &ec2.DescribeRouteTablesInput{Filters: []vpctypes.Filter{{Name: &filterName, Values: []string{vpcVal}}}}
-	for nextToken != nil {
-		routeTables, err := svc.DescribeRouteTables(ctx, params)
+	paginator := ec2.NewDescribeRouteTablesPaginator(svc, params)
+	for paginator.HasMorePages() {
+		routeTables, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, err
-		}
-		nextToken = routeTables.NextToken
-		if routeTables.NextToken != nil {
-			params.NextToken = nextToken
 		}
 
 		for _, routeTable := range routeTables.RouteTables {
@@ -714,17 +693,13 @@ func (a *mqlAwsVpc) subnets() ([]interface{}, error) {
 	ctx := context.Background()
 	res := []interface{}{}
 
-	nextToken := aws.String("no_token_to_start_with")
 	filterName := "vpc-id"
 	params := &ec2.DescribeSubnetsInput{Filters: []vpctypes.Filter{{Name: &filterName, Values: []string{vpcVal}}}}
-	for nextToken != nil {
-		subnets, err := svc.DescribeSubnets(ctx, params)
+	paginator := ec2.NewDescribeSubnetsPaginator(svc, params)
+	for paginator.HasMorePages() {
+		subnets, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, err
-		}
-		nextToken = subnets.NextToken
-		if subnets.NextToken != nil {
-			params.NextToken = nextToken
 		}
 
 		for _, subnet := range subnets.Subnets {

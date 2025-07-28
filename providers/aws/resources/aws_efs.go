@@ -59,9 +59,10 @@ func (a *mqlAwsEfs) getFilesystems(conn *connection.AwsConnection) []*jobpool.Jo
 			ctx := context.Background()
 			res := []interface{}{}
 
-			var marker *string
-			for {
-				describeFileSystemsRes, err := svc.DescribeFileSystems(ctx, &efs.DescribeFileSystemsInput{Marker: marker})
+			params := &efs.DescribeFileSystemsInput{}
+			paginator := efs.NewDescribeFileSystemsPaginator(svc, params)
+			for paginator.HasMorePages() {
+				describeFileSystemsRes, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -70,8 +71,7 @@ func (a *mqlAwsEfs) getFilesystems(conn *connection.AwsConnection) []*jobpool.Jo
 					return nil, err
 				}
 
-				for i := range describeFileSystemsRes.FileSystems {
-					fs := describeFileSystemsRes.FileSystems[i]
+				for _, fs := range describeFileSystemsRes.FileSystems {
 					args := map[string]*llx.RawData{
 						"id":               llx.StringDataPtr(fs.FileSystemId),
 						"arn":              llx.StringDataPtr(fs.FileSystemArn),
@@ -90,10 +90,6 @@ func (a *mqlAwsEfs) getFilesystems(conn *connection.AwsConnection) []*jobpool.Jo
 
 					res = append(res, mqlFilesystem)
 				}
-				if describeFileSystemsRes.NextMarker == nil {
-					break
-				}
-				marker = describeFileSystemsRes.NextMarker
 			}
 			return jobpool.JobResult(res), nil
 		}

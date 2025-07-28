@@ -37,26 +37,25 @@ func (a *mqlAwsCloudfront) distributions() ([]interface{}, error) {
 	ctx := context.Background()
 	res := []interface{}{}
 
-	var marker *string
-	for {
-		distributions, err := svc.ListDistributions(ctx, &cloudfront.ListDistributionsInput{Marker: marker})
+	params := &cloudfront.ListDistributionsInput{}
+	paginator := cloudfront.NewListDistributionsPaginator(svc, params)
+	for paginator.HasMorePages() {
+		distributions, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not gather aws cloudfront distributions")
 		}
 
-		for i := range distributions.DistributionList.Items {
-			d := distributions.DistributionList.Items[i]
+		for _, distribution := range distributions.DistributionList.Items {
 			origins := []interface{}{}
-			if or := d.Origins; or != nil {
-				for i := range d.Origins.Items {
-					o := d.Origins.Items[i]
+			if or := distribution.Origins; or != nil {
+				for _, origin := range distribution.Origins.Items {
 					mqlAwsCloudfrontOrigin, err := CreateResource(a.MqlRuntime, "aws.cloudfront.distribution.origin",
 						map[string]*llx.RawData{
-							"domainName":         llx.StringDataPtr(o.DomainName),
-							"id":                 llx.StringDataPtr(o.Id),
-							"connectionAttempts": llx.IntDataDefault(o.ConnectionAttempts, 0),
-							"connectionTimeout":  llx.IntDataDefault(o.ConnectionTimeout, 0),
-							"originPath":         llx.StringDataPtr(o.OriginPath),
+							"domainName":         llx.StringDataPtr(origin.DomainName),
+							"id":                 llx.StringDataPtr(origin.Id),
+							"connectionAttempts": llx.IntDataDefault(origin.ConnectionAttempts, 0),
+							"connectionTimeout":  llx.IntDataDefault(origin.ConnectionTimeout, 0),
+							"originPath":         llx.StringDataPtr(origin.OriginPath),
 							"account":            llx.StringData(conn.AccountId()),
 						})
 					if err != nil {
@@ -66,34 +65,34 @@ func (a *mqlAwsCloudfront) distributions() ([]interface{}, error) {
 				}
 			}
 			cacheBehaviors := []interface{}{}
-			if cb := d.CacheBehaviors; cb != nil {
-				cacheBehaviors, err = convert.JsonToDictSlice(d.CacheBehaviors.Items)
+			if cb := distribution.CacheBehaviors; cb != nil {
+				cacheBehaviors, err = convert.JsonToDictSlice(distribution.CacheBehaviors.Items)
 				if err != nil {
 					return nil, err
 				}
 			}
-			defaultCacheBehavior, err := convert.JsonToDict(d.DefaultCacheBehavior)
+			defaultCacheBehavior, err := convert.JsonToDict(distribution.DefaultCacheBehavior)
 			if err != nil {
 				return nil, err
 			}
 
 			cnames := []interface{}{}
-			for i := range d.Aliases.Items {
-				cnames = append(cnames, d.Aliases.Items[i])
+			for _, alias := range distribution.Aliases.Items {
+				cnames = append(cnames, alias)
 			}
 
 			args := map[string]*llx.RawData{
-				"arn":                  llx.StringDataPtr(d.ARN),
+				"arn":                  llx.StringDataPtr(distribution.ARN),
 				"cacheBehaviors":       llx.ArrayData(cacheBehaviors, types.Any),
 				"cnames":               llx.ArrayData(cnames, types.String),
 				"defaultCacheBehavior": llx.MapData(defaultCacheBehavior, types.Any),
-				"domainName":           llx.StringDataPtr(d.DomainName),
-				"enabled":              llx.BoolDataPtr(d.Enabled),
-				"httpVersion":          llx.StringData(string(d.HttpVersion)),
-				"isIPV6Enabled":        llx.BoolDataPtr(d.IsIPV6Enabled),
+				"domainName":           llx.StringDataPtr(distribution.DomainName),
+				"enabled":              llx.BoolDataPtr(distribution.Enabled),
+				"httpVersion":          llx.StringData(string(distribution.HttpVersion)),
+				"isIPV6Enabled":        llx.BoolDataPtr(distribution.IsIPV6Enabled),
 				"origins":              llx.ArrayData(origins, types.Resource("aws.cloudfront.distribution.origin")),
-				"priceClass":           llx.StringData(string(d.PriceClass)),
-				"status":               llx.StringDataPtr(d.Status),
+				"priceClass":           llx.StringData(string(distribution.PriceClass)),
+				"status":               llx.StringDataPtr(distribution.Status),
 			}
 
 			mqlAwsCloudfrontDist, err := CreateResource(a.MqlRuntime, "aws.cloudfront.distribution", args)
@@ -103,10 +102,6 @@ func (a *mqlAwsCloudfront) distributions() ([]interface{}, error) {
 
 			res = append(res, mqlAwsCloudfrontDist)
 		}
-		if distributions.DistributionList.NextMarker == nil {
-			break
-		}
-		marker = distributions.DistributionList.NextMarker
 	}
 
 	return res, nil
@@ -123,6 +118,7 @@ func (a *mqlAwsCloudfront) functions() ([]interface{}, error) {
 	ctx := context.Background()
 	res := []interface{}{}
 
+	// the AWS SDK does not have a paginator for this function
 	var marker *string
 	for {
 		functions, err := svc.ListFunctions(ctx, &cloudfront.ListFunctionsInput{Marker: marker})

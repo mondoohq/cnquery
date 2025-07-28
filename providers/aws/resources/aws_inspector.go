@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	"github.com/rs/zerolog/log"
@@ -60,10 +59,10 @@ func (a *mqlAwsInspector) getCoverage(conn *connection.AwsConnection) []*jobpool
 			ctx := context.Background()
 			res := []interface{}{}
 
-			nextToken := aws.String("no_token_to_start_with")
 			params := &inspector2.ListCoverageInput{}
-			for nextToken != nil {
-				coverages, err := svc.ListCoverage(ctx, params)
+			paginator := inspector2.NewListCoveragePaginator(svc, params)
+			for paginator.HasMorePages() {
+				coverages, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -92,10 +91,6 @@ func (a *mqlAwsInspector) getCoverage(conn *connection.AwsConnection) []*jobpool
 					}
 					mqlCoverage.(*mqlAwsInspectorCoverage).cacheCoverage = &coverage
 					res = append(res, mqlCoverage)
-				}
-				nextToken = coverages.NextToken
-				if coverages.NextToken != nil {
-					params.NextToken = nextToken
 				}
 			}
 			return jobpool.JobResult(res), nil

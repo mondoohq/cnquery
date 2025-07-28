@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild"
 	cbtypes "github.com/aws/aws-sdk-go-v2/service/codebuild/types"
 	"github.com/rs/zerolog/log"
@@ -56,9 +55,9 @@ func (a *mqlAwsCodebuild) getProjects(conn *connection.AwsConnection) []*jobpool
 
 			res := []interface{}{}
 			params := &codebuild.ListProjectsInput{}
-			nextToken := aws.String("no_token_to_start_with")
-			for nextToken != nil {
-				projects, err := svc.ListProjects(ctx, params)
+			paginator := codebuild.NewListProjectsPaginator(svc, params)
+			for paginator.HasMorePages() {
+				projects, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -77,10 +76,6 @@ func (a *mqlAwsCodebuild) getProjects(conn *connection.AwsConnection) []*jobpool
 						return nil, err
 					}
 					res = append(res, mqlProject)
-				}
-				nextToken = projects.NextToken
-				if projects.NextToken != nil {
-					params.NextToken = nextToken
 				}
 			}
 			return jobpool.JobResult(res), nil

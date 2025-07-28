@@ -64,9 +64,10 @@ func (a *mqlAwsRedshift) getClusters(conn *connection.AwsConnection) []*jobpool.
 			ctx := context.Background()
 			res := []interface{}{}
 
-			var marker *string
-			for {
-				clusters, err := svc.DescribeClusters(ctx, &redshift.DescribeClustersInput{Marker: marker})
+			params := &redshift.DescribeClustersInput{}
+			paginator := redshift.NewDescribeClustersPaginator(svc, params)
+			for paginator.HasMorePages() {
+				clusters, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -110,10 +111,6 @@ func (a *mqlAwsRedshift) getClusters(conn *connection.AwsConnection) []*jobpool.
 					}
 					res = append(res, mqlDBInstance)
 				}
-				if clusters.Marker == nil {
-					break
-				}
-				marker = clusters.Marker
 			}
 			return jobpool.JobResult(res), nil
 		}

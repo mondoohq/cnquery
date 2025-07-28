@@ -58,9 +58,10 @@ func (a *mqlAwsEmr) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 
 			res := []interface{}{}
 
-			var marker *string
-			for {
-				clusters, err := svc.ListClusters(ctx, &emr.ListClustersInput{Marker: marker})
+			params := &emr.ListClustersInput{}
+			paginator := emr.NewListClustersPaginator(svc, params)
+			for paginator.HasMorePages() {
+				clusters, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -87,10 +88,6 @@ func (a *mqlAwsEmr) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 					}
 					res = append(res, mqlCluster)
 				}
-				if clusters.Marker == nil {
-					break
-				}
-				marker = clusters.Marker
 			}
 			return jobpool.JobResult(res), nil
 		}
@@ -111,21 +108,18 @@ func (a *mqlAwsEmrCluster) masterInstances() ([]interface{}, error) {
 
 	svc := conn.Emr(region)
 	ctx := context.Background()
-	var marker *string
-	for {
-		instances, err := svc.ListInstances(ctx, &emr.ListInstancesInput{
-			Marker:             marker,
-			ClusterId:          &id,
-			InstanceGroupTypes: []emrtypes.InstanceGroupType{"MASTER"},
-		})
+
+	params := &emr.ListInstancesInput{
+		ClusterId:          &id,
+		InstanceGroupTypes: []emrtypes.InstanceGroupType{"MASTER"},
+	}
+	paginator := emr.NewListInstancesPaginator(svc, params)
+	for paginator.HasMorePages() {
+		instances, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
 		res = append(res, instances.Instances...)
-		if instances.Marker == nil {
-			break
-		}
-		marker = instances.Marker
 	}
 	return convert.JsonToDictSlice(res)
 }

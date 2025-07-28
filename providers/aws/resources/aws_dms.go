@@ -62,9 +62,10 @@ func (a *mqlAwsDms) getReplicationInstances(conn *connection.AwsConnection) []*j
 			ctx := context.Background()
 			res := []interface{}{}
 
-			var marker *string
-			for {
-				replicationInstances, err := svc.DescribeReplicationInstances(ctx, &databasemigrationservice.DescribeReplicationInstancesInput{Marker: marker})
+			params := &databasemigrationservice.DescribeReplicationInstancesInput{}
+			paginator := databasemigrationservice.NewDescribeReplicationInstancesPaginator(svc, params)
+			for paginator.HasMorePages() {
+				replicationInstances, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
@@ -78,11 +79,6 @@ func (a *mqlAwsDms) getReplicationInstances(conn *connection.AwsConnection) []*j
 					return nil, err
 				}
 				res = append(res, mqlRep...)
-
-				if replicationInstances.Marker == nil {
-					break
-				}
-				marker = replicationInstances.Marker
 			}
 			return jobpool.JobResult(res), nil
 		}

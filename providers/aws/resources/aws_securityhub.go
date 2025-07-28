@@ -47,15 +47,14 @@ func (a *mqlAwsSecurityhub) getHubs(conn *connection.AwsConnection) []*jobpool.J
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := conn.Securityhub(regionVal)
+			svc := conn.Securityhub(region)
 			ctx := context.Background()
 			res := []interface{}{}
 			secHub, err := svc.DescribeHub(ctx, &securityhub.DescribeHubInput{})
 			if err != nil {
 				if Is400AccessDeniedError(err) {
-					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+					log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 					return res, nil
 				}
 				var notFoundErr *types.InvalidAccessException
