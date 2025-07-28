@@ -105,17 +105,22 @@ jobs:
 #          echo "SM_CERT_ALIAS=${{ secrets.SM_CERT_ALIAS }}" >> "$GITHUB_ENV"
 #
       #  This is required but needs to installed already, it should be done my ansible and the private-runner repo
-      # - name: Install the required version of jSign (Windows Signing Tool)
-      #   run: |
-      #     curl -LO https://github.com/ebourg/jsign/releases/download/7.1/jsign_7.1_all.deb
-      #     sudo dpkg -i ./jsign_7.1_all.deb
+      - name: Install the required version of jSign (Windows Signing Tool)
+        run: |
+          #curl -LO https://github.com/ebourg/jsign/releases/download/7.1/jsign_7.1_all.deb
+          #dpkg -i ./jsign_7.1_all.deb
+          jsign --help
 
       - name: Log in to Azure for Code Signing
         uses: azure/login@v1
         with:
-          client-id: ${{ secrets.TSIGN_AZURE_CLIENT_ID }}
-          tenant-id: ${{ vars.TSIGN_AZURE_TENANT_ID }}
-          client-secret: ${{ secrets.TSIGN_AZURE_CLIENT_SECRET }}
+          creds: >-
+            {
+              "clientId": "${{ secrets.TSIGN_AZURE_CLIENT_ID }}",
+              "clientSecret": "${{ secrets.TSIGN_AZURE_CLIENT_SECRET }}",
+              "tenantId": "${{ vars.TSIGN_AZURE_TENANT_ID}}",
+              "subscriptionId": "${{ vars.TSIGN_AZURE_SUBSCRIPTION_ID }}"
+            }
 
       - name: Get Azure AD Access Token to trusted signing
         id: get_token
