@@ -367,11 +367,11 @@ func listDeployments(runtime *plugin.Runtime, region string, appName, dgName *st
 	ctx := context.Background()
 	depResources := []interface{}{}
 
-	// Potentially filter by IncludeOnlyStatuses for active ones if desired
-	// IncludeOnlyStatuses: []codedeploytypes.DeploymentStatus{DeploymentStatusInProgress, DeploymentStatusQueued, DeploymentStatusReady}
 	params := &codedeploy.ListDeploymentsInput{
 		ApplicationName:     appName,
 		DeploymentGroupName: dgName,
+		// Potentially filter by IncludeOnlyStatuses for active ones if desired
+		// IncludeOnlyStatuses: []codedeploytypes.DeploymentStatus{DeploymentStatusInProgress, DeploymentStatusQueued, DeploymentStatusReady}
 	}
 	paginator := codedeploy.NewListDeploymentsPaginator(svc, params)
 	for paginator.HasMorePages() {
