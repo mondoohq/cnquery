@@ -107,12 +107,19 @@ jobs:
       #  This is required but needs to installed already, it should be done my ansible and the private-runner repo
       - name: Install the required version of jSign (Windows Signing Tool)
         run: |
-          #curl -LO https://github.com/ebourg/jsign/releases/download/7.1/jsign_7.1_all.deb
-          #dpkg -i ./jsign_7.1_all.deb
-          jsign --help
+          curl -LO https://github.com/ebourg/jsign/releases/download/7.1/jsign_7.1_all.deb
+          dpkg -i ./jsign_7.1_all.deb
+
+      # Install Azure CLI for azure/login to work
+      - name: Azure CLI script
+        uses: azure/cli@v2
+        with:
+          azcliversion: latest
+          inlineScript: |
+            az version
 
       - name: Log in to Azure for Code Signing
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
           creds: >-
             {
