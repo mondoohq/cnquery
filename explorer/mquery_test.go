@@ -71,9 +71,11 @@ func TestMquery_Refresh(t *testing.T) {
 
 	err := a.RefreshMRN("//owner")
 	require.NoError(t, err)
+	err = a.Props[0].RefreshMRN(a.Mrn)
+	require.NoError(t, err)
 	assert.Equal(t, "//owner/queries/my-id0", a.Mrn)
 	assert.Empty(t, a.Uid)
-	assert.Equal(t, "//owner/queries/world", a.Props[0].Mrn)
+	assert.Equal(t, "//owner/queries/my-id0/properties/world", a.Props[0].Mrn)
 	assert.Empty(t, a.Props[0].Uid)
 
 	x := testutils.LinuxMock()
@@ -86,8 +88,8 @@ func TestMquery_Refresh(t *testing.T) {
 		},
 	)
 	require.NoError(t, err)
-	assert.Equal(t, "5KkJ/lLHnBM=", a.Checksum)
-	assert.Equal(t, "9NhbOk30tEg=", a.Props[0].Checksum)
+	assert.Equal(t, "g4cj2tMzHs4=", a.Checksum)
+	assert.Equal(t, "OSGvkbAIHFU=", a.Props[0].Checksum)
 }
 
 func TestMqueryMerge(t *testing.T) {
