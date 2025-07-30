@@ -75,6 +75,11 @@ func getFeatures() cnquery.Features {
 
 func InitViperConfig() {
 	viper.SetConfigType("yaml")
+	// Effectively, we disable using a key delimiter in viper. So you cannot do something like
+	// annotations.foo = "bar"
+	// You can only do
+	// annotations = {"foo": "bar"}
+	viper.SetOptions(viper.KeyDelimiter("\\"))
 
 	Path = strings.TrimSpace(UserProvidedPath)
 	// base 64 config env setting has always precedence
