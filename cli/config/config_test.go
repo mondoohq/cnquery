@@ -124,6 +124,8 @@ space_mrn: //captain.api.mondoo.app/spaces/musing-saha-952142
 `
 
 		viper.SetConfigType("yaml")
+		viper.SetOptions(viper.KeyDelimiter("\\"))
+
 		err := viper.ReadConfig(strings.NewReader(data))
 		require.NoError(t, err)
 
@@ -222,5 +224,37 @@ space_mrn: //captain.api.mondoo.app/spaces/musing-saha-952142
 		assert.Equal(t, "//captain.api.mondoo.app/spaces/test-space-id", cfg.Audience)
 		assert.Equal(t, "https://accounts.google.com", cfg.IssuerURI)
 		assert.Equal(t, "https://api.example.com", cfg.APIEndpoint)
+	})
+
+	t.Run("test config with annotations", func(t *testing.T) {
+		data := `
+agent_mrn: //agents.api.mondoo.app/spaces/musing-saha-952142/agents/1zDY7auR20SgrFfiGUT5qZWx6mE
+api_endpoint: https://us.api.mondoo.com
+api_proxy: http://192.168.4.4:3128
+annotations:
+  "foo.bar": "baz"
+certificate: |
+  -----BEGIN CERTIFICATE-----
+  MIICV .. fis=
+  -----END CERTIFICATE-----
+
+mrn: //agents.api.mondoo.app/spaces/musing-saha-952142/serviceaccounts/1zDY7cJ7bA84JxxNBWDxBdui2xE
+private_key: |
+  -----BEGIN PRIVATE KEY-----
+  MIG2AgE....C0Dvs=
+  -----END PRIVATE KEY-----
+space_mrn: //captain.api.mondoo.app/spaces/musing-saha-952142
+`
+
+		viper.SetConfigType("yaml")
+		viper.SetOptions(viper.KeyDelimiter("\\"))
+
+		err := viper.ReadConfig(strings.NewReader(data))
+		require.NoError(t, err)
+
+		cfg, err := Read()
+		require.NoError(t, err)
+
+		assert.Equal(t, "baz", cfg.Annotations["foo.bar"])
 	})
 }
