@@ -104,19 +104,9 @@ jobs:
 #          echo "SM_CODE_SIGNING_CERT_SHA1_HASH=${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}" >> "$GITHUB_ENV"
 #          echo "SM_CERT_ALIAS=${{ secrets.SM_CERT_ALIAS }}" >> "$GITHUB_ENV"
 #
-      #  This is required but needs to installed already, it should be done my ansible and the private-runner repo
-      - name: Install the required version of jSign (Windows Signing Tool)
-        run: |
-          curl -LO https://github.com/ebourg/jsign/releases/download/7.1/jsign_7.1_all.deb
-          dpkg -i ./jsign_7.1_all.deb
 
-      # Install Azure CLI for azure/login to work
-      - name: Azure CLI script
-        uses: azure/cli@v2
-        with:
-          azcliversion: latest
-          inlineScript: |
-            az version
+# jsign and azure-cli are both requirements for Azure Trusted Signing and these actions to authenticate
+# These packages have been installed on the self-hosted runner using ansible from the private repo
 
       - name: Log in to Azure for Code Signing
         uses: azure/login@v2
