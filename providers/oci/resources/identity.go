@@ -334,9 +334,6 @@ func (o *mqlOciIdentityUser) groups() ([]interface{}, error) {
 	for i := range list.Data {
 		grp := list.Data[i].(*mqlOciIdentityGroup)
 		id := grp.Id.Data
-		if err != nil {
-			return nil, err
-		}
 		_, ok := grpMember[id]
 		if ok {
 			res = append(res, grp)
