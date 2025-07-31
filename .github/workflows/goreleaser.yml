@@ -47,7 +47,7 @@ jobs:
 
       - name: Skip Publish for Alpha and Beta Tags
         id: skip-publish
-        if: contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') || inputs.skip-publish == 'true'
+        if: contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') || inputs.skip-publish == true
         run: |
           echo "Skipping publish for alpha and beta tags"
           echo "skip-publish=true" >> $GITHUB_OUTPUT
@@ -153,7 +153,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Run GoReleaser (w/ Docker Release)
-        if: ${{ inputs.skip-publish != 'true' }}
+        if: ${{ inputs.skip-publish != true }}
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
@@ -174,14 +174,14 @@ jobs:
           TSIGN_ACCESS_TOKEN: ${{ steps.get_token.outputs.tsign_access_token }}
 
       - name: Run GoReleaser (w/o Docker Release)
-        if: ${{ inputs.skip-publish == 'true'}}
+        if: ${{ inputs.skip-publish == true }}
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
           version: latest
           args: |
             release -f .github/.goreleaser-unstable.yml \
-            ${{ inputs.goreleaser-snapshot == 'true' && '--snapshot' || '' }} \
+            ${{ inputs.goreleaser-snapshot == true && '--snapshot' || '' }} \
             --clean --timeout 120m
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
