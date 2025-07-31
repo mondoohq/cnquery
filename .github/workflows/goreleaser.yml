@@ -151,7 +151,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Run GoReleaser (w/ Docker Release)
-        if: ${{ ! steps.skip-publish.outputs.skip-publish }}
+        if: ${{ inputs.skip-publish != 'true' }}
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
@@ -172,7 +172,7 @@ jobs:
           TSIGN_ACCESS_TOKEN: ${{ steps.get_token.outputs.tsign_access_token }}
 
       - name: Run GoReleaser (w/o Docker Release)
-        if: ${{ steps.skip-publish.outputs.skip-publish == 'true' }}
+        if: ${{ inputs.skip-publish == 'true'}}
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
