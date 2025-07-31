@@ -78,13 +78,6 @@ jobs:
           workload_identity_provider: ${{ secrets.GCP_WIP }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
-      - id: 'gcp_secrets'
-        uses: 'google-github-actions/get-secretmanager-secrets@v2'
-        with:
-          secrets: |-
-            code_sign_cert_b64:mondoo-base-infra/mondoo_code_sign_certificate_pfx_b64
-            code_sign_cert_challenge:mondoo-base-infra/mondoo_code_sign_challenge
-
       - name: "Write RPM Signing Cert"
         run: |
           gpgkey="$(mktemp -t gpgkey.XXX)"
@@ -92,30 +85,6 @@ jobs:
           echo "GPG_KEY_PATH=$gpgkey" >> $GITHUB_ENV
         env:
           GPG_KEY: '${{ secrets.GPG_KEY}}'
-
-#      - name: "Write Windows Signing Cert"
-#        run: |
-#          cert="$(mktemp -t cert.XXX)"
-#          base64 -d <<<"$CERT_CONTENTS" > "$cert"
-#          echo "CERT_FILE=$cert" >> $GITHUB_ENV
-#        env:
-#          CERT_CONTENTS: '${{ steps.gcp_secrets.outputs.code_sign_cert_b64 }}'
-#
-#      - name: Configure DigiCert Signing Variables
-#        shell: bash
-#        run: |
-#          # CertLocker Authentication Certifiate
-#          CERT_PATH="$(mktemp -t cert.XXX)"
-#          echo "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > ${CERT_PATH}
-#          echo "SM_CLIENT_CERT_FILE=${CERT_PATH}" >> "$GITHUB_ENV"
-#          echo "SM_CLIENT_CERT_PASSWORD=${{ secrets.SM_CLIENT_CERT_PASSWORD }}" >> "$GITHUB_ENV"
-#          # CertLocker API Key & Host
-#          echo "SM_API_KEY=${{ secrets.SM_API_KEY }}" >> "$GITHUB_ENV"
-#          echo "SM_HOST=${{ secrets.SM_HOST }}" >> "$GITHUB_ENV"
-#          # DigiCert CertLocker Code Signing Certificate
-#          echo "SM_CODE_SIGNING_CERT_SHA1_HASH=${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}" >> "$GITHUB_ENV"
-#          echo "SM_CERT_ALIAS=${{ secrets.SM_CERT_ALIAS }}" >> "$GITHUB_ENV"
-#
 
 # jsign and azure-cli are both requirements for Azure Trusted Signing and these actions to authenticate
 # These packages have been installed on the self-hosted runner using ansible from the private repo
@@ -234,7 +203,7 @@ jobs:
       # We can now trigger the cnquery bump in cnspec, which will also trigger the release of cnspec.
       # The docker container is a pre-requisite for cnspec release.
       - name: Trigger cnquery bump in cnspec
-        if: ${{ ! steps.skip-publish.outputs.skip-publish }}
+        if: ${{ inputs.skip-publish != true }}
         uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.RELEASR_ACTION_TOKEN }}
@@ -243,8 +212,3 @@ jobs:
           client-payload: '{
               "version": "${{  github.ref_name }}"
             }'
-
-      - name: Cleanup
-        if: always()
-        run:
-          rm -f ${CERT_PATH}
