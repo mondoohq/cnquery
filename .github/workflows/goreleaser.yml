@@ -40,8 +40,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
-          fetch-tags: true
+          fetch-depth: 0
+
+      - name: Dump all inputs
+        run: echo "${{ toJSON(inputs) }}"
 
       - name: Skip Publish for Alpha and Beta Tags
         id: skip-publish
