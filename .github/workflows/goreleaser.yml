@@ -178,11 +178,13 @@ jobs:
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
-          version: latest
-          args: |
-            release -f .github/.goreleaser-unstable.yml \
-            ${{ inputs.goreleaser-snapshot == true && '--snapshot' || '' }} \
-            --clean --timeout 120m
+          version: '~> v2'
+          args: >
+            release
+            ${{ inputs.goreleaser-snapshot == true && '--snapshot' || '' }}
+            --config .github/.goreleaser-unstable.yml
+            --clean
+            --timeout 120m
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CERT_PASSWORD: ${{ steps.gcp_secrets.outputs.code_sign_cert_challenge }}
