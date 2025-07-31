@@ -10,45 +10,45 @@ before:
   hooks:
     - make providers
 builds:
-  # - id: linux
-  #   main: ./apps/cnquery/cnquery.go
-  #   binary: cnquery
-  #   goos:
-  #     - linux
-  #   goarch:
-  #     - amd64
-  #     - 386
-  #     - arm64
-  #     - arm
-  #     - ppc64le
-  #     - s390x
-  #   # ARM 6= Raspberry Pi A, A+, B, B+, Zero
-  #   # ARM 7= Raspberry Pi 2, 3, 4
-  #   goarm:
-  #     - 6
-  #     - 7
-  #   flags:
-  #     - -tags="production netgo"
-  #   ldflags:
-  #     - "-extldflags=-static"
-  #     - -s -w -X go.mondoo.com/cnquery/v9.Version={{.Version}} -X go.mondoo.com/cnquery/v9.Build={{.ShortCommit}} -X go.mondoo.com/cnquery/v9.Date={{.Date}}
-  # - id: macos
-  #   main: ./apps/cnquery/cnquery.go
-  #   binary: cnquery
-  #   goos:
-  #     - darwin
-  #   goarch:
-  #     - amd64
-  #     - arm64
-  #   flags: -tags production
-  #   ldflags:
-  #     # clang + macos does not support static: - -extldflags "-static"
-  #     - -s -w -X go.mondoo.com/cnquery/v9.Version={{.Version}} -X go.mondoo.com/cnquery/v9.Build={{.ShortCommit}} -X go.mondoo.com/cnquery/v9.Date={{.Date}}
-  #   hooks:
-  #     post:
-  #       - cmd: /tmp/quill sign-and-notarize "{{ .Path }}" -vv || true
-  #         env:
-  #           - QUILL_LOG_FILE=/tmp/quill-{{ .Target }}.log
+  - id: linux
+    main: ./apps/cnquery/cnquery.go
+    binary: cnquery
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - 386
+      - arm64
+      - arm
+      - ppc64le
+      - s390x
+    # ARM 6= Raspberry Pi A, A+, B, B+, Zero
+    # ARM 7= Raspberry Pi 2, 3, 4
+    goarm:
+      - 6
+      - 7
+    flags:
+      - -tags="production netgo"
+    ldflags:
+      - "-extldflags=-static"
+      - -s -w -X go.mondoo.com/cnquery/v9.Version={{.Version}} -X go.mondoo.com/cnquery/v9.Build={{.ShortCommit}} -X go.mondoo.com/cnquery/v9.Date={{.Date}}
+  - id: macos
+    main: ./apps/cnquery/cnquery.go
+    binary: cnquery
+    goos:
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    flags: -tags production
+    ldflags:
+      # clang + macos does not support static: - -extldflags "-static"
+      - -s -w -X go.mondoo.com/cnquery/v9.Version={{.Version}} -X go.mondoo.com/cnquery/v9.Build={{.ShortCommit}} -X go.mondoo.com/cnquery/v9.Date={{.Date}}
+    hooks:
+      post:
+        - cmd: /tmp/quill sign-and-notarize "{{ .Path }}" -vv || true
+          env:
+            - QUILL_LOG_FILE=/tmp/quill-{{ .Target }}.log
   - id: windows
     main: ./apps/cnquery/cnquery.go
     binary: cnquery
@@ -65,215 +65,214 @@ builds:
     hooks:
       post:
         - cmd: jsign --storetype TRUSTEDSIGNING --keystore {{ .Env.TSIGN_AZURE_ENDPOINT }} --storepass {{ .Env.TSIGN_ACCESS_TOKEN }} --alias {{ .Env.TSIGN_ACCOUNT_NAME }}/{{ .Env.TSIGN_CERT_PROFILE_NAME }} '{{ .Path }}'
-
-# nfpms:
-  # -
-  #   maintainer: Mondoo <hello@mondoo.com>
-  #   description: Cloud-Native Asset Inventory Framework
-  #   homepage: https://mondoo.com/
-  #   vendor: Mondoo, Inc
-  #   license: MPL-2.0
-  #   formats:
-  #     - deb
-  #     - rpm
-  #   rpm:
-  #     signature:
-  #       key_file: '{{ .Env.GPG_KEY_PATH }}'
+nfpms:
+  -
+    maintainer: Mondoo <hello@mondoo.com>
+    description: Cloud-Native Asset Inventory Framework
+    homepage: https://mondoo.com/
+    vendor: Mondoo, Inc
+    license: MPL-2.0
+    formats:
+      - deb
+      - rpm
+    rpm:
+      signature:
+        key_file: '{{ .Env.GPG_KEY_PATH }}'
 archives:
   - id: releases
     format_overrides:
       - goos: windows
-        format: zip
+        formats: [zip]
     files:
       - none*
 checksum:
   name_template: '{{ .ProjectName }}_v{{ .Version }}_SHA256SUMS'
   algorithm: sha256
 snapshot:
-  name_template: "{{ .Tag }}-snapshot"
+  version_template: "{{ .Tag }}-snapshot"
 changelog:
   use: github-native
-# dockers: # https://goreleaser.com/customization/docker/
-#     # UBI containers
-#   - use: buildx
-#     goos: linux
-#     goarch: amd64
-#     dockerfile: Dockerfile-ubi
-#     image_templates:
-#       - "mondoo/{{ .ProjectName }}:{{ .Version }}-ubi-amd64"
-#     build_flag_templates:
-#       - "--platform=linux/amd64"
-#       - "--label=org.opencontainers.image.created={{.Date}}"
-#       - "--label=org.opencontainers.image.title={{.ProjectName}}"
-#       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-#       - "--label=org.opencontainers.image.version={{.Version}}"
-#       - "--target=root"
-#   - use: buildx
-#     goos: linux
-#     goarch: arm64
-#     dockerfile: Dockerfile-ubi
-#     image_templates:
-#       - "mondoo/{{ .ProjectName }}:{{ .Version }}-ubi-arm64"
-#     build_flag_templates:
-#       - "--platform=linux/arm64"
-#       - "--label=org.opencontainers.image.created={{.Date}}"
-#       - "--label=org.opencontainers.image.title={{.ProjectName}}"
-#       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-#       - "--label=org.opencontainers.image.version={{.Version}}"
-#       - "--target=root"
-#     # Standard containers
-#   - use: buildx
-#     goos: linux
-#     goarch: amd64
-#     image_templates:
-#       - "mondoo/{{ .ProjectName }}:{{ .Version }}-amd64"
-#     build_flag_templates:
-#       - "--platform=linux/amd64"
-#       - "--label=org.opencontainers.image.created={{.Date}}"
-#       - "--label=org.opencontainers.image.title={{.ProjectName}}"
-#       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-#       - "--label=org.opencontainers.image.version={{.Version}}"
-#       - "--target=root"
-#   - use: buildx
-#     goos: linux
-#     goarch: arm64
-#     image_templates:
-#       - "mondoo/{{ .ProjectName }}:{{ .Version }}-arm64v8"
-#     build_flag_templates:
-#       - "--platform=linux/arm64/v8"
-#       - "--label=org.opencontainers.image.created={{.Date}}"
-#       - "--label=org.opencontainers.image.title={{.ProjectName}}"
-#       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-#       - "--label=org.opencontainers.image.version={{.Version}}"
-#       - "--target=root"
-#   - use: buildx
-#     goos: linux
-#     goarch: arm
-#     goarm: 6
-#     image_templates:
-#       - "mondoo/{{ .ProjectName }}:{{ .Version }}-armv6"
-#     build_flag_templates:
-#       - "--platform=linux/arm/v6"
-#       - "--label=org.opencontainers.image.created={{.Date}}"
-#       - "--label=org.opencontainers.image.title={{.ProjectName}}"
-#       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-#       - "--label=org.opencontainers.image.version={{.Version}}"
-#       - "--target=root"
-#   - use: buildx
-#     goos: linux
-#     goarch: arm
-#     goarm: 7
-#     image_templates:
-#       - "mondoo/{{ .ProjectName }}:{{ .Version }}-armv7"
-#     build_flag_templates:
-#       - "--platform=linux/arm/v7"
-#       - "--label=org.opencontainers.image.created={{.Date}}"
-#       - "--label=org.opencontainers.image.title={{.ProjectName}}"
-#       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-#       - "--label=org.opencontainers.image.version={{.Version}}"
-#       - "--target=root"
-#   # Rootless
-#     # UBI containers
-#   - use: buildx
-#     goos: linux
-#     goarch: amd64
-#     dockerfile: Dockerfile-ubi
-#     image_templates:
-#       - "mondoo/{{ .ProjectName }}:{{ .Version }}-ubi-amd64-rootless"
-#     build_flag_templates:
-#       - "--platform=linux/amd64"
-#       - "--label=org.opencontainers.image.created={{.Date}}"
-#       - "--label=org.opencontainers.image.title={{.ProjectName}}"
-#       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-#       - "--label=org.opencontainers.image.version={{.Version}}"
-#       - "--target=rootless"
-#   - use: buildx
-#     goos: linux
-#     goarch: arm64
-#     dockerfile: Dockerfile-ubi
-#     image_templates:
-#       - "mondoo/{{ .ProjectName }}:{{ .Version }}-ubi-arm64-rootless"
-#     build_flag_templates:
-#       - "--platform=linux/arm64/v8"
-#       - "--label=org.opencontainers.image.created={{.Date}}"
-#       - "--label=org.opencontainers.image.title={{.ProjectName}}"
-#       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-#       - "--label=org.opencontainers.image.version={{.Version}}"
-#       - "--target=rootless"
-#     # Standard containers
-#   - use: buildx
-#     goos: linux
-#     goarch: amd64
-#     image_templates:
-#       - "mondoo/{{ .ProjectName }}:{{ .Version }}-amd64-rootless"
-#     build_flag_templates:
-#       - "--platform=linux/amd64"
-#       - "--label=org.opencontainers.image.created={{.Date}}"
-#       - "--label=org.opencontainers.image.title={{.ProjectName}}"
-#       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-#       - "--label=org.opencontainers.image.version={{.Version}}"
-#       - "--target=rootless"
-#   - use: buildx
-#     goos: linux
-#     goarch: arm64
-#     image_templates:
-#       - "mondoo/{{ .ProjectName }}:{{ .Version }}-arm64v8-rootless"
-#     build_flag_templates:
-#       - "--platform=linux/arm64/v8"
-#       - "--label=org.opencontainers.image.created={{.Date}}"
-#       - "--label=org.opencontainers.image.title={{.ProjectName}}"
-#       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-#       - "--label=org.opencontainers.image.version={{.Version}}"
-#       - "--target=rootless"
-#   - use: buildx
-#     goos: linux
-#     goarch: arm
-#     goarm: 6
-#     image_templates:
-#       - "mondoo/{{ .ProjectName }}:{{ .Version }}-armv6-rootless"
-#     build_flag_templates:
-#       - "--platform=linux/arm/v6"
-#       - "--label=org.opencontainers.image.created={{.Date}}"
-#       - "--label=org.opencontainers.image.title={{.ProjectName}}"
-#       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-#       - "--label=org.opencontainers.image.version={{.Version}}"
-#       - "--target=rootless"
-#   - use: buildx
-#     goos: linux
-#     goarch: arm
-#     goarm: 7
-#     image_templates:
-#       - "mondoo/{{ .ProjectName }}:{{ .Version }}-armv7-rootless"
-#     build_flag_templates:
-#       - "--platform=linux/arm/v7"
-#       - "--label=org.opencontainers.image.created={{.Date}}"
-#       - "--label=org.opencontainers.image.title={{.ProjectName}}"
-#       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-#       - "--label=org.opencontainers.image.version={{.Version}}"
-#       - "--target=rootless"
-# docker_manifests:  # https://goreleaser.com/customization/docker_manifest/
-#     # UBI containers
-#   - name_template: mondoo/{{ .ProjectName }}:{{ .Version }}-ubi
-#     image_templates:
-#       - mondoo/{{ .ProjectName }}:{{ .Version }}-ubi-amd64
-#       - mondoo/{{ .ProjectName }}:{{ .Version }}-ubi-arm64
-#     # Standard containers
-#   - name_template: mondoo/{{ .ProjectName }}:{{ .Version }}
-#     image_templates:
-#       - mondoo/{{ .ProjectName }}:{{ .Version }}-amd64
-#       - mondoo/{{ .ProjectName }}:{{ .Version }}-arm64v8
-#       - mondoo/{{ .ProjectName }}:{{ .Version }}-armv6
-#       - mondoo/{{ .ProjectName }}:{{ .Version }}-armv7
-#   # Rootless
-#     # UBI containers
-#   - name_template: mondoo/{{ .ProjectName }}:{{ .Version }}-ubi-rootless
-#     image_templates:
-#       - mondoo/{{ .ProjectName }}:{{ .Version }}-ubi-amd64-rootless
-#       - mondoo/{{ .ProjectName }}:{{ .Version }}-ubi-arm64-rootless
-#     # Standard containers
-#   - name_template: mondoo/{{ .ProjectName }}:{{ .Version }}-rootless
-#     image_templates:
-#       - mondoo/{{ .ProjectName }}:{{ .Version }}-amd64-rootless
-#       - mondoo/{{ .ProjectName }}:{{ .Version }}-arm64v8-rootless
-#       - mondoo/{{ .ProjectName }}:{{ .Version }}-armv6-rootless
-#       - mondoo/{{ .ProjectName }}:{{ .Version }}-armv7-rootless
+dockers: # https://goreleaser.com/customization/docker/
+    # UBI containers
+  - use: buildx
+    goos: linux
+    goarch: amd64
+    dockerfile: Dockerfile-ubi
+    image_templates:
+      - "mondoo/{{ .ProjectName }}:{{ .Version }}-ubi-amd64"
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--target=root"
+  - use: buildx
+    goos: linux
+    goarch: arm64
+    dockerfile: Dockerfile-ubi
+    image_templates:
+      - "mondoo/{{ .ProjectName }}:{{ .Version }}-ubi-arm64"
+    build_flag_templates:
+      - "--platform=linux/arm64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--target=root"
+    # Standard containers
+  - use: buildx
+    goos: linux
+    goarch: amd64
+    image_templates:
+      - "mondoo/{{ .ProjectName }}:{{ .Version }}-amd64"
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--target=root"
+  - use: buildx
+    goos: linux
+    goarch: arm64
+    image_templates:
+      - "mondoo/{{ .ProjectName }}:{{ .Version }}-arm64v8"
+    build_flag_templates:
+      - "--platform=linux/arm64/v8"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--target=root"
+  - use: buildx
+    goos: linux
+    goarch: arm
+    goarm: 6
+    image_templates:
+      - "mondoo/{{ .ProjectName }}:{{ .Version }}-armv6"
+    build_flag_templates:
+      - "--platform=linux/arm/v6"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--target=root"
+  - use: buildx
+    goos: linux
+    goarch: arm
+    goarm: 7
+    image_templates:
+      - "mondoo/{{ .ProjectName }}:{{ .Version }}-armv7"
+    build_flag_templates:
+      - "--platform=linux/arm/v7"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--target=root"
+  # Rootless
+    # UBI containers
+  - use: buildx
+    goos: linux
+    goarch: amd64
+    dockerfile: Dockerfile-ubi
+    image_templates:
+      - "mondoo/{{ .ProjectName }}:{{ .Version }}-ubi-amd64-rootless"
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--target=rootless"
+  - use: buildx
+    goos: linux
+    goarch: arm64
+    dockerfile: Dockerfile-ubi
+    image_templates:
+      - "mondoo/{{ .ProjectName }}:{{ .Version }}-ubi-arm64-rootless"
+    build_flag_templates:
+      - "--platform=linux/arm64/v8"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--target=rootless"
+    # Standard containers
+  - use: buildx
+    goos: linux
+    goarch: amd64
+    image_templates:
+      - "mondoo/{{ .ProjectName }}:{{ .Version }}-amd64-rootless"
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--target=rootless"
+  - use: buildx
+    goos: linux
+    goarch: arm64
+    image_templates:
+      - "mondoo/{{ .ProjectName }}:{{ .Version }}-arm64v8-rootless"
+    build_flag_templates:
+      - "--platform=linux/arm64/v8"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--target=rootless"
+  - use: buildx
+    goos: linux
+    goarch: arm
+    goarm: 6
+    image_templates:
+      - "mondoo/{{ .ProjectName }}:{{ .Version }}-armv6-rootless"
+    build_flag_templates:
+      - "--platform=linux/arm/v6"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--target=rootless"
+  - use: buildx
+    goos: linux
+    goarch: arm
+    goarm: 7
+    image_templates:
+      - "mondoo/{{ .ProjectName }}:{{ .Version }}-armv7-rootless"
+    build_flag_templates:
+      - "--platform=linux/arm/v7"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--target=rootless"
+docker_manifests:  # https://goreleaser.com/customization/docker_manifest/
+    # UBI containers
+  - name_template: mondoo/{{ .ProjectName }}:{{ .Version }}-ubi
+    image_templates:
+      - mondoo/{{ .ProjectName }}:{{ .Version }}-ubi-amd64
+      - mondoo/{{ .ProjectName }}:{{ .Version }}-ubi-arm64
+    # Standard containers
+  - name_template: mondoo/{{ .ProjectName }}:{{ .Version }}
+    image_templates:
+      - mondoo/{{ .ProjectName }}:{{ .Version }}-amd64
+      - mondoo/{{ .ProjectName }}:{{ .Version }}-arm64v8
+      - mondoo/{{ .ProjectName }}:{{ .Version }}-armv6
+      - mondoo/{{ .ProjectName }}:{{ .Version }}-armv7
+  # Rootless
+    # UBI containers
+  - name_template: mondoo/{{ .ProjectName }}:{{ .Version }}-ubi-rootless
+    image_templates:
+      - mondoo/{{ .ProjectName }}:{{ .Version }}-ubi-amd64-rootless
+      - mondoo/{{ .ProjectName }}:{{ .Version }}-ubi-arm64-rootless
+    # Standard containers
+  - name_template: mondoo/{{ .ProjectName }}:{{ .Version }}-rootless
+    image_templates:
+      - mondoo/{{ .ProjectName }}:{{ .Version }}-amd64-rootless
+      - mondoo/{{ .ProjectName }}:{{ .Version }}-arm64v8-rootless
+      - mondoo/{{ .ProjectName }}:{{ .Version }}-armv6-rootless
+      - mondoo/{{ .ProjectName }}:{{ .Version }}-armv7-rootless

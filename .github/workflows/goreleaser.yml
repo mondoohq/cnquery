@@ -163,8 +163,12 @@ jobs:
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
-          version: v2.5.1
-          args: release --clean --timeout 120m
+          version: v2.11.2
+          args: >
+            release
+            --config .goreleaser.yml
+            --clean
+            --timeout 120m
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CERT_PASSWORD: ${{ steps.gcp_secrets.outputs.code_sign_cert_challenge }}
@@ -184,7 +188,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
-          version: '~> v2'
+          version: v2.11.2
           args: >
             release
             ${{ inputs.goreleaser-snapshot == true && '--snapshot' || '' }}
@@ -208,6 +212,7 @@ jobs:
       - name: Check RPMs
         run: |
           rpm -qpi dist/*.rpm
+
       - name: Output Quill Logs
         if: ${{ failure() }}
         run: |
