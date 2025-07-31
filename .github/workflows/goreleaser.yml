@@ -137,7 +137,9 @@ jobs:
             echo "Error: Access token is empty"
             exit 1
           fi
-          echo "TSIGN_ACCESS_TOKEN=$TSIGN_ACCESS_TOKEN" >> $GITHUB_ENV
+          PREFIX="${TSIGN_ACCESS_TOKEN:0:8}"
+          echo "Access token prefix: ${PREFIX}..."
+          echo "TSIGN_ACCESS_TOKEN=$TSIGN_ACCESS_TOKEN" >> $GITHUB_OUTPUT
 
 
       - name: Install Quill for Mac Signing and Notarization
@@ -171,7 +173,7 @@ jobs:
           TSIGN_AZURE_ENDPOINT: ${{ vars.TSIGN_AZURE_ENDPOINT }}
           TSIGN_ACCOUNT_NAME: ${{ vars.TSIGN_ACCOUNT_NAME }}
           TSIGN_CERT_PROFILE_NAME: ${{ github.event.inputs.use-test-cert == 'true' && vars.TSIGN_TEST_CERT_PROFILE_NAME || vars.TSIGN_CERT_PROFILE_NAME }}
-          TSIGN_ACCESS_TOKEN: ${{ steps.get_token.outputs.tsign_access_token }}
+          TSIGN_ACCESS_TOKEN: ${{ steps.get_token.outputs.TSIGN_ACCESS_TOKEN }}
 
       - name: Run GoReleaser (w/o Docker Release)
         if: ${{ inputs.skip-publish == true }}
@@ -197,7 +199,7 @@ jobs:
           TSIGN_AZURE_ENDPOINT: ${{ vars.TSIGN_AZURE_ENDPOINT }}
           TSIGN_ACCOUNT_NAME: ${{ vars.TSIGN_ACCOUNT_NAME }}
           TSIGN_CERT_PROFILE_NAME: ${{ github.event.inputs.use-test-cert == 'true' && vars.TSIGN_TEST_CERT_PROFILE_NAME || vars.TSIGN_CERT_PROFILE_NAME }}
-          TSIGN_ACCESS_TOKEN: ${{ steps.get_token.outputs.tsign_access_token }}
+          TSIGN_ACCESS_TOKEN: ${{ steps.get_token.outputs.TSIGN_ACCESS_TOKEN }}
 
       - name: Check RPMs
         run: |
