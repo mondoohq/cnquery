@@ -16,6 +16,11 @@ on:
         required: false
         default: false
         type: boolean
+      goreleaser-snapshot:
+        description: 'Run goreleaser in snapshot mode, which will not publish and bypass tag checks.'
+        required: false
+        default: false
+        type: boolean
 
 
 env:
@@ -35,7 +40,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
+          fetch-tags: true
 
       - name: Skip Publish for Alpha and Beta Tags
         id: skip-publish
@@ -171,7 +177,10 @@ jobs:
         with:
           distribution: goreleaser
           version: latest
-          args: release -f .github/.goreleaser-unstable.yml --clean --timeout 120m
+          args: |
+            release -f .github/.goreleaser-unstable.yml \
+            ${{ inputs.goreleaser-snapshot == 'true' && '--snapshot' || '' }} \
+            --clean --timeout 120m
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CERT_PASSWORD: ${{ steps.gcp_secrets.outputs.code_sign_cert_challenge }}
