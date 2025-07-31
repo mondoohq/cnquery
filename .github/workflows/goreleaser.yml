@@ -21,7 +21,11 @@ on:
         required: false
         default: false
         type: boolean
-
+      upload-artifacts:
+        description: "Uploading artifacts to workflow"
+        required: false
+        default: false
+        type: boolean
 
 env:
   REGISTRY: docker.io
@@ -212,6 +216,14 @@ jobs:
             ls -l $f
             cat $f
           done
+
+      - name: Upload artifacts
+        if: ${{ inputs.upload-artifacts == true }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-artifacts
+          path: dist/*.zip
+          retention-days: 7
 
       # At this point we know the docker container is published.
       # We can now trigger the cnquery bump in cnspec, which will also trigger the release of cnspec.
