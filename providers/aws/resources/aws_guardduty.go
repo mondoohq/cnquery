@@ -52,9 +52,8 @@ func (a *mqlAwsGuardduty) getDetectors(conn *connection.AwsConnection) []*jobpoo
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := conn.Guardduty(regionVal)
+			svc := conn.Guardduty(region)
 			ctx := context.Background()
 
 			res := []interface{}{}
@@ -64,7 +63,7 @@ func (a *mqlAwsGuardduty) getDetectors(conn *connection.AwsConnection) []*jobpoo
 				detectors, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, err
@@ -74,7 +73,7 @@ func (a *mqlAwsGuardduty) getDetectors(conn *connection.AwsConnection) []*jobpoo
 					mqlCluster, err := CreateResource(a.MqlRuntime, "aws.guardduty.detector",
 						map[string]*llx.RawData{
 							"id":     llx.StringData(id),
-							"region": llx.StringData(regionVal),
+							"region": llx.StringData(region),
 						})
 					if err != nil {
 						return nil, err
@@ -227,19 +226,18 @@ func (a *mqlAwsGuardduty) listFindings(conn *connection.AwsConnection, detectorM
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := conn.Guardduty(regionVal)
+			svc := conn.Guardduty(region)
 
 			res := []interface{}{}
-			detectorList := detectorMap[regionVal]
+			detectorList := detectorMap[region]
 			for _, detectorId := range detectorList {
 				params := &guardduty.ListFindingsInput{
 					DetectorId: &detectorId,
 					FindingCriteria: &types.FindingCriteria{
 						Criterion: map[string]types.Condition{
 							"region": {
-								Equals: []string{regionVal},
+								Equals: []string{region},
 							},
 							"service.archived": {
 								Equals: []string{"false"},
@@ -247,7 +245,7 @@ func (a *mqlAwsGuardduty) listFindings(conn *connection.AwsConnection, detectorM
 						},
 					},
 				}
-				findings, err := fetchFindings(svc, detectorId, regionVal, params, a.MqlRuntime)
+				findings, err := fetchFindings(svc, detectorId, region, params, a.MqlRuntime)
 				if err != nil {
 					return nil, err
 				}

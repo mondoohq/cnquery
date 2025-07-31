@@ -56,16 +56,15 @@ func (a *mqlAwsBackup) getVaults(conn *connection.AwsConnection) []*jobpool.Job 
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := conn.Backup(regionVal)
+			svc := conn.Backup(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
 			vaults, err := svc.ListBackupVaults(ctx, &backup.ListBackupVaultsInput{})
 			if err != nil {
 				if Is400AccessDeniedError(err) {
-					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+					log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 					return res, nil
 				}
 				return nil, err
@@ -76,7 +75,7 @@ func (a *mqlAwsBackup) getVaults(conn *connection.AwsConnection) []*jobpool.Job 
 						"arn":              llx.StringDataPtr(v.BackupVaultArn),
 						"name":             llx.StringDataPtr(v.BackupVaultName),
 						"createdAt":        llx.TimeDataPtr(v.CreationDate),
-						"region":           llx.StringData(regionVal),
+						"region":           llx.StringData(region),
 						"locked":           llx.BoolDataPtr(v.Locked),
 						"encryptionKeyArn": llx.StringDataPtr(v.EncryptionKeyArn),
 					})

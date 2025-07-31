@@ -50,9 +50,8 @@ func (a *mqlAwsSagemaker) getEndpoints(conn *connection.AwsConnection) []*jobpoo
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := conn.Sagemaker(regionVal)
+			svc := conn.Sagemaker(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -62,7 +61,7 @@ func (a *mqlAwsSagemaker) getEndpoints(conn *connection.AwsConnection) []*jobpoo
 				endpoints, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, err
@@ -77,7 +76,7 @@ func (a *mqlAwsSagemaker) getEndpoints(conn *connection.AwsConnection) []*jobpoo
 						map[string]*llx.RawData{
 							"arn":    llx.StringDataPtr(endpoint.EndpointArn),
 							"name":   llx.StringDataPtr(endpoint.EndpointName),
-							"region": llx.StringData(regionVal),
+							"region": llx.StringData(region),
 							"tags":   llx.MapData(tags, types.String),
 						})
 					if err != nil {
@@ -134,9 +133,8 @@ func (a *mqlAwsSagemaker) getNotebookInstances(conn *connection.AwsConnection) [
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := conn.Sagemaker(regionVal)
+			svc := conn.Sagemaker(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -146,7 +144,7 @@ func (a *mqlAwsSagemaker) getNotebookInstances(conn *connection.AwsConnection) [
 				notebookInstances, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, err
@@ -160,7 +158,7 @@ func (a *mqlAwsSagemaker) getNotebookInstances(conn *connection.AwsConnection) [
 						map[string]*llx.RawData{
 							"arn":    llx.StringData(convert.ToValue(instance.NotebookInstanceArn)),
 							"name":   llx.StringData(convert.ToValue(instance.NotebookInstanceName)),
-							"region": llx.StringData(regionVal),
+							"region": llx.StringData(region),
 							"tags":   llx.MapData(tags, types.String),
 						})
 					if err != nil {

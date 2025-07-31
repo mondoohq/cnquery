@@ -51,12 +51,11 @@ func (a *mqlAws) getVpcs(conn *connection.AwsConnection) []*jobpool.Job {
 		return []*jobpool.Job{{Err: err}}
 	}
 
-	for i := range regions {
-		regionVal := regions[i]
+	for _, region := range regions {
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("vpc>getVpcs>calling aws with region %s", regionVal)
+			log.Debug().Msgf("vpc>getVpcs>calling aws with region %s", region)
 
-			svc := conn.Ec2(regionVal)
+			svc := conn.Ec2(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -66,7 +65,7 @@ func (a *mqlAws) getVpcs(conn *connection.AwsConnection) []*jobpool.Job {
 				vpcs, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, err
@@ -84,14 +83,14 @@ func (a *mqlAws) getVpcs(conn *connection.AwsConnection) []*jobpool.Job {
 					}
 					mqlVpc, err := CreateResource(a.MqlRuntime, "aws.vpc",
 						map[string]*llx.RawData{
-							"arn":                      llx.StringData(fmt.Sprintf(vpcArnPattern, regionVal, conn.AccountId(), convert.ToValue(vpc.VpcId))),
+							"arn":                      llx.StringData(fmt.Sprintf(vpcArnPattern, region, conn.AccountId(), convert.ToValue(vpc.VpcId))),
 							"cidrBlock":                llx.StringDataPtr(vpc.CidrBlock),
 							"id":                       llx.StringDataPtr(vpc.VpcId),
 							"instanceTenancy":          llx.StringData(string(vpc.InstanceTenancy)),
 							"internetGatewayBlockMode": llx.StringData(string(vpc.BlockPublicAccessStates.InternetGatewayBlockMode)),
 							"isDefault":                llx.BoolData(convert.ToValue(vpc.IsDefault)),
 							"name":                     llx.StringData(name),
-							"region":                   llx.StringData(regionVal),
+							"region":                   llx.StringData(region),
 							"state":                    llx.StringData(string(vpc.State)),
 							"tags":                     llx.MapData(Ec2TagsToMap(vpc.Tags), types.String),
 						})

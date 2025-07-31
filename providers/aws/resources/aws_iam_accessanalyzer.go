@@ -144,13 +144,12 @@ func (a *mqlAwsIamAccessAnalyzer) listFindings(conn *connection.AwsConnection, a
 		return []*jobpool.Job{{Err: err}}
 	}
 
-	for i := range regions {
-		regionVal := regions[i]
+	for _, region := range regions {
 		f := func() (jobpool.JobResult, error) {
-			svc := conn.AccessAnalyzer(regionVal)
+			svc := conn.AccessAnalyzer(region)
 			res := []interface{}{}
 
-			analyzerList := analyzerMap[regionVal]
+			analyzerList := analyzerMap[region]
 			for _, analyzerArn := range analyzerList {
 
 				ctx := context.Background()
@@ -168,10 +167,10 @@ func (a *mqlAwsIamAccessAnalyzer) listFindings(conn *connection.AwsConnection, a
 					findings, err := paginator.NextPage(ctx)
 					if err != nil {
 						if Is400AccessDeniedError(err) {
-							log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+							log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 							return res, nil
 						}
-						log.Error().Err(err).Str("region", regionVal).Msg("error listing analyzers")
+						log.Error().Err(err).Str("region", region).Msg("error listing analyzers")
 						return nil, err
 					}
 					for _, finding := range findings.Findings {
@@ -188,7 +187,7 @@ func (a *mqlAwsIamAccessAnalyzer) listFindings(conn *connection.AwsConnection, a
 								"createdAt":            llx.TimeDataPtr(finding.CreatedAt),
 								"updatedAt":            llx.TimeDataPtr(finding.UpdatedAt),
 								"analyzedAt":           llx.TimeDataPtr(finding.AnalyzedAt),
-								"region":               llx.StringData(regionVal),
+								"region":               llx.StringData(region),
 								"analyzerArn":          llx.StringData(analyzerArn),
 							})
 						if err != nil {

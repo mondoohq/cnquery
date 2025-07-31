@@ -62,15 +62,14 @@ func (a *mqlAwsTimestreamLiveanalytics) getDatabases(conn *connection.AwsConnect
 	}
 
 	for _, region := range regions {
-		regionVal := region
-		if !slices.Contains(timeStreamLiveRegions, regionVal) {
-			log.Debug().Str("region", regionVal).Msg("skipping region since timestream is not available in this region")
+		if !slices.Contains(timeStreamLiveRegions, region) {
+			log.Debug().Str("region", region).Msg("skipping region since timestream is not available in this region")
 			continue
 		}
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("timestream>getDatabases>calling aws with region %s", regionVal)
+			log.Debug().Msgf("timestream>getDatabases>calling aws with region %s", region)
 
-			svc := conn.TimestreamLiveAnalytics(regionVal)
+			svc := conn.TimestreamLiveAnalytics(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -80,7 +79,7 @@ func (a *mqlAwsTimestreamLiveanalytics) getDatabases(conn *connection.AwsConnect
 				resp, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, err
@@ -95,7 +94,7 @@ func (a *mqlAwsTimestreamLiveanalytics) getDatabases(conn *connection.AwsConnect
 							"arn":        llx.StringDataPtr(database.Arn),
 							"name":       llx.StringDataPtr(database.DatabaseName),
 							"kmsKeyId":   llx.StringDataPtr(database.KmsKeyId),
-							"region":     llx.StringData(regionVal),
+							"region":     llx.StringData(region),
 							"createdAt":  llx.TimeDataPtr(database.CreationTime),
 							"updatedAt":  llx.TimeDataPtr(database.LastUpdatedTime),
 							"tableCount": llx.IntData(database.TableCount),

@@ -74,11 +74,10 @@ func (o *mqlOciIdentity) getUsers(conn *connection.OciConnection) []*jobpool.Job
 		return []*jobpool.Job{{Err: err}} // return the error
 	}
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci with region %s", regionVal)
+			log.Debug().Msgf("calling oci with region %s", region)
 
-			svc, err := conn.IdentityClientWithRegion(*regionVal.RegionKey)
+			svc, err := conn.IdentityClientWithRegion(*region.RegionKey)
 			if err != nil {
 				return nil, err
 			}
@@ -400,11 +399,10 @@ func (o *mqlOciIdentity) getGroups(conn *connection.OciConnection) []*jobpool.Jo
 		return []*jobpool.Job{{Err: err}} // return the error
 	}
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci with region %s", regionVal)
+			log.Debug().Msgf("calling oci with region %s", region)
 
-			svc, err := conn.IdentityClientWithRegion(*regionVal.RegionKey)
+			svc, err := conn.IdentityClientWithRegion(*region.RegionKey)
 			if err != nil {
 				return nil, err
 			}
@@ -501,11 +499,10 @@ func (o *mqlOciIdentity) getPolicies(conn *connection.OciConnection) []*jobpool.
 		return []*jobpool.Job{{Err: err}} // return the error
 	}
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci with region %s", regionVal)
+			log.Debug().Msgf("calling oci with region %s", region)
 
-			svc, err := conn.IdentityClientWithRegion(*regionVal.RegionKey)
+			svc, err := conn.IdentityClientWithRegion(*region.RegionKey)
 			if err != nil {
 				return nil, err
 			}

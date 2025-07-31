@@ -203,10 +203,8 @@ func (a *mqlAwsCloudtrailTrail) id() (string, error) {
 }
 
 func (a *mqlAwsCloudtrailTrail) status() (interface{}, error) {
-	regionValue := a.Region.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
-	svc := conn.Cloudtrail(regionValue)
+	svc := conn.Cloudtrail(a.Region.Data)
 	ctx := context.Background()
 
 	arnValue := a.Arn.Data
@@ -223,10 +221,8 @@ func (a *mqlAwsCloudtrailTrail) status() (interface{}, error) {
 }
 
 func (a *mqlAwsCloudtrailTrail) eventSelectors() ([]interface{}, error) {
-	regionValue := a.Region.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
-	svc := conn.Cloudtrail(regionValue)
+	svc := conn.Cloudtrail(a.Region.Data)
 	ctx := context.Background()
 
 	arnValue := a.Arn.Data

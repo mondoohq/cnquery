@@ -56,11 +56,10 @@ func (a *mqlAwsRedshift) getClusters(conn *connection.AwsConnection) []*jobpool.
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("redshift>getClusters>calling aws with region %s", regionVal)
+			log.Debug().Msgf("redshift>getClusters>calling aws with region %s", region)
 
-			svc := conn.Redshift(regionVal)
+			svc := conn.Redshift(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -70,7 +69,7 @@ func (a *mqlAwsRedshift) getClusters(conn *connection.AwsConnection) []*jobpool.
 				clusters, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, err
@@ -83,7 +82,7 @@ func (a *mqlAwsRedshift) getClusters(conn *connection.AwsConnection) []*jobpool.
 					mqlDBInstance, err := CreateResource(a.MqlRuntime, "aws.redshift.cluster",
 						map[string]*llx.RawData{
 							"allowVersionUpgrade":              llx.BoolDataPtr(cluster.AllowVersionUpgrade),
-							"arn":                              llx.StringData(fmt.Sprintf(redshiftClusterArnPattern, regionVal, conn.AccountId(), convert.ToValue(cluster.ClusterIdentifier))),
+							"arn":                              llx.StringData(fmt.Sprintf(redshiftClusterArnPattern, region, conn.AccountId(), convert.ToValue(cluster.ClusterIdentifier))),
 							"automatedSnapshotRetentionPeriod": llx.IntDataDefault(cluster.AutomatedSnapshotRetentionPeriod, 0),
 							"availabilityZone":                 llx.StringDataPtr(cluster.AvailabilityZone),
 							"clusterParameterGroupNames":       llx.ArrayData(names, types.String),
@@ -102,7 +101,7 @@ func (a *mqlAwsRedshift) getClusters(conn *connection.AwsConnection) []*jobpool.
 							"numberOfNodes":                    llx.IntDataDefault(cluster.NumberOfNodes, 0),
 							"preferredMaintenanceWindow":       llx.StringDataPtr(cluster.PreferredMaintenanceWindow),
 							"publiclyAccessible":               llx.BoolDataPtr(cluster.PubliclyAccessible),
-							"region":                           llx.StringData(regionVal),
+							"region":                           llx.StringData(region),
 							"tags":                             llx.MapData(redshiftTagsToMap(cluster.Tags), types.String),
 							"vpcId":                            llx.StringDataPtr(cluster.VpcId),
 						})

@@ -56,9 +56,8 @@ func (a *mqlAwsCloudwatch) getMetrics(conn *connection.AwsConnection) []*jobpool
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := conn.Cloudwatch(regionVal)
+			svc := conn.Cloudwatch(region)
 			ctx := context.Background()
 
 			res := []interface{}{}
@@ -68,7 +67,7 @@ func (a *mqlAwsCloudwatch) getMetrics(conn *connection.AwsConnection) []*jobpool
 				metrics, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, err
@@ -91,7 +90,7 @@ func (a *mqlAwsCloudwatch) getMetrics(conn *connection.AwsConnection) []*jobpool
 						map[string]*llx.RawData{
 							"name":       llx.StringDataPtr(metric.MetricName),
 							"namespace":  llx.StringDataPtr(metric.Namespace),
-							"region":     llx.StringData(regionVal),
+							"region":     llx.StringData(region),
 							"dimensions": llx.ArrayData(dimensions, types.Resource("aws.cloudwatch.metricdimension")),
 						})
 					if err != nil {
@@ -459,9 +458,8 @@ func (a *mqlAwsCloudwatch) getAlarms(conn *connection.AwsConnection) []*jobpool.
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := conn.Cloudwatch(regionVal)
+			svc := conn.Cloudwatch(region)
 			ctx := context.Background()
 
 			res := []interface{}{}
@@ -471,7 +469,7 @@ func (a *mqlAwsCloudwatch) getAlarms(conn *connection.AwsConnection) []*jobpool.
 				alarms, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, err
@@ -483,7 +481,7 @@ func (a *mqlAwsCloudwatch) getAlarms(conn *connection.AwsConnection) []*jobpool.
 						mqlAlarmAction, err := NewResource(a.MqlRuntime, "aws.sns.topic",
 							map[string]*llx.RawData{
 								"arn":    llx.StringData(action),
-								"region": llx.StringData(regionVal),
+								"region": llx.StringData(region),
 							})
 						if err != nil {
 							return nil, err
@@ -495,7 +493,7 @@ func (a *mqlAwsCloudwatch) getAlarms(conn *connection.AwsConnection) []*jobpool.
 						mqlInsuffAction, err := NewResource(a.MqlRuntime, "aws.sns.topic",
 							map[string]*llx.RawData{
 								"arn":    llx.StringData(action),
-								"region": llx.StringData(regionVal),
+								"region": llx.StringData(region),
 							})
 						if err != nil {
 							return nil, err
@@ -508,7 +506,7 @@ func (a *mqlAwsCloudwatch) getAlarms(conn *connection.AwsConnection) []*jobpool.
 						mqlokAction, err := NewResource(a.MqlRuntime, "aws.sns.topic",
 							map[string]*llx.RawData{
 								"arn":    llx.StringData(action),
-								"region": llx.StringData(regionVal),
+								"region": llx.StringData(region),
 							})
 						if err != nil {
 							return nil, err
@@ -521,7 +519,7 @@ func (a *mqlAwsCloudwatch) getAlarms(conn *connection.AwsConnection) []*jobpool.
 							"arn":                     llx.StringDataPtr(alarm.AlarmArn),
 							"metricName":              llx.StringDataPtr(alarm.MetricName),
 							"metricNamespace":         llx.StringDataPtr(alarm.Namespace),
-							"region":                  llx.StringData(regionVal),
+							"region":                  llx.StringData(region),
 							"state":                   llx.StringData(string(alarm.StateValue)),
 							"stateReason":             llx.StringDataPtr(alarm.StateReason),
 							"insufficientDataActions": llx.ArrayData(insuffActions, types.Resource("aws.sns.topic")),
@@ -567,11 +565,10 @@ func (a *mqlAwsCloudwatch) getLogGroups(conn *connection.AwsConnection) []*jobpo
 		return []*jobpool.Job{{Err: err}}
 	}
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("cloudwatch>getLogGroups>calling aws with region %s", regionVal)
+			log.Debug().Msgf("cloudwatch>getLogGroups>calling aws with region %s", region)
 
-			svc := conn.CloudwatchLogs(regionVal)
+			svc := conn.CloudwatchLogs(region)
 			ctx := context.Background()
 
 			params := &cloudwatchlogs.DescribeLogGroupsInput{}
@@ -581,7 +578,7 @@ func (a *mqlAwsCloudwatch) getLogGroups(conn *connection.AwsConnection) []*jobpo
 				logGroups, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, errors.Wrap(err, "could not gather AWS CloudWatch log groups")
@@ -590,7 +587,7 @@ func (a *mqlAwsCloudwatch) getLogGroups(conn *connection.AwsConnection) []*jobpo
 				for _, loggroup := range logGroups.LogGroups {
 					args["arn"] = llx.StringDataPtr(loggroup.Arn)
 					args["name"] = llx.StringDataPtr(loggroup.LogGroupName)
-					args["region"] = llx.StringData(regionVal)
+					args["region"] = llx.StringData(region)
 					args["retentionInDays"] = llx.IntDataDefault(loggroup.RetentionInDays, 0)
 
 					// add kms key if there is one
