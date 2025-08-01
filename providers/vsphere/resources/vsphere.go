@@ -5,6 +5,7 @@ package resources
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25/mo"
@@ -147,7 +148,7 @@ func esxiHostProperties(conn *connection.VsphereConnection) (*object.HostSystem,
 
 		h, err = cl.HostByMoid(moid)
 		if err != nil {
-			return nil, nil, errors.New("could not find the esxi host via platform id: " + identifier)
+			return nil, nil, fmt.Errorf("could not find the esxi host via platform id: %s: %w", identifier, err)
 		}
 	}
 
