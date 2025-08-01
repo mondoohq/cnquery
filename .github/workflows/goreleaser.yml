@@ -157,7 +157,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
-          version: v2.6.1
+          version: v2.6.0
           args: >
             release
             ${{ inputs.goreleaser-snapshot == true && '--snapshot' || '' }}
