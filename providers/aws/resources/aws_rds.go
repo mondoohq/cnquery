@@ -95,11 +95,10 @@ func (a *mqlAwsRds) getClusterParameterGroups(conn *connection.AwsConnection) []
 		return []*jobpool.Job{{Err: err}}
 	}
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("rds>getClusterParameterGroup>calling aws with region %s", regionVal)
+			log.Debug().Msgf("rds>getClusterParameterGroup>calling aws with region %s", region)
 			res := []interface{}{}
-			svc := conn.Rds(regionVal)
+			svc := conn.Rds(region)
 			ctx := context.Background()
 
 			params := &rds.DescribeDBClusterParameterGroupsInput{}
@@ -108,7 +107,7 @@ func (a *mqlAwsRds) getClusterParameterGroups(conn *connection.AwsConnection) []
 				DBClusterParameterGroups, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, err
@@ -152,11 +151,10 @@ func (a *mqlAwsRds) getParameterGroups(conn *connection.AwsConnection) []*jobpoo
 		return []*jobpool.Job{{Err: err}}
 	}
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("rds>getParameterGroup>calling aws with region %s", regionVal)
+			log.Debug().Msgf("rds>getParameterGroup>calling aws with region %s", region)
 			res := []interface{}{}
-			svc := conn.Rds(regionVal)
+			svc := conn.Rds(region)
 			ctx := context.Background()
 
 			params := &rds.DescribeDBParameterGroupsInput{}
@@ -165,7 +163,7 @@ func (a *mqlAwsRds) getParameterGroups(conn *connection.AwsConnection) []*jobpoo
 				dbParameterGroups, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, err
@@ -193,12 +191,11 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("rds>getDbInstances>calling aws with region %s", regionVal)
+			log.Debug().Msgf("rds>getDbInstances>calling aws with region %s", region)
 
 			res := []interface{}{}
-			svc := conn.Rds(regionVal)
+			svc := conn.Rds(region)
 			ctx := context.Background()
 
 			params := &rds.DescribeDBInstancesInput{}
@@ -207,7 +204,7 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 				dbInstances, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, err
@@ -219,7 +216,7 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 						continue
 					}
 
-					mqlDBInstance, err := newMqlAwsRdsInstance(a.MqlRuntime, regionVal, conn.AccountId(), dbInstance)
+					mqlDBInstance, err := newMqlAwsRdsInstance(a.MqlRuntime, region, conn.AccountId(), dbInstance)
 					if err != nil {
 						return nil, err
 					}
@@ -260,12 +257,11 @@ func (a *mqlAwsRds) getPendingMaintenanceActions(conn *connection.AwsConnection)
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("rds>getDbInstances>calling aws with region %s", regionVal)
+			log.Debug().Msgf("rds>getDbInstances>calling aws with region %s", region)
 
 			res := []interface{}{}
-			svc := conn.Rds(regionVal)
+			svc := conn.Rds(region)
 			ctx := context.Background()
 
 			params := &rds.DescribePendingMaintenanceActionsInput{}
@@ -697,12 +693,11 @@ func (a *mqlAwsRds) getDbClusters(conn *connection.AwsConnection) []*jobpool.Job
 		return []*jobpool.Job{{Err: err}}
 	}
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("rds>getDbClusters>calling aws with region %s", regionVal)
+			log.Debug().Msgf("rds>getDbClusters>calling aws with region %s", region)
 
 			res := []interface{}{}
-			svc := conn.Rds(regionVal)
+			svc := conn.Rds(region)
 			ctx := context.Background()
 
 			params := &rds.DescribeDBClustersInput{}
@@ -711,7 +706,7 @@ func (a *mqlAwsRds) getDbClusters(conn *connection.AwsConnection) []*jobpool.Job
 				dbClusters, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, err
@@ -724,7 +719,7 @@ func (a *mqlAwsRds) getDbClusters(conn *connection.AwsConnection) []*jobpool.Job
 						continue
 					}
 
-					mqlDbCluster, err := newMqlAwsRdsCluster(a.MqlRuntime, regionVal, conn.AccountId(), cluster)
+					mqlDbCluster, err := newMqlAwsRdsCluster(a.MqlRuntime, region, conn.AccountId(), cluster)
 					if err != nil {
 						return nil, err
 					}

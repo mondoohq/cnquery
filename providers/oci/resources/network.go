@@ -74,11 +74,10 @@ func (o *mqlOciNetwork) getVcns(conn *connection.OciConnection) []*jobpool.Job {
 		return []*jobpool.Job{{Err: err}} // return the error
 	}
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci with region %s", regionVal)
+			log.Debug().Msgf("calling oci with region %s", region)
 
-			svc, err := conn.NetworkClient(*regionVal.RegionKey)
+			svc, err := conn.NetworkClient(*region.RegionKey)
 			if err != nil {
 				return nil, err
 			}
@@ -216,11 +215,10 @@ func (o *mqlOciNetwork) getSecurityLists(conn *connection.OciConnection) []*jobp
 		return []*jobpool.Job{{Err: err}} // return the error
 	}
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci with region %s", regionVal)
+			log.Debug().Msgf("calling oci with region %s", region)
 
-			svc, err := conn.NetworkClient(*regionVal.RegionKey)
+			svc, err := conn.NetworkClient(*region.RegionKey)
 			if err != nil {
 				return nil, err
 			}

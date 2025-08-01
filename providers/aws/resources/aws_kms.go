@@ -52,11 +52,10 @@ func (a *mqlAwsKms) getKeys(conn *connection.AwsConnection) []*jobpool.Job {
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("kms>getKeys>calling aws with region %s", regionVal)
+			log.Debug().Msgf("kms>getKeys>calling aws with region %s", region)
 
-			svc := conn.Kms(regionVal)
+			svc := conn.Kms(region)
 			res := []interface{}{}
 
 			keys := make([]types.KeyListEntry, 0)
@@ -77,7 +76,7 @@ func (a *mqlAwsKms) getKeys(conn *connection.AwsConnection) []*jobpool.Job {
 					map[string]*llx.RawData{
 						"id":     llx.StringDataPtr(key.KeyId),
 						"arn":    llx.StringDataPtr(key.KeyArn),
-						"region": llx.StringData(regionVal),
+						"region": llx.StringData(region),
 					})
 				if err != nil {
 					return nil, err

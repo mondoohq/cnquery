@@ -50,12 +50,11 @@ func (a *mqlAwsEfs) getFilesystems(conn *connection.AwsConnection) []*jobpool.Jo
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
-	for i := range regions {
-		regionVal := regions[i]
+	for _, region := range regions {
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("efs>getFilesystems>calling aws with region %s", regionVal)
+			log.Debug().Msgf("efs>getFilesystems>calling aws with region %s", region)
 
-			svc := conn.Efs(regionVal)
+			svc := conn.Efs(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -65,7 +64,7 @@ func (a *mqlAwsEfs) getFilesystems(conn *connection.AwsConnection) []*jobpool.Jo
 				describeFileSystemsRes, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, err
@@ -77,7 +76,7 @@ func (a *mqlAwsEfs) getFilesystems(conn *connection.AwsConnection) []*jobpool.Jo
 						"arn":              llx.StringDataPtr(fs.FileSystemArn),
 						"name":             llx.StringDataPtr(fs.Name),
 						"encrypted":        llx.BoolData(convert.ToValue(fs.Encrypted)),
-						"region":           llx.StringData(regionVal),
+						"region":           llx.StringData(region),
 						"availabilityZone": llx.StringDataPtr(fs.AvailabilityZoneName),
 						"createdAt":        llx.TimeDataPtr(fs.CreationTime),
 						"tags":             llx.MapData(efsTagsToMap(fs.Tags), types.String),

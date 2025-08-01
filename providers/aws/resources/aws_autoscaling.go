@@ -130,9 +130,8 @@ func (a *mqlAwsAutoscaling) getGroups(conn *connection.AwsConnection) []*jobpool
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := conn.Autoscaling(regionVal)
+			svc := conn.Autoscaling(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -142,7 +141,7 @@ func (a *mqlAwsAutoscaling) getGroups(conn *connection.AwsConnection) []*jobpool
 				groups, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, err
@@ -174,7 +173,7 @@ func (a *mqlAwsAutoscaling) getGroups(conn *connection.AwsConnection) []*jobpool
 							"maxSize":                 llx.IntDataDefault(group.MaxSize, 0),
 							"minSize":                 llx.IntDataDefault(group.MinSize, 0),
 							"name":                    llx.StringDataPtr(group.AutoScalingGroupName),
-							"region":                  llx.StringData(regionVal),
+							"region":                  llx.StringData(region),
 							"tags":                    llx.MapData(autoscalingTagsToMap(group.Tags), types.String),
 						})
 					if err != nil {
