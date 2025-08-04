@@ -170,7 +170,7 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		if res != nil {
 		  mqlId := res.MqlID()
 			if mqlId == "" {
-			  log.Warn().Msgf("resource %s has no MQL ID defined, this is usually a dev issue with the resource, please open a Github issue", name)
+			  log.Warn().Msgf("resource %s has no MQL ID defined, this is usually a dev issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
 			}
 			id := name + "\x00" + mqlId
 			if x, ok := runtime.Resources.Get(id); ok {
@@ -190,7 +190,7 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 
 	mqlId := res.MqlID()
 	if mqlId == "" {
-		log.Warn().Msgf("resource %s has no MQL ID defined, this is usually a dev issue with the resource, please open a Github issue", name)
+		log.Warn().Msgf("resource %s has no MQL ID defined, this is usually a dev issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
 	}
 	id := name + "\x00" + mqlId
 	if x, ok := runtime.Resources.Get(id); ok {
@@ -217,7 +217,7 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 
 	mqlId := res.MqlID()
 	if mqlId == "" {
-		log.Warn().Msgf("resource %s has no MQL ID defined, this is usually a dev issue with the resource, please open a Github issue", name)
+		log.Warn().Msgf("resource %s has no MQL ID defined, this is usually a dev issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
 	}
 	id := name + "\x00" + mqlId
 	if x, ok := runtime.Resources.Get(id); ok {
