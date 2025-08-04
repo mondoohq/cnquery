@@ -424,6 +424,10 @@ var sles = &PlatformResolver{
 			modules := getActivatedSlesModules(conn)
 			pf.Metadata["suse/modules"] = strings.Join(modules, ",")
 
+			baseproduct := getSlesBaseProduct(conn)
+			if len(baseproduct) > 0 {
+				pf.Metadata["suse/baseproduct"] = baseproduct
+			}
 			return true, nil
 		}
 		return false, nil

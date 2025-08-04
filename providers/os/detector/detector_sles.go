@@ -5,6 +5,8 @@ package detector
 
 import (
 	"encoding/xml"
+	"io"
+	"path"
 	"strings"
 
 	"github.com/spf13/afero"
@@ -63,4 +65,34 @@ func getActivatedSlesModules(conn shared.Connection) []string {
 	}
 
 	return modules
+}
+
+func getSlesBaseProduct(conn shared.Connection) string {
+	fs := conn.FileSystem()
+	linkreader, ok := fs.(afero.LinkReader)
+	var link string
+	if ok {
+		var err error
+		link, err = linkreader.ReadlinkIfPossible("/etc/products.d/baseproduct")
+		if err != nil || link == "" {
+			return ""
+		}
+	} else {
+		cmd, err := conn.RunCommand("readlink /etc/products.d/baseproduct")
+		if err != nil || cmd.ExitStatus != 0 {
+			return ""
+		}
+		lBytes, err := io.ReadAll(cmd.Stdout)
+		if err != nil {
+			return ""
+		}
+		link = strings.TrimSpace(string(lBytes))
+	}
+
+	// Get file name from the symlink
+	name := path.Base(link)
+
+	// trim the ".prod" suffix
+	name = strings.TrimSuffix(name, ".prod")
+	return strings.ToLower(name)
 }
