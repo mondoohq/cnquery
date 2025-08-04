@@ -163,11 +163,11 @@ func init() {
 			Create: createGcpProjectStorageServiceBucketLifecycleRuleCondition,
 		},
 		"gcp.project.sqlService": {
-			// to override args, implement: initGcpProjectSqlService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initGcpProjectSqlService,
 			Create: createGcpProjectSqlService,
 		},
 		"gcp.project.sqlService.instance": {
-			// to override args, implement: initGcpProjectSqlServiceInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initGcpProjectSqlServiceInstance,
 			Create: createGcpProjectSqlServiceInstance,
 		},
 		"gcp.project.sqlService.instance.database": {
@@ -231,7 +231,7 @@ func init() {
 			Create: createGcpProjectDnsService,
 		},
 		"gcp.project.dnsService.managedzone": {
-			// to override args, implement: initGcpProjectDnsServiceManagedzone(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initGcpProjectDnsServiceManagedzone,
 			Create: createGcpProjectDnsServiceManagedzone,
 		},
 		"gcp.project.dnsService.recordset": {
@@ -363,7 +363,7 @@ func init() {
 			Create: createGcpProjectKmsService,
 		},
 		"gcp.project.kmsService.keyring": {
-			// to override args, implement: initGcpProjectKmsServiceKeyring(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initGcpProjectKmsServiceKeyring,
 			Create: createGcpProjectKmsServiceKeyring,
 		},
 		"gcp.project.kmsService.keyring.cryptokey": {
