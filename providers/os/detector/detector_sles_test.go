@@ -143,3 +143,33 @@ func TestGetActivatedSlesModules(t *testing.T) {
 		})
 	}
 }
+
+type mockFsReadLink struct {
+	afero.Fs
+	readLinkIfPossible func(string) (string, error)
+}
+
+func (m *mockFsReadLink) ReadlinkIfPossible(name string) (string, error) {
+	if m.readLinkIfPossible != nil {
+		return m.readLinkIfPossible(name)
+	}
+	return "", afero.ErrFileNotFound
+}
+
+func TestSlesBaseProduct(t *testing.T) {
+	conn := &mockConnection{
+		fs: &mockFsReadLink{
+			Fs: afero.NewMemMapFs(),
+			readLinkIfPossible: func(path string) (string, error) {
+				if path == "/etc/products.d/baseproduct" {
+					return "SUSE_SAP.prod", nil
+				}
+				return "", afero.ErrFileNotFound
+			},
+		},
+	}
+
+	// Test with a valid base product
+	baseProduct := getSlesBaseProduct(conn)
+	assert.Equal(t, "suse_sap", baseProduct)
+}
