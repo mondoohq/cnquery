@@ -645,7 +645,7 @@ func newMqlAwsPendingMaintenanceAction(runtime *plugin.Runtime, resourceArn stri
 			"autoAppliedAfterDate": llx.TimeDataPtr(maintenanceAction.AutoAppliedAfterDate),
 			"currentApplyDate":     llx.TimeDataPtr(maintenanceAction.CurrentApplyDate),
 			"forcedApplyDate":      llx.TimeDataPtr(maintenanceAction.ForcedApplyDate),
-			"optInStatus":          llx.StringDataPtr(maintenanceAction.OptInStatus),
+			"doptInStatus":         llx.StringDataPtr(maintenanceAction.dOptInStatus),
 		})
 	if err != nil {
 		return nil, err
