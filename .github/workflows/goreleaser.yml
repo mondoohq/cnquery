@@ -39,6 +39,7 @@ jobs:
       id-token: 'write'
 
     runs-on: self-hosted
+    environment: prod
     timeout-minutes: 120
     steps:
       - name: Checkout
@@ -89,16 +90,12 @@ jobs:
 # jsign and azure-cli are both requirements for Azure Trusted Signing and these actions to authenticate
 # These packages have been installed on the self-hosted runner using ansible from the private repo
 
-      - name: Log in to Azure for Code Signing
+      - name: Azure login
         uses: azure/login@v2
         with:
-          creds: >-
-            {
-              "clientId": "${{ secrets.TSIGN_AZURE_CLIENT_ID }}",
-              "clientSecret": "${{ secrets.TSIGN_AZURE_CLIENT_SECRET }}",
-              "tenantId": "${{ vars.TSIGN_AZURE_TENANT_ID}}",
-              "subscriptionId": "${{ vars.TSIGN_AZURE_SUBSCRIPTION_ID }}"
-            }
+          client-id: ${{ secrets.TSIGN_AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.TSIGN_AZURE_TENANT_ID}}
+          subscription-id: ${{ vars.TSIGN_AZURE_SUBSCRIPTION_ID }}
 
       - name: Get Azure AD Access Token to trusted signing
         id: get_token
