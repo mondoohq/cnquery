@@ -50,6 +50,61 @@ func initGcpProjectKmsService(runtime *plugin.Runtime, args map[string]*llx.RawD
 	return args, nil, nil
 }
 
+func initGcpProjectKmsServiceKeyring(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 3 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if args == nil {
+			args = make(map[string]*llx.RawData)
+		}
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["location"] = llx.StringData(ids.region)
+			args["projectId"] = llx.StringData(ids.project)
+		} else {
+			return nil, nil, errors.New("no asset identifier found")
+		}
+	}
+
+	// Create the parent KMS service and find the specific keyring
+	obj, err := CreateResource(runtime, "gcp.project.kmsService", map[string]*llx.RawData{
+		"projectId": args["projectId"],
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	kmsSvc := obj.(*mqlGcpProjectKmsService)
+	keyrings := kmsSvc.GetKeyrings()
+	if keyrings.Error != nil {
+		return nil, nil, keyrings.Error
+	}
+
+	// Find the matching keyring
+	for _, kr := range keyrings.Data {
+		keyring := kr.(*mqlGcpProjectKmsServiceKeyring)
+		name := keyring.GetName()
+		if name.Error != nil {
+			return nil, nil, name.Error
+		}
+		location := keyring.GetLocation()
+		if location.Error != nil {
+			return nil, nil, location.Error
+		}
+		projectId := keyring.GetProjectId()
+		if projectId.Error != nil {
+			return nil, nil, projectId.Error
+		}
+
+		if name.Data == args["name"].Value && location.Data == args["location"].Value && projectId.Data == args["projectId"].Value {
+			return args, keyring, nil
+		}
+	}
+
+	return nil, nil, errors.New("KMS keyring not found")
+}
+
 func (g *mqlGcpProject) kms() (*mqlGcpProjectKmsService, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
