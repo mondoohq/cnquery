@@ -52,11 +52,10 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("lambda>getFunctions>calling aws with region %s", regionVal)
+			log.Debug().Msgf("lambda>getFunctions>calling aws with region %s", region)
 
-			svc := conn.Lambda(regionVal)
+			svc := conn.Lambda(region)
 			ctx := context.Background()
 			res := []interface{}{}
 			params := &lambda.ListFunctionsInput{}
@@ -65,7 +64,7 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 				functionsResp, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, errors.Wrap(err, "could not gather aws lambda functions")
@@ -93,7 +92,7 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 							"runtime":      llx.StringData(string(function.Runtime)),
 							"dlqTargetArn": llx.StringData(dlqTarget),
 							"vpcConfig":    llx.MapData(vpcConfigJson, types.Any),
-							"region":       llx.StringData(regionVal),
+							"region":       llx.StringData(region),
 							"tags":         llx.MapData(tags, types.String),
 						})
 					if err != nil {

@@ -53,9 +53,8 @@ func (a *mqlAwsInspector) getCoverage(conn *connection.AwsConnection) []*jobpool
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := conn.Inspector(regionVal)
+			svc := conn.Inspector(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -65,7 +64,7 @@ func (a *mqlAwsInspector) getCoverage(conn *connection.AwsConnection) []*jobpool
 				coverages, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, err
@@ -83,7 +82,7 @@ func (a *mqlAwsInspector) getCoverage(conn *connection.AwsConnection) []*jobpool
 							"statusReason":  llx.StringData(string(coverage.ScanStatus.Reason)),
 							"statusCode":    llx.StringData(string(coverage.ScanStatus.StatusCode)),
 							"scanType":      llx.StringData(string(coverage.ScanType)),
-							"region":        llx.StringData(regionVal),
+							"region":        llx.StringData(region),
 						},
 					)
 					if err != nil {

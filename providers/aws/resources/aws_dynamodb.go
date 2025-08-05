@@ -80,11 +80,10 @@ func (a *mqlAwsDynamodb) getExports(conn *connection.AwsConnection) []*jobpool.J
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("dynamodb>getExports>calling aws with region %s", regionVal)
+			log.Debug().Msgf("dynamodb>getExports>calling aws with region %s", region)
 
-			svc := conn.Dynamodb(regionVal)
+			svc := conn.Dynamodb(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -92,7 +91,7 @@ func (a *mqlAwsDynamodb) getExports(conn *connection.AwsConnection) []*jobpool.J
 			listExportsResp, err := svc.ListExports(ctx, &dynamodb.ListExportsInput{})
 			if err != nil {
 				if Is400AccessDeniedError(err) {
-					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+					log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 					return res, nil
 				}
 				return nil, errors.Wrap(err, "could not gather aws dynamodb exports")
@@ -368,11 +367,10 @@ func (a *mqlAwsDynamodb) getLimits(conn *connection.AwsConnection) []*jobpool.Jo
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("dynamodb>getLimits>calling aws with region %s", regionVal)
+			log.Debug().Msgf("dynamodb>getLimits>calling aws with region %s", region)
 
-			svc := conn.Dynamodb(regionVal)
+			svc := conn.Dynamodb(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -380,7 +378,7 @@ func (a *mqlAwsDynamodb) getLimits(conn *connection.AwsConnection) []*jobpool.Jo
 			limitsResp, err := svc.DescribeLimits(ctx, &dynamodb.DescribeLimitsInput{})
 			if err != nil {
 				if Is400AccessDeniedError(err) {
-					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+					log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 					return res, nil
 				}
 				return nil, errors.Wrap(err, "could not gather aws dynamodb backups")
@@ -388,8 +386,8 @@ func (a *mqlAwsDynamodb) getLimits(conn *connection.AwsConnection) []*jobpool.Jo
 
 			mqlLimits, err := CreateResource(a.MqlRuntime, "aws.dynamodb.limit",
 				map[string]*llx.RawData{
-					"arn":             llx.StringData(fmt.Sprintf(limitsArn, regionVal, conn.AccountId())),
-					"region":          llx.StringData(regionVal),
+					"arn":             llx.StringData(fmt.Sprintf(limitsArn, region, conn.AccountId())),
+					"region":          llx.StringData(region),
 					"accountMaxRead":  llx.IntData(*limitsResp.AccountMaxReadCapacityUnits),
 					"accountMaxWrite": llx.IntData(*limitsResp.AccountMaxWriteCapacityUnits),
 					"tableMaxRead":    llx.IntData(*limitsResp.TableMaxReadCapacityUnits),
@@ -456,11 +454,10 @@ func (a *mqlAwsDynamodb) getTables(conn *connection.AwsConnection) []*jobpool.Jo
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("dynamodb>getTables>calling aws with region %s", regionVal)
+			log.Debug().Msgf("dynamodb>getTables>calling aws with region %s", region)
 
-			svc := conn.Dynamodb(regionVal)
+			svc := conn.Dynamodb(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -468,7 +465,7 @@ func (a *mqlAwsDynamodb) getTables(conn *connection.AwsConnection) []*jobpool.Jo
 			listTablesResp, err := svc.ListTables(ctx, &dynamodb.ListTablesInput{})
 			if err != nil {
 				if Is400AccessDeniedError(err) {
-					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+					log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 					return res, nil
 				}
 				return nil, errors.Wrap(err, "could not gather aws dynamodb tables")
@@ -490,9 +487,9 @@ func (a *mqlAwsDynamodb) getTables(conn *connection.AwsConnection) []*jobpool.Jo
 
 				mqlTable, err := CreateResource(a.MqlRuntime, "aws.dynamodb.table",
 					map[string]*llx.RawData{
-						"arn":                       llx.StringData(fmt.Sprintf(dynamoTableArnPattern, regionVal, conn.AccountId(), tableName)),
+						"arn":                       llx.StringData(fmt.Sprintf(dynamoTableArnPattern, region, conn.AccountId(), tableName)),
 						"name":                      llx.StringData(tableName),
-						"region":                    llx.StringData(regionVal),
+						"region":                    llx.StringData(region),
 						"sseDescription":            llx.DictData(sseDict),
 						"provisionedThroughput":     llx.DictData(throughputDict),
 						"createdTime":               llx.TimeDataPtr(table.Table.CreationDateTime),

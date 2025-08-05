@@ -57,11 +57,10 @@ func (a *mqlAwsApplicationAutoscaling) getTargets(conn *connection.AwsConnection
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("appautoscaling>getTargets>calling aws with region %s", regionVal)
+			log.Debug().Msgf("appautoscaling>getTargets>calling aws with region %s", region)
 
-			svc := conn.ApplicationAutoscaling(regionVal)
+			svc := conn.ApplicationAutoscaling(region)
 			ctx := context.Background()
 
 			res := []interface{}{}
@@ -71,7 +70,7 @@ func (a *mqlAwsApplicationAutoscaling) getTargets(conn *connection.AwsConnection
 				resp, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, errors.Wrap(err, "could not gather application autoscaling scalable targets")
@@ -84,7 +83,7 @@ func (a *mqlAwsApplicationAutoscaling) getTargets(conn *connection.AwsConnection
 					}
 					mqlSTarget, err := CreateResource(a.MqlRuntime, "aws.applicationAutoscaling.target",
 						map[string]*llx.RawData{
-							"arn":               llx.StringData(fmt.Sprintf("arn:aws:application-autoscaling:%s:%s:%s/%s", regionVal, conn.AccountId(), namespace, convert.ToValue(target.ResourceId))),
+							"arn":               llx.StringData(fmt.Sprintf("arn:aws:application-autoscaling:%s:%s:%s/%s", region, conn.AccountId(), namespace, convert.ToValue(target.ResourceId))),
 							"namespace":         llx.StringData(string(target.ServiceNamespace)),
 							"scalableDimension": llx.StringData(string(target.ScalableDimension)),
 							"minCapacity":       llx.IntDataDefault(target.MinCapacity, 0),

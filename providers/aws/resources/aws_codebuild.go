@@ -48,9 +48,8 @@ func (a *mqlAwsCodebuild) getProjects(conn *connection.AwsConnection) []*jobpool
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := conn.Codebuild(regionVal)
+			svc := conn.Codebuild(region)
 			ctx := context.Background()
 
 			res := []interface{}{}
@@ -60,7 +59,7 @@ func (a *mqlAwsCodebuild) getProjects(conn *connection.AwsConnection) []*jobpool
 				projects, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, err
@@ -70,7 +69,7 @@ func (a *mqlAwsCodebuild) getProjects(conn *connection.AwsConnection) []*jobpool
 					mqlProject, err := CreateResource(a.MqlRuntime, "aws.codebuild.project",
 						map[string]*llx.RawData{
 							"name":   llx.StringData(project),
-							"region": llx.StringData(regionVal),
+							"region": llx.StringData(region),
 						})
 					if err != nil {
 						return nil, err
