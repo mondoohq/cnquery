@@ -289,9 +289,6 @@ resources:
     refs:
     - title: Introduction to tables
       url: https://cloud.google.com/bigquery/docs/tables-intro
-    platform:
-      name:
-      - gcp
   gcp.project.binaryAuthorizationControl:
     fields:
       policy: {}

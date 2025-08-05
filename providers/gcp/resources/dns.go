@@ -19,6 +19,56 @@ import (
 	"google.golang.org/api/option"
 )
 
+func initGcpProjectDnsServiceManagedzone(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 3 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if args == nil {
+			args = make(map[string]*llx.RawData)
+		}
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["projectId"] = llx.StringData(ids.project)
+		} else {
+			return nil, nil, errors.New("no asset identifier found")
+		}
+	}
+
+	// Create the parent DNS service and find the specific managed zone
+	obj, err := CreateResource(runtime, "gcp.project.dnsService", map[string]*llx.RawData{
+		"projectId": args["projectId"],
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	dnsSvc := obj.(*mqlGcpProjectDnsService)
+	managedzones := dnsSvc.GetManagedZones()
+	if managedzones.Error != nil {
+		return nil, nil, managedzones.Error
+	}
+
+	// Find the matching managed zone
+	for _, mz := range managedzones.Data {
+		managedzone := mz.(*mqlGcpProjectDnsServiceManagedzone)
+		id := managedzone.GetId()
+		if id.Error != nil {
+			return nil, nil, id.Error
+		}
+		projectId := managedzone.GetProjectId()
+		if projectId.Error != nil {
+			return nil, nil, projectId.Error
+		}
+
+		if id.Data == args["name"].Value && projectId.Data == args["projectId"].Value {
+			return args, managedzone, nil
+		}
+	}
+
+	return nil, nil, errors.New("DNS managed zone not found")
+}
+
 type mqlGcpProjectDnsServiceInternal struct {
 	serviceEnabled bool
 }

@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"go.mondoo.com/cnquery/v11/llx"
@@ -18,6 +19,77 @@ import (
 	"google.golang.org/api/option"
 	"google.golang.org/api/sqladmin/v1"
 )
+
+func initGcpProjectSqlService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 0 {
+		return args, nil, nil
+	}
+
+	conn, ok := runtime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
+
+	projectId := conn.ResourceID()
+	args["projectId"] = llx.StringData(projectId)
+
+	return args, nil, nil
+}
+
+func initGcpProjectSqlServiceInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 3 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if args == nil {
+			args = make(map[string]*llx.RawData)
+		}
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["region"] = llx.StringData(ids.region)
+			args["projectId"] = llx.StringData(ids.project)
+		} else {
+			return nil, nil, errors.New("no asset identifier found")
+		}
+	}
+
+	// Create the parent SQL service and find the specific instance
+	obj, err := CreateResource(runtime, "gcp.project.sqlService", map[string]*llx.RawData{
+		"projectId": args["projectId"],
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	sqlSvc := obj.(*mqlGcpProjectSqlService)
+	instances := sqlSvc.GetInstances()
+	if instances.Error != nil {
+		return nil, nil, instances.Error
+	}
+
+	// Find the matching instance
+	for _, inst := range instances.Data {
+		instance := inst.(*mqlGcpProjectSqlServiceInstance)
+		name := instance.GetName()
+		if name.Error != nil {
+			return nil, nil, name.Error
+		}
+		projectId := instance.GetProjectId()
+		if projectId.Error != nil {
+			return nil, nil, projectId.Error
+		}
+		instanceRegion := instance.GetRegion()
+		if instanceRegion.Error != nil {
+			return nil, nil, instanceRegion.Error
+		}
+
+		if instanceRegion.Data == args["region"].Value && name.Data == args["name"].Value && projectId.Data == args["projectId"].Value {
+			return args, instance, nil
+		}
+	}
+
+	return nil, nil, errors.New("SQL instance not found")
+}
 
 func (g *mqlGcpProjectSqlService) id() (string, error) {
 	if g.ProjectId.Error != nil {
