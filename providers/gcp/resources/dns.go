@@ -52,16 +52,16 @@ func initGcpProjectDnsServiceManagedzone(runtime *plugin.Runtime, args map[strin
 	// Find the matching managed zone
 	for _, mz := range managedzones.Data {
 		managedzone := mz.(*mqlGcpProjectDnsServiceManagedzone)
-		name := managedzone.GetName()
-		if name.Error != nil {
-			return nil, nil, name.Error
+		id := managedzone.GetId()
+		if id.Error != nil {
+			return nil, nil, id.Error
 		}
 		projectId := managedzone.GetProjectId()
 		if projectId.Error != nil {
 			return nil, nil, projectId.Error
 		}
 
-		if name.Data == args["name"].Value && projectId.Data == args["projectId"].Value {
+		if id.Data == args["name"].Value && projectId.Data == args["projectId"].Value {
 			return args, managedzone, nil
 		}
 	}
