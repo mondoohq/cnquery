@@ -45,10 +45,6 @@ func (entry BlockDevice) isNoBootVolume() bool {
 	return entry.Uuid != "" && typ != "" && typ != "vfat" && label != "efi" && label != "boot"
 }
 
-func (entry BlockDevice) isNoBootVolumeAndUnmounted() bool {
-	return entry.isNoBootVolume() && !entry.isMounted()
-}
-
 func (entry BlockDevice) isMounted() bool {
 	return entry.MountPoint != ""
 }

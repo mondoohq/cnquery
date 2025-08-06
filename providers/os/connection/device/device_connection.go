@@ -5,6 +5,7 @@ package device
 
 import (
 	"errors"
+	"maps"
 	"runtime"
 	"slices"
 	"strings"
@@ -85,7 +86,7 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 		return nil, errors.New("device connection> no blocks found, cannot perform a scan")
 	}
 
-	res := &DeviceConnection{
+	deviceConnection := &DeviceConnection{
 		Connection:    plugin.NewConnection(connId, asset),
 		deviceManager: manager,
 		asset:         asset,
@@ -94,7 +95,7 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 	if conf.Options == nil {
 		conf.Options = make(map[string]string)
 	}
-	res.keepMounted = conf.Options[KeepMounted] == "true"
+	deviceConnection.keepMounted = conf.Options[KeepMounted] == "true"
 
 	if len(asset.IdDetector) == 0 {
 		asset.IdDetector = []string{ids.IdDetector_Hostname, ids.IdDetector_SshHostkey}
@@ -107,18 +108,17 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 		asset.IdDetector = append(asset.IdDetector, ids.IdDetector_CloudDetect)
 	}
 
-	res.partitions = make(map[string]*snapshot.PartitionInfo)
+	deviceConnection.partitions = make(map[string]*snapshot.PartitionInfo)
 
 	skipAssetDetection := conf.Options[SkipAssetDetection] == "true"
 
-	// we iterate over all the blocks and try to run OS detection on each one of them
-	// we only return one asset, if we find the right block (e.g. the one with the root FS)
+	// first, iterate over all blocks and mount them, if needed.
 	for _, block := range blocks {
 		log.Debug().
 			Str("name", block.Name).
 			Str("type", block.FsType).
 			Str("mountpoint", block.MountPoint).
-			Msg("trying partition for asset detection")
+			Msg("mounting block device")
 
 		if block.MountPoint == "" {
 			scanDir, err := manager.Mount(block)
@@ -128,31 +128,47 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 			}
 			block.MountPoint = scanDir
 		}
-		if !stringx.Contains(res.MountedDirs, block.MountPoint) {
-			res.MountedDirs = append(res.MountedDirs, block.MountPoint)
+		if !stringx.Contains(deviceConnection.MountedDirs, block.MountPoint) {
+			deviceConnection.MountedDirs = append(deviceConnection.MountedDirs, block.MountPoint)
 		}
 
-		res.partitions[block.MountPoint] = block
+		deviceConnection.partitions[block.RootDir()] = block
+	}
 
-		if skipAssetDetection {
-			log.Debug().Msg("device connection> skipping asset detection as requested")
+	if skipAssetDetection {
+		log.Debug().Msg("device connection> skipping asset detection as requested")
+		return deviceConnection, nil
+	}
+
+	log.Debug().
+		Strs("partitions", slices.Collect(maps.Keys(deviceConnection.partitions))).
+		Strs("mountedDirs", deviceConnection.MountedDirs).
+		Msg("device connection> mounted partitions, proceeding with asset detection")
+
+	// once everything is mounted, we can try and find the correct partition that holds the OS
+	for partition, block := range deviceConnection.partitions {
+		if deviceConnection.FileSystemConnection != nil {
+			log.Debug().Str("partition", block.Name).Msg("device connection> already found a filesystem connection, skipping")
 			continue
 		}
 
-		if fsConn, err := tryDetectAsset(connId, block, conf, asset); err != nil {
-			log.Error().Err(err).Msg("partition did not return an asset, continuing")
-		} else if fsConn != nil {
-			res.FileSystemConnection = fsConn
+		fsConn, err := tryDetectAsset(connId, block, conf, asset)
+		if fsConn != nil {
+			deviceConnection.FileSystemConnection = fsConn
+		}
+		if err != nil {
+			log.Error().Err(err).Str("partition", partition).Msg("partition did not return an asset, continuing")
 		}
 	}
 
 	// if none of the blocks returned a platform that we could detect, we return an error
-	if asset.Platform == nil && !skipAssetDetection {
-		res.Close()
+	if asset.Platform == nil {
+		log.Debug().Msg("device connection> no platform detected, closing device connection")
+		deviceConnection.Close()
 		return nil, errors.New("device connection> no platform detected")
 	}
 
-	return res, nil
+	return deviceConnection, nil
 }
 
 func (c *DeviceConnection) Close() {
@@ -236,8 +252,7 @@ func tryDetectAsset(connId uint32, partition *snapshot.PartitionInfo, conf *inve
 		return nil, errors.New("cannot detect os")
 	}
 
-	log.Debug().Err(err).Msg("device connection> detecting platform from device")
-
+	log.Debug().Str("partition", partition.MountPoint).Str("block", partition.Name).Msg("device connection> detected os from mountpoint")
 	fingerprint, p, err := id.IdentifyPlatform(fsConn, &plugin.ConnectReq{}, p, asset.IdDetector)
 	if err != nil {
 		if len(asset.PlatformIds) == 0 {
@@ -248,7 +263,7 @@ func tryDetectAsset(connId uint32, partition *snapshot.PartitionInfo, conf *inve
 	}
 
 	if p == nil {
-		log.Debug().Msg("device connection> no platform detected")
+		log.Debug().Str("partition", partition.MountPoint).Str("block", partition.Name).Msg("device connection> no platform detected")
 		return nil, errors.New("device connection> no platform detected")
 	}
 
@@ -268,6 +283,7 @@ func tryDetectAsset(connId uint32, partition *snapshot.PartitionInfo, conf *inve
 	// as well as we want to always have some platform to the asset
 	if asset.Platform == nil || !slices.Contains([]string{"", "unknown"}, p.Name) {
 		asset.Platform = p
+		log.Debug().Str("partition", partition.MountPoint).Str("block", partition.Name).Msg("device connection> platform os from mountpoint")
 		return fsConn, nil
 	}
 
