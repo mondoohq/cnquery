@@ -85,8 +85,10 @@ func (d *LinuxDeviceManager) IdentifyMountTargets(opts map[string]string) ([]*sn
 
 	var partitions []*snapshot.PartitionInfo
 	var errs []error
+	mountAll := opts[MountAllPartitions] == "true"
+	includeMounted := opts[IncludeMounted] == "true"
 	for _, deviceName := range deviceNames {
-		partitionsForDevice, err := d.identifyViaDeviceName(deviceName, opts[MountAllPartitions] == "true", opts[IncludeMounted] == "true")
+		partitionsForDevice, err := d.identifyViaDeviceName(deviceName, mountAll, includeMounted)
 		if err != nil {
 			errs = append(errs, err)
 			continue
@@ -117,8 +119,7 @@ func (d *LinuxDeviceManager) attemptExpandPartitions(partitions []*snapshot.Part
 		log.Warn().Err(err).Msg("could not find fstab")
 		return partitions, nil
 	}
-	log.Debug().Any("fstab", fstabEntries).
-		Msg("fstab entries found")
+	log.Debug().Any("fstab", fstabEntries).Msg("fstab entries found")
 
 	partitions, err = d.mountWithFstab(partitions, fstabEntries)
 	if err != nil {
