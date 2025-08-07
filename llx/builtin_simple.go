@@ -94,11 +94,28 @@ func boolOrOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, fLeft
 // boolAndOp behaves like boolOp, but checks if the left argument is false first
 // (and stop if it is). Only then proceeds to check the right argument.
 func boolAndOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, fLeft func(interface{}) bool, fRight func(interface{}) bool) (*RawData, uint64, error) {
+	arg := chunk.Function.Args[0]
+
 	if bind.Value != nil && !fLeft(bind.Value) {
+		// if the left side is false, we can return false immediately
+		// We need to write a nil result for the right side to avoid
+		// it being excecuted, for example to get its data for the
+		// datapoints
+		typ := types.Type(arg.Type)
+		switch typ.Underlying() {
+		case types.Ref:
+			rRef := uint64(bytes2int(arg.Value))
+			e.cache.Store(rRef, &stepCache{
+				Result: &RawData{
+					Type:  typ,
+					Value: nil,
+				},
+			})
+		}
 		return BoolData(false), 0, nil
 	}
 
-	v, dref, err := e.resolveValue(chunk.Function.Args[0], ref)
+	v, dref, err := e.resolveValue(arg, ref)
 	if err != nil {
 		return nil, 0, err
 	}
