@@ -264,7 +264,7 @@ func TryDetectAssetFromPath(connId uint32, path string, conf *inventory.Config, 
 	fingerprint, p, err := id.IdentifyPlatform(fsConn, &plugin.ConnectReq{}, p, asset.IdDetector)
 	if err != nil {
 		if len(asset.PlatformIds) == 0 {
-			log.Debug().Err(err).Msg("device connection> failed to identify platform from device")
+			log.Debug().Str("path", path).Err(err).Msg("device connection> failed to identify platform from path")
 			return nil, err
 		}
 		log.Warn().Err(err).Msg("device connection> cannot detect platform ids, using existing ones")
@@ -273,6 +273,12 @@ func TryDetectAssetFromPath(connId uint32, path string, conf *inventory.Config, 
 	if p == nil {
 		log.Debug().Str("path", path).Msg("device connection> no platform detected")
 		return nil, errors.New("device connection> no platform detected")
+	}
+
+	// even if we get a platform, sometimes its an empty one (e.g. name's empty or unknown)
+	if slices.Contains([]string{"", "unknown"}, p.Name) {
+		log.Debug().Str("path", path).Msg("device connection> platform name is empty, discarding it")
+		return nil, errors.New("device connection> platform found, but empty")
 	}
 
 	if asset.Name == "" && fingerprint != nil {
@@ -286,12 +292,9 @@ func TryDetectAssetFromPath(connId uint32, path string, conf *inventory.Config, 
 
 	asset.Id = conf.Type
 
-	// volumes and partitions without a system on them would return an "unknown" platform
-	// we don't want to overwrite the platform if a "proper" one was detected already
-	// as well as we want to always have some platform to the asset
-	if asset.Platform == nil || !slices.Contains([]string{"", "unknown"}, p.Name) {
+	if asset.Platform == nil {
 		asset.Platform = p
-		log.Debug().Str("path", path).Msg("device connection> platform os from mountpoint")
+		log.Debug().Str("path", path).Msg("device connection> using platform os from mountpoint")
 	}
 
 	return fsConn, nil
