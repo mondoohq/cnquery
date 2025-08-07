@@ -33,6 +33,7 @@ const (
 )
 
 type DeviceConnection struct {
+	// represents the single fs where an asset has been identified
 	*fs.FileSystemConnection
 	plugin.Connection
 	asset         *inventory.Asset
