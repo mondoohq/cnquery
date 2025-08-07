@@ -114,21 +114,26 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 
 	// first, iterate over all blocks and mount them, if needed.
 	for _, block := range blocks {
-		log.Debug().
+		logBuilder := log.Debug().
 			Str("name", block.Name).
 			Str("type", block.FsType).
-			Str("mountpoint", block.MountPoint).
-			Msg("mounting block device")
-
+			Str("mountpoint", block.MountPoint)
 		if block.MountPoint == "" {
+			logBuilder.Msg("device connection> mounting block device")
 			scanDir, err := manager.Mount(block)
 			if err != nil {
 				log.Error().Err(err).Msg("unable to complete mount step")
 				continue
 			}
 			block.MountPoint = scanDir
+		} else {
+			logBuilder.Msg("device connection> already mounted block device")
 		}
 		if !stringx.Contains(deviceConnection.MountedDirs, block.MountPoint) {
+			log.Debug().
+				Str("name", block.Name).
+				Str("mountpoint", block.MountPoint).
+				Msg("device connection> adding mountpoint to mounted dirs")
 			deviceConnection.MountedDirs = append(deviceConnection.MountedDirs, block.MountPoint)
 		}
 
