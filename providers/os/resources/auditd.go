@@ -72,11 +72,23 @@ func (s *mqlAuditdConfig) parse(file *mqlFile) error {
 	defer s.lock.Unlock()
 
 	if file == nil {
-		return errors.New("no base auditd config file to read")
+		// Set empty params for missing config file
+		s.Params.Data = make(map[string]any)
+		s.Params.State = plugin.StateIsSet
+		return nil
 	}
 
 	content := file.GetContent()
 	if content.Error != nil {
+		// Check if this is a "file not found" type error
+		errorMsg := content.Error.Error()
+		if strings.Contains(errorMsg, "no such file") || strings.Contains(errorMsg, "does not exist") {
+			// Handle missing config file gracefully - set empty params
+			s.Params.Data = make(map[string]any)
+			s.Params.State = plugin.StateIsSet
+			return nil
+		}
+		// For other errors (like permission denied), propagate the error
 		return content.Error
 	}
 
@@ -121,7 +133,13 @@ func (s *mqlAuditdConfig) parse(file *mqlFile) error {
 }
 
 func (s *mqlAuditdConfig) params(file *mqlFile) (map[string]any, error) {
-	return nil, s.parse(file)
+	err := s.parse(file)
+	if err != nil {
+		// If parse failed due to other reasons (not missing file), return error
+		return nil, err
+	}
+	// Return the parsed params (which could be empty if file was missing)
+	return s.Params.Data, nil
 }
 
 var auditdDowncaseKeywords = []string{
@@ -169,6 +187,18 @@ func (s *mqlAuditdRules) load(path string) error {
 
 	files, err := getSortedPathFiles(s.MqlRuntime, path)
 	if err != nil {
+		// Check if this is a "directory not found" type error
+		errorMsg := err.Error()
+		if strings.Contains(errorMsg, "no such file") || strings.Contains(errorMsg, "does not exist") {
+			// Handle missing rules directory gracefully - set empty arrays
+			s.Controls = plugin.TValue[[]any]{State: plugin.StateIsSet, Data: []any{}}
+			s.Files = plugin.TValue[[]any]{State: plugin.StateIsSet, Data: []any{}}
+			s.Syscalls = plugin.TValue[[]any]{State: plugin.StateIsSet, Data: []any{}}
+			s.loaded = true
+			s.loadError = nil
+			return nil
+		}
+		// For other errors (like permission denied), propagate the error
 		s.Controls = plugin.TValue[[]any]{State: plugin.StateIsSet, Error: err}
 		s.Files = plugin.TValue[[]any]{State: plugin.StateIsSet, Error: err}
 		s.Syscalls = plugin.TValue[[]any]{State: plugin.StateIsSet, Error: err}
