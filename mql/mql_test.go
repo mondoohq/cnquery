@@ -464,3 +464,17 @@ func TestArrayConcat(t *testing.T) {
 		},
 	})
 }
+
+func TestAndShortCircuiting(t *testing.T) {
+	x := testutils.InitTester(testutils.LinuxMock())
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:        "false && muser.error",
+			Expectation: nil,
+		},
+		{
+			Code:  "true && muser.error",
+			Error: "this is an error from the mockprovider",
+		},
+	})
+}
