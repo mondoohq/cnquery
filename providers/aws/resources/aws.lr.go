@@ -4942,6 +4942,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.eks.cluster.authenticationMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksCluster).GetAuthenticationMode()).ToDataRes(types.String)
 	},
+	"aws.eks.cluster.deletionProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksCluster).GetDeletionProtection()).ToDataRes(types.Bool)
+	},
 	"aws.neptune.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNeptune).GetClusters()).ToDataRes(types.Array(types.Resource("aws.neptune.cluster")))
 	},
@@ -11486,6 +11489,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.eks.cluster.authenticationMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEksCluster).AuthenticationMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eks.cluster.deletionProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksCluster).DeletionProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.neptune.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -29169,6 +29176,7 @@ type mqlAwsEksCluster struct {
 	IamRole plugin.TValue[*mqlAwsIamRole]
 	SupportType plugin.TValue[string]
 	AuthenticationMode plugin.TValue[string]
+	DeletionProtection plugin.TValue[bool]
 }
 
 // createAwsEksCluster creates a new instance of this resource
@@ -29302,6 +29310,10 @@ func (c *mqlAwsEksCluster) GetSupportType() *plugin.TValue[string] {
 
 func (c *mqlAwsEksCluster) GetAuthenticationMode() *plugin.TValue[string] {
 	return &c.AuthenticationMode
+}
+
+func (c *mqlAwsEksCluster) GetDeletionProtection() *plugin.TValue[bool] {
+	return &c.DeletionProtection
 }
 
 // mqlAwsNeptune for the aws.neptune resource

@@ -1615,6 +1615,8 @@ resources:
       authenticationMode:
         min_mondoo_version: 9.0.0
       createdAt: {}
+      deletionProtection:
+        min_mondoo_version: 9.0.0
       encryptionConfig: {}
       endpoint: {}
       iamRole:

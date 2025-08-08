@@ -113,6 +113,7 @@ func (a *mqlAwsEks) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 					"supportType":        llx.StringData(string(cluster.UpgradePolicy.SupportType)),
 					"tags":               llx.MapData(strMapToInterface(cluster.Tags), types.String),
 					"version":            llx.StringDataPtr(cluster.Version),
+					"deletionProtection": llx.BoolDataPtr(cluster.DeletionProtection),
 				}
 
 				if cluster.RoleArn != nil {

@@ -3469,6 +3469,8 @@ aws.eks.cluster @defaults("arn version status") {
   supportType string
   // Cluster authentication mode
   authenticationMode string
+  // Whether deletion protection is enabled or not
+  deletionProtection bool
 }
 
 // Amazon Neptune
