@@ -18,7 +18,15 @@ import (
 
 type mqlK8sCronjobInternal struct {
 	lock sync.Mutex
-	obj  *batchv1.CronJob
+	obj  runtime.Object
+}
+
+func (k *mqlK8sCronjob) getCronJob() (*batchv1.CronJob, error) {
+	cj, ok := k.obj.(*batchv1.CronJob)
+	if ok {
+		return cj, nil
+	}
+	return nil, errors.New("invalid k8s cronjob")
 }
 
 func (k *mqlK8s) cronjobs() ([]interface{}, error) {
@@ -38,11 +46,7 @@ func (k *mqlK8s) cronjobs() ([]interface{}, error) {
 			return nil, err
 		}
 
-		cj, ok := resource.(*batchv1.CronJob)
-		if !ok {
-			return nil, errors.New("not a k8s cronjob")
-		}
-		r.(*mqlK8sCronjob).obj = cj
+		r.(*mqlK8sCronjob).obj = resource
 		return r, nil
 	})
 }
@@ -76,17 +80,35 @@ func initK8sCronjob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 }
 
 func (k *mqlK8sCronjob) annotations() (map[string]interface{}, error) {
-	return convert.MapToInterfaceMap(k.obj.GetAnnotations()), nil
+	// Get the CronJob object
+	cj, err := k.getCronJob()
+	if err != nil {
+		return nil, err
+	}
+	return convert.MapToInterfaceMap(cj.GetAnnotations()), nil
 }
 
 func (k *mqlK8sCronjob) labels() (map[string]interface{}, error) {
-	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
+	cj, err := k.getCronJob()
+	if err != nil {
+		return nil, err
+	}
+	return convert.MapToInterfaceMap(cj.GetLabels()), nil
 }
 
 func (k *mqlK8sCronjob) initContainers() ([]interface{}, error) {
-	return getContainers(k.obj, &k.obj.ObjectMeta, k.MqlRuntime, InitContainerType)
+	// Get the CronJob object
+	cj, err := k.getCronJob()
+	if err != nil {
+		return nil, err
+	}
+	return getContainers(cj, &cj.ObjectMeta, k.MqlRuntime, InitContainerType)
 }
 
 func (k *mqlK8sCronjob) containers() ([]interface{}, error) {
-	return getContainers(k.obj, &k.obj.ObjectMeta, k.MqlRuntime, ContainerContainerType)
+	cj, err := k.getCronJob()
+	if err != nil {
+		return nil, err
+	}
+	return getContainers(cj, &cj.ObjectMeta, k.MqlRuntime, ContainerContainerType)
 }

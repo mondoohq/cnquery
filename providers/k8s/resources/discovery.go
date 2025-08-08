@@ -283,7 +283,12 @@ func discoverPods(
 			continue
 		}
 
-		if PodOwnerReferencesFilter(pod.obj.ObjectMeta.OwnerReferences) {
+		k8sMeta, err := meta.Accessor(pod.obj)
+		if err != nil {
+			continue
+		}
+
+		if PodOwnerReferencesFilter(k8sMeta.GetOwnerReferences()) {
 			continue
 		}
 
@@ -295,7 +300,7 @@ func discoverPods(
 		for k, v := range pod.GetLabels().Data {
 			labels[k] = v.(string)
 		}
-		addMondooAssetLabels(labels, &pod.obj.ObjectMeta, clusterId)
+		addMondooAssetLabels(labels, k8sMeta, clusterId)
 		platform, err := createPlatformData(pod.Kind.Data, conn.Runtime())
 		if err != nil {
 			return nil, err
@@ -347,7 +352,12 @@ func discoverJobs(
 			continue
 		}
 
-		if JobOwnerReferencesFilter(job.obj.ObjectMeta.OwnerReferences) {
+		k8sMeta, err := meta.Accessor(job.obj)
+		if err != nil {
+			continue
+		}
+
+		if JobOwnerReferencesFilter(k8sMeta.GetOwnerReferences()) {
 			continue
 		}
 
@@ -359,7 +369,7 @@ func discoverJobs(
 		for k, v := range job.GetLabels().Data {
 			labels[k] = v.(string)
 		}
-		addMondooAssetLabels(labels, &job.obj.ObjectMeta, clusterId)
+		addMondooAssetLabels(labels, k8sMeta, clusterId)
 		platform, err := createPlatformData(job.Kind.Data, conn.Runtime())
 		if err != nil {
 			return nil, err
@@ -415,11 +425,16 @@ func discoverServices(
 			continue
 		}
 
+		k8sMeta, err := meta.Accessor(serv.obj)
+		if err != nil {
+			continue
+		}
+
 		labels := map[string]string{}
 		for k, v := range serv.GetLabels().Data {
 			labels[k] = v.(string)
 		}
-		addMondooAssetLabels(labels, &serv.obj.ObjectMeta, clusterId)
+		addMondooAssetLabels(labels, k8sMeta, clusterId)
 		platform, err := createPlatformData(serv.Kind.Data, conn.Runtime())
 		if err != nil {
 			return nil, err
@@ -475,11 +490,16 @@ func discoverCronJobs(
 			continue
 		}
 
+		k8sMeta, err := meta.Accessor(cjob.obj)
+		if err != nil {
+			continue
+		}
+
 		labels := map[string]string{}
 		for k, v := range cjob.GetLabels().Data {
 			labels[k] = v.(string)
 		}
-		addMondooAssetLabels(labels, &cjob.obj.ObjectMeta, clusterId)
+		addMondooAssetLabels(labels, k8sMeta, clusterId)
 		platform, err := createPlatformData(cjob.Kind.Data, conn.Runtime())
 		if err != nil {
 			return nil, err
@@ -535,11 +555,16 @@ func discoverStatefulSets(
 			continue
 		}
 
+		k8sMeta, err := meta.Accessor(statefulset.obj)
+		if err != nil {
+			continue
+		}
+
 		labels := map[string]string{}
 		for k, v := range statefulset.GetLabels().Data {
 			labels[k] = v.(string)
 		}
-		addMondooAssetLabels(labels, &statefulset.obj.ObjectMeta, clusterId)
+		addMondooAssetLabels(labels, k8sMeta, clusterId)
 		platform, err := createPlatformData(statefulset.Kind.Data, conn.Runtime())
 		if err != nil {
 			return nil, err
@@ -595,11 +620,16 @@ func discoverDeployments(
 			continue
 		}
 
+		k8sMeta, err := meta.Accessor(deployment.obj)
+		if err != nil {
+			continue
+		}
+
 		labels := map[string]string{}
 		for k, v := range deployment.GetLabels().Data {
 			labels[k] = v.(string)
 		}
-		addMondooAssetLabels(labels, &deployment.obj.ObjectMeta, clusterId)
+		addMondooAssetLabels(labels, k8sMeta, clusterId)
 		platform, err := createPlatformData(deployment.Kind.Data, conn.Runtime())
 		if err != nil {
 			return nil, err
@@ -651,7 +681,12 @@ func discoverReplicaSets(
 			continue
 		}
 
-		if ReplicaSetOwnerReferencesFilter(replicaset.obj.ObjectMeta.OwnerReferences) {
+		k8sMeta, err := meta.Accessor(replicaset.obj)
+		if err != nil {
+			continue
+		}
+
+		if ReplicaSetOwnerReferencesFilter(k8sMeta.GetOwnerReferences()) {
 			continue
 		}
 
@@ -663,7 +698,7 @@ func discoverReplicaSets(
 		for k, v := range replicaset.GetLabels().Data {
 			labels[k] = v.(string)
 		}
-		addMondooAssetLabels(labels, &replicaset.obj.ObjectMeta, clusterId)
+		addMondooAssetLabels(labels, k8sMeta, clusterId)
 		platform, err := createPlatformData(replicaset.Kind.Data, conn.Runtime())
 		if err != nil {
 			return nil, err
@@ -719,11 +754,16 @@ func discoverDaemonSets(
 			continue
 		}
 
+		k8sMeta, err := meta.Accessor(daemonset.obj)
+		if err != nil {
+			continue
+		}
+
 		labels := map[string]string{}
 		for k, v := range daemonset.GetLabels().Data {
 			labels[k] = v.(string)
 		}
-		addMondooAssetLabels(labels, &daemonset.obj.ObjectMeta, clusterId)
+		addMondooAssetLabels(labels, k8sMeta, clusterId)
 		platform, err := createPlatformData(daemonset.Kind.Data, conn.Runtime())
 		if err != nil {
 			return nil, err
@@ -809,11 +849,16 @@ func discoverIngresses(
 			continue
 		}
 
+		k8sMeta, err := meta.Accessor(ingress.obj)
+		if err != nil {
+			continue
+		}
+
 		labels := map[string]string{}
 		for k, v := range ingress.GetLabels().Data {
 			labels[k] = v.(string)
 		}
-		addMondooAssetLabels(labels, &ingress.obj.ObjectMeta, clusterId)
+		addMondooAssetLabels(labels, k8sMeta, clusterId)
 		platform, err := createPlatformData(ingress.Kind.Data, conn.Runtime())
 		if err != nil {
 			return nil, err
@@ -911,7 +956,12 @@ func discoverContainerImages(conn shared.Connection, runtime *plugin.Runtime, in
 			continue
 		}
 
-		podImages := UniqueImagesForPod(*pod.obj, runtime)
+		podObj, err := pod.getPod()
+		if err != nil {
+			continue
+		}
+
+		podImages := UniqueImagesForPod(podObj, runtime)
 		runningImages = types.MergeMaps(runningImages, podImages)
 	}
 

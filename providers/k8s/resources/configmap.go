@@ -18,7 +18,15 @@ import (
 
 type mqlK8sConfigmapInternal struct {
 	lock sync.Mutex
-	obj  *corev1.ConfigMap
+	obj  runtime.Object
+}
+
+func (k *mqlK8sConfigmap) getConfigMap() (*corev1.ConfigMap, error) {
+	cm, ok := k.obj.(*corev1.ConfigMap)
+	if ok {
+		return cm, nil
+	}
+	return nil, errors.New("invalid k8s configmap")
 }
 
 func (k *mqlK8s) configmaps() ([]interface{}, error) {
@@ -65,9 +73,18 @@ func initK8sConfigmap(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 }
 
 func (k *mqlK8sConfigmap) annotations() (map[string]interface{}, error) {
-	return convert.MapToInterfaceMap(k.obj.GetAnnotations()), nil
+	// Get the ConfigMap object
+	cm, err := k.getConfigMap()
+	if err != nil {
+		return nil, err
+	}
+	return convert.MapToInterfaceMap(cm.GetAnnotations()), nil
 }
 
 func (k *mqlK8sConfigmap) labels() (map[string]interface{}, error) {
-	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
+	cm, err := k.getConfigMap()
+	if err != nil {
+		return nil, err
+	}
+	return convert.MapToInterfaceMap(cm.GetLabels()), nil
 }

@@ -18,7 +18,15 @@ import (
 
 type mqlK8sStatefulsetInternal struct {
 	lock sync.Mutex
-	obj  *appsv1.StatefulSet
+	obj  runtime.Object
+}
+
+func (k *mqlK8sStatefulset) getStatefulSet() (*appsv1.StatefulSet, error) {
+	s, ok := k.obj.(*appsv1.StatefulSet)
+	if ok {
+		return s, nil
+	}
+	return nil, errors.New("invalid k8s statefulset")
 }
 
 func (k *mqlK8s) statefulsets() ([]interface{}, error) {
@@ -38,11 +46,7 @@ func (k *mqlK8s) statefulsets() ([]interface{}, error) {
 			return nil, err
 		}
 
-		s, ok := resource.(*appsv1.StatefulSet)
-		if !ok {
-			return nil, errors.New("not a k8s statefulset")
-		}
-		r.(*mqlK8sStatefulset).obj = s
+		r.(*mqlK8sStatefulset).obj = resource
 		return r, nil
 	})
 }
@@ -76,17 +80,33 @@ func initK8sStatefulset(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 }
 
 func (k *mqlK8sStatefulset) annotations() (map[string]interface{}, error) {
-	return convert.MapToInterfaceMap(k.obj.GetAnnotations()), nil
+	s, err := k.getStatefulSet()
+	if err != nil {
+		return nil, err
+	}
+	return convert.MapToInterfaceMap(s.GetAnnotations()), nil
 }
 
 func (k *mqlK8sStatefulset) labels() (map[string]interface{}, error) {
-	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
+	s, err := k.getStatefulSet()
+	if err != nil {
+		return nil, err
+	}
+	return convert.MapToInterfaceMap(s.GetLabels()), nil
 }
 
 func (k *mqlK8sStatefulset) initContainers() ([]interface{}, error) {
-	return getContainers(k.obj, &k.obj.ObjectMeta, k.MqlRuntime, InitContainerType)
+	s, err := k.getStatefulSet()
+	if err != nil {
+		return nil, err
+	}
+	return getContainers(s, &s.ObjectMeta, k.MqlRuntime, InitContainerType)
 }
 
 func (k *mqlK8sStatefulset) containers() ([]interface{}, error) {
-	return getContainers(k.obj, &k.obj.ObjectMeta, k.MqlRuntime, ContainerContainerType)
+	s, err := k.getStatefulSet()
+	if err != nil {
+		return nil, err
+	}
+	return getContainers(s, &s.ObjectMeta, k.MqlRuntime, ContainerContainerType)
 }
