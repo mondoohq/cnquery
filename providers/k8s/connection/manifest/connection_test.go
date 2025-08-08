@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/v11"
 	"go.mondoo.com/cnquery/v11/providers"
@@ -38,7 +39,7 @@ func K8s() *providers.Runtime {
 }
 
 func TestPlatformIDDetectionManifest(t *testing.T) {
-	path := "./testdata/deployment.yaml"
+	path := "./testdata/valid/deployment.yaml"
 
 	runtime := K8s()
 	err := runtime.Connect(&plugin.ConnectReq{
@@ -67,7 +68,7 @@ func TestPlatformIDDetectionManifest(t *testing.T) {
 }
 
 func TestManifestDiscovery(t *testing.T) {
-	path := "./testdata/deployment.yaml"
+	path := "./testdata/valid/deployment.yaml"
 
 	runtime := K8s()
 	rootAsset := &inventory.Asset{
@@ -123,7 +124,7 @@ func TestManifestDiscovery(t *testing.T) {
 }
 
 func TestOperatorManifest(t *testing.T) {
-	path := "./testdata/mondoo-operator-manifests.yaml"
+	path := "./testdata/valid/mondoo-operator-manifests.yaml"
 
 	runtime := K8s()
 	rootAsset := &inventory.Asset{
@@ -180,7 +181,7 @@ func TestOperatorManifest(t *testing.T) {
 }
 
 func TestOperatorManifestWithNamespaceFilter(t *testing.T) {
-	path := "./testdata/mondoo-operator-manifests.yaml"
+	path := "./testdata/valid/mondoo-operator-manifests.yaml"
 
 	runtime := K8s()
 	rootAsset := &inventory.Asset{
@@ -237,7 +238,7 @@ func TestOperatorManifestWithNamespaceFilter(t *testing.T) {
 }
 
 func TestManifestNoObjects(t *testing.T) {
-	path := "./testdata/no-discovered-objects.yaml"
+	path := "./testdata/valid/no-discovered-objects.yaml"
 
 	runtime := K8s()
 	rootAsset := &inventory.Asset{
@@ -283,7 +284,7 @@ func TestManifestNoObjects(t *testing.T) {
 }
 
 func TestManifestDir(t *testing.T) {
-	path := "./testdata/"
+	path := "./testdata/valid"
 
 	runtime := K8s()
 	rootAsset := &inventory.Asset{
@@ -326,4 +327,48 @@ func TestManifestDir(t *testing.T) {
 	require.NotEmpty(t, inv.Spec.Assets[0].PlatformIds[0])
 	// we have the operator deployment twice
 	require.Equal(t, inv.Spec.Assets[3].PlatformIds[0], inv.Spec.Assets[4].PlatformIds[0])
+}
+
+func TestManifest_InvalidManifests(t *testing.T) {
+	path := "./testdata/invalid"
+
+	runtime := K8s()
+	rootAsset := &inventory.Asset{
+		Connections: []*inventory.Config{{
+			Type: "k8s",
+			Options: map[string]string{
+				shared.OPTION_MANIFEST: path,
+			},
+			Discover: &inventory.Discovery{
+				Targets: []string{"auto"},
+			},
+		}},
+	}
+	conn, err := manifest.NewConnection(0, rootAsset, manifest.WithManifestFile(path))
+	require.NoError(t, err)
+
+	err = runtime.Connect(&plugin.ConnectReq{
+		Asset: rootAsset,
+	})
+	require.NoError(t, err)
+
+	pluginRuntime := &plugin.Runtime{
+		Resources:      &syncx.Map[plugin.Resource]{},
+		Connection:     conn,
+		HasRecording:   false,
+		CreateResource: resources.CreateResource,
+	}
+	inv, err := resources.Discover(pluginRuntime, cnquery.Features{})
+	require.NoError(t, err)
+	assert.Len(t, inv.Spec.Assets, 3)
+
+	for i := range inv.Spec.Assets {
+		asset := inv.Spec.Assets[i]
+		err = runtime.Connect(&plugin.ConnectReq{
+			Asset: asset,
+		})
+		require.NoError(t, err)
+		assert.NotEmpty(t, asset.PlatformIds[0])
+	}
+	require.NotEmpty(t, inv.Spec.Assets[0].PlatformIds[0])
 }
