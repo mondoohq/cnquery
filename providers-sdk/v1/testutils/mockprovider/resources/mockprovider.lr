@@ -11,6 +11,7 @@ muser {
   nullstring() string
   groups() []mgroup
   dict() dict
+  error() string
 }
 
 mgroup {
