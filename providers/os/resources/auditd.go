@@ -22,8 +22,7 @@ import (
 )
 
 type mqlAuditdConfigInternal struct {
-	lock       sync.Mutex
-	customPath string // Store custom path when provided during initialization
+	lock sync.Mutex
 }
 
 func initAuditdConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
