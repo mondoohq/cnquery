@@ -32,6 +32,8 @@ func initAuditdConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 			return nil, nil, errors.New("wrong type for 'path' in auditd.config initialization, it must be a string")
 		}
 
+		// Always create the file resource, even if the file doesn't exist
+		// The error handling will happen in the parse() method when content is accessed
 		f, err := CreateResource(runtime, "file", map[string]*llx.RawData{
 			"path": llx.StringData(path),
 		})
@@ -62,6 +64,13 @@ func (s *mqlAuditdConfig) file() (*mqlFile, error) {
 		"path": llx.StringData(defaultAuditdConfig),
 	})
 	if err != nil {
+		// Check if this is a "file not found" type error
+		errorMsg := err.Error()
+		if strings.Contains(errorMsg, "no such file") || strings.Contains(errorMsg, "does not exist") || strings.Contains(errorMsg, "not found") {
+			// For missing files, return nil - parse() method will handle this gracefully
+			return nil, nil
+		}
+		// For other errors (like permission issues), propagate the error
 		return nil, err
 	}
 	return f.(*mqlFile), nil
@@ -72,17 +81,29 @@ func (s *mqlAuditdConfig) parse(file *mqlFile) error {
 	defer s.lock.Unlock()
 
 	if file == nil {
-		return errors.New("no base auditd config file to read")
+		// Set empty params for missing config file
+		s.Params.Data = make(map[string]interface{})
+		s.Params.State = plugin.StateIsSet
+		return nil
 	}
 
 	content := file.GetContent()
 	if content.Error != nil {
+		// Check if this is a "file not found" type error
+		errorMsg := content.Error.Error()
+		if strings.Contains(errorMsg, "no such file") || strings.Contains(errorMsg, "does not exist") || strings.Contains(errorMsg, "not found") {
+			// Handle missing config file gracefully - set empty params
+			s.Params.Data = make(map[string]interface{})
+			s.Params.State = plugin.StateIsSet
+			return nil
+		}
+		// For other errors (like permission denied), propagate the error
 		return content.Error
 	}
 
 	ini := parsers.ParseIni(content.Data, "=")
 
-	res := make(map[string]any, len(ini.Fields))
+	res := make(map[string]interface{}, len(ini.Fields))
 	s.Params.Data = res
 	s.Params.State = plugin.StateIsSet
 
@@ -121,7 +142,13 @@ func (s *mqlAuditdConfig) parse(file *mqlFile) error {
 }
 
 func (s *mqlAuditdConfig) params(file *mqlFile) (map[string]any, error) {
-	return nil, s.parse(file)
+	err := s.parse(file)
+	if err != nil {
+		// If parse failed due to other reasons (not missing file), return error
+		return nil, err
+	}
+	// Return the parsed params (which could be empty if file was missing)
+	return s.Params.Data, nil
 }
 
 var auditdDowncaseKeywords = []string{
@@ -169,6 +196,18 @@ func (s *mqlAuditdRules) load(path string) error {
 
 	files, err := getSortedPathFiles(s.MqlRuntime, path)
 	if err != nil {
+		// Check if this is a "directory not found" type error
+		errorMsg := err.Error()
+		if strings.Contains(errorMsg, "no such file") || strings.Contains(errorMsg, "does not exist") {
+			// Handle missing rules directory gracefully - set empty arrays
+			s.Controls = plugin.TValue[[]any]{State: plugin.StateIsSet, Data: []any{}}
+			s.Files = plugin.TValue[[]any]{State: plugin.StateIsSet, Data: []any{}}
+			s.Syscalls = plugin.TValue[[]any]{State: plugin.StateIsSet, Data: []any{}}
+			s.loaded = true
+			s.loadError = nil
+			return nil
+		}
+		// For other errors (like permission denied), propagate the error
 		s.Controls = plugin.TValue[[]any]{State: plugin.StateIsSet, Error: err}
 		s.Files = plugin.TValue[[]any]{State: plugin.StateIsSet, Error: err}
 		s.Syscalls = plugin.TValue[[]any]{State: plugin.StateIsSet, Error: err}
