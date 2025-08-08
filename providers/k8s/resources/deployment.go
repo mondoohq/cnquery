@@ -18,7 +18,15 @@ import (
 
 type mqlK8sDeploymentInternal struct {
 	lock sync.Mutex
-	obj  *appsv1.Deployment
+	obj  runtime.Object
+}
+
+func (k *mqlK8sDeployment) getDeployment() (*appsv1.Deployment, error) {
+	d, ok := k.obj.(*appsv1.Deployment)
+	if ok {
+		return d, nil
+	}
+	return nil, errors.New("invalid k8s deployment")
 }
 
 func (k *mqlK8s) deployments() ([]interface{}, error) {
@@ -38,11 +46,7 @@ func (k *mqlK8s) deployments() ([]interface{}, error) {
 			return nil, err
 		}
 
-		d, ok := resource.(*appsv1.Deployment)
-		if !ok {
-			return nil, errors.New("not a k8s deployment")
-		}
-		r.(*mqlK8sDeployment).obj = d
+		r.(*mqlK8sDeployment).obj = resource
 		return r, nil
 	})
 }
@@ -76,17 +80,33 @@ func initK8sDeployment(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 }
 
 func (k *mqlK8sDeployment) annotations() (map[string]interface{}, error) {
-	return convert.MapToInterfaceMap(k.obj.GetAnnotations()), nil
+	d, err := k.getDeployment()
+	if err != nil {
+		return nil, err
+	}
+	return convert.MapToInterfaceMap(d.GetAnnotations()), nil
 }
 
 func (k *mqlK8sDeployment) labels() (map[string]interface{}, error) {
-	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
+	d, err := k.getDeployment()
+	if err != nil {
+		return nil, err
+	}
+	return convert.MapToInterfaceMap(d.GetLabels()), nil
 }
 
 func (k *mqlK8sDeployment) initContainers() ([]interface{}, error) {
-	return getContainers(k.obj, &k.obj.ObjectMeta, k.MqlRuntime, InitContainerType)
+	d, err := k.getDeployment()
+	if err != nil {
+		return nil, err
+	}
+	return getContainers(d, &d.ObjectMeta, k.MqlRuntime, InitContainerType)
 }
 
 func (k *mqlK8sDeployment) containers() ([]interface{}, error) {
-	return getContainers(k.obj, &k.obj.ObjectMeta, k.MqlRuntime, ContainerContainerType)
+	d, err := k.getDeployment()
+	if err != nil {
+		return nil, err
+	}
+	return getContainers(d, &d.ObjectMeta, k.MqlRuntime, ContainerContainerType)
 }

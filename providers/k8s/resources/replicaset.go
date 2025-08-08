@@ -18,7 +18,15 @@ import (
 
 type mqlK8sReplicasetInternal struct {
 	lock sync.Mutex
-	obj  *appsv1.ReplicaSet
+	obj  runtime.Object
+}
+
+func (k *mqlK8sReplicaset) getReplicaSet() (*appsv1.ReplicaSet, error) {
+	rs, ok := k.obj.(*appsv1.ReplicaSet)
+	if ok {
+		return rs, nil
+	}
+	return nil, errors.New("invalid k8s replicaset")
 }
 
 func (k *mqlK8s) replicasets() ([]interface{}, error) {
@@ -38,11 +46,7 @@ func (k *mqlK8s) replicasets() ([]interface{}, error) {
 			return nil, err
 		}
 
-		rs, ok := resource.(*appsv1.ReplicaSet)
-		if !ok {
-			return nil, errors.New("not a k8s replicaset")
-		}
-		r.(*mqlK8sReplicaset).obj = rs
+		r.(*mqlK8sReplicaset).obj = resource
 		return r, nil
 	})
 }
@@ -76,17 +80,33 @@ func initK8sReplicaset(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 }
 
 func (k *mqlK8sReplicaset) annotations() (map[string]interface{}, error) {
-	return convert.MapToInterfaceMap(k.obj.GetAnnotations()), nil
+	rs, err := k.getReplicaSet()
+	if err != nil {
+		return nil, err
+	}
+	return convert.MapToInterfaceMap(rs.GetAnnotations()), nil
 }
 
 func (k *mqlK8sReplicaset) labels() (map[string]interface{}, error) {
-	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
+	rs, err := k.getReplicaSet()
+	if err != nil {
+		return nil, err
+	}
+	return convert.MapToInterfaceMap(rs.GetLabels()), nil
 }
 
 func (k *mqlK8sReplicaset) initContainers() ([]interface{}, error) {
-	return getContainers(k.obj, &k.obj.ObjectMeta, k.MqlRuntime, InitContainerType)
+	rs, err := k.getReplicaSet()
+	if err != nil {
+		return nil, err
+	}
+	return getContainers(rs, &rs.ObjectMeta, k.MqlRuntime, InitContainerType)
 }
 
 func (k *mqlK8sReplicaset) containers() ([]interface{}, error) {
-	return getContainers(k.obj, &k.obj.ObjectMeta, k.MqlRuntime, ContainerContainerType)
+	rs, err := k.getReplicaSet()
+	if err != nil {
+		return nil, err
+	}
+	return getContainers(rs, &rs.ObjectMeta, k.MqlRuntime, ContainerContainerType)
 }

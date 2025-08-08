@@ -17,16 +17,20 @@ import (
 
 type mqlK8sServiceInternal struct {
 	lock sync.Mutex
-	obj  *corev1.Service
+	obj  runtime.Object
+}
+
+func (k *mqlK8sService) getService() (*corev1.Service, error) {
+	s, ok := k.obj.(*corev1.Service)
+	if ok {
+		return s, nil
+	}
+	return nil, errors.New("invalid k8s service")
 }
 
 func (k *mqlK8s) services() ([]interface{}, error) {
 	return k8sResourceToMql(k.MqlRuntime, gvkString(corev1.SchemeGroupVersion.WithKind("services")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
-		srv, ok := resource.(*corev1.Service)
-		if !ok {
-			return nil, errors.New("not a k8s service")
-		}
 
 		r, err := CreateResource(k.MqlRuntime, "k8s.service", map[string]*llx.RawData{
 			"id":              llx.StringData(objIdFromK8sObj(obj, objT)),
@@ -40,7 +44,7 @@ func (k *mqlK8s) services() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		r.(*mqlK8sService).obj = srv
+		r.(*mqlK8sService).obj = resource
 		return r, nil
 	})
 }
@@ -54,7 +58,11 @@ func (k *mqlK8sService) manifest() (map[string]interface{}, error) {
 }
 
 func (k *mqlK8sService) spec() (map[string]interface{}, error) {
-	dict, err := convert.JsonToDict(k.obj.Spec)
+	s, err := k.getService()
+	if err != nil {
+		return nil, err
+	}
+	dict, err := convert.JsonToDict(s.Spec)
 	if err != nil {
 		return nil, err
 	}
@@ -70,9 +78,17 @@ func initK8sService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 }
 
 func (k *mqlK8sService) annotations() (map[string]interface{}, error) {
-	return convert.MapToInterfaceMap(k.obj.GetAnnotations()), nil
+	s, err := k.getService()
+	if err != nil {
+		return nil, err
+	}
+	return convert.MapToInterfaceMap(s.GetAnnotations()), nil
 }
 
 func (k *mqlK8sService) labels() (map[string]interface{}, error) {
-	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
+	s, err := k.getService()
+	if err != nil {
+		return nil, err
+	}
+	return convert.MapToInterfaceMap(s.GetLabels()), nil
 }
