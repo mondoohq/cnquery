@@ -9,6 +9,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/types"
@@ -101,7 +102,11 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		}
 
 		if res != nil {
-			id := name+"\x00"+res.MqlID()
+			mqlId := res.MqlID()
+			if mqlId == "" {
+			  log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+			}
+			id := name + "\x00" + mqlId
 			if x, ok := runtime.Resources.Get(id); ok {
 				return x, nil
 			}
@@ -117,7 +122,11 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		return nil, err
 	}
 
-	id := name+"\x00"+res.MqlID()
+	mqlId := res.MqlID()
+	if mqlId == "" {
+		log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+	}
+	id := name + "\x00" + mqlId
 	if x, ok := runtime.Resources.Get(id); ok {
 		return x, nil
 	}
@@ -140,7 +149,11 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 		return nil, err
 	}
 
-	id := name+"\x00"+res.MqlID()
+	mqlId := res.MqlID()
+	if mqlId == "" {
+		log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+	}
+	id := name + "\x00" + mqlId
 	if x, ok := runtime.Resources.Get(id); ok {
 		return x, nil
 	}

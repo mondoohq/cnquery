@@ -168,7 +168,7 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		}
 
 		if res != nil {
-		  mqlId := res.MqlID()
+			mqlId := res.MqlID()
 			if mqlId == "" {
 			  log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
 			}
