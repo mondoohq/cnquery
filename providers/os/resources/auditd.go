@@ -7,6 +7,7 @@ package resources
 import (
 	"errors"
 	"fmt"
+	"os"
 	"regexp"
 	"slices"
 	"strings"
@@ -64,6 +65,13 @@ func (s *mqlAuditdConfig) file() (*mqlFile, error) {
 		"path": llx.StringData(defaultAuditdConfig),
 	})
 	if err != nil {
+		// Check if this is a "file not found" type error
+		// errorMsg := err.Error()
+		if errors.Is(err, os.ErrNotExist) {
+			// For missing files, return nil - parse() method will handle this gracefully
+			return nil, nil
+		}
+		// For other errors (like permission issues), propagate the error
 		return nil, err
 	}
 	return f.(*mqlFile), nil
@@ -83,8 +91,8 @@ func (s *mqlAuditdConfig) parse(file *mqlFile) error {
 	content := file.GetContent()
 	if content.Error != nil {
 		// Check if this is a "file not found" type error
-		errorMsg := content.Error.Error()
-		if strings.Contains(errorMsg, "no such file") || strings.Contains(errorMsg, "does not exist") || strings.Contains(errorMsg, "not found") {
+		// errorMsg := content.Error.Error()
+		if errors.Is(content.Error, os.ErrNotExist) {
 			// Handle missing config file gracefully - set empty params
 			s.Params.Data = make(map[string]interface{})
 			s.Params.State = plugin.StateIsSet
