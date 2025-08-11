@@ -18,7 +18,15 @@ import (
 
 type mqlK8sPodInternal struct {
 	lock sync.Mutex
-	obj  *corev1.Pod
+	obj  runtime.Object
+}
+
+func (k *mqlK8sPod) getPod() (*corev1.Pod, error) {
+	p, ok := k.obj.(*corev1.Pod)
+	if ok {
+		return p, nil
+	}
+	return nil, errors.New("invalid k8s pod")
 }
 
 func (k *mqlK8s) pods() ([]interface{}, error) {
@@ -39,11 +47,7 @@ func (k *mqlK8s) pods() ([]interface{}, error) {
 			return nil, err
 		}
 
-		p, ok := resource.(*corev1.Pod)
-		if !ok {
-			return nil, errors.New("not a k8s pod")
-		}
-		r.(*mqlK8sPod).obj = p
+		r.(*mqlK8sPod).obj = resource
 		return r, nil
 	})
 }
@@ -57,7 +61,11 @@ func (k *mqlK8sPod) manifest() (map[string]interface{}, error) {
 }
 
 func (k *mqlK8sPod) podSpec() (map[string]interface{}, error) {
-	podSpec, err := resources.GetPodSpec(k.obj)
+	pod, err := k.getPod()
+	if err != nil {
+		return nil, err
+	}
+	podSpec, err := resources.GetPodSpec(pod)
 	if err != nil {
 		return nil, err
 	}
@@ -77,27 +85,51 @@ func initK8sPod(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 }
 
 func (k *mqlK8sPod) initContainers() ([]interface{}, error) {
-	return getContainers(k.obj, &k.obj.ObjectMeta, k.MqlRuntime, InitContainerType)
+	pod, err := k.getPod()
+	if err != nil {
+		return nil, err
+	}
+	return getContainers(pod, &pod.ObjectMeta, k.MqlRuntime, InitContainerType)
 }
 
 func (k *mqlK8sPod) ephemeralContainers() ([]interface{}, error) {
-	return getContainers(k.obj, &k.obj.ObjectMeta, k.MqlRuntime, EphemeralContainerType)
+	pod, err := k.getPod()
+	if err != nil {
+		return nil, err
+	}
+	return getContainers(pod, &pod.ObjectMeta, k.MqlRuntime, EphemeralContainerType)
 }
 
 func (k *mqlK8sPod) containers() ([]interface{}, error) {
-	return getContainers(k.obj, &k.obj.ObjectMeta, k.MqlRuntime, ContainerContainerType)
+	pod, err := k.getPod()
+	if err != nil {
+		return nil, err
+	}
+	return getContainers(pod, &pod.ObjectMeta, k.MqlRuntime, ContainerContainerType)
 }
 
 func (k *mqlK8sPod) annotations() (map[string]interface{}, error) {
-	return convert.MapToInterfaceMap(k.obj.GetAnnotations()), nil
+	pod, err := k.getPod()
+	if err != nil {
+		return nil, err
+	}
+	return convert.MapToInterfaceMap(pod.GetAnnotations()), nil
 }
 
 func (k *mqlK8sPod) labels() (map[string]interface{}, error) {
-	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
+	pod, err := k.getPod()
+	if err != nil {
+		return nil, err
+	}
+	return convert.MapToInterfaceMap(pod.GetLabels()), nil
 }
 
 func (k *mqlK8sPod) node() (*mqlK8sNode, error) {
-	podSpec, err := resources.GetPodSpec(k.obj)
+	pod, err := k.getPod()
+	if err != nil {
+		return nil, err
+	}
+	podSpec, err := resources.GetPodSpec(pod)
 	if err != nil {
 		return nil, err
 	}

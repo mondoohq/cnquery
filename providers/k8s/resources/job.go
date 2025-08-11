@@ -18,7 +18,15 @@ import (
 
 type mqlK8sJobInternal struct {
 	lock sync.Mutex
-	obj  *batchv1.Job
+	obj  runtime.Object
+}
+
+func (k *mqlK8sJob) getJob() (*batchv1.Job, error) {
+	j, ok := k.obj.(*batchv1.Job)
+	if ok {
+		return j, nil
+	}
+	return nil, errors.New("invalid k8s job")
 }
 
 func (k *mqlK8s) jobs() ([]interface{}, error) {
@@ -38,11 +46,7 @@ func (k *mqlK8s) jobs() ([]interface{}, error) {
 			return nil, err
 		}
 
-		j, ok := resource.(*batchv1.Job)
-		if !ok {
-			return nil, errors.New("not a k8s job")
-		}
-		r.(*mqlK8sJob).obj = j
+		r.(*mqlK8sJob).obj = resource
 		return r, nil
 	})
 }
@@ -76,17 +80,33 @@ func initK8sJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 }
 
 func (k *mqlK8sJob) annotations() (map[string]interface{}, error) {
-	return convert.MapToInterfaceMap(k.obj.GetAnnotations()), nil
+	j, err := k.getJob()
+	if err != nil {
+		return nil, err
+	}
+	return convert.MapToInterfaceMap(j.GetAnnotations()), nil
 }
 
 func (k *mqlK8sJob) labels() (map[string]interface{}, error) {
-	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
+	j, err := k.getJob()
+	if err != nil {
+		return nil, err
+	}
+	return convert.MapToInterfaceMap(j.GetLabels()), nil
 }
 
 func (k *mqlK8sJob) initContainers() ([]interface{}, error) {
-	return getContainers(k.obj, &k.obj.ObjectMeta, k.MqlRuntime, InitContainerType)
+	j, err := k.getJob()
+	if err != nil {
+		return nil, err
+	}
+	return getContainers(j, &j.ObjectMeta, k.MqlRuntime, InitContainerType)
 }
 
 func (k *mqlK8sJob) containers() ([]interface{}, error) {
-	return getContainers(k.obj, &k.obj.ObjectMeta, k.MqlRuntime, ContainerContainerType)
+	j, err := k.getJob()
+	if err != nil {
+		return nil, err
+	}
+	return getContainers(j, &j.ObjectMeta, k.MqlRuntime, ContainerContainerType)
 }

@@ -55,7 +55,7 @@ func ResolveContainerImageFromStatus(containerStatus v1.ContainerStatus) (string
 
 // UniqueImagesForPod returns the unique container images for a pod. Images are compared based on their digest
 // if that is available in the pod status. If there is no pod status set, the container image tag is used.
-func UniqueImagesForPod(pod v1.Pod, runtime *plugin.Runtime) map[string]ContainerImage {
+func UniqueImagesForPod(pod *v1.Pod, runtime *plugin.Runtime) map[string]ContainerImage {
 	imagesSet := make(map[string]ContainerImage)
 
 	pullSecrets := make([]v1.Secret, 0, len(pod.Spec.ImagePullSecrets))

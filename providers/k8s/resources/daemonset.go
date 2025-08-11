@@ -18,7 +18,15 @@ import (
 
 type mqlK8sDaemonsetInternal struct {
 	lock sync.Mutex
-	obj  *appsv1.DaemonSet
+	obj  runtime.Object
+}
+
+func (k *mqlK8sDaemonset) getDaemonSet() (*appsv1.DaemonSet, error) {
+	ds, ok := k.obj.(*appsv1.DaemonSet)
+	if ok {
+		return ds, nil
+	}
+	return nil, errors.New("invalid k8s daemonset")
 }
 
 func (k *mqlK8s) daemonsets() ([]interface{}, error) {
@@ -38,11 +46,7 @@ func (k *mqlK8s) daemonsets() ([]interface{}, error) {
 			return nil, err
 		}
 
-		d, ok := resource.(*appsv1.DaemonSet)
-		if !ok {
-			return nil, errors.New("not a k8s daemonset")
-		}
-		r.(*mqlK8sDaemonset).obj = d
+		r.(*mqlK8sDaemonset).obj = resource
 		return r, nil
 	})
 }
@@ -76,17 +80,33 @@ func initK8sDaemonset(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 }
 
 func (k *mqlK8sDaemonset) annotations() (map[string]interface{}, error) {
-	return convert.MapToInterfaceMap(k.obj.GetAnnotations()), nil
+	ds, err := k.getDaemonSet()
+	if err != nil {
+		return nil, err
+	}
+	return convert.MapToInterfaceMap(ds.GetAnnotations()), nil
 }
 
 func (k *mqlK8sDaemonset) labels() (map[string]interface{}, error) {
-	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
+	ds, err := k.getDaemonSet()
+	if err != nil {
+		return nil, err
+	}
+	return convert.MapToInterfaceMap(ds.GetLabels()), nil
 }
 
 func (k *mqlK8sDaemonset) initContainers() ([]interface{}, error) {
-	return getContainers(k.obj, &k.obj.ObjectMeta, k.MqlRuntime, InitContainerType)
+	ds, err := k.getDaemonSet()
+	if err != nil {
+		return nil, err
+	}
+	return getContainers(ds, &ds.ObjectMeta, k.MqlRuntime, InitContainerType)
 }
 
 func (k *mqlK8sDaemonset) containers() ([]interface{}, error) {
-	return getContainers(k.obj, &k.obj.ObjectMeta, k.MqlRuntime, ContainerContainerType)
+	ds, err := k.getDaemonSet()
+	if err != nil {
+		return nil, err
+	}
+	return getContainers(ds, &ds.ObjectMeta, k.MqlRuntime, ContainerContainerType)
 }

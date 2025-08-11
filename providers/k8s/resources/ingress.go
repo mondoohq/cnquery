@@ -21,8 +21,16 @@ import (
 
 type mqlK8sIngressInternal struct {
 	lock  sync.Mutex
-	obj   *networkingv1.Ingress
+	obj   runtime.Object
 	objId string
+}
+
+func (k *mqlK8sIngress) getIngress() (*networkingv1.Ingress, error) {
+	ing, ok := k.obj.(*networkingv1.Ingress)
+	if ok {
+		return ing, nil
+	}
+	return nil, errors.New("invalid k8s ingress")
 }
 
 func (k *mqlK8s) ingresses() ([]interface{}, error) {
@@ -67,7 +75,11 @@ func (k *mqlK8sIngress) tls() ([]interface{}, error) {
 	}
 	k8s := o.(*mqlK8s)
 
-	tls, err := getTLS(k.obj, k.objId, k.MqlRuntime, k8s.GetSecrets)
+	ing, err := k.getIngress()
+	if err != nil {
+		return nil, err
+	}
+	tls, err := getTLS(ing, k.objId, k.MqlRuntime, k8s.GetSecrets)
 	if err != nil {
 		return nil, err
 	}
@@ -92,11 +104,19 @@ func initK8sIngress(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 }
 
 func (k *mqlK8sIngress) annotations() (map[string]interface{}, error) {
-	return convert.MapToInterfaceMap(k.obj.GetAnnotations()), nil
+	ing, err := k.getIngress()
+	if err != nil {
+		return nil, err
+	}
+	return convert.MapToInterfaceMap(ing.GetAnnotations()), nil
 }
 
 func (k *mqlK8sIngress) labels() (map[string]interface{}, error) {
-	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
+	ing, err := k.getIngress()
+	if err != nil {
+		return nil, err
+	}
+	return convert.MapToInterfaceMap(ing.GetLabels()), nil
 }
 
 func buildRules(ingress *networkingv1.Ingress, objId string, runtime *plugin.Runtime) ([]interface{}, error) {
