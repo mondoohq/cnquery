@@ -338,3 +338,102 @@ func TestFindAndUpdateMsSqlHotfixes(t *testing.T) {
 	require.Equal(t, "1.0.0", pkg.Version, "expected non-SQL Server package to remain unchanged")
 	assert.Equal(t, "pkg:windows/windows/Not%20a%20hotfix@1.0.0?arch=x86", pkg.PUrl)
 }
+
+func TestGetDotNetFrameworkPackageFromRegistryKeyItems(t *testing.T) {
+	platform := &inventory.Platform{
+		Name:    "windows",
+		Version: "19041",
+		Arch:    "x86_64",
+		Family:  []string{"windows"},
+	}
+
+	t.Run("with version and install location", func(t *testing.T) {
+		// Create mock registry items for .NET Framework 4.8
+		items := []registry.RegistryKeyItem{
+			{
+				Key: "Version",
+				Value: registry.RegistryKeyValue{
+					Kind:   registry.SZ,
+					String: "4.8.04084.0",
+				},
+			},
+			{
+				Key: "InstallLocation",
+				Value: registry.RegistryKeyValue{
+					Kind:   registry.SZ,
+					String: "C:\\Windows\\Microsoft.NET\\Framework64\\v4.8.04084\\",
+				},
+			},
+		}
+
+		pkg := getDotNetFrameworkPackageFromRegistryKeyItems(items, platform)
+		require.NotNil(t, pkg, "expected package to be created")
+
+		assert.Equal(t, "Microsoft .NET Framework", pkg.Name)
+		assert.Equal(t, "4.8.04084.0", pkg.Version)
+		assert.Equal(t, "windows/app", pkg.Format)
+		assert.Equal(t, "x86_64", pkg.Arch)
+		assert.Equal(t, "Microsoft", pkg.Vendor)
+		assert.Equal(t, "pkg:windows/windows/Microsoft%20.NET%20Framework@4.8.04084.0?arch=x86_64", pkg.PUrl)
+		assert.Len(t, pkg.Files, 1)
+		assert.Equal(t, "C:\\Windows\\Microsoft.NET\\Framework64\\v4.8.04084\\", pkg.Files[0].Path)
+		assert.Equal(t, PkgFilesIncluded, pkg.FilesAvailable)
+
+		// Verify CPE generation
+		require.Len(t, pkg.CPEs, 2, "expected 2 CPE entries")
+		expectedCPEs := []string{
+			"cpe:2.3:a:microsoft:microsoft_.net_framework:4.8.04084.0:*:*:*:*:*:*:*",
+			"cpe:2.3:a:microsoft:microsoft_.net_framework:4.8.04084:*:*:*:*:*:*:*",
+		}
+		assert.ElementsMatch(t, expectedCPEs, pkg.CPEs)
+	})
+
+	t.Run("with .NET 3.5 version", func(t *testing.T) {
+		// Create mock registry items for .NET Framework 3.5
+		items := []registry.RegistryKeyItem{
+			{
+				Key: "Version",
+				Value: registry.RegistryKeyValue{
+					Kind:   registry.SZ,
+					String: "3.5.30729.4926",
+				},
+			},
+			{
+				Key: "InstallLocation",
+				Value: registry.RegistryKeyValue{
+					Kind:   registry.SZ,
+					String: "C:\\Windows\\Microsoft.NET\\Framework\\v3.5\\",
+				},
+			},
+		}
+
+		pkg := getDotNetFrameworkPackageFromRegistryKeyItems(items, platform)
+		require.NotNil(t, pkg, "expected package to be created")
+
+		assert.Equal(t, "Microsoft .NET Framework", pkg.Name)
+		assert.Equal(t, "3.5.30729.4926", pkg.Version)
+		assert.Equal(t, "windows/app", pkg.Format)
+		assert.Equal(t, "x86_64", pkg.Arch)
+		assert.Equal(t, "Microsoft", pkg.Vendor)
+		assert.Equal(t, "pkg:windows/windows/Microsoft%20.NET%20Framework@3.5.30729.4926?arch=x86_64", pkg.PUrl)
+		assert.Len(t, pkg.Files, 1)
+		assert.Equal(t, "C:\\Windows\\Microsoft.NET\\Framework\\v3.5\\", pkg.Files[0].Path)
+		assert.Equal(t, PkgFilesIncluded, pkg.FilesAvailable)
+
+		// Verify CPE generation
+		require.Len(t, pkg.CPEs, 2, "expected 2 CPE entries")
+		expectedCPEs := []string{
+			"cpe:2.3:a:microsoft:microsoft_.net_framework:3.5.30729.4926:*:*:*:*:*:*:*",
+			"cpe:2.3:a:microsoft:microsoft_.net_framework:3.5.30729:*:*:*:*:*:*:*",
+		}
+		assert.ElementsMatch(t, expectedCPEs, pkg.CPEs)
+	})
+
+	t.Run("with empty items", func(t *testing.T) {
+		// Create empty registry items
+		items := []registry.RegistryKeyItem{}
+
+		pkg := getDotNetFrameworkPackageFromRegistryKeyItems(items, platform)
+		assert.Nil(t, pkg, "expected no package when no items are provided")
+	})
+}
