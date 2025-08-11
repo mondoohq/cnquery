@@ -68,9 +68,10 @@ build_bundle(){
   if [[ "${GOOS}" == "windows" ]]; then
     ### SIGN THE BINARY
     echo "  - Signing the binary ${PROVIDER_DIST}/${PROVIDER_EXECUTABLE}..."
-    jsign --storetype DIGICERTONE --alias "${SM_CERT_ALIAS}" \
-          --storepass "${SM_API_KEY}|${SM_CLIENT_CERT_FILE}|${SM_CLIENT_CERT_PASSWORD}" \
-          --tsaurl "http://timestamp.digicert.com"  ${PROVIDER_DIST}/${PROVIDER_EXECUTABLE}
+    jsign --storetype TRUSTEDSIGNING \
+          --keystore "${TSIGN_AZURE_ENDPOINT}" \
+          --storepass "${TSIGN_ACCESS_TOKEN}" \
+          --alias "${TSIGN_ACCOUNT_NAME}/${TSIGN_CERT_PROFILE_NAME}" "${PROVIDER_DIST}/${PROVIDER_EXECUTABLE}"
   fi
 
   # set linux flags that do not work on macos

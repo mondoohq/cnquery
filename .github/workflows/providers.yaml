@@ -16,6 +16,11 @@ on:
         type: boolean
         required: false
         default: false
+      use-test-cert:
+        description: "Use test certificate profile (not publicly trusted)"
+        required: false
+        default: false
+        type: boolean
 
 
 env:
@@ -35,6 +40,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Dump all inputs
+        run: echo "${{ toJSON(inputs) }}"
+
       - name: Detect providers
         id: providers
         run: |
@@ -79,6 +88,7 @@ jobs:
             printf '%s\n' "${providers[@]}" | jq -R . | jq -sc . > providers.json
             echo "build_list=$(cat providers.json)" >> $GITHUB_OUTPUT
           fi
+
       - name: Build List
         run: |
           echo "=== Providers detected:"
@@ -90,7 +100,12 @@ jobs:
   provider-build:
     name: "${{ matrix.provider }}"
     runs-on: self-hosted
+    environment: prod
     timeout-minutes: 120
+    permissions:
+      contents: 'read'
+      # Add "id-token" for OIDC Azure Login
+      id-token: 'write'
     needs: scoping
     if: ${{ needs.scoping.outputs.build_list != '[]' }}
     strategy:
@@ -127,22 +142,29 @@ jobs:
       - name: 'Set up gcloud CLI'
         uses: 'google-github-actions/setup-gcloud@v2'
 
-      - name: Set DigiCert Signing Variables
-        shell: bash
+# jsign and azure-cli are both requirements for Azure Trusted Signing and these actions to authenticate
+# These packages have been installed on the self-hosted runner using ansible from the private repo
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.TSIGN_AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.TSIGN_AZURE_TENANT_ID}}
+          subscription-id: ${{ vars.TSIGN_AZURE_SUBSCRIPTION_ID }}
+
+      - name: Get Azure AD Access Token to trusted signing
+        id: get_token
         run: |
-          echo "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > Certificate_pkcs12.p12
-          echo "SM_CERT_ALIAS=${{ secrets.SM_CERT_ALIAS }}" >> "$GITHUB_ENV"
-          echo "SM_HOST=${{ secrets.SM_HOST }}" >> "$GITHUB_ENV"
-          echo "SM_API_KEY=${{ secrets.SM_API_KEY }}" >> "$GITHUB_ENV"
-          echo "SM_CLIENT_CERT_FILE=`realpath Certificate_pkcs12.p12`" >> "$GITHUB_ENV"
-          echo "SM_CLIENT_CERT_PASSWORD=${{ secrets.SM_CLIENT_CERT_PASSWORD }}" >> "$GITHUB_ENV"
-          echo "SM_CODE_SIGNING_CERT_SHA1_HASH=${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}" >> "$GITHUB_ENV"
+          set -e  # Stop on first error
+          TSIGN_ACCESS_TOKEN=$(az account get-access-token --resource https://codesigning.azure.net --query accessToken -o tsv)
 
-
-      # - name: Install jSign (Windows Signing Tool) -- Required for public runners
-      #   run: |
-      #     curl -LO https://github.com/ebourg/jsign/releases/download/5.0/jsign_5.0_all.deb
-      #     sudo dpkg -i ./jsign_5.0_all.deb
+          if [ -z "$TSIGN_ACCESS_TOKEN" ]; then
+            echo "Error: Access token is empty"
+            exit 1
+          fi
+          PREFIX="${TSIGN_ACCESS_TOKEN:0:8}"
+          echo "Access token prefix: ${PREFIX}..."
+          echo "TSIGN_ACCESS_TOKEN=$TSIGN_ACCESS_TOKEN" >> $GITHUB_OUTPUT
 
       - name: 'Build dependencies'
         run: |
@@ -154,6 +176,11 @@ jobs:
         run: |
           rm -rf ./dist
           scripts/provider_bundler.sh ${{ matrix.provider }}
+        env:
+          TSIGN_AZURE_ENDPOINT: ${{ vars.TSIGN_AZURE_ENDPOINT }}
+          TSIGN_ACCOUNT_NAME: ${{ vars.TSIGN_ACCOUNT_NAME }}
+          TSIGN_CERT_PROFILE_NAME: ${{ github.event.inputs.use-test-cert == 'true' && vars.TSIGN_TEST_CERT_PROFILE_NAME || vars.TSIGN_CERT_PROFILE_NAME }}
+          TSIGN_ACCESS_TOKEN: ${{ steps.get_token.outputs.TSIGN_ACCESS_TOKEN }}
 
       - name: 'Publish Provider'
         if: ${{ ! inputs.skip_publish }}
@@ -210,6 +237,7 @@ jobs:
           owner: mondoohq
           repositories: |
             releasr
+
       - name: Trigger Reindex of releases.mondoo.com
         uses: peter-evans/repository-dispatch@v3
         with:
