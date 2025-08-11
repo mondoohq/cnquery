@@ -64,12 +64,12 @@ func (s *mqlAuditdConfig) file() (*mqlFile, error) {
 		"path": llx.StringData(defaultAuditdConfig),
 	})
 	if err != nil {
-		// Check if this is a "file not found" type error
-		errorMsg := err.Error()
-		if strings.Contains(errorMsg, "no such file") || strings.Contains(errorMsg, "does not exist") || strings.Contains(errorMsg, "not found") {
-			// For missing files, return nil - parse() method will handle this gracefully
-			return nil, nil
-		}
+		//// Check if this is a "file not found" type error
+		//errorMsg := err.Error()
+		//if strings.Contains(errorMsg, "no such file") || strings.Contains(errorMsg, "does not exist") || strings.Contains(errorMsg, "not found") {
+		//	// For missing files, return nil - parse() method will handle this gracefully
+		//	return nil, nil
+		//}
 		// For other errors (like permission issues), propagate the error
 		return nil, err
 	}
