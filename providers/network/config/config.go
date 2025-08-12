@@ -19,6 +19,7 @@ var Config = plugin.Provider{
 		"go.mondoo.com/cnquery/providers/os",
 		"go.mondoo.com/cnquery/providers/k8s",
 		"go.mondoo.com/cnquery/providers/aws",
+		"go.mondoo.com/cnquery/providers/networkdiscovery",
 		// FIXME: DEPRECATED, remove in v12.0 vv
 		// Until v10 providers had a version indication in their ID. With v10
 		// this is no longer the case. Once we get far enough away from legacy
