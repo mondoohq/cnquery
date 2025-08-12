@@ -61,8 +61,10 @@ func (s *Service) detect(asset *inventory.Asset, _ *connection.Connection) error
 			return err
 		}
 		platformID := "//platformid.api.mondoo.app/runtime/terraform/domain/" + domain + "/org/" + org + "/repo/" + repo
-		asset.Connections[0].PlatformId = platformID
-		asset.PlatformIds = []string{platformID}
+		if len(asset.PlatformIds) == 0 {
+			asset.PlatformIds = []string{platformID}
+		}
+		asset.Connections[0].PlatformId = asset.PlatformIds[0]
 		asset.Name = "Terraform Static Analysis " + org + "/" + repo
 		return nil
 	}
@@ -74,8 +76,10 @@ func (s *Service) detect(asset *inventory.Asset, _ *connection.Connection) error
 		h.Write([]byte(absPath))
 		hash := hex.EncodeToString(h.Sum(nil))
 		platformID := "//platformid.api.mondoo.app/runtime/terraform/hash/" + hash
-		asset.Connections[0].PlatformId = platformID
-		asset.PlatformIds = []string{platformID}
+		if len(asset.PlatformIds) == 0 {
+			asset.PlatformIds = []string{platformID}
+		}
+		asset.Connections[0].PlatformId = asset.PlatformIds[0]
 		asset.Name = "Terraform Static Analysis " + parseNameFromPath(projectPath)
 		return nil
 	}
