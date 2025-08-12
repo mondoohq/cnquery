@@ -89,7 +89,6 @@ func (s *mqlAuditdConfig) parse(file *mqlFile) error {
 
 	content := file.GetContent()
 	if content.Error != nil {
-		// Check if this is a "file not found" type error
 		errorMsg := content.Error.Error()
 		if strings.Contains(errorMsg, "not found") {
 			// Handle missing config file gracefully - set empty params
