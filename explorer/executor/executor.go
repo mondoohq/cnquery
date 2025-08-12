@@ -266,6 +266,9 @@ func (e *instance) StoreQueryData() error {
 
 	results := e.snapshotResults()
 
+	warnOnTooLarge := func(item *llx.Result, msgSize int) {
+		log.Warn().Msgf("Data %s (%d) exceeds maximum message size", item.CodeId, msgSize)
+	}
 	if len(results) > 0 {
 		err := iox.ChunkMessages(func(chunk []*llx.Result) error {
 			log.Debug().Msg("Sending datapoints")
@@ -281,9 +284,10 @@ func (e *instance) StoreQueryData() error {
 				return err
 			}
 			return nil
-		}, func(item *llx.Result, msgSize int) {
-			log.Warn().Msgf("Data %s (%d) exceeds maximum message size", item.CodeId, msgSize)
-		}, results...)
+		},
+			cnquery.DisableMaxLimit,
+			warnOnTooLarge,
+			results...)
 		if err != nil {
 			return err
 		}

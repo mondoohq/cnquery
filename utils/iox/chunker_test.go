@@ -25,11 +25,33 @@ func TestChunkerIgnoreTooLargeMessages(t *testing.T) {
 	err := ChunkMessages(func(chunk []*grpc_testing.Payload) error {
 		chunks = append(chunks, chunk)
 		return nil
-	}, func(*grpc_testing.Payload, int) {}, payloads...)
+	}, false, func(*grpc_testing.Payload, int) {}, payloads...)
 	require.NoError(t, err)
 	require.Len(t, chunks, 1)
 	require.Len(t, chunks[0], 1)
 	require.Equal(t, payloads[1], chunks[0][0])
+}
+
+func TestChunkerDoNotIgnoreTooLargeMessages(t *testing.T) {
+	payloads := []*grpc_testing.Payload{
+		{
+			Body: bytes.Repeat([]byte{0x01}, maxMessageSize+1),
+		},
+		{
+			Body: bytes.Repeat([]byte{0x02}, maxMessageSize/2),
+		},
+	}
+
+	var chunks [][]*grpc_testing.Payload
+	err := ChunkMessages(func(chunk []*grpc_testing.Payload) error {
+		chunks = append(chunks, chunk)
+		return nil
+	}, true, func(*grpc_testing.Payload, int) {}, payloads...)
+	require.NoError(t, err)
+	require.Len(t, chunks, 1)
+	require.Len(t, chunks[0], 2)
+	require.Equal(t, payloads[0], chunks[0][0])
+	require.Equal(t, payloads[1], chunks[0][1])
 }
 
 func TestChunker(t *testing.T) {
@@ -53,7 +75,7 @@ func TestChunker(t *testing.T) {
 	err := ChunkMessages(func(chunk []*grpc_testing.Payload) error {
 		chunks = append(chunks, chunk)
 		return nil
-	}, func(*grpc_testing.Payload, int) {}, payloads...)
+	}, false, func(*grpc_testing.Payload, int) {}, payloads...)
 	require.NoError(t, err)
 	require.Len(t, chunks, 3)
 	require.Len(t, chunks[0], 1)

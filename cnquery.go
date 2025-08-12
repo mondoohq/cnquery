@@ -20,6 +20,12 @@ var Build string
 // Date is set via ldflags
 var Date string
 
+// DisableMaxLimit disables the max limit for data that is being collected and sent upstream.
+// There are use cases when data is not collected via RPC (when using builtin providers) and it is not being
+// sent upstream (when running incognito). In those cases, it is not required to impose this limit.
+// It is designed as a compile flag to ensure that it is not accidentally enabled in builds that use RPC/communicate with the server.
+var DisableMaxLimit bool
+
 /*
  versioning follows semver guidelines: https://semver.org/
 
