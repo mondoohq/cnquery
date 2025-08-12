@@ -103,7 +103,7 @@ func (s *mqlAuditdConfig) parse(file *mqlFile) error {
 
 	ini := parsers.ParseIni(content.Data, "=")
 
-	res := make(map[string]any, len(ini.Fields))
+	res := make(map[string]interface{}, len(ini.Fields))
 	s.Params.Data = res
 	s.Params.State = plugin.StateIsSet
 
