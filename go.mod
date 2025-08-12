@@ -51,7 +51,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/go-cmdtest v0.4.0
 	github.com/google/go-cmp v0.7.0
-	github.com/google/go-containerregistry v0.20.5
+	github.com/google/go-containerregistry v0.20.6
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-hclog v1.6.3
 	github.com/hashicorp/go-plugin v1.6.3
