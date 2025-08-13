@@ -9,7 +9,7 @@ import (
 
 var maxMessageSize = 6 * (1 << 20)
 
-func ChunkMessages[T proto.Message](sendFunc func([]T) error, onTooLarge func(T, int), items ...T) error {
+func ChunkMessages[T proto.Message](sendFunc func([]T) error, ignoreMaxMessageSize bool, onTooLarge func(T, int), items ...T) error {
 	idx := 0
 	for {
 		buffer := make([]T, 0, len(items))
@@ -20,13 +20,13 @@ func ChunkMessages[T proto.Message](sendFunc func([]T) error, onTooLarge func(T,
 		size := 0
 		for i := idx; i < len(items); i++ {
 			msgSize := proto.Size(items[i])
-			if msgSize > maxMessageSize {
+			if msgSize > maxMessageSize && !ignoreMaxMessageSize {
 				onTooLarge(items[i], msgSize)
 				idx++
 				continue
 			}
 			size += proto.Size(items[i])
-			if size > maxMessageSize {
+			if size > maxMessageSize && !ignoreMaxMessageSize {
 				break
 			}
 			buffer = append(buffer, items[i])
