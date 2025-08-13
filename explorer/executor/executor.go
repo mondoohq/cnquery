@@ -285,7 +285,7 @@ func (e *instance) StoreQueryData() error {
 			}
 			return nil
 		},
-			cnquery.DisableMaxLimit,
+			cnquery.GetDisableMaxLimit(),
 			warnOnTooLarge,
 			results...)
 		if err != nil {
