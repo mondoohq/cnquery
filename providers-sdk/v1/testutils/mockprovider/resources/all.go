@@ -59,6 +59,10 @@ func (c *mqlMuser) dict() (any, error) {
 	}, nil
 }
 
+func (c *mqlMuser) error() (string, error) {
+	return "", fmt.Errorf("this is an error from the mockprovider")
+}
+
 // This is an example of how we can override builtin functions today, this will have to change to provide
 // a better mechanism to do so but for now, this pattern is adopted in multiple providers
 

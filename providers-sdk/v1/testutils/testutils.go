@@ -338,6 +338,7 @@ type SimpleTest struct {
 	Code        string
 	ResultIndex int
 	Expectation interface{}
+	Error       string
 }
 
 func (ctx *tester) TestSimple(t *testing.T, tests []SimpleTest) {
@@ -354,8 +355,14 @@ func (ctx *tester) TestSimple(t *testing.T, tests []SimpleTest) {
 			}
 
 			data := res[cur.ResultIndex].Data
-			require.NoError(t, data.Error)
-			assert.Equal(t, cur.Expectation, data.Value)
+			if cur.Error != "" {
+				require.NotNil(t, data.Error)
+				assert.Equal(t, cur.Error, data.Error.Error())
+			} else {
+				require.NoError(t, data.Error)
+				assert.Equal(t, cur.Expectation, data.Value)
+			}
+
 		})
 	}
 }

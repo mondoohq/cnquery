@@ -132,6 +132,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"muser.dict": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMuser).GetDict()).ToDataRes(types.Dict)
 	},
+	"muser.error": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMuser).GetError()).ToDataRes(types.String)
+	},
 	"mgroup.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMgroup).GetName()).ToDataRes(types.String)
 	},
@@ -182,6 +185,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"muser.dict": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMuser).Dict, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"muser.error": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMuser).Error, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"mgroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -247,6 +254,7 @@ type mqlMuser struct {
 	Nullstring plugin.TValue[string]
 	Groups plugin.TValue[[]interface{}]
 	Dict plugin.TValue[interface{}]
+	Error plugin.TValue[string]
 }
 
 // createMuser creates a new instance of this resource
@@ -347,6 +355,12 @@ func (c *mqlMuser) GetGroups() *plugin.TValue[[]interface{}] {
 func (c *mqlMuser) GetDict() *plugin.TValue[interface{}] {
 	return plugin.GetOrCompute[interface{}](&c.Dict, func() (interface{}, error) {
 		return c.dict()
+	})
+}
+
+func (c *mqlMuser) GetError() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Error, func() (string, error) {
+		return c.error()
 	})
 }
 
