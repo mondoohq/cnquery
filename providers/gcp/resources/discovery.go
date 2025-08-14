@@ -25,24 +25,28 @@ var ENABLE_FINE_GRAINED_ASSETS = false
 
 const (
 	// Discovery flags
-	DiscoveryAuto               = "auto"
-	DiscoveryAll                = "all"
-	DiscoveryOrganization       = "organization"
-	DiscoveryFolders            = "folders"
-	DiscoveryInstances          = "instances"
-	DiscoveryProjects           = "projects"
-	DiscoveryComputeImages      = "compute-images"
-	DiscoveryComputeNetworks    = "compute-networks"
-	DiscoveryComputeSubnetworks = "compute-subnetworks"
-	DiscoveryComputeFirewalls   = "compute-firewalls"
-	DiscoveryGkeClusters        = "gke-clusters"
-	DiscoveryStorageBuckets     = "storage-buckets"
-	DiscoveryBigQueryDatasets   = "bigquery-datasets"
+	DiscoveryAuto = "auto"
+	DiscoveryAll  = "all"
+
+	// top-level assets
+	DiscoveryFolders      = "folders"
+	DiscoveryOrganization = "organization"
+	DiscoveryProjects     = "projects"
+
+	// resources
+	DiscoverCloudDNSZones       = "cloud-dns-zones"
+	DiscoverCloudKMSKeyrings    = "cloud-kms-keyrings"
 	DiscoverCloudSQLMySQL       = "cloud-sql-mysql"
 	DiscoverCloudSQLPostgreSQL  = "cloud-sql-postgresql"
 	DiscoverCloudSQLSQLServer   = "cloud-sql-sqlserver"
-	DiscoverCloudDNSZones       = "cloud-dns-zones"
-	DiscoverCloudKMSKeyrings    = "cloud-kms-keyrings"
+	DiscoveryBigQueryDatasets   = "bigquery-datasets"
+	DiscoveryComputeFirewalls   = "compute-firewalls"
+	DiscoveryComputeImages      = "compute-images"
+	DiscoveryComputeNetworks    = "compute-networks"
+	DiscoveryComputeSubnetworks = "compute-subnetworks"
+	DiscoveryGkeClusters        = "gke-clusters"
+	DiscoveryInstances          = "instances"
+	DiscoveryStorageBuckets     = "storage-buckets"
 )
 
 // List of all CloudSQL types, this will be used during discovery
@@ -440,7 +444,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 			})
 		}
 	}
-	// all Cloud SQL dicovery flags/types
+	// all Cloud SQL discovery flags/types
 	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, append(targets, AllCloudSQLTypes...)...) {
 		sqlservice := gcpProject.GetSql()
 		if sqlservice.Error != nil {
