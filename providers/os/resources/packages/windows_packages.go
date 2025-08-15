@@ -256,10 +256,10 @@ func (w *WinPkgManager) getLocalInstalledApps() ([]Package, error) {
 	// They do not show up in the general apps or features list, so we need to discover them separately
 	dotNetFramework, err := w.getDotNetFramework()
 	if err != nil {
-		return nil, err
+		log.Debug().Err(err).Msg("could not get .NET Framework packages from registry")
+	} else {
+		packages = append(packages, dotNetFramework...)
 	}
-	packages = append(packages, dotNetFramework...)
-
 	return packages, nil
 }
 
@@ -405,10 +405,10 @@ func (w *WinPkgManager) getFsInstalledApps() ([]Package, error) {
 	// They do not show up in the general apps or features list, so we need to discover them separately
 	dotNetFramework, err := w.getDotNetFrameworkFs()
 	if err != nil {
-		return nil, err
+		log.Debug().Err(err).Msg("could not get .NET Framework packages from filesystem")
+	} else {
+		packages = append(packages, dotNetFramework...)
 	}
-	packages = append(packages, dotNetFramework...)
-
 	msSqlHotfixes := findMsSqlHotfixes(packages)
 	if len(msSqlHotfixes) > 0 {
 		packages = updateMsSqlPackages(packages, msSqlHotfixes[len(msSqlHotfixes)-1])
