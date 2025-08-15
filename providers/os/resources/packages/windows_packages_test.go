@@ -437,3 +437,93 @@ func TestGetDotNetFrameworkPackageFromRegistryKeyItems(t *testing.T) {
 		assert.Nil(t, pkg, "expected no package when no items are provided")
 	})
 }
+
+func TestFindAndUpdateMsSqlGDR_en(t *testing.T) {
+	// Setup: create a list of packages with SQL Server hotfixes and SQL Server packages
+	packages := []Package{
+		{Name: "SQL Server 2022 Database Engine Services", Version: "16.0.1000.6", PUrl: "pkg:windows/windows/SQL%20Server%202022%20Database%20Engine%20Services@16.0.1000.6?arch=x86"},
+		{Name: "SQL Server 2022 Shared Management Objects", Version: "16.0.1000.6", PUrl: "pkg:windows/windows/SQL%20Server%202022%20Shared%20Management%20Objects@16.0.1000.6?arch=x86"},
+		// We should not update the setup package
+		{Name: "Microsoft SQL Server 2022 Setup (English)", Version: "16.0.1000.6", PUrl: "pkg:windows/windows/Microsoft%20SQL%20Server%202022%20Setup%20%28English%29@16.0.1000.6?arch=x86"},
+		{Name: "GDR 1115 for SQL Server 2022 (KB5035432) (64-bit)", Version: "16.0.1115.1", PUrl: "pkg:windows/windows/GDR%201115%20for%20SQL%20Server%202022%20%28KB5035432%29%20%2864-bit%29@16.0.1115.1?arch=x86"},
+		{Name: "GDR 1105 for SQL Server 2022 (KB5029379) (64-bit)", Version: "16.0.1105.1", PUrl: "pkg:windows/windows/GDR%201105%20for%20SQL%20Server%202022%20%28KB5029379%29%20%2864-bit%29@16.0.1105.1?arch=x86"},
+		{Name: "Not a hotfix", Version: "1.0.0", PUrl: "pkg:windows/windows/Not%20a%20hotfix@1.0.0?arch=x86"},
+	}
+
+	// Step 1: Find SQL Server gdrUpdates
+	gdrUpdates := findMsSqlGdrUpdates(packages)
+	require.Len(t, gdrUpdates, 2, "expected 2 updates")
+
+	// Step 2: Get the latest hotfix (should be the last one after sorting)
+	latestUpdate := gdrUpdates[len(gdrUpdates)-1]
+	expectedLatestVersion := "16.0.1115.1"
+	require.Equal(t, expectedLatestVersion, latestUpdate.Version, "expected latest update version")
+
+	// Step 3: Update SQL Server packages with the latest hotfix version
+	packages = updateMsSqlPackages(packages, latestUpdate)
+
+	// Step 4: Check that all SQL Server packages have the updated version
+	pkg := findPkgByName(packages, "SQL Server 2022 Database Engine Services")
+	require.NotNil(t, pkg, "SQL Server 2022 Database Engine Services package should exist")
+	require.Equal(t, expectedLatestVersion, pkg.Version, "expected SQL Server 2022 Database Engine Services to have updated version")
+	assert.Equal(t, "pkg:windows/windows/SQL%20Server%202022%20Database%20Engine%20Services@16.0.1115.1?arch=x86", pkg.PUrl)
+
+	pkg = findPkgByName(packages, "GDR 1105 for SQL Server 2022 (KB5029379) (64-bit)")
+	require.NotNil(t, pkg, "KB5029379 SQL Server package should exist")
+	require.Equal(t, "16.0.1105.1", pkg.Version, "expected Hotfix KB5029379 SQL Server to remain unchanged")
+
+	pkg = findPkgByName(packages, "GDR 1115 for SQL Server 2022 (KB5035432) (64-bit)")
+	require.NotNil(t, pkg, "KB5035432 SQL Server package should exist")
+	require.Equal(t, "16.0.1115.1", pkg.Version, "expected Hotfix KB5035432 SQL Server to remain unchanged")
+
+	// Step 5: Ensure non-SQL Server packages are unchanged
+	pkg = findPkgByName(packages, "Not a hotfix")
+	require.NotNil(t, pkg, "Not a hotfix package should exist")
+	require.Equal(t, "1.0.0", pkg.Version, "expected non-SQL Server package to remain unchanged")
+	assert.Equal(t, "pkg:windows/windows/Not%20a%20hotfix@1.0.0?arch=x86", pkg.PUrl)
+}
+
+func TestFindAndUpdateMsSqlGDR_de(t *testing.T) {
+	// Setup: create a list of packages with SQL Server hotfixes and SQL Server packages
+	packages := []Package{
+		{Name: "SQL Server 2022 Database Engine Services", Version: "16.0.1050.5", PUrl: "pkg:windows/windows/SQL%20Server%202022%20Database%20Engine%20Services@16.0.1050.5?arch=x86"},
+		{Name: "SQL Server 2022 Shared Management Objects", Version: "16.0.1050.5", PUrl: "pkg:windows/windows/SQL%20Server%202022%20Shared%20Management%20Objects@16.0.1050.5?arch=x86"},
+		// We should not update the setup package
+		{Name: "Microsoft SQL Server 2022 Setup (English)", Version: "16.0.1050.5", PUrl: "pkg:windows/windows/Microsoft%20SQL%20Server%202022%20Setup%20%28English%29@16.0.1050.5?arch=x86"},
+		{Name: "GDR 1115 für SQL Server 2022 (KB5035432) (64-bit)", Version: "16.0.1115.1", PUrl: "pkg:windows/windows/GDR%201115%20für%20SQL%20Server%202022%20%28KB5035432%29%20%2864-bit%29@16.0.1115.1?arch=x86"},
+		{Name: "GDR 1110 für SQL Server 2022 (KB5032968) (64-bit)", Version: "16.0.1110.1", PUrl: "pkg:windows/windows/GDR%201110%20für%20SQL%20Server%202022%20%28KB5032968%29%20%2864-bit%29@16.0.1110.1?arch=x86"},
+		{Name: "Not a hotfix", Version: "1.0.0", PUrl: "pkg:windows/windows/Not%20a%20hotfix@1.0.0?arch=x86"},
+	}
+
+	// Step 1: Find SQL Server gdrUpdates
+	gdrUpdates := findMsSqlGdrUpdates(packages)
+	require.Len(t, gdrUpdates, 2, "expected 2 updates")
+
+	// Step 2: Get the latest hotfix (should be the last one after sorting)
+	latestUpdate := gdrUpdates[len(gdrUpdates)-1]
+	expectedLatestVersion := "16.0.1115.1"
+	require.Equal(t, expectedLatestVersion, latestUpdate.Version, "expected latest update version")
+
+	// Step 3: Update SQL Server packages with the latest hotfix version
+	updated := updateMsSqlPackages(packages, latestUpdate)
+
+	// Step 4: Check that all SQL Server packages have the updated version
+	pkg := findPkgByName(updated, "SQL Server 2022 Database Engine Services")
+	require.NotNil(t, pkg, "SQL Server 2022 Database Engine Services package should exist")
+	require.Equal(t, expectedLatestVersion, pkg.Version, "expected SQL Server 2022 Database Engine Services to have updated version")
+	assert.Equal(t, "pkg:windows/windows/SQL%20Server%202022%20Database%20Engine%20Services@16.0.1115.1?arch=x86", pkg.PUrl)
+
+	pkg = findPkgByName(updated, "GDR 1115 für SQL Server 2022 (KB5035432) (64-bit)")
+	require.NotNil(t, pkg, "KB5035432 SQL Server package should exist")
+	require.Equal(t, "16.0.1115.1", pkg.Version, "expected Hotfix KB5001090 SQL Server to remain unchanged")
+
+	pkg = findPkgByName(updated, "GDR 1110 für SQL Server 2022 (KB5032968) (64-bit)")
+	require.NotNil(t, pkg, "KB5032968 SQL Server package should exist")
+	require.Equal(t, "16.0.1110.1", pkg.Version, "expected Hotfix KB5001091 SQL Server to remain unchanged")
+
+	// Step 5: Ensure non-SQL Server packages are unchanged
+	pkg = findPkgByName(updated, "Not a hotfix")
+	require.NotNil(t, pkg, "Not a hotfix package should exist")
+	require.Equal(t, "1.0.0", pkg.Version, "expected non-SQL Server package to remain unchanged")
+	assert.Equal(t, "pkg:windows/windows/Not%20a%20hotfix@1.0.0?arch=x86", pkg.PUrl)
+}

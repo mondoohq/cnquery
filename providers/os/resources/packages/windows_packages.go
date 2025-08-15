@@ -72,7 +72,8 @@ var (
 		WinArchX86OnArm64: "x86onarm",
 	}
 
-	sqlHotfixRegExp = regexp.MustCompile(`^Hotfix .+ SQL Server`)
+	sqlGDRUpdateRegExp = regexp.MustCompile(`^GDR \d+ .+ SQL Server \d+ \(KB\d+\)`)
+	sqlHotfixRegExp    = regexp.MustCompile(`^Hotfix .+ SQL Server`)
 	// Find the database engine package and use version as a reference for the update
 	msSqlServiceRegexp = regexp.MustCompile(`^SQL Server \d+ Database Engine Services$`)
 )
@@ -586,6 +587,11 @@ func (w *WinPkgManager) List() ([]Package, error) {
 	hotfixAsPkgs := HotFixesToPackages(hotfixes)
 
 	msSqlHotfixes := findMsSqlHotfixes(appPkgs)
+	msSqlGdrPackages := findMsSqlGdrUpdates(appPkgs)
+	// MS only allows GDR or Hotfixes/CU, no need to check which one takes precedence
+	if len(msSqlGdrPackages) > 0 {
+		pkgs = updateMsSqlPackages(pkgs, msSqlGdrPackages[len(msSqlGdrPackages)-1])
+	}
 	if len(msSqlHotfixes) > 0 {
 		pkgs = updateMsSqlPackages(pkgs, msSqlHotfixes[len(msSqlHotfixes)-1])
 	}
@@ -665,8 +671,23 @@ func findMsSqlHotfixes(packages []Package) []Package {
 	return sqlHotfixes
 }
 
+// findMsSqlGdrUpdates returns a list of GDR updates that are related to Microsoft SQL Server
+// The list is sorted by the GDR update id
+func findMsSqlGdrUpdates(packages []Package) []Package {
+	sqlGdrUpdates := []Package{}
+	for _, p := range packages {
+		if sqlGDRUpdateRegExp.MatchString(p.Name) {
+			sqlGdrUpdates = append(sqlGdrUpdates, p)
+		}
+	}
+	slices.SortFunc(sqlGdrUpdates, func(a, b Package) int {
+		return strings.Compare(a.Version, b.Version)
+	})
+	return sqlGdrUpdates
+}
+
 // updateMsSqlPackages updates the version of the SQL Server packages to the latest hotfix version
-func updateMsSqlPackages(pkgs []Package, latestMsSqlHotfix Package) []Package {
+func updateMsSqlPackages(pkgs []Package, latestMsSqlUpdate Package) []Package {
 	currentVersion := ""
 	for _, pkg := range pkgs {
 		if msSqlServiceRegexp.MatchString(pkg.Name) {
@@ -674,12 +695,14 @@ func updateMsSqlPackages(pkgs []Package, latestMsSqlHotfix Package) []Package {
 			break
 		}
 	}
+	log.Debug().Str("currentVersion", currentVersion).Msg("Updating SQL Server packages")
 
 	// Find other SQL Server packages and update them to the latest hotfix version
 	for i, pkg := range pkgs {
 		if strings.Contains(pkg.Name, "SQL Server") && pkg.Version == currentVersion {
-			pkgs[i].Version = latestMsSqlHotfix.Version
-			pkgs[i].PUrl = strings.Replace(pkgs[i].PUrl, currentVersion, latestMsSqlHotfix.Version, 1)
+			pkgs[i].Version = latestMsSqlUpdate.Version
+			log.Debug().Str("package", pkg.Name).Str("version", latestMsSqlUpdate.Version).Msg("Updated SQL Server package")
+			pkgs[i].PUrl = strings.Replace(pkgs[i].PUrl, currentVersion, latestMsSqlUpdate.Version, 1)
 		}
 	}
 	return pkgs
