@@ -25,6 +25,8 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/resources/cpe"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/powershell"
 	"go.mondoo.com/cnquery/v11/providers/os/resources/purl"
+	"go.mondoo.com/ranger-rpc/codes"
+	"go.mondoo.com/ranger-rpc/status"
 )
 
 // ProcessorArchitecture Enum
@@ -130,38 +132,9 @@ func (p winAppxPackages) toPackage(platform *inventory.Platform) Package {
 		p.arch = arch
 	}
 
-	pkg := Package{
-		Name:    p.Name,
-		Version: p.Version,
-		Arch:    p.arch,
-		Format:  "windows/appx",
-		Vendor:  p.Publisher,
-		PUrl:    purl.NewPackageURL(platform, purl.TypeAppx, p.Name, p.Version).String(),
-	}
-	if p.InstallLocation != "" {
-		pkg.Files = []FileRecord{
-			{
-				Path: p.InstallLocation,
-			},
-		}
-		pkg.FilesAvailable = PkgFilesIncluded
-	}
+	pkg := createPackage(p.Name, p.Version, "windows/appx", p.arch, p.Publisher, p.InstallLocation, platform)
 
-	if p.Version != "" {
-		cpeWfns, err := cpe.NewPackage2Cpe(p.Publisher, p.Name, p.Version, "", "")
-		if err != nil {
-			log.Debug().Err(err).
-				Str("name", p.Name).
-				Str("version", p.Version).
-				Msg("could not create cpe for windows appx package")
-		} else {
-			pkg.CPEs = cpeWfns
-		}
-	} else {
-		log.Debug().Msg("ignored package since information is missing")
-	}
-
-	return pkg
+	return *pkg
 }
 
 // Good read: https://www.wintips.org/view-installed-apps-and-packages-in-windows-10-8-1-8-from-powershell/
@@ -278,7 +251,61 @@ func (w *WinPkgManager) getLocalInstalledApps() ([]Package, error) {
 			packages = append(packages, *p)
 		}
 	}
+
+	// These are the .NET Framework packages
+	// They do not show up in the general apps or features list, so we need to discover them separately
+	dotNetFramework, err := w.getDotNetFramework()
+	if err != nil {
+		return nil, err
+	}
+	packages = append(packages, dotNetFramework...)
+
 	return packages, nil
+}
+
+// getDotNetFramework returns the .NET Framework package
+func (w *WinPkgManager) getDotNetFramework() ([]Package, error) {
+	// https://learn.microsoft.com/en-us/dotnet/framework/install/how-to-determine-which-versions-are-installed#net-framework-45-and-later-versions
+	dotNet45plus := "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4\\Full"
+	// https://learn.microsoft.com/en-us/dotnet/framework/install/how-to-determine-which-versions-are-installed#use-registry-editor-older-framework-versions
+	dotNet35 := "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v3.5"
+
+	return getDotNetFrameworkPackageFromRegistryKeys(dotNet45plus, dotNet35, w.platform)
+}
+
+// getDotNetFrameworkFs returns the .NET Framework package discovered on the filesystem
+func (w *WinPkgManager) getDotNetFrameworkFs() ([]Package, error) {
+	// https://learn.microsoft.com/en-us/dotnet/framework/install/how-to-determine-which-versions-are-installed#net-framework-45-and-later-versions
+	dotNet45plus := "Microsoft\\NET Framework Setup\\NDP\\v4\\Full"
+	// https://learn.microsoft.com/en-us/dotnet/framework/install/how-to-determine-which-versions-are-installed#use-registry-editor-older-framework-versions
+	dotNet35 := "Microsoft\\NET Framework Setup\\NDP\\v3.5"
+
+	return getDotNetFrameworkPackageFromRegistryKeys(dotNet45plus, dotNet35, w.platform)
+}
+
+// getDotNetFrameworkPackageFromRegistryKeys returns the .NET Framework package from the registry keys
+func getDotNetFrameworkPackageFromRegistryKeys(dotNet45plus, dotNet35 string, platform *inventory.Platform) ([]Package, error) {
+	items, err := registry.GetNativeRegistryKeyItems(dotNet45plus)
+	if err != nil && status.Code(err) != codes.NotFound {
+		return nil, err
+	}
+
+	if len(items) == 0 {
+		items, err = registry.GetNativeRegistryKeyItems(dotNet35)
+		if err != nil && status.Code(err) != codes.NotFound {
+			return nil, err
+		}
+	}
+
+	if len(items) == 0 {
+		return nil, nil
+	}
+
+	p := getDotNetFrameworkPackageFromRegistryKeyItems(items, platform)
+	if p == nil {
+		return nil, nil
+	}
+	return []Package{*p}, nil
 }
 
 func (w *WinPkgManager) getInstalledApps() ([]Package, error) {
@@ -373,6 +400,14 @@ func (w *WinPkgManager) getFsInstalledApps() ([]Package, error) {
 			packages = append(packages, *p)
 		}
 	}
+
+	// These are the .NET Framework packages
+	// They do not show up in the general apps or features list, so we need to discover them separately
+	dotNetFramework, err := w.getDotNetFrameworkFs()
+	if err != nil {
+		return nil, err
+	}
+	packages = append(packages, dotNetFramework...)
 
 	msSqlHotfixes := findMsSqlHotfixes(packages)
 	if len(msSqlHotfixes) > 0 {
@@ -490,35 +525,31 @@ func getPackageFromRegistryKeyItems(children []registry.RegistryKeyItem, platfor
 		return nil
 	}
 
-	pkg := &Package{
-		Name:    displayName,
-		Version: displayVersion,
-		Format:  "windows/app",
-		Arch:    platform.Arch,
-		Vendor:  publisher,
-		PUrl: purl.NewPackageURL(
-			platform, purl.TypeWindows, displayName, displayVersion,
-		).String(),
-	}
-	if installLocation != "" {
-		pkg.Files = []FileRecord{
-			{
-				Path: installLocation,
-			},
+	pkg := createPackage(displayName, displayVersion, "windows/app", platform.Arch, publisher, installLocation, platform)
+
+	return pkg
+}
+
+// getDotNetFrameworkPackageFromRegistryKeyItems returns the .NET Framework package from the registry key items
+func getDotNetFrameworkPackageFromRegistryKeyItems(items []registry.RegistryKeyItem, platform *inventory.Platform) *Package {
+	var version string
+	var installLocation string
+
+	for _, i := range items {
+		switch i.Key {
+		case "Version":
+			version = i.Value.String
+		case "InstallLocation":
+			installLocation = i.Value.String
 		}
-		pkg.FilesAvailable = PkgFilesIncluded
 	}
 
-	if displayVersion != "" {
-		cpeWfns, err := cpe.NewPackage2Cpe(publisher, displayName, displayVersion, "", "")
-		if err != nil {
-			log.Debug().Err(err).Str("name", displayName).Str("version", displayVersion).Msg("could not create cpe for windows app package")
-		} else {
-			pkg.CPEs = cpeWfns
-		}
-	} else {
-		log.Debug().Msg("ignored package since information is missing")
+	if version == "" {
+		return nil
 	}
+
+	pkg := createPackage("Microsoft .NET Framework", version, "windows/app", platform.Arch, "Microsoft", installLocation, platform)
+
 	return pkg
 }
 
@@ -596,7 +627,6 @@ func ParseWindowsAppPackages(platform *inventory.Platform, input io.Reader) ([]P
 		if entry.UninstallString == "" {
 			continue
 		}
-		cpeWfns := []string{}
 
 		// TODO: We need to figure out why we have empty displayNames.
 		// this is common in windows but we need to verify it is a windows
@@ -604,36 +634,8 @@ func ParseWindowsAppPackages(platform *inventory.Platform, input io.Reader) ([]P
 		if entry.DisplayName == "" {
 			continue
 		}
-		if entry.DisplayVersion != "" {
-			cpeWfns, err = cpe.NewPackage2Cpe(entry.Publisher, entry.DisplayName, entry.DisplayVersion, "", "")
-			if err != nil {
-				log.Debug().Err(err).
-					Str("name", entry.DisplayName).
-					Str("version", entry.DisplayVersion).
-					Msg("could not create cpe for windows app package")
-			}
-		} else {
-			log.Debug().Msg("ignored package since information is missing")
-		}
-		pkg := Package{
-			Name:    entry.DisplayName,
-			Version: entry.DisplayVersion,
-			Format:  "windows/app",
-			CPEs:    cpeWfns,
-			Vendor:  entry.Publisher,
-			Arch:    platform.Arch,
-			PUrl: purl.NewPackageURL(
-				platform, purl.TypeWindows, entry.DisplayName, entry.DisplayVersion,
-			).String(),
-		}
-		if entry.InstallLocation != "" {
-			pkg.Files = []FileRecord{
-				{
-					Path: entry.InstallLocation,
-				},
-			}
-		}
-		pkgs = append(pkgs, pkg)
+		pkg := createPackage(entry.DisplayName, entry.DisplayVersion, "windows/app", platform.Arch, entry.Publisher, entry.InstallLocation, platform)
+		pkgs = append(pkgs, *pkg)
 	}
 
 	return pkgs, nil
@@ -681,4 +683,42 @@ func updateMsSqlPackages(pkgs []Package, latestMsSqlHotfix Package) []Package {
 		}
 	}
 	return pkgs
+}
+
+// createPackage creates a new package with the given parameters
+func createPackage(name, version, format, arch, publisher, installLocation string, platform *inventory.Platform) *Package {
+	purlType := purl.TypeWindows
+	if format == "windows/appx" {
+		purlType = purl.TypeAppx
+	}
+
+	pkg := &Package{
+		Name:    name,
+		Version: version,
+		Format:  format,
+		Arch:    arch,
+		Vendor:  publisher,
+		PUrl: purl.NewPackageURL(
+			platform, purlType, name, version,
+		).String(),
+	}
+	if installLocation != "" {
+		pkg.Files = []FileRecord{
+			{
+				Path: installLocation,
+			},
+		}
+		pkg.FilesAvailable = PkgFilesIncluded
+	}
+
+	if version != "" {
+		cpeWfns, err := cpe.NewPackage2Cpe(publisher, name, version, "", "")
+		if err != nil {
+			log.Debug().Err(err).Str("name", name).Str("version", version).Msg("could not create cpe for windows app package")
+		} else {
+			pkg.CPEs = cpeWfns
+		}
+	}
+
+	return pkg
 }
