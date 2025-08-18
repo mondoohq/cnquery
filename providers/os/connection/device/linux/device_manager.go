@@ -426,8 +426,8 @@ func validateOpts(opts map[string]string) error {
 		return errors.New("either lun or device names must be provided")
 	}
 
-	if !deviceNamesPresent && mountAll {
-		return errors.New("mount-all-partitions requires device names")
+	if mountAll && !deviceNamesPresent && !lunsPresent {
+		return errors.New("mount-all-partitions requires device names or luns")
 	}
 
 	return nil
@@ -456,11 +456,11 @@ func getLunsFromOpts(opts map[string]string) ([]int, error) {
 }
 
 func (c *LinuxDeviceManager) identifyDeviceViaLun(lun int) ([]snapshot.BlockDevice, error) {
+	log.Debug().Int("lun", lun).Msg("identifying devices via LUN")
 	scsiDevices, err := c.listScsiDevices()
 	if err != nil {
 		return nil, err
 	}
-
 	// only interested in the scsi devices that match the provided LUN
 	filteredScsiDevices := filterScsiDevices(scsiDevices, lun)
 	if len(filteredScsiDevices) == 0 {
@@ -468,6 +468,7 @@ func (c *LinuxDeviceManager) identifyDeviceViaLun(lun int) ([]snapshot.BlockDevi
 	}
 	devices := []snapshot.BlockDevice{}
 	for _, device := range filteredScsiDevices {
+		log.Debug().Str("device", device.VolumePath).Int("lun", lun).Msg("found device that matches LUN")
 		d := snapshot.BlockDevice{
 			Name: device.VolumePath,
 		}
