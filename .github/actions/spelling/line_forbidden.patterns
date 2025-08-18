@@ -69,6 +69,9 @@
 # s.b. NetFlow
 \bNetflow\b
 
+# s.b. IPsec
+\bIPSec\b
+
 # s.b. Side scanning
 \b[Ss]idescanning\b
 
@@ -117,6 +120,12 @@
 # s.b. SmartCard
 \bSmartcard\b
 \bSmart Card\b
+
+# s.b. 802.1Q, etc. Letter is always uppercase
+\b802.1[a-f]\b
+
+# s.b. LAN
+\bLan\b
 
 #
 # Product Names
@@ -326,12 +335,34 @@
 \bService Now\b
 \bServicenow\b
 
-# s.b. name server
-\bnameserver\b
-
 # s.b. Nmap
 \b[Nn]Map\b
 
+# s.b. NX-OS
+\bNX OS\b
+\bNXOS\b
+
+#
+# Fortinet Terms
+#
+
+# s.b. FortiGate
+\bFortigate\b
+
+# s.b. Fortinet
+\bFortiNet\b
+
+# s.b. FortiGuard
+\bFortiguard\b
+
+# s.b. FortiAnalyzer
+\bFortianalyzer\b
+
+# s.b. FortiManager
+\bFortimanager\b
+
+# s.b. FortiOS
+\bForti OS\b
 
 #
 # Apple Terms
