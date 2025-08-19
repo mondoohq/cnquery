@@ -53,9 +53,8 @@ func (a *mqlAwsElb) getClassicLoadBalancers(conn *connection.AwsConnection) []*j
 		return []*jobpool.Job{{Err: err}}
 	}
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := conn.Elb(regionVal)
+			svc := conn.Elb(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -65,7 +64,7 @@ func (a *mqlAwsElb) getClassicLoadBalancers(conn *connection.AwsConnection) []*j
 				lbs, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, err
@@ -77,14 +76,14 @@ func (a *mqlAwsElb) getClassicLoadBalancers(conn *connection.AwsConnection) []*j
 					}
 					mqlLb, err := CreateResource(a.MqlRuntime, "aws.elb.loadbalancer",
 						map[string]*llx.RawData{
-							"arn":                  llx.StringData(fmt.Sprintf(elbv1LbArnPattern, regionVal, conn.AccountId(), convert.ToValue(lb.LoadBalancerName))),
+							"arn":                  llx.StringData(fmt.Sprintf(elbv1LbArnPattern, region, conn.AccountId(), convert.ToValue(lb.LoadBalancerName))),
 							"createdTime":          llx.TimeDataPtr(lb.CreatedTime),
 							"createdAt":            llx.TimeDataPtr(lb.CreatedTime),
 							"dnsName":              llx.StringDataPtr(lb.DNSName),
 							"elbType":              llx.StringData("classic"),
 							"listenerDescriptions": llx.AnyData(jsonListeners),
 							"name":                 llx.StringDataPtr(lb.LoadBalancerName),
-							"region":               llx.StringData(regionVal),
+							"region":               llx.StringData(region),
 							"scheme":               llx.StringDataPtr(lb.Scheme),
 							"vpcId":                llx.StringDataPtr(lb.VPCId),
 						})
@@ -132,9 +131,8 @@ func (a *mqlAwsElb) getLoadBalancers(conn *connection.AwsConnection) []*jobpool.
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := conn.Elbv2(regionVal)
+			svc := conn.Elbv2(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -144,7 +142,7 @@ func (a *mqlAwsElb) getLoadBalancers(conn *connection.AwsConnection) []*jobpool.
 				lbs, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, err
@@ -159,7 +157,7 @@ func (a *mqlAwsElb) getLoadBalancers(conn *connection.AwsConnection) []*jobpool.
 					for _, sg := range lb.SecurityGroups {
 						mqlSg, err := NewResource(a.MqlRuntime, "aws.ec2.securitygroup",
 							map[string]*llx.RawData{
-								"arn": llx.StringData(fmt.Sprintf(securityGroupArnPattern, regionVal, conn.AccountId(), sg)),
+								"arn": llx.StringData(fmt.Sprintf(securityGroupArnPattern, region, conn.AccountId(), sg)),
 							})
 						if err != nil {
 							return nil, err
@@ -179,14 +177,14 @@ func (a *mqlAwsElb) getLoadBalancers(conn *connection.AwsConnection) []*jobpool.
 						"securityGroups":    llx.ArrayData(sgs, types.Resource("aws.ec2.securitygroup")),
 						"vpcId":             llx.StringDataPtr(lb.VpcId),
 						"elbType":           llx.StringData(string(lb.Type)),
-						"region":            llx.StringData(regionVal),
+						"region":            llx.StringData(region),
 						"vpc":               llx.NilData, // set vpc to nil as default, if vpc is not set
 					}
 
 					if lb.VpcId != nil {
 						mqlVpc, err := NewResource(a.MqlRuntime, "aws.vpc",
 							map[string]*llx.RawData{
-								"arn": llx.StringData(fmt.Sprintf(vpcArnPattern, regionVal, conn.AccountId(), convert.ToValue(lb.VpcId))),
+								"arn": llx.StringData(fmt.Sprintf(vpcArnPattern, region, conn.AccountId(), convert.ToValue(lb.VpcId))),
 							})
 						if err != nil {
 							return nil, err

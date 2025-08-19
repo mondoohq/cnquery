@@ -54,11 +54,10 @@ func (a *mqlAwsDms) getReplicationInstances(conn *connection.AwsConnection) []*j
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("dms>getReplicationInstances>calling aws with region %s", regionVal)
+			log.Debug().Msgf("dms>getReplicationInstances>calling aws with region %s", region)
 
-			svc := conn.Dms(regionVal)
+			svc := conn.Dms(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -68,7 +67,7 @@ func (a *mqlAwsDms) getReplicationInstances(conn *connection.AwsConnection) []*j
 				replicationInstances, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return nil, nil
 					}
 					return nil, err

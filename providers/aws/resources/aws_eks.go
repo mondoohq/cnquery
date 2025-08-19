@@ -53,18 +53,17 @@ func (a *mqlAwsEks) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 		return []*jobpool.Job{{Err: err}} // return the error
 	}
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("eks>getClusters>calling aws with region %s", regionVal)
+			log.Debug().Msgf("eks>getClusters>calling aws with region %s", region)
 
-			svc := conn.Eks(regionVal)
+			svc := conn.Eks(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
 			describeClusterRes, err := svc.ListClusters(ctx, &eks.ListClustersInput{})
 			if err != nil {
 				if Is400AccessDeniedError(err) {
-					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+					log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 					return res, nil
 				}
 				return nil, err
@@ -107,7 +106,7 @@ func (a *mqlAwsEks) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 					"name":               llx.StringDataPtr(cluster.Name),
 					"networkConfig":      llx.MapData(kubernetesNetworkConfig, types.Any),
 					"platformVersion":    llx.StringDataPtr(cluster.PlatformVersion),
-					"region":             llx.StringData(regionVal),
+					"region":             llx.StringData(region),
 					"resourcesVpcConfig": llx.MapData(vpcConfig, types.Any),
 					"status":             llx.StringData(string(cluster.Status)),
 					"supportType":        llx.StringData(string(cluster.UpgradePolicy.SupportType)),

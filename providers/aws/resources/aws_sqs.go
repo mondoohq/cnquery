@@ -56,9 +56,8 @@ func (a *mqlAwsSqs) getQueues(conn *connection.AwsConnection) []*jobpool.Job {
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := conn.Sqs(regionVal)
+			svc := conn.Sqs(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -68,7 +67,7 @@ func (a *mqlAwsSqs) getQueues(conn *connection.AwsConnection) []*jobpool.Job {
 				qs, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, err
@@ -77,7 +76,7 @@ func (a *mqlAwsSqs) getQueues(conn *connection.AwsConnection) []*jobpool.Job {
 					mqlTopic, err := CreateResource(a.MqlRuntime, "aws.sqs.queue",
 						map[string]*llx.RawData{
 							"url":    llx.StringData(q),
-							"region": llx.StringData(regionVal),
+							"region": llx.StringData(region),
 						},
 					)
 					if err != nil {

@@ -50,11 +50,10 @@ func (a *mqlAwsNeptune) getDbClusters(conn *connection.AwsConnection) []*jobpool
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("neptune>getDbClusters>calling aws with region %s", regionVal)
+			log.Debug().Msgf("neptune>getDbClusters>calling aws with region %s", region)
 
-			svc := conn.Neptune(regionVal)
+			svc := conn.Neptune(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -72,7 +71,7 @@ func (a *mqlAwsNeptune) getDbClusters(conn *connection.AwsConnection) []*jobpool
 				cluster, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, err
@@ -81,7 +80,7 @@ func (a *mqlAwsNeptune) getDbClusters(conn *connection.AwsConnection) []*jobpool
 					return nil, nil
 				}
 				for _, cluster := range cluster.DBClusters {
-					mqlCluster, err := newMqlAwsNeptuneCluster(a.MqlRuntime, regionVal, cluster)
+					mqlCluster, err := newMqlAwsNeptuneCluster(a.MqlRuntime, region, cluster)
 					if err != nil {
 						return nil, err
 					}
@@ -164,11 +163,10 @@ func (a *mqlAwsNeptune) getDbInstances(conn *connection.AwsConnection) []*jobpoo
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("neptune>getDbInstances>calling aws with region %s", regionVal)
+			log.Debug().Msgf("neptune>getDbInstances>calling aws with region %s", region)
 
-			svc := conn.Neptune(regionVal)
+			svc := conn.Neptune(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -186,7 +184,7 @@ func (a *mqlAwsNeptune) getDbInstances(conn *connection.AwsConnection) []*jobpoo
 				cluster, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, err
@@ -195,7 +193,7 @@ func (a *mqlAwsNeptune) getDbInstances(conn *connection.AwsConnection) []*jobpoo
 					return nil, nil
 				}
 				for _, instance := range cluster.DBInstances {
-					mqlNeptuneInstance, err := newMqlAwsNeptuneInstance(a.MqlRuntime, regionVal, instance)
+					mqlNeptuneInstance, err := newMqlAwsNeptuneInstance(a.MqlRuntime, region, instance)
 					if err != nil {
 						return nil, err
 					}

@@ -49,16 +49,15 @@ func (a *mqlAwsEs) getDomains(conn *connection.AwsConnection) []*jobpool.Job {
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := conn.Es(regionVal)
+			svc := conn.Es(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
 			domains, err := svc.ListDomainNames(ctx, &elasticsearchservice.ListDomainNamesInput{})
 			if err != nil {
 				if Is400AccessDeniedError(err) {
-					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+					log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 					return res, nil
 				}
 				return nil, err
@@ -70,7 +69,7 @@ func (a *mqlAwsEs) getDomains(conn *connection.AwsConnection) []*jobpool.Job {
 				mqlDomain, err := NewResource(a.MqlRuntime, "aws.es.domain",
 					map[string]*llx.RawData{
 						"name":   llx.StringDataPtr(domain.DomainName),
-						"region": llx.StringData(regionVal),
+						"region": llx.StringData(region),
 					})
 				if err != nil {
 					return nil, err

@@ -136,11 +136,10 @@ func (a *mqlAwsEc2) getEIPs(conn *connection.AwsConnection) []*jobpool.Job {
 		return []*jobpool.Job{{Err: err}}
 	}
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("ec2>getEIPs>calling aws with region %s", regionVal)
+			log.Debug().Msgf("ec2>getEIPs>calling aws with region %s", region)
 
-			svc := conn.Ec2(regionVal)
+			svc := conn.Ec2(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -148,7 +147,7 @@ func (a *mqlAwsEc2) getEIPs(conn *connection.AwsConnection) []*jobpool.Job {
 			addresses, err := svc.DescribeAddresses(ctx, params)
 			if err != nil {
 				if Is400AccessDeniedError(err) {
-					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+					log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 					return res, nil
 				}
 				return nil, err
@@ -166,7 +165,7 @@ func (a *mqlAwsEc2) getEIPs(conn *connection.AwsConnection) []*jobpool.Job {
 					"privateIpAddress":        llx.StringDataPtr(add.PrivateIpAddress),
 					"publicIpv4Pool":          llx.StringDataPtr(add.PublicIpv4Pool),
 					"tags":                    llx.MapData(Ec2TagsToMap(add.Tags), types.String),
-					"region":                  llx.StringData(regionVal),
+					"region":                  llx.StringData(region),
 				}
 				mqlAddress, err := CreateResource(a.MqlRuntime, "aws.ec2.eip", args)
 				if err != nil {
@@ -214,11 +213,10 @@ func (a *mqlAwsEc2) getNetworkACLs(conn *connection.AwsConnection) []*jobpool.Jo
 		return []*jobpool.Job{{Err: err}}
 	}
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("ec2>getNetworkACLs>calling aws with region %s", regionVal)
+			log.Debug().Msgf("ec2>getNetworkACLs>calling aws with region %s", region)
 
-			svc := conn.Ec2(regionVal)
+			svc := conn.Ec2(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -228,7 +226,7 @@ func (a *mqlAwsEc2) getNetworkACLs(conn *connection.AwsConnection) []*jobpool.Jo
 				networkAcls, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, err
@@ -250,9 +248,9 @@ func (a *mqlAwsEc2) getNetworkACLs(conn *connection.AwsConnection) []*jobpool.Jo
 
 					mqlNetworkAcl, err := CreateResource(a.MqlRuntime, "aws.ec2.networkacl",
 						map[string]*llx.RawData{
-							"arn":          llx.StringData(fmt.Sprintf(networkAclArnPattern, regionVal, conn.AccountId(), convert.ToValue(acl.NetworkAclId))),
+							"arn":          llx.StringData(fmt.Sprintf(networkAclArnPattern, region, conn.AccountId(), convert.ToValue(acl.NetworkAclId))),
 							"id":           llx.StringDataPtr(acl.NetworkAclId),
-							"region":       llx.StringData(regionVal),
+							"region":       llx.StringData(region),
 							"isDefault":    llx.BoolDataPtr(acl.IsDefault),
 							"tags":         llx.MapData(Ec2TagsToMap(acl.Tags), types.String),
 							"associations": llx.ArrayData(assoc, "aws.ec2.networkacl.association"),
@@ -376,11 +374,10 @@ func (a *mqlAwsEc2) getSecurityGroups(conn *connection.AwsConnection) []*jobpool
 		return []*jobpool.Job{{Err: err}}
 	}
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("ec2>getSecurityGroups>calling aws with region %s", regionVal)
+			log.Debug().Msgf("ec2>getSecurityGroups>calling aws with region %s", region)
 
-			svc := conn.Ec2(regionVal)
+			svc := conn.Ec2(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -390,7 +387,7 @@ func (a *mqlAwsEc2) getSecurityGroups(conn *connection.AwsConnection) []*jobpool
 				securityGroups, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, err
@@ -398,12 +395,12 @@ func (a *mqlAwsEc2) getSecurityGroups(conn *connection.AwsConnection) []*jobpool
 
 				for _, group := range securityGroups.SecurityGroups {
 					args := map[string]*llx.RawData{
-						"arn":         llx.StringData(fmt.Sprintf(securityGroupArnPattern, regionVal, conn.AccountId(), convert.ToValue(group.GroupId))),
+						"arn":         llx.StringData(fmt.Sprintf(securityGroupArnPattern, region, conn.AccountId(), convert.ToValue(group.GroupId))),
 						"id":          llx.StringDataPtr(group.GroupId),
 						"name":        llx.StringDataPtr(group.GroupName),
 						"description": llx.StringDataPtr(group.Description),
 						"tags":        llx.MapData(Ec2TagsToMap(group.Tags), types.String),
-						"region":      llx.StringData(regionVal),
+						"region":      llx.StringData(region),
 					}
 
 					mqlEc2SecurityGroup, err := CreateResource(a.MqlRuntime, "aws.ec2.securitygroup", args)
@@ -567,11 +564,10 @@ func (a *mqlAwsEc2) getKeypairs(conn *connection.AwsConnection) []*jobpool.Job {
 		return []*jobpool.Job{{Err: err}}
 	}
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("ec2>getKeypairs>calling aws with region %s", regionVal)
+			log.Debug().Msgf("ec2>getKeypairs>calling aws with region %s", region)
 
-			svc := conn.Ec2(regionVal)
+			svc := conn.Ec2(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -579,7 +575,7 @@ func (a *mqlAwsEc2) getKeypairs(conn *connection.AwsConnection) []*jobpool.Job {
 			keyPairs, err := svc.DescribeKeyPairs(ctx, params)
 			if err != nil {
 				if Is400AccessDeniedError(err) {
-					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+					log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 					return res, nil
 				}
 				return nil, err
@@ -589,12 +585,12 @@ func (a *mqlAwsEc2) getKeypairs(conn *connection.AwsConnection) []*jobpool.Job {
 				kp := keyPairs.KeyPairs[i]
 				mqlKeypair, err := CreateResource(a.MqlRuntime, "aws.ec2.keypair",
 					map[string]*llx.RawData{
-						"arn":         llx.StringData(fmt.Sprintf(keypairArnPattern, conn.AccountId(), regionVal, convert.ToValue(kp.KeyPairId))),
+						"arn":         llx.StringData(fmt.Sprintf(keypairArnPattern, conn.AccountId(), region, convert.ToValue(kp.KeyPairId))),
 						"fingerprint": llx.StringDataPtr(kp.KeyFingerprint),
 						"name":        llx.StringDataPtr(kp.KeyName),
 						"type":        llx.StringData(string(kp.KeyType)),
 						"tags":        llx.MapData(Ec2TagsToMap(kp.Tags), types.String),
-						"region":      llx.StringData(regionVal),
+						"region":      llx.StringData(region),
 						"createdAt":   llx.TimeDataPtr(kp.CreateTime),
 					})
 				if err != nil {
@@ -709,23 +705,22 @@ func (a *mqlAwsEc2) getEbsEncryptionPerRegion(conn *connection.AwsConnection) []
 		return []*jobpool.Job{{Err: err}}
 	}
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("ec2>getEbsEncryptionPerRegion>calling aws with region %s", regionVal)
+			log.Debug().Msgf("ec2>getEbsEncryptionPerRegion>calling aws with region %s", region)
 
-			svc := conn.Ec2(regionVal)
+			svc := conn.Ec2(region)
 			ctx := context.Background()
 
 			ebsEncryptionRes, err := svc.GetEbsEncryptionByDefault(ctx, &ec2.GetEbsEncryptionByDefaultInput{})
 			if err != nil {
 				if Is400AccessDeniedError(err) {
-					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+					log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 					return nil, nil
 				}
 				return nil, err
 			}
 			structVal := ebsEncryption{
-				region:                 regionVal,
+				region:                 region,
 				ebsEncryptionByDefault: convert.ToValue(ebsEncryptionRes.EbsEncryptionByDefault),
 			}
 			return jobpool.JobResult(structVal), nil
@@ -786,30 +781,29 @@ func (a *mqlAwsEc2) getInstances(conn *connection.AwsConnection) []*jobpool.Job 
 		return []*jobpool.Job{{Err: err}}
 	}
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("ec2>getInstances>calling aws with region %s", regionVal)
+			log.Debug().Msgf("ec2>getInstances>calling aws with region %s", region)
 
-			svc := conn.Ec2(regionVal)
+			svc := conn.Ec2(region)
 			ctx := context.Background()
 			var res []interface{}
 
 			instances, err := a.getEc2Instances(ctx, svc, conn.Filters)
 			if err != nil {
 				if Is400AccessDeniedError(err) {
-					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+					log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 					return res, nil
 				}
 				// AWS returns an error response when trying to find an instance with a specific identifier if it cannot find it in some region.
 				// we do not propagate this error upward because an instance can be found in one region and return an error for all others which
 				// would be the expected behavior.
 				if Is400InstanceNotFoundError(err) {
-					log.Debug().Str("region", regionVal).Msg("could not find instance in region")
+					log.Debug().Str("region", region).Msg("could not find instance in region")
 					return res, nil
 				}
 				return nil, err
 			}
-			res, err = a.gatherInstanceInfo(instances, regionVal)
+			res, err = a.gatherInstanceInfo(instances, region)
 			if err != nil {
 				return nil, err
 			}
@@ -1342,9 +1336,8 @@ func (a *mqlAwsEc2) getVolumes(conn *connection.AwsConnection) []*jobpool.Job {
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := conn.Ec2(regionVal)
+			svc := conn.Ec2(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -1354,7 +1347,7 @@ func (a *mqlAwsEc2) getVolumes(conn *connection.AwsConnection) []*jobpool.Job {
 				volumes, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, err
@@ -1374,7 +1367,7 @@ func (a *mqlAwsEc2) getVolumes(conn *connection.AwsConnection) []*jobpool.Job {
 							"id":                 llx.StringDataPtr(vol.VolumeId),
 							"iops":               llx.IntDataDefault(vol.Iops, 0),
 							"multiAttachEnabled": llx.BoolDataPtr(vol.MultiAttachEnabled),
-							"region":             llx.StringData(regionVal),
+							"region":             llx.StringData(region),
 							"size":               llx.IntDataDefault(vol.Size, 0),
 							"state":              llx.StringData(string(vol.State)),
 							"tags":               llx.MapData(Ec2TagsToMap(vol.Tags), types.String),
@@ -1564,16 +1557,15 @@ func (a *mqlAwsEc2) getVpnConnections(conn *connection.AwsConnection) []*jobpool
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := conn.Ec2(regionVal)
+			svc := conn.Ec2(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
 			vpnConnections, err := svc.DescribeVpnConnections(ctx, &ec2.DescribeVpnConnectionsInput{})
 			if err != nil {
 				if Is400AccessDeniedError(err) {
-					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+					log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 					return res, nil
 				}
 				return nil, err
@@ -1594,7 +1586,7 @@ func (a *mqlAwsEc2) getVpnConnections(conn *connection.AwsConnection) []*jobpool
 				}
 				mqlVpnConn, err := CreateResource(a.MqlRuntime, "aws.ec2.vpnconnection",
 					map[string]*llx.RawData{
-						"arn":          llx.StringData(fmt.Sprintf(vpnConnArnPattern, regionVal, conn.AccountId(), convert.ToValue(vpnConn.VpnConnectionId))),
+						"arn":          llx.StringData(fmt.Sprintf(vpnConnArnPattern, region, conn.AccountId(), convert.ToValue(vpnConn.VpnConnectionId))),
 						"vgwTelemetry": llx.ArrayData(mqlVgwT, types.Resource("aws.ec2.vgwtelemetry")),
 					})
 				if err != nil {
@@ -1635,9 +1627,8 @@ func (a *mqlAwsEc2) getSnapshots(conn *connection.AwsConnection) []*jobpool.Job 
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := conn.Ec2(regionVal)
+			svc := conn.Ec2(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -1647,7 +1638,7 @@ func (a *mqlAwsEc2) getSnapshots(conn *connection.AwsConnection) []*jobpool.Job 
 				snapshots, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, err
@@ -1655,12 +1646,12 @@ func (a *mqlAwsEc2) getSnapshots(conn *connection.AwsConnection) []*jobpool.Job 
 				for _, snapshot := range snapshots.Snapshots {
 					mqlSnap, err := CreateResource(a.MqlRuntime, "aws.ec2.snapshot",
 						map[string]*llx.RawData{
-							"arn":            llx.StringData(fmt.Sprintf(snapshotArnPattern, regionVal, conn.AccountId(), convert.ToValue(snapshot.SnapshotId))),
+							"arn":            llx.StringData(fmt.Sprintf(snapshotArnPattern, region, conn.AccountId(), convert.ToValue(snapshot.SnapshotId))),
 							"completionTime": llx.TimeDataPtr(snapshot.CompletionTime),
 							"description":    llx.StringDataPtr(snapshot.Description),
 							"encrypted":      llx.BoolDataPtr(snapshot.Encrypted),
 							"id":             llx.StringDataPtr(snapshot.SnapshotId),
-							"region":         llx.StringData(regionVal),
+							"region":         llx.StringData(region),
 							"startTime":      llx.TimeDataPtr(snapshot.StartTime),
 							"state":          llx.StringData(string(snapshot.State)),
 							"storageTier":    llx.StringData(string(snapshot.StorageTier)),
@@ -1721,9 +1712,8 @@ func (a *mqlAwsEc2) getInternetGateways(conn *connection.AwsConnection) []*jobpo
 		return []*jobpool.Job{{Err: err}}
 	}
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := conn.Ec2(regionVal)
+			svc := conn.Ec2(region)
 			ctx := context.Background()
 			params := &ec2.DescribeInternetGatewaysInput{}
 			res := []interface{}{}
@@ -1732,7 +1722,7 @@ func (a *mqlAwsEc2) getInternetGateways(conn *connection.AwsConnection) []*jobpo
 				internetGws, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, err
@@ -1744,7 +1734,7 @@ func (a *mqlAwsEc2) getInternetGateways(conn *connection.AwsConnection) []*jobpo
 					}
 					mqlInternetGw, err := CreateResource(a.MqlRuntime, "aws.ec2.internetgateway",
 						map[string]*llx.RawData{
-							"arn":         llx.StringData(fmt.Sprintf(internetGwArnPattern, regionVal, convert.ToValue(gateway.OwnerId), convert.ToValue(gateway.InternetGatewayId))),
+							"arn":         llx.StringData(fmt.Sprintf(internetGwArnPattern, region, convert.ToValue(gateway.OwnerId), convert.ToValue(gateway.InternetGatewayId))),
 							"id":          llx.StringData(convert.ToValue(gateway.InternetGatewayId)),
 							"attachments": llx.ArrayData(jsonAttachments, types.Any),
 						})

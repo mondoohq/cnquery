@@ -49,11 +49,10 @@ func (a *mqlAwsElasticache) getClusters(conn *connection.AwsConnection) []*jobpo
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("elasticache>getClusters>calling aws with region %s", regionVal)
+			log.Debug().Msgf("elasticache>getClusters>calling aws with region %s", region)
 
-			svc := conn.Elasticache(regionVal)
+			svc := conn.Elasticache(region)
 			ctx := context.Background()
 			var res interface{}
 
@@ -63,7 +62,7 @@ func (a *mqlAwsElasticache) getClusters(conn *connection.AwsConnection) []*jobpo
 				clusters, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, err
@@ -111,11 +110,10 @@ func (a *mqlAwsElasticache) getCacheClusters(conn *connection.AwsConnection) []*
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("elasticache>getCacheClusters>calling aws with region %s", regionVal)
+			log.Debug().Msgf("elasticache>getCacheClusters>calling aws with region %s", region)
 
-			svc := conn.Elasticache(regionVal)
+			svc := conn.Elasticache(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -125,7 +123,7 @@ func (a *mqlAwsElasticache) getCacheClusters(conn *connection.AwsConnection) []*
 				clusters, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, err
@@ -134,7 +132,7 @@ func (a *mqlAwsElasticache) getCacheClusters(conn *connection.AwsConnection) []*
 					return nil, nil
 				}
 				for _, cluster := range clusters.CacheClusters {
-					mqlCluster, err := newMqlAwsElasticacheCluster(a.MqlRuntime, regionVal, conn.AccountId(), cluster)
+					mqlCluster, err := newMqlAwsElasticacheCluster(a.MqlRuntime, region, conn.AccountId(), cluster)
 					if err != nil {
 						return nil, err
 					}
@@ -250,11 +248,10 @@ func (a *mqlAwsElasticache) getServerlessCaches(conn *connection.AwsConnection) 
 	}
 
 	for _, region := range regions {
-		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("elasticache>getServerlessClusters>calling aws with region %s", regionVal)
+			log.Debug().Msgf("elasticache>getServerlessClusters>calling aws with region %s", region)
 
-			svc := conn.Elasticache(regionVal)
+			svc := conn.Elasticache(region)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -264,7 +261,7 @@ func (a *mqlAwsElasticache) getServerlessCaches(conn *connection.AwsConnection) 
 				caches, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
 					return nil, err
@@ -273,7 +270,7 @@ func (a *mqlAwsElasticache) getServerlessCaches(conn *connection.AwsConnection) 
 					return nil, nil
 				}
 				for _, cache := range caches.ServerlessCaches {
-					mqlCache, err := newMqlAwsElasticacheServerlessCache(a.MqlRuntime, regionVal, conn.AccountId(), cache)
+					mqlCache, err := newMqlAwsElasticacheServerlessCache(a.MqlRuntime, region, conn.AccountId(), cache)
 					if err != nil {
 						return nil, err
 					}
