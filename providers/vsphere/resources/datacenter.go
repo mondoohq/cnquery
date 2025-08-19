@@ -34,7 +34,20 @@ func newVsphereHostResources(vClient *resourceclient.Client, runtime *plugin.Run
 		var tags []string
 		if hostInfo != nil {
 			name = hostInfo.Name
-			tags = extractTagKeys(hostInfo.Tag)
+			simpleTags := extractTagKeys(hostInfo.Tag)
+
+			// Get vAPI tags using the connection
+			conn := runtime.Connection.(*connection.VsphereConnection)
+			ctx := context.Background()
+
+			// Get vAPI tags using the connection config
+			vapiTags := vClient.GetHostTags(ctx, h.Reference(), conn.Conf)
+			// Use vAPI tags if available, otherwise use simple tags
+			if len(vapiTags) > 0 {
+				tags = vapiTags
+			} else {
+				tags = simpleTags
+			}
 		}
 
 		mqlHost, err := CreateResource(runtime, "vsphere.host", map[string]*llx.RawData{

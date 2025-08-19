@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"context"
+
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25/mo"
 	"go.mondoo.com/cnquery/v11/llx"
@@ -24,7 +26,22 @@ func newMqlVm(runtime *plugin.Runtime, vm *object.VirtualMachine, vmInfo *mo.Vir
 	var tags []string
 	if vmInfo != nil && vmInfo.Config != nil {
 		name = vmInfo.Config.Name
-		tags = extractTagKeys(vmInfo.Tag)
+		// Try both approaches for testing
+		simpleTags := extractTagKeys(vmInfo.Tag)
+
+		// Get vAPI tags using the connection
+		conn := runtime.Connection.(*connection.VsphereConnection)
+		vClient := resourceclient.New(conn.Client())
+		ctx := context.Background()
+
+		// Get vAPI tags using the connection config
+		vapiTags := vClient.GetVmTags(ctx, vm.Reference(), conn.Conf)
+		// Use vAPI tags if available, fallback to simple tags
+		if len(vapiTags) > 0 {
+			tags = vapiTags
+		} else {
+			tags = simpleTags
+		}
 	}
 
 	mqlVm, err := CreateResource(runtime, "vsphere.vm", map[string]*llx.RawData{
