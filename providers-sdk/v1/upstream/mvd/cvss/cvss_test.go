@@ -114,6 +114,15 @@ func TestCvss31Parsing1(t *testing.T) {
 	assert.Equal(t, "High", c.Severity().String(), "severity properly extracted")
 }
 
+func TestCvss31Parsing_modifiedbasemetrics(t *testing.T) {
+	c, err := New("8.1/CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H/E:F/RL:O/RC:C/CR:H/IR:H/AR:H/MAV:N/MAC:L/MPR:N/MUI:N/MS:U/MC:H/MI:H/MA:H")
+	assert.Nil(t, err, "could parse the cvss vector")
+	assert.True(t, c.Verify(), "valid cvss vector")
+	assert.Equal(t, "3.1", c.Version(), "vector format version")
+
+	assert.Equal(t, float32(8.1), c.Score, "score properly detected")
+}
+
 func TestCvss31WithoutScoreParsing(t *testing.T) {
 	c, err := New("CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H")
 	require.NoError(t, err, "could parse the cvss vector")

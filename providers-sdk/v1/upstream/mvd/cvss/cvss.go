@@ -120,6 +120,24 @@ func init() {
 		"TD": {
 			"M", "L", "M", "H", "ND",
 		},
+
+		// Modified Base Metrics (Non-mandatory)
+		// Modified Attack Vector (MAV): [X, N, A, L, P]
+		"MAV": {"X", "N", "A", "L", "P"},
+		// Modified Attack Complexity (MAC): [X, L, H]
+		"MAC": {"X", "L", "H"},
+		// Modified Privileges Required (MPR): [X, N, L, H]
+		"MPR": {"X", "N", "L", "H"},
+		// Modified User Interaction (MUI): [X, N, P, A]
+		"MUI": {"X", "N", "R"},
+		// Modified Scope (MS): [X, N, L, H]
+		"MS": {"X", "U", "C"},
+		// Modified Confidentiality (MC): [X, N, L, H]
+		"MC": {"X", "N", "L", "H"},
+		// Modified Integrity (MI): [X, N, L, H, S]
+		"MI": {"X", "N", "L", "H"},
+		// Modified Availability (MA): [X, N, L, H, S]
+		"MA": {"X", "N", "L", "H"},
 	}
 	// MetricsV4 defines the valid CVSS 4.0 metrics and their allowed values.
 	// CVSS v4 https://www.first.org/cvss/v4-0/specification-document
