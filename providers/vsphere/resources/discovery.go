@@ -124,6 +124,22 @@ func discoverDatacenter(conn *connection.VsphereConnection, datacenterResource *
 			platformID := connection.VsphereResourceID(instanceUuid, mqlHost.Moid.Data)
 			clonedConfig := conn.Conf.Clone(inventory.WithoutDiscovery())
 			clonedConfig.PlatformId = platformID
+
+			labels := map[string]string{
+				"vsphere.vmware.com/name":          mqlHost.Name.Data,
+				"vsphere.vmware.com/moid":          mqlHost.Moid.Data,
+				"vsphere.vmware.com/inventorypath": mqlHost.InventoryPath.Data,
+			}
+
+			// Add tags as labels with vsphere.vmware.com/tag/ prefix
+			if mqlHost.Tags.Error == nil {
+				for _, tag := range mqlHost.Tags.Data {
+					if tagStr, ok := tag.(string); ok {
+						labels["vsphere.vmware.com/tag/"+tagStr] = "true"
+					}
+				}
+			}
+
 			assetList = append(assetList, &inventory.Asset{
 				Name: mqlHost.Name.Data,
 				Platform: &inventory.Platform{
@@ -137,11 +153,7 @@ func discoverDatacenter(conn *connection.VsphereConnection, datacenterResource *
 					TechnologyUrlSegments: []string{"vmware", "esxi", esxiVersion.Version + "-" + esxiVersion.Build},
 				},
 				Connections: []*inventory.Config{clonedConfig}, // pass-in the parent connection config
-				Labels: map[string]string{
-					"vsphere.vmware.com/name":          mqlHost.Name.Data,
-					"vsphere.vmware.com/moid":          mqlHost.Moid.Data,
-					"vsphere.vmware.com/inventorypath": mqlHost.InventoryPath.Data,
-				},
+				Labels:      labels,
 				State:       mapHostPowerstateToState(mqlHost.host.Runtime.PowerState),
 				PlatformIds: []string{platformID},
 			})
@@ -157,15 +169,27 @@ func discoverDatacenter(conn *connection.VsphereConnection, datacenterResource *
 			platformID := connection.VsphereResourceID(instanceUuid, vm.Moid.Data)
 			clonedConfig := conn.Conf.Clone(inventory.WithoutDiscovery())
 			clonedConfig.PlatformId = platformID
+
+			labels := map[string]string{
+				"vsphere.vmware.com/name":           vm.Name.Data,
+				"vsphere.vmware.com/moid":           vm.Moid.Data,
+				"vsphere.vmware.com/inventory-path": vm.InventoryPath.Data,
+			}
+
+			// Add tags as labels with vsphere.vmware.com/tag/ prefix
+			if vm.Tags.Error == nil {
+				for _, tag := range vm.Tags.Data {
+					if tagStr, ok := tag.(string); ok {
+						labels["vsphere.vmware.com/tag/"+tagStr] = "true"
+					}
+				}
+			}
+
 			assetList = append(assetList, &inventory.Asset{
 				Name:        vm.Name.Data,
 				Platform:    &inventory.Platform{},
 				Connections: []*inventory.Config{clonedConfig},
-				Labels: map[string]string{
-					"vsphere.vmware.com/name":           vm.Name.Data,
-					"vsphere.vmware.com/moid":           vm.Moid.Data,
-					"vsphere.vmware.com/inventory-path": vm.InventoryPath.Data,
-				},
+				Labels:      labels,
 				State:       mapVmGuestState(vm.vm.Guest.GuestState),
 				PlatformIds: []string{platformID},
 			})

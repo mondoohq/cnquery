@@ -12,7 +12,9 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/vsphere/connection"
 	"go.mondoo.com/cnquery/v11/providers/vsphere/resources/resourceclient"
+	"go.mondoo.com/cnquery/v11/types"
 )
+
 
 func newVsphereHostResources(vClient *resourceclient.Client, runtime *plugin.Runtime, vhosts []*object.HostSystem) ([]interface{}, error) {
 	mqlHosts := make([]interface{}, len(vhosts))
@@ -28,6 +30,9 @@ func newVsphereHostResources(vClient *resourceclient.Client, runtime *plugin.Run
 			return nil, err
 		}
 
+		// Extract tags from hostInfo.Tag field (simpler than vAPI REST client)
+		tags := extractTagKeys(hostInfo.Tag)
+
 		var name string
 		if hostInfo != nil {
 			name = hostInfo.Name
@@ -38,6 +43,7 @@ func newVsphereHostResources(vClient *resourceclient.Client, runtime *plugin.Run
 			"name":          llx.StringData(name),
 			"properties":    llx.DictData(props),
 			"inventoryPath": llx.StringData(h.InventoryPath),
+			"tags":          llx.ArrayData(stringSliceToInterface(tags), types.String),
 		})
 		if err != nil {
 			return nil, err

@@ -186,6 +186,8 @@ private vsphere.host @defaults("moid name") {
   ntp() esxi.ntpconfig
   // Host SNMP configuration
   snmp() map[string]string
+  //Host tags
+  tags []string
 }
 
 // vSphere VM resource
@@ -200,6 +202,8 @@ private vsphere.vm @defaults("moid name") {
   properties dict
   // Virtual machine advanced properties
   advancedSettings() map[string]string
+  // VM tags
+  tags []string
 }
 
 // vSphere standard virtual switch
