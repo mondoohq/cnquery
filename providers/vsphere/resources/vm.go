@@ -35,7 +35,7 @@ func newMqlVm(runtime *plugin.Runtime, vm *object.VirtualMachine, vmInfo *mo.Vir
 		ctx := context.Background()
 
 		// Get vAPI tags using the connection config
-		vapiTags := vClient.GetVmTags(ctx, vm.Reference(), conn.Conf)
+		vapiTags := GetTags(ctx, vm.Reference(), vClient.Client.Client, conn.Conf)
 		// Use vAPI tags if available, fallback to simple tags
 		if len(vapiTags) > 0 {
 			tags = vapiTags

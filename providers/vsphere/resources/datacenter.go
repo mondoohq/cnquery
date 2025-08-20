@@ -41,7 +41,7 @@ func newVsphereHostResources(vClient *resourceclient.Client, runtime *plugin.Run
 			ctx := context.Background()
 
 			// Get vAPI tags using the connection config
-			vapiTags := vClient.GetHostTags(ctx, h.Reference(), conn.Conf)
+			vapiTags := GetTags(ctx, h.Reference(), vClient.Client.Client, conn.Conf)
 			// Use vAPI tags if available, otherwise use simple tags
 			if len(vapiTags) > 0 {
 				tags = vapiTags
