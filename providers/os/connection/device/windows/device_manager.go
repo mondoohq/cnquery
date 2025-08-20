@@ -42,7 +42,7 @@ func (d *WindowsDeviceManager) Name() string {
 	return "windows"
 }
 
-func (d *WindowsDeviceManager) IdentifyMountTargets(opts map[string]string) ([]*snapshot.PartitionInfo, error) {
+func (d *WindowsDeviceManager) IdentifyMountTargets(opts map[string]string) ([]*snapshot.Partition, error) {
 	log.Debug().Msg("device connection> identifying mount targets")
 	diskDrives, err := d.IdentifyDiskDrives()
 	if err != nil {
@@ -83,11 +83,11 @@ func (d *WindowsDeviceManager) IdentifyMountTargets(opts map[string]string) ([]*
 	if err != nil {
 		return nil, err
 	}
-	partitionInfo := &snapshot.PartitionInfo{
+	partitionInfo := &snapshot.Partition{
 		Name:   partition.DriveLetter,
 		FsType: "Windows",
 	}
-	return []*snapshot.PartitionInfo{partitionInfo}, nil
+	return []*snapshot.Partition{partitionInfo}, nil
 }
 
 // validates the options provided to the device manager
@@ -106,13 +106,26 @@ func validateOpts(opts map[string]string) error {
 	return nil
 }
 
-func (d *WindowsDeviceManager) Mount(pi *snapshot.PartitionInfo) (string, error) {
-	// note: we do not (yet) do the mounting in windows. for now, we simply return the drive letter
-	// as that means the drive is already mounted
-	if strings.HasSuffix(pi.Name, ":") {
-		return pi.Name, nil
+func (d *WindowsDeviceManager) Mount(partitions []*snapshot.Partition) ([]*snapshot.MountedPartition, error) {
+	res := []*snapshot.MountedPartition{}
+	for _, partition := range partitions {
+		name := partition.Name
+		if !strings.HasSuffix(name, ":") {
+			name += ":"
+		}
+		mp := &snapshot.MountedPartition{
+			Name:         partition.Name,
+			FsType:       partition.FsType,
+			Label:        partition.Label,
+			Uuid:         partition.Uuid,
+			PartUuid:     partition.PartUuid,
+			MountPoint:   name,
+			MountOptions: []string{}, // Windows does not use mount options like Linux
+			Aliases:      partition.Aliases,
+		}
+		res = append(res, mp)
 	}
-	return pi.Name + ":", nil
+	return res, nil
 }
 
 func (d *WindowsDeviceManager) UnmountAndClose() {

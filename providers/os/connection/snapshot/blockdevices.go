@@ -22,27 +22,26 @@ type BlockDevices struct {
 }
 
 type BlockDevice struct {
-	Name       string        `json:"name,omitempty"`
-	FsType     string        `json:"fstype,omitempty"`
-	Label      string        `json:"label,omitempty"`
-	Uuid       string        `json:"uuid,omitempty"`
-	PartUuid   string        `json:"partuuid,omitempty"`
-	MountPoint string        `json:"mountpoint,omitempty"`
-	Children   []BlockDevice `json:"children,omitempty"`
-	Size       Size          `json:"size,omitempty"`
+	Name        string        `json:"name,omitempty"`
+	FsType      string        `json:"fstype,omitempty"`
+	Label       string        `json:"label,omitempty"`
+	Uuid        string        `json:"uuid,omitempty"`
+	PartUuid    string        `json:"partuuid,omitempty"`
+	MountPoints []string      `json:"mountpoints,omitempty"`
+	Children    []BlockDevice `json:"children,omitempty"`
+	Size        Size          `json:"size,omitempty"`
 
 	Aliases []string `json:"-"`
 }
 
-func (b BlockDevice) PartitionInfo(devPath string) *PartitionInfo {
-	return &PartitionInfo{
-		Name:       path.Join(devPath, b.Name),
-		FsType:     b.FsType,
-		Label:      b.Label,
-		Uuid:       b.Uuid,
-		PartUuid:   b.PartUuid,
-		MountPoint: b.MountPoint,
-		Aliases:    b.Aliases,
+func (b BlockDevice) Partition(devPath string) *Partition {
+	return &Partition{
+		Name:     path.Join(devPath, b.Name),
+		FsType:   b.FsType,
+		Label:    b.Label,
+		Uuid:     b.Uuid,
+		PartUuid: b.PartUuid,
+		Aliases:  b.Aliases,
 	}
 }
 
@@ -65,7 +64,7 @@ func (s *Size) UnmarshalJSON(data []byte) error {
 }
 
 func (cmdRunner *LocalCommandRunner) GetBlockDevices() (*BlockDevices, error) {
-	cmd, err := cmdRunner.RunCommand("lsblk -bo NAME,SIZE,FSTYPE,MOUNTPOINT,LABEL,UUID,PARTUUID --json")
+	cmd, err := cmdRunner.RunCommand("lsblk -bo NAME,SIZE,FSTYPE,MOUNTPOINTS,LABEL,UUID,PARTUUID --json")
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +85,6 @@ func (cmdRunner *LocalCommandRunner) GetBlockDevices() (*BlockDevices, error) {
 	}
 
 	blockEntries.findAliases()
-
 	return blockEntries, nil
 }
 
@@ -177,7 +175,7 @@ func (blockEntries BlockDevices) FindDevice(requested string) (BlockDevice, erro
 }
 
 // Searches all the partitions in the device and finds one that can be mounted. It must be unmounted, non-boot partition
-func (device BlockDevice) GetPartitions(includeBoot bool, includeMounted bool) ([]*PartitionInfo, error) {
+func (device BlockDevice) GetPartitions(includeBoot bool, includeMounted bool) ([]*Partition, error) {
 	log.Debug().Str("device", device.Name).Msg("get partitions for device")
 
 	blockDevices := &BlockDevices{
@@ -203,15 +201,16 @@ func (device BlockDevice) GetPartitions(includeBoot bool, includeMounted bool) (
 			return false
 		}
 
-		// skip mounted partitions unless includeMounted is true
+		// sltekip mounted partitions unless includeMounted is true
 		if partition.isMounted() && !includeMounted {
+			log.Debug().Str("name", partition.Name).Strs("mountpoints", partition.MountPoints).Msg("skipping mounted partition")
 			return false
 		}
 
 		return true
 	}
 
-	partitions := []*PartitionInfo{}
+	partitions := []*Partition{}
 	for _, partition := range blockDevices.BlockDevices {
 		log.Debug().Str("name", partition.Name).Int64("size", int64(partition.Size)).Msg("checking partition")
 		if filter(partition) {
@@ -225,12 +224,12 @@ func (device BlockDevice) GetPartitions(includeBoot bool, includeMounted bool) (
 				partitions = append(partitions, mapLVM2Partitions(partition)...)
 				continue
 			}
-			partitions = append(partitions, partition.PartitionInfo("/dev"))
+			partitions = append(partitions, partition.Partition("/dev"))
 		} else {
 			log.Debug().
 				Str("name", partition.Name).
 				Str("fs_type", partition.FsType).
-				Str("mountpoint", partition.MountPoint).
+				Strs("mountpoints", partition.MountPoints).
 				Msg("skipping partition, because the filter did not match")
 		}
 	}
@@ -242,16 +241,16 @@ func (device BlockDevice) GetPartitions(includeBoot bool, includeMounted bool) (
 	return partitions, nil
 }
 
-func mapLVM2Partitions(part BlockDevice) (partitions []*PartitionInfo) {
+func mapLVM2Partitions(part BlockDevice) (partitions []*Partition) {
 	for _, p := range part.Children {
-		partitions = append(partitions, p.PartitionInfo("/dev/mapper"))
+		partitions = append(partitions, p.Partition("/dev/mapper"))
 	}
 
 	return partitions
 }
 
 // If multiple partitions meet this criteria, the largest one is returned.
-func (device BlockDevice) GetMountablePartition() (*PartitionInfo, error) {
+func (device BlockDevice) GetMountablePartition() (*Partition, error) {
 	// return the largest partition. we can extend this to be a parameter in the future
 	partitions, err := device.GetPartitions(false, false)
 	if err != nil {
