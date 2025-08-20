@@ -257,7 +257,9 @@ func parseKeyVal(line string) (string, string, int) {
 	return line[:keyend], line[valstart:valend], i
 }
 
-var reOperator = regexp.MustCompile(`(=|!=|<|<=|>|>=)`)
+// Make sure this regex matches the most complete form first (ie >=) before
+// matching the shorter forms (ie =)
+var reOperator = regexp.MustCompile(`(!=|<=|>=|=|>|<)`)
 
 func (s *mqlAuditdRules) parse(content string, errors *multierr.Errors) {
 	s.Syscalls.State = plugin.StateIsSet
