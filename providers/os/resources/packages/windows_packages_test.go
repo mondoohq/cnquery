@@ -490,8 +490,8 @@ func TestFindAndUpdateMsSqlGDR_de(t *testing.T) {
 		{Name: "SQL Server 2022 Shared Management Objects", Version: "16.0.1050.5", PUrl: "pkg:windows/windows/SQL%20Server%202022%20Shared%20Management%20Objects@16.0.1050.5?arch=x86"},
 		// We should not update the setup package
 		{Name: "Microsoft SQL Server 2022 Setup (English)", Version: "16.0.1050.5", PUrl: "pkg:windows/windows/Microsoft%20SQL%20Server%202022%20Setup%20%28English%29@16.0.1050.5?arch=x86"},
-		{Name: "GDR 1115 für SQL Server 2022 (KB5035432) (64-bit)", Version: "16.0.1115.1", PUrl: "pkg:windows/windows/GDR%201115%20für%20SQL%20Server%202022%20%28KB5035432%29%20%2864-bit%29@16.0.1115.1?arch=x86"},
-		{Name: "GDR 1110 für SQL Server 2022 (KB5032968) (64-bit)", Version: "16.0.1110.1", PUrl: "pkg:windows/windows/GDR%201110%20für%20SQL%20Server%202022%20%28KB5032968%29%20%2864-bit%29@16.0.1110.1?arch=x86"},
+		{Name: "GDR 1115 für SQL Server 2022 (KB5035432) (64-bit)", Version: "16.0.1115.1", PUrl: "pkg:windows/windows/GDR%201115%20f%C3%BCr%20SQL%20Server%202022%20%28KB5035432%29%20%2864-bit%29@16.0.1115.1?arch=x86"},
+		{Name: "GDR 1110 für SQL Server 2022 (KB5032968) (64-bit)", Version: "16.0.1110.1", PUrl: "pkg:windows/windows/GDR%201110%20f%C3%BCr%20SQL%20Server%202022%20%28KB5032968%29%20%2864-bit%29@16.0.1110.1?arch=x86"},
 		{Name: "Not a hotfix", Version: "1.0.0", PUrl: "pkg:windows/windows/Not%20a%20hotfix@1.0.0?arch=x86"},
 	}
 
@@ -526,4 +526,63 @@ func TestFindAndUpdateMsSqlGDR_de(t *testing.T) {
 	require.NotNil(t, pkg, "Not a hotfix package should exist")
 	require.Equal(t, "1.0.0", pkg.Version, "expected non-SQL Server package to remain unchanged")
 	assert.Equal(t, "pkg:windows/windows/Not%20a%20hotfix@1.0.0?arch=x86", pkg.PUrl)
+}
+
+func TestFindAndUpdateMsSqlGDR_de_special_characters(t *testing.T) {
+	// Setup: create a list of packages with SQL Server hotfixes and SQL Server packages
+	packages := []Package{
+		{Name: "SQL Server 2017 Database Engine Services", Version: "14.0.1000.169", PUrl: "pkg:windows/windows/SQL%20Server%202017%20Database%20Engine%20Services@14.0.1000.169?arch=x86"},
+		{Name: "SQL Server 2017 Shared Management Objects", Version: "14.0.1000.169", PUrl: "pkg:windows/windows/SQL%20Server%202022%20Shared%20Management%20Objects@14.0.1000.169?arch=x86"},
+		// We should not update the setup package
+		{Name: "Microsoft SQL Server 2017 Setup (English)", Version: "14.0.1000.169", PUrl: "pkg:windows/windows/Microsoft%20SQL%20Server%202017%20Setup%20%28English%29@14.0.1050.5"},
+		// This package contains a non breaking space between SQL Server and 2017
+		{Name: "GDR 2042 für SQL Server 2017 (KB5014354) (64-bit)", Version: "14.0.2042.3", PUrl: "pkg:windows/windows/GDR%202042%20f%C3%BCr%20SQL%20Server%202017%20%28KB5014354%29%20%2864-bit%29@14.0.2042.3?arch=x86"},
+		// This package contains a non breaking space between SQL Server and 2017
+		{Name: "GDR 2037 für SQL Server 2017 (KB4583456) (64-bit)", Version: "14.0.2037.2", PUrl: "pkg:windows/windows/GDR%202037%20f%C3%BCr%20SQL%20Server%202017%20%28KB4583456%29%20%2864-bit%29@14.0.2037.2?arch=x86"},
+		{Name: "Not a hotfix", Version: "1.0.0", PUrl: "pkg:windows/windows/Not%20a%20hotfix@1.0.0?arch=x86"},
+	}
+
+	// Step 1: Find SQL Server gdrUpdates
+	gdrUpdates := findMsSqlGdrUpdates(packages)
+	require.Len(t, gdrUpdates, 2, "expected 2 updates")
+
+	// Step 2: Get the latest hotfix (should be the last one after sorting)
+	latestUpdate := gdrUpdates[len(gdrUpdates)-1]
+	expectedLatestVersion := "14.0.2042.3"
+	require.Equal(t, expectedLatestVersion, latestUpdate.Version, "expected latest update version")
+
+	// Step 3: Update SQL Server packages with the latest hotfix version
+	updated := updateMsSqlPackages(packages, latestUpdate)
+
+	// Step 4: Check that all SQL Server packages have the updated version
+	pkg := findPkgByName(updated, "SQL Server 2017 Database Engine Services")
+	require.NotNil(t, pkg, "SQL Server 2017 Database Engine Services package should exist")
+	require.Equal(t, expectedLatestVersion, pkg.Version, "expected SQL Server 2017 Database Engine Services to have updated version")
+	assert.Equal(t, "pkg:windows/windows/SQL%20Server%202017%20Database%20Engine%20Services@14.0.2042.3?arch=x86", pkg.PUrl)
+
+	// Step 5: Ensure non-SQL Server packages are unchanged
+	pkg = findPkgByName(updated, "Not a hotfix")
+	require.NotNil(t, pkg, "Not a hotfix package should exist")
+	require.Equal(t, "1.0.0", pkg.Version, "expected non-SQL Server package to remain unchanged")
+	assert.Equal(t, "pkg:windows/windows/Not%20a%20hotfix@1.0.0?arch=x86", pkg.PUrl)
+}
+
+func TestCreatePackage(t *testing.T) {
+	t.Run("create package with non-breaking space in name", func(t *testing.T) {
+		// The name contains a non-breaking space between Server and 2017
+		pkg := createPackage("GDR 2042 für SQL Server 2017 (KB5014354) (64-bit)", "1234", "windows/app", "x86_64", "Microsoft", "", nil)
+		require.NotNil(t, pkg, "expected package to be created")
+
+		// Here we check that the name is replaced with a regular space
+		assert.Equal(t, "GDR 2042 für SQL Server 2017 (KB5014354) (64-bit)", pkg.Name)
+	})
+
+	t.Run("create package with non-breaking space in name - unicode", func(t *testing.T) {
+		// The name contains a non-breaking space between Server and 2017
+		pkg := createPackage("GDR 2042 für SQL Server\u00a02017 (KB5014354) (64-bit)", "1234", "windows/app", "x86_64", "Microsoft", "", nil)
+		require.NotNil(t, pkg, "expected package to be created")
+
+		// Here we check that the name is replaced with a regular space
+		assert.Equal(t, "GDR 2042 für SQL Server 2017 (KB5014354) (64-bit)", pkg.Name)
+	})
 }
