@@ -48,10 +48,10 @@ func (m *volumeMounter) Mount(input *MountPartitionInput) (*MountedPartition, er
 	if input == nil {
 		return nil, errors.New("mount device> partition is required")
 	}
-	if input.Name == "" {
+	if input.Partition.Name == "" {
 		return nil, errors.New("mount device> partition name is required")
 	}
-	if input.FsType == "" {
+	if input.Partition.FsType == "" {
 		return nil, errors.New("mount device> partition fs type is required")
 	}
 
@@ -64,17 +64,12 @@ func (m *volumeMounter) Mount(input *MountPartitionInput) (*MountedPartition, er
 		mountDir = dir
 	}
 
-	m.scanDirs[mountDir] = input.Name
+	m.scanDirs[mountDir] = input.Partition.Name
 
 	mp := &MountedPartition{
-		Name:         input.Name,
-		FsType:       input.FsType,
-		Label:        input.Label,
-		Uuid:         input.Uuid,
-		PartUuid:     input.PartUuid,
+		Partition:    input.Partition,
 		MountOptions: input.MountOptions,
 		MountPoint:   mountDir,
-		rootPath:     input.RootPath,
 	}
 	return mp, m.mountVolume(input, mountDir)
 }
@@ -83,10 +78,10 @@ func (m *volumeMounter) Umount(partition *MountedPartition) error {
 	if partition == nil {
 		return errors.New("unmount device> partition is required")
 	}
-	if partition.Name == "" {
+	if partition.Partition.Name == "" {
 		return errors.New("unmount device> partition name is required")
 	}
-	log.Debug().Str("dir", partition.MountPoint).Str("name", partition.Name).Msg("unmount volume")
+	log.Debug().Str("dir", partition.MountPoint).Str("name", partition.Partition.Name).Msg("unmount volume")
 	if err := Unmount(partition.MountPoint); err != nil {
 		log.Warn().Err(err).Str("dir", partition.MountPoint).Msg("failed to unmount dir")
 		return err
@@ -108,14 +103,17 @@ func (m *volumeMounter) createScanDir() (string, error) {
 
 func (m *volumeMounter) mountVolume(input *MountPartitionInput, dir string) error {
 	opts := input.MountOptions
-	if input.FsType == "xfs" {
+	fsType := input.Partition.FsType
+	name := input.Partition.Name
+	if fsType == "xfs" {
 		opts = append(opts, "nouuid")
 	}
+
 	opts = stringx.DedupStringArray(opts)
 	opts = sanitizeOptions(opts)
 
-	log.Debug().Str("fstype", input.FsType).Str("device", input.Name).Str("dir", dir).Strs("opts", opts).Msg("mount volume to scan dir")
-	return Mount(input.Name, dir, input.FsType, opts)
+	log.Debug().Str("fstype", fsType).Str("device", name).Str("dir", dir).Strs("opts", opts).Msg("mount volume to scan dir")
+	return Mount(name, dir, fsType, opts)
 }
 
 func sanitizeOptions(options []string) []string {

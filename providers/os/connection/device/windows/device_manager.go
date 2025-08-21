@@ -114,14 +114,9 @@ func (d *WindowsDeviceManager) Mount(partitions []*snapshot.Partition) ([]*snaps
 			name += ":"
 		}
 		mp := &snapshot.MountedPartition{
-			Name:         partition.Name,
-			FsType:       partition.FsType,
-			Label:        partition.Label,
-			Uuid:         partition.Uuid,
-			PartUuid:     partition.PartUuid,
+			Partition:    partition,
 			MountPoint:   name,
 			MountOptions: []string{}, // Windows does not use mount options like Linux
-			Aliases:      partition.Aliases,
 		}
 		res = append(res, mp)
 	}
