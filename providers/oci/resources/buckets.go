@@ -11,9 +11,9 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/objectstorage"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/oci/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/oci/connection"
 )
 
 func (e *mqlOciObjectStorage) id() (string, error) {
@@ -47,7 +47,7 @@ func (o *mqlOciObjectStorage) namespace() (string, error) {
 	}
 }
 
-func (o *mqlOciObjectStorage) buckets() ([]interface{}, error) {
+func (o *mqlOciObjectStorage) buckets() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
 	// fetch regions
@@ -67,7 +67,7 @@ func (o *mqlOciObjectStorage) buckets() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(o.getBuckets(conn, namespace, list.Data), 5)
 	poolOfJobs.Run()
 
@@ -77,7 +77,7 @@ func (o *mqlOciObjectStorage) buckets() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
@@ -110,7 +110,7 @@ func (o *mqlOciObjectStorage) getBucketsForRegion(ctx context.Context, objectSto
 	return entries, nil
 }
 
-func (o *mqlOciObjectStorage) getBuckets(conn *connection.OciConnection, namespace string, regions []interface{}) []*jobpool.Job {
+func (o *mqlOciObjectStorage) getBuckets(conn *connection.OciConnection, namespace string, regions []any) []*jobpool.Job {
 	ctx := context.Background()
 	tasks := make([]*jobpool.Job, 0)
 
@@ -127,7 +127,7 @@ func (o *mqlOciObjectStorage) getBuckets(conn *connection.OciConnection, namespa
 				return nil, err
 			}
 
-			var res []interface{}
+			var res []any
 			buckets, err := o.getBucketsForRegion(ctx, svc, conn.TenantID(), namespace)
 			if err != nil {
 				return nil, err

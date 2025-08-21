@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/shadow"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/shadow"
 )
 
 const defaultShadowConfig = "/etc/shadow"
@@ -32,7 +32,7 @@ func parseInt(s string, dflt int64, msg string) (int64, error) {
 	return res, nil
 }
 
-func (s *mqlShadow) list() ([]interface{}, error) {
+func (s *mqlShadow) list() ([]any, error) {
 	// TODO: we may want to create a real mondoo file resource
 	o, err := CreateResource(s.MqlRuntime, "file", map[string]*llx.RawData{
 		"path": llx.StringData(defaultShadowConfig),
@@ -52,7 +52,7 @@ func (s *mqlShadow) list() ([]interface{}, error) {
 		return nil, err
 	}
 
-	shadowEntryResources := make([]interface{}, len(entries))
+	shadowEntryResources := make([]any, len(entries))
 	for i := range entries {
 		entry := entries[i]
 

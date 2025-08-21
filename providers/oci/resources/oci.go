@@ -9,16 +9,16 @@ import (
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/audit"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/oci/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/oci/connection"
 )
 
 func (o *mqlOci) id() (string, error) {
 	return "oci", nil
 }
 
-func (o *mqlOci) regions() ([]interface{}, error) {
+func (o *mqlOci) regions() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
 	regions, err := conn.GetRegions(context.Background())
@@ -26,7 +26,7 @@ func (o *mqlOci) regions() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range regions {
 		region := regions[i]
 
@@ -54,7 +54,7 @@ func (o *mqlOciRegion) id() (string, error) {
 	return "oci.region/" + o.Id.Data, nil
 }
 
-func (o *mqlOci) compartments() ([]interface{}, error) {
+func (o *mqlOci) compartments() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
 	compartments, err := conn.GetCompartments(context.Background())
@@ -62,7 +62,7 @@ func (o *mqlOci) compartments() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range compartments {
 		compartment := compartments[i]
 

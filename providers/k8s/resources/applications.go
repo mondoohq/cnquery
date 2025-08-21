@@ -7,9 +7,9 @@ import (
 	"slices"
 	"sort"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 const (
@@ -22,7 +22,7 @@ const (
 	K8sApplicationManagedBy = "app.kubernetes.io/managed-by"
 )
 
-func (k *mqlK8s) apps() ([]interface{}, error) {
+func (k *mqlK8s) apps() ([]any, error) {
 	apps := map[string]k8sapp{}
 
 	// fetch deployment resources
@@ -50,7 +50,7 @@ func (k *mqlK8s) apps() ([]interface{}, error) {
 	}
 
 	// return k8s app list
-	appList := []interface{}{}
+	appList := []any{}
 	for _, app := range apps {
 		r, err := CreateResource(k.MqlRuntime, "k8s.app", map[string]*llx.RawData{
 			"__id":       llx.StringData(app.name + "/" + app.instance),
@@ -80,7 +80,7 @@ type k8sapp struct {
 	managedBy  string
 }
 
-func extractApp(apps map[string]k8sapp, labels map[string]interface{}) {
+func extractApp(apps map[string]k8sapp, labels map[string]any) {
 	name, nameOk := labels[K8sApplicationName]
 	instance, instanceOK := labels[K8sApplicationInstance]
 	version, versionOK := labels[K8sApplicationVersion]

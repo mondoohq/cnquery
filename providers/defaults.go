@@ -5,7 +5,7 @@
 
 package providers
 
-import "go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+import "go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 
 // DefaultProviders are useful when working in air-gapped environments
 // to tell users what providers are used for common connections, when there
@@ -14,7 +14,7 @@ var DefaultProviders Providers = map[string]*Provider{
 	"ansible": {
 		Provider: &plugin.Provider{
 			Name:            "ansible",
-			ID:              "go.mondoo.com/cnquery/v11/providers/ansible",
+			ID:              "go.mondoo.com/cnquery/v12/providers/ansible",
 			ConnectionTypes: []string{"ansible"},
 			Connectors: []plugin.Connector{
 				{
@@ -88,9 +88,9 @@ var DefaultProviders Providers = map[string]*Provider{
 
 	"cloudflare": {
 		Provider: &plugin.Provider{
-			Name:            "cloudflare",
-			ID:              "go.mondoo.com/cnquery/v11/providers/cloudflare",
-			ConnectionTypes: []string{"cloudflare"},
+			Name:            "cloudformation",
+			ID:              "go.mondoo.com/cnquery/v12/providers/cloudformation",
+			ConnectionTypes: []string{"cloudformation"},
 			Connectors: []plugin.Connector{
 				{
 					Name:  "cloudflare",
@@ -103,9 +103,9 @@ var DefaultProviders Providers = map[string]*Provider{
 
 	"cloudformation": {
 		Provider: &plugin.Provider{
-			Name:            "cloudformation",
-			ID:              "go.mondoo.com/cnquery/v11/providers/cloudformation",
-			ConnectionTypes: []string{"cloudformation"},
+			Name:            "cloudflare",
+			ID:              "go.mondoo.com/cnquery/v12/providers/cloudflare",
+			ConnectionTypes: []string{"cloudflare"},
 			Connectors: []plugin.Connector{
 				{
 					Name:  "cloudformation",
@@ -233,7 +233,7 @@ var DefaultProviders Providers = map[string]*Provider{
 	"mondoo": {
 		Provider: &plugin.Provider{
 			Name:            "mondoo",
-			ID:              "go.mondoo.com/cnquery/v11/providers/mondoo",
+			ID:              "go.mondoo.com/cnquery/v12/providers/mondoo",
 			ConnectionTypes: []string{"mondoo"},
 			Connectors: []plugin.Connector{
 				{
@@ -278,7 +278,7 @@ var DefaultProviders Providers = map[string]*Provider{
 	"nmap": {
 		Provider: &plugin.Provider{
 			Name:            "nmap",
-			ID:              "go.mondoo.com/cnquery/v11/providers/nmap",
+			ID:              "go.mondoo.com/cnquery/v12/providers/nmap",
 			ConnectionTypes: []string{"nmap"},
 			Connectors: []plugin.Connector{
 				{
@@ -395,7 +395,7 @@ var DefaultProviders Providers = map[string]*Provider{
 	"shodan": {
 		Provider: &plugin.Provider{
 			Name:            "shodan",
-			ID:              "go.mondoo.com/cnquery/v11/providers/shodan",
+			ID:              "go.mondoo.com/cnquery/v12/providers/shodan",
 			ConnectionTypes: []string{"shodan"},
 			Connectors: []plugin.Connector{
 				{
@@ -425,7 +425,7 @@ var DefaultProviders Providers = map[string]*Provider{
 	"snowflake": {
 		Provider: &plugin.Provider{
 			Name:            "snowflake",
-			ID:              "go.mondoo.com/cnquery/v11/providers/snowflake",
+			ID:              "go.mondoo.com/cnquery/v12/providers/snowflake",
 			ConnectionTypes: []string{"snowflake"},
 			Connectors: []plugin.Connector{
 				{
@@ -440,7 +440,7 @@ var DefaultProviders Providers = map[string]*Provider{
 	"tailscale": {
 		Provider: &plugin.Provider{
 			Name:            "tailscale",
-			ID:              "go.mondoo.com/cnquery/v11/providers/tailscale",
+			ID:              "go.mondoo.com/cnquery/v12/providers/tailscale",
 			ConnectionTypes: []string{"tailscale"},
 			Connectors: []plugin.Connector{
 				{
@@ -454,9 +454,9 @@ var DefaultProviders Providers = map[string]*Provider{
 
 	"terraform": {
 		Provider: &plugin.Provider{
-			Name:            "terraform",
-			ID:              "go.mondoo.com/cnquery/v9/providers/terraform",
-			ConnectionTypes: []string{"terraform-state", "terraform-plan", "terraform-hcl", "terraform-hcl-git"},
+			Name:            "tailscale",
+			ID:              "go.mondoo.com/cnquery/v12/providers/tailscale",
+			ConnectionTypes: []string{"tailscale"},
 			Connectors: []plugin.Connector{
 				{
 					Name:  "terraform",

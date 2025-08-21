@@ -11,14 +11,14 @@ import (
 	"github.com/gobwas/glob"
 	"github.com/google/go-github/v72/github"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/logger"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
-	"go.mondoo.com/cnquery/v11/providers/github/connection"
-	"go.mondoo.com/cnquery/v11/utils/stringx"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/logger"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/v12/providers/github/connection"
+	"go.mondoo.com/cnquery/v12/utils/stringx"
 )
 
 func Discover(runtime *plugin.Runtime, opts map[string]string) (*inventory.Inventory, error) {
@@ -130,7 +130,7 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 		})
 	}
 
-	if stringx.ContainsAnyOf(targets, connection.DiscoveryRepos, connection.DiscoveryRepository, connection.DiscoveryAll, connection.DiscoveryAuto) {
+	if stringx.ContainsAnyOf(targets, connection.DiscoveryRepos, connection.DiscoveryAll, connection.DiscoveryAuto) {
 		for i := range org.GetRepositories().Data {
 			repo := org.GetRepositories().Data[i].(*mqlGithubRepository)
 			if reposFilter.skipRepo(repo.Name.Data) {
@@ -162,7 +162,7 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 			}
 		}
 	}
-	if stringx.ContainsAnyOf(targets, connection.DiscoveryUsers, connection.DiscoveryUser) {
+	if stringx.ContainsAnyOf(targets, connection.DiscoveryUsers) {
 		assetList = []*inventory.Asset{}
 		for i := range org.GetMembers().Data {
 			user := org.GetMembers().Data[i].(*mqlGithubUser)

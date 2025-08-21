@@ -10,8 +10,8 @@ import (
 	"regexp"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/languages"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/languages/javascript"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/languages"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/languages/javascript"
 	"sigs.k8s.io/yaml"
 )
 

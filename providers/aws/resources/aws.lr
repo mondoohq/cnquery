@@ -4,7 +4,7 @@
 import "../../network/resources/network.lr"
 
 option provider = "go.mondoo.com/cnquery/v9/providers/aws"
-option go_package = "go.mondoo.com/cnquery/v11/providers/aws/resources"
+option go_package = "go.mondoo.com/cnquery/v12/providers/aws/resources"
 
 alias aws.accessAnalyzer = aws.iam.accessAnalyzer
 alias aws.accessAnalyzer.analyzer = aws.iam.accessanalyzer.analyzer
@@ -774,8 +774,6 @@ private aws.iam.usercredentialreportentry @defaults("arn") {
 
   // IAM user
   user() aws.iam.user
-  // Time when user was created: deprecated, use createdAt
-  userCreationTime() time
   // Time when user was created
   createdAt() time
 }
@@ -788,8 +786,6 @@ private aws.iam.user @defaults("arn name createdAt") {
   id string
   // Name of the user
   name string
-  // Time when user was created: deprecated, use createdAt
-  createDate time
   // Time when user was created
   createdAt time
   // Time when password was last used
@@ -812,8 +808,6 @@ private aws.iam.user @defaults("arn name createdAt") {
 private aws.iam.instanceProfile @defaults("arn instanceProfileId") {
   // ARN of the instance profile
   arn string
-  // Time when the instance profile was created: deprecated, use createdAt
-  createDate time
   // Time when the instance profile was created
   createdAt time
   // ID of the IAM instance profile
@@ -836,8 +830,6 @@ private aws.iam.loginProfile @defaults("createdAt") {
 private aws.iam.policy @defaults("arn name") {
   // ARN of the policy
   arn string
-  // ID of the policy: deprecated, use policyId
-  id string
   // ID of the policy
   policyId() string
   // Name of the policy
@@ -848,8 +840,6 @@ private aws.iam.policy @defaults("arn name") {
   isAttachable() bool
   // Number of principal entities (users, groups, and roles) that the policy is attached to
   attachmentCount() int
-  // Time when the policy was created: deprecated, use createdAt
-  createDate() time
   // Time when the policy was created
   createdAt() time
   // Time when the policy was updated
@@ -879,8 +869,6 @@ private aws.iam.policyversion @defaults("arn isDefaultVersion createdAt") {
   isDefaultVersion bool
   // JSON statements for this policy version
   document() dict
-  // Time when this policy version was created: deprecated, use createdAt
-  createDate time
   // Time when this policy version was created
   createdAt time
 }
@@ -897,8 +885,6 @@ private aws.iam.role @defaults("arn name") {
   description string
   // Tags associated with the role
   tags map[string]string
-  // Time when the role was created: deprecated, use createdAt
-  createDate time
   // Time when the role was created
   createdAt time
   // Policy document that grants an entity permission to assume the role
@@ -913,8 +899,6 @@ private aws.iam.group @defaults("arn name") {
   id string
   // Name of the group
   name string
-  // Time when the group was created: deprecated, use createdAt
-  createDate time
   // Time when the group was created
   createdAt time
   // List of usernames that belong to the group
@@ -1309,8 +1293,6 @@ private aws.guardduty.detector @defaults("id region") {
   findingPublishingFrequency() string
   // List of active findings by the detector
   findings() []aws.guardduty.finding
-  // Deprecated (use `findings` instead)
-  unarchivedFindings() []dict
 }
 
 // AWS Guard Duty finding
@@ -2064,12 +2046,8 @@ private aws.sqs.queue {
 
 // Amazon Relational Database Service (RDS)
 aws.rds {
-  // Deprecated: Use `instances` instead
-  dbInstances() []aws.rds.dbinstance
   // List of database instances
   instances() []aws.rds.dbinstance
-  // Deprecated: Use `clusters` instead
-  dbClusters() []aws.rds.dbcluster
   // List of RDS database clusters
   clusters() []aws.rds.dbcluster
   // List of all pending maintenance actions for the database instance
@@ -2395,8 +2373,6 @@ aws.rds.parameterGroup.parameter @defaults("name value") {
 
 // Amazon ElastiCache
 aws.elasticache @defaults("cacheClusters") {
-  // Deprecated: Use `cacheClusters` instead.
-  clusters() []dict
   // List of cache clusters
   cacheClusters() []aws.elasticache.cluster
   // List of serverless caches
@@ -2868,10 +2844,6 @@ private aws.vpc.peeringConnection {
 private aws.vpc.peeringConnection.peeringVpc {
   // Whether DNS resolution from the remote VPC is allowed
   allowDnsResolutionFromRemoteVpc bool
-  // Whether egress is allowed from a local classic link to the remote VPC
-  allowEgressFromLocalClassicLinkToRemoteVpc bool
-  // Whether egress is allowed from a local VPC to a classic link
-  allowEgressFromLocalVpcToRemoteClassicLink bool
   // List of IPv4 CIDR blocks for peering connection
   ipv4CiderBlocks []string
   // List of IPv6 CIDR blocks for peering connection

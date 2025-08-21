@@ -10,8 +10,8 @@
 package inventory
 
 import (
-	upstream "go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream"
-	vault "go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
+	upstream "go.mondoo.com/cnquery/v12/providers-sdk/v1/upstream"
+	vault "go.mondoo.com/cnquery/v12/providers-sdk/v1/vault"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -1936,7 +1936,7 @@ const file_inventory_proto_rawDesc = "" +
 	"\x0fKIND_K8S_OBJECT\x10\v\x12\x13\n" +
 	"\x0fKIND_AWS_OBJECT\x10\f\x12\x13\n" +
 	"\x0fKIND_GCP_OBJECT\x10\r\x12\x15\n" +
-	"\x11KIND_AZURE_OBJECT\x10\x0eB6Z4go.mondoo.com/cnquery/v11/providers-sdk/v1/inventoryb\x06proto3"
+	"\x11KIND_AZURE_OBJECT\x10\x0eB6Z4go.mondoo.com/cnquery/v12/providers-sdk/v1/inventoryb\x06proto3"
 
 var (
 	file_inventory_proto_rawDescOnce sync.Once

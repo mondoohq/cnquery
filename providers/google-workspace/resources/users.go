@@ -8,24 +8,24 @@ import (
 	"strings"
 	"time"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/google-workspace/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/google-workspace/connection"
+	"go.mondoo.com/cnquery/v12/types"
 
 	directory "google.golang.org/api/admin/directory/v1"
 	reports "google.golang.org/api/admin/reports/v1"
 )
 
-func (g *mqlGoogleworkspace) users() ([]interface{}, error) {
+func (g *mqlGoogleworkspace) users() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GoogleWorkspaceConnection)
 	directoryService, err := directoryService(conn, directory.AdminDirectoryUserReadonlyScope)
 	if err != nil {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 
 	users, err := directoryService.Users.List().Customer(conn.CustomerID()).Do()
 	if err != nil {
@@ -54,7 +54,7 @@ func (g *mqlGoogleworkspace) users() ([]interface{}, error) {
 	return res, nil
 }
 
-func newMqlGoogleWorkspaceUser(runtime *plugin.Runtime, entry *directory.User) (interface{}, error) {
+func newMqlGoogleWorkspaceUser(runtime *plugin.Runtime, entry *directory.User) (any, error) {
 	var lastLoginTime *time.Time
 	var creationTime *time.Time
 
@@ -161,7 +161,7 @@ func shouldCheckEarlierDateForReport(err error) bool {
 	return false
 }
 
-func (g *mqlGoogleworkspaceUser) tokens() ([]interface{}, error) {
+func (g *mqlGoogleworkspaceUser) tokens() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GoogleWorkspaceConnection)
 	directoryService, err := directoryService(conn, directory.AdminDirectoryUserSecurityScope)
 	if err != nil {
@@ -178,7 +178,7 @@ func (g *mqlGoogleworkspaceUser) tokens() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range tokenList.Items {
 		r, err := newMqlGoogleWorkspaceToken(g.MqlRuntime, tokenList.Items[i])
 		if err != nil {
@@ -190,7 +190,7 @@ func (g *mqlGoogleworkspaceUser) tokens() ([]interface{}, error) {
 	return res, nil
 }
 
-func newMqlGoogleWorkspaceToken(runtime *plugin.Runtime, entry *directory.Token) (interface{}, error) {
+func newMqlGoogleWorkspaceToken(runtime *plugin.Runtime, entry *directory.Token) (any, error) {
 	return CreateResource(runtime, "googleworkspace.token", map[string]*llx.RawData{
 		"anonymous":   llx.BoolData(entry.Anonymous),
 		"clientId":    llx.StringData(entry.ClientId),

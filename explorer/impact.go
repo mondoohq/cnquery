@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	"go.mondoo.com/cnquery/v11/checksums"
+	"go.mondoo.com/cnquery/v12/checksums"
 	"gopkg.in/yaml.v3"
 )
 
@@ -208,7 +208,7 @@ func (s ScoringSystem) MarshalJSON() ([]byte, error) {
 	return json.Marshal(result) // will add quotes and escape if needed
 }
 
-func (s ScoringSystem) MarshalYAML() (interface{}, error) {
+func (s ScoringSystem) MarshalYAML() (any, error) {
 	switch s {
 	case ScoringSystem_SCORING_UNSPECIFIED:
 		return "unspecified", nil

@@ -9,11 +9,11 @@ import (
 	"fmt"
 	"strconv"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/gcp/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v12/types"
 	"google.golang.org/api/cloudresourcemanager/v3"
 	"google.golang.org/api/iam/v1"
 	"google.golang.org/api/option"
@@ -58,7 +58,7 @@ func (g *mqlGcpProject) storage() (*mqlGcpProjectStorageService, error) {
 	return res.(*mqlGcpProjectStorageService), nil
 }
 
-func (g *mqlGcpProjectStorageService) buckets() ([]interface{}, error) {
+func (g *mqlGcpProjectStorageService) buckets() ([]any, error) {
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -83,19 +83,19 @@ func (g *mqlGcpProjectStorageService) buckets() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := make([]interface{}, 0, len(buckets.Items))
+	res := make([]any, 0, len(buckets.Items))
 	for i := range buckets.Items {
 		bucket := buckets.Items[i]
 		created := parseTime(bucket.TimeCreated)
 		updated := parseTime(bucket.Updated)
 
-		var iamConfigurationDict map[string]interface{}
+		var iamConfigurationDict map[string]any
 		iamConfigurationDict, err = convert.JsonToDict(bucket.IamConfiguration)
 		if err != nil {
 			return nil, err
 		}
 
-		var retentionPolicy map[string]interface{}
+		var retentionPolicy map[string]any
 		retentionPolicy, err = convert.JsonToDict(bucket.RetentionPolicy)
 		if err != nil {
 			return nil, err
@@ -277,7 +277,7 @@ func initGcpProjectStorageServiceBucket(runtime *plugin.Runtime, args map[string
 	return nil, nil, errors.New("bucket not found")
 }
 
-func (g *mqlGcpProjectStorageServiceBucket) iamPolicy() ([]interface{}, error) {
+func (g *mqlGcpProjectStorageServiceBucket) iamPolicy() ([]any, error) {
 	if g.Name.Error != nil {
 		return nil, g.Name.Error
 	}
@@ -301,7 +301,7 @@ func (g *mqlGcpProjectStorageServiceBucket) iamPolicy() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range policy.Bindings {
 		b := policy.Bindings[i]
 

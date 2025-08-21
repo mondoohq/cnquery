@@ -9,12 +9,12 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/cnquery/v11/checksums"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/pam"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/checksums"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/pam"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 const (
@@ -71,7 +71,7 @@ func (se *mqlPamConfServiceEntry) id() (string, error) {
 
 // GetFiles is called when the user has not provided a custom path. Otherwise files are set in the init
 // method and this function is never called then since the data is already cached.
-func (s *mqlPamConf) files() ([]interface{}, error) {
+func (s *mqlPamConf) files() ([]any, error) {
 	// check if the pam.d directory exists and is a directory
 	// according to the pam spec, pam prefers the directory if it  exists over the single file config
 	// see http://www.linux-pam.org/Linux-PAM-html/sag-configuration.html
@@ -94,7 +94,7 @@ func (s *mqlPamConf) files() ([]interface{}, error) {
 	}
 }
 
-func (s *mqlPamConf) content(files []interface{}) (string, error) {
+func (s *mqlPamConf) content(files []any) (string, error) {
 	conn := s.MqlRuntime.Connection.(shared.Connection)
 
 	var res strings.Builder
@@ -125,7 +125,7 @@ func (s *mqlPamConf) content(files []interface{}) (string, error) {
 	return res.String(), nil
 }
 
-func (s *mqlPamConf) services(files []interface{}) (map[string]interface{}, error) {
+func (s *mqlPamConf) services(files []any) (map[string]any, error) {
 	conn := s.MqlRuntime.Connection.(shared.Connection)
 
 	contents := map[string]string{}
@@ -152,10 +152,10 @@ func (s *mqlPamConf) services(files []interface{}) (map[string]interface{}, erro
 		return nil, notReadyError
 	}
 
-	services := map[string]interface{}{}
+	services := map[string]any{}
 	for basename, content := range contents {
 		lines := strings.Split(content, "\n")
-		settings := []interface{}{}
+		settings := []any{}
 		var line string
 		for i := range lines {
 			line = lines[i]
@@ -175,7 +175,7 @@ func (s *mqlPamConf) services(files []interface{}) (map[string]interface{}, erro
 	return services, nil
 }
 
-func (s *mqlPamConf) entries(files []interface{}) (map[string]interface{}, error) {
+func (s *mqlPamConf) entries(files []any) (map[string]any, error) {
 	conn := s.MqlRuntime.Connection.(shared.Connection)
 
 	contents := map[string]string{}
@@ -202,10 +202,10 @@ func (s *mqlPamConf) entries(files []interface{}) (map[string]interface{}, error
 		return nil, notReadyError
 	}
 
-	services := map[string]interface{}{}
+	services := map[string]any{}
 	for basename, content := range contents {
 		lines := strings.Split(content, "\n")
-		settings := []interface{}{}
+		settings := []any{}
 		var line string
 		for i := range lines {
 			line = lines[i]

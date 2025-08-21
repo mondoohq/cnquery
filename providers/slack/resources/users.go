@@ -9,17 +9,17 @@ import (
 	"time"
 
 	"github.com/slack-go/slack"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/slack/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/slack/connection"
 )
 
 func (o *mqlSlackUsers) id() (string, error) {
 	return "slack.users", nil
 }
 
-func (s *mqlSlackUsers) list() ([]interface{}, error) {
+func (s *mqlSlackUsers) list() ([]any, error) {
 	conn := s.MqlRuntime.Connection.(*connection.SlackConnection)
 	client := conn.Client()
 	if client == nil {
@@ -33,7 +33,7 @@ func (s *mqlSlackUsers) list() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	var list []interface{}
+	var list []any
 	for i := range users {
 		mqlUser, err := newMqlSlackUser(s.MqlRuntime, users[i])
 		if err != nil {
@@ -45,13 +45,13 @@ func (s *mqlSlackUsers) list() ([]interface{}, error) {
 	return list, nil
 }
 
-func (s *mqlSlackUsers) bots() ([]interface{}, error) {
+func (s *mqlSlackUsers) bots() ([]any, error) {
 	all, err := s.list()
 	if err != nil {
 		return all, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range all {
 		cur := all[i]
 		usr := cur.(*mqlSlackUser)
@@ -63,13 +63,13 @@ func (s *mqlSlackUsers) bots() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *mqlSlackUsers) members() ([]interface{}, error) {
+func (s *mqlSlackUsers) members() ([]any, error) {
 	all, err := s.list()
 	if err != nil {
 		return all, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range all {
 		cur := all[i]
 		usr := cur.(*mqlSlackUser)
@@ -81,13 +81,13 @@ func (s *mqlSlackUsers) members() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *mqlSlackUsers) admins() ([]interface{}, error) {
+func (s *mqlSlackUsers) admins() ([]any, error) {
 	all, err := s.list()
 	if err != nil {
 		return all, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range all {
 		cur := all[i]
 		usr := cur.(*mqlSlackUser)
@@ -102,13 +102,13 @@ func (s *mqlSlackUsers) admins() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *mqlSlackUsers) owners() ([]interface{}, error) {
+func (s *mqlSlackUsers) owners() ([]any, error) {
 	all, err := s.list()
 	if err != nil {
 		return all, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range all {
 		cur := all[i]
 		usr := cur.(*mqlSlackUser)
@@ -163,7 +163,7 @@ func newUserProfile(u slack.UserProfile) userProfile {
 }
 
 func newMqlSlackUser(runtime *plugin.Runtime, user slack.User) (plugin.Resource, error) {
-	var enterpriseUser interface{}
+	var enterpriseUser any
 
 	userProfile, err := convert.JsonToDict(newUserProfile(user.Profile))
 	if err != nil {
@@ -216,7 +216,7 @@ func (x *mqlSlackUser) id() (string, error) {
 	return "slack.user/" + x.TeamId.Data + "/" + x.Id.Data, nil
 }
 
-func newMqlSlackEnterpriseUser(runtime *plugin.Runtime, user slack.EnterpriseUser) (interface{}, error) {
+func newMqlSlackEnterpriseUser(runtime *plugin.Runtime, user slack.EnterpriseUser) (any, error) {
 	return CreateResource(runtime, "slack.enterpriseUser", map[string]*llx.RawData{
 		"id":             llx.StringData(user.ID),
 		"enterpriseId":   llx.StringData(user.EnterpriseID),

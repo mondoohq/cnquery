@@ -11,11 +11,11 @@ import (
 	waftypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (a *mqlAwsWaf) id() (string, error) {
@@ -60,13 +60,13 @@ func initAwsWaf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 	return args, nil, nil
 }
 
-func (a *mqlAwsWaf) acls() ([]interface{}, error) {
+func (a *mqlAwsWaf) acls() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	region := ""
 	svc := conn.Wafv2(region)
 	ctx := context.Background()
-	acls := []interface{}{}
+	acls := []any{}
 	nextMarker := aws.String("No-Marker-to-begin-with")
 	scopeString := a.Scope.Data
 	scope := waftypes.Scope(scopeString)
@@ -214,7 +214,7 @@ func (a *mqlAwsWafRuleFieldtomatchJa3fingerprint) id() (string, error) {
 	return a.StatementID.Data, nil
 }
 
-func (a *mqlAwsWafRulegroup) rules() ([]interface{}, error) {
+func (a *mqlAwsWafRulegroup) rules() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	scopeString := a.Scope.Data
@@ -222,7 +222,7 @@ func (a *mqlAwsWafRulegroup) rules() ([]interface{}, error) {
 	ctx := context.Background()
 	region := ""
 	svc := conn.Wafv2(region)
-	rules := []interface{}{}
+	rules := []any{}
 	params := &wafv2.GetRuleGroupInput{
 		Id:    &a.Id.Data,
 		Name:  &a.Name.Data,
@@ -254,13 +254,13 @@ func (a *mqlAwsWafRulegroup) rules() ([]interface{}, error) {
 	return rules, nil
 }
 
-func (a *mqlAwsWaf) ruleGroups() ([]interface{}, error) {
+func (a *mqlAwsWaf) ruleGroups() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	region := ""
 	svc := conn.Wafv2(region)
 	ctx := context.Background()
-	acls := []interface{}{}
+	acls := []any{}
 	nextMarker := aws.String("No-Marker-to-begin-with")
 	scopeString := a.Scope.Data
 	scope := waftypes.Scope(scopeString)
@@ -294,13 +294,13 @@ func (a *mqlAwsWaf) ruleGroups() ([]interface{}, error) {
 	return acls, nil
 }
 
-func (a *mqlAwsWaf) ipSets() ([]interface{}, error) {
+func (a *mqlAwsWaf) ipSets() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	region := ""
 	svc := conn.Wafv2(region)
 	ctx := context.Background()
-	acls := []interface{}{}
+	acls := []any{}
 	nextMarker := aws.String("No-Marker-to-begin-with")
 	scopeString := a.Scope.Data
 	scope := waftypes.Scope(scopeString)
@@ -346,7 +346,7 @@ func (a *mqlAwsWaf) ipSets() ([]interface{}, error) {
 	return acls, nil
 }
 
-func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
+func (a *mqlAwsWafAcl) rules() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	scopeString := a.Scope.Data
@@ -354,7 +354,7 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 	ctx := context.Background()
 	region := ""
 	svc := conn.Wafv2(region)
-	rules := []interface{}{}
+	rules := []any{}
 	params := &wafv2.GetWebACLInput{
 		Id:    &a.Id.Data,
 		Name:  &a.Name.Data,
@@ -439,7 +439,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 	var regexpatternsetreferencestatement plugin.Resource
 	var rulegroupreferencestatement plugin.Resource
 	var sizeconstraintstatement plugin.Resource
-	var statementJson map[string]interface{}
+	var statementJson map[string]any
 	mqlStatementID := ruleID + "/" + uuid.New().String()
 	var kind string
 	if statement != nil {
@@ -568,7 +568,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 		}
 		if statement.AndStatement != nil {
 			kind = "AndStatement"
-			var statements []interface{}
+			var statements []any
 			for _, statement := range statement.AndStatement.Statements {
 				andStatementMqlStatement, err := createStatementResource(runtime, &statement, ruleName, ruleID)
 				if err != nil {
@@ -600,7 +600,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 		}
 		if statement.OrStatement != nil {
 			kind = "OrStatement"
-			var statements []interface{}
+			var statements []any
 			for _, statement := range statement.OrStatement.Statements {
 				orStatementMqlStatement, err := createStatementResource(runtime, &statement, ruleName, ruleID)
 				if err != nil {

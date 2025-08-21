@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/muesli/termenv"
-	"go.mondoo.com/cnquery/v11/cli/theme/colors"
+	"go.mondoo.com/cnquery/v12/cli/theme/colors"
 )
 
 // TextList is a simple text list output format
@@ -23,7 +23,7 @@ func (s *TextList) ApplyOptions(opts ...renderOption) {
 	}
 }
 
-func (s *TextList) Convert(bom *Sbom) (interface{}, error) {
+func (s *TextList) Convert(bom *Sbom) (any, error) {
 	return nil, conversionNotSupportedError
 }
 

@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/cli/config"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream"
+	"go.mondoo.com/cnquery/v12/cli/config"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/upstream"
 	"go.mondoo.com/ranger-rpc"
 )
 

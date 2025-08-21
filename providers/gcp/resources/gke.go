@@ -9,11 +9,11 @@ import (
 	"fmt"
 	"strings"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/gcp/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v12/types"
 
 	container "cloud.google.com/go/container/apiv1"
 	"cloud.google.com/go/container/apiv1/containerpb"
@@ -187,7 +187,7 @@ func (g *mqlGcpProjectGkeServiceClusterNetworkConfig) id() (string, error) {
 	return g.Id.Data, g.Id.Error
 }
 
-func (g *mqlGcpProjectGkeService) clusters() ([]interface{}, error) {
+func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 	// when the service is not enabled, we return nil
 	if !g.serviceEnabled {
 		return nil, nil
@@ -219,12 +219,12 @@ func (g *mqlGcpProjectGkeService) clusters() ([]interface{}, error) {
 		log.Error().Err(err).Msg("failed to list clusters")
 		return nil, err
 	}
-	res := []interface{}{}
+	res := []any{}
 
 	for i := range resp.Clusters {
 		c := resp.Clusters[i]
 
-		nodePools := make([]interface{}, 0, len(c.NodePools))
+		nodePools := make([]any, 0, len(c.NodePools))
 		for _, np := range c.NodePools {
 			mqlNodePool, err := createMqlNodePool(g.MqlRuntime, np, c.Id, projectId)
 			if err != nil {
@@ -240,87 +240,87 @@ func (g *mqlGcpProjectGkeService) clusters() ([]interface{}, error) {
 
 		var addonsConfig plugin.Resource
 		if c.AddonsConfig != nil {
-			var httpLoadBalancing map[string]interface{}
+			var httpLoadBalancing map[string]any
 			if c.AddonsConfig.HttpLoadBalancing != nil {
-				httpLoadBalancing = map[string]interface{}{
+				httpLoadBalancing = map[string]any{
 					"disabled": c.AddonsConfig.HttpLoadBalancing.Disabled,
 				}
 			}
 
-			var horizontalPodAutoscaling map[string]interface{}
+			var horizontalPodAutoscaling map[string]any
 			if c.AddonsConfig.HorizontalPodAutoscaling != nil {
-				horizontalPodAutoscaling = map[string]interface{}{
+				horizontalPodAutoscaling = map[string]any{
 					"disabled": c.AddonsConfig.HorizontalPodAutoscaling.Disabled,
 				}
 			}
 
-			var kubernetesDashboard map[string]interface{}
+			var kubernetesDashboard map[string]any
 			if c.AddonsConfig.KubernetesDashboard != nil {
-				kubernetesDashboard = map[string]interface{}{
+				kubernetesDashboard = map[string]any{
 					"disabled": c.AddonsConfig.KubernetesDashboard.Disabled,
 				}
 			}
 
-			var networkPolicyConfig map[string]interface{}
+			var networkPolicyConfig map[string]any
 			if c.AddonsConfig.NetworkPolicyConfig != nil {
-				networkPolicyConfig = map[string]interface{}{
+				networkPolicyConfig = map[string]any{
 					"disabled": c.AddonsConfig.NetworkPolicyConfig.Disabled,
 				}
 			}
 
-			var cloudRunConfig map[string]interface{}
+			var cloudRunConfig map[string]any
 			if c.AddonsConfig.CloudRunConfig != nil {
-				cloudRunConfig = map[string]interface{}{
+				cloudRunConfig = map[string]any{
 					"disabled":         c.AddonsConfig.CloudRunConfig.Disabled,
 					"loadBalancerType": c.AddonsConfig.CloudRunConfig.LoadBalancerType.String(),
 				}
 			}
 
-			var dnsCacheConfig map[string]interface{}
+			var dnsCacheConfig map[string]any
 			if c.AddonsConfig.DnsCacheConfig != nil {
-				dnsCacheConfig = map[string]interface{}{
+				dnsCacheConfig = map[string]any{
 					"enabled": c.AddonsConfig.DnsCacheConfig.Enabled,
 				}
 			}
 
-			var configConnectorConfig map[string]interface{}
+			var configConnectorConfig map[string]any
 			if c.AddonsConfig.ConfigConnectorConfig != nil {
-				configConnectorConfig = map[string]interface{}{
+				configConnectorConfig = map[string]any{
 					"enabled": c.AddonsConfig.ConfigConnectorConfig.Enabled,
 				}
 			}
 
-			var gcePersistentDiskCsiDriverConfig map[string]interface{}
+			var gcePersistentDiskCsiDriverConfig map[string]any
 			if c.AddonsConfig.GcePersistentDiskCsiDriverConfig != nil {
-				gcePersistentDiskCsiDriverConfig = map[string]interface{}{
+				gcePersistentDiskCsiDriverConfig = map[string]any{
 					"enabled": c.AddonsConfig.GcePersistentDiskCsiDriverConfig.Enabled,
 				}
 			}
 
-			var gcpFilestoreCsiDriverConfig map[string]interface{}
+			var gcpFilestoreCsiDriverConfig map[string]any
 			if c.AddonsConfig.GcpFilestoreCsiDriverConfig != nil {
-				gcpFilestoreCsiDriverConfig = map[string]interface{}{
+				gcpFilestoreCsiDriverConfig = map[string]any{
 					"enabled": c.AddonsConfig.GcpFilestoreCsiDriverConfig.Enabled,
 				}
 			}
 
-			var gkeBackupAgentConfig map[string]interface{}
+			var gkeBackupAgentConfig map[string]any
 			if c.AddonsConfig.GkeBackupAgentConfig != nil {
-				gkeBackupAgentConfig = map[string]interface{}{
+				gkeBackupAgentConfig = map[string]any{
 					"enabled": c.AddonsConfig.GkeBackupAgentConfig.Enabled,
 				}
 			}
 
-			var gcsFuseCsiDriverConfig map[string]interface{}
+			var gcsFuseCsiDriverConfig map[string]any
 			if c.AddonsConfig.GcsFuseCsiDriverConfig != nil {
-				gcsFuseCsiDriverConfig = map[string]interface{}{
+				gcsFuseCsiDriverConfig = map[string]any{
 					"enabled": c.AddonsConfig.GcsFuseCsiDriverConfig.Enabled,
 				}
 			}
 
-			var statefulHaConfig map[string]interface{}
+			var statefulHaConfig map[string]any
 			if c.AddonsConfig.StatefulHaConfig != nil {
-				statefulHaConfig = map[string]interface{}{
+				statefulHaConfig = map[string]any{
 					"enabled": c.AddonsConfig.StatefulHaConfig.Enabled,
 				}
 			}
@@ -345,9 +345,9 @@ func (g *mqlGcpProjectGkeService) clusters() ([]interface{}, error) {
 			}
 		}
 
-		var workloadIdCfg map[string]interface{}
+		var workloadIdCfg map[string]any
 		if c.WorkloadIdentityConfig != nil {
-			workloadIdCfg = map[string]interface{}{
+			workloadIdCfg = map[string]any{
 				"workloadPool": c.WorkloadIdentityConfig.WorkloadPool,
 			}
 		}
@@ -375,25 +375,25 @@ func (g *mqlGcpProjectGkeService) clusters() ([]interface{}, error) {
 		}
 		var networkConfig plugin.Resource
 		if c.NetworkConfig != nil {
-			var defaultSnatStatus map[string]interface{}
+			var defaultSnatStatus map[string]any
 			if c.NetworkConfig.DefaultSnatStatus != nil {
-				defaultSnatStatus = map[string]interface{}{
+				defaultSnatStatus = map[string]any{
 					"disabled": c.NetworkConfig.DefaultSnatStatus.Disabled,
 				}
 			}
 
-			var dnsConfig map[string]interface{}
+			var dnsConfig map[string]any
 			if c.NetworkConfig.DnsConfig != nil {
-				dnsConfig = map[string]interface{}{
+				dnsConfig = map[string]any{
 					"clusterDns":       c.NetworkConfig.DnsConfig.ClusterDns.String(),
 					"clusterDnsScope":  c.NetworkConfig.DnsConfig.ClusterDnsScope.String(),
 					"clusterDnsDomain": c.NetworkConfig.DnsConfig.ClusterDnsDomain,
 				}
 			}
 
-			var serviceExternalIpsConfig map[string]interface{}
+			var serviceExternalIpsConfig map[string]any
 			if c.NetworkConfig.ServiceExternalIpsConfig != nil {
-				serviceExternalIpsConfig = map[string]interface{}{
+				serviceExternalIpsConfig = map[string]any{
 					"enabled": c.NetworkConfig.ServiceExternalIpsConfig.Enabled,
 				}
 			}
@@ -417,30 +417,30 @@ func (g *mqlGcpProjectGkeService) clusters() ([]interface{}, error) {
 			}
 		}
 
-		var binAuth map[string]interface{}
+		var binAuth map[string]any
 		if c.BinaryAuthorization != nil {
-			binAuth = map[string]interface{}{
+			binAuth = map[string]any{
 				"enabled":        c.BinaryAuthorization.Enabled,
 				"evaluationMode": c.BinaryAuthorization.EvaluationMode.String(),
 			}
 		}
 
-		var legacyAbac map[string]interface{}
+		var legacyAbac map[string]any
 		if c.LegacyAbac != nil {
-			legacyAbac = map[string]interface{}{
+			legacyAbac = map[string]any{
 				"enabled": c.LegacyAbac.Enabled,
 			}
 		}
 
-		var masterAuth map[string]interface{}
+		var masterAuth map[string]any
 		if c.MasterAuth != nil {
-			var clientCertCfg map[string]interface{}
+			var clientCertCfg map[string]any
 			if c.MasterAuth.ClientCertificateConfig != nil {
-				clientCertCfg = map[string]interface{}{
+				clientCertCfg = map[string]any{
 					"issueClientCertificate": c.MasterAuth.ClientCertificateConfig.IssueClientCertificate,
 				}
 			}
-			masterAuth = map[string]interface{}{
+			masterAuth = map[string]any{
 				"username":                c.MasterAuth.Username,
 				"password":                c.MasterAuth.Password,
 				"clientCertificateConfig": clientCertCfg,
@@ -450,31 +450,31 @@ func (g *mqlGcpProjectGkeService) clusters() ([]interface{}, error) {
 			}
 		}
 
-		var masterAuthorizedNetworksCfg map[string]interface{}
+		var masterAuthorizedNetworksCfg map[string]any
 		if c.MasterAuthorizedNetworksConfig != nil {
-			cidrBlocks := make([]interface{}, 0, len(c.MasterAuthorizedNetworksConfig.CidrBlocks))
+			cidrBlocks := make([]any, 0, len(c.MasterAuthorizedNetworksConfig.CidrBlocks))
 			for _, cidrBlock := range c.MasterAuthorizedNetworksConfig.CidrBlocks {
-				cidrBlocks = append(cidrBlocks, map[string]interface{}{
+				cidrBlocks = append(cidrBlocks, map[string]any{
 					"displayName": cidrBlock.DisplayName,
 					"cidrBlock":   cidrBlock.CidrBlock,
 				})
 			}
-			masterAuthorizedNetworksCfg = map[string]interface{}{
+			masterAuthorizedNetworksCfg = map[string]any{
 				"enabled":    c.MasterAuthorizedNetworksConfig.Enabled,
 				"cidrBlocks": cidrBlocks,
 			}
 		}
 
-		var privateClusterCfg map[string]interface{}
+		var privateClusterCfg map[string]any
 		if c.PrivateClusterConfig != nil {
-			var masterGlobalAccessCfg map[string]interface{}
+			var masterGlobalAccessCfg map[string]any
 			if c.PrivateClusterConfig.MasterGlobalAccessConfig != nil {
-				masterGlobalAccessCfg = map[string]interface{}{
+				masterGlobalAccessCfg = map[string]any{
 					"enabled": c.PrivateClusterConfig.MasterGlobalAccessConfig.Enabled,
 				}
 			}
 
-			privateClusterCfg = map[string]interface{}{
+			privateClusterCfg = map[string]any{
 				"enablePrivateNodes":       c.PrivateClusterConfig.EnablePrivateNodes,
 				"enablePrivateEndpoint":    c.PrivateClusterConfig.EnablePrivateEndpoint,
 				"masterIpv4CidrBlock":      c.PrivateClusterConfig.MasterIpv4CidrBlock,
@@ -485,45 +485,45 @@ func (g *mqlGcpProjectGkeService) clusters() ([]interface{}, error) {
 			}
 		}
 
-		var databaseEncryption map[string]interface{}
+		var databaseEncryption map[string]any
 		if c.DatabaseEncryption != nil {
-			databaseEncryption = map[string]interface{}{
+			databaseEncryption = map[string]any{
 				"state":   c.DatabaseEncryption.State.String(),
 				"keyName": c.DatabaseEncryption.KeyName,
 			}
 		}
 
-		var shieldedNodesConfig map[string]interface{}
+		var shieldedNodesConfig map[string]any
 		if c.ShieldedNodes != nil {
-			shieldedNodesConfig = map[string]interface{}{
+			shieldedNodesConfig = map[string]any{
 				"enabled": c.ShieldedNodes.Enabled,
 			}
 		}
 
-		var costManagementConfig map[string]interface{}
+		var costManagementConfig map[string]any
 		if c.CostManagementConfig != nil {
-			costManagementConfig = map[string]interface{}{
+			costManagementConfig = map[string]any{
 				"enabled": c.CostManagementConfig.Enabled,
 			}
 		}
 
-		var confidentialNodesConfig map[string]interface{}
+		var confidentialNodesConfig map[string]any
 		if c.ConfidentialNodes != nil {
-			confidentialNodesConfig = map[string]interface{}{
+			confidentialNodesConfig = map[string]any{
 				"enabled": c.ConfidentialNodes.Enabled,
 			}
 		}
 
-		var identityServiceConfig map[string]interface{}
+		var identityServiceConfig map[string]any
 		if c.IdentityServiceConfig != nil {
-			identityServiceConfig = map[string]interface{}{
+			identityServiceConfig = map[string]any{
 				"enabled": c.IdentityServiceConfig.Enabled,
 			}
 		}
 
-		var networkPolicyConfig map[string]interface{}
+		var networkPolicyConfig map[string]any
 		if c.NetworkPolicy != nil {
-			networkPolicyConfig = map[string]interface{}{
+			networkPolicyConfig = map[string]any{
 				"enabled":  c.NetworkPolicy.Enabled,
 				"provider": c.NetworkPolicy.Provider.String(),
 			}
@@ -618,16 +618,16 @@ func createMqlNodePool(runtime *plugin.Runtime, np *containerpb.NodePool, cluste
 		return nil, err
 	}
 
-	var management map[string]interface{}
+	var management map[string]any
 	if np.Management != nil {
-		var upgradeOpts map[string]interface{}
+		var upgradeOpts map[string]any
 		if np.Management.UpgradeOptions != nil {
-			upgradeOpts = map[string]interface{}{
+			upgradeOpts = map[string]any{
 				"autoUpgradeStartTime": np.Management.UpgradeOptions.AutoUpgradeStartTime,
 				"description":          np.Management.UpgradeOptions.Description,
 			}
 		}
-		management = map[string]interface{}{
+		management = map[string]any{
 			"autoRepair":     np.Management.AutoRepair,
 			"autoUpgrade":    np.Management.AutoUpgrade,
 			"upgradeOptions": upgradeOpts,
@@ -652,7 +652,7 @@ func createMqlNodePool(runtime *plugin.Runtime, np *containerpb.NodePool, cluste
 func createMqlNodePoolConfig(runtime *plugin.Runtime, np *containerpb.NodePool, nodePoolId, projectId string) (plugin.Resource, error) {
 	cfg := np.Config
 	var err error
-	mqlAccelerators := make([]interface{}, 0, len(cfg.Accelerators))
+	mqlAccelerators := make([]any, 0, len(cfg.Accelerators))
 	for i, acc := range cfg.Accelerators {
 		mqlAcc, err := createMqlAccelerator(runtime, acc, nodePoolId, i)
 		if err != nil {
@@ -661,7 +661,7 @@ func createMqlNodePoolConfig(runtime *plugin.Runtime, np *containerpb.NodePool, 
 		mqlAccelerators = append(mqlAccelerators, mqlAcc)
 	}
 
-	nodeTaints := make([]interface{}, 0, len(cfg.Taints))
+	nodeTaints := make([]any, 0, len(cfg.Taints))
 	for i, taint := range cfg.Taints {
 		mqlNodeTaint, err := CreateResource(runtime, "gcp.project.gkeService.cluster.nodepool.config.nodeTaint", map[string]*llx.RawData{
 			"id":     llx.StringData(fmt.Sprintf("%s/taints/%d", nodePoolId, i)),

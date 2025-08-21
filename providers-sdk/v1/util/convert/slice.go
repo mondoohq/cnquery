@@ -3,8 +3,8 @@
 
 package convert
 
-func SliceAnyToInterface[T any](s []T) []interface{} {
-	res := make([]interface{}, len(s))
+func SliceAnyToInterface[T any](s []T) []any {
+	res := make([]any, len(s))
 	for i, v := range s {
 		res[i] = v
 	}
@@ -19,8 +19,8 @@ func SliceStrPtrToStr(s []*string) []string {
 	return res
 }
 
-func SliceStrPtrToInterface(s []*string) []interface{} {
-	res := make([]interface{}, len(s))
+func SliceStrPtrToInterface(s []*string) []any {
+	res := make([]any, len(s))
 	for i, v := range s {
 		res[i] = *v
 	}

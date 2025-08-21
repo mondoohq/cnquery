@@ -8,8 +8,8 @@ import (
 	"math/rand"
 	"strconv"
 
-	"go.mondoo.com/cnquery/v11/types"
-	"go.mondoo.com/cnquery/v11/utils/multierr"
+	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/cnquery/v12/utils/multierr"
 )
 
 var arrayBlockType = types.Array(types.Block)
@@ -22,7 +22,7 @@ func arrayGetFirstIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uin
 		return &RawData{Type: bind.Type[1:]}, 0, nil
 	}
 
-	arr, ok := bind.Value.([]interface{})
+	arr, ok := bind.Value.([]any)
 	if !ok {
 		return nil, 0, errors.New("failed to typecast " + bind.Type.Label() + " into array")
 	}
@@ -42,7 +42,7 @@ func arrayGetLastIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint
 		return &RawData{Type: bind.Type[1:]}, 0, nil
 	}
 
-	arr, ok := bind.Value.([]interface{})
+	arr, ok := bind.Value.([]any)
 	if !ok {
 		return nil, 0, errors.New("failed to typecast " + bind.Type.Label() + " into array")
 	}
@@ -78,7 +78,7 @@ func arrayGetIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) 
 
 	key := int(bytes2int(args[0].Value))
 
-	arr, ok := bind.Value.([]interface{})
+	arr, ok := bind.Value.([]any)
 	if !ok {
 		return nil, 0, errors.New("failed to typecast " + bind.Type.Label() + " into array")
 	}
@@ -104,7 +104,7 @@ func arrayBlockListV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 		return &RawData{Type: bind.Type[1:]}, 0, nil
 	}
 
-	arr, ok := bind.Value.([]interface{})
+	arr, ok := bind.Value.([]any)
 	if !ok {
 		return nil, 0, errors.New("failed to typecast " + bind.Type.Label() + " into array")
 	}
@@ -112,7 +112,7 @@ func arrayBlockListV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 	if len(arr) == 0 {
 		return &RawData{
 			Type:  arrayBlockType,
-			Value: []interface{}{},
+			Value: []any{},
 		}, 0, nil
 	}
 
@@ -152,7 +152,7 @@ func arrayBlockListV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 		var anyError multierr.Errors
 		anyError.Add(errs...)
 
-		allResults := make([]interface{}, len(arr))
+		allResults := make([]any, len(arr))
 		for i, rd := range results {
 			allResults[i] = rd.toRawData().Value
 		}
@@ -188,7 +188,7 @@ func arrayLengthV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 		return &RawData{Type: types.Int, Error: bind.Error}, 0, nil
 	}
 
-	arr, ok := bind.Value.([]interface{})
+	arr, ok := bind.Value.([]any)
 	if !ok {
 		return nil, 0, errors.New("failed to typecast " + bind.Type.Label() + " into array")
 	}
@@ -200,7 +200,7 @@ func arrayNotEmptyV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) 
 		return BoolFalse, 0, nil
 	}
 
-	arr, ok := bind.Value.([]interface{})
+	arr, ok := bind.Value.([]any)
 	if !ok {
 		return nil, 0, errors.New("failed to typecast " + bind.Type.Label() + " into array")
 	}
@@ -223,7 +223,7 @@ func _arrayWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, in
 		return &RawData{Type: items.Type}, 0, nil
 	}
 
-	list := items.Value.([]interface{})
+	list := items.Value.([]any)
 	if len(list) == 0 {
 		return items, 0, nil
 	}
@@ -231,7 +231,7 @@ func _arrayWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, in
 	arg1 := chunk.Function.Args[1]
 	if types.Type(arg1.Type).Underlying() != types.FunctionLike {
 		right := arg1.RawData().Value
-		var res []interface{}
+		var res []any
 		for i := range list {
 			left := list[i]
 			if left == right {
@@ -267,7 +267,7 @@ func _arrayWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, in
 		}
 	}
 	err = e.runFunctionBlocks(argsList, fref, func(results []arrayBlockCallResult, errors []error) {
-		resList := []interface{}{}
+		resList := []any{}
 		for i, res := range results {
 			isTruthy := res.isTruthy()
 			if isTruthy == !invert {
@@ -342,7 +342,7 @@ func arrayAllV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Raw
 		return &RawData{Type: types.Bool, Error: errors.New("failed to validate all entries (list is null)")}, 0, nil
 	}
 
-	filteredList := bind.Value.([]interface{})
+	filteredList := bind.Value.([]any)
 
 	if len(filteredList) != 0 {
 		return BoolFalse, 0, nil
@@ -355,7 +355,7 @@ func arrayNoneV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Ra
 		return &RawData{Type: types.Bool, Error: errors.New("failed to validate all entries (list is null)")}, 0, nil
 	}
 
-	filteredList := bind.Value.([]interface{})
+	filteredList := bind.Value.([]any)
 
 	if len(filteredList) != 0 {
 		return BoolFalse, 0, nil
@@ -368,7 +368,7 @@ func arrayAnyV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Raw
 		return &RawData{Type: types.Bool, Error: errors.New("failed to validate all entries (list is null)")}, 0, nil
 	}
 
-	filteredList := bind.Value.([]interface{})
+	filteredList := bind.Value.([]any)
 
 	if len(filteredList) == 0 {
 		return BoolFalse, 0, nil
@@ -381,7 +381,7 @@ func arrayOneV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Raw
 		return &RawData{Type: types.Bool, Error: errors.New("failed to validate all entries (list is null)")}, 0, nil
 	}
 
-	filteredList := bind.Value.([]interface{})
+	filteredList := bind.Value.([]any)
 
 	if len(filteredList) != 1 {
 		return BoolFalse, 0, nil
@@ -401,13 +401,13 @@ func arrayMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Raw
 		return &RawData{Type: types.Type(chunk.Function.Type)}, 0, nil
 	}
 
-	list := items.Value.([]interface{})
+	list := items.Value.([]any)
 	if len(list) == 0 {
 		// Note: We have to set the type to be the child taype here. The array is
 		// now technically an any-typed, i.e. it cannot just be cast into a
 		// []T if that is requested down the line. Without carrying types around,
 		// we won't be able to do that easily.
-		return &RawData{Type: types.Type(chunk.Function.Type), Value: []interface{}{}}, 0, nil
+		return &RawData{Type: types.Type(chunk.Function.Type), Value: []any{}}, 0, nil
 	}
 
 	arg1 := chunk.Function.Args[1]
@@ -435,7 +435,7 @@ func arrayMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Raw
 
 	err = e.runFunctionBlocks(argsList, fref, func(results []arrayBlockCallResult, errs []error) {
 		mappedType := types.Unset
-		resList := []interface{}{}
+		resList := []any{}
 		f := e.ctx.code.Block(fref)
 
 		epChecksum := e.ctx.code.Checksums[f.Entrypoints[0]]
@@ -465,13 +465,13 @@ func arrayMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Raw
 	return nil, 0, nil
 }
 
-func flatten(v interface{}) []interface{} {
-	list, ok := v.([]interface{})
+func flatten(v any) []any {
+	list, ok := v.([]any)
 	if !ok {
-		return []interface{}{v}
+		return []any{v}
 	}
 
-	var res []interface{}
+	var res []any
 	for i := range list {
 		res = append(res, flatten(list[i])...)
 	}
@@ -483,13 +483,13 @@ func arrayFlat(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawD
 		return &RawData{Type: bind.Type, Error: bind.Error}, 0, nil
 	}
 
-	list, ok := bind.Value.([]interface{})
+	list, ok := bind.Value.([]any)
 	// this should not happen at this point
 	if !ok {
 		return &RawData{Type: bind.Type, Error: errors.New("incorrect type, no array data found")}, 0, nil
 	}
 
-	var res []interface{}
+	var res []any
 	for i := range list {
 		res = append(res, flatten(list[i])...)
 	}
@@ -509,11 +509,11 @@ func arrayFlat(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawD
 // Take an array and separate it into a list of unique entries and another
 // list of only duplicates. The latter list only has every entry appear only
 // once.
-func detectDupes(array interface{}, typ types.Type) ([]interface{}, []interface{}, error) {
+func detectDupes(array any, typ types.Type) ([]any, []any, error) {
 	if array == nil {
 		return nil, nil, nil
 	}
-	arr, ok := array.([]interface{})
+	arr, ok := array.([]any)
 	if !ok {
 		return nil, nil, errors.New("failed to typecast " + typ.Label() + " into array")
 	}
@@ -524,8 +524,8 @@ func detectDupes(array interface{}, typ types.Type) ([]interface{}, []interface{
 		return nil, nil, errors.New("cannot extract duplicates from array, must be a basic type. Try using a field argument.")
 	}
 
-	existing := []interface{}{}
-	duplicates := []interface{}{}
+	existing := []any{}
+	duplicates := []any{}
 	var found bool
 	for i := 0; i < len(arr); i++ {
 		left := arr[i]
@@ -575,7 +575,7 @@ func arrayFieldDuplicatesV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref u
 		return &RawData{Type: items.Type}, 0, nil
 	}
 
-	list := items.Value.([]interface{})
+	list := items.Value.([]any)
 	if len(list) == 0 {
 		return items, 0, nil
 	}
@@ -624,7 +624,7 @@ func arrayFieldDuplicatesV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref u
 			}
 		}
 
-		resList := []interface{}{}
+		resList := []any{}
 
 		equalFunc, ok := types.Equal[filteredList[0].Type]
 		if !ok {
@@ -646,7 +646,7 @@ func arrayFieldDuplicatesV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref u
 		}
 
 		// to track values of fields
-		existing := make(map[int]interface{})
+		existing := make(map[int]any)
 		// to track index of duplicate resources
 		duplicateIndices := []int{}
 		var found bool
@@ -759,10 +759,10 @@ func arrayDifferenceV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64
 		return nil, 0, errors.New("cannot compare array entries")
 	}
 
-	org := bind.Value.([]interface{})
-	filters := arg.Value.([]interface{})
+	org := bind.Value.([]any)
+	filters := arg.Value.([]any)
 
-	var res []interface{}
+	var res []any
 	var skip bool
 	for i := range org {
 		skip = false
@@ -864,8 +864,8 @@ func arrayContainsAll(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 		return nil, 0, errors.New("cannot compare array entries")
 	}
 
-	org := bind.Value.([]interface{})
-	filters := arg.Value.([]interface{})
+	org := bind.Value.([]any)
+	filters := arg.Value.([]any)
 
 	for i := range org {
 		for j := range filters {
@@ -915,10 +915,10 @@ func arrayContainsNone(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64
 		return nil, 0, errors.New("cannot compare array entries")
 	}
 
-	org := bind.Value.([]interface{})
-	filters := arg.Value.([]interface{})
+	org := bind.Value.([]any)
+	filters := arg.Value.([]any)
 
-	var res []interface{}
+	var res []any
 	for i := range org {
 		for j := range filters {
 			if equalFunc(org[i], filters[j]) {
@@ -962,7 +962,7 @@ func compileLogicalArrayOp(underlying types.Type, op string) func(types.Type, ty
 	}
 }
 
-func cmpArrays(left *RawData, right *RawData, f func(interface{}, interface{}) bool) bool {
+func cmpArrays(left *RawData, right *RawData, f func(any, any) bool) bool {
 	if left.Value == nil {
 		if right.Value == nil {
 			return true
@@ -973,8 +973,8 @@ func cmpArrays(left *RawData, right *RawData, f func(interface{}, interface{}) b
 		return false
 	}
 
-	l := left.Value.([]interface{})
-	r := right.Value.([]interface{})
+	l := left.Value.([]any)
+	r := right.Value.([]any)
 
 	if len(l) != len(r) {
 		return false
@@ -989,8 +989,8 @@ func cmpArrays(left *RawData, right *RawData, f func(interface{}, interface{}) b
 	return true
 }
 
-func cmpArrayOne(leftArray *RawData, right *RawData, f func(interface{}, interface{}) bool) bool {
-	l := leftArray.Value.([]interface{})
+func cmpArrayOne(leftArray *RawData, right *RawData, f func(any, any) bool) bool {
+	l := leftArray.Value.([]any)
 	if len(l) != 1 {
 		return false
 	}
@@ -999,8 +999,8 @@ func cmpArrayOne(leftArray *RawData, right *RawData, f func(interface{}, interfa
 
 // []T -- []T
 
-func tArrayCmp(left *RawData, right *RawData) func(interface{}, interface{}) bool {
-	return func(a interface{}, b interface{}) bool {
+func tArrayCmp(left *RawData, right *RawData) func(any, any) bool {
+	return func(a any, b any) bool {
 		if left.Type.Child() != right.Type.Child() {
 			return false
 		}
@@ -1031,7 +1031,7 @@ func tarrayConcatTarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uin
 		return &RawData{Type: items.Type}, 0, nil
 	}
 
-	v, _ := bind.Value.([]interface{})
+	v, _ := bind.Value.([]any)
 	if v == nil {
 		if items.Value == nil {
 			return &RawData{Type: bind.Type}, 0, nil
@@ -1039,12 +1039,12 @@ func tarrayConcatTarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uin
 		return nil, 0, errors.New("cannot add arrays to null")
 	}
 
-	list := items.Value.([]interface{})
+	list := items.Value.([]any)
 	if len(list) == 0 {
 		return bind, 0, nil
 	}
 
-	res := make([]interface{}, len(v)+len(list))
+	res := make([]any, len(v)+len(list))
 	var idx int
 	for i := range v {
 		res[idx] = v[i]
@@ -1072,7 +1072,7 @@ func tarrayDeleteTarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uin
 		return &RawData{Type: items.Type}, 0, nil
 	}
 
-	v, _ := bind.Value.([]interface{})
+	v, _ := bind.Value.([]any)
 	if v == nil {
 		if items.Value == nil {
 			return &RawData{Type: bind.Type}, 0, nil
@@ -1080,7 +1080,7 @@ func tarrayDeleteTarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uin
 		return nil, 0, errors.New("cannot add arrays to null")
 	}
 
-	list := items.Value.([]interface{})
+	list := items.Value.([]any)
 	if len(list) == 0 {
 		return items, 0, nil
 	}
@@ -1088,7 +1088,7 @@ func tarrayDeleteTarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uin
 	// TODO: We can optimize the way the deletion works, but need to map to
 	// recognized types to do so. Common example: strings an numbers.
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range v {
 		found := false
 		for j := range list {
@@ -1163,7 +1163,7 @@ func arrayCmpNilV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 	if bind.Value == nil {
 		return BoolTrue, 0, nil
 	}
-	v := bind.Value.([]interface{})
+	v := bind.Value.([]any)
 	if v == nil {
 		return BoolTrue, 0, nil
 	}
@@ -1174,7 +1174,7 @@ func arrayNotNilV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 	if bind.Value == nil {
 		return BoolFalse, 0, nil
 	}
-	v := bind.Value.([]interface{})
+	v := bind.Value.([]any)
 	if v == nil {
 		return BoolFalse, 0, nil
 	}
@@ -1185,7 +1185,7 @@ func arrayCmpEmpty(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 	if bind.Value == nil {
 		return BoolTrue, 0, nil
 	}
-	v := bind.Value.([]interface{})
+	v := bind.Value.([]any)
 	if v == nil {
 		return BoolTrue, 0, nil
 	}
@@ -1196,7 +1196,7 @@ func arrayNotEmpty(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 	if bind.Value == nil {
 		return BoolFalse, 0, nil
 	}
-	v := bind.Value.([]interface{})
+	v := bind.Value.([]any)
 	if v == nil {
 		return BoolFalse, 0, nil
 	}

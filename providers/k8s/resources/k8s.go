@@ -6,7 +6,7 @@ package resources
 import (
 	"sync"
 
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 )
 
 type mqlK8sInternal struct {
@@ -14,7 +14,7 @@ type mqlK8sInternal struct {
 	nodesByName map[string]*mqlK8sNode
 }
 
-func (k *mqlK8s) serverVersion() (interface{}, error) {
+func (k *mqlK8s) serverVersion() (any, error) {
 	kt, err := k8sProvider(k.MqlRuntime.Connection)
 	if err != nil {
 		return nil, err

@@ -7,10 +7,10 @@ import (
 	"errors"
 
 	"github.com/packethost/packngo"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/equinix/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/equinix/connection"
 )
 
 func initEquinixMetalOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -76,7 +76,7 @@ func (r *mqlEquinixMetalOrganization) id() (string, error) {
 	return r.Url.Data, r.Url.Error
 }
 
-func (r *mqlEquinixMetalOrganization) users() ([]interface{}, error) {
+func (r *mqlEquinixMetalOrganization) users() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.EquinixConnection)
 	c := conn.Client()
 
@@ -89,7 +89,7 @@ func (r *mqlEquinixMetalOrganization) users() ([]interface{}, error) {
 	}
 
 	// now iterate over the user urls of the project
-	res := []interface{}{}
+	res := []any{}
 	for i := range members {
 		usr := members[i].User
 

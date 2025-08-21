@@ -9,7 +9,7 @@ import (
 	"io"
 	"strings"
 
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
 	"howett.net/plist"
 )
 
@@ -30,15 +30,15 @@ type Preferences struct {
 	connection shared.Connection
 }
 
-func (p *Preferences) UserPreferences() (map[string]map[string]interface{}, error) {
+func (p *Preferences) UserPreferences() (map[string]map[string]any, error) {
 	return p.preferences(userDomains, userDomainPreferences)
 }
 
-func (p *Preferences) UserHostPreferences() (map[string]map[string]interface{}, error) {
+func (p *Preferences) UserHostPreferences() (map[string]map[string]any, error) {
 	return p.preferences(currentHostDomains, currentHostDomainPreferences)
 }
 
-func (p *Preferences) preferences(domainCmd string, preferencesCmd string) (map[string]map[string]interface{}, error) {
+func (p *Preferences) preferences(domainCmd string, preferencesCmd string) (map[string]map[string]any, error) {
 	c, err := p.connection.RunCommand(domainCmd)
 	if err != nil {
 		return nil, err
@@ -49,7 +49,7 @@ func (p *Preferences) preferences(domainCmd string, preferencesCmd string) (map[
 		return nil, err
 	}
 
-	res := map[string]map[string]interface{}{}
+	res := map[string]map[string]any{}
 
 	for i := range domains {
 		domain := domains[i]
@@ -84,7 +84,7 @@ func ParseDomains(r io.Reader) ([]string, error) {
 	return res, nil
 }
 
-func ParsePreferences(input io.Reader) (map[string]interface{}, error) {
+func ParsePreferences(input io.Reader) (map[string]any, error) {
 	var r io.ReadSeeker
 	r, ok := input.(io.ReadSeeker)
 	if !ok {
@@ -95,7 +95,7 @@ func ParsePreferences(input io.Reader) (map[string]interface{}, error) {
 		r = bytes.NewReader(data)
 	}
 
-	var data map[string]interface{}
+	var data map[string]any
 	decoder := plist.NewDecoder(r)
 	err := decoder.Decode(&data)
 	if err != nil {

@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -237,15 +237,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"tailscale.devices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlTailscale).Devices, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlTailscale).Devices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"tailscale.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlTailscale).Users, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlTailscale).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"tailscale.nameservers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlTailscale).Nameservers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlTailscale).Nameservers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"tailscale.device.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -273,11 +273,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"tailscale.device.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlTailscaleDevice).Tags, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlTailscaleDevice).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"tailscale.device.addresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlTailscaleDevice).Addresses, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlTailscaleDevice).Addresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"tailscale.device.clientVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -410,9 +410,9 @@ type mqlTailscale struct {
 	__id string
 	// optional: if you define mqlTailscaleInternal it will be used here
 	Tailnet plugin.TValue[string]
-	Devices plugin.TValue[[]interface{}]
-	Users plugin.TValue[[]interface{}]
-	Nameservers plugin.TValue[[]interface{}]
+	Devices plugin.TValue[[]any]
+	Users plugin.TValue[[]any]
+	Nameservers plugin.TValue[[]any]
 }
 
 // createTailscale creates a new instance of this resource
@@ -456,15 +456,15 @@ func (c *mqlTailscale) GetTailnet() *plugin.TValue[string] {
 	return &c.Tailnet
 }
 
-func (c *mqlTailscale) GetDevices() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Devices, func() ([]interface{}, error) {
+func (c *mqlTailscale) GetDevices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Devices, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("tailscale", c.__id, "devices")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -472,15 +472,15 @@ func (c *mqlTailscale) GetDevices() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlTailscale) GetUsers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Users, func() ([]interface{}, error) {
+func (c *mqlTailscale) GetUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Users, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("tailscale", c.__id, "users")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -488,8 +488,8 @@ func (c *mqlTailscale) GetUsers() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlTailscale) GetNameservers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Nameservers, func() ([]interface{}, error) {
+func (c *mqlTailscale) GetNameservers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Nameservers, func() ([]any, error) {
 		return c.nameservers()
 	})
 }
@@ -504,8 +504,8 @@ type mqlTailscaleDevice struct {
 	Os plugin.TValue[string]
 	Name plugin.TValue[string]
 	User plugin.TValue[string]
-	Tags plugin.TValue[[]interface{}]
-	Addresses plugin.TValue[[]interface{}]
+	Tags plugin.TValue[[]any]
+	Addresses plugin.TValue[[]any]
 	ClientVersion plugin.TValue[string]
 	MachineKey plugin.TValue[string]
 	NodeKey plugin.TValue[string]
@@ -578,11 +578,11 @@ func (c *mqlTailscaleDevice) GetUser() *plugin.TValue[string] {
 	return &c.User
 }
 
-func (c *mqlTailscaleDevice) GetTags() *plugin.TValue[[]interface{}] {
+func (c *mqlTailscaleDevice) GetTags() *plugin.TValue[[]any] {
 	return &c.Tags
 }
 
-func (c *mqlTailscaleDevice) GetAddresses() *plugin.TValue[[]interface{}] {
+func (c *mqlTailscaleDevice) GetAddresses() *plugin.TValue[[]any] {
 	return &c.Addresses
 }
 

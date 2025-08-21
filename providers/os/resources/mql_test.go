@@ -9,8 +9,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/testutils"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/testutils"
 )
 
 // Core Language constructs
@@ -81,19 +81,19 @@ func TestMap(t *testing.T) {
 	x.TestSimple(t, []testutils.SimpleTest{
 		{
 			Code:        "{a: 123}",
-			Expectation: map[string]interface{}{"a": int64(123)},
+			Expectation: map[string]any{"a": int64(123)},
 		},
 		{
 			Code:        "return {a: 123}",
-			Expectation: map[string]interface{}{"a": int64(123)},
+			Expectation: map[string]any{"a": int64(123)},
 		},
 		{
 			Code:        "{a: 1, b: 2, c: 3}.where(key == 'c')",
-			Expectation: map[string]interface{}{"c": int64(3)},
+			Expectation: map[string]any{"c": int64(3)},
 		},
 		{
 			Code:        "{a: 1, b: 2, c: 3}.where(value < 3)",
-			Expectation: map[string]interface{}{"a": int64(1), "b": int64(2)},
+			Expectation: map[string]any{"a": int64(1), "b": int64(2)},
 		},
 		{
 			Code:        "parse.xml('/dummy.xml').params.length",
@@ -117,7 +117,7 @@ func TestMap(t *testing.T) {
 		},
 		{
 			Code: "parse.json('/dummy.json').params { _['Protocol'] != 1 }",
-			Expectation: map[string]interface{}{
+			Expectation: map[string]any{
 				"__t": llx.BoolTrue,
 				"__s": llx.BoolTrue,
 				"CQ28lTwZsvVdJM4dCyeTdbQhExY8oiUIcMoPyPjXAJNgtjMLnHK6qgEVywRY1Hbw9QqInuL06EWIOaEMj2e9NA==": llx.BoolTrue,
@@ -146,19 +146,19 @@ func TestListResource(t *testing.T) {
 		},
 		{
 			Code:        "users.where(name == 'rooot').list { uid }",
-			Expectation: []interface{}{},
+			Expectation: []any{},
 		},
 		{
 			Code:        "users.where(uid > 0).where(uid < 0).list",
-			Expectation: []interface{}{},
+			Expectation: []any{},
 		},
 		{
 			Code: `users.where(name == 'root').list {
 				uid == 0
 				gid == 0
 			}`,
-			Expectation: []interface{}{
-				map[string]interface{}{
+			Expectation: []any{
+				map[string]any{
 					"__t": llx.BoolTrue,
 					"__s": llx.BoolTrue,
 					"BamDDGp87sNG0hVjpmEAPEjF6fZmdA6j3nDinlgr/y5xK3KaLgulyscoeEEaEASm2RkRXifnWj3ZbF0OZBF6XA==": llx.BoolTrue,
@@ -168,7 +168,7 @@ func TestListResource(t *testing.T) {
 		},
 		{
 			Code:        "users.map(name)",
-			Expectation: []interface{}([]interface{}{"root", "bin", "chris", "christopher"}),
+			Expectation: []any([]any{"root", "bin", "chris", "christopher"}),
 		},
 		{
 			// outside variables cause the block to be standalone
@@ -238,8 +238,8 @@ func TestResource_duplicateFields(t *testing.T) {
 	x.TestSimple(t, []testutils.SimpleTest{
 		{
 			Code: "users.list.duplicates(gid) { gid }",
-			Expectation: []interface{}{
-				map[string]interface{}{
+			Expectation: []any{
+				map[string]any{
 					"__t": llx.BoolTrue,
 					"__s": llx.NilData,
 					"Cuv5ImO3PMlg/BnsKFcT/K88cResNOFnEZnbYwBT44aycwbRuvhhMqjq0E96i+POSgNSxO1QPi6U2VNNRuSPtQ==": &llx.RawData{
@@ -248,7 +248,7 @@ func TestResource_duplicateFields(t *testing.T) {
 						Error: nil,
 					},
 				},
-				map[string]interface{}{
+				map[string]any{
 					"__t": llx.BoolTrue,
 					"__s": llx.NilData,
 					"Cuv5ImO3PMlg/BnsKFcT/K88cResNOFnEZnbYwBT44aycwbRuvhhMqjq0E96i+POSgNSxO1QPi6U2VNNRuSPtQ==": &llx.RawData{
@@ -443,7 +443,7 @@ func TestDict_Methods_Map(t *testing.T) {
 		},
 		{
 			Code:        p + "params['string-array'].where(_ == 'a')",
-			Expectation: []interface{}{"a"},
+			Expectation: []any{"a"},
 		},
 		{
 			Code:        p + "params.users.recurse(name != empty).map(name)",
@@ -479,7 +479,7 @@ func TestDict_Methods_Map(t *testing.T) {
 		},
 		{
 			Code:        p + "params['f'].map(_['ff'])",
-			Expectation: []interface{}{float64(3)},
+			Expectation: []any{float64(3)},
 		},
 		// {
 		// 	p + "params { _['1'] == _['1.0'] }",
@@ -491,7 +491,7 @@ func TestDict_Methods_Map(t *testing.T) {
 		},
 		{
 			Code:        p + "params['int-array']",
-			Expectation: []interface{}{float64(1), float64(2), float64(3)},
+			Expectation: []any{float64(1), float64(2), float64(3)},
 		},
 		{
 			Code:        p + "params['hello'] + ' world'",
@@ -527,7 +527,7 @@ func TestDict_Methods_Map(t *testing.T) {
 		},
 		{
 			Code:        p + "params['aoa'].flat",
-			Expectation: []interface{}{float64(1), float64(2), float64(3)},
+			Expectation: []any{float64(1), float64(2), float64(3)},
 		},
 	})
 
@@ -559,7 +559,7 @@ func TestDict_Methods_Array(t *testing.T) {
 		},
 		{
 			Code:        p + "params[2]",
-			Expectation: map[string]interface{}{"ll": float64(0)},
+			Expectation: map[string]any{"ll": float64(0)},
 		},
 		{
 			Code:        p + "params.first",

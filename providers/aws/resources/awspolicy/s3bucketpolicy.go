@@ -46,7 +46,7 @@ func (v *S3BucketPolicyStatementValue) Value() []string {
 
 // value can be string or []string, convert everything to []string
 func (v *S3BucketPolicyStatementValue) UnmarshalJSON(b []byte) error {
-	var raw interface{}
+	var raw any
 	err := json.Unmarshal(b, &raw)
 	if err != nil {
 		return err
@@ -56,7 +56,7 @@ func (v *S3BucketPolicyStatementValue) UnmarshalJSON(b []byte) error {
 	switch v := raw.(type) {
 	case string:
 		p = []string{v}
-	case []interface{}:
+	case []any:
 		var items []string
 		for _, item := range v {
 			items = append(items, fmt.Sprintf("%v", item))
@@ -79,7 +79,7 @@ func (v Principal) Data() map[string][]string {
 // value can be string, map[string]string or map[string][]string
 // we convert everything to map[string][]string
 func (v *Principal) UnmarshalJSON(b []byte) error {
-	var raw interface{}
+	var raw any
 	err := json.Unmarshal(b, &raw)
 	if err != nil {
 		return err
@@ -91,13 +91,13 @@ func (v *Principal) UnmarshalJSON(b []byte) error {
 		p = map[string][]string{
 			"AWS": {v},
 		}
-	case map[string]interface{}:
+	case map[string]any:
 		p = map[string][]string{}
 		for key, value := range v {
 			switch subv := value.(type) {
 			case string:
 				p[key] = []string{fmt.Sprintf("%v", subv)}
-			case []interface{}:
+			case []any:
 				var items []string
 				for _, item := range v {
 					items = append(items, fmt.Sprintf("%v", item))

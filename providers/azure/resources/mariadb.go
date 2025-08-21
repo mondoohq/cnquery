@@ -7,11 +7,11 @@ import (
 	"context"
 	"errors"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/azure/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/azure/connection"
+	"go.mondoo.com/cnquery/v12/types"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	mariadb "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mariadb/armmariadb"
@@ -43,7 +43,7 @@ func (a *mqlAzureSubscriptionMariaDbServiceDatabase) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionMariaDbService) servers() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMariaDbService) servers() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -56,7 +56,7 @@ func (a *mqlAzureSubscriptionMariaDbService) servers() ([]interface{}, error) {
 		return nil, err
 	}
 	pager := dbClient.NewListPager(&mariadb.ServersClientListOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -86,7 +86,7 @@ func (a *mqlAzureSubscriptionMariaDbService) servers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionMariaDbServiceServer) databases() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMariaDbServiceServer) databases() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -107,7 +107,7 @@ func (a *mqlAzureSubscriptionMariaDbServiceServer) databases() ([]interface{}, e
 		return nil, err
 	}
 	pager := dbDatabaseClient.NewListByServerPager(resourceID.ResourceGroup, server, &mariadb.DatabasesClientListByServerOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -132,7 +132,7 @@ func (a *mqlAzureSubscriptionMariaDbServiceServer) databases() ([]interface{}, e
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionMariaDbServiceServer) firewallRules() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMariaDbServiceServer) firewallRules() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -154,7 +154,7 @@ func (a *mqlAzureSubscriptionMariaDbServiceServer) firewallRules() ([]interface{
 		return nil, err
 	}
 	pager := dbFirewallClient.NewListByServerPager(resourceID.ResourceGroup, server, &mariadb.FirewallRulesClientListByServerOptions{})
-	res := []interface{}{}
+	res := []any{}
 
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
@@ -180,7 +180,7 @@ func (a *mqlAzureSubscriptionMariaDbServiceServer) firewallRules() ([]interface{
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionMariaDbServiceServer) configuration() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMariaDbServiceServer) configuration() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -202,7 +202,7 @@ func (a *mqlAzureSubscriptionMariaDbServiceServer) configuration() ([]interface{
 		return nil, err
 	}
 	pager := dbConfClient.NewListByServerPager(resourceID.ResourceGroup, server, &mariadb.ConfigurationsClientListByServerOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {

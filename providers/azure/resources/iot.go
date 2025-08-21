@@ -8,10 +8,10 @@ import (
 	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/iothub/armiothub"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/azure/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/azure/connection"
 )
 
 func initAzureSubscriptionIotService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -28,7 +28,7 @@ func initAzureSubscriptionIotService(runtime *plugin.Runtime, args map[string]*l
 	return args, nil, nil
 }
 
-func (a *mqlAzureSubscriptionIotService) hubs() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionIotService) hubs() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -42,7 +42,7 @@ func (a *mqlAzureSubscriptionIotService) hubs() ([]interface{}, error) {
 
 	client := clientFactory.NewResourceClient()
 	hubsPager := client.NewListBySubscriptionPager(nil)
-	var hubs []interface{}
+	var hubs []any
 
 	for hubsPager.More() {
 		page, err := hubsPager.NextPage(ctx)

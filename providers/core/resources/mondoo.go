@@ -6,8 +6,8 @@ package resources
 import (
 	"runtime"
 
-	"go.mondoo.com/cnquery/v11"
-	"go.mondoo.com/cnquery/v11/cli/execruntime"
+	"go.mondoo.com/cnquery/v12"
+	"go.mondoo.com/cnquery/v12/cli/execruntime"
 )
 
 func (m *mqlMondoo) version() (string, error) {
@@ -22,18 +22,18 @@ func (m *mqlMondoo) arch() (string, error) {
 	return runtime.GOOS + "-" + runtime.GOARCH, nil
 }
 
-func (m *mqlMondoo) jobEnvironment() (map[string]interface{}, error) {
+func (m *mqlMondoo) jobEnvironment() (map[string]any, error) {
 	// get the local agent runtime information
 	ciEnv := execruntime.Detect()
 
-	return map[string]interface{}{
+	return map[string]any{
 		"id":   ciEnv.Namespace,
 		"name": ciEnv.Name,
 	}, nil
 }
 
-func (m *mqlMondoo) capabilities() ([]interface{}, error) {
+func (m *mqlMondoo) capabilities() ([]any, error) {
 	// This method should never be reached.
 	// These values are set during the `connect` call.
-	return []interface{}{}, nil
+	return []any{}, nil
 }

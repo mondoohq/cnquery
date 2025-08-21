@@ -11,7 +11,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 var testTime = time.Unix(1715874169, 1)
@@ -43,11 +43,11 @@ func TestRawData_String(t *testing.T) {
 		{DictData(int64(1)), "1"},
 		{DictData(float64(1.2)), "1.2"},
 		{DictData(string("yo")), "\"yo\""},
-		{DictData([]interface{}{int64(1)}), "[1]"},
-		{DictData(map[string]interface{}{"a": "b"}), "{\"a\":\"b\"}"},
+		{DictData([]any{int64(1)}), "[1]"},
+		{DictData(map[string]any{"a": "b"}), "{\"a\":\"b\"}"},
 		{VersionData("1.2.3"), "1.2.3"},
-		{ArrayData([]interface{}{"a", "b"}, types.String), "[\"a\",\"b\"]"},
-		{MapData(map[string]interface{}{"a": "b"}, types.String), "{\"a\":\"b\"}"},
+		{ArrayData([]any{"a", "b"}, types.String), "[\"a\",\"b\"]"},
+		{MapData(map[string]any{"a": "b"}, types.String), "{\"a\":\"b\"}"},
 		{IPData(ParseIP("1.2.3.4")), "1.2.3.4/8"},
 		{IPData(ParseIP("")), "<null>"},
 		// implicit nil:
@@ -85,12 +85,12 @@ func TestTruthy(t *testing.T) {
 		{TimeDataPtr(&testTime), true},
 		{VersionData("1.2.3"), true},
 		{VersionData(""), false},
-		{ArrayData([]interface{}{}, types.Any), false},
-		{ArrayData([]interface{}{false}, types.Bool), false},
-		{ArrayData([]interface{}{true}, types.Bool), true},
-		{MapData(map[string]interface{}{}, types.Any), true},
-		{MapData(map[string]interface{}{"a": false}, types.Bool), false},
-		{MapData(map[string]interface{}{"a": true}, types.Bool), true},
+		{ArrayData([]any{}, types.Any), false},
+		{ArrayData([]any{false}, types.Bool), false},
+		{ArrayData([]any{true}, types.Bool), true},
+		{MapData(map[string]any{}, types.Any), true},
+		{MapData(map[string]any{"a": false}, types.Bool), false},
+		{MapData(map[string]any{"a": true}, types.Bool), true},
 		{ResourceData(nil, "something"), true},
 		// implicit nil:
 		{&RawData{types.String, nil, nil}, false},
@@ -128,14 +128,14 @@ func TestSuccess(t *testing.T) {
 		{VersionData("1.2.3"), false, false},
 		{IPData(ParseIP("192.168.0.1")), false, false},
 		{IPData(ParseIP("")), false, false},
-		{ArrayData([]interface{}{}, types.Any), false, false},
-		{ArrayData([]interface{}{true, false, true}, types.Bool), false, true},
-		{ArrayData([]interface{}{true, true}, types.Bool), true, true},
+		{ArrayData([]any{}, types.Any), false, false},
+		{ArrayData([]any{true, false, true}, types.Bool), false, true},
+		{ArrayData([]any{true, true}, types.Bool), true, true},
 		{ResourceData(nil, "something"), false, false},
 		{
 			data: &RawData{
 				Type: types.Block,
-				Value: map[string]interface{}{
+				Value: map[string]any{
 					"__s": BoolData(true),
 				},
 			},
@@ -145,7 +145,7 @@ func TestSuccess(t *testing.T) {
 		{
 			data: &RawData{
 				Type: types.Block,
-				Value: map[string]interface{}{
+				Value: map[string]any{
 					"__s": BoolData(false),
 				},
 			},
@@ -155,7 +155,7 @@ func TestSuccess(t *testing.T) {
 		{
 			data: &RawData{
 				Type: types.Block,
-				Value: map[string]interface{}{
+				Value: map[string]any{
 					"__s": NilData,
 				},
 			},
@@ -165,7 +165,7 @@ func TestSuccess(t *testing.T) {
 		{
 			data: &RawData{
 				Type:  types.Block,
-				Value: map[string]interface{}{},
+				Value: map[string]any{},
 			},
 			success: false,
 			valid:   false,
@@ -208,8 +208,8 @@ func TestRawData_JSON(t *testing.T) {
 		IPData(ParseIntIP(0)),
 		IPData(ParseIntIP(1<<33 - 1)),
 		IPData(ParseIP("2001:db8:3c4d:15::1a2f:1a2b/64")),
-		ArrayData([]interface{}{"a", "b"}, types.String),
-		MapData(map[string]interface{}{"a": "b"}, types.String),
+		ArrayData([]any{"a", "b"}, types.String),
+		MapData(map[string]any{"a": "b"}, types.String),
 		{Error: errors.New("test")},
 	}
 

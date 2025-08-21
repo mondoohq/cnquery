@@ -15,7 +15,6 @@ resources:
     fields:
       advisor: {}
       aks: {}
-      authorization: {}
       authorizationSource: {}
       cloudDefender: {}
       compute: {}
@@ -264,7 +263,6 @@ resources:
     fields:
       description: {}
       id: {}
-      isCustom: {}
       name: {}
       permissions: {}
       scopes: {}
@@ -295,7 +293,6 @@ resources:
         min_mondoo_version: 9.0.0
       roleAssignments:
         min_mondoo_version: 9.0.0
-      roleDefinitions: {}
       roles:
         min_mondoo_version: 9.0.0
       subscriptionId: {}
@@ -329,7 +326,6 @@ resources:
     fields:
       description: {}
       id: {}
-      isCustom: {}
       name: {}
       permissions: {}
       scopes: {}

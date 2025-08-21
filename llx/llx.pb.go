@@ -1457,7 +1457,7 @@ const file_llx_proto_rawDesc = "" +
 	"\aaddress\x18\x01 \x01(\fR\aaddress\x12\x1d\n" +
 	"\n" +
 	"has_prefix\x18\x02 \x01(\bR\thasPrefix\x12#\n" +
-	"\rprefix_length\x18\x03 \x01(\x05R\fprefixLengthB\x1fZ\x1dgo.mondoo.com/cnquery/v11/llxb\x06proto3"
+	"\rprefix_length\x18\x03 \x01(\x05R\fprefixLengthB\x1fZ\x1dgo.mondoo.com/cnquery/v12/llxb\x06proto3"
 
 var (
 	file_llx_proto_rawDescOnce sync.Once

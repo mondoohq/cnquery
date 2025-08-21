@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/google/go-github/v72/github"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers/github/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers/github/connection"
 )
 
 func (g *mqlGithubTeam) id() (string, error) {
@@ -21,7 +21,7 @@ func (g *mqlGithubTeam) id() (string, error) {
 	return "github.team/" + strconv.FormatInt(id, 10), nil
 }
 
-func (g *mqlGithubTeam) repositories() ([]interface{}, error) {
+func (g *mqlGithubTeam) repositories() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
 	if g.Id.Error != nil {
@@ -56,7 +56,7 @@ func (g *mqlGithubTeam) repositories() ([]interface{}, error) {
 		listOpts.Page = resp.NextPage
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range allRepos {
 		repo := allRepos[i]
 
@@ -70,7 +70,7 @@ func (g *mqlGithubTeam) repositories() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGithubTeam) members() ([]interface{}, error) {
+func (g *mqlGithubTeam) members() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
 	if g.Id.Error != nil {
@@ -106,7 +106,7 @@ func (g *mqlGithubTeam) members() ([]interface{}, error) {
 		listOpts.Page = resp.NextPage
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range allMembers {
 		member := allMembers[i]
 

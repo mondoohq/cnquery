@@ -7,17 +7,17 @@ import "strings"
 
 // Ini contains the parsed contents of an ini-style file
 type Ini struct {
-	Fields map[string]interface{}
+	Fields map[string]any
 }
 
 // ParseIni parses the raw text contents of an ini-style file
 func ParseIni(raw string, delimiter string) *Ini {
 	res := Ini{
-		Fields: map[string]interface{}{},
+		Fields: map[string]any{},
 	}
 
 	curGroup := ""
-	res.Fields[curGroup] = map[string]interface{}{}
+	res.Fields[curGroup] = map[string]any{}
 
 	lines := strings.Split(raw, "\n")
 	for i := range lines {
@@ -35,7 +35,7 @@ func ParseIni(raw string, delimiter string) *Ini {
 			gEnd := strings.Index(line, "]")
 			if gEnd > 0 {
 				curGroup = line[1:gEnd]
-				res.Fields[curGroup] = map[string]interface{}{}
+				res.Fields[curGroup] = map[string]any{}
 			}
 			continue
 		}
@@ -58,11 +58,11 @@ func ParseIni(raw string, delimiter string) *Ini {
 			v = strings.Trim(kv[1], " \t\r")
 		}
 
-		res.Fields[curGroup].(map[string]interface{})[k] = v
+		res.Fields[curGroup].(map[string]any)[k] = v
 	}
 
 	// check if group "" really contains entries
-	defaultGroup := res.Fields[""].(map[string]interface{})
+	defaultGroup := res.Fields[""].(map[string]any)
 	if len(defaultGroup) == 0 {
 		delete(res.Fields, "")
 	}

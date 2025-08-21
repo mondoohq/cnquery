@@ -8,20 +8,20 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (a *mqlAwsConfig) id() (string, error) {
 	return "aws.config", nil
 }
 
-func (a *mqlAwsConfig) recorders() ([]interface{}, error) {
+func (a *mqlAwsConfig) recorders() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getRecorders(conn), 5)
 	poolOfJobs.Run()
 
@@ -31,7 +31,7 @@ func (a *mqlAwsConfig) recorders() ([]interface{}, error) {
 	}
 	// get all the results
 	for _, job := range poolOfJobs.Jobs {
-		res = append(res, job.Result.([]interface{})...)
+		res = append(res, job.Result.([]any)...)
 	}
 	return res, nil
 }
@@ -49,7 +49,7 @@ func (a *mqlAwsConfig) getRecorders(conn *connection.AwsConnection) []*jobpool.J
 
 			svc := conn.ConfigService(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 
 			params := &configservice.DescribeConfigurationRecordersInput{}
 			configRecorders, err := svc.DescribeConfigurationRecorders(ctx, params)
@@ -72,7 +72,7 @@ func (a *mqlAwsConfig) getRecorders(conn *connection.AwsConnection) []*jobpool.J
 					recording = val.recording
 					lastStatus = val.lastStatus
 				}
-				resourceTypesInterface := make([]interface{}, len(r.RecordingGroup.ResourceTypes))
+				resourceTypesInterface := make([]any, len(r.RecordingGroup.ResourceTypes))
 				for i, resourceType := range r.RecordingGroup.ResourceTypes {
 					resourceTypesInterface[i] = string(resourceType)
 				}
@@ -99,9 +99,9 @@ func (a *mqlAwsConfig) getRecorders(conn *connection.AwsConnection) []*jobpool.J
 	return tasks
 }
 
-func (a *mqlAwsConfig) deliveryChannels() ([]interface{}, error) {
+func (a *mqlAwsConfig) deliveryChannels() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getDeliveryChannels(conn), 5)
 	poolOfJobs.Run()
 
@@ -110,7 +110,7 @@ func (a *mqlAwsConfig) deliveryChannels() ([]interface{}, error) {
 	}
 
 	for _, job := range poolOfJobs.Jobs {
-		res = append(res, job.Result.([]interface{})...)
+		res = append(res, job.Result.([]any)...)
 	}
 	return res, nil
 }
@@ -128,7 +128,7 @@ func (a *mqlAwsConfig) getDeliveryChannels(conn *connection.AwsConnection) []*jo
 
 			svc := conn.ConfigService(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 
 			deliveryChannelsParams := &configservice.DescribeDeliveryChannelsInput{}
 			deliveryChannels, err := svc.DescribeDeliveryChannels(ctx, deliveryChannelsParams)
@@ -189,9 +189,9 @@ func (a *mqlAwsConfigRecorder) id() (string, error) {
 	return getName(name, region), nil
 }
 
-func (a *mqlAwsConfig) rules() ([]interface{}, error) {
+func (a *mqlAwsConfig) rules() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getRules(conn), 5)
 	poolOfJobs.Run()
 
@@ -201,7 +201,7 @@ func (a *mqlAwsConfig) rules() ([]interface{}, error) {
 	}
 	// get all the results
 	for _, job := range poolOfJobs.Jobs {
-		res = append(res, job.Result.([]interface{})...)
+		res = append(res, job.Result.([]any)...)
 	}
 	return res, nil
 }
@@ -219,7 +219,7 @@ func (a *mqlAwsConfig) getRules(conn *connection.AwsConnection) []*jobpool.Job {
 
 			svc := conn.ConfigService(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 
 			params := &configservice.DescribeConfigRulesInput{}
 			rules, err := svc.DescribeConfigRules(ctx, params)

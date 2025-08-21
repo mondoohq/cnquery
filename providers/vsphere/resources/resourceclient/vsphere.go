@@ -27,7 +27,7 @@ type Client struct {
 	Client *govmomi.Client
 }
 
-func (c *Client) AboutInfo() (map[string]interface{}, error) {
+func (c *Client) AboutInfo() (map[string]any, error) {
 	return PropertiesToDict(c.Client.ServiceContent.About)
 }
 

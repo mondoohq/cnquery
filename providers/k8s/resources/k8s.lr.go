@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -134,10 +134,6 @@ func init() {
 		"k8s.rbac.rolebinding": {
 			Init: initK8sRbacRolebinding,
 			Create: createK8sRbacRolebinding,
-		},
-		"k8s.podsecuritypolicy": {
-			// to override args, implement: initK8sPodsecuritypolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createK8sPodsecuritypolicy,
 		},
 		"k8s.networkpolicy": {
 			Init: initK8sNetworkpolicy,
@@ -306,9 +302,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.rolebindings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8s).GetRolebindings()).ToDataRes(types.Array(types.Resource("k8s.rbac.rolebinding")))
-	},
-	"k8s.podSecurityPolicies": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlK8s).GetPodSecurityPolicies()).ToDataRes(types.Array(types.Resource("k8s.podsecuritypolicy")))
 	},
 	"k8s.networkPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8s).GetNetworkPolicies()).ToDataRes(types.Array(types.Resource("k8s.networkpolicy")))
@@ -691,9 +684,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.container.imageName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sContainer).GetImageName()).ToDataRes(types.String)
 	},
-	"k8s.container.image": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlK8sContainer).GetImage()).ToDataRes(types.String)
-	},
 	"k8s.container.containerImage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sContainer).GetContainerImage()).ToDataRes(types.Resource("container.image"))
 	},
@@ -745,9 +735,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.initContainer.imageName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sInitContainer).GetImageName()).ToDataRes(types.String)
 	},
-	"k8s.initContainer.image": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlK8sInitContainer).GetImage()).ToDataRes(types.String)
-	},
 	"k8s.initContainer.containerImage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sInitContainer).GetContainerImage()).ToDataRes(types.Resource("container.image"))
 	},
@@ -792,9 +779,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.ephemeralContainer.imageName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sEphemeralContainer).GetImageName()).ToDataRes(types.String)
-	},
-	"k8s.ephemeralContainer.image": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlK8sEphemeralContainer).GetImage()).ToDataRes(types.String)
 	},
 	"k8s.ephemeralContainer.containerImage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sEphemeralContainer).GetContainerImage()).ToDataRes(types.Resource("container.image"))
@@ -1204,36 +1188,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.rbac.rolebinding.roleRef": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacRolebinding).GetRoleRef()).ToDataRes(types.Dict)
 	},
-	"k8s.podsecuritypolicy.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlK8sPodsecuritypolicy).GetId()).ToDataRes(types.String)
-	},
-	"k8s.podsecuritypolicy.uid": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlK8sPodsecuritypolicy).GetUid()).ToDataRes(types.String)
-	},
-	"k8s.podsecuritypolicy.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlK8sPodsecuritypolicy).GetResourceVersion()).ToDataRes(types.String)
-	},
-	"k8s.podsecuritypolicy.labels": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlK8sPodsecuritypolicy).GetLabels()).ToDataRes(types.Map(types.String, types.String))
-	},
-	"k8s.podsecuritypolicy.annotations": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlK8sPodsecuritypolicy).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
-	},
-	"k8s.podsecuritypolicy.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlK8sPodsecuritypolicy).GetName()).ToDataRes(types.String)
-	},
-	"k8s.podsecuritypolicy.kind": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlK8sPodsecuritypolicy).GetKind()).ToDataRes(types.String)
-	},
-	"k8s.podsecuritypolicy.created": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlK8sPodsecuritypolicy).GetCreated()).ToDataRes(types.Time)
-	},
-	"k8s.podsecuritypolicy.manifest": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlK8sPodsecuritypolicy).GetManifest()).ToDataRes(types.Dict)
-	},
-	"k8s.podsecuritypolicy.spec": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlK8sPodsecuritypolicy).GetSpec()).ToDataRes(types.Dict)
-	},
 	"k8s.networkpolicy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sNetworkpolicy).GetId()).ToDataRes(types.String)
 	},
@@ -1389,103 +1343,99 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"k8s.serverVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8s).ServerVersion, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8s).ServerVersion, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.apiResources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8s).ApiResources, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8s).ApiResources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.namespaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8s).Namespaces, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8s).Namespaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.nodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8s).Nodes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8s).Nodes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.pods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8s).Pods, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8s).Pods, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.deployments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8s).Deployments, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8s).Deployments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.daemonsets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8s).Daemonsets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8s).Daemonsets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.statefulsets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8s).Statefulsets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8s).Statefulsets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.replicasets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8s).Replicasets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8s).Replicasets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.jobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8s).Jobs, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8s).Jobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.cronjobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8s).Cronjobs, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8s).Cronjobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.secrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8s).Secrets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8s).Secrets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.configmaps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8s).Configmaps, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8s).Configmaps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.services": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8s).Services, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8s).Services, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.ingresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8s).Ingresses, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8s).Ingresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.serviceaccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8s).Serviceaccounts, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8s).Serviceaccounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.clusterroles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8s).Clusterroles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8s).Clusterroles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.clusterrolebindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8s).Clusterrolebindings, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8s).Clusterrolebindings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8s).Roles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8s).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.rolebindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8s).Rolebindings, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
-		return
-	},
-	"k8s.podSecurityPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8s).PodSecurityPolicies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8s).Rolebindings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.networkPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8s).NetworkPolicies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8s).NetworkPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.customresources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8s).Customresources, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8s).Customresources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.validatingWebhookConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8s).ValidatingWebhookConfigurations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8s).ValidatingWebhookConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.apps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8s).Apps, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8s).Apps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.apiresource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1517,11 +1467,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.apiresource.shortNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sApiresource).ShortNames, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sApiresource).ShortNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.apiresource.categories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sApiresource).Categories, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sApiresource).Categories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.namespace.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1545,7 +1495,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.namespace.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sNamespace).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sNamespace).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.namespace.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1553,11 +1503,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.namespace.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sNamespace).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sNamespace).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.namespace.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sNamespace).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sNamespace).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.node.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1573,11 +1523,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.node.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sNode).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sNode).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.node.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sNode).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sNode).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.node.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1597,7 +1547,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.node.nodeInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sNode).NodeInfo, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sNode).NodeInfo, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.node.kubeletPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1621,11 +1571,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.pod.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sPod).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sPod).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.pod.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sPod).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sPod).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.pod.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1649,23 +1599,23 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.pod.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sPod).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sPod).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.pod.podSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sPod).PodSpec, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sPod).PodSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.pod.ephemeralContainers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sPod).EphemeralContainers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sPod).EphemeralContainers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.pod.initContainers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sPod).InitContainers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sPod).InitContainers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.pod.containers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sPod).Containers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sPod).Containers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.pod.node": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1689,11 +1639,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.deployment.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sDeployment).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sDeployment).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.deployment.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sDeployment).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sDeployment).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.deployment.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1713,19 +1663,19 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.deployment.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sDeployment).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sDeployment).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.deployment.podSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sDeployment).PodSpec, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sDeployment).PodSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.deployment.initContainers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sDeployment).InitContainers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sDeployment).InitContainers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.deployment.containers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sDeployment).Containers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sDeployment).Containers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.daemonset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1745,11 +1695,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.daemonset.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sDaemonset).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sDaemonset).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.daemonset.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sDaemonset).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sDaemonset).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.daemonset.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1769,19 +1719,19 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.daemonset.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sDaemonset).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sDaemonset).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.daemonset.podSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sDaemonset).PodSpec, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sDaemonset).PodSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.daemonset.initContainers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sDaemonset).InitContainers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sDaemonset).InitContainers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.daemonset.containers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sDaemonset).Containers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sDaemonset).Containers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.statefulset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1801,11 +1751,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.statefulset.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sStatefulset).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sStatefulset).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.statefulset.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sStatefulset).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sStatefulset).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.statefulset.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1825,19 +1775,19 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.statefulset.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sStatefulset).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sStatefulset).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.statefulset.podSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sStatefulset).PodSpec, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sStatefulset).PodSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.statefulset.initContainers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sStatefulset).InitContainers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sStatefulset).InitContainers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.statefulset.containers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sStatefulset).Containers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sStatefulset).Containers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.replicaset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1857,11 +1807,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.replicaset.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sReplicaset).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sReplicaset).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.replicaset.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sReplicaset).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sReplicaset).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.replicaset.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1881,19 +1831,19 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.replicaset.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sReplicaset).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sReplicaset).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.replicaset.podSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sReplicaset).PodSpec, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sReplicaset).PodSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.replicaset.initContainers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sReplicaset).InitContainers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sReplicaset).InitContainers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.replicaset.containers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sReplicaset).Containers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sReplicaset).Containers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.job.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1913,11 +1863,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.job.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sJob).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sJob).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.job.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sJob).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sJob).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.job.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1937,19 +1887,19 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.job.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sJob).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sJob).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.job.podSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sJob).PodSpec, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sJob).PodSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.job.initContainers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sJob).InitContainers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sJob).InitContainers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.job.containers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sJob).Containers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sJob).Containers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.cronjob.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1969,11 +1919,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.cronjob.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sCronjob).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sCronjob).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.cronjob.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sCronjob).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sCronjob).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.cronjob.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1993,19 +1943,19 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.cronjob.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sCronjob).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sCronjob).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.cronjob.podSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sCronjob).PodSpec, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sCronjob).PodSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.cronjob.initContainers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sCronjob).InitContainers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sCronjob).InitContainers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.cronjob.containers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sCronjob).Containers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sCronjob).Containers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.container.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2024,40 +1974,36 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlK8sContainer).ImageName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"k8s.container.image": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sContainer).Image, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"k8s.container.containerImage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sContainer).ContainerImage, ok = plugin.RawToTValue[plugin.Resource](v.Value, v.Error)
 		return
 	},
 	"k8s.container.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sContainer).Command, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sContainer).Command, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.container.args": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sContainer).Args, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sContainer).Args, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.container.resources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sContainer).Resources, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sContainer).Resources, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.container.volumeMounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sContainer).VolumeMounts, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sContainer).VolumeMounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.container.volumeDevices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sContainer).VolumeDevices, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sContainer).VolumeDevices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.container.livenessProbe": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sContainer).LivenessProbe, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sContainer).LivenessProbe, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.container.readinessProbe": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sContainer).ReadinessProbe, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sContainer).ReadinessProbe, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.container.imagePullPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2065,7 +2011,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.container.securityContext": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sContainer).SecurityContext, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sContainer).SecurityContext, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.container.workingDir": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2077,11 +2023,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.container.env": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sContainer).Env, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sContainer).Env, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.container.envFrom": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sContainer).EnvFrom, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sContainer).EnvFrom, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.initContainer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2100,32 +2046,28 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlK8sInitContainer).ImageName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"k8s.initContainer.image": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sInitContainer).Image, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"k8s.initContainer.containerImage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sInitContainer).ContainerImage, ok = plugin.RawToTValue[plugin.Resource](v.Value, v.Error)
 		return
 	},
 	"k8s.initContainer.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sInitContainer).Command, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sInitContainer).Command, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.initContainer.args": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sInitContainer).Args, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sInitContainer).Args, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.initContainer.resources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sInitContainer).Resources, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sInitContainer).Resources, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.initContainer.volumeMounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sInitContainer).VolumeMounts, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sInitContainer).VolumeMounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.initContainer.volumeDevices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sInitContainer).VolumeDevices, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sInitContainer).VolumeDevices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.initContainer.imagePullPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2133,7 +2075,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.initContainer.securityContext": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sInitContainer).SecurityContext, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sInitContainer).SecurityContext, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.initContainer.workingDir": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2145,11 +2087,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.initContainer.env": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sInitContainer).Env, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sInitContainer).Env, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.initContainer.envFrom": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sInitContainer).EnvFrom, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sInitContainer).EnvFrom, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.ephemeralContainer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2168,28 +2110,24 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlK8sEphemeralContainer).ImageName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"k8s.ephemeralContainer.image": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sEphemeralContainer).Image, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"k8s.ephemeralContainer.containerImage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sEphemeralContainer).ContainerImage, ok = plugin.RawToTValue[plugin.Resource](v.Value, v.Error)
 		return
 	},
 	"k8s.ephemeralContainer.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sEphemeralContainer).Command, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sEphemeralContainer).Command, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.ephemeralContainer.args": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sEphemeralContainer).Args, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sEphemeralContainer).Args, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.ephemeralContainer.volumeMounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sEphemeralContainer).VolumeMounts, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sEphemeralContainer).VolumeMounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.ephemeralContainer.volumeDevices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sEphemeralContainer).VolumeDevices, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sEphemeralContainer).VolumeDevices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.ephemeralContainer.imagePullPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2197,7 +2135,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.ephemeralContainer.securityContext": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sEphemeralContainer).SecurityContext, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sEphemeralContainer).SecurityContext, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.ephemeralContainer.workingDir": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2209,11 +2147,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.ephemeralContainer.env": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sEphemeralContainer).Env, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sEphemeralContainer).Env, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.ephemeralContainer.envFrom": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sEphemeralContainer).EnvFrom, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sEphemeralContainer).EnvFrom, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.secret.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2233,11 +2171,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.secret.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sSecret).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sSecret).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.secret.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sSecret).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sSecret).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.secret.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2257,7 +2195,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.secret.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sSecret).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sSecret).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.secret.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2265,7 +2203,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.secret.certificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sSecret).Certificates, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sSecret).Certificates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.configmap.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2285,11 +2223,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.configmap.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sConfigmap).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sConfigmap).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.configmap.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sConfigmap).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sConfigmap).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.configmap.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2309,11 +2247,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.configmap.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sConfigmap).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sConfigmap).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.configmap.data": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sConfigmap).Data, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sConfigmap).Data, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2333,11 +2271,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.service.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sService).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sService).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.service.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sService).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sService).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.service.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2357,11 +2295,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.service.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sService).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sService).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.service.spec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sService).Spec, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sService).Spec, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.ingressresourceref.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2453,7 +2391,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.ingressrule.httpPaths": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sIngressrule).HttpPaths, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sIngressrule).HttpPaths, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.ingresstls.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2465,11 +2403,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.ingresstls.hosts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sIngresstls).Hosts, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sIngresstls).Hosts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.ingresstls.certificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sIngresstls).Certificates, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sIngresstls).Certificates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.ingress.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2489,11 +2427,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.ingress.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sIngress).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sIngress).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.ingress.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sIngress).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sIngress).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.ingress.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2513,15 +2451,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.ingress.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sIngress).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sIngress).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.ingress.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sIngress).Rules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sIngress).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.ingress.tls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sIngress).Tls, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sIngress).Tls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.serviceaccount.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2541,11 +2479,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.serviceaccount.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sServiceaccount).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sServiceaccount).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.serviceaccount.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sServiceaccount).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sServiceaccount).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.serviceaccount.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2565,15 +2503,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.serviceaccount.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sServiceaccount).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sServiceaccount).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.serviceaccount.secrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sServiceaccount).Secrets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sServiceaccount).Secrets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.serviceaccount.imagePullSecrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sServiceaccount).ImagePullSecrets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sServiceaccount).ImagePullSecrets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.serviceaccount.automountServiceAccountToken": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2597,11 +2535,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.rbac.clusterrole.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sRbacClusterrole).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sRbacClusterrole).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.rbac.clusterrole.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sRbacClusterrole).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sRbacClusterrole).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.rbac.clusterrole.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2617,15 +2555,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.rbac.clusterrole.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sRbacClusterrole).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sRbacClusterrole).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.rbac.clusterrole.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sRbacClusterrole).Rules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sRbacClusterrole).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.rbac.clusterrole.aggregationRule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sRbacClusterrole).AggregationRule, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sRbacClusterrole).AggregationRule, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.rbac.clusterrolebinding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2645,11 +2583,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.rbac.clusterrolebinding.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sRbacClusterrolebinding).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sRbacClusterrolebinding).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.rbac.clusterrolebinding.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sRbacClusterrolebinding).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sRbacClusterrolebinding).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.rbac.clusterrolebinding.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2665,15 +2603,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.rbac.clusterrolebinding.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sRbacClusterrolebinding).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sRbacClusterrolebinding).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.rbac.clusterrolebinding.subjects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sRbacClusterrolebinding).Subjects, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sRbacClusterrolebinding).Subjects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.rbac.clusterrolebinding.roleRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sRbacClusterrolebinding).RoleRef, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sRbacClusterrolebinding).RoleRef, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.rbac.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2693,11 +2631,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.rbac.role.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sRbacRole).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sRbacRole).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.rbac.role.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sRbacRole).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sRbacRole).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.rbac.role.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2717,11 +2655,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.rbac.role.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sRbacRole).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sRbacRole).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.rbac.role.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sRbacRole).Rules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sRbacRole).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.rbac.rolebinding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2741,11 +2679,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.rbac.rolebinding.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sRbacRolebinding).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sRbacRolebinding).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.rbac.rolebinding.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sRbacRolebinding).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sRbacRolebinding).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.rbac.rolebinding.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2765,59 +2703,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.rbac.rolebinding.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sRbacRolebinding).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sRbacRolebinding).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.rbac.rolebinding.subjects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sRbacRolebinding).Subjects, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sRbacRolebinding).Subjects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.rbac.rolebinding.roleRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sRbacRolebinding).RoleRef, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
-		return
-	},
-	"k8s.podsecuritypolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sPodsecuritypolicy).__id, ok = v.Value.(string)
-			return
-		},
-	"k8s.podsecuritypolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sPodsecuritypolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"k8s.podsecuritypolicy.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sPodsecuritypolicy).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"k8s.podsecuritypolicy.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sPodsecuritypolicy).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"k8s.podsecuritypolicy.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sPodsecuritypolicy).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
-		return
-	},
-	"k8s.podsecuritypolicy.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sPodsecuritypolicy).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
-		return
-	},
-	"k8s.podsecuritypolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sPodsecuritypolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"k8s.podsecuritypolicy.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sPodsecuritypolicy).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"k8s.podsecuritypolicy.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sPodsecuritypolicy).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
-		return
-	},
-	"k8s.podsecuritypolicy.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sPodsecuritypolicy).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
-		return
-	},
-	"k8s.podsecuritypolicy.spec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sPodsecuritypolicy).Spec, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sRbacRolebinding).RoleRef, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.networkpolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2837,11 +2731,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.networkpolicy.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sNetworkpolicy).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sNetworkpolicy).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.networkpolicy.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sNetworkpolicy).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sNetworkpolicy).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.networkpolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2861,11 +2755,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.networkpolicy.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sNetworkpolicy).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sNetworkpolicy).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.networkpolicy.spec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sNetworkpolicy).Spec, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sNetworkpolicy).Spec, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.customresource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2885,11 +2779,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.customresource.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sCustomresource).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sCustomresource).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.customresource.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sCustomresource).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sCustomresource).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.customresource.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2909,7 +2803,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.customresource.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sCustomresource).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sCustomresource).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.admissionreview.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2941,11 +2835,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.admissionrequest.object": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sAdmissionrequest).Object, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sAdmissionrequest).Object, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.admissionrequest.oldObject": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sAdmissionrequest).OldObject, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sAdmissionrequest).OldObject, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.userinfo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2977,11 +2871,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.admission.validatingwebhookconfiguration.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sAdmissionValidatingwebhookconfiguration).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sAdmissionValidatingwebhookconfiguration).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.admission.validatingwebhookconfiguration.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sAdmissionValidatingwebhookconfiguration).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlK8sAdmissionValidatingwebhookconfiguration).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"k8s.admission.validatingwebhookconfiguration.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2997,11 +2891,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.admission.validatingwebhookconfiguration.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sAdmissionValidatingwebhookconfiguration).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlK8sAdmissionValidatingwebhookconfiguration).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.admission.validatingwebhookconfiguration.webhooks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sAdmissionValidatingwebhookconfiguration).Webhooks, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sAdmissionValidatingwebhookconfiguration).Webhooks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.app.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3029,7 +2923,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.app.components": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sApp).Components, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlK8sApp).Components, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 }
@@ -3061,31 +2955,30 @@ type mqlK8s struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	mqlK8sInternal
-	ServerVersion plugin.TValue[interface{}]
-	ApiResources plugin.TValue[[]interface{}]
-	Namespaces plugin.TValue[[]interface{}]
-	Nodes plugin.TValue[[]interface{}]
-	Pods plugin.TValue[[]interface{}]
-	Deployments plugin.TValue[[]interface{}]
-	Daemonsets plugin.TValue[[]interface{}]
-	Statefulsets plugin.TValue[[]interface{}]
-	Replicasets plugin.TValue[[]interface{}]
-	Jobs plugin.TValue[[]interface{}]
-	Cronjobs plugin.TValue[[]interface{}]
-	Secrets plugin.TValue[[]interface{}]
-	Configmaps plugin.TValue[[]interface{}]
-	Services plugin.TValue[[]interface{}]
-	Ingresses plugin.TValue[[]interface{}]
-	Serviceaccounts plugin.TValue[[]interface{}]
-	Clusterroles plugin.TValue[[]interface{}]
-	Clusterrolebindings plugin.TValue[[]interface{}]
-	Roles plugin.TValue[[]interface{}]
-	Rolebindings plugin.TValue[[]interface{}]
-	PodSecurityPolicies plugin.TValue[[]interface{}]
-	NetworkPolicies plugin.TValue[[]interface{}]
-	Customresources plugin.TValue[[]interface{}]
-	ValidatingWebhookConfigurations plugin.TValue[[]interface{}]
-	Apps plugin.TValue[[]interface{}]
+	ServerVersion plugin.TValue[any]
+	ApiResources plugin.TValue[[]any]
+	Namespaces plugin.TValue[[]any]
+	Nodes plugin.TValue[[]any]
+	Pods plugin.TValue[[]any]
+	Deployments plugin.TValue[[]any]
+	Daemonsets plugin.TValue[[]any]
+	Statefulsets plugin.TValue[[]any]
+	Replicasets plugin.TValue[[]any]
+	Jobs plugin.TValue[[]any]
+	Cronjobs plugin.TValue[[]any]
+	Secrets plugin.TValue[[]any]
+	Configmaps plugin.TValue[[]any]
+	Services plugin.TValue[[]any]
+	Ingresses plugin.TValue[[]any]
+	Serviceaccounts plugin.TValue[[]any]
+	Clusterroles plugin.TValue[[]any]
+	Clusterrolebindings plugin.TValue[[]any]
+	Roles plugin.TValue[[]any]
+	Rolebindings plugin.TValue[[]any]
+	NetworkPolicies plugin.TValue[[]any]
+	Customresources plugin.TValue[[]any]
+	ValidatingWebhookConfigurations plugin.TValue[[]any]
+	Apps plugin.TValue[[]any]
 }
 
 // createK8s creates a new instance of this resource
@@ -3120,21 +3013,21 @@ func (c *mqlK8s) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlK8s) GetServerVersion() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.ServerVersion, func() (interface{}, error) {
+func (c *mqlK8s) GetServerVersion() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.ServerVersion, func() (any, error) {
 		return c.serverVersion()
 	})
 }
 
-func (c *mqlK8s) GetApiResources() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.ApiResources, func() ([]interface{}, error) {
+func (c *mqlK8s) GetApiResources() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ApiResources, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "apiResources")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3142,15 +3035,15 @@ func (c *mqlK8s) GetApiResources() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlK8s) GetNamespaces() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Namespaces, func() ([]interface{}, error) {
+func (c *mqlK8s) GetNamespaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Namespaces, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "namespaces")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3158,15 +3051,15 @@ func (c *mqlK8s) GetNamespaces() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlK8s) GetNodes() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Nodes, func() ([]interface{}, error) {
+func (c *mqlK8s) GetNodes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Nodes, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "nodes")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3174,15 +3067,15 @@ func (c *mqlK8s) GetNodes() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlK8s) GetPods() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Pods, func() ([]interface{}, error) {
+func (c *mqlK8s) GetPods() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Pods, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "pods")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3190,15 +3083,15 @@ func (c *mqlK8s) GetPods() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlK8s) GetDeployments() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Deployments, func() ([]interface{}, error) {
+func (c *mqlK8s) GetDeployments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Deployments, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "deployments")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3206,15 +3099,15 @@ func (c *mqlK8s) GetDeployments() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlK8s) GetDaemonsets() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Daemonsets, func() ([]interface{}, error) {
+func (c *mqlK8s) GetDaemonsets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Daemonsets, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "daemonsets")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3222,15 +3115,15 @@ func (c *mqlK8s) GetDaemonsets() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlK8s) GetStatefulsets() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Statefulsets, func() ([]interface{}, error) {
+func (c *mqlK8s) GetStatefulsets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Statefulsets, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "statefulsets")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3238,15 +3131,15 @@ func (c *mqlK8s) GetStatefulsets() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlK8s) GetReplicasets() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Replicasets, func() ([]interface{}, error) {
+func (c *mqlK8s) GetReplicasets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Replicasets, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "replicasets")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3254,15 +3147,15 @@ func (c *mqlK8s) GetReplicasets() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlK8s) GetJobs() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Jobs, func() ([]interface{}, error) {
+func (c *mqlK8s) GetJobs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Jobs, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "jobs")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3270,15 +3163,15 @@ func (c *mqlK8s) GetJobs() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlK8s) GetCronjobs() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Cronjobs, func() ([]interface{}, error) {
+func (c *mqlK8s) GetCronjobs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Cronjobs, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "cronjobs")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3286,15 +3179,15 @@ func (c *mqlK8s) GetCronjobs() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlK8s) GetSecrets() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Secrets, func() ([]interface{}, error) {
+func (c *mqlK8s) GetSecrets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Secrets, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "secrets")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3302,15 +3195,15 @@ func (c *mqlK8s) GetSecrets() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlK8s) GetConfigmaps() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Configmaps, func() ([]interface{}, error) {
+func (c *mqlK8s) GetConfigmaps() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Configmaps, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "configmaps")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3318,15 +3211,15 @@ func (c *mqlK8s) GetConfigmaps() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlK8s) GetServices() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Services, func() ([]interface{}, error) {
+func (c *mqlK8s) GetServices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Services, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "services")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3334,15 +3227,15 @@ func (c *mqlK8s) GetServices() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlK8s) GetIngresses() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Ingresses, func() ([]interface{}, error) {
+func (c *mqlK8s) GetIngresses() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Ingresses, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "ingresses")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3350,15 +3243,15 @@ func (c *mqlK8s) GetIngresses() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlK8s) GetServiceaccounts() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Serviceaccounts, func() ([]interface{}, error) {
+func (c *mqlK8s) GetServiceaccounts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Serviceaccounts, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "serviceaccounts")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3366,15 +3259,15 @@ func (c *mqlK8s) GetServiceaccounts() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlK8s) GetClusterroles() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Clusterroles, func() ([]interface{}, error) {
+func (c *mqlK8s) GetClusterroles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Clusterroles, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "clusterroles")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3382,15 +3275,15 @@ func (c *mqlK8s) GetClusterroles() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlK8s) GetClusterrolebindings() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Clusterrolebindings, func() ([]interface{}, error) {
+func (c *mqlK8s) GetClusterrolebindings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Clusterrolebindings, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "clusterrolebindings")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3398,15 +3291,15 @@ func (c *mqlK8s) GetClusterrolebindings() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlK8s) GetRoles() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Roles, func() ([]interface{}, error) {
+func (c *mqlK8s) GetRoles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Roles, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "roles")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3414,15 +3307,15 @@ func (c *mqlK8s) GetRoles() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlK8s) GetRolebindings() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Rolebindings, func() ([]interface{}, error) {
+func (c *mqlK8s) GetRolebindings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rolebindings, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "rolebindings")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3430,31 +3323,15 @@ func (c *mqlK8s) GetRolebindings() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlK8s) GetPodSecurityPolicies() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.PodSecurityPolicies, func() ([]interface{}, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "podSecurityPolicies")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.([]interface{}), nil
-			}
-		}
-
-		return c.podSecurityPolicies()
-	})
-}
-
-func (c *mqlK8s) GetNetworkPolicies() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.NetworkPolicies, func() ([]interface{}, error) {
+func (c *mqlK8s) GetNetworkPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NetworkPolicies, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "networkPolicies")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3462,15 +3339,15 @@ func (c *mqlK8s) GetNetworkPolicies() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlK8s) GetCustomresources() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Customresources, func() ([]interface{}, error) {
+func (c *mqlK8s) GetCustomresources() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Customresources, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "customresources")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3478,15 +3355,15 @@ func (c *mqlK8s) GetCustomresources() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlK8s) GetValidatingWebhookConfigurations() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.ValidatingWebhookConfigurations, func() ([]interface{}, error) {
+func (c *mqlK8s) GetValidatingWebhookConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ValidatingWebhookConfigurations, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "validatingWebhookConfigurations")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3494,15 +3371,15 @@ func (c *mqlK8s) GetValidatingWebhookConfigurations() *plugin.TValue[[]interface
 	})
 }
 
-func (c *mqlK8s) GetApps() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Apps, func() ([]interface{}, error) {
+func (c *mqlK8s) GetApps() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Apps, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "apps")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3521,8 +3398,8 @@ type mqlK8sApiresource struct {
 	Group plugin.TValue[string]
 	Version plugin.TValue[string]
 	Kind plugin.TValue[string]
-	ShortNames plugin.TValue[[]interface{}]
-	Categories plugin.TValue[[]interface{}]
+	ShortNames plugin.TValue[[]any]
+	Categories plugin.TValue[[]any]
 }
 
 // createK8sApiresource creates a new instance of this resource
@@ -3586,11 +3463,11 @@ func (c *mqlK8sApiresource) GetKind() *plugin.TValue[string] {
 	return &c.Kind
 }
 
-func (c *mqlK8sApiresource) GetShortNames() *plugin.TValue[[]interface{}] {
+func (c *mqlK8sApiresource) GetShortNames() *plugin.TValue[[]any] {
 	return &c.ShortNames
 }
 
-func (c *mqlK8sApiresource) GetCategories() *plugin.TValue[[]interface{}] {
+func (c *mqlK8sApiresource) GetCategories() *plugin.TValue[[]any] {
 	return &c.Categories
 }
 
@@ -3603,10 +3480,10 @@ type mqlK8sNamespace struct {
 	Uid plugin.TValue[string]
 	Name plugin.TValue[string]
 	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[interface{}]
+	Manifest plugin.TValue[any]
 	Kind plugin.TValue[string]
-	Labels plugin.TValue[map[string]interface{}]
-	Annotations plugin.TValue[map[string]interface{}]
+	Labels plugin.TValue[map[string]any]
+	Annotations plugin.TValue[map[string]any]
 }
 
 // createK8sNamespace creates a new instance of this resource
@@ -3662,8 +3539,8 @@ func (c *mqlK8sNamespace) GetCreated() *plugin.TValue[*time.Time] {
 	return &c.Created
 }
 
-func (c *mqlK8sNamespace) GetManifest() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+func (c *mqlK8sNamespace) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
 		return c.manifest()
 	})
 }
@@ -3672,14 +3549,14 @@ func (c *mqlK8sNamespace) GetKind() *plugin.TValue[string] {
 	return &c.Kind
 }
 
-func (c *mqlK8sNamespace) GetLabels() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+func (c *mqlK8sNamespace) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
 		return c.labels()
 	})
 }
 
-func (c *mqlK8sNamespace) GetAnnotations() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
+func (c *mqlK8sNamespace) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
 	})
 }
@@ -3691,13 +3568,13 @@ type mqlK8sNode struct {
 	mqlK8sNodeInternal
 	Id plugin.TValue[string]
 	Uid plugin.TValue[string]
-	Labels plugin.TValue[map[string]interface{}]
-	Annotations plugin.TValue[map[string]interface{}]
+	Labels plugin.TValue[map[string]any]
+	Annotations plugin.TValue[map[string]any]
 	ResourceVersion plugin.TValue[string]
 	Name plugin.TValue[string]
 	Kind plugin.TValue[string]
 	Created plugin.TValue[*time.Time]
-	NodeInfo plugin.TValue[interface{}]
+	NodeInfo plugin.TValue[any]
 	KubeletPort plugin.TValue[int64]
 }
 
@@ -3746,14 +3623,14 @@ func (c *mqlK8sNode) GetUid() *plugin.TValue[string] {
 	return &c.Uid
 }
 
-func (c *mqlK8sNode) GetLabels() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+func (c *mqlK8sNode) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
 		return c.labels()
 	})
 }
 
-func (c *mqlK8sNode) GetAnnotations() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
+func (c *mqlK8sNode) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
 	})
 }
@@ -3774,7 +3651,7 @@ func (c *mqlK8sNode) GetCreated() *plugin.TValue[*time.Time] {
 	return &c.Created
 }
 
-func (c *mqlK8sNode) GetNodeInfo() *plugin.TValue[interface{}] {
+func (c *mqlK8sNode) GetNodeInfo() *plugin.TValue[any] {
 	return &c.NodeInfo
 }
 
@@ -3790,18 +3667,18 @@ type mqlK8sPod struct {
 	Id plugin.TValue[string]
 	Uid plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]interface{}]
-	Annotations plugin.TValue[map[string]interface{}]
+	Labels plugin.TValue[map[string]any]
+	Annotations plugin.TValue[map[string]any]
 	Name plugin.TValue[string]
 	Namespace plugin.TValue[string]
 	ApiVersion plugin.TValue[string]
 	Kind plugin.TValue[string]
 	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[interface{}]
-	PodSpec plugin.TValue[interface{}]
-	EphemeralContainers plugin.TValue[[]interface{}]
-	InitContainers plugin.TValue[[]interface{}]
-	Containers plugin.TValue[[]interface{}]
+	Manifest plugin.TValue[any]
+	PodSpec plugin.TValue[any]
+	EphemeralContainers plugin.TValue[[]any]
+	InitContainers plugin.TValue[[]any]
+	Containers plugin.TValue[[]any]
 	Node plugin.TValue[*mqlK8sNode]
 }
 
@@ -3854,14 +3731,14 @@ func (c *mqlK8sPod) GetResourceVersion() *plugin.TValue[string] {
 	return &c.ResourceVersion
 }
 
-func (c *mqlK8sPod) GetLabels() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+func (c *mqlK8sPod) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
 		return c.labels()
 	})
 }
 
-func (c *mqlK8sPod) GetAnnotations() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
+func (c *mqlK8sPod) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
 	})
 }
@@ -3886,27 +3763,27 @@ func (c *mqlK8sPod) GetCreated() *plugin.TValue[*time.Time] {
 	return &c.Created
 }
 
-func (c *mqlK8sPod) GetManifest() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+func (c *mqlK8sPod) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
 		return c.manifest()
 	})
 }
 
-func (c *mqlK8sPod) GetPodSpec() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.PodSpec, func() (interface{}, error) {
+func (c *mqlK8sPod) GetPodSpec() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.PodSpec, func() (any, error) {
 		return c.podSpec()
 	})
 }
 
-func (c *mqlK8sPod) GetEphemeralContainers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.EphemeralContainers, func() ([]interface{}, error) {
+func (c *mqlK8sPod) GetEphemeralContainers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EphemeralContainers, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.pod", c.__id, "ephemeralContainers")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3914,15 +3791,15 @@ func (c *mqlK8sPod) GetEphemeralContainers() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlK8sPod) GetInitContainers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.InitContainers, func() ([]interface{}, error) {
+func (c *mqlK8sPod) GetInitContainers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InitContainers, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.pod", c.__id, "initContainers")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3930,15 +3807,15 @@ func (c *mqlK8sPod) GetInitContainers() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlK8sPod) GetContainers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Containers, func() ([]interface{}, error) {
+func (c *mqlK8sPod) GetContainers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Containers, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.pod", c.__id, "containers")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3970,16 +3847,16 @@ type mqlK8sDeployment struct {
 	Id plugin.TValue[string]
 	Uid plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]interface{}]
-	Annotations plugin.TValue[map[string]interface{}]
+	Labels plugin.TValue[map[string]any]
+	Annotations plugin.TValue[map[string]any]
 	Name plugin.TValue[string]
 	Namespace plugin.TValue[string]
 	Kind plugin.TValue[string]
 	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[interface{}]
-	PodSpec plugin.TValue[interface{}]
-	InitContainers plugin.TValue[[]interface{}]
-	Containers plugin.TValue[[]interface{}]
+	Manifest plugin.TValue[any]
+	PodSpec plugin.TValue[any]
+	InitContainers plugin.TValue[[]any]
+	Containers plugin.TValue[[]any]
 }
 
 // createK8sDeployment creates a new instance of this resource
@@ -4031,14 +3908,14 @@ func (c *mqlK8sDeployment) GetResourceVersion() *plugin.TValue[string] {
 	return &c.ResourceVersion
 }
 
-func (c *mqlK8sDeployment) GetLabels() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+func (c *mqlK8sDeployment) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
 		return c.labels()
 	})
 }
 
-func (c *mqlK8sDeployment) GetAnnotations() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
+func (c *mqlK8sDeployment) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
 	})
 }
@@ -4059,27 +3936,27 @@ func (c *mqlK8sDeployment) GetCreated() *plugin.TValue[*time.Time] {
 	return &c.Created
 }
 
-func (c *mqlK8sDeployment) GetManifest() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+func (c *mqlK8sDeployment) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
 		return c.manifest()
 	})
 }
 
-func (c *mqlK8sDeployment) GetPodSpec() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.PodSpec, func() (interface{}, error) {
+func (c *mqlK8sDeployment) GetPodSpec() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.PodSpec, func() (any, error) {
 		return c.podSpec()
 	})
 }
 
-func (c *mqlK8sDeployment) GetInitContainers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.InitContainers, func() ([]interface{}, error) {
+func (c *mqlK8sDeployment) GetInitContainers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InitContainers, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.deployment", c.__id, "initContainers")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -4087,15 +3964,15 @@ func (c *mqlK8sDeployment) GetInitContainers() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlK8sDeployment) GetContainers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Containers, func() ([]interface{}, error) {
+func (c *mqlK8sDeployment) GetContainers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Containers, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.deployment", c.__id, "containers")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -4111,16 +3988,16 @@ type mqlK8sDaemonset struct {
 	Id plugin.TValue[string]
 	Uid plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]interface{}]
-	Annotations plugin.TValue[map[string]interface{}]
+	Labels plugin.TValue[map[string]any]
+	Annotations plugin.TValue[map[string]any]
 	Name plugin.TValue[string]
 	Namespace plugin.TValue[string]
 	Kind plugin.TValue[string]
 	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[interface{}]
-	PodSpec plugin.TValue[interface{}]
-	InitContainers plugin.TValue[[]interface{}]
-	Containers plugin.TValue[[]interface{}]
+	Manifest plugin.TValue[any]
+	PodSpec plugin.TValue[any]
+	InitContainers plugin.TValue[[]any]
+	Containers plugin.TValue[[]any]
 }
 
 // createK8sDaemonset creates a new instance of this resource
@@ -4172,14 +4049,14 @@ func (c *mqlK8sDaemonset) GetResourceVersion() *plugin.TValue[string] {
 	return &c.ResourceVersion
 }
 
-func (c *mqlK8sDaemonset) GetLabels() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+func (c *mqlK8sDaemonset) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
 		return c.labels()
 	})
 }
 
-func (c *mqlK8sDaemonset) GetAnnotations() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
+func (c *mqlK8sDaemonset) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
 	})
 }
@@ -4200,27 +4077,27 @@ func (c *mqlK8sDaemonset) GetCreated() *plugin.TValue[*time.Time] {
 	return &c.Created
 }
 
-func (c *mqlK8sDaemonset) GetManifest() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+func (c *mqlK8sDaemonset) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
 		return c.manifest()
 	})
 }
 
-func (c *mqlK8sDaemonset) GetPodSpec() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.PodSpec, func() (interface{}, error) {
+func (c *mqlK8sDaemonset) GetPodSpec() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.PodSpec, func() (any, error) {
 		return c.podSpec()
 	})
 }
 
-func (c *mqlK8sDaemonset) GetInitContainers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.InitContainers, func() ([]interface{}, error) {
+func (c *mqlK8sDaemonset) GetInitContainers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InitContainers, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.daemonset", c.__id, "initContainers")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -4228,15 +4105,15 @@ func (c *mqlK8sDaemonset) GetInitContainers() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlK8sDaemonset) GetContainers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Containers, func() ([]interface{}, error) {
+func (c *mqlK8sDaemonset) GetContainers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Containers, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.daemonset", c.__id, "containers")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -4252,16 +4129,16 @@ type mqlK8sStatefulset struct {
 	Id plugin.TValue[string]
 	Uid plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]interface{}]
-	Annotations plugin.TValue[map[string]interface{}]
+	Labels plugin.TValue[map[string]any]
+	Annotations plugin.TValue[map[string]any]
 	Name plugin.TValue[string]
 	Namespace plugin.TValue[string]
 	Kind plugin.TValue[string]
 	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[interface{}]
-	PodSpec plugin.TValue[interface{}]
-	InitContainers plugin.TValue[[]interface{}]
-	Containers plugin.TValue[[]interface{}]
+	Manifest plugin.TValue[any]
+	PodSpec plugin.TValue[any]
+	InitContainers plugin.TValue[[]any]
+	Containers plugin.TValue[[]any]
 }
 
 // createK8sStatefulset creates a new instance of this resource
@@ -4313,14 +4190,14 @@ func (c *mqlK8sStatefulset) GetResourceVersion() *plugin.TValue[string] {
 	return &c.ResourceVersion
 }
 
-func (c *mqlK8sStatefulset) GetLabels() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+func (c *mqlK8sStatefulset) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
 		return c.labels()
 	})
 }
 
-func (c *mqlK8sStatefulset) GetAnnotations() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
+func (c *mqlK8sStatefulset) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
 	})
 }
@@ -4341,27 +4218,27 @@ func (c *mqlK8sStatefulset) GetCreated() *plugin.TValue[*time.Time] {
 	return &c.Created
 }
 
-func (c *mqlK8sStatefulset) GetManifest() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+func (c *mqlK8sStatefulset) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
 		return c.manifest()
 	})
 }
 
-func (c *mqlK8sStatefulset) GetPodSpec() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.PodSpec, func() (interface{}, error) {
+func (c *mqlK8sStatefulset) GetPodSpec() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.PodSpec, func() (any, error) {
 		return c.podSpec()
 	})
 }
 
-func (c *mqlK8sStatefulset) GetInitContainers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.InitContainers, func() ([]interface{}, error) {
+func (c *mqlK8sStatefulset) GetInitContainers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InitContainers, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.statefulset", c.__id, "initContainers")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -4369,15 +4246,15 @@ func (c *mqlK8sStatefulset) GetInitContainers() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlK8sStatefulset) GetContainers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Containers, func() ([]interface{}, error) {
+func (c *mqlK8sStatefulset) GetContainers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Containers, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.statefulset", c.__id, "containers")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -4393,16 +4270,16 @@ type mqlK8sReplicaset struct {
 	Id plugin.TValue[string]
 	Uid plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]interface{}]
-	Annotations plugin.TValue[map[string]interface{}]
+	Labels plugin.TValue[map[string]any]
+	Annotations plugin.TValue[map[string]any]
 	Name plugin.TValue[string]
 	Namespace plugin.TValue[string]
 	Kind plugin.TValue[string]
 	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[interface{}]
-	PodSpec plugin.TValue[interface{}]
-	InitContainers plugin.TValue[[]interface{}]
-	Containers plugin.TValue[[]interface{}]
+	Manifest plugin.TValue[any]
+	PodSpec plugin.TValue[any]
+	InitContainers plugin.TValue[[]any]
+	Containers plugin.TValue[[]any]
 }
 
 // createK8sReplicaset creates a new instance of this resource
@@ -4454,14 +4331,14 @@ func (c *mqlK8sReplicaset) GetResourceVersion() *plugin.TValue[string] {
 	return &c.ResourceVersion
 }
 
-func (c *mqlK8sReplicaset) GetLabels() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+func (c *mqlK8sReplicaset) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
 		return c.labels()
 	})
 }
 
-func (c *mqlK8sReplicaset) GetAnnotations() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
+func (c *mqlK8sReplicaset) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
 	})
 }
@@ -4482,27 +4359,27 @@ func (c *mqlK8sReplicaset) GetCreated() *plugin.TValue[*time.Time] {
 	return &c.Created
 }
 
-func (c *mqlK8sReplicaset) GetManifest() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+func (c *mqlK8sReplicaset) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
 		return c.manifest()
 	})
 }
 
-func (c *mqlK8sReplicaset) GetPodSpec() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.PodSpec, func() (interface{}, error) {
+func (c *mqlK8sReplicaset) GetPodSpec() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.PodSpec, func() (any, error) {
 		return c.podSpec()
 	})
 }
 
-func (c *mqlK8sReplicaset) GetInitContainers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.InitContainers, func() ([]interface{}, error) {
+func (c *mqlK8sReplicaset) GetInitContainers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InitContainers, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.replicaset", c.__id, "initContainers")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -4510,15 +4387,15 @@ func (c *mqlK8sReplicaset) GetInitContainers() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlK8sReplicaset) GetContainers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Containers, func() ([]interface{}, error) {
+func (c *mqlK8sReplicaset) GetContainers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Containers, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.replicaset", c.__id, "containers")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -4534,16 +4411,16 @@ type mqlK8sJob struct {
 	Id plugin.TValue[string]
 	Uid plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]interface{}]
-	Annotations plugin.TValue[map[string]interface{}]
+	Labels plugin.TValue[map[string]any]
+	Annotations plugin.TValue[map[string]any]
 	Name plugin.TValue[string]
 	Namespace plugin.TValue[string]
 	Kind plugin.TValue[string]
 	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[interface{}]
-	PodSpec plugin.TValue[interface{}]
-	InitContainers plugin.TValue[[]interface{}]
-	Containers plugin.TValue[[]interface{}]
+	Manifest plugin.TValue[any]
+	PodSpec plugin.TValue[any]
+	InitContainers plugin.TValue[[]any]
+	Containers plugin.TValue[[]any]
 }
 
 // createK8sJob creates a new instance of this resource
@@ -4595,14 +4472,14 @@ func (c *mqlK8sJob) GetResourceVersion() *plugin.TValue[string] {
 	return &c.ResourceVersion
 }
 
-func (c *mqlK8sJob) GetLabels() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+func (c *mqlK8sJob) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
 		return c.labels()
 	})
 }
 
-func (c *mqlK8sJob) GetAnnotations() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
+func (c *mqlK8sJob) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
 	})
 }
@@ -4623,27 +4500,27 @@ func (c *mqlK8sJob) GetCreated() *plugin.TValue[*time.Time] {
 	return &c.Created
 }
 
-func (c *mqlK8sJob) GetManifest() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+func (c *mqlK8sJob) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
 		return c.manifest()
 	})
 }
 
-func (c *mqlK8sJob) GetPodSpec() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.PodSpec, func() (interface{}, error) {
+func (c *mqlK8sJob) GetPodSpec() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.PodSpec, func() (any, error) {
 		return c.podSpec()
 	})
 }
 
-func (c *mqlK8sJob) GetInitContainers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.InitContainers, func() ([]interface{}, error) {
+func (c *mqlK8sJob) GetInitContainers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InitContainers, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.job", c.__id, "initContainers")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -4651,15 +4528,15 @@ func (c *mqlK8sJob) GetInitContainers() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlK8sJob) GetContainers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Containers, func() ([]interface{}, error) {
+func (c *mqlK8sJob) GetContainers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Containers, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.job", c.__id, "containers")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -4675,16 +4552,16 @@ type mqlK8sCronjob struct {
 	Id plugin.TValue[string]
 	Uid plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]interface{}]
-	Annotations plugin.TValue[map[string]interface{}]
+	Labels plugin.TValue[map[string]any]
+	Annotations plugin.TValue[map[string]any]
 	Name plugin.TValue[string]
 	Namespace plugin.TValue[string]
 	Kind plugin.TValue[string]
 	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[interface{}]
-	PodSpec plugin.TValue[interface{}]
-	InitContainers plugin.TValue[[]interface{}]
-	Containers plugin.TValue[[]interface{}]
+	Manifest plugin.TValue[any]
+	PodSpec plugin.TValue[any]
+	InitContainers plugin.TValue[[]any]
+	Containers plugin.TValue[[]any]
 }
 
 // createK8sCronjob creates a new instance of this resource
@@ -4736,14 +4613,14 @@ func (c *mqlK8sCronjob) GetResourceVersion() *plugin.TValue[string] {
 	return &c.ResourceVersion
 }
 
-func (c *mqlK8sCronjob) GetLabels() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+func (c *mqlK8sCronjob) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
 		return c.labels()
 	})
 }
 
-func (c *mqlK8sCronjob) GetAnnotations() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
+func (c *mqlK8sCronjob) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
 	})
 }
@@ -4764,27 +4641,27 @@ func (c *mqlK8sCronjob) GetCreated() *plugin.TValue[*time.Time] {
 	return &c.Created
 }
 
-func (c *mqlK8sCronjob) GetManifest() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+func (c *mqlK8sCronjob) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
 		return c.manifest()
 	})
 }
 
-func (c *mqlK8sCronjob) GetPodSpec() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.PodSpec, func() (interface{}, error) {
+func (c *mqlK8sCronjob) GetPodSpec() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.PodSpec, func() (any, error) {
 		return c.podSpec()
 	})
 }
 
-func (c *mqlK8sCronjob) GetInitContainers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.InitContainers, func() ([]interface{}, error) {
+func (c *mqlK8sCronjob) GetInitContainers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InitContainers, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.cronjob", c.__id, "initContainers")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -4792,15 +4669,15 @@ func (c *mqlK8sCronjob) GetInitContainers() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlK8sCronjob) GetContainers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Containers, func() ([]interface{}, error) {
+func (c *mqlK8sCronjob) GetContainers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Containers, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.cronjob", c.__id, "containers")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -4816,21 +4693,20 @@ type mqlK8sContainer struct {
 	Uid plugin.TValue[string]
 	Name plugin.TValue[string]
 	ImageName plugin.TValue[string]
-	Image plugin.TValue[string]
 	ContainerImage plugin.TValue[plugin.Resource]
-	Command plugin.TValue[[]interface{}]
-	Args plugin.TValue[[]interface{}]
-	Resources plugin.TValue[interface{}]
-	VolumeMounts plugin.TValue[[]interface{}]
-	VolumeDevices plugin.TValue[[]interface{}]
-	LivenessProbe plugin.TValue[interface{}]
-	ReadinessProbe plugin.TValue[interface{}]
+	Command plugin.TValue[[]any]
+	Args plugin.TValue[[]any]
+	Resources plugin.TValue[any]
+	VolumeMounts plugin.TValue[[]any]
+	VolumeDevices plugin.TValue[[]any]
+	LivenessProbe plugin.TValue[any]
+	ReadinessProbe plugin.TValue[any]
 	ImagePullPolicy plugin.TValue[string]
-	SecurityContext plugin.TValue[interface{}]
+	SecurityContext plugin.TValue[any]
 	WorkingDir plugin.TValue[string]
 	Tty plugin.TValue[bool]
-	Env plugin.TValue[interface{}]
-	EnvFrom plugin.TValue[interface{}]
+	Env plugin.TValue[any]
+	EnvFrom plugin.TValue[any]
 }
 
 // createK8sContainer creates a new instance of this resource
@@ -4882,10 +4758,6 @@ func (c *mqlK8sContainer) GetImageName() *plugin.TValue[string] {
 	return &c.ImageName
 }
 
-func (c *mqlK8sContainer) GetImage() *plugin.TValue[string] {
-	return &c.Image
-}
-
 func (c *mqlK8sContainer) GetContainerImage() *plugin.TValue[plugin.Resource] {
 	return plugin.GetOrCompute[plugin.Resource](&c.ContainerImage, func() (plugin.Resource, error) {
 		if c.MqlRuntime.HasRecording {
@@ -4902,31 +4774,31 @@ func (c *mqlK8sContainer) GetContainerImage() *plugin.TValue[plugin.Resource] {
 	})
 }
 
-func (c *mqlK8sContainer) GetCommand() *plugin.TValue[[]interface{}] {
+func (c *mqlK8sContainer) GetCommand() *plugin.TValue[[]any] {
 	return &c.Command
 }
 
-func (c *mqlK8sContainer) GetArgs() *plugin.TValue[[]interface{}] {
+func (c *mqlK8sContainer) GetArgs() *plugin.TValue[[]any] {
 	return &c.Args
 }
 
-func (c *mqlK8sContainer) GetResources() *plugin.TValue[interface{}] {
+func (c *mqlK8sContainer) GetResources() *plugin.TValue[any] {
 	return &c.Resources
 }
 
-func (c *mqlK8sContainer) GetVolumeMounts() *plugin.TValue[[]interface{}] {
+func (c *mqlK8sContainer) GetVolumeMounts() *plugin.TValue[[]any] {
 	return &c.VolumeMounts
 }
 
-func (c *mqlK8sContainer) GetVolumeDevices() *plugin.TValue[[]interface{}] {
+func (c *mqlK8sContainer) GetVolumeDevices() *plugin.TValue[[]any] {
 	return &c.VolumeDevices
 }
 
-func (c *mqlK8sContainer) GetLivenessProbe() *plugin.TValue[interface{}] {
+func (c *mqlK8sContainer) GetLivenessProbe() *plugin.TValue[any] {
 	return &c.LivenessProbe
 }
 
-func (c *mqlK8sContainer) GetReadinessProbe() *plugin.TValue[interface{}] {
+func (c *mqlK8sContainer) GetReadinessProbe() *plugin.TValue[any] {
 	return &c.ReadinessProbe
 }
 
@@ -4934,7 +4806,7 @@ func (c *mqlK8sContainer) GetImagePullPolicy() *plugin.TValue[string] {
 	return &c.ImagePullPolicy
 }
 
-func (c *mqlK8sContainer) GetSecurityContext() *plugin.TValue[interface{}] {
+func (c *mqlK8sContainer) GetSecurityContext() *plugin.TValue[any] {
 	return &c.SecurityContext
 }
 
@@ -4946,11 +4818,11 @@ func (c *mqlK8sContainer) GetTty() *plugin.TValue[bool] {
 	return &c.Tty
 }
 
-func (c *mqlK8sContainer) GetEnv() *plugin.TValue[interface{}] {
+func (c *mqlK8sContainer) GetEnv() *plugin.TValue[any] {
 	return &c.Env
 }
 
-func (c *mqlK8sContainer) GetEnvFrom() *plugin.TValue[interface{}] {
+func (c *mqlK8sContainer) GetEnvFrom() *plugin.TValue[any] {
 	return &c.EnvFrom
 }
 
@@ -4962,19 +4834,18 @@ type mqlK8sInitContainer struct {
 	Uid plugin.TValue[string]
 	Name plugin.TValue[string]
 	ImageName plugin.TValue[string]
-	Image plugin.TValue[string]
 	ContainerImage plugin.TValue[plugin.Resource]
-	Command plugin.TValue[[]interface{}]
-	Args plugin.TValue[[]interface{}]
-	Resources plugin.TValue[interface{}]
-	VolumeMounts plugin.TValue[[]interface{}]
-	VolumeDevices plugin.TValue[[]interface{}]
+	Command plugin.TValue[[]any]
+	Args plugin.TValue[[]any]
+	Resources plugin.TValue[any]
+	VolumeMounts plugin.TValue[[]any]
+	VolumeDevices plugin.TValue[[]any]
 	ImagePullPolicy plugin.TValue[string]
-	SecurityContext plugin.TValue[interface{}]
+	SecurityContext plugin.TValue[any]
 	WorkingDir plugin.TValue[string]
 	Tty plugin.TValue[bool]
-	Env plugin.TValue[interface{}]
-	EnvFrom plugin.TValue[interface{}]
+	Env plugin.TValue[any]
+	EnvFrom plugin.TValue[any]
 }
 
 // createK8sInitContainer creates a new instance of this resource
@@ -5026,10 +4897,6 @@ func (c *mqlK8sInitContainer) GetImageName() *plugin.TValue[string] {
 	return &c.ImageName
 }
 
-func (c *mqlK8sInitContainer) GetImage() *plugin.TValue[string] {
-	return &c.Image
-}
-
 func (c *mqlK8sInitContainer) GetContainerImage() *plugin.TValue[plugin.Resource] {
 	return plugin.GetOrCompute[plugin.Resource](&c.ContainerImage, func() (plugin.Resource, error) {
 		if c.MqlRuntime.HasRecording {
@@ -5046,23 +4913,23 @@ func (c *mqlK8sInitContainer) GetContainerImage() *plugin.TValue[plugin.Resource
 	})
 }
 
-func (c *mqlK8sInitContainer) GetCommand() *plugin.TValue[[]interface{}] {
+func (c *mqlK8sInitContainer) GetCommand() *plugin.TValue[[]any] {
 	return &c.Command
 }
 
-func (c *mqlK8sInitContainer) GetArgs() *plugin.TValue[[]interface{}] {
+func (c *mqlK8sInitContainer) GetArgs() *plugin.TValue[[]any] {
 	return &c.Args
 }
 
-func (c *mqlK8sInitContainer) GetResources() *plugin.TValue[interface{}] {
+func (c *mqlK8sInitContainer) GetResources() *plugin.TValue[any] {
 	return &c.Resources
 }
 
-func (c *mqlK8sInitContainer) GetVolumeMounts() *plugin.TValue[[]interface{}] {
+func (c *mqlK8sInitContainer) GetVolumeMounts() *plugin.TValue[[]any] {
 	return &c.VolumeMounts
 }
 
-func (c *mqlK8sInitContainer) GetVolumeDevices() *plugin.TValue[[]interface{}] {
+func (c *mqlK8sInitContainer) GetVolumeDevices() *plugin.TValue[[]any] {
 	return &c.VolumeDevices
 }
 
@@ -5070,7 +4937,7 @@ func (c *mqlK8sInitContainer) GetImagePullPolicy() *plugin.TValue[string] {
 	return &c.ImagePullPolicy
 }
 
-func (c *mqlK8sInitContainer) GetSecurityContext() *plugin.TValue[interface{}] {
+func (c *mqlK8sInitContainer) GetSecurityContext() *plugin.TValue[any] {
 	return &c.SecurityContext
 }
 
@@ -5082,11 +4949,11 @@ func (c *mqlK8sInitContainer) GetTty() *plugin.TValue[bool] {
 	return &c.Tty
 }
 
-func (c *mqlK8sInitContainer) GetEnv() *plugin.TValue[interface{}] {
+func (c *mqlK8sInitContainer) GetEnv() *plugin.TValue[any] {
 	return &c.Env
 }
 
-func (c *mqlK8sInitContainer) GetEnvFrom() *plugin.TValue[interface{}] {
+func (c *mqlK8sInitContainer) GetEnvFrom() *plugin.TValue[any] {
 	return &c.EnvFrom
 }
 
@@ -5098,18 +4965,17 @@ type mqlK8sEphemeralContainer struct {
 	Uid plugin.TValue[string]
 	Name plugin.TValue[string]
 	ImageName plugin.TValue[string]
-	Image plugin.TValue[string]
 	ContainerImage plugin.TValue[plugin.Resource]
-	Command plugin.TValue[[]interface{}]
-	Args plugin.TValue[[]interface{}]
-	VolumeMounts plugin.TValue[[]interface{}]
-	VolumeDevices plugin.TValue[[]interface{}]
+	Command plugin.TValue[[]any]
+	Args plugin.TValue[[]any]
+	VolumeMounts plugin.TValue[[]any]
+	VolumeDevices plugin.TValue[[]any]
 	ImagePullPolicy plugin.TValue[string]
-	SecurityContext plugin.TValue[interface{}]
+	SecurityContext plugin.TValue[any]
 	WorkingDir plugin.TValue[string]
 	Tty plugin.TValue[bool]
-	Env plugin.TValue[interface{}]
-	EnvFrom plugin.TValue[interface{}]
+	Env plugin.TValue[any]
+	EnvFrom plugin.TValue[any]
 }
 
 // createK8sEphemeralContainer creates a new instance of this resource
@@ -5161,10 +5027,6 @@ func (c *mqlK8sEphemeralContainer) GetImageName() *plugin.TValue[string] {
 	return &c.ImageName
 }
 
-func (c *mqlK8sEphemeralContainer) GetImage() *plugin.TValue[string] {
-	return &c.Image
-}
-
 func (c *mqlK8sEphemeralContainer) GetContainerImage() *plugin.TValue[plugin.Resource] {
 	return plugin.GetOrCompute[plugin.Resource](&c.ContainerImage, func() (plugin.Resource, error) {
 		if c.MqlRuntime.HasRecording {
@@ -5181,19 +5043,19 @@ func (c *mqlK8sEphemeralContainer) GetContainerImage() *plugin.TValue[plugin.Res
 	})
 }
 
-func (c *mqlK8sEphemeralContainer) GetCommand() *plugin.TValue[[]interface{}] {
+func (c *mqlK8sEphemeralContainer) GetCommand() *plugin.TValue[[]any] {
 	return &c.Command
 }
 
-func (c *mqlK8sEphemeralContainer) GetArgs() *plugin.TValue[[]interface{}] {
+func (c *mqlK8sEphemeralContainer) GetArgs() *plugin.TValue[[]any] {
 	return &c.Args
 }
 
-func (c *mqlK8sEphemeralContainer) GetVolumeMounts() *plugin.TValue[[]interface{}] {
+func (c *mqlK8sEphemeralContainer) GetVolumeMounts() *plugin.TValue[[]any] {
 	return &c.VolumeMounts
 }
 
-func (c *mqlK8sEphemeralContainer) GetVolumeDevices() *plugin.TValue[[]interface{}] {
+func (c *mqlK8sEphemeralContainer) GetVolumeDevices() *plugin.TValue[[]any] {
 	return &c.VolumeDevices
 }
 
@@ -5201,7 +5063,7 @@ func (c *mqlK8sEphemeralContainer) GetImagePullPolicy() *plugin.TValue[string] {
 	return &c.ImagePullPolicy
 }
 
-func (c *mqlK8sEphemeralContainer) GetSecurityContext() *plugin.TValue[interface{}] {
+func (c *mqlK8sEphemeralContainer) GetSecurityContext() *plugin.TValue[any] {
 	return &c.SecurityContext
 }
 
@@ -5213,11 +5075,11 @@ func (c *mqlK8sEphemeralContainer) GetTty() *plugin.TValue[bool] {
 	return &c.Tty
 }
 
-func (c *mqlK8sEphemeralContainer) GetEnv() *plugin.TValue[interface{}] {
+func (c *mqlK8sEphemeralContainer) GetEnv() *plugin.TValue[any] {
 	return &c.Env
 }
 
-func (c *mqlK8sEphemeralContainer) GetEnvFrom() *plugin.TValue[interface{}] {
+func (c *mqlK8sEphemeralContainer) GetEnvFrom() *plugin.TValue[any] {
 	return &c.EnvFrom
 }
 
@@ -5229,15 +5091,15 @@ type mqlK8sSecret struct {
 	Id plugin.TValue[string]
 	Uid plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]interface{}]
-	Annotations plugin.TValue[map[string]interface{}]
+	Labels plugin.TValue[map[string]any]
+	Annotations plugin.TValue[map[string]any]
 	Name plugin.TValue[string]
 	Namespace plugin.TValue[string]
 	Kind plugin.TValue[string]
 	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[interface{}]
+	Manifest plugin.TValue[any]
 	Type plugin.TValue[string]
-	Certificates plugin.TValue[[]interface{}]
+	Certificates plugin.TValue[[]any]
 }
 
 // createK8sSecret creates a new instance of this resource
@@ -5289,14 +5151,14 @@ func (c *mqlK8sSecret) GetResourceVersion() *plugin.TValue[string] {
 	return &c.ResourceVersion
 }
 
-func (c *mqlK8sSecret) GetLabels() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+func (c *mqlK8sSecret) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
 		return c.labels()
 	})
 }
 
-func (c *mqlK8sSecret) GetAnnotations() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
+func (c *mqlK8sSecret) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
 	})
 }
@@ -5317,8 +5179,8 @@ func (c *mqlK8sSecret) GetCreated() *plugin.TValue[*time.Time] {
 	return &c.Created
 }
 
-func (c *mqlK8sSecret) GetManifest() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+func (c *mqlK8sSecret) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
 		return c.manifest()
 	})
 }
@@ -5327,15 +5189,15 @@ func (c *mqlK8sSecret) GetType() *plugin.TValue[string] {
 	return &c.Type
 }
 
-func (c *mqlK8sSecret) GetCertificates() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Certificates, func() ([]interface{}, error) {
+func (c *mqlK8sSecret) GetCertificates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Certificates, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.secret", c.__id, "certificates")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -5351,14 +5213,14 @@ type mqlK8sConfigmap struct {
 	Id plugin.TValue[string]
 	Uid plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]interface{}]
-	Annotations plugin.TValue[map[string]interface{}]
+	Labels plugin.TValue[map[string]any]
+	Annotations plugin.TValue[map[string]any]
 	Name plugin.TValue[string]
 	Namespace plugin.TValue[string]
 	Kind plugin.TValue[string]
 	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[interface{}]
-	Data plugin.TValue[map[string]interface{}]
+	Manifest plugin.TValue[any]
+	Data plugin.TValue[map[string]any]
 }
 
 // createK8sConfigmap creates a new instance of this resource
@@ -5410,14 +5272,14 @@ func (c *mqlK8sConfigmap) GetResourceVersion() *plugin.TValue[string] {
 	return &c.ResourceVersion
 }
 
-func (c *mqlK8sConfigmap) GetLabels() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+func (c *mqlK8sConfigmap) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
 		return c.labels()
 	})
 }
 
-func (c *mqlK8sConfigmap) GetAnnotations() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
+func (c *mqlK8sConfigmap) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
 	})
 }
@@ -5438,13 +5300,13 @@ func (c *mqlK8sConfigmap) GetCreated() *plugin.TValue[*time.Time] {
 	return &c.Created
 }
 
-func (c *mqlK8sConfigmap) GetManifest() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+func (c *mqlK8sConfigmap) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
 		return c.manifest()
 	})
 }
 
-func (c *mqlK8sConfigmap) GetData() *plugin.TValue[map[string]interface{}] {
+func (c *mqlK8sConfigmap) GetData() *plugin.TValue[map[string]any] {
 	return &c.Data
 }
 
@@ -5456,14 +5318,14 @@ type mqlK8sService struct {
 	Id plugin.TValue[string]
 	Uid plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]interface{}]
-	Annotations plugin.TValue[map[string]interface{}]
+	Labels plugin.TValue[map[string]any]
+	Annotations plugin.TValue[map[string]any]
 	Name plugin.TValue[string]
 	Namespace plugin.TValue[string]
 	Kind plugin.TValue[string]
 	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[interface{}]
-	Spec plugin.TValue[interface{}]
+	Manifest plugin.TValue[any]
+	Spec plugin.TValue[any]
 }
 
 // createK8sService creates a new instance of this resource
@@ -5515,14 +5377,14 @@ func (c *mqlK8sService) GetResourceVersion() *plugin.TValue[string] {
 	return &c.ResourceVersion
 }
 
-func (c *mqlK8sService) GetLabels() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+func (c *mqlK8sService) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
 		return c.labels()
 	})
 }
 
-func (c *mqlK8sService) GetAnnotations() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
+func (c *mqlK8sService) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
 	})
 }
@@ -5543,14 +5405,14 @@ func (c *mqlK8sService) GetCreated() *plugin.TValue[*time.Time] {
 	return &c.Created
 }
 
-func (c *mqlK8sService) GetManifest() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+func (c *mqlK8sService) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
 		return c.manifest()
 	})
 }
 
-func (c *mqlK8sService) GetSpec() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Spec, func() (interface{}, error) {
+func (c *mqlK8sService) GetSpec() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Spec, func() (any, error) {
 		return c.spec()
 	})
 }
@@ -5813,7 +5675,7 @@ type mqlK8sIngressrule struct {
 	// optional: if you define mqlK8sIngressruleInternal it will be used here
 	Id plugin.TValue[string]
 	Host plugin.TValue[string]
-	HttpPaths plugin.TValue[[]interface{}]
+	HttpPaths plugin.TValue[[]any]
 }
 
 // createK8sIngressrule creates a new instance of this resource
@@ -5861,7 +5723,7 @@ func (c *mqlK8sIngressrule) GetHost() *plugin.TValue[string] {
 	return &c.Host
 }
 
-func (c *mqlK8sIngressrule) GetHttpPaths() *plugin.TValue[[]interface{}] {
+func (c *mqlK8sIngressrule) GetHttpPaths() *plugin.TValue[[]any] {
 	return &c.HttpPaths
 }
 
@@ -5871,8 +5733,8 @@ type mqlK8sIngresstls struct {
 	__id string
 	// optional: if you define mqlK8sIngresstlsInternal it will be used here
 	Id plugin.TValue[string]
-	Hosts plugin.TValue[[]interface{}]
-	Certificates plugin.TValue[[]interface{}]
+	Hosts plugin.TValue[[]any]
+	Certificates plugin.TValue[[]any]
 }
 
 // createK8sIngresstls creates a new instance of this resource
@@ -5916,11 +5778,11 @@ func (c *mqlK8sIngresstls) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
-func (c *mqlK8sIngresstls) GetHosts() *plugin.TValue[[]interface{}] {
+func (c *mqlK8sIngresstls) GetHosts() *plugin.TValue[[]any] {
 	return &c.Hosts
 }
 
-func (c *mqlK8sIngresstls) GetCertificates() *plugin.TValue[[]interface{}] {
+func (c *mqlK8sIngresstls) GetCertificates() *plugin.TValue[[]any] {
 	return &c.Certificates
 }
 
@@ -5932,15 +5794,15 @@ type mqlK8sIngress struct {
 	Id plugin.TValue[string]
 	Uid plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]interface{}]
-	Annotations plugin.TValue[map[string]interface{}]
+	Labels plugin.TValue[map[string]any]
+	Annotations plugin.TValue[map[string]any]
 	Name plugin.TValue[string]
 	Namespace plugin.TValue[string]
 	Kind plugin.TValue[string]
 	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[interface{}]
-	Rules plugin.TValue[[]interface{}]
-	Tls plugin.TValue[[]interface{}]
+	Manifest plugin.TValue[any]
+	Rules plugin.TValue[[]any]
+	Tls plugin.TValue[[]any]
 }
 
 // createK8sIngress creates a new instance of this resource
@@ -5992,14 +5854,14 @@ func (c *mqlK8sIngress) GetResourceVersion() *plugin.TValue[string] {
 	return &c.ResourceVersion
 }
 
-func (c *mqlK8sIngress) GetLabels() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+func (c *mqlK8sIngress) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
 		return c.labels()
 	})
 }
 
-func (c *mqlK8sIngress) GetAnnotations() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
+func (c *mqlK8sIngress) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
 	})
 }
@@ -6020,25 +5882,25 @@ func (c *mqlK8sIngress) GetCreated() *plugin.TValue[*time.Time] {
 	return &c.Created
 }
 
-func (c *mqlK8sIngress) GetManifest() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+func (c *mqlK8sIngress) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
 		return c.manifest()
 	})
 }
 
-func (c *mqlK8sIngress) GetRules() *plugin.TValue[[]interface{}] {
+func (c *mqlK8sIngress) GetRules() *plugin.TValue[[]any] {
 	return &c.Rules
 }
 
-func (c *mqlK8sIngress) GetTls() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Tls, func() ([]interface{}, error) {
+func (c *mqlK8sIngress) GetTls() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tls, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.ingress", c.__id, "tls")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -6054,15 +5916,15 @@ type mqlK8sServiceaccount struct {
 	Id plugin.TValue[string]
 	Uid plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]interface{}]
-	Annotations plugin.TValue[map[string]interface{}]
+	Labels plugin.TValue[map[string]any]
+	Annotations plugin.TValue[map[string]any]
 	Name plugin.TValue[string]
 	Namespace plugin.TValue[string]
 	Kind plugin.TValue[string]
 	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[interface{}]
-	Secrets plugin.TValue[[]interface{}]
-	ImagePullSecrets plugin.TValue[[]interface{}]
+	Manifest plugin.TValue[any]
+	Secrets plugin.TValue[[]any]
+	ImagePullSecrets plugin.TValue[[]any]
 	AutomountServiceAccountToken plugin.TValue[bool]
 }
 
@@ -6115,14 +5977,14 @@ func (c *mqlK8sServiceaccount) GetResourceVersion() *plugin.TValue[string] {
 	return &c.ResourceVersion
 }
 
-func (c *mqlK8sServiceaccount) GetLabels() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+func (c *mqlK8sServiceaccount) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
 		return c.labels()
 	})
 }
 
-func (c *mqlK8sServiceaccount) GetAnnotations() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
+func (c *mqlK8sServiceaccount) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
 	})
 }
@@ -6143,17 +6005,17 @@ func (c *mqlK8sServiceaccount) GetCreated() *plugin.TValue[*time.Time] {
 	return &c.Created
 }
 
-func (c *mqlK8sServiceaccount) GetManifest() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+func (c *mqlK8sServiceaccount) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
 		return c.manifest()
 	})
 }
 
-func (c *mqlK8sServiceaccount) GetSecrets() *plugin.TValue[[]interface{}] {
+func (c *mqlK8sServiceaccount) GetSecrets() *plugin.TValue[[]any] {
 	return &c.Secrets
 }
 
-func (c *mqlK8sServiceaccount) GetImagePullSecrets() *plugin.TValue[[]interface{}] {
+func (c *mqlK8sServiceaccount) GetImagePullSecrets() *plugin.TValue[[]any] {
 	return &c.ImagePullSecrets
 }
 
@@ -6169,14 +6031,14 @@ type mqlK8sRbacClusterrole struct {
 	Id plugin.TValue[string]
 	Uid plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]interface{}]
-	Annotations plugin.TValue[map[string]interface{}]
+	Labels plugin.TValue[map[string]any]
+	Annotations plugin.TValue[map[string]any]
 	Name plugin.TValue[string]
 	Kind plugin.TValue[string]
 	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[interface{}]
-	Rules plugin.TValue[[]interface{}]
-	AggregationRule plugin.TValue[interface{}]
+	Manifest plugin.TValue[any]
+	Rules plugin.TValue[[]any]
+	AggregationRule plugin.TValue[any]
 }
 
 // createK8sRbacClusterrole creates a new instance of this resource
@@ -6228,14 +6090,14 @@ func (c *mqlK8sRbacClusterrole) GetResourceVersion() *plugin.TValue[string] {
 	return &c.ResourceVersion
 }
 
-func (c *mqlK8sRbacClusterrole) GetLabels() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+func (c *mqlK8sRbacClusterrole) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
 		return c.labels()
 	})
 }
 
-func (c *mqlK8sRbacClusterrole) GetAnnotations() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
+func (c *mqlK8sRbacClusterrole) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
 	})
 }
@@ -6252,17 +6114,17 @@ func (c *mqlK8sRbacClusterrole) GetCreated() *plugin.TValue[*time.Time] {
 	return &c.Created
 }
 
-func (c *mqlK8sRbacClusterrole) GetManifest() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+func (c *mqlK8sRbacClusterrole) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
 		return c.manifest()
 	})
 }
 
-func (c *mqlK8sRbacClusterrole) GetRules() *plugin.TValue[[]interface{}] {
+func (c *mqlK8sRbacClusterrole) GetRules() *plugin.TValue[[]any] {
 	return &c.Rules
 }
 
-func (c *mqlK8sRbacClusterrole) GetAggregationRule() *plugin.TValue[interface{}] {
+func (c *mqlK8sRbacClusterrole) GetAggregationRule() *plugin.TValue[any] {
 	return &c.AggregationRule
 }
 
@@ -6274,14 +6136,14 @@ type mqlK8sRbacClusterrolebinding struct {
 	Id plugin.TValue[string]
 	Uid plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]interface{}]
-	Annotations plugin.TValue[map[string]interface{}]
+	Labels plugin.TValue[map[string]any]
+	Annotations plugin.TValue[map[string]any]
 	Name plugin.TValue[string]
 	Kind plugin.TValue[string]
 	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[interface{}]
-	Subjects plugin.TValue[[]interface{}]
-	RoleRef plugin.TValue[interface{}]
+	Manifest plugin.TValue[any]
+	Subjects plugin.TValue[[]any]
+	RoleRef plugin.TValue[any]
 }
 
 // createK8sRbacClusterrolebinding creates a new instance of this resource
@@ -6333,14 +6195,14 @@ func (c *mqlK8sRbacClusterrolebinding) GetResourceVersion() *plugin.TValue[strin
 	return &c.ResourceVersion
 }
 
-func (c *mqlK8sRbacClusterrolebinding) GetLabels() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+func (c *mqlK8sRbacClusterrolebinding) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
 		return c.labels()
 	})
 }
 
-func (c *mqlK8sRbacClusterrolebinding) GetAnnotations() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
+func (c *mqlK8sRbacClusterrolebinding) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
 	})
 }
@@ -6357,17 +6219,17 @@ func (c *mqlK8sRbacClusterrolebinding) GetCreated() *plugin.TValue[*time.Time] {
 	return &c.Created
 }
 
-func (c *mqlK8sRbacClusterrolebinding) GetManifest() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+func (c *mqlK8sRbacClusterrolebinding) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
 		return c.manifest()
 	})
 }
 
-func (c *mqlK8sRbacClusterrolebinding) GetSubjects() *plugin.TValue[[]interface{}] {
+func (c *mqlK8sRbacClusterrolebinding) GetSubjects() *plugin.TValue[[]any] {
 	return &c.Subjects
 }
 
-func (c *mqlK8sRbacClusterrolebinding) GetRoleRef() *plugin.TValue[interface{}] {
+func (c *mqlK8sRbacClusterrolebinding) GetRoleRef() *plugin.TValue[any] {
 	return &c.RoleRef
 }
 
@@ -6379,14 +6241,14 @@ type mqlK8sRbacRole struct {
 	Id plugin.TValue[string]
 	Uid plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]interface{}]
-	Annotations plugin.TValue[map[string]interface{}]
+	Labels plugin.TValue[map[string]any]
+	Annotations plugin.TValue[map[string]any]
 	Name plugin.TValue[string]
 	Namespace plugin.TValue[string]
 	Kind plugin.TValue[string]
 	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[interface{}]
-	Rules plugin.TValue[[]interface{}]
+	Manifest plugin.TValue[any]
+	Rules plugin.TValue[[]any]
 }
 
 // createK8sRbacRole creates a new instance of this resource
@@ -6438,14 +6300,14 @@ func (c *mqlK8sRbacRole) GetResourceVersion() *plugin.TValue[string] {
 	return &c.ResourceVersion
 }
 
-func (c *mqlK8sRbacRole) GetLabels() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+func (c *mqlK8sRbacRole) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
 		return c.labels()
 	})
 }
 
-func (c *mqlK8sRbacRole) GetAnnotations() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
+func (c *mqlK8sRbacRole) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
 	})
 }
@@ -6466,13 +6328,13 @@ func (c *mqlK8sRbacRole) GetCreated() *plugin.TValue[*time.Time] {
 	return &c.Created
 }
 
-func (c *mqlK8sRbacRole) GetManifest() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+func (c *mqlK8sRbacRole) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
 		return c.manifest()
 	})
 }
 
-func (c *mqlK8sRbacRole) GetRules() *plugin.TValue[[]interface{}] {
+func (c *mqlK8sRbacRole) GetRules() *plugin.TValue[[]any] {
 	return &c.Rules
 }
 
@@ -6484,15 +6346,15 @@ type mqlK8sRbacRolebinding struct {
 	Id plugin.TValue[string]
 	Uid plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]interface{}]
-	Annotations plugin.TValue[map[string]interface{}]
+	Labels plugin.TValue[map[string]any]
+	Annotations plugin.TValue[map[string]any]
 	Name plugin.TValue[string]
 	Namespace plugin.TValue[string]
 	Kind plugin.TValue[string]
 	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[interface{}]
-	Subjects plugin.TValue[[]interface{}]
-	RoleRef plugin.TValue[interface{}]
+	Manifest plugin.TValue[any]
+	Subjects plugin.TValue[[]any]
+	RoleRef plugin.TValue[any]
 }
 
 // createK8sRbacRolebinding creates a new instance of this resource
@@ -6544,14 +6406,14 @@ func (c *mqlK8sRbacRolebinding) GetResourceVersion() *plugin.TValue[string] {
 	return &c.ResourceVersion
 }
 
-func (c *mqlK8sRbacRolebinding) GetLabels() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+func (c *mqlK8sRbacRolebinding) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
 		return c.labels()
 	})
 }
 
-func (c *mqlK8sRbacRolebinding) GetAnnotations() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
+func (c *mqlK8sRbacRolebinding) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
 	})
 }
@@ -6572,120 +6434,18 @@ func (c *mqlK8sRbacRolebinding) GetCreated() *plugin.TValue[*time.Time] {
 	return &c.Created
 }
 
-func (c *mqlK8sRbacRolebinding) GetManifest() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+func (c *mqlK8sRbacRolebinding) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
 		return c.manifest()
 	})
 }
 
-func (c *mqlK8sRbacRolebinding) GetSubjects() *plugin.TValue[[]interface{}] {
+func (c *mqlK8sRbacRolebinding) GetSubjects() *plugin.TValue[[]any] {
 	return &c.Subjects
 }
 
-func (c *mqlK8sRbacRolebinding) GetRoleRef() *plugin.TValue[interface{}] {
+func (c *mqlK8sRbacRolebinding) GetRoleRef() *plugin.TValue[any] {
 	return &c.RoleRef
-}
-
-// mqlK8sPodsecuritypolicy for the k8s.podsecuritypolicy resource
-type mqlK8sPodsecuritypolicy struct {
-	MqlRuntime *plugin.Runtime
-	__id string
-	mqlK8sPodsecuritypolicyInternal
-	Id plugin.TValue[string]
-	Uid plugin.TValue[string]
-	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]interface{}]
-	Annotations plugin.TValue[map[string]interface{}]
-	Name plugin.TValue[string]
-	Kind plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[interface{}]
-	Spec plugin.TValue[interface{}]
-}
-
-// createK8sPodsecuritypolicy creates a new instance of this resource
-func createK8sPodsecuritypolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlK8sPodsecuritypolicy{
-		MqlRuntime: runtime,
-	}
-
-	err := SetAllData(res, args)
-	if err != nil {
-		return res, err
-	}
-
-	if res.__id == "" {
-	res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("k8s.podsecuritypolicy", res.__id)
-		if err != nil || args == nil {
-			return res, err
-		}
-		return res, SetAllData(res, args)
-	}
-
-	return res, nil
-}
-
-func (c *mqlK8sPodsecuritypolicy) MqlName() string {
-	return "k8s.podsecuritypolicy"
-}
-
-func (c *mqlK8sPodsecuritypolicy) MqlID() string {
-	return c.__id
-}
-
-func (c *mqlK8sPodsecuritypolicy) GetId() *plugin.TValue[string] {
-	return &c.Id
-}
-
-func (c *mqlK8sPodsecuritypolicy) GetUid() *plugin.TValue[string] {
-	return &c.Uid
-}
-
-func (c *mqlK8sPodsecuritypolicy) GetResourceVersion() *plugin.TValue[string] {
-	return &c.ResourceVersion
-}
-
-func (c *mqlK8sPodsecuritypolicy) GetLabels() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
-		return c.labels()
-	})
-}
-
-func (c *mqlK8sPodsecuritypolicy) GetAnnotations() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
-		return c.annotations()
-	})
-}
-
-func (c *mqlK8sPodsecuritypolicy) GetName() *plugin.TValue[string] {
-	return &c.Name
-}
-
-func (c *mqlK8sPodsecuritypolicy) GetKind() *plugin.TValue[string] {
-	return &c.Kind
-}
-
-func (c *mqlK8sPodsecuritypolicy) GetCreated() *plugin.TValue[*time.Time] {
-	return &c.Created
-}
-
-func (c *mqlK8sPodsecuritypolicy) GetManifest() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
-		return c.manifest()
-	})
-}
-
-func (c *mqlK8sPodsecuritypolicy) GetSpec() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Spec, func() (interface{}, error) {
-		return c.spec()
-	})
 }
 
 // mqlK8sNetworkpolicy for the k8s.networkpolicy resource
@@ -6696,14 +6456,14 @@ type mqlK8sNetworkpolicy struct {
 	Id plugin.TValue[string]
 	Uid plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]interface{}]
-	Annotations plugin.TValue[map[string]interface{}]
+	Labels plugin.TValue[map[string]any]
+	Annotations plugin.TValue[map[string]any]
 	Name plugin.TValue[string]
 	Namespace plugin.TValue[string]
 	Kind plugin.TValue[string]
 	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[interface{}]
-	Spec plugin.TValue[interface{}]
+	Manifest plugin.TValue[any]
+	Spec plugin.TValue[any]
 }
 
 // createK8sNetworkpolicy creates a new instance of this resource
@@ -6755,14 +6515,14 @@ func (c *mqlK8sNetworkpolicy) GetResourceVersion() *plugin.TValue[string] {
 	return &c.ResourceVersion
 }
 
-func (c *mqlK8sNetworkpolicy) GetLabels() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+func (c *mqlK8sNetworkpolicy) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
 		return c.labels()
 	})
 }
 
-func (c *mqlK8sNetworkpolicy) GetAnnotations() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
+func (c *mqlK8sNetworkpolicy) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
 	})
 }
@@ -6783,14 +6543,14 @@ func (c *mqlK8sNetworkpolicy) GetCreated() *plugin.TValue[*time.Time] {
 	return &c.Created
 }
 
-func (c *mqlK8sNetworkpolicy) GetManifest() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+func (c *mqlK8sNetworkpolicy) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
 		return c.manifest()
 	})
 }
 
-func (c *mqlK8sNetworkpolicy) GetSpec() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Spec, func() (interface{}, error) {
+func (c *mqlK8sNetworkpolicy) GetSpec() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Spec, func() (any, error) {
 		return c.spec()
 	})
 }
@@ -6803,13 +6563,13 @@ type mqlK8sCustomresource struct {
 	Id plugin.TValue[string]
 	Uid plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]interface{}]
-	Annotations plugin.TValue[map[string]interface{}]
+	Labels plugin.TValue[map[string]any]
+	Annotations plugin.TValue[map[string]any]
 	Name plugin.TValue[string]
 	Namespace plugin.TValue[string]
 	Kind plugin.TValue[string]
 	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[interface{}]
+	Manifest plugin.TValue[any]
 }
 
 // createK8sCustomresource creates a new instance of this resource
@@ -6861,14 +6621,14 @@ func (c *mqlK8sCustomresource) GetResourceVersion() *plugin.TValue[string] {
 	return &c.ResourceVersion
 }
 
-func (c *mqlK8sCustomresource) GetLabels() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+func (c *mqlK8sCustomresource) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
 		return c.labels()
 	})
 }
 
-func (c *mqlK8sCustomresource) GetAnnotations() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
+func (c *mqlK8sCustomresource) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
 	})
 }
@@ -6889,8 +6649,8 @@ func (c *mqlK8sCustomresource) GetCreated() *plugin.TValue[*time.Time] {
 	return &c.Created
 }
 
-func (c *mqlK8sCustomresource) GetManifest() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+func (c *mqlK8sCustomresource) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
 		return c.manifest()
 	})
 }
@@ -6960,8 +6720,8 @@ type mqlK8sAdmissionrequest struct {
 	Namespace plugin.TValue[string]
 	Operation plugin.TValue[string]
 	UserInfo plugin.TValue[*mqlK8sUserinfo]
-	Object plugin.TValue[interface{}]
-	OldObject plugin.TValue[interface{}]
+	Object plugin.TValue[any]
+	OldObject plugin.TValue[any]
 }
 
 // createK8sAdmissionrequest creates a new instance of this resource
@@ -7029,11 +6789,11 @@ func (c *mqlK8sAdmissionrequest) GetUserInfo() *plugin.TValue[*mqlK8sUserinfo] {
 	})
 }
 
-func (c *mqlK8sAdmissionrequest) GetObject() *plugin.TValue[interface{}] {
+func (c *mqlK8sAdmissionrequest) GetObject() *plugin.TValue[any] {
 	return &c.Object
 }
 
-func (c *mqlK8sAdmissionrequest) GetOldObject() *plugin.TValue[interface{}] {
+func (c *mqlK8sAdmissionrequest) GetOldObject() *plugin.TValue[any] {
 	return &c.OldObject
 }
 
@@ -7099,13 +6859,13 @@ type mqlK8sAdmissionValidatingwebhookconfiguration struct {
 	Id plugin.TValue[string]
 	Uid plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]interface{}]
-	Annotations plugin.TValue[map[string]interface{}]
+	Labels plugin.TValue[map[string]any]
+	Annotations plugin.TValue[map[string]any]
 	Name plugin.TValue[string]
 	Kind plugin.TValue[string]
 	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[interface{}]
-	Webhooks plugin.TValue[[]interface{}]
+	Manifest plugin.TValue[any]
+	Webhooks plugin.TValue[[]any]
 }
 
 // createK8sAdmissionValidatingwebhookconfiguration creates a new instance of this resource
@@ -7152,14 +6912,14 @@ func (c *mqlK8sAdmissionValidatingwebhookconfiguration) GetResourceVersion() *pl
 	return &c.ResourceVersion
 }
 
-func (c *mqlK8sAdmissionValidatingwebhookconfiguration) GetLabels() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+func (c *mqlK8sAdmissionValidatingwebhookconfiguration) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
 		return c.labels()
 	})
 }
 
-func (c *mqlK8sAdmissionValidatingwebhookconfiguration) GetAnnotations() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
+func (c *mqlK8sAdmissionValidatingwebhookconfiguration) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
 	})
 }
@@ -7176,14 +6936,14 @@ func (c *mqlK8sAdmissionValidatingwebhookconfiguration) GetCreated() *plugin.TVa
 	return &c.Created
 }
 
-func (c *mqlK8sAdmissionValidatingwebhookconfiguration) GetManifest() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+func (c *mqlK8sAdmissionValidatingwebhookconfiguration) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
 		return c.manifest()
 	})
 }
 
-func (c *mqlK8sAdmissionValidatingwebhookconfiguration) GetWebhooks() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Webhooks, func() ([]interface{}, error) {
+func (c *mqlK8sAdmissionValidatingwebhookconfiguration) GetWebhooks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Webhooks, func() ([]any, error) {
 		return c.webhooks()
 	})
 }
@@ -7198,7 +6958,7 @@ type mqlK8sApp struct {
 	Instance plugin.TValue[string]
 	ManagedBy plugin.TValue[string]
 	PartOf plugin.TValue[string]
-	Components plugin.TValue[[]interface{}]
+	Components plugin.TValue[[]any]
 }
 
 // createK8sApp creates a new instance of this resource
@@ -7253,6 +7013,6 @@ func (c *mqlK8sApp) GetPartOf() *plugin.TValue[string] {
 	return &c.PartOf
 }
 
-func (c *mqlK8sApp) GetComponents() *plugin.TValue[[]interface{}] {
+func (c *mqlK8sApp) GetComponents() *plugin.TValue[[]any] {
 	return &c.Components
 }

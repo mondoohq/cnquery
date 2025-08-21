@@ -7,13 +7,13 @@ import (
 	"context"
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/okta/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/okta/connection"
 )
 
-func (o *mqlOkta) domains() ([]interface{}, error) {
+func (o *mqlOkta) domains() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
 	client := conn.Client()
 
@@ -29,7 +29,7 @@ func (o *mqlOkta) domains() ([]interface{}, error) {
 		return nil, nil
 	}
 
-	list := []interface{}{}
+	list := []any{}
 	for i := range domainSlice.Domains {
 		entry := domainSlice.Domains[i]
 		r, err := newMqlOktaDomain(o.MqlRuntime, entry)
@@ -43,7 +43,7 @@ func (o *mqlOkta) domains() ([]interface{}, error) {
 	return list, nil
 }
 
-func newMqlOktaDomain(runtime *plugin.Runtime, entry *okta.Domain) (interface{}, error) {
+func newMqlOktaDomain(runtime *plugin.Runtime, entry *okta.Domain) (any, error) {
 	publicCertificate, err := convert.JsonToDict(entry.PublicCertificate)
 	if err != nil {
 		return nil, err

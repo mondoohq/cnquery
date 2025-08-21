@@ -102,44 +102,44 @@ func TestParseBlockEntries(t *testing.T) {
 		Fstype:      "squashfs",
 		Label:       "",
 		Uuid:        "",
-		Mountpoints: []interface{}{"/var/lib/snapd/snap/core/10577"},
+		Mountpoints: []any{"/var/lib/snapd/snap/core/10577"},
 	}, {
 		Name:        "sda",
 		Fstype:      "btrfs",
 		Label:       "storage01",
 		Uuid:        "6060df9a-7e53-439c-9189-ba9657161fd4",
-		Mountpoints: []interface{}{"/data"},
+		Mountpoints: []any{"/data"},
 	}, {
 		Name:        "sdb",
 		Fstype:      "btrfs",
 		Label:       "storage01",
 		Uuid:        "6060df9a-7e53-439c-9189-ba9657161fd4",
-		Mountpoints: []interface{}{nil},
+		Mountpoints: []any{nil},
 	}, {
 		Name:        "sdc",
 		Fstype:      "",
 		Label:       "",
 		Uuid:        "",
-		Mountpoints: []interface{}{nil},
+		Mountpoints: []any{nil},
 		Children: []blockdevice{{
 			Name:        "sdc1",
 			Fstype:      "vfat",
 			Label:       "",
 			Uuid:        "0EC7-F4C1",
-			Mountpoints: []interface{}{"/boot"},
+			Mountpoints: []any{"/boot"},
 		}, {
 			Name:        "sdc2",
 			Fstype:      "ext4",
 			Label:       "",
 			Uuid:        "6c44ec5a-4727-47d4-b485-81cff72b207e",
-			Mountpoints: []interface{}{"/"},
+			Mountpoints: []any{"/"},
 		}},
 	}, {
 		Name:        "sdd",
 		Fstype:      "btrfs",
 		Label:       "storage01",
 		Uuid:        "6060df9a-7e53-439c-9189-ba9657161fd4",
-		Mountpoints: []interface{}{nil},
+		Mountpoints: []any{nil},
 	}}, devices.Blockdevices)
 
 	data = `{
@@ -163,7 +163,7 @@ func TestParseBlockEntries(t *testing.T) {
 			Label:       "/",
 			Uuid:        "e6c06bf4-70a3-4524-84fa-35484afc0d19",
 			Mountpoint:  "/",
-			Mountpoints: []interface{}{"/"},
+			Mountpoints: []any{"/"},
 		}},
 	}})
 }

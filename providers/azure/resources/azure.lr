@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 
 option provider = "go.mondoo.com/cnquery/v9/providers/azure"
-option go_package = "go.mondoo.com/cnquery/v11/providers/azure/resources"
+option go_package = "go.mondoo.com/cnquery/v12/providers/azure/resources"
 
 // Azure resource
 azure {
@@ -54,8 +54,6 @@ azure.subscription @defaults ("name") {
   keyVault() azure.subscription.keyVaultService
   // Authorization resources in the subscription
   iam() azure.subscription.authorizationService
-  // Deprecated: use `iam` instead
-  authorization() azure.subscription.authorizationService
   // Monitor resources in the subscription
   monitor() azure.subscription.monitorService
   // Cloud defender resources in the subscription
@@ -1850,8 +1848,6 @@ private azure.subscription.authorizationService {
   subscriptionId string
   // Role definitions for the Azure subscription
   roles() []azure.subscription.authorizationService.roleDefinition
-  // Deprecated: use `roles` instead
-  roleDefinitions() []azure.subscription.authorizationService.roleDefinition
   // Role assignments
   roleAssignments() []azure.subscription.authorizationService.roleAssignment
   // Managed identities
@@ -1868,8 +1864,6 @@ private azure.subscription.authorizationService.roleDefinition @defaults ("name 
   name string
   // Role type
   type string
-  // Deprecated: use `type` instead
-  isCustom bool
   // Scopes for which the role definition applies
   scopes []string
   // Permissions that are attached to the role definition

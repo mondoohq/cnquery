@@ -7,11 +7,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	subject "go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
+	subject "go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 )
 
 func TestDictToMapStr_Int(t *testing.T) {
-	input := map[string]interface{}{
+	input := map[string]any{
 		"one": 1,
 		"two": 2,
 		"bad": "not-an-int",
@@ -26,7 +26,7 @@ func TestDictToMapStr_Int(t *testing.T) {
 }
 
 func TestDictToMapStr_String(t *testing.T) {
-	input := map[string]interface{}{
+	input := map[string]any{
 		"a": "hello",
 		"b": "world",
 		"c": 123, // Should be ignored
@@ -46,9 +46,9 @@ func TestDictToMapStr_EmptyInput(t *testing.T) {
 }
 
 func TestDictToMapStr_WrongType(t *testing.T) {
-	input := map[string]interface{}{
+	input := map[string]any{
 		"x": []int{1, 2, 3},
-		"y": map[string]interface{}{"nested": "value"},
+		"y": map[string]any{"nested": "value"},
 	}
 	output := subject.DictToTypedMap[string](input)
 	assert.Empty(t, output)

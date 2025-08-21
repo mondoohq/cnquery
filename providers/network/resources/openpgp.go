@@ -10,17 +10,17 @@ import (
 
 	"github.com/ProtonMail/go-crypto/openpgp"
 	"github.com/ProtonMail/go-crypto/openpgp/packet"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 )
 
-func (p *mqlOpenpgpEntities) list(content string) ([]interface{}, error) {
+func (p *mqlOpenpgpEntities) list(content string) ([]any, error) {
 	entries, err := openpgp.ReadArmoredKeyRing(strings.NewReader(content))
 	if err != nil {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	// to create certificate resources
 	for i := range entries {
 		entity := entries[i]
@@ -105,13 +105,13 @@ func (r *mqlOpenpgpEntity) id() (string, error) {
 	return "openpgp.entity/" + fp.Data, nil
 }
 
-func (r *mqlOpenpgpEntity) identities() ([]interface{}, error) {
+func (r *mqlOpenpgpEntity) identities() ([]any, error) {
 	fp := r.PrimaryPublicKey.Data.GetFingerprint()
 	if fp.Error != nil {
 		return nil, fp.Error
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for k := range r._identities {
 		identity := r._identities[k]
 		o, err := CreateResource(r.MqlRuntime, "openpgp.identity", map[string]*llx.RawData{
@@ -145,8 +145,8 @@ func (r *mqlOpenpgpIdentity) id() (string, error) {
 	return "openpgp.identity/" + r.Fingerprint.Data + "/" + r.Name.Data, nil
 }
 
-func (r *mqlOpenpgpIdentity) signatures() ([]interface{}, error) {
-	res := []interface{}{}
+func (r *mqlOpenpgpIdentity) signatures() ([]any, error) {
+	res := []any{}
 	for k := range r._signatures {
 		signature := r._signatures[k]
 

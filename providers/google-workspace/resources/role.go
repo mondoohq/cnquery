@@ -6,22 +6,22 @@ package resources
 import (
 	"strconv"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/google-workspace/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/google-workspace/connection"
+	"go.mondoo.com/cnquery/v12/types"
 	directory "google.golang.org/api/admin/directory/v1"
 )
 
-func (g *mqlGoogleworkspace) roles() ([]interface{}, error) {
+func (g *mqlGoogleworkspace) roles() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GoogleWorkspaceConnection)
 	directoryService, err := directoryService(conn, directory.AdminDirectoryRolemanagementReadonlyScope)
 	if err != nil {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	groups, err := directoryService.Roles.List(conn.CustomerID()).Do()
 	if err != nil {
 		return nil, err
@@ -48,7 +48,7 @@ func (g *mqlGoogleworkspace) roles() ([]interface{}, error) {
 	return res, nil
 }
 
-func newMqlGoogleWorkspaceRole(runtime *plugin.Runtime, entry *directory.Role) (interface{}, error) {
+func newMqlGoogleWorkspaceRole(runtime *plugin.Runtime, entry *directory.Role) (any, error) {
 	privileges, err := convert.JsonToDictSlice(entry.RolePrivileges)
 	if err != nil {
 		return nil, err

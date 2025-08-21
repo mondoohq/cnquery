@@ -8,14 +8,14 @@ import (
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	"github.com/okta/okta-sdk-golang/v2/okta/query"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/okta/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/okta/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
-func (o *mqlOkta) applications() ([]interface{}, error) {
+func (o *mqlOkta) applications() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
 	client := conn.Client()
 
@@ -34,7 +34,7 @@ func (o *mqlOkta) applications() ([]interface{}, error) {
 		return nil, nil
 	}
 
-	list := []interface{}{}
+	list := []any{}
 	appendEntry := func(datalist []okta.App) error {
 		for i := range datalist {
 			entry := datalist[i]
@@ -69,7 +69,7 @@ func (o *mqlOkta) applications() ([]interface{}, error) {
 	return list, nil
 }
 
-func newMqlOktaApplication(runtime *plugin.Runtime, entry *okta.Application) (interface{}, error) {
+func newMqlOktaApplication(runtime *plugin.Runtime, entry *okta.Application) (any, error) {
 	credentials, err := convert.JsonToDict(entry.Credentials)
 	if err != nil {
 		return nil, err

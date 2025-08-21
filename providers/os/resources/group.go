@@ -8,10 +8,10 @@ import (
 	"strconv"
 	"sync"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/groups"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/groups"
 )
 
 type mqlGroupInternal struct {
@@ -78,7 +78,7 @@ func (x *mqlGroup) id() (string, error) {
 	return "group/" + id + "/" + x.Name.Data, nil
 }
 
-func (x *mqlGroup) members() ([]interface{}, error) {
+func (x *mqlGroup) members() ([]any, error) {
 	raw, err := CreateResource(x.MqlRuntime, "users", nil)
 	if err != nil {
 		return nil, errors.New("cannot get users info for group: " + err.Error())
@@ -89,7 +89,7 @@ func (x *mqlGroup) members() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := make([]interface{}, len(x.membersArr))
+	res := make([]any, len(x.membersArr))
 	for i, name := range x.membersArr {
 		user, ok := users.usersByName[name]
 		if !ok {
@@ -107,7 +107,7 @@ type mqlGroupsInternal struct {
 	groupsByName map[string]*mqlGroup
 }
 
-func (x *mqlGroups) list() ([]interface{}, error) {
+func (x *mqlGroups) list() ([]any, error) {
 	x.lock.Lock()
 	defer x.lock.Unlock()
 
@@ -130,7 +130,7 @@ func (x *mqlGroups) list() ([]interface{}, error) {
 		return nil, errors.New("could not retrieve groups list")
 	}
 
-	var res []interface{}
+	var res []any
 	for i := range groups {
 		group := groups[i]
 		nu, err := CreateResource(x.MqlRuntime, "group", map[string]*llx.RawData{
@@ -151,7 +151,7 @@ func (x *mqlGroups) list() ([]interface{}, error) {
 	return res, x.refreshCache(res)
 }
 
-func (x *mqlGroups) refreshCache(all []interface{}) error {
+func (x *mqlGroups) refreshCache(all []any) error {
 	if all == nil {
 		raw := x.GetList()
 		if raw.Error != nil {

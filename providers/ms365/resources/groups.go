@@ -10,17 +10,17 @@ import (
 	abstractions "github.com/microsoft/kiota-abstractions-go"
 	"github.com/microsoftgraph/msgraph-sdk-go/groups"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/ms365/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (a *mqlMicrosoftGroup) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlMicrosoftGroup) members() ([]interface{}, error) {
+func (a *mqlMicrosoftGroup) members() ([]any, error) {
 	msResource, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "microsoft", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
@@ -49,7 +49,7 @@ func (a *mqlMicrosoftGroup) members() ([]interface{}, error) {
 		return nil, transformError(err)
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for _, member := range resp.GetValue() {
 		memberId := member.GetId()
 		if memberId == nil {
@@ -98,7 +98,7 @@ func initMicrosoftGroups(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	return args, resource.(*mqlMicrosoftGroups), nil
 }
 
-func (a *mqlMicrosoftGroups) list() ([]interface{}, error) {
+func (a *mqlMicrosoftGroups) list() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -120,7 +120,7 @@ func (a *mqlMicrosoftGroups) list() ([]interface{}, error) {
 	if err != nil {
 		return nil, transformError(err)
 	}
-	res := []interface{}{}
+	res := []any{}
 	for _, grp := range grps {
 		graphGrp, err := CreateResource(a.MqlRuntime, "microsoft.group",
 			map[string]*llx.RawData{

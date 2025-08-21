@@ -1666,7 +1666,6 @@ resources:
         Use the `aws.elasticache` resource to assess the configuration of Amazon ElastiCache.
     fields:
       cacheClusters: {}
-      clusters: {}
       serverlessCaches:
         min_mondoo_version: 9.0.0
     min_mondoo_version: 5.15.0
@@ -1954,7 +1953,7 @@ resources:
           region
           status
           findingPublishingFrequency
-          unarchivedFindings
+          findings
         }
       title: Return a list of Amazon GuardDuty Detectors along with the values for
         specified fields
@@ -1976,7 +1975,6 @@ resources:
       status: {}
       tags:
         min_mondoo_version: 9.0.0
-      unarchivedFindings: {}
     is_private: true
     min_mondoo_version: 5.15.0
     platform:
@@ -2112,7 +2110,6 @@ resources:
         The `aws.iam.group` resource provides fields for assessing the configuration of IAM Groups. For usage, read the `aws.iam` resource documentation.
     fields:
       arn: {}
-      createDate: {}
       createdAt:
         min_mondoo_version: 9.0.0
       id: {}
@@ -2126,7 +2123,6 @@ resources:
   aws.iam.instanceProfile:
     fields:
       arn: {}
-      createDate: {}
       createdAt: {}
       iamRoles: {}
       instanceProfileId: {}
@@ -2155,7 +2151,6 @@ resources:
       attachedRoles: {}
       attachedUsers: {}
       attachmentCount: {}
-      createDate: {}
       createdAt:
         min_mondoo_version: 9.0.0
       defaultVersion: {}
@@ -2179,7 +2174,6 @@ resources:
         The `aws.iam.policyversion` resource provides fields for assessing the metadata for IAM Policy versions. For usage, read the `aws.iam` resource documentation.
     fields:
       arn: {}
-      createDate: {}
       createdAt:
         min_mondoo_version: 9.0.0
       document: {}
@@ -2197,7 +2191,6 @@ resources:
     fields:
       arn: {}
       assumeRolePolicyDocument: {}
-      createDate: {}
       createdAt:
         min_mondoo_version: 9.0.0
       description: {}
@@ -2217,7 +2210,6 @@ resources:
       accessKeys: {}
       arn: {}
       attachedPolicies: {}
-      createDate: {}
       createdAt:
         min_mondoo_version: 9.0.0
       groups: {}
@@ -2511,8 +2503,6 @@ resources:
         min_mondoo_version: 9.0.0
       clusters:
         min_mondoo_version: 9.0.0
-      dbClusters: {}
-      dbInstances: {}
       instances:
         min_mondoo_version: 9.0.0
       parameterGroups:
@@ -2525,11 +2515,11 @@ resources:
     - title: Security in Amazon RDS
       url: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.html
     snippets:
-    - query: aws.rds.dbInstances.all(snapshots.length > 0)
+    - query: aws.rds.instances.all(snapshots.length > 0)
       title: Check whether RDS DB instances have backups enabled
-    - query: aws.rds.dbInstances.all(multiAZ == true)
+    - query: aws.rds.instances.all(multiAZ == true)
       title: Check whether high availability is enabled for all rds instances
-    - query: aws.rds.dbClusters { snapshots.where( encrypted == false) } { arn region
+    - query: aws.rds.clusters { snapshots.where( encrypted == false) } { arn region
         id }
       title: Return a list of RDS Clusters across all regions where snapshots are
         not encrypted and return the `arn` `region` and `id` for the cluster
@@ -3372,8 +3362,6 @@ resources:
   aws.vpc.peeringConnection.peeringVpc:
     fields:
       allowDnsResolutionFromRemoteVpc: {}
-      allowEgressFromLocalClassicLinkToRemoteVpc: {}
-      allowEgressFromLocalVpcToRemoteClassicLink: {}
       ipv4CiderBlocks: {}
       ipv6CiderBlocks: {}
       ownerID: {}

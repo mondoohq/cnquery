@@ -7,9 +7,9 @@ import (
 	"errors"
 	"sync"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -21,8 +21,8 @@ type mqlK8sServiceaccountInternal struct {
 	obj  *corev1.ServiceAccount
 }
 
-func (k *mqlK8s) serviceaccounts() ([]interface{}, error) {
-	return k8sResourceToMql(k.MqlRuntime, gvkString(corev1.SchemeGroupVersion.WithKind("serviceaccounts")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+func (k *mqlK8s) serviceaccounts() ([]any, error) {
+	return k8sResourceToMql(k.MqlRuntime, gvkString(corev1.SchemeGroupVersion.WithKind("serviceaccounts")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (any, error) {
 		ts := obj.GetCreationTimestamp()
 
 		serviceAccount, ok := resource.(*corev1.ServiceAccount)
@@ -68,7 +68,7 @@ func (k *mqlK8s) serviceaccounts() ([]interface{}, error) {
 	})
 }
 
-func (k *mqlK8sServiceaccount) manifest() (map[string]interface{}, error) {
+func (k *mqlK8sServiceaccount) manifest() (map[string]any, error) {
 	manifest, err := convert.JsonToDict(k.obj)
 	if err != nil {
 		return nil, err
@@ -81,13 +81,13 @@ func (k *mqlK8sServiceaccount) id() (string, error) {
 }
 
 func initK8sServiceaccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	return initNamespacedResource[*mqlK8sServiceaccount](runtime, args, func(k *mqlK8s) *plugin.TValue[[]interface{}] { return k.GetServiceaccounts() })
+	return initNamespacedResource[*mqlK8sServiceaccount](runtime, args, func(k *mqlK8s) *plugin.TValue[[]any] { return k.GetServiceaccounts() })
 }
 
-func (k *mqlK8sServiceaccount) annotations() (map[string]interface{}, error) {
+func (k *mqlK8sServiceaccount) annotations() (map[string]any, error) {
 	return convert.MapToInterfaceMap(k.obj.GetAnnotations()), nil
 }
 
-func (k *mqlK8sServiceaccount) labels() (map[string]interface{}, error) {
+func (k *mqlK8sServiceaccount) labels() (map[string]any, error) {
 	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
 }

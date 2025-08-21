@@ -26,11 +26,11 @@ import (
 	"github.com/mitchellh/hashstructure/v2"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/v11/logger/zerologadapter"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/logger/zerologadapter"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
 )
 
 type AwsConnection struct {
@@ -262,7 +262,7 @@ type ConnectionOption func(charp *AwsConnection)
 // return s3.NewDefaultEndpointResolverV2().ResolveEndpoint(ctx, params)
 func WithEndpoint(apiEndpoint string) ConnectionOption {
 	return func(a *AwsConnection) {
-		customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+		customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...any) (aws.Endpoint, error) {
 			if apiEndpoint != "" {
 				return aws.Endpoint{
 					PartitionID:   "aws",

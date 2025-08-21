@@ -6,12 +6,12 @@ package resources
 import (
 	"strconv"
 
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 
-	"go.mondoo.com/cnquery/v11/providers/vcd/connection"
+	"go.mondoo.com/cnquery/v12/providers/vcd/connection"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 
 	"github.com/vmware/go-vcloud-director/v2/types/v56"
 
@@ -19,7 +19,7 @@ import (
 	"github.com/vmware/go-vcloud-director/v2/govcd"
 )
 
-func (v *mqlVcd) organizations() ([]interface{}, error) {
+func (v *mqlVcd) organizations() ([]any, error) {
 	conn := v.MqlRuntime.Connection.(*connection.VcdConnection)
 	client := conn.Client()
 
@@ -28,7 +28,7 @@ func (v *mqlVcd) organizations() ([]interface{}, error) {
 		return nil, err
 	}
 
-	list := []interface{}{}
+	list := []any{}
 	for i := range orgs.Org {
 		entry, err := newMqlVcdOrganization(v.MqlRuntime, orgs.Org[i])
 		if err != nil {
@@ -39,7 +39,7 @@ func (v *mqlVcd) organizations() ([]interface{}, error) {
 	return list, nil
 }
 
-func newMqlVcdOrganization(runtime *plugin.Runtime, org *types.Org) (interface{}, error) {
+func newMqlVcdOrganization(runtime *plugin.Runtime, org *types.Org) (any, error) {
 	return CreateResource(runtime, "vcd.organization", map[string]*llx.RawData{
 		"id":          llx.StringData(org.ID),
 		"name":        llx.StringData(org.Name),
@@ -53,7 +53,7 @@ func (v *mqlVcdOrganization) id() (string, error) {
 	return "vcd.organization/" + v.Name.Data, v.Name.Error
 }
 
-func (v *mqlVcdOrganization) settings() (interface{}, error) {
+func (v *mqlVcdOrganization) settings() (any, error) {
 	conn := v.MqlRuntime.Connection.(*connection.VcdConnection)
 	client := conn.Client()
 
@@ -122,7 +122,7 @@ func (v *mqlVcdOrganizationLdapSettings) id() (string, error) {
 }
 
 // https://developer.vmware.com/apis/1260/vmware-cloud-director/doc/doc/types/QueryResultAdminVMRecordType.html
-func (v *mqlVcdOrganization) vms() ([]interface{}, error) {
+func (v *mqlVcdOrganization) vms() ([]any, error) {
 	conn := v.MqlRuntime.Connection.(*connection.VcdConnection)
 	client := conn.Client()
 
@@ -140,7 +140,7 @@ func (v *mqlVcdOrganization) vms() ([]interface{}, error) {
 		return nil, err
 	}
 
-	list := []interface{}{}
+	list := []any{}
 	for i := range vmList {
 		entry, err := newMqlVcdVm(v.MqlRuntime, vmList[i])
 		if err != nil {
@@ -151,7 +151,7 @@ func (v *mqlVcdOrganization) vms() ([]interface{}, error) {
 	return list, nil
 }
 
-func newMqlVcdVm(runtime *plugin.Runtime, vm *types.QueryResultVMRecordType) (interface{}, error) {
+func newMqlVcdVm(runtime *plugin.Runtime, vm *types.QueryResultVMRecordType) (any, error) {
 	totalStorage := int64(0)
 	if vm.TotalStorageAllocatedMb != "" {
 		// this value can be ""
@@ -200,7 +200,7 @@ func (v *mqlVcdVm) id() (string, error) {
 }
 
 // https://developer.vmware.com/apis/72/vmware-cloud-director/doc/doc/types/OrganizationRightsType.html
-func (v *mqlVcdOrganization) rights() ([]interface{}, error) {
+func (v *mqlVcdOrganization) rights() ([]any, error) {
 	conn := v.MqlRuntime.Connection.(*connection.VcdConnection)
 	client := conn.Client()
 
@@ -219,7 +219,7 @@ func (v *mqlVcdOrganization) rights() ([]interface{}, error) {
 		return nil, err
 	}
 
-	list := []interface{}{}
+	list := []any{}
 	for i := range rightList {
 		entry, err := newMqlVcdRight(v.MqlRuntime, rightList[i])
 		if err != nil {
@@ -230,7 +230,7 @@ func (v *mqlVcdOrganization) rights() ([]interface{}, error) {
 	return list, nil
 }
 
-func newMqlVcdRight(runtime *plugin.Runtime, right *types.Right) (interface{}, error) {
+func newMqlVcdRight(runtime *plugin.Runtime, right *types.Right) (any, error) {
 	return CreateResource(runtime, "vcd.right", map[string]*llx.RawData{
 		"id":               llx.StringData(right.ID),
 		"name":             llx.StringData(right.Name),
@@ -247,7 +247,7 @@ func (v *mqlVcdRight) id() (string, error) {
 }
 
 // see https://developer.vmware.com/apis/1260/vmware-cloud-director/doc/doc//types/AdminVdcType.html
-func (v *mqlVcdOrganization) vdcs() ([]interface{}, error) {
+func (v *mqlVcdOrganization) vdcs() ([]any, error) {
 	conn := v.MqlRuntime.Connection.(*connection.VcdConnection)
 	client := conn.Client()
 
@@ -266,7 +266,7 @@ func (v *mqlVcdOrganization) vdcs() ([]interface{}, error) {
 		return nil, err
 	}
 
-	list := []interface{}{}
+	list := []any{}
 	for i := range vdcList {
 		entry, err := newMqlVcdVdc(v.MqlRuntime, vdcList[i])
 		if err != nil {
@@ -307,7 +307,7 @@ func (v *mqlVcdVdc) id() (string, error) {
 	return "vcd.vdc/" + v.Name.Data, v.Name.Error
 }
 
-func (v *mqlVcdOrganization) vdcGroups() ([]interface{}, error) {
+func (v *mqlVcdOrganization) vdcGroups() ([]any, error) {
 	conn := v.MqlRuntime.Connection.(*connection.VcdConnection)
 	client := conn.Client()
 
@@ -326,7 +326,7 @@ func (v *mqlVcdOrganization) vdcGroups() ([]interface{}, error) {
 		return nil, err
 	}
 
-	list := []interface{}{}
+	list := []any{}
 	for i := range vdcGroupList {
 		entry, err := newMqlVcdVdcGroup(v.MqlRuntime, vdcGroupList[i].VdcGroup)
 		if err != nil {
@@ -337,7 +337,7 @@ func (v *mqlVcdOrganization) vdcGroups() ([]interface{}, error) {
 	return list, nil
 }
 
-func newMqlVcdVdcGroup(runtime *plugin.Runtime, grp *types.VdcGroup) (interface{}, error) {
+func newMqlVcdVdcGroup(runtime *plugin.Runtime, grp *types.VdcGroup) (any, error) {
 	return CreateResource(runtime, "vcd.vdcGroup", map[string]*llx.RawData{
 		"name":                       llx.StringData(grp.Name),
 		"description":                llx.StringData(grp.Description),
@@ -354,7 +354,7 @@ func (v *mqlVcdVdcGroup) id() (string, error) {
 }
 
 // https://developer.vmware.com/apis/1260/vmware-cloud-director/doc/doc//types/RoleType.html
-func (v *mqlVcdOrganization) roles() ([]interface{}, error) {
+func (v *mqlVcdOrganization) roles() ([]any, error) {
 	conn := v.MqlRuntime.Connection.(*connection.VcdConnection)
 	client := conn.Client()
 
@@ -373,7 +373,7 @@ func (v *mqlVcdOrganization) roles() ([]interface{}, error) {
 		return nil, err
 	}
 
-	list := []interface{}{}
+	list := []any{}
 	for i := range rolesList {
 		entry, err := newMqlVcdRole(v.MqlRuntime, rolesList[i].Role)
 		if err != nil {
@@ -384,7 +384,7 @@ func (v *mqlVcdOrganization) roles() ([]interface{}, error) {
 	return list, nil
 }
 
-func newMqlVcdRole(runtime *plugin.Runtime, role *types.Role) (interface{}, error) {
+func newMqlVcdRole(runtime *plugin.Runtime, role *types.Role) (any, error) {
 	return CreateResource(runtime, "vcd.role", map[string]*llx.RawData{
 		"id":          llx.StringData(role.ID),
 		"name":        llx.StringData(role.Name),

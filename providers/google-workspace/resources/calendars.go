@@ -4,12 +4,12 @@
 package resources
 
 import (
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers/google-workspace/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers/google-workspace/connection"
 	"google.golang.org/api/calendar/v3"
 )
 
-func (g *mqlGoogleworkspace) calendars() ([]interface{}, error) {
+func (g *mqlGoogleworkspace) calendars() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GoogleWorkspaceConnection)
 	calendarService, err := calendarService(conn, calendar.CalendarReadonlyScope, calendar.CalendarSettingsReadonlyScope)
 	if err != nil {
@@ -19,7 +19,7 @@ func (g *mqlGoogleworkspace) calendars() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	res := make([]interface{}, 0, len(calendars.Items))
+	res := make([]any, 0, len(calendars.Items))
 	for _, c := range calendars.Items {
 		r, err := CreateResource(g.MqlRuntime, "googleworkspace.calendar", map[string]*llx.RawData{
 			"__id":            llx.StringData(c.Id),
@@ -35,7 +35,7 @@ func (g *mqlGoogleworkspace) calendars() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGoogleworkspaceCalendar) acl() ([]interface{}, error) {
+func (g *mqlGoogleworkspaceCalendar) acl() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GoogleWorkspaceConnection)
 	calendarService, err := calendarService(conn, calendar.CalendarScope)
 	if err != nil {
@@ -46,7 +46,7 @@ func (g *mqlGoogleworkspaceCalendar) acl() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := make([]interface{}, 0, len(acls.Items))
+	res := make([]any, 0, len(acls.Items))
 	for _, a := range acls.Items {
 		scope, err := CreateResource(g.MqlRuntime, "googleworkspace.calendar.aclRule.scope", map[string]*llx.RawData{
 			"__id":  llx.StringData(a.Id + a.Scope.Type + a.Scope.Value),

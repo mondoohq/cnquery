@@ -6,15 +6,15 @@ package resources
 import (
 	"context"
 
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 
 	abstractions "github.com/microsoft/kiota-abstractions-go"
 	"github.com/microsoftgraph/msgraph-sdk-go/rolemanagement"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/ms365/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 var roledefinitionsSelectFields = []string{
@@ -28,7 +28,7 @@ var roledefinitionsSelectFields = []string{
 	"version",
 }
 
-func (a *mqlMicrosoftRoles) list() ([]interface{}, error) {
+func (a *mqlMicrosoftRoles) list() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -77,7 +77,7 @@ func (a *mqlMicrosoftRoles) list() ([]interface{}, error) {
 		return nil, transformError(err)
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	roles := resp.GetValue()
 	for _, role := range roles {
 		rolePermissions, err := convert.JsonToDictSlice(newUnifiedRolePermissions(role.GetRolePermissions()))
@@ -142,7 +142,7 @@ func (a *mqlMicrosoftRolemanagement) roleDefinitions() (*mqlMicrosoftRoles, erro
 	return resource.(*mqlMicrosoftRoles), nil
 }
 
-func (a *mqlMicrosoftRolemanagementRoledefinition) assignments() ([]interface{}, error) {
+func (a *mqlMicrosoftRolemanagementRoledefinition) assignments() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -163,7 +163,7 @@ func (a *mqlMicrosoftRolemanagementRoledefinition) assignments() ([]interface{},
 	}
 
 	roleAssignments := resp.GetValue()
-	res := []interface{}{}
+	res := []any{}
 	for _, roleAssignment := range roleAssignments {
 		principal, err := convert.JsonToDict(newDirectoryPrincipal(roleAssignment.GetPrincipal()))
 		if err != nil {

@@ -61,7 +61,7 @@ import (
 type CacheEntry struct {
 	Timestamp int64
 	Valid     bool
-	Data      interface{}
+	Data      any
 	Error     error
 }
 

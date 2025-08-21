@@ -10,12 +10,12 @@ import (
 	"strings"
 	"time"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/mqlc"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/types"
-	"go.mondoo.com/cnquery/v11/utils/multierr"
-	"go.mondoo.com/cnquery/v11/utils/sortx"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/mqlc"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/cnquery/v12/utils/multierr"
+	"go.mondoo.com/cnquery/v12/utils/sortx"
 	"golang.org/x/exp/slices"
 )
 
@@ -246,7 +246,7 @@ func isDefaultField(ref string, bundle *llx.CodeBundle, defaultFields []string) 
 	return slices.Contains(defaultFields, label)
 }
 
-func (print *Printer) array(typ types.Type, data []interface{}, checksum string, indent string, cache *printCache) string {
+func (print *Printer) array(typ types.Type, data []any, checksum string, indent string, cache *printCache) string {
 	if len(data) == 0 {
 		return "[]"
 	}
@@ -303,7 +303,7 @@ func (print *Printer) assessmentTemplate(template string, data []string) string 
 	return res
 }
 
-func (print *Printer) dataAssessment(codeID string, data map[string]interface{}, bundle *llx.CodeBundle) string {
+func (print *Printer) dataAssessment(codeID string, data map[string]any, bundle *llx.CodeBundle) string {
 	var assertion *llx.AssertionMessage
 	var ok bool
 
@@ -326,7 +326,7 @@ func (print *Printer) dataAssessment(codeID string, data map[string]interface{},
 		if !ok {
 			return ""
 		}
-		data, ok = raw.Value.(map[string]interface{})
+		data, ok = raw.Value.(map[string]any)
 		if !ok {
 			return ""
 		}
@@ -454,7 +454,7 @@ func (print *Printer) refMap(data map[string]any, checksum string, indent string
 	return res.String()
 }
 
-func (print *Printer) stringMap(typ types.Type, data map[string]interface{}, indent string, cache *printCache) string {
+func (print *Printer) stringMap(typ types.Type, data map[string]any, indent string, cache *printCache) string {
 	if len(data) == 0 {
 		return "{}"
 	}
@@ -473,7 +473,7 @@ func (print *Printer) stringMap(typ types.Type, data map[string]interface{}, ind
 	return res.String()
 }
 
-func (print *Printer) dict(typ types.Type, raw interface{}, indent string, cache *printCache) string {
+func (print *Printer) dict(typ types.Type, raw any, indent string, cache *printCache) string {
 	if raw == nil {
 		return print.Secondary("null")
 	}
@@ -497,7 +497,7 @@ func (print *Printer) dict(typ types.Type, raw interface{}, indent string, cache
 	case time.Time:
 		return print.Secondary(data.String())
 
-	case []interface{}:
+	case []any:
 		if len(data) == 0 {
 			return "[]"
 		}
@@ -516,7 +516,7 @@ func (print *Printer) dict(typ types.Type, raw interface{}, indent string, cache
 		res.WriteString(indent + "]")
 		return res.String()
 
-	case map[string]interface{}:
+	case map[string]any:
 		if len(data) == 0 {
 			return "{}"
 		}
@@ -538,7 +538,7 @@ func (print *Printer) dict(typ types.Type, raw interface{}, indent string, cache
 	}
 }
 
-func (print *Printer) intMap(typ types.Type, data map[int]interface{}, indent string, cache *printCache) string {
+func (print *Printer) intMap(typ types.Type, data map[int]any, indent string, cache *printCache) string {
 	var res strings.Builder
 	res.WriteString("{\n")
 
@@ -613,10 +613,10 @@ func (print *Printer) resourceContext(data any, checksum string, indent string, 
 	return r, true
 }
 
-func (print *Printer) autoExpand(blockRef uint64, data interface{}, indent string, cache *printCache) string {
+func (print *Printer) autoExpand(blockRef uint64, data any, indent string, cache *printCache) string {
 	var res strings.Builder
 
-	if arr, ok := data.([]interface{}); ok {
+	if arr, ok := data.([]any); ok {
 		if len(arr) == 0 {
 			return "[]"
 		}
@@ -641,7 +641,7 @@ func (print *Printer) autoExpand(blockRef uint64, data interface{}, indent strin
 		return print.Secondary("null")
 	}
 
-	m, ok := data.(map[string]interface{})
+	m, ok := data.(map[string]any)
 	if !ok {
 		return "data is not a map to auto-expand"
 	}
@@ -711,7 +711,7 @@ func (print *Printer) autoExpand(blockRef uint64, data interface{}, indent strin
 	return res.String()
 }
 
-func (print *Printer) Data(typ types.Type, data interface{}, checksum string, bundle *llx.CodeBundle, indent string) string {
+func (print *Printer) Data(typ types.Type, data any, checksum string, bundle *llx.CodeBundle, indent string) string {
 	return print.data(typ, data, checksum, indent, newPrintCache(bundle))
 }
 
@@ -802,7 +802,7 @@ func (print *Printer) data(typ types.Type, data any, checksum string, indent str
 		return llx.ScoreString(data.([]byte))
 
 	case types.Block:
-		return print.refMap(data.(map[string]interface{}), checksum, indent, cache)
+		return print.refMap(data.(map[string]any), checksum, indent, cache)
 
 	case types.Version:
 		return print.Secondary(data.(string))
@@ -817,17 +817,17 @@ func (print *Printer) data(typ types.Type, data any, checksum string, indent str
 		if data == nil {
 			return print.Secondary("null")
 		}
-		return print.array(typ, data.([]interface{}), checksum, indent, cache)
+		return print.array(typ, data.([]any), checksum, indent, cache)
 
 	case types.MapLike:
 		if data == nil {
 			return print.Secondary("null")
 		}
 		if typ.Key() == types.String {
-			return print.stringMap(typ, data.(map[string]interface{}), indent, cache)
+			return print.stringMap(typ, data.(map[string]any), indent, cache)
 		}
 		if typ.Key() == types.Int {
-			return print.intMap(typ, data.(map[int]interface{}), indent, cache)
+			return print.intMap(typ, data.(map[int]any), indent, cache)
 		}
 		return "unable to render map, its type is not supported: " + typ.Label() + ", raw: " + fmt.Sprintf("%#v", data)
 

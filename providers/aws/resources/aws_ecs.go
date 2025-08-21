@@ -15,20 +15,20 @@ import (
 	ecstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
-	"go.mondoo.com/cnquery/v11/types"
-	"go.mondoo.com/cnquery/v11/utils/stringx"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/cnquery/v12/utils/stringx"
 )
 
 func (a *mqlAwsEcs) id() (string, error) {
 	return "aws.ecs", nil
 }
 
-func (a *mqlAwsEcs) containers() ([]interface{}, error) {
+func (a *mqlAwsEcs) containers() ([]any, error) {
 	obj, err := CreateResource(a.MqlRuntime, "aws.ecs", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
@@ -39,7 +39,7 @@ func (a *mqlAwsEcs) containers() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	containers := []interface{}{}
+	containers := []any{}
 
 	for i := range clusters {
 		tasks, err := clusters[i].(*mqlAwsEcsCluster).tasks()
@@ -58,7 +58,7 @@ func (a *mqlAwsEcs) containers() ([]interface{}, error) {
 	return containers, nil
 }
 
-func (a *mqlAwsEcs) containerInstances() ([]interface{}, error) {
+func (a *mqlAwsEcs) containerInstances() ([]any, error) {
 	obj, err := CreateResource(a.MqlRuntime, "aws.ecs", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
@@ -69,7 +69,7 @@ func (a *mqlAwsEcs) containerInstances() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	containerInstances := []interface{}{}
+	containerInstances := []any{}
 
 	for i := range clusters {
 		c := clusters[i].(*mqlAwsEcsCluster)
@@ -87,9 +87,9 @@ func (a *mqlAwsEcsInstance) ec2Instance() (*mqlAwsEc2Instance, error) {
 	return a.Ec2Instance.Data, nil
 }
 
-func (a *mqlAwsEcs) clusters() ([]interface{}, error) {
+func (a *mqlAwsEcs) clusters() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getECSClusters(conn), 5)
 	poolOfJobs.Run()
 
@@ -99,7 +99,7 @@ func (a *mqlAwsEcs) clusters() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
@@ -118,7 +118,7 @@ func (a *mqlAwsEcs) getECSClusters(conn *connection.AwsConnection) []*jobpool.Jo
 		f := func() (jobpool.JobResult, error) {
 			svc := conn.Ecs(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 
 			params := &ecsservice.ListClustersInput{}
 			paginator := ecsservice.NewListClustersPaginator(svc, params)
@@ -197,7 +197,7 @@ func initAwsEcsCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	return args, nil, nil
 }
 
-func (a *mqlAwsEcsCluster) containerInstances() ([]interface{}, error) {
+func (a *mqlAwsEcsCluster) containerInstances() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	clustera := a.Arn.Data
 	region := ""
@@ -208,7 +208,7 @@ func (a *mqlAwsEcsCluster) containerInstances() ([]interface{}, error) {
 	}
 	svc := conn.Ecs(region)
 	ctx := context.Background()
-	res := []interface{}{}
+	res := []any{}
 
 	params := &ecsservice.ListContainerInstancesInput{Cluster: &clustera}
 	containerInstances, err := svc.ListContainerInstances(ctx, params)
@@ -260,7 +260,7 @@ func (s *mqlAwsEcsCluster) id() (string, error) {
 	return s.Arn.Data, nil
 }
 
-func (a *mqlAwsEcsCluster) tasks() ([]interface{}, error) {
+func (a *mqlAwsEcsCluster) tasks() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	clustera := a.Arn.Data
 	name := a.Arn.Data
@@ -273,7 +273,7 @@ func (a *mqlAwsEcsCluster) tasks() ([]interface{}, error) {
 	}
 	svc := conn.Ecs(region)
 	ctx := context.Background()
-	res := []interface{}{}
+	res := []any{}
 
 	params := &ecsservice.ListTasksInput{Cluster: &clustera}
 	paginator := ecsservice.NewListTasksPaginator(svc, params)
@@ -369,7 +369,7 @@ type mqlAwsEcsTaskInternal struct {
 	taskDefArn      *string
 }
 
-func (t *mqlAwsEcsTask) containers() ([]interface{}, error) {
+func (t *mqlAwsEcsTask) containers() ([]any, error) {
 	conn := t.MqlRuntime.Connection.(*connection.AwsConnection)
 	ctx := context.Background()
 
@@ -393,11 +393,11 @@ func (t *mqlAwsEcsTask) containers() ([]interface{}, error) {
 		}
 	}
 
-	containers := []interface{}{}
+	containers := []any{}
 	for _, c := range t.cacheContainers {
 		containerLogDriverMap := make(map[string]string)
 		containerCommandMap := make(map[string]string)
-		cmds := []interface{}{}
+		cmds := []any{}
 		for i := range containerCommandMap[convert.ToValue(c.Name)] {
 			cmds = append(cmds, containerCommandMap[convert.ToValue(c.Name)][i])
 		}
@@ -468,8 +468,8 @@ func (s *mqlAwsEcsContainer) id() (string, error) {
 	return s.Arn.Data, nil
 }
 
-func ecsTagsToMap(tags []ecstypes.Tag) map[string]interface{} {
-	res := map[string]interface{}{}
+func ecsTagsToMap(tags []ecstypes.Tag) map[string]any {
+	res := map[string]any{}
 	for _, tag := range tags {
 		if tag.Key != nil && tag.Value != nil {
 			res[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)

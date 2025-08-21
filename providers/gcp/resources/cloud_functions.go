@@ -7,18 +7,18 @@ import (
 	"context"
 	"fmt"
 
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/gcp/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v12/types"
 
 	functions "cloud.google.com/go/functions/apiv1"
 	"cloud.google.com/go/functions/apiv1/functionspb"
-	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v12/llx"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
 
-func (g *mqlGcpProject) cloudFunctions() ([]interface{}, error) {
+func (g *mqlGcpProject) cloudFunctions() ([]any, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
 	}
@@ -73,7 +73,7 @@ func (g *mqlGcpProject) cloudFunctions() ([]interface{}, error) {
 	}
 
 	it := cloudFuncSvc.ListFunctions(ctx, &functionspb.ListFunctionsRequest{Parent: fmt.Sprintf("projects/%s/locations/-", projectId)})
-	var cloudFunctions []interface{}
+	var cloudFunctions []any
 	for {
 		f, err := it.Next()
 		if err == iterator.Done {
@@ -83,7 +83,7 @@ func (g *mqlGcpProject) cloudFunctions() ([]interface{}, error) {
 			return nil, err
 		}
 
-		secretEnvVars := make(map[string]interface{})
+		secretEnvVars := make(map[string]any)
 		for _, v := range f.SecretEnvironmentVariables {
 			envVar, err := convert.JsonToDict(mqlSecretEnvVar{ProjectId: v.ProjectId, Secret: v.Secret, Version: v.Version})
 			if err != nil {
@@ -92,7 +92,7 @@ func (g *mqlGcpProject) cloudFunctions() ([]interface{}, error) {
 			secretEnvVars[v.Key] = envVar
 		}
 
-		secretVolumes := make([]interface{}, 0, len(f.SecretVolumes))
+		secretVolumes := make([]any, 0, len(f.SecretVolumes))
 		for _, v := range f.SecretVolumes {
 			versions := make([]mqlSecretVolumeVersion, 0, len(v.Versions))
 			for _, vv := range v.Versions {
@@ -106,7 +106,7 @@ func (g *mqlGcpProject) cloudFunctions() ([]interface{}, error) {
 		}
 
 		var sourceUploadUrl, sourceArchiveUrl string
-		var sourceRepository map[string]interface{}
+		var sourceRepository map[string]any
 		switch f.SourceCode.(type) {
 		case *functionspb.CloudFunction_SourceArchiveUrl:
 			sourceArchiveUrl = f.GetSourceArchiveUrl()
@@ -120,7 +120,7 @@ func (g *mqlGcpProject) cloudFunctions() ([]interface{}, error) {
 			sourceUploadUrl = f.GetSourceUploadUrl()
 		}
 
-		var httpsTrigger, eventTrigger map[string]interface{}
+		var httpsTrigger, eventTrigger map[string]any
 		switch f.Trigger.(type) {
 		case *functionspb.CloudFunction_HttpsTrigger:
 			pbHttpsTrigger := f.GetHttpsTrigger()

@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -204,7 +204,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"opcua.namespaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOpcua).Namespaces, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOpcua).Namespaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"opcua.root": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -212,7 +212,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"opcua.nodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOpcua).Nodes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOpcua).Nodes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"opcua.server.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -224,7 +224,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"opcua.server.buildInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOpcuaServer).BuildInfo, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlOpcuaServer).BuildInfo, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"opcua.server.currentTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -300,15 +300,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"opcua.node.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOpcuaNode).Properties, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOpcuaNode).Properties, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"opcua.node.components": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOpcuaNode).Components, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOpcuaNode).Components, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"opcua.node.organizes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOpcuaNode).Organizes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOpcuaNode).Organizes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 }
@@ -340,9 +340,9 @@ type mqlOpcua struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlOpcuaInternal it will be used here
-	Namespaces plugin.TValue[[]interface{}]
+	Namespaces plugin.TValue[[]any]
 	Root plugin.TValue[*mqlOpcuaNode]
-	Nodes plugin.TValue[[]interface{}]
+	Nodes plugin.TValue[[]any]
 }
 
 // createOpcua creates a new instance of this resource
@@ -382,15 +382,15 @@ func (c *mqlOpcua) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlOpcua) GetNamespaces() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Namespaces, func() ([]interface{}, error) {
+func (c *mqlOpcua) GetNamespaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Namespaces, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("opcua", c.__id, "namespaces")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -414,15 +414,15 @@ func (c *mqlOpcua) GetRoot() *plugin.TValue[*mqlOpcuaNode] {
 	})
 }
 
-func (c *mqlOpcua) GetNodes() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Nodes, func() ([]interface{}, error) {
+func (c *mqlOpcua) GetNodes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Nodes, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("opcua", c.__id, "nodes")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -436,7 +436,7 @@ type mqlOpcuaServer struct {
 	__id string
 	// optional: if you define mqlOpcuaServerInternal it will be used here
 	Node plugin.TValue[*mqlOpcuaNode]
-	BuildInfo plugin.TValue[interface{}]
+	BuildInfo plugin.TValue[any]
 	CurrentTime plugin.TValue[*time.Time]
 	StartTime plugin.TValue[*time.Time]
 	State plugin.TValue[string]
@@ -483,7 +483,7 @@ func (c *mqlOpcuaServer) GetNode() *plugin.TValue[*mqlOpcuaNode] {
 	return &c.Node
 }
 
-func (c *mqlOpcuaServer) GetBuildInfo() *plugin.TValue[interface{}] {
+func (c *mqlOpcuaServer) GetBuildInfo() *plugin.TValue[any] {
 	return &c.BuildInfo
 }
 
@@ -569,9 +569,9 @@ type mqlOpcuaNode struct {
 	Max plugin.TValue[string]
 	Unit plugin.TValue[string]
 	AccessLevel plugin.TValue[string]
-	Properties plugin.TValue[[]interface{}]
-	Components plugin.TValue[[]interface{}]
-	Organizes plugin.TValue[[]interface{}]
+	Properties plugin.TValue[[]any]
+	Components plugin.TValue[[]any]
+	Organizes plugin.TValue[[]any]
 }
 
 // createOpcuaNode creates a new instance of this resource
@@ -667,15 +667,15 @@ func (c *mqlOpcuaNode) GetAccessLevel() *plugin.TValue[string] {
 	return &c.AccessLevel
 }
 
-func (c *mqlOpcuaNode) GetProperties() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Properties, func() ([]interface{}, error) {
+func (c *mqlOpcuaNode) GetProperties() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Properties, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("opcua.node", c.__id, "properties")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -683,15 +683,15 @@ func (c *mqlOpcuaNode) GetProperties() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlOpcuaNode) GetComponents() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Components, func() ([]interface{}, error) {
+func (c *mqlOpcuaNode) GetComponents() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Components, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("opcua.node", c.__id, "components")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -699,15 +699,15 @@ func (c *mqlOpcuaNode) GetComponents() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlOpcuaNode) GetOrganizes() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Organizes, func() ([]interface{}, error) {
+func (c *mqlOpcuaNode) GetOrganizes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Organizes, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("opcua.node", c.__id, "organizes")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 

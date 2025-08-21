@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -677,43 +677,43 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"snowflake.account.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSnowflakeAccount).Users, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlSnowflakeAccount).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"snowflake.account.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSnowflakeAccount).Roles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlSnowflakeAccount).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"snowflake.account.securityIntegrations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSnowflakeAccount).SecurityIntegrations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlSnowflakeAccount).SecurityIntegrations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"snowflake.account.passwordPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSnowflakeAccount).PasswordPolicies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlSnowflakeAccount).PasswordPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"snowflake.account.networkPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSnowflakeAccount).NetworkPolicies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlSnowflakeAccount).NetworkPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"snowflake.account.procedures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSnowflakeAccount).Procedures, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlSnowflakeAccount).Procedures, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"snowflake.account.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSnowflakeAccount).Parameters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlSnowflakeAccount).Parameters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"snowflake.account.stages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSnowflakeAccount).Stages, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlSnowflakeAccount).Stages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"snowflake.account.databases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSnowflakeAccount).Databases, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlSnowflakeAccount).Databases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"snowflake.account.warehouses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSnowflakeAccount).Warehouses, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlSnowflakeAccount).Warehouses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"snowflake.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -801,7 +801,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"snowflake.user.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSnowflakeUser).Parameters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlSnowflakeUser).Parameters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"snowflake.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -977,19 +977,19 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"snowflake.networkPolicy.allowedIpList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSnowflakeNetworkPolicy).AllowedIpList, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlSnowflakeNetworkPolicy).AllowedIpList, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"snowflake.networkPolicy.blockedIpList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSnowflakeNetworkPolicy).BlockedIpList, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlSnowflakeNetworkPolicy).BlockedIpList, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"snowflake.networkPolicy.allowedNetworkRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSnowflakeNetworkPolicy).AllowedNetworkRules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlSnowflakeNetworkPolicy).AllowedNetworkRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"snowflake.networkPolicy.blockedNetworkRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSnowflakeNetworkPolicy).BlockedNetworkRules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlSnowflakeNetworkPolicy).BlockedNetworkRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"snowflake.networkPolicy.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1439,16 +1439,16 @@ type mqlSnowflakeAccount struct {
 	AccountId plugin.TValue[string]
 	Region plugin.TValue[string]
 	Url plugin.TValue[string]
-	Users plugin.TValue[[]interface{}]
-	Roles plugin.TValue[[]interface{}]
-	SecurityIntegrations plugin.TValue[[]interface{}]
-	PasswordPolicies plugin.TValue[[]interface{}]
-	NetworkPolicies plugin.TValue[[]interface{}]
-	Procedures plugin.TValue[[]interface{}]
-	Parameters plugin.TValue[[]interface{}]
-	Stages plugin.TValue[[]interface{}]
-	Databases plugin.TValue[[]interface{}]
-	Warehouses plugin.TValue[[]interface{}]
+	Users plugin.TValue[[]any]
+	Roles plugin.TValue[[]any]
+	SecurityIntegrations plugin.TValue[[]any]
+	PasswordPolicies plugin.TValue[[]any]
+	NetworkPolicies plugin.TValue[[]any]
+	Procedures plugin.TValue[[]any]
+	Parameters plugin.TValue[[]any]
+	Stages plugin.TValue[[]any]
+	Databases plugin.TValue[[]any]
+	Warehouses plugin.TValue[[]any]
 }
 
 // createSnowflakeAccount creates a new instance of this resource
@@ -1506,15 +1506,15 @@ func (c *mqlSnowflakeAccount) GetUrl() *plugin.TValue[string] {
 	})
 }
 
-func (c *mqlSnowflakeAccount) GetUsers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Users, func() ([]interface{}, error) {
+func (c *mqlSnowflakeAccount) GetUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Users, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.account", c.__id, "users")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1522,15 +1522,15 @@ func (c *mqlSnowflakeAccount) GetUsers() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlSnowflakeAccount) GetRoles() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Roles, func() ([]interface{}, error) {
+func (c *mqlSnowflakeAccount) GetRoles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Roles, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.account", c.__id, "roles")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1538,15 +1538,15 @@ func (c *mqlSnowflakeAccount) GetRoles() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlSnowflakeAccount) GetSecurityIntegrations() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.SecurityIntegrations, func() ([]interface{}, error) {
+func (c *mqlSnowflakeAccount) GetSecurityIntegrations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityIntegrations, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.account", c.__id, "securityIntegrations")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1554,15 +1554,15 @@ func (c *mqlSnowflakeAccount) GetSecurityIntegrations() *plugin.TValue[[]interfa
 	})
 }
 
-func (c *mqlSnowflakeAccount) GetPasswordPolicies() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.PasswordPolicies, func() ([]interface{}, error) {
+func (c *mqlSnowflakeAccount) GetPasswordPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PasswordPolicies, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.account", c.__id, "passwordPolicies")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1570,15 +1570,15 @@ func (c *mqlSnowflakeAccount) GetPasswordPolicies() *plugin.TValue[[]interface{}
 	})
 }
 
-func (c *mqlSnowflakeAccount) GetNetworkPolicies() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.NetworkPolicies, func() ([]interface{}, error) {
+func (c *mqlSnowflakeAccount) GetNetworkPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NetworkPolicies, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.account", c.__id, "networkPolicies")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1586,15 +1586,15 @@ func (c *mqlSnowflakeAccount) GetNetworkPolicies() *plugin.TValue[[]interface{}]
 	})
 }
 
-func (c *mqlSnowflakeAccount) GetProcedures() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Procedures, func() ([]interface{}, error) {
+func (c *mqlSnowflakeAccount) GetProcedures() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Procedures, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.account", c.__id, "procedures")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1602,15 +1602,15 @@ func (c *mqlSnowflakeAccount) GetProcedures() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlSnowflakeAccount) GetParameters() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Parameters, func() ([]interface{}, error) {
+func (c *mqlSnowflakeAccount) GetParameters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Parameters, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.account", c.__id, "parameters")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1618,15 +1618,15 @@ func (c *mqlSnowflakeAccount) GetParameters() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlSnowflakeAccount) GetStages() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Stages, func() ([]interface{}, error) {
+func (c *mqlSnowflakeAccount) GetStages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Stages, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.account", c.__id, "stages")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1634,15 +1634,15 @@ func (c *mqlSnowflakeAccount) GetStages() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlSnowflakeAccount) GetDatabases() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Databases, func() ([]interface{}, error) {
+func (c *mqlSnowflakeAccount) GetDatabases() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Databases, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.account", c.__id, "databases")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1650,15 +1650,15 @@ func (c *mqlSnowflakeAccount) GetDatabases() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlSnowflakeAccount) GetWarehouses() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Warehouses, func() ([]interface{}, error) {
+func (c *mqlSnowflakeAccount) GetWarehouses() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Warehouses, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.account", c.__id, "warehouses")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1691,7 +1691,7 @@ type mqlSnowflakeUser struct {
 	ExpiresAt plugin.TValue[*time.Time]
 	ExtAuthnDuo plugin.TValue[bool]
 	ExtAuthnUid plugin.TValue[string]
-	Parameters plugin.TValue[[]interface{}]
+	Parameters plugin.TValue[[]any]
 }
 
 // createSnowflakeUser creates a new instance of this resource
@@ -1806,15 +1806,15 @@ func (c *mqlSnowflakeUser) GetExtAuthnUid() *plugin.TValue[string] {
 	return &c.ExtAuthnUid
 }
 
-func (c *mqlSnowflakeUser) GetParameters() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Parameters, func() ([]interface{}, error) {
+func (c *mqlSnowflakeUser) GetParameters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Parameters, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.user", c.__id, "parameters")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -2137,10 +2137,10 @@ type mqlSnowflakeNetworkPolicy struct {
 	EntriesInBlockedIpList plugin.TValue[int64]
 	EntriesInAllowedNetworkRules plugin.TValue[int64]
 	EntriesInBlockedNetworkRules plugin.TValue[int64]
-	AllowedIpList plugin.TValue[[]interface{}]
-	BlockedIpList plugin.TValue[[]interface{}]
-	AllowedNetworkRules plugin.TValue[[]interface{}]
-	BlockedNetworkRules plugin.TValue[[]interface{}]
+	AllowedIpList plugin.TValue[[]any]
+	BlockedIpList plugin.TValue[[]any]
+	AllowedNetworkRules plugin.TValue[[]any]
+	BlockedNetworkRules plugin.TValue[[]any]
 	CreatedAt plugin.TValue[*time.Time]
 }
 
@@ -2200,26 +2200,26 @@ func (c *mqlSnowflakeNetworkPolicy) GetEntriesInBlockedNetworkRules() *plugin.TV
 	return &c.EntriesInBlockedNetworkRules
 }
 
-func (c *mqlSnowflakeNetworkPolicy) GetAllowedIpList() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.AllowedIpList, func() ([]interface{}, error) {
+func (c *mqlSnowflakeNetworkPolicy) GetAllowedIpList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AllowedIpList, func() ([]any, error) {
 		return c.allowedIpList()
 	})
 }
 
-func (c *mqlSnowflakeNetworkPolicy) GetBlockedIpList() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.BlockedIpList, func() ([]interface{}, error) {
+func (c *mqlSnowflakeNetworkPolicy) GetBlockedIpList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.BlockedIpList, func() ([]any, error) {
 		return c.blockedIpList()
 	})
 }
 
-func (c *mqlSnowflakeNetworkPolicy) GetAllowedNetworkRules() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.AllowedNetworkRules, func() ([]interface{}, error) {
+func (c *mqlSnowflakeNetworkPolicy) GetAllowedNetworkRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AllowedNetworkRules, func() ([]any, error) {
 		return c.allowedNetworkRules()
 	})
 }
 
-func (c *mqlSnowflakeNetworkPolicy) GetBlockedNetworkRules() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.BlockedNetworkRules, func() ([]interface{}, error) {
+func (c *mqlSnowflakeNetworkPolicy) GetBlockedNetworkRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.BlockedNetworkRules, func() ([]any, error) {
 		return c.blockedNetworkRules()
 	})
 }

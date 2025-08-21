@@ -7,15 +7,15 @@ import (
 	"context"
 	"errors"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers/atlassian/connection/confluence"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers/atlassian/connection/confluence"
 )
 
 func (a *mqlAtlassianConfluence) id() (string, error) {
 	return "confluence", nil
 }
 
-func (a *mqlAtlassianConfluence) users() ([]interface{}, error) {
+func (a *mqlAtlassianConfluence) users() ([]any, error) {
 	conn, ok := a.MqlRuntime.Connection.(*confluence.ConfluenceConnection)
 	if !ok {
 		return nil, errors.New("Current connection does not allow confluence access")
@@ -26,7 +26,7 @@ func (a *mqlAtlassianConfluence) users() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	res := []interface{}{}
+	res := []any{}
 	for _, user := range users.Results {
 		mqlAtlassianConfluenceUser, err := CreateResource(a.MqlRuntime, "atlassian.confluence.user",
 			map[string]*llx.RawData{

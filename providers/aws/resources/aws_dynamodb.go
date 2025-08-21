@@ -14,20 +14,20 @@ import (
 	ddtypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
 )
 
 func (a *mqlAwsDynamodb) id() (string, error) {
 	return "aws.dynamodb", nil
 }
 
-func (a *mqlAwsDynamodb) exports() ([]interface{}, error) {
+func (a *mqlAwsDynamodb) exports() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getExports(conn), 5)
 	poolOfJobs.Run()
 
@@ -38,7 +38,7 @@ func (a *mqlAwsDynamodb) exports() ([]interface{}, error) {
 
 	// get all the results
 	for _, job := range poolOfJobs.Jobs {
-		res = append(res, job.Result.([]interface{})...)
+		res = append(res, job.Result.([]any)...)
 	}
 
 	return res, nil
@@ -85,7 +85,7 @@ func (a *mqlAwsDynamodb) getExports(conn *connection.AwsConnection) []*jobpool.J
 
 			svc := conn.Dynamodb(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 
 			// no pagination required
 			listExportsResp, err := svc.ListExports(ctx, &dynamodb.ListExportsInput{})
@@ -222,9 +222,9 @@ func (a *mqlAwsDynamodbExport) table() (*mqlAwsDynamodbTable, error) {
 	return mqltable.(*mqlAwsDynamodbTable), nil
 }
 
-func (a *mqlAwsDynamodb) backups() ([]interface{}, error) {
+func (a *mqlAwsDynamodb) backups() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getBackups(conn), 5)
 	poolOfJobs.Run()
 
@@ -234,7 +234,7 @@ func (a *mqlAwsDynamodb) backups() ([]interface{}, error) {
 	}
 	// get all the results
 	for _, job := range poolOfJobs.Jobs {
-		res = append(res, job.Result.([]interface{})...)
+		res = append(res, job.Result.([]any)...)
 	}
 
 	return res, nil
@@ -253,7 +253,7 @@ func (a *mqlAwsDynamodb) getBackups(conn *connection.AwsConnection) []*jobpool.J
 
 			svc := conn.Dynamodb(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 
 			// no pagination required
 			listBackupsResp, err := svc.ListBackups(ctx, &dynamodb.ListBackupsInput{})
@@ -313,7 +313,7 @@ func initAwsDynamodbTable(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	return nil, nil, errors.New("dynamo db table does not exist")
 }
 
-func (a *mqlAwsDynamodbTable) backups() ([]interface{}, error) {
+func (a *mqlAwsDynamodbTable) backups() ([]any, error) {
 	tableName := a.Name.Data
 	region := a.Region.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
@@ -327,7 +327,7 @@ func (a *mqlAwsDynamodbTable) backups() ([]interface{}, error) {
 	return convert.JsonToDictSlice(listBackupsResp.BackupSummaries)
 }
 
-func (a *mqlAwsDynamodbTable) tags() (map[string]interface{}, error) {
+func (a *mqlAwsDynamodbTable) tags() (map[string]any, error) {
 	tableArn := a.Arn.Data
 	region := a.Region.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
@@ -341,9 +341,9 @@ func (a *mqlAwsDynamodbTable) tags() (map[string]interface{}, error) {
 	return dynamoDBTagsToMap(tags.Tags), nil
 }
 
-func (a *mqlAwsDynamodb) limits() ([]interface{}, error) {
+func (a *mqlAwsDynamodb) limits() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getLimits(conn), 5)
 	poolOfJobs.Run()
 
@@ -353,7 +353,7 @@ func (a *mqlAwsDynamodb) limits() ([]interface{}, error) {
 	}
 	// get all the results
 	for _, job := range poolOfJobs.Jobs {
-		res = append(res, job.Result.(interface{}))
+		res = append(res, job.Result.(any))
 	}
 	return res, nil
 }
@@ -372,7 +372,7 @@ func (a *mqlAwsDynamodb) getLimits(conn *connection.AwsConnection) []*jobpool.Jo
 
 			svc := conn.Dynamodb(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 
 			// no pagination required
 			limitsResp, err := svc.DescribeLimits(ctx, &dynamodb.DescribeLimitsInput{})
@@ -403,7 +403,7 @@ func (a *mqlAwsDynamodb) getLimits(conn *connection.AwsConnection) []*jobpool.Jo
 	return tasks
 }
 
-func (a *mqlAwsDynamodb) globalTables() ([]interface{}, error) {
+func (a *mqlAwsDynamodb) globalTables() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.Dynamodb("")
 	ctx := context.Background()
@@ -413,7 +413,7 @@ func (a *mqlAwsDynamodb) globalTables() ([]interface{}, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "could not gather aws dynamodb global tables")
 	}
-	res := []interface{}{}
+	res := []any{}
 	for _, table := range listGlobalTablesResp.GlobalTables {
 		mqlTable, err := CreateResource(a.MqlRuntime, "aws.dynamodb.globaltable",
 			map[string]*llx.RawData{
@@ -428,9 +428,9 @@ func (a *mqlAwsDynamodb) globalTables() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsDynamodb) tables() ([]interface{}, error) {
+func (a *mqlAwsDynamodb) tables() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getTables(conn), 5)
 	poolOfJobs.Run()
 
@@ -440,7 +440,7 @@ func (a *mqlAwsDynamodb) tables() ([]interface{}, error) {
 	}
 	// get all the results
 	for _, job := range poolOfJobs.Jobs {
-		res = append(res, job.Result.([]interface{})...)
+		res = append(res, job.Result.([]any)...)
 	}
 
 	return res, nil
@@ -459,7 +459,7 @@ func (a *mqlAwsDynamodb) getTables(conn *connection.AwsConnection) []*jobpool.Jo
 
 			svc := conn.Dynamodb(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 
 			// no pagination required
 			listTablesResp, err := svc.ListTables(ctx, &dynamodb.ListTablesInput{})
@@ -514,15 +514,15 @@ func (a *mqlAwsDynamodb) getTables(conn *connection.AwsConnection) []*jobpool.Jo
 	return tasks
 }
 
-func dynamoDBTagsToMap(tags []ddtypes.Tag) map[string]interface{} {
-	tagsMap := make(map[string]interface{})
+func dynamoDBTagsToMap(tags []ddtypes.Tag) map[string]any {
+	tagsMap := make(map[string]any)
 	for _, tag := range tags {
 		tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
 	}
 	return tagsMap
 }
 
-func (a *mqlAwsDynamodbGlobaltable) replicaSettings() ([]interface{}, error) {
+func (a *mqlAwsDynamodbGlobaltable) replicaSettings() ([]any, error) {
 	tableName := a.Name.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.Dynamodb("")
@@ -573,7 +573,7 @@ func initAwsDynamodbGlobaltable(runtime *plugin.Runtime, args map[string]*llx.Ra
 	return nil, nil, errors.New("dynamo db table does not exist")
 }
 
-func (a *mqlAwsDynamodbTable) continuousBackups() (interface{}, error) {
+func (a *mqlAwsDynamodbTable) continuousBackups() (any, error) {
 	tableName := a.Name.Data
 	region := a.Region.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)

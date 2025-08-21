@@ -9,9 +9,9 @@ import (
 	"errors"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -514,23 +514,23 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"vcd.organizations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVcd).Organizations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlVcd).Organizations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vcd.providerVDCs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVcd).ProviderVDCs, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlVcd).ProviderVDCs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vcd.networkPools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVcd).NetworkPools, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlVcd).NetworkPools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vcd.externalNetworks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVcd).ExternalNetworks, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlVcd).ExternalNetworks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vcd.serverInstances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVcd).ServerInstances, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlVcd).ServerInstances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vcd.organization.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -558,27 +558,27 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vcd.organization.vms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVcdOrganization).Vms, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlVcdOrganization).Vms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vcd.organization.rights": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVcdOrganization).Rights, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlVcdOrganization).Rights, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vcd.organization.vdcs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVcdOrganization).Vdcs, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlVcdOrganization).Vdcs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vcd.organization.vdcGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVcdOrganization).VdcGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlVcdOrganization).VdcGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vcd.organization.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVcdOrganization).Roles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlVcdOrganization).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vcd.organization.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVcdOrganization).Settings, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlVcdOrganization).Settings, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"vcd.organization.ldapConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -698,7 +698,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vcd.vdcProvider.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVcdVdcProvider).Metadata, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlVcdVdcProvider).Metadata, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"vcd.networkPool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -738,7 +738,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vcd.externalNetwork.configuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVcdExternalNetwork).Configuration, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlVcdExternalNetwork).Configuration, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"vcd.vm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1054,11 +1054,11 @@ type mqlVcd struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlVcdInternal it will be used here
-	Organizations plugin.TValue[[]interface{}]
-	ProviderVDCs plugin.TValue[[]interface{}]
-	NetworkPools plugin.TValue[[]interface{}]
-	ExternalNetworks plugin.TValue[[]interface{}]
-	ServerInstances plugin.TValue[[]interface{}]
+	Organizations plugin.TValue[[]any]
+	ProviderVDCs plugin.TValue[[]any]
+	NetworkPools plugin.TValue[[]any]
+	ExternalNetworks plugin.TValue[[]any]
+	ServerInstances plugin.TValue[[]any]
 }
 
 // createVcd creates a new instance of this resource
@@ -1098,15 +1098,15 @@ func (c *mqlVcd) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlVcd) GetOrganizations() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Organizations, func() ([]interface{}, error) {
+func (c *mqlVcd) GetOrganizations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Organizations, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("vcd", c.__id, "organizations")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1114,15 +1114,15 @@ func (c *mqlVcd) GetOrganizations() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlVcd) GetProviderVDCs() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.ProviderVDCs, func() ([]interface{}, error) {
+func (c *mqlVcd) GetProviderVDCs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ProviderVDCs, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("vcd", c.__id, "providerVDCs")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1130,15 +1130,15 @@ func (c *mqlVcd) GetProviderVDCs() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlVcd) GetNetworkPools() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.NetworkPools, func() ([]interface{}, error) {
+func (c *mqlVcd) GetNetworkPools() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NetworkPools, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("vcd", c.__id, "networkPools")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1146,15 +1146,15 @@ func (c *mqlVcd) GetNetworkPools() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlVcd) GetExternalNetworks() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.ExternalNetworks, func() ([]interface{}, error) {
+func (c *mqlVcd) GetExternalNetworks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ExternalNetworks, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("vcd", c.__id, "externalNetworks")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1162,15 +1162,15 @@ func (c *mqlVcd) GetExternalNetworks() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlVcd) GetServerInstances() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.ServerInstances, func() ([]interface{}, error) {
+func (c *mqlVcd) GetServerInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ServerInstances, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("vcd", c.__id, "serverInstances")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1188,12 +1188,12 @@ type mqlVcdOrganization struct {
 	FullName plugin.TValue[string]
 	IsEnabled plugin.TValue[bool]
 	Description plugin.TValue[string]
-	Vms plugin.TValue[[]interface{}]
-	Rights plugin.TValue[[]interface{}]
-	Vdcs plugin.TValue[[]interface{}]
-	VdcGroups plugin.TValue[[]interface{}]
-	Roles plugin.TValue[[]interface{}]
-	Settings plugin.TValue[interface{}]
+	Vms plugin.TValue[[]any]
+	Rights plugin.TValue[[]any]
+	Vdcs plugin.TValue[[]any]
+	VdcGroups plugin.TValue[[]any]
+	Roles plugin.TValue[[]any]
+	Settings plugin.TValue[any]
 	LdapConfiguration plugin.TValue[*mqlVcdOrganizationLdapSettings]
 }
 
@@ -1254,15 +1254,15 @@ func (c *mqlVcdOrganization) GetDescription() *plugin.TValue[string] {
 	return &c.Description
 }
 
-func (c *mqlVcdOrganization) GetVms() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Vms, func() ([]interface{}, error) {
+func (c *mqlVcdOrganization) GetVms() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Vms, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("vcd.organization", c.__id, "vms")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1270,15 +1270,15 @@ func (c *mqlVcdOrganization) GetVms() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlVcdOrganization) GetRights() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Rights, func() ([]interface{}, error) {
+func (c *mqlVcdOrganization) GetRights() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rights, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("vcd.organization", c.__id, "rights")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1286,15 +1286,15 @@ func (c *mqlVcdOrganization) GetRights() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlVcdOrganization) GetVdcs() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Vdcs, func() ([]interface{}, error) {
+func (c *mqlVcdOrganization) GetVdcs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Vdcs, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("vcd.organization", c.__id, "vdcs")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1302,15 +1302,15 @@ func (c *mqlVcdOrganization) GetVdcs() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlVcdOrganization) GetVdcGroups() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.VdcGroups, func() ([]interface{}, error) {
+func (c *mqlVcdOrganization) GetVdcGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VdcGroups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("vcd.organization", c.__id, "vdcGroups")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1318,15 +1318,15 @@ func (c *mqlVcdOrganization) GetVdcGroups() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlVcdOrganization) GetRoles() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Roles, func() ([]interface{}, error) {
+func (c *mqlVcdOrganization) GetRoles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Roles, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("vcd.organization", c.__id, "roles")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1334,8 +1334,8 @@ func (c *mqlVcdOrganization) GetRoles() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlVcdOrganization) GetSettings() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Settings, func() (interface{}, error) {
+func (c *mqlVcdOrganization) GetSettings() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Settings, func() (any, error) {
 		return c.settings()
 	})
 }
@@ -1455,7 +1455,7 @@ type mqlVcdVdcProvider struct {
 	CpuOverheadMhz plugin.TValue[int64]
 	StorageOverheadMB plugin.TValue[int64]
 	MemoryOverheadMB plugin.TValue[int64]
-	Metadata plugin.TValue[map[string]interface{}]
+	Metadata plugin.TValue[map[string]any]
 }
 
 // createVcdVdcProvider creates a new instance of this resource
@@ -1575,8 +1575,8 @@ func (c *mqlVcdVdcProvider) GetMemoryOverheadMB() *plugin.TValue[int64] {
 	return &c.MemoryOverheadMB
 }
 
-func (c *mqlVcdVdcProvider) GetMetadata() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.Metadata, func() (map[string]interface{}, error) {
+func (c *mqlVcdVdcProvider) GetMetadata() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Metadata, func() (map[string]any, error) {
 		return c.metadata()
 	})
 }
@@ -1649,7 +1649,7 @@ type mqlVcdExternalNetwork struct {
 	Name plugin.TValue[string]
 	Urn plugin.TValue[string]
 	Description plugin.TValue[string]
-	Configuration plugin.TValue[interface{}]
+	Configuration plugin.TValue[any]
 }
 
 // createVcdExternalNetwork creates a new instance of this resource
@@ -1709,8 +1709,8 @@ func (c *mqlVcdExternalNetwork) GetDescription() *plugin.TValue[string] {
 	})
 }
 
-func (c *mqlVcdExternalNetwork) GetConfiguration() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Configuration, func() (interface{}, error) {
+func (c *mqlVcdExternalNetwork) GetConfiguration() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Configuration, func() (any, error) {
 		return c.configuration()
 	})
 }

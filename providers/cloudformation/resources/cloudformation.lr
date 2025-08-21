@@ -1,8 +1,8 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-option provider = "go.mondoo.com/cnquery/v11/providers/cloudformation"
-option go_package = "go.mondoo.com/cnquery/v11/providers/cloudformation/resources"
+option provider = "go.mondoo.com/cnquery/v12/providers/cloudformation"
+option go_package = "go.mondoo.com/cnquery/v12/providers/cloudformation/resources"
 
 // AWS CloudFormation Template
 cloudformation.template @defaults("description") {

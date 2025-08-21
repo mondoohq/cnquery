@@ -6,13 +6,13 @@ package resources
 import (
 	"github.com/vmware/go-vcloud-director/v2/govcd"
 	"github.com/vmware/go-vcloud-director/v2/types/v56"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/vcd/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/vcd/connection"
 )
 
-func (v *mqlVcd) externalNetworks() ([]interface{}, error) {
+func (v *mqlVcd) externalNetworks() ([]any, error) {
 	conn := v.MqlRuntime.Connection.(*connection.VcdConnection)
 	client := conn.Client()
 
@@ -21,7 +21,7 @@ func (v *mqlVcd) externalNetworks() ([]interface{}, error) {
 		return nil, err
 	}
 
-	list := []interface{}{}
+	list := []any{}
 	for i := range externalNetworkList.ExternalNetworkReference {
 		entry, err := newMqlVcdExternalNetwork(v.MqlRuntime, externalNetworkList.ExternalNetworkReference[i])
 		if err != nil {
@@ -33,7 +33,7 @@ func (v *mqlVcd) externalNetworks() ([]interface{}, error) {
 	return list, nil
 }
 
-func newMqlVcdExternalNetwork(runtime *plugin.Runtime, networkPool *types.ExternalNetworkReference) (interface{}, error) {
+func newMqlVcdExternalNetwork(runtime *plugin.Runtime, networkPool *types.ExternalNetworkReference) (any, error) {
 	return CreateResource(runtime, "vcd.externalNetwork", map[string]*llx.RawData{
 		"name": llx.StringData(networkPool.Name),
 	})
@@ -101,7 +101,7 @@ func (v *mqlVcdExternalNetwork) description() (string, error) {
 	return externalNetwork.Description, nil
 }
 
-func (v *mqlVcdExternalNetwork) configuration() (interface{}, error) {
+func (v *mqlVcdExternalNetwork) configuration() (any, error) {
 	externalNetwork, err := v.getData()
 	if err != nil {
 		return "", err

@@ -11,13 +11,13 @@ import (
 	"io"
 	"strings"
 
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/macos"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/macos"
 	"howett.net/plist"
 )
 
-func (m *mqlMacos) userPreferences() (map[string]interface{}, error) {
+func (m *mqlMacos) userPreferences() (map[string]any, error) {
 	conn := m.MqlRuntime.Connection.(shared.Connection)
 	preferences, err := macos.NewPreferences(conn).UserPreferences()
 	if err != nil {
@@ -27,7 +27,7 @@ func (m *mqlMacos) userPreferences() (map[string]interface{}, error) {
 	return convert.JsonToDict(preferences)
 }
 
-func (m *mqlMacos) userHostPreferences() (map[string]interface{}, error) {
+func (m *mqlMacos) userHostPreferences() (map[string]any, error) {
 	conn := m.MqlRuntime.Connection.(shared.Connection)
 
 	preferences, err := macos.NewPreferences(conn).UserHostPreferences()
@@ -38,7 +38,7 @@ func (m *mqlMacos) userHostPreferences() (map[string]interface{}, error) {
 	return convert.JsonToDict(preferences)
 }
 
-func (m *mqlMacos) globalAccountPolicies() (map[string]interface{}, error) {
+func (m *mqlMacos) globalAccountPolicies() (map[string]any, error) {
 	conn := m.MqlRuntime.Connection.(shared.Connection)
 
 	cmd, err := conn.RunCommand("pwpolicy -getaccountpolicies")
@@ -62,7 +62,7 @@ func (m *mqlMacos) globalAccountPolicies() (map[string]interface{}, error) {
 // sudo permissions cannot access the file. Instead we need to call
 // defaults read /Library/Preferences/com.apple.TimeMachine.plist which has FDA
 // see https://developer.apple.com/forums/thread/108348
-func (m *mqlMacosTimemachine) preferences() (map[string]interface{}, error) {
+func (m *mqlMacosTimemachine) preferences() (map[string]any, error) {
 	conn := m.MqlRuntime.Connection.(shared.Connection)
 
 	cmd, err := conn.RunCommand("defaults read /Library/Preferences/com.apple.TimeMachine.plist")
@@ -135,7 +135,7 @@ func (m *mqlMacosSystemsetup) networkTimeServer() (string, error) {
 	return macos.SystemSetupCmdOutput{}.ParseNetworkTimeServer(data), err
 }
 
-func (m *mqlMacosSystemsetup) sleep() ([]interface{}, error) {
+func (m *mqlMacosSystemsetup) sleep() ([]any, error) {
 	data, err := m.runCmd("systemsetup -getsleep")
 	return convert.SliceAnyToInterface(macos.SystemSetupCmdOutput{}.ParseSleep(data)), err
 }
@@ -210,10 +210,10 @@ func (m *mqlMacosSystemsetup) disableKeyboardWhenEnclosureLockIsEngaged() (strin
 	return macos.SystemSetupCmdOutput{}.ParseDisableKeyboardWhenEnclosureLockIsEngaged(data), err
 }
 
-type plistData map[string]interface{}
+type plistData map[string]any
 
 func Decode(r io.ReadSeeker) (plistData, error) {
-	var data map[string]interface{}
+	var data map[string]any
 	decoder := plist.NewDecoder(r)
 	err := decoder.Decode(&data)
 	if err != nil {
@@ -245,7 +245,7 @@ func (d plistData) GetPlistData(path ...string) plistData {
 		if val == nil {
 			return nil
 		}
-		val, ok = val[path[i]].(map[string]interface{})
+		val, ok = val[path[i]].(map[string]any)
 		if !ok {
 			return nil
 		}
@@ -260,7 +260,7 @@ func (d plistData) GetString(path ...string) string {
 		if val == nil {
 			return ""
 		}
-		val, ok = val[path[i]].(map[string]interface{})
+		val, ok = val[path[i]].(map[string]any)
 		if !ok {
 			return ""
 		}
@@ -269,14 +269,14 @@ func (d plistData) GetString(path ...string) string {
 	return val[key].(string)
 }
 
-func (d plistData) GetList(path ...string) []interface{} {
+func (d plistData) GetList(path ...string) []any {
 	val := d
 	for i := 0; i < len(path)-1; i++ {
 		if val == nil {
 			return nil
 		}
-		val = val[path[i]].(map[string]interface{})
+		val = val[path[i]].(map[string]any)
 	}
 	key := path[len(path)-1]
-	return val[key].([]interface{})
+	return val[key].([]any)
 }

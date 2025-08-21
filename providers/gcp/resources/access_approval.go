@@ -8,11 +8,11 @@ import (
 	"errors"
 	"fmt"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/gcp/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v12/types"
 
 	accessapproval "cloud.google.com/go/accessapproval/apiv1"
 	accessapprovalpb "cloud.google.com/go/accessapproval/apiv1/accessapprovalpb"
@@ -74,9 +74,9 @@ func accessApprovalSettings(runtime *plugin.Runtime, settingsName string) (*mqlG
 		return nil, err
 	}
 
-	mqlEnrolledServices := make([]interface{}, 0, len(settings.EnrolledServices))
+	mqlEnrolledServices := make([]any, 0, len(settings.EnrolledServices))
 	for _, s := range settings.EnrolledServices {
-		mqlEnrolledServices = append(mqlEnrolledServices, map[string]interface{}{
+		mqlEnrolledServices = append(mqlEnrolledServices, map[string]any{
 			"cloudProduct":    s.CloudProduct,
 			"enrollmentLevel": s.EnrollmentLevel.String(),
 		})

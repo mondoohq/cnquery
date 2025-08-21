@@ -29,15 +29,15 @@ type USBDevice struct {
 	IsRemovable      bool
 }
 
-func ParseMacosIORegData(data interface{}, devices *[]USBDevice) {
+func ParseMacosIORegData(data any, devices *[]USBDevice) {
 	// Process the data based on its type
 	switch v := data.(type) {
-	case []interface{}:
+	case []any:
 		// An array of entries
 		for _, entry := range v {
 			ParseMacosIORegData(entry, devices)
 		}
-	case map[string]interface{}:
+	case map[string]any:
 		// A single entry
 		// Check if this is a USB device with the right properties
 		if isUSBDevice(v) {
@@ -53,7 +53,7 @@ func ParseMacosIORegData(data interface{}, devices *[]USBDevice) {
 	}
 }
 
-func isUSBDevice(entry map[string]interface{}) bool {
+func isUSBDevice(entry map[string]any) bool {
 	// Check for properties that indicate this is a USB device
 	_, hasVendorID := entry["idVendor"]
 	_, hasProductID := entry["idProduct"]
@@ -66,7 +66,7 @@ func isUSBDevice(entry map[string]interface{}) bool {
 	return hasVendorID || hasProductID
 }
 
-func extractDeviceInfo(entry map[string]interface{}) USBDevice {
+func extractDeviceInfo(entry map[string]any) USBDevice {
 	device := USBDevice{}
 
 	// Extract name
@@ -221,7 +221,7 @@ func formatUSBSpeed(speed int) string {
 }
 
 // Determine if a USB device is removable based on IOKit properties
-func isUSBDeviceRemovable(entry map[string]interface{}) bool {
+func isUSBDeviceRemovable(entry map[string]any) bool {
 	// Check the official IOKit "non-removable" property
 	// If this property exists and is true, the device is explicitly marked as non-removable
 	if nonRemovable, ok := entry["non-removable"].(bool); ok {

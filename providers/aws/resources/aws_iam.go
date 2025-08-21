@@ -18,25 +18,25 @@ import (
 	"github.com/aws/smithy-go"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
-	"go.mondoo.com/cnquery/v11/providers/aws/resources/awsiam"
-	"go.mondoo.com/cnquery/v11/providers/aws/resources/awspolicy"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/providers/aws/resources/awsiam"
+	"go.mondoo.com/cnquery/v12/providers/aws/resources/awspolicy"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (a *mqlAwsIam) id() (string, error) {
 	return "aws.iam", nil
 }
 
-func (a *mqlAwsIam) serverCertificates() ([]interface{}, error) {
+func (a *mqlAwsIam) serverCertificates() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Iam("")
 	ctx := context.Background()
-	res := []interface{}{}
+	res := []any{}
 	params := &iam.ListServerCertificatesInput{}
 	paginator := iam.NewListServerCertificatesPaginator(svc, params)
 	for paginator.HasMorePages() {
@@ -55,7 +55,7 @@ func (a *mqlAwsIam) serverCertificates() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsIam) credentialReport() ([]interface{}, error) {
+func (a *mqlAwsIam) credentialReport() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Iam("")
@@ -125,7 +125,7 @@ func (a *mqlAwsIam) credentialReport() ([]interface{}, error) {
 		return nil, errors.Wrap(err, "could not parse aws iam credential report")
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range entries {
 		userEntry, err := CreateResource(a.MqlRuntime, "aws.iam.usercredentialreportentry",
 			map[string]*llx.RawData{"properties": llx.MapData(entries[i], types.String)},
@@ -138,7 +138,7 @@ func (a *mqlAwsIam) credentialReport() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsIam) accountPasswordPolicy() (map[string]interface{}, error) {
+func (a *mqlAwsIam) accountPasswordPolicy() (map[string]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Iam("")
@@ -158,8 +158,8 @@ func (a *mqlAwsIam) accountPasswordPolicy() (map[string]interface{}, error) {
 	return res, nil
 }
 
-func ParsePasswordPolicy(passwordPolicy *iamtypes.PasswordPolicy) map[string]interface{} {
-	res := map[string]interface{}{}
+func ParsePasswordPolicy(passwordPolicy *iamtypes.PasswordPolicy) map[string]any {
+	res := map[string]any{}
 
 	if passwordPolicy != nil {
 		prp := int64(0)
@@ -189,7 +189,7 @@ func ParsePasswordPolicy(passwordPolicy *iamtypes.PasswordPolicy) map[string]int
 	return res
 }
 
-func (a *mqlAwsIam) accountSummary() (map[string]interface{}, error) {
+func (a *mqlAwsIam) accountSummary() (map[string]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Iam("")
@@ -201,7 +201,7 @@ func (a *mqlAwsIam) accountSummary() (map[string]interface{}, error) {
 	}
 
 	// convert result to MQL
-	res := map[string]interface{}{}
+	res := map[string]any{}
 	for k := range resp.SummaryMap {
 		res[k] = int64(resp.SummaryMap[k])
 	}
@@ -209,13 +209,13 @@ func (a *mqlAwsIam) accountSummary() (map[string]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsIam) users() ([]interface{}, error) {
+func (a *mqlAwsIam) users() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Iam("")
 	ctx := context.Background()
 
-	res := []interface{}{}
+	res := []any{}
 	params := &iam.ListUsersInput{}
 	paginator := iam.NewListUsersPaginator(svc, params)
 	for paginator.HasMorePages() {
@@ -235,11 +235,11 @@ func (a *mqlAwsIam) users() ([]interface{}, error) {
 	return res, nil
 }
 
-func iamTagsToMap(tags []iamtypes.Tag) map[string]interface{} {
-	var tagsMap map[string]interface{}
+func iamTagsToMap(tags []iamtypes.Tag) map[string]any {
+	var tagsMap map[string]any
 
 	if len(tags) > 0 {
-		tagsMap := map[string]interface{}{}
+		tagsMap := map[string]any{}
 		for i := range tags {
 			tag := tags[i]
 			tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
@@ -249,13 +249,13 @@ func iamTagsToMap(tags []iamtypes.Tag) map[string]interface{} {
 	return tagsMap
 }
 
-func (a *mqlAwsIam) instanceProfiles() ([]interface{}, error) {
+func (a *mqlAwsIam) instanceProfiles() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Iam("")
 	ctx := context.Background()
 
-	res := []interface{}{}
+	res := []any{}
 	params := &iam.ListInstanceProfilesInput{}
 	paginator := iam.NewListInstanceProfilesPaginator(svc, params)
 	for paginator.HasMorePages() {
@@ -282,7 +282,6 @@ func (a *mqlAwsIam) createInstanceProfile(instanceProfile *iamtypes.InstanceProf
 	res, err := CreateResource(a.MqlRuntime, "aws.iam.instanceProfile",
 		map[string]*llx.RawData{
 			"arn":                 llx.StringDataPtr(instanceProfile.Arn),
-			"createDate":          llx.TimeDataPtr(instanceProfile.CreateDate),
 			"createdAt":           llx.TimeDataPtr(instanceProfile.CreateDate),
 			"instanceProfileId":   llx.StringDataPtr(instanceProfile.InstanceProfileId),
 			"instanceProfileName": llx.StringDataPtr(instanceProfile.InstanceProfileName),
@@ -305,8 +304,8 @@ type mqlAwsIamInstanceProfileInternal struct {
 	rolesCache []iamtypes.Role
 }
 
-func (a *mqlAwsIamInstanceProfile) iamRoles() ([]interface{}, error) {
-	res := []interface{}{}
+func (a *mqlAwsIamInstanceProfile) iamRoles() ([]any, error) {
+	res := []any{}
 	for _, role := range a.rolesCache {
 		roleRes, err := NewResource(a.MqlRuntime, "aws.iam.role", map[string]*llx.RawData{
 			"arn": llx.StringDataPtr(role.Arn),
@@ -330,7 +329,6 @@ func (a *mqlAwsIam) createIamUser(usr *iamtypes.User) (plugin.Resource, error) {
 			"arn":              llx.StringDataPtr(usr.Arn),
 			"id":               llx.StringDataPtr(usr.UserId),
 			"name":             llx.StringDataPtr(usr.UserName),
-			"createDate":       llx.TimeDataPtr(usr.CreateDate),
 			"createdAt":        llx.TimeDataPtr(usr.CreateDate),
 			"passwordLastUsed": llx.TimeDataPtr(usr.PasswordLastUsed),
 			"tags":             llx.MapData(iamTagsToMap(usr.Tags), types.String),
@@ -338,7 +336,7 @@ func (a *mqlAwsIam) createIamUser(usr *iamtypes.User) (plugin.Resource, error) {
 	)
 }
 
-func (a *mqlAwsIam) virtualMfaDevices() ([]interface{}, error) {
+func (a *mqlAwsIam) virtualMfaDevices() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Iam("")
@@ -347,12 +345,12 @@ func (a *mqlAwsIam) virtualMfaDevices() ([]interface{}, error) {
 	devicesResp, err := svc.ListVirtualMFADevices(ctx, &iam.ListVirtualMFADevicesInput{})
 	if err != nil {
 		log.Error().Err(err).Msg("cannot gather virtual mfa devices info")
-		a.VirtualMfaDevices = plugin.TValue[[]interface{}]{Error: err, State: plugin.StateIsSet}
+		a.VirtualMfaDevices = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet}
 		return nil, nil
 	}
 
 	// note: adding pagination to this call results in Throttling: Rate exceeded error
-	res := []interface{}{}
+	res := []any{}
 	for i := range devicesResp.VirtualMFADevices {
 		device := devicesResp.VirtualMFADevices[i]
 
@@ -396,8 +394,8 @@ type mqlAwsIamVirtualmfadeviceInternal struct {
 	cacheUserArn  *string
 }
 
-func (a *mqlAwsIam) mqlPolicies(policies []iamtypes.Policy) ([]interface{}, error) {
-	res := []interface{}{}
+func (a *mqlAwsIam) mqlPolicies(policies []iamtypes.Policy) ([]any, error) {
+	res := []any{}
 	for i := range policies {
 		policy := policies[i]
 		// NOTE: here we have all the information about the policy already
@@ -422,13 +420,13 @@ func (a *mqlAwsIam) mqlPolicies(policies []iamtypes.Policy) ([]interface{}, erro
 	return res, nil
 }
 
-func (a *mqlAwsIam) attachedPolicies() ([]interface{}, error) {
+func (a *mqlAwsIam) attachedPolicies() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Iam("")
 	ctx := context.Background()
 
-	res := []interface{}{}
+	res := []any{}
 	params := &iam.ListPoliciesInput{
 		// setting only attached ensures we only fetch policies attached to a user, group, or role
 		OnlyAttached: true,
@@ -450,13 +448,13 @@ func (a *mqlAwsIam) attachedPolicies() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsIam) policies() ([]interface{}, error) {
+func (a *mqlAwsIam) policies() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Iam("")
 	ctx := context.Background()
 
-	res := []interface{}{}
+	res := []any{}
 	params := &iam.ListPoliciesInput{}
 	paginator := iam.NewListPoliciesPaginator(svc, params)
 	for paginator.HasMorePages() {
@@ -475,12 +473,12 @@ func (a *mqlAwsIam) policies() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsIam) roles() ([]interface{}, error) {
+func (a *mqlAwsIam) roles() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.Iam("")
 	ctx := context.Background()
 
-	res := []interface{}{}
+	res := []any{}
 	params := &iam.ListRolesInput{}
 	paginator := iam.NewListRolesPaginator(svc, params)
 	for paginator.HasMorePages() {
@@ -492,7 +490,7 @@ func (a *mqlAwsIam) roles() ([]interface{}, error) {
 		// Added Trust relationship policy attached to each role
 		for _, role := range rolesResp.Roles {
 			policyOutput, err := svc.GetRole(ctx, &iam.GetRoleInput{RoleName: role.RoleName})
-			var policyDocumentMap map[string]interface{}
+			var policyDocumentMap map[string]any
 			if err == nil && policyOutput.Role != nil && policyOutput.Role.AssumeRolePolicyDocument != nil {
 				policyDocument := *policyOutput.Role.AssumeRolePolicyDocument
 				decodedPolicyDocument, decodeErr := url.QueryUnescape(policyDocument)
@@ -508,7 +506,6 @@ func (a *mqlAwsIam) roles() ([]interface{}, error) {
 					"name":                     llx.StringDataPtr(role.RoleName),
 					"description":              llx.StringDataPtr(role.Description),
 					"tags":                     llx.MapData(iamTagsToMap(role.Tags), types.String),
-					"createDate":               llx.TimeDataPtr(role.CreateDate),
 					"createdAt":                llx.TimeDataPtr(role.CreateDate),
 					"assumeRolePolicyDocument": llx.MapData(policyDocumentMap, types.Any),
 				})
@@ -523,13 +520,13 @@ func (a *mqlAwsIam) roles() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsIam) groups() ([]interface{}, error) {
+func (a *mqlAwsIam) groups() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Iam("")
 	ctx := context.Background()
 
-	res := []interface{}{}
+	res := []any{}
 	params := &iam.ListGroupsInput{}
 	paginator := iam.NewListGroupsPaginator(svc, params)
 	for paginator.HasMorePages() {
@@ -751,10 +748,6 @@ func (a *mqlAwsIamUsercredentialreportentry) createdAt() (*time.Time, error) {
 	return a.getTimeValue("user_creation_time")
 }
 
-func (a *mqlAwsIamUsercredentialreportentry) userCreationTime() (*time.Time, error) {
-	return a.getTimeValue("user_creation_time")
-}
-
 func (a *mqlAwsIamVirtualmfadevice) id() (string, error) {
 	return a.SerialNumber.Data, nil
 }
@@ -792,7 +785,6 @@ func initAwsIamUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 			args["arn"] = llx.StringDataPtr(usr.Arn)
 			args["id"] = llx.StringDataPtr(usr.UserId)
 			args["name"] = llx.StringDataPtr(usr.UserName)
-			args["createDate"] = llx.TimeDataPtr(usr.CreateDate)
 			args["createdAt"] = llx.TimeDataPtr(usr.CreateDate)
 			args["passwordLastUsed"] = llx.TimeDataPtr(usr.PasswordLastUsed)
 			args["tags"] = llx.MapData(iamTagsToMap(usr.Tags), types.String)
@@ -811,7 +803,7 @@ func (a *mqlAwsIamUser) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func (a *mqlAwsIamUser) accessKeys() ([]interface{}, error) {
+func (a *mqlAwsIamUser) accessKeys() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Iam("")
@@ -819,7 +811,7 @@ func (a *mqlAwsIamUser) accessKeys() ([]interface{}, error) {
 
 	username := a.Name.Data
 
-	res := []interface{}{}
+	res := []any{}
 	params := &iam.ListAccessKeysInput{
 		UserName: &username,
 	}
@@ -839,7 +831,7 @@ func (a *mqlAwsIamUser) accessKeys() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsIamUser) policies() ([]interface{}, error) {
+func (a *mqlAwsIamUser) policies() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Iam("")
@@ -847,7 +839,7 @@ func (a *mqlAwsIamUser) policies() ([]interface{}, error) {
 
 	username := a.Name.Data
 
-	res := []interface{}{}
+	res := []any{}
 	params := &iam.ListUserPoliciesInput{
 		UserName: &username,
 	}
@@ -866,7 +858,7 @@ func (a *mqlAwsIamUser) policies() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsIamUser) attachedPolicies() ([]interface{}, error) {
+func (a *mqlAwsIamUser) attachedPolicies() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Iam("")
@@ -874,7 +866,7 @@ func (a *mqlAwsIamUser) attachedPolicies() ([]interface{}, error) {
 
 	username := a.Name.Data
 
-	res := []interface{}{}
+	res := []any{}
 	params := &iam.ListAttachedUserPoliciesInput{
 		UserName: &username,
 	}
@@ -982,16 +974,6 @@ func (a *mqlAwsIamPolicy) attachmentCount() (int64, error) {
 	return int64(*policy.AttachmentCount), nil
 }
 
-func (a *mqlAwsIamPolicy) createDate() (*time.Time, error) {
-	arn := a.Arn.Data
-
-	policy, err := a.loadPolicy(arn)
-	if err != nil {
-		return nil, err
-	}
-	return policy.CreateDate, nil
-}
-
 func (a *mqlAwsIamPolicy) createdAt() (*time.Time, error) {
 	arn := a.Arn.Data
 
@@ -1075,14 +1057,14 @@ func (a *mqlAwsIamPolicy) listAttachedEntities(arn string) (attachedEntities, er
 	return res, nil
 }
 
-func (a *mqlAwsIamPolicy) attachedUsers() ([]interface{}, error) {
+func (a *mqlAwsIamPolicy) attachedUsers() ([]any, error) {
 	arn := a.Arn.Data
 
 	entities, err := a.listAttachedEntities(arn)
 	if err != nil {
 		return nil, err
 	}
-	res := []interface{}{}
+	res := []any{}
 	for _, usr := range entities.PolicyUsers {
 		mqlUser, err := NewResource(a.MqlRuntime, "aws.iam.user",
 			map[string]*llx.RawData{
@@ -1097,14 +1079,14 @@ func (a *mqlAwsIamPolicy) attachedUsers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsIamPolicy) attachedRoles() ([]interface{}, error) {
+func (a *mqlAwsIamPolicy) attachedRoles() ([]any, error) {
 	arn := a.Arn.Data
 	entities, err := a.listAttachedEntities(arn)
 	if err != nil {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for _, role := range entities.PolicyRoles {
 		mqlUser, err := NewResource(a.MqlRuntime, "aws.iam.role",
 			map[string]*llx.RawData{"name": llx.StringDataPtr(role.RoleName)},
@@ -1118,7 +1100,7 @@ func (a *mqlAwsIamPolicy) attachedRoles() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsIamPolicy) attachedGroups() ([]interface{}, error) {
+func (a *mqlAwsIamPolicy) attachedGroups() ([]any, error) {
 	arn := a.Arn.Data
 
 	entities, err := a.listAttachedEntities(arn)
@@ -1126,7 +1108,7 @@ func (a *mqlAwsIamPolicy) attachedGroups() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range entities.PolicyGroups {
 		group := entities.PolicyGroups[i]
 
@@ -1164,7 +1146,6 @@ func (a *mqlAwsIamPolicy) defaultVersion() (*mqlAwsIamPolicyversion, error) {
 					"arn":              llx.StringData(arn),
 					"versionId":        llx.StringDataPtr(policyversion.VersionId),
 					"isDefaultVersion": llx.BoolData(policyversion.IsDefaultVersion),
-					"createDate":       llx.TimeDataPtr(policyversion.CreateDate),
 					"createdAt":        llx.TimeDataPtr(policyversion.CreateDate),
 				})
 			if err != nil {
@@ -1176,7 +1157,7 @@ func (a *mqlAwsIamPolicy) defaultVersion() (*mqlAwsIamPolicyversion, error) {
 	return nil, errors.New("unable to find default policy version")
 }
 
-func (a *mqlAwsIamPolicy) versions() ([]interface{}, error) {
+func (a *mqlAwsIamPolicy) versions() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Iam("")
@@ -1189,7 +1170,7 @@ func (a *mqlAwsIamPolicy) versions() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range policyVersions.Versions {
 		policyversion := policyVersions.Versions[i]
 
@@ -1198,7 +1179,6 @@ func (a *mqlAwsIamPolicy) versions() ([]interface{}, error) {
 				"arn":              llx.StringData(arn),
 				"versionId":        llx.StringDataPtr(policyversion.VersionId),
 				"isDefaultVersion": llx.BoolData(policyversion.IsDefaultVersion),
-				"createDate":       llx.TimeDataPtr(policyversion.CreateDate),
 				"createdAt":        llx.TimeDataPtr(policyversion.CreateDate),
 			})
 		if err != nil {
@@ -1219,7 +1199,7 @@ func (a *mqlAwsIamPolicyversion) id() (string, error) {
 	return arn + "/" + versionid, nil
 }
 
-func (a *mqlAwsIamPolicyversion) document() (interface{}, error) {
+func (a *mqlAwsIamPolicyversion) document() (any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Iam("")
@@ -1291,7 +1271,7 @@ func initAwsIamRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 
 		role := resp.Role
 
-		var policyDocumentMap map[string]interface{}
+		var policyDocumentMap map[string]any
 		if role != nil && role.AssumeRolePolicyDocument != nil {
 			policyDocument := *role.AssumeRolePolicyDocument
 			decodedPolicyDocument, decodeErr := url.QueryUnescape(policyDocument)
@@ -1305,7 +1285,6 @@ func initAwsIamRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 		args["name"] = llx.StringDataPtr(role.RoleName)
 		args["description"] = llx.StringDataPtr(role.Description)
 		args["tags"] = llx.MapData(iamTagsToMap(role.Tags), types.String)
-		args["createDate"] = llx.TimeDataPtr(role.CreateDate)
 		args["createdAt"] = llx.TimeDataPtr(role.CreateDate)
 		args["assumeRolePolicyDocument"] = llx.MapData(policyDocumentMap, types.Any)
 		return args, nil, nil
@@ -1345,7 +1324,7 @@ func initAwsIamGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		if err != nil {
 			return nil, nil, err
 		}
-		usernames := []interface{}{}
+		usernames := []any{}
 		for _, user := range resp.Users {
 			usernames = append(usernames, convert.ToValue(user.UserName))
 		}
@@ -1354,7 +1333,6 @@ func initAwsIamGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		args["arn"] = llx.StringDataPtr(grp.Arn)
 		args["id"] = llx.StringDataPtr(grp.GroupId)
 		args["name"] = llx.StringDataPtr(grp.GroupName)
-		args["createDate"] = llx.TimeDataPtr(grp.CreateDate)
 		args["createdAt"] = llx.TimeDataPtr(grp.CreateDate)
 		args["usernames"] = llx.ArrayData(usernames, types.String)
 		return args, nil, nil
@@ -1367,7 +1345,7 @@ func (a *mqlAwsIamGroup) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func (a *mqlAwsIamUser) groups() ([]interface{}, error) {
+func (a *mqlAwsIamUser) groups() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Iam("")
@@ -1375,7 +1353,7 @@ func (a *mqlAwsIamUser) groups() ([]interface{}, error) {
 
 	username := a.Name.Data
 
-	res := []interface{}{}
+	res := []any{}
 	params := &iam.ListGroupsForUserInput{
 		UserName: &username,
 	}
@@ -1473,7 +1451,6 @@ func initAwsIamInstanceProfile(runtime *plugin.Runtime, args map[string]*llx.Raw
 		ip := resp.InstanceProfile
 		res, err := CreateResource(runtime, "aws.iam.instanceProfile", map[string]*llx.RawData{
 			"arn":                 llx.StringDataPtr(ip.Arn),
-			"createDate":          llx.TimeDataPtr(ip.CreateDate),
 			"createdAt":           llx.TimeDataPtr(ip.CreateDate),
 			"instanceProfileId":   llx.StringDataPtr(ip.InstanceProfileId),
 			"instanceProfileName": llx.StringDataPtr(ip.InstanceProfileName),

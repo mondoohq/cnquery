@@ -13,8 +13,8 @@ import (
 	"strings"
 	"text/template"
 
-	"go.mondoo.com/cnquery/v11/types"
-	"go.mondoo.com/cnquery/v11/utils/multierr"
+	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/cnquery/v12/utils/multierr"
 )
 
 // Go produced go code for the LR file
@@ -121,9 +121,9 @@ import (
 	"errors"%s
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/types"%s
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/types"%s
 )
 `
 
@@ -765,15 +765,15 @@ func (t *Type) goType(b *goBuilder) string {
 }
 
 func (t *MapType) goType(b *goBuilder) string {
-	// limited to interface{} because we cannot cast as universally
+	// limited to any because we cannot cast as universally
 	// between types yet
-	return "map[" + t.Key.goType(b) + "]interface{}"
+	return "map[" + t.Key.goType(b) + "]any"
 }
 
 func (t *ListType) goType() string {
-	// limited to []interface{} because we cannot cast as universally
+	// limited to []any because we cannot cast as universally
 	// between types yet
-	return "[]interface{}"
+	return "[]any"
 }
 
 var primitiveTypes = map[string]string{
@@ -784,10 +784,10 @@ var primitiveTypes = map[string]string{
 	"time":    "*time.Time",
 	"range":   "llx.Range",
 	"regex":   "string",
-	"dict":    "interface{}",
+	"dict":    "any",
 	"version": "string",
 	"ip":      "llx.RawIP",
-	"any":     "interface{}",
+	"any":     "any",
 }
 
 func (t *SimpleType) goType(b *goBuilder) string {

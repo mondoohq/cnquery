@@ -4,12 +4,12 @@
 package resources
 
 import (
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/ansible/connection"
-	"go.mondoo.com/cnquery/v11/providers/ansible/play"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/ansible/connection"
+	"go.mondoo.com/cnquery/v12/providers/ansible/play"
+	"go.mondoo.com/cnquery/v12/types"
 	"strconv"
 )
 
@@ -17,11 +17,11 @@ func (r *mqlAnsible) id() (string, error) {
 	return "ansible", nil
 }
 
-func (r *mqlAnsible) plays() ([]interface{}, error) {
+func (r *mqlAnsible) plays() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.AnsibleConnection)
 	playbook := conn.Playbook()
 
-	var plays []interface{}
+	var plays []any
 	for _, play := range playbook {
 
 		p, err := newMqlAnsiblePlay(r.MqlRuntime, play)
@@ -88,8 +88,8 @@ func newMqlAnsibleHandler(runtime *plugin.Runtime, id string, task *play.Handler
 	return mqlHandler, nil
 }
 
-func newMqlAnsibleHandlers(runtime *plugin.Runtime, idPrefix string, handler []*play.Handler) ([]interface{}, error) {
-	var mqlTasks []interface{}
+func newMqlAnsibleHandlers(runtime *plugin.Runtime, idPrefix string, handler []*play.Handler) ([]any, error) {
+	var mqlTasks []any
 	for i, t := range handler {
 		id := idPrefix + strconv.Itoa(i)
 		if t.Name != "" {
@@ -105,7 +105,7 @@ func newMqlAnsibleHandlers(runtime *plugin.Runtime, idPrefix string, handler []*
 	return mqlTasks, nil
 }
 
-func (r *mqlAnsiblePlay) handlers() ([]interface{}, error) {
+func (r *mqlAnsiblePlay) handlers() ([]any, error) {
 	return newMqlAnsibleHandlers(r.MqlRuntime, "handlers", r.play.Handlers)
 }
 
@@ -143,8 +143,8 @@ func newMqlAnsibleTask(runtime *plugin.Runtime, id string, task *play.Task) (*mq
 	return mqlTask, nil
 }
 
-func newMqlAnsibleTasks(runtime *plugin.Runtime, idPrefix string, tasks []*play.Task) ([]interface{}, error) {
-	var mqlTasks []interface{}
+func newMqlAnsibleTasks(runtime *plugin.Runtime, idPrefix string, tasks []*play.Task) ([]any, error) {
+	var mqlTasks []any
 	for i, t := range tasks {
 		id := idPrefix + strconv.Itoa(i)
 		if t.Name != "" {
@@ -164,14 +164,14 @@ type mqlAnsibleTaskInternal struct {
 	task *play.Task
 }
 
-func (r *mqlAnsiblePlay) tasks() ([]interface{}, error) {
+func (r *mqlAnsiblePlay) tasks() ([]any, error) {
 	return newMqlAnsibleTasks(r.MqlRuntime, "tasks", r.play.Tasks)
 }
 
-func (r *mqlAnsibleTask) block() ([]interface{}, error) {
+func (r *mqlAnsibleTask) block() ([]any, error) {
 	return newMqlAnsibleTasks(r.MqlRuntime, "block", r.task.Block)
 }
 
-func (r *mqlAnsibleTask) rescue() ([]interface{}, error) {
+func (r *mqlAnsibleTask) rescue() ([]any, error) {
 	return newMqlAnsibleTasks(r.MqlRuntime, "rescue", r.task.Rescue)
 }

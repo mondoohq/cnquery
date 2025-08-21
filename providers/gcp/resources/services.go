@@ -11,9 +11,9 @@ import (
 	serviceusage "cloud.google.com/go/serviceusage/apiv1"
 	"cloud.google.com/go/serviceusage/apiv1/serviceusagepb"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/gcp/connection"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
@@ -35,12 +35,12 @@ func serviceName(name string) string {
 	return entries[len(entries)-1]
 }
 
-func (g *mqlGcpProject) services() ([]interface{}, error) {
+func (g *mqlGcpProject) services() ([]any, error) {
 	return g.fetchServices("")
 }
 
 // fetches the gcp services with a filter, e.g. "state:ENABLED"
-func (g *mqlGcpProject) fetchServices(filter string) ([]interface{}, error) {
+func (g *mqlGcpProject) fetchServices(filter string) ([]any, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
 	}
@@ -72,7 +72,7 @@ func (g *mqlGcpProject) fetchServices(filter string) ([]interface{}, error) {
 		PageSize: 200,
 	})
 
-	res := []interface{}{}
+	res := []any{}
 	for {
 		item, err := it.Next()
 		if err == iterator.Done {

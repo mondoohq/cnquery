@@ -12,23 +12,23 @@ import (
 	"github.com/aws/smithy-go/transport/http"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
 
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (a *mqlAwsEfsFilesystem) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func (a *mqlAwsEfs) filesystems() ([]interface{}, error) {
+func (a *mqlAwsEfs) filesystems() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getFilesystems(conn), 5)
 	poolOfJobs.Run()
 
@@ -38,7 +38,7 @@ func (a *mqlAwsEfs) filesystems() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
@@ -56,7 +56,7 @@ func (a *mqlAwsEfs) getFilesystems(conn *connection.AwsConnection) []*jobpool.Jo
 
 			svc := conn.Efs(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 
 			params := &efs.DescribeFileSystemsInput{}
 			paginator := efs.NewDescribeFileSystemsPaginator(svc, params)
@@ -149,7 +149,7 @@ func initAwsEfsFilesystem(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	return nil, nil, errors.New("efs filesystem does not exist")
 }
 
-func (a *mqlAwsEfsFilesystem) backupPolicy() (interface{}, error) {
+func (a *mqlAwsEfsFilesystem) backupPolicy() (any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	id := a.Id.Data
 	region := a.Region.Data
@@ -175,8 +175,8 @@ func (a *mqlAwsEfsFilesystem) backupPolicy() (interface{}, error) {
 	return res, nil
 }
 
-func efsTagsToMap(tags []efstypes.Tag) map[string]interface{} {
-	tagsMap := make(map[string]interface{})
+func efsTagsToMap(tags []efstypes.Tag) map[string]any {
+	tagsMap := make(map[string]any)
 
 	if len(tags) > 0 {
 		for i := range tags {

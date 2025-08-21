@@ -14,12 +14,12 @@ import (
 	rds_types "github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/aws/smithy-go/transport/http"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 // The cluster and instance API also return data for non-RDS engines like Neptune and DocumentDB. We have to filter
@@ -30,15 +30,10 @@ func (a *mqlAwsRds) id() (string, error) {
 	return "aws.rds", nil
 }
 
-// Deprecated: use instances() instead
-func (a *mqlAwsRds) dbInstances() ([]interface{}, error) {
-	return a.instances()
-}
-
 // instances returns all RDS instances
-func (a *mqlAwsRds) instances() ([]interface{}, error) {
+func (a *mqlAwsRds) instances() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getDbInstances(conn), 5)
 	poolOfJobs.Run()
 
@@ -48,15 +43,15 @@ func (a *mqlAwsRds) instances() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
 }
 
-func (a *mqlAwsRds) clusterParameterGroups() ([]interface{}, error) {
+func (a *mqlAwsRds) clusterParameterGroups() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getClusterParameterGroups(conn), 5)
 	poolOfJobs.Run()
 
@@ -66,14 +61,14 @@ func (a *mqlAwsRds) clusterParameterGroups() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 	return res, nil
 }
 
-func (a *mqlAwsRds) parameterGroups() ([]interface{}, error) {
+func (a *mqlAwsRds) parameterGroups() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getParameterGroups(conn), 5)
 	poolOfJobs.Run()
 
@@ -83,7 +78,7 @@ func (a *mqlAwsRds) parameterGroups() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 	return res, nil
 }
@@ -97,7 +92,7 @@ func (a *mqlAwsRds) getClusterParameterGroups(conn *connection.AwsConnection) []
 	for _, region := range regions {
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("rds>getClusterParameterGroup>calling aws with region %s", region)
-			res := []interface{}{}
+			res := []any{}
 			svc := conn.Rds(region)
 			ctx := context.Background()
 
@@ -153,7 +148,7 @@ func (a *mqlAwsRds) getParameterGroups(conn *connection.AwsConnection) []*jobpoo
 	for _, region := range regions {
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("rds>getParameterGroup>calling aws with region %s", region)
-			res := []interface{}{}
+			res := []any{}
 			svc := conn.Rds(region)
 			ctx := context.Background()
 
@@ -194,7 +189,7 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("rds>getDbInstances>calling aws with region %s", region)
 
-			res := []interface{}{}
+			res := []any{}
 			svc := conn.Rds(region)
 			ctx := context.Background()
 
@@ -230,10 +225,10 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 	return tasks
 }
 
-// pendingMaintenanceActions returns all pending maintaince actions for all RDS instances
-func (a *mqlAwsRds) allPendingMaintenanceActions() ([]interface{}, error) {
+// pendingMaintenanceActions returns all pending maintenance actions for all RDS instances
+func (a *mqlAwsRds) allPendingMaintenanceActions() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getPendingMaintenanceActions(conn), 5)
 	poolOfJobs.Run()
 
@@ -243,7 +238,7 @@ func (a *mqlAwsRds) allPendingMaintenanceActions() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
@@ -260,7 +255,7 @@ func (a *mqlAwsRds) getPendingMaintenanceActions(conn *connection.AwsConnection)
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("rds>getDbInstances>calling aws with region %s", region)
 
-			res := []interface{}{}
+			res := []any{}
 			svc := conn.Rds(region)
 			ctx := context.Background()
 
@@ -319,9 +314,9 @@ func newMqlAwsParameterGroup(runtime *plugin.Runtime, region string, parameterGr
 	return mqlParameterGroup, nil
 }
 
-func (a mqlAwsRdsClusterParameterGroup) parameters() ([]interface{}, error) {
+func (a mqlAwsRdsClusterParameterGroup) parameters() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	svc := conn.Rds(a.Region.Data)
 	ctx := context.Background()
 
@@ -345,9 +340,9 @@ func (a mqlAwsRdsClusterParameterGroup) parameters() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsRdsParameterGroup) parameters() ([]interface{}, error) {
+func (a *mqlAwsRdsParameterGroup) parameters() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	svc := conn.Rds(a.Region.Data)
 	ctx := context.Background()
 
@@ -372,7 +367,7 @@ func (a *mqlAwsRdsParameterGroup) parameters() ([]interface{}, error) {
 }
 
 func newMqlAwsRdsParameterGroupParameter(runtime *plugin.Runtime, parameter rds_types.Parameter) (*mqlAwsRdsParameterGroupParameter, error) {
-	engineModes := []interface{}{}
+	engineModes := []any{}
 	for _, engineMode := range parameter.SupportedEngineModes {
 		engineModes = append(engineModes, engineMode)
 	}
@@ -400,7 +395,7 @@ func newMqlAwsRdsParameterGroupParameter(runtime *plugin.Runtime, parameter rds_
 }
 
 func newMqlAwsRdsInstance(runtime *plugin.Runtime, region string, accountID string, dbInstance rds_types.DBInstance) (*mqlAwsRdsDbinstance, error) {
-	stringSliceInterface := []interface{}{}
+	stringSliceInterface := []any{}
 	for _, logExport := range dbInstance.EnabledCloudwatchLogsExports {
 		stringSliceInterface = append(stringSliceInterface, logExport)
 	}
@@ -493,7 +488,7 @@ func initAwsRdsDbcluster(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 
 	rds := obj.(*mqlAwsRds)
-	rawResources := rds.GetDbClusters()
+	rawResources := rds.GetClusters()
 
 	arnVal := args["arn"].Value.(string)
 	for _, rawResource := range rawResources.Data {
@@ -528,7 +523,7 @@ func initAwsRdsDbinstance(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 
 	rds := obj.(*mqlAwsRds)
-	rawResources := rds.GetDbInstances()
+	rawResources := rds.GetInstances()
 
 	arnVal := args["arn"].Value.(string)
 	for _, rawResource := range rawResources.Data {
@@ -540,9 +535,9 @@ func initAwsRdsDbinstance(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	return nil, nil, errors.New("rds db instance does not exist")
 }
 
-func (a *mqlAwsRdsDbinstance) subnets() ([]interface{}, error) {
+func (a *mqlAwsRdsDbinstance) subnets() ([]any, error) {
 	if a.cacheSubnets != nil {
-		res := []interface{}{}
+		res := []any{}
 		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 		for i := range a.cacheSubnets.Subnets {
 			subnet := a.cacheSubnets.Subnets[i]
@@ -558,18 +553,18 @@ func (a *mqlAwsRdsDbinstance) subnets() ([]interface{}, error) {
 	return nil, errors.New("no subnets found for RDS DB instance")
 }
 
-func (a *mqlAwsRdsDbinstance) securityGroups() ([]interface{}, error) {
+func (a *mqlAwsRdsDbinstance) securityGroups() ([]any, error) {
 	return a.newSecurityGroupResources(a.MqlRuntime)
 }
 
-func (a *mqlAwsRdsDbinstance) snapshots() ([]interface{}, error) {
+func (a *mqlAwsRdsDbinstance) snapshots() ([]any, error) {
 	instanceId := a.Id.Data
 	region := a.Region.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Rds(region)
 	ctx := context.Background()
-	res := []interface{}{}
+	res := []any{}
 
 	params := &rds.DescribeDBSnapshotsInput{DBInstanceIdentifier: &instanceId}
 	paginator := rds.NewDescribeDBSnapshotsPaginator(svc, params)
@@ -590,14 +585,14 @@ func (a *mqlAwsRdsDbinstance) snapshots() ([]interface{}, error) {
 }
 
 // pendingMaintenanceActions returns all pending maintenance actions for the RDS instance
-func (a *mqlAwsRdsDbinstance) pendingMaintenanceActions() ([]interface{}, error) {
+func (a *mqlAwsRdsDbinstance) pendingMaintenanceActions() ([]any, error) {
 	instanceArn := a.Arn.Data
 	region := a.Region.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Rds(region)
 	ctx := context.Background()
-	res := []interface{}{}
+	res := []any{}
 
 	params := &rds.DescribePendingMaintenanceActionsInput{
 		ResourceIdentifier: &instanceArn,
@@ -649,8 +644,8 @@ func newMqlAwsPendingMaintenanceAction(runtime *plugin.Runtime, resourceArn stri
 	return res.(*mqlAwsRdsPendingMaintenanceAction), nil
 }
 
-func rdsTagsToMap(tags []rds_types.Tag) map[string]interface{} {
-	tagsMap := make(map[string]interface{})
+func rdsTagsToMap(tags []rds_types.Tag) map[string]any {
+	tagsMap := make(map[string]any)
 
 	if len(tags) > 0 {
 		for i := range tags {
@@ -662,15 +657,10 @@ func rdsTagsToMap(tags []rds_types.Tag) map[string]interface{} {
 	return tagsMap
 }
 
-// Deprecated: use clusters() instead
-func (a *mqlAwsRds) dbClusters() ([]interface{}, error) {
-	return a.clusters()
-}
-
 // clusters returns all RDS clusters
-func (a *mqlAwsRds) clusters() ([]interface{}, error) {
+func (a *mqlAwsRds) clusters() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getDbClusters(conn), 5)
 	poolOfJobs.Run()
 
@@ -680,7 +670,7 @@ func (a *mqlAwsRds) clusters() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
@@ -696,7 +686,7 @@ func (a *mqlAwsRds) getDbClusters(conn *connection.AwsConnection) []*jobpool.Job
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("rds>getDbClusters>calling aws with region %s", region)
 
-			res := []interface{}{}
+			res := []any{}
 			svc := conn.Rds(region)
 			ctx := context.Background()
 
@@ -742,7 +732,7 @@ func (a *mqlAwsRdsDbcluster) id() (string, error) {
 }
 
 func newMqlAwsRdsCluster(runtime *plugin.Runtime, region string, accountID string, cluster rds_types.DBCluster) (*mqlAwsRdsDbcluster, error) {
-	mqlRdsDbInstances := []interface{}{}
+	mqlRdsDbInstances := []any{}
 	for _, instance := range cluster.DBClusterMembers {
 		mqlInstance, err := NewResource(runtime, "aws.rds.dbinstance",
 			map[string]*llx.RawData{
@@ -757,7 +747,7 @@ func newMqlAwsRdsCluster(runtime *plugin.Runtime, region string, accountID strin
 	for i := range cluster.VpcSecurityGroups {
 		sgsArns = append(sgsArns, NewSecurityGroupArn(region, accountID, convert.ToValue(cluster.VpcSecurityGroups[i].VpcSecurityGroupId)))
 	}
-	stringSliceAZs := []interface{}{}
+	stringSliceAZs := []any{}
 	for _, zone := range cluster.AvailabilityZones {
 		stringSliceAZs = append(stringSliceAZs, zone)
 	}
@@ -820,18 +810,18 @@ func newMqlAwsRdsCluster(runtime *plugin.Runtime, region string, accountID strin
 	return mqlDbCluster, nil
 }
 
-func (a *mqlAwsRdsDbcluster) securityGroups() ([]interface{}, error) {
+func (a *mqlAwsRdsDbcluster) securityGroups() ([]any, error) {
 	return a.newSecurityGroupResources(a.MqlRuntime)
 }
 
-func (a *mqlAwsRdsDbcluster) snapshots() ([]interface{}, error) {
+func (a *mqlAwsRdsDbcluster) snapshots() ([]any, error) {
 	dbClusterId := a.Id.Data
 	region := a.Region.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Rds(region)
 	ctx := context.Background()
-	res := []interface{}{}
+	res := []any{}
 
 	params := &rds.DescribeDBClusterSnapshotsInput{DBClusterIdentifier: &dbClusterId}
 	paginator := rds.NewDescribeDBClusterSnapshotsPaginator(svc, params)
@@ -928,14 +918,14 @@ func (a *mqlAwsRdsBackupsetting) kmsKey() (*mqlAwsKmsKey, error) {
 	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
-func (a *mqlAwsRdsDbinstance) backupSettings() ([]interface{}, error) {
+func (a *mqlAwsRdsDbinstance) backupSettings() ([]any, error) {
 	instanceId := a.Id.Data
 	region := a.Region.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Rds(region)
 	ctx := context.Background()
-	res := []interface{}{}
+	res := []any{}
 	params := &rds.DescribeDBInstanceAutomatedBackupsInput{DBInstanceIdentifier: &instanceId}
 	paginator := rds.NewDescribeDBInstanceAutomatedBackupsPaginator(svc, params)
 	for paginator.HasMorePages() {
@@ -978,14 +968,14 @@ func (a *mqlAwsRdsDbinstance) backupSettings() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsRdsDbcluster) backupSettings() ([]interface{}, error) {
+func (a *mqlAwsRdsDbcluster) backupSettings() ([]any, error) {
 	clusterId := a.Id.Data
 	region := a.Region.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Rds(region)
 	ctx := context.Background()
-	res := []interface{}{}
+	res := []any{}
 
 	params := &rds.DescribeDBClusterAutomatedBackupsInput{DBClusterIdentifier: &clusterId}
 	paginator := rds.NewDescribeDBClusterAutomatedBackupsPaginator(svc, params)
@@ -1029,7 +1019,7 @@ func (a *mqlAwsRdsDbcluster) backupSettings() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsRdsSnapshot) attributes() ([]interface{}, error) {
+func (a *mqlAwsRdsSnapshot) attributes() ([]any, error) {
 	snapshotId := a.Id.Data
 	region := a.Region.Data
 	isCluster := a.IsClusterSnapshot.Data

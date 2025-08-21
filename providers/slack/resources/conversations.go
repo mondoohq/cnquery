@@ -8,24 +8,24 @@ import (
 	"time"
 
 	"github.com/slack-go/slack"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/slack/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/slack/connection"
 )
 
 func (o *mqlSlackConversations) id() (string, error) {
 	return "slack.conversations", nil
 }
 
-func (s *mqlSlackConversations) listChannels(excludeArchived bool, types ...string) ([]interface{}, error) {
+func (s *mqlSlackConversations) listChannels(excludeArchived bool, types ...string) ([]any, error) {
 	conn := s.MqlRuntime.Connection.(*connection.SlackConnection)
 	client := conn.Client()
 	if client == nil {
 		return nil, errors.New("cannot retrieve new data while using a mock connection")
 	}
 
-	list := []interface{}{}
+	list := []any{}
 
 	// https://api.slack.com/methods/conversations.list
 	// scopes: channels:read, groups:read, im:read, mpim:read
@@ -57,19 +57,19 @@ func (s *mqlSlackConversations) listChannels(excludeArchived bool, types ...stri
 	return list, nil
 }
 
-func (s *mqlSlackConversations) list() ([]interface{}, error) {
+func (s *mqlSlackConversations) list() ([]any, error) {
 	return s.listChannels(false, "public_channel", "private_channel", "mpim", "im")
 }
 
-func (s *mqlSlackConversations) privateChannels() ([]interface{}, error) {
+func (s *mqlSlackConversations) privateChannels() ([]any, error) {
 	return s.listChannels(true, "private_channel")
 }
 
-func (s *mqlSlackConversations) publicChannels() ([]interface{}, error) {
+func (s *mqlSlackConversations) publicChannels() ([]any, error) {
 	return s.listChannels(true, "public_channel")
 }
 
-func (s *mqlSlackConversations) directMessages() ([]interface{}, error) {
+func (s *mqlSlackConversations) directMessages() ([]any, error) {
 	return s.listChannels(true, "mpim", "im")
 }
 
@@ -105,7 +105,7 @@ func newPurpose(p slack.Purpose) purpose {
 	}
 }
 
-func newMqlSlackConversation(runtime *plugin.Runtime, conversation slack.Channel) (interface{}, error) {
+func newMqlSlackConversation(runtime *plugin.Runtime, conversation slack.Channel) (any, error) {
 	topic, err := convert.JsonToDict(newTopic(conversation.Topic))
 	if err != nil {
 		return nil, err
@@ -169,7 +169,7 @@ func (s *mqlSlackConversation) creator() (*mqlSlackUser, error) {
 	return r.(*mqlSlackUser), nil
 }
 
-func (s *mqlSlackConversation) members() ([]interface{}, error) {
+func (s *mqlSlackConversation) members() ([]any, error) {
 	conn := s.MqlRuntime.Connection.(*connection.SlackConnection)
 	client := conn.Client()
 	if client == nil {
@@ -194,7 +194,7 @@ func (s *mqlSlackConversation) members() ([]interface{}, error) {
 		return nil
 	}
 
-	var list []interface{}
+	var list []any
 	isChannel := s.IsChannel.Data
 	if !isChannel {
 		return list, nil

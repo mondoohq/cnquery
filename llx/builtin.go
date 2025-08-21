@@ -8,8 +8,8 @@ import (
 	"fmt"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/resources"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 type chunkHandlerV2 struct {
@@ -830,7 +830,7 @@ func runResourceFunction(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint
 	e.watcherIds.Store(wid)
 
 	// watch this field in the resource
-	err := e.ctx.runtime.WatchAndUpdate(rr, chunk.Id, wid, func(fieldData interface{}, fieldError error) {
+	err := e.ctx.runtime.WatchAndUpdate(rr, chunk.Id, wid, func(fieldData any, fieldError error) {
 		data := &RawData{
 			Type:  types.Type(resource.Fields[chunk.Id].Type),
 			Value: fieldData,

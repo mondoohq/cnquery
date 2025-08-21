@@ -43,7 +43,7 @@ func TestWindowsRegistryKeyMultiStringParser(t *testing.T) {
 	assert.Equal(t, 1, len(items))
 	assert.Equal(t, "Machine", items[0].Key)
 	assert.Equal(t, 7, items[0].Value.Kind)
-	assert.Equal(t, []interface{}{
+	assert.Equal(t, []any{
 		"Software\\Microsoft\\Windows NT\\CurrentVersion\\Print",
 		"Software\\Microsoft\\Windows NT\\CurrentVersion\\Windows",
 		"System\\CurrentControlSet\\Control\\Print\\Printers",

@@ -9,10 +9,10 @@ import (
 
 	binaryauthorization "cloud.google.com/go/binaryauthorization/apiv1"
 	"cloud.google.com/go/binaryauthorization/apiv1/binaryauthorizationpb"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/gcp/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v12/types"
 	"google.golang.org/api/option"
 )
 
@@ -53,7 +53,7 @@ func (g *mqlGcpProject) binaryAuthorization() (*mqlGcpProjectBinaryAuthorization
 		return nil, err
 	}
 
-	var admissionWhitelistPatterns []interface{}
+	var admissionWhitelistPatterns []any
 	for _, pattern := range resp.GetAdmissionWhitelistPatterns() {
 		admissionWhitelistPatterns = append(admissionWhitelistPatterns, pattern.GetNamePattern())
 	}
@@ -112,8 +112,8 @@ func (g *mqlGcpProject) binaryAuthorization() (*mqlGcpProjectBinaryAuthorization
 	return bauthz.(*mqlGcpProjectBinaryAuthorizationControl), nil
 }
 
-func (g *mqlGcpProject) toMqlBinaryAuthzAdmissionRules(rules map[string]*binaryauthorizationpb.AdmissionRule, policyName string, ruleSetName string) (map[string]interface{}, error) {
-	mqlRules := make(map[string]interface{})
+func (g *mqlGcpProject) toMqlBinaryAuthzAdmissionRules(rules map[string]*binaryauthorizationpb.AdmissionRule, policyName string, ruleSetName string) (map[string]any, error) {
+	mqlRules := make(map[string]any)
 	for ruleName, rule := range rules {
 		mqlId := fmt.Sprintf("%s/%s/%s", policyName, ruleSetName, ruleName)
 		mqlRule, err := g.toMqlBinaryAuthzAdmissionRule(rule, mqlId)
@@ -126,7 +126,7 @@ func (g *mqlGcpProject) toMqlBinaryAuthzAdmissionRules(rules map[string]*binarya
 }
 
 func (g *mqlGcpProject) toMqlBinaryAuthzAdmissionRule(rule *binaryauthorizationpb.AdmissionRule, mqlId string) (plugin.Resource, error) {
-	var requiresAttestationsBy []interface{}
+	var requiresAttestationsBy []any
 	for _, attestation := range rule.GetRequireAttestationsBy() {
 		requiresAttestationsBy = append(requiresAttestationsBy, attestation)
 	}

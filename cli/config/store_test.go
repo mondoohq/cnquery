@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	subject "go.mondoo.com/cnquery/v11/cli/config"
+	subject "go.mondoo.com/cnquery/v12/cli/config"
 	"gopkg.in/yaml.v2"
 
 	"github.com/spf13/afero"
@@ -44,7 +44,7 @@ func TestStoreConfig(t *testing.T) {
 		content, err := afero.ReadFile(fs, configPath)
 		assert.NoError(t, err, "Should be able to read the config file")
 
-		var yamlData map[string]interface{}
+		var yamlData map[string]any
 		err = yaml.Unmarshal(content, &yamlData)
 		assert.NoError(t, err, "Config file should be valid YAML")
 
@@ -66,7 +66,7 @@ func TestStoreConfig(t *testing.T) {
 		content, err := afero.ReadFile(fs, configPath)
 		assert.NoError(t, err)
 
-		var yamlData map[string]interface{}
+		var yamlData map[string]any
 		err = yaml.Unmarshal(content, &yamlData)
 		assert.NoError(t, err, "Config file should be valid YAML")
 

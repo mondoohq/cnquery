@@ -15,21 +15,21 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	vpctypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (a *mqlAwsVpc) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func (a *mqlAws) vpcs() ([]interface{}, error) {
+func (a *mqlAws) vpcs() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getVpcs(conn), 5)
 	poolOfJobs.Run()
 
@@ -39,7 +39,7 @@ func (a *mqlAws) vpcs() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 	return res, nil
 }
@@ -57,7 +57,7 @@ func (a *mqlAws) getVpcs(conn *connection.AwsConnection) []*jobpool.Job {
 
 			svc := conn.Ec2(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 
 			params := &ec2.DescribeVpcsInput{}
 			paginator := ec2.NewDescribeVpcsPaginator(svc, params)
@@ -165,13 +165,13 @@ func (a *mqlAwsVpcNatgatewayAddress) publicIp() (*mqlAwsEc2Eip, error) {
 	return nil, nil
 }
 
-func (a *mqlAwsVpc) natGateways() ([]interface{}, error) {
+func (a *mqlAwsVpc) natGateways() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	vpc := a.Id.Data
 
 	svc := conn.Ec2(a.Region.Data)
 	ctx := context.Background()
-	endpoints := []interface{}{}
+	endpoints := []any{}
 	filterKeyVal := "vpc-id"
 	params := &ec2.DescribeNatGatewaysInput{Filter: []vpctypes.Filter{{Name: &filterKeyVal, Values: []string{vpc}}}}
 	paginator := ec2.NewDescribeNatGatewaysPaginator(svc, params)
@@ -183,7 +183,7 @@ func (a *mqlAwsVpc) natGateways() ([]interface{}, error) {
 		}
 
 		for _, gw := range natgateways.NatGateways {
-			addresses := []interface{}{}
+			addresses := []any{}
 			for _, address := range gw.NatGatewayAddresses {
 				mqlNatGatewayAddress, err := CreateResource(a.MqlRuntime, "aws.vpc.natgateway.address",
 					map[string]*llx.RawData{
@@ -226,13 +226,13 @@ func (a *mqlAwsVpcEndpoint) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAwsVpc) endpoints() ([]interface{}, error) {
+func (a *mqlAwsVpc) endpoints() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	vpcId := a.Id.Data
 
 	svc := conn.Ec2(a.Region.Data)
 	ctx := context.Background()
-	endpoints := []interface{}{}
+	endpoints := []any{}
 	params := &ec2.DescribeVpcEndpointsInput{
 		Filters: []vpctypes.Filter{
 			{
@@ -249,7 +249,7 @@ func (a *mqlAwsVpc) endpoints() ([]interface{}, error) {
 		}
 
 		for _, endpoint := range endpointsRes.VpcEndpoints {
-			var subnetIds []interface{}
+			var subnetIds []any
 			for _, subnet := range endpoint.SubnetIds {
 				subnetIds = append(subnetIds, subnet)
 			}
@@ -280,13 +280,13 @@ func (a *mqlAwsVpcServiceEndpoint) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAwsVpc) serviceEndpoints() ([]interface{}, error) {
+func (a *mqlAwsVpc) serviceEndpoints() ([]any, error) {
 	var (
 		conn      = a.MqlRuntime.Connection.(*connection.AwsConnection)
 		vpcID     = a.Id.Data
 		svc       = conn.Ec2(a.Region.Data)
 		ctx       = context.Background()
-		endpoints = []interface{}{}
+		endpoints = []any{}
 	)
 
 	paginator := ec2.NewDescribeVpcEndpointsPaginator(svc, &ec2.DescribeVpcEndpointsInput{
@@ -390,8 +390,8 @@ func (a *mqlAwsVpcServiceEndpoint) gatherVpcServiceEndpointInfo() error {
 	a.VpcEndpointPolicySupported = plugin.TValue[bool]{Data: convert.ToValue(service.VpcEndpointPolicySupported), State: plugin.StateIsSet}
 	a.PayerResponsibility = plugin.TValue[string]{Data: string(service.PayerResponsibility), State: plugin.StateIsSet}
 	a.PrivateDnsNameVerificationState = plugin.TValue[string]{Data: string(service.PrivateDnsNameVerificationState), State: plugin.StateIsSet}
-	a.AvailabilityZones = plugin.TValue[[]interface{}]{Data: convert.SliceAnyToInterface(service.AvailabilityZones), State: plugin.StateIsSet}
-	a.PrivateDnsNames = plugin.TValue[[]interface{}]{Data: dnsNames, State: plugin.StateIsSet}
+	a.AvailabilityZones = plugin.TValue[[]any]{Data: convert.SliceAnyToInterface(service.AvailabilityZones), State: plugin.StateIsSet}
+	a.PrivateDnsNames = plugin.TValue[[]any]{Data: dnsNames, State: plugin.StateIsSet}
 
 	return nil
 }
@@ -416,11 +416,11 @@ func (a *mqlAwsVpcServiceEndpoint) payerResponsibility() (string, error) {
 	return "", a.gatherVpcServiceEndpointInfo()
 }
 
-func (a *mqlAwsVpcServiceEndpoint) availabilityZones() ([]interface{}, error) {
+func (a *mqlAwsVpcServiceEndpoint) availabilityZones() ([]any, error) {
 	return nil, a.gatherVpcServiceEndpointInfo()
 }
 
-func (a *mqlAwsVpcServiceEndpoint) privateDnsNames() ([]interface{}, error) {
+func (a *mqlAwsVpcServiceEndpoint) privateDnsNames() ([]any, error) {
 	return nil, a.gatherVpcServiceEndpointInfo()
 }
 
@@ -428,13 +428,13 @@ func (a *mqlAwsVpcPeeringConnection) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAwsVpc) peeringConnections() ([]interface{}, error) {
+func (a *mqlAwsVpc) peeringConnections() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	vpc := a.Id.Data
 
 	svc := conn.Ec2(a.Region.Data)
 	ctx := context.Background()
-	pcs := []interface{}{}
+	pcs := []any{}
 	filterKeyVal := "requester-vpc-info.vpc-id"
 	filterKeyVal2 := "accepter-vpc-info.vpc-id"
 
@@ -481,24 +481,22 @@ type mqlAwsVpcPeeringConnectionInternal struct {
 
 func (a *mqlAwsVpcPeeringConnection) acceptorVpc() (*mqlAwsVpcPeeringConnectionPeeringVpc, error) {
 	acceptor := a.peeringConnectionCache.AccepterVpcInfo
-	ipv4 := []interface{}{}
+	ipv4 := []any{}
 	for i := range acceptor.CidrBlockSet {
 		ipv4 = append(ipv4, *acceptor.CidrBlockSet[i].CidrBlock)
 	}
-	ipv6 := []interface{}{}
+	ipv6 := []any{}
 	for i := range acceptor.Ipv6CidrBlockSet {
 		ipv6 = append(ipv6, *acceptor.Ipv6CidrBlockSet[i].Ipv6CidrBlock)
 	}
 	mql, err := CreateResource(a.MqlRuntime, "aws.vpc.peeringConnection.peeringVpc",
 		map[string]*llx.RawData{
-			"allowDnsResolutionFromRemoteVpc":            llx.BoolDataPtr(acceptor.PeeringOptions.AllowDnsResolutionFromRemoteVpc),
-			"allowEgressFromLocalClassicLinkToRemoteVpc": llx.BoolDataPtr(acceptor.PeeringOptions.AllowEgressFromLocalClassicLinkToRemoteVpc), // this is deprecated by aws...
-			"allowEgressFromLocalVpcToRemoteClassicLink": llx.BoolDataPtr(acceptor.PeeringOptions.AllowEgressFromLocalVpcToRemoteClassicLink), // this is deprecated by aws...
-			"ipv4CiderBlocks":                            llx.ArrayData(ipv4, types.String),
-			"ipv6CiderBlocks":                            llx.ArrayData(ipv6, types.String),
-			"ownerID":                                    llx.StringDataPtr(acceptor.OwnerId),
-			"region":                                     llx.StringData(a.region),
-			"vpcId":                                      llx.StringDataPtr(acceptor.VpcId),
+			"allowDnsResolutionFromRemoteVpc": llx.BoolDataPtr(acceptor.PeeringOptions.AllowDnsResolutionFromRemoteVpc),
+			"ipv4CiderBlocks":                 llx.ArrayData(ipv4, types.String),
+			"ipv6CiderBlocks":                 llx.ArrayData(ipv6, types.String),
+			"ownerID":                         llx.StringDataPtr(acceptor.OwnerId),
+			"region":                          llx.StringData(a.region),
+			"vpcId":                           llx.StringDataPtr(acceptor.VpcId),
 		},
 	)
 	if err != nil {
@@ -519,23 +517,21 @@ func (a *mqlAwsVpcPeeringConnectionPeeringVpc) vpc() (*mqlAwsVpc, error) {
 
 func (a *mqlAwsVpcPeeringConnection) requestorVpc() (*mqlAwsVpcPeeringConnectionPeeringVpc, error) {
 	acceptor := a.peeringConnectionCache.AccepterVpcInfo
-	ipv4 := []interface{}{}
+	ipv4 := []any{}
 	for i := range acceptor.CidrBlockSet {
 		ipv4 = append(ipv4, *acceptor.CidrBlockSet[i].CidrBlock)
 	}
-	ipv6 := []interface{}{}
+	ipv6 := []any{}
 	for i := range acceptor.Ipv6CidrBlockSet {
 		ipv6 = append(ipv6, *acceptor.Ipv6CidrBlockSet[i].Ipv6CidrBlock)
 	}
 	mql, err := CreateResource(a.MqlRuntime, "aws.vpc.peeringConnection.peeringVpc",
 		map[string]*llx.RawData{
-			"allowDnsResolutionFromRemoteVpc":            llx.BoolDataPtr(acceptor.PeeringOptions.AllowDnsResolutionFromRemoteVpc),
-			"allowEgressFromLocalClassicLinkToRemoteVpc": llx.BoolDataPtr(acceptor.PeeringOptions.AllowEgressFromLocalClassicLinkToRemoteVpc), // this is deprecated by aws...
-			"allowEgressFromLocalVpcToRemoteClassicLink": llx.BoolDataPtr(acceptor.PeeringOptions.AllowEgressFromLocalVpcToRemoteClassicLink), // this is deprecated by aws...
-			"ipv4CiderBlocks":                            llx.ArrayData(ipv4, types.String),
-			"ipv6CiderBlocks":                            llx.ArrayData(ipv6, types.String),
-			"ownerID":                                    llx.StringDataPtr(acceptor.OwnerId),
-			"region":                                     llx.StringData(a.region),
+			"allowDnsResolutionFromRemoteVpc": llx.BoolDataPtr(acceptor.PeeringOptions.AllowDnsResolutionFromRemoteVpc),
+			"ipv4CiderBlocks":                 llx.ArrayData(ipv4, types.String),
+			"ipv6CiderBlocks":                 llx.ArrayData(ipv6, types.String),
+			"ownerID":                         llx.StringDataPtr(acceptor.OwnerId),
+			"region":                          llx.StringData(a.region),
 			// vpc() aws.vpc // ← We can populate this if the VPC is in this account
 			"vpcId": llx.StringDataPtr(acceptor.VpcId),
 		},
@@ -547,13 +543,13 @@ func (a *mqlAwsVpcPeeringConnection) requestorVpc() (*mqlAwsVpcPeeringConnection
 	return mql.(*mqlAwsVpcPeeringConnectionPeeringVpc), nil
 }
 
-func (a *mqlAwsVpc) flowLogs() ([]interface{}, error) {
+func (a *mqlAwsVpc) flowLogs() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	vpc := a.Id.Data
 
 	svc := conn.Ec2(a.Region.Data)
 	ctx := context.Background()
-	flowLogs := []interface{}{}
+	flowLogs := []any{}
 	filterKeyVal := "resource-id"
 	params := &ec2.DescribeFlowLogsInput{Filter: []vpctypes.Filter{{Name: &filterKeyVal, Values: []string{vpc}}}}
 	paginator := ec2.NewDescribeFlowLogsPaginator(svc, params)
@@ -592,13 +588,13 @@ func (a *mqlAwsVpcRoutetable) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAwsVpc) routeTables() ([]interface{}, error) {
+func (a *mqlAwsVpc) routeTables() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	vpcVal := a.Id.Data
 
 	svc := conn.Ec2(a.Region.Data)
 	ctx := context.Background()
-	res := []interface{}{}
+	res := []any{}
 
 	filterName := "vpc-id"
 	params := &ec2.DescribeRouteTablesInput{Filters: []vpctypes.Filter{{Name: &filterName, Values: []string{vpcVal}}}}
@@ -636,8 +632,8 @@ type mqlAwsVpcRoutetableInternal struct {
 	region            string
 }
 
-func (a *mqlAwsVpcRoutetable) associations() ([]interface{}, error) {
-	res := []interface{}{}
+func (a *mqlAwsVpcRoutetable) associations() ([]any, error) {
+	res := []any{}
 	for i := range a.cacheAssociations {
 		assoc := a.cacheAssociations[i]
 		state, err := convert.JsonToDict(assoc.AssociationState)
@@ -684,13 +680,13 @@ func (a *mqlAwsVpcSubnet) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func (a *mqlAwsVpc) subnets() ([]interface{}, error) {
+func (a *mqlAwsVpc) subnets() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	vpcVal := a.Id.Data
 
 	svc := conn.Ec2(a.Region.Data)
 	ctx := context.Background()
-	res := []interface{}{}
+	res := []any{}
 
 	filterName := "vpc-id"
 	params := &ec2.DescribeSubnetsInput{Filters: []vpctypes.Filter{{Name: &filterName, Values: []string{vpcVal}}}}

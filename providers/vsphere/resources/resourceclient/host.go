@@ -27,11 +27,11 @@ func HostInfo(host *object.HostSystem) (*mo.HostSystem, error) {
 	return &props, nil
 }
 
-func HostProperties(host *mo.HostSystem) (map[string]interface{}, error) {
+func HostProperties(host *mo.HostSystem) (map[string]any, error) {
 	return PropertiesToDict(host)
 }
 
-func HostOptions(host *object.HostSystem) (map[string]interface{}, error) {
+func HostOptions(host *object.HostSystem) (map[string]any, error) {
 	ctx := context.Background()
 	m, err := host.ConfigManager().OptionManager(ctx)
 	if err != nil {
@@ -44,7 +44,7 @@ func HostOptions(host *object.HostSystem) (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	advancedProps := map[string]interface{}{}
+	advancedProps := map[string]any{}
 	for i := range om.Setting {
 		prop := om.Setting[i]
 		key := prop.GetOptionValue().Key
