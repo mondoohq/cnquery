@@ -10,8 +10,10 @@ import (
 	"github.com/vmware/govmomi/object"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v11/providers/vsphere/connection"
 	"go.mondoo.com/cnquery/v11/providers/vsphere/resources/resourceclient"
+	"go.mondoo.com/cnquery/v11/types"
 )
 
 func newVsphereHostResources(vClient *resourceclient.Client, runtime *plugin.Runtime, vhosts []*object.HostSystem) ([]interface{}, error) {
@@ -29,8 +31,23 @@ func newVsphereHostResources(vClient *resourceclient.Client, runtime *plugin.Run
 		}
 
 		var name string
+		var tags []string
 		if hostInfo != nil {
 			name = hostInfo.Name
+			simpleTags := extractTagKeys(hostInfo.Tag)
+
+			// Get vAPI tags using the connection
+			conn := runtime.Connection.(*connection.VsphereConnection)
+			ctx := context.Background()
+
+			// Get vAPI tags using the connection config
+			vapiTags := GetTags(ctx, h.Reference(), vClient.Client.Client, conn.Conf)
+			// Use vAPI tags if available, otherwise use simple tags
+			if len(vapiTags) > 0 {
+				tags = vapiTags
+			} else {
+				tags = simpleTags
+			}
 		}
 
 		mqlHost, err := CreateResource(runtime, "vsphere.host", map[string]*llx.RawData{
@@ -38,6 +55,7 @@ func newVsphereHostResources(vClient *resourceclient.Client, runtime *plugin.Run
 			"name":          llx.StringData(name),
 			"properties":    llx.DictData(props),
 			"inventoryPath": llx.StringData(h.InventoryPath),
+			"tags":          llx.ArrayData(convert.SliceAnyToInterface(tags), types.String),
 		})
 		if err != nil {
 			return nil, err

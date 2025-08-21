@@ -391,6 +391,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.host.snmp": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereHost).GetSnmp()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"vsphere.host.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetTags()).ToDataRes(types.Array(types.String))
+	},
 	"vsphere.vm.moid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVm).GetMoid()).ToDataRes(types.String)
 	},
@@ -405,6 +408,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vsphere.vm.advancedSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVm).GetAdvancedSettings()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"vsphere.vm.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVm).GetTags()).ToDataRes(types.Array(types.String))
 	},
 	"vsphere.vswitch.standard.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVswitchStandard).GetName()).ToDataRes(types.String)
@@ -897,6 +903,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlVsphereHost).Snmp, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
 		return
 	},
+	"vsphere.host.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).Tags, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"vsphere.vm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlVsphereVm).__id, ok = v.Value.(string)
 			return
@@ -919,6 +929,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"vsphere.vm.advancedSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereVm).AdvancedSettings, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVm).Tags, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"vsphere.vswitch.standard.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2169,6 +2183,7 @@ type mqlVsphereHost struct {
 	Timezone plugin.TValue[*mqlEsxiTimezone]
 	Ntp plugin.TValue[*mqlEsxiNtpconfig]
 	Snmp plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[[]interface{}]
 }
 
 // createVsphereHost creates a new instance of this resource
@@ -2386,6 +2401,10 @@ func (c *mqlVsphereHost) GetSnmp() *plugin.TValue[map[string]interface{}] {
 	})
 }
 
+func (c *mqlVsphereHost) GetTags() *plugin.TValue[[]interface{}] {
+	return &c.Tags
+}
+
 // mqlVsphereVm for the vsphere.vm resource
 type mqlVsphereVm struct {
 	MqlRuntime *plugin.Runtime
@@ -2396,6 +2415,7 @@ type mqlVsphereVm struct {
 	InventoryPath plugin.TValue[string]
 	Properties plugin.TValue[interface{}]
 	AdvancedSettings plugin.TValue[map[string]interface{}]
+	Tags plugin.TValue[[]interface{}]
 }
 
 // createVsphereVm creates a new instance of this resource
@@ -2455,6 +2475,10 @@ func (c *mqlVsphereVm) GetAdvancedSettings() *plugin.TValue[map[string]interface
 	return plugin.GetOrCompute[map[string]interface{}](&c.AdvancedSettings, func() (map[string]interface{}, error) {
 		return c.advancedSettings()
 	})
+}
+
+func (c *mqlVsphereVm) GetTags() *plugin.TValue[[]interface{}] {
+	return &c.Tags
 }
 
 // mqlVsphereVswitchStandard for the vsphere.vswitch.standard resource
