@@ -55,18 +55,16 @@ func (m *volumeMounter) Mount(input *MountPartitionInput) (*MountedPartition, er
 		return nil, errors.New("mount device> partition fs type is required")
 	}
 
-	var dir string
-	var err error
-	if input.ScanDir == nil {
-		dir, err = m.createScanDir()
+	mountDir := input.MountDir
+	if mountDir == "" {
+		dir, err := m.createScanDir()
 		if err != nil {
 			return nil, err
 		}
-	} else {
-		dir = *input.ScanDir
+		mountDir = dir
 	}
 
-	m.scanDirs[dir] = input.Name
+	m.scanDirs[mountDir] = input.Name
 
 	mp := &MountedPartition{
 		Name:         input.Name,
@@ -75,9 +73,10 @@ func (m *volumeMounter) Mount(input *MountPartitionInput) (*MountedPartition, er
 		Uuid:         input.Uuid,
 		PartUuid:     input.PartUuid,
 		MountOptions: input.MountOptions,
-		MountPoint:   dir,
+		MountPoint:   mountDir,
+		rootPath:     input.RootPath,
 	}
-	return mp, m.mountVolume(input, dir)
+	return mp, m.mountVolume(input, mountDir)
 }
 
 func (m *volumeMounter) Umount(partition *MountedPartition) error {

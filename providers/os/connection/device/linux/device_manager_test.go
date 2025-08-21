@@ -39,7 +39,7 @@ func TestMountWithFstab(t *testing.T) {
 	f := newFixture(t)
 
 	t.Run("happy path", func(t *testing.T) {
-		partitions := []*snapshot.PartitionInfo{
+		partitions := []*snapshot.Partition{
 			{
 				Name:   "/dev/sdf1",
 				FsType: "ext4",
@@ -77,13 +77,15 @@ func TestMountWithFstab(t *testing.T) {
 			},
 		}
 
-		f.volumeMounter.EXPECT().MountP(gomock.Eq(&snapshot.MountPartitionDto{
-			PartitionInfo: partitions[0], ScanDir: nil,
-		})).Return("/tmp/scandir", nil).Times(1)
-		f.volumeMounter.EXPECT().MountP(gomock.Eq(&snapshot.MountPartitionDto{
+		f.volumeMounter.EXPECT().Mount(&snapshot.MountPartitionInput{
+			MountOptions: []string{"defaults"},
+			FsType:       "ext4",
+			Name:         "/dev/sdf1",
+		}).Return("/tmp/scandir", nil).Times(1)
+		f.volumeMounter.EXPECT().Mount(gomock.Eq(&snapshot.MountPartitionInput{
 			PartitionInfo: partitions[1], ScanDir: ptr.To("/tmp/scandir/boot/efi"),
 		})).Return("/tmp/scandir/boot/efi", nil).Times(1)
-		f.volumeMounter.EXPECT().MountP(gomock.Eq(&snapshot.MountPartitionDto{
+		f.volumeMounter.EXPECT().Mount(gomock.Eq(&snapshot.MountPartitionInput{
 			PartitionInfo: partitions[2], ScanDir: ptr.To("/tmp/scandir/data"),
 		})).Return("/tmp/scandir/data", nil).Times(1)
 
@@ -146,17 +148,17 @@ func TestMountWithFstab(t *testing.T) {
 			},
 		}
 
-		f.volumeMounter.EXPECT().MountP(gomock.Eq(&snapshot.MountPartitionDto{
+		f.volumeMounter.EXPECT().Mount(gomock.Eq(&snapshot.MountPartitionInput{
 			PartitionInfo: partitions[0], ScanDir: nil,
 		})).Return("/tmp/scandir", nil).Times(1)
-		f.volumeMounter.EXPECT().MountP(gomock.Eq(&snapshot.MountPartitionDto{
+		f.volumeMounter.EXPECT().Mount(gomock.Eq(&snapshot.MountPartitionInput{
 			PartitionInfo: partitions[1], ScanDir: ptr.To("/tmp/scandir/boot/efi"),
 		})).Return("/tmp/scandir/boot/efi", nil).Times(1)
-		f.volumeMounter.EXPECT().MountP(gomock.Eq(&snapshot.MountPartitionDto{
+		f.volumeMounter.EXPECT().Mount(gomock.Eq(&snapshot.MountPartitionInput{
 			PartitionInfo: partitions[2], ScanDir: ptr.To("/tmp/scandir/data"),
 		})).Return("/tmp/scandir/data", nil).Times(1)
 
-		f.volumeMounter.EXPECT().MountP(gomock.Cond(func(dto *snapshot.MountPartitionDto) bool {
+		f.volumeMounter.EXPECT().Mount(gomock.Cond(func(dto *snapshot.MountPartitionInput) bool {
 			return dto.Name == "/dev/sdf1" &&
 				slices.Equal(dto.MountOptions, entries[1].Options) &&
 				dto.ScanDir != nil && *dto.ScanDir == "/tmp/scandir/home"
@@ -271,10 +273,10 @@ func TestMountWithFstab(t *testing.T) {
 			},
 		}
 
-		f.volumeMounter.EXPECT().MountP(gomock.Eq(&snapshot.MountPartitionDto{
+		f.volumeMounter.EXPECT().Mount(gomock.Eq(&snapshot.MountPartitionInput{
 			PartitionInfo: partitions[1], ScanDir: nil,
 		})).Return("/tmp/scandir1", nil).Times(1)
-		f.volumeMounter.EXPECT().MountP(gomock.Eq(&snapshot.MountPartitionDto{
+		f.volumeMounter.EXPECT().Mount(gomock.Eq(&snapshot.MountPartitionInput{
 			PartitionInfo: partitions[2], ScanDir: nil,
 		})).Return("/tmp/scandir2", nil).Times(1)
 
@@ -331,10 +333,10 @@ func TestMountWithFstab(t *testing.T) {
 			},
 		}
 
-		f.volumeMounter.EXPECT().MountP(gomock.Eq(&snapshot.MountPartitionDto{
+		f.volumeMounter.EXPECT().Mount(gomock.Eq(&snapshot.MountPartitionInput{
 			PartitionInfo: partitions[0], ScanDir: nil,
 		})).Return("/tmp/scandir", nil).Times(1)
-		f.volumeMounter.EXPECT().MountP(gomock.Eq(&snapshot.MountPartitionDto{
+		f.volumeMounter.EXPECT().Mount(gomock.Eq(&snapshot.MountPartitionInput{
 			PartitionInfo: partitions[1], ScanDir: ptr.To("/tmp/scandir/boot/efi"),
 		})).Return("/tmp/scandir/boot/efi", nil).Times(1)
 
@@ -392,17 +394,17 @@ func TestMountWithFstab(t *testing.T) {
 			},
 		}
 
-		f.volumeMounter.EXPECT().MountP(gomock.Eq(&snapshot.MountPartitionDto{
+		f.volumeMounter.EXPECT().Mount(gomock.Eq(&snapshot.MountPartitionInput{
 			PartitionInfo: partitions[0], ScanDir: nil,
 		})).Return("/tmp/scandir", nil).Times(1)
-		f.volumeMounter.EXPECT().MountP(gomock.Eq(&snapshot.MountPartitionDto{
+		f.volumeMounter.EXPECT().Mount(gomock.Eq(&snapshot.MountPartitionInput{
 			PartitionInfo: partitions[1], ScanDir: ptr.To("/tmp/scandir/boot/efi"),
 		})).Return("/tmp/scandir/boot/efi", nil).Times(1)
-		f.volumeMounter.EXPECT().MountP(gomock.Eq(&snapshot.MountPartitionDto{
+		f.volumeMounter.EXPECT().Mount(gomock.Eq(&snapshot.MountPartitionInput{
 			PartitionInfo: partitions[2], ScanDir: ptr.To("/tmp/scandir/data"),
 		})).Return("/tmp/scandir/data", nil).Times(1)
 
-		f.volumeMounter.EXPECT().UmountP(partitions[1]).Return(nil).Times(1)
+		f.volumeMounter.EXPECT().UMount(partitions[1]).Return(nil).Times(1)
 
 		result, err := f.dmgr.mountWithFstab(partitions, entries)
 		assert.NoError(t, err)
@@ -458,10 +460,10 @@ func TestMountWithFstab(t *testing.T) {
 			},
 		}
 
-		f.volumeMounter.EXPECT().MountP(gomock.Eq(&snapshot.MountPartitionDto{
+		f.volumeMounter.EXPECT().Mount(gomock.Eq(&snapshot.MountPartitionInput{
 			PartitionInfo: partitions[1], ScanDir: ptr.To("/tmp/prescandir/boot/efi"),
 		})).Return("/tmp/prescandir/boot/efi", nil).Times(1)
-		f.volumeMounter.EXPECT().MountP(gomock.Eq(&snapshot.MountPartitionDto{
+		f.volumeMounter.EXPECT().Mount(gomock.Eq(&snapshot.MountPartitionInput{
 			PartitionInfo: partitions[2], ScanDir: ptr.To("/tmp/prescandir/data"),
 		})).Return("/tmp/prescandir/data", nil).Times(1)
 

@@ -145,8 +145,8 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 
 func (c *DeviceConnection) tryDetectAsset(conf *inventory.Config, asset *inventory.Asset) {
 	for partition, block := range c.partitions {
-		log.Debug().Str("partition", partition).Str("path", block.MountPoint).Str("name", block.Name).Msg("device connection> trying to detect asset")
-		fsConn, err := TryDetectAssetFromPath(c.ID(), block.MountPoint, conf, asset)
+		log.Debug().Str("partition", partition).Str("path", block.RootFsPath()).Str("name", block.Name).Msg("device connection> trying to detect asset")
+		fsConn, err := TryDetectAssetFromPath(c.ID(), block.RootFsPath(), conf, asset)
 		if fsConn != nil {
 			c.FileSystemConnection = fsConn
 			return

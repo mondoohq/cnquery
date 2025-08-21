@@ -21,7 +21,6 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/connection/snapshot"
 	"go.mondoo.com/cnquery/v11/providers/os/fs"
 	"go.mondoo.com/cnquery/v11/providers/os/resources"
-	"k8s.io/utils/ptr"
 )
 
 const (
@@ -104,14 +103,22 @@ func (d *LinuxDeviceManager) IdentifyMountTargets(opts map[string]string) ([]*sn
 	return partitions, errors.Join(errs...)
 }
 
-func (d *LinuxDeviceManager) attemptExpandPartitions(partitions []*snapshot.Partition) ([]*snapshot.MountedPartition, bool, error) {
+// tries to handle cases like
+// 1. reconstructing partitions from fstab
+// 2. expanding partitions that are part of an ostree (we need to find the root dir)
+func (d *LinuxDeviceManager) attemptExpandAndMountPartitions(partitions []*snapshot.Partition) ([]*snapshot.MountedPartition, bool, error) {
 	log.Debug().Msg("attempting to expand partitions infos")
 
-	fstabEntries, err := d.hintFSTypes(partitions)
+	fstabEntries, err := d.hintFsTypes(partitions)
 	if err != nil {
 		log.Warn().Err(err).Msg("could not find fstab")
 		return nil, false, nil
 	}
+	if len(fstabEntries) == 0 {
+		log.Debug().Msg("no fstab entries found, skipping mount with fstab")
+		return nil, false, nil
+	}
+
 	log.Debug().Any("fstab", fstabEntries).Msg("fstab entries found")
 
 	mounted, err := d.mountWithFstab(partitions, fstabEntries)
@@ -124,34 +131,51 @@ func (d *LinuxDeviceManager) attemptExpandPartitions(partitions []*snapshot.Part
 	return mounted, true, nil
 }
 
-func (d *LinuxDeviceManager) hintFSTypes(partitions []*snapshot.Partition) ([]resources.FstabEntry, error) {
+func (d *LinuxDeviceManager) hintFsTypes(partitions []*snapshot.Partition) ([]resources.FstabEntry, error) {
 	for _, partition := range partitions {
-		dir, err := d.volumeMounter.Mount(partition.ToDefaultMountInput())
+		entries, ostree, err := d.hintPartitionFsType(partition)
 		if err != nil {
+			log.Warn().Err(err).Str("device", partition.Name).Msg("unable to hint fstab entries")
 			continue
 		}
-		defer func() {
-			if err := d.volumeMounter.Umount(dir); err != nil {
-				log.Warn().Err(err).Str("device", partition.Name).Msg("unable to unmount partition")
-			}
-		}()
-
-		entries, err := d.attemptFindFstab(dir.MountPoint)
-		if err != nil {
-			return nil, err
-		}
 		if entries != nil {
+			log.Debug().Str("device", partition.Name).Msg("fstab entries found")
 			return entries, nil
 		}
-
-		if ok := d.attemptFindOSTree(dir.MountPoint, partition.Name); ok {
-			log.Debug().Str("device", partition.Name).Msg("ostree found")
-			return nil, nil
+		if ostree != "" {
+			partition.RootPath = ostree
 		}
+	}
+	return nil, nil
+}
 
+func (d *LinuxDeviceManager) hintPartitionFsType(partition *snapshot.Partition) ([]resources.FstabEntry, string, error) {
+	mounted, err := d.volumeMounter.Mount(partition.ToDefaultMountInput())
+	if err != nil {
+		return nil, "", err
+	}
+	defer func() {
+		if err := d.volumeMounter.Umount(mounted); err != nil {
+			log.Warn().Err(err).Str("device", partition.Name).Msg("unable to unmount partition")
+		}
+	}()
+
+	entries, err := d.attemptFindFstab(mounted.MountPoint)
+	if err != nil {
+		return nil, "", err
+	}
+	if entries != nil {
+		return entries, "", nil
 	}
 
-	return nil, errors.New("fstab not found")
+	if match := d.attemptFindOSTreeRoot(mounted.MountPoint, partition.Name); match != "" {
+		trimmed := strings.TrimPrefix(match, mounted.MountPoint)
+		log.Debug().Str("device", partition.Name).Str("ostree", trimmed).Msg("ostree found")
+		return nil, trimmed, nil
+	}
+
+	// no fstab/ostree found, return empty entries
+	return nil, "", nil
 }
 
 func (d *LinuxDeviceManager) attemptFindFstab(dir string) ([]resources.FstabEntry, error) {
@@ -187,28 +211,28 @@ func (d *LinuxDeviceManager) attemptFindFstab(dir string) ([]resources.FstabEntr
 	return resources.ParseFstab(bytes.NewReader(fstabFile))
 }
 
-func (d *LinuxDeviceManager) attemptFindOSTree(dir string, partitionName string) bool {
+func (d *LinuxDeviceManager) attemptFindOSTreeRoot(dir string, partitionName string) string {
 	log.Debug().Str("device", partitionName).Str("path", dir).Msg("attempting to find ostree")
 
 	info, err := os.Stat(path.Join(dir, "ostree"))
 	if err != nil {
 		if os.IsNotExist(err) {
-			return false
+			return ""
 		}
 
 		log.Error().Err(err).Str("device", partitionName).Str("path", dir).Msg("unable to stat ostree")
-		return false
+		return ""
 	}
 
 	if !info.IsDir() {
 		log.Warn().Str("device", partitionName).Str("path", dir).Msg("ostree is not a directory")
-		return false
+		return ""
 	}
 
 	entries, err := os.ReadDir(path.Join(dir, "ostree"))
 	if err != nil {
 		log.Error().Err(err).Str("device", partitionName).Str("path", dir).Msg("unable to read ostree directory")
-		return false
+		return ""
 	}
 
 	entries = slices.DeleteFunc(entries, func(entry os.DirEntry) bool {
@@ -227,7 +251,7 @@ func (d *LinuxDeviceManager) attemptFindOSTree(dir string, partitionName string)
 
 	if len(entries) == 0 {
 		log.Debug().Str("device", partitionName).Str("path", dir).Msg("no ostree entries")
-		return false
+		return ""
 	}
 	if len(entries) > 1 {
 		slices.SortFunc(entries, func(a, b os.DirEntry) int {
@@ -241,22 +265,25 @@ func (d *LinuxDeviceManager) attemptFindOSTree(dir string, partitionName string)
 	boot1, err := os.Readlink(path.Join(dir, "ostree", entries[0].Name()))
 	if err != nil {
 		log.Error().Err(err).Str("device", partitionName).Msg("unable to readlink boot.1")
-		return false
+		return ""
 	}
 
 	matches, err := filepath.Glob(path.Join(dir, "ostree", boot1, "*", "*", "0"))
 	if err != nil {
 		log.Error().Err(err).Str("device", partitionName).Msg("unable to glob ostree")
-		return false
+		return ""
 	}
 
 	if len(matches) == 0 {
 		log.Debug().Str("device", partitionName).Str("path", dir).Msg("no ostree matches")
-		return false
+		return ""
 	} else if len(matches) > 1 {
-		log.Warn().Str("device", partitionName).Str("path", dir).Msg("multiple ostree matches")
+		log.Debug().Str("device", partitionName).Str("path", dir).Msg("multiple ostree matches")
 	}
-	return true
+
+	match := matches[0]
+	log.Debug().Str("matches", match).Str("device", partitionName).Msg("ostree match found")
+	return match
 }
 
 // mountWithFstab mounts partitions adjusting the mountpoint and mount options according to the discovered fstab entries
@@ -280,16 +307,16 @@ func (d *LinuxDeviceManager) mountWithFstab(partitions []*snapshot.Partition, en
 			Str("guest-mountpoint", entry.Mountpoint).
 			Msg("partition matches fstab entry")
 
-		var scanDir *string
+		mountDir := ""
 		if rootScanDir != "" {
-			scanDir = ptr.To(path.Join(rootScanDir, entry.Mountpoint))
+			mountDir = path.Join(rootScanDir, entry.Mountpoint)
 		}
 
 		log.Debug().Str("device", partition.Name).
 			Strs("options", entry.Options).
-			Any("scan-dir", scanDir).
+			Any("mount-dir", mountDir).
 			Msg("mounting partition as subvolume")
-		mp, err := d.volumeMounter.Mount(partition.ToMountInput(entry.Options, scanDir))
+		mp, err := d.volumeMounter.Mount(partition.ToMountInput(entry.Options, mountDir))
 		if err != nil {
 			log.Error().Err(err).Str("device", partition.Name).Msg("unable to mount partition")
 			return nil, err
@@ -346,7 +373,7 @@ func cmpPartition2Fstab(partition *snapshot.Partition, entry resources.FstabEntr
 func (d *LinuxDeviceManager) Mount(partitions []*snapshot.Partition) ([]*snapshot.MountedPartition, error) {
 	res := []*snapshot.MountedPartition{}
 	if d.opts[SkipAttemptExpandPartitions] != "true" {
-		mps, ok, err := d.attemptExpandPartitions(partitions)
+		mps, ok, err := d.attemptExpandAndMountPartitions(partitions)
 		if ok {
 			return mps, err
 		}
