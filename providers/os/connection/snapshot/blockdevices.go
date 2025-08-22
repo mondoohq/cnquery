@@ -207,7 +207,7 @@ func (device *BlockDevice) GetPartitions(includeBoot bool, includeMounted bool) 
 			return false
 		}
 
-		// sltekip mounted partitions unless includeMounted is true
+		// skip mounted partitions unless includeMounted is true
 		if partition.isMounted() && !includeMounted {
 			log.Debug().Str("name", partition.Name).Strs("mountpoints", partition.MountPoints).Msg("skipping mounted partition")
 			return false
