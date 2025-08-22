@@ -72,8 +72,8 @@ var (
 		WinArchX86OnArm64: "x86onarm",
 	}
 
-	sqlGDRUpdateRegExp = regexp.MustCompile(`^GDR \d+ .+ SQL Server \d+ \(KB\d+\)`)
-	sqlHotfixRegExp    = regexp.MustCompile(`^Hotfix .+ SQL Server`)
+	sqlGDRUpdateRegExp = regexp.MustCompile(`^GDR.\d+.+SQL.Server.\d+.\(KB\d+\)`)
+	sqlHotfixRegExp    = regexp.MustCompile(`^Hotfix.+SQL.Server`)
 	// Find the database engine package and use version as a reference for the update
 	msSqlServiceRegexp = regexp.MustCompile(`^SQL Server \d+ Database Engine Services$`)
 )
@@ -715,6 +715,8 @@ func createPackage(name, version, format, arch, publisher, installLocation strin
 		purlType = purl.TypeAppx
 	}
 
+	// replace non-breaking spaces with regular spaces
+	name = strings.ReplaceAll(name, "\u00a0", " ")
 	pkg := &Package{
 		Name:    name,
 		Version: version,
