@@ -27,6 +27,11 @@ type Partition struct {
 	// but is nested in a folder somewhere (e.g. boot.1)
 	// e.g. ostree/boot.1.1/fedora-coreos/1f65edba61a143a78be83340f66d3e247e20ec48a539724ca037607c7bdf4942/0
 	RootPath string
+
+	// RequestedName is the name of the partition as requested by the user.
+	// This might differ from the actual Name if the partition was found using interchangeable names.
+	// E.g. this could be '/dev/sdm' while Name is '/dev/xvdm' since we treat [sd]m and [xvd]m the same.
+	RequestedName string
 }
 
 func (p *Partition) ToMountInput(opts []string, mountDir string) *MountPartitionInput {

@@ -18,30 +18,34 @@ import (
 )
 
 type BlockDevices struct {
-	BlockDevices []BlockDevice `json:"blockDevices,omitempty"`
+	BlockDevices []*BlockDevice `json:"blockDevices,omitempty"`
 }
 
 type BlockDevice struct {
-	Name        string        `json:"name,omitempty"`
-	FsType      string        `json:"fstype,omitempty"`
-	Label       string        `json:"label,omitempty"`
-	Uuid        string        `json:"uuid,omitempty"`
-	PartUuid    string        `json:"partuuid,omitempty"`
-	MountPoints []string      `json:"mountpoints,omitempty"`
-	Children    []BlockDevice `json:"children,omitempty"`
-	Size        Size          `json:"size,omitempty"`
+	Name        string         `json:"name,omitempty"`
+	FsType      string         `json:"fstype,omitempty"`
+	Label       string         `json:"label,omitempty"`
+	Uuid        string         `json:"uuid,omitempty"`
+	PartUuid    string         `json:"partuuid,omitempty"`
+	MountPoints []string       `json:"mountpoints,omitempty"`
+	Children    []*BlockDevice `json:"children,omitempty"`
+	Size        Size           `json:"size,omitempty"`
 
-	Aliases []string `json:"-"`
+	// This is how the device was requested/searched as. It might differ from the actual name
+	// e.g. we treat /dev/sdm the same as /dev/xvdm, so RequestedName can be '/dev/sdm' while Name is '/dev/xvdm'
+	RequestedName string   `json:"-"`
+	Aliases       []string `json:"-"`
 }
 
 func (b BlockDevice) Partition(devPath string) *Partition {
 	return &Partition{
-		Name:     path.Join(devPath, b.Name),
-		FsType:   b.FsType,
-		Label:    b.Label,
-		Uuid:     b.Uuid,
-		PartUuid: b.PartUuid,
-		Aliases:  b.Aliases,
+		Name:          path.Join(devPath, b.Name),
+		FsType:        b.FsType,
+		Label:         b.Label,
+		Uuid:          b.Uuid,
+		PartUuid:      b.PartUuid,
+		Aliases:       b.Aliases,
+		RequestedName: b.RequestedName,
 	}
 }
 
@@ -120,21 +124,21 @@ func (blockEntries *BlockDevices) findAliases() {
 }
 
 // Searches for a device by name
-func (blockEntries BlockDevices) FindDevice(requested string) (BlockDevice, error) {
+func (blockEntries BlockDevices) FindDevice(requested string) (*BlockDevice, error) {
 	log.Debug().Str("device", requested).Msg("searching for device")
 
 	devices := blockEntries.BlockDevices
 	if len(devices) == 0 {
-		return BlockDevice{}, fmt.Errorf("no block devices found")
+		return nil, fmt.Errorf("no block devices found")
 	}
 
 	requestedName := strings.TrimPrefix(requested, "/dev/")
 	lmsCache := map[string]int{}
 	bestMatch := struct {
-		Device BlockDevice
+		Device *BlockDevice
 		Lms    int
 	}{
-		Device: BlockDevice{},
+		Device: nil,
 		Lms:    0,
 	}
 
@@ -144,6 +148,7 @@ func (blockEntries BlockDevices) FindDevice(requested string) (BlockDevice, erro
 			Strs("aliases", d.Aliases).
 			Msg("checking device")
 		if d.Name == requestedName {
+			d.RequestedName = requested
 			return d, nil
 		}
 
@@ -163,6 +168,7 @@ func (blockEntries BlockDevices) FindDevice(requested string) (BlockDevice, erro
 	}
 
 	if bestMatch.Lms > 0 {
+		bestMatch.Device.RequestedName = requested
 		return bestMatch.Device, nil
 	}
 
@@ -171,11 +177,11 @@ func (blockEntries BlockDevices) FindDevice(requested string) (BlockDevice, erro
 		Any("checked_names", lmsCache).
 		Msg("no device found")
 
-	return BlockDevice{}, fmt.Errorf("no block device found with name %s", requested)
+	return nil, fmt.Errorf("no block device found with name %s", requested)
 }
 
 // Searches all the partitions in the device and finds one that can be mounted. It must be unmounted, non-boot partition
-func (device BlockDevice) GetPartitions(includeBoot bool, includeMounted bool) ([]*Partition, error) {
+func (device *BlockDevice) GetPartitions(includeBoot bool, includeMounted bool) ([]*Partition, error) {
 	log.Debug().Str("device", device.Name).Msg("get partitions for device")
 
 	blockDevices := &BlockDevices{
@@ -189,7 +195,7 @@ func (device BlockDevice) GetPartitions(includeBoot bool, includeMounted bool) (
 	sortBlockDevicesBySize(blockDevices.BlockDevices)
 	blockDevices.findAliases()
 
-	filter := func(partition BlockDevice) bool {
+	filter := func(partition *BlockDevice) bool {
 		if partition.FsType == "" {
 			log.Debug().Str("name", partition.Name).Msg("skipping partition without filesystem type")
 			return false
@@ -241,8 +247,8 @@ func (device BlockDevice) GetPartitions(includeBoot bool, includeMounted bool) (
 	return partitions, nil
 }
 
-func mapLVM2Partitions(part BlockDevice) (partitions []*Partition) {
-	for _, p := range part.Children {
+func mapLVM2Partitions(device *BlockDevice) (partitions []*Partition) {
+	for _, p := range device.Children {
 		partitions = append(partitions, p.Partition("/dev/mapper"))
 	}
 
@@ -250,7 +256,7 @@ func mapLVM2Partitions(part BlockDevice) (partitions []*Partition) {
 }
 
 // If multiple partitions meet this criteria, the largest one is returned.
-func (device BlockDevice) GetMountablePartition() (*Partition, error) {
+func (device *BlockDevice) GetMountablePartition() (*Partition, error) {
 	// return the largest partition. we can extend this to be a parameter in the future
 	partitions, err := device.GetPartitions(false, false)
 	if err != nil {
@@ -260,15 +266,14 @@ func (device BlockDevice) GetMountablePartition() (*Partition, error) {
 	return partitions[0], nil
 }
 
-func sortBlockDevicesBySize(partitions []BlockDevice) {
+func sortBlockDevicesBySize(partitions []*BlockDevice) {
 	sort.Slice(partitions, func(i, j int) bool {
 		return partitions[i].Size > partitions[j].Size
 	})
 }
 
 func (blockEntries *BlockDevices) findAlias(alias, path string) {
-	for i := range blockEntries.BlockDevices {
-		device := blockEntries.BlockDevices[i]
+	for _, device := range blockEntries.BlockDevices {
 		if alias == device.Name {
 			log.Debug().
 				Str("alias", alias).
@@ -276,7 +281,6 @@ func (blockEntries *BlockDevices) findAlias(alias, path string) {
 				Str("name", device.Name).
 				Msg("found alias")
 			device.Aliases = append(device.Aliases, path)
-			blockEntries.BlockDevices[i] = device
 			return
 		}
 	}
