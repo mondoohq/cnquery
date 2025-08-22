@@ -11,9 +11,9 @@ type DeviceManager interface {
 	// Name returns the name of the device manager
 	Name() string
 	// IdentifyMountTargets returns a list of partitions that match the given options and can be mounted
-	IdentifyMountTargets(opts map[string]string) ([]*snapshot.PartitionInfo, error)
-	// Mounts the partition and returns the directory it was mounted to
-	Mount(pi *snapshot.PartitionInfo) (string, error)
+	IdentifyMountTargets(opts map[string]string) ([]*snapshot.Partition, error)
+	// Mounts partitions and returns the directories they were mounted to
+	Mount(partitions []*snapshot.Partition) ([]*snapshot.MountedPartition, error)
 	// UnmountAndClose unmounts the partitions from the specified dirs and closes the device manager
 	UnmountAndClose()
 }

@@ -8,35 +8,63 @@ import (
 	"strings"
 )
 
-type PartitionInfo struct {
+type Partition struct {
 	// Device name (e.g. /dev/sda1)
 	Name string
 	// Filesystem type (e.g. ext4)
 	FsType string
-
 	// Resolved device name aliases (e.g. /dev/sda1 -> /dev/nvme0n1p1)
 	Aliases []string
 	// (optional) Label is the partition label
 	Label string
 	// (optional) UUID is the volume UUID
 	Uuid string
-	// (optional) MountPoint is the partition mount point
-	MountPoint string
 	// (optional) PartUuid is the partition UUID
 	PartUuid string
 
-	// (optional) MountOptions are the mount options
-	MountOptions []string
-	// (optional) bind adjusts the root for FS connection
-	bind string
+	// if specified, indicates where the root filesystem is present on the partition
+	// this is useful for ostree where the root fs is not under the mounted partition directly
+	// but is nested in a folder somewhere (e.g. boot.1)
+	// e.g. ostree/boot.1.1/fedora-coreos/1f65edba61a143a78be83340f66d3e247e20ec48a539724ca037607c7bdf4942/0
+	RootPath string
+
+	// RequestedName is the name of the partition as requested by the user.
+	// This might differ from the actual Name if the partition was found using interchangeable names.
+	// E.g. this could be '/dev/sdm' while Name is '/dev/xvdm' since we treat [sd]m and [xvd]m the same.
+	RequestedName string
 }
 
-// MountPartitionDto is the input for the MountP method
-type MountPartitionDto struct {
-	*PartitionInfo
+func (p *Partition) ToMountInput(opts []string, mountDir string) *MountPartitionInput {
+	return &MountPartitionInput{
+		Partition:    p,
+		MountOptions: opts,
+		MountDir:     mountDir,
+	}
+}
 
-	// Override the scan dir for the mount
-	ScanDir *string
+func (p *Partition) ToDefaultMountInput() *MountPartitionInput {
+	return p.ToMountInput([]string{}, "")
+}
+
+type MountedPartition struct {
+	Partition *Partition
+	// MountPoint is the directory where the partition is mounted
+	MountPoint string
+	// MountOptions are the mount options
+	MountOptions []string
+}
+
+// MountPartitionInput is the input for the Mount method
+type MountPartitionInput struct {
+	Partition    *Partition
+	MountOptions []string
+	// if specfied, mount the partition at this directory
+	MountDir string
+}
+
+// Gets the path on the mounted partition where the root filesystem is located.
+func (mp *MountedPartition) RootFsPath() string {
+	return path.Join(mp.MountPoint, mp.Partition.RootPath)
 }
 
 func (entry BlockDevice) isNoBootVolume() bool {
@@ -46,18 +74,9 @@ func (entry BlockDevice) isNoBootVolume() bool {
 }
 
 func (entry BlockDevice) isMounted() bool {
-	return entry.MountPoint != ""
-}
-
-func (entry PartitionInfo) key() string {
-	return strings.Join(append([]string{entry.Name, entry.Uuid}, entry.MountOptions...), "|")
-}
-
-func (i PartitionInfo) RootDir() string {
-	return path.Join(i.MountPoint, i.bind)
-}
-
-func (i *PartitionInfo) SetBind(bind string) *PartitionInfo {
-	i.bind = bind
-	return i
+	if len(entry.MountPoints) == 1 && entry.MountPoints[0] == "" {
+		// This is a special case where the partition is not mounted
+		return false
+	}
+	return len(entry.MountPoints) > 0
 }

@@ -4,7 +4,10 @@
 package snapshot
 
 import (
+	"maps"
 	"os"
+	"slices"
+	"sort"
 	"strings"
 
 	"go.mondoo.com/cnquery/v11/utils/stringx"
@@ -20,15 +23,15 @@ const (
 
 //go:generate mockgen -source=./volumemounter.go -destination=./mock_volumemounter.go -package=snapshot
 type VolumeMounter interface {
-	MountP(dto *MountPartitionDto) (string, error)
-	UmountP(partition *PartitionInfo) error
-	UnmountVolumeFromInstance() error
+	Mount(input *MountPartitionInput) (*MountedPartition, error)
+	Umount(partition *MountedPartition) error
+	UnmountAll() error
 	RemoveTempScanDir() error
 }
 
 type volumeMounter struct {
 	// the tmp dirs we create; serves as the directory we mount the volumes to
-	// maps the device name to the directory
+	// maps directory name to the partition name
 	scanDirs  map[string]string
 	cmdRunner *LocalCommandRunner
 }
@@ -41,56 +44,49 @@ func NewVolumeMounter(shell []string) VolumeMounter {
 }
 
 // Mounts a specific partition and returns the directory it was mounted to
-func (m *volumeMounter) MountP(dto *MountPartitionDto) (string, error) {
-	if dto == nil {
-		return "", errors.New("mount device> partition is required")
+func (m *volumeMounter) Mount(input *MountPartitionInput) (*MountedPartition, error) {
+	if input == nil {
+		return nil, errors.New("mount device> partition is required")
+	}
+	if input.Partition.Name == "" {
+		return nil, errors.New("mount device> partition name is required")
+	}
+	if input.Partition.FsType == "" {
+		return nil, errors.New("mount device> partition fs type is required")
 	}
 
-	partition := dto.PartitionInfo
-	if partition == nil {
-		return "", errors.New("mount device> partition is required")
-	}
-	if partition.Name == "" {
-		return "", errors.New("mount device> partition name is required")
-	}
-	if partition.FsType == "" {
-		return "", errors.New("mount device> partition fs type is required")
-	}
-
-	var dir string
-	var err error
-	if dto.ScanDir == nil {
-		dir, err = m.createScanDir()
+	mountDir := input.MountDir
+	if mountDir == "" {
+		dir, err := m.createScanDir()
 		if err != nil {
-			return "", err
+			return nil, err
 		}
-	} else {
-		dir = *dto.ScanDir
+		mountDir = dir
 	}
 
-	m.scanDirs[partition.key()] = dir
+	m.scanDirs[mountDir] = input.Partition.Name
 
-	return dir, m.mountVolume(dto)
+	mp := &MountedPartition{
+		Partition:    input.Partition,
+		MountOptions: input.MountOptions,
+		MountPoint:   mountDir,
+	}
+	return mp, m.mountVolume(input, mountDir)
 }
 
-func (m *volumeMounter) UmountP(partition *PartitionInfo) error {
+func (m *volumeMounter) Umount(partition *MountedPartition) error {
 	if partition == nil {
 		return errors.New("unmount device> partition is required")
 	}
-	if partition.Name == "" {
+	if partition.Partition.Name == "" {
 		return errors.New("unmount device> partition name is required")
 	}
-	key := partition.key()
-	dir, ok := m.scanDirs[key]
-	if !ok {
-		return errors.New("unmount device> partition not found")
-	}
-	log.Debug().Str("dir", dir).Str("name", partition.Name).Msg("unmount volume")
-	if err := Unmount(dir); err != nil {
-		log.Warn().Err(err).Str("dir", dir).Msg("failed to unmount dir")
+	log.Debug().Str("dir", partition.MountPoint).Str("name", partition.Partition.Name).Msg("unmount volume")
+	if err := Unmount(partition.MountPoint); err != nil {
+		log.Warn().Err(err).Str("dir", partition.MountPoint).Msg("failed to unmount dir")
 		return err
 	}
-	delete(m.scanDirs, key)
+	delete(m.scanDirs, partition.MountPoint)
 
 	return nil
 }
@@ -105,17 +101,19 @@ func (m *volumeMounter) createScanDir() (string, error) {
 	return dir, nil
 }
 
-func (m *volumeMounter) mountVolume(fsInfo *MountPartitionDto) error {
-	opts := fsInfo.MountOptions
-	if fsInfo.FsType == "xfs" {
+func (m *volumeMounter) mountVolume(input *MountPartitionInput, dir string) error {
+	opts := input.MountOptions
+	fsType := input.Partition.FsType
+	name := input.Partition.Name
+	if fsType == "xfs" {
 		opts = append(opts, "nouuid")
 	}
+
 	opts = stringx.DedupStringArray(opts)
 	opts = sanitizeOptions(opts)
 
-	scanDir := m.scanDirs[fsInfo.key()]
-	log.Debug().Str("fstype", fsInfo.FsType).Str("device", fsInfo.Name).Str("scandir", scanDir).Str("opts", strings.Join(opts, ",")).Msg("mount volume to scan dir")
-	return Mount(fsInfo.Name, scanDir, fsInfo.FsType, opts)
+	log.Debug().Str("fstype", fsType).Str("device", name).Str("dir", dir).Strs("opts", opts).Msg("mount volume to scan dir")
+	return Mount(name, dir, fsType, opts)
 }
 
 func sanitizeOptions(options []string) []string {
@@ -133,17 +131,22 @@ func sanitizeOptions(options []string) []string {
 	return sanitized
 }
 
-func (m *volumeMounter) UnmountVolumeFromInstance() error {
+func (m *volumeMounter) UnmountAll() error {
 	if len(m.scanDirs) == 0 {
 		log.Warn().Msg("no scan dirs to unmount, skipping")
 		return nil
 	}
 
 	var errs []error
-	for name, dir := range m.scanDirs {
+	dirs := slices.Collect(maps.Keys(m.scanDirs))
+	// sort the entries by the length of the mountpoint, so we can mount the deepest directories first
+	sort.Slice(dirs, func(i, j int) bool {
+		return PathDepth(dirs[i]) > PathDepth(dirs[j])
+	})
+	for _, dir := range dirs {
 		log.Debug().
 			Str("dir", dir).
-			Str("name", name).
+			Str("partition", m.scanDirs[dir]).
 			Msg("unmount volume")
 		if err := Unmount(dir); err != nil {
 			log.Warn().
@@ -157,10 +160,10 @@ func (m *volumeMounter) UnmountVolumeFromInstance() error {
 
 func (m *volumeMounter) RemoveTempScanDir() error {
 	var errs []error
-	for name, dir := range m.scanDirs {
+	for dir, partition := range m.scanDirs {
 		log.Debug().
 			Str("dir", dir).
-			Str("name", name).
+			Str("partition", partition).
 			Msg("remove created dir")
 		if err := os.RemoveAll(dir); err != nil {
 			log.Error().Err(err).
@@ -171,4 +174,11 @@ func (m *volumeMounter) RemoveTempScanDir() error {
 	}
 
 	return errors.Join(errs...)
+}
+
+func PathDepth(path string) int {
+	if path == "/" {
+		return 0
+	}
+	return len(strings.Split(strings.Trim(path, "/"), "/"))
 }
