@@ -107,6 +107,11 @@ Get-ItemProperty (@(
 Select-Object -Property DisplayName,DisplayVersion,Publisher,EstimatedSize,InstallSource,UninstallString,InstallLocation | ConvertTo-Json -Compress
 `
 
+// We need to fill in the path collected from the registry
+const dotNetClrVersionScript = `
+((Get-Item "%sclr.dll").VersionInfo).ProductVersion
+`
+
 var (
 	WINDOWS_QUERY_HOTFIXES      = `Get-HotFix | Select-Object -Property Status, Description, HotFixId, Caption, InstalledOn, InstalledBy | ConvertTo-Json`
 	WINDOWS_QUERY_APPX_PACKAGES = `Get-AppxPackage -AllUsers | Select Name, PackageFullName, Architecture, Version, Publisher, InstallLocation | ConvertTo-Json`
@@ -271,21 +276,6 @@ func (w *WinPkgManager) getDotNetFramework() ([]Package, error) {
 	// https://learn.microsoft.com/en-us/dotnet/framework/install/how-to-determine-which-versions-are-installed#use-registry-editor-older-framework-versions
 	dotNet35 := "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v3.5"
 
-	return getDotNetFrameworkPackageFromRegistryKeys(dotNet45plus, dotNet35, w.platform)
-}
-
-// getDotNetFrameworkFs returns the .NET Framework package discovered on the filesystem
-func (w *WinPkgManager) getDotNetFrameworkFs() ([]Package, error) {
-	// https://learn.microsoft.com/en-us/dotnet/framework/install/how-to-determine-which-versions-are-installed#net-framework-45-and-later-versions
-	dotNet45plus := "Microsoft\\NET Framework Setup\\NDP\\v4\\Full"
-	// https://learn.microsoft.com/en-us/dotnet/framework/install/how-to-determine-which-versions-are-installed#use-registry-editor-older-framework-versions
-	dotNet35 := "Microsoft\\NET Framework Setup\\NDP\\v3.5"
-
-	return getDotNetFrameworkPackageFromRegistryKeys(dotNet45plus, dotNet35, w.platform)
-}
-
-// getDotNetFrameworkPackageFromRegistryKeys returns the .NET Framework package from the registry keys
-func getDotNetFrameworkPackageFromRegistryKeys(dotNet45plus, dotNet35 string, platform *inventory.Platform) ([]Package, error) {
 	items, err := registry.GetNativeRegistryKeyItems(dotNet45plus)
 	if err != nil && status.Code(err) != codes.NotFound {
 		return nil, err
@@ -302,11 +292,47 @@ func getDotNetFrameworkPackageFromRegistryKeys(dotNet45plus, dotNet35 string, pl
 		return nil, nil
 	}
 
-	p := getDotNetFrameworkPackageFromRegistryKeyItems(items, platform)
-	if p == nil {
+	installLocation := ""
+	for _, i := range items {
+		switch i.Key {
+		case "InstallPath":
+			installLocation = i.Value.String
+		}
+	}
+
+	if installLocation == "" {
 		return nil, nil
 	}
-	return []Package{*p}, nil
+
+	dotNetRuntimeScript := fmt.Sprintf(dotNetClrVersionScript, installLocation)
+	cmd, err := w.conn.RunCommand(powershell.Encode(dotNetRuntimeScript))
+	if err != nil {
+		return nil, fmt.Errorf("could not read app package list")
+	}
+
+	if cmd.ExitStatus != 0 {
+		stderr, err := io.ReadAll(cmd.Stderr)
+		if err != nil {
+			return nil, err
+		}
+		return nil, errors.New("failed to retrieve installed apps: " + string(stderr))
+	}
+
+	data, err := io.ReadAll(cmd.Stdout)
+	if err != nil {
+		return nil, err
+	}
+
+	// for empty result set do not get the '{}', therefore lets abort here
+	if len(data) == 0 {
+		return nil, nil
+	}
+	version := strings.TrimSpace(string(data))
+	version = strings.ReplaceAll(version, "\n", "")
+
+	pkg := createPackage("Microsoft .NET Framework", version, "windows/app", w.platform.Arch, "Microsoft", installLocation, w.platform)
+
+	return []Package{*pkg}, nil
 }
 
 func (w *WinPkgManager) getInstalledApps() ([]Package, error) {
@@ -402,14 +428,6 @@ func (w *WinPkgManager) getFsInstalledApps() ([]Package, error) {
 		}
 	}
 
-	// These are the .NET Framework packages
-	// They do not show up in the general apps or features list, so we need to discover them separately
-	dotNetFramework, err := w.getDotNetFrameworkFs()
-	if err != nil {
-		log.Debug().Err(err).Msg("could not get .NET Framework packages from filesystem")
-	} else {
-		packages = append(packages, dotNetFramework...)
-	}
 	msSqlHotfixes := findMsSqlHotfixes(packages)
 	if len(msSqlHotfixes) > 0 {
 		packages = updateMsSqlPackages(packages, msSqlHotfixes[len(msSqlHotfixes)-1])
@@ -527,29 +545,6 @@ func getPackageFromRegistryKeyItems(children []registry.RegistryKeyItem, platfor
 	}
 
 	pkg := createPackage(displayName, displayVersion, "windows/app", platform.Arch, publisher, installLocation, platform)
-
-	return pkg
-}
-
-// getDotNetFrameworkPackageFromRegistryKeyItems returns the .NET Framework package from the registry key items
-func getDotNetFrameworkPackageFromRegistryKeyItems(items []registry.RegistryKeyItem, platform *inventory.Platform) *Package {
-	var version string
-	var installLocation string
-
-	for _, i := range items {
-		switch i.Key {
-		case "Version":
-			version = i.Value.String
-		case "InstallLocation":
-			installLocation = i.Value.String
-		}
-	}
-
-	if version == "" {
-		return nil
-	}
-
-	pkg := createPackage("Microsoft .NET Framework", version, "windows/app", platform.Arch, "Microsoft", installLocation, platform)
 
 	return pkg
 }
