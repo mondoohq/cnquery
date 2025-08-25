@@ -487,6 +487,36 @@ func compileResourceNone(c *compiler, typ types.Type, ref uint64, id string, cal
 	return types.Bool, nil
 }
 
+func compileResourceChildAccess(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+	if call != nil && len(call.Function) > 0 {
+		return types.Nil, errors.New("function " + id + " does not take arguments")
+	}
+
+	_, err := listResource(c, typ)
+	if err != nil {
+		return types.Nil, multierr.Wrap(err, "failed to compile "+id)
+	}
+
+	t, err := compileResourceDefault(c, typ, ref, "list", nil)
+	if err != nil {
+		return t, err
+	}
+	listRef := c.tailRef()
+
+	c.addChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   id,
+		Function: &llx.Function{
+			Type:    string(t.Child()),
+			Binding: listRef,
+			Args: []*llx.Primitive{
+				llx.RefPrimitiveV2(listRef),
+			},
+		},
+	})
+	return typ, nil
+}
+
 func compileResourceLength(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
 	if call != nil && len(call.Function) > 0 {
 		return types.Nil, errors.New("function " + id + " does not take arguments")
