@@ -268,6 +268,27 @@ func TestTypeCasts(t *testing.T) {
 	})
 }
 
+func TestResource_Builtins(t *testing.T) {
+	x := testutils.InitTester(testutils.LinuxMock())
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:        "customGroups.length",
+			ResultIndex: 0,
+			Expectation: int64(5),
+		},
+		{
+			Code:        "customGroups.first",
+			ResultIndex: 0,
+			Expectation: &llx.MockResource{Name: "mgroup", ID: "group1"},
+		},
+		{
+			Code:        "customGroups.last",
+			ResultIndex: 0,
+			Expectation: &llx.MockResource{Name: "mgroup", ID: "group7"},
+		},
+	})
+}
+
 func TestNullResources(t *testing.T) {
 	x := testutils.InitTester(testutils.LinuxMock())
 	x.TestSimple(t, []testutils.SimpleTest{

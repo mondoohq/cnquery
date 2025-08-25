@@ -224,7 +224,8 @@ func init() {
 			"none":     {compile: compileMapNone, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 		},
 		types.ResourceLike: {
-			// "":       compileHandler{compile: compileResourceDefault},
+			"first":    {compile: compileResourceChildAccess, signature: FunctionSignature{}},
+			"last":     {compile: compileResourceChildAccess, signature: FunctionSignature{}},
 			"length":   {compile: compileResourceLength, signature: FunctionSignature{}},
 			"where":    {compile: compileResourceWhere, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"sample":   {compile: compileResourceSample, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Int}}},
