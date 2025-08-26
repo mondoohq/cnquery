@@ -62,7 +62,7 @@ func TestFindDevice(t *testing.T) {
 	t.Run("match by exact name", func(t *testing.T) {
 		blockEntries := BlockDevices{
 			BlockDevices: []*BlockDevice{
-				{Name: "sda", Children: []*BlockDevice{{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoints: []string{"/"}}}},
+				{Name: "sda", Children: []*BlockDevice{{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoint: "/"}}},
 				{Name: "nvme0n1", Children: []*BlockDevice{{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
 				{Name: "sdx", Children: []*BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
 			},
@@ -77,7 +77,7 @@ func TestFindDevice(t *testing.T) {
 	t.Run("match by alias name", func(t *testing.T) {
 		blockEntries := BlockDevices{
 			BlockDevices: []*BlockDevice{
-				{Name: "sda", Children: []*BlockDevice{{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoints: []string{"/"}}}},
+				{Name: "sda", Children: []*BlockDevice{{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoint: "/"}}},
 				{Name: "nvme0n1", Children: []*BlockDevice{{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
 				{Name: "sdx", Aliases: []string{"xvdx"}, Children: []*BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
 			},
@@ -92,7 +92,7 @@ func TestFindDevice(t *testing.T) {
 	t.Run("match by interchangeable name", func(t *testing.T) {
 		blockEntries := BlockDevices{
 			BlockDevices: []*BlockDevice{
-				{Name: "sda", Children: []*BlockDevice{{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoints: []string{"/"}}}},
+				{Name: "sda", Children: []*BlockDevice{{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoint: "/"}}},
 				{Name: "nvme0n1", Children: []*BlockDevice{{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
 				{Name: "xvdc", Children: []*BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
 			},
@@ -107,7 +107,7 @@ func TestFindDevice(t *testing.T) {
 	t.Run("no match", func(t *testing.T) {
 		blockEntries := BlockDevices{
 			BlockDevices: []*BlockDevice{
-				{Name: "sda", Children: []*BlockDevice{{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoints: []string{"/"}}}},
+				{Name: "sda", Children: []*BlockDevice{{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoint: "/"}}},
 				{Name: "nvme0n1", Children: []*BlockDevice{{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
 				{Name: "xvdc", Children: []*BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
 			},
@@ -121,7 +121,7 @@ func TestFindDevice(t *testing.T) {
 	t.Run("multiple matches by trailing letter", func(t *testing.T) {
 		blockEntries := BlockDevices{
 			BlockDevices: []*BlockDevice{
-				{Name: "sda", Children: []*BlockDevice{{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoints: []string{"/"}}}},
+				{Name: "sda", Children: []*BlockDevice{{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoint: "/"}}},
 				{Name: "nvme0n1", Children: []*BlockDevice{{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
 				{Name: "stc", Children: []*BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
 				{Name: "xvdc", Children: []*BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
@@ -137,7 +137,7 @@ func TestFindDevice(t *testing.T) {
 	t.Run("perfect match and trailing letter matches", func(t *testing.T) {
 		blockEntries := BlockDevices{
 			BlockDevices: []*BlockDevice{
-				{Name: "sda", Children: []*BlockDevice{{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoints: []string{"/"}}}},
+				{Name: "sda", Children: []*BlockDevice{{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoint: "/"}}},
 				{Name: "nvme0n1", Children: []*BlockDevice{{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
 				{Name: "sta", Children: []*BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
 				{Name: "xvda", Children: []*BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
@@ -156,7 +156,7 @@ func TestFindDevice(t *testing.T) {
 				{Name: "xvda", Children: []*BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
 				{Name: "sta", Children: []*BlockDevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
 				{Name: "nvme0n1", Children: []*BlockDevice{{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
-				{Name: "sda", Children: []*BlockDevice{{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoints: []string{"/"}}}},
+				{Name: "sda", Children: []*BlockDevice{{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoint: "/"}}},
 			},
 		}
 
@@ -172,7 +172,7 @@ func TestGetMountablePartition(t *testing.T) {
 		block := BlockDevice{
 			Name: "sda",
 			Children: []*BlockDevice{
-				{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoints: []string{"/"}},
+				{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoint: "/"},
 			},
 		}
 		_, err := block.GetMountablePartition()
@@ -184,7 +184,7 @@ func TestGetMountablePartition(t *testing.T) {
 		block := BlockDevice{
 			Name: "sda",
 			Children: []*BlockDevice{
-				{Uuid: "1234", FsType: "", Label: "ROOT", Name: "sda1", MountPoints: []string{}},
+				{Uuid: "1234", FsType: "", Label: "ROOT", Name: "sda1", MountPoint: ""},
 			},
 		}
 		_, err := block.GetMountablePartition()
@@ -196,7 +196,7 @@ func TestGetMountablePartition(t *testing.T) {
 		block := BlockDevice{
 			Name: "sda",
 			Children: []*BlockDevice{
-				{Uuid: "1234", FsType: "xfs", Label: "EFI", Name: "sda1", MountPoints: []string{}},
+				{Uuid: "1234", FsType: "xfs", Label: "EFI", Name: "sda1", MountPoint: ""},
 			},
 		}
 		_, err := block.GetMountablePartition()
@@ -208,7 +208,7 @@ func TestGetMountablePartition(t *testing.T) {
 		block := BlockDevice{
 			Name: "sda",
 			Children: []*BlockDevice{
-				{Uuid: "1234", FsType: "vfat", Label: "", Name: "sda1", MountPoints: []string{}},
+				{Uuid: "1234", FsType: "vfat", Label: "", Name: "sda1", MountPoint: ""},
 			},
 		}
 		_, err := block.GetMountablePartition()
@@ -220,7 +220,7 @@ func TestGetMountablePartition(t *testing.T) {
 		block := BlockDevice{
 			Name: "sda",
 			Children: []*BlockDevice{
-				{Uuid: "1234", FsType: "xfs", Label: "boot", Name: "sda1", MountPoints: []string{}},
+				{Uuid: "1234", FsType: "xfs", Label: "boot", Name: "sda1", MountPoint: ""},
 			},
 		}
 		_, err := block.GetMountablePartition()
@@ -270,11 +270,11 @@ func TestGetPartitions(t *testing.T) {
 			Name: "sda",
 			Children: []*BlockDevice{
 				// already mounted
-				{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoints: []string{"/"}},
-				{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "sda2", MountPoints: []string{}},
-				{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sda3", MountPoints: []string{}},
+				{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoint: "/"},
+				{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "sda2", MountPoint: ""},
+				{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sda3", MountPoint: ""},
 				// no fs type
-				{Uuid: "12347", FsType: "", Label: "ROOT", Name: "sda4", MountPoints: []string{}},
+				{Uuid: "12347", FsType: "", Label: "ROOT", Name: "sda4", MountPoint: ""},
 			},
 		}
 		parts, err := block.GetPartitions(true, false)
@@ -306,11 +306,11 @@ func TestGetPartitions(t *testing.T) {
 			Name: "sda",
 			Children: []*BlockDevice{
 				// already mounted
-				{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoints: []string{"/"}},
-				{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "sda2", MountPoints: []string{}},
-				{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sda3", MountPoints: []string{}},
+				{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoint: "/"},
+				{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "sda2", MountPoint: ""},
+				{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sda3", MountPoint: ""},
 				// no fs type
-				{Uuid: "12347", FsType: "", Label: "ROOT", Name: "sda4", MountPoints: []string{}},
+				{Uuid: "12347", FsType: "", Label: "ROOT", Name: "sda4", MountPoint: ""},
 			},
 		}
 		parts, err := block.GetPartitions(true, true)
@@ -327,11 +327,11 @@ func TestGetPartitions(t *testing.T) {
 		block := BlockDevice{
 			Name: "sda",
 			Children: []*BlockDevice{
-				{Uuid: "1234", FsType: "fat32", Label: "EFI", Name: "sda1", MountPoints: []string{}},
+				{Uuid: "1234", FsType: "fat32", Label: "EFI", Name: "sda1", MountPoint: ""},
 				{
-					Uuid: "12345", FsType: "lvm2_member", Label: "LVM", Name: "sda2", MountPoints: []string{}, Children: []*BlockDevice{
-						{Uuid: "lv12346", FsType: "lvm", Label: "ROOT", Name: "rootvg-rootlv", MountPoints: []string{}},
-						{Uuid: "lv12347", FsType: "lvm", Label: "HOME", Name: "rootvg-homelv", MountPoints: []string{}},
+					Uuid: "12345", FsType: "lvm2_member", Label: "LVM", Name: "sda2", MountPoint: "", Children: []*BlockDevice{
+						{Uuid: "lv12346", FsType: "lvm", Label: "ROOT", Name: "rootvg-rootlv", MountPoint: ""},
+						{Uuid: "lv12347", FsType: "lvm", Label: "HOME", Name: "rootvg-homelv", MountPoint: ""},
 					},
 				},
 			},

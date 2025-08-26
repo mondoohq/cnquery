@@ -74,9 +74,5 @@ func (entry BlockDevice) isNoBootVolume() bool {
 }
 
 func (entry BlockDevice) isMounted() bool {
-	if len(entry.MountPoints) == 1 && entry.MountPoints[0] == "" {
-		// This is a special case where the partition is not mounted
-		return false
-	}
-	return len(entry.MountPoints) > 0
+	return entry.MountPoint != ""
 }
