@@ -45,12 +45,65 @@ const (
 	DiscoveryComputeNetworks    = "compute-networks"
 	DiscoveryComputeSubnetworks = "compute-subnetworks"
 	DiscoveryGkeClusters        = "gke-clusters"
-	DiscoveryInstances          = "instances"
+	DiscoveryComputeInstances   = "instances"
 	DiscoveryStorageBuckets     = "storage-buckets"
 )
 
+var All = []string{
+	DiscoveryOrganization,
+	DiscoveryFolders,
+	DiscoveryProjects,
+}
+
+func allDiscovery() []string {
+	return append(All, AllAPIResources...)
+}
+
+var Auto = []string{
+	DiscoveryOrganization,
+	DiscoveryFolders,
+	DiscoveryProjects,
+}
+
+var AllAPIResources = []string{
+	DiscoveryComputeImages,
+	DiscoveryComputeNetworks,
+	DiscoveryComputeSubnetworks,
+	DiscoveryComputeFirewalls,
+	DiscoveryGkeClusters,
+	DiscoveryStorageBuckets,
+	DiscoveryBigQueryDatasets,
+	DiscoverCloudSQLMySQL,
+	DiscoverCloudSQLPostgreSQL,
+	DiscoverCloudSQLSQLServer,
+	DiscoverCloudDNSZones,
+	DiscoverCloudKMSKeyrings,
+	DiscoveryComputeInstances,
+}
+
 // List of all CloudSQL types, this will be used during discovery
 var AllCloudSQLTypes = []string{DiscoverCloudSQLPostgreSQL, DiscoverCloudSQLSQLServer, DiscoverCloudSQLMySQL}
+
+func getDiscoveryTargets(config *inventory.Config) []string {
+	targets := config.Discover.Targets
+
+	if stringx.ContainsAnyOf(targets, DiscoveryAll) {
+		// return the All list + All Api Resources list
+		return allDiscovery()
+	}
+	if stringx.ContainsAnyOf(targets, DiscoveryAuto) {
+		for i, target := range targets {
+			if target == "auto" {
+				// remove the auto keyword
+				targets = slices.Delete(targets, i, i+1)
+			}
+		}
+		// add in the required discovery targets
+		return append(targets, Auto...)
+	}
+	// random assortment of targets
+	return targets
+}
 
 func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 	conn, ok := runtime.Connection.(*connection.GcpConnection)
@@ -61,6 +114,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 	in := &inventory.Inventory{Spec: &inventory.InventorySpec{
 		Assets: []*inventory.Asset{},
 	}}
+	discoveryTargets := getDiscoveryTargets(conn.Conf)
 
 	if conn.ResourceType() == connection.Organization {
 		res, err := NewResource(runtime, "gcp.organization", nil)
@@ -70,7 +124,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 
 		gcpOrg := res.(*mqlGcpOrganization)
 
-		list, err := discoverOrganization(conn, gcpOrg)
+		list, err := discoverOrganization(conn, gcpOrg, discoveryTargets)
 		if err != nil {
 			return nil, err
 		}
@@ -82,7 +136,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 		}
 
 		gcpFolder := res.(*mqlGcpFolder)
-		if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, DiscoveryAll, DiscoveryAuto, DiscoveryFolders) {
+		if stringx.Contains(discoveryTargets, DiscoveryFolders) {
 			in.Spec.Assets = append(in.Spec.Assets, &inventory.Asset{
 				PlatformIds: []string{
 					connection.NewFolderPlatformID(gcpFolder.Id.Data),
@@ -101,7 +155,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 			})
 		}
 
-		list, err := discoverFolder(conn, gcpFolder)
+		list, err := discoverFolder(conn, gcpFolder, discoveryTargets)
 		if err != nil {
 			return nil, err
 		}
@@ -116,7 +170,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 		}
 
 		gcpProject := res.(*mqlGcpProject)
-		if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, DiscoveryAll, DiscoveryAuto, DiscoveryProjects) {
+		if stringx.Contains(discoveryTargets, DiscoveryProjects) {
 			in.Spec.Assets = append(in.Spec.Assets, &inventory.Asset{
 				PlatformIds: []string{
 					connection.NewProjectPlatformID(gcpProject.Id.Data),
@@ -135,7 +189,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 			})
 		}
 
-		list, err := discoverProject(conn, gcpProject)
+		list, err := discoverProject(conn, gcpProject, discoveryTargets)
 		if err != nil {
 			return nil, err
 		}
@@ -163,9 +217,9 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 	return in, nil
 }
 
-func discoverOrganization(conn *connection.GcpConnection, gcpOrg *mqlGcpOrganization) ([]*inventory.Asset, error) {
+func discoverOrganization(conn *connection.GcpConnection, gcpOrg *mqlGcpOrganization, discoveryTargets []string) ([]*inventory.Asset, error) {
 	assetList := []*inventory.Asset{}
-	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, DiscoveryAll, DiscoveryAuto, DiscoveryProjects) {
+	if stringx.Contains(discoveryTargets, DiscoveryProjects) {
 		projects := gcpOrg.GetProjects()
 		if projects.Error != nil {
 			return nil, projects.Error
@@ -203,14 +257,14 @@ func discoverOrganization(conn *connection.GcpConnection, gcpOrg *mqlGcpOrganiza
 				Connections: []*inventory.Config{projectConf}, // pass-in the parent connection config
 			})
 
-			projectAssets, err := discoverProject(conn, project)
+			projectAssets, err := discoverProject(conn, project, discoveryTargets)
 			if err != nil {
 				return nil, err
 			}
 			assetList = append(assetList, projectAssets...)
 		}
 	}
-	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, DiscoveryAll, DiscoveryAuto, DiscoveryFolders) {
+	if stringx.Contains(discoveryTargets, DiscoveryFolders) {
 		folders := gcpOrg.GetFolders()
 		if folders.Error != nil {
 			return nil, folders.Error
@@ -251,10 +305,10 @@ func discoverOrganization(conn *connection.GcpConnection, gcpOrg *mqlGcpOrganiza
 	return assetList, nil
 }
 
-func discoverFolder(conn *connection.GcpConnection, gcpFolder *mqlGcpFolder) ([]*inventory.Asset, error) {
+func discoverFolder(conn *connection.GcpConnection, gcpFolder *mqlGcpFolder, discoveryTargets []string) ([]*inventory.Asset, error) {
 	assetList := []*inventory.Asset{}
 
-	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, DiscoveryAll, DiscoveryAuto, DiscoveryProjects) {
+	if stringx.Contains(discoveryTargets, DiscoveryProjects) {
 		projects := gcpFolder.GetProjects()
 		if projects.Error != nil {
 			return nil, projects.Error
@@ -296,13 +350,9 @@ func discoverFolder(conn *connection.GcpConnection, gcpFolder *mqlGcpFolder) ([]
 	return assetList, nil
 }
 
-func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) ([]*inventory.Asset, error) {
+func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, discoveryTargets []string) ([]*inventory.Asset, error) {
 	assetList := []*inventory.Asset{}
-	targets := []string{DiscoveryAll}
-	if ENABLE_FINE_GRAINED_ASSETS {
-		targets = append(targets, DiscoveryAuto)
-	}
-	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, append(targets, DiscoveryInstances)...) {
+	if stringx.Contains(discoveryTargets, DiscoveryComputeInstances) {
 		compute := gcpProject.GetCompute()
 		if compute.Error != nil {
 			return nil, compute.Error
@@ -350,7 +400,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 			})
 		}
 	}
-	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, append(targets, DiscoveryComputeImages)...) {
+	if stringx.Contains(discoveryTargets, DiscoveryComputeImages) {
 		compute := gcpProject.GetCompute()
 		if compute.Error != nil {
 			return nil, compute.Error
@@ -384,7 +434,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 			})
 		}
 	}
-	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, append(targets, DiscoverCloudKMSKeyrings)...) {
+	if stringx.Contains(discoveryTargets, DiscoverCloudKMSKeyrings) {
 		kmsservice := gcpProject.GetKms()
 		if kmsservice.Error != nil {
 			return nil, kmsservice.Error
@@ -414,7 +464,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 			})
 		}
 	}
-	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, append(targets, DiscoverCloudDNSZones)...) {
+	if stringx.Contains(discoveryTargets, DiscoverCloudDNSZones) {
 		dnsservice := gcpProject.GetDns()
 		if dnsservice.Error != nil {
 			return nil, dnsservice.Error
@@ -445,7 +495,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 		}
 	}
 	// all Cloud SQL discovery flags/types
-	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, append(targets, AllCloudSQLTypes...)...) {
+	if stringx.ContainsAnyOf(discoveryTargets, AllCloudSQLTypes...) {
 		sqlservice := gcpProject.GetSql()
 		if sqlservice.Error != nil {
 			return nil, sqlservice.Error
@@ -463,7 +513,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 				platformName   = fmt.Sprintf("gcp-sql-%s", sqlType)
 			)
 
-			if !slices.Contains(conn.Conf.Discover.Targets, fmt.Sprintf("cloud-sql-%s", sqlType)) {
+			if !slices.Contains(discoveryTargets, fmt.Sprintf("cloud-sql-%s", sqlType)) {
 				log.Debug().
 					Str("sql_type", sqlType).
 					Msg("gcp.discovery> skipping cloud sql instance")
@@ -488,7 +538,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 			})
 		}
 	}
-	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, append(targets, DiscoveryComputeNetworks)...) {
+	if stringx.ContainsAnyOf(discoveryTargets, DiscoveryComputeNetworks) {
 		compute := gcpProject.GetCompute()
 		if compute.Error != nil {
 			return nil, compute.Error
@@ -517,7 +567,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 			})
 		}
 	}
-	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, append(targets, DiscoveryComputeSubnetworks)...) {
+	if stringx.ContainsAnyOf(discoveryTargets, DiscoveryComputeSubnetworks) {
 		compute := gcpProject.GetCompute()
 		if compute.Error != nil {
 			return nil, compute.Error
@@ -550,7 +600,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 			})
 		}
 	}
-	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, append(targets, DiscoveryComputeFirewalls)...) {
+	if stringx.ContainsAnyOf(discoveryTargets, DiscoveryComputeFirewalls) {
 		compute := gcpProject.GetCompute()
 		if compute.Error != nil {
 			return nil, compute.Error
@@ -579,7 +629,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 			})
 		}
 	}
-	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, append(targets, DiscoveryGkeClusters)...) {
+	if stringx.ContainsAnyOf(discoveryTargets, DiscoveryGkeClusters) {
 		gke := gcpProject.GetGke()
 		if gke.Error != nil {
 			return nil, gke.Error
@@ -608,7 +658,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 			})
 		}
 	}
-	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, append(targets, DiscoveryStorageBuckets)...) {
+	if stringx.ContainsAnyOf(discoveryTargets, DiscoveryStorageBuckets) {
 		storage := gcpProject.GetStorage()
 		if storage.Error != nil {
 			return nil, storage.Error
@@ -637,7 +687,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 			})
 		}
 	}
-	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, append(targets, DiscoveryBigQueryDatasets)...) {
+	if stringx.ContainsAnyOf(discoveryTargets, DiscoveryBigQueryDatasets) {
 		bq := gcpProject.GetBigquery()
 		if bq.Error != nil {
 			return nil, bq.Error
