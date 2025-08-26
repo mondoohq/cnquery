@@ -19,13 +19,12 @@ func TestImpactParsing(t *testing.T) {
 		data  string
 		res   *Impact
 	}{
-		{
-			"simple number",
-			"30",
-			&Impact{
-				Value: &ImpactValue{Value: 30},
-			},
-		},
+		{"simple number", "30", &Impact{Value: &ImpactValue{Value: 30}}},
+		{"critical", "\"critical\"", &Impact{Value: &ImpactValue{Value: 95}}},
+		{"high", "\"high\"", &Impact{Value: &ImpactValue{Value: 80}}},
+		{"medium", "\"medium\"", &Impact{Value: &ImpactValue{Value: 55}}},
+		{"low", "\"low\"", &Impact{Value: &ImpactValue{Value: 20}}},
+		{"none", "\"none\"", &Impact{Value: &ImpactValue{Value: 0}}},
 		{
 			"complex definition",
 			`{"weight": 20, "value": 40}`,
