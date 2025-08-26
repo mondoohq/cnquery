@@ -22,14 +22,14 @@ type BlockDevices struct {
 }
 
 type BlockDevice struct {
-	Name        string         `json:"name,omitempty"`
-	FsType      string         `json:"fstype,omitempty"`
-	Label       string         `json:"label,omitempty"`
-	Uuid        string         `json:"uuid,omitempty"`
-	PartUuid    string         `json:"partuuid,omitempty"`
-	MountPoints []string       `json:"mountpoints,omitempty"`
-	Children    []*BlockDevice `json:"children,omitempty"`
-	Size        Size           `json:"size,omitempty"`
+	Name       string         `json:"name,omitempty"`
+	FsType     string         `json:"fstype,omitempty"`
+	Label      string         `json:"label,omitempty"`
+	Uuid       string         `json:"uuid,omitempty"`
+	PartUuid   string         `json:"partuuid,omitempty"`
+	MountPoint string         `json:"mountpoint,omitempty"`
+	Children   []*BlockDevice `json:"children,omitempty"`
+	Size       Size           `json:"size,omitempty"`
 
 	// This is how the device was requested/searched as. It might differ from the actual name
 	// e.g. we treat /dev/sdm the same as /dev/xvdm, so RequestedName can be '/dev/sdm' while Name is '/dev/xvdm'
@@ -68,7 +68,7 @@ func (s *Size) UnmarshalJSON(data []byte) error {
 }
 
 func (cmdRunner *LocalCommandRunner) GetBlockDevices() (*BlockDevices, error) {
-	cmd, err := cmdRunner.RunCommand("lsblk -bo NAME,SIZE,FSTYPE,MOUNTPOINTS,LABEL,UUID,PARTUUID --json")
+	cmd, err := cmdRunner.RunCommand("lsblk -bo NAME,SIZE,FSTYPE,MOUNTPOINT,LABEL,UUID,PARTUUID --json")
 	if err != nil {
 		return nil, err
 	}
@@ -209,7 +209,7 @@ func (device *BlockDevice) GetPartitions(includeBoot bool, includeMounted bool) 
 
 		// skip mounted partitions unless includeMounted is true
 		if partition.isMounted() && !includeMounted {
-			log.Debug().Str("name", partition.Name).Strs("mountpoints", partition.MountPoints).Msg("skipping mounted partition")
+			log.Debug().Str("name", partition.Name).Str("mountpoint", partition.MountPoint).Msg("skipping mounted partition")
 			return false
 		}
 
@@ -235,7 +235,7 @@ func (device *BlockDevice) GetPartitions(includeBoot bool, includeMounted bool) 
 			log.Debug().
 				Str("name", partition.Name).
 				Str("fs_type", partition.FsType).
-				Strs("mountpoints", partition.MountPoints).
+				Str("mountpoint", partition.MountPoint).
 				Msg("skipping partition, because the filter did not match")
 		}
 	}
