@@ -29,6 +29,14 @@ func (v *Impact) HumanReadable() string {
 	}
 }
 
+var ImpactValues = map[string]int32{
+	"critical": 95,
+	"high":     80,
+	"medium":   55,
+	"low":      20,
+	"none":     0,
+}
+
 func (v *Impact) AddBase(base *Impact) {
 	if base == nil {
 		return
@@ -73,6 +81,16 @@ func (v *Impact) UnmarshalJSON(data []byte) error {
 		if v.Value.Value < 0 || v.Value.Value > 100 {
 			return errors.New("impact must be between 0 and 100")
 		}
+		return nil
+	}
+
+	var word string
+	if err := json.Unmarshal(data, &word); err == nil {
+		num, ok := ImpactValues[word]
+		if !ok {
+			return errors.New("impact can only be critical, high, medium, low, or none or a numeric value")
+		}
+		v.Value = &ImpactValue{Value: num}
 		return nil
 	}
 
