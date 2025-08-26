@@ -37,7 +37,7 @@ enum Status {
   // status typically requires a thorough review and reprocessing of the BOM.
   STATUS_FAILED = 3;
 
-  // STARTED indicates that the SBOM scan was initialized. It is used 
+  // STARTED indicates that the SBOM scan was initialized. It is used
   // for tracking progress of a scan over time.
   STATUS_STARTED = 4;
 }
@@ -76,7 +76,7 @@ message Sbom {
   // providing a detailed account of the software composition of the asset.
   repeated Package packages = 5;
 
-  // 'error_message' is and optional field that describes the error from a 
+  // 'error_message' is and optional field that describes the error from a
   // failed scan
   string error_message = 6;
 }
@@ -119,14 +119,14 @@ enum ExternalIDType {
   // and all subresources belong.
   EXTERNAL_ID_TYPE_AWS_ORG = 3;
 
-  // EXTERNAL_ID_TYPE_AZURE_SUB represents an Azure subscription identifier. 
+  // EXTERNAL_ID_TYPE_AZURE_SUB represents an Azure subscription identifier.
   // This type is used when the external ID refers specifically to an Azure
-  // subscription number, which is a unique identifier for an Azure 
+  // subscription number, which is a unique identifier for an Azure
   // subscription.
   EXTERNAL_ID_TYPE_AZURE_SUB = 4;
 
-  // EXTERNAL_ID_TYPE_AZURE_ID represents a fully qualified Azure resource 
-  // identifier, a standarized format used by Azure to uniquely identify 
+  // EXTERNAL_ID_TYPE_AZURE_ID represents a fully qualified Azure resource
+  // identifier, a standarized format used by Azure to uniquely identify
   // resources within the Azure ecosystem.
   EXTERNAL_ID_TYPE_AZURE_ID = 5;
 }
@@ -180,9 +180,12 @@ message Asset {
   map<string, string> labels = 18;
 
   // 'trace_id' is used to link the asset to a specific identifier
-  // that is passed in by the user. if the user provides no value, 
+  // that is passed in by the user. if the user provides no value,
   // this will be empty.
   string trace_id = 19;
+
+  // In case this is a Linux asset, you can specify the different kernels here.
+  repeated Kernel kernels = 20;
 }
 
 // Platform describes the technical platform or environment of an asset. This
@@ -254,4 +257,13 @@ message Evidence {
   // the asset. The format and interpretation of this value depend on the
   // 'type'. For example, it could be a file path for file evidence.
   string value = 2;
+}
+
+message Kernel {
+  // The name of the kernel.
+  string name = 1;
+  // The version of the kernel.
+  string version = 2;
+  // Is the kernel currently running or not
+  bool running = 3;
 }
