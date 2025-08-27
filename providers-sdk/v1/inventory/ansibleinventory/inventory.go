@@ -240,20 +240,10 @@ func (i *Inventory) ToV1Inventory() *inventory.Inventory {
 	}
 
 	// move credentials out into credentials section
-	out.PreProcess()
+	// TODO: check on this error
+	_ = out.PreProcess()
 
 	return out
-}
-
-var validConnectionTypes = []string{"ssh", "winrm", "local", "docker"}
-
-func isValidConnectionType(conn string) bool {
-	for i := range validConnectionTypes {
-		if conn == validConnectionTypes[i] {
-			return true
-		}
-	}
-	return false
 }
 
 // ansibleBackend maps an ansible connection to mondoo backend
