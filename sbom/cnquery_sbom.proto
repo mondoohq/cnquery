@@ -259,6 +259,7 @@ message Evidence {
   string value = 2;
 }
 
+// Kernel contains information about a OS kernel
 message Kernel {
   // The name of the kernel.
   string name = 1;
