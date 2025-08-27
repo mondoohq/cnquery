@@ -60,7 +60,9 @@ func NewImageConnection(id uint32, conf *inventory.Config, asset *inventory.Asse
 			if err != nil {
 				log.Debug().Str("tar", extractedFsTar.Name()).Msg("tar> failed to save image tar")
 				_ = os.Remove(extractedFsTar.Name())
-				_ = os.Remove(ociTar.Name())
+				if ociTar != nil {
+					_ = os.Remove(ociTar.Name())
+				}
 				return "", err
 			}
 
@@ -70,7 +72,9 @@ func NewImageConnection(id uint32, conf *inventory.Config, asset *inventory.Asse
 		tar.WithCloseFn(func() {
 			log.Debug().Str("tar", extractedFsTar.Name()).Msg("tar> remove temporary tar file on connection close")
 			_ = os.Remove(extractedFsTar.Name())
-			_ = os.Remove(ociTar.Name())
+			if ociTar != nil {
+				_ = os.Remove(ociTar.Name())
+			}
 		}),
 	)
 }
