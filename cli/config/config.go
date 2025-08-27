@@ -40,37 +40,15 @@ const (
 // Init initializes and loads the mondoo config
 func Init(rootCmd *cobra.Command) {
 	cobra.OnInitialize(InitViperConfig, func() {
-		Features = getFeatures()
+		var err error
+		Features, err = cnquery.InitFeatures(viper.GetStringSlice("features")...)
+		if err != nil {
+			log.Error().Msg(err.Error())
+		}
+		// by default we don't print the list of active features, at least not for now...
 	})
 	// persistent flags are global for the application
 	rootCmd.PersistentFlags().StringVar(&UserProvidedPath, "config", "", "Set config file path (default $HOME/.config/mondoo/mondoo.yml)")
-}
-
-func getFeatures() cnquery.Features {
-	bitSet := make([]bool, 256)
-	flags := []byte{}
-
-	for _, f := range cnquery.DefaultFeatures {
-		if !bitSet[f] {
-			bitSet[f] = true
-			flags = append(flags, f)
-		}
-	}
-
-	envFeatures := viper.GetStringSlice("features")
-	for _, name := range envFeatures {
-		flag, ok := cnquery.FeaturesValue[name]
-		if ok {
-			if !bitSet[byte(flag)] {
-				bitSet[byte(flag)] = true
-				flags = append(flags, byte(flag))
-			}
-		} else {
-			log.Warn().Str("feature", name).Msg("could not parse feature")
-		}
-	}
-
-	return cnquery.Features(flags)
 }
 
 func InitViperConfig() {
