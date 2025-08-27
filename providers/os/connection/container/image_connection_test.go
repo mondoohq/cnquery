@@ -126,7 +126,7 @@ func TestNewImageConnectionSetsOciTarFormat(t *testing.T) {
 		require.NoError(t, err)
 
 		inv := &inventory.Config{Options: map[string]string{
-			container.ImageTarFormatOptKey: "true",
+			container.INCLUDE_OCI_TAR_OPT_KEY: "true",
 		}}
 		_, err = container.NewImageConnection(1, inv, &inventory.Asset{}, img, ref)
 		require.NoError(t, err)

@@ -27,7 +27,7 @@ const (
 	// used to cache the oci format tar file when the inventory requests to create it alongside the extracted file system tar
 	OPTION_FILE_OCI = "oci-path"
 	// tar the image in the format you get when running `docker save <image> > <image>.tar` containing layers and manifest.json
-	ImageTarFormatOptKey = "include-oci-tar"
+	INCLUDE_OCI_TAR_OPT_KEY = "include-oci-tar"
 )
 
 // NewImageConnection uses a container image reference as input and creates a tar connection
@@ -90,7 +90,7 @@ func saveImgTarToTmp(extractedTarFile, ociTarFile *os.File, img v1.Image, ref na
 }
 
 func includeOciTar(conf *inventory.Config) bool {
-	return conf.Options[ImageTarFormatOptKey] == "true"
+	return conf.Options[INCLUDE_OCI_TAR_OPT_KEY] == "true"
 }
 
 // NewRegistryImage loads a container image from a remote registry
