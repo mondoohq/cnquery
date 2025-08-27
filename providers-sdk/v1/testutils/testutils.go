@@ -42,33 +42,19 @@ var (
 
 func init() {
 	logger.InitTestEnv()
-	Features = getEnvFeatures()
+
+	var err error
+	Features, err = cnquery.InitFeatures(strings.Split(os.Getenv("FEATURES"), ",")...)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+	}
+	fmt.Println("---> active features: " + Features.String())
 
 	_, pathToFile, _, ok := runtime.Caller(0)
 	if !ok {
 		panic("unable to get runtime for testutils for cnquery providers")
 	}
 	TestutilsDir = path.Dir(pathToFile)
-}
-
-func getEnvFeatures() cnquery.Features {
-	env := os.Getenv("FEATURES")
-	if env == "" {
-		return cnquery.Features{byte(cnquery.PiperCode)}
-	}
-
-	arr := strings.Split(env, ",")
-	var fts cnquery.Features
-	for i := range arr {
-		v, ok := cnquery.FeaturesValue[arr[i]]
-		if ok {
-			fmt.Println("--> activate feature: " + arr[i])
-			fts = append(Features, byte(v))
-		} else {
-			panic("cannot find requested feature: " + arr[i])
-		}
-	}
-	return fts
 }
 
 type tester struct {
