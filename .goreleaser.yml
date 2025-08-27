@@ -31,7 +31,7 @@ builds:
       - -tags="production netgo"
     ldflags:
       - "-extldflags=-static"
-      - -s -w -X go.mondoo.com/cnquery/v11.Version={{.Version}} -X go.mondoo.com/cnquery/v11.Build={{.ShortCommit}} -X go.mondoo.com/cnquery/v11.Date={{.Date}}
+      - -s -w -X go.mondoo.com/cnquery/v12.Version={{.Version}} -X go.mondoo.com/cnquery/v12.Build={{.ShortCommit}} -X go.mondoo.com/cnquery/v12.Date={{.Date}}
   - id: macos
     main: ./apps/cnquery/cnquery.go
     binary: cnquery
@@ -43,7 +43,7 @@ builds:
     flags: -tags production
     ldflags:
       # clang + macos does not support static: - -extldflags "-static"
-      - -s -w -X go.mondoo.com/cnquery/v11.Version={{.Version}} -X go.mondoo.com/cnquery/v11.Build={{.ShortCommit}} -X go.mondoo.com/cnquery/v11.Date={{.Date}}
+      - -s -w -X go.mondoo.com/cnquery/v12.Version={{.Version}} -X go.mondoo.com/cnquery/v12.Build={{.ShortCommit}} -X go.mondoo.com/cnquery/v12.Date={{.Date}}
     hooks:
       post:
         - cmd: /tmp/quill sign-and-notarize "{{ .Path }}" -vv || true
@@ -61,7 +61,7 @@ builds:
     flags: -tags production -buildmode exe
     ldflags:
       - "-extldflags -static"
-      - -s -w -X go.mondoo.com/cnquery/v11.Version={{.Version}} -X go.mondoo.com/cnquery/v11.Build={{.ShortCommit}} -X go.mondoo.com/cnquery/v11.Date={{.Date}}
+      - -s -w -X go.mondoo.com/cnquery/v12.Version={{.Version}} -X go.mondoo.com/cnquery/v12.Build={{.ShortCommit}} -X go.mondoo.com/cnquery/v12.Date={{.Date}}
     hooks:
       post:
         - cmd: jsign --storetype TRUSTEDSIGNING --keystore {{ .Env.TSIGN_AZURE_ENDPOINT }} --storepass {{ .Env.TSIGN_ACCESS_TOKEN }} --alias {{ .Env.TSIGN_ACCOUNT_NAME }}/{{ .Env.TSIGN_CERT_PROFILE_NAME }} '{{ .Path }}'
