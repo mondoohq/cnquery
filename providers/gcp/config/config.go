@@ -41,7 +41,7 @@ Examples with the GCP project configured:
 			Discovery: []string{
 				resources.DiscoveryOrganization,
 				resources.DiscoveryFolders,
-				resources.DiscoveryInstances,
+				resources.DiscoveryComputeInstances,
 				resources.DiscoveryProjects,
 				resources.DiscoveryComputeImages,
 				resources.DiscoveryComputeNetworks,
