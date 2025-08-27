@@ -96,7 +96,7 @@ func TestNewImageConnection_DisableDelayDiscovery(t *testing.T) {
 	assert.False(t, inv.DelayDiscovery)
 }
 
-func TestNewImageConnectionSetsOciTarFormat(t *testing.T) {
+func TestNewImageConnectionSetsOciTarFile(t *testing.T) {
 	t.Run("do not include oci does not set oci tar file opt", func(t *testing.T) {
 		err := cacheAlpine()
 		require.NoError(t, err, "should create tar without error")
@@ -112,10 +112,10 @@ func TestNewImageConnectionSetsOciTarFormat(t *testing.T) {
 		}}
 		_, err = container.NewImageConnection(1, inv, &inventory.Asset{}, img, ref)
 		require.NoError(t, err)
-		assert.Empty(t, inv.Options[container.OPTION_FILE_OCI])
+		require.Empty(t, inv.Options[container.OPTION_FILE_OCI])
 	})
 
-	t.Run("do not include oci sets oci tar file opt", func(t *testing.T) {
+	t.Run("include oci sets oci tar file opt", func(t *testing.T) {
 		err := cacheAlpine()
 		require.NoError(t, err, "should create tar without error")
 
@@ -130,7 +130,7 @@ func TestNewImageConnectionSetsOciTarFormat(t *testing.T) {
 		}}
 		_, err = container.NewImageConnection(1, inv, &inventory.Asset{}, img, ref)
 		require.NoError(t, err)
-		assert.NotEmpty(t, inv.Options[container.OPTION_FILE_OCI])
+		require.NotEmpty(t, inv.Options[container.OPTION_FILE_OCI])
 	})
 }
 
