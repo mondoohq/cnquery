@@ -150,7 +150,7 @@ func (c *ContainerConnection) FileInfo(path string) (shared.FileInfoDetails, err
 	}
 
 	return shared.FileInfoDetails{
-		Mode: shared.FileModeDetails{mode},
+		Mode: shared.FileModeDetails{FileMode: mode},
 		Size: stat.Size(),
 		Uid:  uid,
 		Gid:  gid,
