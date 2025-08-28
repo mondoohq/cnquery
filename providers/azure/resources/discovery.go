@@ -6,6 +6,7 @@ package resources
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	"go.mondoo.com/cnquery/v12/llx"
@@ -16,8 +17,6 @@ import (
 
 	subscriptions "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions"
 )
-
-var ENABLE_FINE_GRAINED_ASSETS = false
 
 const (
 	SubscriptionLabel  = "azure.mondoo.com/subscription"
@@ -43,6 +42,31 @@ const (
 	DiscoveryKeyVaults               = "keyvaults-vaults"
 	DiscoverySecurityGroups          = "security-groups"
 )
+
+var All = []string{
+	DiscoverySubscriptions,
+	DiscoveryInstances,
+}
+
+var Auto = []string{DiscoverySubscriptions}
+
+func allDiscovery() []string {
+	return append(All, AllAPIResources...)
+}
+
+var AllAPIResources = []string{
+	DiscoveryInstancesApi,
+	DiscoverySqlServers,
+	DiscoveryPostgresServers,
+	DiscoveryPostgresFlexibleServers,
+	DiscoveryMySqlServers,
+	DiscoveryMySqlFlexibleServers,
+	DiscoveryMariaDbServers,
+	DiscoveryStorageAccounts,
+	DiscoveryStorageContainers,
+	DiscoveryKeyVaults,
+	DiscoverySecurityGroups,
+}
 
 type azureObject struct {
 	subscription string
@@ -73,13 +97,35 @@ func MondooAzureInstanceID(instanceID string) string {
 	return "//platformid.api.mondoo.app/runtime/azure" + instanceID
 }
 
+func getDiscoveryTargets(config *inventory.Config) []string {
+	targets := config.Discover.Targets
+	if len(targets) == 0 {
+		return Auto
+	}
+	if stringx.ContainsAnyOf(targets, DiscoveryAll) {
+		// return the All list + All Api Resources list
+		return allDiscovery()
+	}
+	if stringx.ContainsAnyOf(targets, DiscoveryAuto) {
+		for i, target := range targets {
+			if target == DiscoveryAuto {
+				// remove the auto keyword
+				targets = slices.Delete(targets, i, i+1)
+			}
+		}
+		// add in the required discovery targets
+		return append(targets, Auto...)
+	}
+	// random assortment of targets
+	return targets
+}
+
 func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.Inventory, error) {
 	conn, ok := runtime.Connection.(*connection.AzureConnection)
 	if !ok {
 		return nil, errors.New("invalid connection provided, it is not an Azure connection")
 	}
 	assets := []*inventory.Asset{}
-	targets := rootConf.GetDiscover().GetTargets()
 	subsToInclude := rootConf.Options["subscriptions"]
 	subsToExclude := rootConf.Options["subscriptions-exclude"]
 	filter := connection.SubscriptionsFilter{}
@@ -101,16 +147,15 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 		subsWithConfigs[i] = subWithConfig{sub: sub, conf: getSubConfig(conn.Conf, sub)}
 	}
 
-	if stringx.ContainsAnyOf(targets, DiscoverySubscriptions, DiscoveryAll, DiscoveryAuto) {
+	targets := getDiscoveryTargets(rootConf)
+
+	if stringx.ContainsAnyOf(targets, DiscoverySubscriptions) {
 		// we've already discovered those, simply add them as assets
 		for _, s := range subsWithConfigs {
 			assets = append(assets, subToAsset(s))
 		}
 	}
-	matchingTargets := []string{DiscoveryAll}
-	if ENABLE_FINE_GRAINED_ASSETS {
-		matchingTargets = append(matchingTargets, DiscoveryAuto)
-	}
+
 	// FIXME: do not discover instances as OSes right now, only discover as API representations.
 	if stringx.ContainsAnyOf(targets, DiscoveryInstances) {
 		vms, err := discoverInstances(runtime, subsWithConfigs)
@@ -119,28 +164,28 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 		}
 		assets = append(assets, vms...)
 	}
-	if stringx.ContainsAnyOf(targets, append(matchingTargets, DiscoveryInstancesApi)...) {
+	if stringx.ContainsAnyOf(targets, DiscoveryInstancesApi) {
 		vms, err := discoverInstancesApi(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
 		}
 		assets = append(assets, vms...)
 	}
-	if stringx.ContainsAnyOf(targets, append(matchingTargets, DiscoverySqlServers)...) {
+	if stringx.ContainsAnyOf(targets, DiscoverySqlServers) {
 		sqlServers, err := discoverSqlServers(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
 		}
 		assets = append(assets, sqlServers...)
 	}
-	if stringx.ContainsAnyOf(targets, append(matchingTargets, DiscoveryMySqlServers)...) {
+	if stringx.ContainsAnyOf(targets, DiscoveryMySqlServers) {
 		mySqlServers, err := discoverMySqlServers(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
 		}
 		assets = append(assets, mySqlServers...)
 	}
-	if stringx.ContainsAnyOf(targets, append(matchingTargets, DiscoveryMySqlFlexibleServers)...) {
+	if stringx.ContainsAnyOf(targets, DiscoveryMySqlFlexibleServers) {
 		flexibleServers, err := discoverMySqlFlexibleServers(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
@@ -148,7 +193,7 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 		assets = append(assets, flexibleServers...)
 	}
 
-	if stringx.ContainsAnyOf(targets, append(matchingTargets, DiscoveryPostgresServers)...) {
+	if stringx.ContainsAnyOf(targets, DiscoveryPostgresServers) {
 		postgresServers, err := discoverPostgresqlServers(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
@@ -156,7 +201,7 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 		assets = append(assets, postgresServers...)
 	}
 
-	if stringx.ContainsAnyOf(targets, append(matchingTargets, DiscoveryPostgresFlexibleServers)...) {
+	if stringx.ContainsAnyOf(targets, DiscoveryPostgresFlexibleServers) {
 		flexibleServers, err := discoverPostgresqlFlexibleServers(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
@@ -164,7 +209,7 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 		assets = append(assets, flexibleServers...)
 	}
 
-	if stringx.ContainsAnyOf(targets, append(matchingTargets, DiscoveryMariaDbServers)...) {
+	if stringx.ContainsAnyOf(targets, DiscoveryMariaDbServers) {
 		mariaDbServers, err := discoverMariadbServers(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
@@ -172,7 +217,7 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 		assets = append(assets, mariaDbServers...)
 	}
 
-	if stringx.ContainsAnyOf(targets, append(matchingTargets, DiscoveryStorageAccounts)...) {
+	if stringx.ContainsAnyOf(targets, DiscoveryStorageAccounts) {
 		accs, err := discoverStorageAccounts(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
@@ -181,21 +226,21 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 	}
 
 	// FIXME: bring back the storage containers as as part of FF scanning once we can do parallel scanning
-	if stringx.ContainsAnyOf(targets, DiscoveryAll, DiscoveryStorageContainers) {
+	if stringx.ContainsAnyOf(targets, DiscoveryStorageContainers) {
 		containers, err := discoverStorageAccountsContainers(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
 		}
 		assets = append(assets, containers...)
 	}
-	if stringx.ContainsAnyOf(targets, append(matchingTargets, DiscoverySecurityGroups)...) {
+	if stringx.ContainsAnyOf(targets, DiscoverySecurityGroups) {
 		secGrps, err := discoverSecurityGroups(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
 		}
 		assets = append(assets, secGrps...)
 	}
-	if stringx.ContainsAnyOf(targets, append(matchingTargets, DiscoveryKeyVaults)...) {
+	if stringx.ContainsAnyOf(targets, DiscoveryKeyVaults) {
 		kvs, err := discoverVaults(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
